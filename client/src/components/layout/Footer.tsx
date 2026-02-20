@@ -44,7 +44,7 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-4 md:gap-6">
             <a href="https://instagram.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-instagram">Instagram</a>
-            <a href="https://tiktok.com/@intertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-tiktok">TikTok</a>
+            <a href="https://tiktok.com/@shopintertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-tiktok">TikTok</a>
             <a href="https://pinterest.com/shopintertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-pinterest">Pinterest</a>
           </div>
         </div>

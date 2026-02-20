@@ -5,7 +5,7 @@ export default function About() {
     <div className="py-8 md:py-16 max-w-3xl mx-auto w-full flex flex-col gap-10 md:gap-16">
       <header className="flex flex-col gap-4 md:gap-6">
         <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Our Story</span>
-        <h1 className="text-3xl md:text-6xl font-serif" data-testid="text-about-title">About Intertexe</h1>
+        <h1 className="text-3xl md:text-6xl font-serif" data-testid="text-about-title">About <span className="tracking-widest uppercase">Intertexe</span></h1>
       </header>
 
       <div className="flex flex-col gap-8 md:gap-12 text-base md:text-lg text-foreground/80 leading-relaxed font-light">
