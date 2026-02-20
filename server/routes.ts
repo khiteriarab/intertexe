@@ -120,14 +120,15 @@ export async function registerRoutes(
       fallback: true,
     });
 
-    if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY || !process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
+    const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+    if (!apiKey) {
       return res.json(buildFallback());
     }
 
     try {
       const openai = new OpenAI({
-        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        apiKey,
+        ...(process.env.OPENAI_API_KEY ? {} : { baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL }),
       });
 
       const prompt = `You are a luxury fashion advisor specializing in material quality. 
