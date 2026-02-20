@@ -210,36 +210,47 @@ export default function Quiz() {
 function BrandsStep({ designers, selectedBrands, onToggle }: { designers: any[]; selectedBrands: string[]; onToggle: (name: string) => void }) {
   const [brandSearch, setBrandSearch] = useState("");
 
-  const initialBrands = useMemo(() => {
-    return (designers as any[]).slice(0, 8);
+  const popularBrands = useMemo(() => {
+    const popular = [
+      "Hermès", "Brunello Cucinelli", "Loro Piana", "The Row", "Zegna",
+      "Max Mara", "Jil Sander", "Bottega Veneta", "Auralee", "Lemaire",
+      "Margaret Howell", "Studio Nicholson"
+    ];
+    const found = popular
+      .map(name => (designers as any[]).find((d: any) => d.name === name))
+      .filter(Boolean);
+    if (found.length >= 6) return found;
+    return (designers as any[]).slice(0, 12);
   }, [designers]);
 
   const searchResults = useMemo(() => {
-    if (brandSearch.length < 2) return [];
-    const q = brandSearch.toLowerCase();
-    return (designers as any[])
-      .filter((d: any) => d.name.toLowerCase().includes(q))
-      .slice(0, 10);
+    if (!brandSearch.trim()) return [];
+    const q = brandSearch.toLowerCase().trim();
+    const startsWith = (designers as any[])
+      .filter((d: any) => d.name.toLowerCase().startsWith(q));
+    const contains = (designers as any[])
+      .filter((d: any) => !d.name.toLowerCase().startsWith(q) && d.name.toLowerCase().includes(q));
+    return [...startsWith, ...contains].slice(0, 12);
   }, [designers, brandSearch]);
 
-  const displayBrands = brandSearch.length >= 2 ? searchResults : initialBrands;
+  const isSearching = brandSearch.trim().length > 0;
 
-  const selectedNotShown = selectedBrands.filter(
-    name => !displayBrands.some((d: any) => d.name === name)
+  const selectedNotShown = (list: any[]) => selectedBrands.filter(
+    name => !list.some((d: any) => d.name === name)
   );
 
   return (
     <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-2 text-center mb-2 md:mb-4">
         <h2 className="text-2xl md:text-4xl font-serif">Select brands you already love</h2>
-        <p className="text-muted-foreground text-sm">Optional. Search to find specific brands.</p>
+        <p className="text-muted-foreground text-sm">Optional. Pick from popular brands or search for any brand.</p>
       </div>
 
       <div className="relative max-w-md mx-auto w-full">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Search brands..."
+          placeholder="Type to search brands..."
           className="w-full bg-background border border-border/60 pl-12 pr-10 py-3 text-sm focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 uppercase tracking-widest"
           value={brandSearch}
           onChange={(e) => setBrandSearch(e.target.value)}
@@ -267,36 +278,62 @@ function BrandsStep({ designers, selectedBrands, onToggle }: { designers: any[];
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-w-lg mx-auto w-full max-h-[40vh] overflow-y-auto">
-        {displayBrands.map((brand: any) => {
-          const isSelected = selectedBrands.includes(brand.name);
-          return (
-            <button key={brand.id} onClick={() => onToggle(brand.name)}
-              className={`p-3 md:p-4 border text-left flex items-center justify-between gap-3 transition-all active:scale-[0.98] ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-border/60 hover:border-foreground'}`}
-              data-testid={`button-brand-${brand.slug}`}
-            >
-              <span className="font-serif text-sm md:text-base truncate">{brand.name}</span>
-              {isSelected && <Check className="w-4 h-4 flex-shrink-0" />}
-            </button>
-          );
-        })}
-        {selectedNotShown.map(name => {
-          const brand = (designers as any[]).find((d: any) => d.name === name);
-          if (!brand) return null;
-          return (
-            <button key={brand.id} onClick={() => onToggle(brand.name)}
-              className="p-3 md:p-4 border text-left flex items-center justify-between gap-3 transition-all active:scale-[0.98] border-foreground bg-foreground text-background"
-              data-testid={`button-brand-${brand.slug}`}
-            >
-              <span className="font-serif text-sm md:text-base truncate">{brand.name}</span>
-              <Check className="w-4 h-4 flex-shrink-0" />
-            </button>
-          );
-        })}
-      </div>
-
-      {brandSearch.length >= 2 && searchResults.length === 0 && (
-        <p className="text-center text-sm text-muted-foreground">No brands found matching "{brandSearch}"</p>
+      {isSearching ? (
+        <>
+          <div className="flex flex-col gap-1 max-w-lg mx-auto w-full">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+              {searchResults.length > 0 ? `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} for "${brandSearch}"` : ''}
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 max-h-[40vh] overflow-y-auto scrollbar-hide">
+              {searchResults.map((brand: any) => {
+                const isSelected = selectedBrands.includes(brand.name);
+                return (
+                  <button key={brand.id} onClick={() => onToggle(brand.name)}
+                    className={`p-3 md:p-4 border text-left flex items-center justify-between gap-3 transition-all active:scale-[0.98] ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-border/60 hover:border-foreground'}`}
+                    data-testid={`button-brand-${brand.slug}`}
+                  >
+                    <span className="font-serif text-sm md:text-base truncate">{brand.name}</span>
+                    {isSelected && <Check className="w-4 h-4 flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {searchResults.length === 0 && (
+            <p className="text-center text-sm text-muted-foreground">No brands found matching "{brandSearch}"</p>
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col gap-3 max-w-lg mx-auto w-full">
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Popular Brands</span>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+            {popularBrands.map((brand: any) => {
+              const isSelected = selectedBrands.includes(brand.name);
+              return (
+                <button key={brand.id} onClick={() => onToggle(brand.name)}
+                  className={`p-3 md:p-4 border text-left flex items-center justify-between gap-2 transition-all active:scale-[0.98] ${isSelected ? 'border-foreground bg-foreground text-background' : 'border-border/60 hover:border-foreground'}`}
+                  data-testid={`button-brand-${brand.slug}`}
+                >
+                  <span className="font-serif text-xs md:text-sm truncate">{brand.name}</span>
+                  {isSelected && <Check className="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+          {selectedNotShown(popularBrands).map(name => {
+            const brand = (designers as any[]).find((d: any) => d.name === name);
+            if (!brand) return null;
+            return (
+              <button key={brand.id} onClick={() => onToggle(brand.name)}
+                className="p-3 md:p-4 border text-left flex items-center justify-between gap-3 transition-all active:scale-[0.98] border-foreground bg-foreground text-background"
+                data-testid={`button-brand-selected-${brand.slug}`}
+              >
+                <span className="font-serif text-xs md:text-sm truncate">{brand.name}</span>
+                <Check className="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" />
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
