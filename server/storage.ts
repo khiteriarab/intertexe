@@ -14,33 +14,41 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ilike, asc } from "drizzle-orm";
+import { supabase } from "./supabase";
+
+function mapSupabaseDesigner(row: any): Designer {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    status: row.status || "Pending",
+    naturalFiberPercent: row.natural_fiber_percent ?? null,
+    description: row.description ?? null,
+    createdAt: row.created_at ? new Date(row.created_at) : null,
+  };
+}
 
 export interface IStorage {
-  // Users
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
-  // Designers
-  getDesigners(): Promise<Designer[]>;
+  getDesigners(limit?: number): Promise<Designer[]>;
   getDesignerBySlug(slug: string): Promise<Designer | undefined>;
   searchDesigners(query: string): Promise<Designer[]>;
   createDesigner(designer: InsertDesigner): Promise<Designer>;
 
-  // Favorites
   getFavoritesByUser(userId: string): Promise<(Favorite & { designer: Designer })[]>;
   addFavorite(fav: InsertFavorite): Promise<Favorite>;
   removeFavorite(userId: string, designerId: string): Promise<void>;
   isFavorited(userId: string, designerId: string): Promise<boolean>;
 
-  // Quiz
   saveQuizResult(result: InsertQuizResult): Promise<QuizResult>;
   getQuizResultsByUser(userId: string): Promise<QuizResult[]>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // Users
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -61,17 +69,39 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  // Designers
-  async getDesigners(): Promise<Designer[]> {
+  async getDesigners(limit?: number): Promise<Designer[]> {
+    if (supabase) {
+      let query = supabase.from("designers").select("*").order("name", { ascending: true });
+      if (limit) query = query.limit(limit);
+      else query = query.limit(1000);
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+      return (data || []).map(mapSupabaseDesigner);
+    }
     return db.select().from(designers).orderBy(asc(designers.name));
   }
 
   async getDesignerBySlug(slug: string): Promise<Designer | undefined> {
+    if (supabase) {
+      const { data, error } = await supabase.from("designers").select("*").eq("slug", slug).limit(1).single();
+      if (error || !data) return undefined;
+      return mapSupabaseDesigner(data);
+    }
     const [designer] = await db.select().from(designers).where(eq(designers.slug, slug));
     return designer;
   }
 
   async searchDesigners(query: string): Promise<Designer[]> {
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("designers")
+        .select("*")
+        .ilike("name", `%${query}%`)
+        .order("name", { ascending: true })
+        .limit(50);
+      if (error) throw new Error(error.message);
+      return (data || []).map(mapSupabaseDesigner);
+    }
     return db.select().from(designers).where(ilike(designers.name, `%${query}%`)).orderBy(asc(designers.name));
   }
 
@@ -80,8 +110,24 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  // Favorites
   async getFavoritesByUser(userId: string): Promise<(Favorite & { designer: Designer })[]> {
+    const favRows = await db.select().from(favorites).where(eq(favorites.userId, userId));
+
+    if (supabase && favRows.length > 0) {
+      const designerIds = favRows.map(f => f.designerId);
+      const { data: designerData } = await supabase
+        .from("designers")
+        .select("*")
+        .in("id", designerIds);
+
+      const designerMap = new Map<string, Designer>();
+      (designerData || []).forEach(d => designerMap.set(d.id, mapSupabaseDesigner(d)));
+
+      return favRows
+        .filter(f => designerMap.has(f.designerId))
+        .map(f => ({ ...f, designer: designerMap.get(f.designerId)! }));
+    }
+
     const rows = await db
       .select()
       .from(favorites)
@@ -113,7 +159,6 @@ export class DatabaseStorage implements IStorage {
     return !!row;
   }
 
-  // Quiz
   async saveQuizResult(result: InsertQuizResult): Promise<QuizResult> {
     const [created] = await db.insert(quizResults).values(result).returning();
     return created;
