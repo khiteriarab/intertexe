@@ -27,14 +27,14 @@ export default function Designers() {
   ];
 
   return (
-    <div className="py-8 md:py-12 flex flex-col gap-12">
-      <header className="flex flex-col items-center text-center gap-6 max-w-2xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-serif">The Directory</h1>
-        <p className="text-muted-foreground">
+    <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-12">
+      <header className="flex flex-col items-center text-center gap-4 md:gap-6 max-w-2xl mx-auto">
+        <h1 className="text-3xl md:text-5xl font-serif">The Directory</h1>
+        <p className="text-muted-foreground text-sm md:text-base">
           Explore our curated index of designers committed to exceptional material quality.
         </p>
 
-        <div className="relative w-full max-w-md mt-4">
+        <div className="relative w-full max-w-md mt-2 md:mt-4">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
@@ -47,7 +47,7 @@ export default function Designers() {
         </div>
       </header>
 
-      <div className="flex flex-col md:flex-row gap-12 mt-8">
+      <div className="flex flex-col md:flex-row gap-8 md:gap-12 mt-4 md:mt-8">
         <aside className="hidden md:block w-8 shrink-0 sticky top-32 h-fit">
           <nav className="flex flex-col gap-2 text-xs font-medium text-muted-foreground">
             {alphabet.map(letter => (
@@ -66,7 +66,7 @@ export default function Designers() {
           </nav>
         </aside>
 
-        <div className="flex-1 flex flex-col gap-16">
+        <div className="flex-1 flex flex-col gap-10 md:gap-16">
           {isLoading ? (
             <div className="flex flex-col gap-8 animate-pulse">
               {[1,2,3].map(i => (
@@ -82,13 +82,13 @@ export default function Designers() {
             <div className="text-center py-20 text-muted-foreground">No designers found.</div>
           ) : (
             sortedKeys.map(letter => (
-              <section key={letter} id={`letter-${letter}`} className="flex flex-col gap-6 scroll-mt-24">
-                <h2 className="text-4xl font-serif border-b border-border/40 pb-4 text-foreground/80">{letter === "#" ? "0-9 / Symbols" : letter}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              <section key={letter} id={`letter-${letter}`} className="flex flex-col gap-4 md:gap-6 scroll-mt-24">
+                <h2 className="text-3xl md:text-4xl font-serif border-b border-border/40 pb-3 md:pb-4 text-foreground/80">{letter === "#" ? "0-9 / Symbols" : letter}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                   {grouped[letter].map((designer: any) => (
-                    <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 py-2" data-testid={`card-designer-${designer.slug}`}>
-                        <div className="flex justify-between items-baseline">
-                          <h3 className="text-xl font-serif group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
+                    <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-2 md:gap-3 py-2 active:opacity-70 transition-opacity" data-testid={`card-designer-${designer.slug}`}>
+                        <div className="flex justify-between items-baseline gap-2">
+                          <h3 className="text-base md:text-xl font-serif group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
                           {designer.naturalFiberPercent != null && (
                             <span className="text-xs tracking-wider text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>
                           )}

@@ -4,6 +4,14 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
+- **2026-02-20**: Mobile UX overhaul & auth simplification
+  - Comprehensive mobile-first responsive design across all pages
+  - Quiz brands step: shows 8 initial brands + search bar (not all 11,909)
+  - Removed username from signup, email is now the sole login identifier
+  - Touch-optimized: active:scale effects, proper tap targets, mobile grids
+  - Safe-area-inset support for bottom nav on notched phones
+  - Social links: Instagram @intertexe, TikTok @intertexe, Pinterest @shopintertexe
+  - Designer directory: A-Z first, numbers/symbols grouped under "#" last
 - **2026-02-20**: Supabase integration for designer data
   - Designers now sourced from Supabase (11,909 brands)
   - Graceful fallback to local PostgreSQL if Supabase unavailable
