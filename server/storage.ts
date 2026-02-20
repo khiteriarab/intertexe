@@ -48,6 +48,9 @@ export interface IStorage {
   getQuizResultsByUser(userId: string): Promise<QuizResult[]>;
 }
 
+let designerCache: { data: Designer[]; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -72,12 +75,38 @@ export class DatabaseStorage implements IStorage {
   async getDesigners(limit?: number): Promise<Designer[]> {
     if (supabase) {
       try {
-        let query = supabase.from("designers").select("*").order("name", { ascending: true });
-        if (limit) query = query.limit(limit);
-        else query = query.limit(1000);
-        const { data, error } = await query;
-        if (error) throw error;
-        return (data || []).map(mapSupabaseDesigner);
+        if (limit) {
+          const { data, error } = await supabase
+            .from("designers")
+            .select("*")
+            .order("name", { ascending: true })
+            .limit(limit);
+          if (error) throw error;
+          return (data || []).map(mapSupabaseDesigner);
+        }
+
+        if (designerCache && Date.now() - designerCache.timestamp < CACHE_TTL) {
+          return designerCache.data;
+        }
+
+        const allDesigners: Designer[] = [];
+        const PAGE_SIZE = 1000;
+        let from = 0;
+        while (true) {
+          const { data, error } = await supabase
+            .from("designers")
+            .select("*")
+            .order("name", { ascending: true })
+            .range(from, from + PAGE_SIZE - 1);
+          if (error) throw error;
+          if (!data || data.length === 0) break;
+          allDesigners.push(...data.map(mapSupabaseDesigner));
+          if (data.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+        console.log(`Fetched ${allDesigners.length} designers from Supabase`);
+        designerCache = { data: allDesigners, timestamp: Date.now() };
+        return allDesigners;
       } catch (err: any) {
         console.error("Supabase getDesigners failed, falling back to local DB:", err.message);
       }

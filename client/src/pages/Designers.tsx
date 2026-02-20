@@ -1,31 +1,16 @@
-import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export default function Designers() {
   const [search, setSearch] = useState("");
 
-const { data: designers = [], isLoading } = useQuery({
-  queryKey: ["designers", search],
-  queryFn: async () => {
-    let query = supabase
-      .from("designers")
-      .select("*")
-      .eq("status", "live");
-
-    if (search) {
-      query = query.ilike("name", `%${search}%`);
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    return data ?? [];
-  },
-});
+  const { data: designers = [], isLoading } = useQuery({
+    queryKey: ["designers", search],
+    queryFn: () => api.getDesigners(search || undefined),
+  });
 
   const grouped = (designers as any[]).reduce((acc: Record<string, any[]>, designer: any) => {
     const firstChar = designer.name.charAt(0).toUpperCase();
