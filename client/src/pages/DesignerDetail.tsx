@@ -112,26 +112,42 @@ export default function DesignerDetail() {
             </div>
           </div>
 
-          {designer.naturalFiberPercent != null && (
-            <div className="flex flex-col gap-2 py-6 md:py-8 border-y border-border/40">
-              <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Material Score</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl md:text-6xl font-serif">{designer.naturalFiberPercent}%</span>
-                <span className="text-base md:text-lg text-muted-foreground font-serif italic">Natural Fibers</span>
+          <div className="flex flex-col gap-3 py-6 md:py-8 border-y border-border/40">
+            <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Natural Fiber Score</span>
+            {designer.naturalFiberPercent != null ? (
+              <>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-5xl md:text-7xl font-serif">{designer.naturalFiberPercent}%</span>
+                  <span className="text-base md:text-lg text-muted-foreground font-serif italic">Natural Fibers</span>
+                </div>
+                <div className="w-full h-2 bg-secondary mt-2 md:mt-3 relative overflow-hidden">
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-foreground transition-all duration-700"
+                    style={{ width: `${designer.naturalFiberPercent}%` }}
+                  />
+                </div>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                  {designer.naturalFiberPercent >= 90
+                    ? "Exceptional commitment to natural materials."
+                    : designer.naturalFiberPercent >= 70
+                    ? "Strong emphasis on natural fibers with minimal synthetics."
+                    : designer.naturalFiberPercent >= 50
+                    ? "A balanced mix of natural and synthetic materials."
+                    : "Uses a higher proportion of synthetic materials."}
+                </p>
+              </>
+            ) : (
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl md:text-4xl font-serif text-muted-foreground/60">--</span>
+                <span className="text-sm text-muted-foreground">Score pending review</span>
               </div>
-              <div className="w-full h-1 bg-secondary mt-3 md:mt-4 relative">
-                <div 
-                  className="absolute top-0 left-0 h-full bg-foreground transition-all duration-700"
-                  style={{ width: `${designer.naturalFiberPercent}%` }}
-                />
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="flex flex-col gap-3 md:gap-4">
             <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">About the Brand</span>
             <p className="text-base md:text-lg text-foreground/80 leading-relaxed font-light">
-              {designer.description || `${designer.name} is dedicated to utilizing high-quality materials, with a strong focus on natural fibers across their collections.`}
+              {designer.description || `${designer.name} is a fashion brand in our directory. Material composition details are being compiled by our editorial team.`}
             </p>
           </div>
         </div>
