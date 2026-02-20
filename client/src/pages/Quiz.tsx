@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 
 const MATERIAL_OPTIONS = [
   "Cotton", "Silk", "Linen", "Wool", "Cashmere", "Leather / Suede",
@@ -33,6 +34,8 @@ export default function Quiz() {
     brands: [] as string[]
   });
 
+  const { isAuthenticated } = useAuth();
+
   const recommendMutation = useMutation({
     mutationFn: () => api.getRecommendation({
       materials: selections.materials,
@@ -43,22 +46,36 @@ export default function Quiz() {
     onSuccess: (data) => {
       setRecommendation(data);
       setCurrentStep(STEPS.length - 1);
-    },
-  });
 
-  const saveMutation = useMutation({
-    mutationFn: () => api.submitQuiz({
-      materials: selections.materials,
-      priceRange: selections.spend,
-      syntheticTolerance: selections.syntheticTolerance,
-      favoriteBrands: selections.brands,
-    }),
+      const quizData = {
+        materials: selections.materials,
+        priceRange: selections.spend,
+        syntheticTolerance: selections.syntheticTolerance,
+        favoriteBrands: selections.brands,
+        profileType: data.profileType,
+        recommendation: data.recommendation,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem("intertexe_pending_quiz", JSON.stringify(quizData));
+
+      if (isAuthenticated) {
+        api.submitQuiz({
+          materials: selections.materials,
+          priceRange: selections.spend,
+          syntheticTolerance: selections.syntheticTolerance,
+          favoriteBrands: selections.brands,
+          profileType: data.profileType,
+          recommendation: data.recommendation,
+        }).then(() => {
+          localStorage.removeItem("intertexe_pending_quiz");
+        }).catch(() => {});
+      }
+    },
   });
 
   const nextStep = () => {
     if (currentStep === STEPS.length - 2) {
       recommendMutation.mutate();
-      saveMutation.mutate();
     } else {
       setCurrentStep(s => Math.min(s + 1, STEPS.length - 1));
     }

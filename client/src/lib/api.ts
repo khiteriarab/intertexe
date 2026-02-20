@@ -83,6 +83,8 @@ export const api = {
     priceRange: string;
     syntheticTolerance: string;
     favoriteBrands: string[];
+    profileType?: string;
+    recommendation?: string;
   }) {
     const res = await fetch("/api/quiz", {
       method: "POST",
