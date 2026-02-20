@@ -1,16 +1,171 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth } from "./auth";
+import { insertQuizResultSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  setupAuth(app);
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // ─── Designers ─────────────────────────────
+  app.get("/api/designers", async (req, res) => {
+    try {
+      const q = req.query.q as string | undefined;
+      const list = q ? await storage.searchDesigners(q) : await storage.getDesigners();
+      return res.json(list);
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/designers/:slug", async (req, res) => {
+    try {
+      const designer = await storage.getDesignerBySlug(req.params.slug);
+      if (!designer) return res.status(404).json({ message: "Designer not found" });
+      return res.json(designer);
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  // ─── Favorites ─────────────────────────────
+  app.get("/api/favorites", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const favs = await storage.getFavoritesByUser(req.user!.id);
+      return res.json(favs);
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/favorites", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const { designerId } = req.body;
+      if (!designerId) return res.status(400).json({ message: "designerId is required" });
+
+      const already = await storage.isFavorited(req.user!.id, designerId);
+      if (already) return res.status(409).json({ message: "Already favorited" });
+
+      const fav = await storage.addFavorite({ userId: req.user!.id, designerId });
+      return res.status(201).json(fav);
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/favorites/:designerId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      await storage.removeFavorite(req.user!.id, req.params.designerId);
+      return res.json({ message: "Removed" });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/favorites/check/:designerId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.json({ favorited: false });
+    try {
+      const favorited = await storage.isFavorited(req.user!.id, req.params.designerId);
+      return res.json({ favorited });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  // ─── Quiz ──────────────────────────────────
+  app.post("/api/quiz", async (req, res) => {
+    try {
+      const parsed = insertQuizResultSchema.safeParse({
+        ...req.body,
+        userId: req.isAuthenticated() ? req.user!.id : null,
+      });
+      if (!parsed.success) return res.status(400).json({ message: "Invalid quiz data" });
+
+      const result = await storage.saveQuizResult(parsed.data);
+      return res.status(201).json(result);
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/quiz/results", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const results = await storage.getQuizResultsByUser(req.user!.id);
+      return res.json(results);
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  // ─── AI Recommendations ────────────────────
+  app.post("/api/recommend", async (req, res) => {
+    try {
+      const { materials, priceRange, syntheticTolerance, favoriteBrands } = req.body;
+
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        // Return a mocked recommendation if no API key
+        return res.json({
+          profileType: "The Purist",
+          recommendation:
+            `Based on your preference for ${(materials || []).join(", ")} and a tolerance of "${syntheticTolerance || "moderate"}" synthetics, ` +
+            `we recommend focusing on designers known for their dedication to natural fibers. ` +
+            `Look for heavy-weight knits, structured wovens, and investment pieces that prioritize composition over trend.`,
+          suggestedDesignerTypes: ["Heritage luxury brands", "Scandinavian minimalists", "Japanese artisanal labels"],
+          recommendedMaterials: materials?.slice(0, 3) || ["Cashmere", "Silk", "Linen"],
+        });
+      }
+
+      const prompt = `You are a luxury fashion advisor specializing in material quality. 
+A customer has the following preferences:
+- Favorite materials: ${(materials || []).join(", ")}
+- Budget per item: ${priceRange || "Not specified"}
+- Synthetic content tolerance: ${syntheticTolerance || "Not specified"}
+- Brands they already love: ${(favoriteBrands || []).join(", ") || "None specified"}
+
+Provide a JSON response with exactly these fields:
+{
+  "profileType": "A creative name for this customer's material profile (e.g. The Purist, The Pragmatist, The Connoisseur)",
+  "recommendation": "A 2-3 sentence personalized styling direction focusing on material quality",
+  "suggestedDesignerTypes": ["3 types of designers to explore"],
+  "recommendedMaterials": ["Top 3 materials to prioritize"]
+}`;
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: prompt }],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("OpenAI error:", errorText);
+        return res.status(502).json({ message: "AI service error" });
+      }
+
+      const data = await response.json();
+      const result = JSON.parse(data.choices[0].message.content);
+      return res.json(result);
+    } catch (err: any) {
+      console.error("Recommendation error:", err);
+      return res.status(500).json({ message: err.message });
+    }
+  });
 
   return httpServer;
 }
