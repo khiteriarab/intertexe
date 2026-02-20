@@ -1,0 +1,286 @@
+Build a full-stack web application called INTERTEXE using:
+
+- Next.js 14 (App Router)
+- TypeScript
+- Supabase (database + auth)
+- OpenAI API (for AI recommendations)
+- Tailwind CSS
+- Mobile-first responsive design
+- Deployed-ready for Vercel
+
+--------------------------------------------------
+PROJECT PURPOSE
+--------------------------------------------------
+
+INTERTEXE is a fashion discovery and curation platform focused on MATERIAL QUALITY.
+
+Users can:
+- Browse designers
+- View % of each designer’s products that use natural fibers
+- Take a material-preference quiz
+- Save favorite designers and materials
+- Receive AI-powered product recommendations
+- Create accounts and log in
+
+Brand background color: #FAFAF8  
+Primary accent color: #111111  
+Primary font style: elegant serif for headings, clean sans-serif for body  
+Site should feel luxury, minimal, editorial, modern.
+
+--------------------------------------------------
+ENVIRONMENT VARIABLES
+--------------------------------------------------
+
+NEXT_PUBLIC_SUPABASE_URL  
+NEXT_PUBLIC_SUPABASE_ANON_KEY  
+OPENAI_API_KEY  
+
+--------------------------------------------------
+SUPABASE DATABASE SCHEMA
+--------------------------------------------------
+
+TABLE: designers
+- id (uuid, primary key)
+- name (text)
+- slug (text)
+- status (text)  // pending | processed | live
+- natural_fiber_percent (integer, nullable)
+- created_at (timestamp)
+
+TABLE: favorites
+- id (uuid)
+- user_id (uuid, references auth.users)
+- designer_id (uuid, references designers.id)
+- created_at (timestamp)
+
+TABLE: quiz_results
+- id (uuid)
+- user_id (uuid)
+- materials (text[])
+- price_range (text)
+- synthetic_tolerance (text)
+- favorite_brands (text[])
+- created_at (timestamp)
+
+Users table handled by Supabase Auth.
+
+--------------------------------------------------
+ROUTES / PAGES
+--------------------------------------------------
+
+/                → Homepage  
+/designers       → Alphabetical list  
+/designers/[slug] → Designer detail  
+/materials       → Material categories  
+/quiz            → Quiz  
+/login  
+/signup  
+/account         → Favorites + quiz history  
+
+--------------------------------------------------
+HOMEPAGE
+--------------------------------------------------
+
+- Top navigation with horizontal logo at:
+  /public/logos/Intertexe-Horizontal.png
+
+Hero headline:
+"Material-first fashion for women who expect quality in every fiber."
+
+Subtext:
+Discover designers and pieces ranked by fabric composition.
+
+Buttons:
+- Take Quiz
+- Browse Designers
+
+Sections:
+- Material Highlights (grid)
+- Editorial tiles
+- Call-to-action to quiz
+
+--------------------------------------------------
+NAVIGATION LABELS
+--------------------------------------------------
+
+Top Navigation:
+- Home
+- Just In
+- Designers
+- Materials
+- Quiz
+- Account
+
+Mobile Bottom Nav:
+- Home
+- Designers
+- Quiz
+- Favorites
+- More
+
+--------------------------------------------------
+MORE / PROFILE MENU
+--------------------------------------------------
+
+- My Account
+- Wishlist (Favorites)
+- Quiz Results
+- Rewards (placeholder)
+- Country / Region
+- Help & Support
+- Log In / Sign Up
+- Log Out
+
+--------------------------------------------------
+DESIGNERS PAGE
+--------------------------------------------------
+
+- Fetch designers from Supabase
+- Sort alphabetically by name
+- A–Z jump navigation
+- Search bar
+- Clicking a designer opens detail page
+
+--------------------------------------------------
+DESIGNER DETAIL PAGE
+--------------------------------------------------
+
+Display:
+
+- Designer name
+- Large natural fiber percentage
+- Status badge
+- Save to favorites button
+
+--------------------------------------------------
+MATERIALS PAGE
+--------------------------------------------------
+
+Clickable materials:
+
+- Cotton
+- Silk
+- Linen
+- Wool
+- Cashmere
+- Leather
+- Denim
+- Tencel / Modal
+- Viscose / Rayon
+- Alpaca
+- Velvet
+- Satin
+
+Selecting a material filters designers.
+
+--------------------------------------------------
+QUIZ FLOW (4 STEPS)
+--------------------------------------------------
+
+STEP 1  
+Question:
+"What materials do you gravitate toward?"
+
+Multi-select:
+- Cotton
+- Silk
+- Linen
+- Wool
+- Cashmere
+- Leather / Suede
+- Tencel / Modal
+- Viscose / Rayon
+- Alpaca
+- Denim
+- Velvet
+- Satin
+
+STEP 2  
+Question:
+"Your typical spend per item"
+
+Single-select:
+- Under $150
+- $150–$300
+- $300–$600
+- $600–$1,200
+- No limit
+
+STEP 3  
+Question:
+"How much synthetic content are you comfortable with?"
+
+Single-select:
+- Ideally none (natural only)
+- Up to 10%
+- Up to 25%
+- Up to 40%
+- Depends on the piece
+
+STEP 4  
+Question:
+"Select brands you already love"
+
+- Pull brands dynamically from designers table
+- Searchable
+- Multi-select
+
+Save quiz results to quiz_results table.
+
+--------------------------------------------------
+AI RECOMMENDATIONS
+--------------------------------------------------
+
+Create API route:
+
+/app/api/recommend/route.ts
+
+Send to OpenAI:
+- Selected materials
+- Price range
+- Synthetic tolerance
+- Favorite brands
+
+Return:
+- Recommended materials
+- Suggested designer types
+- Styling direction
+
+--------------------------------------------------
+AUTHENTICATION
+--------------------------------------------------
+
+Use Supabase Auth:
+
+- Email/password
+- Protect account, favorites, quiz results
+
+--------------------------------------------------
+TECH REQUIREMENTS
+--------------------------------------------------
+
+- Server Components where possible
+- API routes in /app/api
+- Supabase client utility
+- Tailwind configured
+- Clean folder structure
+- Mobile-first responsive
+- Skeleton loaders
+- Toast confirmations
+
+--------------------------------------------------
+OUTPUT EXPECTATIONS
+--------------------------------------------------
+
+Generate:
+
+- Folder structure
+- Supabase client file
+- OpenAI API route
+- Core pages
+- Components
+- Queries
+- Ready-to-run code
+
+Always connect to Supabase.
+Do not use mock data.
