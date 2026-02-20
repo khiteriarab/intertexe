@@ -39,8 +39,8 @@ export default function Contact() {
               <a href="https://instagram.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-muted-foreground transition-colors" data-testid="link-contact-instagram">
                 Instagram — @intertexe
               </a>
-              <a href="https://tiktok.com/@intertexe" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-muted-foreground transition-colors" data-testid="link-contact-tiktok">
-                TikTok — @intertexe
+              <a href="https://tiktok.com/@shopintertexe" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-muted-foreground transition-colors" data-testid="link-contact-tiktok">
+                TikTok — @shopintertexe
               </a>
               <a href="https://pinterest.com/shopintertexe" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-muted-foreground transition-colors" data-testid="link-contact-pinterest">
                 Pinterest — @shopintertexe
