@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertQuizResultSchema } from "@shared/schema";
+import OpenAI from "openai";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -106,22 +107,28 @@ export async function registerRoutes(
 
   // ─── AI Recommendations ────────────────────
   app.post("/api/recommend", async (req, res) => {
-    try {
-      const { materials, priceRange, syntheticTolerance, favoriteBrands } = req.body;
+    const { materials, priceRange, syntheticTolerance, favoriteBrands } = req.body;
 
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        // Return a mocked recommendation if no API key
-        return res.json({
-          profileType: "The Purist",
-          recommendation:
-            `Based on your preference for ${(materials || []).join(", ")} and a tolerance of "${syntheticTolerance || "moderate"}" synthetics, ` +
-            `we recommend focusing on designers known for their dedication to natural fibers. ` +
-            `Look for heavy-weight knits, structured wovens, and investment pieces that prioritize composition over trend.`,
-          suggestedDesignerTypes: ["Heritage luxury brands", "Scandinavian minimalists", "Japanese artisanal labels"],
-          recommendedMaterials: materials?.slice(0, 3) || ["Cashmere", "Silk", "Linen"],
-        });
-      }
+    const buildFallback = () => ({
+      profileType: "The Purist",
+      recommendation:
+        `Based on your preference for ${(materials || []).join(", ")} and a tolerance of "${syntheticTolerance || "moderate"}" synthetics, ` +
+        `we recommend focusing on designers known for their dedication to natural fibers. ` +
+        `Look for heavy-weight knits, structured wovens, and investment pieces that prioritize composition over trend.`,
+      suggestedDesignerTypes: ["Heritage luxury brands", "Scandinavian minimalists", "Japanese artisanal labels"],
+      recommendedMaterials: materials?.slice(0, 3) || ["Cashmere", "Silk", "Linen"],
+      fallback: true,
+    });
+
+    if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY || !process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
+      return res.json(buildFallback());
+    }
+
+    try {
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
 
       const prompt = `You are a luxury fashion advisor specializing in material quality. 
 A customer has the following preferences:
@@ -138,32 +145,23 @@ Provide a JSON response with exactly these fields:
   "recommendedMaterials": ["Top 3 materials to prioritize"]
 }`;
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [{ role: "user", content: prompt }],
-          response_format: { type: "json_object" },
-          temperature: 0.7,
-        }),
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("OpenAI error:", errorText);
-        return res.status(502).json({ message: "AI service error" });
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        console.error("Recommendation: empty response from OpenAI");
+        return res.json(buildFallback());
       }
 
-      const data = await response.json();
-      const result = JSON.parse(data.choices[0].message.content);
+      const result = JSON.parse(content);
       return res.json(result);
     } catch (err: any) {
-      console.error("Recommendation error:", err);
-      return res.status(500).json({ message: err.message });
+      console.error("Recommendation error:", err.message);
+      return res.json(buildFallback());
     }
   });
 

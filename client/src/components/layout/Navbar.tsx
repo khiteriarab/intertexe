@@ -1,12 +1,10 @@
 import { Link, useLocation } from "wouter";
-import { Search, Heart, User, Menu, Home, Grid, Plus, List } from "lucide-react";
+import { Search, Heart, User, Menu, Home, Grid, List } from "lucide-react";
 
 export function Navbar() {
   const [location] = useLocation();
 
   const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Just In", href: "/just-in" },
     { name: "Designers", href: "/designers" },
     { name: "Materials", href: "/materials" },
     { name: "Quiz", href: "/quiz" },
