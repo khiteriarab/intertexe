@@ -1,26 +1,23 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Search } from "lucide-react";
-import { DESIGNERS } from "@/lib/data";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export default function Designers() {
   const [search, setSearch] = useState("");
 
-  // Sort alphabetically
-  const sortedDesigners = [...DESIGNERS].sort((a, b) => a.name.localeCompare(b.name));
-  
-  // Filter by search
-  const filteredDesigners = sortedDesigners.filter(d => 
-    d.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const { data: designers = [], isLoading } = useQuery({
+    queryKey: ["designers", search],
+    queryFn: () => api.getDesigners(search || undefined),
+  });
 
-  // Group by first letter
-  const grouped = filteredDesigners.reduce((acc, designer) => {
+  const grouped = (designers as any[]).reduce((acc: Record<string, any[]>, designer: any) => {
     const letter = designer.name.charAt(0).toUpperCase();
     if (!acc[letter]) acc[letter] = [];
     acc[letter].push(designer);
     return acc;
-  }, {} as Record<string, typeof DESIGNERS>);
+  }, {});
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -32,7 +29,6 @@ export default function Designers() {
           Explore our curated index of designers committed to exceptional material quality.
         </p>
 
-        {/* Search */}
         <div className="relative w-full max-w-md mt-4">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -47,7 +43,6 @@ export default function Designers() {
       </header>
 
       <div className="flex flex-col md:flex-row gap-12 mt-8">
-        {/* A-Z Jump Navigation (Desktop) */}
         <aside className="hidden md:block w-8 shrink-0 sticky top-32 h-fit">
           <nav className="flex flex-col gap-2 text-xs font-medium text-muted-foreground">
             {alphabet.map(letter => (
@@ -63,24 +58,32 @@ export default function Designers() {
           </nav>
         </aside>
 
-        {/* List */}
         <div className="flex-1 flex flex-col gap-16">
-          {Object.entries(grouped).length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col gap-8 animate-pulse">
+              {[1,2,3].map(i => (
+                <div key={i}>
+                  <div className="h-8 w-12 bg-secondary mb-6" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1,2,3].map(j => <div key={j} className="h-16 bg-secondary" />)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : Object.entries(grouped).length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">No designers found.</div>
           ) : (
             Object.keys(grouped).sort().map(letter => (
               <section key={letter} id={`letter-${letter}`} className="flex flex-col gap-6 scroll-mt-24">
                 <h2 className="text-4xl font-serif border-b border-border/40 pb-4 text-foreground/80">{letter}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {grouped[letter].map(designer => (
-                    <Link key={designer.id} href={`/designers/${designer.slug}`}>
-                      <a className="group flex flex-col gap-3 py-2" data-testid={`card-designer-${designer.slug}`}>
+                  {grouped[letter].map((designer: any) => (
+                    <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 py-2" data-testid={`card-designer-${designer.slug}`}>
                         <div className="flex justify-between items-baseline">
                           <h3 className="text-xl font-serif group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
-                          <span className="text-xs tracking-wider text-muted-foreground">{designer.natural_fiber_percent}% Natural</span>
+                          <span className="text-xs tracking-wider text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>
                         </div>
                         <div className="h-px w-full bg-border/40 group-hover:bg-foreground/20 transition-colors" />
-                      </a>
                     </Link>
                   ))}
                 </div>

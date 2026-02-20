@@ -31,24 +31,20 @@ export function Navbar() {
           </button>
 
           {/* Logo */}
-          <Link href="/">
-            <a className="font-serif text-2xl tracking-widest uppercase font-medium text-foreground" data-testid="link-home-logo">
+          <Link href="/" className="font-serif text-2xl tracking-widest uppercase font-medium text-foreground" data-testid="link-home-logo">
               Intertexe
-            </a>
           </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
-              <Link key={link.name} href={link.href}>
-                <a 
+              <Link key={link.name} href={link.href}
                   className={`text-sm tracking-wide uppercase transition-colors hover:text-foreground/70 ${
                     location === link.href ? "text-foreground font-medium" : "text-muted-foreground"
                   }`}
                   data-testid={`link-nav-${link.name.toLowerCase().replace(' ', '-')}`}
                 >
                   {link.name}
-                </a>
               </Link>
             ))}
           </nav>
@@ -58,10 +54,8 @@ export function Navbar() {
             <button className="p-2 -mr-2 text-foreground hover:text-foreground/70 transition-colors" data-testid="button-search">
               <Search className="w-5 h-5" strokeWidth={1.5} />
             </button>
-            <Link href="/account">
-              <a className="hidden md:block p-2 text-foreground hover:text-foreground/70 transition-colors" data-testid="link-account">
+            <Link href="/account" className="hidden md:block p-2 text-foreground hover:text-foreground/70 transition-colors" data-testid="link-account">
                 <User className="w-5 h-5" strokeWidth={1.5} />
-              </a>
             </Link>
           </div>
         </div>
@@ -74,8 +68,7 @@ export function Navbar() {
             const Icon = link.icon;
             const isActive = location === link.href || (link.href !== '/' && location.startsWith(link.href));
             return (
-              <Link key={link.name} href={link.href}>
-                <a 
+              <Link key={link.name} href={link.href}
                   className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
                     isActive ? "text-foreground" : "text-muted-foreground"
                   }`}
@@ -83,7 +76,6 @@ export function Navbar() {
                 >
                   <Icon className="w-5 h-5" strokeWidth={isActive ? 2 : 1.5} />
                   <span className="text-[10px] tracking-wider uppercase">{link.name}</span>
-                </a>
               </Link>
             );
           })}
