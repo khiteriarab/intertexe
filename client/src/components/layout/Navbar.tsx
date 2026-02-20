@@ -1,10 +1,34 @@
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Heart, User, Menu, Home, Grid, List } from "lucide-react";
+import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export function Navbar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: results = [] } = useQuery({
+    queryKey: ["designerSearch", searchQuery],
+    queryFn: () => api.getDesigners(searchQuery),
+    enabled: searchQuery.length >= 2,
+  });
+
+  useEffect(() => {
+    if (searchOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  useEffect(() => {
+    setSearchOpen(false);
+    setSearchQuery("");
+  }, [location]);
 
   const navLinks = [
+    { name: "Just In", href: "/just-in" },
     { name: "Designers", href: "/designers" },
     { name: "Materials", href: "/materials" },
     { name: "Quiz", href: "/quiz" },
@@ -12,54 +36,88 @@ export function Navbar() {
 
   const mobileNavLinks = [
     { name: "Home", href: "/", icon: Home },
+    { name: "New", href: "/just-in", icon: Sparkles },
     { name: "Designers", href: "/designers", icon: Grid },
     { name: "Quiz", href: "/quiz", icon: List },
-    { name: "Favorites", href: "/account/favorites", icon: Heart },
-    { name: "More", href: "/account", icon: Menu },
+    { name: "Account", href: "/account", icon: User },
   ];
 
   return (
     <>
-      {/* Top Navigation (Desktop & Mobile header) */}
       <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/40">
         <div className="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-          {/* Mobile Menu Icon */}
-          <button className="md:hidden p-2 -ml-2 text-foreground" data-testid="button-mobile-menu">
-            <Menu className="w-5 h-5" strokeWidth={1.5} />
-          </button>
-
-          {/* Logo */}
           <Link href="/" className="font-serif text-2xl tracking-widest uppercase font-medium text-foreground" data-testid="link-home-logo">
-              Intertexe
+            Intertexe
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
               <Link key={link.name} href={link.href}
-                  className={`text-sm tracking-wide uppercase transition-colors hover:text-foreground/70 ${
-                    location === link.href ? "text-foreground font-medium" : "text-muted-foreground"
-                  }`}
-                  data-testid={`link-nav-${link.name.toLowerCase().replace(' ', '-')}`}
-                >
-                  {link.name}
+                className={`text-sm tracking-wide uppercase transition-colors hover:text-foreground/70 ${
+                  location === link.href ? "text-foreground font-medium" : "text-muted-foreground"
+                }`}
+                data-testid={`link-nav-${link.name.toLowerCase().replace(' ', '-')}`}
+              >
+                {link.name}
               </Link>
             ))}
           </nav>
 
-          {/* Right Icons */}
           <div className="flex items-center space-x-4">
-            <button className="p-2 -mr-2 text-foreground hover:text-foreground/70 transition-colors" data-testid="button-search">
-              <Search className="w-5 h-5" strokeWidth={1.5} />
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-2 text-foreground hover:text-foreground/70 transition-colors"
+              data-testid="button-search"
+            >
+              {searchOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Search className="w-5 h-5" strokeWidth={1.5} />}
             </button>
             <Link href="/account" className="hidden md:block p-2 text-foreground hover:text-foreground/70 transition-colors" data-testid="link-account">
-                <User className="w-5 h-5" strokeWidth={1.5} />
+              <User className="w-5 h-5" strokeWidth={1.5} />
             </Link>
           </div>
         </div>
+
+        {searchOpen && (
+          <div className="border-t border-border/40 bg-background">
+            <div className="container mx-auto px-4 md:px-8 py-4">
+              <div className="relative max-w-xl mx-auto">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Search designers..."
+                  className="w-full bg-background border border-border/60 pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 uppercase tracking-widest"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  data-testid="input-global-search"
+                />
+              </div>
+              {searchQuery.length >= 2 && (
+                <div className="max-w-xl mx-auto mt-2 max-h-[300px] overflow-y-auto">
+                  {(results as any[]).length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">No designers found.</p>
+                  ) : (
+                    <div className="flex flex-col">
+                      {(results as any[]).slice(0, 8).map((designer: any) => (
+                        <Link
+                          key={designer.id}
+                          href={`/designers/${designer.slug}`}
+                          className="flex items-center justify-between py-3 px-4 hover:bg-secondary/50 transition-colors border-b border-border/20 last:border-0"
+                          data-testid={`search-result-${designer.slug}`}
+                        >
+                          <span className="font-serif text-base">{designer.name}</span>
+                          <span className="text-xs uppercase tracking-widest text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border/40 pb-safe">
         <div className="flex justify-around items-center h-16 px-2">
           {mobileNavLinks.map((link) => {
@@ -67,13 +125,13 @@ export function Navbar() {
             const isActive = location === link.href || (link.href !== '/' && location.startsWith(link.href));
             return (
               <Link key={link.name} href={link.href}
-                  className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-                    isActive ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                  data-testid={`link-mobile-nav-${link.name.toLowerCase()}`}
-                >
-                  <Icon className="w-5 h-5" strokeWidth={isActive ? 2 : 1.5} />
-                  <span className="text-[10px] tracking-wider uppercase">{link.name}</span>
+                className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+                  isActive ? "text-foreground" : "text-muted-foreground"
+                }`}
+                data-testid={`link-mobile-nav-${link.name.toLowerCase()}`}
+              >
+                <Icon className="w-5 h-5" strokeWidth={isActive ? 2 : 1.5} />
+                <span className="text-[10px] tracking-wider uppercase">{link.name}</span>
               </Link>
             );
           })}

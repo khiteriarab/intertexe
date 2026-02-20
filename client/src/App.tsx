@@ -6,8 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout/Layout";
 import NotFound from "@/pages/not-found";
 
-// Pages
 import Home from "@/pages/Home";
+import JustIn from "@/pages/JustIn";
 import Designers from "@/pages/Designers";
 import DesignerDetail from "@/pages/DesignerDetail";
 import Materials from "@/pages/Materials";
@@ -19,12 +19,12 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/just-in" component={JustIn} />
         <Route path="/designers" component={Designers} />
         <Route path="/designers/:slug" component={DesignerDetail} />
         <Route path="/materials" component={Materials} />
         <Route path="/quiz" component={Quiz} />
         <Route path="/account" component={Account} />
-        {/* Fallback to 404 */}
         <Route component={NotFound} />
       </Switch>
     </Layout>
