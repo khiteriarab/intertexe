@@ -222,7 +222,9 @@ export default function Quiz() {
 }
 
 function QuizResults({ selections, recommendation, designers }: { selections: any; recommendation: any; designers: any[] }) {
-  const recommendedDesigners = designers.filter((d: any) => d.naturalFiberPercent > 85).slice(0, 3);
+  const recommendedDesigners = designers
+    .filter((d: any) => d.naturalFiberPercent == null || d.naturalFiberPercent > 85)
+    .slice(0, 3);
 
   return (
     <div className="py-8 md:py-16 max-w-4xl mx-auto w-full flex flex-col gap-16 animate-in fade-in duration-700">
@@ -280,9 +282,11 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
                 </div>
                 <div>
                   <h3 className="text-xl font-serif">{designer.name}</h3>
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">
-                    {designer.naturalFiberPercent}% Natural Fibers
-                  </p>
+                  {designer.naturalFiberPercent != null && (
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">
+                      {designer.naturalFiberPercent}% Natural Fibers
+                    </p>
+                  )}
                 </div>
             </Link>
           ))}

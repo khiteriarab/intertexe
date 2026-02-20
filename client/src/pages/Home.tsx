@@ -77,10 +77,12 @@ export default function Home() {
                   </div>
                   <div className="flex flex-col">
                     <h3 className="font-serif text-xl group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm font-medium">{designer.naturalFiberPercent}%</span>
-                      <span className="text-xs uppercase tracking-wider text-muted-foreground">Natural Fibers</span>
-                    </div>
+                    {designer.naturalFiberPercent != null && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm font-medium">{designer.naturalFiberPercent}%</span>
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">Natural Fibers</span>
+                      </div>
+                    )}
                   </div>
               </Link>
             ))}

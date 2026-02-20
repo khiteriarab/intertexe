@@ -207,10 +207,12 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                         <Heart className="w-4 h-4 fill-foreground" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-2 mt-auto pt-4 border-t border-border/40">
-                      <span className="text-xs uppercase tracking-widest text-muted-foreground">Material Score</span>
-                      <span className="text-sm font-medium ml-auto">{fav.designer.naturalFiberPercent}%</span>
-                    </div>
+                    {fav.designer.naturalFiberPercent != null && (
+                      <div className="flex items-center gap-2 mt-auto pt-4 border-t border-border/40">
+                        <span className="text-xs uppercase tracking-widest text-muted-foreground">Material Score</span>
+                        <span className="text-sm font-medium ml-auto">{fav.designer.naturalFiberPercent}%</span>
+                      </div>
+                    )}
                 </Link>
               ))}
             </div>

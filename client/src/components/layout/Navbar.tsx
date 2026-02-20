@@ -106,7 +106,7 @@ export function Navbar() {
                           data-testid={`search-result-${designer.slug}`}
                         >
                           <span className="font-serif text-base">{designer.name}</span>
-                          <span className="text-xs uppercase tracking-widest text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>
+                          {designer.naturalFiberPercent != null && <span className="text-xs uppercase tracking-widest text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>}
                         </Link>
                       ))}
                     </div>

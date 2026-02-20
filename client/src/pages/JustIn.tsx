@@ -56,12 +56,14 @@ export default function JustIn() {
                     <span className="text-xs uppercase tracking-widest text-muted-foreground">New Arrival</span>
                   </div>
                   <h2 className="text-4xl md:text-5xl font-serif group-hover:text-muted-foreground transition-colors">{featured.name}</h2>
-                  <p className="text-foreground/70 font-light leading-relaxed">{featured.description}</p>
+                  {featured.description && <p className="text-foreground/70 font-light leading-relaxed">{featured.description}</p>}
                   <div className="flex items-center gap-4 pt-4 border-t border-border/40">
-                    <div className="flex flex-col">
-                      <span className="text-3xl font-serif">{featured.naturalFiberPercent}%</span>
-                      <span className="text-xs uppercase tracking-widest text-muted-foreground">Natural Fibers</span>
-                    </div>
+                    {featured.naturalFiberPercent != null && (
+                      <div className="flex flex-col">
+                        <span className="text-3xl font-serif">{featured.naturalFiberPercent}%</span>
+                        <span className="text-xs uppercase tracking-widest text-muted-foreground">Natural Fibers</span>
+                      </div>
+                    )}
                     <div className="ml-auto flex items-center gap-2 text-sm uppercase tracking-widest group-hover:text-muted-foreground transition-colors">
                       View Profile <ArrowRight className="w-4 h-4" />
                     </div>
@@ -82,13 +84,15 @@ export default function JustIn() {
                         {designer.name.charAt(0)}
                       </div>
                       <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/40 to-transparent">
-                        <span className="text-white text-xs uppercase tracking-widest">{designer.naturalFiberPercent}% Natural</span>
-                      </div>
+                      {designer.naturalFiberPercent != null && (
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/40 to-transparent">
+                          <span className="text-white text-xs uppercase tracking-widest">{designer.naturalFiberPercent}% Natural</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col gap-1">
                       <h3 className="text-xl font-serif group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">{designer.description}</p>
+                      {designer.description && <p className="text-sm text-muted-foreground line-clamp-2">{designer.description}</p>}
                     </div>
                   </Link>
                 ))}
@@ -107,7 +111,7 @@ export default function JustIn() {
                       <span className="text-xs text-muted-foreground uppercase tracking-widest">{designer.status}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xl font-serif">{designer.naturalFiberPercent}%</span>
+                      {designer.naturalFiberPercent != null && <span className="text-xl font-serif">{designer.naturalFiberPercent}%</span>}
                       <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </div>
                   </Link>

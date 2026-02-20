@@ -112,19 +112,21 @@ export default function DesignerDetail() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 py-8 border-y border-border/40">
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">Material Score</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-6xl font-serif">{designer.naturalFiberPercent}%</span>
-              <span className="text-lg text-muted-foreground font-serif italic">Natural Fibers</span>
+          {designer.naturalFiberPercent != null && (
+            <div className="flex flex-col gap-2 py-8 border-y border-border/40">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Material Score</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-6xl font-serif">{designer.naturalFiberPercent}%</span>
+                <span className="text-lg text-muted-foreground font-serif italic">Natural Fibers</span>
+              </div>
+              <div className="w-full h-1 bg-secondary mt-4 relative">
+                <div 
+                  className="absolute top-0 left-0 h-full bg-foreground transition-all duration-700"
+                  style={{ width: `${designer.naturalFiberPercent}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full h-1 bg-secondary mt-4 relative">
-              <div 
-                className="absolute top-0 left-0 h-full bg-foreground transition-all duration-700"
-                style={{ width: `${designer.naturalFiberPercent}%` }}
-              />
-            </div>
-          </div>
+          )}
 
           <div className="flex flex-col gap-4">
             <span className="text-xs uppercase tracking-widest text-muted-foreground">About the Brand</span>

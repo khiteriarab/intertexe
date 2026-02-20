@@ -81,7 +81,9 @@ export default function Designers() {
                     <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 py-2" data-testid={`card-designer-${designer.slug}`}>
                         <div className="flex justify-between items-baseline">
                           <h3 className="text-xl font-serif group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
-                          <span className="text-xs tracking-wider text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>
+                          {designer.naturalFiberPercent != null && (
+                            <span className="text-xs tracking-wider text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>
+                          )}
                         </div>
                         <div className="h-px w-full bg-border/40 group-hover:bg-foreground/20 transition-colors" />
                     </Link>
