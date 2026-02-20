@@ -48,20 +48,20 @@ export default function Designers() {
       </header>
 
       <div className="flex flex-col md:flex-row gap-8 md:gap-12 mt-4 md:mt-8">
-        <aside className="hidden md:block w-8 shrink-0 sticky top-32 h-fit">
-          <nav className="flex flex-col gap-2 text-xs font-medium text-muted-foreground">
+        <aside className="hidden md:block w-8 shrink-0 sticky top-32 self-start max-h-[calc(100vh-10rem)] overflow-y-auto scrollbar-hide">
+          <nav className="flex flex-col gap-1.5 text-xs font-medium text-muted-foreground">
             {alphabet.map(letter => (
               <a 
                 key={letter} 
                 href={`#letter-${letter}`}
-                className={`hover:text-foreground transition-colors ${!grouped[letter] ? 'opacity-30 pointer-events-none' : ''}`}
+                className={`hover:text-foreground transition-colors leading-tight ${!grouped[letter] ? 'opacity-30 pointer-events-none' : ''}`}
                 data-testid={`link-jump-${letter}`}
               >
                 {letter}
               </a>
             ))}
             {grouped["#"] && (
-              <a href="#letter-#" className="hover:text-foreground transition-colors" data-testid="link-jump-#">#</a>
+              <a href="#letter-#" className="hover:text-foreground transition-colors leading-tight" data-testid="link-jump-#">#</a>
             )}
           </nav>
         </aside>
