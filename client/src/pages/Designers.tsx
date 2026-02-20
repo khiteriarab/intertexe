@@ -13,13 +13,18 @@ export default function Designers() {
   });
 
   const grouped = (designers as any[]).reduce((acc: Record<string, any[]>, designer: any) => {
-    const letter = designer.name.charAt(0).toUpperCase();
+    const firstChar = designer.name.charAt(0).toUpperCase();
+    const letter = /^[A-Z]$/.test(firstChar) ? firstChar : "#";
     if (!acc[letter]) acc[letter] = [];
     acc[letter].push(designer);
     return acc;
   }, {});
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const sortedKeys = [
+    ...alphabet.filter(l => grouped[l]),
+    ...(grouped["#"] ? ["#"] : []),
+  ];
 
   return (
     <div className="py-8 md:py-12 flex flex-col gap-12">
@@ -55,6 +60,9 @@ export default function Designers() {
                 {letter}
               </a>
             ))}
+            {grouped["#"] && (
+              <a href="#letter-#" className="hover:text-foreground transition-colors" data-testid="link-jump-#">#</a>
+            )}
           </nav>
         </aside>
 
@@ -73,9 +81,9 @@ export default function Designers() {
           ) : Object.entries(grouped).length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">No designers found.</div>
           ) : (
-            Object.keys(grouped).sort().map(letter => (
+            sortedKeys.map(letter => (
               <section key={letter} id={`letter-${letter}`} className="flex flex-col gap-6 scroll-mt-24">
-                <h2 className="text-4xl font-serif border-b border-border/40 pb-4 text-foreground/80">{letter}</h2>
+                <h2 className="text-4xl font-serif border-b border-border/40 pb-4 text-foreground/80">{letter === "#" ? "0-9 / Symbols" : letter}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {grouped[letter].map((designer: any) => (
                     <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 py-2" data-testid={`card-designer-${designer.slug}`}>

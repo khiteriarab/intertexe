@@ -43,9 +43,9 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Intertexe. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <span className="text-xs text-background/40 uppercase tracking-widest">Instagram</span>
-            <span className="text-xs text-background/40 uppercase tracking-widest">Pinterest</span>
-            <span className="text-xs text-background/40 uppercase tracking-widest">Newsletter</span>
+            <a href="https://instagram.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-instagram">Instagram</a>
+            <a href="https://tiktok.com/@intertexe" target="_blank" rel="noopener noreferrer" className="text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-tiktok">TikTok</a>
+            <a href="https://pinterest.com/shopintertexe" target="_blank" rel="noopener noreferrer" className="text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-pinterest">Pinterest</a>
           </div>
         </div>
       </div>
