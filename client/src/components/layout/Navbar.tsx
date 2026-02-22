@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { fetchDesigners } from "@/lib/supabase";
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
@@ -12,7 +12,7 @@ export function Navbar() {
 
   const { data: results = [] } = useQuery({
     queryKey: ["designerSearch", searchQuery],
-    queryFn: () => api.getDesigners(searchQuery),
+    queryFn: () => fetchDesigners(searchQuery),
     enabled: searchQuery.length >= 2,
   });
 

@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { fetchDesigners } from "@/lib/supabase";
 
 export default function Designers() {
   const [search, setSearch] = useState("");
 
   const { data: designers = [], isLoading } = useQuery({
     queryKey: ["designers", search],
-    queryFn: () => api.getDesigners(search || undefined),
+    queryFn: () => fetchDesigners(search || undefined),
   });
 
   const grouped = (designers as any[]).reduce((acc: Record<string, any[]>, designer: any) => {

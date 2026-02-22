@@ -1,12 +1,12 @@
 import { Link } from "wouter";
 import { ArrowRight, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { fetchDesigners } from "@/lib/supabase";
 
 export default function JustIn() {
   const { data: designers = [], isLoading } = useQuery({
     queryKey: ["designers"],
-    queryFn: () => api.getDesigners(),
+    queryFn: () => fetchDesigners(),
   });
 
   const sorted = [...(designers as any[])].sort(

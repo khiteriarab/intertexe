@@ -2,6 +2,7 @@ import { useParams, Link } from "wouter";
 import { Heart, ChevronLeft } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { fetchDesignerBySlug } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,7 +14,7 @@ export default function DesignerDetail() {
 
   const { data: designer, isLoading } = useQuery({
     queryKey: ["designer", slug],
-    queryFn: () => api.getDesigner(slug!),
+    queryFn: () => fetchDesignerBySlug(slug!),
     enabled: !!slug,
   });
 
