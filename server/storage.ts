@@ -28,6 +28,31 @@ function mapSupabaseDesigner(row: any): Designer {
   };
 }
 
+function syncToSupabase(table: string, operation: "insert" | "upsert" | "delete", data: any, match?: any) {
+  if (!supabase) return;
+  (async () => {
+    try {
+      if (operation === "insert") {
+        const { error } = await supabase.from(table).insert(data);
+        if (error) throw error;
+      } else if (operation === "upsert") {
+        const { error } = await supabase.from(table).upsert(data);
+        if (error) throw error;
+      } else if (operation === "delete") {
+        let query = supabase.from(table).delete();
+        for (const [key, value] of Object.entries(match)) {
+          query = query.eq(key, value as string);
+        }
+        const { error } = await query;
+        if (error) throw error;
+      }
+      console.log(`Supabase sync: ${operation} on ${table} OK`);
+    } catch (err: any) {
+      console.error(`Supabase sync failed: ${operation} on ${table} -`, err.message);
+    }
+  })();
+}
+
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -50,7 +75,7 @@ export interface IStorage {
 }
 
 let designerCache: { data: Designer[]; timestamp: number } | null = null;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -70,6 +95,15 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
+    syncToSupabase("users", "insert", {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      password: "synced-from-replit",
+      username: user.username,
+      subscription_tier: user.subscriptionTier || "free",
+      fabric_persona: user.fabricPersona || null,
+    });
     return user;
   }
 
@@ -191,6 +225,11 @@ export class DatabaseStorage implements IStorage {
 
   async addFavorite(fav: InsertFavorite): Promise<Favorite> {
     const [created] = await db.insert(favorites).values(fav).returning();
+    syncToSupabase("favorites", "insert", {
+      id: created.id,
+      user_id: created.userId,
+      designer_id: created.designerId,
+    });
     return created;
   }
 
@@ -198,6 +237,10 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(favorites)
       .where(and(eq(favorites.userId, userId), eq(favorites.designerId, designerId)));
+    syncToSupabase("favorites", "delete", null, {
+      user_id: userId,
+      designer_id: designerId,
+    });
   }
 
   async isFavorited(userId: string, designerId: string): Promise<boolean> {
@@ -210,6 +253,16 @@ export class DatabaseStorage implements IStorage {
 
   async saveQuizResult(result: InsertQuizResult): Promise<QuizResult> {
     const [created] = await db.insert(quizResults).values(result).returning();
+    syncToSupabase("quiz_results", "insert", {
+      id: created.id,
+      user_id: created.userId || null,
+      materials: created.materials,
+      price_range: created.priceRange,
+      synthetic_tolerance: created.syntheticTolerance,
+      favorite_brands: created.favoriteBrands || [],
+      profile_type: created.profileType || null,
+      recommendation: created.recommendation || null,
+    });
     return created;
   }
 
@@ -219,6 +272,13 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPersona(userId: string, persona: string): Promise<void> {
     await db.update(users).set({ fabricPersona: persona }).where(eq(users.id, userId));
+    if (supabase) {
+      supabase.from("users").update({ fabric_persona: persona }).eq("id", userId)
+        .then(({ error }) => {
+          if (error) console.error("Supabase persona sync failed:", error.message);
+          else console.log("Supabase sync: update persona OK");
+        });
+    }
   }
 }
 

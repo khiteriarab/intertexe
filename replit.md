@@ -4,6 +4,14 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
+- **2026-02-22**: Supabase dual-write sync for Vercel deployment
+  - server/storage.ts: All user CRUD operations now sync to Supabase (fire-and-forget)
+  - Users, quiz_results, favorites tables synced on create/update/delete
+  - Password hashes NOT synced (security) — placeholder value sent instead
+  - Column mapping: camelCase (local PG) → snake_case (Supabase)
+  - syncToSupabase() helper with error logging, non-blocking async
+  - User persona updates sync to Supabase users table
+  - Enables Vercel static deployment to read user data from Supabase
 - **2026-02-22**: Fabric persona system (5 categories)
   - shared/personas.ts: Defines 5 fabric personas (The Purist, The Refined Romantic, The Structured Minimalist, The Conscious Curator, The Performance Luxe)
   - assignPersona() deterministically assigns persona based on quiz answers (materials + synthetic tolerance)
