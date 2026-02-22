@@ -2,11 +2,23 @@ import { useEffect, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { ExternalLink } from "lucide-react";
 
+function isValidExternalUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export default function Leaving() {
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
-  const url = params.get("url") || "";
+  const rawUrl = params.get("url") || "";
   const brand = params.get("brand") || "our partner";
+
+  const isValid = isValidExternalUrl(rawUrl);
+  const url = isValid ? rawUrl : "";
 
   const [countdown, setCountdown] = useState(5);
 
@@ -29,9 +41,9 @@ export default function Leaving() {
     return (
       <div className="py-20 text-center flex flex-col items-center gap-6" data-testid="leaving-error">
         <h1 className="text-2xl md:text-3xl font-serif">Invalid link</h1>
-        <p className="text-sm text-muted-foreground">No destination was provided.</p>
-        <Link href="/" className="border border-foreground px-8 py-3 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground hover:text-background transition-colors active:scale-95" data-testid="link-back-home">
-          Back to INTERTEXE
+        <p className="text-sm text-muted-foreground">The destination provided is not valid.</p>
+        <Link href="/designers" className="border border-foreground px-8 py-3 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground hover:text-background transition-colors active:scale-95" data-testid="link-back-directory">
+          Back to Directory
         </Link>
       </div>
     );
@@ -58,6 +70,7 @@ export default function Leaving() {
       <div className="flex flex-col items-center gap-6 w-full">
         <a
           href={url}
+          rel="noopener noreferrer"
           className="flex items-center justify-center gap-3 w-full max-w-sm bg-foreground text-background px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground/90 transition-colors active:scale-[0.98]"
           data-testid="link-continue-to-brand"
         >
