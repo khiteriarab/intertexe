@@ -14,6 +14,7 @@ export interface Designer {
   status: string;
   naturalFiberPercent: number | null;
   description: string | null;
+  website: string | null;
   createdAt: string | null;
 }
 
@@ -25,6 +26,7 @@ function mapRow(row: any): Designer {
     status: row.status || "Pending",
     naturalFiberPercent: row.natural_fiber_percent ?? null,
     description: row.description ?? null,
+    website: row.website ?? null,
     createdAt: row.created_at ?? null,
   };
 }

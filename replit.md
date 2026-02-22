@@ -4,6 +4,15 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
+- **2026-02-22**: Fabric standards module and redirect interstitial
+  - shared/fabric-standards.ts: Defines allowed natural fibers, banned synthetics (polyester etc.), lining tolerance rules (max 15% synthetic in linings)
+  - evaluateProduct() validates products against INTERTEXE quality standards for affiliate API integration
+  - parseFabricString() parses common fabric composition formats from partner APIs
+  - /leaving page: Branded interstitial shown before redirecting users to partner websites
+  - 5-second auto-redirect countdown with manual "Continue to [Brand]" button
+  - Affiliate disclosure included on redirect page
+  - "Shop [Brand]" button added to designer detail pages, routing through /leaving
+  - Designer interface updated to support website URL field (ready for Supabase column)
 - **2026-02-22**: Signup flow, subscription gating, SEO, and analytics
   - After signup → redirect to /quiz (value-tied accounts)
   - Quiz results show "Save your results" banner if not logged in; auto-save if logged in
