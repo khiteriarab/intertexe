@@ -4,14 +4,24 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
-- **2026-02-22**: Supabase dual-write sync for Vercel deployment
+- **2026-02-22**: Frontend-direct Supabase mode for Vercel deployment
+  - client/src/lib/supabase.ts: Full Supabase Auth + direct CRUD for quiz/favorites/users
+  - isVercelMode flag: VITE_USE_SUPABASE_AUTH=true activates direct Supabase writes
+  - Supabase Auth (signUp/signInWithPassword) replaces Passport.js on Vercel
+  - On signup: creates Supabase Auth user + inserts into custom users table
+  - Quiz results write directly to Supabase quiz_results table (text[] arrays)
+  - Favorites write directly to Supabase favorites table
+  - Persona assignment runs client-side using shared/personas.ts
+  - Login supports both email and username (username→email lookup if needed)
+  - api.ts routes: isVercelMode → Supabase direct, else → Express /api/* routes
+  - Replit mode unchanged: all API calls go through Express backend
+- **2026-02-22**: Supabase dual-write sync (server-side)
   - server/storage.ts: All user CRUD operations now sync to Supabase (fire-and-forget)
   - Users, quiz_results, favorites tables synced on create/update/delete
   - Password hashes NOT synced (security) — placeholder value sent instead
   - Column mapping: camelCase (local PG) → snake_case (Supabase)
   - syncToSupabase() helper with error logging, non-blocking async
   - User persona updates sync to Supabase users table
-  - Enables Vercel static deployment to read user data from Supabase
 - **2026-02-22**: Fabric persona system (5 categories)
   - shared/personas.ts: Defines 5 fabric personas (The Purist, The Refined Romantic, The Structured Minimalist, The Conscious Curator, The Performance Luxe)
   - assignPersona() deterministically assigns persona based on quiz answers (materials + synthetic tolerance)
@@ -111,4 +121,11 @@ INTERTEXE is a luxury fashion discovery and curation platform focused on **mater
 - `SUPABASE_ANON_KEY` - Supabase anonymous key (server-side)
 - `VITE_SUPABASE_URL` - Supabase project URL (frontend, required for Vercel)
 - `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key (frontend, required for Vercel)
+- `VITE_USE_SUPABASE_AUTH` - Set to "true" on Vercel to enable direct Supabase auth/writes (not set on Replit)
 - `SESSION_SECRET` - Optional, defaults to dev secret
+
+### Vercel Environment Variables
+Set these in Vercel project settings:
+- `VITE_SUPABASE_URL` = your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` = your Supabase anon key
+- `VITE_USE_SUPABASE_AUTH` = `true`

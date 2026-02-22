@@ -1,4 +1,18 @@
 import { queryClient } from "./queryClient";
+import {
+  isVercelMode,
+  supabaseSignup,
+  supabaseLogin,
+  supabaseLogout,
+  supabaseGetMe,
+  supabaseSubmitQuiz,
+  supabaseGetQuizResults,
+  supabaseGetRecommendation,
+  supabaseGetFavorites,
+  supabaseAddFavorite,
+  supabaseRemoveFavorite,
+  supabaseCheckFavorite,
+} from "./supabase";
 
 async function handleResponse(res: Response) {
   if (!res.ok) {
@@ -14,6 +28,9 @@ function apiFetch(url: string, options: RequestInit = {}) {
 
 export const api = {
   async login(username: string, password: string) {
+    if (isVercelMode) {
+      return supabaseLogin(username, password);
+    }
     const res = await apiFetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -23,6 +40,9 @@ export const api = {
   },
 
   async signup(data: { username: string; email: string; password: string; name?: string }) {
+    if (isVercelMode) {
+      return supabaseSignup({ email: data.email, password: data.password, name: data.name });
+    }
     const res = await apiFetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -32,11 +52,17 @@ export const api = {
   },
 
   async logout() {
+    if (isVercelMode) {
+      return supabaseLogout();
+    }
     const res = await apiFetch("/api/auth/logout", { method: "POST" });
     return handleResponse(res);
   },
 
   async getMe() {
+    if (isVercelMode) {
+      return supabaseGetMe();
+    }
     const res = await apiFetch("/api/auth/me");
     if (res.status === 401) return null;
     return handleResponse(res);
@@ -54,12 +80,18 @@ export const api = {
   },
 
   async getFavorites() {
+    if (isVercelMode) {
+      return supabaseGetFavorites();
+    }
     const res = await apiFetch("/api/favorites");
     if (res.status === 401) return [];
     return handleResponse(res);
   },
 
   async addFavorite(designerId: string) {
+    if (isVercelMode) {
+      return supabaseAddFavorite(designerId);
+    }
     const res = await apiFetch("/api/favorites", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -69,11 +101,17 @@ export const api = {
   },
 
   async removeFavorite(designerId: string) {
+    if (isVercelMode) {
+      return supabaseRemoveFavorite(designerId);
+    }
     const res = await apiFetch(`/api/favorites/${designerId}`, { method: "DELETE" });
     return handleResponse(res);
   },
 
   async checkFavorite(designerId: string) {
+    if (isVercelMode) {
+      return supabaseCheckFavorite(designerId);
+    }
     const res = await apiFetch(`/api/favorites/check/${designerId}`);
     return handleResponse(res);
   },
@@ -86,6 +124,9 @@ export const api = {
     profileType?: string;
     recommendation?: string;
   }) {
+    if (isVercelMode) {
+      return supabaseSubmitQuiz(data);
+    }
     const res = await apiFetch("/api/quiz", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -95,6 +136,9 @@ export const api = {
   },
 
   async getQuizResults() {
+    if (isVercelMode) {
+      return supabaseGetQuizResults();
+    }
     const res = await apiFetch("/api/quiz/results");
     if (res.status === 401) return [];
     return handleResponse(res);
@@ -106,6 +150,9 @@ export const api = {
     syntheticTolerance: string;
     favoriteBrands: string[];
   }) {
+    if (isVercelMode) {
+      return supabaseGetRecommendation(data);
+    }
     const res = await apiFetch("/api/recommend", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
