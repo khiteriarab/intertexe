@@ -7,7 +7,95 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
+import { getBrandScreenshotUrl, getBrandLogoUrl } from "@/lib/brand-images";
 import { useState } from "react";
+
+function BrandImage({ name, className, size = "screenshot" }: { name: string; className?: string; size?: "screenshot" | "logo" }) {
+  const [failed, setFailed] = useState(false);
+  const url = size === "logo" ? getBrandLogoUrl(name) : getBrandScreenshotUrl(name);
+
+  if (!url || failed) {
+    return (
+      <div className={`flex items-center justify-center bg-secondary ${className}`}>
+        <span className="font-serif text-4xl md:text-6xl text-muted-foreground/15">{name.charAt(0)}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative bg-secondary overflow-hidden ${className}`}>
+      <img
+        src={url}
+        alt={`${name} website`}
+        className="absolute inset-0 w-full h-full object-cover object-top"
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
+      {failed === false && (
+        <div className="absolute inset-0 flex items-center justify-center font-serif text-4xl md:text-6xl text-muted-foreground/15">
+          {name.charAt(0)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const brandTier = getQualityTier(brand.naturalFiberPercent);
+  const screenshotUrl = getBrandScreenshotUrl(brand.name, 400);
+
+  const card = (
+    <div className="bg-secondary/30 border border-border/20 hover:border-border/50 transition-all flex flex-col group" data-testid={`card-similar-${index}`}>
+      <div className="aspect-[4/3] bg-secondary relative overflow-hidden">
+        {screenshotUrl && !imgFailed ? (
+          <img
+            src={screenshotUrl}
+            alt={`${brand.name} website`}
+            className="absolute inset-0 w-full h-full object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-serif text-3xl md:text-4xl text-muted-foreground/15 group-hover:text-muted-foreground/25 transition-colors">
+              {brand.name.charAt(0)}
+            </span>
+          </div>
+        )}
+        {brand.naturalFiberPercent != null && (
+          <div className="absolute top-2 left-2 z-10">
+            <span className={`px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.1em] font-medium ${getTierColor(brandTier.tier)}`}>
+              {brandTier.shortLabel}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
+        <h3 className="font-serif text-sm md:text-base leading-snug">{brand.name}</h3>
+        {brand.reason && (
+          <p className="text-[11px] md:text-xs text-muted-foreground leading-relaxed line-clamp-2">{brand.reason}</p>
+        )}
+        {brand.naturalFiberPercent != null && (
+          <div className="flex items-center gap-1.5 mt-auto pt-2">
+            <div className="w-12 h-1 bg-secondary relative overflow-hidden">
+              <div className="absolute top-0 left-0 h-full bg-foreground/60" style={{ width: `${brand.naturalFiberPercent}%` }} />
+            </div>
+            <span className="text-[10px] text-muted-foreground">{brand.naturalFiberPercent}%</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return brand.slug ? (
+    <Link href={`/designers/${brand.slug}`} className="contents">
+      {card}
+    </Link>
+  ) : (
+    <div>{card}</div>
+  );
+}
 
 export default function DesignerDetail() {
   const { slug } = useParams();
@@ -109,11 +197,9 @@ export default function DesignerDetail() {
       </Link>
 
       <header className="flex flex-col md:flex-row gap-6 md:gap-16 items-start">
-        <div className="w-full md:w-1/3 aspect-[3/4] bg-secondary relative overflow-hidden flex-shrink-0 hidden md:block">
-          <div className="absolute inset-0 flex items-center justify-center font-serif text-6xl md:text-8xl text-muted-foreground/20">
-            {designer.name.charAt(0)}
-          </div>
-          <div className="absolute top-4 left-4">
+        <div className="w-full md:w-1/3 aspect-[3/4] relative overflow-hidden flex-shrink-0 hidden md:block">
+          <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
+          <div className="absolute top-4 left-4 z-10">
             <span className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
               {tier.verdict}
             </span>
@@ -228,47 +314,9 @@ export default function DesignerDetail() {
           </div>
         ) : similarBrands && similarBrands.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {similarBrands.map((brand: any, i: number) => {
-              const brandTier = getQualityTier(brand.naturalFiberPercent);
-              const card = (
-                <div className="bg-secondary/30 border border-border/20 hover:border-border/50 transition-all flex flex-col group" data-testid={`card-similar-${i}`}>
-                  <div className="aspect-[4/3] bg-secondary relative overflow-hidden flex items-center justify-center">
-                    <span className="font-serif text-3xl md:text-4xl text-muted-foreground/15 group-hover:text-muted-foreground/25 transition-colors">
-                      {brand.name.charAt(0)}
-                    </span>
-                    {brand.naturalFiberPercent != null && (
-                      <div className="absolute top-2 left-2">
-                        <span className={`px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.1em] font-medium ${getTierColor(brandTier.tier)}`}>
-                          {brandTier.shortLabel}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
-                    <h3 className="font-serif text-sm md:text-base leading-snug">{brand.name}</h3>
-                    {brand.reason && (
-                      <p className="text-[11px] md:text-xs text-muted-foreground leading-relaxed line-clamp-2">{brand.reason}</p>
-                    )}
-                    {brand.naturalFiberPercent != null && (
-                      <div className="flex items-center gap-1.5 mt-auto pt-2">
-                        <div className="w-12 h-1 bg-secondary relative overflow-hidden">
-                          <div className="absolute top-0 left-0 h-full bg-foreground/60" style={{ width: `${brand.naturalFiberPercent}%` }} />
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">{brand.naturalFiberPercent}%</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-
-              return brand.slug ? (
-                <Link key={i} href={`/designers/${brand.slug}`} className="contents">
-                  {card}
-                </Link>
-              ) : (
-                <div key={i}>{card}</div>
-              );
-            })}
+            {similarBrands.map((brand: any, i: number) => (
+              <SimilarBrandCard key={i} brand={brand} index={i} />
+            ))}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground italic" data-testid="text-similar-loading">Curating recommendations...</p>
