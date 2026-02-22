@@ -1,12 +1,11 @@
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import type { Express, Request, Response, NextFunction } from "express";
 import type { User } from "@shared/schema";
-import { analyticsEvents } from "@shared/schema";
+import { authTokens, analyticsEvents } from "@shared/schema";
 import { db } from "./db";
+import { eq, lt } from "drizzle-orm";
 import { sendWelcomeEmail } from "./resend";
 
 const scryptAsync = promisify(scrypt);
@@ -23,37 +22,44 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
   return timingSafeEqual(Buffer.from(hashed, "hex"), buf);
 }
 
-const tokenStore = new Map<string, { userId: string; expiresAt: number }>();
-
 function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
-function cleanExpiredTokens() {
-  const now = Date.now();
-  for (const [token, data] of tokenStore) {
-    if (data.expiresAt < now) tokenStore.delete(token);
-  }
-}
-
-setInterval(cleanExpiredTokens, 60 * 60 * 1000);
-
 const TOKEN_TTL = 30 * 24 * 60 * 60 * 1000;
+
+async function storeToken(userId: string): Promise<string> {
+  const token = generateToken();
+  const expiresAt = new Date(Date.now() + TOKEN_TTL);
+  await db.insert(authTokens).values({ token, userId, expiresAt });
+  return token;
+}
 
 async function getUserFromToken(req: Request): Promise<User | null> {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) return null;
 
   const token = authHeader.slice(7);
-  const entry = tokenStore.get(token);
-  if (!entry || entry.expiresAt < Date.now()) {
-    if (entry) tokenStore.delete(token);
+  try {
+    const [entry] = await db.select().from(authTokens).where(eq(authTokens.token, token)).limit(1);
+    if (!entry || entry.expiresAt < new Date()) {
+      if (entry) {
+        db.delete(authTokens).where(eq(authTokens.token, token)).catch(() => {});
+      }
+      return null;
+    }
+    const user = await storage.getUser(entry.userId);
+    return user || null;
+  } catch {
     return null;
   }
-
-  const user = await storage.getUser(entry.userId);
-  return user || null;
 }
+
+setInterval(async () => {
+  try {
+    await db.delete(authTokens).where(lt(authTokens.expiresAt, new Date()));
+  } catch {}
+}, 60 * 60 * 1000);
 
 declare global {
   namespace Express {
@@ -115,9 +121,7 @@ export function setupAuth(app: Express) {
       sendWelcomeEmail(email, name).catch(() => {});
       db.insert(analyticsEvents).values({ event: "signup", userId: user.id }).catch(() => {});
 
-      const token = generateToken();
-      tokenStore.set(token, { userId: user.id, expiresAt: Date.now() + TOKEN_TTL });
-
+      const token = await storeToken(user.id);
       const { password: _, ...safeUser } = user;
       return res.status(201).json({ ...safeUser, token });
     } catch (err: any) {
@@ -140,9 +144,7 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      const token = generateToken();
-      tokenStore.set(token, { userId: user.id, expiresAt: Date.now() + TOKEN_TTL });
-
+      const token = await storeToken(user.id);
       const { password: _, ...safeUser } = user;
       return res.json({ ...safeUser, token });
     } catch (err: any) {
@@ -150,10 +152,11 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/auth/logout", (req, res) => {
+  app.post("/api/auth/logout", async (req, res) => {
     const authHeader = req.headers.authorization;
     if (authHeader?.startsWith("Bearer ")) {
-      tokenStore.delete(authHeader.slice(7));
+      const token = authHeader.slice(7);
+      db.delete(authTokens).where(eq(authTokens.token, token)).catch(() => {});
     }
     return res.json({ message: "Logged out" });
   });

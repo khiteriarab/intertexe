@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles, UserCheck } from "lucide-react";
+import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles, UserCheck, MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
@@ -34,12 +34,13 @@ export function Navbar() {
     { name: "Designers", href: "/designers" },
     { name: "Materials", href: "/materials" },
     { name: "Quiz", href: "/quiz" },
+    { name: "Chat", href: "/chat" },
   ];
 
   const mobileNavLinks = [
     { name: "Home", href: "/", icon: Home },
-    { name: "New", href: "/just-in", icon: Sparkles },
     { name: "Designers", href: "/designers", icon: Grid },
+    { name: "Chat", href: "/chat", icon: MessageCircle },
     { name: "Quiz", href: "/quiz", icon: List },
     { name: "Account", href: "/account", icon: isAuthenticated ? UserCheck : User },
   ];
@@ -48,8 +49,9 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/40">
         <div className="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="font-serif text-2xl tracking-widest uppercase font-medium text-foreground" data-testid="link-home-logo">
-            Intertexe
+          <Link href="/" className="flex flex-col items-start leading-none" data-testid="link-home-logo">
+            <span className="font-serif text-[11px] tracking-[0.35em] uppercase text-muted-foreground font-normal">The House of</span>
+            <span className="font-serif text-xl md:text-2xl tracking-[0.2em] uppercase font-medium text-foreground -mt-0.5">Intertexe</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">

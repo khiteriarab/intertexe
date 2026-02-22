@@ -42,6 +42,14 @@ export const quizResults = pgTable("quiz_results", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const authTokens = pgTable("auth_tokens", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  token: text("token").notNull().unique(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const analyticsEvents = pgTable("analytics_events", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   event: text("event").notNull(),

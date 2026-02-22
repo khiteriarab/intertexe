@@ -4,6 +4,30 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
+- **2026-02-22**: AI Chat Platform (Material Advisor)
+  - Full chat UI with streaming responses via OpenAI (gpt-5.1)
+  - Custom system prompt: fashion fabrics, designer quality, sustainability expertise
+  - Conversations persisted to DB (conversations + messages tables)
+  - Suggested questions for new users
+  - Sidebar with conversation history (create/delete/switch)
+  - Mobile-responsive: fullscreen sidebar on mobile, compact input
+  - Added /chat route + "Chat" in desktop nav + mobile bottom nav
+- **2026-02-22**: Material Detail Pages
+  - Expanded material data: origin, description, characteristics, care, sustainability, search keywords
+  - Individual material detail pages at /materials/:slug
+  - Material cards now clickable links on Materials page
+  - Each material page shows recommended designers using natural fibers
+  - Rich editorial content for Cotton, Silk, Linen, Wool, Cashmere, Leather, Denim, Tencel/Modal, Viscose/Rayon, Alpaca
+- **2026-02-22**: Auth token persistence (DB-backed)
+  - auth_tokens table stores tokens in PostgreSQL (survives server restarts)
+  - Replaced in-memory Map token store with DB queries
+  - Hourly cleanup of expired tokens
+  - Fixes login not working on published/deployed site
+- **2026-02-22**: Quiz brands fix + Navbar logo
+  - Quiz brands step: loads 500 designers (not all 11,909) + Supabase search for typed queries
+  - Loading state shown while designers load on mobile
+  - Navbar: stacked "The House of / INTERTEXE" luxury logo treatment
+  - Mobile nav: replaced "New" with "Chat" icon
 - **2026-02-22**: Frontend-direct Supabase mode for Vercel deployment
   - client/src/lib/supabase.ts: Full Supabase Auth + direct CRUD for quiz/favorites/users
   - isVercelMode flag: VITE_USE_SUPABASE_AUTH=true activates direct Supabase writes

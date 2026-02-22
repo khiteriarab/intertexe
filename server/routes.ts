@@ -7,6 +7,7 @@ import { assignPersona } from "@shared/personas";
 import OpenAI from "openai";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
+import { registerChatRoutes } from "./replit_integrations/chat";
 
 async function trackEvent(event: string, userId?: string, metadata?: Record<string, any>) {
   try {
@@ -25,6 +26,7 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   setupAuth(app);
+  registerChatRoutes(app);
 
   // ─── Designers ─────────────────────────────
   app.get("/api/designers", async (req, res) => {

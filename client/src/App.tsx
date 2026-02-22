@@ -26,6 +26,8 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import MaterialDetail from "@/pages/MaterialDetail";
+import Chat from "@/pages/Chat";
 import Leaving from "@/pages/Leaving";
 
 function Router() {
@@ -38,7 +40,9 @@ function Router() {
         <Route path="/designers" component={Designers} />
         <Route path="/designers/:slug" component={DesignerDetail} />
         <Route path="/materials" component={Materials} />
+        <Route path="/materials/:slug" component={MaterialDetail} />
         <Route path="/quiz" component={Quiz} />
+        <Route path="/chat" component={Chat} />
         <Route path="/account" component={Account} />
         <Route path="/about" component={About} />
         <Route path="/contact" component={Contact} />

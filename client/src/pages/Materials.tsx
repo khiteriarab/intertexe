@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { MATERIALS } from "@/lib/data";
 
 export default function Materials() {
@@ -18,7 +19,6 @@ export default function Materials() {
       </header>
 
       <div className="flex flex-col gap-12 md:gap-20">
-        {/* Plant Based */}
         <section className="flex flex-col gap-6 md:gap-8">
           <div className="flex flex-col gap-1.5 md:gap-2 border-b border-border/40 pb-3 md:pb-4">
             <h2 className="text-2xl md:text-3xl font-serif">Plant-Based Fibers</h2>
@@ -61,7 +61,7 @@ export default function Materials() {
 
 function MaterialCard({ material }: { material: any }) {
   return (
-    <div className="group cursor-pointer flex flex-col gap-3 md:gap-4 active:scale-[0.97] transition-transform" data-testid={`card-material-${material.id}`}>
+    <Link href={`/materials/${material.slug}`} className="group flex flex-col gap-3 md:gap-4 active:scale-[0.97] transition-transform" data-testid={`card-material-${material.id}`}>
       <div className="aspect-square bg-secondary relative overflow-hidden flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-foreground/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <span className="font-serif text-2xl md:text-3xl text-muted-foreground/30">{material.name.charAt(0)}</span>
@@ -72,6 +72,6 @@ function MaterialCard({ material }: { material: any }) {
           Explore
         </span>
       </div>
-    </div>
+    </Link>
   );
 }

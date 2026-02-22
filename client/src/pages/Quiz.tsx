@@ -24,9 +24,10 @@ export default function Quiz() {
   const [currentStep, setCurrentStep] = useState(0);
   const [recommendation, setRecommendation] = useState<any>(null);
 
-  const { data: designers = [] } = useQuery({
-    queryKey: ["designers"],
-    queryFn: () => fetchDesigners(),
+  const { data: designers = [], isLoading: designersLoading } = useQuery({
+    queryKey: ["designers-quiz"],
+    queryFn: () => fetchDesigners(undefined, 500),
+    staleTime: 10 * 60 * 1000,
   });
 
   const [selections, setSelections] = useState({
@@ -224,6 +225,7 @@ export default function Quiz() {
         {currentStep === 3 && (
           <BrandsStep
             designers={designers}
+            designersLoading={designersLoading}
             selectedBrands={selections.brands}
             onToggle={(name: string) => toggleSelection('brands', name)}
           />
@@ -245,10 +247,18 @@ export default function Quiz() {
   );
 }
 
-function BrandsStep({ designers, selectedBrands, onToggle }: { designers: any[]; selectedBrands: string[]; onToggle: (name: string) => void }) {
+function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: { designers: any[]; designersLoading: boolean; selectedBrands: string[]; onToggle: (name: string) => void }) {
   const [brandSearch, setBrandSearch] = useState("");
 
+  const { data: searchedDesigners = [] } = useQuery({
+    queryKey: ["designers-search", brandSearch],
+    queryFn: () => fetchDesigners(brandSearch, 20),
+    enabled: brandSearch.trim().length >= 2,
+    staleTime: 60 * 1000,
+  });
+
   const popularBrands = useMemo(() => {
+    if (designers.length === 0) return [];
     const popular = [
       "Hermès", "Brunello Cucinelli", "Loro Piana", "The Row", "Zegna",
       "Max Mara", "Jil Sander", "Bottega Veneta", "Auralee", "Lemaire",
@@ -263,13 +273,14 @@ function BrandsStep({ designers, selectedBrands, onToggle }: { designers: any[];
 
   const searchResults = useMemo(() => {
     if (!brandSearch.trim()) return [];
+    if (searchedDesigners.length > 0) return searchedDesigners.slice(0, 12);
     const q = brandSearch.toLowerCase().trim();
     const startsWith = (designers as any[])
       .filter((d: any) => d.name.toLowerCase().startsWith(q));
     const contains = (designers as any[])
       .filter((d: any) => !d.name.toLowerCase().startsWith(q) && d.name.toLowerCase().includes(q));
     return [...startsWith, ...contains].slice(0, 12);
-  }, [designers, brandSearch]);
+  }, [designers, searchedDesigners, brandSearch]);
 
   const isSearching = brandSearch.trim().length > 0;
 
@@ -313,6 +324,13 @@ function BrandsStep({ designers, selectedBrands, onToggle }: { designers: any[];
               {name} <X className="w-3 h-3" />
             </button>
           ))}
+        </div>
+      )}
+
+      {designersLoading && !isSearching && (
+        <div className="flex flex-col items-center gap-3 py-6">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <span className="text-xs text-muted-foreground uppercase tracking-widest">Loading brands...</span>
         </div>
       )}
 
