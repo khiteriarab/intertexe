@@ -8,10 +8,13 @@ async function handleResponse(res: Response) {
   return res.json();
 }
 
+function apiFetch(url: string, options: RequestInit = {}) {
+  return fetch(url, { ...options, credentials: "include" });
+}
+
 export const api = {
-  // Auth
   async login(username: string, password: string) {
-    const res = await fetch("/api/auth/login", {
+    const res = await apiFetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -20,7 +23,7 @@ export const api = {
   },
 
   async signup(data: { username: string; email: string; password: string; name?: string }) {
-    const res = await fetch("/api/auth/signup", {
+    const res = await apiFetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -29,37 +32,35 @@ export const api = {
   },
 
   async logout() {
-    const res = await fetch("/api/auth/logout", { method: "POST" });
+    const res = await apiFetch("/api/auth/logout", { method: "POST" });
     return handleResponse(res);
   },
 
   async getMe() {
-    const res = await fetch("/api/auth/me");
+    const res = await apiFetch("/api/auth/me");
     if (res.status === 401) return null;
     return handleResponse(res);
   },
 
-  // Designers
   async getDesigners(query?: string) {
     const url = query ? `/api/designers?q=${encodeURIComponent(query)}` : "/api/designers";
-    const res = await fetch(url);
+    const res = await apiFetch(url);
     return handleResponse(res);
   },
 
   async getDesigner(slug: string) {
-    const res = await fetch(`/api/designers/${slug}`);
+    const res = await apiFetch(`/api/designers/${slug}`);
     return handleResponse(res);
   },
 
-  // Favorites
   async getFavorites() {
-    const res = await fetch("/api/favorites");
+    const res = await apiFetch("/api/favorites");
     if (res.status === 401) return [];
     return handleResponse(res);
   },
 
   async addFavorite(designerId: string) {
-    const res = await fetch("/api/favorites", {
+    const res = await apiFetch("/api/favorites", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ designerId }),
@@ -68,16 +69,15 @@ export const api = {
   },
 
   async removeFavorite(designerId: string) {
-    const res = await fetch(`/api/favorites/${designerId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/favorites/${designerId}`, { method: "DELETE" });
     return handleResponse(res);
   },
 
   async checkFavorite(designerId: string) {
-    const res = await fetch(`/api/favorites/check/${designerId}`);
+    const res = await apiFetch(`/api/favorites/check/${designerId}`);
     return handleResponse(res);
   },
 
-  // Quiz
   async submitQuiz(data: {
     materials: string[];
     priceRange: string;
@@ -86,7 +86,7 @@ export const api = {
     profileType?: string;
     recommendation?: string;
   }) {
-    const res = await fetch("/api/quiz", {
+    const res = await apiFetch("/api/quiz", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -95,19 +95,18 @@ export const api = {
   },
 
   async getQuizResults() {
-    const res = await fetch("/api/quiz/results");
+    const res = await apiFetch("/api/quiz/results");
     if (res.status === 401) return [];
     return handleResponse(res);
   },
 
-  // AI
   async getRecommendation(data: {
     materials: string[];
     priceRange: string;
     syntheticTolerance: string;
     favoriteBrands: string[];
   }) {
-    const res = await fetch("/api/recommend", {
+    const res = await apiFetch("/api/recommend", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

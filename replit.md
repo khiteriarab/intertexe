@@ -4,6 +4,10 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
+- **2026-02-22**: Resend welcome email on signup
+  - server/resend.ts: Resend client via Replit connector (fresh credentials per send)
+  - Branded HTML email with INTERTEXE luxury aesthetic (Georgia serif, #111 accents)
+  - Fire-and-forget on signup — doesn't block account creation
 - **2026-02-22**: Frontend-direct Supabase integration for Vercel deployment
   - Frontend now fetches designers directly from Supabase (no backend needed)
   - client/src/lib/supabase.ts: Supabase client with fetchDesigners/fetchDesignerBySlug

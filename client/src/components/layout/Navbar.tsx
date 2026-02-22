@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles } from "lucide-react";
+import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles, UserCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isAuthenticated } = useAuth();
 
   const { data: results = [] } = useQuery({
     queryKey: ["designerSearch", searchQuery],
@@ -39,7 +41,7 @@ export function Navbar() {
     { name: "New", href: "/just-in", icon: Sparkles },
     { name: "Designers", href: "/designers", icon: Grid },
     { name: "Quiz", href: "/quiz", icon: List },
-    { name: "Account", href: "/account", icon: User },
+    { name: "Account", href: "/account", icon: isAuthenticated ? UserCheck : User },
   ];
 
   return (
@@ -72,7 +74,11 @@ export function Navbar() {
               {searchOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Search className="w-5 h-5" strokeWidth={1.5} />}
             </button>
             <Link href="/account" className="hidden md:block p-2 text-foreground hover:text-foreground/70 transition-colors" data-testid="link-account">
-              <User className="w-5 h-5" strokeWidth={1.5} />
+              {isAuthenticated ? (
+                <UserCheck className="w-5 h-5" strokeWidth={1.5} />
+              ) : (
+                <User className="w-5 h-5" strokeWidth={1.5} />
+              )}
             </Link>
           </div>
         </div>

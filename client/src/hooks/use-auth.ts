@@ -36,8 +36,9 @@ export function useAuth() {
       api.login(data.username, data.password),
     onSuccess: async () => {
       await syncPendingQuizData();
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
+      await queryClient.refetchQueries({ queryKey: ["auth", "me"] });
       queryClient.invalidateQueries({ queryKey: ["quizResults"] });
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },
   });
 
@@ -46,16 +47,18 @@ export function useAuth() {
       api.signup(data),
     onSuccess: async () => {
       await syncPendingQuizData();
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
+      await queryClient.refetchQueries({ queryKey: ["auth", "me"] });
       queryClient.invalidateQueries({ queryKey: ["quizResults"] });
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: api.logout,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
+    onSuccess: async () => {
+      queryClient.setQueryData(["auth", "me"], null);
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["quizResults"] });
     },
   });
 
