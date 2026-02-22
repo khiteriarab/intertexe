@@ -113,7 +113,7 @@ Here's what you can do:
 
 <!-- CTA -->
 <tr><td style="padding:0 0 32px 0;text-align:center;">
-<a href="https://intertexe.com/quiz" style="display:inline-block;background-color:#111111;color:#FAFAF8;text-decoration:none;padding:14px 40px;font-size:13px;letter-spacing:2px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-transform:uppercase;">Take the Quiz</a>
+<a href="https://intertexe.vercel.app/quiz" style="display:inline-block;background-color:#111111;color:#FAFAF8;text-decoration:none;padding:14px 40px;font-size:13px;letter-spacing:2px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-transform:uppercase;">Take the Quiz</a>
 </td></tr>
 
 <!-- Divider -->
