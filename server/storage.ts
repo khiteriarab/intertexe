@@ -129,6 +129,7 @@ const KNOWN_DOMAINS: Record<string, string> = {
   "moncler": "moncler.com",
   "stone island": "stoneisland.com",
   "off-white": "off---white.com",
+  "off white": "off---white.com",
   "fear of god": "fearofgod.com",
   "amiri": "amiri.com",
   "tom ford": "tomford.com",

@@ -21,7 +21,67 @@ export interface Designer {
   createdAt: string | null;
 }
 
+function guessBrandWebsite(name: string): string | null {
+  const KNOWN: Record<string, string> = {
+    "alexander wang": "alexanderwang.com", "ralph lauren": "ralphlauren.com",
+    "tommy hilfiger": "tommyhilfiger.com", "calvin klein": "calvinklein.com",
+    "michael kors": "michaelkors.com", "marc jacobs": "marcjacobs.com",
+    "kate spade": "katespade.com", "tory burch": "toryburch.com",
+    "diane von furstenberg": "dvf.com", "oscar de la renta": "oscardelarenta.com",
+    "carolina herrera": "carolinaherrera.com", "helmut lang": "helmutlang.com",
+    "rag & bone": "rag-bone.com", "acne studios": "acnestudios.com",
+    "a.p.c.": "apc.fr", "maison margiela": "maisonmargiela.com",
+    "rick owens": "rickowens.eu", "the row": "therow.com",
+    "bottega veneta": "bottegaveneta.com", "saint laurent": "ysl.com",
+    "louis vuitton": "louisvuitton.com", "gucci": "gucci.com",
+    "prada": "prada.com", "burberry": "burberry.com",
+    "givenchy": "givenchy.com", "balenciaga": "balenciaga.com",
+    "valentino": "valentino.com", "fendi": "fendi.com",
+    "dior": "dior.com", "celine": "celine.com", "loewe": "loewe.com",
+    "chanel": "chanel.com", "hermès": "hermes.com", "versace": "versace.com",
+    "dolce & gabbana": "dolcegabbana.com", "armani": "armani.com",
+    "giorgio armani": "armani.com", "emporio armani": "armani.com",
+    "moncler": "moncler.com", "stone island": "stoneisland.com",
+    "off-white": "off---white.com", "fear of god": "fearofgod.com",
+    "amiri": "amiri.com", "tom ford": "tomford.com",
+    "stella mccartney": "stellamccartney.com", "isabel marant": "isabelmarant.com",
+    "nanushka": "nanushka.com", "ganni": "ganni.com", "cos": "cos.com",
+    "& other stories": "stories.com", "zara": "zara.com",
+    "massimo dutti": "massimodutti.com", "uniqlo": "uniqlo.com",
+    "j.crew": "jcrew.com", "theory": "theory.com", "vince": "vince.com",
+    "brunello cucinelli": "brunellocucinelli.com", "loro piana": "loropiana.com",
+    "zegna": "zegna.com", "tod's": "tods.com", "ferragamo": "ferragamo.com",
+    "jimmy choo": "jimmychoo.com", "christian louboutin": "christianlouboutin.com",
+    "nike": "nike.com", "adidas": "adidas.com", "new balance": "newbalance.com",
+    "the north face": "thenorthface.com", "patagonia": "patagonia.com",
+    "canada goose": "canadagoose.com", "barbour": "barbour.com",
+    "allsaints": "allsaints.com", "paul smith": "paulsmith.com",
+    "vivienne westwood": "viviennewestwood.com",
+    "alexander mcqueen": "alexandermcqueen.com",
+    "max mara": "maxmara.com", "jil sander": "jilsander.com",
+    "sacai": "sacai.jp", "issey miyake": "isseymiyake.com",
+    "kenzo": "kenzo.com", "ami paris": "amiparis.com",
+    "jacquemus": "jacquemus.com", "lemaire": "lemaire.fr",
+    "reformation": "thereformation.com", "anine bing": "aninebing.com",
+    "khaite": "khaite.com", "proenza schouler": "proenzaschouler.com",
+    "coach": "coach.com", "hugo boss": "hugoboss.com",
+    "diesel": "diesel.com", "balmain": "balmain.com",
+    "lanvin": "lanvin.com", "mugler": "mugler.com",
+    "chloé": "chloe.com", "sandro": "sandro-paris.com",
+    "maje": "maje.com", "h&m": "hm.com",
+    "thom browne": "thombrowne.com", "golden goose": "goldengoose.com",
+    "everlane": "everlane.com", "lululemon": "lululemon.com",
+    "zimmermann": "zimmermann.com", "veja": "veja-store.com",
+  };
+  const lower = name.toLowerCase().trim();
+  if (KNOWN[lower]) return `https://${KNOWN[lower]}`;
+  const cleaned = lower.replace(/[®™*#°]/g, '').replace(/\s+/g, '').replace(/[&+]/g, '').replace(/[''`]/g, '').replace(/[^a-z0-9.-]/g, '');
+  if (cleaned.length < 2) return null;
+  return `https://${cleaned}.com`;
+}
+
 function mapRow(row: any): Designer {
+  const website = row.website ?? guessBrandWebsite(row.name);
   return {
     id: row.id,
     name: row.name,
@@ -29,7 +89,7 @@ function mapRow(row: any): Designer {
     status: row.status || "Pending",
     naturalFiberPercent: row.natural_fiber_percent ?? null,
     description: row.description ?? null,
-    website: row.website ?? null,
+    website,
     createdAt: row.created_at ?? null,
   };
 }
