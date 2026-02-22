@@ -14,6 +14,20 @@ import {
   supabaseCheckFavorite,
 } from "./supabase";
 
+const TOKEN_KEY = "intertexe_auth_token";
+
+function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function setToken(token: string) {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
 async function handleResponse(res: Response) {
   if (!res.ok) {
     const body = await res.json().catch(() => ({ message: "Request failed" }));
@@ -23,7 +37,14 @@ async function handleResponse(res: Response) {
 }
 
 function apiFetch(url: string, options: RequestInit = {}) {
-  return fetch(url, { ...options, credentials: "include" });
+  const token = getToken();
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> || {}),
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
 }
 
 export const api = {
@@ -31,24 +52,32 @@ export const api = {
     if (isVercelMode) {
       return supabaseLogin(username, password);
     }
-    const res = await apiFetch("/api/auth/login", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
-    return handleResponse(res);
+    const data = await handleResponse(res);
+    if (data.token) {
+      setToken(data.token);
+    }
+    return data;
   },
 
   async signup(data: { username: string; email: string; password: string; name?: string }) {
     if (isVercelMode) {
       return supabaseSignup({ email: data.email, password: data.password, name: data.name });
     }
-    const res = await apiFetch("/api/auth/signup", {
+    const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return handleResponse(res);
+    const result = await handleResponse(res);
+    if (result.token) {
+      setToken(result.token);
+    }
+    return result;
   },
 
   async logout() {
@@ -56,6 +85,7 @@ export const api = {
       return supabaseLogout();
     }
     const res = await apiFetch("/api/auth/logout", { method: "POST" });
+    clearToken();
     return handleResponse(res);
   },
 
@@ -63,8 +93,13 @@ export const api = {
     if (isVercelMode) {
       return supabaseGetMe();
     }
+    const token = getToken();
+    if (!token) return null;
     const res = await apiFetch("/api/auth/me");
-    if (res.status === 401) return null;
+    if (res.status === 401) {
+      clearToken();
+      return null;
+    }
     return handleResponse(res);
   },
 
