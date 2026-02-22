@@ -7,8 +7,8 @@ import textureImage from "@/assets/images/material-texture.jpg";
 
 export default function Home() {
   const { data: designers = [], isLoading } = useQuery({
-    queryKey: ["designers"],
-    queryFn: () => fetchDesigners(),
+    queryKey: ["designers-home"],
+    queryFn: () => fetchDesigners(undefined, 4),
   });
 
   const topDesigners = designers.slice(0, 4);

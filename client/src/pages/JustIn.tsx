@@ -5,8 +5,8 @@ import { fetchDesigners } from "@/lib/supabase";
 
 export default function JustIn() {
   const { data: designers = [], isLoading } = useQuery({
-    queryKey: ["designers"],
-    queryFn: () => fetchDesigners(),
+    queryKey: ["designers-just-in"],
+    queryFn: () => fetchDesigners(undefined, 50),
   });
 
   const sorted = [...(designers as any[])].sort(

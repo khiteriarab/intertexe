@@ -29,9 +29,14 @@ function mapRow(row: any): Designer {
   };
 }
 
-export async function fetchDesigners(query?: string): Promise<Designer[]> {
+let designerCache: Designer[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000;
+
+export async function fetchDesigners(query?: string, limit?: number): Promise<Designer[]> {
   if (!supabase) {
-    const url = query ? `/api/designers?q=${encodeURIComponent(query)}` : "/api/designers";
+    let url = query ? `/api/designers?q=${encodeURIComponent(query)}` : "/api/designers";
+    if (limit) url += (url.includes("?") ? "&" : "?") + `limit=${limit}`;
     const res = await fetch(url);
     if (!res.ok) return [];
     return res.json();
@@ -43,9 +48,23 @@ export async function fetchDesigners(query?: string): Promise<Designer[]> {
       .select("*")
       .ilike("name", `%${query}%`)
       .order("name", { ascending: true })
-      .limit(50);
+      .limit(limit || 50);
     if (error) throw error;
     return (data || []).map(mapRow);
+  }
+
+  if (limit) {
+    const { data, error } = await supabase
+      .from("designers")
+      .select("*")
+      .order("name", { ascending: true })
+      .limit(limit);
+    if (error) throw error;
+    return (data || []).map(mapRow);
+  }
+
+  if (designerCache && Date.now() - cacheTimestamp < CACHE_TTL) {
+    return designerCache;
   }
 
   const all: Designer[] = [];
@@ -63,6 +82,8 @@ export async function fetchDesigners(query?: string): Promise<Designer[]> {
     if (data.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
   }
+  designerCache = all;
+  cacheTimestamp = Date.now();
   return all;
 }
 

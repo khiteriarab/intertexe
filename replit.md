@@ -69,6 +69,8 @@ INTERTEXE is a luxury fashion discovery and curation platform focused on **mater
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection (users, favorites, quiz)
 - `OPENAI_API_KEY` - User's OpenAI key for AI recommendations
-- `SUPABASE_PROJECT_URL` - Supabase project URL (designer database)
-- `SUPABASE_ANON_KEY` - Supabase anonymous key
+- `SUPABASE_PROJECT_URL` - Supabase project URL (server-side)
+- `SUPABASE_ANON_KEY` - Supabase anonymous key (server-side)
+- `VITE_SUPABASE_URL` - Supabase project URL (frontend, required for Vercel)
+- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key (frontend, required for Vercel)
 - `SESSION_SECRET` - Optional, defaults to dev secret
