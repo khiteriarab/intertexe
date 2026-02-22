@@ -30,8 +30,20 @@ export default function DesignerDetail() {
 
   const { data: favStatus } = useQuery({
     queryKey: ["favoriteCheck", designer?.id],
-    queryFn: () => api.checkFavorite(designer.id),
+    queryFn: () => api.checkFavorite(designer!.id),
     enabled: !!designer?.id,
+  });
+
+  const { data: similarBrands, isLoading: similarLoading } = useQuery({
+    queryKey: ["similar", slug],
+    queryFn: async () => {
+      const res = await fetch(`/api/designers/${slug}/similar`);
+      if (!res.ok) throw new Error("Failed to load");
+      return res.json();
+    },
+    enabled: !!designer,
+    staleTime: 1000 * 60 * 30,
+    retry: 1,
   });
 
   const isSaved = favStatus?.favorited || false;
@@ -39,9 +51,9 @@ export default function DesignerDetail() {
   const toggleFav = useMutation({
     mutationFn: async () => {
       if (isSaved) {
-        await api.removeFavorite(designer.id);
+        await api.removeFavorite(designer!.id);
       } else {
-        await api.addFavorite(designer.id);
+        await api.addFavorite(designer!.id);
       }
     },
     onSuccess: () => {
@@ -49,7 +61,7 @@ export default function DesignerDetail() {
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
       toast({
         title: isSaved ? "Removed from wishlist" : "Saved to wishlist",
-        description: `${designer.name} has been ${isSaved ? "removed from" : "added to"} your favorites.`,
+        description: `${designer!.name} has been ${isSaved ? "removed from" : "added to"} your favorites.`,
       });
     },
     onError: (err: any) => {
@@ -87,18 +99,6 @@ export default function DesignerDetail() {
       </div>
     );
   }
-
-  const { data: similarBrands, isLoading: similarLoading } = useQuery({
-    queryKey: ["similar", slug],
-    queryFn: async () => {
-      const res = await fetch(`/api/designers/${slug}/similar`);
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json();
-    },
-    enabled: !!designer,
-    staleTime: 1000 * 60 * 30,
-    retry: 1,
-  });
 
   const tier = getQualityTier(designer.naturalFiberPercent);
 
