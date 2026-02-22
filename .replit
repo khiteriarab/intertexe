@@ -48,3 +48,5 @@ integrations = ["javascript_openai_ai_integrations:2.0.0", "github:1.0.0"]
 
 [userenv.shared]
 SUPABASE_PROJECT_URL = "https://burrylupizvggupsryuj.supabase.co"
+VITE_SUPABASE_URL = "https://burrylupizvggupsryuj.supabase.co"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1cnJ5bHVwaXp2Z2d1cHNyeXVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1ODEyNTYsImV4cCI6MjA4NzE1NzI1Nn0.Y6ESbOsDJEq4yVYdN3PIQZ5yYLCWweGCdj3pKx7iB9g"

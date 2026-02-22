@@ -4,6 +4,15 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
+- **2026-02-22**: Frontend-direct Supabase integration for Vercel deployment
+  - Frontend now fetches designers directly from Supabase (no backend needed)
+  - client/src/lib/supabase.ts: Supabase client with fetchDesigners/fetchDesignerBySlug
+  - Falls back to /api/designers if VITE_SUPABASE_* env vars not set
+  - All pages (Home, Designers, JustIn, Quiz, DesignerDetail, Navbar) use direct Supabase
+  - Paginated fetching retrieves all 11,909 designers (batches of 1000)
+  - VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set in Vercel env vars
+  - TikTok social link updated to @shopintertexe
+  - Scroll-to-top on page navigation
 - **2026-02-20**: Mobile UX overhaul & auth simplification
   - Comprehensive mobile-first responsive design across all pages
   - Quiz brands step: shows 8 initial brands + search bar (not all 11,909)
@@ -35,10 +44,11 @@ INTERTEXE is a luxury fashion discovery and curation platform focused on **mater
 - `shared/schema.ts` - Data models (users, designers, favorites, quiz_results)
 - `server/routes.ts` - API routes (/api/designers, /api/favorites, /api/quiz, /api/recommend, /api/auth/*)
 - `server/storage.ts` - Database CRUD operations (Supabase for designers, local PG for rest)
-- `server/supabase.ts` - Supabase client configuration
+- `server/supabase.ts` - Server-side Supabase client configuration
 - `server/auth.ts` - Passport authentication setup
 - `server/seed.ts` - Designer seed data (local fallback, 20 luxury brands)
-- `client/src/lib/api.ts` - Frontend API client
+- `client/src/lib/supabase.ts` - Frontend Supabase client (direct designer fetching for Vercel)
+- `client/src/lib/api.ts` - Frontend API client (auth, favorites, quiz)
 - `client/src/hooks/use-auth.ts` - Authentication hook
 
 ### Routes
@@ -59,6 +69,8 @@ INTERTEXE is a luxury fashion discovery and curation platform focused on **mater
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection (users, favorites, quiz)
 - `OPENAI_API_KEY` - User's OpenAI key for AI recommendations
-- `SUPABASE_PROJECT_URL` - Supabase project URL (designer database)
-- `SUPABASE_ANON_KEY` - Supabase anonymous key
+- `SUPABASE_PROJECT_URL` - Supabase project URL (server-side)
+- `SUPABASE_ANON_KEY` - Supabase anonymous key (server-side)
+- `VITE_SUPABASE_URL` - Supabase project URL (frontend, required for Vercel)
+- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key (frontend, required for Vercel)
 - `SESSION_SECRET` - Optional, defaults to dev secret

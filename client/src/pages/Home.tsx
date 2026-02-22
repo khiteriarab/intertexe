@@ -1,14 +1,14 @@
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { fetchDesigners } from "@/lib/supabase";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
 
 export default function Home() {
   const { data: designers = [], isLoading } = useQuery({
-    queryKey: ["designers"],
-    queryFn: () => api.getDesigners(),
+    queryKey: ["designers-home"],
+    queryFn: () => fetchDesigners(undefined, 4),
   });
 
   const topDesigners = designers.slice(0, 4);

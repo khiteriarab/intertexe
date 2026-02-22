@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { fetchDesigners } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 
 const MATERIAL_OPTIONS = [
@@ -24,7 +25,7 @@ export default function Quiz() {
 
   const { data: designers = [] } = useQuery({
     queryKey: ["designers"],
-    queryFn: () => api.getDesigners(),
+    queryFn: () => fetchDesigners(),
   });
 
   const [selections, setSelections] = useState({
