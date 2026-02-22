@@ -17,7 +17,7 @@ export default function Account() {
 
   if (authLoading) {
     return (
-      <div className="py-20 flex items-center justify-center">
+      <div className="py-20 flex items-center justify-center min-h-[60vh]">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="h-8 w-48 bg-secondary" />
           <div className="h-4 w-32 bg-secondary" />
@@ -58,63 +58,74 @@ export default function Account() {
   };
 
   return (
-    <div className="py-10 md:py-16 flex flex-col items-center max-w-md mx-auto w-full gap-8 md:gap-10 px-1">
-      <div className="text-center flex flex-col gap-3">
-        <h1 className="text-3xl md:text-4xl font-serif">{mode === "login" ? "Welcome Back" : "Create Account"}</h1>
-        <p className="text-muted-foreground text-sm md:text-base">
-          {mode === "login"
-            ? "Sign in to access your wishlist, quiz results, and personalized recommendations."
-            : "Join INTERTEXE to save designers, track materials, and discover your fiber profile."
-          }
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <label className="text-xs uppercase tracking-widest text-muted-foreground">Email</label>
-          <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            className="w-full border border-border/60 px-4 py-3.5 text-sm bg-background focus:outline-none focus:border-foreground transition-colors"
-            required data-testid="input-email" />
+    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-8 md:py-16 px-2">
+      <div className="flex flex-col items-center w-full max-w-md gap-8 md:gap-10">
+        <div className="text-center flex flex-col gap-3">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+            {mode === "login" ? "Sign In" : "Join Us"}
+          </span>
+          <h1 className="text-3xl md:text-4xl font-serif">{mode === "login" ? "Welcome Back" : "Create Account"}</h1>
+          <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-xs mx-auto">
+            {mode === "login"
+              ? "Sign in to access your wishlist and personalized recommendations."
+              : "Join INTERTEXE to discover your fabric persona and save your favorite designers."
+            }
+          </p>
         </div>
 
-        {mode === "signup" && (
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
+          {mode === "signup" && (
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Full Name</label>
+              <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                placeholder="Your name"
+                data-testid="input-name" />
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
-            <label className="text-xs uppercase tracking-widest text-muted-foreground">Full Name</label>
-            <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              className="w-full border border-border/60 px-4 py-3.5 text-sm bg-background focus:outline-none focus:border-foreground transition-colors"
-              data-testid="input-name" />
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Email</label>
+            <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+              placeholder="you@example.com"
+              required data-testid="input-email" />
           </div>
-        )}
 
-        <div className="flex flex-col gap-2">
-          <label className="text-xs uppercase tracking-widest text-muted-foreground">Password</label>
-          <div className="relative">
-            <input type={showPassword ? "text" : "password"} value={form.password}
-              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              className="w-full border border-border/60 px-4 py-3.5 text-sm bg-background focus:outline-none focus:border-foreground transition-colors pr-12"
-              required data-testid="input-password" />
-            <button type="button" onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-1">
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Password</label>
+            <div className="relative">
+              <input type={showPassword ? "text" : "password"} value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors pr-14 placeholder:text-muted-foreground/40"
+                placeholder="Your password"
+                required data-testid="input-password" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-1.5 active:scale-90 transition-transform">
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
+
+          <button type="submit" disabled={login.isPending || signup.isPending}
+            className="mt-2 bg-foreground text-background py-4 uppercase tracking-[0.2em] text-xs font-medium hover:bg-foreground/90 transition-all disabled:opacity-50 active:scale-[0.98]"
+            data-testid="button-submit-auth">
+            {(login.isPending || signup.isPending) ? "Please wait..." : mode === "login" ? "Log In" : "Create Account"}
+          </button>
+        </form>
+
+        <div className="flex items-center gap-4 w-full">
+          <div className="flex-1 h-px bg-border/60" />
+          <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">or</span>
+          <div className="flex-1 h-px bg-border/60" />
         </div>
 
-        <button type="submit" disabled={login.isPending || signup.isPending}
-          className="mt-4 bg-foreground text-background py-4 uppercase tracking-widest text-xs md:text-sm font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50 active:scale-[0.98]"
-          data-testid="button-submit-auth">
-          {(login.isPending || signup.isPending) ? "Please wait..." : mode === "login" ? "Log In" : "Create Account"}
-        </button>
-      </form>
-
-      <p className="text-sm text-muted-foreground">
-        {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
         <button onClick={() => setMode(mode === "login" ? "signup" : "login")}
-          className="text-foreground border-b border-foreground pb-px hover:text-muted-foreground hover:border-muted-foreground transition-colors"
+          className="w-full border border-border/60 py-4 uppercase tracking-[0.2em] text-xs font-medium text-foreground hover:border-foreground transition-colors active:scale-[0.98]"
           data-testid="button-toggle-auth-mode">
-          {mode === "login" ? "Sign Up" : "Log In"}
+          {mode === "login" ? "Create an Account" : "Sign In Instead"}
         </button>
-      </p>
+      </div>
     </div>
   );
 }
@@ -155,45 +166,49 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
     : null;
 
   const menuItems = [
-    { id: "account" as const, icon: User, label: "My Account" },
+    { id: "account" as const, icon: User, label: "Profile" },
     { id: "wishlist" as const, icon: Heart, label: "Wishlist" },
-    { id: "quiz" as const, icon: List, label: "Quiz History" },
+    { id: "quiz" as const, icon: List, label: "Quiz" },
   ];
 
   return (
-    <div className="py-6 md:py-12 flex flex-col md:flex-row gap-8 md:gap-12">
-      <aside className="w-full md:w-64 shrink-0 flex flex-col gap-6 md:gap-8">
-        <div className="flex flex-col gap-2">
+    <div className="py-6 md:py-12 flex flex-col gap-6 md:gap-0 md:flex-row md:gap-12">
+      <aside className="w-full md:w-64 shrink-0 flex flex-col gap-5 md:gap-8">
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl md:text-3xl font-serif" data-testid="text-account-title">Account</h1>
           <p className="text-muted-foreground text-sm" data-testid="text-welcome-name">Welcome, {user.name || user.email}</p>
         </div>
-        <nav className="flex overflow-x-auto md:overflow-visible md:flex-col gap-1 -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0 scrollbar-hide">
+
+        <div className="flex md:flex-col gap-1.5 md:gap-1 -mx-4 px-4 md:mx-0 md:px-0">
           {menuItems.map(item => (
             <button key={item.id} onClick={() => handleTabChange(item.id)}
-              className={`flex items-center gap-2 md:gap-3 py-2.5 md:py-3 px-3 md:px-4 md:-mx-4 transition-colors text-[11px] md:text-sm uppercase tracking-widest whitespace-nowrap text-left ${
-                activeTab === item.id ? "bg-foreground text-background md:bg-secondary/80 md:text-foreground font-medium" : "hover:bg-secondary/50"
+              className={`flex-1 md:flex-initial flex items-center justify-center md:justify-start gap-2.5 py-3 md:py-3 px-3 md:px-4 md:-mx-4 transition-all text-[10px] md:text-sm uppercase tracking-[0.15em] md:tracking-widest whitespace-nowrap text-center md:text-left ${
+                activeTab === item.id
+                  ? "bg-foreground text-background md:bg-secondary/80 md:text-foreground font-medium"
+                  : "bg-secondary/40 md:bg-transparent hover:bg-secondary/60 md:hover:bg-secondary/50 text-foreground/70 md:text-foreground"
               }`}
               data-testid={`button-tab-${item.id}`}>
               <item.icon className="w-4 h-4 flex-shrink-0" />
-              {item.label}
+              <span>{item.label}</span>
               {item.id === "wishlist" && (favorites as any[]).length > 0 && (
-                <span className="ml-auto text-[10px] opacity-60">{(favorites as any[]).length}</span>
+                <span className="ml-auto text-[9px] opacity-60 hidden md:inline">{(favorites as any[]).length}</span>
               )}
               {item.id === "quiz" && (quizResults as any[]).length > 0 && (
-                <span className="ml-auto text-[10px] opacity-60">{(quizResults as any[]).length}</span>
+                <span className="ml-auto text-[9px] opacity-60 hidden md:inline">{(quizResults as any[]).length}</span>
               )}
             </button>
           ))}
-          <button onClick={onLogout}
-            className="flex items-center gap-2 md:gap-3 py-2.5 md:py-3 px-3 md:px-4 md:-mx-4 hover:bg-secondary/50 transition-colors text-[11px] md:text-sm uppercase tracking-widest text-muted-foreground mt-2 md:mt-8 text-left whitespace-nowrap"
-            data-testid="button-logout">
-            <LogOut className="w-4 h-4 flex-shrink-0" />
-            Log Out
-          </button>
-        </nav>
+        </div>
+
+        <button onClick={onLogout}
+          className="hidden md:flex items-center gap-3 py-3 px-4 -mx-4 hover:bg-secondary/50 transition-colors text-sm uppercase tracking-widest text-muted-foreground mt-4 text-left whitespace-nowrap"
+          data-testid="button-logout">
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          Log Out
+        </button>
       </aside>
 
-      <div ref={contentRef} className="flex-1 flex flex-col gap-8 md:gap-12">
+      <div ref={contentRef} className="flex-1 flex flex-col gap-8 md:gap-12 scroll-mt-20">
         {activeTab === "account" && (
           <section className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-300">
             <h2 className="text-xl md:text-2xl font-serif border-b border-border/40 pb-3 md:pb-4">Your Profile</h2>
@@ -202,12 +217,12 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
               <div className="border border-border p-5 md:p-6 flex flex-col gap-3 bg-secondary/10" data-testid="card-persona">
                 <div className="flex items-center gap-2">
                   <Leaf className="w-4 h-4" />
-                  <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Your Fabric Persona</span>
+                  <span className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-muted-foreground">Your Fabric Persona</span>
                 </div>
                 <h3 className="text-xl md:text-2xl font-serif" data-testid="text-persona-name">{persona.name}</h3>
                 <p className="text-sm text-foreground/70 italic">{persona.tagline}</p>
                 <p className="text-sm text-foreground/80 leading-relaxed">{persona.description}</p>
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground pt-3 border-t border-border/20 mt-1">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-6 sm:gap-y-2 text-xs text-muted-foreground pt-3 border-t border-border/20 mt-1">
                   <span>Core Value: {persona.coreValue}</span>
                   <span>You Buy For: {persona.buysFor}</span>
                 </div>
@@ -218,56 +233,50 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
               <Link href="/quiz"
                 className="border border-dashed border-border/60 p-5 md:p-6 flex items-center justify-between hover:border-foreground transition-colors bg-secondary/10 active:scale-[0.98]"
                 data-testid="link-take-quiz-persona">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
                     <Leaf className="w-4 h-4" />
-                    <span className="text-xs uppercase tracking-widest font-medium">Discover Your Fabric Persona</span>
+                    <span className="text-xs uppercase tracking-[0.15em] font-medium">Discover Your Fabric Persona</span>
                   </div>
                   <p className="text-sm text-muted-foreground">Take the quiz to find your material identity</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
               </Link>
             )}
 
-            <div className="flex flex-col gap-4">
-              <div className="flex justify-between items-center py-3 border-b border-border/20">
-                <span className="text-xs uppercase tracking-widest text-muted-foreground">Email</span>
-                <span className="text-sm">{user.email}</span>
+            <div className="flex flex-col gap-0">
+              <div className="flex justify-between items-center py-4 border-b border-border/20">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Email</span>
+                <span className="text-sm text-right max-w-[60%] truncate">{user.email}</span>
               </div>
               {user.name && (
-                <div className="flex justify-between items-center py-3 border-b border-border/20">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground">Name</span>
+                <div className="flex justify-between items-center py-4 border-b border-border/20">
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Name</span>
                   <span className="text-sm">{user.name}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center py-3 border-b border-border/20">
-                <span className="text-xs uppercase tracking-widest text-muted-foreground">Saved Designers</span>
+              <div className="flex justify-between items-center py-4 border-b border-border/20">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Saved Designers</span>
                 <span className="text-sm">{(favorites as any[]).length}</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-border/20">
-                <span className="text-xs uppercase tracking-widest text-muted-foreground">Quizzes Taken</span>
+              <div className="flex justify-between items-center py-4 border-b border-border/20">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Quizzes Taken</span>
                 <span className="text-sm">{(quizResults as any[]).length}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 mt-2">
               <button onClick={() => handleTabChange("wishlist")}
-                className="border border-border/60 p-4 md:p-6 flex items-center justify-between hover:border-foreground transition-colors active:scale-[0.98]"
+                className="border border-border/60 p-4 md:p-6 flex flex-col items-center gap-2.5 md:gap-3 hover:border-foreground transition-colors active:scale-[0.98] text-center"
                 data-testid="button-goto-wishlist">
-                <div className="flex items-center gap-3">
-                  <Heart className="w-5 h-5" />
-                  <span className="text-xs uppercase tracking-widest">Your Wishlist</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <Heart className="w-5 h-5" />
+                <span className="text-[10px] md:text-xs uppercase tracking-[0.15em]">Wishlist</span>
               </button>
               <button onClick={() => handleTabChange("quiz")}
-                className="border border-border/60 p-4 md:p-6 flex items-center justify-between hover:border-foreground transition-colors active:scale-[0.98]"
+                className="border border-border/60 p-4 md:p-6 flex flex-col items-center gap-2.5 md:gap-3 hover:border-foreground transition-colors active:scale-[0.98] text-center"
                 data-testid="button-goto-quiz-history">
-                <div className="flex items-center gap-3">
-                  <List className="w-5 h-5" />
-                  <span className="text-xs uppercase tracking-widest">Quiz History</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <List className="w-5 h-5" />
+                <span className="text-[10px] md:text-xs uppercase tracking-[0.15em]">Quiz History</span>
               </button>
             </div>
 
@@ -275,40 +284,47 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
               className="bg-foreground text-background py-4 px-6 flex items-center justify-center gap-3 hover:bg-foreground/90 transition-colors active:scale-[0.98]"
               data-testid="button-retake-quiz">
               <Sparkles className="w-5 h-5" />
-              <span className="text-xs uppercase tracking-widest">{persona ? "Retake the Quiz" : "Take the Quiz"}</span>
+              <span className="text-xs uppercase tracking-[0.15em]">{persona ? "Retake the Quiz" : "Take the Quiz"}</span>
             </Link>
+
+            <button onClick={onLogout}
+              className="md:hidden flex items-center justify-center gap-2.5 py-3.5 text-muted-foreground border border-border/40 text-[10px] uppercase tracking-[0.15em] hover:border-foreground hover:text-foreground transition-colors active:scale-[0.98]"
+              data-testid="button-logout-mobile">
+              <LogOut className="w-4 h-4" />
+              Log Out
+            </button>
           </section>
         )}
 
         {activeTab === "wishlist" && (
-          <section className="flex flex-col gap-4 md:gap-6 animate-in fade-in duration-300">
+          <section className="flex flex-col gap-5 md:gap-6 animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-border/40 pb-3 md:pb-4">
               <h2 className="text-xl md:text-2xl font-serif">Your Wishlist</h2>
-              <button onClick={() => handleTabChange("account")} className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors md:hidden" data-testid="button-back-account">Back</button>
+              <button onClick={() => handleTabChange("account")} className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors md:hidden active:scale-95 py-1 px-2" data-testid="button-back-account">Back</button>
             </div>
             {favsLoading ? (
               <div className="animate-pulse grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 {[1,2].map(i => <div key={i} className="h-28 md:h-32 bg-secondary" />)}
               </div>
             ) : (favorites as any[]).length === 0 ? (
-              <div className="py-10 md:py-12 text-center bg-secondary/20 border border-dashed border-border/60">
-                <Heart className="w-8 h-8 mx-auto mb-4 text-muted-foreground/40" />
+              <div className="py-12 md:py-16 text-center bg-secondary/20 border border-dashed border-border/60 flex flex-col items-center gap-4">
+                <Heart className="w-8 h-8 text-muted-foreground/30" />
                 <p className="text-muted-foreground text-sm">You haven't saved any designers yet.</p>
-                <Link href="/designers" className="mt-4 inline-block text-xs md:text-sm uppercase tracking-widest border-b border-foreground pb-1" data-testid="link-browse-designers">Browse Directory</Link>
+                <Link href="/designers" className="mt-2 inline-block text-xs uppercase tracking-[0.15em] border-b border-foreground pb-1 active:scale-95 transition-transform" data-testid="link-browse-designers">Browse Directory</Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                 {(favorites as any[]).map((fav: any) => (
-                  <Link key={fav.id} href={`/designers/${fav.designer?.slug || fav.designerId}`} className="group flex flex-col gap-3 md:gap-4 border border-border p-3 md:p-4 hover:border-foreground transition-colors active:scale-[0.98]" data-testid={`card-favorite-${fav.designer?.slug || fav.designerId}`}>
+                  <Link key={fav.id} href={`/designers/${fav.designer?.slug || fav.designerId}`} className="group flex flex-col gap-3 border border-border p-4 hover:border-foreground transition-colors active:scale-[0.98]" data-testid={`card-favorite-${fav.designer?.slug || fav.designerId}`}>
                       <div className="flex justify-between items-start">
                         <h3 className="text-lg md:text-xl font-serif">{fav.designer?.name || "Designer"}</h3>
-                        <button className="text-foreground p-1" onClick={(e) => { e.preventDefault(); removeFav.mutate(fav.designerId); }}>
+                        <button className="text-foreground p-1.5 -mr-1 active:scale-90 transition-transform" onClick={(e) => { e.preventDefault(); removeFav.mutate(fav.designerId); }}>
                           <Heart className="w-4 h-4 fill-foreground" />
                         </button>
                       </div>
                       {fav.designer?.naturalFiberPercent != null && (
-                        <div className="flex items-center gap-2 mt-auto pt-3 md:pt-4 border-t border-border/40">
-                          <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Material Score</span>
+                        <div className="flex items-center gap-2 mt-auto pt-3 border-t border-border/40">
+                          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Material Score</span>
                           <span className="text-sm font-medium ml-auto">{fav.designer.naturalFiberPercent}%</span>
                         </div>
                       )}
@@ -320,43 +336,41 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
         )}
 
         {activeTab === "quiz" && (
-          <section className="flex flex-col gap-4 md:gap-6 animate-in fade-in duration-300">
+          <section className="flex flex-col gap-5 md:gap-6 animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-border/40 pb-3 md:pb-4">
               <h2 className="text-xl md:text-2xl font-serif">Quiz History</h2>
-              <button onClick={() => handleTabChange("account")} className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors md:hidden" data-testid="button-back-account-2">Back</button>
+              <button onClick={() => handleTabChange("account")} className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors md:hidden active:scale-95 py-1 px-2" data-testid="button-back-account-2">Back</button>
             </div>
             {(quizResults as any[]).length === 0 ? (
-              <div className="py-10 md:py-12 text-center bg-secondary/20 border border-dashed border-border/60">
-                <Sparkles className="w-8 h-8 mx-auto mb-4 text-muted-foreground/40" />
+              <div className="py-12 md:py-16 text-center bg-secondary/20 border border-dashed border-border/60 flex flex-col items-center gap-4">
+                <Sparkles className="w-8 h-8 text-muted-foreground/30" />
                 <p className="text-muted-foreground text-sm">You haven't taken the quiz yet.</p>
-                <Link href="/quiz" className="mt-4 inline-block text-xs md:text-sm uppercase tracking-widest border-b border-foreground pb-1" data-testid="link-take-quiz">Take the Quiz</Link>
+                <Link href="/quiz" className="mt-2 inline-block text-xs uppercase tracking-[0.15em] border-b border-foreground pb-1 active:scale-95 transition-transform" data-testid="link-take-quiz">Take the Quiz</Link>
               </div>
             ) : (
               <div className="flex flex-col gap-4 md:gap-6">
                 {(quizResults as any[]).map((result: any) => (
                   <div key={result.id} className="border border-border p-4 md:p-6 flex flex-col gap-4" data-testid={`card-quiz-${result.id}`}>
-                    <div className="flex justify-between items-start">
-                      <div className="flex flex-col gap-1">
-                        {result.profileType && (
-                          <h3 className="text-lg md:text-xl font-serif">{result.profileType}</h3>
-                        )}
-                        <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">
-                          {new Date(result.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                        </span>
-                      </div>
+                    <div className="flex flex-col gap-1">
+                      {result.profileType && (
+                        <h3 className="text-lg md:text-xl font-serif">{result.profileType}</h3>
+                      )}
+                      <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                        {new Date(result.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                      </span>
                     </div>
 
                     {result.recommendation && (
                       <p className="text-sm text-foreground/80 leading-relaxed">{result.recommendation}</p>
                     )}
 
-                    <div className="flex flex-wrap gap-1.5 md:gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {result.materials.map((m: string) => (
-                        <span key={m} className="text-[10px] md:text-xs uppercase tracking-widest border border-border/40 px-2 py-1">{m}</span>
+                        <span key={m} className="text-[10px] uppercase tracking-[0.1em] border border-border/40 px-2.5 py-1">{m}</span>
                       ))}
                     </div>
 
-                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground pt-2 border-t border-border/20">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-x-6 sm:gap-y-2 text-xs text-muted-foreground pt-3 border-t border-border/20">
                       <span>Budget: {result.priceRange}</span>
                       <span>Synthetic tolerance: {result.syntheticTolerance}</span>
                       {result.favoriteBrands && result.favoriteBrands.length > 0 && (

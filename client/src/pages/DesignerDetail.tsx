@@ -93,27 +93,27 @@ export default function DesignerDetail() {
       </Link>
 
       <header className="flex flex-col md:flex-row gap-6 md:gap-16 items-start">
-        <div className="w-full md:w-1/3 aspect-[3/4] bg-secondary relative overflow-hidden flex-shrink-0">
+        <div className="w-full md:w-1/3 aspect-[3/4] bg-secondary relative overflow-hidden flex-shrink-0 hidden md:block">
           <div className="absolute inset-0 flex items-center justify-center font-serif text-6xl md:text-8xl text-muted-foreground/20">
             {designer.name.charAt(0)}
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 md:gap-8 flex-1 w-full">
+        <div className="flex flex-col gap-5 md:gap-8 flex-1 w-full">
           <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-start w-full gap-4">
-              <h1 className="text-3xl md:text-6xl font-serif leading-tight">{designer.name}</h1>
+            <div className="flex justify-between items-start w-full gap-3">
+              <h1 className="text-[28px] leading-[1.15] md:text-6xl font-serif md:leading-tight">{designer.name}</h1>
               <button 
                 onClick={() => toggleFav.mutate()}
-                className="p-2.5 md:p-3 bg-secondary hover:bg-secondary/80 transition-colors flex-shrink-0 active:scale-90"
+                className="p-2.5 md:p-3 bg-secondary hover:bg-secondary/80 transition-colors flex-shrink-0 active:scale-90 mt-0.5"
                 data-testid={`button-save-${designer.slug}`}
               >
                 <Heart className={`w-5 h-5 ${isSaved ? 'fill-foreground text-foreground' : 'text-foreground'}`} strokeWidth={1.5} />
               </button>
             </div>
             
-            <div className="flex items-center gap-3 mt-2 md:mt-4">
-              <span className={`px-3 py-1 text-[10px] md:text-xs uppercase tracking-widest border ${
+            <div className="flex items-center gap-3 mt-1 md:mt-4">
+              <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] border ${
                 designer.status === 'live' ? 'border-foreground text-foreground' : 'border-muted-foreground text-muted-foreground'
               }`}>
                 {designer.status}
@@ -121,21 +121,21 @@ export default function DesignerDetail() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 py-6 md:py-8 border-y border-border/40">
-            <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Natural Fiber Score</span>
+          <div className="flex flex-col gap-3 py-5 md:py-8 border-y border-border/40">
+            <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Natural Fiber Score</span>
             {designer.naturalFiberPercent != null ? (
               <>
-                <div className="flex items-baseline gap-3">
-                  <span className="text-5xl md:text-7xl font-serif">{designer.naturalFiberPercent}%</span>
-                  <span className="text-base md:text-lg text-muted-foreground font-serif italic">Natural Fibers</span>
+                <div className="flex items-baseline gap-2 md:gap-3">
+                  <span className="text-4xl md:text-7xl font-serif">{designer.naturalFiberPercent}%</span>
+                  <span className="text-sm md:text-lg text-muted-foreground font-serif italic">Natural Fibers</span>
                 </div>
-                <div className="w-full h-2 bg-secondary mt-2 md:mt-3 relative overflow-hidden">
+                <div className="w-full h-1.5 md:h-2 bg-secondary mt-1.5 md:mt-3 relative overflow-hidden">
                   <div 
                     className="absolute top-0 left-0 h-full bg-foreground transition-all duration-700"
                     style={{ width: `${designer.naturalFiberPercent}%` }}
                   />
                 </div>
-                <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {designer.naturalFiberPercent >= 90
                     ? "Exceptional commitment to natural materials."
                     : designer.naturalFiberPercent >= 70

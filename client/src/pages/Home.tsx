@@ -17,29 +17,30 @@ export default function Home() {
     <div className="flex flex-col gap-16 md:gap-24 py-6 md:py-16">
       
       {/* Hero Section */}
-      <section className="relative h-[60vh] md:h-[70vh] min-h-[420px] md:min-h-[500px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[65vh] md:h-[70vh] min-h-[480px] md:min-h-[500px] flex items-end md:items-center justify-center overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img 
             src={heroImage}
             alt="Luxury Fashion Editorial" 
-            className="w-full h-full object-cover object-center opacity-90"
+            className="w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-black/20 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10 md:bg-black/20 md:bg-none" />
+          <div className="hidden md:block absolute inset-0 bg-black/20 mix-blend-multiply" />
         </div>
         
-        <div className="relative z-10 text-center px-6 max-w-3xl flex flex-col items-center">
-          <h1 className="text-3xl md:text-6xl lg:text-7xl font-serif text-white mb-4 md:mb-6 leading-tight" data-testid="text-hero-headline">
+        <div className="relative z-10 text-center px-6 pb-10 md:pb-0 max-w-3xl flex flex-col items-center">
+          <h1 className="text-[28px] leading-[1.2] md:text-6xl lg:text-7xl font-serif text-white mb-4 md:mb-6 md:leading-tight" data-testid="text-hero-headline">
             Material-first fashion for women who expect quality in every fiber.
           </h1>
-          <p className="text-base md:text-xl text-white/90 mb-8 md:mb-10 max-w-xl font-light tracking-wide" data-testid="text-hero-subtext">
+          <p className="text-sm md:text-xl text-white/85 mb-7 md:mb-10 max-w-xl font-light tracking-wide" data-testid="text-hero-subtext">
             Discover designers and pieces ranked by fabric composition.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Link href="/quiz" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center justify-center gap-2 active:scale-95" data-testid="button-take-quiz">
+            <Link href="/quiz" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center justify-center gap-2 active:scale-[0.97]" data-testid="button-take-quiz">
                 Take Quiz <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/designers" className="border border-white text-white px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm font-medium hover:bg-white/10 transition-colors text-center active:scale-95" data-testid="button-browse-designers">
+            <Link href="/designers" className="border border-white/80 text-white px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/10 transition-colors text-center active:scale-[0.97]" data-testid="button-browse-designers">
                 Browse Designers
             </Link>
           </div>
@@ -50,7 +51,7 @@ export default function Home() {
       <section className="flex flex-col gap-6 md:gap-10">
         <div className="flex justify-between items-end border-b border-border/50 pb-3 md:pb-4">
           <h2 className="text-2xl md:text-3xl font-serif">Curated Designers</h2>
-          <Link href="/designers" className="text-sm uppercase tracking-widest hover:text-muted-foreground transition-colors hidden sm:block" data-testid="link-view-all-designers">
+          <Link href="/designers" className="text-[10px] md:text-sm uppercase tracking-[0.15em] hover:text-muted-foreground transition-colors active:scale-95" data-testid="link-view-all-designers">
               View All
           </Link>
         </div>

@@ -399,12 +399,12 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
       </header>
 
       {!isAuthenticated && (
-        <div className="bg-foreground text-background p-6 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-8 justify-between" data-testid="banner-save-results">
-          <div className="flex flex-col gap-1 text-center md:text-left">
+        <div className="bg-foreground text-background p-5 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-8 justify-between" data-testid="banner-save-results">
+          <div className="flex flex-col gap-1.5 text-center md:text-left">
             <span className="text-sm md:text-base font-serif">Save your results</span>
-            <span className="text-xs text-background/70">Create an account to keep your fabric persona, track favorites, and get personalized recommendations.</span>
+            <span className="text-xs text-background/70 leading-relaxed">Create an account to keep your fabric persona and get personalized recommendations.</span>
           </div>
-          <Link href="/account" className="border border-background px-6 py-3 uppercase tracking-widest text-[10px] md:text-xs hover:bg-background hover:text-foreground transition-colors active:scale-95 whitespace-nowrap flex-shrink-0" data-testid="link-create-account-save">
+          <Link href="/account" className="border border-background px-6 py-3.5 md:py-3 uppercase tracking-[0.15em] text-[10px] md:text-xs hover:bg-background hover:text-foreground transition-colors active:scale-[0.97] whitespace-nowrap flex-shrink-0 w-full md:w-auto text-center" data-testid="link-create-account-save">
             Create Account
           </Link>
         </div>
