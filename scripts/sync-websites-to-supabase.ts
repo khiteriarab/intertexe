@@ -243,7 +243,7 @@ async function main() {
   
   console.log("\nStep 3: Generating and saving website URLs...");
   
-  const BATCH_SIZE = 100;
+  const BATCH_SIZE = 500;
   let updated = 0;
   let skipped = 0;
   
@@ -255,23 +255,21 @@ async function main() {
       return { id: d.id, website: url };
     }).filter(u => u.website !== null);
     
-    for (const upd of updates) {
-      const { error } = await supabase
+    const promises = updates.map(upd =>
+      supabase
         .from("designers")
         .update({ website: upd.website })
-        .eq("id", upd.id);
-      
-      if (error) {
-        console.error(`  Failed to update ${upd.id}: ${error.message}`);
-        skipped++;
-      } else {
-        updated++;
-      }
-    }
+        .eq("id", upd.id)
+        .then(({ error }) => {
+          if (error) { skipped++; } else { updated++; }
+        })
+    );
+    
+    await Promise.all(promises);
     
     const batchNum = Math.floor(i / BATCH_SIZE) + 1;
     const totalBatches = Math.ceil(needsUpdate.length / BATCH_SIZE);
-    console.log(`  Batch ${batchNum}/${totalBatches}: ${updates.length} updated`);
+    console.log(`  Batch ${batchNum}/${totalBatches}: ${updates.length} updated (total: ${updated})`);
   }
   
   console.log(`\nDone! Updated ${updated} designers, skipped ${skipped}.`);
