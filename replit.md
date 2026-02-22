@@ -4,6 +4,15 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
+- **2026-02-22**: Signup flow, subscription gating, SEO, and analytics
+  - After signup → redirect to /quiz (value-tied accounts)
+  - Quiz results show "Save your results" banner if not logged in; auto-save if logged in
+  - Removed all mock designer arrays (DESIGNERS, MOCK_USER) from data.ts
+  - Added subscriptionTier column to users (default "free"), gating structure in /api/recommend
+  - useSEO hook: dynamic page title + meta description + og:title/twitter:title per designer page
+  - Analytics: analytics_events table, trackEvent on signup/quiz_completed/favorite_saved
+  - /api/analytics/summary endpoint for event counts
+  - Pending quiz results sync from localStorage on login/signup (syncPendingQuizData)
 - **2026-02-22**: Resend welcome email on signup
   - server/resend.ts: Resend client via Replit connector (fresh credentials per send)
   - Branded HTML email with INTERTEXE luxury aesthetic (Georgia serif, #111 accents)

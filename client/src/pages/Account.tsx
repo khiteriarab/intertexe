@@ -54,7 +54,10 @@ function AuthForms() {
       });
     } else {
       signup.mutate({ username: form.email, email: form.email, password: form.password, name: form.name || undefined }, {
-        onSuccess: () => { toast({ title: "Welcome to INTERTEXE!" }); },
+        onSuccess: () => {
+          toast({ title: "Welcome to INTERTEXE!" });
+          setLocation("/quiz");
+        },
         onError: (err: any) => toast({ title: "Signup failed", description: err.message }),
       });
     }

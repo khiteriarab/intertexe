@@ -358,6 +358,7 @@ function BrandsStep({ designers, selectedBrands, onToggle }: { designers: any[];
 }
 
 function QuizResults({ selections, recommendation, designers }: { selections: any; recommendation: any; designers: any[] }) {
+  const { isAuthenticated } = useAuth();
   const recommendedDesigners = designers
     .filter((d: any) => d.naturalFiberPercent == null || d.naturalFiberPercent > 85)
     .slice(0, 3);
@@ -371,6 +372,18 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
           {recommendation.recommendation}
         </p>
       </header>
+
+      {!isAuthenticated && (
+        <div className="bg-foreground text-background p-6 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-8 justify-between" data-testid="banner-save-results">
+          <div className="flex flex-col gap-1 text-center md:text-left">
+            <span className="text-sm md:text-base font-serif">Save your results</span>
+            <span className="text-xs text-background/70">Create an account to keep your profile, track favorites, and get personalized recommendations.</span>
+          </div>
+          <Link href="/account" className="border border-background px-6 py-3 uppercase tracking-widest text-[10px] md:text-xs hover:bg-background hover:text-foreground transition-colors active:scale-95 whitespace-nowrap flex-shrink-0" data-testid="link-create-account-save">
+            Create Account
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 border-y border-border/40 py-8 md:py-12">
         <div className="flex flex-col gap-4 md:gap-6">
@@ -430,8 +443,8 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
       </section>
 
       <div className="flex justify-center pt-4 md:pt-8">
-        <Link href="/account" className="border border-foreground px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground hover:text-background transition-colors active:scale-95">
-            View Your Account
+        <Link href={isAuthenticated ? "/account" : "/designers"} className="border border-foreground px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground hover:text-background transition-colors active:scale-95">
+            {isAuthenticated ? "View Your Account" : "Browse Designers"}
         </Link>
       </div>
     </div>
