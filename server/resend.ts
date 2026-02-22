@@ -1,6 +1,7 @@
+// Resend integration via Replit connector
+// WARNING: Never cache the client — access tokens expire, so credentials
+// must be fetched fresh each time.
 import { Resend } from "resend";
-
-let connectionSettings: any;
 
 async function getCredentials() {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
@@ -14,7 +15,7 @@ async function getCredentials() {
     throw new Error("X_REPLIT_TOKEN not found for repl/depl");
   }
 
-  connectionSettings = await fetch(
+  const settings = await fetch(
     "https://" + hostname + "/api/v2/connection?include_secrets=true&connector_names=resend",
     {
       headers: {
@@ -26,16 +27,16 @@ async function getCredentials() {
     .then((res) => res.json())
     .then((data) => data.items?.[0]);
 
-  if (!connectionSettings || !connectionSettings.settings.api_key) {
+  if (!settings || !settings.settings.api_key) {
     throw new Error("Resend not connected");
   }
   return {
-    apiKey: connectionSettings.settings.api_key,
-    fromEmail: connectionSettings.settings.from_email,
+    apiKey: settings.settings.api_key,
+    fromEmail: settings.settings.from_email,
   };
 }
 
-export async function getResendClient() {
+async function getFreshResendClient() {
   const { apiKey, fromEmail } = await getCredentials();
   return {
     client: new Resend(apiKey),
@@ -45,7 +46,7 @@ export async function getResendClient() {
 
 export async function sendWelcomeEmail(toEmail: string, name?: string | null) {
   try {
-    const { client, fromEmail } = await getResendClient();
+    const { client, fromEmail } = await getFreshResendClient();
     const firstName = name || "there";
 
     await client.emails.send({
