@@ -41,13 +41,20 @@ declare global {
 export function setupAuth(app: Express) {
   const PgSession = connectPgSimple(session);
 
+  app.set("trust proxy", 1);
+
   app.use(
     session({
       store: new PgSession({ pool, createTableIfMissing: true }),
       secret: process.env.SESSION_SECRET || "intertexe-session-secret-change-in-prod",
       resave: false,
       saveUninitialized: false,
-      cookie: { maxAge: 30 * 24 * 60 * 60 * 1000, secure: false },
+      cookie: {
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        secure: true,
+        sameSite: "none",
+        httpOnly: true,
+      },
     })
   );
 
