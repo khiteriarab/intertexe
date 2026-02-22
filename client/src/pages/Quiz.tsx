@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { fetchDesigners } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { assignPersona } from "@shared/personas";
+import { BrandImage } from "@/components/BrandImage";
 
 const MATERIAL_OPTIONS = [
   "Cotton", "Silk", "Linen", "Wool", "Cashmere", "Leather / Suede",
@@ -477,9 +478,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-8">
           {recommendedDesigners.map((designer: any) => (
             <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 md:gap-4" data-testid={`card-recommended-${designer.slug}`}>
-                <div className="aspect-[3/4] bg-secondary relative flex items-center justify-center">
-                  <span className="font-serif text-4xl md:text-5xl text-muted-foreground/30">{designer.name.charAt(0)}</span>
-                </div>
+                <BrandImage name={designer.name} className="aspect-[3/4]" />
                 <div>
                   <h3 className="text-base md:text-xl font-serif">{designer.name}</h3>
                   {designer.naturalFiberPercent != null && (

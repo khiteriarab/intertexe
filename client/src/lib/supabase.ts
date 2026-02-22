@@ -82,9 +82,10 @@ function guessBrandWebsite(name: string): string | null {
 
 function mapRow(row: any): Designer {
   const website = row.website ?? guessBrandWebsite(row.name);
+  const cleanName = (row.name || '').replace(/[®™©°]/g, '').replace(/\*+/g, '').replace(/\s{2,}/g, ' ').trim();
   return {
     id: row.id,
-    name: row.name,
+    name: cleanName || row.name,
     slug: row.slug,
     status: row.status || "Pending",
     naturalFiberPercent: row.natural_fiber_percent ?? null,

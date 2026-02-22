@@ -7,38 +7,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
-import { getBrandScreenshotUrl, getBrandLogoUrl } from "@/lib/brand-images";
+import { getBrandScreenshotUrl } from "@/lib/brand-images";
+import { BrandImage } from "@/components/BrandImage";
 import { useState } from "react";
-
-function BrandImage({ name, className, size = "screenshot" }: { name: string; className?: string; size?: "screenshot" | "logo" }) {
-  const [failed, setFailed] = useState(false);
-  const url = size === "logo" ? getBrandLogoUrl(name) : getBrandScreenshotUrl(name);
-
-  if (!url || failed) {
-    return (
-      <div className={`flex items-center justify-center bg-secondary ${className}`}>
-        <span className="font-serif text-4xl md:text-6xl text-muted-foreground/15">{name.charAt(0)}</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`relative bg-secondary overflow-hidden ${className}`}>
-      <img
-        src={url}
-        alt={`${name} website`}
-        className="absolute inset-0 w-full h-full object-cover object-top"
-        loading="lazy"
-        onError={() => setFailed(true)}
-      />
-      {failed === false && (
-        <div className="absolute inset-0 flex items-center justify-center font-serif text-4xl md:text-6xl text-muted-foreground/15">
-          {name.charAt(0)}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
   const [imgFailed, setImgFailed] = useState(false);

@@ -29,9 +29,9 @@ const KEEP_UPPER_WORDS = new Set([
 ]);
 
 const DO_NOT_TOUCH_NAMES = new Set([
-  'A_COLD_WALL*', 'GCDS', 'MSGM', 'OAMC', 'DKNY', 'MCM', 'RVCA', 'UGG',
+  'A_COLD_WALL*', 'A_COLD_WALL', 'GCDS', 'MSGM', 'OAMC', 'DKNY', 'MCM', 'RVCA', 'UGG',
   'COS', 'H&M', 'BOSS', '#RIKYN', 'DIOR', 'FENDI', 'AT.P.CO',
-  'adidas', 'agnès b.', 'and wander', 'iets frans...',
+  'adidas', 'agnès b.', 'and wander', 'iets frans...', 'iets frans',
   '1017 ALYX 9SM', '4SDESIGNS', '5TATE OF MIND', '6TH NBRHD',
   'AFRM', 'AGMES', 'AKNVAS', 'AMIRI', 'ACRONYM', 'AMBUSH',
   'VTMNTS', 'SPRWMN', 'ölend', '1XBLUE', '22TOTE',
@@ -39,9 +39,8 @@ const DO_NOT_TOUCH_NAMES = new Set([
 
 function titleCaseWord(word: string, isFirst: boolean): string {
   if (word.length === 0) return word;
-  const m = word.match(/^(.+?)([®™*°]*)$/);
-  const main = m ? m[1] : word;
-  const suffix = m ? m[2] : '';
+  const main = word;
+  const suffix = '';
   if (/^([A-Za-z]\.){2,}[A-Za-z]?\.?$/.test(main)) return main.toUpperCase() + suffix;
   if (KEEP_UPPER_WORDS.has(main.toUpperCase())) return main.toUpperCase() + suffix;
   if (/^\d/.test(main)) return main + suffix;
@@ -55,15 +54,23 @@ function titleCaseWord(word: string, isFirst: boolean): string {
   return main.charAt(0).toUpperCase() + main.slice(1).toLowerCase() + suffix;
 }
 
+function cleanBrandSymbols(name: string): string {
+  let cleaned = name.replace(/[®™©°]/g, '').replace(/\*+/g, '');
+  cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+  if (cleaned.startsWith("'") && cleaned.length <= 3) return cleaned;
+  return cleaned;
+}
+
 function fixBrandName(name: string): string {
-  if (DO_NOT_TOUCH_NAMES.has(name)) return name;
-  const letters = name.replace(/[^a-zA-ZÀ-ÿ]/g, '');
-  if (letters.length < 3) return name;
-  const hasAccents = /[àáâãäåæçèéêëìíîïñòóôõöùúûü]/.test(name);
+  const cleaned = cleanBrandSymbols(name);
+  if (DO_NOT_TOUCH_NAMES.has(cleaned) || DO_NOT_TOUCH_NAMES.has(name)) return cleaned;
+  const letters = cleaned.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+  if (letters.length < 3) return cleaned;
+  const hasAccents = /[àáâãäåæçèéêëìíîïñòóôõöùúûü]/.test(cleaned);
   const isAllCaps = letters === letters.toUpperCase() && !hasAccents;
   const isAllLower = letters === letters.toLowerCase() && !hasAccents;
-  if (!isAllCaps && !isAllLower) return name;
-  const parts = name.split(/(\s+)/);
+  if (!isAllCaps && !isAllLower) return cleaned;
+  const parts = cleaned.split(/(\s+)/);
   let wordIndex = 0;
   return parts.map((part) => {
     if (/^\s+$/.test(part)) return part;
