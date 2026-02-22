@@ -8,6 +8,7 @@ import type { Express } from "express";
 import type { User } from "@shared/schema";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
+import { sendWelcomeEmail } from "./resend";
 
 const scryptAsync = promisify(scrypt);
 
@@ -104,6 +105,8 @@ export function setupAuth(app: Express) {
         password: await hashPassword(password),
         name: name || null,
       });
+
+      sendWelcomeEmail(email, name).catch(() => {});
 
       req.login(user, (err) => {
         if (err) return res.status(500).json({ message: "Login failed after signup" });
