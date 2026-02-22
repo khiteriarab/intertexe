@@ -379,7 +379,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
             <span className="text-sm md:text-base font-serif">Save your results</span>
             <span className="text-xs text-background/70">Create an account to keep your profile, track favorites, and get personalized recommendations.</span>
           </div>
-          <Link href="/account" className="border border-background px-6 py-3 uppercase tracking-widest text-[10px] md:text-xs hover:bg-background hover:text-foreground transition-colors active:scale-95 whitespace-nowrap flex-shrink-0">
+          <Link href="/account" className="border border-background px-6 py-3 uppercase tracking-widest text-[10px] md:text-xs hover:bg-background hover:text-foreground transition-colors active:scale-95 whitespace-nowrap flex-shrink-0" data-testid="link-create-account-save">
             Create Account
           </Link>
         </div>

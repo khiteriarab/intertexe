@@ -9,10 +9,21 @@ export function useSEO({
 }) {
   useEffect(() => {
     if (title) {
-      document.title = title.includes("INTERTEXE") ? title : `${title} | INTERTEXE`;
+      const fullTitle = title.includes("INTERTEXE") ? title : `${title} | INTERTEXE`;
+      document.title = fullTitle;
+
+      const ogTitle = document.querySelector('meta[property="og:title"]') as HTMLMetaElement;
+      if (ogTitle) ogTitle.content = fullTitle;
+
+      const twTitle = document.querySelector('meta[name="twitter:title"]') as HTMLMetaElement;
+      if (twTitle) twTitle.content = fullTitle;
     }
     return () => {
       document.title = "INTERTEXE";
+      const ogTitle = document.querySelector('meta[property="og:title"]') as HTMLMetaElement;
+      if (ogTitle) ogTitle.content = "INTERTEXE";
+      const twTitle = document.querySelector('meta[name="twitter:title"]') as HTMLMetaElement;
+      if (twTitle) twTitle.content = "INTERTEXE";
     };
   }, [title]);
 
