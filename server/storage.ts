@@ -7,13 +7,18 @@ import {
   type InsertFavorite,
   type QuizResult,
   type InsertQuizResult,
+  type Review,
+  type InsertReview,
+  type ReviewVote,
   users,
   designers,
   favorites,
   quizResults,
+  reviews,
+  reviewVotes,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, ilike, asc } from "drizzle-orm";
+import { eq, and, ilike, asc, sql, desc } from "drizzle-orm";
 import { supabase } from "./supabase";
 
 const LOWERCASE_WORDS = new Set([
@@ -323,6 +328,14 @@ export interface IStorage {
   saveQuizResult(result: InsertQuizResult): Promise<QuizResult>;
   getQuizResultsByUser(userId: string): Promise<QuizResult[]>;
   updateUserPersona(userId: string, persona: string): Promise<void>;
+
+  createReview(review: InsertReview): Promise<Review>;
+  getReviewsByDesigner(designerSlug: string): Promise<(Review & { userName: string })[]>;
+  getReviewsByUser(userId: string): Promise<Review[]>;
+  deleteReview(reviewId: string, userId: string): Promise<void>;
+  voteHelpful(reviewId: string, userId: string): Promise<void>;
+  hasVoted(reviewId: string, userId: string): Promise<boolean>;
+  getUserReviewForDesigner(userId: string, designerSlug: string): Promise<Review | undefined>;
 }
 
 let designerCache: { data: Designer[]; timestamp: number } | null = null;
@@ -530,6 +543,63 @@ export class DatabaseStorage implements IStorage {
           else console.log("Supabase sync: update persona OK");
         });
     }
+  }
+  async createReview(review: InsertReview): Promise<Review> {
+    const [created] = await db.insert(reviews).values(review).returning();
+    return created;
+  }
+
+  async getReviewsByDesigner(designerSlug: string): Promise<(Review & { userName: string })[]> {
+    const rows = await db
+      .select({
+        id: reviews.id,
+        userId: reviews.userId,
+        designerSlug: reviews.designerSlug,
+        rating: reviews.rating,
+        fabricQuality: reviews.fabricQuality,
+        title: reviews.title,
+        body: reviews.body,
+        productName: reviews.productName,
+        helpfulCount: reviews.helpfulCount,
+        createdAt: reviews.createdAt,
+        userName: users.name,
+      })
+      .from(reviews)
+      .leftJoin(users, eq(reviews.userId, users.id))
+      .where(eq(reviews.designerSlug, designerSlug))
+      .orderBy(reviews.createdAt);
+    return rows.map(r => ({ ...r, userName: r.userName || "Anonymous" }));
+  }
+
+  async getReviewsByUser(userId: string): Promise<Review[]> {
+    return db.select().from(reviews).where(eq(reviews.userId, userId));
+  }
+
+  async deleteReview(reviewId: string, userId: string): Promise<void> {
+    await db.delete(reviewVotes).where(eq(reviewVotes.reviewId, reviewId));
+    await db.delete(reviews).where(and(eq(reviews.id, reviewId), eq(reviews.userId, userId)));
+  }
+
+  async voteHelpful(reviewId: string, userId: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      const existing = await tx.select().from(reviewVotes)
+        .where(and(eq(reviewVotes.reviewId, reviewId), eq(reviewVotes.userId, userId)));
+      if (existing.length > 0) return;
+      await tx.insert(reviewVotes).values({ reviewId, userId });
+      await tx.execute(sql`UPDATE reviews SET helpful_count = helpful_count + 1 WHERE id = ${reviewId}`);
+    });
+  }
+
+  async hasVoted(reviewId: string, userId: string): Promise<boolean> {
+    const rows = await db.select().from(reviewVotes)
+      .where(and(eq(reviewVotes.reviewId, reviewId), eq(reviewVotes.userId, userId)));
+    return rows.length > 0;
+  }
+
+  async getUserReviewForDesigner(userId: string, designerSlug: string): Promise<Review | undefined> {
+    const [review] = await db.select().from(reviews)
+      .where(and(eq(reviews.userId, userId), eq(reviews.designerSlug, designerSlug)));
+    return review;
   }
 }
 

@@ -195,4 +195,35 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  async getReviews(designerSlug: string) {
+    const res = await apiFetch(`/api/reviews/${designerSlug}`);
+    return handleResponse(res);
+  },
+
+  async submitReview(data: {
+    designerSlug: string;
+    rating: number;
+    fabricQuality?: number;
+    title?: string;
+    body?: string;
+    productName?: string;
+  }) {
+    const res = await apiFetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  async deleteReview(reviewId: string) {
+    const res = await apiFetch(`/api/reviews/${reviewId}`, { method: "DELETE" });
+    return handleResponse(res);
+  },
+
+  async voteHelpful(reviewId: string) {
+    const res = await apiFetch(`/api/reviews/${reviewId}/helpful`, { method: "POST" });
+    return handleResponse(res);
+  },
 };
