@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { fetchDesignerBySlug } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function DesignerDetail() {
   const { slug } = useParams();
@@ -16,6 +17,13 @@ export default function DesignerDetail() {
     queryKey: ["designer", slug],
     queryFn: () => fetchDesignerBySlug(slug!),
     enabled: !!slug,
+  });
+
+  useSEO({
+    title: designer ? `${designer.name} — Material Quality & Natural Fiber Score` : undefined,
+    description: designer
+      ? designer.description || `Explore ${designer.name}'s commitment to natural fibers and material quality on INTERTEXE.`
+      : undefined,
   });
 
   const { data: favStatus } = useQuery({

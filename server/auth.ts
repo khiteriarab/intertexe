@@ -6,8 +6,9 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import type { Express } from "express";
 import type { User } from "@shared/schema";
+import { analyticsEvents } from "@shared/schema";
 import connectPgSimple from "connect-pg-simple";
-import { pool } from "./db";
+import { pool, db } from "./db";
 import { sendWelcomeEmail } from "./resend";
 
 const scryptAsync = promisify(scrypt);
@@ -32,6 +33,7 @@ declare global {
       email: string;
       password: string;
       name: string | null;
+      subscriptionTier: string;
     }
   }
 }
@@ -107,6 +109,7 @@ export function setupAuth(app: Express) {
       });
 
       sendWelcomeEmail(email, name).catch(() => {});
+      db.insert(analyticsEvents).values({ event: "signup", userId: user.id }).catch(() => {});
 
       req.login(user, (err) => {
         if (err) return res.status(500).json({ message: "Login failed after signup" });

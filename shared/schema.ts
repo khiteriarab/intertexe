@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   name: text("name"),
+  subscriptionTier: text("subscription_tier").notNull().default("free"),
 });
 
 export const designers = pgTable("designers", {
@@ -37,6 +38,14 @@ export const quizResults = pgTable("quiz_results", {
   favoriteBrands: text("favorite_brands").array().notNull(),
   profileType: text("profile_type"),
   recommendation: text("recommendation"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  event: text("event").notNull(),
+  userId: uuid("user_id"),
+  metadata: text("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

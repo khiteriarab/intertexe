@@ -2,8 +2,22 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertQuizResultSchema } from "@shared/schema";
+import { insertQuizResultSchema, analyticsEvents } from "@shared/schema";
 import OpenAI from "openai";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
+
+async function trackEvent(event: string, userId?: string, metadata?: Record<string, any>) {
+  try {
+    await db.insert(analyticsEvents).values({
+      event,
+      userId: userId || null,
+      metadata: metadata ? JSON.stringify(metadata) : null,
+    });
+  } catch (err) {
+    console.error("Analytics tracking error:", err);
+  }
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -53,6 +67,7 @@ export async function registerRoutes(
       if (already) return res.status(409).json({ message: "Already favorited" });
 
       const fav = await storage.addFavorite({ userId: req.user!.id, designerId });
+      trackEvent("favorite_saved", req.user!.id, { designerId });
       return res.status(201).json(fav);
     } catch (err: any) {
       return res.status(500).json({ message: err.message });
@@ -89,6 +104,10 @@ export async function registerRoutes(
       if (!parsed.success) return res.status(400).json({ message: "Invalid quiz data" });
 
       const result = await storage.saveQuizResult(parsed.data);
+      trackEvent("quiz_completed", parsed.data.userId || undefined, {
+        materials: parsed.data.materials,
+        profileType: parsed.data.profileType,
+      });
       return res.status(201).json(result);
     } catch (err: any) {
       return res.status(500).json({ message: err.message });
@@ -106,7 +125,20 @@ export async function registerRoutes(
   });
 
   // ─── AI Recommendations ────────────────────
+  // Subscription gating: AI recommendations require active subscription
+  // Currently allowing all users during beta; flip requireSubscription to enforce
   app.post("/api/recommend", async (req, res) => {
+    const requireSubscription = false; // Set to true to enforce paid tier
+    if (requireSubscription) {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Sign in to access AI recommendations", requiresAuth: true });
+      }
+      const tier = req.user!.subscriptionTier || "free";
+      if (tier === "free") {
+        return res.status(403).json({ message: "AI recommendations require a premium subscription", requiresUpgrade: true });
+      }
+    }
+
     const { materials, priceRange, syntheticTolerance, favoriteBrands } = req.body;
 
     const buildFallback = () => ({
@@ -163,6 +195,18 @@ Provide a JSON response with exactly these fields:
     } catch (err: any) {
       console.error("Recommendation error:", err.message);
       return res.json(buildFallback());
+    }
+  });
+
+  // ─── Analytics ────────────────────────────
+  app.get("/api/analytics/summary", async (req, res) => {
+    try {
+      const result = await db.execute(
+        sql`SELECT event, COUNT(*)::int as count FROM analytics_events GROUP BY event ORDER BY count DESC`
+      );
+      return res.json(result.rows || []);
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
     }
   });
 

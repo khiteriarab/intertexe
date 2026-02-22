@@ -1,0 +1,96 @@
+1. Lock the Signup Experience
+
+Your goal:
+	•	User signs up
+	•	Gets welcome email
+	•	Lands in product immediately
+
+Next things to confirm inside Replit:
+	•	After signup → redirect to /quiz
+	•	After quiz → show results
+	•	Prompt: “Save your results by creating an account” if not logged in
+	•	If already logged in → auto-save
+
+This ensures:
+
+➡️ Accounts = tied to value
+➡️ Not random signups
+
+Tell Replit:
+
+After successful signup, redirect users to /quiz.
+If user completes quiz while not logged in, store results temporarily and prompt account creation to save results.
+
+⸻
+
+✅ 2. Make Designers Page Pull From Supabase (No Mock Data)
+
+Right now Replit still has mock arrays.
+
+Tell Replit:
+
+Remove all mock designer arrays and ensure Designers page fetches from Supabase designers table where status = ‘live’. If none exist, display empty state message.
+
+This is essential for scale.
+
+⸻
+
+✅ 3. Add “Favorites” Saving
+
+Tell Replit:
+
+Logged-in users can click “Save” on a designer. This creates a row in favorites table. Favorites page shows user’s saved designers.
+
+This is retention.
+
+⸻
+
+✅ 4. Lock the Monetization Model
+
+Here’s the cleanest structure for you:
+
+Free Tier
+	•	Browse designers
+	•	Take quiz
+	•	See top-level % material quality
+
+Paid Tier ($19/month later)
+	•	AI recommendations
+	•	Deep fabric breakdowns
+	•	Personalized edits
+	•	Saved collections
+	•	Alerts when high-quality items drop
+
+Tell Replit:
+
+Add subscription gating so AI recommendations require active subscription. Browsing designers and quiz remain free.
+
+You do NOT need to build payments yet. Just structure for it.
+
+⸻
+
+✅ 5. Add AI Recommendations Hook
+
+Tell Replit:
+
+Use OpenAI API to generate recommendations based on quiz results and saved favorites. Store response in database and display on user dashboard.
+
+⸻
+
+✅ 6. SEO & Indexing (Critical for Income)
+
+Tell Replit:
+
+Ensure every designer page has SEO-friendly meta title and description using designer name.
+
+This is how you’ll eventually rank on Google.
+
+⸻
+
+✅ 7. Analytics
+
+Tell Replit:
+
+Add basic analytics to track: signups, quiz completions, favorites saved.
+
+Without this you’re blind.
