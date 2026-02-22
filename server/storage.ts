@@ -16,11 +16,17 @@ import { db } from "./db";
 import { eq, and, ilike, asc } from "drizzle-orm";
 import { supabase } from "./supabase";
 
+const NAME_CORRECTIONS: Record<string, { name: string; slug: string }> = {
+  ".., merci italia": { name: "Merci Italia", slug: "merci-italia" },
+  "..,merci": { name: "Merci", slug: "merci" },
+};
+
 function mapSupabaseDesigner(row: any): Designer {
+  const correction = NAME_CORRECTIONS[row.name];
   return {
     id: row.id,
-    name: row.name,
-    slug: row.slug,
+    name: correction?.name || row.name,
+    slug: correction?.slug || row.slug,
     status: row.status || "Pending",
     naturalFiberPercent: row.natural_fiber_percent ?? null,
     description: row.description ?? null,
