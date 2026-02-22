@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesignerBySlug } from "@/lib/supabase";
@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
+import { useState } from "react";
 
 export default function DesignerDetail() {
   const { slug } = useParams();
@@ -86,6 +87,18 @@ export default function DesignerDetail() {
       </div>
     );
   }
+
+  const { data: similarBrands, isLoading: similarLoading } = useQuery({
+    queryKey: ["similar", slug],
+    queryFn: async () => {
+      const res = await fetch(`/api/designers/${slug}/similar`);
+      if (!res.ok) throw new Error("Failed to load");
+      return res.json();
+    },
+    enabled: !!designer,
+    staleTime: 1000 * 60 * 30,
+    retry: 1,
+  });
 
   const tier = getQualityTier(designer.naturalFiberPercent);
 
@@ -194,6 +207,73 @@ export default function DesignerDetail() {
           )}
         </div>
       </header>
+
+      <section className="flex flex-col gap-6" data-testid="section-similar-brands">
+        <div className="flex items-center gap-3">
+          <Sparkles className="w-4 h-4 text-foreground/60" />
+          <h2 className="text-xs uppercase tracking-[0.2em] font-medium">If You Love {designer.name}, You'll Love</h2>
+        </div>
+
+        {similarLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-secondary animate-pulse flex flex-col">
+                <div className="aspect-[4/3]" />
+                <div className="p-4 flex flex-col gap-2">
+                  <div className="h-4 bg-secondary/80 w-2/3" />
+                  <div className="h-3 bg-secondary/60 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : similarBrands && similarBrands.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            {similarBrands.map((brand: any, i: number) => {
+              const brandTier = getQualityTier(brand.naturalFiberPercent);
+              const card = (
+                <div className="bg-secondary/30 border border-border/20 hover:border-border/50 transition-all flex flex-col group" data-testid={`card-similar-${i}`}>
+                  <div className="aspect-[4/3] bg-secondary relative overflow-hidden flex items-center justify-center">
+                    <span className="font-serif text-3xl md:text-4xl text-muted-foreground/15 group-hover:text-muted-foreground/25 transition-colors">
+                      {brand.name.charAt(0)}
+                    </span>
+                    {brand.naturalFiberPercent != null && (
+                      <div className="absolute top-2 left-2">
+                        <span className={`px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.1em] font-medium ${getTierColor(brandTier.tier)}`}>
+                          {brandTier.shortLabel}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
+                    <h3 className="font-serif text-sm md:text-base leading-snug">{brand.name}</h3>
+                    {brand.reason && (
+                      <p className="text-[11px] md:text-xs text-muted-foreground leading-relaxed line-clamp-2">{brand.reason}</p>
+                    )}
+                    {brand.naturalFiberPercent != null && (
+                      <div className="flex items-center gap-1.5 mt-auto pt-2">
+                        <div className="w-12 h-1 bg-secondary relative overflow-hidden">
+                          <div className="absolute top-0 left-0 h-full bg-foreground/60" style={{ width: `${brand.naturalFiberPercent}%` }} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{brand.naturalFiberPercent}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+
+              return brand.slug ? (
+                <Link key={i} href={`/designers/${brand.slug}`} className="contents">
+                  {card}
+                </Link>
+              ) : (
+                <div key={i}>{card}</div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground italic" data-testid="text-similar-loading">Curating recommendations...</p>
+        )}
+      </section>
     </div>
   );
 }

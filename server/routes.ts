@@ -167,6 +167,73 @@ export async function registerRoutes(
     return res.json(result);
   });
 
+  // ─── Similar Brands (AI) ──────────────────
+  const similarCache = new Map<string, { data: any; ts: number }>();
+  const SIMILAR_TTL = 1000 * 60 * 60;
+
+  app.get("/api/designers/:slug/similar", async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const cached = similarCache.get(slug);
+      if (cached && Date.now() - cached.ts < SIMILAR_TTL) {
+        return res.json(cached.data);
+      }
+
+      const designer = await storage.getDesignerBySlug(slug);
+      if (!designer) return res.status(404).json({ message: "Designer not found" });
+
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+
+      const tierLabel = designer.naturalFiberPercent != null
+        ? designer.naturalFiberPercent >= 90 ? "Exceptional" : designer.naturalFiberPercent >= 70 ? "Excellent" : designer.naturalFiberPercent >= 50 ? "Good" : "Caution"
+        : "Under Review";
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-5.1",
+        messages: [
+          {
+            role: "system",
+            content: `You are INTERTEXE, the definitive authority on luxury fashion material quality. Given a fashion brand, suggest 6 similar brands that a fan of this brand would love. Focus on brands with similar aesthetics, price point, and material quality. Only suggest real, well-known fashion brands. Return a JSON object with a "brands" array, where each entry has "name" (exact brand name with correct capitalization) and "reason" (one concise sentence explaining why a fan of the original brand would love this one, focusing on material quality, craftsmanship, or aesthetic).`
+          },
+          {
+            role: "user",
+            content: `Brand: ${designer.name}${designer.naturalFiberPercent != null ? `\nNatural Fiber Score: ${designer.naturalFiberPercent}% (${tierLabel} tier)` : ''}${designer.description ? `\nAbout: ${designer.description}` : ''}\n\nSuggest 6 similar luxury fashion brands.`
+          }
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices[0]?.message?.content || '{"brands":[]}';
+      let suggestions: Array<{ name: string; reason: string }> = [];
+      try {
+        const parsed = JSON.parse(content);
+        suggestions = parsed.brands || [];
+      } catch {
+        console.error("Failed to parse AI similar brands response");
+        return res.json([]);
+      }
+
+      const allDesigners = await storage.getDesigners();
+      const matched = suggestions.map(s => {
+        const nameNorm = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const match = allDesigners.find(d => {
+          const dNorm = d.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return dNorm === nameNorm;
+        });
+        return match ? { ...match, reason: s.reason } : { name: s.name, slug: null, reason: s.reason, naturalFiberPercent: null };
+      }).filter(s => s.name.toLowerCase() !== designer.name.toLowerCase()).slice(0, 6);
+
+      similarCache.set(slug, { data: matched, ts: Date.now() });
+      return res.json(matched);
+    } catch (err: any) {
+      console.error("Similar brands error:", err.message);
+      return res.json([]);
+    }
+  });
+
   // ─── Analytics ────────────────────────────
   app.get("/api/analytics/summary", async (req, res) => {
     try {
