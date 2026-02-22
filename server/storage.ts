@@ -16,17 +16,83 @@ import { db } from "./db";
 import { eq, and, ilike, asc } from "drizzle-orm";
 import { supabase } from "./supabase";
 
-const NAME_CORRECTIONS: Record<string, { name: string; slug: string }> = {
-  ".., merci italia": { name: "Merci Italia", slug: "merci-italia" },
-  "..,merci": { name: "Merci", slug: "merci" },
-};
+const LOWERCASE_WORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
+  'by', 'de', 'del', 'della', 'delle', 'dei', 'degli', 'di', 'da', 'du', 'des', 'la', 'le', 'les',
+  'von', 'van', 'der', 'den', 'het', 'el', 'en', 'et', 'e', 'y', 'und',
+]);
+
+const KEEP_UPPER_WORDS = new Set([
+  'II', 'III', 'IV', 'VI', 'VII', 'VIII', 'IX', 'XI', 'XII',
+  'NYC', 'USA', 'UK', 'EU', 'LA', 'NY', 'DC', 'US', 'CO', 'LTD', 'INC', 'LLC',
+  'DJ', 'MC', 'MR', 'DR', 'ST', 'VS', 'X', 'XL', 'XXL', 'XS', 'NB',
+]);
+
+const DO_NOT_TOUCH_NAMES = new Set([
+  'A_COLD_WALL*', 'GCDS', 'MSGM', 'OAMC', 'DKNY', 'MCM', 'RVCA', 'UGG',
+  'COS', 'H&M', 'BOSS', '#RIKYN', 'DIOR', 'FENDI', 'AT.P.CO',
+  'adidas', 'agnès b.', 'and wander', 'iets frans...',
+  '1017 ALYX 9SM', '4SDESIGNS', '5TATE OF MIND', '6TH NBRHD',
+  'AFRM', 'AGMES', 'AKNVAS', 'AMIRI', 'ACRONYM', 'AMBUSH',
+  'VTMNTS', 'SPRWMN', 'ölend', '1XBLUE', '22TOTE',
+]);
+
+function titleCaseWord(word: string, isFirst: boolean): string {
+  if (word.length === 0) return word;
+  const m = word.match(/^(.+?)([®™*°]*)$/);
+  const main = m ? m[1] : word;
+  const suffix = m ? m[2] : '';
+  if (/^([A-Za-z]\.){2,}[A-Za-z]?\.?$/.test(main)) return main.toUpperCase() + suffix;
+  if (KEEP_UPPER_WORDS.has(main.toUpperCase())) return main.toUpperCase() + suffix;
+  if (/^\d/.test(main)) return main + suffix;
+  if (!isFirst && LOWERCASE_WORDS.has(main.toLowerCase())) return main.toLowerCase() + suffix;
+  if (/^[A-Za-z]+\.[A-Za-z]/i.test(main) && !/^([A-Za-z]\.)+[A-Za-z]?\.?$/.test(main)) {
+    return main.split('.').map(p => p.length > 0 ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : '').join('.') + suffix;
+  }
+  if (main.includes('-')) {
+    return main.split('-').map(p => p.length > 0 ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : p).join('-') + suffix;
+  }
+  return main.charAt(0).toUpperCase() + main.slice(1).toLowerCase() + suffix;
+}
+
+function fixBrandName(name: string): string {
+  if (DO_NOT_TOUCH_NAMES.has(name)) return name;
+  const letters = name.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+  if (letters.length < 3) return name;
+  const hasAccents = /[àáâãäåæçèéêëìíîïñòóôõöùúûü]/.test(name);
+  const isAllCaps = letters === letters.toUpperCase() && !hasAccents;
+  const isAllLower = letters === letters.toLowerCase() && !hasAccents;
+  if (!isAllCaps && !isAllLower) return name;
+  const parts = name.split(/(\s+)/);
+  let wordIndex = 0;
+  return parts.map((part) => {
+    if (/^\s+$/.test(part)) return part;
+    const isFirst = wordIndex === 0;
+    wordIndex++;
+    if (part === '+' || part === '&' || part === '|') return part;
+    if (part.includes('/')) {
+      return part.split('/').map((sub, si) => titleCaseWord(sub, isFirst && si === 0)).join('/');
+    }
+    return titleCaseWord(part, isFirst);
+  }).join('');
+}
+
+function fixSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[®™*#&'°_]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-+/g, '-');
+}
 
 function mapSupabaseDesigner(row: any): Designer {
-  const correction = NAME_CORRECTIONS[row.name];
+  const fixedName = fixBrandName(row.name);
   return {
     id: row.id,
-    name: correction?.name || row.name,
-    slug: correction?.slug || row.slug,
+    name: fixedName,
+    slug: fixedName !== row.name ? fixSlug(fixedName) : row.slug,
     status: row.status || "Pending",
     naturalFiberPercent: row.natural_fiber_percent ?? null,
     description: row.description ?? null,
