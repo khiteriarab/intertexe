@@ -1,9 +1,19 @@
 # INTERTEXE
 
 ## Overview
-INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
+INTERTEXE is the definitive material quality reference for luxury fashion. The platform makes buying decisions for high-end consumers — every designer is vetted, ranked, and given a clear quality verdict so shoppers never have to read a label or guess. Features include quality tier badges, prescriptive buying rules for every fabric, curated "The Edit" picks, a comprehensive directory with tier filters, and AI-powered material advice.
 
 ## Recent Changes
+- **2026-02-22**: Authority Redesign — "We choose so you don't have to think"
+  - Quality Tier System: Exceptional (90%+), Excellent (70-89%), Good (50-69%), Caution (<50%), Under Review (null)
+  - Every designer card now shows quality badge + verdict across all pages
+  - Homepage: "We've done the research. You just shop." hero, INTERTEXE Standard section, stats, curated top picks
+  - Designer Detail: "The INTERTEXE Verdict" section with tier-specific buy/trust recommendation
+  - Material pages: Full "Buying Rules" section — Look For, Avoid, Red Flags, Price Guidance per fabric
+  - "Just In" → "The Edit" — curated picks filtered to 70%+ quality designers with tier filter tabs
+  - Designers Directory: Quality tier filter buttons (All/Exceptional/Excellent/Good)
+  - Navbar: Updated labels (The Edit, Directory, Buying Guide), search results show quality badges
+  - Mobile nav: The Edit + Directory as primary tabs
 - **2026-02-22**: AI Chat Platform (Material Advisor)
   - Full chat UI with streaming responses via OpenAI (gpt-5.1)
   - Custom system prompt: fashion fabrics, designer quality, sustainability expertise

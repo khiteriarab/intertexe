@@ -1,11 +1,12 @@
 import { useParams, Link } from "wouter";
-import { Heart, ChevronLeft, ExternalLink } from "lucide-react";
+import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesignerBySlug } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
+import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
 
 export default function DesignerDetail() {
   const { slug } = useParams();
@@ -86,8 +87,10 @@ export default function DesignerDetail() {
     );
   }
 
+  const tier = getQualityTier(designer.naturalFiberPercent);
+
   return (
-    <div className="py-8 md:py-12 flex flex-col gap-12 max-w-4xl mx-auto w-full">
+    <div className="py-8 md:py-12 flex flex-col gap-10 md:gap-12 max-w-4xl mx-auto w-full">
       <Link href="/designers" className="flex items-center gap-2 text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground w-fit transition-colors active:scale-95" data-testid="link-back">
           <ChevronLeft className="w-4 h-4" /> Back to Directory
       </Link>
@@ -97,13 +100,18 @@ export default function DesignerDetail() {
           <div className="absolute inset-0 flex items-center justify-center font-serif text-6xl md:text-8xl text-muted-foreground/20">
             {designer.name.charAt(0)}
           </div>
+          <div className="absolute top-4 left-4">
+            <span className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
+              {tier.verdict}
+            </span>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-5 md:gap-8 flex-1 w-full">
-          <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-5 md:gap-6 flex-1 w-full">
+          <div className="flex flex-col gap-3">
             <div className="flex justify-between items-start w-full gap-3">
-              <h1 className="text-[28px] leading-[1.15] md:text-6xl font-serif md:leading-tight">{designer.name}</h1>
-              <button 
+              <h1 className="text-[28px] leading-[1.15] md:text-5xl font-serif md:leading-tight" data-testid="text-designer-name">{designer.name}</h1>
+              <button
                 onClick={() => toggleFav.mutate()}
                 className="p-2.5 md:p-3 bg-secondary hover:bg-secondary/80 transition-colors flex-shrink-0 active:scale-90 mt-0.5"
                 data-testid={`button-save-${designer.slug}`}
@@ -111,8 +119,11 @@ export default function DesignerDetail() {
                 <Heart className={`w-5 h-5 ${isSaved ? 'fill-foreground text-foreground' : 'text-foreground'}`} strokeWidth={1.5} />
               </button>
             </div>
-            
-            <div className="flex items-center gap-3 mt-1 md:mt-4">
+
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
+                {tier.verdict}
+              </span>
               <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] border ${
                 designer.status === 'live' ? 'border-foreground text-foreground' : 'border-muted-foreground text-muted-foreground'
               }`}>
@@ -121,29 +132,37 @@ export default function DesignerDetail() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 py-5 md:py-8 border-y border-border/40">
+          <div className={`flex flex-col gap-4 p-5 md:p-6 border-l-[3px] ${getTierAccent(tier.tier)} bg-secondary/30`} data-testid="section-verdict">
+            <div className="flex items-center gap-2">
+              {tier.tier === 'exceptional' ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : tier.tier === 'excellent' ? (
+                <CheckCircle2 className="w-4 h-4 text-foreground/70" />
+              ) : tier.tier === 'good' ? (
+                <Info className="w-4 h-4 text-foreground/60" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-muted-foreground" />
+              )}
+              <h3 className="text-xs uppercase tracking-[0.2em] font-medium">The INTERTEXE Verdict</h3>
+            </div>
+            <p className="text-sm md:text-base text-foreground/80 leading-relaxed">{tier.description}</p>
+            <p className="text-sm text-foreground/70 italic">{tier.buyingAdvice}</p>
+          </div>
+
+          <div className="flex flex-col gap-3 py-5 md:py-6 border-y border-border/40">
             <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Natural Fiber Score</span>
             {designer.naturalFiberPercent != null ? (
               <>
                 <div className="flex items-baseline gap-2 md:gap-3">
-                  <span className="text-4xl md:text-7xl font-serif">{designer.naturalFiberPercent}%</span>
-                  <span className="text-sm md:text-lg text-muted-foreground font-serif italic">Natural Fibers</span>
+                  <span className="text-4xl md:text-6xl font-serif">{designer.naturalFiberPercent}%</span>
+                  <span className="text-sm text-muted-foreground font-serif italic">Natural Fibers</span>
                 </div>
-                <div className="w-full h-1.5 md:h-2 bg-secondary mt-1.5 md:mt-3 relative overflow-hidden">
-                  <div 
+                <div className="w-full h-1.5 md:h-2 bg-secondary mt-1 relative overflow-hidden">
+                  <div
                     className="absolute top-0 left-0 h-full bg-foreground transition-all duration-700"
                     style={{ width: `${designer.naturalFiberPercent}%` }}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {designer.naturalFiberPercent >= 90
-                    ? "Exceptional commitment to natural materials."
-                    : designer.naturalFiberPercent >= 70
-                    ? "Strong emphasis on natural fibers with minimal synthetics."
-                    : designer.naturalFiberPercent >= 50
-                    ? "A balanced mix of natural and synthetic materials."
-                    : "Uses a higher proportion of synthetic materials."}
-                </p>
               </>
             ) : (
               <div className="flex items-baseline gap-3">
@@ -153,9 +172,9 @@ export default function DesignerDetail() {
             )}
           </div>
 
-          <div className="flex flex-col gap-3 md:gap-4">
+          <div className="flex flex-col gap-3">
             <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">About the Brand</span>
-            <p className="text-base md:text-lg text-foreground/80 leading-relaxed font-light">
+            <p className="text-sm md:text-base text-foreground/80 leading-relaxed font-light">
               {designer.description || `${designer.name} is a fashion brand in our directory. Material composition details are being compiled by our editorial team.`}
             </p>
           </div>

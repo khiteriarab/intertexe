@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles, UserCheck, MessageCircle } from "lucide-react";
+import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles, UserCheck, MessageCircle, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
+import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
@@ -30,17 +31,17 @@ export function Navbar() {
   }, [location]);
 
   const navLinks = [
-    { name: "Just In", href: "/just-in" },
-    { name: "Designers", href: "/designers" },
-    { name: "Materials", href: "/materials" },
+    { name: "The Edit", href: "/just-in" },
+    { name: "Directory", href: "/designers" },
+    { name: "Buying Guide", href: "/materials" },
     { name: "Quiz", href: "/quiz" },
     { name: "Chat", href: "/chat" },
   ];
 
   const mobileNavLinks = [
     { name: "Home", href: "/", icon: Home },
-    { name: "Designers", href: "/designers", icon: Grid },
-    { name: "Chat", href: "/chat", icon: MessageCircle },
+    { name: "The Edit", href: "/just-in", icon: Award },
+    { name: "Directory", href: "/designers", icon: Grid },
     { name: "Quiz", href: "/quiz", icon: List },
     { name: "Account", href: "/account", icon: isAuthenticated ? UserCheck : User },
   ];
@@ -114,7 +115,12 @@ export function Navbar() {
                           data-testid={`search-result-${designer.slug}`}
                         >
                           <span className="font-serif text-base">{designer.name}</span>
-                          {designer.naturalFiberPercent != null && <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground ml-2 flex-shrink-0">{designer.naturalFiberPercent}%</span>}
+                          <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                            {designer.naturalFiberPercent != null && <span className="text-[10px] md:text-xs text-muted-foreground">{designer.naturalFiberPercent}%</span>}
+                            <span className={`px-1.5 py-0.5 text-[8px] uppercase tracking-wider ${getTierColor(getQualityTier(designer.naturalFiberPercent).tier)}`}>
+                              {getQualityTier(designer.naturalFiberPercent).shortLabel}
+                            </span>
+                          </div>
                         </Link>
                       ))}
                     </div>
