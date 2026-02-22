@@ -38,13 +38,21 @@ let designerCache: Designer[] | null = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000;
 
+async function fetchDesignersFromAPI(query?: string, limit?: number): Promise<Designer[]> {
+  let url = query ? `/api/designers?q=${encodeURIComponent(query)}` : "/api/designers";
+  if (limit) url += (url.includes("?") ? "&" : "?") + `limit=${limit}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export async function fetchDesigners(query?: string, limit?: number): Promise<Designer[]> {
+  if (!isVercelMode) {
+    return fetchDesignersFromAPI(query, limit);
+  }
+
   if (!supabase) {
-    let url = query ? `/api/designers?q=${encodeURIComponent(query)}` : "/api/designers";
-    if (limit) url += (url.includes("?") ? "&" : "?") + `limit=${limit}`;
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    return res.json();
+    return fetchDesignersFromAPI(query, limit);
   }
 
   if (query) {
@@ -93,6 +101,12 @@ export async function fetchDesigners(query?: string, limit?: number): Promise<De
 }
 
 export async function fetchDesignerBySlug(slug: string): Promise<Designer | null> {
+  if (!isVercelMode) {
+    const res = await fetch(`/api/designers/${slug}`);
+    if (!res.ok) return null;
+    return res.json();
+  }
+
   if (!supabase) {
     const res = await fetch(`/api/designers/${slug}`);
     if (!res.ok) return null;
