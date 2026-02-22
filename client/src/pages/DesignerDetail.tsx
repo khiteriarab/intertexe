@@ -284,11 +284,11 @@ export default function DesignerDetail() {
               className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground/90 transition-colors active:scale-[0.98] mt-2"
               data-testid={`link-shop-${designer.slug}`}
             >
-              Shop {designer.name} <ExternalLink className="w-3.5 h-3.5" />
+              Visit {designer.name} <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           ) : (
             <div className="flex items-center justify-center gap-3 w-full border border-border/40 text-muted-foreground px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs mt-2 cursor-default" data-testid={`link-shop-${designer.slug}-pending`}>
-              Shop link coming soon
+              Website coming soon
             </div>
           )}
         </div>

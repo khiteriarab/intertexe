@@ -20,6 +20,7 @@ export const designers = pgTable("designers", {
   status: text("status").notNull().default("live"),
   naturalFiberPercent: integer("natural_fiber_percent"),
   description: text("description"),
+  website: text("website"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
