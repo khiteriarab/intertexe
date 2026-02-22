@@ -46,6 +46,7 @@ export interface IStorage {
 
   saveQuizResult(result: InsertQuizResult): Promise<QuizResult>;
   getQuizResultsByUser(userId: string): Promise<QuizResult[]>;
+  updateUserPersona(userId: string, persona: string): Promise<void>;
 }
 
 let designerCache: { data: Designer[]; timestamp: number } | null = null;
@@ -214,6 +215,10 @@ export class DatabaseStorage implements IStorage {
 
   async getQuizResultsByUser(userId: string): Promise<QuizResult[]> {
     return db.select().from(quizResults).where(eq(quizResults.userId, userId));
+  }
+
+  async updateUserPersona(userId: string, persona: string): Promise<void> {
+    await db.update(users).set({ fabricPersona: persona }).where(eq(users.id, userId));
   }
 }
 

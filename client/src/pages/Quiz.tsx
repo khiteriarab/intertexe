@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesigners } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
+import { assignPersona } from "@shared/personas";
 
 const MATERIAL_OPTIONS = [
   "Cotton", "Silk", "Linen", "Wool", "Cashmere", "Leather / Suede",
@@ -37,6 +38,51 @@ export default function Quiz() {
 
   const { isAuthenticated } = useAuth();
 
+  const handleResults = (data: any) => {
+    setRecommendation(data);
+    setCurrentStep(STEPS.length - 1);
+
+    const quizData = {
+      materials: selections.materials,
+      priceRange: selections.spend,
+      syntheticTolerance: selections.syntheticTolerance,
+      favoriteBrands: selections.brands,
+      profileType: data.profileType,
+      recommendation: data.recommendation,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem("intertexe_pending_quiz", JSON.stringify(quizData));
+
+    if (isAuthenticated) {
+      api.submitQuiz({
+        materials: selections.materials,
+        priceRange: selections.spend,
+        syntheticTolerance: selections.syntheticTolerance,
+        favoriteBrands: selections.brands,
+        profileType: data.profileType,
+        recommendation: data.recommendation,
+      }).then(() => {
+        localStorage.removeItem("intertexe_pending_quiz");
+      }).catch(() => {});
+    }
+  };
+
+  const getClientPersona = () => {
+    const persona = assignPersona({
+      materials: selections.materials,
+      syntheticTolerance: selections.syntheticTolerance,
+    });
+    return {
+      profileType: persona.name,
+      personaId: persona.id,
+      recommendation: persona.description,
+      coreValue: persona.coreValue,
+      buysFor: persona.buysFor,
+      suggestedDesignerTypes: persona.suggestedDesignerTypes,
+      recommendedMaterials: persona.recommendedMaterials,
+    };
+  };
+
   const recommendMutation = useMutation({
     mutationFn: () => api.getRecommendation({
       materials: selections.materials,
@@ -44,34 +90,8 @@ export default function Quiz() {
       syntheticTolerance: selections.syntheticTolerance,
       favoriteBrands: selections.brands,
     }),
-    onSuccess: (data) => {
-      setRecommendation(data);
-      setCurrentStep(STEPS.length - 1);
-
-      const quizData = {
-        materials: selections.materials,
-        priceRange: selections.spend,
-        syntheticTolerance: selections.syntheticTolerance,
-        favoriteBrands: selections.brands,
-        profileType: data.profileType,
-        recommendation: data.recommendation,
-        savedAt: new Date().toISOString(),
-      };
-      localStorage.setItem("intertexe_pending_quiz", JSON.stringify(quizData));
-
-      if (isAuthenticated) {
-        api.submitQuiz({
-          materials: selections.materials,
-          priceRange: selections.spend,
-          syntheticTolerance: selections.syntheticTolerance,
-          favoriteBrands: selections.brands,
-          profileType: data.profileType,
-          recommendation: data.recommendation,
-        }).then(() => {
-          localStorage.removeItem("intertexe_pending_quiz");
-        }).catch(() => {});
-      }
-    },
+    onSuccess: (data) => handleResults(data),
+    onError: () => handleResults(getClientPersona()),
   });
 
   const nextStep = () => {
@@ -366,9 +386,14 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
   return (
     <div className="py-6 md:py-16 max-w-4xl mx-auto w-full flex flex-col gap-10 md:gap-16 animate-in fade-in duration-700">
       <header className="text-center flex flex-col gap-4 md:gap-6 px-2">
-        <span className="text-xs uppercase tracking-widest text-muted-foreground">Your Profile</span>
-        <h1 className="text-3xl md:text-6xl font-serif">{recommendation.profileType}</h1>
-        <p className="text-base md:text-lg text-foreground/80 max-w-2xl mx-auto font-light">
+        <span className="text-xs uppercase tracking-widest text-muted-foreground">Your Fabric Persona</span>
+        <h1 className="text-3xl md:text-6xl font-serif" data-testid="text-persona-name">{recommendation.profileType}</h1>
+        {recommendation.coreValue && (
+          <p className="text-sm md:text-base uppercase tracking-[0.2em] text-muted-foreground italic font-serif">
+            "{recommendation.coreValue}"
+          </p>
+        )}
+        <p className="text-base md:text-lg text-foreground/80 max-w-2xl mx-auto font-light leading-relaxed">
           {recommendation.recommendation}
         </p>
       </header>
@@ -377,7 +402,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
         <div className="bg-foreground text-background p-6 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-8 justify-between" data-testid="banner-save-results">
           <div className="flex flex-col gap-1 text-center md:text-left">
             <span className="text-sm md:text-base font-serif">Save your results</span>
-            <span className="text-xs text-background/70">Create an account to keep your profile, track favorites, and get personalized recommendations.</span>
+            <span className="text-xs text-background/70">Create an account to keep your fabric persona, track favorites, and get personalized recommendations.</span>
           </div>
           <Link href="/account" className="border border-background px-6 py-3 uppercase tracking-widest text-[10px] md:text-xs hover:bg-background hover:text-foreground transition-colors active:scale-95 whitespace-nowrap flex-shrink-0" data-testid="link-create-account-save">
             Create Account
@@ -386,16 +411,24 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 border-y border-border/40 py-8 md:py-12">
-        <div className="flex flex-col gap-4 md:gap-6">
-          <h2 className="text-xl md:text-2xl font-serif">Explore These Categories</h2>
-          <ul className="flex flex-col gap-2 md:gap-3">
-            {(recommendation.suggestedDesignerTypes || []).map((t: string, i: number) => (
-              <li key={i} className="flex items-center gap-3 text-muted-foreground text-sm">
-                <span className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center bg-foreground text-background text-[10px] md:text-xs font-medium flex-shrink-0">{i + 1}</span>
-                {t}
-              </li>
-            ))}
-          </ul>
+        <div className="flex flex-col gap-6 md:gap-8">
+          {recommendation.buysFor && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">You Buy For</span>
+              <p className="text-lg md:text-xl font-serif">{recommendation.buysFor}</p>
+            </div>
+          )}
+          <div className="flex flex-col gap-3">
+            <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Explore These Categories</span>
+            <ul className="flex flex-col gap-2 md:gap-3">
+              {(recommendation.suggestedDesignerTypes || []).map((t: string, i: number) => (
+                <li key={i} className="flex items-center gap-3 text-foreground/80 text-sm">
+                  <span className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center bg-foreground text-background text-[10px] md:text-xs font-medium flex-shrink-0">{i + 1}</span>
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
         <div className="flex flex-col gap-3 md:gap-4 bg-secondary/30 p-4 md:p-6">
           <span className="text-xs uppercase tracking-widest text-muted-foreground mb-1 md:mb-2">Your Preferences</span>
@@ -408,7 +441,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
             <span className="font-serif text-sm">{selections.syntheticTolerance}</span>
           </div>
           <div className="flex flex-col gap-2 pt-2">
-            <span className="text-sm">Core Materials</span>
+            <span className="text-sm">Your Materials</span>
             <div className="flex flex-wrap gap-1.5 md:gap-2">
               {(recommendation.recommendedMaterials || selections.materials).map((m: string) => (
                 <span key={m} className="px-2 py-1 bg-background text-[10px] md:text-xs uppercase tracking-widest">{m}</span>
@@ -443,7 +476,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
       </section>
 
       <div className="flex justify-center pt-4 md:pt-8">
-        <Link href={isAuthenticated ? "/account" : "/designers"} className="border border-foreground px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground hover:text-background transition-colors active:scale-95">
+        <Link href={isAuthenticated ? "/account" : "/designers"} className="border border-foreground px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground hover:text-background transition-colors active:scale-95" data-testid="link-after-quiz">
             {isAuthenticated ? "View Your Account" : "Browse Designers"}
         </Link>
       </div>

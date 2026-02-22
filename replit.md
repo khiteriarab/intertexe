@@ -4,6 +4,14 @@
 INTERTEXE is a luxury fashion discovery and curation platform focused on **material quality**. Users can browse designers ranked by natural fiber percentage, take a material-preference quiz, save favorites, and receive AI-powered recommendations.
 
 ## Recent Changes
+- **2026-02-22**: Fabric persona system (5 categories)
+  - shared/personas.ts: Defines 5 fabric personas (The Purist, The Refined Romantic, The Structured Minimalist, The Conscious Curator, The Performance Luxe)
+  - assignPersona() deterministically assigns persona based on quiz answers (materials + synthetic tolerance)
+  - fabric_persona column added to users table, updated on quiz completion/retake
+  - /api/recommend now returns instant persona results (no AI dependency)
+  - Quiz results page shows persona name, tagline, core value, buying advice, and designer types
+  - Client-side fallback: if API fails, persona is assigned locally
+  - Persona stored on user profile for filtering, recommendations, and email segmentation
 - **2026-02-22**: Fabric standards module and redirect interstitial
   - shared/fabric-standards.ts: Defines allowed natural fibers, banned synthetics (polyester etc.), lining tolerance rules (max 15% synthetic in linings)
   - evaluateProduct() validates products against INTERTEXE quality standards for affiliate API integration

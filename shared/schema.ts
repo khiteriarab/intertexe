@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   name: text("name"),
   subscriptionTier: text("subscription_tier").notNull().default("free"),
+  fabricPersona: text("fabric_persona"),
 });
 
 export const designers = pgTable("designers", {
