@@ -1,9 +1,12 @@
 import { useState, useMemo, Component, type ReactNode } from "react";
 import { Link } from "wouter";
-import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, SlidersHorizontal } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, SlidersHorizontal, Star } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesigners, fetchDesignersByNames, fetchAllProducts, fetchProductsByBrand } from "@/lib/supabase";
+import { getAllProfiles, getTierLabel, type BrandProfile } from "@/lib/brand-profiles";
+import { getCuratedScore } from "@/lib/curated-quality-scores";
+import { BrandImage } from "@/components/BrandImage";
 
 const POPULAR_BRAND_NAMES = [
   "FRAME", "RE/DONE", "Reformation", "Ganni", "Isabel Marant",
@@ -436,10 +439,77 @@ function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: {
   );
 }
 
+const MATERIAL_TERMS: Record<string, string[]> = {
+  "Cotton": ["cotton"],
+  "Silk": ["silk"],
+  "Linen": ["linen", "flax"],
+  "Wool": ["wool", "merino"],
+  "Cashmere": ["cashmere"],
+  "Leather / Suede": ["leather", "suede"],
+  "Tencel / Modal": ["tencel", "modal"],
+  "Denim": ["denim"],
+  "Alpaca": ["alpaca"],
+  "Viscose / Rayon": ["viscose", "rayon"],
+  "Velvet": ["velvet"],
+  "Satin": ["satin"],
+};
+
+function QuizProductCard({ product }: { product: any }) {
+  const imageUrl = product.imageUrl || product.image_url;
+  const brandName = product.brandName || product.brand_name || "";
+  const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
+  const shopUrl = product.url
+    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}`
+    : null;
+  return (
+    <div className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`card-quiz-product-${product.productId || product.product_id}`}>
+      <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+        <img
+          src={imageUrl}
+          alt={product.name}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+          loading="lazy"
+        />
+        {fiberPercent != null && fiberPercent >= 90 && (
+          <div className="absolute top-2 left-2">
+            <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              {fiberPercent}% natural
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5 p-3 flex-1">
+        <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground">{brandName}</span>
+        <h3 className="text-[13px] leading-snug line-clamp-2 font-medium">{product.name}</h3>
+        {product.composition && (
+          <p className="text-[10px] text-muted-foreground line-clamp-1 mt-auto">{product.composition}</p>
+        )}
+        <div className="flex items-center justify-between mt-1">
+          {product.price && <span className="text-xs font-medium">{product.price}</span>}
+          {fiberPercent != null && fiberPercent < 90 && (
+            <span className="text-[9px] text-muted-foreground">{fiberPercent}% natural</span>
+          )}
+        </div>
+      </div>
+      {shopUrl && (
+        <a
+          href={shopUrl}
+          className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98]"
+          data-testid={`button-shop-quiz-${product.productId || product.product_id}`}
+        >
+          Shop Now <ExternalLink className="w-3 h-3" />
+        </a>
+      )}
+    </div>
+  );
+}
+
 function QuizResults({ selections, recommendation, designers }: { selections: any; recommendation: any; designers: any[] }) {
   const { isAuthenticated } = useAuth();
   const selectedBrandNames: string[] = selections.brands || [];
   const selectedMaterials: string[] = selections.materials || [];
+  const spendRange: string = selections.spend || "";
 
   const selectedBrandSlugs = useMemo(() => {
     return selectedBrandNames.map(name => {
@@ -465,10 +535,9 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
   });
 
   const { data: allProducts = [], isLoading: allProductsLoading } = useQuery({
-    queryKey: ["all-products-quiz-fallback"],
+    queryKey: ["all-products-quiz"],
     queryFn: fetchAllProducts,
     staleTime: 10 * 60 * 1000,
-    enabled: true,
   });
 
   const selectedDesigners = useMemo(() => {
@@ -477,45 +546,55 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
       .filter(Boolean);
   }, [selectedBrandNames, designers]);
 
-  const similarDesigners = useMemo(() => {
-    const selectedSet = new Set(selectedBrandNames.map(n => n.toLowerCase()));
-    return designers
-      .filter((d: any) => !selectedSet.has(d.name.toLowerCase()) && d.naturalFiberPercent != null && d.naturalFiberPercent > 60)
-      .slice(0, 6);
-  }, [designers, selectedBrandNames]);
-
   const brandProductsWithImages = brandProducts.filter((p: any) => p.imageUrl || p.image_url);
 
-  const materialFallbackProducts = useMemo(() => {
-    if (brandProductsWithImages.length > 0) return [];
-    const materialTerms: Record<string, string[]> = {
-      "Cotton": ["cotton"],
-      "Silk": ["silk"],
-      "Linen": ["linen", "flax"],
-      "Wool": ["wool", "merino"],
-      "Cashmere": ["cashmere"],
-      "Leather / Suede": ["leather", "suede"],
-      "Tencel / Modal": ["tencel", "modal"],
-      "Denim": ["denim"],
-      "Alpaca": ["alpaca"],
-    };
-    const searchTerms = selectedMaterials.flatMap(m => materialTerms[m] || [m.toLowerCase()]);
-    if (searchTerms.length === 0) return (allProducts as any[]).filter((p: any) => p.imageUrl || p.image_url).slice(0, 24);
+  const searchTerms = useMemo(() => {
+    return selectedMaterials.flatMap(m => MATERIAL_TERMS[m] || [m.toLowerCase()]);
+  }, [selectedMaterials]);
+
+  const recommendedProducts = useMemo(() => {
+    const selectedSlugsSet = new Set(selectedBrandSlugs);
     return (allProducts as any[])
       .filter((p: any) => {
         if (!(p.imageUrl || p.image_url)) return false;
+        const slug = p.brandSlug || p.brand_slug;
+        if (selectedSlugsSet.has(slug)) return false;
+        if (searchTerms.length === 0) return true;
         const comp = (p.composition || "").toLowerCase();
         return searchTerms.some(t => comp.includes(t));
       })
       .sort((a: any, b: any) => (b.naturalFiberPercent || 0) - (a.naturalFiberPercent || 0))
-      .slice(0, 24);
-  }, [brandProductsWithImages, allProducts, selectedMaterials]);
+      .slice(0, 12);
+  }, [allProducts, selectedBrandSlugs, searchTerms]);
 
-  const productsWithImages = brandProductsWithImages.length > 0 ? brandProductsWithImages : materialFallbackProducts;
-  const isFallback = brandProductsWithImages.length === 0 && materialFallbackProducts.length > 0;
-  const isLoadingProducts = productsLoading || (brandProductsWithImages.length === 0 && allProductsLoading);
-  const [showAllProducts, setShowAllProducts] = useState(false);
-  const displayProducts = showAllProducts ? productsWithImages : productsWithImages.slice(0, 12);
+  const recommendedBrands = useMemo(() => {
+    const profiles = getAllProfiles();
+    const selectedSlugsSet = new Set(selectedBrandSlugs);
+    const userMaterialsLower = selectedMaterials.map(m => m.toLowerCase().replace(/\s*\/\s*/g, ''));
+
+    return profiles
+      .filter(p => !selectedSlugsSet.has(p.slug))
+      .map(profile => {
+        let score = 0;
+        const profileMatsLower = profile.materialStrengths.map(m => m.toLowerCase());
+        userMaterialsLower.forEach(um => {
+          if (profileMatsLower.some(pm => pm.includes(um) || um.includes(pm))) score += 3;
+        });
+        score += Math.floor(profile.naturalFiberEstimate / 10);
+        if (profile.tier === "aspirational") score += 2;
+        else if (profile.tier === "material-strong") score += 1;
+        return { profile, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map(r => r.profile);
+  }, [selectedBrandSlugs, selectedMaterials]);
+
+  const [showAllSelected, setShowAllSelected] = useState(false);
+  const displaySelectedProducts = showAllSelected ? brandProductsWithImages : brandProductsWithImages.slice(0, 6);
+  const [showAllRecommended, setShowAllRecommended] = useState(false);
+  const displayRecommendedProducts = showAllRecommended ? recommendedProducts : recommendedProducts.slice(0, 6);
+  const isLoadingProducts = productsLoading || allProductsLoading;
 
   return (
     <div className="py-6 md:py-16 max-w-4xl mx-auto w-full flex flex-col gap-10 md:gap-16 animate-in fade-in duration-700">
@@ -544,19 +623,61 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
         </div>
       )}
 
-      <section className="flex flex-col gap-6 md:gap-8" data-testid="section-shop-collection">
+      {brandProductsWithImages.length > 0 && (
+        <section className="flex flex-col gap-6 md:gap-8" data-testid="section-selected-products">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl md:text-3xl font-serif">From {selectedBrandNames.join(' & ')}</h2>
+            <p className="text-muted-foreground text-sm">
+              {brandProductsWithImages.length} verified pieces from your selected {selectedBrandNames.length === 1 ? 'brand' : 'brands'}. Every item meets our natural fiber threshold.
+            </p>
+          </div>
+          {isLoadingProducts ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="animate-pulse flex flex-col">
+                  <div className="aspect-[3/4] bg-secondary" />
+                  <div className="p-3 flex flex-col gap-2">
+                    <div className="h-3 bg-secondary w-1/2" />
+                    <div className="h-4 bg-secondary w-3/4" />
+                    <div className="h-3 bg-secondary w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                {displaySelectedProducts.map((product: any) => (
+                  <QuizProductCard key={product.productId || product.product_id} product={product} />
+                ))}
+              </div>
+              {!showAllSelected && brandProductsWithImages.length > 6 && (
+                <button
+                  onClick={() => setShowAllSelected(true)}
+                  className="flex items-center justify-center gap-2 w-full border border-foreground/20 hover:border-foreground/40 py-3.5 uppercase tracking-[0.15em] text-[10px] md:text-xs transition-colors active:scale-[0.98]"
+                  data-testid="button-show-more-selected"
+                >
+                  Show All {brandProductsWithImages.length} Pieces <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      <section className="flex flex-col gap-6 md:gap-8" data-testid="section-recommended-products">
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl md:text-3xl font-serif">Shop Your Standards</h2>
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4 text-foreground/60" />
+            <h2 className="text-2xl md:text-3xl font-serif">Recommended For You</h2>
+          </div>
           <p className="text-muted-foreground text-sm">
-            {productsWithImages.length > 0
-              ? isFallback
-                ? `${productsWithImages.length} verified pieces matching your material preferences${selectedMaterials.length > 0 ? ` — ${selectedMaterials.slice(0, 3).join(', ').toLowerCase()}` : ''}. Every item meets our natural fiber threshold.`
-                : `${productsWithImages.length} verified pieces from ${selectedBrandNames.join(', ')}. Every item meets our natural fiber threshold.`
-              : `Browse verified products from the brands that match your standards.`}
+            {selectedMaterials.length > 0
+              ? `Top-scoring ${selectedMaterials.slice(0, 3).join(', ').toLowerCase()} pieces from brands that match your material standards.`
+              : `Our highest-rated pieces from brands that match your preferences.`}
           </p>
         </div>
-
-        {isLoadingProducts ? (
+        {allProductsLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="animate-pulse flex flex-col">
@@ -569,67 +690,20 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
               </div>
             ))}
           </div>
-        ) : displayProducts.length > 0 ? (
+        ) : recommendedProducts.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {displayProducts.map((product: any) => {
-                const imageUrl = product.imageUrl || product.image_url;
-                const brandName = product.brandName || product.brand_name || "";
-                const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
-                const shopUrl = product.url
-                  ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}`
-                  : null;
-                return (
-                  <div key={product.productId || product.product_id} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`card-quiz-product-${product.productId || product.product_id}`}>
-                    <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-                      <img
-                        src={imageUrl}
-                        alt={product.name}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                        loading="lazy"
-                      />
-                      {fiberPercent != null && fiberPercent >= 90 && (
-                        <div className="absolute top-2 left-2">
-                          <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
-                            <CheckCircle2 className="w-2.5 h-2.5" />
-                            {fiberPercent}% natural
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-1.5 p-3 flex-1">
-                      <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground">{brandName}</span>
-                      <h3 className="text-[13px] leading-snug line-clamp-2 font-medium">{product.name}</h3>
-                      {product.composition && (
-                        <p className="text-[10px] text-muted-foreground line-clamp-1 mt-auto">{product.composition}</p>
-                      )}
-                      <div className="flex items-center justify-between mt-1">
-                        {product.price && <span className="text-xs font-medium">{product.price}</span>}
-                        {fiberPercent != null && fiberPercent < 90 && (
-                          <span className="text-[9px] text-muted-foreground">{fiberPercent}% natural</span>
-                        )}
-                      </div>
-                    </div>
-                    {shopUrl && (
-                      <a
-                        href={shopUrl}
-                        className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98]"
-                        data-testid={`button-shop-quiz-${product.productId || product.product_id}`}
-                      >
-                        Shop Now <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-                );
-              })}
+              {displayRecommendedProducts.map((product: any) => (
+                <QuizProductCard key={product.productId || product.product_id} product={product} />
+              ))}
             </div>
-            {!showAllProducts && productsWithImages.length > 12 && (
+            {!showAllRecommended && recommendedProducts.length > 6 && (
               <button
-                onClick={() => setShowAllProducts(true)}
+                onClick={() => setShowAllRecommended(true)}
                 className="flex items-center justify-center gap-2 w-full border border-foreground/20 hover:border-foreground/40 py-3.5 uppercase tracking-[0.15em] text-[10px] md:text-xs transition-colors active:scale-[0.98]"
-                data-testid="button-show-more-products"
+                data-testid="button-show-more-recommended"
               >
-                Show All {productsWithImages.length} Products <ArrowRight className="w-3 h-3" />
+                Show All {recommendedProducts.length} Recommendations <ArrowRight className="w-3 h-3" />
               </button>
             )}
           </>
@@ -645,37 +719,45 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
         )}
       </section>
 
-      {selectedDesigners.length > 0 && (
-        <section className="flex flex-col gap-6 md:gap-8" data-testid="section-your-designers">
+      {recommendedBrands.length > 0 && (
+        <section className="flex flex-col gap-6 md:gap-8 border-t border-border/40 pt-10 md:pt-14" data-testid="section-recommended-brands">
           <div className="flex flex-col gap-2">
-            <h2 className="text-xl md:text-2xl font-serif">Your Designers</h2>
+            <h2 className="text-xl md:text-2xl font-serif">Brands We'd Recommend</h2>
             <p className="text-muted-foreground text-sm">
-              The brands you selected — explore their full collections and quality verdicts.
+              Based on your love of {selectedMaterials.slice(0, 2).join(' and ').toLowerCase() || 'natural fibers'} — these brands excel in the materials you care about.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
-            {selectedDesigners.map((designer: any) => {
-              const tier = designer.naturalFiberPercent != null
-                ? designer.naturalFiberPercent >= 90 ? 'Exceptional' : designer.naturalFiberPercent >= 70 ? 'Excellent' : 'Good'
-                : null;
+            {recommendedBrands.map((profile) => {
+              const score = getCuratedScore(profile.name);
               return (
-                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-selected-${designer.slug}`}>
-                  <div className="aspect-[4/3] bg-secondary flex items-center justify-center relative overflow-hidden">
-                    <span className="font-serif text-5xl md:text-6xl text-foreground/[0.04] select-none">{designer.name.charAt(0)}</span>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
-                      <h3 className="text-sm md:text-base font-serif text-center leading-tight">{designer.name}</h3>
-                      {tier && (
-                        <span className={`text-[8px] uppercase tracking-[0.15em] px-2 py-0.5 ${
-                          tier === 'Exceptional' ? 'bg-foreground text-background' :
-                          tier === 'Excellent' ? 'bg-foreground/80 text-background' :
-                          'bg-foreground/10 text-foreground/60'
-                        }`}>{tier}</span>
-                      )}
+                <Link key={profile.slug} href={`/designers/${profile.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-recommended-${profile.slug}`}>
+                  <div className="aspect-[4/3] bg-secondary relative overflow-hidden">
+                    <BrandImage name={profile.name} className="absolute inset-0 w-full h-full" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3 flex flex-col gap-1.5">
+                      <h3 className="text-sm md:text-base font-serif text-white leading-tight">{profile.name}</h3>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[8px] uppercase tracking-[0.1em] px-1.5 py-0.5 bg-white/20 text-white backdrop-blur-sm">
+                          {getTierLabel(profile.tier)}
+                        </span>
+                        {score != null && (
+                          <span className="text-[8px] text-white/70">{score}% natural</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="p-2.5 md:p-3 flex items-center justify-between">
-                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground">View Designer</span>
-                    <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                  <div className="p-3 flex flex-col gap-1.5">
+                    <div className="flex flex-wrap gap-1">
+                      {profile.materialStrengths.slice(0, 3).map(mat => (
+                        <span key={mat} className={`text-[8px] uppercase tracking-[0.1em] px-1.5 py-0.5 ${
+                          selectedMaterials.some(sm => mat.toLowerCase().includes(sm.toLowerCase().split(' ')[0]))
+                            ? 'bg-foreground text-background font-medium'
+                            : 'bg-secondary text-foreground/60'
+                        }`}>{mat}</span>
+                      ))}
+                    </div>
+                    <span className="text-[9px] text-muted-foreground">{profile.priceRange}</span>
                   </div>
                 </Link>
               );
@@ -684,36 +766,40 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
         </section>
       )}
 
-      {similarDesigners.length > 0 && (
-        <section className="flex flex-col gap-6 md:gap-8 border-t border-border/40 pt-10 md:pt-14" data-testid="section-explore-similar">
+      {selectedDesigners.length > 0 && (
+        <section className="flex flex-col gap-6 md:gap-8 border-t border-border/40 pt-10 md:pt-14" data-testid="section-your-designers">
           <div className="flex flex-col gap-2">
-            <h2 className="text-xl md:text-2xl font-serif">Explore Similar Designers</h2>
+            <h2 className="text-xl md:text-2xl font-serif">Your Selected Brands</h2>
             <p className="text-muted-foreground text-sm">
-              Based on your preferences, you might also love these brands.
+              Explore the full quality verdicts for the brands you chose.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
-            {similarDesigners.map((designer: any) => {
-              const tier = designer.naturalFiberPercent != null
-                ? designer.naturalFiberPercent >= 90 ? 'Exceptional' : designer.naturalFiberPercent >= 70 ? 'Excellent' : 'Good'
+            {selectedDesigners.map((designer: any) => {
+              const score = getCuratedScore(designer.name);
+              const tierLabel = score != null
+                ? score >= 90 ? 'Exceptional' : score >= 70 ? 'Excellent' : 'Good'
                 : null;
               return (
-                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-similar-${designer.slug}`}>
-                  <div className="aspect-[4/3] bg-secondary flex items-center justify-center relative overflow-hidden">
-                    <span className="font-serif text-5xl md:text-6xl text-foreground/[0.04] select-none">{designer.name.charAt(0)}</span>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
-                      <h3 className="text-sm md:text-base font-serif text-center leading-tight">{designer.name}</h3>
-                      {tier && (
-                        <span className={`text-[8px] uppercase tracking-[0.15em] px-2 py-0.5 ${
-                          tier === 'Exceptional' ? 'bg-foreground text-background' :
-                          tier === 'Excellent' ? 'bg-foreground/80 text-background' :
-                          'bg-foreground/10 text-foreground/60'
-                        }`}>{tier}</span>
-                      )}
+                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-selected-${designer.slug}`}>
+                  <div className="aspect-[4/3] bg-secondary relative overflow-hidden">
+                    <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute bottom-3 left-3 z-10">
+                      <h3 className="text-sm md:text-base font-serif text-white leading-tight drop-shadow-lg">{designer.name}</h3>
                     </div>
+                    {tierLabel && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className={`text-[8px] uppercase tracking-[0.15em] px-2 py-0.5 ${
+                          tierLabel === 'Exceptional' ? 'bg-foreground text-background' :
+                          tierLabel === 'Excellent' ? 'bg-foreground/80 text-background' :
+                          'bg-foreground/10 text-foreground/60'
+                        }`}>{tierLabel}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-2.5 md:p-3 flex items-center justify-between">
-                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground">View Designer</span>
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground">View Quality Verdict</span>
                     <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </Link>
