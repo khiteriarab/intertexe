@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, Component, type ReactNode } from "react";
 import { Link } from "wouter";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -6,6 +6,23 @@ import { api } from "@/lib/api";
 import { fetchDesigners, fetchDesignersByNames } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { assignPersona } from "@shared/personas";
+
+class QuizErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: any) {
+    console.error("QuizResults render error:", error);
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
+}
 
 
 const MATERIAL_OPTIONS = [
@@ -143,7 +160,20 @@ export default function Quiz() {
   };
 
   if (currentStep === STEPS.length - 1 && recommendation) {
-    return <QuizResults selections={selections} recommendation={recommendation} designers={designers} />;
+    const errorFallback = (
+      <div className="py-16 max-w-2xl mx-auto text-center flex flex-col gap-6 px-4">
+        <h1 className="text-3xl font-serif">{recommendation.profileType || "Your Fabric Persona"}</h1>
+        <p className="text-foreground/80">{recommendation.recommendation || "Your results are ready."}</p>
+        <Link href="/designers" className="border border-foreground px-8 py-4 uppercase tracking-widest text-xs hover:bg-foreground hover:text-background transition-colors">
+          Browse All Designers
+        </Link>
+      </div>
+    );
+    return (
+      <QuizErrorBoundary fallback={errorFallback}>
+        <QuizResults selections={selections} recommendation={recommendation} designers={designers} />
+      </QuizErrorBoundary>
+    );
   }
 
   if (recommendMutation.isPending) {
