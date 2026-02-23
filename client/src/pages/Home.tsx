@@ -14,7 +14,7 @@ const CURATED_BRAND_SLUGS = [
   "ganni",
   "isabel-marant",
   "khaite",
-  "zimmermann",
+  "toteme",
   "sandro",
 ];
 
