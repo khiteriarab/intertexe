@@ -297,25 +297,36 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
 
 export async function fetchProductsByIds(ids: string[]): Promise<any[]> {
   if (!ids.length) return [];
+  const mapRow = (row: any) => ({
+    id: row.id,
+    brandSlug: row.brand_slug,
+    brandName: row.brand_name,
+    name: row.name,
+    productId: row.product_id,
+    url: row.url,
+    imageUrl: row.image_url,
+    price: row.price,
+    composition: row.composition,
+    naturalFiberPercent: row.natural_fiber_percent,
+    category: row.category,
+  });
   if (supabase) {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .in("id", ids);
-    if (error) return [];
-    return (data || []).map((row: any) => ({
-      id: row.id,
-      brandSlug: row.brand_slug,
-      brandName: row.brand_name,
-      name: row.name,
-      productId: row.product_id,
-      url: row.url,
-      imageUrl: row.image_url,
-      price: row.price,
-      composition: row.composition,
-      naturalFiberPercent: row.natural_fiber_percent,
-      category: row.category,
-    }));
+    const numericIds = ids.filter(id => /^\d+$/.test(id));
+    const uuidIds = ids.filter(id => /^[0-9a-f-]{36}$/i.test(id));
+    const results: any[] = [];
+    if (numericIds.length > 0) {
+      const { data } = await supabase.from("products").select("*").in("id", numericIds.map(Number));
+      if (data) results.push(...data);
+    }
+    if (uuidIds.length > 0) {
+      const { data } = await supabase.from("products").select("*").in("id", uuidIds);
+      if (data) results.push(...data);
+    }
+    if (results.length === 0 && numericIds.length === 0 && uuidIds.length === 0) {
+      const { data } = await supabase.from("products").select("*").in("id", ids);
+      if (data) results.push(...data);
+    }
+    if (results.length > 0) return results.map(mapRow);
   }
   try {
     const res = await fetch(`/api/products/by-ids`, {

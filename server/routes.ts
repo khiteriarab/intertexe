@@ -415,10 +415,18 @@ export async function registerRoutes(
     try {
       const { ids } = req.body;
       if (!Array.isArray(ids) || ids.length === 0) return res.json([]);
-      const result = await db.execute(
-        sql`SELECT * FROM products WHERE id = ANY(${ids}::uuid[])`
-      );
-      return res.json(result.rows || []);
+      const uuidIds = ids.filter((id: string) => /^[0-9a-f-]{36}$/i.test(id));
+      const numericIds = ids.filter((id: string) => /^\d+$/.test(id));
+      let rows: any[] = [];
+      if (uuidIds.length > 0) {
+        const r = await db.execute(sql`SELECT * FROM products WHERE id = ANY(${uuidIds}::uuid[])`);
+        rows.push(...(r.rows || []));
+      }
+      if (numericIds.length > 0) {
+        const r = await db.execute(sql`SELECT * FROM products WHERE id = ANY(${numericIds.map(Number)}::bigint[])`);
+        rows.push(...(r.rows || []));
+      }
+      return res.json(rows);
     } catch (err: any) {
       return res.json([]);
     }
