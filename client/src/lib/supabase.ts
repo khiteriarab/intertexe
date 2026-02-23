@@ -453,11 +453,17 @@ export async function supabaseGetRecommendation(data: {
     priceRange: data.priceRange || undefined,
   });
 
-  const { data: { user: authUser } } = await supabase!.auth.getUser();
-  if (authUser) {
-    supabase!.from("users").update({ fabric_persona: persona.id }).eq("id", authUser.id)
-      .then(() => {})
-      .catch((err: any) => console.error("Failed to update persona:", err));
+  try {
+    if (supabase) {
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData?.user) {
+        supabase.from("users").update({ fabric_persona: persona.id }).eq("id", authData.user.id)
+          .then(() => {})
+          .catch((err: any) => console.error("Failed to update persona:", err));
+      }
+    }
+  } catch (e) {
+    console.error("Non-critical: failed to update persona in Supabase", e);
   }
 
   return {

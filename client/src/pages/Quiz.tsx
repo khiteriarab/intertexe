@@ -94,12 +94,19 @@ export default function Quiz() {
   };
 
   const recommendMutation = useMutation({
-    mutationFn: () => api.getRecommendation({
-      materials: selections.materials,
-      priceRange: selections.spend,
-      syntheticTolerance: selections.syntheticTolerance,
-      favoriteBrands: selections.brands,
-    }),
+    mutationFn: async () => {
+      try {
+        const result = await api.getRecommendation({
+          materials: selections.materials,
+          priceRange: selections.spend,
+          syntheticTolerance: selections.syntheticTolerance,
+          favoriteBrands: selections.brands,
+        });
+        return result;
+      } catch {
+        return getClientPersona();
+      }
+    },
     onSuccess: (data) => handleResults(data),
     onError: () => handleResults(getClientPersona()),
   });
