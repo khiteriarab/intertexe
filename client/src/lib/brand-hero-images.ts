@@ -3,7 +3,7 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "ba&sh": "https://ba-sh.com/on/demandware.static/-/Library-Sites-BashSharedLibrary/default/dwecd1e558/SS26/Casual_Chic_Denim/ALL-3_Slider-desktop_backtocool_2000x860px.jpg",
   "khaite": "https://khaite.com/cdn/shop/files/S26_R1_HomePageHeroBanner_Desktop_02.10.26_acfd338a-9a9b-4327-bf6f-1fc0d67c0aaf.jpg?v=1770418145&width=1920",
   "anine bing": "https://www.aninebing.com/cdn/shop/files/DESKTOP_1_22c19e0a-1abe-4be3-8374-0224a6c0d9ed_1920x.progressive.jpg?v=1771260049",
-  "agolde": "https://cdn.shopify.com/s/files/1/0269/4076/8349/files/A154B-1601_90S_PINCH_WAIST_ADDITION_0603.jpg?v=1771541283&width=1200",
+  "agolde": "https://cdn.shopify.com/s/files/1/0269/4076/8349/files/A215B-1895_90S_PINCH_WAIST_CROP_FLAUNT_0800.jpg",
   "isabel marant": "https://isabelmarant.com/cdn/shop/files/HP_Hero_Banner_2000x800_Etoile_Bolton.jpg?crop=center&height=800&v=1771320465&width=2000",
   "reiss": "https://reiss.com/cms/resource/blob/1400442/dd5961a2de251b200ebbdf7a958e6fce/uk-hp-image1-data.jpg",
   "maje": "https://maje.com/on/demandware.static/-/Library-Sites-Maje-Shared/default/dwb473bd30/site/home/ss26/push-menu/SS26_PM.jpg",
