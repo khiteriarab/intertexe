@@ -1,11 +1,29 @@
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2, Shield, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDesigners } from "@/lib/supabase";
+import { fetchDesigners, fetchDesignerBySlug } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
-import { BrandImage } from "@/components/BrandImage";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
+import editorial1 from "@/assets/images/fashion_editorial_1.jpg";
+import editorial2 from "@/assets/images/fashion_editorial_2.jpg";
+import editorial3 from "@/assets/images/fashion_editorial_3.jpg";
+import editorial4 from "@/assets/images/fashion_editorial_4.jpg";
+import editorial5 from "@/assets/images/fashion_editorial_5.jpg";
+import editorial6 from "@/assets/images/fashion_editorial_6.jpg";
+import editorial7 from "@/assets/images/fashion_editorial_7.jpg";
+import editorial8 from "@/assets/images/fashion_editorial_8.jpg";
+
+const CURATED_BRANDS = [
+  { slug: "ba-sh", image: editorial1 },
+  { slug: "sezane", image: editorial2 },
+  { slug: "reformation", image: editorial3 },
+  { slug: "ganni", image: editorial4 },
+  { slug: "isabel-marant", image: editorial5 },
+  { slug: "khaite", image: editorial6 },
+  { slug: "zimmermann", image: editorial7 },
+  { slug: "jacquemus", image: editorial8 },
+];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {
   const tier = getQualityTier(naturalFiberPercent);
@@ -23,13 +41,19 @@ export default function Home() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const scoredDesigners = (designers as any[])
-    .filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 70)
-    .sort((a: any, b: any) => (b.naturalFiberPercent ?? 0) - (a.naturalFiberPercent ?? 0));
-
-  const approvedDesigners = scoredDesigners.length > 0
-    ? scoredDesigners.slice(0, 8)
-    : (designers as any[]).slice(0, 8);
+  const { data: curatedDesigners = [], isLoading: curatedLoading } = useQuery({
+    queryKey: ["curated-brands"],
+    queryFn: async () => {
+      const results = await Promise.all(
+        CURATED_BRANDS.map(async (b) => {
+          const designer = await fetchDesignerBySlug(b.slug);
+          return designer ? { ...designer, editorialImage: b.image } : null;
+        })
+      );
+      return results.filter(Boolean) as any[];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   const exceptionalCount = (designers as any[]).filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 90).length;
 
@@ -111,14 +135,14 @@ export default function Home() {
         <div className="flex justify-between items-end border-b border-border/50 pb-3 md:pb-4 mb-8 md:mb-10">
           <div>
             <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground mb-1">INTERTEXE Approved</p>
-            <h2 className="text-2xl md:text-3xl font-serif">Top-Rated Designers</h2>
+            <h2 className="text-2xl md:text-3xl font-serif">The Brands We Love</h2>
           </div>
           <Link href="/designers" className="text-[10px] md:text-sm uppercase tracking-[0.15em] hover:text-muted-foreground transition-colors active:scale-95" data-testid="link-view-all-designers">
             View All
           </Link>
         </div>
 
-        {isLoading ? (
+        {curatedLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
             {[1,2,3,4].map(i => (
               <div key={i} className="flex flex-col gap-4 animate-pulse">
@@ -130,22 +154,21 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-            {approvedDesigners.map((designer: any) => {
+            {curatedDesigners.map((designer: any) => {
               const tier = getQualityTier(designer.naturalFiberPercent);
               return (
                 <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 md:gap-4 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.id}`}>
                   <div className="aspect-[3/4] bg-secondary w-full overflow-hidden relative">
-                    <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
+                    <img
+                      src={designer.editorialImage}
+                      alt={`${designer.name} fashion editorial`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="lazy"
+                    />
                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <div className="absolute top-3 left-3">
+                    <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
                       <QualityBadge naturalFiberPercent={designer.naturalFiberPercent} />
                     </div>
-                    {designer.naturalFiberPercent != null && (
-                      <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 bg-gradient-to-t from-black/50 to-transparent">
-                        <span className="text-white text-lg md:text-2xl font-serif">{designer.naturalFiberPercent}%</span>
-                        <span className="text-white/70 text-[10px] uppercase tracking-wider ml-1.5">natural</span>
-                      </div>
-                    )}
                   </div>
                   <div className="flex flex-col">
                     <h3 className="font-serif text-base md:text-lg group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
