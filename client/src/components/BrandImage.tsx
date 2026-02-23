@@ -5,9 +5,11 @@ export function BrandImage({ name, className }: { name: string; className?: stri
   const [failed, setFailed] = useState(false);
   const heroUrl = getBrandHeroImage(name);
 
+  const hasImage = heroUrl && !failed;
+
   return (
-    <div className={`relative overflow-hidden bg-secondary ${className}`}>
-      {!failed ? (
+    <div className={`relative overflow-hidden ${hasImage ? 'bg-secondary' : 'bg-[#f0ece6]'} ${className}`}>
+      {hasImage ? (
         <img
           src={heroUrl}
           alt={`${name} editorial`}
@@ -16,8 +18,8 @@ export function BrandImage({ name, className }: { name: string; className?: stri
           onError={() => setFailed(true)}
         />
       ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#f5f0eb]">
-          <span className="font-serif text-2xl md:text-3xl text-foreground/15 tracking-widest uppercase">
+        <div className="absolute inset-0 flex items-center justify-center px-4">
+          <span className="font-serif text-lg md:text-xl text-foreground/30 tracking-[0.15em] uppercase text-center leading-relaxed">
             {name}
           </span>
         </div>

@@ -12,62 +12,34 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "acne studios": "https://www.acnestudios.com/on/demandware.static/-/Library-Sites-acne/default/dw0ed7f45c/home/2026/w08/ss26-woman-d.jpg",
   "re/done": "https://shopredone.com/cdn/shop/files/HP_Desktop3A.png?v=1770341915&width=1200",
   "nanushka": "https://www.nanushka.com/cdn/shop/files/1-4_dc57372d-5e11-42d9-9109-1fed5455f31c.jpg?v=1758183209",
+  "ganni": "https://www.ganni.com/dw/image/v2/AAWT_PRD/on/demandware.static/-/Library-Sites-ganni-shared/default/dwa2e1293d/images/homepage/HP-WK7-1.jpg?sw=1600",
+  "totême": "https://toteme.com/cdn/shop/files/13_251118_TOTEME_WEAR_034_1.jpg?v=1771339720&width=1500",
+  "toteme": "https://toteme.com/cdn/shop/files/13_251118_TOTEME_WEAR_034_1.jpg?v=1771339720&width=1500",
+  "theory": "https://ak-media.theory.com/i/theory/W-New-Arrivals-Flyout_1.jpg?$mediaDesktopLarge$",
+  "sandro": "https://www.sandro-paris.com/on/demandware.static/-/Library-Sites-Sandro-Shared/default/dw5782132f/Megamenu/CAMPAGNE-SS26_IMAGEMENU_CHAUSSURE_F.jpg",
+  "iro": "https://www.iroparis.com/on/demandware.static/-/Sites-storefront_eur/default/dwcbc7aef9/260128_TEMPLATE_MENU_PROMOTIONAL_BANNER.jpg",
+  "club monaco": "https://www.clubmonaco.com/cdn/shop/files/260204_SiteFlip_Promo_Desktop.jpg?v=1770069167&width=2500",
+  "proenza schouler": "https://www.proenzaschouler.com/cdn/shop/files/305300260029_INSTA_ML_HEADER.jpg?v=1770076333&width=450",
+  "the row": "https://www.therow.com/cdn/shop/files/THE-ROW-Spring26-1080-1080-8_5132c3bc-9c82-40a0-aeec-f243dc125fb9.jpg?v=1770737574&width=800",
+  "chloé": "https://www.chloe.com/on/demandware.static/-/Library-Sites-Chloe-WW/default/dw4e8cc887/MENU_EDITORIAL/Edito_slider/SUMMER26-MENU-SLIDER-PADDINGTON-1.1.jpg",
+  "chloe": "https://www.chloe.com/on/demandware.static/-/Library-Sites-Chloe-WW/default/dw4e8cc887/MENU_EDITORIAL/Edito_slider/SUMMER26-MENU-SLIDER-PADDINGTON-1.1.jpg",
+  "loewe": "https://www.loewe.com/dw/image/v2/BBPC_PRD/on/demandware.static/-/Library-Sites-LOW_SharedLibrary/default/dw973598fb/000000%201%20SS26/MAIN%20CAMPAIGN/LOEWE_SS26_MAIN_CAMPAIGN_TALIA_RYDER_sRGB_CROPPED_23_3x4.jpg?sw=1300&sfrm=jpg",
+  "bottega veneta": "https://bottega-veneta.dam.kering.com/asset/e253b51d-6b72-42e5-9638-3122d81e7e75/Medium/BV_S26_Adv_sRGB_4x5_imageonly_B23.jpg",
+  "jil sander": "https://www.jilsander.com/dw/image/v2/BCBQ_PRD/on/demandware.static/-/Library-Sites-JilSanderSharedLibrary/default/dwbfced3a2/content/HOME/SS26_WOMEN_HOME.jpg?sw=1300&sfrm=jpg",
+  "allsaints": "https://www.allsaints.com/on/demandware.static/-/Library-Sites-library-shared/default/dwce20a91f/images/global/megamenu/SPRING%20LAUNCH%202026/290126_SPRINGLAUNCH_Nav_WW_DT.jpg",
+  "all saints": "https://www.allsaints.com/on/demandware.static/-/Library-Sites-library-shared/default/dwce20a91f/images/global/megamenu/SPRING%20LAUNCH%202026/290126_SPRINGLAUNCH_Nav_WW_DT.jpg",
+  "zadig & voltaire": "https://images.prismic.io/zadig-et-voltairecom/aZdF7cFoBIGEgkcN_Desk-Bloc-1512x2160-MARO.jpg?auto=format",
+  "margaret howell": "https://www.margarethowell.co.uk/cdn/shop/files/margaret-howell-ss26-campaign-1307x1888-03.jpg?v=1770051486&width=1320",
+  "joseph": "https://joseph-fashion.com/cdn/shop/files/Look_01_Joseph_AW26_4034.jpg?crop=center&height=1500&v=1771617269&width=1000",
+  "ami paris": "https://a.storyblok.com/f/283537/1440x900/8b19363fc4/hp_outerwear_hero_desktop.jpg/m/1200x0/filters:quality(80)",
+  "citizens of humanity": "https://citizensofhumanity.com/cdn/shop/files/BANNER-MOONLIGHT-2.jpg?v=1771532018&width=1500",
+  "rag & bone": "https://www.rag-bone.com/dw/image/v2/BGGC_PRD/on/demandware.static/-/Library-Sites-ragandbone-content-global/default/dw248011c6/homepage_2026/February/0217_February_1.jpg?sw=1200",
+  "equipment": "https://cdn.merchantly.com/asset/5453/5/optimized_5.14_EQ_HPFlip_SlotA_D_1x.jpg",
+  "ted baker": "https://www.tedbaker.com/cdn/shop/files/282526_NAVY_1.jpg?v=1762809952&width=495",
+  "vince": "https://www.vince.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dwb6aa9114/W_3-Pants_225x175.jpg",
 };
 
-const FASHION_EDITORIAL_IMAGES = [
-  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1495385794356-15371f348c31?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80&fit=crop&crop=top",
-  "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1551803091-e20673f15770?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1475180098004-ca77a66827be?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1504703395950-b89145a5425b?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1502716119720-b23a1e3b2a55?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1512310604669-443f26c35f52?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1513379733131-47fc74b45fc7?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1506152983158-b4a74a01c721?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1550614000-4895a10e1bfd?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1571513722275-4b41940f54b8?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1470468969717-61d5d54fd036?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1488161628813-04466f872be2?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&q=80&fit=crop",
-];
-
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
-}
-
-export function getBrandHeroImage(brandName: string): string {
+export function getBrandHeroImage(brandName: string): string | null {
   const lower = brandName.toLowerCase().trim();
 
   if (BRAND_HERO_IMAGES[lower]) {
@@ -80,6 +52,5 @@ export function getBrandHeroImage(brandName: string): string {
     }
   }
 
-  const index = hashString(lower) % FASHION_EDITORIAL_IMAGES.length;
-  return FASHION_EDITORIAL_IMAGES[index];
+  return null;
 }
