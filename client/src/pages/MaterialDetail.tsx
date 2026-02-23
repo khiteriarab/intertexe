@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
 import { MATERIALS } from "@/lib/data";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { filterToCuratedBrands } from "@/lib/curated-brands";
 
 export default function MaterialDetail() {
   const params = useParams<{ slug: string }>();
@@ -35,7 +36,7 @@ export default function MaterialDetail() {
 
   const relatedDesigners = scoredRelated.length > 0
     ? scoredRelated.slice(0, 8)
-    : designers.slice(0, 8);
+    : filterToCuratedBrands(designers as any[]).slice(0, 8);
 
   const categoryLabel = material.category === 'plant' ? 'Plant-Based' : material.category === 'animal' ? 'Animal-Based' : 'Semi-Synthetic';
 

@@ -4,6 +4,8 @@ import { ArrowRight, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
 import { getQualityTier, getTierColor, type QualityTier } from "@/lib/quality-tiers";
+import { filterToCuratedBrands } from "@/lib/curated-brands";
+import { BrandImage } from "@/components/BrandImage";
 
 const FILTER_TABS = [
   { key: 'all', label: 'All Picks' },
@@ -26,7 +28,7 @@ export default function JustIn() {
 
   const qualityDesigners = scoredDesigners.length > 0
     ? scoredDesigners
-    : (designers as any[]).slice(0, 50);
+    : filterToCuratedBrands(designers as any[]);
 
   const filtered = filter === 'all'
     ? qualityDesigners
@@ -90,8 +92,8 @@ export default function JustIn() {
           {featured && (
             <Link href={`/designers/${featured.slug}`} className="group active:scale-[0.99] transition-transform" data-testid={`card-featured-${featured.slug}`}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-0 border border-border/40 group-hover:border-foreground/20 transition-colors">
-                <div className="aspect-[16/9] md:aspect-auto bg-secondary relative overflow-hidden flex items-center justify-center">
-                  <span className="font-serif text-[80px] md:text-[120px] text-muted-foreground/10">{featured.name.charAt(0)}</span>
+                <div className="aspect-[16/9] md:aspect-auto bg-secondary relative overflow-hidden">
+                  <BrandImage name={featured.name} className="w-full h-full min-h-[200px] md:min-h-[300px]" />
                   <div className="absolute top-4 left-4">
                     <span className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(getQualityTier(featured.naturalFiberPercent).tier)}`}>
                       {getQualityTier(featured.naturalFiberPercent).verdict}
@@ -129,9 +131,7 @@ export default function JustIn() {
                   return (
                     <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 md:gap-4 active:scale-[0.98] transition-transform" data-testid={`card-edit-${designer.slug}`}>
                       <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center font-serif text-5xl md:text-6xl text-muted-foreground/10">
-                          {designer.name.charAt(0)}
-                        </div>
+                        <BrandImage name={designer.name} className="w-full h-full" />
                         <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute top-3 left-3">
                           <span className={`px-2 py-0.5 text-[9px] uppercase tracking-[0.1em] font-medium ${getTierColor(tier.tier)}`}>

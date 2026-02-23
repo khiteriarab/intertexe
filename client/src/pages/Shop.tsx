@@ -9,6 +9,7 @@ import { FABRIC_PERSONAS, type FabricPersona } from "@shared/personas";
 import { getQualityTier, getTierColor, type QualityTier } from "@/lib/quality-tiers";
 import { BrandImage } from "@/components/BrandImage";
 import { guessDomain } from "@/lib/brand-images";
+import { filterToCuratedBrands } from "@/lib/curated-brands";
 
 type ShopFilter = "for-you" | "favorites" | "exceptional" | "excellent";
 
@@ -107,8 +108,14 @@ export default function Shop() {
   const latestQuiz = (quizResults as any[]).length > 0 ? (quizResults as any[])[(quizResults as any[]).length - 1] : null;
 
   const scoredDesigners = (allDesigners as any[]).filter((d: any) => d.naturalFiberPercent != null);
-  const exceptionalDesigners = scoredDesigners.filter((d: any) => d.naturalFiberPercent >= 90).sort((a: any, b: any) => b.naturalFiberPercent - a.naturalFiberPercent);
-  const excellentDesigners = scoredDesigners.filter((d: any) => d.naturalFiberPercent >= 70 && d.naturalFiberPercent < 90).sort((a: any, b: any) => b.naturalFiberPercent - a.naturalFiberPercent);
+  const hasScores = scoredDesigners.length > 0;
+  const exceptionalDesigners = hasScores
+    ? scoredDesigners.filter((d: any) => d.naturalFiberPercent >= 90).sort((a: any, b: any) => b.naturalFiberPercent - a.naturalFiberPercent)
+    : [];
+  const excellentDesigners = hasScores
+    ? scoredDesigners.filter((d: any) => d.naturalFiberPercent >= 70 && d.naturalFiberPercent < 90).sort((a: any, b: any) => b.naturalFiberPercent - a.naturalFiberPercent)
+    : [];
+  const curatedFallback = !hasScores ? filterToCuratedBrands(allDesigners as any[]) : [];
 
   const favoriteDesigners = (favorites as any[])
     .map((fav: any) => {
@@ -118,6 +125,10 @@ export default function Shop() {
     .filter(Boolean);
 
   const getPersonalizedPicks = (): any[] => {
+    if (!hasScores) {
+      return curatedFallback;
+    }
+
     if (!persona && !latestQuiz) {
       return [...exceptionalDesigners.slice(0, 8), ...excellentDesigners.slice(0, 8)];
     }
@@ -160,9 +171,9 @@ export default function Shop() {
       case "favorites":
         return favoriteDesigners;
       case "exceptional":
-        return exceptionalDesigners.slice(0, 24);
+        return hasScores ? exceptionalDesigners.slice(0, 24) : curatedFallback.slice(0, 12);
       case "excellent":
-        return excellentDesigners.slice(0, 24);
+        return hasScores ? excellentDesigners.slice(0, 24) : curatedFallback.slice(12, 24);
       default:
         return personalizedPicks;
     }
@@ -174,8 +185,10 @@ export default function Shop() {
   const filterTabs: { key: ShopFilter; label: string; count?: number }[] = [
     { key: "for-you", label: isAuthenticated && persona ? "For You" : "Top Picks" },
     ...(isAuthenticated ? [{ key: "favorites" as ShopFilter, label: "Saved", count: favoriteDesigners.length }] : []),
-    { key: "exceptional", label: "Exceptional", count: exceptionalDesigners.length },
-    { key: "excellent", label: "Excellent", count: excellentDesigners.length },
+    ...(hasScores ? [
+      { key: "exceptional" as ShopFilter, label: "Exceptional", count: exceptionalDesigners.length },
+      { key: "excellent" as ShopFilter, label: "Excellent", count: excellentDesigners.length },
+    ] : []),
   ];
 
   return (
