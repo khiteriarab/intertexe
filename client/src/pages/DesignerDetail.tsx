@@ -7,32 +7,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
-import { getBrandLogoUrl } from "@/lib/brand-images";
 import { BrandImage } from "@/components/BrandImage";
-import { useState } from "react";
 
 function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
-  const [logoFailed, setLogoFailed] = useState(false);
   const brandTier = getQualityTier(brand.naturalFiberPercent);
-  const logoUrl = getBrandLogoUrl(brand.name);
 
   const card = (
     <div className="bg-secondary/30 border border-border/20 hover:border-border/50 transition-all flex flex-col group" data-testid={`card-similar-${index}`}>
-      <div className="aspect-[4/3] bg-secondary relative overflow-hidden flex items-center justify-center">
-        <span className="absolute font-serif text-[80px] text-foreground/[0.03] select-none">{brand.name.charAt(0)}</span>
-        {logoUrl && !logoFailed ? (
-          <img
-            src={logoUrl}
-            alt={`${brand.name} logo`}
-            className="w-10 h-10 md:w-12 md:h-12 object-contain relative z-10"
-            loading="lazy"
-            onError={() => setLogoFailed(true)}
-          />
-        ) : (
-          <span className="font-serif text-2xl md:text-3xl text-foreground/15 relative z-10">
-            {brand.name.charAt(0)}
-          </span>
-        )}
+      <div className="aspect-[4/3] bg-secondary relative overflow-hidden">
+        <BrandImage name={brand.name} className="absolute inset-0 w-full h-full" />
         {brand.naturalFiberPercent != null && (
           <div className="absolute top-2 left-2 z-10">
             <span className={`px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.1em] font-medium ${getTierColor(brandTier.tier)}`}>

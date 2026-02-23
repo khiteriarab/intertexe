@@ -14,49 +14,60 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "nanushka": "https://www.nanushka.com/cdn/shop/files/1-4_dc57372d-5e11-42d9-9109-1fed5455f31c.jpg?v=1758183209",
 };
 
-const BRAND_SCREENSHOT_DOMAINS: Record<string, string> = {
-  "sézane": "sezane.com",
-  "sezane": "sezane.com",
-  "reformation": "thereformation.com",
-  "ganni": "ganni.com",
-  "totême": "toteme-studio.com",
-  "toteme": "toteme-studio.com",
-  "cos": "cos.com",
-  "theory": "theory.com",
-  "vince": "vince.com",
-  "sandro": "sandro-paris.com",
-  "iro": "iroparis.com",
-  "jacquemus": "jacquemus.com",
-  "club monaco": "clubmonaco.com",
-  "max mara": "us.maxmara.com",
-  "proenza schouler": "proenzaschouler.com",
-  "the row": "therow.com",
-  "chloé": "chloe.com",
-  "chloe": "chloe.com",
-  "loewe": "loewe.com",
-  "bottega veneta": "bottegaveneta.com",
-  "brunello cucinelli": "brunellocucinelli.com",
-  "loro piana": "loropiana.com",
-  "jil sander": "jilsander.com",
-  "lemaire": "lemaire.fr",
-  "ami paris": "amiparis.com",
-  "a.p.c.": "apc.fr",
-  "equipment": "equipmentfr.com",
-  "rag & bone": "rag-bone.com",
-  "citizens of humanity": "citizensofhumanity.com",
-  "ted baker": "tedbaker.com",
-  "allsaints": "allsaints.com",
-  "all saints": "allsaints.com",
-  "arket": "arket.com",
-  "& other stories": "stories.com",
-  "claudie pierlot": "claudiepierlot.com",
-  "zadig & voltaire": "zadig-et-voltaire.com",
-  "margaret howell": "margarethowell.co.uk",
-  "joseph": "joseph-fashion.com",
-  "eileen fisher": "eileenfisher.com",
-};
+const FASHION_EDITORIAL_IMAGES = [
+  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1495385794356-15371f348c31?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80&fit=crop&crop=top",
+  "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1551803091-e20673f15770?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1475180098004-ca77a66827be?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1504703395950-b89145a5425b?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1502716119720-b23a1e3b2a55?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1512310604669-443f26c35f52?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1513379733131-47fc74b45fc7?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1506152983158-b4a74a01c721?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1550614000-4895a10e1bfd?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1571513722275-4b41940f54b8?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1470468969717-61d5d54fd036?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1488161628813-04466f872be2?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&q=80&fit=crop",
+  "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&q=80&fit=crop",
+];
 
-export function getBrandHeroImage(brandName: string): string | null {
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+
+export function getBrandHeroImage(brandName: string): string {
   const lower = brandName.toLowerCase().trim();
 
   if (BRAND_HERO_IMAGES[lower]) {
@@ -69,10 +80,6 @@ export function getBrandHeroImage(brandName: string): string | null {
     }
   }
 
-  const domain = BRAND_SCREENSHOT_DOMAINS[lower];
-  if (domain) {
-    return `https://s.wordpress.com/mshots/v1/https://${domain}?w=800&h=1000`;
-  }
-
-  return null;
+  const index = hashString(lower) % FASHION_EDITORIAL_IMAGES.length;
+  return FASHION_EDITORIAL_IMAGES[index];
 }
