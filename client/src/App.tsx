@@ -29,6 +29,7 @@ import Terms from "@/pages/Terms";
 import MaterialDetail from "@/pages/MaterialDetail";
 import Chat from "@/pages/Chat";
 import Leaving from "@/pages/Leaving";
+import Shop from "@/pages/Shop";
 
 function Router() {
   return (
@@ -42,6 +43,7 @@ function Router() {
         <Route path="/materials" component={Materials} />
         <Route path="/materials/:slug" component={MaterialDetail} />
         <Route path="/quiz" component={Quiz} />
+        <Route path="/shop" component={Shop} />
         <Route path="/chat" component={Chat} />
         <Route path="/account" component={Account} />
         <Route path="/about" component={About} />

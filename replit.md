@@ -4,6 +4,17 @@
 INTERTEXE is the definitive material quality reference for luxury fashion. The platform makes buying decisions for high-end consumers — every designer is vetted, ranked, and given a clear quality verdict so shoppers never have to read a label or guess. Features include quality tier badges, prescriptive buying rules for every fabric, curated "The Edit" picks, a comprehensive directory with tier filters, and AI-powered material advice.
 
 ## Recent Changes
+- **2026-02-23**: Shop Page & Vercel Signup
+  - New `/shop` page: personalized shopping destination for logged-in users
+  - Shows designers filtered by user's fabric persona, quiz preferences, and favorites
+  - "Shop [Brand]" buttons on each card linking through `/leaving` interstitial
+  - Filter tabs: For You (personalized), Saved (favorites), Exceptional, Excellent
+  - Persona banner shows user's fabric identity and recommended materials
+  - Non-authenticated users see curated top picks + quiz CTA
+  - Added "Shop" as first item in desktop nav and mobile bottom nav
+  - Vercel serverless signup function (`api/supabase-signup.ts`) for auto-confirm + branded email
+  - `vercel.json` routing config for API routes + SPA fallback
+  - Branded Resend welcome email redesigned with "What's next" sections
 - **2026-02-23**: Logo Rebrand & Reviews Removal
   - Logo changed from "The House of / INTERTEXE" to just "INTERTEXE" with light "INTER" + bold "TEXE"
   - Applied consistently across Navbar, Footer, and all brand references
