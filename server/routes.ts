@@ -92,7 +92,15 @@ export async function registerRoutes(
     try {
       const q = req.query.q as string | undefined;
       const names = req.query.names as string | undefined;
+      const slugs = req.query.slugs as string | undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+      if (slugs) {
+        const slugList = slugs.split(',').map(s => s.trim()).filter(Boolean);
+        const results = await Promise.all(
+          slugList.map(s => storage.getDesignerBySlug(s))
+        );
+        return res.json(results.filter(Boolean));
+      }
       if (names) {
         const nameList = names.split(',').map(n => n.trim()).filter(Boolean);
         const all = await storage.getDesigners();

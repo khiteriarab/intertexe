@@ -246,6 +246,25 @@ export async function fetchDesignersByNames(names: string[]): Promise<Designer[]
   return (data || []).map(mapRow);
 }
 
+export async function fetchDesignersBySlugs(slugs: string[]): Promise<Designer[]> {
+  if (!isVercelMode || !supabase) {
+    const res = await fetch(`/api/designers?slugs=${encodeURIComponent(slugs.join(','))}`);
+    if (!res.ok) return [];
+    return res.json();
+  }
+
+  const all: Designer[] = [];
+  for (let i = 0; i < slugs.length; i += 50) {
+    const batch = slugs.slice(i, i + 50);
+    const { data, error } = await supabase
+      .from("designers")
+      .select("*")
+      .in("slug", batch);
+    if (!error && data) all.push(...data.map(mapRow));
+  }
+  return all;
+}
+
 export async function fetchDesignerBySlug(slug: string): Promise<Designer | null> {
   if (!isVercelMode) {
     const res = await fetch(`/api/designers/${slug}`);
