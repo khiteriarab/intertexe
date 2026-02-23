@@ -37,6 +37,9 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "equipment": "https://cdn.merchantly.com/asset/5453/5/optimized_5.14_EQ_HPFlip_SlotA_D_1x.jpg",
   "ted baker": "https://www.tedbaker.com/cdn/shop/files/282526_NAVY_1.jpg?v=1762809952&width=495",
   "vince": "https://www.vince.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dwb6aa9114/W_3-Pants_225x175.jpg",
+  "sézane": "https://media.sezane.com/image/upload/c_crop,fl_progressive:semi,h_1,q_auto:best,w_0.97902097902098,x_0.01048951048951,y_0/c_scale,w_963/y0zn0hnuuwmmmnfti8kj.jpg",
+  "sezane": "https://media.sezane.com/image/upload/c_crop,fl_progressive:semi,h_1,q_auto:best,w_0.97902097902098,x_0.01048951048951,y_0/c_scale,w_963/y0zn0hnuuwmmmnfti8kj.jpg",
+  "reformation": "https://www.thereformation.com/on/demandware.static/-/Sites-reformation-us-Library/default/dw80c371e3/images/prints/floral.jpg",
 };
 
 export function getBrandHeroImage(brandName: string): string | null {
@@ -44,12 +47,6 @@ export function getBrandHeroImage(brandName: string): string | null {
 
   if (BRAND_HERO_IMAGES[lower]) {
     return BRAND_HERO_IMAGES[lower];
-  }
-
-  for (const [key, url] of Object.entries(BRAND_HERO_IMAGES)) {
-    if (lower.includes(key) || key.includes(lower)) {
-      return url;
-    }
   }
 
   return null;
