@@ -7,7 +7,7 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "isabel marant": "https://isabelmarant.com/cdn/shop/files/HP_Hero_Banner_2000x800_Etoile_Bolton.jpg?crop=center&height=800&v=1771320465&width=2000",
   "reiss": "https://reiss.com/cms/resource/blob/1400442/dd5961a2de251b200ebbdf7a958e6fce/uk-hp-image1-data.jpg",
   "maje": "https://maje.com/on/demandware.static/-/Library-Sites-Maje-Shared/default/dwb473bd30/site/home/ss26/push-menu/SS26_PM.jpg",
-  "zimmermann": "https://www.zimmermann.com/media/wysiwyg/2000x1200.jpg",
+  "zimmermann": "https://www.zimmermann.com/media/wysiwyg/1-camp_3.jpg",
   "stella mccartney": "https://www.stellamccartney.com/dw/image/v2/BCWD_PRD/on/demandware.static/-/Sites-master_catalog/default/dw3c26da1b/Assets/7B0139WP05331000_X/large/f/3/b/e/f3be9b92b011f914799d46825602bcda26f572a4_7B0139WP05331000_X.jpg?sw=800&sh=1000",
   "acne studios": "https://www.acnestudios.com/on/demandware.static/-/Library-Sites-acne/default/dw0ed7f45c/home/2026/w08/ss26-woman-d.jpg",
   "re/done": "https://shopredone.com/cdn/shop/files/HP_Desktop3A.png?v=1770341915&width=1200",
