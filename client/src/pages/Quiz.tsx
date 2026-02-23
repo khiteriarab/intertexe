@@ -261,12 +261,13 @@ function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: {
   const popularBrands = useMemo(() => {
     if (designers.length === 0) return [];
     const popular = [
-      "Hermès", "Brunello Cucinelli", "Loro Piana", "The Row", "Zegna",
-      "Max Mara", "Jil Sander", "Bottega Veneta", "Auralee", "Lemaire",
-      "Margaret Howell", "Studio Nicholson"
+      "Ba&sh", "Sezane", "Reformation", "Ganni", "Isabel Marant",
+      "KHAITE", "Zimmermann", "Jacquemus", "TOTEME", "Anine Bing",
+      "Nanushka", "Rouje", "Staud", "Ulla Johnson", "Max Mara",
+      "The Row", "Vince", "Reiss"
     ];
     const found = popular
-      .map(name => (designers as any[]).find((d: any) => d.name === name))
+      .map(name => (designers as any[]).find((d: any) => d.name.toLowerCase() === name.toLowerCase()))
       .filter(Boolean);
     if (found.length >= 6) return found;
     return (designers as any[]).slice(0, 12);
