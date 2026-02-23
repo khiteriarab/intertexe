@@ -51,6 +51,9 @@ export async function registerRoutes(
         if (authError.message.includes("already been registered")) {
           return res.status(400).json({ message: "Email already registered" });
         }
+        if (authError.message.includes("not allowed") || authError.message.includes("not authorized")) {
+          return res.status(400).json({ message: "Unable to create account with this email. Please try a different email address or contact support." });
+        }
         return res.status(400).json({ message: authError.message });
       }
 
