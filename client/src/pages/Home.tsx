@@ -3,26 +3,19 @@ import { ArrowRight, CheckCircle2, Shield, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners, fetchDesignerBySlug } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { BrandImage } from "@/components/BrandImage";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
-import editorial1 from "@/assets/images/fashion_editorial_1.jpg";
-import editorial2 from "@/assets/images/fashion_editorial_2.jpg";
-import editorial3 from "@/assets/images/fashion_editorial_3.jpg";
-import editorial4 from "@/assets/images/fashion_editorial_4.jpg";
-import editorial5 from "@/assets/images/fashion_editorial_5.jpg";
-import editorial6 from "@/assets/images/fashion_editorial_6.jpg";
-import editorial7 from "@/assets/images/fashion_editorial_7.jpg";
-import editorial8 from "@/assets/images/fashion_editorial_8.jpg";
 
-const CURATED_BRANDS = [
-  { slug: "ba-sh", image: editorial1 },
-  { slug: "sezane", image: editorial2 },
-  { slug: "reformation", image: editorial3 },
-  { slug: "ganni", image: editorial4 },
-  { slug: "isabel-marant", image: editorial5 },
-  { slug: "khaite", image: editorial6 },
-  { slug: "zimmermann", image: editorial7 },
-  { slug: "jacquemus", image: editorial8 },
+const CURATED_BRAND_SLUGS = [
+  "ba-sh",
+  "sezane",
+  "reformation",
+  "ganni",
+  "isabel-marant",
+  "khaite",
+  "zimmermann",
+  "jacquemus",
 ];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {
@@ -45,9 +38,9 @@ export default function Home() {
     queryKey: ["curated-brands"],
     queryFn: async () => {
       const results = await Promise.all(
-        CURATED_BRANDS.map(async (b) => {
-          const designer = await fetchDesignerBySlug(b.slug);
-          return designer ? { ...designer, editorialImage: b.image } : null;
+        CURATED_BRAND_SLUGS.map(async (slug) => {
+          const designer = await fetchDesignerBySlug(slug);
+          return designer || null;
         })
       );
       return results.filter(Boolean) as any[];
@@ -159,12 +152,7 @@ export default function Home() {
               return (
                 <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 md:gap-4 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.id}`}>
                   <div className="aspect-[3/4] bg-secondary w-full overflow-hidden relative">
-                    <img
-                      src={designer.editorialImage}
-                      alt={`${designer.name} fashion editorial`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
-                    />
+                    <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
                       <QualityBadge naturalFiberPercent={designer.naturalFiberPercent} />
