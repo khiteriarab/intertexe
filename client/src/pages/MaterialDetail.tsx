@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners, fetchProductsByFiberAndCategory } from "@/lib/supabase";
 import { MATERIALS } from "@/lib/data";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { filterToCuratedBrands } from "@/lib/curated-brands";
+import { BrandImage } from "@/components/BrandImage";
 
 const FIBER_QUERIES: Record<string, string[]> = {
   cotton: ["cotton"],
@@ -112,16 +114,23 @@ export default function MaterialDetail() {
     );
   }
 
-  const scoredRelated = designers
+  const enrichedDesigners = (designers as any[]).map((d: any) => {
+    if (d.naturalFiberPercent != null) return d;
+    const score = getCuratedScore(d.name);
+    return score != null ? { ...d, naturalFiberPercent: score } : d;
+  });
+
+  const scoredRelated = enrichedDesigners
     .filter((d: any) => {
       if (d.naturalFiberPercent == null) return false;
       if (material.category === 'synthetic') return true;
       return d.naturalFiberPercent > 70;
-    });
+    })
+    .sort((a: any, b: any) => (b.naturalFiberPercent || 0) - (a.naturalFiberPercent || 0));
 
   const relatedDesigners = scoredRelated.length > 0
     ? scoredRelated.slice(0, 8)
-    : filterToCuratedBrands(designers as any[]).slice(0, 8);
+    : filterToCuratedBrands(enrichedDesigners as any[]).slice(0, 8);
 
   const categoryLabel = material.category === 'plant' ? 'Plant-Based' : material.category === 'animal' ? 'Animal-Based' : 'Semi-Synthetic';
 
@@ -321,21 +330,22 @@ export default function MaterialDetail() {
             <p className="text-muted-foreground text-sm">No designers found for this material yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">
             {relatedDesigners.map((designer: any) => {
               const dTier = getQualityTier(designer.naturalFiberPercent);
               return (
-                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3" data-testid={`card-designer-${designer.slug}`}>
-                  <div className="aspect-[3/4] bg-secondary relative flex items-center justify-center">
-                    <span className="font-serif text-3xl md:text-4xl text-muted-foreground/20">{designer.name.charAt(0)}</span>
-                    <div className="absolute top-2 left-2">
+                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-2.5 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.slug}`}>
+                  <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                    <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
+                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute bottom-0 left-0 right-0 p-2.5 md:p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
                       <span className={`px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.1em] font-medium ${getTierColor(dTier.tier)}`}>
                         {dTier.shortLabel}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm md:text-base font-serif group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
+                    <h3 className="text-sm md:text-base font-serif group-hover:text-muted-foreground transition-colors leading-tight">{designer.name}</h3>
                     {designer.naturalFiberPercent != null && (
                       <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">
                         {designer.naturalFiberPercent}% Natural

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "wouter";
 import { ExternalLink, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -91,9 +91,9 @@ function FiberHighlight({ fiber, count, onClick }: { fiber: string; count: numbe
   const fiberImages: Record<string, string> = {
     cashmere: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
     silk: "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&q=80",
-    wool: "https://images.unsplash.com/photo-1601244005535-a48e8d4e4e0c?w=600&q=80",
+    wool: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=600&q=80",
     cotton: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80",
-    linen: "https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80",
+    linen: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=600&q=80",
   };
 
   return (
