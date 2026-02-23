@@ -15,7 +15,7 @@ const CURATED_BRAND_SLUGS = [
   "isabel-marant",
   "khaite",
   "zimmermann",
-  "jacquemus",
+  "sandro",
 ];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {
