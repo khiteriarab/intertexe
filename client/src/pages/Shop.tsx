@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "wouter";
-import { ExternalLink, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
+import { ExternalLink, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight, Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
 import { fetchAllProducts } from "@/lib/supabase";
+import { useProductFavorites } from "@/hooks/use-product-favorites";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear";
@@ -27,6 +28,10 @@ const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
 ];
 
 function ProductCard({ product }: { product: any }) {
+  const { toggle, isFavorited } = useProductFavorites();
+  const productId = String(product.id);
+  const saved = isFavorited(productId);
+
   const shopUrl = product.url
     ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(product.brand_name || product.brandName || "")}`
     : null;
@@ -42,7 +47,7 @@ function ProductCard({ product }: { product: any }) {
   const wrapperProps = shopUrl ? { href: shopUrl } : {};
 
   return (
-    <CardWrapper {...wrapperProps} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all cursor-pointer" data-testid={`product-card-${product.id}`}>
+    <CardWrapper {...wrapperProps} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
           <img
@@ -59,10 +64,26 @@ function ProductCard({ product }: { product: any }) {
               </span>
             </div>
           )}
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+            className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+            data-testid={`btn-favorite-${product.id}`}
+            aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+          >
+            <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
+          </button>
         </div>
       ) : (
-        <div className="aspect-[3/4] bg-secondary/50 flex items-center justify-center">
+        <div className="aspect-[3/4] bg-secondary/50 flex items-center justify-center relative">
           <ShoppingBag className="w-8 h-8 text-muted-foreground/20" />
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+            className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+            data-testid={`btn-favorite-${product.id}`}
+            aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+          >
+            <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
+          </button>
         </div>
       )}
       <div className="flex flex-col gap-1.5 p-3 md:p-4 flex-1">

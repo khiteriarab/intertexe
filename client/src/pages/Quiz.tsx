@@ -1,6 +1,6 @@
 import { useState, useMemo, Component, type ReactNode } from "react";
 import { Link } from "wouter";
-import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, SlidersHorizontal, Star } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, SlidersHorizontal, Star, Heart } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesigners, fetchDesignersByNames, fetchAllProducts, fetchProductsByBrand } from "@/lib/supabase";
@@ -8,6 +8,7 @@ import { getAllProfiles, getTierLabel, type BrandProfile } from "@/lib/brand-pro
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { getBrandHeroImage } from "@/lib/brand-hero-images";
 import { BrandImage } from "@/components/BrandImage";
+import { useProductFavorites } from "@/hooks/use-product-favorites";
 
 const POPULAR_BRAND_NAMES = [
   "FRAME", "RE/DONE", "Reformation", "Ganni", "Isabel Marant",
@@ -463,6 +464,9 @@ const RELIABLE_PRODUCT_SLUGS = new Set([
 ]);
 
 function QuizProductCard({ product }: { product: any }) {
+  const { toggle, isFavorited } = useProductFavorites();
+  const productId = String(product.productId || product.product_id || product.id);
+  const saved = isFavorited(productId);
   const imageUrl = product.imageUrl || product.image_url;
   const brandName = product.brandName || product.brand_name || "";
   const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
@@ -488,6 +492,14 @@ function QuizProductCard({ product }: { product: any }) {
             </span>
           </div>
         )}
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+          className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+          data-testid={`btn-favorite-quiz-${productId}`}
+          aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+        >
+          <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
+        </button>
       </div>
       <div className="flex flex-col gap-1.5 p-3 flex-1">
         <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground">{brandName}</span>

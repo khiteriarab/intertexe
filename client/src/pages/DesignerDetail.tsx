@@ -10,6 +10,22 @@ import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { getBrandProfile, getTierLabel, type BrandProfile } from "@/lib/brand-profiles";
 import { BrandImage } from "@/components/BrandImage";
+import { useProductFavorites } from "@/hooks/use-product-favorites";
+
+function ProductFavoriteButton({ productId }: { productId: string }) {
+  const { toggle, isFavorited } = useProductFavorites();
+  const saved = isFavorited(productId);
+  return (
+    <button
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+      className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+      data-testid={`btn-favorite-detail-${productId}`}
+      aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+    >
+      <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
+    </button>
+  );
+}
 
 function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
   const brandTier = getQualityTier(brand.naturalFiberPercent);
@@ -379,6 +395,7 @@ export default function DesignerDetail() {
                         {product.natural_fiber_percent || product.naturalFiberPercent}% natural
                       </span>
                     </div>
+                    <ProductFavoriteButton productId={String(product.product_id || product.productId)} />
                   </div>
                   <div className="p-3 flex flex-col gap-1.5 flex-1">
                     <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
