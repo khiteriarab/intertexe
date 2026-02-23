@@ -1,6 +1,6 @@
 import { useState, useMemo, Component, type ReactNode } from "react";
 import { Link } from "wouter";
-import { Check, ArrowRight, ArrowLeft, Loader2, Search, X } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesigners, fetchDesignersByNames } from "@/lib/supabase";
@@ -527,12 +527,21 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
         <div className="flex flex-col gap-2">
           <h2 className="text-2xl md:text-3xl font-serif">Shop Your Standards</h2>
           <p className="text-muted-foreground text-sm">
-            Browse clothes from top-tier designers — every piece verified to meet INTERTEXE fabric standards.
+            We've verified 400+ products for natural fiber content. Browse by material and shop directly from the brands that meet your standards.
           </p>
         </div>
 
+        <Link
+          href="/shop"
+          className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 md:py-5 uppercase tracking-[0.2em] text-xs md:text-sm hover:bg-foreground/90 transition-colors active:scale-[0.98]"
+          data-testid="link-shop-verified"
+        >
+          <ShoppingBag className="w-4 h-4" />
+          Shop Verified Products
+        </Link>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
-          {recommendedDesigners.map((designer: any) => {
+          {recommendedDesigners.slice(0, 6).map((designer: any) => {
             const tier = designer.naturalFiberPercent != null
               ? designer.naturalFiberPercent >= 90 ? 'Exceptional' : designer.naturalFiberPercent >= 70 ? 'Excellent' : 'Good'
               : null;
@@ -559,27 +568,15 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
             );
           })}
         </div>
-
-        <div className="flex flex-col gap-4 p-6 md:p-8 bg-secondary/20 border border-border/20">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-foreground/20 rounded-full animate-pulse" />
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Coming Soon</span>
-          </div>
-          <p className="text-sm text-foreground/70 leading-relaxed">
-            Browse individual pieces from these designers that meet our fabric standards — only clothes with verified natural fiber compositions, filtered and approved by our editorial team.
-          </p>
-        </div>
       </section>
 
       <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4 md:pt-8">
+        <Link href="/shop" className="bg-foreground text-background px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground/90 transition-colors active:scale-95 text-center flex items-center justify-center gap-2" data-testid="link-start-shopping">
+          <ShoppingBag className="w-3.5 h-3.5" /> Start Shopping
+        </Link>
         <Link href="/designers" className="border border-foreground px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground hover:text-background transition-colors active:scale-95 text-center" data-testid="link-browse-designers">
           Browse All Designers
         </Link>
-        {isAuthenticated && (
-          <Link href="/account" className="border border-border/40 px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-secondary/50 transition-colors active:scale-95 text-center" data-testid="link-after-quiz">
-            View Your Account
-          </Link>
-        )}
       </div>
     </div>
   );
