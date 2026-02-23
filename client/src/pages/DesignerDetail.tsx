@@ -64,7 +64,7 @@ export default function DesignerDetail() {
   });
 
   useSEO({
-    title: designer ? `${designer.name} — Material Quality & Natural Fiber Score` : undefined,
+    title: designer ? `${designer.name} Quality Review 2026 — Natural Fiber Score` : undefined,
     description: designer
       ? designer.description || `Explore ${designer.name}'s commitment to natural fibers and material quality on INTERTEXE.`
       : undefined,

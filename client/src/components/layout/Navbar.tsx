@@ -31,7 +31,6 @@ export function Navbar() {
   }, [location]);
 
   const navLinks = [
-    { name: "Shop", href: "/shop" },
     { name: "The Edit", href: "/just-in" },
     { name: "Directory", href: "/designers" },
     { name: "Buying Guide", href: "/materials" },

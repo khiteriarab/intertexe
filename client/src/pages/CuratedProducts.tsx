@@ -2,13 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ChevronLeft, ShoppingBag, ExternalLink, Mail, CheckCircle2, ArrowRight } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
-import { fetchProductsByFiber } from "@/lib/supabase";
+import { fetchProductsByFiberAndCategory } from "@/lib/supabase";
 import { useState } from "react";
 
 interface PageConfig {
   slug: string;
   title: string;
   fiber: string;
+  category?: string;
   fiberQuery: string[];
   heroTitle: string;
   heroSubtitle: string;
@@ -20,8 +21,9 @@ interface PageConfig {
 const PAGE_CONFIGS: Record<string, PageConfig> = {
   "linen-dresses": {
     slug: "linen-dresses",
-    title: "The Best Linen Dresses Worth Buying",
+    title: "Best Linen Dresses in 2026",
     fiber: "Linen",
+    category: "dresses",
     fiberQuery: ["linen", "flax"],
     heroTitle: "Linen Dresses",
     heroSubtitle: "We tested the composition of every dress. These are the ones worth your money.",
@@ -38,10 +40,32 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
       "Under $80 for a linen dress — likely mixed with synthetic",
     ],
   },
+  "linen-tops": {
+    slug: "linen-tops",
+    title: "Best Linen Tops & Shirts in 2026",
+    fiber: "Linen",
+    category: "tops",
+    fiberQuery: ["linen", "flax"],
+    heroTitle: "Linen Tops & Shirts",
+    heroSubtitle: "Breezy, breathable, and built for warm weather. Every composition verified.",
+    intro: "A linen shirt is the backbone of any summer wardrobe. The problem? Most \"linen\" tops are blended with polyester to cut costs. We checked every label to find the real thing.",
+    buyingTips: [
+      "100% linen shirts get softer with every wash",
+      "Linen-cotton blends (70/30) offer crease resistance without synthetics",
+      "Camp collars and oversized fits suit linen's natural drape",
+      "French or Belgian flax is the highest quality linen fiber",
+    ],
+    redFlags: [
+      "\"Linen look\" or \"linen style\" — usually polyester",
+      "Blended with more than 20% polyester",
+      "Extremely stiff linen that doesn't soften — low quality fiber",
+    ],
+  },
   "silk-dresses": {
     slug: "silk-dresses",
-    title: "The Best Silk Dresses Worth Buying",
+    title: "Best Silk Dresses in 2026",
     fiber: "Silk",
+    category: "dresses",
     fiberQuery: ["silk"],
     heroTitle: "Silk Dresses",
     heroSubtitle: "Verified 100% silk. No polyester masquerading as luxury.",
@@ -58,10 +82,32 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
       "Under $100 for a silk dress — almost certainly synthetic",
     ],
   },
+  "silk-tops": {
+    slug: "silk-tops",
+    title: "Best Silk Tops & Blouses in 2026",
+    fiber: "Silk",
+    category: "tops",
+    fiberQuery: ["silk"],
+    heroTitle: "Silk Tops & Blouses",
+    heroSubtitle: "The real thing. No poly-satin pretenders.",
+    intro: "A silk blouse is a wardrobe investment that lasts decades — if it's actually silk. We verified every composition to find tops made from genuine silk, not the polyester satin sold at similar price points.",
+    buyingTips: [
+      "Silk charmeuse for a dressier drape, crepe de chine for everyday wear",
+      "19+ momme weight for shirts that hold up to regular wear",
+      "Silk twill is more structured — ideal for button-downs",
+      "Hand wash or delicate cycle in cold water to preserve the fiber",
+    ],
+    redFlags: [
+      "\"Silk touch\" or \"silk satin\" without stating 100% silk",
+      "Shiny, plasticky appearance — real silk has a subtle, matte luster",
+      "Under $80 for a silk top — very likely synthetic",
+    ],
+  },
   "cotton-dresses": {
     slug: "cotton-dresses",
-    title: "The Best Cotton & Denim Dresses Worth Buying",
+    title: "Best Cotton & Denim Dresses in 2026",
     fiber: "Cotton",
+    category: "dresses",
     fiberQuery: ["cotton", "denim"],
     heroTitle: "Cotton & Denim Dresses",
     heroSubtitle: "Breathable, durable, and honestly made. Every piece verified.",
@@ -78,7 +124,94 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
       "\"Denim\" pieces that are actually stretch poly-cotton",
     ],
   },
+  "cotton-tops": {
+    slug: "cotton-tops",
+    title: "Best Cotton Tops & Shirts in 2026",
+    fiber: "Cotton",
+    category: "tops",
+    fiberQuery: ["cotton", "denim"],
+    heroTitle: "Cotton Tops & Shirts",
+    heroSubtitle: "Classic cotton. No synthetic fillers. Every label checked.",
+    intro: "Cotton shirts should be simple — but brands love cutting corners with polyester blends that pill, trap heat, and look cheap after a few washes. We verified every label to find the ones made from real, quality cotton.",
+    buyingTips: [
+      "100% cotton oxford cloth is the gold standard for casual shirts",
+      "Supima and Pima cotton are softer and more durable than regular cotton",
+      "Cotton poplin is lightweight and crisp — perfect for warm weather",
+      "Look for selvedge denim shirts — 100% cotton with no stretch",
+    ],
+    redFlags: [
+      "\"Cotton rich\" — usually 60% cotton, 40% polyester",
+      "Jersey tees with no fabric composition listed",
+      "Denim shirts with more than 5% elastane — loses shape quickly",
+    ],
+  },
+  "cashmere-sweaters": {
+    slug: "cashmere-sweaters",
+    title: "Best Cashmere Sweaters in 2026",
+    fiber: "Cashmere",
+    category: "knitwear",
+    fiberQuery: ["cashmere"],
+    heroTitle: "Cashmere Sweaters",
+    heroSubtitle: "The luxury knit. Verified compositions — no blended imitations.",
+    intro: "Cashmere is the most coveted knitwear fiber in the world — lighter, warmer, and softer than wool. But the market is flooded with blends that use as little as 5% cashmere and call it \"cashmere.\" We checked every label.",
+    buyingTips: [
+      "Grade A cashmere uses the longest, finest fibers (under 15.5 microns)",
+      "Inner Mongolian cashmere is considered the world's best",
+      "2-ply construction is more durable than single-ply",
+      "Pilling is normal for the first few wears — it decreases over time",
+    ],
+    redFlags: [
+      "\"Cashmere blend\" with less than 70% cashmere",
+      "Under $100 for a cashmere sweater — almost certainly recycled or blended",
+      "\"Cashmere feel\" or \"cashmere touch\" — this is acrylic",
+      "Extremely light weight — may indicate thin, low-grade fiber",
+    ],
+  },
+  "wool-sweaters": {
+    slug: "wool-sweaters",
+    title: "Best Wool Sweaters & Knitwear in 2026",
+    fiber: "Wool",
+    category: "knitwear",
+    fiberQuery: ["wool", "merino"],
+    heroTitle: "Wool Sweaters & Knitwear",
+    heroSubtitle: "Warm, breathable, and naturally odor-resistant. Every fiber verified.",
+    intro: "Good wool knitwear lasts a lifetime. Merino, lambswool, and virgin wool are naturally temperature-regulating and antimicrobial. But cheap acrylic blends dominate the market. We found the pieces worth investing in.",
+    buyingTips: [
+      "Merino wool (under 18.5 microns) is the softest and least itchy",
+      "Virgin wool means first-shearing fiber — strongest and most resilient",
+      "Lambswool is softer than regular wool, from the first shearing of young sheep",
+      "Wool naturally resists odors — you don't need to wash it after every wear",
+    ],
+    redFlags: [
+      "\"Wool blend\" with more than 30% acrylic or polyester",
+      "\"Warm and cozy\" fabric descriptions with no composition listed",
+      "Very low price for \"100% wool\" — may be recycled/reclaimed wool",
+    ],
+  },
+  "viscose-dresses": {
+    slug: "viscose-dresses",
+    title: "Best Viscose & Rayon Dresses in 2026",
+    fiber: "Viscose",
+    category: "dresses",
+    fiberQuery: ["viscose", "rayon", "wood pulp", "lyocell", "tencel", "modal"],
+    heroTitle: "Viscose & Rayon Dresses",
+    heroSubtitle: "The semi-natural alternative to silk. Every composition checked.",
+    intro: "Viscose (also called rayon) is made from plant cellulose — usually wood pulp. When done right, it drapes beautifully and breathes like silk at a fraction of the price. Lyocell and TENCEL are the premium versions with sustainable closed-loop production.",
+    buyingTips: [
+      "TENCEL/Lyocell is the gold standard — closed-loop, sustainable production",
+      "EcoVero viscose uses sustainably sourced wood pulp",
+      "Viscose drapes like silk but is more affordable and easier to care for",
+      "Modal is even softer than regular viscose — excellent for everyday wear",
+    ],
+    redFlags: [
+      "Viscose blended with polyester — defeats the purpose of the fabric",
+      "\"Rayon\" with no specific type listed — quality varies enormously",
+      "Very cheap viscose wrinkles badly and may shrink in the wash",
+    ],
+  },
 };
+
+export const ALL_CURATED_SLUGS = Object.keys(PAGE_CONFIGS);
 
 function EmailCapture({ fiber }: { fiber: string }) {
   const [email, setEmail] = useState("");
@@ -134,7 +267,6 @@ function ProductCard({ product, index }: { product: any; index: number }) {
   const brandSlug = product.brand_slug || product.brandSlug;
   const imageUrl = product.image_url || product.imageUrl;
   const naturalPercent = product.natural_fiber_percent || product.naturalFiberPercent;
-  const productId = product.product_id || product.productId;
 
   return (
     <a
@@ -191,7 +323,7 @@ export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) 
       if (!config) return [];
       const allProducts: any[] = [];
       for (const fiber of config.fiberQuery) {
-        const results = await fetchProductsByFiber(fiber);
+        const results = await fetchProductsByFiberAndCategory(fiber, config.category);
         allProducts.push(...results);
       }
       const seen = new Set<string>();
@@ -218,6 +350,10 @@ export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) 
       </div>
     );
   }
+
+  const relatedPages = Object.entries(PAGE_CONFIGS)
+    .filter(([key]) => key !== pageSlug)
+    .slice(0, 6);
 
   return (
     <div className="min-h-screen bg-background pb-32 md:pb-16">
@@ -310,8 +446,9 @@ export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) 
               ))}
             </div>
           ) : (
-            <div className="py-12 text-center text-muted-foreground">
-              <p className="text-sm">No verified {config.fiber.toLowerCase()} pieces yet. Check back soon.</p>
+            <div className="py-12 text-center">
+              <p className="text-sm text-muted-foreground mb-2">No verified {config.fiber.toLowerCase()} pieces in this category yet.</p>
+              <p className="text-xs text-muted-foreground/70">We're actively adding new verified products. Sign up below to get notified.</p>
             </div>
           )}
         </section>
@@ -323,19 +460,17 @@ export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) 
         <section className="py-8 border-t border-border/20">
           <h2 className="text-xs uppercase tracking-[0.2em] font-medium mb-4">More Curated Collections</h2>
           <div className="flex flex-wrap gap-3">
-            {Object.entries(PAGE_CONFIGS)
-              .filter(([key]) => key !== pageSlug)
-              .map(([key, cfg]) => (
-                <Link
-                  key={key}
-                  href={`/${key}`}
-                  className="flex items-center gap-2 px-4 py-3 border border-border/30 hover:border-foreground/30 transition-colors text-sm"
-                  data-testid={`link-collection-${key}`}
-                >
-                  {cfg.heroTitle}
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              ))}
+            {relatedPages.map(([key, cfg]) => (
+              <Link
+                key={key}
+                href={`/materials/${key}`}
+                className="flex items-center gap-2 px-4 py-3 border border-border/30 hover:border-foreground/30 transition-colors text-sm"
+                data-testid={`link-collection-${key}`}
+              >
+                {cfg.heroTitle}
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            ))}
           </div>
         </section>
       </div>

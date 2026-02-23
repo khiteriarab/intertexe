@@ -27,8 +27,9 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Quality Tier System:** Implements a clear quality tier system (Exceptional, Excellent, Good, Caution, Under Review) displayed across designer cards and detailed verdicts.
 - **Fabric Persona System:** Assigns one of five fabric personas (e.g., The Purist, The Refined Romantic) to users based on quiz answers, enabling personalized recommendations and content.
 - **Product Verification:** 48 verified products across 3 brands (Sandro, Reformation, The Kooples) stored in products table with composition, natural fiber %, images, prices.
-- **SEO Product Pages:** Database-driven pages at `/linen-dresses`, `/silk-dresses`, `/cotton-dresses` with buying tips, red flags, and email capture.
-- **SEO Optimization:** Dynamic SEO for designer pages, product pages, and curated collection pages.
+- **SEO Product Pages:** 9 material+category pages under `/materials/` (e.g., `/materials/linen-dresses`, `/materials/silk-tops`, `/materials/cashmere-sweaters`) with SEO titles like "Best Linen Dresses in 2026 | INTERTEXE", buying tips, red flags, and email capture.
+- **SEO Optimization:** Dynamic SEO for designer pages (e.g., "Reformation Quality Review 2026"), product pages, and curated collection pages.
+- **Navigation:** Desktop nav: The Edit, Directory, Buying Guide, Quiz, Chat. Shop available via mobile bottom nav. No logo overlap.
 - **Composition Parsing:** Handles raw material names: "flax"→linen, "wood pulp"→viscose, "Good Earth Cotton"→cotton.
 
 **Feature Specifications:**
