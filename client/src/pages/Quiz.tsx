@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { fetchDesigners, fetchDesignersByNames } from "@/lib/supabase";
+import { fetchDesigners } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { assignPersona } from "@shared/personas";
 
@@ -42,19 +42,32 @@ export default function Quiz() {
   const [currentStep, setCurrentStep] = useState(0);
   const [recommendation, setRecommendation] = useState<any>(null);
 
-  const POPULAR_BRAND_NAMES = [
-    "FRAME", "RE/DONE", "Reformation", "Ganni", "Isabel Marant",
-    "KHAITE", "Zimmermann", "Jacquemus", "TOTEME", "Anine Bing",
-    "Nanushka", "STAUD", "Ulla Johnson", "Max Mara",
-    "The Row", "Vince", "Reiss", "Theory", "Acne Studios", "Sandro",
-    "Maje", "AllSaints", "Club Monaco"
+  const designers = [
+    { id: "1", name: "FRAME", slug: "frame" },
+    { id: "2", name: "RE/DONE", slug: "re-done" },
+    { id: "3", name: "Reformation", slug: "reformation" },
+    { id: "4", name: "Ganni", slug: "ganni" },
+    { id: "5", name: "Isabel Marant", slug: "isabel-marant" },
+    { id: "6", name: "KHAITE", slug: "khaite" },
+    { id: "7", name: "Zimmermann", slug: "zimmermann" },
+    { id: "8", name: "Jacquemus", slug: "jacquemus" },
+    { id: "9", name: "TOTEME", slug: "toteme" },
+    { id: "10", name: "Anine Bing", slug: "anine-bing" },
+    { id: "11", name: "Nanushka", slug: "nanushka" },
+    { id: "12", name: "STAUD", slug: "staud" },
+    { id: "13", name: "Ulla Johnson", slug: "ulla-johnson" },
+    { id: "14", name: "Max Mara", slug: "max-mara" },
+    { id: "15", name: "The Row", slug: "the-row" },
+    { id: "16", name: "Vince", slug: "vince" },
+    { id: "17", name: "Reiss", slug: "reiss" },
+    { id: "18", name: "Theory", slug: "theory" },
+    { id: "19", name: "Acne Studios", slug: "acne-studios" },
+    { id: "20", name: "Sandro", slug: "sandro" },
+    { id: "21", name: "Maje", slug: "maje" },
+    { id: "22", name: "AllSaints", slug: "allsaints" },
+    { id: "23", name: "Club Monaco", slug: "club-monaco" },
   ];
-
-  const { data: designers = [], isLoading: designersLoading } = useQuery({
-    queryKey: ["designers-quiz-popular"],
-    queryFn: () => fetchDesignersByNames(POPULAR_BRAND_NAMES),
-    staleTime: 10 * 60 * 1000,
-  });
+  const designersLoading = false;
 
   const [selections, setSelections] = useState({
     materials: [] as string[],
@@ -303,15 +316,7 @@ function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: {
     staleTime: 60 * 1000,
   });
 
-  const popularBrands = useMemo(() => {
-    if (designers.length === 0) return [];
-    const order = POPULAR_BRAND_NAMES.map(n => n.toLowerCase());
-    return [...(designers as any[])].sort((a: any, b: any) => {
-      const ai = order.indexOf(a.name.toLowerCase());
-      const bi = order.indexOf(b.name.toLowerCase());
-      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-    });
-  }, [designers]);
+  const popularBrands = designers;
 
   const searchResults = useMemo(() => {
     if (!brandSearch.trim()) return [];
