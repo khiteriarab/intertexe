@@ -92,9 +92,9 @@ function FiberHighlight({ fiber, count, onClick }: { fiber: string; count: numbe
   const fiberImages: Record<string, string> = {
     cashmere: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
     silk: "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&q=80",
-    wool: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=600&q=80",
+    wool: "https://images.unsplash.com/photo-1583922146077-8a01bde6fa3e?w=600&q=80",
     cotton: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80",
-    linen: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=600&q=80",
+    linen: "https://images.unsplash.com/photo-1528459105426-b7548b3e0b3c?w=600&q=80",
   };
 
   return (
