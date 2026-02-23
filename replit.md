@@ -51,8 +51,9 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 ## Product Data
 - **Supabase Migration:** `supabase-products-migration.sql` contains CREATE TABLE + 257 INSERT statements for syncing to Supabase.
 - **Scraper Scripts:** `scripts/scrape-brands.cjs` (Shopify JSON scrapers for Khaite, Anine Bing) and `scripts/sync-to-supabase.cjs` (Supabase sync + migration SQL generation).
-- **Brands Scraped:** Anine Bing (113 products, keyword-inferred compositions), Khaite (96 products, Shopify Material option), Sandro (26 products), Reformation (13 products), The Kooples (9 products). Total: 257 verified products.
-- **Non-Scrapable Brands:** ba&sh, Sézane, Ganni, Isabel Marant are protected by Cloudflare/captcha and cannot be scraped via Shopify JSON APIs.
+- **Brands Scraped:** Anine Bing (113 products, keyword-inferred compositions), Frame (150 products, Shopify composition data), Khaite (96 products, Shopify Material option), Sandro (26 products), Reformation (13 products), The Kooples (9 products). Total: 407 verified products.
+- **Frame SQL:** `supabase-frame-products.sql` — 150 INSERT statements for syncing Frame products to Supabase.
+- **Non-Scrapable Brands:** ba&sh, Sézane, Ganni, Isabel Marant, Vince are protected by Cloudflare/non-Shopify platforms and cannot be scraped via Shopify JSON APIs.
 - **Composition Inference:** Anine Bing uses keyword-based inference from product descriptions (silk, cashmere, cotton, wool, denim, etc.) since structured composition data is not available.
 - **Pass Rates:** Sandro dresses 7%, Sandro tops 95%, Reformation 87%, The Kooples 75%.
 - **Homepage Brands:** Khaite, Totême, Anine Bing, Frame, Vince, Nanushka, Acne Studios, The Row, AGOLDE, Sandro.
