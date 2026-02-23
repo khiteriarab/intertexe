@@ -4,16 +4,11 @@
 INTERTEXE is the definitive material quality reference for luxury fashion. The platform makes buying decisions for high-end consumers — every designer is vetted, ranked, and given a clear quality verdict so shoppers never have to read a label or guess. Features include quality tier badges, prescriptive buying rules for every fabric, curated "The Edit" picks, a comprehensive directory with tier filters, and AI-powered material advice.
 
 ## Recent Changes
-- **2026-02-22**: Community Reviews System
-  - Users can leave reviews on any designer with overall rating (1-5) and fabric quality rating (1-5)
-  - Optional product name, title, and detailed review text
-  - Helpful voting system (one vote per user per review, transactional)
-  - Average ratings and review count displayed on designer detail pages
-  - Reviews table: reviews(id, user_id, designer_slug, rating, fabric_quality, title, body, product_name, helpful_count)
-  - Review votes table: review_votes(id, review_id, user_id) with unique constraint
-  - Unique constraint on (user_id, designer_slug) prevents duplicate reviews
-  - Server-side validation: rating 1-5, fabric quality 1-5, title max 200 chars, body max 2000 chars
-  - Auth-gated: must be logged in to write reviews, vote helpful, or delete own reviews
+- **2026-02-23**: Logo Rebrand & Reviews Removal
+  - Logo changed from "The House of / INTERTEXE" to just "INTERTEXE" with light "INTER" + bold "TEXE"
+  - Applied consistently across Navbar, Footer, and all brand references
+  - Removed entire community reviews feature (schema, storage, API routes, UI components)
+  - Added "Browse Collection" teaser section on designer detail pages (Coming Soon — for future clothing API)
 - **2026-02-22**: Brand Name Cleaning & Image Components
   - cleanBrandSymbols() strips ®, ™, ©, * from brand names (server + client)
   - Shared BrandImage component (client/src/components/BrandImage.tsx) used on designer detail + quiz results
@@ -50,7 +45,7 @@ INTERTEXE is the definitive material quality reference for luxury fashion. The p
 - **2026-02-22**: Quiz brands fix + Navbar logo
   - Quiz brands step: loads 500 designers (not all 11,909) + Supabase search for typed queries
   - Loading state shown while designers load on mobile
-  - Navbar: stacked "The House of / INTERTEXE" luxury logo treatment
+  - Navbar: "INTERTEXE" logo with light "INTER" + bold "TEXE" treatment
   - Mobile nav: replaced "New" with "Chat" icon
 - **2026-02-22**: Frontend-direct Supabase mode for Vercel deployment
   - client/src/lib/supabase.ts: Full Supabase Auth + direct CRUD for quiz/favorites/users

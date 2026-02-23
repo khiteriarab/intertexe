@@ -6,8 +6,8 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-8 py-10 md:py-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           <div className="col-span-2 md:col-span-1 flex flex-col gap-3 md:gap-6 mb-2 md:mb-0">
-            <Link href="/" className="font-serif text-xl md:text-2xl tracking-widest uppercase font-medium" data-testid="link-footer-logo">
-              Intertexe
+            <Link href="/" className="font-serif text-xl md:text-2xl tracking-[0.25em] uppercase" data-testid="link-footer-logo">
+              <span className="font-light">INTER</span><span className="font-bold">TEXE</span>
             </Link>
             <p className="text-background/60 text-xs md:text-sm leading-relaxed max-w-xs">
               Material-first fashion discovery. We rank designers by what matters most — the quality of their fabrics.
