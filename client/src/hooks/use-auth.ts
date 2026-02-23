@@ -21,6 +21,19 @@ async function syncPendingQuizData() {
   }
 }
 
+async function syncLocalProductFavorites() {
+  try {
+    const stored = localStorage.getItem("intertexe_product_favorites");
+    if (!stored) return;
+    const localIds: string[] = JSON.parse(stored);
+    if (localIds.length === 0) return;
+    const merged = await api.syncProductFavorites(localIds);
+    localStorage.setItem("intertexe_product_favorites", JSON.stringify(merged));
+  } catch (err) {
+    console.error("Failed to sync product favorites:", err);
+  }
+}
+
 export function useAuth() {
   const queryClient = useQueryClient();
 
@@ -36,9 +49,11 @@ export function useAuth() {
       api.login(data.username, data.password),
     onSuccess: async () => {
       await syncPendingQuizData();
+      await syncLocalProductFavorites();
       await queryClient.refetchQueries({ queryKey: ["auth", "me"] });
       queryClient.invalidateQueries({ queryKey: ["quizResults"] });
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["product-favorites"] });
     },
   });
 
@@ -47,9 +62,11 @@ export function useAuth() {
       api.signup(data),
     onSuccess: async () => {
       await syncPendingQuizData();
+      await syncLocalProductFavorites();
       await queryClient.refetchQueries({ queryKey: ["auth", "me"] });
       queryClient.invalidateQueries({ queryKey: ["quizResults"] });
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["product-favorites"] });
     },
   });
 
@@ -59,6 +76,7 @@ export function useAuth() {
       queryClient.setQueryData(["auth", "me"], null);
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
       queryClient.invalidateQueries({ queryKey: ["quizResults"] });
+      queryClient.invalidateQueries({ queryKey: ["product-favorites"] });
     },
   });
 

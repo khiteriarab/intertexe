@@ -7,10 +7,12 @@ import {
   type InsertFavorite,
   type QuizResult,
   type InsertQuizResult,
+  type ProductFavorite,
   users,
   designers,
   favorites,
   quizResults,
+  productFavorites,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ilike, asc, sql, desc } from "drizzle-orm";
@@ -344,6 +346,10 @@ export interface IStorage {
   getQuizResultsByUser(userId: string): Promise<QuizResult[]>;
   updateUserPersona(userId: string, persona: string): Promise<void>;
 
+  getProductFavorites(userId: string): Promise<string[]>;
+  addProductFavorite(userId: string, productId: string): Promise<void>;
+  removeProductFavorite(userId: string, productId: string): Promise<void>;
+  syncProductFavorites(userId: string, productIds: string[]): Promise<string[]>;
 }
 
 let designerCache: { data: Designer[]; timestamp: number } | null = null;
@@ -551,6 +557,34 @@ export class DatabaseStorage implements IStorage {
           else console.log("Supabase sync: update persona OK");
         });
     }
+  }
+
+  async getProductFavorites(userId: string): Promise<string[]> {
+    const rows = await db.select().from(productFavorites).where(eq(productFavorites.userId, userId));
+    return rows.map(r => r.productId);
+  }
+
+  async addProductFavorite(userId: string, productId: string): Promise<void> {
+    await db.insert(productFavorites).values({ userId, productId }).onConflictDoNothing();
+  }
+
+  async removeProductFavorite(userId: string, productId: string): Promise<void> {
+    await db.delete(productFavorites).where(
+      and(eq(productFavorites.userId, userId), eq(productFavorites.productId, productId))
+    );
+  }
+
+  async syncProductFavorites(userId: string, productIds: string[]): Promise<string[]> {
+    const existing = await this.getProductFavorites(userId);
+    const existingSet = new Set(existing);
+    const newIds = productIds.filter(id => !existingSet.has(id));
+    if (newIds.length > 0) {
+      await db.insert(productFavorites)
+        .values(newIds.map(productId => ({ userId, productId })))
+        .onConflictDoNothing();
+    }
+    const allRows = await this.getProductFavorites(userId);
+    return allRows;
   }
 }
 

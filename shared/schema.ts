@@ -67,6 +67,13 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const productFavorites = pgTable("product_favorites", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  productId: text("product_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const analyticsEvents = pgTable("analytics_events", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   event: text("event").notNull(),
@@ -103,6 +110,11 @@ export const insertProductSchema = createInsertSchema(products).omit({
   createdAt: true,
 });
 
+export const insertProductFavoriteSchema = createInsertSchema(productFavorites).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -114,4 +126,6 @@ export type QuizResult = typeof quizResults.$inferSelect;
 export type InsertQuizResult = z.infer<typeof insertQuizResultSchema>;
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type ProductFavorite = typeof productFavorites.$inferSelect;
+export type InsertProductFavorite = z.infer<typeof insertProductFavoriteSchema>;
 export * from "./models/chat";

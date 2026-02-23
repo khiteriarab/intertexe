@@ -201,6 +201,51 @@ export async function registerRoutes(
     }
   });
 
+  // ─── Product Favorites ─────────────────────
+  app.get("/api/product-favorites", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const productIds = await storage.getProductFavorites(req.user!.id);
+      return res.json({ productIds });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/product-favorites", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const { productId } = req.body;
+      if (!productId) return res.status(400).json({ message: "productId required" });
+      await storage.addProductFavorite(req.user!.id, productId);
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/product-favorites/:productId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      await storage.removeProductFavorite(req.user!.id, req.params.productId);
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/product-favorites/sync", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const { productIds } = req.body;
+      if (!Array.isArray(productIds)) return res.status(400).json({ message: "productIds array required" });
+      const merged = await storage.syncProductFavorites(req.user!.id, productIds);
+      return res.json({ productIds: merged });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
   // ─── Quiz ──────────────────────────────────
   app.post("/api/quiz", async (req, res) => {
     try {

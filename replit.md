@@ -21,7 +21,8 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 **Technical Implementations:**
 - **Frontend:** Developed with React, Vite, Tailwind CSS for styling, wouter for routing, and TanStack Query for data fetching.
 - **Backend:** Powered by Express.js, handling API routes and session-based authentication using Passport.js.
-- **Database Management:** Utilizes PostgreSQL for storing user-specific data (users, favorites, quiz results, products) and Supabase for designer data, allowing for efficient data management and scalability.
+- **Database Management:** Utilizes PostgreSQL for storing user-specific data (users, favorites, quiz results, products, product favorites) and Supabase for designer data, allowing for efficient data management and scalability.
+- **Product Favorites:** Heart button on all product cards (Shop, Quiz, Designer Detail). Saves to localStorage for anonymous users. When logged in, syncs to `product_favorites` table in PostgreSQL via `/api/product-favorites` endpoints. On login/signup, any localStorage favorites merge into the user's account automatically. Hook: `use-product-favorites.ts`.
 - **AI Integration:** Incorporates OpenAI's GPT-4o-mini for AI-driven material advice and quiz recommendations, with conversation persistence and history management.
 - **Authentication:** Features an email-based signup and login flow, with token persistence in the database. A dual-write sync mechanism ensures data consistency between the local PostgreSQL and Supabase for user-related data.
 - **Quality Tier System:** Implements a clear quality tier system (Exceptional, Excellent, Good, Caution, Under Review) displayed across designer cards and detailed verdicts.

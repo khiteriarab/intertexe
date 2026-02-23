@@ -179,6 +179,37 @@ export const api = {
     return handleResponse(res);
   },
 
+  async getProductFavorites(): Promise<string[]> {
+    const res = await apiFetch("/api/product-favorites");
+    if (res.status === 401) return [];
+    const data = await handleResponse(res);
+    return data.productIds || [];
+  },
+
+  async addProductFavorite(productId: string) {
+    const res = await apiFetch("/api/product-favorites", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId }),
+    });
+    return handleResponse(res);
+  },
+
+  async removeProductFavorite(productId: string) {
+    const res = await apiFetch(`/api/product-favorites/${encodeURIComponent(productId)}`, { method: "DELETE" });
+    return handleResponse(res);
+  },
+
+  async syncProductFavorites(productIds: string[]): Promise<string[]> {
+    const res = await apiFetch("/api/product-favorites/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productIds }),
+    });
+    const data = await handleResponse(res);
+    return data.productIds || [];
+  },
+
   async getRecommendation(data: {
     materials: string[];
     priceRange: string;

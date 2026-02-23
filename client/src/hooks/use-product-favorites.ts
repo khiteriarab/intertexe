@@ -1,8 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 
 const STORAGE_KEY = "intertexe_product_favorites";
 
-function loadFavorites(): Set<string> {
+function loadLocal(): Set<string> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? new Set(JSON.parse(stored)) : new Set();
@@ -11,45 +14,97 @@ function loadFavorites(): Set<string> {
   }
 }
 
-function saveFavorites(favorites: Set<string>) {
+function saveLocal(favorites: Set<string>) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...favorites]));
   } catch {}
 }
 
 const listeners = new Set<() => void>();
-
 function notify() {
   listeners.forEach((fn) => fn());
 }
 
 export function useProductFavorites() {
-  const [favorites, setFavorites] = useState<Set<string>>(loadFavorites);
+  const { user, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const syncedRef = useRef(false);
+
+  const { data: serverFavorites } = useQuery({
+    queryKey: ["product-favorites"],
+    queryFn: () => api.getProductFavorites(),
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+
+  const [localFavorites, setLocalFavorites] = useState<Set<string>>(loadLocal);
 
   useEffect(() => {
-    const update = () => setFavorites(loadFavorites());
+    const update = () => setLocalFavorites(loadLocal());
     listeners.add(update);
     return () => { listeners.delete(update); };
   }, []);
 
-  const toggle = useCallback((productId: string) => {
-    const current = loadFavorites();
-    if (current.has(productId)) {
-      current.delete(productId);
-    } else {
-      current.add(productId);
+  useEffect(() => {
+    if (!isAuthenticated || !serverFavorites || syncedRef.current) return;
+    syncedRef.current = true;
+
+    const local = loadLocal();
+    if (local.size > 0) {
+      api.syncProductFavorites([...local]).then((merged) => {
+        saveLocal(new Set(merged));
+        setLocalFavorites(new Set(merged));
+        queryClient.setQueryData(["product-favorites"], merged);
+        notify();
+      }).catch(() => {});
+    } else if (serverFavorites.length > 0) {
+      saveLocal(new Set(serverFavorites));
+      setLocalFavorites(new Set(serverFavorites));
+      notify();
     }
-    saveFavorites(current);
-    setFavorites(new Set(current));
+  }, [isAuthenticated, serverFavorites, queryClient]);
+
+  useEffect(() => {
+    syncedRef.current = false;
+  }, [user?.id]);
+
+  const merged = new Set<string>([
+    ...localFavorites,
+    ...(serverFavorites || []),
+  ]);
+
+  const toggle = useCallback((productId: string) => {
+    const current = loadLocal();
+    const adding = !current.has(productId);
+
+    if (adding) {
+      current.add(productId);
+    } else {
+      current.delete(productId);
+    }
+    saveLocal(current);
+    setLocalFavorites(new Set(current));
     notify();
-  }, []);
+
+    if (isAuthenticated) {
+      if (adding) {
+        api.addProductFavorite(productId).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["product-favorites"] });
+        }).catch(() => {});
+      } else {
+        api.removeProductFavorite(productId).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["product-favorites"] });
+        }).catch(() => {});
+      }
+    }
+  }, [isAuthenticated, queryClient]);
 
   const isFavorited = useCallback(
-    (productId: string) => favorites.has(productId),
-    [favorites]
+    (productId: string) => merged.has(productId),
+    [merged]
   );
 
-  const count = favorites.size;
+  const count = merged.size;
 
-  return { toggle, isFavorited, count, favorites };
+  return { toggle, isFavorited, count, favorites: merged };
 }
