@@ -28,7 +28,7 @@ function notify() {
 export function useProductFavorites() {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
-  const syncedRef = useRef(false);
+  const hasSynced = useRef<string | null>(null);
 
   const { data: serverFavorites } = useQuery({
     queryKey: ["product-favorites"],
@@ -46,8 +46,9 @@ export function useProductFavorites() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated || !serverFavorites || syncedRef.current) return;
-    syncedRef.current = true;
+    if (!isAuthenticated || !user?.id || !serverFavorites) return;
+    if (hasSynced.current === user.id) return;
+    hasSynced.current = user.id;
 
     const local = loadLocal();
     if (local.size > 0) {
@@ -62,11 +63,7 @@ export function useProductFavorites() {
       setLocalFavorites(new Set(serverFavorites));
       notify();
     }
-  }, [isAuthenticated, serverFavorites, queryClient]);
-
-  useEffect(() => {
-    syncedRef.current = false;
-  }, [user?.id]);
+  }, [isAuthenticated, user?.id, serverFavorites, queryClient]);
 
   const merged = new Set<string>([
     ...localFavorites,

@@ -411,6 +411,19 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/products/by-ids", async (req, res) => {
+    try {
+      const { ids } = req.body;
+      if (!Array.isArray(ids) || ids.length === 0) return res.json([]);
+      const result = await db.execute(
+        sql`SELECT * FROM products WHERE id = ANY(${ids}::uuid[])`
+      );
+      return res.json(result.rows || []);
+    } catch (err: any) {
+      return res.json([]);
+    }
+  });
+
   app.get("/api/products/:brandSlug", async (req, res) => {
     try {
       const { brandSlug } = req.params;

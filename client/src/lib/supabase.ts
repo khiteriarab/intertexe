@@ -295,6 +295,41 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
   return data ? mapRow(data) : null;
 }
 
+export async function fetchProductsByIds(ids: string[]): Promise<any[]> {
+  if (!ids.length) return [];
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .in("id", ids);
+    if (error) return [];
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      brandSlug: row.brand_slug,
+      brandName: row.brand_name,
+      name: row.name,
+      productId: row.product_id,
+      url: row.url,
+      imageUrl: row.image_url,
+      price: row.price,
+      composition: row.composition,
+      naturalFiberPercent: row.natural_fiber_percent,
+      category: row.category,
+    }));
+  }
+  try {
+    const res = await fetch(`/api/products/by-ids`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchProductsByBrand(brandSlug: string): Promise<any[]> {
   if (supabase) {
     const { data, error } = await supabase

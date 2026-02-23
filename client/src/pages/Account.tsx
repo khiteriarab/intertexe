@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf } from "lucide-react";
+import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -9,6 +9,8 @@ import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 import { useToast } from "@/hooks/use-toast";
 import { FABRIC_PERSONAS } from "@shared/personas";
 import { BrandImage } from "@/components/BrandImage";
+import { useProductFavorites } from "@/hooks/use-product-favorites";
+import { fetchProductsByIds } from "@/lib/supabase";
 
 export default function Account() {
   const { user, isLoading: authLoading, isAuthenticated, login, signup, logout } = useAuth();
@@ -138,10 +140,19 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const contentRef = useRef<HTMLDivElement>(null);
+  const { favorites: productFavIds, toggle: toggleProductFav, count: productFavCount } = useProductFavorites();
 
   const { data: favorites = [], isLoading: favsLoading } = useQuery({
     queryKey: ["favorites"],
     queryFn: api.getFavorites,
+  });
+
+  const productFavIdArray = [...productFavIds];
+  const { data: savedProducts = [], isLoading: productsLoading } = useQuery({
+    queryKey: ["saved-products", productFavIdArray.sort().join(",")],
+    queryFn: () => fetchProductsByIds(productFavIdArray),
+    enabled: productFavIdArray.length > 0,
+    staleTime: 60_000,
   });
 
   const { data: quizResults = [] } = useQuery({
@@ -193,8 +204,8 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
               data-testid={`button-tab-${item.id}`}>
               <item.icon className="w-4 h-4 flex-shrink-0" />
               <span>{item.label}</span>
-              {item.id === "wishlist" && (favorites as any[]).length > 0 && (
-                <span className="ml-auto text-[9px] opacity-60 hidden md:inline">{(favorites as any[]).length}</span>
+              {item.id === "wishlist" && ((favorites as any[]).length + productFavCount) > 0 && (
+                <span className="ml-auto text-[9px] opacity-60 hidden md:inline">{(favorites as any[]).length + productFavCount}</span>
               )}
               {item.id === "quiz" && (quizResults as any[]).length > 0 && (
                 <span className="ml-auto text-[9px] opacity-60 hidden md:inline">{(quizResults as any[]).length}</span>
@@ -259,8 +270,8 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                 </div>
               )}
               <div className="flex justify-between items-center py-4 border-b border-border/20">
-                <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Saved Designers</span>
-                <span className="text-sm">{(favorites as any[]).length}</span>
+                <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Saved Items</span>
+                <span className="text-sm">{(favorites as any[]).length + productFavCount}</span>
               </div>
               <div className="flex justify-between items-center py-4 border-b border-border/20">
                 <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Quizzes Taken</span>
@@ -305,37 +316,109 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
               <h2 className="text-xl md:text-2xl font-serif">Your Wishlist</h2>
               <button onClick={() => handleTabChange("account")} className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors md:hidden active:scale-95 py-1 px-2" data-testid="button-back-account">Back</button>
             </div>
-            {favsLoading ? (
-              <div className="animate-pulse grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                {[1,2].map(i => <div key={i} className="h-28 md:h-32 bg-secondary" />)}
+
+            {productFavCount > 0 && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground">Saved Products ({productFavCount})</h3>
+                {productsLoading ? (
+                  <div className="animate-pulse grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[1,2,3].map(i => <div key={i} className="aspect-[3/4] bg-secondary" />)}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {(savedProducts as any[]).map((product: any) => {
+                      const imageUrl = product.imageUrl || product.image_url;
+                      const brandName = product.brandName || product.brand_name || "";
+                      const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
+                      const productId = String(product.id);
+                      const shopUrl = product.url
+                        ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}`
+                        : null;
+                      return (
+                        <div key={productId} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`card-saved-product-${productId}`}>
+                          <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                            {imageUrl ? (
+                              <img src={imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                <ShoppingBag className="w-8 h-8 opacity-30" />
+                              </div>
+                            )}
+                            {fiberPercent != null && fiberPercent >= 90 && (
+                              <div className="absolute top-2 left-2">
+                                <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
+                                  <CheckCircle2 className="w-2.5 h-2.5" />
+                                  {fiberPercent}% natural
+                                </span>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => toggleProductFav(productId)}
+                              className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+                              data-testid={`btn-unfav-${productId}`}
+                              aria-label="Remove from favorites"
+                            >
+                              <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+                            </button>
+                          </div>
+                          <div className="flex flex-col gap-1.5 p-3 flex-1">
+                            <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground">{brandName}</span>
+                            <h3 className="text-[13px] leading-snug line-clamp-2 font-medium">{product.name}</h3>
+                            {product.composition && (
+                              <p className="text-[10px] text-muted-foreground line-clamp-1 mt-auto">{product.composition}</p>
+                            )}
+                            <div className="flex items-center justify-between mt-1">
+                              {product.price && <span className="text-xs font-medium">{product.price}</span>}
+                              {fiberPercent != null && fiberPercent < 90 && (
+                                <span className="text-[9px] text-muted-foreground">{fiberPercent}% natural</span>
+                              )}
+                            </div>
+                          </div>
+                          {shopUrl && (
+                            <a href={shopUrl} className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors">
+                              Shop Now <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            ) : (favorites as any[]).length === 0 ? (
+            )}
+
+            {(favorites as any[]).length > 0 && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground">Saved Designers ({(favorites as any[]).length})</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                  {(favorites as any[]).map((fav: any) => {
+                    const brandName = fav.designer?.name || "Designer";
+                    const score = fav.designer?.naturalFiberPercent ?? getCuratedScore(brandName);
+                    const tier = getQualityTier(score);
+                    return (
+                      <Link key={fav.id} href={`/designers/${fav.designer?.slug || fav.designerId}`} className="group flex flex-col border border-border hover:border-foreground transition-colors active:scale-[0.98] overflow-hidden" data-testid={`card-favorite-${fav.designer?.slug || fav.designerId}`}>
+                        <BrandImage name={brandName} className="aspect-[4/3] w-full" />
+                        <div className="flex flex-col gap-2 p-4">
+                          <div className="flex justify-between items-start">
+                            <h3 className="text-base md:text-lg font-serif">{brandName}</h3>
+                            <button className="text-foreground p-1.5 -mr-1 active:scale-90 transition-transform" onClick={(e) => { e.preventDefault(); removeFav.mutate(fav.designerId); }}>
+                              <Heart className="w-4 h-4 fill-foreground" />
+                            </button>
+                          </div>
+                          <span className={`text-[9px] uppercase tracking-[0.1em] w-fit px-2 py-0.5 ${getTierColor(tier.tier)}`}>{tier.verdict}</span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {(favorites as any[]).length === 0 && productFavCount === 0 && (
               <div className="py-12 md:py-16 text-center bg-secondary/20 border border-dashed border-border/60 flex flex-col items-center gap-4">
                 <Heart className="w-8 h-8 text-muted-foreground/30" />
-                <p className="text-muted-foreground text-sm">You haven't saved any designers yet.</p>
-                <Link href="/designers" className="mt-2 inline-block text-xs uppercase tracking-[0.15em] border-b border-foreground pb-1 active:scale-95 transition-transform" data-testid="link-browse-designers">Browse Directory</Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-                {(favorites as any[]).map((fav: any) => {
-                  const brandName = fav.designer?.name || "Designer";
-                  const score = fav.designer?.naturalFiberPercent ?? getCuratedScore(brandName);
-                  const tier = getQualityTier(score);
-                  return (
-                    <Link key={fav.id} href={`/designers/${fav.designer?.slug || fav.designerId}`} className="group flex flex-col border border-border hover:border-foreground transition-colors active:scale-[0.98] overflow-hidden" data-testid={`card-favorite-${fav.designer?.slug || fav.designerId}`}>
-                      <BrandImage name={brandName} className="aspect-[4/3] w-full" />
-                      <div className="flex flex-col gap-2 p-4">
-                        <div className="flex justify-between items-start">
-                          <h3 className="text-base md:text-lg font-serif">{brandName}</h3>
-                          <button className="text-foreground p-1.5 -mr-1 active:scale-90 transition-transform" onClick={(e) => { e.preventDefault(); removeFav.mutate(fav.designerId); }}>
-                            <Heart className="w-4 h-4 fill-foreground" />
-                          </button>
-                        </div>
-                        <span className={`text-[9px] uppercase tracking-[0.1em] w-fit px-2 py-0.5 ${getTierColor(tier.tier)}`}>{tier.verdict}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
+                <p className="text-muted-foreground text-sm">You haven't saved any products or designers yet.</p>
+                <Link href="/shop" className="mt-2 inline-block text-xs uppercase tracking-[0.15em] border-b border-foreground pb-1 active:scale-95 transition-transform" data-testid="link-browse-shop">Browse Shop</Link>
               </div>
             )}
           </section>
