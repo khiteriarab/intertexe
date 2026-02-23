@@ -331,59 +331,71 @@ export default function DesignerDetail() {
         <div className="flex items-center gap-3">
           <ShoppingBag className="w-4 h-4 text-foreground/60" />
           <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
-            {products && products.length > 0 ? `${products.length} Pieces That Meet Our Standards` : `Browse ${designer.name} Collection`}
+            {products && products.length > 0 ? `${products.length} Verified Pieces` : `Browse ${designer.name}`}
           </h2>
         </div>
-        <p className="text-sm text-foreground/70 leading-relaxed">
-          {products && products.length > 0
-            ? `Every item below has been verified by INTERTEXE — only pieces with ≥50% natural fiber composition make this list.`
-            : `Browse ${designer.name} pieces that meet INTERTEXE fabric standards — only items with verified natural fiber compositions, filtered and approved by our editorial team.`}
-        </p>
 
         {products && products.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {products.map((product: any) => (
-              <a
-                key={product.product_id || product.productId}
-                href={product.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
-                data-testid={`card-product-${product.product_id || product.productId}`}
-              >
-                <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-                  {(product.image_url || product.imageUrl) ? (
-                    <img
-                      src={product.image_url || product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <ShoppingBag className="w-8 h-8 opacity-30" />
+          <>
+            <p className="text-sm text-foreground/70 leading-relaxed">
+              Every item below has been verified by INTERTEXE — only pieces with ≥50% natural fiber composition make this list.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {products.map((product: any) => (
+                <a
+                  key={product.product_id || product.productId}
+                  href={product.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
+                  data-testid={`card-product-${product.product_id || product.productId}`}
+                >
+                  <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                    {(product.image_url || product.imageUrl) ? (
+                      <img
+                        src={product.image_url || product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <ShoppingBag className="w-8 h-8 opacity-30" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2">
+                      <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                        {product.natural_fiber_percent || product.naturalFiberPercent}% natural
+                      </span>
                     </div>
-                  )}
-                  <div className="absolute top-2 left-2">
-                    <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                      {product.natural_fiber_percent || product.naturalFiberPercent}% natural
-                    </span>
                   </div>
-                </div>
-                <div className="p-3 flex flex-col gap-1.5 flex-1">
-                  <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
-                  <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
-                  {(product.price) && (
-                    <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
-                  )}
-                </div>
-              </a>
-            ))}
-          </div>
+                  <div className="p-3 flex flex-col gap-1.5 flex-1">
+                    <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
+                    <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
+                    {(product.price) && (
+                      <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </>
         ) : (
-          <div className="flex items-center gap-3 py-3 px-4 bg-secondary/20 border border-border/20">
-            <div className="w-2 h-2 bg-foreground/20 rounded-full animate-pulse" />
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Coming Soon</span>
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-foreground/70 leading-relaxed">
+              {profile
+                ? `We're currently verifying ${designer.name}'s product compositions. ${profile.materialStrengths ? `Based on our analysis, look for pieces in ${profile.materialStrengths.slice(0, 3).join(', ').toLowerCase()} for the best natural fiber content.` : ''}`
+                : `Product verification for ${designer.name} is in progress. Check back soon for verified pieces with natural fiber compositions.`}
+            </p>
+            {designer.website && (
+              <Link
+                href={`/leaving?url=${encodeURIComponent(designer.website)}&brand=${encodeURIComponent(designer.name)}`}
+                className="flex items-center justify-center gap-3 w-full border border-foreground/20 hover:border-foreground/40 text-foreground px-8 py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98]"
+                data-testid={`link-browse-${designer.slug}`}
+              >
+                Browse on {designer.name.split(' ').length > 3 ? 'their site' : `${designer.name}.com`} <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            )}
           </div>
         )}
       </section>
