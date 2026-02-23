@@ -9,6 +9,11 @@ INTERTEXE is the definitive material quality reference for luxury fashion. The p
   - Applied consistently across Navbar, Footer, and all brand references
   - Removed entire community reviews feature (schema, storage, API routes, UI components)
   - Added "Browse Collection" teaser section on designer detail pages (Coming Soon — for future clothing API)
+  - Quiz results: "Shop Your Standards" section with quality tier badges + "Coming Soon" clothing teaser
+  - Enhanced brand name cleaning: now strips brackets/parens, trailing punctuation (!, etc.)
+  - Added BRAND_NAME_OVERRIDES map for 8 edge-case brands (Les Artistes, Red V, Weekender, etc.)
+  - Slug generation updated to strip brackets, parens, and exclamation marks
+  - Client-side (supabase.ts) and server-side (storage.ts) cleaning kept in sync
 - **2026-02-22**: Brand Name Cleaning & Image Components
   - cleanBrandSymbols() strips ®, ™, ©, * from brand names (server + client)
   - Shared BrandImage component (client/src/components/BrandImage.tsx) used on designer detail + quiz results

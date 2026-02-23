@@ -470,32 +470,62 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
         </div>
       </div>
 
-      <section className="flex flex-col gap-6 md:gap-8">
+      <section className="flex flex-col gap-6 md:gap-8" data-testid="section-shop-collection">
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl md:text-3xl font-serif">Recommended for You</h2>
-          <p className="text-muted-foreground text-sm">Designers matching your material standards.</p>
+          <h2 className="text-2xl md:text-3xl font-serif">Shop Your Standards</h2>
+          <p className="text-muted-foreground text-sm">
+            Browse clothes from top-tier designers — every piece verified to meet INTERTEXE fabric standards.
+          </p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-8">
-          {recommendedDesigners.map((designer: any) => (
-            <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 md:gap-4" data-testid={`card-recommended-${designer.slug}`}>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+          {recommendedDesigners.map((designer: any) => {
+            const tier = designer.naturalFiberPercent != null
+              ? designer.naturalFiberPercent >= 90 ? 'Exceptional' : designer.naturalFiberPercent >= 70 ? 'Excellent' : 'Good'
+              : null;
+            return (
+              <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-recommended-${designer.slug}`}>
                 <BrandImage name={designer.name} className="aspect-[3/4]" />
-                <div>
-                  <h3 className="text-base md:text-xl font-serif">{designer.name}</h3>
-                  {designer.naturalFiberPercent != null && (
-                    <p className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground mt-1">
-                      {designer.naturalFiberPercent}% Natural Fibers
-                    </p>
-                  )}
+                <div className="p-3 md:p-4 flex flex-col gap-1.5">
+                  <h3 className="text-sm md:text-base font-serif">{designer.name}</h3>
+                  <div className="flex items-center gap-2">
+                    {tier && (
+                      <span className={`text-[8px] md:text-[9px] uppercase tracking-wider px-1.5 py-0.5 ${
+                        tier === 'Exceptional' ? 'bg-foreground text-background' :
+                        tier === 'Excellent' ? 'bg-foreground/80 text-background' :
+                        'bg-secondary text-foreground/70'
+                      }`}>{tier}</span>
+                    )}
+                    {designer.naturalFiberPercent != null && (
+                      <span className="text-[10px] text-muted-foreground">{designer.naturalFiberPercent}%</span>
+                    )}
+                  </div>
                 </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col gap-4 p-6 md:p-8 bg-secondary/20 border border-border/20">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-foreground/20 rounded-full animate-pulse" />
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Coming Soon</span>
+          </div>
+          <p className="text-sm text-foreground/70 leading-relaxed">
+            Browse individual pieces from these designers that meet our fabric standards — only clothes with verified natural fiber compositions, filtered and approved by our editorial team.
+          </p>
         </div>
       </section>
 
-      <div className="flex justify-center pt-4 md:pt-8">
-        <Link href={isAuthenticated ? "/account" : "/designers"} className="border border-foreground px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground hover:text-background transition-colors active:scale-95" data-testid="link-after-quiz">
-            {isAuthenticated ? "View Your Account" : "Browse Designers"}
+      <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4 md:pt-8">
+        <Link href="/designers" className="border border-foreground px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground hover:text-background transition-colors active:scale-95 text-center" data-testid="link-browse-designers">
+          Browse All Designers
         </Link>
+        {isAuthenticated && (
+          <Link href="/account" className="border border-border/40 px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-secondary/50 transition-colors active:scale-95 text-center" data-testid="link-after-quiz">
+            View Your Account
+          </Link>
+        )}
       </div>
     </div>
   );

@@ -80,12 +80,24 @@ function guessBrandWebsite(name: string): string | null {
   return `https://${cleaned}.com`;
 }
 
+const BRAND_NAME_OVERRIDES: Record<string, string> = {
+  "LES (ART)ISTS": "Les Artistes",
+  "LOST [in] ME": "Lost in Me",
+  "Red(V)": "Red V",
+  "Vlone(GOAT)": "Vlone",
+  "Weekend(er)": "Weekender",
+  "THE (Alphabet)": "The Alphabet",
+  "Who*s Who": "Who's Who",
+  "PropÃ©t": "Propet",
+};
+
 function mapRow(row: any): Designer {
   const website = row.website ?? guessBrandWebsite(row.name);
-  const cleanName = (row.name || '').replace(/[®™©°]/g, '').replace(/\*+/g, '').replace(/\s{2,}/g, ' ').trim();
+  const rawName = row.name || '';
+  const cleanName = BRAND_NAME_OVERRIDES[rawName] || rawName.replace(/[®™©°]/g, '').replace(/\*+/g, '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s*\[[^\]]*\]\s*/g, ' ').replace(/[!]+$/g, '').replace(/\s{2,}/g, ' ').trim();
   return {
     id: row.id,
-    name: cleanName || row.name,
+    name: cleanName || rawName,
     slug: row.slug,
     status: row.status || "Pending",
     naturalFiberPercent: row.natural_fiber_percent ?? null,

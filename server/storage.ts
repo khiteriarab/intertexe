@@ -28,6 +28,17 @@ const KEEP_UPPER_WORDS = new Set([
   'DJ', 'MC', 'MR', 'DR', 'ST', 'VS', 'X', 'XL', 'XXL', 'XS', 'NB',
 ]);
 
+const BRAND_NAME_OVERRIDES: Record<string, string> = {
+  "LES (ART)ISTS": "Les Artistes",
+  "LOST [in] ME": "Lost in Me",
+  "Red(V)": "Red V",
+  "Vlone(GOAT)": "Vlone",
+  "Weekend(er)": "Weekender",
+  "THE (Alphabet)": "The Alphabet",
+  "Who*s Who": "Who's Who",
+  "PropÃ©t": "Propet",
+};
+
 const DO_NOT_TOUCH_NAMES = new Set([
   'A_COLD_WALL*', 'A_COLD_WALL', 'GCDS', 'MSGM', 'OAMC', 'DKNY', 'MCM', 'RVCA', 'UGG',
   'COS', 'H&M', 'BOSS', '#RIKYN', 'DIOR', 'FENDI', 'AT.P.CO',
@@ -56,12 +67,16 @@ function titleCaseWord(word: string, isFirst: boolean): string {
 
 function cleanBrandSymbols(name: string): string {
   let cleaned = name.replace(/[®™©°]/g, '').replace(/\*+/g, '');
+  cleaned = cleaned.replace(/\s*\([^)]*\)\s*/g, ' ');
+  cleaned = cleaned.replace(/\s*\[[^\]]*\]\s*/g, ' ');
+  cleaned = cleaned.replace(/[!]+$/g, '');
   cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
   if (cleaned.startsWith("'") && cleaned.length <= 3) return cleaned;
   return cleaned;
 }
 
 function fixBrandName(name: string): string {
+  if (BRAND_NAME_OVERRIDES[name]) return BRAND_NAME_OVERRIDES[name];
   const cleaned = cleanBrandSymbols(name);
   if (DO_NOT_TOUCH_NAMES.has(cleaned) || DO_NOT_TOUCH_NAMES.has(name)) return cleaned;
   const letters = cleaned.replace(/[^a-zA-ZÀ-ÿ]/g, '');
@@ -88,7 +103,10 @@ function fixSlug(name: string): string {
   return name
     .toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[®™*#&'°_]/g, '')
+    .replace(/[®™©*#&'°_]/g, '')
+    .replace(/\([^)]*\)/g, '')
+    .replace(/\[[^\]]*\]/g, '')
+    .replace(/[!]+/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .replace(/-+/g, '-');
