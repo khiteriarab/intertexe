@@ -141,6 +141,20 @@ const NON_CLOTHING_PATTERNS = [
   /\bcandle holder\b/i,
   /\bmesh tote\b/i,
   /\bcanvas tote\b/i,
+  /\bkids?\b/i,
+  /\byouth\b/i,
+  /\bjunior\b/i,
+  /\bchildren\b/i,
+  /\btoddler\b/i,
+  /\binfant\b/i,
+  /\bnewborn\b/i,
+  /\bmen's\b/i,
+  /\bmens\b/i,
+  /\bfor men\b/i,
+  /\bdog (sweater|collar|coat|harness|leash|bed|bandana|hoodie)\b/i,
+  /\bthrow blanket\b/i,
+  /\b(vase|planter|coaster|cushion|picture frame|wine glass)\b/i,
+  /\b(throw pillow)\b/i,
 ];
 
 function isClothingProduct(name: string): boolean {
