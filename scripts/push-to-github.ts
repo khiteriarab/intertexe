@@ -97,34 +97,34 @@ async function main() {
   const files = getAllFiles('/home/runner/workspace');
   console.log(`Found ${files.length} files to push.`);
 
-  // Create blobs with retry
+  // Create blobs in parallel batches
   const blobs: { path: string; sha: string }[] = [];
-  let count = 0;
+  const BATCH_SIZE = 15;
 
-  for (const file of files) {
-    const content = fs.readFileSync(file.fullPath);
-    const base64 = content.toString('base64');
-    
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        const blob = await octokit.git.createBlob({
-          owner: OWNER,
-          repo: REPO,
-          content: base64,
-          encoding: 'base64',
-        });
-        blobs.push({ path: file.path, sha: blob.data.sha });
-        break;
-      } catch (e: any) {
-        retries--;
-        if (retries === 0) throw e;
-        console.log(`  Retry for ${file.path}...`);
-        await sleep(2000);
-      }
-    }
-    count++;
-    if (count % 20 === 0) console.log(`  ${count}/${files.length} files processed...`);
+  for (let i = 0; i < files.length; i += BATCH_SIZE) {
+    const batch = files.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map(async (file) => {
+        const content = fs.readFileSync(file.fullPath);
+        const base64 = content.toString('base64');
+        let retries = 3;
+        while (retries > 0) {
+          try {
+            const blob = await octokit.git.createBlob({
+              owner: OWNER, repo: REPO, content: base64, encoding: 'base64',
+            });
+            return { path: file.path, sha: blob.data.sha };
+          } catch (e: any) {
+            retries--;
+            if (retries === 0) throw e;
+            await sleep(1000);
+          }
+        }
+        throw new Error(`Failed to create blob for ${file.path}`);
+      })
+    );
+    blobs.push(...results);
+    console.log(`  ${Math.min(i + BATCH_SIZE, files.length)}/${files.length} files processed...`);
   }
   console.log(`All ${files.length} blobs created.`);
 
