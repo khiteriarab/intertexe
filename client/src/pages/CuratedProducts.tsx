@@ -437,9 +437,9 @@ export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) 
                 </div>
               ))}
             </div>
-          ) : products.length > 0 ? (
+          ) : products.filter((p: any) => p.image_url || p.imageUrl).length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {products.map((product: any, index: number) => (
+              {products.filter((p: any) => p.image_url || p.imageUrl).map((product: any, index: number) => (
                 <ProductCard key={product.product_id || product.productId || index} product={product} index={index} />
               ))}
             </div>

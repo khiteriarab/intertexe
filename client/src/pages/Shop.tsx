@@ -134,7 +134,8 @@ export default function Shop() {
     queryFn: async () => {
       const res = await fetch("/api/products");
       if (!res.ok) return [];
-      return res.json();
+      const data = await res.json();
+      return data.filter((p: any) => p.image_url);
     },
     staleTime: 5 * 60 * 1000,
   });

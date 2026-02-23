@@ -332,17 +332,17 @@ export default function DesignerDetail() {
         <div className="flex items-center gap-3">
           <ShoppingBag className="w-4 h-4 text-foreground/60" />
           <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
-            {products && products.length > 0 ? `${products.length} Verified Pieces` : `Browse ${designer.name}`}
+            {products && products.filter((p: any) => p.image_url || p.imageUrl).length > 0 ? `${products.filter((p: any) => p.image_url || p.imageUrl).length} Verified Pieces` : `Browse ${designer.name}`}
           </h2>
         </div>
 
-        {products && products.length > 0 ? (
+        {products && products.filter((p: any) => p.image_url || p.imageUrl).length > 0 ? (
           <>
             <p className="text-sm text-foreground/70 leading-relaxed">
               Every item below has been verified by INTERTEXE — only pieces with ≥50% natural fiber composition make this list.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {products.map((product: any) => (
+              {products.filter((p: any) => p.image_url || p.imageUrl).map((product: any) => (
                 <a
                   key={product.product_id || product.productId}
                   href={product.url}

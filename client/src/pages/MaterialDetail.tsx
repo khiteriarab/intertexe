@@ -92,6 +92,7 @@ export default function MaterialDetail() {
       return allProducts.filter((p) => {
         const id = p.product_id || p.productId;
         if (seen.has(id)) return false;
+        if (!(p.image_url || p.imageUrl)) return false;
         seen.add(id);
         return true;
       });
