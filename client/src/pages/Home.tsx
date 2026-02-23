@@ -10,8 +10,8 @@ import textureImage from "@/assets/images/material-texture.jpg";
 
 const CURATED_BRAND_SLUGS = [
   "khaite",
-  "toteme",
   "anine-bing",
+  "toteme",
   "frame",
   "vince",
   "nanushka",
