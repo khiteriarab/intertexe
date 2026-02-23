@@ -15,6 +15,19 @@ function ScrollToTop() {
   return null;
 }
 
+function RouteTracker() {
+  const [location] = useLocation();
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "page_view", {
+        page_path: location,
+        page_title: document.title,
+      });
+    }
+  }, [location]);
+  return null;
+}
+
 import Home from "@/pages/Home";
 import JustIn from "@/pages/JustIn";
 import Designers from "@/pages/Designers";
@@ -44,6 +57,7 @@ function Router() {
   return (
     <Layout>
       <ScrollToTop />
+      <RouteTracker />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/just-in" component={JustIn} />
