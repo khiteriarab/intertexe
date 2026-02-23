@@ -4,8 +4,11 @@ import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf } 
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { getCuratedScore } from "@/lib/curated-quality-scores";
+import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 import { useToast } from "@/hooks/use-toast";
 import { FABRIC_PERSONAS } from "@shared/personas";
+import { BrandImage } from "@/components/BrandImage";
 
 export default function Account() {
   const { user, isLoading: authLoading, isAuthenticated, login, signup, logout } = useAuth();
@@ -314,22 +317,25 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-                {(favorites as any[]).map((fav: any) => (
-                  <Link key={fav.id} href={`/designers/${fav.designer?.slug || fav.designerId}`} className="group flex flex-col gap-3 border border-border p-4 hover:border-foreground transition-colors active:scale-[0.98]" data-testid={`card-favorite-${fav.designer?.slug || fav.designerId}`}>
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-lg md:text-xl font-serif">{fav.designer?.name || "Designer"}</h3>
-                        <button className="text-foreground p-1.5 -mr-1 active:scale-90 transition-transform" onClick={(e) => { e.preventDefault(); removeFav.mutate(fav.designerId); }}>
-                          <Heart className="w-4 h-4 fill-foreground" />
-                        </button>
-                      </div>
-                      {fav.designer?.naturalFiberPercent != null && (
-                        <div className="flex items-center gap-2 mt-auto pt-3 border-t border-border/40">
-                          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Material Score</span>
-                          <span className="text-sm font-medium ml-auto">{fav.designer.naturalFiberPercent}%</span>
+                {(favorites as any[]).map((fav: any) => {
+                  const brandName = fav.designer?.name || "Designer";
+                  const score = fav.designer?.naturalFiberPercent ?? getCuratedScore(brandName);
+                  const tier = getQualityTier(score);
+                  return (
+                    <Link key={fav.id} href={`/designers/${fav.designer?.slug || fav.designerId}`} className="group flex flex-col border border-border hover:border-foreground transition-colors active:scale-[0.98] overflow-hidden" data-testid={`card-favorite-${fav.designer?.slug || fav.designerId}`}>
+                      <BrandImage name={brandName} className="aspect-[4/3] w-full" />
+                      <div className="flex flex-col gap-2 p-4">
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-base md:text-lg font-serif">{brandName}</h3>
+                          <button className="text-foreground p-1.5 -mr-1 active:scale-90 transition-transform" onClick={(e) => { e.preventDefault(); removeFav.mutate(fav.designerId); }}>
+                            <Heart className="w-4 h-4 fill-foreground" />
+                          </button>
                         </div>
-                      )}
-                  </Link>
-                ))}
+                        <span className={`text-[9px] uppercase tracking-[0.1em] w-fit px-2 py-0.5 ${getTierColor(tier.tier)}`}>{tier.verdict}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </section>

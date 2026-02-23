@@ -490,11 +490,38 @@ export async function supabaseGetFavorites(): Promise<any[]> {
     .order("created_at", { ascending: false });
 
   if (error) return [];
+
+  const designerIds = (data || []).map((row: any) => row.designer_id).filter(Boolean);
+  let designerMap: Record<string, any> = {};
+
+  if (designerIds.length > 0) {
+    const { data: designers } = await supabase
+      .from("designers")
+      .select("*")
+      .in("id", designerIds);
+
+    if (designers) {
+      for (const d of designers) {
+        const rawName = d.name || "";
+        const cleanName = BRAND_NAME_OVERRIDES[rawName] || rawName.replace(/[®™©°]/g, '').replace(/\*+/g, '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s*\[[^\]]*\]\s*/g, ' ').replace(/[!]+$/g, '').replace(/\s{2,}/g, ' ').trim();
+        designerMap[d.id] = {
+          id: d.id,
+          name: cleanName || rawName,
+          slug: d.slug,
+          naturalFiberPercent: d.natural_fiber_percent ?? d.naturalFiberPercent ?? null,
+          description: d.description,
+          website: d.website,
+        };
+      }
+    }
+  }
+
   return (data || []).map((row: any) => ({
     id: row.id,
     userId: row.user_id,
     designerId: row.designer_id,
     createdAt: row.created_at,
+    designer: designerMap[row.designer_id] || null,
   }));
 }
 
