@@ -30,6 +30,7 @@ import MaterialDetail from "@/pages/MaterialDetail";
 import Chat from "@/pages/Chat";
 import Leaving from "@/pages/Leaving";
 import Shop from "@/pages/Shop";
+import CuratedProducts from "@/pages/CuratedProducts";
 
 function Router() {
   return (
@@ -51,6 +52,9 @@ function Router() {
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
         <Route path="/leaving" component={Leaving} />
+        <Route path="/linen-dresses">{() => <CuratedProducts pageSlug="linen-dresses" />}</Route>
+        <Route path="/silk-dresses">{() => <CuratedProducts pageSlug="silk-dresses" />}</Route>
+        <Route path="/cotton-dresses">{() => <CuratedProducts pageSlug="cotton-dresses" />}</Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>
