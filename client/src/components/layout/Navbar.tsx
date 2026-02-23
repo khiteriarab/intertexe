@@ -43,7 +43,7 @@ export function Navbar() {
     { name: "Home", href: "/", icon: Home },
     { name: "Shop", href: "/shop", icon: ShoppingBag },
     { name: "Directory", href: "/designers", icon: Grid },
-    { name: "Quiz", href: "/quiz", icon: List },
+    { name: "Chat", href: "/chat", icon: MessageCircle },
     { name: "Account", href: "/account", icon: isAuthenticated ? UserCheck : User },
   ];
 
