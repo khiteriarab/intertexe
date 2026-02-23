@@ -7,32 +7,31 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
-import { getBrandScreenshotUrl } from "@/lib/brand-images";
+import { getBrandLogoUrl } from "@/lib/brand-images";
 import { BrandImage } from "@/components/BrandImage";
 import { useState } from "react";
 
 function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
-  const [imgFailed, setImgFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
   const brandTier = getQualityTier(brand.naturalFiberPercent);
-  const screenshotUrl = getBrandScreenshotUrl(brand.name, 400);
+  const logoUrl = getBrandLogoUrl(brand.name);
 
   const card = (
     <div className="bg-secondary/30 border border-border/20 hover:border-border/50 transition-all flex flex-col group" data-testid={`card-similar-${index}`}>
-      <div className="aspect-[4/3] bg-secondary relative overflow-hidden">
-        {screenshotUrl && !imgFailed ? (
+      <div className="aspect-[4/3] bg-secondary relative overflow-hidden flex items-center justify-center">
+        <span className="absolute font-serif text-[80px] text-foreground/[0.03] select-none">{brand.name.charAt(0)}</span>
+        {logoUrl && !logoFailed ? (
           <img
-            src={screenshotUrl}
-            alt={`${brand.name} website`}
-            className="absolute inset-0 w-full h-full object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
+            src={logoUrl}
+            alt={`${brand.name} logo`}
+            className="w-10 h-10 md:w-12 md:h-12 object-contain relative z-10"
             loading="lazy"
-            onError={() => setImgFailed(true)}
+            onError={() => setLogoFailed(true)}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="font-serif text-3xl md:text-4xl text-muted-foreground/15 group-hover:text-muted-foreground/25 transition-colors">
-              {brand.name.charAt(0)}
-            </span>
-          </div>
+          <span className="font-serif text-2xl md:text-3xl text-foreground/15 relative z-10">
+            {brand.name.charAt(0)}
+          </span>
         )}
         {brand.naturalFiberPercent != null && (
           <div className="absolute top-2 left-2 z-10">
