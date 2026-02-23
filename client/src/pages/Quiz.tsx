@@ -1,9 +1,9 @@
 import { useState, useMemo, Component, type ReactNode } from "react";
 import { Link } from "wouter";
-import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, SlidersHorizontal } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { fetchDesigners, fetchDesignersByNames } from "@/lib/supabase";
+import { fetchDesigners, fetchDesignersByNames, fetchAllProducts, fetchProductsByBrand } from "@/lib/supabase";
 
 const POPULAR_BRAND_NAMES = [
   "FRAME", "RE/DONE", "Reformation", "Ganni", "Isabel Marant",
