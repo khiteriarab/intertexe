@@ -438,22 +438,47 @@ function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: {
 
 function QuizResults({ selections, recommendation, designers }: { selections: any; recommendation: any; designers: any[] }) {
   const { isAuthenticated } = useAuth();
-  const curatedSlugs = [
-    "ba-sh", "sezane", "reformation", "ganni", "isabel-marant", "khaite",
-    "zimmermann", "jacquemus", "toteme", "anine-bing", "nanushka", "rouje"
-  ];
-  const curatedMatches = curatedSlugs
-    .map(slug => designers.find((d: any) => d.slug === slug))
-    .filter(Boolean);
-  const scoredDesigners = designers
-    .filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent > 85);
-  const recommendedDesigners = curatedMatches.length >= 6
-    ? curatedMatches.slice(0, 6)
-    : scoredDesigners.length >= 6
-      ? scoredDesigners.slice(0, 6)
-      : curatedMatches.length > 0
-        ? curatedMatches
-        : designers.slice(0, 6);
+  const selectedBrandNames: string[] = selections.brands || [];
+
+  const selectedBrandSlugs = useMemo(() => {
+    return selectedBrandNames.map(name => {
+      const match = designers.find((d: any) => d.name === name);
+      return match ? match.slug : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    });
+  }, [selectedBrandNames, designers]);
+
+  const { data: brandProducts = [], isLoading: productsLoading } = useQuery({
+    queryKey: ["quiz-brand-products", selectedBrandSlugs],
+    queryFn: async () => {
+      if (selectedBrandSlugs.length === 0) return [];
+      const results = await Promise.all(
+        selectedBrandSlugs.map(slug => fetchProductsByBrand(slug))
+      );
+      return results
+        .flat()
+        .filter((p: any) => p.imageUrl || p.image_url)
+        .sort((a: any, b: any) => (b.naturalFiberPercent || 0) - (a.naturalFiberPercent || 0));
+    },
+    enabled: selectedBrandSlugs.length > 0,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const selectedDesigners = useMemo(() => {
+    return selectedBrandNames
+      .map(name => designers.find((d: any) => d.name === name))
+      .filter(Boolean);
+  }, [selectedBrandNames, designers]);
+
+  const similarDesigners = useMemo(() => {
+    const selectedSet = new Set(selectedBrandNames.map(n => n.toLowerCase()));
+    return designers
+      .filter((d: any) => !selectedSet.has(d.name.toLowerCase()) && d.naturalFiberPercent != null && d.naturalFiberPercent > 60)
+      .slice(0, 6);
+  }, [designers, selectedBrandNames]);
+
+  const productsWithImages = brandProducts.filter((p: any) => p.imageUrl || p.image_url);
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const displayProducts = showAllProducts ? productsWithImages : productsWithImages.slice(0, 12);
 
   return (
     <div className="py-6 md:py-16 max-w-4xl mx-auto w-full flex flex-col gap-10 md:gap-16 animate-in fade-in duration-700">
@@ -480,6 +505,183 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
             Create Account
           </Link>
         </div>
+      )}
+
+      <section className="flex flex-col gap-6 md:gap-8" data-testid="section-shop-collection">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl md:text-3xl font-serif">Shop Your Standards</h2>
+          <p className="text-muted-foreground text-sm">
+            {productsWithImages.length > 0
+              ? `${productsWithImages.length} verified pieces from ${selectedBrandNames.length > 0 ? selectedBrandNames.join(', ') : 'your selected brands'}. Every item meets our natural fiber threshold.`
+              : `Browse verified products from the brands that match your standards.`}
+          </p>
+        </div>
+
+        {productsLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse flex flex-col">
+                <div className="aspect-[3/4] bg-secondary" />
+                <div className="p-3 flex flex-col gap-2">
+                  <div className="h-3 bg-secondary w-1/2" />
+                  <div className="h-4 bg-secondary w-3/4" />
+                  <div className="h-3 bg-secondary w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : displayProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {displayProducts.map((product: any) => {
+                const imageUrl = product.imageUrl || product.image_url;
+                const brandName = product.brandName || product.brand_name || "";
+                const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
+                const shopUrl = product.url
+                  ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}`
+                  : null;
+                return (
+                  <div key={product.productId || product.product_id} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`card-quiz-product-${product.productId || product.product_id}`}>
+                    <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                      <img
+                        src={imageUrl}
+                        alt={product.name}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      {fiberPercent != null && fiberPercent >= 90 && (
+                        <div className="absolute top-2 left-2">
+                          <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
+                            <CheckCircle2 className="w-2.5 h-2.5" />
+                            {fiberPercent}% natural
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1.5 p-3 flex-1">
+                      <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground">{brandName}</span>
+                      <h3 className="text-[13px] leading-snug line-clamp-2 font-medium">{product.name}</h3>
+                      {product.composition && (
+                        <p className="text-[10px] text-muted-foreground line-clamp-1 mt-auto">{product.composition}</p>
+                      )}
+                      <div className="flex items-center justify-between mt-1">
+                        {product.price && <span className="text-xs font-medium">{product.price}</span>}
+                        {fiberPercent != null && fiberPercent < 90 && (
+                          <span className="text-[9px] text-muted-foreground">{fiberPercent}% natural</span>
+                        )}
+                      </div>
+                    </div>
+                    {shopUrl && (
+                      <a
+                        href={shopUrl}
+                        className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98]"
+                        data-testid={`button-shop-quiz-${product.productId || product.product_id}`}
+                      >
+                        Shop Now <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {!showAllProducts && productsWithImages.length > 12 && (
+              <button
+                onClick={() => setShowAllProducts(true)}
+                className="flex items-center justify-center gap-2 w-full border border-foreground/20 hover:border-foreground/40 py-3.5 uppercase tracking-[0.15em] text-[10px] md:text-xs transition-colors active:scale-[0.98]"
+                data-testid="button-show-more-products"
+              >
+                Show All {productsWithImages.length} Products <ArrowRight className="w-3 h-3" />
+              </button>
+            )}
+          </>
+        ) : (
+          <Link
+            href="/shop"
+            className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 md:py-5 uppercase tracking-[0.2em] text-xs md:text-sm hover:bg-foreground/90 transition-colors active:scale-[0.98]"
+            data-testid="link-shop-verified"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Shop All Verified Products
+          </Link>
+        )}
+      </section>
+
+      {selectedDesigners.length > 0 && (
+        <section className="flex flex-col gap-6 md:gap-8" data-testid="section-your-designers">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl md:text-2xl font-serif">Your Designers</h2>
+            <p className="text-muted-foreground text-sm">
+              The brands you selected — explore their full collections and quality verdicts.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+            {selectedDesigners.map((designer: any) => {
+              const tier = designer.naturalFiberPercent != null
+                ? designer.naturalFiberPercent >= 90 ? 'Exceptional' : designer.naturalFiberPercent >= 70 ? 'Excellent' : 'Good'
+                : null;
+              return (
+                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-selected-${designer.slug}`}>
+                  <div className="aspect-[4/3] bg-secondary flex items-center justify-center relative overflow-hidden">
+                    <span className="font-serif text-5xl md:text-6xl text-foreground/[0.04] select-none">{designer.name.charAt(0)}</span>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
+                      <h3 className="text-sm md:text-base font-serif text-center leading-tight">{designer.name}</h3>
+                      {tier && (
+                        <span className={`text-[8px] uppercase tracking-[0.15em] px-2 py-0.5 ${
+                          tier === 'Exceptional' ? 'bg-foreground text-background' :
+                          tier === 'Excellent' ? 'bg-foreground/80 text-background' :
+                          'bg-foreground/10 text-foreground/60'
+                        }`}>{tier}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-2.5 md:p-3 flex items-center justify-between">
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground">View Designer</span>
+                    <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {similarDesigners.length > 0 && (
+        <section className="flex flex-col gap-6 md:gap-8 border-t border-border/40 pt-10 md:pt-14" data-testid="section-explore-similar">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl md:text-2xl font-serif">Explore Similar Designers</h2>
+            <p className="text-muted-foreground text-sm">
+              Based on your preferences, you might also love these brands.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+            {similarDesigners.map((designer: any) => {
+              const tier = designer.naturalFiberPercent != null
+                ? designer.naturalFiberPercent >= 90 ? 'Exceptional' : designer.naturalFiberPercent >= 70 ? 'Excellent' : 'Good'
+                : null;
+              return (
+                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-similar-${designer.slug}`}>
+                  <div className="aspect-[4/3] bg-secondary flex items-center justify-center relative overflow-hidden">
+                    <span className="font-serif text-5xl md:text-6xl text-foreground/[0.04] select-none">{designer.name.charAt(0)}</span>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
+                      <h3 className="text-sm md:text-base font-serif text-center leading-tight">{designer.name}</h3>
+                      {tier && (
+                        <span className={`text-[8px] uppercase tracking-[0.15em] px-2 py-0.5 ${
+                          tier === 'Exceptional' ? 'bg-foreground text-background' :
+                          tier === 'Excellent' ? 'bg-foreground/80 text-background' :
+                          'bg-foreground/10 text-foreground/60'
+                        }`}>{tier}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-2.5 md:p-3 flex items-center justify-between">
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground">View Designer</span>
+                    <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 border-y border-border/40 py-8 md:py-12">
@@ -522,53 +724,6 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
           </div>
         </div>
       </div>
-
-      <section className="flex flex-col gap-6 md:gap-8" data-testid="section-shop-collection">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-2xl md:text-3xl font-serif">Shop Your Standards</h2>
-          <p className="text-muted-foreground text-sm">
-            We've verified 400+ products for natural fiber content. Browse by material and shop directly from the brands that meet your standards.
-          </p>
-        </div>
-
-        <Link
-          href="/shop"
-          className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 md:py-5 uppercase tracking-[0.2em] text-xs md:text-sm hover:bg-foreground/90 transition-colors active:scale-[0.98]"
-          data-testid="link-shop-verified"
-        >
-          <ShoppingBag className="w-4 h-4" />
-          Shop Verified Products
-        </Link>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
-          {recommendedDesigners.slice(0, 6).map((designer: any) => {
-            const tier = designer.naturalFiberPercent != null
-              ? designer.naturalFiberPercent >= 90 ? 'Exceptional' : designer.naturalFiberPercent >= 70 ? 'Excellent' : 'Good'
-              : null;
-            return (
-              <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-recommended-${designer.slug}`}>
-                <div className="aspect-[3/4] bg-secondary flex items-center justify-center relative overflow-hidden">
-                  <span className="font-serif text-6xl md:text-8xl text-foreground/[0.04] select-none">{designer.name.charAt(0)}</span>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4">
-                    <h3 className="text-base md:text-xl font-serif text-center leading-tight">{designer.name}</h3>
-                    {tier && (
-                      <span className={`text-[8px] md:text-[9px] uppercase tracking-[0.15em] px-2 py-1 ${
-                        tier === 'Exceptional' ? 'bg-foreground text-background' :
-                        tier === 'Excellent' ? 'bg-foreground/80 text-background' :
-                        'bg-foreground/10 text-foreground/60'
-                      }`}>{tier}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="p-3 md:p-4 flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">View Designer</span>
-                  <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
 
       <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4 md:pt-8">
         <Link href="/shop" className="bg-foreground text-background px-6 py-3 md:px-8 md:py-4 uppercase tracking-widest text-xs md:text-sm hover:bg-foreground/90 transition-colors active:scale-95 text-center flex items-center justify-center gap-2" data-testid="link-start-shopping">
