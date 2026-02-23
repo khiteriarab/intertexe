@@ -219,9 +219,33 @@ function mapUserRow(row: any): SupabaseUser {
 export async function supabaseSignup(data: { email: string; password: string; name?: string }): Promise<SupabaseUser> {
   if (!supabase) throw new Error("Supabase not configured");
 
+  try {
+    const apiBase = import.meta.env.VITE_API_URL || "";
+    const res = await fetch(`${apiBase}/api/supabase-signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: data.email, password: data.password, name: data.name }),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Signup failed");
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+    if (signInError) console.warn("Auto sign-in after signup failed:", signInError.message);
+
+    return result as SupabaseUser;
+  } catch (serverErr: any) {
+    console.warn("Server signup unavailable, falling back to direct Supabase:", serverErr.message);
+  }
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
+    options: {
+      emailRedirectTo: "https://intertexe.com",
+    },
   });
 
   if (authError) throw new Error(authError.message);

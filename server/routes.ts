@@ -8,6 +8,8 @@ import OpenAI from "openai";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { registerChatRoutes } from "./replit_integrations/chat";
+import { supabaseAdmin } from "./supabase";
+import { sendWelcomeEmail } from "./resend";
 
 async function trackEvent(event: string, userId?: string, metadata?: Record<string, any>) {
   try {
@@ -27,6 +29,63 @@ export async function registerRoutes(
 ): Promise<Server> {
   setupAuth(app);
   registerChatRoutes(app);
+
+  app.post("/api/supabase-signup", async (req, res) => {
+    try {
+      const { email, password, name } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      if (!supabaseAdmin) {
+        return res.status(500).json({ message: "Supabase admin not configured" });
+      }
+
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+
+      if (authError) {
+        if (authError.message.includes("already been registered")) {
+          return res.status(400).json({ message: "Email already registered" });
+        }
+        return res.status(400).json({ message: authError.message });
+      }
+
+      if (!authData.user) {
+        return res.status(500).json({ message: "Failed to create user" });
+      }
+
+      const userId = authData.user.id;
+      const username = email.split("@")[0] + "_" + userId.slice(0, 6);
+
+      await supabaseAdmin.from("users").upsert({
+        id: userId,
+        email,
+        name: name || null,
+        username,
+        password: "supabase-auth",
+        subscription_tier: "free",
+        fabric_persona: null,
+      });
+
+      sendWelcomeEmail(email, name).catch(() => {});
+      trackEvent("signup", userId).catch(() => {});
+
+      return res.status(201).json({
+        id: userId,
+        email,
+        name: name || null,
+        username,
+        subscriptionTier: "free",
+        fabricPersona: null,
+      });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
 
   // ─── Designers ─────────────────────────────
   app.get("/api/designers", async (req, res) => {
