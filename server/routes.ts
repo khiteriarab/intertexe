@@ -92,6 +92,7 @@ export async function registerRoutes(
     try {
       const q = req.query.q as string | undefined;
       const names = req.query.names as string | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
       if (names) {
         const nameList = names.split(',').map(n => n.trim()).filter(Boolean);
         const all = await storage.getDesigners();
@@ -100,7 +101,7 @@ export async function registerRoutes(
           .filter(Boolean);
         return res.json(matched);
       }
-      const list = q ? await storage.searchDesigners(q) : await storage.getDesigners();
+      const list = q ? await storage.searchDesigners(q) : await storage.getDesigners(limit);
       return res.json(list);
     } catch (err: any) {
       return res.status(500).json({ message: err.message });

@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
-import { getQualityTier, getTierColor, type QualityTier } from "@/lib/quality-tiers";
-import { getCuratedScore } from "@/lib/curated-quality-scores";
+import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { getCuratedScore, CURATED_QUALITY_SCORES } from "@/lib/curated-quality-scores";
+import { getBrandProfile } from "@/lib/brand-profiles";
 
 const TIER_FILTERS = [
   { key: 'all', label: 'All' },
@@ -13,49 +14,83 @@ const TIER_FILTERS = [
   { key: 'good', label: 'Good' },
 ] as const;
 
+const CURATED_BRAND_NAMES = Object.keys(CURATED_QUALITY_SCORES);
+
 export default function Designers() {
   const [search, setSearch] = useState("");
   const [tierFilter, setTierFilter] = useState<string>('all');
 
-  const { data: designers = [], isLoading } = useQuery({
-    queryKey: ["designers", search],
-    queryFn: () => fetchDesigners(search || undefined),
-  });
-
-  const enrichedDesigners = (designers as any[]).map((d: any) => {
-    if (d.naturalFiberPercent != null) return d;
-    const score = getCuratedScore(d.name);
-    return score != null ? { ...d, naturalFiberPercent: score } : d;
-  });
-
-  const filtered = tierFilter === 'all'
-    ? enrichedDesigners
-    : enrichedDesigners.filter((d: any) => {
-        const tier = getQualityTier(d.naturalFiberPercent);
-        return tier.tier === tierFilter;
+  const { data: curatedDesigners = [], isLoading: curatedLoading } = useQuery({
+    queryKey: ["designers-curated"],
+    queryFn: () => fetchDesigners(undefined, 500),
+    staleTime: 10 * 60 * 1000,
+    select: (data: any[]) => {
+      return data.filter((d: any) => {
+        const score = getCuratedScore(d.name);
+        return score != null || d.naturalFiberPercent != null;
       });
+    },
+  });
 
-  const grouped = filtered.reduce((acc: Record<string, any[]>, designer: any) => {
-    const firstChar = designer.name.charAt(0).toUpperCase();
-    const letter = /^[A-Z]$/.test(firstChar) ? firstChar : "#";
-    if (!acc[letter]) acc[letter] = [];
-    acc[letter].push(designer);
-    return acc;
-  }, {});
+  const { data: searchResults = [], isLoading: searchLoading, isFetching: searchFetching } = useQuery({
+    queryKey: ["designers-search", search],
+    queryFn: () => fetchDesigners(search, 50),
+    enabled: search.length >= 2,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isSearching = search.length >= 2;
+  const baseDesigners = isSearching ? searchResults : curatedDesigners;
+  const isLoading = isSearching ? searchLoading : curatedLoading;
+
+  const enrichedDesigners = useMemo(() =>
+    (baseDesigners as any[]).map((d: any) => {
+      if (d.naturalFiberPercent != null) return d;
+      const score = getCuratedScore(d.name);
+      return score != null ? { ...d, naturalFiberPercent: score } : d;
+    }),
+    [baseDesigners]
+  );
+
+  const filtered = useMemo(() =>
+    tierFilter === 'all'
+      ? enrichedDesigners
+      : enrichedDesigners.filter((d: any) => {
+          const tier = getQualityTier(d.naturalFiberPercent);
+          return tier.tier === tierFilter;
+        }),
+    [enrichedDesigners, tierFilter]
+  );
+
+  const { grouped, sortedKeys } = useMemo(() => {
+    const g = filtered.reduce((acc: Record<string, any[]>, designer: any) => {
+      const firstChar = designer.name.charAt(0).toUpperCase();
+      const letter = /^[A-Z]$/.test(firstChar) ? firstChar : "#";
+      if (!acc[letter]) acc[letter] = [];
+      acc[letter].push(designer);
+      return acc;
+    }, {});
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    const keys = [
+      ...alphabet.filter(l => g[l]),
+      ...(g["#"] ? ["#"] : []),
+    ];
+    return { grouped: g, sortedKeys: keys };
+  }, [filtered]);
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const sortedKeys = [
-    ...alphabet.filter(l => grouped[l]),
-    ...(grouped["#"] ? ["#"] : []),
-  ];
 
   return (
     <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-12">
       <header className="flex flex-col items-center text-center gap-4 md:gap-6 max-w-2xl mx-auto">
-        <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-muted-foreground">{enrichedDesigners.length.toLocaleString()}+ Brands Vetted</p>
+        <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-muted-foreground" data-testid="text-brand-count">
+          {isSearching ? `${filtered.length} results` : `${filtered.length} Curated Brands`}
+        </p>
         <h1 className="text-3xl md:text-5xl font-serif">The Directory</h1>
         <p className="text-muted-foreground text-sm md:text-base">
-          Every designer ranked by material quality. Filter by our quality tiers to find brands you can trust.
+          {isSearching
+            ? "Showing results from our full database of 11,000+ brands."
+            : "Our curated selection of brands ranked by material quality. Search to explore all 11,000+ brands."}
         </p>
 
         <div className="relative w-full max-w-md mt-2 md:mt-4">
@@ -68,6 +103,15 @@ export default function Designers() {
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search-designers"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs uppercase tracking-widest"
+              data-testid="button-clear-search"
+            >
+              Clear
+            </button>
+          )}
         </div>
       </header>
 
@@ -108,7 +152,7 @@ export default function Designers() {
         </aside>
 
         <div className="flex-1 flex flex-col gap-10 md:gap-16">
-          {isLoading ? (
+          {isLoading || (isSearching && searchFetching) ? (
             <div className="flex flex-col gap-8 animate-pulse">
               {[1,2,3].map(i => (
                 <div key={i}>
@@ -120,7 +164,20 @@ export default function Designers() {
               ))}
             </div>
           ) : Object.entries(grouped).length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">No designers found.</div>
+            <div className="text-center py-20">
+              <p className="text-muted-foreground">
+                {isSearching ? `No designers found for "${search}".` : "No designers found."}
+              </p>
+              {isSearching && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="mt-4 text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="button-back-to-curated"
+                >
+                  Back to curated brands
+                </button>
+              )}
+            </div>
           ) : (
             sortedKeys.map(letter => (
               <section key={letter} id={`letter-${letter}`} className="flex flex-col gap-4 md:gap-6 scroll-mt-24">
@@ -128,6 +185,7 @@ export default function Designers() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                   {grouped[letter].map((designer: any) => {
                     const tier = getQualityTier(designer.naturalFiberPercent);
+                    const profile = getBrandProfile(designer.slug);
                     return (
                       <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-2 py-3 px-3 border border-border/20 hover:border-foreground/20 transition-colors active:opacity-70" data-testid={`card-designer-${designer.slug}`}>
                         <div className="flex justify-between items-start gap-2">
@@ -136,6 +194,13 @@ export default function Designers() {
                             {tier.shortLabel}
                           </span>
                         </div>
+                        {profile && (
+                          <div className="flex flex-wrap gap-1">
+                            {profile.materialStrengths.slice(0, 3).map(mat => (
+                              <span key={mat} className="text-[8px] uppercase tracking-wider text-muted-foreground bg-secondary/60 px-1.5 py-0.5">{mat}</span>
+                            ))}
+                          </div>
+                        )}
                         <div className="flex items-center justify-between">
                           {designer.naturalFiberPercent != null ? (
                             <span className="text-xs text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>
