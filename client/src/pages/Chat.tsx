@@ -174,7 +174,7 @@ export default function Chat() {
   const isNewChat = !activeConv && messages.length === 0;
 
   return (
-    <div className="flex h-[calc(100vh-4rem-3.5rem)] md:h-[calc(100vh-4rem)] -mx-4 md:-mx-8" data-testid="page-chat">
+    <div className="flex h-[calc(100vh-4rem-5rem)] md:h-[calc(100vh-4rem)] -mx-4 md:-mx-8" data-testid="page-chat">
       <aside className={`${sidebarOpen ? 'fixed inset-0 z-40 bg-background' : 'hidden'} md:relative md:flex md:w-72 flex-col border-r border-border/40 bg-background shrink-0`}>
         <div className="flex items-center justify-between p-4 border-b border-border/40">
           <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Conversations</span>

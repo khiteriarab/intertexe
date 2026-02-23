@@ -64,4 +64,6 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Material-Strong:** Eileen Fisher, A.P.C., COS, Arket, Equipment, Nili Lotan, Filippa K, Joseph, Margaret Howell, Citizens of Humanity, AGOLDE, Ami Paris.
 - **Aspirational:** The Row, Brunello Cucinelli, Loro Piana, Jil Sander, Lemaire, Bottega Veneta, Chloé, Loewe, Stella McCartney, Acne Studios.
 - **Accessible:** Reformation, Everlane, & Other Stories, Massimo Dutti, Re/Done, Quince.
-- **Designer Detail Page:** Enhanced with brand profile data — material strength tags, price range, tier badge, HQ/founding year, editorial intro. "Shop" button text updated for affiliate readiness.
+- **Designer Detail Page:** Enhanced with brand profile data — material strength tags, price range, tier badge, HQ/founding year, editorial intro. Mobile hero image banner added. "Shop" button text updated for affiliate readiness.
+- **Supabase Migration:** `supabase-brand-profiles-migration.sql` — CREATE TABLE + 39 INSERT statements for `brand_profiles` table. Run in Supabase SQL editor to populate data for Vercel deployment.
+- **Navigation:** Desktop nav uses flexbox layout (no absolute positioning) to prevent logo overlap. Mobile bottom nav with safe-area-inset support.

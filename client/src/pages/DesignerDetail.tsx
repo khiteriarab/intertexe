@@ -213,6 +213,16 @@ export default function DesignerDetail() {
       </Link>
 
       <header className="flex flex-col md:flex-row gap-6 md:gap-16 items-start">
+        <div className="w-full aspect-[16/9] relative overflow-hidden flex-shrink-0 md:hidden -mx-4">
+          <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          <div className="absolute bottom-3 left-4 z-10">
+            <span className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
+              {tier.verdict}
+            </span>
+          </div>
+        </div>
+
         <div className="w-full md:w-1/3 aspect-[3/4] relative overflow-hidden flex-shrink-0 hidden md:block">
           <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 z-10">
