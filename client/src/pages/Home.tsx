@@ -1,7 +1,7 @@
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle2, Shield, Award } from "lucide-react";
+import { ArrowRight, CheckCircle2, Shield, Award, ShoppingBag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDesigners, fetchDesignerBySlug } from "@/lib/supabase";
+import { fetchDesigners, fetchDesignerBySlug, fetchAllProducts } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
@@ -9,13 +9,15 @@ import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
 
 const CURATED_BRAND_SLUGS = [
-  "ba-sh",
-  "sezane",
-  "anine-bing",
-  "ganni",
-  "isabel-marant",
   "khaite",
   "toteme",
+  "anine-bing",
+  "frame",
+  "vince",
+  "nanushka",
+  "acne-studios",
+  "the-row",
+  "agolde",
   "sandro",
 ];
 
@@ -51,6 +53,18 @@ export default function Home() {
       }) as any[];
     },
     staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: allProducts = [] } = useQuery({
+    queryKey: ["all-products"],
+    queryFn: fetchAllProducts,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const productCountByBrand: Record<string, number> = {};
+  (allProducts as any[]).forEach((p: any) => {
+    const slug = p.brand_slug || p.brandSlug;
+    if (slug) productCountByBrand[slug] = (productCountByBrand[slug] || 0) + 1;
   });
 
   const enrichedDesigners = (designers as any[]).map((d: any) => {
@@ -160,13 +174,20 @@ export default function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
             {curatedDesigners.map((designer: any) => {
               const tier = getQualityTier(designer.naturalFiberPercent);
+              const productCount = productCountByBrand[designer.slug] || 0;
               return (
                 <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 md:gap-4 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.id}`}>
                   <div className="aspect-[3/4] bg-secondary w-full overflow-hidden relative">
                     <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+                    <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-end justify-between">
                       <QualityBadge naturalFiberPercent={designer.naturalFiberPercent} />
+                      {productCount > 0 && (
+                        <span className="flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                          <ShoppingBag className="w-2.5 h-2.5" />
+                          {productCount} verified
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col">

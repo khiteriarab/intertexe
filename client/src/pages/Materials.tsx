@@ -1,6 +1,18 @@
 import { Link } from "wouter";
 import { MATERIALS } from "@/lib/data";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShoppingBag } from "lucide-react";
+
+const SHOP_BY_MATERIAL = [
+  { slug: "linen-dresses", label: "Linen Dresses" },
+  { slug: "linen-tops", label: "Linen Tops" },
+  { slug: "silk-dresses", label: "Silk Dresses" },
+  { slug: "silk-tops", label: "Silk Tops" },
+  { slug: "cotton-dresses", label: "Cotton Dresses" },
+  { slug: "cotton-tops", label: "Cotton Tops" },
+  { slug: "cashmere-sweaters", label: "Cashmere Sweaters" },
+  { slug: "wool-sweaters", label: "Wool Sweaters" },
+  { slug: "viscose-dresses", label: "Viscose Dresses" },
+];
 
 export default function Materials() {
   const categories = {
@@ -18,6 +30,28 @@ export default function Materials() {
           Everything you need to know before you buy. Each guide includes what to look for, what to avoid, red flags, and what to pay.
         </p>
       </header>
+
+      <section className="bg-foreground text-background -mx-4 md:-mx-8 px-4 md:px-8 py-8 md:py-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 mb-6">
+            <ShoppingBag className="w-4 h-4 text-background/60" />
+            <h2 className="text-xs uppercase tracking-[0.3em] text-background/60">Shop Verified Products by Material</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
+            {SHOP_BY_MATERIAL.map(item => (
+              <Link
+                key={item.slug}
+                href={`/materials/${item.slug}`}
+                className="group flex items-center justify-between px-4 py-3 border border-background/20 hover:border-background/50 hover:bg-background/5 transition-all text-sm text-background/90"
+                data-testid={`link-shop-${item.slug}`}
+              >
+                <span>{item.label}</span>
+                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <div className="bg-secondary/50 -mx-4 md:-mx-8 px-4 md:px-8 py-8 md:py-12">
         <div className="max-w-3xl mx-auto text-center flex flex-col gap-4">

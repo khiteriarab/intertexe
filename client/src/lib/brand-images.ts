@@ -167,6 +167,14 @@ const KNOWN_DOMAINS: Record<string, string> = {
   "rabanne": "rabanne.com",
   "chloé": "chloe.com",
   "see by chloé": "seebychloe.com",
+  "nili lotan": "nililotan.com",
+  "filippa k": "filippa-k.com",
+  "everlane": "everlane.com",
+  "quince": "onequince.com",
+  "l'agence": "lagence.com",
+  "loulou studio": "louloustudio.com",
+  "st. agni": "stagni.com",
+  "maria mcmanus": "mariamcmanus.com",
 };
 
 function guessDomain(brandName: string): string | null {

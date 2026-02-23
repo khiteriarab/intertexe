@@ -29,6 +29,8 @@ export const CURATED_QUALITY_SCORES: Record<string, number> = {
   "vince": 80,
   "ami paris": 75,
   "a.p.c.": 79,
+  "nili lotan": 82,
+  "filippa k": 78,
 
   "sézane": 68,
   "sezane": 68,
@@ -47,12 +49,20 @@ export const CURATED_QUALITY_SCORES: Record<string, number> = {
   "& other stories": 60,
   "claudie pierlot": 52,
 
+  "the kooples": 60,
   "allsaints": 48,
   "all saints": 48,
   "ted baker": 42,
   "cos": 55,
   "max mara": 70,
   "zimmermann": 62,
+  "jacquemus": 72,
+
+  "everlane": 70,
+  "quince": 80,
+  "massimo dutti": 65,
+  "l'agence": 62,
+  "lagence": 62,
 };
 
 export function getCuratedScore(brandName: string): number | null {

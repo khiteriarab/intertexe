@@ -1,13 +1,14 @@
 import { useParams, Link } from "wouter";
-import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag } from "lucide-react";
+import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag, MapPin, Calendar, Tag } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { fetchDesignerBySlug } from "@/lib/supabase";
+import { fetchDesignerBySlug, fetchProductsByBrand } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
+import { getBrandProfile, getTierLabel, type BrandProfile } from "@/lib/brand-profiles";
 import { BrandImage } from "@/components/BrandImage";
 
 function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
@@ -51,6 +52,51 @@ function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
   );
 }
 
+function BrandProfileSection({ profile }: { profile: BrandProfile }) {
+  return (
+    <div className="flex flex-col gap-5 py-5 md:py-6 border-y border-border/40" data-testid="section-brand-profile">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-medium bg-foreground/5 border border-border/30" data-testid="badge-brand-tier">
+          {getTierLabel(profile.tier)}
+        </span>
+        {profile.priceRange && (
+          <span className="flex items-center gap-1.5 px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-muted-foreground border border-border/20" data-testid="text-price-range">
+            <Tag className="w-3 h-3" />
+            {profile.priceRange}
+          </span>
+        )}
+        {profile.headquarters && (
+          <span className="flex items-center gap-1.5 px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-muted-foreground border border-border/20" data-testid="text-headquarters">
+            <MapPin className="w-3 h-3" />
+            {profile.headquarters}
+          </span>
+        )}
+        {profile.foundedYear && (
+          <span className="flex items-center gap-1.5 px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-muted-foreground border border-border/20" data-testid="text-founded">
+            <Calendar className="w-3 h-3" />
+            Est. {profile.foundedYear}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Material Strengths</span>
+        <div className="flex flex-wrap gap-2" data-testid="section-material-strengths">
+          {profile.materialStrengths.map((mat) => (
+            <span
+              key={mat}
+              className="px-3 py-1.5 text-[10px] md:text-xs uppercase tracking-[0.1em] font-medium bg-foreground text-background"
+              data-testid={`tag-material-${mat.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              {mat}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DesignerDetail() {
   const { slug } = useParams();
   const { toast } = useToast();
@@ -63,10 +109,12 @@ export default function DesignerDetail() {
     enabled: !!slug,
   });
 
+  const profile = slug ? getBrandProfile(slug) : null;
+
   useSEO({
-    title: designer ? `${designer.name} — Material Quality & Natural Fiber Score` : undefined,
+    title: designer ? `${designer.name} Quality Review 2026 — Natural Fiber Score` : undefined,
     description: designer
-      ? designer.description || `Explore ${designer.name}'s commitment to natural fibers and material quality on INTERTEXE.`
+      ? profile?.intro || designer.description || `Explore ${designer.name}'s commitment to natural fibers and material quality on INTERTEXE.`
       : undefined,
   });
 
@@ -74,6 +122,13 @@ export default function DesignerDetail() {
     queryKey: ["favoriteCheck", designer?.id],
     queryFn: () => api.checkFavorite(designer!.id),
     enabled: !!designer?.id,
+  });
+
+  const { data: products } = useQuery({
+    queryKey: ["products", slug],
+    queryFn: () => fetchProductsByBrand(slug!),
+    enabled: !!slug,
+    staleTime: 1000 * 60 * 10,
   });
 
   const { data: similarBrands, isLoading: similarLoading } = useQuery({
@@ -147,6 +202,10 @@ export default function DesignerDetail() {
     : designer;
   const tier = getQualityTier(enrichedDesigner.naturalFiberPercent);
 
+  const aboutText = profile?.intro
+    || designer.description
+    || `${designer.name} is a fashion brand in our directory. Material composition details are being compiled by our editorial team.`;
+
   return (
     <div className="py-8 md:py-12 flex flex-col gap-10 md:gap-12 max-w-4xl mx-auto w-full">
       <Link href="/designers" className="flex items-center gap-2 text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground w-fit transition-colors active:scale-95" data-testid="link-back">
@@ -154,6 +213,16 @@ export default function DesignerDetail() {
       </Link>
 
       <header className="flex flex-col md:flex-row gap-6 md:gap-16 items-start">
+        <div className="w-full aspect-[16/9] relative overflow-hidden flex-shrink-0 md:hidden -mx-4">
+          <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          <div className="absolute bottom-3 left-4 z-10">
+            <span className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
+              {tier.verdict}
+            </span>
+          </div>
+        </div>
+
         <div className="w-full md:w-1/3 aspect-[3/4] relative overflow-hidden flex-shrink-0 hidden md:block">
           <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 z-10">
@@ -176,10 +245,15 @@ export default function DesignerDetail() {
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
                 {tier.verdict}
               </span>
+              {profile && (
+                <span className="px-3 py-1 text-[10px] uppercase tracking-[0.15em] border border-foreground/20 text-foreground/70">
+                  {getTierLabel(profile.tier)}
+                </span>
+              )}
               <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] border ${
                 designer.status === 'live' ? 'border-foreground text-foreground' : 'border-muted-foreground text-muted-foreground'
               }`}>
@@ -228,10 +302,12 @@ export default function DesignerDetail() {
             )}
           </div>
 
+          {profile && <BrandProfileSection profile={profile} />}
+
           <div className="flex flex-col gap-3">
-            <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">About the Brand</span>
+            <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">About {designer.name}</span>
             <p className="text-sm md:text-base text-foreground/80 leading-relaxed font-light">
-              {designer.description || `${designer.name} is a fashion brand in our directory. Material composition details are being compiled by our editorial team.`}
+              {aboutText}
             </p>
           </div>
 
@@ -241,7 +317,7 @@ export default function DesignerDetail() {
               className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground/90 transition-colors active:scale-[0.98] mt-2"
               data-testid={`link-shop-${designer.slug}`}
             >
-              Visit {designer.name} <ExternalLink className="w-3.5 h-3.5" />
+              Shop {designer.name} <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           ) : (
             <div className="flex items-center justify-center gap-3 w-full border border-border/40 text-muted-foreground px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs mt-2 cursor-default" data-testid={`link-shop-${designer.slug}-pending`}>
@@ -251,18 +327,77 @@ export default function DesignerDetail() {
         </div>
       </header>
 
-      <section className="flex flex-col gap-5 p-6 md:p-8 bg-secondary/20 border border-border/20" data-testid="section-browse-collection">
+      <section className="flex flex-col gap-5" data-testid="section-browse-collection">
         <div className="flex items-center gap-3">
           <ShoppingBag className="w-4 h-4 text-foreground/60" />
-          <h2 className="text-xs uppercase tracking-[0.2em] font-medium">Browse {designer.name} Collection</h2>
+          <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
+            {products && products.length > 0 ? `${products.length} Verified Pieces` : `Browse ${designer.name}`}
+          </h2>
         </div>
-        <p className="text-sm text-foreground/70 leading-relaxed">
-          Browse {designer.name} pieces that meet INTERTEXE fabric standards — only items with verified natural fiber compositions, filtered and approved by our editorial team.
-        </p>
-        <div className="flex items-center gap-3 py-3 px-4 bg-background/60 border border-border/20">
-          <div className="w-2 h-2 bg-foreground/20 rounded-full animate-pulse" />
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Coming Soon</span>
-        </div>
+
+        {products && products.length > 0 ? (
+          <>
+            <p className="text-sm text-foreground/70 leading-relaxed">
+              Every item below has been verified by INTERTEXE — only pieces with ≥50% natural fiber composition make this list.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {products.map((product: any) => (
+                <a
+                  key={product.product_id || product.productId}
+                  href={product.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
+                  data-testid={`card-product-${product.product_id || product.productId}`}
+                >
+                  <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                    {(product.image_url || product.imageUrl) ? (
+                      <img
+                        src={product.image_url || product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <ShoppingBag className="w-8 h-8 opacity-30" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2">
+                      <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                        {product.natural_fiber_percent || product.naturalFiberPercent}% natural
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3 flex flex-col gap-1.5 flex-1">
+                    <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
+                    <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
+                    {(product.price) && (
+                      <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-foreground/70 leading-relaxed">
+              {profile
+                ? `We're currently verifying ${designer.name}'s product compositions. ${profile.materialStrengths ? `Based on our analysis, look for pieces in ${profile.materialStrengths.slice(0, 3).join(', ').toLowerCase()} for the best natural fiber content.` : ''}`
+                : `Product verification for ${designer.name} is in progress. Check back soon for verified pieces with natural fiber compositions.`}
+            </p>
+            {designer.website && (
+              <Link
+                href={`/leaving?url=${encodeURIComponent(designer.website)}&brand=${encodeURIComponent(designer.name)}`}
+                className="flex items-center justify-center gap-3 w-full border border-foreground/20 hover:border-foreground/40 text-foreground px-8 py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98]"
+                data-testid={`link-browse-${designer.slug}`}
+              >
+                Browse on {designer.name.split(' ').length > 3 ? 'their site' : `${designer.name}.com`} <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="flex flex-col gap-6" data-testid="section-similar-brands">

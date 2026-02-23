@@ -30,6 +30,14 @@ import MaterialDetail from "@/pages/MaterialDetail";
 import Chat from "@/pages/Chat";
 import Leaving from "@/pages/Leaving";
 import Shop from "@/pages/Shop";
+import CuratedProducts, { ALL_CURATED_SLUGS } from "@/pages/CuratedProducts";
+
+function MaterialRouteHandler({ params }: { params: { slug: string } }) {
+  if (ALL_CURATED_SLUGS.includes(params.slug)) {
+    return <CuratedProducts pageSlug={params.slug} />;
+  }
+  return <MaterialDetail />;
+}
 
 function Router() {
   return (
@@ -41,7 +49,7 @@ function Router() {
         <Route path="/designers" component={Designers} />
         <Route path="/designers/:slug" component={DesignerDetail} />
         <Route path="/materials" component={Materials} />
-        <Route path="/materials/:slug" component={MaterialDetail} />
+        <Route path="/materials/:slug">{(params) => <MaterialRouteHandler params={params} />}</Route>
         <Route path="/quiz" component={Quiz} />
         <Route path="/shop" component={Shop} />
         <Route path="/chat" component={Chat} />

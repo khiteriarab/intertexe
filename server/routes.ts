@@ -302,6 +302,46 @@ export async function registerRoutes(
     }
   });
 
+  // ─── Products ────────────────────────────
+  app.get("/api/products", async (req, res) => {
+    try {
+      const { category, fiber } = req.query;
+      let result;
+      if (category && fiber) {
+        result = await db.execute(
+          sql`SELECT * FROM products WHERE approved = 'yes' AND category = ${category} AND LOWER(composition) LIKE LOWER(${`%${fiber}%`}) ORDER BY natural_fiber_percent DESC`
+        );
+      } else if (category) {
+        result = await db.execute(
+          sql`SELECT * FROM products WHERE approved = 'yes' AND category = ${category} ORDER BY natural_fiber_percent DESC`
+        );
+      } else if (fiber) {
+        result = await db.execute(
+          sql`SELECT * FROM products WHERE approved = 'yes' AND LOWER(composition) LIKE LOWER(${`%${fiber}%`}) ORDER BY natural_fiber_percent DESC`
+        );
+      } else {
+        result = await db.execute(
+          sql`SELECT * FROM products WHERE approved = 'yes' ORDER BY natural_fiber_percent DESC`
+        );
+      }
+      return res.json(result.rows || []);
+    } catch (err: any) {
+      return res.json([]);
+    }
+  });
+
+  app.get("/api/products/:brandSlug", async (req, res) => {
+    try {
+      const { brandSlug } = req.params;
+      const result = await db.execute(
+        sql`SELECT * FROM products WHERE brand_slug = ${brandSlug} AND approved = 'yes' ORDER BY natural_fiber_percent DESC`
+      );
+      return res.json(result.rows || []);
+    } catch (err: any) {
+      return res.json([]);
+    }
+  });
+
   // ─── Analytics ────────────────────────────
   app.get("/api/analytics/summary", async (req, res) => {
     try {
