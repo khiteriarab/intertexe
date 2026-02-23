@@ -807,3 +807,41 @@ export function getAllProfiles(): BrandProfile[] {
 export function getProfilesByTier(tier: BrandTier): BrandProfile[] {
   return Object.values(BRAND_PROFILES).filter(p => p.tier === tier);
 }
+
+export function getSimilarBrands(slug: string, count = 6): Array<{ name: string; slug: string; reason: string; naturalFiberPercent: number }> {
+  const profile = BRAND_PROFILES[slug];
+  if (!profile) return [];
+
+  const allProfiles = Object.values(BRAND_PROFILES).filter(p => p.slug !== slug);
+  const scored = allProfiles.map(p => {
+    let score = 0;
+    const materialOverlap = p.materialStrengths.filter(m => profile.materialStrengths.includes(m)).length;
+    score += materialOverlap * 3;
+    if (p.tier === profile.tier) score += 4;
+    const tierOrder: BrandTier[] = ["accessible", "material-strong", "anchor", "aspirational"];
+    const tierDist = Math.abs(tierOrder.indexOf(p.tier) - tierOrder.indexOf(profile.tier));
+    if (tierDist === 1) score += 2;
+    const fiberDiff = Math.abs(p.naturalFiberEstimate - profile.naturalFiberEstimate);
+    if (fiberDiff <= 10) score += 2;
+    else if (fiberDiff <= 20) score += 1;
+    return { profile: p, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const reasons: Record<string, (brand: BrandProfile, source: BrandProfile) => string> = {
+    default: (b, s) => {
+      const shared = b.materialStrengths.filter(m => s.materialStrengths.includes(m));
+      if (shared.length >= 2) return `Shares ${s.name}'s strength in ${shared.slice(0, 2).join(" and ").toLowerCase()} with a ${getTierLabel(b.tier).toLowerCase()} approach.`;
+      if (shared.length === 1) return `Like ${s.name}, excels in ${shared[0].toLowerCase()} with ${b.naturalFiberEstimate}% natural fiber compositions.`;
+      return `A ${getTierLabel(b.tier).toLowerCase()} brand with ${b.naturalFiberEstimate}% natural fiber content and similar aesthetic.`;
+    },
+  };
+
+  return scored.slice(0, count).map(({ profile: p }) => ({
+    name: p.name,
+    slug: p.slug,
+    reason: reasons.default(p, profile),
+    naturalFiberPercent: p.naturalFiberEstimate,
+  }));
+}
