@@ -134,13 +134,23 @@ export default function DesignerDetail() {
   const { data: similarBrands, isLoading: similarLoading } = useQuery({
     queryKey: ["similar", slug],
     queryFn: async () => {
-      const res = await fetch(`/api/designers/${slug}/similar`);
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json();
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`/api/designers/${slug}/similar`, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error("API unavailable");
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+        throw new Error("Empty response");
+      } catch {
+        const { getSimilarBrands } = await import("@/lib/brand-profiles");
+        return getSimilarBrands(slug!, 6);
+      }
     },
     enabled: !!designer,
     staleTime: 1000 * 60 * 30,
-    retry: 1,
+    retry: 0,
   });
 
   const isSaved = favStatus?.favorited || false;
