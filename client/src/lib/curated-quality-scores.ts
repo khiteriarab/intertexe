@@ -63,6 +63,10 @@ export const CURATED_QUALITY_SCORES: Record<string, number> = {
   "massimo dutti": 65,
   "l'agence": 62,
   "lagence": 62,
+
+  "loulou studio": 78,
+  "st. agni": 76,
+  "maria mcmanus": 82,
 };
 
 export function getCuratedScore(brandName: string): number | null {
