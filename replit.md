@@ -26,7 +26,7 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Authentication:** Features an email-based signup and login flow, with token persistence in the database. A dual-write sync mechanism ensures data consistency between the local PostgreSQL and Supabase for user-related data.
 - **Quality Tier System:** Implements a clear quality tier system (Exceptional, Excellent, Good, Caution, Under Review) displayed across designer cards and detailed verdicts.
 - **Fabric Persona System:** Assigns one of five fabric personas (e.g., The Purist, The Refined Romantic) to users based on quiz answers, enabling personalized recommendations and content.
-- **Product Verification:** 48 verified products across 3 brands (Sandro, Reformation, The Kooples) stored in products table with composition, natural fiber %, images, prices.
+- **Product Verification:** 257 verified products across 5 brands (Anine Bing, Khaite, Sandro, Reformation, The Kooples) stored in products table with composition, natural fiber %, images, prices.
 - **SEO Product Pages:** 9 material+category pages under `/materials/` (e.g., `/materials/linen-dresses`, `/materials/silk-tops`, `/materials/cashmere-sweaters`) with SEO titles like "Best Linen Dresses in 2026 | INTERTEXE", buying tips, red flags, and email capture.
 - **SEO Optimization:** Dynamic SEO for designer pages (e.g., "Reformation Quality Review 2026"), product pages, and curated collection pages.
 - **Navigation:** Desktop nav: The Edit, Directory, Buying Guide, Quiz, Chat. Shop available via mobile bottom nav. No logo overlap.
@@ -49,7 +49,10 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **thum.io:** Employed for generating website screenshots for brand images.
 
 ## Product Data
-- **Supabase Migration:** `supabase-products-migration.sql` contains CREATE TABLE + 48 INSERT statements for syncing to Supabase.
-- **Brands Scraped:** Sandro (26 products), Reformation (13 products), The Kooples (9 products).
+- **Supabase Migration:** `supabase-products-migration.sql` contains CREATE TABLE + 257 INSERT statements for syncing to Supabase.
+- **Scraper Scripts:** `scripts/scrape-brands.cjs` (Shopify JSON scrapers for Khaite, Anine Bing) and `scripts/sync-to-supabase.cjs` (Supabase sync + migration SQL generation).
+- **Brands Scraped:** Anine Bing (113 products, keyword-inferred compositions), Khaite (96 products, Shopify Material option), Sandro (26 products), Reformation (13 products), The Kooples (9 products). Total: 257 verified products.
+- **Non-Scrapable Brands:** ba&sh, Sézane, Ganni, Isabel Marant are protected by Cloudflare/captcha and cannot be scraped via Shopify JSON APIs.
+- **Composition Inference:** Anine Bing uses keyword-based inference from product descriptions (silk, cashmere, cotton, wool, denim, etc.) since structured composition data is not available.
 - **Pass Rates:** Sandro dresses 7%, Sandro tops 95%, Reformation 87%, The Kooples 75%.
 - **Homepage Brands:** ba&sh, Sézane, Anine Bing, Ganni, Isabel Marant, Khaite, Totême, Sandro, Reformation, The Kooples.
