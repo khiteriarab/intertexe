@@ -18,6 +18,7 @@ function ScrollToTop() {
 import Home from "@/pages/Home";
 import JustIn from "@/pages/JustIn";
 import Designers from "@/pages/Designers";
+import DesignersAll from "@/pages/DesignersAll";
 import DesignerDetail from "@/pages/DesignerDetail";
 import Materials from "@/pages/Materials";
 import Quiz from "@/pages/Quiz";
@@ -47,6 +48,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/just-in" component={JustIn} />
         <Route path="/designers" component={Designers} />
+        <Route path="/designers/all" component={DesignersAll} />
         <Route path="/designers/:slug" component={DesignerDetail} />
         <Route path="/materials" component={Materials} />
         <Route path="/materials/:slug">{(params) => <MaterialRouteHandler params={params} />}</Route>
