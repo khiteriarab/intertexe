@@ -98,8 +98,8 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Link href="/quiz" className="bg-white text-black px-6 py-4 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center justify-center gap-2 active:scale-[0.97]" data-testid="button-take-quiz">
-              Find My Designers <ArrowRight className="w-4 h-4" />
+            <Link href="/shop" className="bg-white text-black px-6 py-4 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center justify-center gap-2 active:scale-[0.97]" data-testid="button-shop-now">
+              Shop Verified Products <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/designers" className="border border-white/80 text-white px-6 py-4 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/10 transition-colors text-center active:scale-[0.97]" data-testid="button-browse-designers">
               Browse the Directory

@@ -15,8 +15,8 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 **UI/UX Decisions:**
 - **Visuals:** Features a clean, sharp-edged design with no border radius. Typography uses Playfair Display for headings and DM Sans for body text, adhering to a luxury aesthetic.
 - **Mobile-First Design:** The entire platform is responsive and optimized for mobile devices, including touch-optimized interactions and safe-area-inset support for notched phones.
-- **Navigation:** Clear and intuitive navigation with a focus on core features like "The Edit," "Directory," and "Buying Guide." A mobile bottom navigation is implemented for easy access.
-- **Personalization:** A `/shop` page provides personalized shopping experiences based on user fabric personas, quiz preferences, and saved favorites.
+- **Navigation:** Desktop nav: Shop, The Edit, Directory, Buying Guide, Quiz, Chat. Shop is the primary CTA. Mobile bottom nav: Home, Shop, Directory, Chat, Account.
+- **Shop Page:** Product-first `/shop` page showing 431 verified products organized by material (cashmere, silk, wool, cotton, linen). Fiber tabs filter products, category sub-filters (knitwear, tops, dresses, bottoms, outerwear). Each product card shows image, brand, name, composition, price, and "Shop Now" link via affiliate interstitial.
 
 **Technical Implementations:**
 - **Frontend:** Developed with React, Vite, Tailwind CSS for styling, wouter for routing, and TanStack Query for data fetching.

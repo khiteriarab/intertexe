@@ -1,330 +1,332 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
-import { ExternalLink, Heart, ShoppingBag, Sparkles, ArrowRight, Filter } from "lucide-react";
+import { ExternalLink, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDesigners } from "@/lib/supabase";
-import { useAuth } from "@/hooks/use-auth";
-import { api } from "@/lib/api";
-import { FABRIC_PERSONAS, type FabricPersona } from "@shared/personas";
-import { getQualityTier, getTierColor, type QualityTier } from "@/lib/quality-tiers";
-import { getCuratedScore } from "@/lib/curated-quality-scores";
-import { BrandImage } from "@/components/BrandImage";
-import { guessDomain } from "@/lib/brand-images";
-import { filterToCuratedBrands } from "@/lib/curated-brands";
+import { useSEO } from "@/hooks/use-seo";
 
-type ShopFilter = "for-you" | "favorites" | "exceptional" | "excellent";
+type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
+type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear";
 
-function getShopUrl(designer: any): string {
-  const website = designer.website || (guessDomain(designer.name) ? `https://${guessDomain(designer.name)}` : null);
-  if (!website) return `/designers/${designer.slug}`;
-  const url = website.startsWith("http") ? website : `https://${website}`;
-  return `/leaving?url=${encodeURIComponent(url)}&brand=${encodeURIComponent(designer.name)}`;
-}
+const FIBER_TABS: { key: FiberTab; label: string; description: string }[] = [
+  { key: "all", label: "All", description: "Every verified product" },
+  { key: "cashmere", label: "Cashmere", description: "Pure cashmere knits and accessories" },
+  { key: "silk", label: "Silk", description: "Silk blouses, dresses, and more" },
+  { key: "wool", label: "Wool", description: "Wool tailoring, knits, and outerwear" },
+  { key: "cotton", label: "Cotton", description: "Cotton essentials and denim" },
+  { key: "linen", label: "Linen", description: "Linen dresses, tops, and suiting" },
+];
 
-function ShopCard({ designer, showShopButton = true }: { designer: any; showShopButton?: boolean }) {
-  const tier = getQualityTier(designer.naturalFiberPercent);
+const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "knitwear", label: "Knitwear" },
+  { key: "tops", label: "Tops" },
+  { key: "dresses", label: "Dresses" },
+  { key: "bottoms", label: "Bottoms" },
+  { key: "outerwear", label: "Outerwear" },
+];
+
+function ProductCard({ product }: { product: any }) {
+  const shopUrl = product.url
+    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(product.brand_name || product.brandName || "")}`
+    : null;
+
+  const name = product.name || product.productName || "";
+  const brandName = product.brand_name || product.brandName || "";
+  const imageUrl = product.image_url || product.imageUrl;
+  const price = product.price;
+  const composition = product.composition;
+  const fiberPercent = product.natural_fiber_percent || product.naturalFiberPercent;
 
   return (
-    <div className="group flex flex-col border border-border/60 hover:border-foreground/40 transition-all h-full" data-testid={`shop-card-${designer.slug}`}>
-      <Link href={`/designers/${designer.slug}`} className="block">
-        <BrandImage name={designer.name} className="aspect-[4/3] w-full" />
-      </Link>
-      <div className="flex flex-col gap-3 p-4 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <Link href={`/designers/${designer.slug}`} className="flex-1 min-w-0">
-            <h3 className="font-serif text-base md:text-lg truncate">{designer.name}</h3>
-          </Link>
-          <span className={`px-2 py-0.5 text-[8px] uppercase tracking-wider flex-shrink-0 ${getTierColor(tier.tier)}`}>
-            {tier.shortLabel}
-          </span>
-        </div>
-        {designer.naturalFiberPercent != null && (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-1 bg-secondary overflow-hidden">
-              <div className="h-full bg-foreground/70 transition-all" style={{ width: `${designer.naturalFiberPercent}%` }} />
+    <div className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`product-card-${product.id}`}>
+      {imageUrl ? (
+        <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+          <img
+            src={imageUrl}
+            alt={name}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+            loading="lazy"
+          />
+          {fiberPercent != null && fiberPercent >= 90 && (
+            <div className="absolute top-2 left-2">
+              <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
+                <CheckCircle2 className="w-2.5 h-2.5" />
+                {fiberPercent}% natural
+              </span>
             </div>
-            <span className="text-[10px] text-muted-foreground flex-shrink-0">{designer.naturalFiberPercent}% natural</span>
-          </div>
+          )}
+        </div>
+      ) : (
+        <div className="aspect-[3/4] bg-secondary/50 flex items-center justify-center">
+          <ShoppingBag className="w-8 h-8 text-muted-foreground/20" />
+        </div>
+      )}
+      <div className="flex flex-col gap-1.5 p-3 md:p-4 flex-1">
+        <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{brandName}</span>
+        <h3 className="text-[13px] md:text-sm leading-snug line-clamp-2 font-medium" data-testid={`text-product-name-${product.id}`}>{name}</h3>
+        {composition && (
+          <p className="text-[10px] md:text-[11px] text-muted-foreground leading-relaxed line-clamp-1 mt-auto">{composition}</p>
         )}
-        <div className="mt-auto">
-          {showShopButton && (
-            <a
-              href={getShopUrl(designer)}
-              className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98] whitespace-nowrap overflow-hidden"
-              data-testid={`button-shop-${designer.slug}`}
-            >
-              <ShoppingBag className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="truncate">Shop {designer.name}</span>
-            </a>
+        <div className="flex items-center justify-between mt-1">
+          {price && <span className="text-xs font-medium" data-testid={`text-price-${product.id}`}>{price}</span>}
+          {fiberPercent != null && fiberPercent < 90 && (
+            <span className="text-[9px] text-muted-foreground">{fiberPercent}% natural</span>
           )}
         </div>
       </div>
+      {shopUrl && (
+        <a
+          href={shopUrl}
+          className="flex items-center justify-center gap-2 bg-foreground text-background py-3 md:py-3.5 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98]"
+          data-testid={`button-shop-product-${product.id}`}
+        >
+          Shop Now <ExternalLink className="w-3 h-3" />
+        </a>
+      )}
     </div>
   );
 }
 
-function PersonaBanner({ persona }: { persona: FabricPersona }) {
+function FiberHighlight({ fiber, count, onClick }: { fiber: string; count: number; onClick: () => void }) {
+  const fiberImages: Record<string, string> = {
+    cashmere: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
+    silk: "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&q=80",
+    wool: "https://images.unsplash.com/photo-1601244005535-a48e8d4e4e0c?w=600&q=80",
+    cotton: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80",
+    linen: "https://images.unsplash.com/photo-1604176354204-9268737828e4?w=600&q=80",
+  };
+
   return (
-    <div className="border border-border bg-secondary/20 p-5 md:p-8 flex flex-col gap-3" data-testid="banner-persona">
-      <div className="flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-foreground/60" />
-        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Your Fabric Persona</span>
+    <button
+      onClick={onClick}
+      className="group relative overflow-hidden aspect-[3/2] md:aspect-[4/3] bg-secondary flex items-end active:scale-[0.98] transition-transform"
+      data-testid={`fiber-card-${fiber}`}
+    >
+      <img
+        src={fiberImages[fiber] || ""}
+        alt={fiber}
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      <div className="relative z-10 p-3 md:p-4 flex flex-col gap-0.5 w-full">
+        <span className="font-serif text-base md:text-lg text-white capitalize">{fiber}</span>
+        <span className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/70">{count} verified pieces</span>
       </div>
-      <h2 className="font-serif text-2xl md:text-3xl">{persona.name}</h2>
-      <p className="text-sm text-foreground/70 italic">{persona.tagline}</p>
-      <p className="text-sm text-foreground/70 leading-relaxed max-w-2xl">{persona.description}</p>
-      <div className="flex flex-wrap gap-1.5 mt-2">
-        {persona.recommendedMaterials.map(m => (
-          <span key={m} className="text-[10px] uppercase tracking-[0.15em] border border-border/60 px-2.5 py-1">{m}</span>
-        ))}
+      <div className="absolute top-3 right-3 z-10">
+        <ChevronRight className="w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
       </div>
-    </div>
+    </button>
   );
 }
 
 export default function Shop() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const [filter, setFilter] = useState<ShopFilter>("for-you");
+  const [fiberTab, setFiberTab] = useState<FiberTab>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
 
-  const { data: allDesigners = [], isLoading: designersLoading } = useQuery({
-    queryKey: ["designers-shop"],
-    queryFn: () => fetchDesigners(undefined, 500),
+  useSEO({
+    title: "Shop Verified Products | INTERTEXE",
+    description: "Browse 400+ products verified for natural fiber quality. Shop cashmere, silk, wool, cotton, and linen from brands we've vetted.",
+  });
+
+  const { data: allProducts = [], isLoading } = useQuery({
+    queryKey: ["all-products-shop"],
+    queryFn: async () => {
+      const res = await fetch("/api/products");
+      if (!res.ok) return [];
+      return res.json();
+    },
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: favorites = [] } = useQuery({
-    queryKey: ["favorites"],
-    queryFn: api.getFavorites,
-    enabled: isAuthenticated,
-  });
-
-  const { data: quizResults = [] } = useQuery({
-    queryKey: ["quizResults"],
-    queryFn: api.getQuizResults,
-    enabled: isAuthenticated,
-  });
-
-  const persona = user?.fabricPersona
-    ? FABRIC_PERSONAS.find(p => p.id === user.fabricPersona) || null
-    : null;
-
-  const latestQuiz = (quizResults as any[]).length > 0 ? (quizResults as any[])[(quizResults as any[]).length - 1] : null;
-
-  const enrichedDesigners = useMemo(() => {
-    return (allDesigners as any[]).map((d: any) => {
-      if (d.naturalFiberPercent != null) return d;
-      const score = getCuratedScore(d.name);
-      return score != null ? { ...d, naturalFiberPercent: score } : d;
+  const fiberCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    (allProducts as any[]).forEach((p: any) => {
+      const comp = (p.composition || "").toLowerCase();
+      if (comp.includes("cashmere")) counts.cashmere = (counts.cashmere || 0) + 1;
+      if (comp.includes("silk")) counts.silk = (counts.silk || 0) + 1;
+      if (comp.includes("wool") || comp.includes("merino")) counts.wool = (counts.wool || 0) + 1;
+      if (comp.includes("cotton")) counts.cotton = (counts.cotton || 0) + 1;
+      if (comp.includes("linen") || comp.includes("flax")) counts.linen = (counts.linen || 0) + 1;
     });
-  }, [allDesigners]);
+    return counts;
+  }, [allProducts]);
 
-  const scoredDesigners = enrichedDesigners.filter((d: any) => d.naturalFiberPercent != null);
-  const hasScores = scoredDesigners.length > 0;
-  const exceptionalDesigners = hasScores
-    ? scoredDesigners.filter((d: any) => d.naturalFiberPercent >= 90).sort((a: any, b: any) => b.naturalFiberPercent - a.naturalFiberPercent)
-    : [];
-  const excellentDesigners = hasScores
-    ? scoredDesigners.filter((d: any) => d.naturalFiberPercent >= 70 && d.naturalFiberPercent < 90).sort((a: any, b: any) => b.naturalFiberPercent - a.naturalFiberPercent)
-    : [];
-  const curatedFallback = !hasScores ? filterToCuratedBrands(enrichedDesigners) : [];
+  const filteredProducts = useMemo(() => {
+    let products = allProducts as any[];
 
-  const favoriteDesigners = (favorites as any[])
-    .map((fav: any) => {
-      const designer = enrichedDesigners.find((d: any) => d.id === fav.designerId);
-      return designer || fav.designer;
-    })
-    .filter(Boolean);
-
-  const getPersonalizedPicks = (): any[] => {
-    if (!hasScores) {
-      return curatedFallback;
+    if (fiberTab !== "all") {
+      const fiberTerms: Record<string, string[]> = {
+        cashmere: ["cashmere"],
+        silk: ["silk"],
+        wool: ["wool", "merino"],
+        cotton: ["cotton"],
+        linen: ["linen", "flax"],
+      };
+      const terms = fiberTerms[fiberTab] || [];
+      products = products.filter((p: any) => {
+        const comp = (p.composition || "").toLowerCase();
+        return terms.some(t => comp.includes(t));
+      });
     }
 
-    if (!persona && !latestQuiz) {
-      return [...exceptionalDesigners.slice(0, 8), ...excellentDesigners.slice(0, 8)];
+    if (categoryFilter !== "all") {
+      products = products.filter((p: any) => p.category === categoryFilter);
     }
 
-    const quizMaterials = latestQuiz?.materials?.map((m: string) => m.toLowerCase()) || [];
-    const personaMaterials = persona?.recommendedMaterials.map(m => m.toLowerCase()) || [];
-    const allPreferredMaterials = [...new Set([...quizMaterials, ...personaMaterials])];
+    return products;
+  }, [allProducts, fiberTab, categoryFilter]);
 
-    const qualityDesigners = [...exceptionalDesigners, ...excellentDesigners];
-
-    if (allPreferredMaterials.length === 0) {
-      return qualityDesigners.slice(0, 16);
-    }
-
-    const scored = qualityDesigners.map((d: any) => {
-      let score = d.naturalFiberPercent || 0;
-      const desc = (d.description || "").toLowerCase();
-      const name = (d.name || "").toLowerCase();
-      for (const mat of allPreferredMaterials) {
-        if (desc.includes(mat) || name.includes(mat)) {
-          score += 20;
-        }
-      }
-      if (favoriteDesigners.some((fav: any) => fav?.id === d.id)) {
-        score += 10;
-      }
-      return { ...d, _score: score };
-    });
-
-    scored.sort((a: any, b: any) => b._score - a._score);
-    return scored.slice(0, 24);
-  };
-
-  const personalizedPicks = getPersonalizedPicks();
-
-  const getFilteredDesigners = (): any[] => {
-    switch (filter) {
-      case "for-you":
-        return personalizedPicks;
-      case "favorites":
-        return favoriteDesigners;
-      case "exceptional":
-        return hasScores ? exceptionalDesigners.slice(0, 24) : curatedFallback.slice(0, 12);
-      case "excellent":
-        return hasScores ? excellentDesigners.slice(0, 24) : curatedFallback.slice(12, 24);
-      default:
-        return personalizedPicks;
-    }
-  };
-
-  const filteredDesigners = getFilteredDesigners();
-  const isLoading = authLoading || designersLoading;
-
-  const filterTabs: { key: ShopFilter; label: string; count?: number }[] = [
-    { key: "for-you", label: isAuthenticated && persona ? "For You" : "Top Picks" },
-    ...(isAuthenticated ? [{ key: "favorites" as ShopFilter, label: "Saved", count: favoriteDesigners.length }] : []),
-    ...(hasScores ? [
-      { key: "exceptional" as ShopFilter, label: "Exceptional", count: exceptionalDesigners.length },
-      { key: "excellent" as ShopFilter, label: "Excellent", count: excellentDesigners.length },
-    ] : []),
-  ];
+  const showHighlights = fiberTab === "all" && categoryFilter === "all";
 
   return (
-    <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-12">
-      <header className="flex flex-col gap-3 md:gap-5">
-        <div className="flex items-center gap-3">
-          <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 text-foreground/60" />
-          <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">
-            {isAuthenticated && persona ? "Curated for You" : "Shop the Standard"}
+    <div className="min-h-screen pb-24 md:pb-16">
+      <div className="py-6 md:py-10 flex flex-col gap-6 md:gap-10">
+        <header className="flex flex-col gap-2 md:gap-3">
+          <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground" data-testid="text-shop-label">
+            Verified Products
           </span>
-        </div>
-        <h1 className="text-3xl md:text-6xl font-serif" data-testid="text-shop-title">
-          {isAuthenticated && persona ? "Your Edit" : "Shop"}
-        </h1>
-        <p className="text-muted-foreground max-w-xl text-sm md:text-base leading-relaxed">
-          {isAuthenticated && persona
-            ? `Designers selected for ${persona.name}. Every brand here meets the INTERTEXE standard — just pick what you love and shop.`
-            : "Every designer here has been vetted for material quality. Browse by tier, find your favorites, and shop directly from the brands you trust."
-          }
-        </p>
-      </header>
+          <h1 className="text-2xl md:text-5xl font-serif" data-testid="text-shop-title">
+            Shop by Material
+          </h1>
+          <p className="text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed">
+            {(allProducts as any[]).length}+ products, every one checked for natural fiber content. Pick a material, find what you love, shop direct.
+          </p>
+        </header>
 
-      {isAuthenticated && persona && (
-        <PersonaBanner persona={persona} />
-      )}
-
-      {!isAuthenticated && (
-        <div className="border border-dashed border-border/60 p-5 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-secondary/10">
-          <div className="flex flex-col gap-2">
-            <h3 className="font-serif text-lg md:text-xl">Get personalized picks</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-              Take the 2-minute quiz to discover your fabric persona. We'll curate a shopping page tailored to your material preferences.
-            </p>
+        {showHighlights && !isLoading && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 -mx-1 md:mx-0">
+            {(["cashmere", "silk", "wool", "cotton", "linen"] as const).map(fiber => (
+              <FiberHighlight
+                key={fiber}
+                fiber={fiber}
+                count={fiberCounts[fiber] || 0}
+                onClick={() => { setFiberTab(fiber); setCategoryFilter("all"); }}
+              />
+            ))}
           </div>
-          <Link href="/quiz" className="flex items-center gap-2 bg-foreground text-background px-6 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98] flex-shrink-0" data-testid="link-shop-quiz">
-            <Sparkles className="w-3.5 h-3.5" />
-            Take the Quiz
-          </Link>
-        </div>
-      )}
+        )}
 
-      {isAuthenticated && !persona && (
-        <div className="border border-dashed border-border/60 p-5 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-secondary/10">
-          <div className="flex flex-col gap-2">
-            <h3 className="font-serif text-lg md:text-xl">Personalize your shop</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-              Take the quiz to unlock picks matched to your material standards and fabric persona.
-            </p>
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-1.5 md:gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+            {FIBER_TABS.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); }}
+                className={`px-3.5 md:px-5 py-2.5 text-[10px] md:text-xs uppercase tracking-[0.15em] whitespace-nowrap transition-colors flex-shrink-0 min-h-[40px] ${
+                  fiberTab === tab.key
+                    ? "bg-foreground text-background font-medium"
+                    : "bg-secondary/60 text-foreground/70 hover:bg-secondary active:bg-secondary"
+                }`}
+                data-testid={`tab-fiber-${tab.key}`}
+              >
+                {tab.label}
+                {tab.key !== "all" && fiberCounts[tab.key] ? (
+                  <span className="ml-1.5 opacity-60">{fiberCounts[tab.key]}</span>
+                ) : null}
+              </button>
+            ))}
           </div>
-          <Link href="/quiz" className="flex items-center gap-2 bg-foreground text-background px-6 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98] flex-shrink-0" data-testid="link-shop-quiz">
-            <Sparkles className="w-3.5 h-3.5" />
-            Take the Quiz
-          </Link>
-        </div>
-      )}
 
-      <div className="flex gap-2 md:gap-3 border-b border-border/40 pb-0 overflow-x-auto no-scrollbar">
-        {filterTabs.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={`px-3 md:px-5 py-2.5 md:py-3 text-[10px] md:text-xs uppercase tracking-widest transition-colors border-b-2 -mb-px whitespace-nowrap flex items-center gap-1.5 ${
-              filter === tab.key
-                ? "border-foreground text-foreground font-medium"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-            data-testid={`tab-shop-${tab.key}`}
-          >
-            {tab.label}
-            {tab.count !== undefined && tab.count > 0 && (
-              <span className="text-[9px] opacity-50">{tab.count}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 animate-pulse">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col">
-              <div className="aspect-[4/3] bg-secondary" />
-              <div className="p-4 flex flex-col gap-3">
-                <div className="h-5 bg-secondary w-3/4" />
-                <div className="h-10 bg-secondary" />
-              </div>
+          {fiberTab !== "all" && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+              {CATEGORY_FILTERS.map(cat => (
+                <button
+                  key={cat.key}
+                  onClick={() => setCategoryFilter(cat.key)}
+                  className={`px-3 py-2 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap border transition-colors flex-shrink-0 min-h-[36px] ${
+                    categoryFilter === cat.key
+                      ? "border-foreground text-foreground font-medium"
+                      : "border-border/40 text-muted-foreground hover:border-foreground/40"
+                  }`}
+                  data-testid={`tab-category-${cat.key}`}
+                >
+                  {cat.label}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : filteredDesigners.length === 0 ? (
-        <div className="py-16 md:py-24 text-center flex flex-col items-center gap-4">
-          {filter === "favorites" ? (
-            <>
-              <Heart className="w-10 h-10 text-muted-foreground/20" />
-              <p className="text-muted-foreground">You haven't saved any designers yet.</p>
-              <Link href="/designers" className="text-xs uppercase tracking-[0.15em] border-b border-foreground pb-1" data-testid="link-browse-directory">
-                Browse the Directory
-              </Link>
-            </>
-          ) : (
-            <>
-              <ShoppingBag className="w-10 h-10 text-muted-foreground/20" />
-              <p className="text-muted-foreground">No designers match this filter.</p>
-            </>
           )}
         </div>
-      ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-          {filteredDesigners.map((designer: any) => (
-            <ShopCard key={designer.id || designer.slug} designer={designer} />
-          ))}
-        </div>
-      )}
 
-      {filteredDesigners.length > 0 && (filter === "for-you" || filter === "exceptional" || filter === "excellent") && (
-        <div className="text-center pt-4">
-          <Link
-            href="/designers"
-            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors border-b border-border/40 hover:border-foreground pb-1"
-            data-testid="link-view-all-directory"
-          >
-            View Full Directory
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+        {fiberTab !== "all" && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              {filteredProducts.length} {fiberTab} {categoryFilter !== "all" ? categoryFilter : "products"} verified
+            </p>
+            <Link
+              href={`/materials/${fiberTab}`}
+              className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
+              data-testid={`link-material-guide-${fiberTab}`}
+            >
+              {fiberTab} buying guide <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse flex flex-col">
+                <div className="aspect-[3/4] bg-secondary" />
+                <div className="p-3 flex flex-col gap-2">
+                  <div className="h-3 bg-secondary w-1/3" />
+                  <div className="h-4 bg-secondary w-3/4" />
+                  <div className="h-3 bg-secondary w-1/2" />
+                  <div className="h-10 bg-secondary mt-2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="py-16 text-center flex flex-col items-center gap-3">
+            <ShoppingBag className="w-10 h-10 text-muted-foreground/20" />
+            <p className="text-muted-foreground text-sm">No products match this combination yet.</p>
+            <button
+              onClick={() => { setFiberTab("all"); setCategoryFilter("all"); }}
+              className="text-xs uppercase tracking-[0.15em] border-b border-foreground pb-0.5"
+              data-testid="button-reset-filters"
+            >
+              View all products
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+            {filteredProducts.slice(0, 40).map((product: any) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+
+        {filteredProducts.length > 40 && (
+          <p className="text-center text-xs text-muted-foreground pt-2">
+            Showing 40 of {filteredProducts.length} products
+          </p>
+        )}
+
+        <div className="border-t border-border/30 pt-8 md:pt-10 flex flex-col gap-4">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Explore by Material</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+            {[
+              { href: "/materials/cashmere-sweaters", label: "Cashmere Sweaters" },
+              { href: "/materials/silk-tops", label: "Silk Tops" },
+              { href: "/materials/linen-dresses", label: "Linen Dresses" },
+              { href: "/materials/cotton", label: "Cotton Guide" },
+              { href: "/materials/wool", label: "Wool Guide" },
+              { href: "/materials", label: "All Materials" },
+            ].map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex items-center justify-between px-4 py-3.5 border border-border/30 hover:border-foreground/30 active:bg-secondary/50 transition-colors"
+                data-testid={`link-explore-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                <span className="text-xs md:text-sm">{link.label}</span>
+                <ArrowRight className="w-3 h-3 text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
