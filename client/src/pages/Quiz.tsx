@@ -439,6 +439,7 @@ function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: {
 function QuizResults({ selections, recommendation, designers }: { selections: any; recommendation: any; designers: any[] }) {
   const { isAuthenticated } = useAuth();
   const selectedBrandNames: string[] = selections.brands || [];
+  const selectedMaterials: string[] = selections.materials || [];
 
   const selectedBrandSlugs = useMemo(() => {
     return selectedBrandNames.map(name => {
@@ -463,6 +464,13 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
     staleTime: 10 * 60 * 1000,
   });
 
+  const { data: allProducts = [], isLoading: allProductsLoading } = useQuery({
+    queryKey: ["all-products-quiz-fallback"],
+    queryFn: fetchAllProducts,
+    staleTime: 10 * 60 * 1000,
+    enabled: true,
+  });
+
   const selectedDesigners = useMemo(() => {
     return selectedBrandNames
       .map(name => designers.find((d: any) => d.name === name))
@@ -476,7 +484,36 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
       .slice(0, 6);
   }, [designers, selectedBrandNames]);
 
-  const productsWithImages = brandProducts.filter((p: any) => p.imageUrl || p.image_url);
+  const brandProductsWithImages = brandProducts.filter((p: any) => p.imageUrl || p.image_url);
+
+  const materialFallbackProducts = useMemo(() => {
+    if (brandProductsWithImages.length > 0) return [];
+    const materialTerms: Record<string, string[]> = {
+      "Cotton": ["cotton"],
+      "Silk": ["silk"],
+      "Linen": ["linen", "flax"],
+      "Wool": ["wool", "merino"],
+      "Cashmere": ["cashmere"],
+      "Leather / Suede": ["leather", "suede"],
+      "Tencel / Modal": ["tencel", "modal"],
+      "Denim": ["denim"],
+      "Alpaca": ["alpaca"],
+    };
+    const searchTerms = selectedMaterials.flatMap(m => materialTerms[m] || [m.toLowerCase()]);
+    if (searchTerms.length === 0) return (allProducts as any[]).filter((p: any) => p.imageUrl || p.image_url).slice(0, 24);
+    return (allProducts as any[])
+      .filter((p: any) => {
+        if (!(p.imageUrl || p.image_url)) return false;
+        const comp = (p.composition || "").toLowerCase();
+        return searchTerms.some(t => comp.includes(t));
+      })
+      .sort((a: any, b: any) => (b.naturalFiberPercent || 0) - (a.naturalFiberPercent || 0))
+      .slice(0, 24);
+  }, [brandProductsWithImages, allProducts, selectedMaterials]);
+
+  const productsWithImages = brandProductsWithImages.length > 0 ? brandProductsWithImages : materialFallbackProducts;
+  const isFallback = brandProductsWithImages.length === 0 && materialFallbackProducts.length > 0;
+  const isLoadingProducts = productsLoading || (brandProductsWithImages.length === 0 && allProductsLoading);
   const [showAllProducts, setShowAllProducts] = useState(false);
   const displayProducts = showAllProducts ? productsWithImages : productsWithImages.slice(0, 12);
 
@@ -512,12 +549,14 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
           <h2 className="text-2xl md:text-3xl font-serif">Shop Your Standards</h2>
           <p className="text-muted-foreground text-sm">
             {productsWithImages.length > 0
-              ? `${productsWithImages.length} verified pieces from ${selectedBrandNames.length > 0 ? selectedBrandNames.join(', ') : 'your selected brands'}. Every item meets our natural fiber threshold.`
+              ? isFallback
+                ? `${productsWithImages.length} verified pieces matching your material preferences${selectedMaterials.length > 0 ? ` — ${selectedMaterials.slice(0, 3).join(', ').toLowerCase()}` : ''}. Every item meets our natural fiber threshold.`
+                : `${productsWithImages.length} verified pieces from ${selectedBrandNames.join(', ')}. Every item meets our natural fiber threshold.`
               : `Browse verified products from the brands that match your standards.`}
           </p>
         </div>
 
-        {productsLoading ? (
+        {isLoadingProducts ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="animate-pulse flex flex-col">
