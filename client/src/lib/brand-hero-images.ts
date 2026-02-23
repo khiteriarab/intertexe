@@ -39,7 +39,6 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "vince": "https://www.vince.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dwb6aa9114/W_3-Pants_225x175.jpg",
   "sézane": "https://media.sezane.com/image/upload/c_crop,fl_progressive:semi,h_1,q_auto:best,w_0.97902097902098,x_0.01048951048951,y_0/c_scale,w_963/y0zn0hnuuwmmmnfti8kj.jpg",
   "sezane": "https://media.sezane.com/image/upload/c_crop,fl_progressive:semi,h_1,q_auto:best,w_0.97902097902098,x_0.01048951048951,y_0/c_scale,w_963/y0zn0hnuuwmmmnfti8kj.jpg",
-  "reformation": "https://www.thereformation.com/on/demandware.static/-/Sites-reformation-us-Library/default/dw80c371e3/images/prints/floral.jpg",
 };
 
 export function getBrandHeroImage(brandName: string): string | null {
