@@ -24,11 +24,11 @@ function ShopCard({ designer, showShopButton = true }: { designer: any; showShop
   const tier = getQualityTier(designer.naturalFiberPercent);
 
   return (
-    <div className="group flex flex-col border border-border/60 hover:border-foreground/40 transition-all" data-testid={`shop-card-${designer.slug}`}>
+    <div className="group flex flex-col border border-border/60 hover:border-foreground/40 transition-all h-full" data-testid={`shop-card-${designer.slug}`}>
       <Link href={`/designers/${designer.slug}`} className="block">
         <BrandImage name={designer.name} className="aspect-[4/3] w-full" />
       </Link>
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 p-4 flex-1">
         <div className="flex items-start justify-between gap-2">
           <Link href={`/designers/${designer.slug}`} className="flex-1 min-w-0">
             <h3 className="font-serif text-base md:text-lg truncate">{designer.name}</h3>
@@ -45,16 +45,18 @@ function ShopCard({ designer, showShopButton = true }: { designer: any; showShop
             <span className="text-[10px] text-muted-foreground flex-shrink-0">{designer.naturalFiberPercent}% natural</span>
           </div>
         )}
-        {showShopButton && (
-          <a
-            href={getShopUrl(designer)}
-            className="mt-1 flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98]"
-            data-testid={`button-shop-${designer.slug}`}
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            Shop {designer.name.length > 15 ? designer.name.slice(0, 15) + "…" : designer.name}
-          </a>
-        )}
+        <div className="mt-auto">
+          {showShopButton && (
+            <a
+              href={getShopUrl(designer)}
+              className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98] whitespace-nowrap overflow-hidden"
+              data-testid={`button-shop-${designer.slug}`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">Shop {designer.name}</span>
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
