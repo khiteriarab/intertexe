@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { fetchDesigners } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { assignPersona } from "@shared/personas";
-import { BrandImage } from "@/components/BrandImage";
+
 
 const MATERIAL_OPTIONS = [
   "Cotton", "Silk", "Linen", "Wool", "Cashmere", "Leather / Suede",
@@ -399,9 +399,22 @@ function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: {
 
 function QuizResults({ selections, recommendation, designers }: { selections: any; recommendation: any; designers: any[] }) {
   const { isAuthenticated } = useAuth();
-  const recommendedDesigners = designers
-    .filter((d: any) => d.naturalFiberPercent == null || d.naturalFiberPercent > 85)
-    .slice(0, 3);
+  const curatedSlugs = [
+    "ba-sh", "sezane", "reformation", "ganni", "isabel-marant", "khaite",
+    "zimmermann", "jacquemus", "toteme", "anine-bing", "nanushka", "rouje"
+  ];
+  const curatedMatches = curatedSlugs
+    .map(slug => designers.find((d: any) => d.slug === slug))
+    .filter(Boolean);
+  const scoredDesigners = designers
+    .filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent > 85);
+  const recommendedDesigners = curatedMatches.length >= 6
+    ? curatedMatches.slice(0, 6)
+    : scoredDesigners.length >= 6
+      ? scoredDesigners.slice(0, 6)
+      : curatedMatches.length > 0
+        ? curatedMatches
+        : designers.slice(0, 6);
 
   return (
     <div className="py-6 md:py-16 max-w-4xl mx-auto w-full flex flex-col gap-10 md:gap-16 animate-in fade-in duration-700">
@@ -486,21 +499,22 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
               : null;
             return (
               <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col border border-border/20 hover:border-border/50 transition-all" data-testid={`card-recommended-${designer.slug}`}>
-                <BrandImage name={designer.name} className="aspect-[3/4]" />
-                <div className="p-3 md:p-4 flex flex-col gap-1.5">
-                  <h3 className="text-sm md:text-base font-serif">{designer.name}</h3>
-                  <div className="flex items-center gap-2">
+                <div className="aspect-[3/4] bg-secondary flex items-center justify-center relative overflow-hidden">
+                  <span className="font-serif text-6xl md:text-8xl text-foreground/[0.04] select-none">{designer.name.charAt(0)}</span>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4">
+                    <h3 className="text-base md:text-xl font-serif text-center leading-tight">{designer.name}</h3>
                     {tier && (
-                      <span className={`text-[8px] md:text-[9px] uppercase tracking-wider px-1.5 py-0.5 ${
+                      <span className={`text-[8px] md:text-[9px] uppercase tracking-[0.15em] px-2 py-1 ${
                         tier === 'Exceptional' ? 'bg-foreground text-background' :
                         tier === 'Excellent' ? 'bg-foreground/80 text-background' :
-                        'bg-secondary text-foreground/70'
+                        'bg-foreground/10 text-foreground/60'
                       }`}>{tier}</span>
                     )}
-                    {designer.naturalFiberPercent != null && (
-                      <span className="text-[10px] text-muted-foreground">{designer.naturalFiberPercent}%</span>
-                    )}
                   </div>
+                </div>
+                <div className="p-3 md:p-4 flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">View Designer</span>
+                  <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </Link>
             );
