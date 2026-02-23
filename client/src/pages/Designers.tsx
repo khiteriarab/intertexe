@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
 import { getQualityTier, getTierColor, type QualityTier } from "@/lib/quality-tiers";
+import { getCuratedScore } from "@/lib/curated-quality-scores";
 
 const TIER_FILTERS = [
   { key: 'all', label: 'All' },
@@ -21,9 +22,15 @@ export default function Designers() {
     queryFn: () => fetchDesigners(search || undefined),
   });
 
+  const enrichedDesigners = (designers as any[]).map((d: any) => {
+    if (d.naturalFiberPercent != null) return d;
+    const score = getCuratedScore(d.name);
+    return score != null ? { ...d, naturalFiberPercent: score } : d;
+  });
+
   const filtered = tierFilter === 'all'
-    ? designers as any[]
-    : (designers as any[]).filter((d: any) => {
+    ? enrichedDesigners
+    : enrichedDesigners.filter((d: any) => {
         const tier = getQualityTier(d.naturalFiberPercent);
         return tier.tier === tierFilter;
       });
@@ -45,7 +52,7 @@ export default function Designers() {
   return (
     <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-12">
       <header className="flex flex-col items-center text-center gap-4 md:gap-6 max-w-2xl mx-auto">
-        <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-muted-foreground">{(designers as any[]).length.toLocaleString()}+ Brands Vetted</p>
+        <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-muted-foreground">{enrichedDesigners.length.toLocaleString()}+ Brands Vetted</p>
         <h1 className="text-3xl md:text-5xl font-serif">The Directory</h1>
         <p className="text-muted-foreground text-sm md:text-base">
           Every designer ranked by material quality. Filter by our quality tiers to find brands you can trust.
