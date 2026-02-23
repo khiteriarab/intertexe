@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout/Layout";
 import NotFound from "@/pages/not-found";
+import { Analytics } from "@vercel/analytics/react";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -71,6 +72,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <Analytics />
       </TooltipProvider>
     </QueryClientProvider>
   );
