@@ -49,7 +49,7 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "filippa k": "https://www.filippa-k.com/globalassets/campaign/ss26/hero-desktop.jpg",
   "lemaire": "https://www.lemaire.fr/cdn/shop/files/LEMAIRE_SS26_LOOKBOOK_01.jpg?v=1770741234&width=1200",
   "massimo dutti": "https://static.massimodutti.net/assets/public/a3da/4b81/4e6049cdade6/c4f3d3bd4bba/HP_W_HERO_DESK.jpg",
-  "reformation": "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1/c_limit,w_1440/PRD-SFCC/1313785/IVORY/1313785.1.IVORY",
+  "reformation": "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1320101/LOVIE/1320101.1.LOVIE",
   "the kooples": "https://www.thekooples.com/on/demandware.static/-/Library-Sites-TKooplesSharedLibrary/default/dw406daf53/media/260203_EDITO_S26_PUSH_01.jpg",
   "quince": "https://www.onequince.com/cdn/shop/files/Q_HP_Hero_Desktop_Linen.jpg?v=1770741555&width=1600",
 };
