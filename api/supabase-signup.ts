@@ -2,16 +2,16 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
   }
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.SUPABASE_PROJECT_URL || process.env.VITE_SUPABASE_URL;
@@ -31,24 +31,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    let userId: string;
+
+    const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.signUp({
       email,
       password,
-      email_confirm: true,
+      options: { data: { name: name || "" } },
     });
 
-    if (authError) {
-      if (authError.message.includes("already been registered")) {
+    if (signUpError) {
+      if (signUpError.message.includes("already been registered") || signUpError.message.includes("already registered")) {
         return res.status(400).json({ message: "Email already registered" });
       }
-      return res.status(400).json({ message: authError.message });
+
+      const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+
+      if (adminError) {
+        if (adminError.message.includes("already been registered")) {
+          return res.status(400).json({ message: "Email already registered" });
+        }
+        return res.status(400).json({ message: "Unable to create account. Please try again." });
+      }
+
+      if (!adminData.user) {
+        return res.status(500).json({ message: "Failed to create user" });
+      }
+      userId = adminData.user.id;
+    } else {
+      if (!signUpData.user) {
+        return res.status(500).json({ message: "Failed to create user" });
+      }
+      userId = signUpData.user.id;
+
+      if (signUpData.user.identities?.length === 0) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      await supabaseAdmin.auth.admin.updateUserById(userId, {
+        email_confirm: true,
+      });
     }
 
-    if (!authData.user) {
-      return res.status(500).json({ message: "Failed to create user" });
-    }
-
-    const userId = authData.user.id;
     const username = email.split("@")[0] + "_" + userId.slice(0, 6);
 
     await supabaseAdmin.from("users").upsert({
