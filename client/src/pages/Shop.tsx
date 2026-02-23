@@ -38,8 +38,11 @@ function ProductCard({ product }: { product: any }) {
   const composition = product.composition;
   const fiberPercent = product.natural_fiber_percent || product.naturalFiberPercent;
 
+  const CardWrapper = shopUrl ? 'a' : 'div';
+  const wrapperProps = shopUrl ? { href: shopUrl } : {};
+
   return (
-    <div className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`product-card-${product.id}`}>
+    <CardWrapper {...wrapperProps} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all cursor-pointer" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
           <img
@@ -75,16 +78,10 @@ function ProductCard({ product }: { product: any }) {
           )}
         </div>
       </div>
-      {shopUrl && (
-        <a
-          href={shopUrl}
-          className="flex items-center justify-center gap-2 bg-foreground text-background py-3 md:py-3.5 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98]"
-          data-testid={`button-shop-product-${product.id}`}
-        >
-          Shop Now <ExternalLink className="w-3 h-3" />
-        </a>
-      )}
-    </div>
+      <div className="flex items-center justify-center gap-2 bg-foreground text-background py-3 md:py-3.5 text-[10px] uppercase tracking-[0.2em] group-hover:bg-foreground/90 transition-colors">
+        Shop Now <ExternalLink className="w-3 h-3" />
+      </div>
+    </CardWrapper>
   );
 }
 

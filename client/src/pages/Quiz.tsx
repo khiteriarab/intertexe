@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { fetchDesigners, fetchDesignersByNames, fetchAllProducts, fetchProductsByBrand } from "@/lib/supabase";
 import { getAllProfiles, getTierLabel, type BrandProfile } from "@/lib/brand-profiles";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
+import { getBrandHeroImage } from "@/lib/brand-hero-images";
 import { BrandImage } from "@/components/BrandImage";
 
 const POPULAR_BRAND_NAMES = [
@@ -454,6 +455,13 @@ const MATERIAL_TERMS: Record<string, string[]> = {
   "Satin": ["satin"],
 };
 
+const RELIABLE_PRODUCT_SLUGS = new Set([
+  "frame", "anine-bing", "khaite", "sandro", "agolde", "reformation", "toteme",
+  "nanushka", "acne-studios", "tibi", "ulla-johnson", "veronica-beard", "rails",
+  "mara-hoffman", "faithfull-the-brand", "rebecca-taylor", "mother-denim",
+  "citizens-of-humanity", "re-done", "dl1961", "veda", "stine-goya",
+]);
+
 function QuizProductCard({ product }: { product: any }) {
   const imageUrl = product.imageUrl || product.image_url;
   const brandName = product.brandName || product.brand_name || "";
@@ -461,8 +469,10 @@ function QuizProductCard({ product }: { product: any }) {
   const shopUrl = product.url
     ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}`
     : null;
+  const CardWrapper = shopUrl ? 'a' : 'div';
+  const wrapperProps = shopUrl ? { href: shopUrl } : {};
   return (
-    <div className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`card-quiz-product-${product.productId || product.product_id}`}>
+    <CardWrapper {...wrapperProps} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all cursor-pointer" data-testid={`card-quiz-product-${product.productId || product.product_id}`}>
       <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
         <img
           src={imageUrl}
@@ -492,16 +502,10 @@ function QuizProductCard({ product }: { product: any }) {
           )}
         </div>
       </div>
-      {shopUrl && (
-        <a
-          href={shopUrl}
-          className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98]"
-          data-testid={`button-shop-quiz-${product.productId || product.product_id}`}
-        >
-          Shop Now <ExternalLink className="w-3 h-3" />
-        </a>
-      )}
-    </div>
+      <div className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] group-hover:bg-foreground/90 transition-colors">
+        Shop Now <ExternalLink className="w-3 h-3" />
+      </div>
+    </CardWrapper>
   );
 }
 
@@ -554,7 +558,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
 
   const recommendedProducts = useMemo(() => {
     const selectedSlugsSet = new Set(selectedBrandSlugs);
-    return (allProducts as any[])
+    const filtered = (allProducts as any[])
       .filter((p: any) => {
         if (!(p.imageUrl || p.image_url)) return false;
         const slug = p.brandSlug || p.brand_slug;
@@ -562,9 +566,32 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
         if (searchTerms.length === 0) return true;
         const comp = (p.composition || "").toLowerCase();
         return searchTerms.some(t => comp.includes(t));
-      })
-      .sort((a: any, b: any) => (b.naturalFiberPercent || 0) - (a.naturalFiberPercent || 0))
-      .slice(0, 12);
+      });
+
+    filtered.sort((a: any, b: any) => {
+      const aSlug = a.brandSlug || a.brand_slug;
+      const bSlug = b.brandSlug || b.brand_slug;
+      const aReliable = RELIABLE_PRODUCT_SLUGS.has(aSlug) ? 1 : 0;
+      const bReliable = RELIABLE_PRODUCT_SLUGS.has(bSlug) ? 1 : 0;
+      if (bReliable !== aReliable) return bReliable - aReliable;
+      return (b.naturalFiberPercent || 0) - (a.naturalFiberPercent || 0);
+    });
+
+    const seen = new Set<string>();
+    const diversified: any[] = [];
+    const brandCounts: Record<string, number> = {};
+    for (const p of filtered) {
+      const slug = p.brandSlug || p.brand_slug;
+      const count = brandCounts[slug] || 0;
+      if (count >= 4) continue;
+      brandCounts[slug] = count + 1;
+      const pid = p.productId || p.product_id;
+      if (seen.has(pid)) continue;
+      seen.add(pid);
+      diversified.push(p);
+      if (diversified.length >= 12) break;
+    }
+    return diversified;
   }, [allProducts, selectedBrandSlugs, searchTerms]);
 
   const recommendedBrands = useMemo(() => {
@@ -573,7 +600,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
     const userMaterialsLower = selectedMaterials.map(m => m.toLowerCase().replace(/\s*\/\s*/g, ''));
 
     return profiles
-      .filter(p => !selectedSlugsSet.has(p.slug))
+      .filter(p => !selectedSlugsSet.has(p.slug) && getBrandHeroImage(p.name) !== null)
       .map(profile => {
         let score = 0;
         const profileMatsLower = profile.materialStrengths.map(m => m.toLowerCase());
