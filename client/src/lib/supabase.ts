@@ -89,6 +89,7 @@ const BRAND_NAME_OVERRIDES: Record<string, string> = {
   "THE (Alphabet)": "The Alphabet",
   "Who*s Who": "Who's Who",
   "PropÃ©t": "Propet",
+  "A_COLD_WALL*": "A-Cold-Wall*",
 };
 
 function mapRow(row: any): Designer {
@@ -171,6 +172,21 @@ export async function fetchDesigners(query?: string, limit?: number): Promise<De
   designerCache = all;
   cacheTimestamp = Date.now();
   return all;
+}
+
+export async function fetchDesignersByNames(names: string[]): Promise<Designer[]> {
+  if (!isVercelMode || !supabase) {
+    const res = await fetch(`/api/designers?names=${encodeURIComponent(names.join(','))}`);
+    if (!res.ok) return [];
+    return res.json();
+  }
+
+  const { data, error } = await supabase
+    .from("designers")
+    .select("*")
+    .in("name", names);
+  if (error) return [];
+  return (data || []).map(mapRow);
 }
 
 export async function fetchDesignerBySlug(slug: string): Promise<Designer | null> {

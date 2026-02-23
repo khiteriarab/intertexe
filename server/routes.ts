@@ -91,6 +91,15 @@ export async function registerRoutes(
   app.get("/api/designers", async (req, res) => {
     try {
       const q = req.query.q as string | undefined;
+      const names = req.query.names as string | undefined;
+      if (names) {
+        const nameList = names.split(',').map(n => n.trim()).filter(Boolean);
+        const all = await storage.getDesigners();
+        const matched = nameList
+          .map(n => all.find(d => d.name.toLowerCase() === n.toLowerCase()))
+          .filter(Boolean);
+        return res.json(matched);
+      }
       const list = q ? await storage.searchDesigners(q) : await storage.getDesigners();
       return res.json(list);
     } catch (err: any) {

@@ -37,10 +37,12 @@ const BRAND_NAME_OVERRIDES: Record<string, string> = {
   "THE (Alphabet)": "The Alphabet",
   "Who*s Who": "Who's Who",
   "PropÃ©t": "Propet",
+  "A_COLD_WALL*": "A-Cold-Wall*",
+  "A_COLD_WALL": "A-Cold-Wall",
 };
 
 const DO_NOT_TOUCH_NAMES = new Set([
-  'A_COLD_WALL*', 'A_COLD_WALL', 'GCDS', 'MSGM', 'OAMC', 'DKNY', 'MCM', 'RVCA', 'UGG',
+  'GCDS', 'MSGM', 'OAMC', 'DKNY', 'MCM', 'RVCA', 'UGG',
   'COS', 'H&M', 'BOSS', '#RIKYN', 'DIOR', 'FENDI', 'AT.P.CO',
   'adidas', 'agnès b.', 'and wander', 'iets frans...', 'iets frans',
   '1017 ALYX 9SM', '4SDESIGNS', '5TATE OF MIND', '6TH NBRHD',

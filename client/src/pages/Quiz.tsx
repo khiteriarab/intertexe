@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { fetchDesigners } from "@/lib/supabase";
+import { fetchDesigners, fetchDesignersByNames } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { assignPersona } from "@shared/personas";
 
@@ -25,9 +25,17 @@ export default function Quiz() {
   const [currentStep, setCurrentStep] = useState(0);
   const [recommendation, setRecommendation] = useState<any>(null);
 
+  const POPULAR_BRAND_NAMES = [
+    "FRAME", "RE/DONE", "Reformation", "Ganni", "Isabel Marant",
+    "KHAITE", "Zimmermann", "Jacquemus", "TOTEME", "Anine Bing",
+    "Nanushka", "STAUD", "Ulla Johnson", "Max Mara",
+    "The Row", "Vince", "Reiss", "Theory", "Acne Studios", "Sandro",
+    "Maje", "AllSaints", "Club Monaco"
+  ];
+
   const { data: designers = [], isLoading: designersLoading } = useQuery({
-    queryKey: ["designers-quiz"],
-    queryFn: () => fetchDesigners(undefined, 500),
+    queryKey: ["designers-quiz-popular"],
+    queryFn: () => fetchDesignersByNames(POPULAR_BRAND_NAMES),
     staleTime: 10 * 60 * 1000,
   });
 
@@ -260,27 +268,21 @@ function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: {
 
   const popularBrands = useMemo(() => {
     if (designers.length === 0) return [];
-    const popular = [
-      "Ba&sh", "Sezane", "Reformation", "Ganni", "Isabel Marant",
-      "KHAITE", "Zimmermann", "Jacquemus", "TOTEME", "Anine Bing",
-      "Nanushka", "Rouje", "Staud", "Ulla Johnson", "Max Mara",
-      "The Row", "Vince", "Reiss"
-    ];
-    const found = popular
-      .map(name => (designers as any[]).find((d: any) => d.name.toLowerCase() === name.toLowerCase()))
-      .filter(Boolean);
-    if (found.length >= 6) return found;
-    return (designers as any[]).slice(0, 12);
+    const order = POPULAR_BRAND_NAMES.map(n => n.toLowerCase());
+    return [...(designers as any[])].sort((a: any, b: any) => {
+      const ai = order.indexOf(a.name.toLowerCase());
+      const bi = order.indexOf(b.name.toLowerCase());
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
   }, [designers]);
 
   const searchResults = useMemo(() => {
     if (!brandSearch.trim()) return [];
     if (searchedDesigners.length > 0) return searchedDesigners.slice(0, 12);
     const q = brandSearch.toLowerCase().trim();
-    const startsWith = (designers as any[])
-      .filter((d: any) => d.name.toLowerCase().startsWith(q));
-    const contains = (designers as any[])
-      .filter((d: any) => !d.name.toLowerCase().startsWith(q) && d.name.toLowerCase().includes(q));
+    const allBrands = designers as any[];
+    const startsWith = allBrands.filter((d: any) => d.name.toLowerCase().startsWith(q));
+    const contains = allBrands.filter((d: any) => !d.name.toLowerCase().startsWith(q) && d.name.toLowerCase().includes(q));
     return [...startsWith, ...contains].slice(0, 12);
   }, [designers, searchedDesigners, brandSearch]);
 
