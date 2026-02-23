@@ -108,6 +108,49 @@ function mapRow(row: any): Designer {
   };
 }
 
+const WOMEN_FASHION_BRAND_SLUGS = new Set([
+  "khaite", "anine-bing", "toteme", "frame", "agolde", "sandro", "acne-studios", "nanushka",
+  "reformation", "vince", "rag-bone", "theory", "max-mara", "the-kooples", "eileen-fisher",
+  "a-p-c-", "cos", "arket", "equipment", "nili-lotan", "filippa-k", "joseph", "margaret-howell",
+  "citizens-of-humanity", "ami-paris", "the-row", "brunello-cucinelli", "loro-piana", "jil-sander",
+  "lemaire", "bottega-veneta", "chloe", "loewe", "stella-mccartney", "everlane", "other-stories",
+  "massimo-dutti", "re-done", "quince", "loulou-studio", "st-agni", "maria-mcmanus",
+  "tibi", "ulla-johnson", "veronica-beard", "cult-gaia", "rachel-comey", "rixo",
+  "faithfull-the-brand", "mara-hoffman", "aje", "sir-the-label", "camilla-and-marc",
+  "l-agence", "fleur-du-mal", "a-l-c-", "mother", "dl1961", "sea-new-york", "esse-studios",
+  "club-monaco", "stine-goya", "rodebjer", "veda", "velvet-by-graham-spencer", "rails",
+  "ted-baker", "dissh", "tanya-taylor", "rebecca-taylor", "derek-lam",
+]);
+
+const NON_CLOTHING_PATTERNS = [
+  /\b(gel cleanser|serum|moisturiz|cleanser|toner|exfoliat|shampoo|conditioner|deodorant|sunscreen)\b/i,
+  /\b(perfume|fragrance|eau de parfum|eau de toilette|cologne)\b/i,
+  /\bcandle\b/i,
+  /\b(lip balm|eye cream|face cream|body cream|hand cream|body lotion|body oil|face oil|hair oil)\b/i,
+  /\b(body wash|body mist|body spray|room spray)\b/i,
+  /\b(handbag|tote bag|crossbody bag|clutch bag|backpack|wallet|phone case|keychain|key ring|key chain)\b/i,
+  /\b(ankle boot|chelsea boot|combat boot|knee boot|rain boot|western boot|riding boot|snow boot|suede boot|leather boot)\b/i,
+  /\b(sneaker|trainer|running shoe|tennis shoe|canvas sneaker|high top sneaker)\b/i,
+  /\b(stiletto|platform pump|kitten.heel)\b/i,
+  /\b(flip flop)\b/i,
+  /\bgift card\b/i,
+  /\be-gift card\b/i,
+  /\bgift set\b/i,
+  /\b(earring|necklace|bracelet|pendant|anklet|brooch|cufflink|charm necklace)\b/i,
+  /\bsunglasses\b/i,
+  /\bcandle holder\b/i,
+  /\bmesh tote\b/i,
+  /\bcanvas tote\b/i,
+];
+
+function isClothingProduct(name: string): boolean {
+  return !NON_CLOTHING_PATTERNS.some(pat => pat.test(name));
+}
+
+function isWomensFashionBrand(slug: string): boolean {
+  return WOMEN_FASHION_BRAND_SLUGS.has(slug);
+}
+
 let designerCache: Designer[] | null = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000;
@@ -221,7 +264,7 @@ export async function fetchProductsByBrand(brandSlug: string): Promise<any[]> {
       .eq("approved", "yes")
       .order("natural_fiber_percent", { ascending: false });
     if (error) return [];
-    return (data || []).map((row: any) => ({
+    return (data || []).filter((row: any) => isClothingProduct(row.name || '')).map((row: any) => ({
       id: row.id,
       brandSlug: row.brand_slug,
       brandName: row.brand_name,
@@ -254,7 +297,7 @@ export async function fetchProductsByFiberAndCategory(fiber: string, category?: 
     if (category) query = query.eq("category", category);
     const { data, error } = await query.order("natural_fiber_percent", { ascending: false });
     if (error) return [];
-    return (data || []).map((row: any) => ({
+    return (data || []).filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || '')).map((row: any) => ({
       id: row.id,
       brandSlug: row.brand_slug,
       brandName: row.brand_name,
@@ -288,7 +331,7 @@ export async function fetchProductsByFiber(fiber: string): Promise<any[]> {
       .ilike("composition", `%${fiber}%`)
       .order("natural_fiber_percent", { ascending: false });
     if (error) return [];
-    return (data || []).map((row: any) => ({
+    return (data || []).filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || '')).map((row: any) => ({
       id: row.id,
       brandSlug: row.brand_slug,
       brandName: row.brand_name,
@@ -319,19 +362,21 @@ export async function fetchAllProducts(): Promise<any[]> {
       .eq("approved", "yes")
       .order("natural_fiber_percent", { ascending: false });
     if (error) return [];
-    return (data || []).map((row: any) => ({
-      id: row.id,
-      brandSlug: row.brand_slug,
-      brandName: row.brand_name,
-      name: row.name,
-      productId: row.product_id,
-      url: row.url,
-      imageUrl: row.image_url,
-      price: row.price,
-      composition: row.composition,
-      naturalFiberPercent: row.natural_fiber_percent,
-      category: row.category,
-    }));
+    return (data || [])
+      .filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''))
+      .map((row: any) => ({
+        id: row.id,
+        brandSlug: row.brand_slug,
+        brandName: row.brand_name,
+        name: row.name,
+        productId: row.product_id,
+        url: row.url,
+        imageUrl: row.image_url,
+        price: row.price,
+        composition: row.composition,
+        naturalFiberPercent: row.natural_fiber_percent,
+        category: row.category,
+      }));
   }
   try {
     const res = await fetch("/api/products");

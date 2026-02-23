@@ -127,7 +127,7 @@ export default function Shop() {
 
   useSEO({
     title: "Shop Verified Products | INTERTEXE",
-    description: "Browse 400+ products verified for natural fiber quality. Shop cashmere, silk, wool, cotton, and linen from brands we've vetted.",
+    description: "Browse 10,000+ women's clothing products verified for natural fiber quality. Shop cashmere, silk, wool, cotton, and linen from 60+ vetted brands.",
   });
 
   const { data: allProducts = [], isLoading } = useQuery({
