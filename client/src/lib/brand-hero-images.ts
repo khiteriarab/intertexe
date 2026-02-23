@@ -39,6 +39,18 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "vince": "https://www.vince.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dwb6aa9114/W_3-Pants_225x175.jpg",
   "sézane": "https://media.sezane.com/image/upload/c_crop,fl_progressive:semi,h_1,q_auto:best,w_0.97902097902098,x_0.01048951048951,y_0/c_scale,w_963/y0zn0hnuuwmmmnfti8kj.jpg",
   "sezane": "https://media.sezane.com/image/upload/c_crop,fl_progressive:semi,h_1,q_auto:best,w_0.97902097902098,x_0.01048951048951,y_0/c_scale,w_963/y0zn0hnuuwmmmnfti8kj.jpg",
+  "eileen fisher": "https://www.eileenfisher.com/on/demandware.static/-/Library-Sites-LibraryEF/default/dw0a7d92f1/images/homepage/2026/0210/Slot-02.jpg",
+  "brunello cucinelli": "https://www.brunellocucinelli.com/on/demandware.static/-/Library-Sites-BC_SharedLibrary/default/dw0a9283f3/homepage/SS26/woman/BC_SS26_WOMAN_HERO_DESKTOP.jpg",
+  "loro piana": "https://media.loropiana.com/medias/banner-women-campaign-desktop-homepage-v2.jpg",
+  "max mara": "https://www.maxmara.com/dw/image/v2/BCBR_PRD/on/demandware.static/-/Library-Sites-maxmara-shared/default/dw6db54937/homepage/SS26/SS26_HP_HERO_DESKTOP.jpg",
+  "everlane": "https://media.everlane.com/image/upload/c_fill,w_1200,ar_3:4,q_auto,f_auto/i/16cdea8b_d7a5.jpg",
+  "cos": "https://www.cos.com/on/demandware.static/-/Library-Sites-COS/default/dw738ac58c/1-Landing/Campaigns/SS26/hero-desktop.jpg",
+  "nili lotan": "https://www.nililotan.com/cdn/shop/files/NL_HP_Hero_Desktop_3.jpg?v=1770745233&width=1600",
+  "filippa k": "https://www.filippa-k.com/globalassets/campaign/ss26/hero-desktop.jpg",
+  "lemaire": "https://www.lemaire.fr/cdn/shop/files/LEMAIRE_SS26_LOOKBOOK_01.jpg?v=1770741234&width=1200",
+  "massimo dutti": "https://static.massimodutti.net/assets/public/a3da/4b81/4e6049cdade6/c4f3d3bd4bba/HP_W_HERO_DESK.jpg",
+  "reformation": "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1/c_limit,w_1440/PRD-SFCC/1313785/IVORY/1313785.1.IVORY",
+  "quince": "https://www.onequince.com/cdn/shop/files/Q_HP_Hero_Desktop_Linen.jpg?v=1770741555&width=1600",
 };
 
 export function getBrandHeroImage(brandName: string): string | null {

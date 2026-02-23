@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag } from "lucide-react";
+import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag, MapPin, Calendar, Tag } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesignerBySlug, fetchProductsByBrand } from "@/lib/supabase";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
+import { getBrandProfile, getTierLabel, type BrandProfile } from "@/lib/brand-profiles";
 import { BrandImage } from "@/components/BrandImage";
 
 function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
@@ -51,6 +52,51 @@ function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
   );
 }
 
+function BrandProfileSection({ profile }: { profile: BrandProfile }) {
+  return (
+    <div className="flex flex-col gap-5 py-5 md:py-6 border-y border-border/40" data-testid="section-brand-profile">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-medium bg-foreground/5 border border-border/30" data-testid="badge-brand-tier">
+          {getTierLabel(profile.tier)}
+        </span>
+        {profile.priceRange && (
+          <span className="flex items-center gap-1.5 px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-muted-foreground border border-border/20" data-testid="text-price-range">
+            <Tag className="w-3 h-3" />
+            {profile.priceRange}
+          </span>
+        )}
+        {profile.headquarters && (
+          <span className="flex items-center gap-1.5 px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-muted-foreground border border-border/20" data-testid="text-headquarters">
+            <MapPin className="w-3 h-3" />
+            {profile.headquarters}
+          </span>
+        )}
+        {profile.foundedYear && (
+          <span className="flex items-center gap-1.5 px-3 py-1 text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-muted-foreground border border-border/20" data-testid="text-founded">
+            <Calendar className="w-3 h-3" />
+            Est. {profile.foundedYear}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Material Strengths</span>
+        <div className="flex flex-wrap gap-2" data-testid="section-material-strengths">
+          {profile.materialStrengths.map((mat) => (
+            <span
+              key={mat}
+              className="px-3 py-1.5 text-[10px] md:text-xs uppercase tracking-[0.1em] font-medium bg-foreground text-background"
+              data-testid={`tag-material-${mat.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              {mat}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DesignerDetail() {
   const { slug } = useParams();
   const { toast } = useToast();
@@ -63,10 +109,12 @@ export default function DesignerDetail() {
     enabled: !!slug,
   });
 
+  const profile = slug ? getBrandProfile(slug) : null;
+
   useSEO({
     title: designer ? `${designer.name} Quality Review 2026 — Natural Fiber Score` : undefined,
     description: designer
-      ? designer.description || `Explore ${designer.name}'s commitment to natural fibers and material quality on INTERTEXE.`
+      ? profile?.intro || designer.description || `Explore ${designer.name}'s commitment to natural fibers and material quality on INTERTEXE.`
       : undefined,
   });
 
@@ -154,6 +202,10 @@ export default function DesignerDetail() {
     : designer;
   const tier = getQualityTier(enrichedDesigner.naturalFiberPercent);
 
+  const aboutText = profile?.intro
+    || designer.description
+    || `${designer.name} is a fashion brand in our directory. Material composition details are being compiled by our editorial team.`;
+
   return (
     <div className="py-8 md:py-12 flex flex-col gap-10 md:gap-12 max-w-4xl mx-auto w-full">
       <Link href="/designers" className="flex items-center gap-2 text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground w-fit transition-colors active:scale-95" data-testid="link-back">
@@ -183,10 +235,15 @@ export default function DesignerDetail() {
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
                 {tier.verdict}
               </span>
+              {profile && (
+                <span className="px-3 py-1 text-[10px] uppercase tracking-[0.15em] border border-foreground/20 text-foreground/70">
+                  {getTierLabel(profile.tier)}
+                </span>
+              )}
               <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] border ${
                 designer.status === 'live' ? 'border-foreground text-foreground' : 'border-muted-foreground text-muted-foreground'
               }`}>
@@ -235,10 +292,12 @@ export default function DesignerDetail() {
             )}
           </div>
 
+          {profile && <BrandProfileSection profile={profile} />}
+
           <div className="flex flex-col gap-3">
-            <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">About the Brand</span>
+            <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">About {designer.name}</span>
             <p className="text-sm md:text-base text-foreground/80 leading-relaxed font-light">
-              {designer.description || `${designer.name} is a fashion brand in our directory. Material composition details are being compiled by our editorial team.`}
+              {aboutText}
             </p>
           </div>
 
@@ -248,7 +307,7 @@ export default function DesignerDetail() {
               className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground/90 transition-colors active:scale-[0.98] mt-2"
               data-testid={`link-shop-${designer.slug}`}
             >
-              Visit {designer.name} <ExternalLink className="w-3.5 h-3.5" />
+              Shop {designer.name} <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           ) : (
             <div className="flex items-center justify-center gap-3 w-full border border-border/40 text-muted-foreground px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs mt-2 cursor-default" data-testid={`link-shop-${designer.slug}-pending`}>
