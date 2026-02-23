@@ -51,6 +51,22 @@ export const authTokens = pgTable("auth_tokens", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const products = pgTable("products", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  brandSlug: text("brand_slug").notNull(),
+  brandName: text("brand_name").notNull(),
+  name: text("name").notNull(),
+  productId: text("product_id").notNull().unique(),
+  url: text("url").notNull(),
+  imageUrl: text("image_url"),
+  price: text("price"),
+  composition: text("composition"),
+  naturalFiberPercent: integer("natural_fiber_percent"),
+  category: text("category").notNull().default("dresses"),
+  approved: text("approved").notNull().default("yes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const analyticsEvents = pgTable("analytics_events", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   event: text("event").notNull(),
@@ -82,6 +98,11 @@ export const insertQuizResultSchema = createInsertSchema(quizResults).omit({
   createdAt: true,
 });
 
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -91,4 +112,6 @@ export type Favorite = typeof favorites.$inferSelect;
 export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
 export type QuizResult = typeof quizResults.$inferSelect;
 export type InsertQuizResult = z.infer<typeof insertQuizResultSchema>;
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = z.infer<typeof insertProductSchema>;
 export * from "./models/chat";

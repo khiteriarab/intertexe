@@ -302,6 +302,19 @@ export async function registerRoutes(
     }
   });
 
+  // ─── Products ────────────────────────────
+  app.get("/api/products/:brandSlug", async (req, res) => {
+    try {
+      const { brandSlug } = req.params;
+      const result = await db.execute(
+        sql`SELECT * FROM products WHERE brand_slug = ${brandSlug} AND approved = 'yes' ORDER BY natural_fiber_percent DESC`
+      );
+      return res.json(result.rows || []);
+    } catch (err: any) {
+      return res.json([]);
+    }
+  });
+
   // ─── Analytics ────────────────────────────
   app.get("/api/analytics/summary", async (req, res) => {
     try {
