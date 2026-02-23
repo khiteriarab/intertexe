@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, Shield, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { BrandImage } from "@/components/BrandImage";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
 
@@ -22,10 +23,13 @@ export default function Home() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const approvedDesigners = (designers as any[])
+  const scoredDesigners = (designers as any[])
     .filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 70)
-    .sort((a: any, b: any) => (b.naturalFiberPercent ?? 0) - (a.naturalFiberPercent ?? 0))
-    .slice(0, 8);
+    .sort((a: any, b: any) => (b.naturalFiberPercent ?? 0) - (a.naturalFiberPercent ?? 0));
+
+  const approvedDesigners = scoredDesigners.length > 0
+    ? scoredDesigners.slice(0, 8)
+    : (designers as any[]).slice(0, 8);
 
   const exceptionalCount = (designers as any[]).filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 90).length;
 
@@ -131,9 +135,7 @@ export default function Home() {
               return (
                 <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 md:gap-4 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.id}`}>
                   <div className="aspect-[3/4] bg-secondary w-full overflow-hidden relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 font-serif text-5xl md:text-6xl">
-                      {designer.name.charAt(0)}
-                    </div>
+                    <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 left-3">
                       <QualityBadge naturalFiberPercent={designer.naturalFiberPercent} />

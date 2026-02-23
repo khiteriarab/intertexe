@@ -20,9 +20,13 @@ export default function JustIn() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const qualityDesigners = (designers as any[])
+  const scoredDesigners = (designers as any[])
     .filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 70)
     .sort((a: any, b: any) => (b.naturalFiberPercent ?? 0) - (a.naturalFiberPercent ?? 0));
+
+  const qualityDesigners = scoredDesigners.length > 0
+    ? scoredDesigners
+    : (designers as any[]).slice(0, 50);
 
   const filtered = filter === 'all'
     ? qualityDesigners

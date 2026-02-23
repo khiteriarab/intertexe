@@ -26,13 +26,16 @@ export default function MaterialDetail() {
     );
   }
 
-  const relatedDesigners = designers
+  const scoredRelated = designers
     .filter((d: any) => {
       if (d.naturalFiberPercent == null) return false;
       if (material.category === 'synthetic') return true;
       return d.naturalFiberPercent > 70;
-    })
-    .slice(0, 8);
+    });
+
+  const relatedDesigners = scoredRelated.length > 0
+    ? scoredRelated.slice(0, 8)
+    : designers.slice(0, 8);
 
   const categoryLabel = material.category === 'plant' ? 'Plant-Based' : material.category === 'animal' ? 'Animal-Based' : 'Semi-Synthetic';
 
