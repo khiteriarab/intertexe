@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2, Shield, Award, ShoppingBag } from "lucide-rea
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners, fetchDesignerBySlug, fetchAllProducts } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
-import { getCuratedScore } from "@/lib/curated-quality-scores";
+import { getCuratedScore, CURATED_QUALITY_SCORES } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
@@ -71,7 +71,11 @@ export default function Home() {
     return score != null ? { ...d, naturalFiberPercent: score } : d;
   });
 
-  const exceptionalCount = enrichedDesigners.filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 90).length;
+  const exceptionalCount = new Set(
+    Object.entries(CURATED_QUALITY_SCORES)
+      .filter(([_, score]) => score >= 90)
+      .map(([name]) => name.toLowerCase())
+  ).size;
 
   return (
     <div className="flex flex-col gap-0">
