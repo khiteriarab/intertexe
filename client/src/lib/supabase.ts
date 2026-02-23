@@ -213,7 +213,7 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
 }
 
 export async function fetchProductsByBrand(brandSlug: string): Promise<any[]> {
-  if (isVercelMode && supabase) {
+  if (supabase) {
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -245,7 +245,7 @@ export async function fetchProductsByBrand(brandSlug: string): Promise<any[]> {
 }
 
 export async function fetchProductsByFiberAndCategory(fiber: string, category?: string): Promise<any[]> {
-  if (isVercelMode && supabase) {
+  if (supabase) {
     let query = supabase
       .from("products")
       .select("*")
@@ -280,7 +280,7 @@ export async function fetchProductsByFiberAndCategory(fiber: string, category?: 
 }
 
 export async function fetchProductsByFiber(fiber: string): Promise<any[]> {
-  if (isVercelMode && supabase) {
+  if (supabase) {
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -312,7 +312,7 @@ export async function fetchProductsByFiber(fiber: string): Promise<any[]> {
 }
 
 export async function fetchAllProducts(): Promise<any[]> {
-  if (isVercelMode && supabase) {
+  if (supabase) {
     const { data, error } = await supabase
       .from("products")
       .select("*")

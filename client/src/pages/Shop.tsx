@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ExternalLink, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
+import { fetchAllProducts } from "@/lib/supabase";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear";
@@ -132,10 +133,8 @@ export default function Shop() {
   const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ["all-products-shop"],
     queryFn: async () => {
-      const res = await fetch("/api/products");
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.filter((p: any) => p.image_url);
+      const data = await fetchAllProducts();
+      return data.filter((p: any) => p.image_url || p.imageUrl);
     },
     staleTime: 5 * 60 * 1000,
   });
