@@ -52,13 +52,11 @@ function FabricProductCard({ product, index }: { product: any; index: number }) 
         </div>
       </div>
       <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
-        <Link
-          href={`/designers/${brandSlug}`}
-          className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
-          onClick={(e) => e.stopPropagation()}
+        <span
+          className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground"
         >
           {brandName}
-        </Link>
+        </span>
         <h3 className="text-xs md:text-sm leading-snug font-medium line-clamp-2">{product.name}</h3>
         <p className="text-[10px] text-muted-foreground line-clamp-1">{product.composition}</p>
         <div className="flex items-center justify-between mt-auto pt-2">

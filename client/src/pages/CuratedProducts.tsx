@@ -296,13 +296,11 @@ function ProductCard({ product, index }: { product: any; index: number }) {
         </div>
       </div>
       <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
-        <Link
-          href={`/designers/${brandSlug}`}
-          className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
-          onClick={(e) => e.stopPropagation()}
+        <span
+          className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground"
         >
           {brandName}
-        </Link>
+        </span>
         <h3 className="text-xs md:text-sm leading-snug font-medium">{product.name}</h3>
         <p className="text-[10px] text-muted-foreground">{product.composition}</p>
         <div className="flex items-center justify-between mt-auto pt-2">
@@ -356,7 +354,7 @@ export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) 
     .slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-background pb-32 md:pb-16">
+    <div className="min-h-screen bg-background pb-24 md:pb-16">
       <div className="max-w-4xl mx-auto px-4 md:px-8">
         <div className="pt-6 pb-4">
           <Link href="/materials" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" data-testid="link-back-materials">
@@ -459,16 +457,16 @@ export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) 
 
         <section className="py-8 border-t border-border/20">
           <h2 className="text-xs uppercase tracking-[0.2em] font-medium mb-4">More Curated Collections</h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 md:gap-3">
             {relatedPages.map(([key, cfg]) => (
               <Link
                 key={key}
                 href={`/materials/${key}`}
-                className="flex items-center gap-2 px-4 py-3 border border-border/30 hover:border-foreground/30 transition-colors text-sm"
+                className="flex items-center justify-between gap-2 px-4 py-3.5 md:py-3 border border-border/30 hover:border-foreground/30 active:bg-secondary/50 transition-colors text-sm"
                 data-testid={`link-collection-${key}`}
               >
-                {cfg.heroTitle}
-                <ArrowRight className="w-3 h-3" />
+                <span className="text-xs md:text-sm">{cfg.heroTitle}</span>
+                <ArrowRight className="w-3 h-3 flex-shrink-0" />
               </Link>
             ))}
           </div>

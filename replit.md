@@ -57,7 +57,7 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Non-Scrapable Brands:** ba&sh, Sézane, Ganni, Isabel Marant, Vince are protected by Cloudflare/non-Shopify platforms and cannot be scraped via Shopify JSON APIs.
 - **Composition Inference:** Anine Bing uses keyword-based inference from product descriptions (silk, cashmere, cotton, wool, denim, etc.) since structured composition data is not available.
 - **Pass Rates:** Sandro dresses 7%, Sandro tops 95%, Reformation 87%, The Kooples 75%.
-- **Homepage Brands:** Khaite, Anine Bing, Frame, AGOLDE, Sandro, Reformation, The Kooples, Totême (all have verified product data).
+- **Homepage Brands:** Khaite, Anine Bing, Totême, Frame, AGOLDE, Sandro, Acne Studios, Nanushka (strong hero images, verified data or curated scores).
 
 ## Brand Directory (Curated Profiles)
 - **Brand Profiles:** `client/src/lib/brand-profiles.ts` — 36 structured brand profiles with editorial intros, material strengths, price ranges, tier classification, HQ, and founding year.
@@ -66,6 +66,7 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Material-Strong:** Eileen Fisher, A.P.C., COS, Arket, Equipment, Nili Lotan, Filippa K, Joseph, Margaret Howell, Citizens of Humanity, AGOLDE, Ami Paris.
 - **Aspirational:** The Row, Brunello Cucinelli, Loro Piana, Jil Sander, Lemaire, Bottega Veneta, Chloé, Loewe, Stella McCartney, Acne Studios.
 - **Accessible:** Reformation, Everlane, & Other Stories, Massimo Dutti, Re/Done, Quince.
+- **Additional Profiles:** Loulou Studio, St. Agni, Maria McManus (39 total brand profiles).
 - **Designer Detail Page:** Enhanced with brand profile data — material strength tags, price range, tier badge, HQ/founding year, editorial intro. Mobile hero image banner added. "Shop" button text updated for affiliate readiness.
 - **Supabase Migration:** `supabase-brand-profiles-migration.sql` — CREATE TABLE + 39 INSERT statements for `brand_profiles` table. Run in Supabase SQL editor to populate data for Vercel deployment.
 - **Navigation:** Desktop nav uses flexbox layout (no absolute positioning) to prevent logo overlap. Mobile bottom nav with safe-area-inset support.

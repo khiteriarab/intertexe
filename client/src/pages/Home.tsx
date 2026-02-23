@@ -11,12 +11,12 @@ import textureImage from "@/assets/images/material-texture.jpg";
 const CURATED_BRAND_SLUGS = [
   "khaite",
   "anine-bing",
+  "toteme",
   "frame",
   "agolde",
   "sandro",
-  "reformation",
-  "the-kooples",
-  "toteme",
+  "acne-studios",
+  "nanushka",
 ];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {
@@ -76,7 +76,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-0">
 
-      <section className="relative h-[70vh] md:h-[80vh] min-h-[520px] flex items-end justify-center overflow-hidden -mx-4 md:-mx-8">
+      <section className="relative h-[85vh] md:h-[80vh] min-h-[520px] flex items-end justify-center overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img
             src={heroImage}
@@ -86,22 +86,22 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/5" />
         </div>
 
-        <div className="relative z-10 text-center px-6 pb-12 md:pb-16 max-w-3xl flex flex-col items-center">
+        <div className="relative z-10 text-center px-5 pb-16 md:pb-16 max-w-3xl flex flex-col items-center" style={{ paddingBottom: 'max(4rem, calc(env(safe-area-inset-bottom, 0px) + 3rem))' }}>
           <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-white/60 mb-4 md:mb-6 font-medium" data-testid="text-hero-label">
             The Material Authority
           </p>
-          <h1 className="text-[32px] leading-[1.15] md:text-6xl lg:text-7xl font-serif text-white mb-5 md:mb-8 md:leading-tight" data-testid="text-hero-headline">
+          <h1 className="text-[28px] leading-[1.2] md:text-6xl lg:text-7xl font-serif text-white mb-5 md:mb-8 md:leading-tight" data-testid="text-hero-headline">
             We've done the research.<br className="hidden md:block" /> You just shop.
           </h1>
-          <p className="text-sm md:text-lg text-white/80 mb-8 md:mb-10 max-w-xl font-light tracking-wide leading-relaxed" data-testid="text-hero-subtext">
+          <p className="text-[13px] md:text-lg text-white/80 mb-8 md:mb-10 max-w-xl font-light tracking-wide leading-relaxed" data-testid="text-hero-subtext">
             Every designer. Every fabric. Every label — vetted and ranked so you never have to wonder what you're buying again.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Link href="/quiz" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center justify-center gap-2 active:scale-[0.97]" data-testid="button-take-quiz">
+            <Link href="/quiz" className="bg-white text-black px-6 py-4 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center justify-center gap-2 active:scale-[0.97]" data-testid="button-take-quiz">
               Find My Designers <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/designers" className="border border-white/80 text-white px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/10 transition-colors text-center active:scale-[0.97]" data-testid="button-browse-designers">
+            <Link href="/designers" className="border border-white/80 text-white px-6 py-4 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/10 transition-colors text-center active:scale-[0.97]" data-testid="button-browse-designers">
               Browse the Directory
             </Link>
           </div>
@@ -159,9 +159,9 @@ export default function Home() {
         </div>
 
         {curatedLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
             {[1,2,3,4].map(i => (
-              <div key={i} className="flex flex-col gap-4 animate-pulse">
+              <div key={i} className="flex flex-col gap-3 animate-pulse">
                 <div className="aspect-[3/4] bg-secondary" />
                 <div className="h-5 bg-secondary w-3/4" />
                 <div className="h-4 bg-secondary w-1/2" />
@@ -169,28 +169,28 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
             {curatedDesigners.map((designer: any) => {
               const tier = getQualityTier(designer.naturalFiberPercent);
               const productCount = productCountByBrand[designer.slug] || 0;
               return (
-                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-3 md:gap-4 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.id}`}>
+                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-2.5 md:gap-4 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.id}`}>
                   <div className="aspect-[3/4] bg-secondary w-full overflow-hidden relative">
                     <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-end justify-between">
+                    <div className="absolute bottom-0 left-0 right-0 p-2.5 md:p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-end justify-between">
                       <QualityBadge naturalFiberPercent={designer.naturalFiberPercent} />
                       {productCount > 0 && (
-                        <span className="flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                        <span className="hidden sm:flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
                           <ShoppingBag className="w-2.5 h-2.5" />
-                          {productCount} verified
+                          {productCount}
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="flex flex-col">
-                    <h3 className="font-serif text-base md:text-lg group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{tier.label}</p>
+                    <h3 className="font-serif text-[15px] md:text-lg group-hover:text-muted-foreground transition-colors leading-tight">{designer.name}</h3>
+                    <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{tier.label}</p>
                   </div>
                 </Link>
               );

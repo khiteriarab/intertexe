@@ -133,14 +133,14 @@ export function Navbar() {
         )}
       </header>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/30 pb-safe">
-        <div className="flex justify-around items-center h-14 px-1">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/30" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="flex justify-around items-center h-[56px] px-1">
           {mobileNavLinks.map((link) => {
             const Icon = link.icon;
             const isActive = location === link.href || (link.href !== '/' && location.startsWith(link.href));
             return (
               <Link key={link.name} href={link.href}
-                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors active:scale-95 ${
+                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors active:scale-95 min-w-[48px] min-h-[48px] ${
                   isActive ? "text-foreground" : "text-muted-foreground/70"
                 }`}
                 data-testid={`link-mobile-nav-${link.name.toLowerCase()}`}

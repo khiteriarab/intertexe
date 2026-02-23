@@ -213,11 +213,12 @@ export default function DesignerDetail() {
       </Link>
 
       <header className="flex flex-col md:flex-row gap-6 md:gap-16 items-start">
-        <div className="w-full aspect-[16/9] relative overflow-hidden flex-shrink-0 md:hidden -mx-4">
+        <div className="w-full aspect-[4/3] relative overflow-hidden flex-shrink-0 md:hidden -mx-4">
           <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-          <div className="absolute bottom-3 left-4 z-10">
-            <span className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
+            <h1 className="text-2xl font-serif text-white leading-tight drop-shadow-lg" data-testid="text-designer-name-mobile">{designer.name}</h1>
+            <span className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-medium w-fit ${getTierColor(tier.tier)}`}>
               {tier.verdict}
             </span>
           </div>
@@ -235,26 +236,26 @@ export default function DesignerDetail() {
         <div className="flex flex-col gap-5 md:gap-6 flex-1 w-full">
           <div className="flex flex-col gap-3">
             <div className="flex justify-between items-start w-full gap-3">
-              <h1 className="text-[28px] leading-[1.15] md:text-5xl font-serif md:leading-tight" data-testid="text-designer-name">{designer.name}</h1>
+              <h1 className="hidden md:block text-5xl font-serif leading-tight" data-testid="text-designer-name">{designer.name}</h1>
               <button
                 onClick={() => toggleFav.mutate()}
-                className="p-2.5 md:p-3 bg-secondary hover:bg-secondary/80 transition-colors flex-shrink-0 active:scale-90 mt-0.5"
+                className="p-3 bg-secondary hover:bg-secondary/80 transition-colors flex-shrink-0 active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 data-testid={`button-save-${designer.slug}`}
               >
                 <Heart className={`w-5 h-5 ${isSaved ? 'fill-foreground text-foreground' : 'text-foreground'}`} strokeWidth={1.5} />
               </button>
             </div>
 
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`hidden md:inline-block px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-medium ${getTierColor(tier.tier)}`}>
                 {tier.verdict}
               </span>
               {profile && (
-                <span className="px-3 py-1 text-[10px] uppercase tracking-[0.15em] border border-foreground/20 text-foreground/70">
+                <span className="px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] border border-foreground/20 text-foreground/70">
                   {getTierLabel(profile.tier)}
                 </span>
               )}
-              <span className={`px-3 py-1 text-[10px] uppercase tracking-[0.15em] border ${
+              <span className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] border ${
                 designer.status === 'live' ? 'border-foreground text-foreground' : 'border-muted-foreground text-muted-foreground'
               }`}>
                 {designer.status}
@@ -314,13 +315,13 @@ export default function DesignerDetail() {
           {designer.website ? (
             <Link
               href={`/leaving?url=${encodeURIComponent(designer.website)}&brand=${encodeURIComponent(designer.name)}`}
-              className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground/90 transition-colors active:scale-[0.98] mt-2"
+              className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-[14px] md:py-4 uppercase tracking-widest text-xs hover:bg-foreground/90 transition-colors active:scale-[0.98] mt-2"
               data-testid={`link-shop-${designer.slug}`}
             >
               Shop {designer.name} <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           ) : (
-            <div className="flex items-center justify-center gap-3 w-full border border-border/40 text-muted-foreground px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs mt-2 cursor-default" data-testid={`link-shop-${designer.slug}-pending`}>
+            <div className="flex items-center justify-center gap-3 w-full border border-border/40 text-muted-foreground px-8 py-[14px] md:py-4 uppercase tracking-widest text-xs mt-2 cursor-default" data-testid={`link-shop-${designer.slug}-pending`}>
               Website coming soon
             </div>
           )}

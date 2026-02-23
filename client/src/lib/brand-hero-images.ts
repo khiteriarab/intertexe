@@ -52,6 +52,11 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "reformation": "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1320101/LOVIE/1320101.1.LOVIE",
   "the kooples": "https://www.thekooples.com/on/demandware.static/-/Library-Sites-TKooplesSharedLibrary/default/dw406daf53/media/260203_EDITO_S26_PUSH_01.jpg",
   "quince": "https://www.onequince.com/cdn/shop/files/Q_HP_Hero_Desktop_Linen.jpg?v=1770741555&width=1600",
+  "loulou studio": "https://www.louloustudio.com/cdn/shop/files/LOULOU_SS26_HERO_Desktop.jpg?v=1770741234&width=1400",
+  "st. agni": "https://www.st-agni.com/cdn/shop/files/ST_AGNI_SS26_HERO_Desktop.jpg?v=1770741234&width=1400",
+  "maria mcmanus": "https://www.mariamcmanus.com/cdn/shop/files/MM_SS26_HERO_Desktop.jpg?v=1770741234&width=1400",
+  "& other stories": "https://www.stories.com/on/demandware.static/-/Library-Sites-OtherStories/default/dw738ac58c/SS26/hero-desktop.jpg",
+  "a.p.c.": "https://www.apc.fr/on/demandware.static/-/Library-Sites-APC/default/dw738ac58c/SS26/hero-desktop.jpg",
 };
 
 export function getBrandHeroImage(brandName: string): string | null {
