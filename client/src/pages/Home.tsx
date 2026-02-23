@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, Shield, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners, fetchDesignerBySlug } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
@@ -43,12 +44,22 @@ export default function Home() {
           return designer || null;
         })
       );
-      return results.filter(Boolean) as any[];
+      return results.filter(Boolean).map((d: any) => {
+        if (d.naturalFiberPercent != null) return d;
+        const score = getCuratedScore(d.name);
+        return score != null ? { ...d, naturalFiberPercent: score } : d;
+      }) as any[];
     },
     staleTime: 10 * 60 * 1000,
   });
 
-  const exceptionalCount = (designers as any[]).filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 90).length;
+  const enrichedDesigners = (designers as any[]).map((d: any) => {
+    if (d.naturalFiberPercent != null) return d;
+    const score = getCuratedScore(d.name);
+    return score != null ? { ...d, naturalFiberPercent: score } : d;
+  });
+
+  const exceptionalCount = enrichedDesigners.filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 90).length;
 
   return (
     <div className="flex flex-col gap-0">

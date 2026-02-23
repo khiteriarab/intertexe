@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
+import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
 
 function SimilarBrandCard({ brand, index }: { brand: any; index: number }) {
@@ -141,7 +142,10 @@ export default function DesignerDetail() {
     );
   }
 
-  const tier = getQualityTier(designer.naturalFiberPercent);
+  const enrichedDesigner = designer.naturalFiberPercent == null
+    ? { ...designer, naturalFiberPercent: getCuratedScore(designer.name) }
+    : designer;
+  const tier = getQualityTier(enrichedDesigner.naturalFiberPercent);
 
   return (
     <div className="py-8 md:py-12 flex flex-col gap-10 md:gap-12 max-w-4xl mx-auto w-full">
@@ -203,16 +207,16 @@ export default function DesignerDetail() {
 
           <div className="flex flex-col gap-3 py-5 md:py-6 border-y border-border/40">
             <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Natural Fiber Score</span>
-            {designer.naturalFiberPercent != null ? (
+            {enrichedDesigner.naturalFiberPercent != null ? (
               <>
                 <div className="flex items-baseline gap-2 md:gap-3">
-                  <span className="text-4xl md:text-6xl font-serif">{designer.naturalFiberPercent}%</span>
+                  <span className="text-4xl md:text-6xl font-serif">{enrichedDesigner.naturalFiberPercent}%</span>
                   <span className="text-sm text-muted-foreground font-serif italic">Natural Fibers</span>
                 </div>
                 <div className="w-full h-1.5 md:h-2 bg-secondary mt-1 relative overflow-hidden">
                   <div
                     className="absolute top-0 left-0 h-full bg-foreground transition-all duration-700"
-                    style={{ width: `${designer.naturalFiberPercent}%` }}
+                    style={{ width: `${enrichedDesigner.naturalFiberPercent}%` }}
                   />
                 </div>
               </>

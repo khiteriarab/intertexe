@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { ArrowRight, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
 import { getQualityTier, getTierColor, type QualityTier } from "@/lib/quality-tiers";
 import { filterToCuratedBrands } from "@/lib/curated-brands";
+import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
 
 const FILTER_TABS = [
@@ -22,13 +23,22 @@ export default function JustIn() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const scoredDesigners = (designers as any[])
+  const enrichedDesigners = useMemo(() => {
+    return (designers as any[]).map((d: any) => {
+      if (d.naturalFiberPercent != null) return d;
+      const curatedScore = getCuratedScore(d.name);
+      if (curatedScore != null) return { ...d, naturalFiberPercent: curatedScore };
+      return d;
+    });
+  }, [designers]);
+
+  const scoredDesigners = enrichedDesigners
     .filter((d: any) => d.naturalFiberPercent != null && d.naturalFiberPercent >= 70)
     .sort((a: any, b: any) => (b.naturalFiberPercent ?? 0) - (a.naturalFiberPercent ?? 0));
 
   const qualityDesigners = scoredDesigners.length > 0
     ? scoredDesigners
-    : filterToCuratedBrands(designers as any[]);
+    : filterToCuratedBrands(enrichedDesigners);
 
   const filtered = filter === 'all'
     ? qualityDesigners

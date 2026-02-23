@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { ExternalLink, Heart, ShoppingBag, Sparkles, ArrowRight, Filter } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import { FABRIC_PERSONAS, type FabricPersona } from "@shared/personas";
 import { getQualityTier, getTierColor, type QualityTier } from "@/lib/quality-tiers";
+import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
 import { guessDomain } from "@/lib/brand-images";
 import { filterToCuratedBrands } from "@/lib/curated-brands";
@@ -109,7 +110,15 @@ export default function Shop() {
 
   const latestQuiz = (quizResults as any[]).length > 0 ? (quizResults as any[])[(quizResults as any[]).length - 1] : null;
 
-  const scoredDesigners = (allDesigners as any[]).filter((d: any) => d.naturalFiberPercent != null);
+  const enrichedDesigners = useMemo(() => {
+    return (allDesigners as any[]).map((d: any) => {
+      if (d.naturalFiberPercent != null) return d;
+      const score = getCuratedScore(d.name);
+      return score != null ? { ...d, naturalFiberPercent: score } : d;
+    });
+  }, [allDesigners]);
+
+  const scoredDesigners = enrichedDesigners.filter((d: any) => d.naturalFiberPercent != null);
   const hasScores = scoredDesigners.length > 0;
   const exceptionalDesigners = hasScores
     ? scoredDesigners.filter((d: any) => d.naturalFiberPercent >= 90).sort((a: any, b: any) => b.naturalFiberPercent - a.naturalFiberPercent)
@@ -117,11 +126,11 @@ export default function Shop() {
   const excellentDesigners = hasScores
     ? scoredDesigners.filter((d: any) => d.naturalFiberPercent >= 70 && d.naturalFiberPercent < 90).sort((a: any, b: any) => b.naturalFiberPercent - a.naturalFiberPercent)
     : [];
-  const curatedFallback = !hasScores ? filterToCuratedBrands(allDesigners as any[]) : [];
+  const curatedFallback = !hasScores ? filterToCuratedBrands(enrichedDesigners) : [];
 
   const favoriteDesigners = (favorites as any[])
     .map((fav: any) => {
-      const designer = (allDesigners as any[]).find((d: any) => d.id === fav.designerId);
+      const designer = enrichedDesigners.find((d: any) => d.id === fav.designerId);
       return designer || fav.designer;
     })
     .filter(Boolean);
