@@ -16,7 +16,7 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "totême": "https://toteme.com/cdn/shop/files/13_251118_TOTEME_WEAR_034_1.jpg?v=1771339720&width=1500",
   "toteme": "https://toteme.com/cdn/shop/files/13_251118_TOTEME_WEAR_034_1.jpg?v=1771339720&width=1500",
   "theory": "https://ak-media.theory.com/i/theory/W-New-Arrivals-Flyout_1.jpg?$mediaDesktopLarge$",
-  "sandro": "https://www.sandro-paris.com/on/demandware.static/-/Library-Sites-Sandro-Shared/default/dw5782132f/Megamenu/CAMPAGNE-SS26_IMAGEMENU_CHAUSSURE_F.jpg",
+  "sandro": "https://www.sandro-paris.com/on/demandware.static/-/Library-Sites-Sandro-Shared/default/dwe636f56c/Megamenu/CAMPAGNE-SS26_IMAGEMENU_PAP_F.jpg",
   "iro": "https://www.iroparis.com/on/demandware.static/-/Sites-storefront_eur/default/dwcbc7aef9/260128_TEMPLATE_MENU_PROMOTIONAL_BANNER.jpg",
   "club monaco": "https://www.clubmonaco.com/cdn/shop/files/260204_SiteFlip_Promo_Desktop.jpg?v=1770069167&width=2500",
   "proenza schouler": "https://www.proenzaschouler.com/cdn/shop/files/305300260029_INSTA_ML_HEADER.jpg?v=1770076333&width=450",
