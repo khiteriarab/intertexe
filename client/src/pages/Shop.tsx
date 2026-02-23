@@ -90,11 +90,11 @@ function ProductCard({ product }: { product: any }) {
 
 function FiberHighlight({ fiber, count, onClick }: { fiber: string; count: number; onClick: () => void }) {
   const fiberImages: Record<string, string> = {
-    cashmere: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80",
-    silk: "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&q=80",
-    wool: "https://images.unsplash.com/photo-1583922146077-8a01bde6fa3e?w=600&q=80",
-    cotton: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80",
-    linen: "https://images.unsplash.com/photo-1528459105426-b7548b3e0b3c?w=600&q=80",
+    cashmere: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_JACKSON_CARDIGAN_-_MEDIUM_HEATHER_GREY_A-09-10222-MHG1_0040.jpg?v=1753111950",
+    silk: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319612/PLUTO_DOT/1319612.1.PLUTO_DOT?_s=RAABAB0",
+    wool: "https://cdn.shopify.com/s/files/1/1519/7996/files/MARGO-DRESS_BLACK_18121533-200_GHOST_jpg.jpg?v=1757970225",
+    cotton: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319334/PRESPA/1319334.1.PRESPA?_s=RAABAB0",
+    linen: "https://us.sandro-paris.com/dw/image/v2/BCMW_PRD/on/demandware.static/-/Sites-master-catalog/default/dwd3c61fa4/images/hi-res/Sandro_SFPRO04783-4111_F_1.jpg?sw=800",
   };
 
   return (
