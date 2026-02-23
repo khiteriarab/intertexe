@@ -38,14 +38,19 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-background/10 mt-10 md:mt-16 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest">
-            &copy; {new Date().getFullYear()} Intertexe. All rights reserved.
+        <div className="border-t border-background/10 mt-10 md:mt-16 pt-6 md:pt-8 flex flex-col gap-6">
+          <p className="text-[10px] md:text-xs text-background/30 leading-relaxed max-w-3xl" data-testid="text-footer-disclosure">
+            INTERTEXE is an independent fashion materials discovery platform. Product images, trademarks, and brand names belong to their respective owners and are used for identification and discovery purposes only. INTERTEXE does not claim ownership of any third-party content.
           </p>
-          <div className="flex items-center gap-4 md:gap-6">
-            <a href="https://instagram.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-instagram">Instagram</a>
-            <a href="https://tiktok.com/@shopintertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-tiktok">TikTok</a>
-            <a href="https://pinterest.com/shopintertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-pinterest">Pinterest</a>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest">
+              &copy; {new Date().getFullYear()} Intertexe. All rights reserved.
+            </p>
+            <div className="flex items-center gap-4 md:gap-6">
+              <a href="https://instagram.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-instagram">Instagram</a>
+              <a href="https://tiktok.com/@shopintertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-tiktok">TikTok</a>
+              <a href="https://pinterest.com/shopintertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-pinterest">Pinterest</a>
+            </div>
           </div>
         </div>
       </div>
