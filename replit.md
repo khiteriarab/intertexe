@@ -56,7 +56,7 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Non-Scrapable Brands:** ba&sh, Sézane, Ganni, Isabel Marant, Vince are protected by Cloudflare/non-Shopify platforms and cannot be scraped via Shopify JSON APIs.
 - **Composition Inference:** Anine Bing uses keyword-based inference from product descriptions (silk, cashmere, cotton, wool, denim, etc.) since structured composition data is not available.
 - **Pass Rates:** Sandro dresses 7%, Sandro tops 95%, Reformation 87%, The Kooples 75%.
-- **Homepage Brands:** Khaite, Totême, Anine Bing, Frame, Vince, Nanushka, Acne Studios, The Row, AGOLDE, Sandro.
+- **Homepage Brands:** Khaite, Anine Bing, Frame, AGOLDE, Sandro, Reformation, The Kooples.
 
 ## Brand Directory (Curated Profiles)
 - **Brand Profiles:** `client/src/lib/brand-profiles.ts` — 36 structured brand profiles with editorial intros, material strengths, price ranges, tier classification, HQ, and founding year.

@@ -10,15 +10,12 @@ import textureImage from "@/assets/images/material-texture.jpg";
 
 const CURATED_BRAND_SLUGS = [
   "khaite",
-  "toteme",
   "anine-bing",
   "frame",
-  "vince",
-  "nanushka",
-  "acne-studios",
-  "the-row",
   "agolde",
   "sandro",
+  "reformation",
+  "the-kooples",
 ];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {
