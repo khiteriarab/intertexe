@@ -47,6 +47,7 @@ export const CURATED_BRAND_SLUGS = [
   "arket",
   "other-stories",
   "claudie-pierlot",
+  "the-kooples",
 ];
 
 const CURATED_BRAND_NAMES = new Set([
@@ -59,7 +60,7 @@ const CURATED_BRAND_NAMES = new Set([
   "bottega veneta", "brunello cucinelli", "loro piana", "jil sander",
   "lemaire", "ami paris", "a.p.c.", "equipment", "rag & bone",
   "citizens of humanity", "eileen fisher", "margaret howell", "joseph",
-  "arket", "& other stories", "claudie pierlot",
+  "arket", "& other stories", "claudie pierlot", "the kooples",
 ]);
 
 export function filterToCuratedBrands(designers: any[]): any[] {

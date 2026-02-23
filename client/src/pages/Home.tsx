@@ -17,6 +17,8 @@ const CURATED_BRAND_SLUGS = [
   "khaite",
   "toteme",
   "sandro",
+  "reformation",
+  "the-kooples",
 ];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {

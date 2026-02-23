@@ -2,115 +2,82 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ChevronLeft, ShoppingBag, ExternalLink, Mail, CheckCircle2, ArrowRight } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
-import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { fetchProductsByFiber } from "@/lib/supabase";
 import { useState } from "react";
 
-interface ProductPageConfig {
+interface PageConfig {
   slug: string;
   title: string;
   fiber: string;
+  fiberQuery: string[];
   heroTitle: string;
   heroSubtitle: string;
   intro: string;
   buyingTips: string[];
   redFlags: string[];
-  products: CuratedProduct[];
 }
 
-interface CuratedProduct {
-  name: string;
-  brand: string;
-  brandSlug: string;
-  url: string;
-  imageUrl: string;
-  price: string;
-  composition: string;
-  naturalFiberPercent: number;
-  highlight?: string;
-}
-
-const LINEN_DRESSES: ProductPageConfig = {
-  slug: "linen-dresses",
-  title: "The Best Linen Dresses Worth Buying",
-  fiber: "Linen",
-  heroTitle: "Linen Dresses",
-  heroSubtitle: "We tested the composition of every dress. These are the ones worth your money.",
-  intro: "Linen is one of the oldest and most sustainable fabrics — breathable, naturally cooling, and it only gets softer with every wash. But most brands cut it with polyester. We found the ones that don't.",
-  buyingTips: [
-    "Look for 100% linen or linen-viscose blends",
-    "European flax (Belgian, French) is the gold standard",
-    "Expect a natural, relaxed drape — stiff linen softens with wear",
-    "Pre-washed or garment-dyed linen has minimal shrinkage",
-  ],
-  redFlags: [
-    "\"Linen blend\" with no percentage listed",
-    "Polyester lining in a \"linen\" dress",
-    "Under $80 for a linen dress — likely mixed with synthetic",
-  ],
-  products: [
-    { name: "Birdie Linen Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/birdie-linen-dress/1320101OVI.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1320101/LOVIE/1320101.1.LOVIE", price: "$298", composition: "100% Linen", naturalFiberPercent: 100, highlight: "Editor's Pick" },
-    { name: "Janu Linen Mini Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/janu-linen-mini-dress/1319548LPS.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319548/LEAPORD_SPOT/1319548.1.LEAPORD_SPOT", price: "$198", composition: "100% Linen", naturalFiberPercent: 100 },
-    { name: "Cecilia Linen Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/cecilia-linen-dress/1319452DEK.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319452/DECK/1319452.1.DECK", price: "$278", composition: "100% Linen", naturalFiberPercent: 100 },
-    { name: "Gingham Linen Maxi Dress", brand: "Sandro", brandSlug: "sandro", url: "https://us.sandro-paris.com/en/p/gingham-linen-maxi-dress/SFPRO04713_D251.html", imageUrl: "https://us.sandro-paris.com/dw/image/v2/BCMW_PRD/on/demandware.static/-/Sites-master-catalog/default/dw430890b3/images/hi-res/Sandro_SFPRO04713-D251_F_1.jpg?sw=800", price: "$365", composition: "86% Linen, 14% Polyester", naturalFiberPercent: 86 },
-    { name: "Maxi Dress with Lace Details", brand: "Sandro", brandSlug: "sandro", url: "https://us.sandro-paris.com/en/p/maxi-dress-with-lace-details/SFPRO04828_D221.html", imageUrl: "https://us.sandro-paris.com/dw/image/v2/BCMW_PRD/on/demandware.static/-/Sites-master-catalog/default/dwef988115/images/hi-res/Sandro_SFPRO04828-D221_F_1.jpg?sw=800", price: "$645", composition: "86% Linen, 14% Polyester", naturalFiberPercent: 86 },
-  ],
-};
-
-const SILK_DRESSES: ProductPageConfig = {
-  slug: "silk-dresses",
-  title: "The Best Silk Dresses Worth Buying",
-  fiber: "Silk",
-  heroTitle: "Silk Dresses",
-  heroSubtitle: "Verified 100% silk. No polyester masquerading as luxury.",
-  intro: "Real silk has a distinct, cool-to-the-touch feel that no synthetic can replicate. It's naturally temperature-regulating, hypoallergenic, and has a luminous drape that polyester satin will never match. We verified every composition label.",
-  buyingTips: [
-    "Mulberry silk is the highest quality (smooth, lustrous)",
-    "Look for momme weight — 19mm+ for dresses, 22mm+ for heavier drapes",
-    "Silk charmeuse has a satin face and matte back",
-    "Silk crepe de chine is matte, breathable, and less delicate",
-  ],
-  redFlags: [
-    "\"Silky\" or \"silk-feel\" — this means polyester",
-    "\"Satin\" without specifying silk — usually polyester satin",
-    "Under $100 for a silk dress — almost certainly synthetic",
-  ],
-  products: [
-    { name: "Eden Silk Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/eden-silk-dress/1319612PPO.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319612/POPPY/1319612.1.POPPY", price: "$248", composition: "100% Silk", naturalFiberPercent: 100, highlight: "Best Value" },
-    { name: "Frankie Silk Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/frankie-silk-dress/1304134RCM.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1304134/ROSECREAM/1304134.1.ROSECREAM", price: "$298", composition: "100% Silk", naturalFiberPercent: 100, highlight: "Editor's Pick" },
-    { name: "Anaiis Silk Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/anaiis-silk-dress/1314547TAV.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1314547/TAVERNA/1314547.1.TAVERNA", price: "$398", composition: "100% Silk", naturalFiberPercent: 100 },
-    { name: "Jillian Silk Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/jillian-silk-dress/1318344PZZ.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1318344/PIAZZA/1318344.1.PIAZZA", price: "$348", composition: "100% Silk", naturalFiberPercent: 100 },
-  ],
-};
-
-const COTTON_DRESSES: ProductPageConfig = {
-  slug: "cotton-dresses",
-  title: "The Best Cotton & Denim Dresses Worth Buying",
-  fiber: "Cotton",
-  heroTitle: "Cotton & Denim Dresses",
-  heroSubtitle: "Breathable, durable, and honestly made. Every piece verified.",
-  intro: "Cotton is the most versatile fabric in fashion — from crisp shirting to soft jersey to raw denim. But quality varies wildly. We found the dresses made with real cotton, organic where possible, without the synthetic shortcuts.",
-  buyingTips: [
-    "Organic cotton (GOTS certified) uses no synthetic pesticides",
-    "Egyptian and Pima cotton have longer fibers = softer, more durable",
-    "Raw/selvedge denim is 100% cotton with no stretch",
-    "Poplin and chambray are lightweight cotton weaves ideal for dresses",
-  ],
-  redFlags: [
-    "\"Cotton blend\" with more than 30% polyester",
-    "Jersey dresses with no composition listed",
-    "\"Denim\" dresses that are actually stretch poly-cotton",
-  ],
-  products: [
-    { name: "Mini Denim Dress", brand: "Sandro", brandSlug: "sandro", url: "https://us.sandro-paris.com/en/p/mini-denim-dress/SFPRO04394_D324.html", imageUrl: "https://us.sandro-paris.com/dw/image/v2/BCMW_PRD/on/demandware.static/-/Sites-master-catalog/default/dw7755d010/images/hi-res/Sandro_SFPRO04394-D324_F_1.jpg?sw=800", price: "$367.50", composition: "100% Cotton", naturalFiberPercent: 100, highlight: "Editor's Pick" },
-    { name: "Joliette Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/joliette-dress/1319017BLK.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319017/BLACK/1319017.1.BLACK", price: "$198", composition: "98% Organic Cotton, 2% Spandex", naturalFiberPercent: 98 },
-    { name: "Manon Denim Midi Dress", brand: "Reformation", brandSlug: "reformation", url: "https://www.thereformation.com/products/manon-denim-midi-dress/1319334PRR.html", imageUrl: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319334/PARADISE/1319334.1.PARADISE", price: "$218", composition: "100% Cotton", naturalFiberPercent: 100 },
-  ],
-};
-
-const PAGE_CONFIGS: Record<string, ProductPageConfig> = {
-  "linen-dresses": LINEN_DRESSES,
-  "silk-dresses": SILK_DRESSES,
-  "cotton-dresses": COTTON_DRESSES,
+const PAGE_CONFIGS: Record<string, PageConfig> = {
+  "linen-dresses": {
+    slug: "linen-dresses",
+    title: "The Best Linen Dresses Worth Buying",
+    fiber: "Linen",
+    fiberQuery: ["linen", "flax"],
+    heroTitle: "Linen Dresses",
+    heroSubtitle: "We tested the composition of every dress. These are the ones worth your money.",
+    intro: "Linen is one of the oldest and most sustainable fabrics — breathable, naturally cooling, and it only gets softer with every wash. But most brands cut it with polyester. We found the ones that don't.",
+    buyingTips: [
+      "Look for 100% linen or linen-viscose blends",
+      "European flax (Belgian, French) is the gold standard",
+      "Expect a natural, relaxed drape — stiff linen softens with wear",
+      "Pre-washed or garment-dyed linen has minimal shrinkage",
+    ],
+    redFlags: [
+      "\"Linen blend\" with no percentage listed",
+      "Polyester lining in a \"linen\" dress",
+      "Under $80 for a linen dress — likely mixed with synthetic",
+    ],
+  },
+  "silk-dresses": {
+    slug: "silk-dresses",
+    title: "The Best Silk Dresses Worth Buying",
+    fiber: "Silk",
+    fiberQuery: ["silk"],
+    heroTitle: "Silk Dresses",
+    heroSubtitle: "Verified 100% silk. No polyester masquerading as luxury.",
+    intro: "Real silk has a distinct, cool-to-the-touch feel that no synthetic can replicate. It's naturally temperature-regulating, hypoallergenic, and has a luminous drape that polyester satin will never match. We verified every composition label.",
+    buyingTips: [
+      "Mulberry silk is the highest quality (smooth, lustrous)",
+      "Look for momme weight — 19mm+ for dresses, 22mm+ for heavier drapes",
+      "Silk charmeuse has a satin face and matte back",
+      "Silk crepe de chine is matte, breathable, and less delicate",
+    ],
+    redFlags: [
+      "\"Silky\" or \"silk-feel\" — this means polyester",
+      "\"Satin\" without specifying silk — usually polyester satin",
+      "Under $100 for a silk dress — almost certainly synthetic",
+    ],
+  },
+  "cotton-dresses": {
+    slug: "cotton-dresses",
+    title: "The Best Cotton & Denim Dresses Worth Buying",
+    fiber: "Cotton",
+    fiberQuery: ["cotton", "denim"],
+    heroTitle: "Cotton & Denim Dresses",
+    heroSubtitle: "Breathable, durable, and honestly made. Every piece verified.",
+    intro: "Cotton is the most versatile fabric in fashion — from crisp shirting to soft jersey to raw denim. But quality varies wildly. We found the pieces made with real cotton, organic where possible, without the synthetic shortcuts.",
+    buyingTips: [
+      "Organic cotton (GOTS certified) uses no synthetic pesticides",
+      "Egyptian and Pima cotton have longer fibers = softer, more durable",
+      "Raw/selvedge denim is 100% cotton with no stretch",
+      "Poplin and chambray are lightweight cotton weaves ideal for dresses",
+    ],
+    redFlags: [
+      "\"Cotton blend\" with more than 30% polyester",
+      "Jersey dresses with no composition listed",
+      "\"Denim\" pieces that are actually stretch poly-cotton",
+    ],
+  },
 };
 
 function EmailCapture({ fiber }: { fiber: string }) {
@@ -162,7 +129,13 @@ function EmailCapture({ fiber }: { fiber: string }) {
   );
 }
 
-function ProductCard({ product, index }: { product: CuratedProduct; index: number }) {
+function ProductCard({ product, index }: { product: any; index: number }) {
+  const brandName = product.brand_name || product.brandName;
+  const brandSlug = product.brand_slug || product.brandSlug;
+  const imageUrl = product.image_url || product.imageUrl;
+  const naturalPercent = product.natural_fiber_percent || product.naturalFiberPercent;
+  const productId = product.product_id || product.productId;
+
   return (
     <a
       href={product.url}
@@ -172,9 +145,9 @@ function ProductCard({ product, index }: { product: CuratedProduct; index: numbe
       data-testid={`card-curated-product-${index}`}
     >
       <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-        {product.imageUrl ? (
+        {imageUrl ? (
           <img
-            src={product.imageUrl}
+            src={imageUrl}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
             loading="lazy"
@@ -184,29 +157,20 @@ function ProductCard({ product, index }: { product: CuratedProduct; index: numbe
             <ShoppingBag className="w-8 h-8 opacity-30" />
           </div>
         )}
-        {product.highlight && (
-          <div className="absolute top-2 right-2">
-            <span className="bg-foreground text-background px-2.5 py-1 text-[8px] uppercase tracking-[0.15em] font-medium">
-              {product.highlight}
-            </span>
-          </div>
-        )}
         <div className="absolute top-2 left-2">
           <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-            {product.naturalFiberPercent}% natural
+            {naturalPercent}% natural
           </span>
         </div>
       </div>
       <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
-        <div className="flex items-center gap-1.5">
-          <Link
-            href={`/designers/${product.brandSlug}`}
-            className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {product.brand}
-          </Link>
-        </div>
+        <Link
+          href={`/designers/${brandSlug}`}
+          className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {brandName}
+        </Link>
         <h3 className="text-xs md:text-sm leading-snug font-medium">{product.name}</h3>
         <p className="text-[10px] text-muted-foreground">{product.composition}</p>
         <div className="flex items-center justify-between mt-auto pt-2">
@@ -220,6 +184,27 @@ function ProductCard({ product, index }: { product: CuratedProduct; index: numbe
 
 export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) {
   const config = PAGE_CONFIGS[pageSlug];
+
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ["curated-products", pageSlug],
+    queryFn: async () => {
+      if (!config) return [];
+      const allProducts: any[] = [];
+      for (const fiber of config.fiberQuery) {
+        const results = await fetchProductsByFiber(fiber);
+        allProducts.push(...results);
+      }
+      const seen = new Set<string>();
+      return allProducts.filter((p) => {
+        const id = p.product_id || p.productId;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    },
+    enabled: !!config,
+    staleTime: 10 * 60 * 1000,
+  });
 
   useSEO({
     title: config?.title || "Curated Products",
@@ -298,18 +283,37 @@ export default function CuratedProductsPage({ pageSlug }: { pageSlug: string }) 
         <section className="py-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
-              {config.products.length} Verified Pieces
+              {isLoading ? "Loading..." : `${products.length} Verified Pieces`}
             </h2>
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Every composition checked
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {config.products.map((product, index) => (
-              <ProductCard key={index} product={product} index={index} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-secondary/30 animate-pulse flex flex-col">
+                  <div className="aspect-[3/4]" />
+                  <div className="p-3 flex flex-col gap-2">
+                    <div className="h-3 bg-secondary/60 w-1/3" />
+                    <div className="h-4 bg-secondary/50 w-2/3" />
+                    <div className="h-3 bg-secondary/40 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : products.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {products.map((product: any, index: number) => (
+                <ProductCard key={product.product_id || product.productId || index} product={product} index={index} />
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-muted-foreground">
+              <p className="text-sm">No verified {config.fiber.toLowerCase()} pieces yet. Check back soon.</p>
+            </div>
+          )}
         </section>
 
         <section className="py-8 border-t border-border/20">

@@ -1,7 +1,7 @@
 # INTERTEXE
 
 ## Overview
-INTERTEXE is a platform designed to be the definitive material quality reference for luxury fashion, aiming to simplify buying decisions for high-end consumers. It vets and ranks designers, providing clear quality verdicts. Key features include quality tier badges, prescriptive buying rules for various fabrics, curated selections ("The Edit"), a comprehensive directory with quality filters, and AI-powered material advice. The platform's vision is to empower consumers with reliable information, ensuring they make informed luxury fashion purchases without extensive label scrutiny.
+INTERTEXE is the definitive material quality reference for luxury fashion. The platform makes buying decisions for high-end consumers — every designer is vetted, ranked, and given a clear quality verdict so shoppers never have to read a label or guess. Features include quality tier badges, prescriptive buying rules for every fabric, curated "The Edit" picks, a comprehensive directory with tier filters, AI-powered material advice, and verified product-level data scraped from brand websites.
 
 ## User Preferences
 - Brand colors: Background #FAFAF8, Accent #111111
@@ -21,13 +21,15 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 **Technical Implementations:**
 - **Frontend:** Developed with React, Vite, Tailwind CSS for styling, wouter for routing, and TanStack Query for data fetching.
 - **Backend:** Powered by Express.js, handling API routes and session-based authentication using Passport.js.
-- **Database Management:** Utilizes PostgreSQL for storing user-specific data (users, favorites, quiz results) and Supabase for designer data, allowing for efficient data management and scalability.
+- **Database Management:** Utilizes PostgreSQL for storing user-specific data (users, favorites, quiz results, products) and Supabase for designer data, allowing for efficient data management and scalability.
 - **AI Integration:** Incorporates OpenAI's GPT-4o-mini for AI-driven material advice and quiz recommendations, with conversation persistence and history management.
 - **Authentication:** Features an email-based signup and login flow, with token persistence in the database. A dual-write sync mechanism ensures data consistency between the local PostgreSQL and Supabase for user-related data.
 - **Quality Tier System:** Implements a clear quality tier system (Exceptional, Excellent, Good, Caution, Under Review) displayed across designer cards and detailed verdicts.
 - **Fabric Persona System:** Assigns one of five fabric personas (e.g., The Purist, The Refined Romantic) to users based on quiz answers, enabling personalized recommendations and content.
-- **Product Verification:** Includes a system for storing and displaying verified products with detailed composition, natural fiber percentages, and links to brand sites.
-- **SEO Optimization:** Dynamic SEO is implemented for designer and product pages, ensuring discoverability and rich previews.
+- **Product Verification:** 48 verified products across 3 brands (Sandro, Reformation, The Kooples) stored in products table with composition, natural fiber %, images, prices.
+- **SEO Product Pages:** Database-driven pages at `/linen-dresses`, `/silk-dresses`, `/cotton-dresses` with buying tips, red flags, and email capture.
+- **SEO Optimization:** Dynamic SEO for designer pages, product pages, and curated collection pages.
+- **Composition Parsing:** Handles raw material names: "flax"→linen, "wood pulp"→viscose, "Good Earth Cotton"→cotton.
 
 **Feature Specifications:**
 - **Designer Directory:** A comprehensive, searchable A-Z directory of designers with quality tier filters.
@@ -36,10 +38,17 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Personalized Shop:** A dedicated `shop` page that curates designers and products based on user preferences and fabric persona.
 - **Affiliate Integration:** Implements an interstitial `/leaving` page for affiliate redirects, displaying disclosures and maintaining brand consistency.
 - **Analytics:** Tracks key user events (signup, quiz completion, favorites) for insights.
+- **Products API:** `/api/products` with fiber/category filters, `/api/products/:brandSlug` for brand-specific products.
 
 ## External Dependencies
 - **OpenAI:** Utilized for AI recommendations and chat functionalities (GPT-4o-mini). Users can connect their own OpenAI API keys.
-- **Supabase:** Serves as the primary database for designer information and as a synchronized data store for user data, supporting direct frontend integration for Vercel deployments.
-- **PostgreSQL:** The core database for the Express.js backend, storing user accounts, quiz results, and favorites.
+- **Supabase:** Serves as the primary database for designer information and as a synchronized data store for user data and products, supporting direct frontend integration for Vercel deployments.
+- **PostgreSQL:** The core database for the Express.js backend, storing user accounts, quiz results, favorites, and verified products.
 - **Resend:** Used for sending branded welcome emails upon user signup.
 - **thum.io:** Employed for generating website screenshots for brand images.
+
+## Product Data
+- **Supabase Migration:** `supabase-products-migration.sql` contains CREATE TABLE + 48 INSERT statements for syncing to Supabase.
+- **Brands Scraped:** Sandro (26 products), Reformation (13 products), The Kooples (9 products).
+- **Pass Rates:** Sandro dresses 7%, Sandro tops 95%, Reformation 87%, The Kooples 75%.
+- **Homepage Brands:** ba&sh, Sézane, Anine Bing, Ganni, Isabel Marant, Khaite, Totême, Sandro, Reformation, The Kooples.

@@ -47,12 +47,14 @@ export const CURATED_QUALITY_SCORES: Record<string, number> = {
   "& other stories": 60,
   "claudie pierlot": 52,
 
+  "the kooples": 60,
   "allsaints": 48,
   "all saints": 48,
   "ted baker": 42,
   "cos": 55,
   "max mara": 70,
   "zimmermann": 62,
+  "jacquemus": 72,
 };
 
 export function getCuratedScore(brandName: string): number | null {

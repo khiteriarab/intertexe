@@ -244,6 +244,69 @@ export async function fetchProductsByBrand(brandSlug: string): Promise<any[]> {
   }
 }
 
+export async function fetchProductsByFiber(fiber: string): Promise<any[]> {
+  if (isVercelMode && supabase) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("approved", "yes")
+      .ilike("composition", `%${fiber}%`)
+      .order("natural_fiber_percent", { ascending: false });
+    if (error) return [];
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      brandSlug: row.brand_slug,
+      brandName: row.brand_name,
+      name: row.name,
+      productId: row.product_id,
+      url: row.url,
+      imageUrl: row.image_url,
+      price: row.price,
+      composition: row.composition,
+      naturalFiberPercent: row.natural_fiber_percent,
+      category: row.category,
+    }));
+  }
+  try {
+    const res = await fetch(`/api/products?fiber=${encodeURIComponent(fiber)}`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAllProducts(): Promise<any[]> {
+  if (isVercelMode && supabase) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("approved", "yes")
+      .order("natural_fiber_percent", { ascending: false });
+    if (error) return [];
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      brandSlug: row.brand_slug,
+      brandName: row.brand_name,
+      name: row.name,
+      productId: row.product_id,
+      url: row.url,
+      imageUrl: row.image_url,
+      price: row.price,
+      composition: row.composition,
+      naturalFiberPercent: row.natural_fiber_percent,
+      category: row.category,
+    }));
+  }
+  try {
+    const res = await fetch("/api/products");
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 export interface SupabaseUser {
   id: string;
   email: string;
