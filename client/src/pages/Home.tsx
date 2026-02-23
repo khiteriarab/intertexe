@@ -148,6 +148,15 @@ export default function Home() {
       </section>
 
       <section className="py-12 md:py-20">
+        {(allProducts as any[]).length > 0 && (
+          <Link href="/shop" className="flex items-center justify-center gap-2 bg-foreground text-background py-3 md:py-3.5 mb-8 md:mb-10 hover:bg-foreground/90 transition-colors active:scale-[0.98]" data-testid="banner-shop-verified">
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-medium">
+              Shop {(allProducts as any[]).filter((p: any) => p.image_url || p.imageUrl).length} Verified Products
+            </span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        )}
         <div className="flex justify-between items-end border-b border-border/50 pb-3 md:pb-4 mb-8 md:mb-10">
           <div>
             <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground mb-1">INTERTEXE Approved</p>
@@ -181,8 +190,8 @@ export default function Home() {
                     <div className="absolute bottom-0 left-0 right-0 p-2.5 md:p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-end justify-between">
                       <QualityBadge naturalFiberPercent={designer.naturalFiberPercent} />
                       {productCount > 0 && (
-                        <span className="hidden sm:flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                          <ShoppingBag className="w-2.5 h-2.5" />
+                        <span className="flex items-center gap-1 bg-white/90 text-black px-1.5 md:px-2 py-0.5 text-[7px] md:text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                          <ShoppingBag className="w-2 h-2 md:w-2.5 md:h-2.5" />
                           {productCount}
                         </span>
                       )}
