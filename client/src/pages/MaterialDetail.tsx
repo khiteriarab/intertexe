@@ -1,18 +1,104 @@
 import { Link, useParams } from "wouter";
-import { ArrowLeft, Leaf, Droplets, Shield, Sparkles, CheckCircle2, XCircle, AlertTriangle, DollarSign } from "lucide-react";
+import { ArrowLeft, Leaf, Droplets, Shield, Sparkles, CheckCircle2, XCircle, AlertTriangle, DollarSign, ShoppingBag, ExternalLink } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDesigners } from "@/lib/supabase";
+import { fetchDesigners, fetchProductsByFiberAndCategory } from "@/lib/supabase";
 import { MATERIALS } from "@/lib/data";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 import { filterToCuratedBrands } from "@/lib/curated-brands";
+
+const FIBER_QUERIES: Record<string, string[]> = {
+  cotton: ["cotton"],
+  silk: ["silk"],
+  linen: ["linen", "flax"],
+  wool: ["wool", "merino"],
+  cashmere: ["cashmere"],
+  denim: ["cotton", "denim"],
+  alpaca: ["alpaca"],
+  "tencel-modal": ["tencel", "lyocell", "modal"],
+  "viscose-rayon": ["viscose", "rayon"],
+};
+
+function FabricProductCard({ product, index }: { product: any; index: number }) {
+  const brandName = product.brand_name || product.brandName;
+  const brandSlug = product.brand_slug || product.brandSlug;
+  const imageUrl = product.image_url || product.imageUrl;
+  const naturalPercent = product.natural_fiber_percent || product.naturalFiberPercent;
+
+  return (
+    <a
+      href={product.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
+      data-testid={`card-fabric-product-${index}`}
+    >
+      <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <ShoppingBag className="w-8 h-8 opacity-30" />
+          </div>
+        )}
+        <div className="absolute top-2 left-2">
+          <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+            {naturalPercent}% natural
+          </span>
+        </div>
+      </div>
+      <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
+        <Link
+          href={`/designers/${brandSlug}`}
+          className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {brandName}
+        </Link>
+        <h3 className="text-xs md:text-sm leading-snug font-medium line-clamp-2">{product.name}</h3>
+        <p className="text-[10px] text-muted-foreground line-clamp-1">{product.composition}</p>
+        <div className="flex items-center justify-between mt-auto pt-2">
+          <span className="text-sm font-medium">{product.price}</span>
+          <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+        </div>
+      </div>
+    </a>
+  );
+}
 
 export default function MaterialDetail() {
   const params = useParams<{ slug: string }>();
   const material = MATERIALS.find(m => m.slug === params.slug);
 
+  const fiberQueries = params.slug ? FIBER_QUERIES[params.slug] || [] : [];
+
   const { data: designers = [], isLoading } = useQuery({
     queryKey: ["designers-material", params.slug],
     queryFn: () => fetchDesigners(undefined, 200),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: fabricProducts = [], isLoading: productsLoading } = useQuery({
+    queryKey: ["fabric-products", params.slug],
+    queryFn: async () => {
+      const allProducts: any[] = [];
+      for (const fiber of fiberQueries) {
+        const results = await fetchProductsByFiberAndCategory(fiber);
+        allProducts.push(...results);
+      }
+      const seen = new Set<string>();
+      return allProducts.filter((p) => {
+        const id = p.product_id || p.productId;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    },
+    enabled: fiberQueries.length > 0,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -170,6 +256,56 @@ export default function MaterialDetail() {
           {material.sustainability}
         </p>
       </section>
+
+      {fabricProducts.length > 0 && (
+        <section className="flex flex-col gap-6 md:gap-8 bg-secondary/30 -mx-4 md:mx-0 px-4 md:px-0" data-testid="section-shop-fabric">
+          <div className="pt-8 md:pt-10 md:px-6">
+            <div className="flex items-center gap-2 mb-1">
+              <ShoppingBag className="w-4 h-4 text-foreground/60" />
+              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Shop Verified Products</p>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-serif">Shop {material.name}</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              {fabricProducts.length} verified {material.name.toLowerCase()} pieces across {new Set(fabricProducts.map((p: any) => p.brand_slug || p.brandSlug)).size} brands. Every composition checked.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 md:px-6 pb-8 md:pb-10">
+            {fabricProducts.slice(0, 12).map((product: any, index: number) => (
+              <FabricProductCard key={product.product_id || product.productId || index} product={product} index={index} />
+            ))}
+          </div>
+          {fabricProducts.length > 12 && (
+            <div className="text-center pb-8 md:pb-10">
+              <span className="text-xs text-muted-foreground">
+                + {fabricProducts.length - 12} more verified {material.name.toLowerCase()} pieces
+              </span>
+            </div>
+          )}
+        </section>
+      )}
+
+      {productsLoading && fiberQueries.length > 0 && (
+        <section className="flex flex-col gap-6 bg-secondary/30 -mx-4 md:mx-0 px-4 md:px-0 py-8 md:py-10">
+          <div className="md:px-6">
+            <div className="flex items-center gap-2 mb-1">
+              <ShoppingBag className="w-4 h-4 text-foreground/60" />
+              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Shop Verified Products</p>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-serif">Shop {material.name}</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 md:px-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-secondary/50 animate-pulse flex flex-col">
+                <div className="aspect-[3/4]" />
+                <div className="p-3 flex flex-col gap-2">
+                  <div className="h-3 bg-secondary/80 w-1/3" />
+                  <div className="h-4 bg-secondary/60 w-2/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="flex flex-col gap-6 md:gap-8">
         <div className="flex flex-col gap-2">

@@ -28,6 +28,7 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Fabric Persona System:** Assigns one of five fabric personas (e.g., The Purist, The Refined Romantic) to users based on quiz answers, enabling personalized recommendations and content.
 - **Product Verification:** 257 verified products across 5 brands (Anine Bing, Khaite, Sandro, Reformation, The Kooples) stored in products table with composition, natural fiber %, images, prices.
 - **SEO Product Pages:** 9 material+category pages under `/materials/` (e.g., `/materials/linen-dresses`, `/materials/silk-tops`, `/materials/cashmere-sweaters`) with SEO titles like "Best Linen Dresses in 2026 | INTERTEXE", buying tips, red flags, and email capture.
+- **Shop by Fabric:** General material pages (`/materials/cotton`, `/materials/cashmere`, etc.) now show verified products matching that fabric type with product cards, brand links, composition labels, and external shop links. Products queried via `fetchProductsByFiberAndCategory` with fiber-specific search terms.
 - **SEO Optimization:** Dynamic SEO for designer pages (e.g., "Reformation Quality Review 2026"), product pages, and curated collection pages.
 - **Navigation:** Desktop nav: The Edit, Directory, Buying Guide, Quiz, Chat. Shop available via mobile bottom nav. No logo overlap.
 - **Composition Parsing:** Handles raw material names: "flax"→linen, "wood pulp"→viscose, "Good Earth Cotton"→cotton.
