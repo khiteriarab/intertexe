@@ -1,5 +1,6 @@
+import { useState, useMemo } from "react";
 import { useParams, Link } from "wouter";
-import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag, MapPin, Calendar, Tag } from "lucide-react";
+import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag, MapPin, Calendar, Tag, Search } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesignerBySlug, fetchProductsByBrand } from "@/lib/supabase";
@@ -110,6 +111,184 @@ function BrandProfileSection({ profile }: { profile: BrandProfile }) {
         </div>
       </div>
     </div>
+  );
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  all: "All",
+  dresses: "Dresses",
+  tops: "Tops",
+  knitwear: "Knitwear",
+  bottoms: "Bottoms",
+  outerwear: "Outerwear",
+  skirts: "Skirts",
+  pants: "Pants",
+  shirts: "Shirts",
+  jackets: "Jackets",
+};
+
+function ProductsSection({ products, designer, profile, slug }: { products: any; designer: any; profile: BrandProfile | null; slug: string }) {
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const visibleProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter((p: any) => p.image_url || p.imageUrl);
+  }, [products]);
+
+  const categories = useMemo(() => {
+    const cats: Record<string, number> = {};
+    visibleProducts.forEach((p: any) => {
+      const cat = (p.category || "").toLowerCase().trim();
+      if (cat) cats[cat] = (cats[cat] || 0) + 1;
+    });
+    return Object.entries(cats)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, count]) => ({ key: cat, label: CATEGORY_LABELS[cat] || cat.charAt(0).toUpperCase() + cat.slice(1), count }));
+  }, [visibleProducts]);
+
+  const filteredProducts = useMemo(() => {
+    let filtered = visibleProducts;
+    if (activeCategory !== "all") {
+      filtered = filtered.filter((p: any) => (p.category || "").toLowerCase().trim() === activeCategory);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((p: any) =>
+        (p.name || "").toLowerCase().includes(q) ||
+        (p.composition || "").toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }, [visibleProducts, activeCategory, searchQuery]);
+
+  return (
+    <section className="flex flex-col gap-5" data-testid="section-browse-collection">
+      <div className="flex items-center gap-3">
+        <ShoppingBag className="w-4 h-4 text-foreground/60" />
+        <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
+          {visibleProducts.length > 0 ? `${visibleProducts.length} Verified Pieces` : `Browse ${designer.name}`}
+        </h2>
+      </div>
+
+      {visibleProducts.length > 0 ? (
+        <>
+          <p className="text-sm text-foreground/70 leading-relaxed">
+            Every item below has been verified by INTERTEXE — only pieces with ≥50% natural fiber composition make this list.
+          </p>
+
+          {(visibleProducts.length > 6 || categories.length > 1) && (
+            <div className="flex flex-col gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={`Search ${designer.name} products...`}
+                  className="w-full pl-10 pr-4 py-2.5 bg-secondary/50 border border-border/30 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/40 transition-colors"
+                  data-testid="input-product-search"
+                />
+              </div>
+
+              {categories.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                  <button
+                    onClick={() => setActiveCategory("all")}
+                    className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                      activeCategory === "all"
+                        ? "bg-foreground text-background"
+                        : "bg-secondary/60 text-foreground/70 hover:bg-secondary"
+                    }`}
+                    data-testid="filter-category-all"
+                  >
+                    All ({visibleProducts.length})
+                  </button>
+                  {categories.map(({ key, label, count }) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveCategory(key)}
+                      className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                        activeCategory === key
+                          ? "bg-foreground text-background"
+                          : "bg-secondary/60 text-foreground/70 hover:bg-secondary"
+                      }`}
+                      data-testid={`filter-category-${key}`}
+                    >
+                      {label} ({count})
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+              {filteredProducts.map((product: any) => (
+                <a
+                  key={product.product_id || product.productId}
+                  href={product.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
+                  data-testid={`card-product-${product.product_id || product.productId}`}
+                >
+                  <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                    {(product.image_url || product.imageUrl) ? (
+                      <img
+                        src={product.image_url || product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <ShoppingBag className="w-8 h-8 opacity-30" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2">
+                      <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                        {product.natural_fiber_percent || product.naturalFiberPercent}% natural
+                      </span>
+                    </div>
+                    <ProductFavoriteButton productId={String(product.product_id || product.productId)} />
+                  </div>
+                  <div className="p-3 flex flex-col gap-1.5 flex-1">
+                    <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
+                    <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
+                    {(product.price) && (
+                      <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              No products match your search. Try a different term or category.
+            </p>
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-foreground/70 leading-relaxed">
+            {profile
+              ? `We're currently verifying ${designer.name}'s product compositions. ${profile.materialStrengths ? `Based on our analysis, look for pieces in ${profile.materialStrengths.slice(0, 3).join(', ').toLowerCase()} for the best natural fiber content.` : ''}`
+              : `Product verification for ${designer.name} is in progress. Check back soon for verified pieces with natural fiber compositions.`}
+          </p>
+          {designer.website && (
+            <Link
+              href={`/leaving?url=${encodeURIComponent(designer.website)}&brand=${encodeURIComponent(designer.name)}`}
+              className="flex items-center justify-center gap-3 w-full border border-foreground/20 hover:border-foreground/40 text-foreground px-8 py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98]"
+              data-testid={`link-browse-${slug}`}
+            >
+              Browse on {designer.name.split(' ').length > 3 ? 'their site' : `${designer.name}.com`} <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -354,79 +533,7 @@ export default function DesignerDetail() {
         </div>
       </header>
 
-      <section className="flex flex-col gap-5" data-testid="section-browse-collection">
-        <div className="flex items-center gap-3">
-          <ShoppingBag className="w-4 h-4 text-foreground/60" />
-          <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
-            {products && products.filter((p: any) => p.image_url || p.imageUrl).length > 0 ? `${products.filter((p: any) => p.image_url || p.imageUrl).length} Verified Pieces` : `Browse ${designer.name}`}
-          </h2>
-        </div>
-
-        {products && products.filter((p: any) => p.image_url || p.imageUrl).length > 0 ? (
-          <>
-            <p className="text-sm text-foreground/70 leading-relaxed">
-              Every item below has been verified by INTERTEXE — only pieces with ≥50% natural fiber composition make this list.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {products.filter((p: any) => p.image_url || p.imageUrl).map((product: any) => (
-                <a
-                  key={product.product_id || product.productId}
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
-                  data-testid={`card-product-${product.product_id || product.productId}`}
-                >
-                  <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-                    {(product.image_url || product.imageUrl) ? (
-                      <img
-                        src={product.image_url || product.imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <ShoppingBag className="w-8 h-8 opacity-30" />
-                      </div>
-                    )}
-                    <div className="absolute top-2 left-2">
-                      <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                        {product.natural_fiber_percent || product.naturalFiberPercent}% natural
-                      </span>
-                    </div>
-                    <ProductFavoriteButton productId={String(product.product_id || product.productId)} />
-                  </div>
-                  <div className="p-3 flex flex-col gap-1.5 flex-1">
-                    <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
-                    <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
-                    {(product.price) && (
-                      <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <p className="text-sm text-foreground/70 leading-relaxed">
-              {profile
-                ? `We're currently verifying ${designer.name}'s product compositions. ${profile.materialStrengths ? `Based on our analysis, look for pieces in ${profile.materialStrengths.slice(0, 3).join(', ').toLowerCase()} for the best natural fiber content.` : ''}`
-                : `Product verification for ${designer.name} is in progress. Check back soon for verified pieces with natural fiber compositions.`}
-            </p>
-            {designer.website && (
-              <Link
-                href={`/leaving?url=${encodeURIComponent(designer.website)}&brand=${encodeURIComponent(designer.name)}`}
-                className="flex items-center justify-center gap-3 w-full border border-foreground/20 hover:border-foreground/40 text-foreground px-8 py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98]"
-                data-testid={`link-browse-${designer.slug}`}
-              >
-                Browse on {designer.name.split(' ').length > 3 ? 'their site' : `${designer.name}.com`} <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
-            )}
-          </div>
-        )}
-      </section>
+      <ProductsSection products={products} designer={designer} profile={profile} slug={slug!} />
 
       <section className="flex flex-col gap-6" data-testid="section-similar-brands">
         <div className="flex items-center gap-3">
