@@ -443,28 +443,36 @@ export async function fetchProductsByFiber(fiber: string): Promise<any[]> {
 export async function fetchAllProducts(): Promise<any[]> {
   let supabaseProducts: any[] = [];
   if (supabase) {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("approved", "yes")
-      .order("natural_fiber_percent", { ascending: false });
-    if (!error && data) {
-      supabaseProducts = (data || [])
-        .filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''))
-        .map((row: any) => ({
-          id: row.id,
-          brandSlug: row.brand_slug,
-          brandName: row.brand_name,
-          name: row.name,
-          productId: row.product_id,
-          url: row.url,
-          imageUrl: row.image_url,
-          price: row.price,
-          composition: row.composition,
-          naturalFiberPercent: row.natural_fiber_percent,
-          category: row.category,
-        }));
+    let allData: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
+        .eq("approved", "yes")
+        .order("natural_fiber_percent", { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (error || !data || data.length === 0) break;
+      allData = allData.concat(data);
+      if (data.length < pageSize) break;
+      from += pageSize;
     }
+    supabaseProducts = allData
+      .filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''))
+      .map((row: any) => ({
+        id: row.id,
+        brandSlug: row.brand_slug,
+        brandName: row.brand_name,
+        name: row.name,
+        productId: row.product_id,
+        url: row.url,
+        imageUrl: row.image_url,
+        price: row.price,
+        composition: row.composition,
+        naturalFiberPercent: row.natural_fiber_percent,
+        category: row.category,
+      }));
   }
   try {
     const res = await fetch("/api/products");
