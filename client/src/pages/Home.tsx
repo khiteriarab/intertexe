@@ -10,8 +10,6 @@ import { useProductFavorites } from "@/hooks/use-product-favorites";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 
 const CURATED_BRAND_SLUGS = [
-  "a-l-c-",
-  "sandro",
   "khaite",
   "anine-bing",
   "toteme",
@@ -20,6 +18,8 @@ const CURATED_BRAND_SLUGS = [
   "nanushka",
   "acne-studios",
   "the-row",
+  "sandro",
+  "agolde",
 ];
 
 function ProductCardSmall({ product }: { product: any }) {
