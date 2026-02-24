@@ -2,7 +2,7 @@ import { useRef, useMemo } from "react";
 import { Link } from "wouter";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDesigners, fetchDesignerBySlug, fetchAllProducts } from "@/lib/supabase";
+import { fetchDesigners, fetchDesignerBySlug, fetchProductSample, fetchProductCount, fetchProductsByFiber, fetchProductsByBrandWithImages } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
@@ -10,8 +10,6 @@ import { useProductFavorites } from "@/hooks/use-product-favorites";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 
 const CURATED_BRAND_SLUGS = [
-  "a-l-c-",
-  "sandro",
   "khaite",
   "anine-bing",
   "toteme",
@@ -20,6 +18,8 @@ const CURATED_BRAND_SLUGS = [
   "nanushka",
   "acne-studios",
   "the-row",
+  "sandro",
+  "agolde",
 ];
 
 function ProductCardSmall({ product }: { product: any }) {
@@ -143,45 +143,56 @@ export default function Home() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: allProducts = [] } = useQuery({
-    queryKey: ["all-products"],
-    queryFn: fetchAllProducts,
+  const { data: productCount = 0 } = useQuery({
+    queryKey: ["product-count"],
+    queryFn: fetchProductCount,
     staleTime: 10 * 60 * 1000,
   });
 
+  const { data: alcProducts = [] } = useQuery({
+    queryKey: ["home-alc-products"],
+    queryFn: () => fetchProductsByBrandWithImages("a-l-c-", 24),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: otherNewProducts = [] } = useQuery({
+    queryKey: ["home-new-in"],
+    queryFn: () => fetchProductSample(24),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const newInProducts = useMemo(() => {
+    const alcIds = new Set(alcProducts.map((p: any) => p.id));
+    const others = otherNewProducts.filter((p: any) => !alcIds.has(p.id));
+    return [...alcProducts, ...others].slice(0, 30);
+  }, [alcProducts, otherNewProducts]);
+
+  const { data: cashmereProducts = [] } = useQuery({
+    queryKey: ["home-cashmere"],
+    queryFn: () => fetchProductsByFiber("cashmere"),
+    staleTime: 10 * 60 * 1000,
+    select: (data: any[]) => data.slice(0, 16),
+  });
+
+  const { data: silkProducts = [] } = useQuery({
+    queryKey: ["home-silk"],
+    queryFn: () => fetchProductsByFiber("silk"),
+    staleTime: 10 * 60 * 1000,
+    select: (data: any[]) => data.slice(0, 16),
+  });
+
+  const { data: linenProducts = [] } = useQuery({
+    queryKey: ["home-linen"],
+    queryFn: () => fetchProductsByFiber("linen"),
+    staleTime: 10 * 60 * 1000,
+    select: (data: any[]) => data.slice(0, 16),
+  });
+
   const productCountByBrand: Record<string, number> = {};
-  (allProducts as any[]).forEach((p: any) => {
+  (newInProducts as any[]).forEach((p: any) => {
     const slug = p.brand_slug || p.brandSlug;
     if (slug) productCountByBrand[slug] = (productCountByBrand[slug] || 0) + 1;
   });
-
-  const productsWithImages = useMemo(() =>
-    (allProducts as any[]).filter((p: any) => p.image_url || p.imageUrl),
-    [allProducts]
-  );
-
-  const newInProducts = useMemo(() =>
-    productsWithImages.slice(0, 24),
-    [productsWithImages]
-  );
-
-  const cashmereProducts = useMemo(() =>
-    productsWithImages.filter((p: any) => (p.composition || "").toLowerCase().includes("cashmere")).slice(0, 16),
-    [productsWithImages]
-  );
-
-  const silkProducts = useMemo(() =>
-    productsWithImages.filter((p: any) => (p.composition || "").toLowerCase().includes("silk")).slice(0, 16),
-    [productsWithImages]
-  );
-
-  const linenProducts = useMemo(() =>
-    productsWithImages.filter((p: any) => {
-      const comp = (p.composition || "").toLowerCase();
-      return comp.includes("linen") || comp.includes("flax");
-    }).slice(0, 16),
-    [productsWithImages]
-  );
 
   return (
     <div className="flex flex-col gap-0">
@@ -201,7 +212,7 @@ export default function Home() {
             The Material Authority
           </h1>
           <p className="text-[13px] md:text-lg text-white/80 mb-6 md:mb-8 font-light leading-relaxed max-w-md" data-testid="text-hero-subtext">
-            {productsWithImages.length.toLocaleString()} verified products. Every fabric checked. Every brand ranked.
+            {productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products. Every fabric checked. Every brand ranked.
           </p>
           <Link href="/shop" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 w-fit active:scale-[0.97]" data-testid="button-shop-now">
             Shop Now <ArrowRight className="w-4 h-4" />
@@ -214,7 +225,7 @@ export default function Home() {
           <HorizontalProductScroll
             products={newInProducts}
             title="New In"
-            subtitle={`${productsWithImages.length.toLocaleString()} verified products`}
+            subtitle={`${productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products`}
             linkHref="/shop"
             linkText="Shop New In"
           />
@@ -346,7 +357,7 @@ export default function Home() {
             <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Brands Vetted</span>
           </div>
           <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
-            <span className="text-2xl md:text-4xl font-serif">{productsWithImages.length.toLocaleString()}</span>
+            <span className="text-2xl md:text-4xl font-serif">{productCount > 0 ? productCount.toLocaleString() : '17,000+'}</span>
             <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Verified Products</span>
           </div>
           <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">

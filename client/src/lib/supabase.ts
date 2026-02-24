@@ -441,6 +441,151 @@ export async function fetchProductsByFiber(fiber: string): Promise<any[]> {
   }
 }
 
+export async function fetchRecommendedProducts(materialTerms: string[], excludeBrandSlugs: string[], limit: number = 50): Promise<any[]> {
+  if (supabase) {
+    let query = supabase
+      .from("products")
+      .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
+      .eq("approved", "yes")
+      .not("image_url", "is", null)
+      .order("natural_fiber_percent", { ascending: false })
+      .limit(limit * 3);
+
+    if (excludeBrandSlugs.length > 0) {
+      query = query.not("brand_slug", "in", `(${excludeBrandSlugs.join(",")})`);
+    }
+
+    if (materialTerms.length === 1) {
+      query = query.ilike("composition", `%${materialTerms[0]}%`);
+    } else if (materialTerms.length > 1) {
+      const orFilter = materialTerms.map(t => `composition.ilike.%${t}%`).join(",");
+      query = query.or(orFilter);
+    }
+
+    const { data, error } = await query;
+    if (error || !data) return [];
+    return data
+      .filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''))
+      .slice(0, limit)
+      .map((row: any) => ({
+        id: row.id,
+        brandSlug: row.brand_slug,
+        brandName: row.brand_name,
+        name: row.name,
+        productId: row.product_id,
+        url: row.url,
+        imageUrl: row.image_url,
+        price: row.price,
+        composition: row.composition,
+        naturalFiberPercent: row.natural_fiber_percent,
+        category: row.category,
+      }));
+  }
+  try {
+    const params = new URLSearchParams();
+    if (materialTerms.length > 0) params.set("fiber", materialTerms[0]);
+    params.set("limit", String(limit));
+    const res = await fetch(`/api/products?${params.toString()}`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchProductsByBrandWithImages(brandSlug: string, limit: number = 24): Promise<any[]> {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
+      .eq("approved", "yes")
+      .eq("brand_slug", brandSlug)
+      .not("image_url", "is", null)
+      .order("natural_fiber_percent", { ascending: false })
+      .limit(limit);
+    if (error || !data) return [];
+    return data
+      .filter((row: any) => isClothingProduct(row.name || ''))
+      .map((row: any) => ({
+        id: row.id,
+        brandSlug: row.brand_slug,
+        brandName: row.brand_name,
+        name: row.name,
+        productId: row.product_id,
+        url: row.url,
+        imageUrl: row.image_url,
+        image_url: row.image_url,
+        price: row.price,
+        composition: row.composition,
+        naturalFiberPercent: row.natural_fiber_percent,
+        category: row.category,
+      }));
+  }
+  try {
+    const res = await fetch(`/api/products/${brandSlug}`);
+    if (!res.ok) return [];
+    const products = await res.json();
+    return products.filter((p: any) => p.imageUrl || p.image_url).slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchProductSample(limit: number = 60): Promise<any[]> {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
+      .eq("approved", "yes")
+      .not("image_url", "is", null)
+      .order("natural_fiber_percent", { ascending: false })
+      .limit(limit);
+    if (error || !data) return [];
+    return data
+      .filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''))
+      .map((row: any) => ({
+        id: row.id,
+        brandSlug: row.brand_slug,
+        brandName: row.brand_name,
+        name: row.name,
+        productId: row.product_id,
+        url: row.url,
+        imageUrl: row.image_url,
+        price: row.price,
+        composition: row.composition,
+        naturalFiberPercent: row.natural_fiber_percent,
+        category: row.category,
+      }));
+  }
+  try {
+    const res = await fetch(`/api/products?limit=${limit}`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchProductCount(): Promise<number> {
+  if (supabase) {
+    const { count, error } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("approved", "yes")
+      .not("image_url", "is", null);
+    if (error || count == null) return 0;
+    return count;
+  }
+  try {
+    const res = await fetch("/api/products/count");
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return data.count || 0;
+  } catch {
+    return 0;
+  }
+}
+
 export async function fetchAllProducts(): Promise<any[]> {
   let supabaseProducts: any[] = [];
   if (supabase) {

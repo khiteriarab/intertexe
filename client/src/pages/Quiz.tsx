@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, SlidersHorizontal, Star, Heart } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { fetchDesigners, fetchDesignersByNames, fetchAllProducts, fetchProductsByBrand } from "@/lib/supabase";
+import { fetchDesigners, fetchDesignersByNames, fetchRecommendedProducts, fetchProductsByBrand } from "@/lib/supabase";
 import { getAllProfiles, getTierLabel, type BrandProfile } from "@/lib/brand-profiles";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { getBrandHeroImage } from "@/lib/brand-hero-images";
@@ -550,9 +550,13 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: allProducts = [], isLoading: allProductsLoading } = useQuery({
-    queryKey: ["all-products-quiz"],
-    queryFn: fetchAllProducts,
+  const searchTerms = useMemo(() => {
+    return selectedMaterials.flatMap(m => MATERIAL_TERMS[m] || [m.toLowerCase()]);
+  }, [selectedMaterials]);
+
+  const { data: recommendedProducts = [], isLoading: recommendedLoading } = useQuery({
+    queryKey: ["quiz-recommended-products", searchTerms, selectedBrandSlugs],
+    queryFn: () => fetchRecommendedProducts(searchTerms, selectedBrandSlugs, 50),
     staleTime: 10 * 60 * 1000,
   });
 
@@ -564,35 +568,11 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
 
   const brandProductsWithImages = brandProducts.filter((p: any) => p.imageUrl || p.image_url);
 
-  const searchTerms = useMemo(() => {
-    return selectedMaterials.flatMap(m => MATERIAL_TERMS[m] || [m.toLowerCase()]);
-  }, [selectedMaterials]);
-
-  const recommendedProducts = useMemo(() => {
-    const selectedSlugsSet = new Set(selectedBrandSlugs);
-    const filtered = (allProducts as any[])
-      .filter((p: any) => {
-        if (!(p.imageUrl || p.image_url)) return false;
-        const slug = p.brandSlug || p.brand_slug;
-        if (selectedSlugsSet.has(slug)) return false;
-        if (searchTerms.length === 0) return true;
-        const comp = (p.composition || "").toLowerCase();
-        return searchTerms.some(t => comp.includes(t));
-      });
-
-    filtered.sort((a: any, b: any) => {
-      const aSlug = a.brandSlug || a.brand_slug;
-      const bSlug = b.brandSlug || b.brand_slug;
-      const aReliable = RELIABLE_PRODUCT_SLUGS.has(aSlug) ? 1 : 0;
-      const bReliable = RELIABLE_PRODUCT_SLUGS.has(bSlug) ? 1 : 0;
-      if (bReliable !== aReliable) return bReliable - aReliable;
-      return (b.naturalFiberPercent || 0) - (a.naturalFiberPercent || 0);
-    });
-
+  const diversifiedRecommended = useMemo(() => {
     const seen = new Set<string>();
     const diversified: any[] = [];
     const brandCounts: Record<string, number> = {};
-    for (const p of filtered) {
+    for (const p of recommendedProducts) {
       const slug = p.brandSlug || p.brand_slug;
       const count = brandCounts[slug] || 0;
       if (count >= 4) continue;
@@ -604,7 +584,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
       if (diversified.length >= 12) break;
     }
     return diversified;
-  }, [allProducts, selectedBrandSlugs, searchTerms]);
+  }, [recommendedProducts]);
 
   const recommendedBrands = useMemo(() => {
     const profiles = getAllProfiles();
@@ -632,8 +612,8 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
   const [showAllSelected, setShowAllSelected] = useState(false);
   const displaySelectedProducts = showAllSelected ? brandProductsWithImages : brandProductsWithImages.slice(0, 6);
   const [showAllRecommended, setShowAllRecommended] = useState(false);
-  const displayRecommendedProducts = showAllRecommended ? recommendedProducts : recommendedProducts.slice(0, 6);
-  const isLoadingProducts = productsLoading || allProductsLoading;
+  const displayRecommendedProducts = showAllRecommended ? diversifiedRecommended : diversifiedRecommended.slice(0, 6);
+  const isLoadingProducts = productsLoading || recommendedLoading;
 
   return (
     <div className="py-6 md:py-16 max-w-4xl mx-auto w-full flex flex-col gap-10 md:gap-16 animate-in fade-in duration-700">
@@ -716,7 +696,7 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
               : `Our highest-rated pieces from brands that match your preferences.`}
           </p>
         </div>
-        {allProductsLoading ? (
+        {recommendedLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="animate-pulse flex flex-col">
@@ -736,13 +716,13 @@ function QuizResults({ selections, recommendation, designers }: { selections: an
                 <QuizProductCard key={product.productId || product.product_id} product={product} />
               ))}
             </div>
-            {!showAllRecommended && recommendedProducts.length > 6 && (
+            {!showAllRecommended && diversifiedRecommended.length > 6 && (
               <button
                 onClick={() => setShowAllRecommended(true)}
                 className="flex items-center justify-center gap-2 w-full border border-foreground/20 hover:border-foreground/40 py-3.5 uppercase tracking-[0.15em] text-[10px] md:text-xs transition-colors active:scale-[0.98]"
                 data-testid="button-show-more-recommended"
               >
-                Show All {recommendedProducts.length} Recommendations <ArrowRight className="w-3 h-3" />
+                Show All {diversifiedRecommended.length} Recommendations <ArrowRight className="w-3 h-3" />
               </button>
             )}
           </>
