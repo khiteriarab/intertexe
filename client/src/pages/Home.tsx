@@ -9,14 +9,18 @@ import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
 
 const CURATED_BRAND_SLUGS = [
-  "a-l-c-",
   "khaite",
   "anine-bing",
   "toteme",
   "frame",
+  "a-l-c-",
   "agolde",
   "sandro",
+  "acne-studios",
   "nanushka",
+  "vince",
+  "the-row",
+  "nili-lotan",
 ];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {

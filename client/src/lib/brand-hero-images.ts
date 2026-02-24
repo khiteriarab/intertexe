@@ -39,7 +39,7 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "rag & bone": "https://www.rag-bone.com/dw/image/v2/BGGC_PRD/on/demandware.static/-/Library-Sites-ragandbone-content-global/default/dw248011c6/homepage_2026/February/0217_February_1.jpg?sw=1200",
   "equipment": "https://cdn.merchantly.com/asset/5453/5/optimized_5.14_EQ_HPFlip_SlotA_D_1x.jpg",
   "ted baker": "https://www.tedbaker.com/cdn/shop/files/282526_NAVY_1.jpg?v=1762809952&width=495",
-  "vince": "https://www.vince.com/on/demandware.static/-/Library-Sites-RefArchSharedLibrary/default/dwb6aa9114/W_3-Pants_225x175.jpg",
+  "vince": "https://cdn.media.amplience.net/i/vince/02-17_HP_SP26_02a?fmt=auto&qlt=default&fmt.webp.qlt=100",
   "sézane": "https://media.sezane.com/image/upload/c_crop,fl_progressive:semi,h_1,q_auto:best,w_0.97902097902098,x_0.01048951048951,y_0/c_scale,w_963/y0zn0hnuuwmmmnfti8kj.jpg",
   "sezane": "https://media.sezane.com/image/upload/c_crop,fl_progressive:semi,h_1,q_auto:best,w_0.97902097902098,x_0.01048951048951,y_0/c_scale,w_963/y0zn0hnuuwmmmnfti8kj.jpg",
   "eileen fisher": "https://www.eileenfisher.com/on/demandware.static/-/Library-Sites-LibraryEF/default/dw0a7d92f1/images/homepage/2026/0210/Slot-02.jpg",
