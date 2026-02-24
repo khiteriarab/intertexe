@@ -19,7 +19,7 @@ async function getAccessToken() {
 
   connectionSettings = await fetch(
     "https://" + hostname + "/api/v2/connection?include_secrets=true&connector_names=github",
-    { headers: { Accept: "application/json", X_REPLIT_TOKEN: xReplitToken } }
+    { headers: { Accept: "application/json", "X-Replit-Token": xReplitToken } }
   ).then(r => r.json()).then(d => d.items?.[0]);
 
   const accessToken = connectionSettings?.settings?.access_token ||
@@ -57,37 +57,34 @@ async function pushToGitHub() {
   const path = await import("path");
 
   const blobs: { path: string; sha: string; mode: string; type: string }[] = [];
-  let count = 0;
+  const BATCH_SIZE = 15;
 
-  for (const filePath of trackedFiles) {
-    const fullPath = path.join("/home/runner/workspace", filePath);
-    if (!fs.existsSync(fullPath)) continue;
-
-    const content = fs.readFileSync(fullPath);
-    const base64Content = content.toString("base64");
-
-    try {
-      const { data } = await octokit.git.createBlob({
-        owner, repo,
-        content: base64Content,
-        encoding: "base64",
-      });
-      blobs.push({ path: filePath, sha: data.sha, mode: "100644", type: "blob" });
-      count++;
-      if (count % 50 === 0) console.log(`  ${count}/${trackedFiles.length} files uploaded...`);
-    } catch (err: any) {
-      console.error(`  Failed to upload ${filePath}: ${err.message}`);
+  for (let i = 0; i < trackedFiles.length; i += BATCH_SIZE) {
+    const batch = trackedFiles.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map(async (filePath) => {
+        const fullPath = path.join("/home/runner/workspace", filePath);
+        if (!fs.existsSync(fullPath)) return null;
+        const content = fs.readFileSync(fullPath).toString("base64");
+        const { data } = await octokit.git.createBlob({
+          owner, repo, content, encoding: "base64",
+        });
+        return { path: filePath, sha: data.sha, mode: "100644" as const, type: "blob" as const };
+      })
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value) blobs.push(r.value);
     }
+    console.log(`  ${Math.min(i + BATCH_SIZE, trackedFiles.length)}/${trackedFiles.length} files uploaded...`);
   }
 
-  console.log(`All ${count} files uploaded. Creating tree...`);
+  console.log(`All ${blobs.length} files uploaded. Creating tree...`);
 
   const { data: tree } = await octokit.git.createTree({
-    owner, repo,
-    tree: blobs as any,
+    owner, repo, tree: blobs as any,
   });
 
-  const commitMessage = "Mobile UX polish + token-based auth";
+  const commitMessage = "Update homepage brands + fix hero images with thum.io";
 
   let parentSha: string | undefined;
   try {
@@ -95,11 +92,7 @@ async function pushToGitHub() {
     parentSha = ref.object.sha;
   } catch {}
 
-  const commitParams: any = {
-    owner, repo,
-    message: commitMessage,
-    tree: tree.sha,
-  };
+  const commitParams: any = { owner, repo, message: commitMessage, tree: tree.sha };
   if (parentSha) commitParams.parents = [parentSha];
 
   const { data: commit } = await octokit.git.createCommit(commitParams);
