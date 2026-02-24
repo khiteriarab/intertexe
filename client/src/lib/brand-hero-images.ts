@@ -85,7 +85,6 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "velvet by graham & spencer": "https://www.velvet-tees.com/cdn/shop/files/VELVET_SS26_HERO_Desktop.jpg?v=1770741234&width=1400",
   "rails": "https://www.railsclothing.com/cdn/shop/files/RAILS_SS26_HERO_Desktop.jpg?v=1770741234&width=1400",
   "dissh": "https://dissh.com/cdn/shop/files/DISSH_SS26_HERO_Desktop.jpg?v=1770741234&width=1400",
-  "club monaco": "https://www.clubmonaco.com/cdn/shop/files/CM_SS26_HERO_Desktop.jpg?v=1770741234&width=1600",
 };
 
 export function getBrandHeroImage(brandName: string): string | null {
