@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "wouter";
-import { ExternalLink, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight, Heart } from "lucide-react";
+import { ExternalLink, ShoppingBag, ArrowRight, ChevronRight, Heart, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
 import { fetchAllProducts } from "@/lib/supabase";
@@ -8,14 +8,15 @@ import { useProductFavorites } from "@/hooks/use-product-favorites";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear";
+type SortOption = "recommended" | "new" | "price-high" | "price-low";
 
-const FIBER_TABS: { key: FiberTab; label: string; description: string }[] = [
-  { key: "all", label: "All", description: "Every verified product" },
-  { key: "cashmere", label: "Cashmere", description: "Pure cashmere knits and accessories" },
-  { key: "silk", label: "Silk", description: "Silk blouses, dresses, and more" },
-  { key: "wool", label: "Wool", description: "Wool tailoring, knits, and outerwear" },
-  { key: "cotton", label: "Cotton", description: "Cotton essentials and denim" },
-  { key: "linen", label: "Linen", description: "Linen dresses, tops, and suiting" },
+const FIBER_TABS: { key: FiberTab; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "cashmere", label: "Cashmere" },
+  { key: "silk", label: "Silk" },
+  { key: "wool", label: "Wool" },
+  { key: "cotton", label: "Cotton" },
+  { key: "linen", label: "Linen" },
 ];
 
 const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
@@ -26,6 +27,20 @@ const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
   { key: "bottoms", label: "Bottoms" },
   { key: "outerwear", label: "Outerwear" },
 ];
+
+const SORT_OPTIONS: { key: SortOption; label: string }[] = [
+  { key: "recommended", label: "Recommended" },
+  { key: "new", label: "New In" },
+  { key: "price-high", label: "Price High to Low" },
+  { key: "price-low", label: "Price Low to High" },
+];
+
+function parsePrice(price: string | null | undefined): number | null {
+  if (!price) return null;
+  const match = price.replace(/[^0-9.]/g, "");
+  const num = parseFloat(match);
+  return isNaN(num) ? null : num;
+}
 
 function ProductCard({ product }: { product: any }) {
   const { toggle, isFavorited } = useProductFavorites();
@@ -47,60 +62,43 @@ function ProductCard({ product }: { product: any }) {
   const wrapperProps = shopUrl ? { href: shopUrl } : {};
 
   return (
-    <CardWrapper {...wrapperProps} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all cursor-pointer relative" data-testid={`product-card-${product.id}`}>
+    <CardWrapper {...wrapperProps} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
-        <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+        <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
           <img
             src={imageUrl}
             alt={name}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
             loading="lazy"
           />
-          {fiberPercent != null && fiberPercent >= 90 && (
-            <div className="absolute top-2 left-2">
-              <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
-                <CheckCircle2 className="w-2.5 h-2.5" />
-                {fiberPercent}% natural
-              </span>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+            className="absolute top-2.5 right-2.5 z-10 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            data-testid={`btn-favorite-${product.id}`}
+            aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+          >
+            <Heart className={`w-4.5 h-4.5 drop-shadow-sm transition-colors ${saved ? "fill-red-500 text-red-500 opacity-100" : "text-white hover:text-white/80"}`} style={saved ? { opacity: 1 } : {}} />
+          </button>
+          {saved && (
+            <div className="absolute top-2.5 right-2.5 z-10 w-8 h-8 flex items-center justify-center group-hover:opacity-0 transition-opacity">
+              <Heart className="w-4.5 h-4.5 fill-red-500 text-red-500" />
             </div>
           )}
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
-            className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
-            data-testid={`btn-favorite-${product.id}`}
-            aria-label={saved ? "Remove from favorites" : "Save to favorites"}
-          >
-            <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
-          </button>
         </div>
       ) : (
-        <div className="aspect-[3/4] bg-secondary/50 flex items-center justify-center relative">
-          <ShoppingBag className="w-8 h-8 text-muted-foreground/20" />
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
-            className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
-            data-testid={`btn-favorite-${product.id}`}
-            aria-label={saved ? "Remove from favorites" : "Save to favorites"}
-          >
-            <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
-          </button>
+        <div className="aspect-[3/4] bg-[#f5f5f5] flex items-center justify-center">
+          <ShoppingBag className="w-8 h-8 text-neutral-300" />
         </div>
       )}
-      <div className="flex flex-col gap-1.5 p-3 md:p-4 flex-1">
-        <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{brandName}</span>
-        <h3 className="text-[13px] md:text-sm leading-snug line-clamp-2 font-medium" data-testid={`text-product-name-${product.id}`}>{name}</h3>
-        {composition && (
-          <p className="text-[10px] md:text-[11px] text-muted-foreground leading-relaxed line-clamp-1 mt-auto">{composition}</p>
-        )}
-        <div className="flex items-center justify-between mt-1">
-          {price && <span className="text-xs font-medium" data-testid={`text-price-${product.id}`}>{price}</span>}
-          {fiberPercent != null && fiberPercent < 90 && (
-            <span className="text-[9px] text-muted-foreground">{fiberPercent}% natural</span>
-          )}
+      <div className="flex flex-col gap-1 pt-3 pb-1">
+        <span className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.08em] text-foreground" data-testid={`text-brand-${product.id}`}>{brandName}</span>
+        <h3 className="text-[12px] md:text-[13px] leading-snug line-clamp-2 text-muted-foreground" data-testid={`text-product-name-${product.id}`}>{name}</h3>
+        <div className="flex items-center gap-2 mt-0.5">
+          {price && <span className="text-[12px] md:text-[13px]" data-testid={`text-price-${product.id}`}>{price}</span>}
         </div>
-      </div>
-      <div className="flex items-center justify-center gap-2 bg-foreground text-background py-3 md:py-3.5 text-[10px] uppercase tracking-[0.2em] group-hover:bg-foreground/90 transition-colors">
-        Shop Now <ExternalLink className="w-3 h-3" />
+        {fiberPercent != null && fiberPercent >= 90 && (
+          <span className="text-[9px] uppercase tracking-wider text-emerald-700 mt-0.5">{fiberPercent}% Natural Fiber</span>
+        )}
       </div>
     </CardWrapper>
   );
@@ -118,7 +116,7 @@ function FiberHighlight({ fiber, count, onClick }: { fiber: string; count: numbe
   return (
     <button
       onClick={onClick}
-      className="group relative overflow-hidden aspect-[3/2] md:aspect-[4/3] bg-secondary flex items-end active:scale-[0.98] transition-transform"
+      className="group relative overflow-hidden aspect-[3/2] md:aspect-[4/3] bg-[#f5f5f5] flex items-end active:scale-[0.98] transition-transform"
       data-testid={`fiber-card-${fiber}`}
     >
       <img
@@ -142,10 +140,13 @@ function FiberHighlight({ fiber, count, onClick }: { fiber: string; count: numbe
 export default function Shop() {
   const [fiberTab, setFiberTab] = useState<FiberTab>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("recommended");
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(60);
 
   useSEO({
     title: "Shop Verified Products | INTERTEXE",
-    description: "Browse 10,000+ women's clothing products verified for natural fiber quality. Shop cashmere, silk, wool, cotton, and linen from 60+ vetted brands.",
+    description: "Browse 17,000+ women's clothing products verified for natural fiber quality. Shop cashmere, silk, wool, cotton, and linen from 60+ vetted brands.",
   });
 
   const { data: allProducts = [], isLoading } = useQuery({
@@ -192,10 +193,33 @@ export default function Shop() {
       products = products.filter((p: any) => p.category === categoryFilter);
     }
 
+    if (sortBy === "price-high") {
+      products = [...products].sort((a, b) => {
+        const pa = parsePrice(a.price);
+        const pb = parsePrice(b.price);
+        if (pa === null && pb === null) return 0;
+        if (pa === null) return 1;
+        if (pb === null) return -1;
+        return pb - pa;
+      });
+    } else if (sortBy === "price-low") {
+      products = [...products].sort((a, b) => {
+        const pa = parsePrice(a.price);
+        const pb = parsePrice(b.price);
+        if (pa === null && pb === null) return 0;
+        if (pa === null) return 1;
+        if (pb === null) return -1;
+        return pa - pb;
+      });
+    } else if (sortBy === "new") {
+      products = [...products].reverse();
+    }
+
     return products;
-  }, [allProducts, fiberTab, categoryFilter]);
+  }, [allProducts, fiberTab, categoryFilter, sortBy]);
 
   const showHighlights = fiberTab === "all" && categoryFilter === "all";
+  const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
 
   return (
     <div className="min-h-screen pb-24 md:pb-16">
@@ -208,7 +232,7 @@ export default function Shop() {
             Shop by Material
           </h1>
           <p className="text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed">
-            {(allProducts as any[]).length}+ products, every one checked for natural fiber content. Pick a material, find what you love, shop direct.
+            {(allProducts as any[]).length.toLocaleString()}+ products, every one checked for natural fiber content.
           </p>
         </header>
 
@@ -219,7 +243,7 @@ export default function Shop() {
                 key={fiber}
                 fiber={fiber}
                 count={fiberCounts[fiber] || 0}
-                onClick={() => { setFiberTab(fiber); setCategoryFilter("all"); }}
+                onClick={() => { setFiberTab(fiber); setCategoryFilter("all"); setVisibleCount(60); }}
               />
             ))}
           </div>
@@ -230,7 +254,7 @@ export default function Shop() {
             {FIBER_TABS.map(tab => (
               <button
                 key={tab.key}
-                onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); }}
+                onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setVisibleCount(60); }}
                 className={`px-3.5 md:px-5 py-2.5 text-[10px] md:text-xs uppercase tracking-[0.15em] whitespace-nowrap transition-colors flex-shrink-0 min-h-[40px] ${
                   fiberTab === tab.key
                     ? "bg-foreground text-background font-medium"
@@ -251,7 +275,7 @@ export default function Shop() {
               {CATEGORY_FILTERS.map(cat => (
                 <button
                   key={cat.key}
-                  onClick={() => setCategoryFilter(cat.key)}
+                  onClick={() => { setCategoryFilter(cat.key); setVisibleCount(60); }}
                   className={`px-3 py-2 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap border transition-colors flex-shrink-0 min-h-[36px] ${
                     categoryFilter === cat.key
                       ? "border-foreground text-foreground font-medium"
@@ -266,11 +290,45 @@ export default function Shop() {
           )}
         </div>
 
+        <div className="flex items-center justify-between border-b border-border/30 pb-3">
+          <p className="text-xs md:text-sm text-muted-foreground" data-testid="text-result-count">
+            <span className="font-medium text-foreground">{filteredProducts.length.toLocaleString()}</span> Results
+          </p>
+          <div className="relative">
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className="flex items-center gap-1.5 text-xs md:text-sm text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="btn-sort"
+            >
+              {currentSort.label}
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
+            </button>
+            {showSortMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 shadow-lg min-w-[180px]">
+                  {SORT_OPTIONS.map(option => (
+                    <button
+                      key={option.key}
+                      onClick={() => { setSortBy(option.key); setShowSortMenu(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-xs md:text-sm transition-colors ${
+                        sortBy === option.key
+                          ? "bg-secondary font-medium text-foreground"
+                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                      }`}
+                      data-testid={`sort-${option.key}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
         {fiberTab !== "all" && (
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              {filteredProducts.length} {fiberTab} {categoryFilter !== "all" ? categoryFilter : "products"} verified
-            </p>
+          <div className="flex items-center justify-end -mt-4">
             <Link
               href={`/materials/${fiberTab}`}
               className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
@@ -282,15 +340,14 @@ export default function Shop() {
         )}
 
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
-            {Array.from({ length: 8 }).map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-10">
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="animate-pulse flex flex-col">
-                <div className="aspect-[3/4] bg-secondary" />
-                <div className="p-3 flex flex-col gap-2">
-                  <div className="h-3 bg-secondary w-1/3" />
-                  <div className="h-4 bg-secondary w-3/4" />
-                  <div className="h-3 bg-secondary w-1/2" />
-                  <div className="h-10 bg-secondary mt-2" />
+                <div className="aspect-[3/4] bg-[#f0f0ee]" />
+                <div className="pt-3 flex flex-col gap-2">
+                  <div className="h-3 bg-[#f0f0ee] w-1/3" />
+                  <div className="h-3 bg-[#f0f0ee] w-3/4" />
+                  <div className="h-3 bg-[#f0f0ee] w-1/4" />
                 </div>
               </div>
             ))}
@@ -308,17 +365,25 @@ export default function Shop() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
-            {filteredProducts.slice(0, 40).map((product: any) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-10">
+              {filteredProducts.slice(0, visibleCount).map((product: any) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
 
-        {filteredProducts.length > 40 && (
-          <p className="text-center text-xs text-muted-foreground pt-2">
-            Showing 40 of {filteredProducts.length} products
-          </p>
+            {filteredProducts.length > visibleCount && (
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + 60)}
+                  className="px-8 py-3 border border-foreground text-foreground text-xs uppercase tracking-[0.2em] hover:bg-foreground hover:text-background transition-colors"
+                  data-testid="btn-load-more"
+                >
+                  View More ({filteredProducts.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         <div className="border-t border-border/30 pt-8 md:pt-10 flex flex-col gap-4">
