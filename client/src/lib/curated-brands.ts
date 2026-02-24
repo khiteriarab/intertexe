@@ -57,6 +57,34 @@ export const CURATED_BRAND_SLUGS = [
   "club-monaco",
   "ted-baker",
   "claudie-pierlot",
+
+  "loulou-studio",
+  "st-agni",
+  "maria-mcmanus",
+  "tibi",
+  "ulla-johnson",
+  "veronica-beard",
+  "cult-gaia",
+  "rachel-comey",
+  "rixo",
+  "faithfull-the-brand",
+  "mara-hoffman",
+  "aje",
+  "sir-the-label",
+  "camilla-and-marc",
+  "l-agence",
+  "fleur-du-mal",
+  "a-l-c-",
+  "mother",
+  "dl1961",
+  "sea-new-york",
+  "esse-studios",
+  "stine-goya",
+  "rodebjer",
+  "veda",
+  "velvet-by-graham-spencer",
+  "rails",
+  "dissh",
 ];
 
 const CURATED_BRAND_NAMES = new Set([
@@ -75,6 +103,13 @@ const CURATED_BRAND_NAMES = new Set([
   "jacquemus", "zimmermann", "proenza schouler", "maje", "iro",
   "zadig & voltaire", "allsaints", "all saints", "reiss",
   "club monaco", "ted baker", "claudie pierlot",
+  "loulou studio", "st. agni", "maria mcmanus", "tibi",
+  "ulla johnson", "veronica beard", "cult gaia", "rachel comey",
+  "rixo", "faithfull the brand", "mara hoffman", "aje",
+  "sir the label", "camilla and marc", "l'agence", "fleur du mal",
+  "a.l.c.", "mother", "mother denim", "dl1961", "sea new york",
+  "esse studios", "stine goya", "rodebjer", "veda",
+  "velvet by graham & spencer", "rails", "dissh",
 ]);
 
 export function filterToCuratedBrands(designers: any[]): any[] {

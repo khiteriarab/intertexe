@@ -9,14 +9,16 @@ import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
 
 const CURATED_BRAND_SLUGS = [
-  "a-l-c-",
-  "sandro",
   "khaite",
   "anine-bing",
   "toteme",
   "frame",
-  "agolde",
+  "vince",
   "nanushka",
+  "acne-studios",
+  "the-row",
+  "sandro",
+  "agolde",
 ];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {
@@ -172,8 +174,8 @@ export default function Home() {
         </div>
 
         {curatedLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
-            {[1,2,3,4].map(i => (
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6">
+            {[1,2,3,4,5,6,7,8,9,10].map(i => (
               <div key={i} className="flex flex-col gap-3 animate-pulse">
                 <div className="aspect-[3/4] bg-secondary" />
                 <div className="h-5 bg-secondary w-3/4" />
@@ -182,7 +184,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6">
             {curatedDesigners.map((designer: any) => {
               const tier = getQualityTier(designer.naturalFiberPercent);
               const productCount = productCountByBrand[designer.slug] || 0;
