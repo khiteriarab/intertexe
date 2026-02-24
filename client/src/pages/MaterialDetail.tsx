@@ -1,5 +1,6 @@
 import { Link, useParams } from "wouter";
-import { ArrowLeft, Leaf, Droplets, Shield, Sparkles, CheckCircle2, XCircle, AlertTriangle, DollarSign, ShoppingBag, ExternalLink } from "lucide-react";
+import { ArrowLeft, Leaf, Droplets, Shield, Sparkles, CheckCircle2, XCircle, AlertTriangle, DollarSign, ShoppingBag, ExternalLink, Heart } from "lucide-react";
+import { useProductFavorites } from "@/hooks/use-product-favorites";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners, fetchProductsByFiberAndCategory } from "@/lib/supabase";
 import { MATERIALS } from "@/lib/data";
@@ -21,6 +22,9 @@ const FIBER_QUERIES: Record<string, string[]> = {
 };
 
 function FabricProductCard({ product, index }: { product: any; index: number }) {
+  const { toggle, isFavorited } = useProductFavorites();
+  const productId = String(product.id);
+  const saved = isFavorited(productId);
   const brandName = product.brand_name || product.brandName;
   const brandSlug = product.brand_slug || product.brandSlug;
   const imageUrl = product.image_url || product.imageUrl;
@@ -47,6 +51,13 @@ function FabricProductCard({ product, index }: { product: any; index: number }) 
             <ShoppingBag className="w-8 h-8 opacity-30" />
           </div>
         )}
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+          className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors z-10"
+          data-testid={`button-heart-fabric-${index}`}
+        >
+          <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
+        </button>
         <div className="absolute top-2 left-2">
           <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
             {naturalPercent}% natural
