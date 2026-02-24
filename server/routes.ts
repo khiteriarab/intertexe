@@ -405,7 +405,20 @@ export async function registerRoutes(
           sql`SELECT * FROM products WHERE approved = 'yes' ORDER BY natural_fiber_percent DESC`
         );
       }
-      return res.json(result.rows || []);
+      const mapped = (result.rows || []).map((r: any) => ({
+        id: r.id,
+        brandSlug: r.brand_slug,
+        brandName: r.brand_name,
+        name: r.name,
+        productId: r.product_id,
+        url: r.url,
+        imageUrl: r.image_url,
+        price: r.price,
+        composition: r.composition,
+        naturalFiberPercent: r.natural_fiber_percent,
+        category: r.category,
+      }));
+      return res.json(mapped);
     } catch (err: any) {
       return res.json([]);
     }
@@ -426,7 +439,20 @@ export async function registerRoutes(
         const r = await db.execute(sql`SELECT * FROM products WHERE id = ANY(${numericIds.map(Number)}::bigint[])`);
         rows.push(...(r.rows || []));
       }
-      return res.json(rows);
+      const mapped = rows.map((r: any) => ({
+        id: r.id,
+        brandSlug: r.brand_slug,
+        brandName: r.brand_name,
+        name: r.name,
+        productId: r.product_id,
+        url: r.url,
+        imageUrl: r.image_url,
+        price: r.price,
+        composition: r.composition,
+        naturalFiberPercent: r.natural_fiber_percent,
+        category: r.category,
+      }));
+      return res.json(mapped);
     } catch (err: any) {
       return res.json([]);
     }
@@ -438,7 +464,20 @@ export async function registerRoutes(
       const result = await db.execute(
         sql`SELECT * FROM products WHERE brand_slug = ${brandSlug} AND approved = 'yes' ORDER BY natural_fiber_percent DESC`
       );
-      return res.json(result.rows || []);
+      const rows = (result.rows || []).map((r: any) => ({
+        id: r.id,
+        brandSlug: r.brand_slug,
+        brandName: r.brand_name,
+        name: r.name,
+        productId: r.product_id,
+        url: r.url,
+        imageUrl: r.image_url,
+        price: r.price,
+        composition: r.composition,
+        naturalFiberPercent: r.natural_fiber_percent,
+        category: r.category,
+      }));
+      return res.json(rows);
     } catch (err: any) {
       return res.json([]);
     }
