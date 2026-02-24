@@ -441,36 +441,41 @@ export async function fetchProductsByFiber(fiber: string): Promise<any[]> {
 }
 
 export async function fetchAllProducts(): Promise<any[]> {
+  let supabaseProducts: any[] = [];
   if (supabase) {
     const { data, error } = await supabase
       .from("products")
       .select("*")
       .eq("approved", "yes")
       .order("natural_fiber_percent", { ascending: false });
-    if (error) return [];
-    return (data || [])
-      .filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''))
-      .map((row: any) => ({
-        id: row.id,
-        brandSlug: row.brand_slug,
-        brandName: row.brand_name,
-        name: row.name,
-        productId: row.product_id,
-        url: row.url,
-        imageUrl: row.image_url,
-        price: row.price,
-        composition: row.composition,
-        naturalFiberPercent: row.natural_fiber_percent,
-        category: row.category,
-      }));
+    if (!error && data) {
+      supabaseProducts = (data || [])
+        .filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''))
+        .map((row: any) => ({
+          id: row.id,
+          brandSlug: row.brand_slug,
+          brandName: row.brand_name,
+          name: row.name,
+          productId: row.product_id,
+          url: row.url,
+          imageUrl: row.image_url,
+          price: row.price,
+          composition: row.composition,
+          naturalFiberPercent: row.natural_fiber_percent,
+          category: row.category,
+        }));
+    }
   }
   try {
     const res = await fetch("/api/products");
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
+    if (res.ok) {
+      const apiProducts: any[] = await res.json();
+      const existingIds = new Set(supabaseProducts.map((p: any) => p.productId || p.id));
+      const newProducts = apiProducts.filter((p: any) => !existingIds.has(p.productId || p.id));
+      return [...supabaseProducts, ...newProducts];
+    }
+  } catch {}
+  return supabaseProducts;
 }
 
 export interface SupabaseUser {
