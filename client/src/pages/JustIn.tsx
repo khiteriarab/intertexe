@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Award, ExternalLink, ShoppingBag, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Award, ExternalLink, ShoppingBag, CheckCircle2, Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners, fetchProductsByBrand } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
@@ -8,6 +8,7 @@ import { filterToCuratedBrands } from "@/lib/curated-brands";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
 import { getBrandProfile } from "@/lib/brand-profiles";
+import { useProductFavorites } from "@/hooks/use-product-favorites";
 
 const FEATURED_BRANDS = [
   { slug: "khaite", name: "Khaite" },
@@ -25,6 +26,9 @@ const FILTER_TABS = [
 ] as const;
 
 function ProductCard({ product }: { product: any }) {
+  const { toggle, isFavorited } = useProductFavorites();
+  const productId = String(product.id);
+  const saved = isFavorited(productId);
   const shopUrl = product.url
     ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(product.brand_name || product.brandName || "")}`
     : null;
@@ -46,6 +50,13 @@ function ProductCard({ product }: { product: any }) {
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
             loading="lazy"
           />
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+            className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+            data-testid={`button-heart-${product.id}`}
+          >
+            <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
+          </button>
           {fiberPercent != null && fiberPercent >= 90 && (
             <div className="absolute top-2 left-2">
               <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
