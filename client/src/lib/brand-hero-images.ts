@@ -1,4 +1,6 @@
 const BRAND_HERO_IMAGES: Record<string, string> = {
+  "a.l.c.": "https://alcltd.com/cdn/shop/files/Spring_Icons_Block_Desktop_2048x.jpg?v=1770237984",
+  "alc": "https://alcltd.com/cdn/shop/files/Spring_Icons_Block_Desktop_2048x.jpg?v=1770237984",
   "frame": "https://frame-store.com/cdn/shop/files/251003_FRAME_SPRNG26_LOOK_02_0252_03_RGB_2000x2666_b2fb19c0-d51f-449c-8077-1693fa74870e.jpg?v=1764896267&width=1200",
   "ba&sh": "https://ba-sh.com/on/demandware.static/-/Library-Sites-BashSharedLibrary/default/dwecd1e558/SS26/Casual_Chic_Denim/ALL-3_Slider-desktop_backtocool_2000x860px.jpg",
   "khaite": "https://khaite.com/cdn/shop/files/S26_R1_HomePageHeroBanner_Desktop_02.10.26_acfd338a-9a9b-4327-bf6f-1fc0d67c0aaf.jpg?v=1770418145&width=1920",

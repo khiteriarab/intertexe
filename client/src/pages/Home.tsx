@@ -9,13 +9,13 @@ import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
 
 const CURATED_BRAND_SLUGS = [
+  "a-l-c-",
   "khaite",
   "anine-bing",
   "toteme",
   "frame",
   "agolde",
   "sandro",
-  "acne-studios",
   "nanushka",
 ];
 
