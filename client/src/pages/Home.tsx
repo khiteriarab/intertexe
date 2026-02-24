@@ -9,6 +9,8 @@ import heroImage from "@/assets/images/hero-fashion.jpg";
 import textureImage from "@/assets/images/material-texture.jpg";
 
 const CURATED_BRAND_SLUGS = [
+  "a-l-c-",
+  "sandro",
   "khaite",
   "anine-bing",
   "toteme",
@@ -17,8 +19,6 @@ const CURATED_BRAND_SLUGS = [
   "nanushka",
   "acne-studios",
   "the-row",
-  "sandro",
-  "agolde",
 ];
 
 function QualityBadge({ naturalFiberPercent }: { naturalFiberPercent: number | null | undefined }) {
