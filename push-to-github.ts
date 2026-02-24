@@ -84,7 +84,8 @@ async function pushToGitHub() {
     owner, repo, tree: blobs as any,
   });
 
-  const commitMessage = "Update homepage brands + fix hero images with thum.io";
+  const now = new Date().toISOString().split("T")[0];
+  const commitMessage = process.argv[2] || `INTERTEXE sync ${now}`;
 
   let parentSha: string | undefined;
   try {
