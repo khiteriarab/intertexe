@@ -362,6 +362,7 @@ export async function fetchProductsByBrand(brandSlug: string): Promise<any[]> {
       composition: row.composition,
       naturalFiberPercent: row.natural_fiber_percent,
       category: row.category,
+      matchingSetId: row.matching_set_id || null,
     }));
   }
   try {

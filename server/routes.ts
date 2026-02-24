@@ -476,6 +476,7 @@ export async function registerRoutes(
         composition: r.composition,
         naturalFiberPercent: r.natural_fiber_percent,
         category: r.category,
+        matchingSetId: r.matching_set_id || null,
       }));
       return res.json(rows);
     } catch (err: any) {

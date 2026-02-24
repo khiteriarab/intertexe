@@ -136,6 +136,20 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
     return products.filter((p: any) => p.image_url || p.imageUrl);
   }, [products]);
 
+  const matchingSets = useMemo(() => {
+    const setMap: Record<string, any[]> = {};
+    visibleProducts.forEach((p: any) => {
+      const setId = p.matching_set_id || p.matchingSetId;
+      if (setId) {
+        if (!setMap[setId]) setMap[setId] = [];
+        setMap[setId].push(p);
+      }
+    });
+    return Object.entries(setMap)
+      .filter(([_, items]) => items.length >= 2)
+      .map(([setId, items]) => ({ setId, items }));
+  }, [visibleProducts]);
+
   const categories = useMemo(() => {
     const cats: Record<string, number> = {};
     visibleProducts.forEach((p: any) => {
@@ -148,6 +162,7 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
   }, [visibleProducts]);
 
   const filteredProducts = useMemo(() => {
+    if (activeCategory === "matching-sets") return [];
     let filtered = visibleProducts;
     if (activeCategory !== "all") {
       filtered = filtered.filter((p: any) => (p.category || "").toLowerCase().trim() === activeCategory);
@@ -191,7 +206,7 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
                 />
               </div>
 
-              {categories.length > 1 && (
+              {(categories.length > 1 || matchingSets.length > 0) && (
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                   <button
                     onClick={() => setActiveCategory("all")}
@@ -204,6 +219,19 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
                   >
                     All ({visibleProducts.length})
                   </button>
+                  {matchingSets.length > 0 && (
+                    <button
+                      onClick={() => setActiveCategory("matching-sets")}
+                      className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                        activeCategory === "matching-sets"
+                          ? "bg-foreground text-background"
+                          : "bg-secondary/60 text-foreground/70 hover:bg-secondary"
+                      }`}
+                      data-testid="filter-category-matching-sets"
+                    >
+                      Matching Sets ({matchingSets.length})
+                    </button>
+                  )}
                   {categories.map(({ key, label, count }) => (
                     <button
                       key={key}
@@ -223,7 +251,69 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
             </div>
           )}
 
-          {filteredProducts.length > 0 ? (
+          {activeCategory === "matching-sets" ? (
+            <div className="flex flex-col gap-6">
+              {matchingSets.map(({ setId, items }) => {
+                const totalPrice = items.reduce((sum: number, p: any) => {
+                  const price = parseFloat((p.price || "").replace(/[^0-9.]/g, ""));
+                  return sum + (isNaN(price) ? 0 : price);
+                }, 0);
+                return (
+                  <div key={setId} className="border border-border/30 bg-secondary/20 p-4 md:p-5 flex flex-col gap-4" data-testid={`matching-set-${setId}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-foreground/60" />
+                        <span className="text-[10px] uppercase tracking-[0.2em] font-medium">Matching Set</span>
+                      </div>
+                      {totalPrice > 0 && (
+                        <span className="text-xs font-medium text-foreground/70">${totalPrice.toLocaleString()} for the set</span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {items.map((product: any) => (
+                        <a
+                          key={product.product_id || product.productId}
+                          href={product.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
+                          data-testid={`card-product-${product.product_id || product.productId}`}
+                        >
+                          <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                            {(product.image_url || product.imageUrl) ? (
+                              <img
+                                src={product.image_url || product.imageUrl}
+                                alt={product.name}
+                                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                <ShoppingBag className="w-8 h-8 opacity-30" />
+                              </div>
+                            )}
+                            <div className="absolute top-2 left-2">
+                              <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                                {product.natural_fiber_percent || product.naturalFiberPercent}% natural
+                              </span>
+                            </div>
+                            <ProductFavoriteButton productId={String(product.product_id || product.productId)} />
+                          </div>
+                          <div className="p-3 flex flex-col gap-1.5 flex-1">
+                            <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
+                            <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
+                            {(product.price) && (
+                              <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
+                            )}
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
               {filteredProducts.map((product: any) => (
                 <a

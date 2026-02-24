@@ -64,6 +64,7 @@ export const products = pgTable("products", {
   naturalFiberPercent: integer("natural_fiber_percent"),
   category: text("category").notNull().default("dresses"),
   approved: text("approved").notNull().default("yes"),
+  matchingSetId: text("matching_set_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
