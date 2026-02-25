@@ -607,6 +607,114 @@ export async function fetchProductCountsByBrand(slugs: string[]): Promise<Record
   return counts;
 }
 
+export async function fetchShopProducts(options: {
+  fiber?: string;
+  category?: string;
+  sort?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{ products: any[]; total: number }> {
+  const { fiber, category, sort = "recommended", limit = 60, offset = 0 } = options;
+
+  if (supabase) {
+    const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
+    let query = supabase
+      .from("products")
+      .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category", { count: "exact" })
+      .eq("approved", "yes")
+      .not("image_url", "is", null)
+      .in("brand_slug", brandSlugs);
+
+    if (fiber && fiber !== "all") {
+      const fiberTerms: Record<string, string[]> = {
+        cashmere: ["cashmere"],
+        silk: ["silk"],
+        wool: ["wool", "merino"],
+        cotton: ["cotton"],
+        linen: ["linen", "flax"],
+      };
+      const terms = fiberTerms[fiber] || [fiber];
+      const orFilters = terms.map(t => `composition.ilike.%${t}%`).join(",");
+      query = query.or(orFilters);
+    }
+
+    if (category && category !== "all") {
+      query = query.eq("category", category);
+    }
+
+    if (sort === "price-high") {
+      query = query.order("natural_fiber_percent", { ascending: false });
+    } else if (sort === "price-low") {
+      query = query.order("natural_fiber_percent", { ascending: true });
+    } else {
+      query = query.order("natural_fiber_percent", { ascending: false });
+    }
+
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+    if (error || !data) return { products: [], total: 0 };
+
+    const products = data
+      .filter((row: any) => isClothingProduct(row.name || ''))
+      .map((row: any) => ({
+        id: row.id,
+        brandSlug: row.brand_slug,
+        brand_slug: row.brand_slug,
+        brandName: row.brand_name,
+        brand_name: row.brand_name,
+        name: row.name,
+        productId: row.product_id,
+        url: row.url,
+        imageUrl: row.image_url,
+        image_url: row.image_url,
+        price: row.price,
+        composition: row.composition,
+        naturalFiberPercent: row.natural_fiber_percent,
+        natural_fiber_percent: row.natural_fiber_percent,
+        category: row.category,
+      }));
+
+    return { products, total: count || 0 };
+  }
+
+  try {
+    const params = new URLSearchParams();
+    if (fiber && fiber !== "all") params.set("fiber", fiber);
+    if (category && category !== "all") params.set("category", category);
+    params.set("limit", String(limit));
+    params.set("offset", String(offset));
+    const res = await fetch(`/api/products?${params}`);
+    if (res.ok) {
+      const data = await res.json();
+      return { products: Array.isArray(data) ? data : data.products || [], total: Array.isArray(data) ? data.length : data.total || 0 };
+    }
+  } catch {}
+  return { products: [], total: 0 };
+}
+
+export async function fetchFiberCounts(): Promise<Record<string, number>> {
+  if (!supabase) return {};
+  const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
+  const fibers = ["cashmere", "silk", "wool", "cotton", "linen"];
+  const counts: Record<string, number> = {};
+
+  await Promise.all(fibers.map(async (fiber) => {
+    const terms = fiber === "wool" ? ["wool", "merino"] : fiber === "linen" ? ["linen", "flax"] : [fiber];
+    const orFilters = terms.map(t => `composition.ilike.%${t}%`).join(",");
+    const { count } = await supabase!
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("approved", "yes")
+      .not("image_url", "is", null)
+      .in("brand_slug", brandSlugs)
+      .or(orFilters);
+    counts[fiber] = count || 0;
+  }));
+
+  return counts;
+}
+
 export async function fetchAllProducts(): Promise<any[]> {
   let supabaseProducts: any[] = [];
   if (supabase) {
