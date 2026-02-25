@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { trackProductFavorite } from "@/lib/analytics";
 
 const STORAGE_KEY = "intertexe_product_favorites";
 
@@ -70,7 +71,7 @@ export function useProductFavorites() {
     ...(serverFavorites || []),
   ]);
 
-  const toggle = useCallback((productId: string) => {
+  const toggle = useCallback((productId: string, brandName?: string) => {
     const current = loadLocal();
     const adding = !current.has(productId);
 
@@ -82,6 +83,8 @@ export function useProductFavorites() {
     saveLocal(current);
     setLocalFavorites(new Set(current));
     notify();
+
+    trackProductFavorite(productId, brandName || "", adding ? "add" : "remove");
 
     if (isAuthenticated) {
       if (adding) {
