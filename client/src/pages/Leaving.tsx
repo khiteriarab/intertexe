@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { ExternalLink } from "lucide-react";
+import { trackAffiliateRedirect } from "@/lib/analytics";
 
 function isValidExternalUrl(url: string): boolean {
   try {
@@ -24,6 +25,7 @@ export default function Leaving() {
 
   useEffect(() => {
     if (!url) return;
+    trackAffiliateRedirect(brand, url);
     const interval = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {

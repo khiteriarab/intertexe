@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout/Layout";
 import NotFound from "@/pages/not-found";
+import { trackPageView } from "@/lib/analytics";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -18,12 +19,7 @@ function ScrollToTop() {
 function RouteTracker() {
   const [location] = useLocation();
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "page_view", {
-        page_path: location,
-        page_title: document.title,
-      });
-    }
+    trackPageView(location, document.title);
   }, [location]);
   return null;
 }
