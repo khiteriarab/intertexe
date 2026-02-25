@@ -2,7 +2,7 @@ import { useRef, useMemo } from "react";
 import { Link } from "wouter";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDesigners, fetchDesignerBySlug, fetchProductSample, fetchProductCount, fetchProductsByFiber, fetchProductsByBrandWithImages } from "@/lib/supabase";
+import { fetchDesigners, fetchDesignerBySlug, fetchProductSample, fetchProductCount, fetchProductsByFiber, fetchProductsByBrandWithImages, fetchProductCountsByBrand } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
@@ -188,10 +188,10 @@ export default function Home() {
     select: (data: any[]) => data.slice(0, 16),
   });
 
-  const productCountByBrand: Record<string, number> = {};
-  (newInProducts as any[]).forEach((p: any) => {
-    const slug = p.brand_slug || p.brandSlug;
-    if (slug) productCountByBrand[slug] = (productCountByBrand[slug] || 0) + 1;
+  const { data: productCountByBrand = {} } = useQuery({
+    queryKey: ["brand-product-counts", CURATED_BRAND_SLUGS],
+    queryFn: () => fetchProductCountsByBrand(CURATED_BRAND_SLUGS),
+    staleTime: 10 * 60 * 1000,
   });
 
   return (
@@ -267,7 +267,7 @@ export default function Home() {
                       <div className="absolute bottom-2.5 right-2.5">
                         <span className="flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
                           <ShoppingBag className="w-2.5 h-2.5" />
-                          {productCount}
+                          {productCount} products
                         </span>
                       </div>
                     )}

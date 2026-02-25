@@ -586,6 +586,27 @@ export async function fetchProductCount(): Promise<number> {
   }
 }
 
+export async function fetchProductCountsByBrand(slugs: string[]): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  if (supabase) {
+    await Promise.all(slugs.map(async (slug) => {
+      const { count } = await supabase
+        .from("products")
+        .select("*", { count: "exact", head: true })
+        .eq("brand_slug", slug)
+        .eq("approved", "yes")
+        .not("image_url", "is", null);
+      counts[slug] = count || 0;
+    }));
+    return counts;
+  }
+  try {
+    const res = await fetch(`/api/products/counts-by-brand?slugs=${slugs.join(",")}`);
+    if (res.ok) return await res.json();
+  } catch {}
+  return counts;
+}
+
 export async function fetchAllProducts(): Promise<any[]> {
   let supabaseProducts: any[] = [];
   if (supabase) {
