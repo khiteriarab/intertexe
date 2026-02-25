@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ExternalLink, ShoppingBag, ArrowRight, ChevronRight, Heart, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
-import { fetchAllProducts } from "@/lib/supabase";
+import { fetchShopProducts, fetchFiberCounts, fetchProductCount } from "@/lib/supabase";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
@@ -34,13 +34,6 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "price-high", label: "Price High to Low" },
   { key: "price-low", label: "Price Low to High" },
 ];
-
-function parsePrice(price: string | null | undefined): number | null {
-  if (!price) return null;
-  const match = price.replace(/[^0-9.]/g, "");
-  const num = parseFloat(match);
-  return isNaN(num) ? null : num;
-}
 
 function ProductCard({ product }: { product: any }) {
   const { toggle, isFavorited } = useProductFavorites();
@@ -137,6 +130,23 @@ function FiberHighlight({ fiber, count, onClick }: { fiber: string; count: numbe
   );
 }
 
+function LoadingSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-10">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="animate-pulse flex flex-col">
+          <div className="aspect-[3/4] bg-[#f0f0ee]" />
+          <div className="pt-3 flex flex-col gap-2">
+            <div className="h-3 bg-[#f0f0ee] w-1/3" />
+            <div className="h-3 bg-[#f0f0ee] w-3/4" />
+            <div className="h-3 bg-[#f0f0ee] w-1/4" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Shop() {
   const [fiberTab, setFiberTab] = useState<FiberTab>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -149,74 +159,37 @@ export default function Shop() {
     description: "Browse 17,000+ women's clothing products verified for natural fiber quality. Shop cashmere, silk, wool, cotton, and linen from 60+ vetted brands.",
   });
 
-  const { data: allProducts = [], isLoading } = useQuery({
-    queryKey: ["all-products-shop"],
-    queryFn: async () => {
-      const data = await fetchAllProducts();
-      return data.filter((p: any) => p.image_url || p.imageUrl);
-    },
-    staleTime: 5 * 60 * 1000,
+  const { data: totalProductCount = 0 } = useQuery({
+    queryKey: ["total-product-count"],
+    queryFn: fetchProductCount,
+    staleTime: 30 * 60 * 1000,
   });
 
-  const fiberCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    (allProducts as any[]).forEach((p: any) => {
-      const comp = (p.composition || "").toLowerCase();
-      if (comp.includes("cashmere")) counts.cashmere = (counts.cashmere || 0) + 1;
-      if (comp.includes("silk")) counts.silk = (counts.silk || 0) + 1;
-      if (comp.includes("wool") || comp.includes("merino")) counts.wool = (counts.wool || 0) + 1;
-      if (comp.includes("cotton")) counts.cotton = (counts.cotton || 0) + 1;
-      if (comp.includes("linen") || comp.includes("flax")) counts.linen = (counts.linen || 0) + 1;
-    });
-    return counts;
-  }, [allProducts]);
+  const { data: fiberCounts = {} } = useQuery({
+    queryKey: ["fiber-counts"],
+    queryFn: fetchFiberCounts,
+    staleTime: 30 * 60 * 1000,
+  });
 
-  const filteredProducts = useMemo(() => {
-    let products = allProducts as any[];
+  const { data: shopData, isLoading, isFetching } = useQuery({
+    queryKey: ["shop-products", fiberTab, categoryFilter, sortBy, visibleCount],
+    queryFn: () => fetchShopProducts({
+      fiber: fiberTab,
+      category: categoryFilter,
+      sort: sortBy,
+      limit: visibleCount,
+      offset: 0,
+    }),
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (prev) => prev,
+  });
 
-    if (fiberTab !== "all") {
-      const fiberTerms: Record<string, string[]> = {
-        cashmere: ["cashmere"],
-        silk: ["silk"],
-        wool: ["wool", "merino"],
-        cotton: ["cotton"],
-        linen: ["linen", "flax"],
-      };
-      const terms = fiberTerms[fiberTab] || [];
-      products = products.filter((p: any) => {
-        const comp = (p.composition || "").toLowerCase();
-        return terms.some(t => comp.includes(t));
-      });
-    }
+  const products = shopData?.products || [];
+  const resultTotal = shopData?.total || 0;
 
-    if (categoryFilter !== "all") {
-      products = products.filter((p: any) => p.category === categoryFilter);
-    }
-
-    if (sortBy === "price-high") {
-      products = [...products].sort((a, b) => {
-        const pa = parsePrice(a.price);
-        const pb = parsePrice(b.price);
-        if (pa === null && pb === null) return 0;
-        if (pa === null) return 1;
-        if (pb === null) return -1;
-        return pb - pa;
-      });
-    } else if (sortBy === "price-low") {
-      products = [...products].sort((a, b) => {
-        const pa = parsePrice(a.price);
-        const pb = parsePrice(b.price);
-        if (pa === null && pb === null) return 0;
-        if (pa === null) return 1;
-        if (pb === null) return -1;
-        return pa - pb;
-      });
-    } else if (sortBy === "new") {
-      products = [...products].reverse();
-    }
-
-    return products;
-  }, [allProducts, fiberTab, categoryFilter, sortBy]);
+  const displayCount = fiberTab === "all" && categoryFilter === "all"
+    ? (totalProductCount > 0 ? totalProductCount : 17000)
+    : resultTotal;
 
   const showHighlights = fiberTab === "all" && categoryFilter === "all";
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
@@ -232,11 +205,11 @@ export default function Shop() {
             Shop by Material
           </h1>
           <p className="text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed">
-            {(allProducts as any[]).length.toLocaleString()}+ products, every one checked for natural fiber content.
+            {displayCount > 0 ? displayCount.toLocaleString() : '17,000'}+ products, every one checked for natural fiber content.
           </p>
         </header>
 
-        {showHighlights && !isLoading && (
+        {showHighlights && Object.keys(fiberCounts).length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 -mx-1 md:mx-0">
             {(["cashmere", "silk", "wool", "cotton", "linen"] as const).map(fiber => (
               <FiberHighlight
@@ -292,7 +265,13 @@ export default function Shop() {
 
         <div className="flex items-center justify-between border-b border-border/30 pb-3">
           <p className="text-xs md:text-sm text-muted-foreground" data-testid="text-result-count">
-            <span className="font-medium text-foreground">{filteredProducts.length.toLocaleString()}</span> Results
+            {isLoading ? (
+              <span className="animate-pulse">Loading...</span>
+            ) : (
+              <>
+                <span className="font-medium text-foreground">{resultTotal.toLocaleString()}</span> Results
+              </>
+            )}
           </p>
           <div className="relative">
             <button
@@ -339,20 +318,9 @@ export default function Shop() {
           </div>
         )}
 
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-10">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="animate-pulse flex flex-col">
-                <div className="aspect-[3/4] bg-[#f0f0ee]" />
-                <div className="pt-3 flex flex-col gap-2">
-                  <div className="h-3 bg-[#f0f0ee] w-1/3" />
-                  <div className="h-3 bg-[#f0f0ee] w-3/4" />
-                  <div className="h-3 bg-[#f0f0ee] w-1/4" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : filteredProducts.length === 0 ? (
+        {isLoading && !products.length ? (
+          <LoadingSkeleton />
+        ) : products.length === 0 ? (
           <div className="py-16 text-center flex flex-col items-center gap-3">
             <ShoppingBag className="w-10 h-10 text-muted-foreground/20" />
             <p className="text-muted-foreground text-sm">No products match this combination yet.</p>
@@ -366,20 +334,25 @@ export default function Shop() {
           </div>
         ) : (
           <>
+            {isFetching && products.length > 0 && (
+              <div className="flex justify-center">
+                <div className="w-5 h-5 border-2 border-foreground/20 border-t-foreground animate-spin" />
+              </div>
+            )}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-10">
-              {filteredProducts.slice(0, visibleCount).map((product: any) => (
+              {products.map((product: any) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
 
-            {filteredProducts.length > visibleCount && (
+            {resultTotal > visibleCount && (
               <div className="flex justify-center pt-4">
                 <button
                   onClick={() => setVisibleCount(prev => prev + 60)}
                   className="px-8 py-3 border border-foreground text-foreground text-xs uppercase tracking-[0.2em] hover:bg-foreground hover:text-background transition-colors"
                   data-testid="btn-load-more"
                 >
-                  View More ({filteredProducts.length - visibleCount} remaining)
+                  View More ({(resultTotal - visibleCount).toLocaleString()} remaining)
                 </button>
               </div>
             )}
