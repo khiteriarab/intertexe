@@ -48,7 +48,7 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "max mara": "https://www.maxmara.com/dw/image/v2/BCBR_PRD/on/demandware.static/-/Library-Sites-maxmara-shared/default/dw6db54937/homepage/SS26/SS26_HP_HERO_DESKTOP.jpg",
   "everlane": "https://media.everlane.com/image/upload/c_fill,w_1200,ar_3:4,q_auto,f_auto/i/16cdea8b_d7a5.jpg",
   "cos": "https://image.thum.io/get/width/800/https://www.cos.com",
-  "nili lotan": "https://image.thum.io/get/width/800/https://www.nililotan.com",
+  "nili lotan": "https://cdn.shopify.com/s/files/1/0021/7595/9158/files/R26_WRTW_81210_Y182_HAISLEYSWEATER_COCOA_91727a7f-f9cc-4b50-bc02-5e5a2c57dbb9.jpg?v=1760460969",
   "filippa k": "https://image.thum.io/get/width/800/https://www.filippa-k.com",
   "lemaire": "https://image.thum.io/get/width/800/https://www.lemaire.fr",
   "massimo dutti": "https://static.massimodutti.net/assets/public/a3da/4b81/4e6049cdade6/c4f3d3bd4bba/HP_W_HERO_DESK.jpg",
@@ -85,6 +85,8 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "velvet by graham & spencer": "https://cdn.shopify.com/s/files/1/3050/6604/files/sonnet07-beach_019.jpg",
   "rails": "https://cdn.shopify.com/s/files/1/0167/1180/files/JULY-WHITE-1-843D-346E-002.jpg",
   "dissh": "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS07147BK.600_10.jpg",
+  "st. agni": "https://cdn.shopify.com/s/files/1/0838/3625/files/12.25_RESORT26_LOOKBOOK_8.jpg?v=1768685449&width=1200",
+  "st agni": "https://cdn.shopify.com/s/files/1/0838/3625/files/12.25_RESORT26_LOOKBOOK_8.jpg?v=1768685449&width=1200",
 };
 
 export function getBrandHeroImage(brandName: string): string | null {
