@@ -85,8 +85,8 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "velvet by graham & spencer": "https://cdn.shopify.com/s/files/1/3050/6604/files/sonnet07-beach_019.jpg",
   "rails": "https://cdn.shopify.com/s/files/1/0167/1180/files/JULY-WHITE-1-843D-346E-002.jpg",
   "dissh": "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS07147BK.600_10.jpg",
-  "st. agni": "https://cdn.shopify.com/s/files/1/0838/3625/files/12.25_RESORT26_LOOKBOOK_8.jpg?v=1768685449&width=1200",
-  "st agni": "https://cdn.shopify.com/s/files/1/0838/3625/files/12.25_RESORT26_LOOKBOOK_8.jpg?v=1768685449&width=1200",
+  "st. agni": "https://cdn.shopify.com/s/files/1/1139/4362/files/20250723_StAgni_S26_Ecom_SH_33_W25-221GML-S26-29035DIN_1300_ac4bc424-babd-4bb6-90e4-ecd3306de637.jpg?v=1769749467",
+  "st agni": "https://cdn.shopify.com/s/files/1/1139/4362/files/20250723_StAgni_S26_Ecom_SH_33_W25-221GML-S26-29035DIN_1300_ac4bc424-babd-4bb6-90e4-ecd3306de637.jpg?v=1769749467",
 };
 
 export function getBrandHeroImage(brandName: string): string | null {
