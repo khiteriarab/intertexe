@@ -48,7 +48,7 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "max mara": "https://www.maxmara.com/dw/image/v2/BCBR_PRD/on/demandware.static/-/Library-Sites-maxmara-shared/default/dw6db54937/homepage/SS26/SS26_HP_HERO_DESKTOP.jpg",
   "everlane": "https://media.everlane.com/image/upload/c_fill,w_1200,ar_3:4,q_auto,f_auto/i/16cdea8b_d7a5.jpg",
   "cos": "https://image.thum.io/get/width/800/https://www.cos.com",
-  "nili lotan": "https://www.nililotan.com/cdn/shop/files/NL_HP_Hero_Desktop_3.jpg?v=1770745233&width=1600",
+  "nili lotan": "https://image.thum.io/get/width/800/https://www.nililotan.com",
   "filippa k": "https://image.thum.io/get/width/800/https://www.filippa-k.com",
   "lemaire": "https://image.thum.io/get/width/800/https://www.lemaire.fr",
   "massimo dutti": "https://static.massimodutti.net/assets/public/a3da/4b81/4e6049cdade6/c4f3d3bd4bba/HP_W_HERO_DESK.jpg",
