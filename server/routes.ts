@@ -411,18 +411,33 @@ export async function registerRoutes(
   app.get("/api/products", async (req, res) => {
     try {
       const { category, fiber } = req.query;
+      const fiberTerms = typeof fiber === "string" ? fiber.split(",").map(f => f.trim()).filter(Boolean) : [];
       let result;
-      if (category && fiber) {
-        result = await db.execute(
-          sql`SELECT * FROM products WHERE approved = 'yes' AND category = ${category} AND LOWER(composition) LIKE LOWER(${`%${fiber}%`}) ORDER BY natural_fiber_percent DESC`
+
+      if (fiberTerms.length === 1) {
+        if (category) {
+          result = await db.execute(
+            sql`SELECT * FROM products WHERE approved = 'yes' AND category = ${category} AND LOWER(composition) LIKE LOWER(${`%${fiberTerms[0]}%`}) ORDER BY natural_fiber_percent DESC`
+          );
+        } else {
+          result = await db.execute(
+            sql`SELECT * FROM products WHERE approved = 'yes' AND LOWER(composition) LIKE LOWER(${`%${fiberTerms[0]}%`}) ORDER BY natural_fiber_percent DESC`
+          );
+        }
+      } else if (fiberTerms.length > 1) {
+        const allResult = await db.execute(
+          sql`SELECT * FROM products WHERE approved = 'yes' ORDER BY natural_fiber_percent DESC`
         );
+        const rows = (allResult.rows || []).filter((r: any) => {
+          const comp = (r.composition || "").toLowerCase();
+          const matchesFiber = fiberTerms.some(t => comp.includes(t.toLowerCase()));
+          const matchesCat = category ? r.category === category : true;
+          return matchesFiber && matchesCat;
+        });
+        result = { rows };
       } else if (category) {
         result = await db.execute(
           sql`SELECT * FROM products WHERE approved = 'yes' AND category = ${category} ORDER BY natural_fiber_percent DESC`
-        );
-      } else if (fiber) {
-        result = await db.execute(
-          sql`SELECT * FROM products WHERE approved = 'yes' AND LOWER(composition) LIKE LOWER(${`%${fiber}%`}) ORDER BY natural_fiber_percent DESC`
         );
       } else {
         result = await db.execute(

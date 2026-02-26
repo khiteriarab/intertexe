@@ -452,7 +452,7 @@ export async function fetchRecommendedProducts(materialTerms: string[], excludeB
       .eq("approved", "yes")
       .not("image_url", "is", null)
       .order("natural_fiber_percent", { ascending: false })
-      .limit(limit * 3);
+      .limit(limit * 5);
 
     if (excludeBrandSlugs.length > 0) {
       query = query.not("brand_slug", "in", `(${excludeBrandSlugs.join(",")})`);
@@ -467,10 +467,42 @@ export async function fetchRecommendedProducts(materialTerms: string[], excludeB
 
     const { data, error } = await query;
     if (error || !data) return [];
-    return data
-      .filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''))
+
+    const filtered = data.filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || ''));
+
+    const scored = filtered.map((row: any) => {
+      const comp = (row.composition || "").toLowerCase();
+      let relevance = 0;
+
+      for (const term of materialTerms) {
+        const t = term.toLowerCase();
+        if (!comp.includes(t)) continue;
+
+        const pctMatch = comp.match(new RegExp(`(\\d+)\\s*%\\s*${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i'))
+          || comp.match(new RegExp(`${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^,]*?(\\d+)\\s*%`, 'i'));
+        if (pctMatch) {
+          relevance = Math.max(relevance, parseInt(pctMatch[1], 10));
+        } else {
+          const firstMaterialMatch = comp.match(/^[\s]*\d*\s*%?\s*([a-z\s/]+)/i);
+          if (firstMaterialMatch && firstMaterialMatch[0].toLowerCase().includes(t)) {
+            relevance = Math.max(relevance, 80);
+          } else {
+            relevance = Math.max(relevance, 40);
+          }
+        }
+      }
+
+      return { row, relevance };
+    });
+
+    scored.sort((a, b) => {
+      if (b.relevance !== a.relevance) return b.relevance - a.relevance;
+      return (b.row.natural_fiber_percent || 0) - (a.row.natural_fiber_percent || 0);
+    });
+
+    return scored
       .slice(0, limit)
-      .map((row: any) => ({
+      .map(({ row }) => ({
         id: row.id,
         brandSlug: row.brand_slug,
         brandName: row.brand_name,
@@ -486,7 +518,7 @@ export async function fetchRecommendedProducts(materialTerms: string[], excludeB
   }
   try {
     const params = new URLSearchParams();
-    if (materialTerms.length > 0) params.set("fiber", materialTerms[0]);
+    if (materialTerms.length > 0) params.set("fiber", materialTerms.join(","));
     params.set("limit", String(limit));
     const res = await fetch(`/api/products?${params.toString()}`);
     if (!res.ok) return [];
