@@ -10,15 +10,15 @@ import { useProductFavorites } from "@/hooks/use-product-favorites";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 
 const CURATED_BRAND_SLUGS = [
-  "sandro",
   "khaite",
   "anine-bing",
+  "toteme",
   "frame",
+  "vince",
   "nanushka",
-  "nili-lotan",
-  "ulla-johnson",
-  "st-agni",
-  "faithfull-the-brand",
+  "acne-studios",
+  "the-row",
+  "sandro",
   "agolde",
 ];
 
