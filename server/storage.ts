@@ -13,6 +13,7 @@ import {
   favorites,
   quizResults,
   productFavorites,
+  recents,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ilike, asc, sql, desc } from "drizzle-orm";
@@ -350,6 +351,9 @@ export interface IStorage {
   addProductFavorite(userId: string, productId: string): Promise<void>;
   removeProductFavorite(userId: string, productId: string): Promise<void>;
   syncProductFavorites(userId: string, productIds: string[]): Promise<string[]>;
+
+  getRecents(userId: string, limit?: number): Promise<any[]>;
+  addRecent(userId: string, productId: string, productUrl?: string, brandName?: string): Promise<void>;
 }
 
 let designerCache: { data: Designer[]; timestamp: number } | null = null;
@@ -585,6 +589,18 @@ export class DatabaseStorage implements IStorage {
     }
     const allRows = await this.getProductFavorites(userId);
     return allRows;
+  }
+
+  async getRecents(userId: string, limit: number = 20): Promise<any[]> {
+    const rows = await db.select().from(recents)
+      .where(eq(recents.userId, userId))
+      .orderBy(desc(recents.createdAt))
+      .limit(limit);
+    return rows;
+  }
+
+  async addRecent(userId: string, productId: string, productUrl?: string, brandName?: string): Promise<void> {
+    await db.insert(recents).values({ userId, productId, productUrl, brandName });
   }
 }
 
