@@ -141,6 +141,12 @@ export function Navbar() {
             const isActive = location === link.href || (link.href !== '/' && location.startsWith(link.href));
             return (
               <Link key={link.name} href={link.href}
+                onClick={(e) => {
+                  if (isActive) {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
                 className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors active:scale-95 min-w-[48px] min-h-[48px] ${
                   isActive ? "text-foreground" : "text-muted-foreground/70"
                 }`}
