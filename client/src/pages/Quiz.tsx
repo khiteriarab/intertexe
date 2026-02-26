@@ -470,8 +470,9 @@ function QuizProductCard({ product }: { product: any }) {
   const imageUrl = product.imageUrl || product.image_url;
   const brandName = product.brandName || product.brand_name || "";
   const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
+  const pId = String(product.id);
   const shopUrl = product.url
-    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}`
+    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}&productId=${encodeURIComponent(pId)}`
     : null;
   const CardWrapper = shopUrl ? 'a' : 'div';
   const wrapperProps = shopUrl ? { href: shopUrl } : {};

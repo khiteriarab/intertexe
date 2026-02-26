@@ -210,6 +210,22 @@ export const api = {
     return data.productIds || [];
   },
 
+  async addRecent(productId: string, productUrl?: string, brandName?: string) {
+    const res = await apiFetch("/api/recents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, productUrl, brandName }),
+    });
+    return handleResponse(res);
+  },
+
+  async getRecents(limit: number = 20) {
+    const res = await apiFetch(`/api/recents?limit=${limit}`);
+    if (res.status === 401) return [];
+    const data = await handleResponse(res);
+    return data.recents || [];
+  },
+
   async getRecommendation(data: {
     materials: string[];
     priceRange: string;

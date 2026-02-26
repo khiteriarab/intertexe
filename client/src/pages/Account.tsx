@@ -269,10 +269,17 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                   <span className="text-sm">{user.name}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center py-4 border-b border-border/20">
+              <button
+                onClick={() => handleTabChange("wishlist")}
+                className="flex justify-between items-center py-4 border-b border-border/20 w-full text-left active:scale-[0.98] transition-transform"
+                data-testid="button-saved-items-row"
+              >
                 <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Saved Items</span>
-                <span className="text-sm">{(favorites as any[]).length + productFavCount}</span>
-              </div>
+                <span className="flex items-center gap-2">
+                  <span className="text-sm">{(favorites as any[]).length + productFavCount}</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                </span>
+              </button>
               <div className="flex justify-between items-center py-4 border-b border-border/20">
                 <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Quizzes Taken</span>
                 <span className="text-sm">{(quizResults as any[]).length}</span>
@@ -332,7 +339,7 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                       const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
                       const productId = String(product.id);
                       const shopUrl = product.url
-                        ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}`
+                        ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}&productId=${encodeURIComponent(productId)}`
                         : null;
                       return (
                         <div key={productId} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`card-saved-product-${productId}`}>

@@ -32,7 +32,7 @@ function ProductCardSmall({ product }: { product: any }) {
   const price = product.price;
 
   const shopUrl = product.url
-    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}`
+    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}&productId=${encodeURIComponent(productId)}`
     : null;
 
   const CardWrapper = shopUrl ? 'a' : 'div';

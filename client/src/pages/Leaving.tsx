@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useSearch } from "wouter";
 import { ExternalLink } from "lucide-react";
 import { trackAffiliateRedirect } from "@/lib/analytics";
+import { useAuth } from "@/hooks/use-auth";
+import { api } from "@/lib/api";
 
 function isValidExternalUrl(url: string): boolean {
   try {
@@ -17,6 +19,10 @@ export default function Leaving() {
   const params = new URLSearchParams(searchString);
   const rawUrl = params.get("url") || "";
   const brand = params.get("brand") || "our partner";
+  const productId = params.get("productId") || "";
+
+  const { isAuthenticated } = useAuth();
+  const trackedRef = useRef(false);
 
   const isValid = isValidExternalUrl(rawUrl);
   const url = isValid ? rawUrl : "";
@@ -26,6 +32,13 @@ export default function Leaving() {
   useEffect(() => {
     if (!url) return;
     trackAffiliateRedirect(brand, url);
+
+    if (isAuthenticated && !trackedRef.current) {
+      trackedRef.current = true;
+      const pid = productId || url;
+      api.addRecent(pid, url, brand).catch(() => {});
+    }
+
     const interval = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -37,7 +50,7 @@ export default function Leaving() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [url]);
+  }, [url, isAuthenticated]);
 
   if (!url) {
     return (
