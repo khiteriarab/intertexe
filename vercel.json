@@ -1,6 +1,7 @@
 {
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/((?!sitemap\\.xml|robots\\.txt).*)", "destination": "/" }
+    { "source": "/:path*", "destination": "/" }
   ]
 }
