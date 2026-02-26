@@ -645,10 +645,8 @@ export async function fetchShopProducts(options: {
       query = query.eq("category", category);
     }
 
-    if (sort === "price-high") {
+    if (sort === "price-high" || sort === "price-low") {
       query = query.order("natural_fiber_percent", { ascending: false });
-    } else if (sort === "price-low") {
-      query = query.order("natural_fiber_percent", { ascending: true });
     } else {
       query = query.order("natural_fiber_percent", { ascending: false });
     }
@@ -658,7 +656,7 @@ export async function fetchShopProducts(options: {
     const { data, error, count } = await query;
     if (error || !data) return { products: [], total: 0 };
 
-    const products = data
+    let products = data
       .filter((row: any) => isClothingProduct(row.name || ''))
       .map((row: any) => ({
         id: row.id,
@@ -677,6 +675,19 @@ export async function fetchShopProducts(options: {
         natural_fiber_percent: row.natural_fiber_percent,
         category: row.category,
       }));
+
+    if (sort === "price-high" || sort === "price-low") {
+      const parsePrice = (p: string | null | undefined): number => {
+        if (!p) return 0;
+        const match = p.replace(/,/g, "").match(/[\d.]+/);
+        return match ? parseFloat(match[0]) : 0;
+      };
+      products.sort((a: any, b: any) => {
+        const pa = parsePrice(a.price);
+        const pb = parsePrice(b.price);
+        return sort === "price-high" ? pb - pa : pa - pb;
+      });
+    }
 
     return { products, total: count || 0 };
   }
