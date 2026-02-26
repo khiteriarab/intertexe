@@ -56,7 +56,6 @@ const BRAND_HERO_IMAGES: Record<string, string> = {
   "the kooples": "https://www.thekooples.com/on/demandware.static/-/Library-Sites-TKooplesSharedLibrary/default/dw406daf53/media/260203_EDITO_S26_PUSH_01.jpg",
   "quince": "https://www.onequince.com/cdn/shop/files/Q_HP_Hero_Desktop_Linen.jpg?v=1770741555&width=1600",
   "loulou studio": "https://image.thum.io/get/width/800/https://www.louloustudio.com",
-  "st. agni": "https://cdn.shopify.com/s/files/1/1139/4362/files/StAgni-Vermeer-1.jpg",
   "maria mcmanus": "https://cdn.shopify.com/s/files/1/0462/0042/2559/files/Mariamcmanus68cc3e4f70921668cc3e4f733cc.6401800168cc3e4f733cc.jpg",
   "& other stories": "https://image.thum.io/get/width/800/https://www.stories.com",
   "a.p.c.": "https://image.thum.io/get/width/800/https://www.apc.fr",
