@@ -246,6 +246,30 @@ export async function registerRoutes(
     }
   });
 
+  // ─── Recents ──────────────────────────────────
+  app.get("/api/recents", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const items = await storage.getRecents(req.user!.id, limit);
+      return res.json({ recents: items });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/recents", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const { productId, productUrl, brandName } = req.body;
+      if (!productId) return res.status(400).json({ message: "productId required" });
+      await storage.addRecent(req.user!.id, productId, productUrl, brandName);
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
   // ─── Quiz ──────────────────────────────────
   app.post("/api/quiz", async (req, res) => {
     try {
