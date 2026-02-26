@@ -1,11 +1,15 @@
 import { useEffect } from "react";
 
+const BASE_URL = "https://www.intertexe.com";
+
 export function useSEO({
   title,
   description,
+  path,
 }: {
   title?: string;
   description?: string;
+  path?: string;
 }) {
   useEffect(() => {
     if (title) {
@@ -19,7 +23,7 @@ export function useSEO({
       if (twTitle) twTitle.content = fullTitle;
     }
     return () => {
-      document.title = "INTERTEXE";
+      document.title = "INTERTEXE — The Material Standard";
       const ogTitle = document.querySelector('meta[property="og:title"]') as HTMLMetaElement;
       if (ogTitle) ogTitle.content = "INTERTEXE";
       const twTitle = document.querySelector('meta[name="twitter:title"]') as HTMLMetaElement;
@@ -44,4 +48,26 @@ export function useSEO({
       if (twDesc) twDesc.content = description;
     }
   }, [description]);
+
+  useEffect(() => {
+    if (path) {
+      const canonicalUrl = `${BASE_URL}${path}`;
+
+      let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+      if (!canonical) {
+        canonical = document.createElement("link");
+        canonical.rel = "canonical";
+        document.head.appendChild(canonical);
+      }
+      canonical.href = canonicalUrl;
+
+      let ogUrl = document.querySelector('meta[property="og:url"]') as HTMLMetaElement;
+      if (!ogUrl) {
+        ogUrl = document.createElement("meta");
+        ogUrl.setAttribute("property", "og:url");
+        document.head.appendChild(ogUrl);
+      }
+      ogUrl.content = canonicalUrl;
+    }
+  }, [path]);
 }
