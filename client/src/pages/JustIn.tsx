@@ -30,7 +30,7 @@ function ProductCard({ product }: { product: any }) {
   const productId = String(product.id);
   const saved = isFavorited(productId);
   const shopUrl = product.url
-    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(product.brand_name || product.brandName || "")}`
+    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(product.brand_name || product.brandName || "")}&productId=${encodeURIComponent(productId)}`
     : null;
 
   const name = product.name || product.productName || "";
