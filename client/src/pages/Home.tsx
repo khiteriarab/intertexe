@@ -14,7 +14,7 @@ const CURATED_BRAND_SLUGS = [
   "anine-bing",
   "toteme",
   "frame",
-  "vince",
+  "diesel",
   "nanushka",
   "acne-studios",
   "the-row",
