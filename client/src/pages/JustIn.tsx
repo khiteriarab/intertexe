@@ -13,6 +13,7 @@ import { useProductFavorites } from "@/hooks/use-product-favorites";
 const FEATURED_BRANDS = [
   { slug: "khaite", name: "Khaite" },
   { slug: "anine-bing", name: "Anine Bing" },
+  { slug: "diesel", name: "Diesel" },
   { slug: "nili-lotan", name: "Nili Lotan" },
   { slug: "frame", name: "Frame" },
   { slug: "st-agni", name: "St. Agni" },
