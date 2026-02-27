@@ -120,7 +120,7 @@ const WOMEN_FASHION_BRAND_SLUGS = new Set([
   "l-agence", "fleur-du-mal", "a-l-c-", "mother", "dl1961", "sea-new-york", "esse-studios",
   "club-monaco", "stine-goya", "rodebjer", "veda", "velvet-by-graham-spencer", "rails",
   "ted-baker", "dissh", "tanya-taylor", "rebecca-taylor", "derek-lam",
-  "rebecca-minkoff",
+  "rebecca-minkoff", "diesel",
 ]);
 
 const NON_CLOTHING_PATTERNS = [

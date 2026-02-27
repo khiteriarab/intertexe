@@ -786,6 +786,17 @@ export const BRAND_PROFILES: Record<string, BrandProfile> = {
     foundedYear: 2010,
     headquarters: "Gold Coast, Australia",
   },
+  "diesel": {
+    slug: "diesel",
+    name: "Diesel",
+    tier: "anchor",
+    intro: "Diesel has defined rebellious, premium denim since 1978. Founded by Renzo Rosso in Italy, the brand is built on innovative washes, bold treatments, and high-quality cotton denim. While known for pushing creative boundaries, Diesel maintains strong natural fiber compositions across its women's jeans, skirts, and denim-forward ready-to-wear.",
+    materialStrengths: ["Denim", "Cotton", "Leather"],
+    priceRange: "$150 – $600",
+    naturalFiberEstimate: 80,
+    foundedYear: 1978,
+    headquarters: "Breganze, Italy",
+  },
 };
 
 export function getBrandProfile(slug: string): BrandProfile | null {

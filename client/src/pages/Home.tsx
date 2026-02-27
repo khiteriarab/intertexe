@@ -14,7 +14,7 @@ const CURATED_BRAND_SLUGS = [
   "anine-bing",
   "toteme",
   "frame",
-  "vince",
+  "diesel",
   "nanushka",
   "acne-studios",
   "the-row",
@@ -155,6 +155,12 @@ export default function Home() {
     staleTime: 10 * 60 * 1000,
   });
 
+  const { data: dieselProducts = [] } = useQuery({
+    queryKey: ["home-diesel-products"],
+    queryFn: () => fetchProductsByBrandWithImages("diesel", 24),
+    staleTime: 10 * 60 * 1000,
+  });
+
   const { data: otherNewProducts = [] } = useQuery({
     queryKey: ["home-new-in"],
     queryFn: () => fetchProductSample(24),
@@ -162,10 +168,20 @@ export default function Home() {
   });
 
   const newInProducts = useMemo(() => {
-    const alcIds = new Set(alcProducts.map((p: any) => p.id));
-    const others = otherNewProducts.filter((p: any) => !alcIds.has(p.id));
-    return [...alcProducts, ...others].slice(0, 30);
-  }, [alcProducts, otherNewProducts]);
+    const seenIds = new Set<string>();
+    const combined: any[] = [];
+    for (const p of [...alcProducts, ...dieselProducts, ...otherNewProducts]) {
+      if (!seenIds.has(p.id)) {
+        seenIds.add(p.id);
+        combined.push(p);
+      }
+    }
+    for (let i = combined.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [combined[i], combined[j]] = [combined[j], combined[i]];
+    }
+    return combined.slice(0, 30);
+  }, [alcProducts, dieselProducts, otherNewProducts]);
 
   const { data: cashmereProducts = [] } = useQuery({
     queryKey: ["home-cashmere"],
