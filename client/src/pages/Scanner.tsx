@@ -1,6 +1,9 @@
 import { useState, useRef, useCallback } from "react";
-import { Camera, Upload, Link, Loader2, ArrowRight, Star, Leaf, ShoppingBag, ExternalLink, ChevronLeft, X } from "lucide-react";
+import { Camera, Upload, Link2, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, ExternalLink } from "lucide-react";
 import { Link as RouterLink } from "wouter";
+import { trackAffiliateRedirect } from "@/lib/analytics";
+import { useProductFavorites } from "@/hooks/use-product-favorites";
+import { Heart } from "lucide-react";
 
 type ScanResult = {
   tagInfo: { brandName: string; productName: string; price: string; composition?: string; confidence: string; rawText: string };
@@ -22,39 +25,80 @@ function ratingColor(rating: string) {
   }
 }
 
+function ratingBorderColor(rating: string) {
+  switch (rating) {
+    case "Exceptional": return "border-emerald-600";
+    case "Excellent": return "border-emerald-500";
+    case "Good": return "border-amber-500";
+    case "Caution": return "border-red-500";
+    default: return "border-neutral-400";
+  }
+}
+
 function ProductCard({ product }: { product: any }) {
+  const { toggle, isFavorited } = useProductFavorites();
+  const productId = String(product.id);
+  const saved = isFavorited(productId);
   const name = product.name || product.productName || "";
   const brandName = product.brand_name || product.brandName || "";
   const imageUrl = product.image_url || product.imageUrl;
   const price = product.price;
   const composition = product.composition;
   const shopUrl = product.url;
+  const naturalFiber = product.natural_fiber_percent;
 
   return (
-    <a href={shopUrl || "#"} target="_blank" rel="noopener noreferrer" className="group flex flex-col" data-testid={`product-scan-${product.id}`}>
-      <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
+    <a href={shopUrl || "#"} target="_blank" rel="noopener noreferrer" onClick={() => shopUrl && trackAffiliateRedirect(brandName, shopUrl)} className="group flex flex-col" data-testid={`product-scan-${product.id}`}>
+      <div className="aspect-[3/4] bg-[#f0f0ee] relative overflow-hidden">
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center"><ShoppingBag className="w-6 h-6 text-neutral-300" /></div>
         )}
         {composition && (
-          <div className="absolute bottom-2 left-2 z-10">
-            <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.05em] font-medium backdrop-blur-sm line-clamp-1 max-w-[140px] md:max-w-[200px]">{composition}</span>
+          <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/60 to-transparent pt-6 pb-2 px-2">
+            <span className="text-[8px] md:text-[9px] text-white/90 uppercase tracking-[0.04em] font-medium line-clamp-1">{composition}</span>
           </div>
         )}
+        {naturalFiber != null && (
+          <div className="absolute top-2 left-2 z-10">
+            <span className="bg-emerald-800/90 text-white px-1.5 py-0.5 text-[8px] font-medium backdrop-blur-sm">{naturalFiber}%</span>
+          </div>
+        )}
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
+          className={`absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+          aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+        >
+          <Heart className={`w-4 h-4 drop-shadow-sm ${saved ? "fill-red-500 text-red-500" : "text-white"}`} />
+        </button>
       </div>
       <div className="flex flex-col gap-0.5 pt-2.5">
         <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">{brandName}</span>
         <h3 className="text-[11px] md:text-[12px] leading-snug line-clamp-2 text-muted-foreground">{name}</h3>
-        {price && <span className="text-[11px] md:text-[12px] mt-0.5">{price}</span>}
+        {price && <span className="text-[11px] md:text-[12px] mt-0.5 font-medium">{price}</span>}
       </div>
     </a>
   );
 }
 
+function FiberBar({ percent, label }: { percent: number; label?: string }) {
+  const color = percent >= 90 ? "bg-emerald-600" : percent >= 70 ? "bg-emerald-500" : percent >= 50 ? "bg-amber-500" : "bg-red-400";
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label || "Natural Fiber"}</span>
+        <span className="text-xs font-medium">{percent}%</span>
+      </div>
+      <div className="w-full h-1.5 bg-neutral-100 overflow-hidden">
+        <div className={`h-full ${color} transition-all duration-1000 ease-out`} style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export default function Scanner() {
-  const [mode, setMode] = useState<"idle" | "camera" | "upload" | "url">("idle");
+  const [mode, setMode] = useState<"idle" | "camera">("idle");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -131,6 +175,7 @@ export default function Scanner() {
       await scanImage(base64);
     };
     reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const scanUrl = async () => {
@@ -166,227 +211,272 @@ export default function Scanner() {
   if (mode === "camera") {
     return (
       <div className="fixed inset-0 bg-black z-50 flex flex-col">
-        <div className="absolute top-4 left-4 z-10">
-          <button onClick={() => { stopCamera(); setMode("idle"); }} className="bg-black/50 text-white p-2 backdrop-blur-sm" data-testid="button-close-camera">
-            <X className="w-5 h-5" />
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
+          <button onClick={() => { stopCamera(); setMode("idle"); }} className="text-white/80 p-1" data-testid="button-close-camera">
+            <X className="w-6 h-6" />
           </button>
+          <span className="text-white/60 text-xs uppercase tracking-widest">Scan Tag</span>
+          <div className="w-6" />
         </div>
         <video ref={videoRef} className="flex-1 object-cover" playsInline autoPlay muted />
         <canvas ref={canvasRef} className="hidden" />
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center">
-          <button onClick={capturePhoto} className="w-16 h-16 bg-white border-4 border-white/50 rounded-full flex items-center justify-center" data-testid="button-capture">
-            <div className="w-12 h-12 bg-white rounded-full border-2 border-neutral-300" />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-64 h-40 md:w-80 md:h-52 border-2 border-white/30 relative">
+            <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-white" />
+            <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-white" />
+            <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-white" />
+            <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-white" />
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-4 pb-[max(2rem,calc(env(safe-area-inset-bottom)+1rem))]">
+          <p className="text-white/50 text-[11px] tracking-wide">Align the tag within the frame</p>
+          <button onClick={capturePhoto} className="w-[68px] h-[68px] rounded-full border-[3px] border-white/80 flex items-center justify-center active:scale-95 transition-transform" data-testid="button-capture">
+            <div className="w-[56px] h-[56px] rounded-full bg-white" />
           </button>
         </div>
-        <p className="absolute bottom-28 left-0 right-0 text-center text-white/70 text-xs">Point at a clothing tag or price label</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
-      <div className="max-w-3xl mx-auto px-4 pt-8 pb-24 md:pt-12 md:pb-16">
-        {!result && !loading && (
-          <>
-            <div className="mb-10">
-              <h1 className="text-2xl md:text-4xl font-serif mb-3" data-testid="text-scanner-title">Shopping Intelligence</h1>
-              <p className="text-sm md:text-base text-muted-foreground">Scan a tag, upload a photo, or paste a product link. We'll tell you what it's really made of.</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 mb-8">
-              <button onClick={startCamera} className="flex items-center gap-4 p-5 bg-white border border-neutral-200 hover:border-neutral-400 transition-colors text-left" data-testid="button-camera-scan">
-                <div className="w-12 h-12 bg-neutral-100 flex items-center justify-center flex-shrink-0"><Camera className="w-5 h-5" /></div>
-                <div>
-                  <span className="text-sm font-medium block">Scan a Tag</span>
-                  <span className="text-xs text-muted-foreground">Use your camera to photograph a price tag or label</span>
-                </div>
-                <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
-              </button>
-
-              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-4 p-5 bg-white border border-neutral-200 hover:border-neutral-400 transition-colors text-left" data-testid="button-upload-photo">
-                <div className="w-12 h-12 bg-neutral-100 flex items-center justify-center flex-shrink-0"><Upload className="w-5 h-5" /></div>
-                <div>
-                  <span className="text-sm font-medium block">Upload Photo</span>
-                  <span className="text-xs text-muted-foreground">Upload a photo of a tag, label, or product</span>
-                </div>
-                <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} data-testid="input-file-upload" />
-
-              <div className="bg-white border border-neutral-200 p-5">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 bg-neutral-100 flex items-center justify-center flex-shrink-0"><Link className="w-5 h-5" /></div>
-                  <div>
-                    <span className="text-sm font-medium block">Paste a Product URL</span>
-                    <span className="text-xs text-muted-foreground">From Nordstrom, SSENSE, Net-a-Porter, or any retailer</span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://www.nordstrom.com/s/..."
-                    className="flex-1 px-3 py-2.5 text-sm border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400"
-                    onKeyDown={(e) => e.key === "Enter" && scanUrl()}
-                    data-testid="input-product-url"
-                  />
-                  <button onClick={scanUrl} disabled={!url.trim()} className="px-5 py-2.5 bg-[#111] text-white text-sm uppercase tracking-wider disabled:opacity-40 hover:bg-neutral-800 transition-colors" data-testid="button-scan-url">
-                    Scan
-                  </button>
-                </div>
+    <div className="w-full">
+      {!result && !loading && (
+        <>
+          <div className="pt-8 md:pt-14 pb-8 md:pb-12">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 md:w-9 md:h-9 bg-[#111] flex items-center justify-center">
+                <Scan className="w-4 h-4 md:w-[18px] md:h-[18px] text-white" />
               </div>
+              <h1 className="text-2xl md:text-[40px] font-serif leading-tight" data-testid="text-scanner-title">Shopping Intelligence</h1>
             </div>
-
-            {error && (
-              <div className="p-4 bg-red-50 border border-red-200 text-red-800 text-sm" data-testid="text-scan-error">{error}</div>
-            )}
-          </>
-        )}
-
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
-            <p className="text-sm text-muted-foreground">Analyzing product...</p>
-            <p className="text-xs text-muted-foreground/60">Searching 17,000+ verified products</p>
+            <p className="text-[13px] md:text-base text-muted-foreground max-w-lg leading-relaxed">
+              Scan a clothing tag, upload a photo, or paste any product URL. We'll identify the brand, analyze its materials, and find you better alternatives.
+            </p>
           </div>
-        )}
 
-        {result && (
-          <div className="space-y-8">
-            <button onClick={reset} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4" data-testid="button-scan-again">
-              <ChevronLeft className="w-4 h-4" /> Scan another product
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-10">
+            <button onClick={startCamera} className="col-span-1 group flex flex-col items-center gap-3 p-6 md:p-8 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]" data-testid="button-camera-scan">
+              <Camera className="w-6 h-6 md:w-7 md:h-7 mb-1" />
+              <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em]">Scan Tag</span>
+              <span className="text-[10px] text-white/40 leading-relaxed text-center hidden md:block">Point your camera at a price tag or clothing label</span>
             </button>
 
-            <div className="bg-white border border-neutral-200 p-6">
-              <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-3">Identified</p>
-              <h2 className="text-xl md:text-2xl font-serif mb-1" data-testid="text-result-brand">{result.tagInfo.brandName}</h2>
-              {result.tagInfo.productName && <p className="text-sm text-muted-foreground mb-2" data-testid="text-result-product">{result.tagInfo.productName}</p>}
-              {result.tagInfo.price && <p className="text-lg font-medium" data-testid="text-result-price">{result.tagInfo.price}</p>}
-              <p className="text-[10px] text-muted-foreground/60 mt-2">{result.tagInfo.rawText}</p>
+            <button onClick={() => fileInputRef.current?.click()} className="col-span-1 group flex flex-col items-center gap-3 p-6 md:p-8 bg-white border border-neutral-200 hover:border-neutral-400 transition-all active:scale-[0.98]" data-testid="button-upload-photo">
+              <Upload className="w-6 h-6 md:w-7 md:h-7 mb-1 text-neutral-600" />
+              <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em]">Upload</span>
+              <span className="text-[10px] text-muted-foreground/60 leading-relaxed text-center hidden md:block">Upload a photo of a tag or product</span>
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} data-testid="input-file-upload" />
+
+            <div className="col-span-2 md:col-span-1 bg-white border border-neutral-200 p-5 md:p-6 flex flex-col">
+              <div className="flex items-center gap-2 mb-3">
+                <Link2 className="w-4 h-4 text-neutral-400" />
+                <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em]">Paste URL</span>
+              </div>
+              <div className="flex gap-2 flex-1">
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="nordstrom.com/s/..."
+                  className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
+                  onKeyDown={(e) => e.key === "Enter" && scanUrl()}
+                  data-testid="input-product-url"
+                />
+                <button onClick={scanUrl} disabled={!url.trim()} className="px-4 py-2.5 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em] font-medium disabled:opacity-30 hover:bg-neutral-800 transition-colors flex-shrink-0" data-testid="button-scan-url">
+                  Scan
+                </button>
+              </div>
+              <p className="text-[9px] md:text-[10px] text-muted-foreground/50 mt-2">Nordstrom, SSENSE, Net-a-Porter, Farfetch, or any retailer</p>
+            </div>
+          </div>
+
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm mb-8" data-testid="text-scan-error">{error}</div>
+          )}
+
+          <div className="border-t border-neutral-100 pt-8 pb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-neutral-400" />
+              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">How it works</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+              <div>
+                <span className="text-[10px] text-muted-foreground/40 font-medium">01</span>
+                <p className="text-sm mt-1">Scan a tag or paste a product link from any retailer</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground/40 font-medium">02</span>
+                <p className="text-sm mt-1">We identify the brand and analyze material composition against 17,000+ verified products</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground/40 font-medium">03</span>
+                <p className="text-sm mt-1">Get an honest verdict, quality rating, and better alternatives with higher natural fiber content</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-32 md:py-40 gap-5">
+          <div className="relative">
+            <div className="w-16 h-16 border border-neutral-200 flex items-center justify-center">
+              <Scan className="w-6 h-6 text-neutral-300 animate-pulse" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 animate-ping" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium mb-1">Analyzing product</p>
+            <p className="text-[11px] text-muted-foreground">Searching 17,000+ verified products</p>
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div className="pt-6 md:pt-10 pb-8">
+          <button onClick={reset} className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors mb-8" data-testid="button-scan-again">
+            <ChevronLeft className="w-3.5 h-3.5" /> New scan
+          </button>
+
+          <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-10 mb-10">
+            <div className="flex-1">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">Identified Product</p>
+              <h2 className="text-2xl md:text-4xl font-serif mb-1" data-testid="text-result-brand">{result.tagInfo.brandName}</h2>
+              {result.tagInfo.productName && <p className="text-sm md:text-base text-muted-foreground mb-3" data-testid="text-result-product">{result.tagInfo.productName}</p>}
+              <div className="flex items-center gap-4">
+                {result.tagInfo.price && <span className="text-lg md:text-xl font-medium" data-testid="text-result-price">{result.tagInfo.price}</span>}
+                {result.brandStats && (
+                  <span className={`px-2 py-0.5 text-[9px] uppercase tracking-[0.1em] font-medium ${ratingColor(result.brandStats.rating)}`} data-testid="text-brand-rating">
+                    {result.brandStats.rating}
+                  </span>
+                )}
+              </div>
+              <p className="text-[9px] text-muted-foreground/40 mt-2">{result.tagInfo.rawText}</p>
             </div>
 
-            {result.designerInfo && (
-              <div className="bg-white border border-neutral-200 p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-2">In Our Directory</p>
-                    <h3 className="text-lg font-serif mb-1">{result.designerInfo.name}</h3>
-                    {result.designerInfo.description && <p className="text-sm text-muted-foreground line-clamp-3">{result.designerInfo.description}</p>}
-                  </div>
-                  {result.designerInfo.slug && (
-                    <RouterLink href={`/designers/${result.designerInfo.slug}`} className="text-xs uppercase tracking-wider border border-neutral-200 px-3 py-1.5 hover:bg-neutral-50 transition-colors whitespace-nowrap flex-shrink-0" data-testid="link-brand-page">
-                      View Brand
-                    </RouterLink>
-                  )}
-                </div>
-              </div>
-            )}
-
             {result.brandStats && (
-              <div className="bg-white border border-neutral-200 p-6">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-3">Brand Rating</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className={`px-2.5 py-1 text-[10px] uppercase tracking-wider font-medium ${ratingColor(result.brandStats.rating)}`} data-testid="text-brand-rating">
-                        {result.brandStats.rating}
-                      </span>
-                      <span className="text-sm text-muted-foreground">{result.brandStats.productCount} verified products</span>
-                    </div>
-                    <div className="w-full bg-neutral-100 h-2">
-                      <div className="h-full bg-emerald-700 transition-all duration-700" style={{ width: `${result.brandStats.avgFiber}%` }} />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{result.brandStats.avgFiber}% average natural fiber content</p>
-                  </div>
-                </div>
+              <div className={`w-full md:w-64 border ${ratingBorderColor(result.brandStats.rating)} p-5 flex-shrink-0`}>
+                <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">Brand Score</p>
+                <FiberBar percent={result.brandStats.avgFiber} label="Avg. Natural Fiber" />
+                <p className="text-[10px] text-muted-foreground mt-2">{result.brandStats.productCount} verified products analyzed</p>
               </div>
             )}
+          </div>
 
-            {result.webIntel && (
-              <div className="bg-white border border-neutral-200 p-6 space-y-5">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Internet Intelligence</p>
+          {result.designerInfo && (
+            <div className="flex items-center justify-between p-4 md:p-5 bg-white border border-neutral-200 mb-6">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-serif font-bold">{result.designerInfo.name.charAt(0)}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{result.designerInfo.name}</p>
+                  <p className="text-[10px] text-emerald-700 uppercase tracking-wider">In our directory</p>
+                </div>
+              </div>
+              <RouterLink href={`/designers/${result.designerInfo.slug}`} className="text-[10px] uppercase tracking-[0.12em] border border-neutral-200 px-3 py-1.5 hover:bg-neutral-50 transition-colors flex-shrink-0 ml-3" data-testid="link-brand-page">
+                View
+              </RouterLink>
+            </div>
+          )}
 
+          {result.webIntel && (
+            <div className="border border-neutral-200 mb-8">
+              <div className="px-5 py-4 border-b border-neutral-100 flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-neutral-400" />
+                <span className="text-[10px] uppercase tracking-[0.15em] font-medium">Intelligence Report</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2">
                 {result.webIntel.composition && (
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider mb-1.5">Likely Composition</p>
-                    <p className="text-sm">{result.webIntel.composition}</p>
+                  <div className="p-5 border-b md:border-r border-neutral-100">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">Composition</p>
+                    <p className="text-sm mb-3">{result.webIntel.composition}</p>
                     {result.webIntel.naturalFiberPercent !== null && (
-                      <div className="mt-2">
-                        <div className="w-full bg-neutral-100 h-2">
-                          <div className="h-full bg-emerald-700 transition-all duration-700" style={{ width: `${result.webIntel.naturalFiberPercent}%` }} />
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">{result.webIntel.naturalFiberPercent}% natural fiber</p>
-                      </div>
+                      <FiberBar percent={result.webIntel.naturalFiberPercent} />
                     )}
                   </div>
                 )}
 
-                {result.webIntel.qualityNotes && (
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider mb-1.5">Quality Assessment</p>
-                    <p className="text-sm text-muted-foreground">{result.webIntel.qualityNotes}</p>
-                  </div>
-                )}
-
                 {result.webIntel.verdict && (
-                  <div className="p-4 bg-[#FAFAF8] border border-neutral-100">
-                    <p className="text-xs font-medium uppercase tracking-wider mb-1.5">Verdict</p>
-                    <p className="text-sm">{result.webIntel.verdict}</p>
+                  <div className="p-5 border-b border-neutral-100">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">Verdict</p>
+                    <p className="text-sm leading-relaxed">{result.webIntel.verdict}</p>
                   </div>
                 )}
 
-                {result.webIntel.priceRange && (
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider mb-1.5">Price Range</p>
-                    <p className="text-sm text-muted-foreground">{result.webIntel.priceRange}</p>
+                {result.webIntel.qualityNotes && (
+                  <div className="p-5 border-b md:border-r border-neutral-100">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">Quality</p>
+                    <p className="text-[13px] text-muted-foreground leading-relaxed">{result.webIntel.qualityNotes}</p>
                   </div>
                 )}
 
-                {result.webIntel.otherRetailers && result.webIntel.otherRetailers.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider mb-1.5">Also Available At</p>
-                    <div className="flex flex-wrap gap-2">
-                      {result.webIntel.otherRetailers.map((r, i) => (
-                        <span key={i} className="text-xs px-2.5 py-1 bg-neutral-100">{r}</span>
-                      ))}
-                    </div>
+                <div className="p-5 border-b border-neutral-100">
+                  <div className="flex flex-col gap-4">
+                    {result.webIntel.priceRange && (
+                      <div>
+                        <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Price Range</p>
+                        <p className="text-sm">{result.webIntel.priceRange}</p>
+                      </div>
+                    )}
+                    {result.webIntel.otherRetailers && result.webIntel.otherRetailers.length > 0 && (
+                      <div>
+                        <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1.5">Also At</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {result.webIntel.otherRetailers.map((r, i) => (
+                            <span key={i} className="text-[10px] px-2 py-0.5 bg-neutral-50 border border-neutral-100">{r}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {result.webIntel.sustainabilityNotes && (
-                  <div className="flex items-start gap-2">
-                    <Leaf className="w-3.5 h-3.5 text-emerald-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wider mb-1">Sustainability</p>
-                      <p className="text-sm text-muted-foreground">{result.webIntel.sustainabilityNotes}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {result.products.length > 0 && (
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-4">Verified Products from {result.tagInfo.brandName}</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {result.products.slice(0, 6).map((p: any) => <ProductCard key={p.id} product={p} />)}
                 </div>
               </div>
-            )}
 
-            {result.betterAlternatives.length > 0 && (
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-1">Higher Quality Alternatives</p>
-                <p className="text-xs text-muted-foreground mb-4">Similar items with better natural fiber content</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {result.betterAlternatives.map((p: any) => <ProductCard key={p.id} product={p} />)}
+              {result.webIntel.sustainabilityNotes && (
+                <div className="px-5 py-4 flex items-start gap-2.5 bg-emerald-50/50">
+                  <Leaf className="w-3.5 h-3.5 text-emerald-700 mt-0.5 flex-shrink-0" />
+                  <p className="text-[12px] text-emerald-900/80 leading-relaxed">{result.webIntel.sustainabilityNotes}</p>
                 </div>
+              )}
+            </div>
+          )}
+
+          {result.products.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-0.5">From {result.tagInfo.brandName}</p>
+                  <p className="text-sm font-medium">Verified Products</p>
+                </div>
+                {result.designerInfo?.slug && (
+                  <RouterLink href={`/designers/${result.designerInfo.slug}`} className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                    View all <ArrowRight className="w-3 h-3" />
+                  </RouterLink>
+                )}
               </div>
-            )}
-          </div>
-        )}
-      </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                {result.products.slice(0, 8).map((p: any) => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </div>
+          )}
+
+          {result.betterAlternatives.length > 0 && (
+            <div className="border-t border-neutral-200 pt-8">
+              <div className="mb-5">
+                <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-0.5">Better Materials</p>
+                <p className="text-sm font-medium">Higher Quality Alternatives</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Similar products from other brands with higher natural fiber content</p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                {result.betterAlternatives.map((p: any) => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
