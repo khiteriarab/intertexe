@@ -71,12 +71,24 @@ export function useProductFavorites() {
     ...(serverFavorites || []),
   ]);
 
-  const toggle = useCallback((productId: string, brandName?: string) => {
+  const toggle = useCallback((productId: string, brandName?: string, price?: string) => {
     const current = loadLocal();
     const adding = !current.has(productId);
 
     if (adding) {
       current.add(productId);
+      if (price) {
+        try {
+          const alerts = JSON.parse(localStorage.getItem("intertexe_price_alerts") || "{}");
+          if (!alerts[productId]) {
+            alerts[productId] = price;
+            localStorage.setItem("intertexe_price_alerts", JSON.stringify(alerts));
+          }
+        } catch {}
+        if (isAuthenticated) {
+          api.savePriceAlert(productId, price).catch(() => {});
+        }
+      }
     } else {
       current.delete(productId);
     }

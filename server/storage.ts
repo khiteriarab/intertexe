@@ -8,11 +8,13 @@ import {
   type QuizResult,
   type InsertQuizResult,
   type ProductFavorite,
+  type PriceAlert,
   users,
   designers,
   favorites,
   quizResults,
   productFavorites,
+  priceAlerts,
   recents,
 } from "@shared/schema";
 import { db } from "./db";
@@ -601,6 +603,29 @@ export class DatabaseStorage implements IStorage {
 
   async addRecent(userId: string, productId: string, productUrl?: string, brandName?: string): Promise<void> {
     await db.insert(recents).values({ userId, productId, productUrl, brandName });
+  }
+
+  async savePriceAlert(userId: string, productId: string, savedPrice: string): Promise<void> {
+    await db.insert(priceAlerts)
+      .values({ userId, productId, savedPrice })
+      .onConflictDoNothing();
+  }
+
+  async getPriceAlerts(userId: string): Promise<PriceAlert[]> {
+    return db.select().from(priceAlerts).where(eq(priceAlerts.userId, userId));
+  }
+
+  async removePriceAlert(userId: string, productId: string): Promise<void> {
+    await db.delete(priceAlerts).where(
+      and(eq(priceAlerts.userId, userId), eq(priceAlerts.productId, productId))
+    );
+  }
+
+  async bulkSavePriceAlerts(userId: string, items: Array<{ productId: string; savedPrice: string }>): Promise<void> {
+    if (items.length === 0) return;
+    await db.insert(priceAlerts)
+      .values(items.map(i => ({ userId, productId: i.productId, savedPrice: i.savedPrice })))
+      .onConflictDoNothing();
   }
 }
 

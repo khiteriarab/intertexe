@@ -210,6 +210,36 @@ export const api = {
     return data.productIds || [];
   },
 
+  async getPriceAlerts(): Promise<Array<{ productId: string; savedPrice: string }>> {
+    const res = await apiFetch("/api/price-alerts");
+    if (res.status === 401) return [];
+    const data = await handleResponse(res);
+    return (data.alerts || []).map((a: any) => ({ productId: a.productId || a.product_id, savedPrice: a.savedPrice || a.saved_price }));
+  },
+
+  async savePriceAlert(productId: string, savedPrice: string) {
+    const res = await apiFetch("/api/price-alerts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, savedPrice }),
+    });
+    return handleResponse(res);
+  },
+
+  async bulkSavePriceAlerts(items: Array<{ productId: string; savedPrice: string }>) {
+    const res = await apiFetch("/api/price-alerts/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    });
+    return handleResponse(res);
+  },
+
+  async removePriceAlert(productId: string) {
+    const res = await apiFetch(`/api/price-alerts/${encodeURIComponent(productId)}`, { method: "DELETE" });
+    return handleResponse(res);
+  },
+
   async addRecent(productId: string, productUrl?: string, brandName?: string) {
     const res = await apiFetch("/api/recents", {
       method: "POST",

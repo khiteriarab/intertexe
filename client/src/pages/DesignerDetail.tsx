@@ -13,12 +13,12 @@ import { getBrandProfile, getTierLabel, type BrandProfile } from "@/lib/brand-pr
 import { BrandImage } from "@/components/BrandImage";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
 
-function ProductFavoriteButton({ productId }: { productId: string }) {
+function ProductFavoriteButton({ productId, brandName, price }: { productId: string; brandName?: string; price?: string }) {
   const { toggle, isFavorited } = useProductFavorites();
   const saved = isFavorited(productId);
   return (
     <button
-      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
       className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
       data-testid={`btn-favorite-detail-${productId}`}
       aria-label={saved ? "Remove from favorites" : "Save to favorites"}
@@ -297,7 +297,7 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
                                 {product.natural_fiber_percent || product.naturalFiberPercent}% natural
                               </span>
                             </div>
-                            <ProductFavoriteButton productId={String(product.product_id || product.productId)} />
+                            <ProductFavoriteButton productId={String(product.product_id || product.productId)} brandName={designer.name} price={product.price} />
                           </div>
                           <div className="p-3 flex flex-col gap-1.5 flex-1">
                             <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
@@ -342,7 +342,7 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
                         {product.natural_fiber_percent || product.naturalFiberPercent}% natural
                       </span>
                     </div>
-                    <ProductFavoriteButton productId={String(product.product_id || product.productId)} />
+                    <ProductFavoriteButton productId={String(product.product_id || product.productId)} brandName={designer.name} price={product.price} />
                   </div>
                   <div className="p-3 flex flex-col gap-1.5 flex-1">
                     <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>

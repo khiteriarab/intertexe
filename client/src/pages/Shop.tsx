@@ -65,7 +65,7 @@ function ProductCard({ product }: { product: any }) {
             loading="lazy"
           />
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
             className="absolute top-2.5 right-2.5 z-10 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             data-testid={`btn-favorite-${product.id}`}
             aria-label={saved ? "Remove from favorites" : "Save to favorites"}

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2 } from "lucide-react";
+import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2, TrendingDown } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FABRIC_PERSONAS } from "@shared/personas";
 import { BrandImage } from "@/components/BrandImage";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
+import { usePriceAlerts } from "@/hooks/use-price-alerts";
 import { fetchProductsByIds } from "@/lib/supabase";
 
 export default function Account() {
@@ -141,6 +142,7 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
   const { toast } = useToast();
   const contentRef = useRef<HTMLDivElement>(null);
   const { favorites: productFavIds, toggle: toggleProductFav, count: productFavCount } = useProductFavorites();
+  const { getPriceDrop } = usePriceAlerts();
 
   const { data: favorites = [], isLoading: favsLoading } = useQuery({
     queryKey: ["favorites"],
@@ -326,7 +328,18 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
 
             {productFavCount > 0 && (
               <div className="flex flex-col gap-3">
-                <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground">Saved Products ({productFavCount})</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground">Saved Products ({productFavCount})</h3>
+                  {(() => {
+                    const dropCount = (savedProducts as any[]).filter((p: any) => getPriceDrop(String(p.id), p.price)).length;
+                    return dropCount > 0 ? (
+                      <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1" data-testid="badge-price-drops-count">
+                        <TrendingDown className="w-3 h-3" />
+                        {dropCount} price {dropCount === 1 ? "drop" : "drops"}
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
                 {productsLoading ? (
                   <div className="animate-pulse grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[1,2,3].map(i => <div key={i} className="aspect-[3/4] bg-secondary" />)}
@@ -341,8 +354,9 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                       const shopUrl = product.url
                         ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}&productId=${encodeURIComponent(productId)}`
                         : null;
+                      const priceDrop = getPriceDrop(productId, product.price);
                       return (
-                        <div key={productId} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all" data-testid={`card-saved-product-${productId}`}>
+                        <div key={productId} className={`group flex flex-col bg-background border transition-all ${priceDrop ? "border-emerald-500/60 hover:border-emerald-500" : "border-border/40 hover:border-foreground/30"}`} data-testid={`card-saved-product-${productId}`}>
                           <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
                             {imageUrl ? (
                               <img src={imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
@@ -351,7 +365,15 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                                 <ShoppingBag className="w-8 h-8 opacity-30" />
                               </div>
                             )}
-                            {fiberPercent != null && fiberPercent >= 90 && (
+                            {priceDrop && (
+                              <div className="absolute bottom-2 left-2 z-10" data-testid={`badge-price-drop-${productId}`}>
+                                <span className="flex items-center gap-1 bg-emerald-600 text-white px-2 py-1 text-[9px] uppercase tracking-wider font-semibold backdrop-blur-sm">
+                                  <TrendingDown className="w-3 h-3" />
+                                  {priceDrop.dropPercent}% off
+                                </span>
+                              </div>
+                            )}
+                            {!priceDrop && fiberPercent != null && fiberPercent >= 90 && (
                               <div className="absolute top-2 left-2">
                                 <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
                                   <CheckCircle2 className="w-2.5 h-2.5" />
@@ -375,15 +397,22 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                               <p className="text-[10px] text-muted-foreground line-clamp-1 mt-auto">{product.composition}</p>
                             )}
                             <div className="flex items-center justify-between mt-1">
-                              {product.price && <span className="text-xs font-medium">{product.price}</span>}
+                              {priceDrop ? (
+                                <div className="flex items-center gap-2" data-testid={`price-drop-info-${productId}`}>
+                                  <span className="text-xs font-semibold text-emerald-700">{product.price}</span>
+                                  <span className="text-[10px] text-muted-foreground line-through">${priceDrop.savedPrice.toLocaleString()}</span>
+                                </div>
+                              ) : (
+                                product.price && <span className="text-xs font-medium">{product.price}</span>
+                              )}
                               {fiberPercent != null && fiberPercent < 90 && (
                                 <span className="text-[9px] text-muted-foreground">{fiberPercent}% natural</span>
                               )}
                             </div>
                           </div>
                           {shopUrl && (
-                            <a href={shopUrl} className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors">
-                              Shop Now <ExternalLink className="w-3 h-3" />
+                            <a href={shopUrl} className={`flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] transition-colors ${priceDrop ? "bg-emerald-700 text-white hover:bg-emerald-800" : "bg-foreground text-background hover:bg-foreground/90"}`}>
+                              {priceDrop ? "Price Dropped — Shop Now" : "Shop Now"} <ExternalLink className="w-3 h-3" />
                             </a>
                           )}
                         </div>

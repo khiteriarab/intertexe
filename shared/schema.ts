@@ -84,6 +84,14 @@ export const recents = pgTable("recents", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const priceAlerts = pgTable("price_alerts", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  productId: text("product_id").notNull(),
+  savedPrice: text("saved_price").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const analyticsEvents = pgTable("analytics_events", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   event: text("event").notNull(),
@@ -130,6 +138,11 @@ export const insertRecentSchema = createInsertSchema(recents).omit({
   createdAt: true,
 });
 
+export const insertPriceAlertSchema = createInsertSchema(priceAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -145,4 +158,6 @@ export type ProductFavorite = typeof productFavorites.$inferSelect;
 export type InsertProductFavorite = z.infer<typeof insertProductFavoriteSchema>;
 export type Recent = typeof recents.$inferSelect;
 export type InsertRecent = z.infer<typeof insertRecentSchema>;
+export type PriceAlert = typeof priceAlerts.$inferSelect;
+export type InsertPriceAlert = z.infer<typeof insertPriceAlertSchema>;
 export * from "./models/chat";

@@ -52,7 +52,7 @@ function FabricProductCard({ product, index }: { product: any; index: number }) 
           </div>
         )}
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, product.price); }}
           className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors z-10"
           data-testid={`button-heart-fabric-${index}`}
         >
