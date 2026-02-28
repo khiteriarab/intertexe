@@ -310,10 +310,6 @@ export default function Scanner() {
             <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm mb-6" data-testid="text-scan-error">{error}</div>
           )}
 
-          <button onClick={() => setResult(DEMO_RESULT)} className="w-full flex items-center justify-center gap-2 py-2.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 hover:text-muted-foreground transition-colors mb-6" data-testid="button-try-demo">
-            See example result
-          </button>
-
           <RouterLink href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-scanner">
             <MessageCircle className="w-4 h-4 flex-shrink-0" />
             <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Ask Our AI Advisor</span>
@@ -340,7 +336,7 @@ export default function Scanner() {
       {result && (() => {
         const fiberPct = result.webIntel?.naturalFiberPercent ?? null;
         const isGreatProduct = fiberPct !== null && fiberPct >= 80;
-        const showAlternatives = !isGreatProduct && result.betterAlternatives.length > 0;
+        const hasProducts = result.products.length > 0 || result.betterAlternatives.length > 0;
 
         return (
         <div className="pt-6 md:pt-10 pb-8">
@@ -393,11 +389,11 @@ export default function Scanner() {
             </RouterLink>
           )}
 
-          {showAlternatives && (
+          {result.betterAlternatives.length > 0 && (
             <div className="mb-8">
               <div className="mb-4">
-                <p className="text-sm font-medium">Better Alternatives</p>
-                <p className="text-[11px] text-muted-foreground">Same category, higher natural fiber content</p>
+                <p className="text-sm font-medium">{isGreatProduct ? "Similar Pieces to Shop" : "Better Alternatives"}</p>
+                <p className="text-[11px] text-muted-foreground">{isGreatProduct ? "High natural fiber products you might also like" : "Same category, higher natural fiber content"}</p>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                 {result.betterAlternatives.map((p: any) => <ProductCard key={p.id} product={p} />)}
