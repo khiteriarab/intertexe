@@ -120,16 +120,91 @@ const DEMO_RESULT: ScanResult = {
   ],
 };
 
+function EmailGate({ onUnlock }: { onUnlock: () => void }) {
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) { setErr("Please enter a valid email"); return; }
+    setSubmitting(true);
+    setErr("");
+    try {
+      await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: crypto.randomUUID().slice(0, 12) }),
+      });
+      localStorage.setItem("intertexe_scanner_email", email.trim());
+      onUnlock();
+    } catch {
+      localStorage.setItem("intertexe_scanner_email", email.trim());
+      onUnlock();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" data-testid="email-gate-overlay">
+      <div className="bg-[#FAFAF8] w-full max-w-md p-8 md:p-10 flex flex-col items-center text-center">
+        <Sparkles className="w-6 h-6 text-neutral-400 mb-4" />
+        <h2 className="text-xl md:text-2xl font-serif mb-2">Unlock Shopping Intelligence</h2>
+        <p className="text-[13px] text-muted-foreground mb-6 leading-relaxed max-w-xs">
+          Enter your email to scan products, check compositions, and get AI-powered material advice — free.
+        </p>
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your email address"
+            className="w-full px-4 py-3 text-[14px] border border-neutral-200 bg-white focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
+            autoFocus
+            data-testid="input-gate-email"
+          />
+          {err && <p className="text-[12px] text-red-500">{err}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-3 bg-[#111] text-white text-[11px] uppercase tracking-[0.15em] font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50"
+            data-testid="button-gate-submit"
+          >
+            {submitting ? "..." : "Get Free Access"}
+          </button>
+        </form>
+        <p className="text-[10px] text-muted-foreground/50 mt-4">No spam. Unsubscribe anytime.</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Scanner() {
   const [mode, setMode] = useState<"idle" | "camera">("idle");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [showEmailGate, setShowEmailGate] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const hasAccess = () => !!localStorage.getItem("intertexe_scanner_email");
+
+  const requireEmail = (action: () => void) => {
+    if (hasAccess()) { action(); return; }
+    setPendingAction(() => action);
+    setShowEmailGate(true);
+  };
+
+  const handleEmailUnlock = () => {
+    setShowEmailGate(false);
+    if (pendingAction) { pendingAction(); setPendingAction(null); }
+  };
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -269,6 +344,7 @@ export default function Scanner() {
 
   return (
     <div className="w-full">
+      {showEmailGate && <EmailGate onUnlock={handleEmailUnlock} />}
       {!result && !loading && (
         <>
           <div className="pt-8 md:pt-14 pb-6 md:pb-8">
@@ -277,12 +353,12 @@ export default function Scanner() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
-            <button onClick={startCamera} className="col-span-1 group flex flex-col items-center gap-2 p-5 md:p-7 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]" data-testid="button-camera-scan">
+            <button onClick={() => requireEmail(startCamera)} className="col-span-1 group flex flex-col items-center gap-2 p-5 md:p-7 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]" data-testid="button-camera-scan">
               <Camera className="w-5 h-5 md:w-6 md:h-6" />
               <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Scan Tag</span>
             </button>
 
-            <button onClick={() => fileInputRef.current?.click()} className="col-span-1 group flex flex-col items-center gap-2 p-5 md:p-7 bg-white border border-neutral-200 hover:border-neutral-400 transition-all active:scale-[0.98]" data-testid="button-upload-photo">
+            <button onClick={() => requireEmail(() => fileInputRef.current?.click())} className="col-span-1 group flex flex-col items-center gap-2 p-5 md:p-7 bg-white border border-neutral-200 hover:border-neutral-400 transition-all active:scale-[0.98]" data-testid="button-upload-photo">
               <Upload className="w-5 h-5 md:w-6 md:h-6 text-neutral-600" />
               <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Upload</span>
             </button>
@@ -296,10 +372,10 @@ export default function Scanner() {
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Paste product URL..."
                   className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
-                  onKeyDown={(e) => e.key === "Enter" && scanUrl()}
+                  onKeyDown={(e) => e.key === "Enter" && requireEmail(scanUrl)}
                   data-testid="input-product-url"
                 />
-                <button onClick={scanUrl} disabled={!url.trim()} className="px-4 py-2.5 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em] font-medium disabled:opacity-30 hover:bg-neutral-800 transition-colors flex-shrink-0" data-testid="button-scan-url">
+                <button onClick={() => requireEmail(scanUrl)} disabled={!url.trim()} className="px-4 py-2.5 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em] font-medium disabled:opacity-30 hover:bg-neutral-800 transition-colors flex-shrink-0" data-testid="button-scan-url">
                   Scan
                 </button>
               </div>
