@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Camera, Upload, Link2, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, ExternalLink } from "lucide-react";
+import { Camera, Upload, Link2, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, ExternalLink, MessageCircle } from "lucide-react";
 import { Link as RouterLink } from "wouter";
 import { trackAffiliateRedirect } from "@/lib/analytics";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
@@ -96,6 +96,24 @@ function FiberBar({ percent, label }: { percent: number; label?: string }) {
     </div>
   );
 }
+
+const DEMO_RESULT: ScanResult = {
+  tagInfo: { brandName: "Zara", productName: "Satin Effect Midi Dress", price: "$89.90", composition: "92% Polyester, 8% Elastane", confidence: "high", rawText: "From zara.com" },
+  products: [],
+  matched: false,
+  brandStats: null,
+  designerInfo: null,
+  webIntel: {
+    composition: "92% Polyester, 8% Elastane",
+    naturalFiberPercent: 0,
+    priceRange: "$30 - $150",
+    otherRetailers: ["Zara.com", "ASOS", "Zalando", "About You"],
+    qualityNotes: "Zara's satin-effect dresses use synthetic polyester with an elastane blend for stretch. The fabric mimics silk's sheen but lacks the breathability and longevity of natural fibers. Typical fast-fashion construction with limited durability.",
+    sustainabilityNotes: "Polyester is petroleum-derived and non-biodegradable. Zara has made some sustainability pledges through their Join Life program, but this particular product uses no natural or recycled fibers.",
+    verdict: "At $89.90 for a 100% synthetic dress, you're paying for trend speed, not material quality. Consider silk or viscose alternatives from brands like Reformation or Sandro for similar aesthetics with better fabric."
+  },
+  betterAlternatives: [],
+};
 
 export default function Scanner() {
   const [mode, setMode] = useState<"idle" | "camera">("idle");
@@ -291,6 +309,10 @@ export default function Scanner() {
             </div>
           </div>
 
+          <button onClick={() => setResult(DEMO_RESULT)} className="w-full flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground border border-dashed border-neutral-200 hover:border-neutral-400 transition-colors" data-testid="button-try-demo">
+            <Sparkles className="w-3 h-3" /> See example result — Zara Satin Dress
+          </button>
+
           {error && (
             <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm mb-8" data-testid="text-scan-error">{error}</div>
           )}
@@ -314,6 +336,19 @@ export default function Scanner() {
                 <p className="text-sm mt-1">Get an honest verdict, quality rating, and better alternatives with higher natural fiber content</p>
               </div>
             </div>
+          </div>
+
+          <div className="border-t border-neutral-100 mt-6 pt-8 pb-4">
+            <RouterLink href="/chat" className="flex items-center gap-4 p-5 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-scanner">
+              <div className="w-10 h-10 border border-white/20 flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em] block">Ask Our AI Advisor</span>
+                <span className="text-[10px] md:text-[11px] text-white/50 block mt-0.5">Get personalized material and brand recommendations</span>
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/40 flex-shrink-0" />
+            </RouterLink>
           </div>
         </>
       )}
@@ -475,6 +510,19 @@ export default function Scanner() {
               </div>
             </div>
           )}
+
+          <div className="border-t border-neutral-200 mt-10 pt-8">
+            <RouterLink href="/chat" className="flex items-center gap-4 p-5 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-results">
+              <div className="w-10 h-10 border border-white/20 flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em] block">Want More Detail?</span>
+                <span className="text-[10px] md:text-[11px] text-white/50 block mt-0.5">Chat with our AI advisor about this brand or product</span>
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/40 flex-shrink-0" />
+            </RouterLink>
+          </div>
         </div>
       )}
     </div>
