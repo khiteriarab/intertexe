@@ -165,6 +165,10 @@ const NON_CLOTHING_PATTERNS = [
   /\bthrow blanket\b/i,
   /\b(vase|planter|coaster|cushion|picture frame|wine glass)\b/i,
   /\b(throw pillow)\b/i,
+  /\b- Belts$/i,
+  /\bleather belt\b/i,
+  /\bslim.*belt\b/i,
+  /\bbelt with\b/i,
 ];
 
 function isClothingProduct(name: string): boolean {
