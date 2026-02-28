@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "wouter";
 import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag, MapPin, Calendar, Tag, Search } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -127,9 +127,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   jackets: "Jackets",
 };
 
+const PRODUCTS_PER_PAGE = 24;
+
 function ProductsSection({ products, designer, profile, slug }: { products: any; designer: any; profile: BrandProfile | null; slug: string }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
 
   const visibleProducts = useMemo(() => {
     if (!products) return [];
@@ -177,6 +180,22 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
     return filtered;
   }, [visibleProducts, activeCategory, searchQuery]);
 
+  const paginatedProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, visibleCount]);
+
+  const hasMore = filteredProducts.length > visibleCount;
+
+  const handleCategoryChange = useCallback((cat: string) => {
+    setActiveCategory(cat);
+    setVisibleCount(PRODUCTS_PER_PAGE);
+  }, []);
+
+  const handleSearchChange = useCallback((q: string) => {
+    setSearchQuery(q);
+    setVisibleCount(PRODUCTS_PER_PAGE);
+  }, []);
+
   return (
     <section className="flex flex-col gap-5" data-testid="section-browse-collection">
       <div className="flex items-center gap-3">
@@ -199,7 +218,7 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder={`Search ${designer.name} products...`}
                   className="w-full pl-10 pr-4 py-2.5 bg-secondary/50 border border-border/30 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/40 transition-colors"
                   data-testid="input-product-search"
@@ -209,7 +228,7 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
               {(categories.length > 1 || matchingSets.length > 0) && (
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                   <button
-                    onClick={() => setActiveCategory("all")}
+                    onClick={() => handleCategoryChange("all")}
                     className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                       activeCategory === "all"
                         ? "bg-foreground text-background"
@@ -221,7 +240,7 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
                   </button>
                   {matchingSets.length > 0 && (
                     <button
-                      onClick={() => setActiveCategory("matching-sets")}
+                      onClick={() => handleCategoryChange("matching-sets")}
                       className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                         activeCategory === "matching-sets"
                           ? "bg-foreground text-background"
@@ -235,7 +254,7 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
                   {categories.map(({ key, label, count }) => (
                     <button
                       key={key}
-                      onClick={() => setActiveCategory(key)}
+                      onClick={() => handleCategoryChange(key)}
                       className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                         activeCategory === key
                           ? "bg-foreground text-background"
@@ -314,46 +333,57 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
               })}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {filteredProducts.map((product: any) => (
-                <a
-                  key={product.product_id || product.productId}
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
-                  data-testid={`card-product-${product.product_id || product.productId}`}
-                >
-                  <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-                    {(product.image_url || product.imageUrl) ? (
-                      <img
-                        src={product.image_url || product.imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <ShoppingBag className="w-8 h-8 opacity-30" />
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                {paginatedProducts.map((product: any) => (
+                  <a
+                    key={product.product_id || product.productId}
+                    href={product.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
+                    data-testid={`card-product-${product.product_id || product.productId}`}
+                  >
+                    <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                      {(product.image_url || product.imageUrl) ? (
+                        <img
+                          src={product.image_url || product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <ShoppingBag className="w-8 h-8 opacity-30" />
+                        </div>
+                      )}
+                      <div className="absolute top-2 left-2">
+                        <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                          {product.natural_fiber_percent || product.naturalFiberPercent}% natural
+                        </span>
                       </div>
-                    )}
-                    <div className="absolute top-2 left-2">
-                      <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                        {product.natural_fiber_percent || product.naturalFiberPercent}% natural
-                      </span>
+                      <ProductFavoriteButton productId={String(product.product_id || product.productId)} brandName={designer.name} price={product.price} />
                     </div>
-                    <ProductFavoriteButton productId={String(product.product_id || product.productId)} brandName={designer.name} price={product.price} />
-                  </div>
-                  <div className="p-3 flex flex-col gap-1.5 flex-1">
-                    <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
-                    <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
-                    {(product.price) && (
-                      <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
+                    <div className="p-3 flex flex-col gap-1.5 flex-1">
+                      <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
+                      <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
+                      {(product.price) && (
+                        <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
+              {hasMore && (
+                <button
+                  onClick={() => setVisibleCount(prev => prev + PRODUCTS_PER_PAGE)}
+                  className="w-full border border-foreground/20 hover:border-foreground/40 text-foreground py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98]"
+                  data-testid="button-load-more-products"
+                >
+                  Load More ({filteredProducts.length - visibleCount} remaining)
+                </button>
+              )}
+            </>
           ) : (
             <p className="text-sm text-muted-foreground py-8 text-center">
               No products match your search. Try a different term or category.
