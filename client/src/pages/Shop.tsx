@@ -243,24 +243,22 @@ export default function Shop() {
             ))}
           </div>
 
-          {fiberTab !== "all" && (
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
-              {CATEGORY_FILTERS.map(cat => (
-                <button
-                  key={cat.key}
-                  onClick={() => { setCategoryFilter(cat.key); setVisibleCount(60); }}
-                  className={`px-3 py-2 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap border transition-colors flex-shrink-0 min-h-[36px] ${
-                    categoryFilter === cat.key
-                      ? "border-foreground text-foreground font-medium"
-                      : "border-border/40 text-muted-foreground hover:border-foreground/40"
-                  }`}
-                  data-testid={`tab-category-${cat.key}`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+            {CATEGORY_FILTERS.map(cat => (
+              <button
+                key={cat.key}
+                onClick={() => { setCategoryFilter(cat.key); setVisibleCount(60); }}
+                className={`px-3 py-2 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap border transition-colors flex-shrink-0 min-h-[36px] ${
+                  categoryFilter === cat.key
+                    ? "border-foreground text-foreground font-medium"
+                    : "border-border/40 text-muted-foreground hover:border-foreground/40"
+                }`}
+                data-testid={`tab-category-${cat.key}`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center justify-between border-b border-border/30 pb-3">
