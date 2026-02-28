@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "wouter";
-import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag, MapPin, Calendar, Tag, Search } from "lucide-react";
+import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag, MapPin, Calendar, Tag, Search, ChevronDown } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesignerBySlug, fetchProductsByBrand } from "@/lib/supabase";
@@ -129,10 +129,25 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const PRODUCTS_PER_PAGE = 24;
 
+type PriceSort = "default" | "price-low" | "price-high";
+const PRICE_SORT_OPTIONS: { key: PriceSort; label: string }[] = [
+  { key: "default", label: "Default" },
+  { key: "price-low", label: "Price: Low to High" },
+  { key: "price-high", label: "Price: High to Low" },
+];
+
+function parsePrice(p: string | null | undefined): number {
+  if (!p) return 0;
+  const match = p.replace(/,/g, "").match(/[\d.]+/);
+  return match ? parseFloat(match[0]) : 0;
+}
+
 function ProductsSection({ products, designer, profile, slug }: { products: any; designer: any; profile: BrandProfile | null; slug: string }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
+  const [priceSort, setPriceSort] = useState<PriceSort>("default");
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   const visibleProducts = useMemo(() => {
     if (!products) return [];
@@ -177,8 +192,15 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
         (p.composition || "").toLowerCase().includes(q)
       );
     }
+    if (priceSort !== "default") {
+      filtered = [...filtered].sort((a: any, b: any) => {
+        const pa = parsePrice(a.price);
+        const pb = parsePrice(b.price);
+        return priceSort === "price-low" ? pa - pb : pb - pa;
+      });
+    }
     return filtered;
-  }, [visibleProducts, activeCategory, searchQuery]);
+  }, [visibleProducts, activeCategory, searchQuery, priceSort]);
 
   const paginatedProducts = useMemo(() => {
     return filteredProducts.slice(0, visibleCount);
@@ -269,6 +291,43 @@ function ProductsSection({ products, designer, profile, slug }: { products: any;
               )}
             </div>
           )}
+
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">{filteredProducts.length}</span> {activeCategory === "matching-sets" ? "sets" : "items"}
+            </p>
+            <div className="relative">
+              <button
+                onClick={() => setShowSortMenu(!showSortMenu)}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="btn-price-sort"
+              >
+                {PRICE_SORT_OPTIONS.find(o => o.key === priceSort)?.label || "Sort"}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
+              </button>
+              {showSortMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 shadow-lg min-w-[180px]">
+                    {PRICE_SORT_OPTIONS.map(option => (
+                      <button
+                        key={option.key}
+                        onClick={() => { setPriceSort(option.key); setShowSortMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${
+                          priceSort === option.key
+                            ? "bg-secondary font-medium text-foreground"
+                            : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                        }`}
+                        data-testid={`sort-${option.key}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
 
           {activeCategory === "matching-sets" ? (
             <div className="flex flex-col gap-6">
