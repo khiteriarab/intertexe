@@ -1,6 +1,7 @@
 import { useState, useMemo, Component, type ReactNode } from "react";
 import { Link } from "wouter";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, SlidersHorizontal, Star, Heart } from "lucide-react";
+import { trackAffiliateRedirect } from "@/lib/analytics";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { fetchDesigners, fetchDesignersByNames, fetchRecommendedProducts, fetchProductsByBrand } from "@/lib/supabase";
@@ -471,11 +472,10 @@ function QuizProductCard({ product }: { product: any }) {
   const brandName = product.brandName || product.brand_name || "";
   const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
   const pId = String(product.id);
-  const shopUrl = product.url
-    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}&productId=${encodeURIComponent(pId)}`
-    : null;
+  const shopUrl = product.url || null;
   const CardWrapper = shopUrl ? 'a' : 'div';
-  const wrapperProps = shopUrl ? { href: shopUrl } : {};
+  const handleClick = shopUrl ? () => { trackAffiliateRedirect(brandName, shopUrl); } : undefined;
+  const wrapperProps = shopUrl ? { href: shopUrl, target: "_blank" as const, rel: "noopener noreferrer", onClick: handleClick } : {};
   return (
     <CardWrapper {...wrapperProps} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all cursor-pointer" data-testid={`card-quiz-product-${product.productId || product.product_id}`}>
       <div className="aspect-[3/4] bg-secondary relative overflow-hidden">

@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "wouter";
 import { ExternalLink, ShoppingBag, ArrowRight, ChevronRight, Heart, ChevronDown } from "lucide-react";
+import { trackAffiliateRedirect } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
 import { fetchShopProducts, fetchFiberCounts, fetchProductCount } from "@/lib/supabase";
@@ -40,9 +41,7 @@ function ProductCard({ product }: { product: any }) {
   const productId = String(product.id);
   const saved = isFavorited(productId);
 
-  const shopUrl = product.url
-    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(product.brand_name || product.brandName || "")}&productId=${encodeURIComponent(productId)}`
-    : null;
+  const shopUrl = product.url || null;
 
   const name = product.name || product.productName || "";
   const brandName = product.brand_name || product.brandName || "";
@@ -52,7 +51,8 @@ function ProductCard({ product }: { product: any }) {
   const fiberPercent = product.natural_fiber_percent || product.naturalFiberPercent;
 
   const CardWrapper = shopUrl ? 'a' : 'div';
-  const wrapperProps = shopUrl ? { href: shopUrl } : {};
+  const handleClick = shopUrl ? () => { trackAffiliateRedirect(brandName, shopUrl); } : undefined;
+  const wrapperProps = shopUrl ? { href: shopUrl, target: "_blank" as const, rel: "noopener noreferrer", onClick: handleClick } : {};
 
   return (
     <CardWrapper {...wrapperProps} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>

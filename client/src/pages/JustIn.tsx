@@ -30,9 +30,7 @@ function ProductCard({ product }: { product: any }) {
   const { toggle, isFavorited } = useProductFavorites();
   const productId = String(product.id);
   const saved = isFavorited(productId);
-  const shopUrl = product.url
-    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(product.brand_name || product.brandName || "")}&productId=${encodeURIComponent(productId)}`
-    : null;
+  const shopUrl = product.url || null;
 
   const name = product.name || product.productName || "";
   const brandName = product.brand_name || product.brandName || "";
@@ -88,6 +86,8 @@ function ProductCard({ product }: { product: any }) {
       {shopUrl && (
         <a
           href={shopUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 bg-foreground text-background py-3 md:py-3.5 text-[10px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors active:scale-[0.98]"
           data-testid={`button-shop-product-${product.id}`}
         >

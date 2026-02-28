@@ -1,6 +1,7 @@
 import { useRef, useMemo } from "react";
 import { Link } from "wouter";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucide-react";
+import { trackAffiliateRedirect } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners, fetchDesignerBySlug, fetchProductSample, fetchProductCount, fetchProductsByFiber, fetchProductsByBrandWithImages, fetchProductCountsByBrand } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
@@ -31,12 +32,11 @@ function ProductCardSmall({ product }: { product: any }) {
   const imageUrl = product.image_url || product.imageUrl;
   const price = product.price;
 
-  const shopUrl = product.url
-    ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}&productId=${encodeURIComponent(productId)}`
-    : null;
+  const shopUrl = product.url || null;
 
   const CardWrapper = shopUrl ? 'a' : 'div';
-  const wrapperProps = shopUrl ? { href: shopUrl } : {};
+  const handleClick = shopUrl ? () => { trackAffiliateRedirect(brandName, shopUrl); } : undefined;
+  const wrapperProps = shopUrl ? { href: shopUrl, target: "_blank" as const, rel: "noopener noreferrer", onClick: handleClick } : {};
 
   return (
     <CardWrapper {...wrapperProps} className="group flex-shrink-0 w-[160px] md:w-[220px] flex flex-col cursor-pointer" data-testid={`product-home-${product.id}`}>
