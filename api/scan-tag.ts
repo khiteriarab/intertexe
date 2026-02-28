@@ -58,7 +58,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
   if (!openaiKey || !supabaseUrl || !supabaseKey) {
-    return res.status(500).json({ error: "Server not configured" });
+    const missing = [];
+    if (!openaiKey) missing.push("OPENAI_API_KEY");
+    if (!supabaseUrl) missing.push("SUPABASE_URL");
+    if (!supabaseKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+    console.error("Missing env vars:", missing.join(", "));
+    return res.status(500).json({ error: "Server not configured", missing });
   }
 
   try {
