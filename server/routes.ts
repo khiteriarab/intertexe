@@ -429,7 +429,7 @@ export async function registerRoutes(
       try {
         const parsed = JSON.parse(content);
         suggestions = parsed.brands || [];
-      } catch {
+      } catch (e) {
         console.error("Failed to parse AI similar brands response");
         return res.json([]);
       }
@@ -616,7 +616,7 @@ export async function registerRoutes(
           .filter((d: any) => d.slug && d.slug.length > 1)
           .map((d: any) => ({ path: `/designers/${d.slug}`, priority: "0.6", changefreq: "weekly" }));
       }
-    } catch {}
+    } catch (e) {}
 
     const allPages = [...staticPages, ...materialPages, ...brandPages];
     const today = new Date().toISOString().split("T")[0];
@@ -675,14 +675,14 @@ ${allPages.map(p => `  <url>
               try {
                 const data = JSON.parse(jsonLd[1]);
                 if (data.offers?.price) newPrice = "$" + parseFloat(data.offers.price).toFixed(2);
-              } catch {}
+              } catch (e) {}
             }
 
             if (newPrice && newPrice !== p.price) {
               await supabaseAdmin.from("products").update({ price: newPrice }).eq("id", p.id);
               priceUpdated++;
             }
-          } catch { failed++; }
+          } catch (e) { failed++; }
 
           await new Promise(r => setTimeout(r, 300));
         }
