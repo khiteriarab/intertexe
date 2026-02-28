@@ -101,10 +101,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const avgFiber = products.length ? Math.round(totalFiber / products.length) : null;
     const brandRating = avgFiber === null ? null : avgFiber >= 95 ? "Exceptional" : avgFiber >= 85 ? "Excellent" : avgFiber >= 70 ? "Good" : "Caution";
 
-    const scannedFiber = products[0]?.natural_fiber_percent || avgFiber || 0;
-    const { data: altData } = await supabase.from("products").select("*").eq("approved", "yes")
-      .gt("natural_fiber_percent", Math.min(scannedFiber + 5, 100)).neq("brand_slug", brandSlug)
-      .order("natural_fiber_percent", { ascending: false }).limit(6);
+    const detectedCategory = pageInfo.category || "";
+    const categoryKeywords: Record<string, string[]> = {
+      dresses: ["dress", "gown", "midi", "maxi", "mini dress"],
+      tops: ["top", "blouse", "shirt", "tee", "camisole", "tank"],
+      bottoms: ["pant", "trouser", "skirt", "jean", "short"],
+      outerwear: ["jacket", "coat", "blazer", "cardigan", "sweater", "knit"],
+      knitwear: ["sweater", "knit", "cardigan", "pullover"],
+    };
+    const searchTerms = categoryKeywords[detectedCategory] || [];
+    let altQuery = supabase.from("products").select("*").eq("approved", "yes")
+      .gte("natural_fiber_percent", 80).neq("brand_slug", brandSlug)
+      .order("natural_fiber_percent", { ascending: false });
+    if (searchTerms.length > 0) {
+      altQuery = altQuery.or(searchTerms.map(t => `name.ilike.%${t}%`).join(","));
+    }
+    const { data: altData } = await altQuery.limit(6);
 
     const webIntel = await webResearch(openai, brandName, pageInfo.productName || "", pageInfo.price || "", designerInfo?.website);
     if (webIntel && pageInfo.composition) {

@@ -112,7 +112,12 @@ const DEMO_RESULT: ScanResult = {
     sustainabilityNotes: "Polyester is petroleum-derived and non-biodegradable. Zara has made some sustainability pledges through their Join Life program, but this particular product uses no natural or recycled fibers.",
     verdict: "At $89.90 for a 100% synthetic dress, you're paying for trend speed, not material quality. Consider silk or viscose alternatives from brands like Reformation or Sandro for similar aesthetics with better fabric."
   },
-  betterAlternatives: [],
+  betterAlternatives: [
+    { id: "demo-1", brand_name: "Reformation", name: "Nikita Silk Midi Dress", price: "$278", composition: "100% Silk", natural_fiber_percent: 100, image_url: null, url: "https://www.thereformation.com" },
+    { id: "demo-2", brand_name: "Sandro", name: "Satin Dress with Open Back", price: "$395", composition: "95% Silk, 5% Elastane", natural_fiber_percent: 95, image_url: null, url: "https://www.sandro-paris.com" },
+    { id: "demo-3", brand_name: "A.L.C.", name: "Harlow Silk Charmeuse Midi Dress", price: "$495", composition: "100% Silk", natural_fiber_percent: 100, image_url: null, url: "https://www.alcltd.com" },
+    { id: "demo-4", brand_name: "Vince", name: "Slip Dress in Silk Satin", price: "$325", composition: "92% Silk, 8% Spandex", natural_fiber_percent: 92, image_url: null, url: "https://www.vince.com" },
+  ],
 };
 
 export default function Scanner() {
