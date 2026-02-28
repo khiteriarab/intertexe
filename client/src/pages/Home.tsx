@@ -228,7 +228,7 @@ export default function Home() {
             Shop by Fabric
           </h1>
           <p className="text-[13px] md:text-lg text-white/80 mb-6 md:mb-8 font-light leading-relaxed max-w-md" data-testid="text-hero-subtext">
-            {productCount > 0 ? productCount.toLocaleString() : '17,000+'} products ranked by what they're made of. Choose a fabric. Browse verified pieces. Shop better materials instantly.
+            {productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products. Choose your fabric, browse ranked pieces, shop better materials instantly.
           </p>
           <Link href="/shop" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 w-fit active:scale-[0.97]" data-testid="button-shop-now">
             Shop by Fabric <ArrowRight className="w-4 h-4" />
