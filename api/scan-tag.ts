@@ -93,13 +93,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const detectedCategory = tagInfo.category || "";
     const categoryKeywords: Record<string, string[]> = {
-      dresses: ["dress", "gown", "midi", "maxi", "mini dress"],
+      dresses: ["dress", "gown", "midi dress", "maxi dress", "mini dress"],
       tops: ["top", "blouse", "shirt", "tee", "camisole", "tank"],
-      bottoms: ["pant", "trouser", "skirt", "jean", "short"],
-      outerwear: ["jacket", "coat", "blazer", "cardigan", "sweater", "knit"],
+      bottoms: ["pant", "trouser", "jean", "denim"],
+      skirts: ["skirt", "mini skirt", "midi skirt"],
+      shorts: ["short"],
+      outerwear: ["jacket", "coat", "blazer"],
       knitwear: ["sweater", "knit", "cardigan", "pullover"],
     };
-    const searchTerms = categoryKeywords[detectedCategory] || [];
+    const productNameLower = (tagInfo.productName || "").toLowerCase();
+    let resolvedCategory = detectedCategory;
+    if (detectedCategory === "bottoms") {
+      if (productNameLower.match(/\b(short|shorts)\b/) && !productNameLower.match(/\b(pant|trouser|jean)\b/)) resolvedCategory = "shorts";
+      else if (productNameLower.match(/\b(skirt)\b/)) resolvedCategory = "skirts";
+    }
+    const searchTerms = categoryKeywords[resolvedCategory] || [];
     let altQuery = supabase.from("products").select("*").eq("approved", "yes")
       .gte("natural_fiber_percent", 80).neq("brand_slug", brandSlug)
       .order("natural_fiber_percent", { ascending: false });
