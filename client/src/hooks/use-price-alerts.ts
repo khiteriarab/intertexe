@@ -1,6 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  supabaseGetPriceWatches,
+  supabaseSavePriceWatch,
+  supabaseRemovePriceWatch,
+  supabaseBulkSavePriceWatches,
+} from "@/lib/supabase";
+import { useEffect, useRef } from "react";
 
 const LOCAL_KEY = "intertexe_price_alerts";
 
@@ -39,15 +45,34 @@ function removeLocalAlert(productId: string) {
 }
 
 export function usePriceAlerts() {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  const hasSynced = useRef<string | null>(null);
+  const userId = user?.id;
 
   const { data: serverAlerts = [] } = useQuery({
-    queryKey: ["price-alerts"],
-    queryFn: () => api.getPriceAlerts(),
-    enabled: isAuthenticated,
+    queryKey: ["price-watches", userId],
+    queryFn: () => supabaseGetPriceWatches(userId),
+    enabled: isAuthenticated && !!userId,
     staleTime: 60_000,
   });
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) return;
+    if (hasSynced.current === userId) return;
+    hasSynced.current = userId;
+
+    const local = loadLocalAlerts();
+    const items = Object.entries(local).map(([productId, price]) => ({
+      productId,
+      originalPrice: price,
+    }));
+    if (items.length > 0) {
+      supabaseBulkSavePriceWatches(items, userId).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["price-watches", userId] });
+      }).catch(() => {});
+    }
+  }, [isAuthenticated, userId, queryClient]);
 
   const alertsMap = new Map<string, string>();
 
@@ -56,24 +81,24 @@ export function usePriceAlerts() {
     alertsMap.set(pid, price);
   }
   for (const alert of serverAlerts) {
-    alertsMap.set(alert.productId, alert.savedPrice);
+    alertsMap.set(alert.productId, alert.originalPrice);
   }
 
   function recordPrice(productId: string, price: string | null | undefined) {
     if (!price) return;
     saveLocalAlert(productId, price);
-    if (isAuthenticated) {
-      api.savePriceAlert(productId, price).then(() => {
-        queryClient.invalidateQueries({ queryKey: ["price-alerts"] });
+    if (isAuthenticated && userId) {
+      supabaseSavePriceWatch(productId, price, userId).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["price-watches", userId] });
       }).catch(() => {});
     }
   }
 
   function clearAlert(productId: string) {
     removeLocalAlert(productId);
-    if (isAuthenticated) {
-      api.removePriceAlert(productId).then(() => {
-        queryClient.invalidateQueries({ queryKey: ["price-alerts"] });
+    if (isAuthenticated && userId) {
+      supabaseRemovePriceWatch(productId, userId).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["price-watches", userId] });
       }).catch(() => {});
     }
   }

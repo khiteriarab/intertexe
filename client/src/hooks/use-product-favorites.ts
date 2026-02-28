@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { trackProductFavorite } from "@/lib/analytics";
+import { supabaseSavePriceWatch } from "@/lib/supabase";
 
 const STORAGE_KEY = "intertexe_product_favorites";
 
@@ -28,6 +29,7 @@ function notify() {
 
 export function useProductFavorites() {
   const { user, isAuthenticated } = useAuth();
+  const userId = user?.id;
   const queryClient = useQueryClient();
   const hasSynced = useRef<string | null>(null);
 
@@ -85,8 +87,8 @@ export function useProductFavorites() {
             localStorage.setItem("intertexe_price_alerts", JSON.stringify(alerts));
           }
         } catch {}
-        if (isAuthenticated) {
-          api.savePriceAlert(productId, price).catch(() => {});
+        if (isAuthenticated && userId) {
+          supabaseSavePriceWatch(productId, price, userId).catch(() => {});
         }
       }
     } else {

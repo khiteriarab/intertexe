@@ -12,6 +12,10 @@ import {
   supabaseAddFavorite,
   supabaseRemoveFavorite,
   supabaseCheckFavorite,
+  supabaseGetPriceWatches,
+  supabaseSavePriceWatch,
+  supabaseBulkSavePriceWatches,
+  supabaseRemovePriceWatch,
 } from "./supabase";
 
 const TOKEN_KEY = "intertexe_auth_token";
@@ -211,33 +215,23 @@ export const api = {
   },
 
   async getPriceAlerts(): Promise<Array<{ productId: string; savedPrice: string }>> {
-    const res = await apiFetch("/api/price-alerts");
-    if (res.status === 401) return [];
-    const data = await handleResponse(res);
-    return (data.alerts || []).map((a: any) => ({ productId: a.productId || a.product_id, savedPrice: a.savedPrice || a.saved_price }));
+    const watches = await supabaseGetPriceWatches();
+    return watches.map(w => ({ productId: w.productId, savedPrice: w.originalPrice }));
   },
 
   async savePriceAlert(productId: string, savedPrice: string) {
-    const res = await apiFetch("/api/price-alerts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId, savedPrice }),
-    });
-    return handleResponse(res);
+    await supabaseSavePriceWatch(productId, savedPrice);
+    return { success: true };
   },
 
   async bulkSavePriceAlerts(items: Array<{ productId: string; savedPrice: string }>) {
-    const res = await apiFetch("/api/price-alerts/bulk", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items }),
-    });
-    return handleResponse(res);
+    await supabaseBulkSavePriceWatches(items.map(i => ({ productId: i.productId, originalPrice: i.savedPrice })));
+    return { success: true };
   },
 
   async removePriceAlert(productId: string) {
-    const res = await apiFetch(`/api/price-alerts/${encodeURIComponent(productId)}`, { method: "DELETE" });
-    return handleResponse(res);
+    await supabaseRemovePriceWatch(productId);
+    return { success: true };
   },
 
   async addRecent(productId: string, productUrl?: string, brandName?: string) {
