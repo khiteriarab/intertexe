@@ -1,10 +1,10 @@
 import { useRef, useMemo } from "react";
 import { Link } from "wouter";
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart, Scan } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucide-react";
 import { trackAffiliateRedirect } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDesigners, fetchDesignerBySlug, fetchProductCount, fetchProductsByFiber, fetchProductsByBrandWithImages, fetchProductCountsByBrand } from "@/lib/supabase";
-import { getQualityTier } from "@/lib/quality-tiers";
+import { fetchDesigners, fetchDesignerBySlug, fetchProductSample, fetchProductCount, fetchProductsByFiber, fetchProductsByBrandWithImages, fetchProductCountsByBrand } from "@/lib/supabase";
+import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
@@ -41,7 +41,7 @@ function ProductCardSmall({ product }: { product: any }) {
 
   return (
     <CardWrapper {...wrapperProps} className="group flex-shrink-0 w-[160px] md:w-[220px] flex flex-col cursor-pointer" data-testid={`product-home-${product.id}`}>
-      <div className="aspect-[3/4] bg-[#f0f0ee] relative overflow-hidden">
+      <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -55,8 +55,8 @@ function ProductCardSmall({ product }: { product: any }) {
           </div>
         )}
         {composition && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent pt-5 pb-1.5 px-2">
-            <span className="text-[8px] md:text-[9px] text-white/90 uppercase tracking-[0.04em] font-medium line-clamp-1">
+          <div className="absolute bottom-2 left-2 z-10">
+            <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.05em] font-medium backdrop-blur-sm line-clamp-1 max-w-[140px] md:max-w-[200px]">
               {composition}
             </span>
           </div>
@@ -72,7 +72,7 @@ function ProductCardSmall({ product }: { product: any }) {
       <div className="flex flex-col gap-0.5 pt-2.5">
         <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">{brandName}</span>
         <h3 className="text-[11px] md:text-[12px] leading-snug line-clamp-2 text-muted-foreground">{name}</h3>
-        {price && <span className="text-[11px] md:text-[12px] mt-0.5 font-medium">{price}</span>}
+        {price && <span className="text-[11px] md:text-[12px] mt-0.5">{price}</span>}
       </div>
     </CardWrapper>
   );
@@ -215,52 +215,26 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-0">
 
-      <section className="relative h-[85vh] md:h-[90vh] min-h-[540px] flex items-end overflow-hidden -mx-4 md:-mx-8">
+      <section className="relative h-[75vh] md:h-[80vh] min-h-[480px] flex items-end overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img
             src={heroImage}
             alt="Luxury Fashion Editorial"
             className="w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-black/5" />
         </div>
 
-        <div className="relative z-10 w-full px-5 md:px-10 pb-12 md:pb-16 flex flex-col" style={{ paddingBottom: 'max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem))' }}>
-          <h1 className="text-[36px] leading-[1.1] md:text-7xl font-serif text-white mb-3 md:mb-5 max-w-xl" data-testid="text-hero-headline">
+        <div className="relative z-10 px-5 md:px-10 pb-12 md:pb-16 max-w-2xl flex flex-col" style={{ paddingBottom: 'max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem))' }}>
+          <h1 className="text-[32px] leading-[1.15] md:text-6xl font-serif text-white mb-4 md:mb-6" data-testid="text-hero-headline">
             Shop by Fabric
           </h1>
-          <p className="text-[13px] md:text-lg text-white/70 mb-7 md:mb-9 font-light leading-relaxed max-w-md" data-testid="text-hero-subtext">
+          <p className="text-[13px] md:text-lg text-white/80 mb-6 md:mb-8 font-light leading-relaxed max-w-md" data-testid="text-hero-subtext">
             {productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products. Choose your fabrics, browse ranked pieces, shop better materials instantly.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/shop" className="bg-white text-black px-7 py-3.5 md:px-9 md:py-4 uppercase tracking-[0.15em] text-[11px] md:text-xs font-medium hover:bg-white/90 transition-colors flex items-center gap-2 active:scale-[0.97]" data-testid="button-shop-now">
-              Shop Now <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-            <Link href="/scanner" className="border border-white/40 text-white px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-[11px] md:text-xs font-medium hover:bg-white/10 transition-colors flex items-center gap-2 active:scale-[0.97] backdrop-blur-sm" data-testid="button-scanner-cta">
-              <Scan className="w-3.5 h-3.5" /> Scan a Product
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="-mx-4 md:-mx-8 bg-[#111] text-white">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
-          <div className="py-6 md:py-8 flex flex-col items-center text-center gap-0.5">
-            <span className="text-xl md:text-3xl font-serif">{(designers as any[]).length.toLocaleString()}+</span>
-            <span className="text-[8px] md:text-[9px] uppercase tracking-[0.2em] text-white/50">Brands Ranked</span>
-          </div>
-          <div className="py-6 md:py-8 flex flex-col items-center text-center gap-0.5">
-            <span className="text-xl md:text-3xl font-serif">{productCount > 0 ? productCount.toLocaleString() : '17,000+'}</span>
-            <span className="text-[8px] md:text-[9px] uppercase tracking-[0.2em] text-white/50">Verified Products</span>
-          </div>
-          <div className="py-6 md:py-8 flex flex-col items-center text-center gap-0.5">
-            <span className="text-xl md:text-3xl font-serif">5</span>
-            <span className="text-[8px] md:text-[9px] uppercase tracking-[0.2em] text-white/50">Material Guides</span>
-          </div>
-          <div className="py-6 md:py-8 flex flex-col items-center text-center gap-0.5">
-            <span className="text-xl md:text-3xl font-serif">100%</span>
-            <span className="text-[8px] md:text-[9px] uppercase tracking-[0.2em] text-white/50">Composition Data</span>
-          </div>
+          <Link href="/shop" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 w-fit active:scale-[0.97]" data-testid="button-shop-now">
+            Shop by Fabric <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 
@@ -269,54 +243,9 @@ export default function Home() {
           <HorizontalProductScroll
             products={newInProducts}
             title="New In"
-            subtitle="Just landed"
+            subtitle={`${productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products`}
             linkHref="/shop"
-            linkText="Shop all new arrivals"
-          />
-        </section>
-      )}
-
-      <section className="-mx-4 md:-mx-8 grid grid-cols-2">
-        <Link href="/materials/cashmere" className="group relative aspect-[3/4] md:aspect-[4/5] overflow-hidden flex items-end" data-testid="link-edit-cashmere-hero">
-          <div className="absolute inset-0 bg-[#e8e4df]">
-            {cashmereProducts[0] && (cashmereProducts[0].image_url || cashmereProducts[0].imageUrl) && (
-              <img src={cashmereProducts[0].image_url || cashmereProducts[0].imageUrl} alt="Cashmere" className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-1000" loading="lazy" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-          </div>
-          <div className="relative z-10 p-4 md:p-8">
-            <p className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-white/50 mb-1">The Edit</p>
-            <h3 className="text-white text-base md:text-2xl font-serif mb-1 md:mb-2">Cashmere</h3>
-            <span className="text-white/70 text-[9px] md:text-[11px] uppercase tracking-[0.12em] flex items-center gap-1 group-hover:gap-2 transition-all">
-              Shop now <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
-        </Link>
-        <Link href="/materials/silk" className="group relative aspect-[3/4] md:aspect-[4/5] overflow-hidden flex items-end" data-testid="link-edit-silk-hero">
-          <div className="absolute inset-0 bg-[#ece6e0]">
-            {silkProducts[0] && (silkProducts[0].image_url || silkProducts[0].imageUrl) && (
-              <img src={silkProducts[0].image_url || silkProducts[0].imageUrl} alt="Silk" className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-1000" loading="lazy" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-          </div>
-          <div className="relative z-10 p-4 md:p-8">
-            <p className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-white/50 mb-1">The Edit</p>
-            <h3 className="text-white text-base md:text-2xl font-serif mb-1 md:mb-2">Silk</h3>
-            <span className="text-white/70 text-[9px] md:text-[11px] uppercase tracking-[0.12em] flex items-center gap-1 group-hover:gap-2 transition-all">
-              Shop now <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
-        </Link>
-      </section>
-
-      {cashmereProducts.length > 0 && (
-        <section className="py-10 md:py-16">
-          <HorizontalProductScroll
-            products={cashmereProducts}
-            title="The Cashmere Edit"
-            subtitle="Pure luxury, verified"
-            linkHref="/materials/cashmere"
-            linkText="Shop all cashmere"
+            linkText="Shop New In"
           />
         </section>
       )}
@@ -324,11 +253,11 @@ export default function Home() {
       <section className="py-8 md:py-14 border-t border-border/30">
         <div className="flex justify-between items-end mb-8 md:mb-10">
           <div>
-            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-1">Curated</p>
-            <h2 className="text-xl md:text-3xl font-serif">The Brands We Love</h2>
+            <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground mb-1">INTERTEXE Approved</p>
+            <h2 className="text-2xl md:text-3xl font-serif">The Brands We Love</h2>
           </div>
-          <Link href="/designers" className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1" data-testid="link-view-all-designers">
-            View All <ArrowRight className="w-3 h-3" />
+          <Link href="/designers" className="text-[10px] md:text-sm uppercase tracking-[0.15em] hover:text-muted-foreground transition-colors" data-testid="link-view-all-designers">
+            View All
           </Link>
         </div>
 
@@ -346,24 +275,24 @@ export default function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-5">
             {curatedDesigners.map((designer: any) => {
               const tier = getQualityTier(designer.naturalFiberPercent);
-              const pCount = productCountByBrand[designer.slug] || 0;
+              const productCount = productCountByBrand[designer.slug] || 0;
               return (
-                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-2 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.id}`}>
-                  <div className="aspect-[3/4] bg-[#f0f0ee] w-full overflow-hidden relative">
+                <Link key={designer.id} href={`/designers/${designer.slug}`} className="group flex flex-col gap-2.5 active:scale-[0.98] transition-transform" data-testid={`card-designer-${designer.id}`}>
+                  <div className="aspect-[3/4] bg-[#f5f5f5] w-full overflow-hidden relative">
                     <BrandImage name={designer.name} className="absolute inset-0 w-full h-full" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-                    {pCount > 0 && (
-                      <div className="absolute bottom-2 right-2">
-                        <span className="flex items-center gap-1 bg-white/90 text-black px-1.5 py-0.5 text-[7px] md:text-[8px] uppercase tracking-[0.08em] font-medium backdrop-blur-sm">
+                    {productCount > 0 && (
+                      <div className="absolute bottom-2.5 right-2.5">
+                        <span className="flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
                           <ShoppingBag className="w-2.5 h-2.5" />
-                          {pCount}
+                          {productCount} products
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col gap-0">
-                    <h3 className="text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.06em] group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
-                    <p className="text-[8px] md:text-[9px] uppercase tracking-[0.15em] text-muted-foreground">{tier.label}</p>
+                  <div className="flex flex-col gap-0.5">
+                    <h3 className="text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.06em] group-hover:text-muted-foreground transition-colors">{designer.name}</h3>
+                    <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground">{tier.label}</p>
                   </div>
                 </Link>
               );
@@ -372,29 +301,63 @@ export default function Home() {
         )}
       </section>
 
-      <section className="-mx-4 md:-mx-8">
-        <Link href="/materials/linen" className="group relative block aspect-[16/9] md:aspect-[21/9] overflow-hidden" data-testid="link-linen-banner">
-          <div className="absolute inset-0 bg-[#ddd8d0]">
-            {linenProducts[0] && (linenProducts[0].image_url || linenProducts[0].imageUrl) && (
-              <img src={linenProducts[0].image_url || linenProducts[0].imageUrl} alt="Linen" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000" loading="lazy" />
+      {cashmereProducts.length > 0 && (
+        <section className="py-8 md:py-14 border-t border-border/30">
+          <HorizontalProductScroll
+            products={cashmereProducts}
+            title="The Cashmere Edit"
+            subtitle="Pure luxury, verified"
+            linkHref="/materials/cashmere"
+            linkText="Shop all cashmere"
+          />
+        </section>
+      )}
+
+      <section className="-mx-4 md:-mx-8 grid grid-cols-1 md:grid-cols-2">
+        <Link href="/materials/silk-tops" className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end" data-testid="link-edit-silk">
+          <div className="absolute inset-0 bg-[#f5f5f5]">
+            {silkProducts[0] && (silkProducts[0].image_url || silkProducts[0].imageUrl) && (
+              <img
+                src={silkProducts[0].image_url || silkProducts[0].imageUrl}
+                alt="Silk Edit"
+                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                loading="lazy"
+              />
             )}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
           </div>
-          <div className="absolute inset-0 z-10 flex items-center px-6 md:px-14">
-            <div>
-              <p className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-white/50 mb-1 md:mb-2">Summer Essentials</p>
-              <h3 className="text-xl md:text-4xl font-serif text-white mb-2 md:mb-3">Linen for Every Day</h3>
-              <p className="text-[11px] md:text-sm text-white/60 mb-4 md:mb-6 max-w-sm">Breathable, natural, and endlessly versatile. Dresses, tops, and suiting in pure linen.</p>
-              <span className="text-white text-[10px] md:text-[11px] uppercase tracking-[0.15em] flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-                Shop Linen <ArrowRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
+          <div className="relative z-10 p-6 md:p-8 flex flex-col gap-1">
+            <h3 className="text-white text-xl md:text-2xl font-serif">The Silk Edit</h3>
+            <p className="text-white/70 text-xs md:text-sm">Blouses, dresses, and camisoles in pure silk</p>
+            <span className="text-white/90 text-[10px] uppercase tracking-[0.15em] mt-2 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+              Shop the edit <ArrowRight className="w-3 h-3" />
+            </span>
+          </div>
+        </Link>
+        <Link href="/materials/linen-dresses" className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end" data-testid="link-edit-linen">
+          <div className="absolute inset-0 bg-[#f5f5f5]">
+            {linenProducts[0] && (linenProducts[0].image_url || linenProducts[0].imageUrl) && (
+              <img
+                src={linenProducts[0].image_url || linenProducts[0].imageUrl}
+                alt="Linen Edit"
+                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                loading="lazy"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+          </div>
+          <div className="relative z-10 p-6 md:p-8 flex flex-col gap-1">
+            <h3 className="text-white text-xl md:text-2xl font-serif">Linen for Every Day</h3>
+            <p className="text-white/70 text-xs md:text-sm">Dresses, tops, and suiting in natural linen</p>
+            <span className="text-white/90 text-[10px] uppercase tracking-[0.15em] mt-2 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+              Shop the edit <ArrowRight className="w-3 h-3" />
+            </span>
           </div>
         </Link>
       </section>
 
       {silkProducts.length > 0 && (
-        <section className="py-10 md:py-16">
+        <section className="py-8 md:py-14">
           <HorizontalProductScroll
             products={silkProducts}
             title="Silk Essentials"
@@ -405,28 +368,34 @@ export default function Home() {
         </section>
       )}
 
-      <section className="-mx-4 md:-mx-8 bg-[#FAFAF8] border-t border-b border-border/20">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 px-6 md:px-14 py-12 md:py-20 max-w-5xl mx-auto">
-          <div className="text-center md:text-left flex-1">
-            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-2">New Feature</p>
-            <h2 className="text-xl md:text-3xl font-serif mb-3 leading-tight">Shopping Intelligence</h2>
-            <p className="text-[13px] md:text-sm text-muted-foreground leading-relaxed max-w-md mx-auto md:mx-0">
-              Scan any clothing tag or paste a product URL. We'll identify the brand, analyze the materials, rate the quality, and suggest better alternatives.
-            </p>
+      <section className="border-t border-b border-border/30 -mx-4 md:-mx-8 px-4 md:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/30">
+          <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
+            <span className="text-2xl md:text-4xl font-serif">{(designers as any[]).length.toLocaleString()}+</span>
+            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Brands Vetted</span>
           </div>
-          <Link href="/scanner" className="bg-[#111] text-white px-8 py-3.5 md:px-10 md:py-4 uppercase tracking-[0.15em] text-[11px] md:text-xs font-medium hover:bg-neutral-800 transition-colors flex items-center gap-2.5 active:scale-[0.97] flex-shrink-0" data-testid="button-scanner-home">
-            <Scan className="w-4 h-4" /> Try Scanner
-          </Link>
+          <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
+            <span className="text-2xl md:text-4xl font-serif">{productCount > 0 ? productCount.toLocaleString() : '17,000+'}</span>
+            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Verified Products</span>
+          </div>
+          <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
+            <span className="text-2xl md:text-4xl font-serif">5</span>
+            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Material Guides</span>
+          </div>
+          <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
+            <span className="text-2xl md:text-4xl font-serif">100%</span>
+            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Composition Verified</span>
+          </div>
         </div>
       </section>
 
-      <section className="text-center py-14 md:py-24 max-w-xl mx-auto flex flex-col items-center gap-4 md:gap-5">
-        <p className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Personalized For You</p>
-        <h2 className="text-xl md:text-4xl font-serif leading-tight">Not Sure Where to Start?</h2>
-        <p className="text-muted-foreground text-[13px] md:text-sm max-w-sm leading-relaxed">
+      <section className="text-center py-12 md:py-20 max-w-2xl mx-auto flex flex-col items-center gap-4 md:gap-6">
+        <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground">Personalized For You</p>
+        <h2 className="text-2xl md:text-4xl font-serif leading-tight">Not Sure Where to Start?</h2>
+        <p className="text-muted-foreground text-sm md:text-base max-w-md leading-relaxed">
           Take our 2-minute quiz. We'll match you with your fabric persona and recommend the designers you'll love.
         </p>
-        <Link href="/quiz" className="bg-foreground text-background px-8 py-3.5 uppercase tracking-[0.15em] text-[11px] font-medium hover:bg-foreground/90 transition-colors mt-2 active:scale-95" data-testid="button-cta-quiz">
+        <Link href="/quiz" className="bg-foreground text-background px-8 py-3.5 uppercase tracking-[0.15em] text-xs font-medium hover:bg-foreground/90 transition-colors mt-2 active:scale-95" data-testid="button-cta-quiz">
           Find My Designers
         </Link>
       </section>

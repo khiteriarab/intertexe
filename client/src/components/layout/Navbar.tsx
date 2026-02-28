@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles, UserCheck, MessageCircle, Award, ShoppingBag } from "lucide-react";
+import { Search, Heart, User, Menu, Home, Grid, List, X, Sparkles, UserCheck, MessageCircle, Award, ShoppingBag, Scan } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDesigners } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
@@ -36,14 +36,15 @@ export function Navbar() {
     { name: "Directory", href: "/designers" },
     { name: "Buying Guide", href: "/materials" },
     { name: "Quiz", href: "/quiz" },
+    { name: "Scanner", href: "/scanner" },
     { name: "Chat", href: "/chat" },
   ];
 
   const mobileNavLinks = [
     { name: "Home", href: "/", icon: Home },
     { name: "Shop", href: "/shop", icon: ShoppingBag },
+    { name: "Scan", href: "/scanner", icon: Scan },
     { name: "Directory", href: "/designers", icon: Grid },
-    { name: "Chat", href: "/chat", icon: MessageCircle },
     { name: "Account", href: "/account", icon: isAuthenticated ? UserCheck : User },
   ];
 
