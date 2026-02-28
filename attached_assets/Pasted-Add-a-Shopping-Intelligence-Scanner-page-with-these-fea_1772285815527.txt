@@ -1,0 +1,34 @@
+Add a Shopping Intelligence / Scanner page with these features:
+
+1. Three input methods:
+
+Camera scan (for mobile users to photograph price tags)
+Photo upload
+Paste a product URL from any retailer (Nordstrom, SSENSE, Farfetch, Net-a-Porter, brand sites, etc.)
+2. Two API endpoints needed:
+
+POST /api/scan-tag — Takes a base64 image, sends it to OpenAI Vision (gpt-4o-mini) to read the brand name, product name, and price from the tag photo.
+
+POST /api/scan-url — Takes a product URL, scrapes the page, sends the text content to OpenAI to extract brand name, product name, price, and material composition.
+
+3. Both endpoints then do the same thing:
+
+Search the designers table in Supabase for the brand (by slug and fuzzy name match) — this covers all 11,000+ brands
+Search the products table for that brand's verified products
+Run a "web intelligence" step: send the brand/product info to OpenAI asking for composition analysis, quality assessment, price range, which retailers carry it, sustainability notes, and an honest verdict on whether it's worth the price
+Find "better alternatives" — query products with higher natural_fiber_percent in the same category from other brands
+Return everything in one response
+4. The results page shows (top to bottom):
+
+Tag/URL identified: brand name, product name, price
+Brand card from our directory (logo, name, description, if we have it)
+Brand rating if we have products (average natural fiber %, rated Exceptional/Excellent/Good/Caution)
+Internet Intelligence section: likely composition with natural fiber % bar, quality assessment, verdict, price range, other retailers, sustainability notes
+Verified products grid from that brand (up to 6)
+Higher Quality Alternatives grid — similar items from other brands with better natural fiber content
+5. Environment:
+
+Uses the same Supabase (SUPABASE_URL, SUPABASE_ANON_KEY) with products and designers tables
+Uses OpenAI (OPENAI_API_KEY) for vision analysis, page scraping analysis, and web intelligence
+The products table has: id, brand_slug, brand_name, name, price, composition, natural_fiber_percent, category, image_url, url, approved
+The designers table has: id, slug, name, logo_url, website, description, rating

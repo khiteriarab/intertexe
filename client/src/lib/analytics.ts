@@ -93,3 +93,19 @@ export function trackEmailCapture(source: string) {
     source,
   });
 }
+
+export function trackScanStart(mode: "camera" | "upload" | "url") {
+  trackEvent("scan_start", { scan_mode: mode });
+}
+
+export function trackScanComplete(brandName: string, mode: "camera" | "upload" | "url", matched: boolean) {
+  trackEvent("scan_complete", {
+    brand_name: brandName,
+    scan_mode: mode,
+    matched_in_directory: matched,
+  });
+}
+
+export function trackScanError(mode: "camera" | "upload" | "url", error: string) {
+  trackEvent("scan_error", { scan_mode: mode, error_message: error });
+}
