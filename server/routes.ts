@@ -635,5 +635,66 @@ ${allPages.map(p => `  <url>
     res.send(xml);
   });
 
+  app.post("/api/admin/sync-rakuten", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const brands = [
+        { slug: "diesel", name: "Diesel" },
+        { slug: "a-l-c-", name: "A.L.C." },
+      ];
+      const results: Record<string, any> = {};
+
+      for (const brand of brands) {
+        const { data: products, error } = await supabaseAdmin
+          .from("products")
+          .select("id, name, price, url, composition, natural_fiber_percent")
+          .eq("brand_slug", brand.slug);
+
+        if (error || !products) {
+          results[brand.slug] = { error: error?.message || "No products" };
+          continue;
+        }
+
+        let priceUpdated = 0, failed = 0;
+        for (const p of products) {
+          const murlMatch = p.url?.match(/murl=([^&]+)/);
+          const actualUrl = murlMatch ? decodeURIComponent(murlMatch[1]) : null;
+          if (!actualUrl) { failed++; continue; }
+
+          try {
+            const scrapeRes = await fetch(actualUrl, {
+              headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)" },
+              signal: AbortSignal.timeout(8000),
+            });
+            if (scrapeRes.status !== 200) { failed++; continue; }
+            const html = await scrapeRes.text();
+
+            let newPrice: string | null = null;
+            const jsonLd = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s);
+            if (jsonLd) {
+              try {
+                const data = JSON.parse(jsonLd[1]);
+                if (data.offers?.price) newPrice = "$" + parseFloat(data.offers.price).toFixed(2);
+              } catch {}
+            }
+
+            if (newPrice && newPrice !== p.price) {
+              await supabaseAdmin.from("products").update({ price: newPrice }).eq("id", p.id);
+              priceUpdated++;
+            }
+          } catch { failed++; }
+
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        results[brand.slug] = { total: products.length, priceUpdated, failed };
+      }
+
+      return res.json({ success: true, results });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
   return httpServer;
 }
