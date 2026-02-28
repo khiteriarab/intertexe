@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Camera, Upload, Link2, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, ExternalLink, MessageCircle } from "lucide-react";
 import { Link as RouterLink } from "wouter";
-import { trackAffiliateRedirect } from "@/lib/analytics";
+import { trackAffiliateRedirect, trackScanStart, trackScanComplete, trackScanError } from "@/lib/analytics";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
 import { Heart } from "lucide-react";
 
@@ -169,10 +169,11 @@ export default function Scanner() {
     await scanImage(dataUrl);
   }, [stopCamera]);
 
-  const scanImage = async (base64: string) => {
+  const scanImage = async (base64: string, mode: "camera" | "upload" = "camera") => {
     setLoading(true);
     setError("");
     setResult(null);
+    trackScanStart(mode);
     try {
       const res = await fetch("/api/scan-tag", {
         method: "POST",
@@ -182,8 +183,10 @@ export default function Scanner() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Scan failed");
       setResult(data);
+      trackScanComplete(data.tagInfo?.brandName || "unknown", mode, data.matched);
     } catch (err: any) {
       setError(err.message || "Failed to scan. Try again.");
+      trackScanError(mode, err.message || "scan_failed");
     } finally {
       setLoading(false);
     }
@@ -195,7 +198,7 @@ export default function Scanner() {
     const reader = new FileReader();
     reader.onload = async () => {
       const base64 = reader.result as string;
-      await scanImage(base64);
+      await scanImage(base64, "upload");
     };
     reader.readAsDataURL(file);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -206,6 +209,7 @@ export default function Scanner() {
     setLoading(true);
     setError("");
     setResult(null);
+    trackScanStart("url");
     try {
       const res = await fetch("/api/scan-url", {
         method: "POST",
@@ -215,8 +219,10 @@ export default function Scanner() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Scan failed");
       setResult(data);
+      trackScanComplete(data.tagInfo?.brandName || "unknown", "url", data.matched);
     } catch (err: any) {
       setError(err.message || "Failed to analyze. Try again.");
+      trackScanError("url", err.message || "scan_failed");
     } finally {
       setLoading(false);
     }
