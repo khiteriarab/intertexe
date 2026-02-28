@@ -31,6 +31,7 @@ function ProductCardSmall({ product }: { product: any }) {
   const brandName = product.brand_name || product.brandName || "";
   const imageUrl = product.image_url || product.imageUrl;
   const price = product.price;
+  const composition = product.composition;
 
   const shopUrl = product.url || null;
 
@@ -51,6 +52,13 @@ function ProductCardSmall({ product }: { product: any }) {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <ShoppingBag className="w-6 h-6 text-neutral-300" />
+          </div>
+        )}
+        {composition && (
+          <div className="absolute bottom-2 left-2 z-10">
+            <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.05em] font-medium backdrop-blur-sm line-clamp-1 max-w-[140px] md:max-w-[200px]">
+              {composition}
+            </span>
           </div>
         )}
         <button
@@ -161,16 +169,10 @@ export default function Home() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: otherNewProducts = [] } = useQuery({
-    queryKey: ["home-new-in"],
-    queryFn: () => fetchProductSample(24),
-    staleTime: 10 * 60 * 1000,
-  });
-
   const newInProducts = useMemo(() => {
     const seenIds = new Set<string>();
     const combined: any[] = [];
-    for (const p of [...alcProducts, ...dieselProducts, ...otherNewProducts]) {
+    for (const p of [...alcProducts, ...dieselProducts]) {
       if (!seenIds.has(p.id)) {
         seenIds.add(p.id);
         combined.push(p);
@@ -181,7 +183,7 @@ export default function Home() {
       [combined[i], combined[j]] = [combined[j], combined[i]];
     }
     return combined.slice(0, 30);
-  }, [alcProducts, dieselProducts, otherNewProducts]);
+  }, [alcProducts, dieselProducts]);
 
   const { data: cashmereProducts = [] } = useQuery({
     queryKey: ["home-cashmere"],
