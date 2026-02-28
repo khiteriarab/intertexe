@@ -351,9 +351,7 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                       const brandName = product.brandName || product.brand_name || "";
                       const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
                       const productId = String(product.id);
-                      const shopUrl = product.url
-                        ? `/leaving?url=${encodeURIComponent(product.url)}&brand=${encodeURIComponent(brandName)}&productId=${encodeURIComponent(productId)}`
-                        : null;
+                      const shopUrl = product.url || null;
                       const priceDrop = getPriceDrop(productId, product.price);
                       return (
                         <div key={productId} className={`group flex flex-col bg-background border transition-all ${priceDrop ? "border-emerald-500/60 hover:border-emerald-500" : "border-border/40 hover:border-foreground/30"}`} data-testid={`card-saved-product-${productId}`}>
@@ -411,7 +409,7 @@ function AccountDashboard({ user, onLogout }: { user: any; onLogout: () => void 
                             </div>
                           </div>
                           {shopUrl && (
-                            <a href={shopUrl} className={`flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] transition-colors ${priceDrop ? "bg-emerald-700 text-white hover:bg-emerald-800" : "bg-foreground text-background hover:bg-foreground/90"}`}>
+                            <a href={shopUrl} target="_blank" rel="noopener noreferrer" className={`flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] transition-colors ${priceDrop ? "bg-emerald-700 text-white hover:bg-emerald-800" : "bg-foreground text-background hover:bg-foreground/90"}`}>
                               {priceDrop ? "Price Dropped — Shop Now" : "Shop Now"} <ExternalLink className="w-3 h-3" />
                             </a>
                           )}
