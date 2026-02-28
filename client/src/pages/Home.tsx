@@ -227,11 +227,9 @@ export default function Home() {
           <h1 className="text-[32px] leading-[1.15] md:text-6xl font-serif text-white mb-4 md:mb-6" data-testid="text-hero-headline">
             Shop by Fabric
           </h1>
-          <div className="flex flex-col gap-1.5 mb-6 md:mb-8 max-w-md" data-testid="text-hero-subtext">
-            <p className="text-[13px] md:text-lg text-white/80 font-light">1. Choose a fabric — Cotton, Silk, Wool</p>
-            <p className="text-[13px] md:text-lg text-white/80 font-light">2. Browse verified pieces</p>
-            <p className="text-[13px] md:text-lg text-white/80 font-light">3. Shop better materials instantly</p>
-          </div>
+          <p className="text-[13px] md:text-lg text-white/80 mb-6 md:mb-8 font-light leading-relaxed max-w-md" data-testid="text-hero-subtext">
+            {productCount > 0 ? productCount.toLocaleString() : '17,000+'} products ranked by what they're made of. Choose a fabric. Browse verified pieces. Shop better materials instantly.
+          </p>
           <Link href="/shop" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 w-fit active:scale-[0.97]" data-testid="button-shop-now">
             Shop by Fabric <ArrowRight className="w-4 h-4" />
           </Link>
