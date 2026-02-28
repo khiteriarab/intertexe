@@ -265,43 +265,30 @@ export default function Scanner() {
     <div className="w-full">
       {!result && !loading && (
         <>
-          <div className="pt-8 md:pt-14 pb-8 md:pb-12">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 md:w-9 md:h-9 bg-[#111] flex items-center justify-center">
-                <Scan className="w-4 h-4 md:w-[18px] md:h-[18px] text-white" />
-              </div>
-              <h1 className="text-2xl md:text-[40px] font-serif leading-tight" data-testid="text-scanner-title">Shopping Intelligence</h1>
-            </div>
-            <p className="text-[13px] md:text-base text-muted-foreground max-w-lg leading-relaxed">
-              Scan a clothing tag, upload a photo, or paste any product URL. We'll identify the brand, analyze its materials, and find you better alternatives.
-            </p>
+          <div className="pt-8 md:pt-14 pb-6 md:pb-8">
+            <h1 className="text-2xl md:text-[40px] font-serif leading-tight mb-2" data-testid="text-scanner-title">Shopping Intelligence</h1>
+            <p className="text-[12px] md:text-sm text-muted-foreground">Scan a tag, upload a photo, or paste a product URL.</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-10">
-            <button onClick={startCamera} className="col-span-1 group flex flex-col items-center gap-3 p-6 md:p-8 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]" data-testid="button-camera-scan">
-              <Camera className="w-6 h-6 md:w-7 md:h-7 mb-1" />
-              <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em]">Scan Tag</span>
-              <span className="text-[10px] text-white/40 leading-relaxed text-center hidden md:block">Point your camera at a price tag or clothing label</span>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
+            <button onClick={startCamera} className="col-span-1 group flex flex-col items-center gap-2 p-5 md:p-7 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]" data-testid="button-camera-scan">
+              <Camera className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Scan Tag</span>
             </button>
 
-            <button onClick={() => fileInputRef.current?.click()} className="col-span-1 group flex flex-col items-center gap-3 p-6 md:p-8 bg-white border border-neutral-200 hover:border-neutral-400 transition-all active:scale-[0.98]" data-testid="button-upload-photo">
-              <Upload className="w-6 h-6 md:w-7 md:h-7 mb-1 text-neutral-600" />
-              <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em]">Upload</span>
-              <span className="text-[10px] text-muted-foreground/60 leading-relaxed text-center hidden md:block">Upload a photo of a tag or product</span>
+            <button onClick={() => fileInputRef.current?.click()} className="col-span-1 group flex flex-col items-center gap-2 p-5 md:p-7 bg-white border border-neutral-200 hover:border-neutral-400 transition-all active:scale-[0.98]" data-testid="button-upload-photo">
+              <Upload className="w-5 h-5 md:w-6 md:h-6 text-neutral-600" />
+              <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Upload</span>
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} data-testid="input-file-upload" />
 
-            <div className="col-span-2 md:col-span-1 bg-white border border-neutral-200 p-5 md:p-6 flex flex-col">
-              <div className="flex items-center gap-2 mb-3">
-                <Link2 className="w-4 h-4 text-neutral-400" />
-                <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em]">Paste URL</span>
-              </div>
-              <div className="flex gap-2 flex-1">
+            <div className="col-span-2 md:col-span-1 bg-white border border-neutral-200 p-4 md:p-5 flex flex-col">
+              <div className="flex gap-2">
                 <input
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="nordstrom.com/s/..."
+                  placeholder="Paste product URL..."
                   className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
                   onKeyDown={(e) => e.key === "Enter" && scanUrl()}
                   data-testid="input-product-url"
@@ -310,51 +297,22 @@ export default function Scanner() {
                   Scan
                 </button>
               </div>
-              <p className="text-[9px] md:text-[10px] text-muted-foreground/50 mt-2">Nordstrom, SSENSE, Net-a-Porter, Farfetch, or any retailer</p>
             </div>
           </div>
-
-          <button onClick={() => setResult(DEMO_RESULT)} className="w-full flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground border border-dashed border-neutral-200 hover:border-neutral-400 transition-colors" data-testid="button-try-demo">
-            <Sparkles className="w-3 h-3" /> See example result — Zara Satin Dress
-          </button>
 
           {error && (
-            <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm mb-8" data-testid="text-scan-error">{error}</div>
+            <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm mb-6" data-testid="text-scan-error">{error}</div>
           )}
 
-          <div className="border-t border-neutral-100 pt-8 pb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-neutral-400" />
-              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">How it works</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              <div>
-                <span className="text-[10px] text-muted-foreground/40 font-medium">01</span>
-                <p className="text-sm mt-1">Scan a tag or paste a product link from any retailer</p>
-              </div>
-              <div>
-                <span className="text-[10px] text-muted-foreground/40 font-medium">02</span>
-                <p className="text-sm mt-1">We identify the brand and analyze material composition against 17,000+ verified products</p>
-              </div>
-              <div>
-                <span className="text-[10px] text-muted-foreground/40 font-medium">03</span>
-                <p className="text-sm mt-1">Get an honest verdict, quality rating, and better alternatives with higher natural fiber content</p>
-              </div>
-            </div>
-          </div>
+          <button onClick={() => setResult(DEMO_RESULT)} className="w-full flex items-center justify-center gap-2 py-2.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 hover:text-muted-foreground transition-colors mb-6" data-testid="button-try-demo">
+            See example result
+          </button>
 
-          <div className="border-t border-neutral-100 mt-6 pt-8 pb-4">
-            <RouterLink href="/chat" className="flex items-center gap-4 p-5 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-scanner">
-              <div className="w-10 h-10 border border-white/20 flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em] block">Ask Our AI Advisor</span>
-                <span className="text-[10px] md:text-[11px] text-white/50 block mt-0.5">Get personalized material and brand recommendations</span>
-              </div>
-              <ArrowRight className="w-4 h-4 text-white/40 flex-shrink-0" />
-            </RouterLink>
-          </div>
+          <RouterLink href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-scanner">
+            <MessageCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Ask Our AI Advisor</span>
+            <ArrowRight className="w-3.5 h-3.5 text-white/40 ml-auto flex-shrink-0" />
+          </RouterLink>
         </>
       )}
 
