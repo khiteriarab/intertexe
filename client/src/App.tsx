@@ -41,6 +41,7 @@ import Chat from "@/pages/Chat";
 import Leaving from "@/pages/Leaving";
 import Shop from "@/pages/Shop";
 import CuratedProducts, { ALL_CURATED_SLUGS } from "@/pages/CuratedProducts";
+import Scanner from "@/pages/Scanner";
 
 function MaterialRouteHandler({ params }: { params: { slug: string } }) {
   if (ALL_CURATED_SLUGS.includes(params.slug)) {
@@ -70,6 +71,7 @@ function Router() {
         <Route path="/contact" component={Contact} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
+        <Route path="/scanner" component={Scanner} />
         <Route path="/leaving" component={Leaving} />
         <Route component={NotFound} />
       </Switch>
