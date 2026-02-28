@@ -231,7 +231,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       betterAlternatives: (altData || []).slice(0, 6),
     });
   } catch (err: any) {
-    console.error("Scan URL error:", err.message);
-    return res.status(500).json({ error: "Failed to analyze this product" });
+    console.error("Scan URL error:", err.message, err.stack);
+    return res.status(500).json({ error: "Failed to analyze this product", detail: err.message });
   }
 }
