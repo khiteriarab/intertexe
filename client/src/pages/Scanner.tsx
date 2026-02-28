@@ -120,7 +120,7 @@ const DEMO_RESULT: ScanResult = {
   ],
 };
 
-function EmailGate({ onUnlock }: { onUnlock: () => void }) {
+function EmailGate({ onUnlock, onClose }: { onUnlock: () => void; onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
@@ -148,7 +148,10 @@ function EmailGate({ onUnlock }: { onUnlock: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" data-testid="email-gate-overlay">
-      <div className="bg-[#FAFAF8] w-full max-w-md p-8 md:p-10 flex flex-col items-center text-center">
+      <div className="bg-[#FAFAF8] w-full max-w-md p-8 md:p-10 flex flex-col items-center text-center relative">
+        <button onClick={onClose} className="absolute top-3 right-3 p-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="button-gate-close">
+          <X className="w-4 h-4" />
+        </button>
         <Sparkles className="w-6 h-6 text-neutral-400 mb-4" />
         <h2 className="text-xl md:text-2xl font-serif mb-2">Unlock Shopping Intelligence</h2>
         <p className="text-[13px] text-muted-foreground mb-6 leading-relaxed max-w-xs">
@@ -344,7 +347,7 @@ export default function Scanner() {
 
   return (
     <div className="w-full">
-      {showEmailGate && <EmailGate onUnlock={handleEmailUnlock} />}
+      {showEmailGate && <EmailGate onUnlock={handleEmailUnlock} onClose={() => { setShowEmailGate(false); setPendingAction(null); }} />}
       {!result && !loading && (
         <>
           <div className="pt-8 md:pt-14 pb-6 md:pb-8">
