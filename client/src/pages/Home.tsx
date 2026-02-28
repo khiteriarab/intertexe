@@ -227,7 +227,7 @@ export default function Home() {
 
         <div className="relative z-10 px-5 md:px-10 pb-12 md:pb-16 max-w-2xl flex flex-col" style={{ paddingBottom: 'max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem))' }}>
           <h1 className="text-[32px] leading-[1.15] md:text-6xl font-serif text-white mb-4 md:mb-6" data-testid="text-hero-headline">
-            Shop by Fabric
+            Know Your Materials
           </h1>
           <p className="text-[13px] md:text-lg text-white/80 mb-6 md:mb-8 font-light leading-relaxed max-w-md" data-testid="text-hero-subtext">
             {productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products. Choose your fabrics, browse ranked pieces, shop better materials instantly.

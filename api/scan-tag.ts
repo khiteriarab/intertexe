@@ -2,6 +2,23 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 
+function resolveCategory(aiCategory: string, productNameLower: string): string {
+  if (aiCategory && aiCategory !== "bottoms") return aiCategory;
+  if (aiCategory === "bottoms") {
+    if (productNameLower.match(/\b(short|shorts)\b/) && !productNameLower.match(/\b(pant|trouser|jean|jeans|denim|flare|wide.?leg|straight.?leg|slim|skinny|cargo)\b/)) return "shorts";
+    if (productNameLower.match(/\b(skirt|skirts)\b/)) return "skirts";
+    return "bottoms";
+  }
+  if (productNameLower.match(/\b(jean|jeans|pant|pants|trouser|trousers|denim|flare|chino|cargo.pant|wide.?leg)\b/)) return "bottoms";
+  if (productNameLower.match(/\b(dress|gown)\b/)) return "dresses";
+  if (productNameLower.match(/\b(top|blouse|shirt|tee|camisole|tank)\b/)) return "tops";
+  if (productNameLower.match(/\b(skirt|skirts)\b/)) return "skirts";
+  if (productNameLower.match(/\b(short|shorts)\b/)) return "shorts";
+  if (productNameLower.match(/\b(jacket|coat|blazer)\b/)) return "outerwear";
+  if (productNameLower.match(/\b(sweater|knit|cardigan|pullover)\b/)) return "knitwear";
+  return "";
+}
+
 async function webResearch(openai: OpenAI, brandName: string, productName: string, tagPrice: string, brandWebsite?: string | null): Promise<any> {
   try {
     let websiteContent = "";
@@ -91,15 +108,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const avgFiber = products.length ? Math.round(totalFiber / products.length) : null;
     const brandRating = avgFiber === null ? null : avgFiber >= 95 ? "Exceptional" : avgFiber >= 85 ? "Excellent" : avgFiber >= 70 ? "Good" : "Caution";
 
-    const detectedCategory = tagInfo.category || "";
+    const productNameLower = (tagInfo.productName || "").toLowerCase();
+    const resolvedCategory = resolveCategory(tagInfo.category || "", productNameLower);
     const categoryKeywords: Record<string, string[]> = {
-      dresses: ["dress", "gown", "midi", "maxi", "mini dress"],
+      dresses: ["dress", "gown", "midi dress", "maxi dress", "mini dress"],
       tops: ["top", "blouse", "shirt", "tee", "camisole", "tank"],
-      bottoms: ["pant", "trouser", "skirt", "jean", "short"],
-      outerwear: ["jacket", "coat", "blazer", "cardigan", "sweater", "knit"],
+      bottoms: ["pant", "trouser", "jean", "chino", "wide leg", "straight leg", "slim fit", "flare"],
+      skirts: ["skirt"],
+      shorts: ["short"],
+      outerwear: ["jacket", "coat", "blazer"],
       knitwear: ["sweater", "knit", "cardigan", "pullover"],
     };
-    const searchTerms = categoryKeywords[detectedCategory] || [];
+    const searchTerms = categoryKeywords[resolvedCategory] || [];
     let altQuery = supabase.from("products").select("*").eq("approved", "yes")
       .gte("natural_fiber_percent", 80).neq("brand_slug", brandSlug)
       .order("natural_fiber_percent", { ascending: false });

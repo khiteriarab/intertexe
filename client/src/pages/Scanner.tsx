@@ -310,10 +310,6 @@ export default function Scanner() {
             <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm mb-6" data-testid="text-scan-error">{error}</div>
           )}
 
-          <button onClick={() => setResult(DEMO_RESULT)} className="w-full flex items-center justify-center gap-2 py-2.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 hover:text-muted-foreground transition-colors mb-6" data-testid="button-try-demo">
-            See example result
-          </button>
-
           <RouterLink href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-scanner">
             <MessageCircle className="w-4 h-4 flex-shrink-0" />
             <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Ask Our AI Advisor</span>
@@ -337,123 +333,79 @@ export default function Scanner() {
         </div>
       )}
 
-      {result && (
+      {result && (() => {
+        const fiberPct = result.webIntel?.naturalFiberPercent ?? null;
+        const isGreatProduct = fiberPct !== null && fiberPct >= 80;
+        const hasProducts = result.products.length > 0 || result.betterAlternatives.length > 0;
+
+        return (
         <div className="pt-6 md:pt-10 pb-8">
-          <button onClick={reset} className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors mb-8" data-testid="button-scan-again">
+          <button onClick={reset} className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors mb-6" data-testid="button-scan-again">
             <ChevronLeft className="w-3.5 h-3.5" /> New scan
           </button>
 
-          <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-10 mb-10">
-            <div className="flex-1">
-              <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">Identified Product</p>
-              <h2 className="text-2xl md:text-4xl font-serif mb-1" data-testid="text-result-brand">{result.tagInfo.brandName}</h2>
-              {result.tagInfo.productName && <p className="text-sm md:text-base text-muted-foreground mb-3" data-testid="text-result-product">{result.tagInfo.productName}</p>}
-              <div className="flex items-center gap-4">
-                {result.tagInfo.price && <span className="text-lg md:text-xl font-medium" data-testid="text-result-price">{result.tagInfo.price}</span>}
-                {result.brandStats && (
-                  <span className={`px-2 py-0.5 text-[9px] uppercase tracking-[0.1em] font-medium ${ratingColor(result.brandStats.rating)}`} data-testid="text-brand-rating">
-                    {result.brandStats.rating}
-                  </span>
-                )}
-              </div>
-              <p className="text-[9px] text-muted-foreground/40 mt-2">{result.tagInfo.rawText}</p>
+          <div className="flex items-start gap-4 mb-4">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl md:text-3xl font-serif mb-0.5" data-testid="text-result-brand">{result.tagInfo.brandName}</h2>
+              {result.tagInfo.productName && <p className="text-[13px] text-muted-foreground truncate" data-testid="text-result-product">{result.tagInfo.productName}</p>}
             </div>
-
-            {result.brandStats && (
-              <div className={`w-full md:w-64 border ${ratingBorderColor(result.brandStats.rating)} p-5 flex-shrink-0`}>
-                <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">Brand Score</p>
-                <FiberBar percent={result.brandStats.avgFiber} label="Avg. Natural Fiber" />
-                <p className="text-[10px] text-muted-foreground mt-2">{result.brandStats.productCount} verified products analyzed</p>
-              </div>
-            )}
+            {result.tagInfo.price && <span className="text-lg font-medium flex-shrink-0" data-testid="text-result-price">{result.tagInfo.price}</span>}
           </div>
 
-          {result.designerInfo && (
-            <div className="flex items-center justify-between p-4 md:p-5 bg-white border border-neutral-200 mb-6">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 bg-neutral-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-serif font-bold">{result.designerInfo.name.charAt(0)}</span>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{result.designerInfo.name}</p>
-                  <p className="text-[10px] text-emerald-700 uppercase tracking-wider">In our directory</p>
-                </div>
-              </div>
-              <RouterLink href={`/designers/${result.designerInfo.slug}`} className="text-[10px] uppercase tracking-[0.12em] border border-neutral-200 px-3 py-1.5 hover:bg-neutral-50 transition-colors flex-shrink-0 ml-3" data-testid="link-brand-page">
-                View
-              </RouterLink>
-            </div>
-          )}
-
           {result.webIntel && (
-            <div className="border border-neutral-200 mb-8">
-              <div className="px-5 py-4 border-b border-neutral-100 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-neutral-400" />
-                <span className="text-[10px] uppercase tracking-[0.15em] font-medium">Intelligence Report</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2">
-                {result.webIntel.composition && (
-                  <div className="p-5 border-b md:border-r border-neutral-100">
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">Composition</p>
-                    <p className="text-sm mb-3">{result.webIntel.composition}</p>
-                    {result.webIntel.naturalFiberPercent !== null && (
-                      <FiberBar percent={result.webIntel.naturalFiberPercent} />
-                    )}
-                  </div>
-                )}
-
-                {result.webIntel.verdict && (
-                  <div className="p-5 border-b border-neutral-100">
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">Verdict</p>
-                    <p className="text-sm leading-relaxed">{result.webIntel.verdict}</p>
-                  </div>
-                )}
-
-                {result.webIntel.qualityNotes && (
-                  <div className="p-5 border-b md:border-r border-neutral-100">
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">Quality</p>
-                    <p className="text-[13px] text-muted-foreground leading-relaxed">{result.webIntel.qualityNotes}</p>
-                  </div>
-                )}
-
-                <div className="p-5 border-b border-neutral-100">
-                  <div className="flex flex-col gap-4">
-                    {result.webIntel.priceRange && (
-                      <div>
-                        <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Price Range</p>
-                        <p className="text-sm">{result.webIntel.priceRange}</p>
-                      </div>
-                    )}
-                    {result.webIntel.otherRetailers && result.webIntel.otherRetailers.length > 0 && (
-                      <div>
-                        <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1.5">Also At</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {result.webIntel.otherRetailers.map((r, i) => (
-                            <span key={i} className="text-[10px] px-2 py-0.5 bg-neutral-50 border border-neutral-100">{r}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+            <div className={`p-4 mb-6 flex items-center gap-3 ${isGreatProduct ? "bg-emerald-50 border border-emerald-200" : fiberPct !== null && fiberPct < 50 ? "bg-amber-50 border border-amber-200" : "bg-neutral-50 border border-neutral-200"}`}>
+              {result.webIntel.composition && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium mb-0.5">{result.webIntel.composition}</p>
+                  <p className={`text-[11px] ${isGreatProduct ? "text-emerald-700" : fiberPct !== null && fiberPct < 50 ? "text-amber-700" : "text-muted-foreground"}`}>
+                    {isGreatProduct ? "Great choice — this is a high natural fiber product" : fiberPct !== null && fiberPct < 50 ? "Low natural fiber content — consider alternatives below" : result.webIntel.verdict || ""}
+                  </p>
                 </div>
-              </div>
-
-              {result.webIntel.sustainabilityNotes && (
-                <div className="px-5 py-4 flex items-start gap-2.5 bg-emerald-50/50">
-                  <Leaf className="w-3.5 h-3.5 text-emerald-700 mt-0.5 flex-shrink-0" />
-                  <p className="text-[12px] text-emerald-900/80 leading-relaxed">{result.webIntel.sustainabilityNotes}</p>
+              )}
+              {fiberPct !== null && (
+                <div className="flex-shrink-0 w-14 h-14 flex items-center justify-center border-2 border-current rounded-none" style={{ color: isGreatProduct ? "#15803d" : fiberPct < 50 ? "#b45309" : "#525252" }}>
+                  <span className="text-base font-bold">{fiberPct}%</span>
                 </div>
               )}
             </div>
           )}
 
+          {result.designerInfo && (
+            <RouterLink href={`/designers/${result.designerInfo.slug}`} className="flex items-center justify-between p-3 bg-white border border-neutral-200 mb-6 hover:border-neutral-400 transition-colors" data-testid="link-brand-page">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[10px] font-serif font-bold">{result.designerInfo.name.charAt(0)}</span>
+                </div>
+                <span className="text-[12px] font-medium truncate">{result.designerInfo.name}</span>
+                {result.brandStats && (
+                  <span className={`px-1.5 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium ${ratingColor(result.brandStats.rating)}`} data-testid="text-brand-rating">
+                    {result.brandStats.rating}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1 flex-shrink-0">
+                View brand <ArrowRight className="w-3 h-3" />
+              </span>
+            </RouterLink>
+          )}
+
+          {result.betterAlternatives.length > 0 && (
+            <div className="mb-8">
+              <div className="mb-4">
+                <p className="text-sm font-medium">{isGreatProduct ? "Similar Pieces to Shop" : "Better Alternatives"}</p>
+                <p className="text-[11px] text-muted-foreground">{isGreatProduct ? "High natural fiber products you might also like" : "Same category, higher natural fiber content"}</p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                {result.betterAlternatives.map((p: any) => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </div>
+          )}
+
           {result.products.length > 0 && (
-            <div className="mb-10">
+            <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-0.5">From {result.tagInfo.brandName}</p>
-                  <p className="text-sm font-medium">Verified Products</p>
+                  <p className="text-sm font-medium">{isGreatProduct ? `More from ${result.tagInfo.brandName}` : `Verified ${result.tagInfo.brandName} Products`}</p>
                 </div>
                 {result.designerInfo?.slug && (
                   <RouterLink href={`/designers/${result.designerInfo.slug}`} className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
@@ -467,33 +419,52 @@ export default function Scanner() {
             </div>
           )}
 
-          {result.betterAlternatives.length > 0 && (
-            <div className="border-t border-neutral-200 pt-8">
-              <div className="mb-5">
-                <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-0.5">Better Materials</p>
-                <p className="text-sm font-medium">Higher Quality Alternatives</p>
-                <p className="text-[11px] text-muted-foreground mt-1">Similar products from other brands with higher natural fiber content</p>
+          {result.webIntel && (result.webIntel.qualityNotes || result.webIntel.sustainabilityNotes || result.webIntel.otherRetailers?.length) && (
+            <div className="border-t border-neutral-100 pt-6 mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-3 h-3 text-neutral-300" />
+                <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60">More Details</span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                {result.betterAlternatives.map((p: any) => <ProductCard key={p.id} product={p} />)}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {result.webIntel.verdict && !isGreatProduct && (
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Verdict</p>
+                    <p className="text-[13px] leading-relaxed">{result.webIntel.verdict}</p>
+                  </div>
+                )}
+                {result.webIntel.qualityNotes && (
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Quality</p>
+                    <p className="text-[13px] text-muted-foreground leading-relaxed">{result.webIntel.qualityNotes}</p>
+                  </div>
+                )}
+                {result.webIntel.otherRetailers && result.webIntel.otherRetailers.length > 0 && (
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1.5">Also Available At</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {result.webIntel.otherRetailers.map((r: string, i: number) => (
+                        <span key={i} className="text-[10px] px-2 py-0.5 bg-neutral-50 border border-neutral-100">{r}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {result.webIntel.sustainabilityNotes && (
+                  <div className="flex items-start gap-2">
+                    <Leaf className="w-3 h-3 text-emerald-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-[12px] text-muted-foreground leading-relaxed">{result.webIntel.sustainabilityNotes}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          <div className="border-t border-neutral-200 mt-10 pt-8">
-            <RouterLink href="/chat" className="flex items-center gap-4 p-5 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-results">
-              <div className="w-10 h-10 border border-white/20 flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[11px] md:text-xs font-medium uppercase tracking-[0.12em] block">Want More Detail?</span>
-                <span className="text-[10px] md:text-[11px] text-white/50 block mt-0.5">Chat with our AI advisor about this brand or product</span>
-              </div>
-              <ArrowRight className="w-4 h-4 text-white/40 flex-shrink-0" />
-            </RouterLink>
-          </div>
-        </div>
-      )}
+          <RouterLink href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-results">
+            <MessageCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Ask Our AI Advisor</span>
+            <ArrowRight className="w-3.5 h-3.5 text-white/40 ml-auto flex-shrink-0" />
+          </RouterLink>
+        </div>);
+      })()}
     </div>
   );
 }
