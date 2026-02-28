@@ -27,7 +27,7 @@ export default function Leaving() {
   const isValid = isValidExternalUrl(rawUrl);
   const url = isValid ? rawUrl : "";
 
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(2);
 
   useEffect(() => {
     if (!url) return;
