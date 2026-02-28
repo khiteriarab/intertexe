@@ -494,7 +494,7 @@ function QuizProductCard({ product }: { product: any }) {
           </div>
         )}
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, product.price); }}
           className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
           data-testid={`btn-favorite-quiz-${productId}`}
           aria-label={saved ? "Remove from favorites" : "Save to favorites"}

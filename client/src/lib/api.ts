@@ -12,6 +12,10 @@ import {
   supabaseAddFavorite,
   supabaseRemoveFavorite,
   supabaseCheckFavorite,
+  supabaseGetPriceWatches,
+  supabaseSavePriceWatch,
+  supabaseBulkSavePriceWatches,
+  supabaseRemovePriceWatch,
 } from "./supabase";
 
 const TOKEN_KEY = "intertexe_auth_token";
@@ -208,6 +212,26 @@ export const api = {
     });
     const data = await handleResponse(res);
     return data.productIds || [];
+  },
+
+  async getPriceAlerts(): Promise<Array<{ productId: string; savedPrice: string }>> {
+    const watches = await supabaseGetPriceWatches();
+    return watches.map(w => ({ productId: w.productId, savedPrice: w.originalPrice }));
+  },
+
+  async savePriceAlert(productId: string, savedPrice: string) {
+    await supabaseSavePriceWatch(productId, savedPrice);
+    return { success: true };
+  },
+
+  async bulkSavePriceAlerts(items: Array<{ productId: string; savedPrice: string }>) {
+    await supabaseBulkSavePriceWatches(items.map(i => ({ productId: i.productId, originalPrice: i.savedPrice })));
+    return { success: true };
+  },
+
+  async removePriceAlert(productId: string) {
+    await supabaseRemovePriceWatch(productId);
+    return { success: true };
   },
 
   async addRecent(productId: string, productUrl?: string, brandName?: string) {

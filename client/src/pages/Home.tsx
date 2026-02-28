@@ -54,7 +54,7 @@ function ProductCardSmall({ product }: { product: any }) {
           </div>
         )}
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
           className={`absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
           aria-label={saved ? "Remove from favorites" : "Save to favorites"}
         >

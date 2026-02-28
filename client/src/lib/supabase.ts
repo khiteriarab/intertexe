@@ -1184,3 +1184,80 @@ export async function supabaseCheckFavorite(designerId: string): Promise<{ favor
 
   return { favorited: (data && data.length > 0) || false };
 }
+
+export async function supabaseGetPriceWatches(userId?: string): Promise<Array<{ productId: string; originalPrice: string; lastKnownPrice: string | null }>> {
+  if (!supabase) return [];
+
+  const uid = userId || (await supabase.auth.getUser()).data?.user?.id;
+  if (!uid) return [];
+
+  const { data, error } = await supabase
+    .from("price_watches")
+    .select("product_id, original_price, last_known_price")
+    .eq("user_id", uid);
+
+  if (error || !data) return [];
+  return data.map((row: any) => ({
+    productId: row.product_id,
+    originalPrice: row.original_price,
+    lastKnownPrice: row.last_known_price,
+  }));
+}
+
+export async function supabaseSavePriceWatch(productId: string, originalPrice: string, userId?: string): Promise<void> {
+  if (!supabase) return;
+
+  const uid = userId || (await supabase.auth.getUser()).data?.user?.id;
+  if (!uid) return;
+
+  await supabase
+    .from("price_watches")
+    .upsert({
+      user_id: uid,
+      product_id: productId,
+      original_price: originalPrice,
+    }, { onConflict: "user_id,product_id" });
+}
+
+export async function supabaseBulkSavePriceWatches(items: Array<{ productId: string; originalPrice: string }>, userId?: string): Promise<void> {
+  if (!supabase || items.length === 0) return;
+
+  const uid = userId || (await supabase.auth.getUser()).data?.user?.id;
+  if (!uid) return;
+
+  const rows = items.map(i => ({
+    user_id: uid,
+    product_id: i.productId,
+    original_price: i.originalPrice,
+  }));
+
+  await supabase
+    .from("price_watches")
+    .upsert(rows, { onConflict: "user_id,product_id" });
+}
+
+export async function supabaseRemovePriceWatch(productId: string, userId?: string): Promise<void> {
+  if (!supabase) return;
+
+  const uid = userId || (await supabase.auth.getUser()).data?.user?.id;
+  if (!uid) return;
+
+  await supabase
+    .from("price_watches")
+    .delete()
+    .eq("user_id", uid)
+    .eq("product_id", productId);
+}
+
+export async function supabaseUpdateLastKnownPrice(productId: string, lastKnownPrice: string, userId?: string): Promise<void> {
+  if (!supabase) return;
+
+  const uid = userId || (await supabase.auth.getUser()).data?.user?.id;
+  if (!uid) return;
+
+  await supabase
+    .from("price_watches")
+    .update({ last_known_price: lastKnownPrice })
+    .eq("user_id", uid)
+    .eq("product_id", productId);
+}

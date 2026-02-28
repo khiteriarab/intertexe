@@ -246,6 +246,51 @@ export async function registerRoutes(
     }
   });
 
+  // ─── Price Alerts ──────────────────────────────
+  app.get("/api/price-alerts", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const alerts = await storage.getPriceAlerts(req.user!.id);
+      return res.json({ alerts });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/price-alerts", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const { productId, savedPrice } = req.body;
+      if (!productId || !savedPrice) return res.status(400).json({ message: "productId and savedPrice required" });
+      await storage.savePriceAlert(req.user!.id, productId, savedPrice);
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/price-alerts/bulk", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const { items } = req.body;
+      if (!Array.isArray(items)) return res.status(400).json({ message: "items array required" });
+      await storage.bulkSavePriceAlerts(req.user!.id, items);
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/price-alerts/:productId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      await storage.removePriceAlert(req.user!.id, req.params.productId);
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
+
   // ─── Recents ──────────────────────────────────
   app.get("/api/recents", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
