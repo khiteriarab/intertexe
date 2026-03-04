@@ -10,7 +10,7 @@ export function Footer() {
               <span className="font-light">INTER</span><span className="font-bold">TEXE</span>
             </Link>
             <p className="text-background/60 text-xs md:text-sm leading-relaxed max-w-xs">
-              Material-first fashion discovery. We rank designers by what matters most — the quality of their fabrics.
+              The easiest way to shop luxury fashion made from natural fabrics.
             </p>
           </div>
 
@@ -18,7 +18,7 @@ export function Footer() {
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Explore</h3>
             <Link href="/just-in" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-just-in">Just In</Link>
             <Link href="/designers" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-designers">Designers</Link>
-            <Link href="/materials" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-materials">Materials</Link>
+            <Link href="/materials" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-materials">Fabrics</Link>
             <Link href="/quiz" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-quiz">Style Quiz</Link>
           </div>
 

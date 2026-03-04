@@ -1,7 +1,7 @@
 # INTERTEXE
 
 ## Overview
-INTERTEXE is the definitive material quality reference for luxury fashion. The platform makes buying decisions for high-end consumers — every designer is vetted, ranked, and given a clear quality verdict so shoppers never have to read a label or guess. Features include quality tier badges, prescriptive buying rules for every fabric, curated "The Edit" picks, a comprehensive directory with tier filters, AI-powered material advice, and verified product-level data scraped from brand websites.
+INTERTEXE is "Google for natural-fabric fashion" — the easiest way to shop luxury fashion made from natural fabrics. Find silk instead of polyester, linen instead of viscose, cotton instead of blends. The Fabric Hub organizes 17,000+ verified products by fiber type (cotton, linen, silk, wool, cashmere) with deep subcategory pages (cotton dresses, silk blouses, linen pants, etc.). Features include quality tier badges, prescriptive buying rules for every fabric, curated subcategory pages, a comprehensive brand directory with tier filters, AI-powered material advice, and verified product-level data scraped from brand websites.
 
 ## User Preferences
 - Brand colors: Background #FAFAF8, Accent #111111
@@ -15,7 +15,7 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 **UI/UX Decisions:**
 - **Visuals:** Features a clean, sharp-edged design with no border radius. Typography uses Playfair Display for headings and DM Sans for body text, adhering to a luxury aesthetic.
 - **Mobile-First Design:** The entire platform is responsive and optimized for mobile devices, including touch-optimized interactions and safe-area-inset support for notched phones.
-- **Navigation:** Desktop nav: Shop, The Edit, Directory, Buying Guide, Quiz, Chat. Shop is the primary CTA. Mobile bottom nav: Home, Shop, Directory, Chat, Account.
+- **Navigation:** Desktop nav: Fabrics, Shop, Directory, Scanner, Quiz, Chat. Fabrics is the primary CTA. Mobile bottom nav: Home, Fabrics, Scan, Shop, Account.
 - **Shop Page:** Product-first `/shop` page showing 431 verified products organized by material (cashmere, silk, wool, cotton, linen). Fiber tabs filter products, category sub-filters (knitwear, tops, dresses, bottoms, outerwear). Each product card shows image, brand, name, composition, price, and "Shop Now" link via affiliate interstitial.
 
 **Technical Implementations:**
@@ -33,7 +33,8 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **SEO Product Pages:** 9 material+category pages under `/materials/` (e.g., `/materials/linen-dresses`, `/materials/silk-tops`, `/materials/cashmere-sweaters`) with SEO titles like "Best Linen Dresses in 2026 | INTERTEXE", buying tips, red flags, and email capture.
 - **Shop by Fabric:** General material pages (`/materials/cotton`, `/materials/cashmere`, etc.) now show verified products matching that fabric type with product cards, brand links, composition labels, and external shop links. Products queried via `fetchProductsByFiberAndCategory` with fiber-specific search terms.
 - **SEO Optimization:** Dynamic SEO for designer pages (e.g., "Reformation Quality Review 2026"), product pages, and curated collection pages.
-- **Navigation:** Desktop nav: The Edit, Directory, Buying Guide, Quiz, Chat. Shop available via mobile bottom nav. No logo overlap.
+- **Fabric Hub:** Central `/materials` page organized by fiber type — Cotton, Linen, Silk, Wool, Cashmere — each with subcategory links (cotton-dresses, silk-blouses, linen-pants, etc.). 22 total subcategory pages with verified products, buying tips, and red flags.
+- **Navigation:** Desktop nav: Fabrics, Shop, Directory, Scanner, Quiz, Chat. Fabrics is the primary entry point. Mobile bottom nav: Home, Fabrics, Scan, Shop, Account.
 - **Composition Parsing:** Handles raw material names: "flax"→linen, "wood pulp"→viscose, "Good Earth Cotton"→cotton.
 
 **Feature Specifications:**
