@@ -1,7 +1,7 @@
 import { Link } from "wouter";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Search, Sparkles, ShoppingBag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProductCount } from "@/lib/supabase";
+import { fetchProductCount, fetchProductsByFiber } from "@/lib/supabase";
 import { useSEO } from "@/hooks/use-seo";
 
 const FABRIC_HUB = [
@@ -57,6 +57,48 @@ const FABRIC_HUB = [
   },
 ];
 
+function FabricCard({ group, image, large }: { group: typeof FABRIC_HUB[0]; image: string | null; large?: boolean }) {
+  return (
+    <div className={`flex flex-col gap-0 ${large ? "md:col-span-1 md:row-span-2" : ""}`} data-testid={`hub-section-${group.slug}`}>
+      <Link
+        href={`/materials/${group.slug}`}
+        className="group relative overflow-hidden bg-[#EDECE8] block"
+      >
+        <div className={`${large ? "aspect-[3/4]" : "aspect-[4/5]"} relative`}>
+          {image ? (
+            <img
+              src={image}
+              alt={group.fabric}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-b from-[#E8E4DE] to-[#D5CFC4]" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
+            <h2 className="text-white text-xl md:text-2xl font-serif mb-1">{group.fabric}</h2>
+            <span className="text-white/70 text-[10px] md:text-[11px] uppercase tracking-[0.15em] flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+              Shop {group.fabric} <ArrowRight className="w-3 h-3" />
+            </span>
+          </div>
+        </div>
+      </Link>
+      <div className="flex flex-wrap gap-x-0 border-t border-border/30">
+        {group.subcategories.map((sub, i) => (
+          <Link
+            key={sub.slug}
+            href={`/materials/${sub.slug}`}
+            className={`text-[11px] md:text-xs text-muted-foreground hover:text-foreground hover:bg-[#f5f5f3] transition-colors py-2.5 px-3 md:px-4 ${i < group.subcategories.length - 1 ? "border-r border-border/20" : ""}`}
+            data-testid={`link-sub-${sub.slug}`}
+          >
+            {sub.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Materials() {
   useSEO({
     title: "Shop by Fabric — Find Silk, Linen, Cotton & Wool Clothing | INTERTEXE",
@@ -70,73 +112,149 @@ export default function Materials() {
     staleTime: 10 * 60 * 1000,
   });
 
+  const { data: cottonImg = null } = useQuery({
+    queryKey: ["hub-img-cotton"],
+    queryFn: () => fetchProductsByFiber("cotton"),
+    staleTime: 30 * 60 * 1000,
+    select: (d: any[]) => {
+      const p = d.find((p: any) => p.image_url || p.imageUrl);
+      return p ? (p.image_url || p.imageUrl) : null;
+    },
+  });
+
+  const { data: linenImg = null } = useQuery({
+    queryKey: ["hub-img-linen"],
+    queryFn: () => fetchProductsByFiber("linen"),
+    staleTime: 30 * 60 * 1000,
+    select: (d: any[]) => {
+      const p = d.find((p: any) => p.image_url || p.imageUrl);
+      return p ? (p.image_url || p.imageUrl) : null;
+    },
+  });
+
+  const { data: silkImg = null } = useQuery({
+    queryKey: ["hub-img-silk"],
+    queryFn: () => fetchProductsByFiber("silk"),
+    staleTime: 30 * 60 * 1000,
+    select: (d: any[]) => {
+      const p = d.find((p: any) => p.image_url || p.imageUrl);
+      return p ? (p.image_url || p.imageUrl) : null;
+    },
+  });
+
+  const { data: woolImg = null } = useQuery({
+    queryKey: ["hub-img-wool"],
+    queryFn: () => fetchProductsByFiber("wool"),
+    staleTime: 30 * 60 * 1000,
+    select: (d: any[]) => {
+      const p = d.find((p: any) => p.image_url || p.imageUrl);
+      return p ? (p.image_url || p.imageUrl) : null;
+    },
+  });
+
+  const { data: cashmereImg = null } = useQuery({
+    queryKey: ["hub-img-cashmere"],
+    queryFn: () => fetchProductsByFiber("cashmere"),
+    staleTime: 30 * 60 * 1000,
+    select: (d: any[]) => {
+      const p = d.find((p: any) => p.image_url || p.imageUrl);
+      return p ? (p.image_url || p.imageUrl) : null;
+    },
+  });
+
+  const images: Record<string, string | null> = {
+    cotton: cottonImg,
+    linen: linenImg,
+    silk: silkImg,
+    wool: woolImg,
+    cashmere: cashmereImg,
+  };
+
   return (
     <div className="flex flex-col" data-testid="page-fabric-hub">
 
-      <div className="flex items-center justify-between py-5 md:py-6 border-b border-border/40">
-        <h1 className="text-sm md:text-base font-serif" data-testid="text-hub-headline">Shop by Fabric</h1>
-        {productCount > 0 && (
-          <span className="text-[10px] md:text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-            {productCount.toLocaleString()} verified products
-          </span>
-        )}
+      <div className="pt-2 pb-6 md:pt-4 md:pb-8">
+        <div className="flex items-baseline justify-between mb-1">
+          <h1 className="text-xl md:text-2xl font-serif" data-testid="text-hub-headline">Shop by Fabric</h1>
+          {productCount > 0 && (
+            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+              {productCount.toLocaleString()} products
+            </span>
+          )}
+        </div>
+        <p className="text-[13px] text-muted-foreground">Find silk, linen, cotton, wool and cashmere — every composition verified.</p>
       </div>
 
-      <section className="-mx-4 md:-mx-8">
-        {FABRIC_HUB.map((group) => (
-          <div
-            key={group.slug}
-            className="border-b border-border/40"
-            data-testid={`hub-section-${group.slug}`}
-          >
-            <Link
-              href={`/materials/${group.slug}`}
-              className="group flex items-center justify-between px-4 md:px-8 py-8 md:py-12 hover:bg-[#f5f5f3] transition-colors duration-300"
-            >
-              <h2
-                className="text-[28px] md:text-[48px] lg:text-[56px] font-serif leading-[1] tracking-[-0.01em]"
-                data-testid={`text-fabric-${group.slug}`}
-              >
-                {group.fabric}
-              </h2>
-              <div className="w-10 h-10 md:w-12 md:h-12 border border-border/50 group-hover:border-foreground group-hover:bg-foreground group-hover:text-background flex items-center justify-center transition-all duration-300 flex-shrink-0">
-                <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-              </div>
-            </Link>
-
-            <div className="px-4 md:px-8 pb-6 md:pb-10 flex flex-wrap gap-x-5 md:gap-x-8 gap-y-1">
-              {group.subcategories.map((sub) => (
-                <Link
-                  key={sub.slug}
-                  href={`/materials/${sub.slug}`}
-                  className="text-[13px] md:text-sm text-muted-foreground hover:text-foreground transition-colors py-1.5 border-b border-transparent hover:border-foreground/30"
-                  data-testid={`link-sub-${sub.slug}`}
-                >
-                  {sub.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))}
+      <section className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="col-span-2 md:col-span-1 md:row-span-2">
+          <FabricCard group={FABRIC_HUB[0]} image={images.cotton} large />
+        </div>
+        <FabricCard group={FABRIC_HUB[1]} image={images.linen} />
+        <FabricCard group={FABRIC_HUB[2]} image={images.silk} />
+        <FabricCard group={FABRIC_HUB[3]} image={images.wool} />
+        <FabricCard group={FABRIC_HUB[4]} image={images.cashmere} />
       </section>
 
-      <section className="-mx-4 md:-mx-8 bg-foreground text-background mt-0">
-        <div className="grid grid-cols-3 divide-x divide-background/10">
-          <Link href="/scanner" className="group flex flex-col items-center gap-2 py-8 md:py-12 px-3 text-center hover:bg-background/5 transition-colors" data-testid="link-hub-scanner">
-            <span className="text-[11px] md:text-sm font-serif">Scan</span>
-            <span className="text-[9px] md:text-[10px] text-background/40 uppercase tracking-[0.1em] hidden md:block">Check any URL</span>
-          </Link>
-          <Link href="/quiz" className="group flex flex-col items-center gap-2 py-8 md:py-12 px-3 text-center hover:bg-background/5 transition-colors" data-testid="link-hub-quiz">
-            <span className="text-[11px] md:text-sm font-serif">Quiz</span>
-            <span className="text-[9px] md:text-[10px] text-background/40 uppercase tracking-[0.1em] hidden md:block">Find your persona</span>
-          </Link>
-          <Link href="/designers" className="group flex flex-col items-center gap-2 py-8 md:py-12 px-3 text-center hover:bg-background/5 transition-colors" data-testid="link-hub-directory">
-            <span className="text-[11px] md:text-sm font-serif">Directory</span>
-            <span className="text-[9px] md:text-[10px] text-background/40 uppercase tracking-[0.1em] hidden md:block">11,000+ brands</span>
-          </Link>
+      <section className="-mx-4 md:-mx-8 bg-foreground text-background mt-12 md:mt-16">
+        <div className="px-4 md:px-8 py-12 md:py-16">
+          <div className="flex flex-col gap-2 mb-8 md:mb-10">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-background/40">More Tools</p>
+            <h2 className="text-lg md:text-xl font-serif">Not sure what fabric to look for?</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            <Link
+              href="/scanner"
+              className="group flex items-center gap-4 px-5 py-4 border border-background/15 hover:border-background/40 transition-colors"
+              data-testid="link-hub-scanner"
+            >
+              <Search className="w-5 h-5 text-background/40 flex-shrink-0" />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">Scan a Product</span>
+                <span className="text-[11px] text-background/40">Paste any URL to check its fabric</span>
+              </div>
+            </Link>
+            <Link
+              href="/quiz"
+              className="group flex items-center gap-4 px-5 py-4 border border-background/15 hover:border-background/40 transition-colors"
+              data-testid="link-hub-quiz"
+            >
+              <Sparkles className="w-5 h-5 text-background/40 flex-shrink-0" />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">Take the Quiz</span>
+                <span className="text-[11px] text-background/40">Find your fabric persona</span>
+              </div>
+            </Link>
+            <Link
+              href="/designers"
+              className="group flex items-center gap-4 px-5 py-4 border border-background/15 hover:border-background/40 transition-colors"
+              data-testid="link-hub-directory"
+            >
+              <ShoppingBag className="w-5 h-5 text-background/40 flex-shrink-0" />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">Brand Directory</span>
+                <span className="text-[11px] text-background/40">Browse 11,000+ brands</span>
+              </div>
+            </Link>
+          </div>
         </div>
       </section>
 
+      <section className="py-12 md:py-16 text-center flex flex-col items-center gap-4">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Every Composition Verified</p>
+        <h2 className="text-xl md:text-2xl font-serif max-w-lg leading-snug">
+          We read every label so you don't have to.
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
+          Every product on INTERTEXE has its fabric composition verified. No guesswork, no marketing language — just real material data.
+        </p>
+        <Link
+          href="/shop"
+          className="mt-3 bg-foreground text-background px-8 py-3.5 uppercase tracking-[0.15em] text-[11px] font-medium hover:bg-foreground/90 transition-colors active:scale-[0.97]"
+          data-testid="button-shop-all"
+        >
+          Shop All Products
+        </Link>
+      </section>
     </div>
   );
 }
