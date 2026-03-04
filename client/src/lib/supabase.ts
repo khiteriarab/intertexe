@@ -652,8 +652,9 @@ export async function fetchShopProducts(options: {
   sort?: string;
   limit?: number;
   offset?: number;
+  search?: string;
 }): Promise<{ products: any[]; total: number }> {
-  const { fiber, category, sort = "recommended", limit = 60, offset = 0 } = options;
+  const { fiber, category, sort = "recommended", limit = 60, offset = 0, search } = options;
 
   if (supabase) {
     const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
@@ -663,6 +664,13 @@ export async function fetchShopProducts(options: {
       .eq("approved", "yes")
       .not("image_url", "is", null)
       .in("brand_slug", brandSlugs);
+
+    if (search && search.trim().length >= 2) {
+      const searchTerms = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      for (const term of searchTerms) {
+        query = query.or(`name.ilike.%${term}%,brand_name.ilike.%${term}%,composition.ilike.%${term}%`);
+      }
+    }
 
     if (fiber && fiber !== "all") {
       const fiberTerms: Record<string, string[]> = {

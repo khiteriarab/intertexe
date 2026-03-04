@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Link } from "wouter";
-import { ExternalLink, ShoppingBag, ArrowRight, ChevronRight, Heart, ChevronDown } from "lucide-react";
+import { ExternalLink, ShoppingBag, ArrowRight, ChevronRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { trackAffiliateRedirect } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
@@ -153,10 +153,21 @@ export default function Shop() {
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [visibleCount, setVisibleCount] = useState(60);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setVisibleCount(60);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useSEO({
-    title: "Shop Verified Products | INTERTEXE",
-    description: "Browse 17,000+ women's clothing products verified for natural fiber quality. Shop cashmere, silk, wool, cotton, and linen from 60+ vetted brands.",
+    title: "Shop Verified Products — Search by Fabric | INTERTEXE",
+    description: "Search any clothing item and filter by fabric. 17,000+ products verified for natural fiber quality — silk, linen, cotton, wool, cashmere from 40+ brands.",
   });
 
   const { data: totalProductCount = 0 } = useQuery({
@@ -172,13 +183,14 @@ export default function Shop() {
   });
 
   const { data: shopData, isLoading, isFetching } = useQuery({
-    queryKey: ["shop-products", fiberTab, categoryFilter, sortBy, visibleCount],
+    queryKey: ["shop-products", fiberTab, categoryFilter, sortBy, visibleCount, debouncedSearch],
     queryFn: () => fetchShopProducts({
       fiber: fiberTab,
       category: categoryFilter,
       sort: sortBy,
       limit: visibleCount,
       offset: 0,
+      search: debouncedSearch || undefined,
     }),
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
@@ -187,26 +199,70 @@ export default function Shop() {
   const products = shopData?.products || [];
   const resultTotal = shopData?.total || 0;
 
-  const displayCount = fiberTab === "all" && categoryFilter === "all"
+  const isSearchActive = debouncedSearch.length >= 2;
+  const displayCount = fiberTab === "all" && categoryFilter === "all" && !isSearchActive
     ? (totalProductCount > 0 ? totalProductCount : 17000)
     : resultTotal;
 
-  const showHighlights = fiberTab === "all" && categoryFilter === "all";
+  const showHighlights = fiberTab === "all" && categoryFilter === "all" && !isSearchActive;
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
 
   return (
     <div className="min-h-screen pb-24 md:pb-16">
       <div className="py-6 md:py-10 flex flex-col gap-6 md:gap-10">
-        <header className="flex flex-col gap-2 md:gap-3">
-          <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground" data-testid="text-shop-label">
-            Verified Products
-          </span>
-          <h1 className="text-2xl md:text-5xl font-serif" data-testid="text-shop-title">
-            Shop by Material
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed">
-            {displayCount > 0 ? displayCount.toLocaleString() : '17,000'}+ products, every one checked for natural fiber content.
-          </p>
+        <header className="flex flex-col gap-4 md:gap-5">
+          <div className="flex flex-col gap-2 md:gap-3">
+            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground" data-testid="text-shop-label">
+              Search by Fabric
+            </span>
+            <h1 className="text-2xl md:text-5xl font-serif" data-testid="text-shop-title">
+              {isSearchActive ? `Results for "${debouncedSearch}"` : "Shop by Fabric"}
+            </h1>
+            <p className="text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed">
+              Search any clothing item and filter by fabric. {!isSearchActive && `${displayCount > 0 ? displayCount.toLocaleString() : '17,000'}+ verified products.`}
+            </p>
+          </div>
+
+          <div className="relative max-w-xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder='Try "black dress" or "silk blouse"'
+              className="w-full bg-background border border-border/60 pl-11 pr-10 py-3.5 text-sm focus:outline-none focus:border-foreground/60 transition-colors placeholder:text-muted-foreground/50"
+              data-testid="input-product-search"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => { setSearchQuery(""); setDebouncedSearch(""); searchInputRef.current?.focus(); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="button-clear-search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {isSearchActive && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{resultTotal} result{resultTotal !== 1 ? "s" : ""}</span>
+              {fiberTab !== "all" && (
+                <span className="px-2 py-0.5 bg-foreground text-background text-[10px] uppercase tracking-wider">{fiberTab}</span>
+              )}
+              {categoryFilter !== "all" && (
+                <span className="px-2 py-0.5 border border-foreground text-[10px] uppercase tracking-wider">{categoryFilter}</span>
+              )}
+              <button
+                onClick={() => { setSearchQuery(""); setDebouncedSearch(""); setFiberTab("all"); setCategoryFilter("all"); }}
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+                data-testid="button-clear-all"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
         </header>
 
         {showHighlights && Object.keys(fiberCounts).length > 0 && (
@@ -358,15 +414,15 @@ export default function Shop() {
         )}
 
         <div className="border-t border-border/30 pt-8 md:pt-10 flex flex-col gap-4">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Explore by Material</h2>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Explore by Fabric</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
             {[
+              { href: "/materials/silk-dresses", label: "Silk Dresses" },
+              { href: "/materials/linen-pants", label: "Linen Pants" },
+              { href: "/materials/cotton-shirts", label: "Cotton Shirts" },
               { href: "/materials/cashmere-sweaters", label: "Cashmere Sweaters" },
-              { href: "/materials/silk-tops", label: "Silk Tops" },
-              { href: "/materials/linen-dresses", label: "Linen Dresses" },
-              { href: "/materials/cotton", label: "Cotton Guide" },
-              { href: "/materials/wool", label: "Wool Guide" },
-              { href: "/materials", label: "All Materials" },
+              { href: "/materials/wool-coats", label: "Wool Coats" },
+              { href: "/materials", label: "Fabric Hub" },
             ].map(link => (
               <Link
                 key={link.href}
