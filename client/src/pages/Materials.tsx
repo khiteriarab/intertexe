@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, Search, ShoppingBag, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProductCount, fetchProductsByFiber } from "@/lib/supabase";
+import { fetchProductCount } from "@/lib/supabase";
 import { useSEO } from "@/hooks/use-seo";
 
 const FABRIC_HUB = [
@@ -75,26 +75,6 @@ export default function Materials() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: cottonCount = 0 } = useQuery({
-    queryKey: ["fiber-count-cotton"],
-    queryFn: async () => { const r = await fetchProductsByFiber("cotton"); return r.length; },
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const { data: silkCount = 0 } = useQuery({
-    queryKey: ["fiber-count-silk"],
-    queryFn: async () => { const r = await fetchProductsByFiber("silk"); return r.length; },
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const { data: linenCount = 0 } = useQuery({
-    queryKey: ["fiber-count-linen"],
-    queryFn: async () => { const r = await fetchProductsByFiber("linen"); return r.length; },
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const fiberCounts: Record<string, number> = { cotton: cottonCount, silk: silkCount, linen: linenCount };
-
   return (
     <div className="flex flex-col gap-0" data-testid="page-fabric-hub">
 
@@ -127,9 +107,7 @@ export default function Materials() {
 
       <section className="max-w-4xl mx-auto w-full px-4 py-10 md:py-16">
         <div className="flex flex-col gap-10 md:gap-14">
-          {FABRIC_HUB.map((group) => {
-            const count = fiberCounts[group.slug] || 0;
-            return (
+          {FABRIC_HUB.map((group) => (
               <div key={group.slug} className="flex flex-col gap-4 md:gap-5" data-testid={`hub-section-${group.slug}`}>
                 <div className="flex items-end justify-between border-b border-border/40 pb-3">
                   <div className="flex flex-col gap-1">
@@ -139,11 +117,6 @@ export default function Materials() {
                     </Link>
                     <p className="text-xs md:text-sm text-muted-foreground">{group.tagline}</p>
                   </div>
-                  {count > 0 && (
-                    <Link href={`/materials/${group.slug}`} className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors" data-testid={`link-all-${group.slug}`}>
-                      {count} products
-                    </Link>
-                  )}
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
                   {group.subcategories.map((sub) => (
@@ -167,8 +140,7 @@ export default function Materials() {
                   </Link>
                 </div>
               </div>
-            );
-          })}
+          ))}
         </div>
       </section>
 
