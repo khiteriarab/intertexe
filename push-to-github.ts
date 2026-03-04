@@ -48,13 +48,20 @@ async function pushToGitHub() {
     });
   }
 
+  const fs = await import("fs");
+  const path = await import("path");
+
   const trackedFiles = execSync("git ls-files", { cwd: "/home/runner/workspace", encoding: "utf-8" })
     .trim().split("\n").filter(f => f && !f.startsWith(".git"));
 
-  console.log(`Uploading ${trackedFiles.length} tracked files via GitHub API...`);
+  const extraFiles = [".npmrc", ".nvmrc"];
+  for (const ef of extraFiles) {
+    if (!trackedFiles.includes(ef) && fs.existsSync(path.join("/home/runner/workspace", ef))) {
+      trackedFiles.push(ef);
+    }
+  }
 
-  const fs = await import("fs");
-  const path = await import("path");
+  console.log(`Uploading ${trackedFiles.length} tracked files via GitHub API...`);
 
   const blobs: { path: string; sha: string; mode: string; type: string }[] = [];
   const BATCH_SIZE = 15;
