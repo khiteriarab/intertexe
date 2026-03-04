@@ -230,7 +230,7 @@ export default function Home() {
             Shop Natural Fabrics
           </h1>
           <p className="text-[13px] md:text-lg text-white/80 mb-6 md:mb-8 font-light leading-relaxed max-w-md" data-testid="text-hero-subtext">
-            The easiest way to shop luxury fashion made from natural fabrics. Find silk, linen, cotton & wool — {productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products.
+            {productCount > 0 ? productCount.toLocaleString() : '17,553'} verified products. Choose your fabrics, browse ranked pieces, shop better materials instantly.
           </p>
           <Link href="/materials" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 w-fit active:scale-[0.97]" data-testid="button-shop-now">
             Browse Fabrics <ArrowRight className="w-4 h-4" />
