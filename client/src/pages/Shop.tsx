@@ -167,7 +167,7 @@ export default function Shop() {
 
   useSEO({
     title: "Shop Verified Products — Search by Fabric | INTERTEXE",
-    description: "Search any clothing item and filter by fabric. 17,000+ products verified for natural fiber quality — silk, linen, cotton, wool, cashmere from 40+ brands.",
+    description: "Search any clothing item and filter by fabric. 17,000+ products verified for natural fiber quality — silk, linen, cotton, wool, cashmere across 11,000+ brands.",
   });
 
   const { data: totalProductCount = 0 } = useQuery({
