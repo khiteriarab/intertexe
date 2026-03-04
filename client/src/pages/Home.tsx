@@ -227,13 +227,13 @@ export default function Home() {
 
         <div className="relative z-10 px-5 md:px-10 pb-12 md:pb-16 max-w-2xl flex flex-col" style={{ paddingBottom: 'max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem))' }}>
           <h1 className="text-[32px] leading-[1.15] md:text-6xl font-serif text-white mb-4 md:mb-6" data-testid="text-hero-headline">
-            Know Your Materials
+            Shop Natural Fabrics
           </h1>
           <p className="text-[13px] md:text-lg text-white/80 mb-6 md:mb-8 font-light leading-relaxed max-w-md" data-testid="text-hero-subtext">
-            {productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products. Choose your fabrics, browse ranked pieces, shop better materials instantly.
+            The easiest way to shop luxury fashion made from natural fabrics. Find silk, linen, cotton & wool — {productCount > 0 ? productCount.toLocaleString() : '17,000+'} verified products.
           </p>
-          <Link href="/shop" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 w-fit active:scale-[0.97]" data-testid="button-shop-now">
-            Shop by Fabric <ArrowRight className="w-4 h-4" />
+          <Link href="/materials" className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 w-fit active:scale-[0.97]" data-testid="button-shop-now">
+            Browse Fabrics <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
