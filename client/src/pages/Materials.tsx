@@ -86,7 +86,7 @@ export default function Materials() {
           </h1>
           <p className="text-[14px] md:text-lg text-background/70 font-light leading-relaxed max-w-xl">
             The easiest way to shop luxury fashion made from natural fabrics.
-            {productCount > 0 && ` ${productCount.toLocaleString()} verified products across 40+ brands.`}
+            {productCount > 0 && ` ${productCount.toLocaleString()} verified products across 11,000+ brands.`}
           </p>
           <div className="flex flex-col gap-2 mt-2 max-w-md">
             <div className="flex items-center gap-3 text-background/60 text-sm">
@@ -181,7 +181,7 @@ export default function Materials() {
               <ShoppingBag className="w-5 h-5 text-background/60 flex-shrink-0" />
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium">Brand Directory</span>
-                <span className="text-[11px] text-background/50">Browse 40+ vetted brands</span>
+                <span className="text-[11px] text-background/50">Browse 11,000+ brands</span>
               </div>
             </Link>
           </div>
