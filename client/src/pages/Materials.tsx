@@ -195,65 +195,57 @@ export default function Materials() {
         <FabricCard group={FABRIC_HUB[4]} image={images.cashmere} />
       </section>
 
-      <section className="-mx-4 md:-mx-8 bg-foreground text-background mt-12 md:mt-16">
-        <div className="px-4 md:px-8 py-12 md:py-16">
-          <div className="flex flex-col gap-2 mb-8 md:mb-10">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-background/40">More Tools</p>
-            <h2 className="text-lg md:text-xl font-serif">Not sure what fabric to look for?</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <Link
-              href="/scanner"
-              className="group flex items-center gap-4 px-5 py-4 border border-background/15 hover:border-background/40 transition-colors"
-              data-testid="link-hub-scanner"
-            >
-              <Search className="w-5 h-5 text-background/40 flex-shrink-0" />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">Scan a Product</span>
-                <span className="text-[11px] text-background/40">Paste any URL to check its fabric</span>
-              </div>
-            </Link>
-            <Link
-              href="/quiz"
-              className="group flex items-center gap-4 px-5 py-4 border border-background/15 hover:border-background/40 transition-colors"
-              data-testid="link-hub-quiz"
-            >
-              <Sparkles className="w-5 h-5 text-background/40 flex-shrink-0" />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">Take the Quiz</span>
-                <span className="text-[11px] text-background/40">Find your fabric persona</span>
-              </div>
-            </Link>
-            <Link
-              href="/designers"
-              className="group flex items-center gap-4 px-5 py-4 border border-background/15 hover:border-background/40 transition-colors"
-              data-testid="link-hub-directory"
-            >
-              <ShoppingBag className="w-5 h-5 text-background/40 flex-shrink-0" />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">Brand Directory</span>
-                <span className="text-[11px] text-background/40">Browse 11,000+ brands</span>
-              </div>
-            </Link>
-          </div>
+      <section className="mt-12 md:mt-16 border-t border-border/30 pt-10 md:pt-14">
+        <div className="text-center mb-8 md:mb-12">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2">Every Composition Verified</p>
+          <h2 className="text-xl md:text-2xl font-serif">We read every label so you don't have to.</h2>
         </div>
-      </section>
 
-      <section className="py-12 md:py-16 text-center flex flex-col items-center gap-4">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Every Composition Verified</p>
-        <h2 className="text-xl md:text-2xl font-serif max-w-lg leading-snug">
-          We read every label so you don't have to.
-        </h2>
-        <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-          Every product on INTERTEXE has its fabric composition verified. No guesswork, no marketing language — just real material data.
-        </p>
-        <Link
-          href="/shop"
-          className="mt-3 bg-foreground text-background px-8 py-3.5 uppercase tracking-[0.15em] text-[11px] font-medium hover:bg-foreground/90 transition-colors active:scale-[0.97]"
-          data-testid="button-shop-all"
-        >
-          Shop All Products
-        </Link>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-border/30">
+          <Link
+            href="/scanner"
+            className="group flex items-start gap-4 p-6 md:p-8 border-b md:border-b-0 md:border-r border-border/30 hover:bg-[#f5f5f3] transition-colors"
+            data-testid="link-hub-scanner"
+          >
+            <Search className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[13px] md:text-sm font-medium">Scan a Product</span>
+              <span className="text-[12px] text-muted-foreground leading-relaxed">Paste any product URL to instantly check its fabric composition and natural fiber percentage.</span>
+            </div>
+          </Link>
+          <Link
+            href="/quiz"
+            className="group flex items-start gap-4 p-6 md:p-8 border-b md:border-b-0 md:border-r border-border/30 hover:bg-[#f5f5f3] transition-colors"
+            data-testid="link-hub-quiz"
+          >
+            <Sparkles className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[13px] md:text-sm font-medium">Take the Quiz</span>
+              <span className="text-[12px] text-muted-foreground leading-relaxed">Discover your fabric persona in 2 minutes and get personalized brand recommendations.</span>
+            </div>
+          </Link>
+          <Link
+            href="/designers"
+            className="group flex items-start gap-4 p-6 md:p-8 hover:bg-[#f5f5f3] transition-colors"
+            data-testid="link-hub-directory"
+          >
+            <ShoppingBag className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[13px] md:text-sm font-medium">Brand Directory</span>
+              <span className="text-[12px] text-muted-foreground leading-relaxed">Browse 11,000+ brands ranked by natural fiber quality. Find your next favourite brand.</span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="text-center mt-10 md:mt-14 pb-4">
+          <Link
+            href="/shop"
+            className="bg-foreground text-background px-10 py-3.5 uppercase tracking-[0.15em] text-[11px] font-medium hover:bg-foreground/90 transition-colors active:scale-[0.97] inline-block"
+            data-testid="button-shop-all"
+          >
+            Shop All Products
+          </Link>
+        </div>
       </section>
     </div>
   );
