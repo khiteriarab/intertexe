@@ -5,9 +5,9 @@ import {
   fetchProductsByBrand,
   fetchAllDesignerSlugs,
 } from "../../../lib/supabase-server";
-import { getQualityTier, getTierColor, getTierAccent } from "@/lib/quality-tiers";
-import { getCuratedScore } from "@/lib/curated-quality-scores";
-import { getBrandProfile, getTierLabel } from "@/lib/brand-profiles";
+import { getQualityTier, getTierColor, getTierAccent } from "../../../lib/quality-tiers";
+import { getCuratedScore } from "../../../lib/curated-quality-scores";
+import { getBrandProfile, getTierLabel } from "../../../lib/brand-profiles";
 import { DesignerDetailProducts } from "./DesignerDetailProducts";
 
 export const revalidate = 3600;

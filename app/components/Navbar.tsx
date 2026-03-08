@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, X, Home, Layers, Scan, ShoppingBag, User, UserCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 
 async function searchDesigners(query: string) {
   const res = await fetch(`/api/designers?q=${encodeURIComponent(query)}`);

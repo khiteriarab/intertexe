@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.shopify.com' },
@@ -34,7 +35,7 @@ const nextConfig = {
           '**/.local/**',
           '**/.cache/**',
           '**/.upm/**',
-          '**/client/src/**',
+          '**/client/**',
         ],
       };
     }

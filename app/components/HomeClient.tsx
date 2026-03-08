@@ -3,8 +3,8 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucide-react";
-import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
-import { getBrandHeroImage } from "@/lib/brand-hero-images";
+import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
+import { getBrandHeroImage } from "../../lib/brand-hero-images";
 
 function ProductCardSmall({ product }: { product: any }) {
   const name = product.name || "";

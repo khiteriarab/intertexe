@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
-import { getBrandProfile } from "@/lib/brand-profiles";
+import { getQualityTier, getTierColor } from "../../../lib/quality-tiers";
+import { getBrandProfile } from "../../../lib/brand-profiles";
 
 const TIER_FILTERS = [
   { key: "all", label: "All" },
