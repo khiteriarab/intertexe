@@ -16,6 +16,21 @@ function ScrollToTop() {
   return null;
 }
 
+function DynamicCanonical() {
+  const [location] = useLocation();
+  useEffect(() => {
+    const canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (canonical) {
+      canonical.href = `https://www.intertexe.com${location === "/" ? "" : location}`;
+    }
+    const ogUrl = document.querySelector('meta[property="og:url"]') as HTMLMetaElement;
+    if (ogUrl) {
+      ogUrl.content = `https://www.intertexe.com${location === "/" ? "" : location}`;
+    }
+  }, [location]);
+  return null;
+}
+
 function RouteTracker() {
   const [location] = useLocation();
   useEffect(() => {
@@ -54,6 +69,7 @@ function Router() {
   return (
     <Layout>
       <ScrollToTop />
+      <DynamicCanonical />
       <RouteTracker />
       <Switch>
         <Route path="/" component={Home} />
