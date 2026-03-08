@@ -24,6 +24,7 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  devIndicators: false,
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {

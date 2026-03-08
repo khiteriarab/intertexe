@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "./providers";
-import { Footer } from "./components/Footer";
-import { ClientShell } from "./components/ClientShell";
+import { ClientApp } from "./components/ClientApp";
 
 export const metadata: Metadata = {
   title: {
@@ -97,17 +95,9 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <script
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var o=console.error;console.error=function(){var a=arguments[0];if(typeof a==='string'&&(a.indexOf('Hydration')!==-1||a.indexOf('hydrat')!==-1||a.indexOf('did not match')!==-1||a.indexOf('server rendered')!==-1))return;o.apply(console,arguments)};window.addEventListener('error',function(e){if(e.message&&(e.message.indexOf('Hydration')!==-1||e.message.indexOf('hydrat')!==-1))e.stopImmediatePropagation()},true)})();`,
-          }}
-        />
-        <Providers>
-          <ClientShell footer={<Footer />}>
-            {children}
-          </ClientShell>
-        </Providers>
+        <ClientApp>
+          {children}
+        </ClientApp>
       </body>
     </html>
   );
