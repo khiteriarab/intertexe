@@ -14,9 +14,15 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-  const [hashed, salt] = stored.split(".");
-  const buf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(Buffer.from(hashed, "hex"), buf);
+  try {
+    if (!stored || !stored.includes(".")) return false;
+    const [hashed, salt] = stored.split(".");
+    if (!hashed || !salt) return false;
+    const buf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(Buffer.from(hashed, "hex"), buf);
+  } catch {
+    return false;
+  }
 }
 
 function signToken(userId: string): string {
@@ -50,37 +56,53 @@ export async function getUserFromToken(authHeader: string | null): Promise<any |
   const payload = verifyToken(token);
   if (!payload) return null;
 
-  const supabase = getServerSupabase();
-  if (!supabase) return null;
+  try {
+    const supabase = getServerSupabase();
+    if (!supabase) return null;
 
-  const { data } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", payload.userId)
-    .limit(1)
-    .single();
+    const { data } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", payload.userId)
+      .limit(1);
 
-  return data || null;
+    return data?.[0] || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getUserByEmail(email: string) {
-  const supabase = getServerSupabase();
-  if (!supabase) return null;
-  const { data } = await supabase.from("users").select("*").eq("email", email).limit(1).single();
-  return data || null;
+  try {
+    const supabase = getServerSupabase();
+    if (!supabase) return null;
+    const { data } = await supabase.from("users").select("*").eq("email", email).limit(1);
+    return data?.[0] || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getUserByUsername(username: string) {
-  const supabase = getServerSupabase();
-  if (!supabase) return null;
-  const { data } = await supabase.from("users").select("*").eq("username", username).limit(1).single();
-  return data || null;
+  try {
+    const supabase = getServerSupabase();
+    if (!supabase) return null;
+    const { data } = await supabase.from("users").select("*").eq("username", username).limit(1);
+    return data?.[0] || null;
+  } catch {
+    return null;
+  }
 }
 
-export async function createUser(data: { username: string; email: string; password: string; name: string | null }) {
+export async function createUser(userData: { username: string; email: string; password: string; name: string | null }) {
   const supabase = getServerSupabase();
-  if (!supabase) throw new Error("Database not available");
-  const { data: user, error } = await supabase.from("users").insert(data).select().single();
-  if (error) throw new Error(error.message);
+  if (!supabase) throw new Error("Unable to create account. Please try again later.");
+  const { data: user, error } = await supabase.from("users").insert(userData).select().single();
+  if (error) {
+    if (error.message?.includes("duplicate") || error.code === "23505") {
+      throw new Error("An account with this email already exists");
+    }
+    throw new Error("Unable to create account. Please try again later.");
+  }
   return user;
 }

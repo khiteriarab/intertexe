@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
     const { password: _, ...safeUser } = user;
     return NextResponse.json({ ...safeUser, token }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+    const msg = err?.message || "Something went wrong. Please try again.";
+    const isUserError = msg.includes("already exists") || msg.includes("already registered");
+    return NextResponse.json({ message: msg }, { status: isUserError ? 400 : 500 });
   }
 }
