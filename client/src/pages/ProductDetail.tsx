@@ -1,11 +1,23 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ExternalLink, ShoppingBag, Heart, Leaf } from "lucide-react";
+import { ChevronLeft, ExternalLink, ShoppingBag, Heart, Leaf, ArrowRight } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import { fetchProductById, fetchProductsByFiber } from "@/lib/supabase";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
 import { trackAffiliateRedirect } from "@/lib/analytics";
+
+const FIBER_KNOWLEDGE: Record<string, { tip: string; care: string; slug: string }> = {
+  silk: { tip: "Look for mulberry silk or charmeuse — they're the highest quality weaves. Silk blends under 70% often lose the lustre and drape you're paying for.", care: "Hand wash cold or dry clean. Never wring — roll in a towel to dry.", slug: "silk" },
+  cotton: { tip: "Pima, Supima, and Egyptian cotton have longer staple fibres, making them softer and more durable than standard cotton.", care: "Machine wash cold, tumble dry low. Gets softer with every wash.", slug: "cotton" },
+  linen: { tip: "Quality linen should feel crisp, not stiff. European flax (Belgian, French, Irish) is considered the gold standard.", care: "Machine wash gentle, air dry. Embrace the wrinkles — they're part of the character.", slug: "linen" },
+  wool: { tip: "Look for 'virgin wool' or 'pure new wool' for the best quality. Merino wool is finer and softer against the skin.", care: "Hand wash cold or dry clean. Lay flat to dry — never hang, as it stretches.", slug: "wool" },
+  cashmere: { tip: "Grade A cashmere uses the longest, finest fibres. Two-ply or higher means more durability. Expect to pay more for Mongolian or Inner Mongolian cashmere.", care: "Hand wash cold with cashmere shampoo. Lay flat on a towel to dry. Fold, never hang.", slug: "cashmere" },
+  merino: { tip: "Superfine merino (under 18.5 microns) is the softest. Look for mulesing-free certifications for ethical sourcing.", care: "Hand wash cold or use wool cycle. Lay flat to dry.", slug: "wool" },
+  mohair: { tip: "Kid mohair is the softest and most luxurious grade. It should feel fluffy, not scratchy.", care: "Dry clean or hand wash very gently in cold water.", slug: "wool" },
+  alpaca: { tip: "Baby alpaca is the finest grade — softer than cashmere and naturally hypoallergenic.", care: "Hand wash cold. Air dry flat, away from direct heat.", slug: "wool" },
+  hemp: { tip: "Hemp fabric gets softer with every wash and is one of the most durable natural fibres available.", care: "Machine wash warm. It's very durable — the easiest natural fibre to care for.", slug: "cotton" },
+};
 
 function parseComposition(composition: string | null | undefined): { fiber: string; percent: number }[] {
   if (!composition) return [];
@@ -99,6 +111,30 @@ function CompositionBar({ parts }: { parts: { fiber: string; percent: number }[]
         ))}
       </div>
     </div>
+  );
+}
+
+function BreadcrumbJsonLd({ product }: { product: any }) {
+  const items: any[] = [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://www.intertexe.com/" },
+    { "@type": "ListItem", position: 2, name: "Shop", item: "https://www.intertexe.com/shop" },
+  ];
+  if (product.brandSlug && product.brandName) {
+    items.push({ "@type": "ListItem", position: 3, name: product.brandName, item: `https://www.intertexe.com/designers/${product.brandSlug}` });
+    items.push({ "@type": "ListItem", position: 4, name: product.name });
+  } else {
+    items.push({ "@type": "ListItem", position: 3, name: product.name });
+  }
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items,
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
   );
 }
 
@@ -305,6 +341,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen pb-16">
+      <BreadcrumbJsonLd product={product} />
       <div className="py-6 md:py-8 flex flex-col gap-8 md:gap-12">
         <nav className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="breadcrumb">
           <Link href="/shop" className="flex items-center gap-1 hover:text-foreground transition-colors" data-testid="link-breadcrumb-shop">
@@ -413,6 +450,27 @@ export default function ProductDetail() {
               </div>
             )}
 
+            {primaryFiber && FIBER_KNOWLEDGE[primaryFiber] && (
+              <div className="flex flex-col gap-3 py-4 border-y border-border/20 bg-[#fafaf8]" data-testid="section-fabric-knowledge">
+                <h3 className="text-[10px] uppercase tracking-[0.2em] font-medium text-muted-foreground px-4">
+                  About {primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}
+                </h3>
+                <p className="text-[12px] text-muted-foreground leading-relaxed px-4">
+                  {FIBER_KNOWLEDGE[primaryFiber].tip}
+                </p>
+                <p className="text-[11px] text-muted-foreground/70 px-4">
+                  <span className="font-medium text-muted-foreground">Care:</span> {FIBER_KNOWLEDGE[primaryFiber].care}
+                </p>
+                <Link
+                  href={`/materials/${FIBER_KNOWLEDGE[primaryFiber].slug}`}
+                  className="text-[10px] uppercase tracking-[0.15em] text-foreground hover:text-muted-foreground transition-colors flex items-center gap-1 px-4"
+                  data-testid="link-fiber-guide"
+                >
+                  Read the full {primaryFiber} guide <ArrowRight className="w-2.5 h-2.5" />
+                </Link>
+              </div>
+            )}
+
             {product.url && (
               <a
                 href={product.url}
@@ -426,9 +484,20 @@ export default function ProductDetail() {
               </a>
             )}
 
-            <p className="text-[10px] text-muted-foreground text-center">
-              Verified by INTERTEXE — composition data sourced directly from the brand.
-            </p>
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] text-muted-foreground text-center">
+                Verified by INTERTEXE — composition data sourced directly from the brand.
+              </p>
+              {product.brandSlug && (
+                <Link
+                  href={`/designers/${product.brandSlug}`}
+                  className="text-[10px] uppercase tracking-[0.12em] text-center text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                  data-testid="link-more-from-brand"
+                >
+                  More from {product.brandName} <ArrowRight className="w-2.5 h-2.5" />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 

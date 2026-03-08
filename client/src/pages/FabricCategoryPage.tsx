@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "wouter";
 import { ArrowRight, ShoppingBag, ExternalLink, Heart, CheckCircle2, XCircle, AlertTriangle, Leaf } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -290,6 +290,32 @@ export function FabricCategoryPage({ categorySlug }: { categorySlug: string }) {
     staleTime: 10 * 60 * 1000,
   });
 
+  useEffect(() => {
+    if (!config || products.length === 0) return;
+    const itemListJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: config.h1,
+      description: config.metaDescription,
+      url: `https://www.intertexe.com${config.path}`,
+      numberOfItems: products.length,
+      itemListElement: products.slice(0, 50).map((product: any, index: number) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: product.name,
+        url: product.url,
+      })),
+    };
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.setAttribute("data-jsonld", "itemlist");
+    script.textContent = JSON.stringify(itemListJsonLd);
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [config, products]);
+
   if (!config) {
     return (
       <div className="py-20 text-center flex flex-col items-center gap-6">
@@ -305,8 +331,19 @@ export function FabricCategoryPage({ categorySlug }: { categorySlug: string }) {
   const brandCount = new Set(products.map((p: any) => p.brand_slug || p.brandSlug)).size;
   const otherFibers = ALL_FIBER_PAGES.filter(f => f.path !== config.path);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.intertexe.com/" },
+      { "@type": "ListItem", position: 2, name: "Natural Fabrics", item: "https://www.intertexe.com/natural-fabrics" },
+      { "@type": "ListItem", position: 3, name: `${config.fiber} Clothing` },
+    ],
+  };
+
   return (
     <div className="flex flex-col" data-testid={`page-${categorySlug}`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <section className="pt-8 md:pt-14 pb-6 md:pb-8 max-w-5xl mx-auto w-full px-4">
         <nav className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground mb-6">
           <Link href="/natural-fabrics" className="hover:text-foreground transition-colors" data-testid="link-natural-fabrics">Natural Fabrics</Link>

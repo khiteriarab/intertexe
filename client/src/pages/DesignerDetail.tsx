@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { Heart, ChevronLeft, ExternalLink, CheckCircle2, AlertTriangle, Info, Sparkles, ShoppingBag, MapPin, Calendar, Tag, Search, ChevronDown } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -492,6 +492,40 @@ export default function DesignerDetail() {
       : undefined,
   });
 
+  useEffect(() => {
+    if (!designer) return;
+    const brandJsonLd: Record<string, any> = {
+      "@context": "https://schema.org",
+      "@type": "Brand",
+      "name": designer.name,
+      "url": `https://www.intertexe.com/designers/${designer.slug}`,
+    };
+    const desc = profile?.intro || designer.description;
+    if (desc) {
+      brandJsonLd["description"] = desc;
+    }
+    if (designer.website) {
+      brandJsonLd["sameAs"] = designer.website;
+    }
+    if (profile?.headquarters) {
+      brandJsonLd["address"] = {
+        "@type": "PostalAddress",
+        "addressLocality": profile.headquarters,
+      };
+    }
+    if (profile?.foundedYear) {
+      brandJsonLd["foundingDate"] = String(profile.foundedYear);
+    }
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.setAttribute("data-brand-jsonld", "true");
+    script.textContent = JSON.stringify(brandJsonLd);
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [designer, profile]);
+
   const { data: favStatus } = useQuery({
     queryKey: ["favoriteCheck", designer?.id],
     queryFn: () => api.checkFavorite(designer!.id),
@@ -590,8 +624,19 @@ export default function DesignerDetail() {
     || designer.description
     || `${designer.name} is a fashion brand in our directory. Material composition details are being compiled by our editorial team.`;
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.intertexe.com/" },
+      { "@type": "ListItem", position: 2, name: "Designers", item: "https://www.intertexe.com/designers" },
+      { "@type": "ListItem", position: 3, name: designer.name },
+    ],
+  };
+
   return (
     <div className="py-8 md:py-12 flex flex-col gap-10 md:gap-12 max-w-4xl mx-auto w-full">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Link href="/designers" className="flex items-center gap-2 text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground w-fit transition-colors active:scale-95" data-testid="link-back">
           <ChevronLeft className="w-4 h-4" /> Back to Directory
       </Link>
