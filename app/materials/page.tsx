@@ -69,7 +69,7 @@ export default async function MaterialsPage() {
   const images: Record<string, string | null> = {};
   FABRICS.forEach((f, i) => { images[f.slug] = fiberImages[i] as string | null; });
 
-  const displayCount = productCount > 0 ? productCount.toLocaleString() : "17,553";
+  const displayCount = productCount > 0 ? new Intl.NumberFormat("en-US").format(productCount) : "17,553";
 
   return (
     <div className="flex flex-col" data-testid="page-fabric-hub">
