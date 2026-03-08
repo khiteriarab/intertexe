@@ -16,7 +16,7 @@ export function Footer() {
 
           <div className="flex flex-col gap-3 md:gap-4">
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Explore</h3>
-            <Link href="/just-in" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-just-in">Just In</Link>
+            <Link href="/shop" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-shop">Shop</Link>
             <Link href="/designers" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-designers">Designers</Link>
             <Link href="/materials" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-materials">Fabrics</Link>
             <Link href="/quiz" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-quiz">Style Quiz</Link>
@@ -44,7 +44,7 @@ export function Footer() {
           </p>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} Intertexe. All rights reserved.
+              &copy; 2026 Intertexe. All rights reserved.
             </p>
             <div className="flex items-center gap-4 md:gap-6">
               <a href="https://instagram.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-instagram">Instagram</a>
