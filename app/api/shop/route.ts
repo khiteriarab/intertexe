@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchShopProducts } from "../../../lib/supabase-server";
+import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../../lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+
+  if (searchParams.get("meta") === "true") {
+    try {
+      const [totalProductCount, fiberCounts] = await Promise.all([
+        fetchProductCount(),
+        fetchFiberCounts(),
+      ]);
+      return NextResponse.json({ totalProductCount, fiberCounts });
+    } catch {
+      return NextResponse.json({ totalProductCount: 0, fiberCounts: {} }, { status: 500 });
+    }
+  }
+
   const fiber = searchParams.get("fiber") || undefined;
   const category = searchParams.get("category") || undefined;
   const sort = searchParams.get("sort") || "recommended";

@@ -121,6 +121,20 @@ export default function ShopClient({
   const [products, setProducts] = useState(initialProducts || []);
   const [resultTotal, setResultTotal] = useState(initialTotal || 0);
   const [isLoading, setIsLoading] = useState(!initialProducts?.length);
+  const [globalCount, setGlobalCount] = useState(totalProductCount);
+  const [fiberCountsState, setFiberCountsState] = useState(fiberCounts);
+
+  useEffect(() => {
+    if (!globalCount || !Object.keys(fiberCountsState).length) {
+      fetch("/api/shop?meta=true")
+        .then(r => r.json())
+        .then(d => {
+          if (d.totalProductCount) setGlobalCount(d.totalProductCount);
+          if (d.fiberCounts) setFiberCountsState(d.fiberCounts);
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -167,7 +181,7 @@ export default function ShopClient({
 
   const isSearchActive = debouncedSearch.length >= 2;
   const displayCount = fiberTab === "all" && categoryFilter === "all" && !isSearchActive
-    ? (totalProductCount > 0 ? totalProductCount : 17000)
+    ? (globalCount > 0 ? globalCount : 17000)
     : resultTotal;
 
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
@@ -222,8 +236,8 @@ export default function ShopClient({
                 data-testid={`tab-fiber-${tab.key}`}
               >
                 {tab.label}
-                {tab.key !== "all" && fiberCounts[tab.key] ? (
-                  <span className="ml-1.5 opacity-50">({fiberCounts[tab.key]})</span>
+                {tab.key !== "all" && fiberCountsState[tab.key] ? (
+                  <span className="ml-1.5 opacity-50">({fiberCountsState[tab.key]})</span>
                 ) : null}
               </button>
             ))}
