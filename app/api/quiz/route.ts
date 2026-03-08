@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../lib/auth-helpers";
 import { getServerSupabase } from "../../../lib/supabase-server";
+import { snakeToCamel } from "../../../lib/case-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
       await supabase.from("users").update({ fabric_persona: profileType }).eq("id", user.id);
     }
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(snakeToCamel(result), { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ message: err.message }, { status: 500 });
   }

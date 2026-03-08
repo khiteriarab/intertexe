@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../lib/auth-helpers";
 import { getServerSupabase } from "../../../lib/supabase-server";
+import { snakeToCamel } from "../../../lib/case-utils";
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request.headers.get("authorization"));
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
   if (!supabase) return NextResponse.json([], { status: 500 });
 
   const { data } = await supabase.from("favorites").select("*").eq("user_id", user.id);
-  return NextResponse.json(data || []);
+  return NextResponse.json(snakeToCamel(data || []));
 }
 
 export async function POST(request: NextRequest) {
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     .eq("designer_id", designerId)
     .limit(1);
 
-  if (existing && existing.length > 0) return NextResponse.json(existing[0]);
+  if (existing && existing.length > 0) return NextResponse.json(snakeToCamel(existing[0]));
 
   const { data: fav, error } = await supabase
     .from("favorites")
@@ -39,5 +40,5 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ message: error.message }, { status: 500 });
-  return NextResponse.json(fav, { status: 201 });
+  return NextResponse.json(snakeToCamel(fav), { status: 201 });
 }
