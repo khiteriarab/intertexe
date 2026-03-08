@@ -302,6 +302,45 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
   return data ? mapRow(data) : null;
 }
 
+export async function fetchProductById(id: string): Promise<any | null> {
+  const mapRow = (row: any) => ({
+    id: row.id,
+    brandSlug: row.brand_slug,
+    brandName: row.brand_name,
+    name: row.name,
+    productId: row.product_id,
+    url: row.url,
+    imageUrl: row.image_url,
+    price: row.price,
+    composition: row.composition,
+    naturalFiberPercent: row.natural_fiber_percent,
+    category: row.category,
+  });
+  if (supabase) {
+    const isNumeric = /^\d+$/.test(id);
+    const isUuid = /^[0-9a-f-]{36}$/i.test(id);
+    let data: any = null;
+    if (isNumeric) {
+      const res = await supabase.from("products").select("*").eq("id", Number(id)).single();
+      data = res.data;
+    } else if (isUuid) {
+      const res = await supabase.from("products").select("*").eq("id", id).single();
+      data = res.data;
+    } else {
+      const res = await supabase.from("products").select("*").eq("id", id).single();
+      data = res.data;
+    }
+    return data ? mapRow(data) : null;
+  }
+  try {
+    const res = await fetch(`/api/products/by-id/${encodeURIComponent(id)}`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchProductsByIds(ids: string[]): Promise<any[]> {
   if (!ids.length) return [];
   const mapRow = (row: any) => ({
