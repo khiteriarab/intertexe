@@ -1,25 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 
-const CURATED_BRAND_SLUGS = new Set([
-  "the-row", "brunello-cucinelli", "loro-piana", "margaret-howell", "lemaire",
-  "jil-sander", "toteme", "eileen-fisher", "joseph", "khaite", "loewe",
-  "bottega-veneta", "chloe", "stella-mccartney", "acne-studios", "isabel-marant",
-  "vince", "cos", "filippa-k", "arket", "nili-lotan", "rag-bone",
-  "theory", "frame", "agolde", "sandro", "maje", "reformation",
-  "anine-bing", "nanushka", "the-kooples", "ba-sh", "sezane", "ganni",
-  "a-p-c", "ami", "jacquemus", "zimmermann", "ulla-johnson",
-  "st-agni", "loulou-studio", "by-malene-birger", "esse-studios",
-  "everlane", "quince", "massimo-dutti", "reiss", "club-monaco",
-  "allsaints", "ted-baker", "j-crew", "banana-republic",
-  "diesel", "l-agence", "tibi", "rachel-comey", "rixo", "re-done",
-  "sea-new-york", "a-l-c-",
-  "dries-van-noten", "rick-owens", "maison-margiela", "sacai", "marni",
-  "max-mara", "weekend-max-mara", "sportmax", "staud", "tory-burch",
-  "veronica-beard", "alice-olivia", "equipment", "joie", "rails",
-  "velvet-by-graham-spencer", "james-perse", "citizens-of-humanity",
-]);
-
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   const baseUrl = "https://www.intertexe.com";
 
@@ -29,6 +10,12 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     { path: "/designers", priority: "0.9", changefreq: "weekly" },
     { path: "/designers/all", priority: "0.8", changefreq: "weekly" },
     { path: "/materials", priority: "0.8", changefreq: "weekly" },
+    { path: "/natural-fabrics", priority: "0.8", changefreq: "weekly" },
+    { path: "/cotton-clothing", priority: "0.8", changefreq: "weekly" },
+    { path: "/linen-clothing", priority: "0.8", changefreq: "weekly" },
+    { path: "/silk-clothing", priority: "0.8", changefreq: "weekly" },
+    { path: "/wool-clothing", priority: "0.8", changefreq: "weekly" },
+    { path: "/cashmere-clothing", priority: "0.8", changefreq: "weekly" },
     { path: "/scanner", priority: "0.7", changefreq: "monthly" },
     { path: "/quiz", priority: "0.7", changefreq: "monthly" },
     { path: "/chat", priority: "0.6", changefreq: "monthly" },
@@ -50,29 +37,99 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   ].map(slug => ({ path: `/materials/${slug}`, priority: "0.7", changefreq: "weekly" }));
 
   let brandPages: { path: string; priority: string; changefreq: string }[] = [];
+  let productPages: { path: string; priority: string; changefreq: string }[] = [];
+
   try {
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
     if (supabaseUrl && supabaseKey) {
       const supabase = createClient(supabaseUrl, supabaseKey);
 
-      const { data: brandsWithProducts } = await supabase
+      const { data: productBrands } = await supabase
         .from("products")
         .select("brand_slug")
         .not("brand_slug", "is", null);
-      const productSlugs = new Set(
-        (brandsWithProducts || []).map((p: any) => p.brand_slug).filter(Boolean)
-      );
+      const productBrandSlugs = [...new Set(
+        (productBrands || []).map((p: any) => p.brand_slug).filter(Boolean)
+      )];
 
-      const allSlugs = new Set([...productSlugs, ...CURATED_BRAND_SLUGS]);
-      brandPages = [...allSlugs]
-        .sort()
-        .map(slug => ({ path: `/designers/${slug}`, priority: "0.6", changefreq: "weekly" }));
+      const { data: matchedDesigners } = await supabase
+        .from("designers")
+        .select("slug")
+        .in("slug", productBrandSlugs)
+        .order("slug");
+
+      if (matchedDesigners) {
+        brandPages = matchedDesigners.map((d: any) => ({
+          path: `/designers/${d.slug}`,
+          priority: "0.6",
+          changefreq: "weekly",
+        }));
+      }
+
+      const productIds: string[] = [];
+      let offset = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data: batch } = await supabase
+          .from("products")
+          .select("id")
+          .eq("approved", "yes")
+          .range(offset, offset + batchSize - 1);
+        if (!batch || batch.length === 0) break;
+        productIds.push(...batch.map((p: any) => p.id));
+        offset += batchSize;
+        if (batch.length < batchSize) break;
+      }
+
+      productPages = productIds.map(id => ({
+        path: `/product/${id}`,
+        priority: "0.5",
+        changefreq: "weekly",
+      }));
     }
   } catch {}
 
-  const allPages = [...staticPages, ...materialPages, ...brandPages];
+  const allPages = [...staticPages, ...materialPages, ...brandPages, ...productPages];
   const today = new Date().toISOString().split("T")[0];
+
+  if (allPages.length > 50000) {
+    const chunkSize = 45000;
+    const chunks: typeof allPages[] = [];
+    for (let i = 0; i < allPages.length; i += chunkSize) {
+      chunks.push(allPages.slice(i, i + chunkSize));
+    }
+
+    const sitemapIndex = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${chunks.map((_, i) => `  <sitemap>
+    <loc>${baseUrl}/api/sitemap?page=${i + 1}</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`).join("\n")}
+</sitemapindex>`;
+
+    const pageParam = _req.query?.page;
+    if (pageParam) {
+      const pageNum = parseInt(pageParam as string, 10) - 1;
+      const chunk = chunks[pageNum] || [];
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${chunk.map(p => `  <url>
+    <loc>${baseUrl}${p.path}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`).join("\n")}
+</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=86400");
+      return res.status(200).send(xml);
+    }
+
+    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=86400");
+    return res.status(200).send(sitemapIndex);
+  }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

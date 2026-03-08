@@ -175,6 +175,16 @@ function isClothingProduct(name: string): boolean {
   return !NON_CLOTHING_PATTERNS.some(pat => pat.test(name));
 }
 
+const MENS_PATTERNS = [
+  /\bmen'?s\b/i,
+  /\bmen's\b/i,
+]
+
+function isNotMensProduct(name: string): boolean {
+  if (/\bwomen'?s?\b/i.test(name)) return true;
+  return !MENS_PATTERNS.some(pat => pat.test(name));
+}
+
 function isWomensFashionBrand(slug: string): boolean {
   return WOMEN_FASHION_BRAND_SLUGS.has(slug);
 }
@@ -300,6 +310,45 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
     .single();
   if (error) return null;
   return data ? mapRow(data) : null;
+}
+
+export async function fetchProductById(id: string): Promise<any | null> {
+  const mapRow = (row: any) => ({
+    id: row.id,
+    brandSlug: row.brand_slug,
+    brandName: row.brand_name,
+    name: row.name,
+    productId: row.product_id,
+    url: row.url,
+    imageUrl: row.image_url,
+    price: row.price,
+    composition: row.composition,
+    naturalFiberPercent: row.natural_fiber_percent,
+    category: row.category,
+  });
+  if (supabase) {
+    const isNumeric = /^\d+$/.test(id);
+    const isUuid = /^[0-9a-f-]{36}$/i.test(id);
+    let data: any = null;
+    if (isNumeric) {
+      const res = await supabase.from("products").select("*").eq("id", Number(id)).single();
+      data = res.data;
+    } else if (isUuid) {
+      const res = await supabase.from("products").select("*").eq("id", id).single();
+      data = res.data;
+    } else {
+      const res = await supabase.from("products").select("*").eq("id", id).single();
+      data = res.data;
+    }
+    return data ? mapRow(data) : null;
+  }
+  try {
+    const res = await fetch(`/api/products/by-id/${encodeURIComponent(id)}`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchProductsByIds(ids: string[]): Promise<any[]> {
@@ -544,7 +593,7 @@ export async function fetchProductsByBrandWithImages(brandSlug: string, limit: n
       .limit(limit);
     if (error || !data) return [];
     return data
-      .filter((row: any) => isClothingProduct(row.name || ''))
+      .filter((row: any) => isClothingProduct(row.name || '') && isNotMensProduct(row.name || ''))
       .map((row: any) => ({
         id: row.id,
         brandSlug: row.brand_slug,
@@ -564,7 +613,7 @@ export async function fetchProductsByBrandWithImages(brandSlug: string, limit: n
     const res = await fetch(`/api/products/${brandSlug}`);
     if (!res.ok) return [];
     const products = await res.json();
-    return products.filter((p: any) => p.imageUrl || p.image_url).slice(0, limit);
+    return products.filter((p: any) => (p.imageUrl || p.image_url) && isNotMensProduct(p.name || '')).slice(0, limit);
   } catch {
     return [];
   }

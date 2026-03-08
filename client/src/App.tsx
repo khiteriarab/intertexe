@@ -57,6 +57,8 @@ import Leaving from "@/pages/Leaving";
 import Shop from "@/pages/Shop";
 import CuratedProducts, { ALL_CURATED_SLUGS } from "@/pages/CuratedProducts";
 import Scanner from "@/pages/Scanner";
+import { FabricCategoryPage, NaturalFabricsPage } from "@/pages/FabricCategoryPage";
+import ProductDetail from "@/pages/ProductDetail";
 
 function MaterialRouteHandler({ params }: { params: { slug: string } }) {
   if (ALL_CURATED_SLUGS.includes(params.slug)) {
@@ -87,7 +89,14 @@ function Router() {
         <Route path="/contact" component={Contact} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
+        <Route path="/product/:id" component={ProductDetail} />
         <Route path="/scanner" component={Scanner} />
+        <Route path="/natural-fabrics" component={NaturalFabricsPage} />
+        <Route path="/linen-clothing">{() => <FabricCategoryPage categorySlug="linen-clothing" />}</Route>
+        <Route path="/silk-clothing">{() => <FabricCategoryPage categorySlug="silk-clothing" />}</Route>
+        <Route path="/cotton-clothing">{() => <FabricCategoryPage categorySlug="cotton-clothing" />}</Route>
+        <Route path="/wool-clothing">{() => <FabricCategoryPage categorySlug="wool-clothing" />}</Route>
+        <Route path="/cashmere-clothing">{() => <FabricCategoryPage categorySlug="cashmere-clothing" />}</Route>
         <Route path="/leaving" component={Leaving} />
         <Route component={NotFound} />
       </Switch>
