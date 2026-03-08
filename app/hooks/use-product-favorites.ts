@@ -69,9 +69,10 @@ export function useProductFavorites() {
               .then((r) => r.ok ? r.json() : null)
               .then((merged) => {
                 if (merged) {
-                  saveLocal(new Set(merged));
-                  setLocalFavorites(new Set(merged));
-                  setServerFavorites(merged);
+                  const ids: string[] = Array.isArray(merged) ? merged : (merged.productIds || []);
+                  saveLocal(new Set(ids));
+                  setLocalFavorites(new Set(ids));
+                  setServerFavorites(ids);
                   notify();
                 }
               })
