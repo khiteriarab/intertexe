@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucide-react";
 import { trackAffiliateRedirect } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDesigners, fetchDesignerBySlug, fetchProductSample, fetchProductCount, fetchProductsByFiber, fetchProductsByBrandWithImages, fetchProductCountsByBrand } from "@/lib/supabase";
+import { fetchDesigners, fetchProductCount, fetchProductsByFiber, fetchProductsByBrandWithImages, fetchProductCountsByBrand } from "@/lib/supabase";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { BrandImage } from "@/components/BrandImage";
@@ -192,19 +192,6 @@ export default function Home() {
     select: (data: any[]) => data.slice(0, 16),
   });
 
-  const { data: silkProducts = [] } = useQuery({
-    queryKey: ["home-silk"],
-    queryFn: () => fetchProductsByFiber("silk"),
-    staleTime: 10 * 60 * 1000,
-    select: (data: any[]) => data.slice(0, 16),
-  });
-
-  const { data: linenProducts = [] } = useQuery({
-    queryKey: ["home-linen"],
-    queryFn: () => fetchProductsByFiber("linen"),
-    staleTime: 10 * 60 * 1000,
-    select: (data: any[]) => data.slice(0, 16),
-  });
 
   const { data: productCountByBrand = {} } = useQuery({
     queryKey: ["brand-product-counts", CURATED_BRAND_SLUGS],
@@ -313,60 +300,33 @@ export default function Home() {
         </section>
       )}
 
-      <section className="-mx-4 md:-mx-8 grid grid-cols-1 md:grid-cols-2">
-        <Link href="/materials/silk-tops" className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end" data-testid="link-edit-silk">
-          <div className="absolute inset-0 bg-[#f5f5f5]">
-            {silkProducts[0] && (silkProducts[0].image_url || silkProducts[0].imageUrl) && (
-              <img
-                src={silkProducts[0].image_url || silkProducts[0].imageUrl}
-                alt="Silk Edit"
-                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-                loading="lazy"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+      <section className="py-8 md:py-14 border-t border-border/30">
+        <div className="flex justify-between items-end mb-6 md:mb-8">
+          <div>
+            <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground mb-1">Shop by Fabric</p>
+            <h2 className="text-2xl md:text-3xl font-serif">Explore Materials</h2>
           </div>
-          <div className="relative z-10 p-6 md:p-8 flex flex-col gap-1">
-            <h3 className="text-white text-xl md:text-2xl font-serif">The Silk Edit</h3>
-            <p className="text-white/70 text-xs md:text-sm">Blouses, dresses, and camisoles in pure silk</p>
-            <span className="text-white/90 text-[10px] uppercase tracking-[0.15em] mt-2 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-              Shop the edit <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
-        </Link>
-        <Link href="/materials/linen-dresses" className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end" data-testid="link-edit-linen">
-          <div className="absolute inset-0 bg-[#f5f5f5]">
-            {linenProducts[0] && (linenProducts[0].image_url || linenProducts[0].imageUrl) && (
-              <img
-                src={linenProducts[0].image_url || linenProducts[0].imageUrl}
-                alt="Linen Edit"
-                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-                loading="lazy"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-          </div>
-          <div className="relative z-10 p-6 md:p-8 flex flex-col gap-1">
-            <h3 className="text-white text-xl md:text-2xl font-serif">Linen for Every Day</h3>
-            <p className="text-white/70 text-xs md:text-sm">Dresses, tops, and suiting in natural linen</p>
-            <span className="text-white/90 text-[10px] uppercase tracking-[0.15em] mt-2 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-              Shop the edit <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
-        </Link>
+          <Link href="/materials" className="text-[10px] md:text-sm uppercase tracking-[0.15em] hover:text-muted-foreground transition-colors" data-testid="link-all-materials">
+            View All
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+          {[
+            { name: "Cotton", href: "/materials/cotton" },
+            { name: "Linen", href: "/materials/linen" },
+            { name: "Silk", href: "/materials/silk" },
+            { name: "Wool", href: "/materials/wool" },
+            { name: "Cashmere", href: "/materials/cashmere" },
+          ].map((fab) => (
+            <Link key={fab.name} href={fab.href} className="group border border-border/30 hover:border-foreground/20 transition-colors p-5 md:p-6 flex flex-col items-center gap-2 text-center" data-testid={`link-fabric-${fab.name.toLowerCase()}`}>
+              <h3 className="text-sm md:text-base font-serif">{fab.name}</h3>
+              <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground group-hover:text-foreground transition-colors flex items-center gap-1">
+                Shop <ArrowRight className="w-2.5 h-2.5" />
+              </span>
+            </Link>
+          ))}
+        </div>
       </section>
-
-      {silkProducts.length > 0 && (
-        <section className="py-8 md:py-14">
-          <HorizontalProductScroll
-            products={silkProducts}
-            title="Silk Essentials"
-            subtitle="Effortless elegance"
-            linkHref="/materials/silk"
-            linkText="Shop all silk"
-          />
-        </section>
-      )}
 
       <section className="border-t border-b border-border/30 -mx-4 md:-mx-8 px-4 md:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/30">
