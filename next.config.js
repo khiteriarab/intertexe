@@ -16,6 +16,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  allowedDevOrigins: ['*.kirk.replit.dev', '*.replit.dev'],
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

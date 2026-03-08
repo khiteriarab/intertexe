@@ -62,7 +62,7 @@ export default async function HomePage() {
     }
   }
 
-  const displayCount = productCount > 0 ? productCount.toLocaleString() : "17,553";
+  const displayCount = productCount > 0 ? new Intl.NumberFormat("en-US").format(productCount) : "17,553";
 
   return (
     <div className="flex flex-col gap-0">
@@ -212,7 +212,7 @@ export default async function HomePage() {
       <section className="border-t border-b border-border/30 -mx-4 md:-mx-8 px-4 md:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/30">
           <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
-            <span className="text-2xl md:text-4xl font-serif">{designers.length.toLocaleString()}+</span>
+            <span className="text-2xl md:text-4xl font-serif">{new Intl.NumberFormat("en-US").format(designers.length)}+</span>
             <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
               Brands Vetted
             </span>
