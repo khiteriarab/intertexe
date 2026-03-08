@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../lib/auth-helpers";
-import { db } from "../../../server/db";
-import { favorites } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { getServerSupabase } from "../../../lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request.headers.get("authorization"));
   if (!user) return NextResponse.json([], { status: 401 });
 
-  const result = await db.select().from(favorites).where(eq(favorites.userId, user.id));
-  return NextResponse.json(result);
+  const supabase = getServerSupabase();
+  if (!supabase) return NextResponse.json([], { status: 500 });
+
+  const { data } = await supabase.from("favorites").select("*").eq("user_id", user.id);
+  return NextResponse.json(data || []);
 }
 
 export async function POST(request: NextRequest) {
@@ -19,9 +20,24 @@ export async function POST(request: NextRequest) {
   const { designerId } = await request.json();
   if (!designerId) return NextResponse.json({ message: "designerId required" }, { status: 400 });
 
-  const existing = await db.select().from(favorites).where(and(eq(favorites.userId, user.id), eq(favorites.designerId, designerId))).limit(1);
-  if (existing.length > 0) return NextResponse.json(existing[0]);
+  const supabase = getServerSupabase();
+  if (!supabase) return NextResponse.json({ message: "Database not available" }, { status: 500 });
 
-  const [fav] = await db.insert(favorites).values({ userId: user.id, designerId }).returning();
+  const { data: existing } = await supabase
+    .from("favorites")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("designer_id", designerId)
+    .limit(1);
+
+  if (existing && existing.length > 0) return NextResponse.json(existing[0]);
+
+  const { data: fav, error } = await supabase
+    .from("favorites")
+    .insert({ user_id: user.id, designer_id: designerId })
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
   return NextResponse.json(fav, { status: 201 });
 }

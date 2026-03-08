@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hashPassword, storeToken, getUserByEmail, getUserByUsername, createUser } from "../../../../lib/auth-helpers";
-import { db } from "../../../../server/db";
-import { analyticsEvents } from "@shared/schema";
 import { sendWelcomeEmail } from "../../../../server/resend";
 
 export async function POST(request: NextRequest) {
@@ -31,7 +29,6 @@ export async function POST(request: NextRequest) {
     });
 
     sendWelcomeEmail(email, name).catch(() => {});
-    db.insert(analyticsEvents).values({ event: "signup", userId: user.id }).catch(() => {});
 
     const token = await storeToken(user.id);
     const { password: _, ...safeUser } = user;

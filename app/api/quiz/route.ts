@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../lib/auth-helpers";
-import { db } from "../../../server/db";
-import { quizResults, users, analyticsEvents } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { getServerSupabase } from "../../../lib/supabase-server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,22 +8,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { materials, priceRange, syntheticTolerance, favoriteBrands, profileType, recommendation } = body;
 
-    const [result] = await db.insert(quizResults).values({
-      userId: user?.id || null,
+    const supabase = getServerSupabase();
+    if (!supabase) return NextResponse.json({ message: "Database not available" }, { status: 500 });
+
+    const { data: result, error } = await supabase.from("quiz_results").insert({
+      user_id: user?.id || null,
       materials: materials || [],
-      priceRange: priceRange || "",
-      syntheticTolerance: syntheticTolerance || "",
-      favoriteBrands: favoriteBrands || [],
-      profileType: profileType || null,
+      price_range: priceRange || "",
+      synthetic_tolerance: syntheticTolerance || "",
+      favorite_brands: favoriteBrands || [],
+      profile_type: profileType || null,
       recommendation: recommendation || null,
-    }).returning();
+    }).select().single();
+
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
 
     if (user && profileType) {
-      await db.update(users).set({ fabricPersona: profileType }).where(eq(users.id, user.id)).catch(() => {});
-    }
-
-    if (user) {
-      db.insert(analyticsEvents).values({ event: "quiz_complete", userId: user.id }).catch(() => {});
+      await supabase.from("users").update({ fabric_persona: profileType }).eq("id", user.id);
     }
 
     return NextResponse.json(result, { status: 201 });
