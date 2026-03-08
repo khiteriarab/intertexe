@@ -48,6 +48,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       const { data: productBrands } = await supabase
         .from("products")
         .select("brand_slug")
+        .eq("approved", "yes")
         .not("brand_slug", "is", null);
       const productBrandSlugs = [...new Set(
         (productBrands || []).map((p: any) => p.brand_slug).filter(Boolean)

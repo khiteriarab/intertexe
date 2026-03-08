@@ -221,6 +221,19 @@ export default function ProductDetail() {
   });
 
   useEffect(() => {
+    if (!isLoading && (!product || error)) {
+      let meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement;
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = "robots";
+        document.head.appendChild(meta);
+      }
+      meta.content = "noindex";
+      return () => { meta.content = "index, follow"; };
+    }
+  }, [isLoading, product, error]);
+
+  useEffect(() => {
     if (!product) return;
     const existing = document.getElementById("product-jsonld");
     if (existing) existing.remove();

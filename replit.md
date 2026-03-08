@@ -58,7 +58,12 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Scraper Scripts:** `scripts/scrape-brands.cjs` (Shopify JSON scrapers for Khaite, Anine Bing) and `scripts/sync-to-supabase.cjs` (Supabase sync + migration SQL generation).
 - **Mass Scraping:** `scripts/scrape-priority-brands.cjs` — Shopify JSON scraper targeting 68 known women's fashion brands. Scraped 22,949 products across 67 brands into Supabase. Handles material options, body HTML parsing, and keyword inference for composition extraction.
 - **Non-Scrapable Brands:** ba&sh, Sézane, Ganni, Isabel Marant, Vince, Zara, Theory, Eileen Fisher, COS, Filippa K, and others are protected by Cloudflare or use non-Shopify platforms.
-- **Homepage Brands:** Khaite, Anine Bing, Totême, Frame, AGOLDE, Sandro, Acne Studios, Nanushka (strong hero images, verified data or curated scores).
+- **Homepage Brands:** Khaite, Anine Bing, Totême, Frame, Reformation, AGOLDE, Sandro, Acne Studios, Nanushka, The Row (women's-only brands with strong hero images). Diesel removed to prevent men's product images.
+- **Product Detail Pages:** Individual product pages at `/product/:id` for all 17,553 products. Each page includes JSON-LD structured data, dynamic SEO title/meta, composition breakdown, related products. Every product is a long-tail search entry point.
+- **Fabric Category Pages:** Top-level SEO pages: `/cotton-clothing`, `/linen-clothing`, `/silk-clothing`, `/wool-clothing`, `/cashmere-clothing`, `/natural-fabrics`. Target broad search queries.
+- **SEO Sitemap:** Dynamic sitemap at `/api/sitemap` with 17,600+ URLs (products, materials, verified brands). Only brand slugs confirmed in both products AND designers tables. Paginated Supabase queries for all products. `trailingSlash: false` in vercel.json.
+- **Dynamic Canonical Tags:** `DynamicCanonical` component in App.tsx updates `<link rel="canonical">` and `og:url` on every route change (fixes "Alternate page with proper canonical tag" GSC error).
+- **Men's Product Filter:** `isNotMensProduct()` filter in supabase.ts excludes men's products from brand product queries while preserving women's "boxer short" fashion items.
 
 ## Brand Directory (Curated Profiles)
 - **Brand Profiles:** `client/src/lib/brand-profiles.ts` — 68 structured brand profiles with editorial intros, material strengths, price ranges, tier classification, HQ, and founding year.

@@ -440,7 +440,7 @@ export async function fetchProductsByFiberAndCategory(fiber: string, category?: 
     if (category) query = query.eq("category", category);
     const { data, error } = await query.order("natural_fiber_percent", { ascending: false });
     if (error) return [];
-    return (data || []).filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || '')).map((row: any) => ({
+    return (data || []).filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || '') && isNotMensProduct(row.name || '')).map((row: any) => ({
       id: row.id,
       brandSlug: row.brand_slug,
       brandName: row.brand_name,
@@ -474,7 +474,7 @@ export async function fetchProductsByFiber(fiber: string): Promise<any[]> {
       .ilike("composition", `%${fiber}%`)
       .order("natural_fiber_percent", { ascending: false });
     if (error) return [];
-    return (data || []).filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || '')).map((row: any) => ({
+    return (data || []).filter((row: any) => isClothingProduct(row.name || '') && isWomensFashionBrand(row.brand_slug || '') && isNotMensProduct(row.name || '')).map((row: any) => ({
       id: row.id,
       brandSlug: row.brand_slug,
       brandName: row.brand_name,
