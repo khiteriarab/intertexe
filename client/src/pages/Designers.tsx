@@ -11,7 +11,6 @@ const BRANDS_WITH_PRODUCTS: { slug: string; name: string; products: number }[] =
   { slug: "aje", name: "Aje", products: 1360 },
   { slug: "tibi", name: "Tibi", products: 1300 },
   { slug: "rails", name: "Rails", products: 1283 },
-  { slug: "ted-baker", name: "Ted Baker", products: 915 },
   { slug: "citizens-of-humanity", name: "Citizens of Humanity", products: 902 },
   { slug: "l-agence", name: "L'Agence", products: 880 },
   { slug: "veronica-beard", name: "Veronica Beard", products: 831 },

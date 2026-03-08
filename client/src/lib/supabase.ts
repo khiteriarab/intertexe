@@ -175,6 +175,16 @@ function isClothingProduct(name: string): boolean {
   return !NON_CLOTHING_PATTERNS.some(pat => pat.test(name));
 }
 
+const MENS_PATTERNS = [
+  /\bmen'?s\b/i,
+  /\bmen's\b/i,
+]
+
+function isNotMensProduct(name: string): boolean {
+  if (/\bwomen'?s?\b/i.test(name)) return true;
+  return !MENS_PATTERNS.some(pat => pat.test(name));
+}
+
 function isWomensFashionBrand(slug: string): boolean {
   return WOMEN_FASHION_BRAND_SLUGS.has(slug);
 }
@@ -583,7 +593,7 @@ export async function fetchProductsByBrandWithImages(brandSlug: string, limit: n
       .limit(limit);
     if (error || !data) return [];
     return data
-      .filter((row: any) => isClothingProduct(row.name || ''))
+      .filter((row: any) => isClothingProduct(row.name || '') && isNotMensProduct(row.name || ''))
       .map((row: any) => ({
         id: row.id,
         brandSlug: row.brand_slug,
@@ -603,7 +613,7 @@ export async function fetchProductsByBrandWithImages(brandSlug: string, limit: n
     const res = await fetch(`/api/products/${brandSlug}`);
     if (!res.ok) return [];
     const products = await res.json();
-    return products.filter((p: any) => p.imageUrl || p.image_url).slice(0, limit);
+    return products.filter((p: any) => (p.imageUrl || p.image_url) && isNotMensProduct(p.name || '')).slice(0, limit);
   } catch {
     return [];
   }
