@@ -12,14 +12,14 @@ const FABRICS = [
   { fabric: "Cashmere", slug: "cashmere", description: "The softest fiber" },
 ];
 
-function FabricCard({ fabric, image, large }: { fabric: typeof FABRICS[0]; image: string | null; large?: boolean }) {
+function FabricCard({ fabric, image }: { fabric: typeof FABRICS[0]; image: string | null }) {
   return (
     <Link
       href={`/materials/${fabric.slug}`}
-      className={`group relative overflow-hidden bg-[#EDECE8] block ${large ? "md:col-span-1 md:row-span-2" : ""}`}
+      className="group relative overflow-hidden bg-[#EDECE8] block"
       data-testid={`hub-section-${fabric.slug}`}
     >
-      <div className={`${large ? "aspect-[3/4]" : "aspect-[4/5]"} relative`}>
+      <div className="aspect-[3/4] relative">
         {image ? (
           <img
             src={image}
@@ -31,8 +31,8 @@ function FabricCard({ fabric, image, large }: { fabric: typeof FABRICS[0]; image
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-          <h2 className="text-white text-xl md:text-2xl font-serif mb-0.5">{fabric.fabric}</h2>
-          <p className="text-white/50 text-[11px] mb-2">{fabric.description}</p>
+          <h2 className="text-white text-lg md:text-2xl font-serif mb-0.5">{fabric.fabric}</h2>
+          <p className="text-white/50 text-[10px] md:text-[11px] mb-2">{fabric.description}</p>
           <span className="text-white/70 text-[10px] md:text-[11px] uppercase tracking-[0.15em] flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
             Shop {fabric.fabric} <ArrowRight className="w-3 h-3" />
           </span>
@@ -116,29 +116,30 @@ export default function Materials() {
   return (
     <div className="flex flex-col" data-testid="page-fabric-hub">
 
-      <div className="pt-2 pb-6 md:pt-4 md:pb-8">
+      <div className="pt-2 pb-6 md:pt-4 md:pb-10">
         <div className="flex items-baseline justify-between mb-1">
-          <h1 className="text-xl md:text-2xl font-serif" data-testid="text-hub-headline">Shop by Fabric</h1>
+          <h1 className="text-xl md:text-3xl font-serif" data-testid="text-hub-headline">Shop by Fabric</h1>
           {productCount > 0 && (
             <span className="text-[9px] md:text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
               {productCount.toLocaleString()} products
             </span>
           )}
         </div>
-        <p className="text-[13px] text-muted-foreground">Find silk, linen, cotton, wool and cashmere — every composition verified.</p>
+        <p className="text-[13px] text-muted-foreground max-w-lg">Find silk, linen, cotton, wool and cashmere — every composition verified.</p>
       </div>
 
-      <section className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-        <div className="col-span-2 md:col-span-1 md:row-span-2">
-          <FabricCard fabric={FABRICS[0]} image={images.cotton} large />
-        </div>
+      <section className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
+        <FabricCard fabric={FABRICS[0]} image={images.cotton} />
         <FabricCard fabric={FABRICS[1]} image={images.linen} />
         <FabricCard fabric={FABRICS[2]} image={images.silk} />
+      </section>
+
+      <section className="grid grid-cols-2 gap-3 md:gap-5 mt-3 md:mt-5">
         <FabricCard fabric={FABRICS[3]} image={images.wool} />
         <FabricCard fabric={FABRICS[4]} image={images.cashmere} />
       </section>
 
-      <section className="mt-12 md:mt-16 border-t border-border/30 pt-10 md:pt-14">
+      <section className="mt-14 md:mt-20 border-t border-border/30 pt-10 md:pt-14">
         <div className="text-center mb-8 md:mb-12">
           <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2">Every Composition Verified</p>
           <h2 className="text-xl md:text-2xl font-serif">We read every label so you don't have to.</h2>
