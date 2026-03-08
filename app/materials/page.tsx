@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { fetchProductCount, fetchProductsByFiber } from "@/../../lib/supabase-server";
+import { fetchProductCount, fetchProductsByFiber } from "../../lib/supabase-server";
 
 export const revalidate = 3600;
 

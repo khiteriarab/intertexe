@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { fetchShopProducts, fetchProductCount } from "@/../../lib/supabase-server";
+import { fetchShopProducts, fetchProductCount } from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
 
 export const metadata: Metadata = {

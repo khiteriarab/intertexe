@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchShopProducts } from "@/../../lib/supabase-server";
+import { fetchShopProducts } from "../../../lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

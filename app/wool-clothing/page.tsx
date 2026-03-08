@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, XCircle, AlertTriangle, ExternalLink } from "lucide-react";
-import { fetchProductsByFiberAndCategory, fetchProductCount } from "@/../../lib/supabase-server";
+import { fetchProductsByFiberAndCategory, fetchProductCount } from "../../lib/supabase-server";
 
 export const revalidate = 3600;
 

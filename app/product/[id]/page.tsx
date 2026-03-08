@@ -6,7 +6,7 @@ import {
   fetchProductById,
   fetchRelatedProducts,
   fetchAllProductIds,
-} from "@/../../lib/supabase-server";
+} from "../../../lib/supabase-server";
 
 export const revalidate = 86400;
 

@@ -17,6 +17,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   allowedDevOrigins: ['*.kirk.replit.dev', '*.replit.dev'],
+  serverExternalPackages: ['@supabase/supabase-js'],
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

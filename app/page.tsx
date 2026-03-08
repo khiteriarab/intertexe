@@ -8,7 +8,7 @@ import {
   fetchProductsByBrandWithImages,
   fetchProductCount,
   fetchProductCountsByBrand,
-} from "@/../../lib/supabase-server";
+} from "../lib/supabase-server";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { HorizontalProductScroll, BrandGrid } from "./components/HomeClient";
 

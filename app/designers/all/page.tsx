@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { fetchDesigners } from "@/../../lib/supabase-server";
+import { fetchDesigners } from "../../../lib/supabase-server";
 import { getCuratedScore } from "@/lib/curated-quality-scores";
 import { DesignersAllClient } from "./DesignersAllClient";
 
