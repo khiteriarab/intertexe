@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { comparePasswords, storeToken, getUserByUsername, getUserByEmail } from "../../../../lib/auth-helpers";
 
 export async function POST(request: NextRequest) {
-  return NextResponse.json({ message: "Auth endpoints are handled by the Express backend during transition" }, { status: 501 });
+  try {
+    const { username, password } = await request.json();
+    if (!username || !password) {
+      return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
+    }
+
+    let user = await getUserByUsername(username);
+    if (!user) {
+      user = await getUserByEmail(username);
+    }
+    if (!user || !(await comparePasswords(password, user.password))) {
+      return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
+    }
+
+    const token = await storeToken(user.id);
+    const { password: _, ...safeUser } = user;
+    return NextResponse.json({ ...safeUser, token });
+  } catch (err: any) {
+    return NextResponse.json({ message: err.message }, { status: 500 });
+  }
 }

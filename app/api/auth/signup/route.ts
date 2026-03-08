@@ -1,5 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hashPassword, storeToken, getUserByEmail, getUserByUsername, createUser } from "../../../../lib/auth-helpers";
+import { db } from "../../../../server/db";
+import { analyticsEvents } from "@shared/schema";
+import { sendWelcomeEmail } from "../../../../server/resend";
 
 export async function POST(request: NextRequest) {
-  return NextResponse.json({ message: "Auth endpoints are handled by the Express backend during transition" }, { status: 501 });
+  try {
+    const { email, password, name, username: providedUsername } = await request.json();
+    if (!email || !password) {
+      return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
+    }
+
+    const username = providedUsername || email;
+
+    const existingEmail = await getUserByEmail(email);
+    if (existingEmail) {
+      return NextResponse.json({ message: "Email already registered" }, { status: 400 });
+    }
+
+    const existingUser = await getUserByUsername(username);
+    if (existingUser) {
+      return NextResponse.json({ message: "An account with this email already exists" }, { status: 400 });
+    }
+
+    const user = await createUser({
+      username,
+      email,
+      password: await hashPassword(password),
+      name: name || null,
+    });
+
+    sendWelcomeEmail(email, name).catch(() => {});
+    db.insert(analyticsEvents).values({ event: "signup", userId: user.id }).catch(() => {});
+
+    const token = await storeToken(user.id);
+    const { password: _, ...safeUser } = user;
+    return NextResponse.json({ ...safeUser, token }, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json({ message: err.message }, { status: 500 });
+  }
 }
