@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useParams } from "wouter";
 import { ArrowLeft, ArrowRight, Leaf, Droplets, Shield, Sparkles, CheckCircle2, XCircle, AlertTriangle, DollarSign, ShoppingBag, ExternalLink, Heart, Filter, ChevronDown } from "lucide-react";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
@@ -169,6 +169,32 @@ export default function MaterialDetail() {
     staleTime: 10 * 60 * 1000,
   });
 
+  useEffect(() => {
+    if (!material || fabricProducts.length === 0) return;
+    const itemListJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: seo?.h1 || `${material.name} Clothing`,
+      description: seo?.metaDesc || `Verified ${material.name.toLowerCase()} clothing from top brands.`,
+      url: `https://www.intertexe.com/materials/${params.slug}`,
+      numberOfItems: fabricProducts.length,
+      itemListElement: fabricProducts.slice(0, 50).map((product: any, index: number) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: product.name,
+        url: product.url,
+      })),
+    };
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.setAttribute("data-jsonld", "itemlist");
+    script.textContent = JSON.stringify(itemListJsonLd);
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [material, fabricProducts, params.slug, seo]);
+
   const filteredProducts = useMemo(() => {
     if (activeCategory === "all") return fabricProducts;
     const filter = CATEGORY_FILTERS.find(f => f.key === activeCategory);
@@ -213,8 +239,19 @@ export default function MaterialDetail() {
 
   const otherFabrics = FABRIC_PAGES.filter(f => f.slug !== params.slug);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.intertexe.com/" },
+      { "@type": "ListItem", position: 2, name: "Materials", item: "https://www.intertexe.com/materials" },
+      { "@type": "ListItem", position: 3, name: material.name },
+    ],
+  };
+
   return (
     <div className="flex flex-col gap-0" data-testid={`page-material-${material.slug}`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       <section className="pt-8 md:pt-14 pb-6 md:pb-8 max-w-5xl mx-auto w-full px-4">
         <Link href="/materials" className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors active:scale-95 self-start py-1 mb-6" data-testid="link-back-materials">
