@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, XCircle, AlertTriangle, ExternalLink } from "lucide-react";
 import { fetchProductsByFiberAndCategory, fetchProductCount } from "../../lib/supabase-server";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Wool Clothing for Women",
