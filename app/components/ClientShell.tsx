@@ -11,20 +11,21 @@ export function ClientShell({ children, footer }: { children: ReactNode; footer:
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <div suppressHydrationWarning>
-      {mounted && <Analytics />}
-      <div className="min-h-screen flex flex-col bg-background text-foreground" suppressHydrationWarning>
-        {mounted && <Navbar />}
-        {!mounted && (
-          <div className="h-16" suppressHydrationWarning />
-        )}
-        <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-20 md:pb-0" suppressHydrationWarning>
+    <>
+      <Analytics />
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
+        <Navbar />
+        <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-20 md:pb-0">
           {children}
         </main>
         {footer}
-        {mounted && <ScrollToTop />}
+        <ScrollToTop />
       </div>
-    </div>
+    </>
   );
 }

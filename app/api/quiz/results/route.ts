@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../../lib/auth-helpers";
-import { db } from "../../../../server/db";
-import { quizResults } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { getServerSupabase } from "../../../../lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request.headers.get("authorization"));
   if (!user) return NextResponse.json([], { status: 401 });
 
-  const results = await db.select().from(quizResults).where(eq(quizResults.userId, user.id)).orderBy(desc(quizResults.createdAt));
-  return NextResponse.json(results);
+  const supabase = getServerSupabase();
+  if (!supabase) return NextResponse.json([], { status: 500 });
+
+  const { data } = await supabase
+    .from("quiz_results")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  return NextResponse.json(data || []);
 }
