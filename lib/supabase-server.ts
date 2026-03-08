@@ -96,6 +96,30 @@ function isNotMensProduct(p: any): boolean {
   return true;
 }
 
+export async function fetchDesignersByNames(names: string[]): Promise<Designer[]> {
+  const supabase = getServerSupabase();
+  if (!supabase || names.length === 0) return [];
+  const { data, error } = await supabase
+    .from("designers")
+    .select("*")
+    .in("name", names);
+  if (error || !data) return [];
+  return data.map(mapDesignerRow);
+}
+
+export async function fetchDesignersByIds(ids: (string | number)[]): Promise<Designer[]> {
+  const supabase = getServerSupabase();
+  if (!supabase || ids.length === 0) return [];
+  const numericIds = ids.map(id => typeof id === 'string' ? parseInt(id, 10) : id).filter(id => !isNaN(id));
+  if (numericIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from("designers")
+    .select("*")
+    .in("id", numericIds);
+  if (error || !data) return [];
+  return data.map(mapDesignerRow);
+}
+
 export async function fetchDesigners(query?: string, limit?: number): Promise<Designer[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
@@ -213,6 +237,32 @@ export async function fetchAllProducts(limit = 200, offset = 0): Promise<Product
   return data.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
 }
 
+export async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase || ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .in("id", ids);
+  if (error || !data) return [];
+  return data.map(mapProductRow);
+}
+
+export async function fetchFiberCounts(): Promise<Record<string, number>> {
+  const supabase = getServerSupabase();
+  if (!supabase) return {};
+  const fibers = ["cashmere", "silk", "wool", "cotton", "linen"];
+  const counts: Record<string, number> = {};
+  await Promise.all(fibers.map(async (fiber) => {
+    const { count, error } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .ilike("composition", `%${fiber}%`);
+    if (!error && count) counts[fiber] = count;
+  }));
+  return counts;
+}
+
 export async function fetchProductCount(): Promise<number> {
   const supabase = getServerSupabase();
   if (!supabase) return 0;
@@ -324,6 +374,64 @@ export async function fetchProductCountsByBrand(slugs: string[]): Promise<Record
     counts[slug] = count || 0;
   }));
   return counts;
+}
+
+export async function fetchRecommendedProducts(
+  materialTerms: string[],
+  excludeBrandSlugs: string[],
+  limit = 50
+): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  let query = supabase
+    .from("products")
+    .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
+    .eq("approved", "yes")
+    .not("image_url", "is", null)
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(limit * 5);
+
+  if (excludeBrandSlugs.length > 0) {
+    query = query.not("brand_slug", "in", `(${excludeBrandSlugs.join(",")})`);
+  }
+
+  if (materialTerms.length === 1) {
+    query = query.ilike("composition", `%${materialTerms[0]}%`);
+  } else if (materialTerms.length > 1) {
+    const orFilter = materialTerms.map(t => `composition.ilike.%${t}%`).join(",");
+    query = query.or(orFilter);
+  }
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+
+  const filtered = data
+    .filter((row: any) => isClothingProduct(row) && isWomensFashionBrand(row.brand_slug || ""));
+
+  const scored = filtered.map((row: any) => {
+    const comp = (row.composition || "").toLowerCase();
+    let relevance = 0;
+    for (const term of materialTerms) {
+      const t = term.toLowerCase();
+      if (!comp.includes(t)) continue;
+      const pctMatch = comp.match(new RegExp(`(\\d+)\\s*%\\s*${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i'))
+        || comp.match(new RegExp(`${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^,]*?(\\d+)\\s*%`, 'i'));
+      if (pctMatch) {
+        relevance = Math.max(relevance, parseInt(pctMatch[1], 10));
+      } else {
+        relevance = Math.max(relevance, 40);
+      }
+    }
+    return { row, relevance };
+  });
+
+  scored.sort((a, b) => {
+    if (b.relevance !== a.relevance) return b.relevance - a.relevance;
+    return (b.row.natural_fiber_percent || 0) - (a.row.natural_fiber_percent || 0);
+  });
+
+  return scored.slice(0, limit).map(({ row }) => mapProductRow(row));
 }
 
 export async function fetchShopProducts(options: {

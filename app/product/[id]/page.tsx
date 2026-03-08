@@ -7,6 +7,7 @@ import {
   fetchRelatedProducts,
   fetchAllProductIds,
 } from "../../../lib/supabase-server";
+import { ProductFavoriteButton, ProductCardHeart } from "./ProductFavoriteButton";
 
 export const revalidate = 86400;
 
@@ -290,6 +291,8 @@ export default async function ProductPage({
               </div>
             )}
 
+            <ProductFavoriteButton productId={String(product.id)} />
+
             {product.url && (
               <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-[0.2em] text-xs font-medium hover:opacity-90 transition-opacity active:scale-[0.98]" data-testid="link-shop-now">
                 Shop Now <ExternalLink className="w-3.5 h-3.5" />
@@ -326,6 +329,7 @@ export default async function ProductPage({
                         </span>
                       </div>
                     )}
+                    <ProductCardHeart productId={String(p.id)} />
                   </div>
                   <div className="flex flex-col gap-1 pt-3">
                     <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">{p.brandName}</span>

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef, useCallback } from "react";
-import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, MessageCircle, Heart } from "lucide-react";
+import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, MessageCircle, Heart, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useProductFavorites } from "../hooks/use-product-favorites";
 
 type ScanResult = {
   tagInfo: { brandName: string; productName: string; price: string; composition?: string; confidence: string; rawText: string };
@@ -24,7 +25,32 @@ function ratingColor(rating: string) {
   }
 }
 
+function FiberBar({ percent }: { percent: number }) {
+  const color = percent >= 80 ? "bg-emerald-600" : percent >= 50 ? "bg-amber-500" : "bg-red-500";
+  return (
+    <div className="flex items-center gap-2 w-full">
+      <div className="flex-1 h-1.5 bg-secondary overflow-hidden">
+        <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${Math.min(percent, 100)}%` }} />
+      </div>
+      <span className="text-[9px] font-medium text-muted-foreground whitespace-nowrap">{percent}% natural</span>
+    </div>
+  );
+}
+
+function ratingBorderColor(rating: string) {
+  switch (rating) {
+    case "Exceptional": return "border-emerald-600";
+    case "Excellent": return "border-emerald-500";
+    case "Good": return "border-amber-500";
+    case "Caution": return "border-red-500";
+    default: return "border-border";
+  }
+}
+
 function ProductCard({ product }: { product: any }) {
+  const { toggle, isFavorited } = useProductFavorites();
+  const productId = String(product.id);
+  const saved = isFavorited(productId);
   const name = product.name || product.productName || "";
   const brandName = product.brand_name || product.brandName || "";
   const imageUrl = product.image_url || product.imageUrl;
@@ -48,9 +74,20 @@ function ProductCard({ product }: { product: any }) {
         )}
         {naturalFiber != null && (
           <div className="absolute top-2 left-2 z-10">
-            <span className="bg-emerald-800/90 text-white px-1.5 py-0.5 text-[8px] font-medium backdrop-blur-sm">{naturalFiber}%</span>
+            <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-1.5 py-0.5 text-[8px] font-medium backdrop-blur-sm">
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              {naturalFiber}%
+            </span>
           </div>
         )}
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
+          className={`absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors`}
+          data-testid={`btn-favorite-scan-${product.id}`}
+          aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+        >
+          <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
+        </button>
       </div>
       <div className="flex flex-col gap-0.5 pt-2.5">
         <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">{brandName}</span>
@@ -376,6 +413,12 @@ export default function ScannerClient() {
             <div className="mb-6">
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Confidence</p>
               <span className="text-[11px] px-2 py-0.5 bg-neutral-100 border border-neutral-200" data-testid="text-result-confidence">{result.tagInfo.confidence}</span>
+            </div>
+          )}
+
+          {fiberPct !== null && (
+            <div className="mb-6">
+              <FiberBar percent={fiberPct} />
             </div>
           )}
 

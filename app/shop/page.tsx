@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { fetchShopProducts, fetchProductCount } from "../../lib/supabase-server";
+import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
 
 export const metadata: Metadata = {
@@ -9,9 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ShopPage() {
-  const [initialData, productCount] = await Promise.all([
+  const [initialData, productCount, fiberCounts] = await Promise.all([
     fetchShopProducts({ limit: 60, offset: 0, sort: "recommended" }),
     fetchProductCount(),
+    fetchFiberCounts(),
   ]);
 
   return (
@@ -19,6 +20,7 @@ export default async function ShopPage() {
       initialProducts={initialData.products}
       initialTotal={initialData.total}
       totalProductCount={productCount}
+      fiberCounts={fiberCounts}
     />
   );
 }
