@@ -5,7 +5,8 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUP
 
 export function getServerSupabase() {
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Missing Supabase environment variables");
+    console.warn("Missing Supabase environment variables — returning null client");
+    return null;
   }
   return createClient(supabaseUrl, supabaseKey);
 }
@@ -97,6 +98,7 @@ function isNotMensProduct(p: any): boolean {
 
 export async function fetchDesigners(query?: string, limit?: number): Promise<Designer[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   let q = supabase.from("designers").select("*").order("name");
   if (query) q = q.ilike("name", `%${query}%`);
   if (limit) q = q.limit(limit);
@@ -107,6 +109,7 @@ export async function fetchDesigners(query?: string, limit?: number): Promise<De
 
 export async function fetchDesignerBySlug(slug: string): Promise<Designer | null> {
   const supabase = getServerSupabase();
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from("designers")
     .select("*")
@@ -118,6 +121,7 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
 
 export async function fetchProductById(id: string): Promise<Product | null> {
   const supabase = getServerSupabase();
+  if (!supabase) return null;
   let query;
   const isNumeric = /^\d+$/.test(id);
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -141,6 +145,7 @@ export async function fetchProductsByFiberAndCategory(
   limit = 100
 ): Promise<Product[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   const fiberTerms: Record<string, string[]> = {
     cotton: ["cotton", "organic cotton"],
     linen: ["linen", "flax"],
@@ -184,6 +189,7 @@ export async function fetchProductsByFiberAndCategory(
 
 export async function fetchProductsByBrand(brandSlug: string): Promise<Product[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -196,6 +202,7 @@ export async function fetchProductsByBrand(brandSlug: string): Promise<Product[]
 
 export async function fetchAllProducts(limit = 200, offset = 0): Promise<Product[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -208,6 +215,7 @@ export async function fetchAllProducts(limit = 200, offset = 0): Promise<Product
 
 export async function fetchProductCount(): Promise<number> {
   const supabase = getServerSupabase();
+  if (!supabase) return 0;
   const { count, error } = await supabase
     .from("products")
     .select("*", { count: "exact", head: true });
@@ -217,6 +225,7 @@ export async function fetchProductCount(): Promise<number> {
 
 export async function fetchAllProductIds(): Promise<string[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   const ids: string[] = [];
   let offset = 0;
   const pageSize = 1000;
@@ -238,6 +247,7 @@ export async function fetchAllProductIds(): Promise<string[]> {
 
 export async function fetchAllDesignerSlugs(): Promise<string[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("designers")
     .select("slug")
@@ -251,6 +261,7 @@ export async function fetchRelatedProducts(
   limit = 8
 ): Promise<Product[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -269,6 +280,7 @@ function isWomensFashionBrand(slug: string): boolean {
 
 export async function fetchProductsByFiber(fiber: string): Promise<Product[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -283,6 +295,7 @@ export async function fetchProductsByFiber(fiber: string): Promise<Product[]> {
 
 export async function fetchProductsByBrandWithImages(brandSlug: string, limit = 24): Promise<Product[]> {
   const supabase = getServerSupabase();
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
@@ -299,6 +312,7 @@ export async function fetchProductsByBrandWithImages(brandSlug: string, limit = 
 
 export async function fetchProductCountsByBrand(slugs: string[]): Promise<Record<string, number>> {
   const supabase = getServerSupabase();
+  if (!supabase) return {};
   const counts: Record<string, number> = {};
   await Promise.all(slugs.map(async (slug) => {
     const { count } = await supabase
@@ -321,6 +335,7 @@ export async function fetchShopProducts(options: {
   search?: string;
 }): Promise<{ products: Product[]; total: number }> {
   const supabase = getServerSupabase();
+  if (!supabase) return { products: [], total: 0 };
   const { fiber, category, sort = "recommended", limit = 60, offset = 0, search } = options;
   const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
 
