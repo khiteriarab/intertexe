@@ -118,9 +118,9 @@ export default function ShopClient({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [products, setProducts] = useState(initialProducts);
-  const [resultTotal, setResultTotal] = useState(initialTotal);
-  const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState(initialProducts || []);
+  const [resultTotal, setResultTotal] = useState(initialTotal || 0);
+  const [isLoading, setIsLoading] = useState(!initialProducts?.length);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -131,9 +131,12 @@ export default function ShopClient({
   }, [searchQuery]);
 
   useEffect(() => {
-    if (fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && !debouncedSearch && visibleCount === 60) {
+    const isDefaultState = fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && !debouncedSearch && visibleCount === 60;
+
+    if (isDefaultState && initialProducts?.length > 0) {
       setProducts(initialProducts);
       setResultTotal(initialTotal);
+      setIsLoading(false);
       return;
     }
 
