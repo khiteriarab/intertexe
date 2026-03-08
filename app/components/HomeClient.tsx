@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucide-react";
 import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
+import { getBrandHeroImage } from "@/lib/brand-hero-images";
 
 function ProductCardSmall({ product }: { product: any }) {
   const name = product.name || "";
@@ -139,6 +140,41 @@ export function HorizontalProductScroll({
   );
 }
 
+function BrandCardImage({ name, count }: { name: string; count: number }) {
+  const [failed, setFailed] = useState(false);
+  const heroUrl = getBrandHeroImage(name);
+  const hasImage = heroUrl && !failed;
+
+  return (
+    <div className={`aspect-[3/4] w-full overflow-hidden relative ${hasImage ? 'bg-secondary' : 'bg-[#f0ece6]'}`}>
+      {hasImage ? (
+        <img
+          src={heroUrl}
+          alt={`${name} editorial`}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center px-4">
+          <span className="font-serif text-lg md:text-xl text-foreground/30 tracking-[0.15em] uppercase text-center leading-relaxed">
+            {name}
+          </span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+      {count > 0 && (
+        <div className="absolute bottom-2.5 right-2.5">
+          <span className="flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+            <ShoppingBag className="w-2.5 h-2.5" />
+            {count} products
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function BrandGrid({
   designers,
   productCounts,
@@ -158,17 +194,7 @@ export function BrandGrid({
             className="group flex flex-col gap-2.5 active:scale-[0.98] transition-transform"
             data-testid={`card-designer-${designer.id}`}
           >
-            <div className="aspect-[3/4] bg-[#f5f5f5] w-full overflow-hidden relative">
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-              {count > 0 && (
-                <div className="absolute bottom-2.5 right-2.5">
-                  <span className="flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                    <ShoppingBag className="w-2.5 h-2.5" />
-                    {count} products
-                  </span>
-                </div>
-              )}
-            </div>
+            <BrandCardImage name={designer.name} count={count} />
             <div className="flex flex-col gap-0.5">
               <h3 className="text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.06em] group-hover:text-muted-foreground transition-colors">
                 {designer.name}
