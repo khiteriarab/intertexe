@@ -4,98 +4,41 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchProductCount, fetchProductsByFiber } from "@/lib/supabase";
 import { useSEO } from "@/hooks/use-seo";
 
-const FABRIC_HUB = [
-  {
-    fabric: "Cotton",
-    slug: "cotton",
-    subcategories: [
-      { slug: "cotton-dresses", label: "Dresses" },
-      { slug: "cotton-shirts", label: "Shirts" },
-      { slug: "cotton-tops", label: "Tops" },
-      { slug: "cotton-pants", label: "Pants" },
-      { slug: "cotton-knitwear", label: "Knitwear" },
-    ],
-  },
-  {
-    fabric: "Linen",
-    slug: "linen",
-    subcategories: [
-      { slug: "linen-dresses", label: "Dresses" },
-      { slug: "linen-tops", label: "Tops" },
-      { slug: "linen-shirts", label: "Shirts" },
-      { slug: "linen-pants", label: "Pants" },
-      { slug: "linen-sets", label: "Sets" },
-    ],
-  },
-  {
-    fabric: "Silk",
-    slug: "silk",
-    subcategories: [
-      { slug: "silk-dresses", label: "Dresses" },
-      { slug: "silk-tops", label: "Tops" },
-      { slug: "silk-blouses", label: "Blouses" },
-      { slug: "silk-skirts", label: "Skirts" },
-      { slug: "silk-dresses-evening", label: "Evening" },
-    ],
-  },
-  {
-    fabric: "Wool",
-    slug: "wool",
-    subcategories: [
-      { slug: "wool-sweaters", label: "Sweaters" },
-      { slug: "wool-coats", label: "Coats" },
-      { slug: "wool-pants", label: "Trousers" },
-    ],
-  },
-  {
-    fabric: "Cashmere",
-    slug: "cashmere",
-    subcategories: [
-      { slug: "cashmere-sweaters", label: "Sweaters" },
-      { slug: "cashmere-knits", label: "Cardigans" },
-    ],
-  },
+const FABRICS = [
+  { fabric: "Cotton", slug: "cotton", description: "Breathable, versatile, everyday" },
+  { fabric: "Linen", slug: "linen", description: "Light, airy, effortless" },
+  { fabric: "Silk", slug: "silk", description: "Luxurious drape, timeless" },
+  { fabric: "Wool", slug: "wool", description: "Warm, structured, seasonless" },
+  { fabric: "Cashmere", slug: "cashmere", description: "The softest fiber" },
 ];
 
-function FabricCard({ group, image, large }: { group: typeof FABRIC_HUB[0]; image: string | null; large?: boolean }) {
+function FabricCard({ fabric, image, large }: { fabric: typeof FABRICS[0]; image: string | null; large?: boolean }) {
   return (
-    <div className={`flex flex-col gap-0 ${large ? "md:col-span-1 md:row-span-2" : ""}`} data-testid={`hub-section-${group.slug}`}>
-      <Link
-        href={`/materials/${group.slug}`}
-        className="group relative overflow-hidden bg-[#EDECE8] block"
-      >
-        <div className={`${large ? "aspect-[3/4]" : "aspect-[4/5]"} relative`}>
-          {image ? (
-            <img
-              src={image}
-              alt={group.fabric}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-b from-[#E8E4DE] to-[#D5CFC4]" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-            <h2 className="text-white text-xl md:text-2xl font-serif mb-1">{group.fabric}</h2>
-            <span className="text-white/70 text-[10px] md:text-[11px] uppercase tracking-[0.15em] flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-              Shop {group.fabric} <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
+    <Link
+      href={`/materials/${fabric.slug}`}
+      className={`group relative overflow-hidden bg-[#EDECE8] block ${large ? "md:col-span-1 md:row-span-2" : ""}`}
+      data-testid={`hub-section-${fabric.slug}`}
+    >
+      <div className={`${large ? "aspect-[3/4]" : "aspect-[4/5]"} relative`}>
+        {image ? (
+          <img
+            src={image}
+            alt={fabric.fabric}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-b from-[#E8E4DE] to-[#D5CFC4]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
+          <h2 className="text-white text-xl md:text-2xl font-serif mb-0.5">{fabric.fabric}</h2>
+          <p className="text-white/50 text-[11px] mb-2">{fabric.description}</p>
+          <span className="text-white/70 text-[10px] md:text-[11px] uppercase tracking-[0.15em] flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+            Shop {fabric.fabric} <ArrowRight className="w-3 h-3" />
+          </span>
         </div>
-      </Link>
-      <div className="flex flex-wrap gap-x-0 border-t border-border/30">
-        {group.subcategories.map((sub, i) => (
-          <Link
-            key={sub.slug}
-            href={`/materials/${sub.slug}`}
-            className={`text-[11px] md:text-xs text-muted-foreground hover:text-foreground hover:bg-[#f5f5f3] transition-colors py-2.5 px-3 md:px-4 ${i < group.subcategories.length - 1 ? "border-r border-border/20" : ""}`}
-            data-testid={`link-sub-${sub.slug}`}
-          >
-            {sub.label}
-          </Link>
-        ))}
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -187,12 +130,12 @@ export default function Materials() {
 
       <section className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         <div className="col-span-2 md:col-span-1 md:row-span-2">
-          <FabricCard group={FABRIC_HUB[0]} image={images.cotton} large />
+          <FabricCard fabric={FABRICS[0]} image={images.cotton} large />
         </div>
-        <FabricCard group={FABRIC_HUB[1]} image={images.linen} />
-        <FabricCard group={FABRIC_HUB[2]} image={images.silk} />
-        <FabricCard group={FABRIC_HUB[3]} image={images.wool} />
-        <FabricCard group={FABRIC_HUB[4]} image={images.cashmere} />
+        <FabricCard fabric={FABRICS[1]} image={images.linen} />
+        <FabricCard fabric={FABRICS[2]} image={images.silk} />
+        <FabricCard fabric={FABRICS[3]} image={images.wool} />
+        <FabricCard fabric={FABRICS[4]} image={images.cashmere} />
       </section>
 
       <section className="mt-12 md:mt-16 border-t border-border/30 pt-10 md:pt-14">
