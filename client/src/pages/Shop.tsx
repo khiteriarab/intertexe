@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
-import { ExternalLink, ShoppingBag, ArrowRight, ChevronRight, Heart, ChevronDown, Search, X } from "lucide-react";
+import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { trackAffiliateRedirect } from "@/lib/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
@@ -32,8 +32,8 @@ const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
 const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "recommended", label: "Recommended" },
   { key: "new", label: "New In" },
-  { key: "price-high", label: "Price High to Low" },
-  { key: "price-low", label: "Price Low to High" },
+  { key: "price-high", label: "Price: High to Low" },
+  { key: "price-low", label: "Price: Low to High" },
 ];
 
 function ProductCard({ product }: { product: any }) {
@@ -42,7 +42,6 @@ function ProductCard({ product }: { product: any }) {
   const saved = isFavorited(productId);
 
   const shopUrl = product.url || null;
-
   const name = product.name || product.productName || "";
   const brandName = product.brand_name || product.brandName || "";
   const imageUrl = product.image_url || product.imageUrl;
@@ -57,7 +56,7 @@ function ProductCard({ product }: { product: any }) {
   return (
     <CardWrapper {...wrapperProps} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
-        <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
+        <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img
             src={imageUrl}
             alt={name}
@@ -66,80 +65,47 @@ function ProductCard({ product }: { product: any }) {
           />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
-            className="absolute top-2.5 right-2.5 z-10 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             data-testid={`btn-favorite-${product.id}`}
             aria-label={saved ? "Remove from favorites" : "Save to favorites"}
           >
-            <Heart className={`w-4.5 h-4.5 drop-shadow-sm transition-colors ${saved ? "fill-red-500 text-red-500 opacity-100" : "text-white hover:text-white/80"}`} style={saved ? { opacity: 1 } : {}} />
+            <Heart className={`w-4 h-4 drop-shadow-sm transition-colors ${saved ? "fill-red-500 text-red-500 opacity-100" : "text-white hover:text-white/80"}`} style={saved ? { opacity: 1 } : {}} />
           </button>
           {saved && (
-            <div className="absolute top-2.5 right-2.5 z-10 w-8 h-8 flex items-center justify-center group-hover:opacity-0 transition-opacity">
-              <Heart className="w-4.5 h-4.5 fill-red-500 text-red-500" />
+            <div className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center group-hover:opacity-0 transition-opacity">
+              <Heart className="w-4 h-4 fill-red-500 text-red-500" />
             </div>
           )}
         </div>
       ) : (
-        <div className="aspect-[3/4] bg-[#f5f5f5] flex items-center justify-center">
+        <div className="aspect-[3/4] bg-[#f5f5f3] flex items-center justify-center">
           <ShoppingBag className="w-8 h-8 text-neutral-300" />
         </div>
       )}
-      <div className="flex flex-col gap-1 pt-3 pb-1">
-        <span className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.08em] text-foreground" data-testid={`text-brand-${product.id}`}>{brandName}</span>
-        <h3 className="text-[12px] md:text-[13px] leading-snug line-clamp-2 text-muted-foreground" data-testid={`text-product-name-${product.id}`}>{name}</h3>
+      <div className="flex flex-col gap-1 pt-3">
+        <span className="text-[10px] md:text-[11px] uppercase tracking-[0.08em] text-muted-foreground" data-testid={`text-brand-${product.id}`}>{brandName}</span>
+        <h3 className="text-[12px] md:text-[13px] leading-snug line-clamp-2 text-foreground" data-testid={`text-product-name-${product.id}`}>{name}</h3>
         <div className="flex items-center gap-2 mt-0.5">
-          {price && <span className="text-[12px] md:text-[13px]" data-testid={`text-price-${product.id}`}>{price}</span>}
+          {price && <span className="text-[12px] md:text-[13px] font-medium" data-testid={`text-price-${product.id}`}>{price}</span>}
         </div>
-        {fiberPercent != null && fiberPercent >= 90 && (
-          <span className="text-[9px] uppercase tracking-wider text-emerald-700 mt-0.5">{fiberPercent}% Natural Fiber</span>
+        {composition && (
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>
         )}
       </div>
     </CardWrapper>
   );
 }
 
-function FiberHighlight({ fiber, count, onClick }: { fiber: string; count: number; onClick: () => void }) {
-  const fiberImages: Record<string, string> = {
-    cashmere: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_JACKSON_CARDIGAN_-_MEDIUM_HEATHER_GREY_A-09-10222-MHG1_0040.jpg?v=1753111950",
-    silk: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319612/PLUTO_DOT/1319612.1.PLUTO_DOT?_s=RAABAB0",
-    wool: "https://cdn.shopify.com/s/files/1/1519/7996/files/MARGO-DRESS_BLACK_18121533-200_GHOST_jpg.jpg?v=1757970225",
-    cotton: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319334/PRESPA/1319334.1.PRESPA?_s=RAABAB0",
-    linen: "https://us.sandro-paris.com/dw/image/v2/BCMW_PRD/on/demandware.static/-/Sites-master-catalog/default/dwd3c61fa4/images/hi-res/Sandro_SFPRO04783-4111_F_1.jpg?sw=800",
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className="group relative overflow-hidden aspect-[3/2] md:aspect-[4/3] bg-[#f5f5f5] flex items-end active:scale-[0.98] transition-transform"
-      data-testid={`fiber-card-${fiber}`}
-    >
-      <img
-        src={fiberImages[fiber] || ""}
-        alt={fiber}
-        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-        loading="lazy"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-      <div className="relative z-10 p-3 md:p-4 flex flex-col gap-0.5 w-full">
-        <span className="font-serif text-base md:text-lg text-white capitalize">{fiber}</span>
-        <span className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/70">{count} verified pieces</span>
-      </div>
-      <div className="absolute top-3 right-3 z-10">
-        <ChevronRight className="w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
-      </div>
-    </button>
-  );
-}
-
 function LoadingSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-10">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
       {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} className="animate-pulse flex flex-col">
           <div className="aspect-[3/4] bg-[#f0f0ee]" />
           <div className="pt-3 flex flex-col gap-2">
-            <div className="h-3 bg-[#f0f0ee] w-1/3" />
+            <div className="h-2.5 bg-[#f0f0ee] w-1/3" />
             <div className="h-3 bg-[#f0f0ee] w-3/4" />
-            <div className="h-3 bg-[#f0f0ee] w-1/4" />
+            <div className="h-2.5 bg-[#f0f0ee] w-1/4" />
           </div>
         </div>
       ))}
@@ -204,110 +170,77 @@ export default function Shop() {
     ? (totalProductCount > 0 ? totalProductCount : 17000)
     : resultTotal;
 
-  const showHighlights = fiberTab === "all" && categoryFilter === "all" && !isSearchActive;
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
 
   return (
     <div className="min-h-screen pb-24 md:pb-16">
-      <div className="py-6 md:py-10 flex flex-col gap-6 md:gap-10">
-        <header className="flex flex-col gap-4 md:gap-5">
-          <div className="flex flex-col gap-2 md:gap-3">
-            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground" data-testid="text-shop-label">
-              Search by Fabric
-            </span>
-            <h1 className="text-2xl md:text-5xl font-serif" data-testid="text-shop-title">
-              {isSearchActive ? `Results for "${debouncedSearch}"` : "Shop by Fabric"}
-            </h1>
-            <p className="text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed">
-              Search any clothing item and filter by fabric. {!isSearchActive && `${displayCount > 0 ? displayCount.toLocaleString() : '17,000'}+ verified products.`}
-            </p>
-          </div>
+      <div className="py-8 md:py-12 flex flex-col gap-0">
 
-          <div className="relative max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder='Try "black dress" or "silk blouse"'
-              className="w-full bg-background border border-border/60 pl-11 pr-10 py-3.5 text-sm focus:outline-none focus:border-foreground/60 transition-colors placeholder:text-muted-foreground/50"
-              data-testid="input-product-search"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => { setSearchQuery(""); setDebouncedSearch(""); searchInputRef.current?.focus(); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="button-clear-search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {isSearchActive && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{resultTotal} result{resultTotal !== 1 ? "s" : ""}</span>
-              {fiberTab !== "all" && (
-                <span className="px-2 py-0.5 bg-foreground text-background text-[10px] uppercase tracking-wider">{fiberTab}</span>
-              )}
-              {categoryFilter !== "all" && (
-                <span className="px-2 py-0.5 border border-foreground text-[10px] uppercase tracking-wider">{categoryFilter}</span>
-              )}
-              <button
-                onClick={() => { setSearchQuery(""); setDebouncedSearch(""); setFiberTab("all"); setCategoryFilter("all"); }}
-                className="underline underline-offset-2 hover:text-foreground transition-colors"
-                data-testid="button-clear-all"
-              >
-                Clear all
-              </button>
+        <header className="mb-8 md:mb-10">
+          <div className="flex flex-col gap-6 md:gap-8">
+            <div>
+              <h1 className="text-2xl md:text-4xl font-serif mb-2" data-testid="text-shop-title">
+                {isSearchActive ? `Results for "${debouncedSearch}"` : "Shop"}
+              </h1>
+              <p className="text-[13px] md:text-sm text-muted-foreground">
+                {displayCount > 0 ? displayCount.toLocaleString() : '17,000+'} verified products
+              </p>
             </div>
-          )}
+
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder='Search "silk dress", "cashmere sweater"...'
+                className="w-full bg-[#f5f5f3] border-0 pl-11 pr-10 py-3.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all placeholder:text-muted-foreground/40"
+                data-testid="input-product-search"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => { setSearchQuery(""); setDebouncedSearch(""); searchInputRef.current?.focus(); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="button-clear-search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
         </header>
 
-        {showHighlights && Object.keys(fiberCounts).length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 -mx-1 md:mx-0">
-            {(["cashmere", "silk", "wool", "cotton", "linen"] as const).map(fiber => (
-              <FiberHighlight
-                key={fiber}
-                fiber={fiber}
-                count={fiberCounts[fiber] || 0}
-                onClick={() => { setFiberTab(fiber); setCategoryFilter("all"); setVisibleCount(60); }}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-1.5 md:gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+        <div className="flex flex-col gap-4 mb-6 md:mb-8">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
             {FIBER_TABS.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setVisibleCount(60); }}
-                className={`px-3.5 md:px-5 py-2.5 text-[10px] md:text-xs uppercase tracking-[0.15em] whitespace-nowrap transition-colors flex-shrink-0 min-h-[40px] ${
+                className={`px-4 md:px-5 py-2 text-[10px] md:text-[11px] uppercase tracking-[0.15em] whitespace-nowrap transition-all flex-shrink-0 ${
                   fiberTab === tab.key
-                    ? "bg-foreground text-background font-medium"
-                    : "bg-secondary/60 text-foreground/70 hover:bg-secondary active:bg-secondary"
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
                 data-testid={`tab-fiber-${tab.key}`}
               >
                 {tab.label}
                 {tab.key !== "all" && fiberCounts[tab.key] ? (
-                  <span className="ml-1.5 opacity-60">{fiberCounts[tab.key]}</span>
+                  <span className="ml-1.5 opacity-50">({fiberCounts[tab.key]})</span>
                 ) : null}
               </button>
             ))}
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1">
             {CATEGORY_FILTERS.map(cat => (
               <button
                 key={cat.key}
                 onClick={() => { setCategoryFilter(cat.key); setVisibleCount(60); }}
-                className={`px-3 py-2 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap border transition-colors flex-shrink-0 min-h-[36px] ${
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap transition-all flex-shrink-0 ${
                   categoryFilter === cat.key
-                    ? "border-foreground text-foreground font-medium"
-                    : "border-border/40 text-muted-foreground hover:border-foreground/40"
+                    ? "border-b-2 border-foreground text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
                 data-testid={`tab-category-${cat.key}`}
               >
@@ -317,37 +250,48 @@ export default function Shop() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-b border-border/30 pb-3">
-          <p className="text-xs md:text-sm text-muted-foreground" data-testid="text-result-count">
+        <div className="flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8">
+          <p className="text-[11px] md:text-xs text-muted-foreground" data-testid="text-result-count">
             {isLoading ? (
               <span className="animate-pulse">Loading...</span>
             ) : (
               <>
-                <span className="font-medium text-foreground">{resultTotal.toLocaleString()}</span> Results
+                <span className="text-foreground">{resultTotal.toLocaleString()}</span> results
               </>
             )}
           </p>
+
+          {isSearchActive && (
+            <button
+              onClick={() => { setSearchQuery(""); setDebouncedSearch(""); setFiberTab("all"); setCategoryFilter("all"); }}
+              className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+              data-testid="button-clear-all"
+            >
+              Clear all
+            </button>
+          )}
+
           <div className="relative">
             <button
               onClick={() => setShowSortMenu(!showSortMenu)}
-              className="flex items-center gap-1.5 text-xs md:text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 text-[11px] md:text-xs text-muted-foreground hover:text-foreground transition-colors"
               data-testid="btn-sort"
             >
-              {currentSort.label}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
+              Sort: {currentSort.label}
+              <ChevronDown className={`w-3 h-3 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
             </button>
             {showSortMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 shadow-lg min-w-[180px]">
+                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/40 shadow-xl min-w-[180px]">
                   {SORT_OPTIONS.map(option => (
                     <button
                       key={option.key}
                       onClick={() => { setSortBy(option.key); setShowSortMenu(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-xs md:text-sm transition-colors ${
+                      className={`w-full text-left px-4 py-2.5 text-[11px] md:text-xs transition-colors ${
                         sortBy === option.key
-                          ? "bg-secondary font-medium text-foreground"
-                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                          ? "bg-[#f5f5f3] text-foreground"
+                          : "text-muted-foreground hover:bg-[#f5f5f3] hover:text-foreground"
                       }`}
                       data-testid={`sort-${option.key}`}
                     >
@@ -361,7 +305,7 @@ export default function Shop() {
         </div>
 
         {fiberTab !== "all" && (
-          <div className="flex items-center justify-end -mt-4">
+          <div className="flex items-center justify-end mb-4 -mt-2">
             <Link
               href={`/materials/${fiberTab}`}
               className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
@@ -375,12 +319,12 @@ export default function Shop() {
         {isLoading && !products.length ? (
           <LoadingSkeleton />
         ) : products.length === 0 ? (
-          <div className="py-16 text-center flex flex-col items-center gap-3">
-            <ShoppingBag className="w-10 h-10 text-muted-foreground/20" />
-            <p className="text-muted-foreground text-sm">No products match this combination yet.</p>
+          <div className="py-20 text-center flex flex-col items-center gap-4">
+            <ShoppingBag className="w-12 h-12 text-muted-foreground/15" />
+            <p className="text-muted-foreground text-sm">No products match this combination.</p>
             <button
               onClick={() => { setFiberTab("all"); setCategoryFilter("all"); }}
-              className="text-xs uppercase tracking-[0.15em] border-b border-foreground pb-0.5"
+              className="text-[11px] uppercase tracking-[0.15em] text-foreground hover:text-muted-foreground transition-colors"
               data-testid="button-reset-filters"
             >
               View all products
@@ -389,32 +333,32 @@ export default function Shop() {
         ) : (
           <>
             {isFetching && products.length > 0 && (
-              <div className="flex justify-center">
-                <div className="w-5 h-5 border-2 border-foreground/20 border-t-foreground animate-spin" />
+              <div className="flex justify-center mb-4">
+                <div className="w-4 h-4 border-2 border-foreground/15 border-t-foreground animate-spin" />
               </div>
             )}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-10">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
               {products.map((product: any) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
 
             {resultTotal > visibleCount && (
-              <div className="flex justify-center pt-4">
+              <div className="flex justify-center pt-10 md:pt-12">
                 <button
                   onClick={() => setVisibleCount(prev => prev + 60)}
-                  className="px-8 py-3 border border-foreground text-foreground text-xs uppercase tracking-[0.2em] hover:bg-foreground hover:text-background transition-colors"
+                  className="px-10 py-3.5 bg-foreground text-background text-[11px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors"
                   data-testid="btn-load-more"
                 >
-                  View More ({(resultTotal - visibleCount).toLocaleString()} remaining)
+                  Load More ({(resultTotal - visibleCount).toLocaleString()})
                 </button>
               </div>
             )}
           </>
         )}
 
-        <div className="border-t border-border/30 pt-8 md:pt-10 flex flex-col gap-4">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Explore by Fabric</h2>
+        <div className="border-t border-border/20 pt-10 md:pt-14 mt-12 md:mt-16">
+          <h2 className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-6">Explore by Fabric</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
             {[
               { href: "/materials/silk-dresses", label: "Silk Dresses" },
@@ -422,16 +366,16 @@ export default function Shop() {
               { href: "/materials/cotton-shirts", label: "Cotton Shirts" },
               { href: "/materials/cashmere-sweaters", label: "Cashmere Sweaters" },
               { href: "/materials/wool-coats", label: "Wool Coats" },
-              { href: "/materials", label: "Fabric Hub" },
+              { href: "/materials", label: "All Fabrics" },
             ].map(link => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="flex items-center justify-between px-4 py-3.5 border border-border/30 hover:border-foreground/30 active:bg-secondary/50 transition-colors"
+                className="flex items-center justify-between px-4 py-3.5 hover:bg-[#f5f5f3] transition-colors group"
                 data-testid={`link-explore-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
               >
-                <span className="text-xs md:text-sm">{link.label}</span>
-                <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                <span className="text-[12px] md:text-[13px]">{link.label}</span>
+                <ArrowRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             ))}
           </div>
