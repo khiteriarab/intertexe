@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const token = await storeToken(user.id);
     const { password: _, ...safeUser } = user;
     return NextResponse.json({ ...safeUser, token });
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ message: "Something went wrong. Please try again." }, { status: 500 });
   }
 }
