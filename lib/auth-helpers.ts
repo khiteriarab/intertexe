@@ -4,7 +4,12 @@ import { getServerSupabase } from "./supabase-server";
 
 const scryptAsync = promisify(scrypt);
 
-const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.SUPABASE_ANON_KEY || "intertexe-default-secret-key-2026";
+const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.SUPABASE_ANON_KEY || (() => {
+  if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+    throw new Error("TOKEN_SECRET or SUPABASE_ANON_KEY must be set in production");
+  }
+  return "intertexe-dev-only-secret-key";
+})();
 const TOKEN_TTL = 30 * 24 * 60 * 60 * 1000;
 
 export async function hashPassword(password: string): Promise<string> {
