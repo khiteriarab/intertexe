@@ -8,7 +8,6 @@ const FABRIC_HUB = [
   {
     fabric: "Cotton",
     slug: "cotton",
-    description: "Breathable, versatile, everyday essential",
     subcategories: [
       { slug: "cotton-dresses", label: "Dresses" },
       { slug: "cotton-shirts", label: "Shirts" },
@@ -20,7 +19,6 @@ const FABRIC_HUB = [
   {
     fabric: "Linen",
     slug: "linen",
-    description: "Light, airy, effortlessly elegant",
     subcategories: [
       { slug: "linen-dresses", label: "Dresses" },
       { slug: "linen-tops", label: "Tops" },
@@ -32,7 +30,6 @@ const FABRIC_HUB = [
   {
     fabric: "Silk",
     slug: "silk",
-    description: "Luxurious drape, timeless sophistication",
     subcategories: [
       { slug: "silk-dresses", label: "Dresses" },
       { slug: "silk-tops", label: "Tops" },
@@ -44,7 +41,6 @@ const FABRIC_HUB = [
   {
     fabric: "Wool",
     slug: "wool",
-    description: "Warm, structured, seasonless",
     subcategories: [
       { slug: "wool-sweaters", label: "Sweaters" },
       { slug: "wool-coats", label: "Coats" },
@@ -54,7 +50,6 @@ const FABRIC_HUB = [
   {
     fabric: "Cashmere",
     slug: "cashmere",
-    description: "The softest fiber, pure indulgence",
     subcategories: [
       { slug: "cashmere-sweaters", label: "Sweaters" },
       { slug: "cashmere-knits", label: "Cardigans" },
@@ -62,14 +57,14 @@ const FABRIC_HUB = [
   },
 ];
 
-function FabricCard({ group, image }: { group: typeof FABRIC_HUB[0]; image: string | null }) {
+function FabricCard({ group, image, large }: { group: typeof FABRIC_HUB[0]; image: string | null; large?: boolean }) {
   return (
-    <div className="flex flex-col" data-testid={`hub-section-${group.slug}`}>
+    <div className={`flex flex-col gap-0 ${large ? "md:col-span-1 md:row-span-2" : ""}`} data-testid={`hub-section-${group.slug}`}>
       <Link
         href={`/materials/${group.slug}`}
         className="group relative overflow-hidden bg-[#EDECE8] block"
       >
-        <div className="aspect-[4/5] relative">
+        <div className={`${large ? "aspect-[3/4]" : "aspect-[4/5]"} relative`}>
           {image ? (
             <img
               src={image}
@@ -81,20 +76,19 @@ function FabricCard({ group, image }: { group: typeof FABRIC_HUB[0]; image: stri
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-            <h2 className="text-white text-xl md:text-2xl font-serif mb-0.5">{group.fabric}</h2>
-            <p className="text-white/60 text-[11px] mb-2 hidden md:block">{group.description}</p>
+            <h2 className="text-white text-xl md:text-2xl font-serif mb-1">{group.fabric}</h2>
             <span className="text-white/70 text-[10px] md:text-[11px] uppercase tracking-[0.15em] flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
               Shop {group.fabric} <ArrowRight className="w-3 h-3" />
             </span>
           </div>
         </div>
       </Link>
-      <div className="grid grid-cols-3 md:grid-cols-5 border-t border-border/30">
+      <div className="flex flex-wrap gap-x-0 border-t border-border/30">
         {group.subcategories.map((sub, i) => (
           <Link
             key={sub.slug}
             href={`/materials/${sub.slug}`}
-            className={`text-[10px] md:text-[11px] text-center text-muted-foreground hover:text-foreground hover:bg-[#f5f5f3] transition-colors py-2.5 px-1 ${i < group.subcategories.length - 1 ? "border-r border-border/20" : ""}`}
+            className={`text-[11px] md:text-xs text-muted-foreground hover:text-foreground hover:bg-[#f5f5f3] transition-colors py-2.5 px-3 md:px-4 ${i < group.subcategories.length - 1 ? "border-r border-border/20" : ""}`}
             data-testid={`link-sub-${sub.slug}`}
           >
             {sub.label}
@@ -191,13 +185,12 @@ export default function Materials() {
         <p className="text-[13px] text-muted-foreground">Find silk, linen, cotton, wool and cashmere — every composition verified.</p>
       </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
-        <FabricCard group={FABRIC_HUB[0]} image={images.cotton} />
+      <section className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="col-span-2 md:col-span-1 md:row-span-2">
+          <FabricCard group={FABRIC_HUB[0]} image={images.cotton} large />
+        </div>
         <FabricCard group={FABRIC_HUB[1]} image={images.linen} />
         <FabricCard group={FABRIC_HUB[2]} image={images.silk} />
-      </section>
-
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 mt-4 md:mt-5">
         <FabricCard group={FABRIC_HUB[3]} image={images.wool} />
         <FabricCard group={FABRIC_HUB[4]} image={images.cashmere} />
       </section>
