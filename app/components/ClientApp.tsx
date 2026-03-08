@@ -1,17 +1,15 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import dynamic from "next/dynamic";
+import { useState, useEffect, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import { Navbar } from "./Navbar";
+import { ScrollToTop } from "./ScrollToTop";
+import { Analytics } from "./Analytics";
 import { Footer } from "./Footer";
 
-const ClientShell = dynamic(
-  () => import("./ClientShell").then((m) => ({ default: m.ClientShell })),
-  { ssr: false }
-);
-
 export function ClientApp({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -25,9 +23,23 @@ export function ClientApp({ children }: { children: ReactNode }) {
       })
   );
 
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
-      <ClientShell footer={<Footer />}>{children}</ClientShell>
+      <Analytics />
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
+        <Navbar />
+        <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-20 md:pb-0">
+          {children}
+        </main>
+        <Footer />
+        <ScrollToTop />
+      </div>
       <Toaster position="top-right" />
     </QueryClientProvider>
   );

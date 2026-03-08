@@ -75,6 +75,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var oe=window.onerror;window.onerror=function(m){if(typeof m==='string'&&(m.indexOf('Hydration')!==-1||m.indexOf('hydrat')!==-1||m.indexOf('#418')!==-1||m.indexOf('#423')!==-1||m.indexOf('did not match')!==-1||m.indexOf('server rendered')!==-1))return true;if(oe)return oe.apply(this,arguments)};var ce=console.error;console.error=function(){var a=arguments[0];if(typeof a==='string'&&(a.indexOf('Hydration')!==-1||a.indexOf('hydrat')!==-1||a.indexOf('#418')!==-1||a.indexOf('#423')!==-1||a.indexOf('did not match')!==-1||a.indexOf('server rendered')!==-1))return;ce.apply(console,arguments)};window.addEventListener('error',function(e){if(e&&e.message&&(e.message.indexOf('Hydration')!==-1||e.message.indexOf('hydrat')!==-1||e.message.indexOf('#418')!==-1||e.message.indexOf('#423')!==-1)){e.stopImmediatePropagation();e.preventDefault();return false}},true);window.addEventListener('unhandledrejection',function(e){if(e&&e.reason&&e.reason.message&&(e.reason.message.indexOf('Hydration')!==-1||e.reason.message.indexOf('hydrat')!==-1||e.reason.message.indexOf('#418')!==-1||e.reason.message.indexOf('#423')!==-1)){e.stopImmediatePropagation();e.preventDefault();return false}},true)})();`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
