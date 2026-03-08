@@ -1,6 +1,7 @@
 {
   "include": [
     "app/**/*",
+    "lib/**/*",
     "client/src/**/*",
     "next-env.d.ts",
     "server/**/*",
