@@ -17,7 +17,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  allowedDevOrigins: ['*.kirk.replit.dev', '*.replit.dev'],
+  allowedDevOrigins: ['*.kirk.replit.dev', '*.replit.dev', '*.repl.co', 'localhost', '127.0.0.1', '0.0.0.0'],
   serverExternalPackages: ['@supabase/supabase-js'],
   experimental: {
     serverActions: {
