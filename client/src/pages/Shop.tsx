@@ -65,17 +65,12 @@ function ProductCard({ product }: { product: any }) {
           />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
-            className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
             data-testid={`btn-favorite-${product.id}`}
             aria-label={saved ? "Remove from favorites" : "Save to favorites"}
           >
-            <Heart className={`w-4 h-4 drop-shadow-sm transition-colors ${saved ? "fill-red-500 text-red-500 opacity-100" : "text-white hover:text-white/80"}`} style={saved ? { opacity: 1 } : {}} />
+            <Heart className={`w-4 h-4 drop-shadow-sm transition-colors ${saved ? "fill-red-500 text-red-500" : "text-white/80"}`} />
           </button>
-          {saved && (
-            <div className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center group-hover:opacity-0 transition-opacity">
-              <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-            </div>
-          )}
         </div>
       ) : (
         <div className="aspect-[3/4] bg-[#f5f5f3] flex items-center justify-center">

@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProductCount, fetchProductsByFiber } from "@/lib/supabase";
 import { useSEO } from "@/hooks/use-seo";
-import editorialImg3 from "@/assets/images/fashion_editorial_3.jpg";
+import editorialHero from "@/assets/images/fashion_editorial_2.jpg";
 
 const FABRICS = [
   {
@@ -189,7 +189,7 @@ export default function Materials() {
       <section className="relative -mx-4 md:-mx-8 overflow-hidden">
         <div className="relative h-[50vh] md:h-[65vh] min-h-[380px]">
           <img
-            src={editorialImg3}
+            src={editorialHero}
             alt="Natural fabric fashion"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
