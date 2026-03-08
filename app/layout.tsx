@@ -75,11 +75,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){function isDevErr(s){if(!s)return false;if(typeof s==='object'&&s.message)s=s.message;if(typeof s!=='string')return false;return s.indexOf('Hydration')!==-1||s.indexOf('hydrat')!==-1||s.indexOf('#418')!==-1||s.indexOf('#423')!==-1||s.indexOf('did not match')!==-1||s.indexOf('server rendered')!==-1||s.indexOf('Text content does not match')!==-1||s.indexOf('Loading chunk')!==-1}if(typeof window.reportError==='function'){var origRE=window.reportError;window.reportError=function(e){if(isDevErr(e))return;origRE.call(window,e)}}var oe=window.onerror;window.onerror=function(m){if(isDevErr(m))return true;if(oe)return oe.apply(this,arguments)};var ce=console.error;console.error=function(){if(isDevErr(arguments[0]))return;ce.apply(console,arguments)};window.addEventListener('error',function(e){if(e&&isDevErr(e.message)){e.stopImmediatePropagation();e.preventDefault()}},true);window.addEventListener('unhandledrejection',function(e){if(e&&e.reason&&isDevErr(e.reason)){e.stopImmediatePropagation();e.preventDefault()}},true);var overlayTags=['nextjs-portal','next-devtools','next-badge-root'];new MutationObserver(function(ml){for(var i=0;i<ml.length;i++){for(var j=0;j<ml[i].addedNodes.length;j++){var n=ml[i].addedNodes[j];if(n&&n.tagName){var t=n.tagName.toLowerCase();if(overlayTags.indexOf(t)!==-1)n.remove()}}}}).observe(document.documentElement,{childList:true,subtree:true})})();`,
-          }}
-        />
+        <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
