@@ -9,7 +9,7 @@ import {
 } from "../../../lib/supabase-server";
 import { ProductFavoriteButton, ProductCardHeart } from "./ProductFavoriteButton";
 
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
 
 export const dynamicParams = true;
 

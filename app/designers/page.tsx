@@ -5,7 +5,7 @@ import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { getBrandProfile } from "../../lib/brand-profiles";
 import { DesignerSearchClient } from "./DesignerSearchClient";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Brand Directory — 11,000+ Brands Ranked by Natural Fiber Quality",

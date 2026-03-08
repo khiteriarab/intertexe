@@ -3,7 +3,7 @@ import Link from "next/link";
 import { fetchProductsByFiberAndCategory, fetchDesigners, fetchProductCount } from "../../../lib/supabase-server";
 import { MATERIALS } from "../../../lib/data";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 const MAIN_FIBERS = ["silk", "cotton", "linen", "wool", "cashmere"];
 

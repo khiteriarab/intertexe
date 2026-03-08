@@ -10,7 +10,7 @@ import { getCuratedScore } from "../../../lib/curated-quality-scores";
 import { getBrandProfile, getTierLabel } from "../../../lib/brand-profiles";
 import { DesignerDetailProducts } from "./DesignerDetailProducts";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const dynamicParams = true;
 

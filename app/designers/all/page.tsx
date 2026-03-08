@@ -3,7 +3,7 @@ import { fetchDesigners } from "../../../lib/supabase-server";
 import { getCuratedScore } from "../../../lib/curated-quality-scores";
 import { DesignersAllClient } from "./DesignersAllClient";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "All Brands A-Z — Complete Fashion Brand Directory",

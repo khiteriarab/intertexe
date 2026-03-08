@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { fetchProductCount, fetchProductsByFiber } from "../../lib/supabase-server";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Shop by Fabric — Find Silk, Linen, Cotton & Wool Clothing",
