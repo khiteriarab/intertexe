@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchAllProductIds, fetchAllDesignerSlugs } from "@/../../lib/supabase-server";
+import { fetchAllProductIds, fetchAllDesignerSlugs } from "../../../lib/supabase-server";
 
 export async function GET() {
   try {
