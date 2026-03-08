@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../../lib/auth-helpers";
 import { getServerSupabase } from "../../../../lib/supabase-server";
+import { snakeToCamel } from "../../../../lib/case-utils";
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request.headers.get("authorization"));
@@ -15,5 +16,5 @@ export async function GET(request: NextRequest) {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  return NextResponse.json(data || []);
+  return NextResponse.json(snakeToCamel(data || []));
 }

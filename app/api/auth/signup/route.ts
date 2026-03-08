@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hashPassword, storeToken, getUserByEmail, getUserByUsername, createUser } from "../../../../lib/auth-helpers";
 import { sendWelcomeEmail } from "../../../../server/resend";
+import { snakeToCamel } from "../../../../lib/case-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     const token = await storeToken(user.id);
     const { password: _, ...safeUser } = user;
-    return NextResponse.json({ ...safeUser, token }, { status: 201 });
+    return NextResponse.json({ ...snakeToCamel(safeUser), token }, { status: 201 });
   } catch (err: any) {
     const msg = err?.message || "Something went wrong. Please try again.";
     const isUserError = msg.includes("already exists") || msg.includes("already registered");

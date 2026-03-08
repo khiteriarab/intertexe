@@ -124,12 +124,12 @@ export async function fetchDesignersByNames(names: string[]): Promise<Designer[]
 export async function fetchDesignersByIds(ids: (string | number)[]): Promise<Designer[]> {
   const supabase = getServerSupabase();
   if (!supabase || ids.length === 0) return [];
-  const numericIds = ids.map(id => typeof id === 'string' ? parseInt(id, 10) : id).filter(id => !isNaN(id));
-  if (numericIds.length === 0) return [];
+  const stringIds = ids.map(id => String(id)).filter(Boolean);
+  if (stringIds.length === 0) return [];
   const { data, error } = await supabase
     .from("designers")
     .select("*")
-    .in("id", numericIds);
+    .in("id", stringIds);
   if (error || !data) return [];
   return data.map(mapDesignerRow);
 }

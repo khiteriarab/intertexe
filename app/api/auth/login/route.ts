@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { comparePasswords, storeToken, getUserByUsername, getUserByEmail } from "../../../../lib/auth-helpers";
+import { snakeToCamel } from "../../../../lib/case-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     const token = await storeToken(user.id);
     const { password: _, ...safeUser } = user;
-    return NextResponse.json({ ...safeUser, token });
+    return NextResponse.json({ ...snakeToCamel(safeUser), token });
   } catch {
     return NextResponse.json({ message: "Something went wrong. Please try again." }, { status: 500 });
   }
