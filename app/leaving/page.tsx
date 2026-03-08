@@ -3,7 +3,8 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
+import { trackAffiliateRedirect } from "../../lib/analytics";
 
 function isValidExternalUrl(url: string): boolean {
   try {
@@ -23,6 +24,13 @@ function LeavingContent() {
   const url = isValid ? rawUrl : "";
 
   const [countdown, setCountdown] = useState(2);
+  const trackedRef = useRef(false);
+
+  useEffect(() => {
+    if (!url || trackedRef.current) return;
+    trackedRef.current = true;
+    trackAffiliateRedirect(brand, url);
+  }, [url, brand]);
 
   useEffect(() => {
     if (!url) return;

@@ -4,6 +4,7 @@ import { useState, useMemo, Component, type ReactNode, useEffect } from "react";
 import Link from "next/link";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, Star, Heart } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
+import { trackQuizStart, trackQuizComplete } from "../../lib/analytics";
 import { assignPersona } from "../../shared/personas";
 import { BRAND_PROFILES, getTierLabel, type BrandProfile } from "../../lib/brand-profiles";
 import { getCuratedScore } from "../../lib/curated-quality-scores";
@@ -98,6 +99,7 @@ export default function QuizClient() {
   const handleResults = (data: any) => {
     setRecommendation(data);
     setCurrentStep(STEPS.length - 1);
+    trackQuizComplete(data.profileType || "unknown");
 
     const quizData = {
       materials: selections.materials,
@@ -135,6 +137,7 @@ export default function QuizClient() {
 
   const submitQuiz = async () => {
     setIsSubmitting(true);
+    trackQuizStart();
     try {
       const res = await fetch("/api/recommend", {
         method: "POST",

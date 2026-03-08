@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, MessageCircle, Heart, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useProductFavorites } from "../hooks/use-product-favorites";
+import { trackScanStart, trackScanComplete, trackScanError } from "../../lib/analytics";
 
 type ScanResult = {
   tagInfo: { brandName: string; productName: string; price: string; composition?: string; confidence: string; rawText: string };
@@ -229,6 +230,7 @@ export default function ScannerClient() {
     setLoading(true);
     setError("");
     setResult(null);
+    trackScanStart("upload");
     try {
       const res = await fetch("/api/scan-tag", {
         method: "POST",
@@ -238,8 +240,10 @@ export default function ScannerClient() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Scan failed");
       setResult(data);
+      trackScanComplete(data.tagInfo?.brandName || "unknown", "upload", data.matched);
     } catch (err: any) {
       setError(err.message || "Failed to scan. Try again.");
+      trackScanError("upload", err.message || "Scan failed");
     } finally {
       setLoading(false);
     }
@@ -262,6 +266,7 @@ export default function ScannerClient() {
     setLoading(true);
     setError("");
     setResult(null);
+    trackScanStart("url");
     try {
       const res = await fetch("/api/scan-url", {
         method: "POST",
@@ -271,8 +276,10 @@ export default function ScannerClient() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Scan failed");
       setResult(data);
+      trackScanComplete(data.tagInfo?.brandName || "unknown", "url", data.matched);
     } catch (err: any) {
       setError(err.message || "Failed to analyze. Try again.");
+      trackScanError("url", err.message || "Scan failed");
     } finally {
       setLoading(false);
     }
