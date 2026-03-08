@@ -233,15 +233,37 @@ export function HomePageContent({ initialData }: { initialData: HomePageData }) 
     const hasData = data.newInProducts.length > 0 && data.curatedDesigners.length > 0;
     if (hasData || fetched) return;
 
-    fetch("/api/homepage")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d && !d.error) {
-          setData(d);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setFetched(true));
+    let retries = 0;
+    const maxRetries = 2;
+
+    const fetchData = () => {
+      fetch("/api/homepage")
+        .then((r) => {
+          if (!r.ok) throw new Error("API error");
+          return r.json();
+        })
+        .then((d) => {
+          if (d && !d.error && d.curatedDesigners?.length > 0) {
+            setData(d);
+            setFetched(true);
+          } else if (retries < maxRetries) {
+            retries++;
+            setTimeout(fetchData, 1000 * retries);
+          } else {
+            setFetched(true);
+          }
+        })
+        .catch(() => {
+          if (retries < maxRetries) {
+            retries++;
+            setTimeout(fetchData, 1000 * retries);
+          } else {
+            setFetched(true);
+          }
+        });
+    };
+
+    fetchData();
   }, [data.newInProducts.length, data.curatedDesigners.length, fetched]);
 
   const displayCount = data.productCount > 0
