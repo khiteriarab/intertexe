@@ -192,7 +192,8 @@ export async function fetchProductsByFiberAndCategory(
     cashmere: ["cashmere"],
   };
 
-  const terms = fiberTerms[fiber.toLowerCase()] || [fiber];
+  const fiberInputs = fiber.split(",").map(f => f.trim().toLowerCase()).filter(Boolean);
+  const terms = fiberInputs.flatMap(f => fiberTerms[f] || [f]);
   let allProducts: any[] = [];
 
   for (const term of terms) {
