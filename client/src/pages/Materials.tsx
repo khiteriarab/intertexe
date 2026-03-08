@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProductCount, fetchProductsByFiber } from "@/lib/supabase";
 import { useSEO } from "@/hooks/use-seo";
-import editorialHero from "@/assets/images/fashion_editorial_2.jpg";
+import fabricHero from "@/assets/images/fabric-hero.jpg";
 
 const FABRICS = [
   {
@@ -189,11 +189,11 @@ export default function Materials() {
       <section className="relative -mx-4 md:-mx-8 overflow-hidden">
         <div className="relative h-[50vh] md:h-[65vh] min-h-[380px]">
           <img
-            src={editorialHero}
-            alt="Natural fabric fashion"
-            className="absolute inset-0 w-full h-full object-cover object-top"
+            src={fabricHero}
+            alt="Natural fabric texture — silk, linen, cotton"
+            className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/10" />
           <div className="absolute bottom-0 left-0 right-0 px-5 md:px-10 pb-10 md:pb-14">
             <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-white/60 mb-3">
               {productCount > 0 ? `${productCount.toLocaleString()} Verified Products` : "17,553 Verified Products"}
