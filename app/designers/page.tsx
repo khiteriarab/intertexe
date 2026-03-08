@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
-import { getCuratedScore } from "@/lib/curated-quality-scores";
-import { getBrandProfile } from "@/lib/brand-profiles";
+import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
+import { getCuratedScore } from "../../lib/curated-quality-scores";
+import { getBrandProfile } from "../../lib/brand-profiles";
 import { DesignerSearchClient } from "./DesignerSearchClient";
 
 export const revalidate = 3600;

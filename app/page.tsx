@@ -9,7 +9,7 @@ import {
   fetchProductCount,
   fetchProductCountsByBrand,
 } from "../lib/supabase-server";
-import { getCuratedScore } from "@/lib/curated-quality-scores";
+import { getCuratedScore } from "../lib/curated-quality-scores";
 import { HorizontalProductScroll, BrandGrid } from "./components/HomeClient";
 
 export const revalidate = 3600;

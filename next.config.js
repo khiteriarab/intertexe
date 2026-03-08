@@ -34,7 +34,7 @@ const nextConfig = {
           '**/.local/**',
           '**/.cache/**',
           '**/.upm/**',
-          '**/client/src/**',
+          '**/client/**',
         ],
       };
     }

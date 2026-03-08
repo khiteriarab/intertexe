@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchProductsByFiberAndCategory, fetchDesigners, fetchProductCount } from "../../../lib/supabase-server";
-import { MATERIALS } from "@/lib/data";
+import { MATERIALS } from "../../../lib/data";
 
 export const revalidate = 3600;
 

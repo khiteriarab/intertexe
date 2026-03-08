@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getQualityTier, getTierColor } from "@/lib/quality-tiers";
-import { getCuratedScore } from "@/lib/curated-quality-scores";
-import { getBrandProfile } from "@/lib/brand-profiles";
+import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
+import { getCuratedScore } from "../../lib/curated-quality-scores";
+import { getBrandProfile } from "../../lib/brand-profiles";
 
 export function DesignerSearchClient() {
   const [search, setSearch] = useState("");
