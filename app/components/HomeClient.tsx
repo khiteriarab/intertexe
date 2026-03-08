@@ -225,16 +225,20 @@ interface HomePageData {
   newInProducts: any[];
 }
 
-export function HomePageContent({ initialData }: { initialData: HomePageData }) {
-  const [data, setData] = useState<HomePageData>(initialData);
+export function HomePageContent({ initialData }: { initialData?: HomePageData }) {
+  const [data, setData] = useState<HomePageData>(initialData || {
+    designers: [],
+    productCount: 0,
+    cashmereProducts: [],
+    silkProducts: [],
+    linenProducts: [],
+    productCountByBrand: {},
+    curatedDesigners: [],
+    newInProducts: [],
+  });
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (data.newInProducts.length > 0 && data.curatedDesigners.length > 0) {
-      setLoaded(true);
-      return;
-    }
-
     fetch("/api/homepage")
       .then((r) => {
         if (!r.ok) throw new Error("API error");
