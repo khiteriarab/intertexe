@@ -163,22 +163,16 @@ export default function Home() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: khaiteProducts = [] } = useQuery({
-    queryKey: ["home-khaite-products"],
-    queryFn: () => fetchProductsByBrandWithImages("khaite", 24),
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const { data: frameProducts = [] } = useQuery({
-    queryKey: ["home-frame-products"],
-    queryFn: () => fetchProductsByBrandWithImages("frame", 24),
+  const { data: dieselProducts = [] } = useQuery({
+    queryKey: ["home-diesel-products"],
+    queryFn: () => fetchProductsByBrandWithImages("diesel", 24),
     staleTime: 10 * 60 * 1000,
   });
 
   const newInProducts = useMemo(() => {
     const seenIds = new Set<string>();
     const combined: any[] = [];
-    for (const p of [...alcProducts, ...khaiteProducts, ...frameProducts]) {
+    for (const p of [...alcProducts, ...dieselProducts]) {
       if (!seenIds.has(p.id)) {
         seenIds.add(p.id);
         combined.push(p);
@@ -189,7 +183,7 @@ export default function Home() {
       [combined[i], combined[j]] = [combined[j], combined[i]];
     }
     return combined.slice(0, 30);
-  }, [alcProducts, khaiteProducts, frameProducts]);
+  }, [alcProducts, dieselProducts]);
 
   const { data: cashmereProducts = [] } = useQuery({
     queryKey: ["home-cashmere"],
