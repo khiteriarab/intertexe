@@ -225,46 +225,33 @@ interface HomePageData {
   newInProducts: any[];
 }
 
-export function HomePageContent({ initialData }: { initialData: HomePageData }) {
-  const [data, setData] = useState<HomePageData>(initialData);
-  const [fetched, setFetched] = useState(false);
+export function HomePageContent({ initialData }: { initialData?: HomePageData }) {
+  const [data, setData] = useState<HomePageData>(initialData || {
+    designers: [],
+    productCount: 0,
+    cashmereProducts: [],
+    silkProducts: [],
+    linenProducts: [],
+    productCountByBrand: {},
+    curatedDesigners: [],
+    newInProducts: [],
+  });
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const hasData = data.newInProducts.length > 0 && data.curatedDesigners.length > 0;
-    if (hasData || fetched) return;
-
-    let retries = 0;
-    const maxRetries = 2;
-
-    const fetchData = () => {
-      fetch("/api/homepage")
-        .then((r) => {
-          if (!r.ok) throw new Error("API error");
-          return r.json();
-        })
-        .then((d) => {
-          if (d && !d.error && d.curatedDesigners?.length > 0) {
-            setData(d);
-            setFetched(true);
-          } else if (retries < maxRetries) {
-            retries++;
-            setTimeout(fetchData, 1000 * retries);
-          } else {
-            setFetched(true);
-          }
-        })
-        .catch(() => {
-          if (retries < maxRetries) {
-            retries++;
-            setTimeout(fetchData, 1000 * retries);
-          } else {
-            setFetched(true);
-          }
-        });
-    };
-
-    fetchData();
-  }, [data.newInProducts.length, data.curatedDesigners.length, fetched]);
+    fetch("/api/homepage")
+      .then((r) => {
+        if (!r.ok) throw new Error("API error");
+        return r.json();
+      })
+      .then((d) => {
+        if (d && !d.error) {
+          setData(d);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
 
   const displayCount = data.productCount > 0
     ? new Intl.NumberFormat("en-US").format(data.productCount)

@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import { getHomePageData } from "../lib/homepage-data";
-import { HomePageContent } from "./components/HomeClient";
-
-export const revalidate = 3600;
+import HomeWrapper from "./components/HomeWrapper";
 
 export const metadata: Metadata = {
   title: "INTERTEXE — The Material Standard",
@@ -11,23 +8,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com" },
 };
 
-export default async function HomePage() {
-  let data;
-  try {
-    data = await getHomePageData();
-  } catch (e) {
-    console.error("Homepage data fetch error:", e);
-    data = {
-      designers: [],
-      productCount: 0,
-      cashmereProducts: [],
-      silkProducts: [],
-      linenProducts: [],
-      productCountByBrand: {},
-      curatedDesigners: [],
-      newInProducts: [],
-    };
-  }
-
-  return <HomePageContent initialData={data} />;
+export default function HomePage() {
+  return <HomeWrapper />;
 }
