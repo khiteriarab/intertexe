@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Script from "next/script";
 import { Providers } from "./providers";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { Analytics } from "./components/Analytics";
 
 export const metadata: Metadata = {
   title: {
@@ -99,18 +99,7 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-EVKFJLK9BP"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-EVKFJLK9BP');
-          `}
-        </Script>
+        <Analytics />
         <Providers>
           <div className="min-h-screen flex flex-col bg-background text-foreground">
             <Navbar />
