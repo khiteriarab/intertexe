@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "./providers";
-import { Footer } from "./components/Footer";
-import { ClientShell } from "./components/ClientShell";
+import { ClientApp } from "./components/ClientApp";
 
 export const metadata: Metadata = {
   title: {
@@ -77,6 +75,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var r=0;window.addEventListener("error",function(e){if(e&&e.message&&e.message.indexOf("Loading chunk")!==-1&&r<3){r++;setTimeout(function(){window.location.reload()},1500)}},true);window.addEventListener("unhandledrejection",function(e){if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf("Loading chunk")!==-1&&r<3){r++;setTimeout(function(){window.location.reload()},1500)}},true)})();`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -97,11 +101,9 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <Providers>
-          <ClientShell footer={<Footer />}>
-            {children}
-          </ClientShell>
-        </Providers>
+        <ClientApp>
+          {children}
+        </ClientApp>
       </body>
     </html>
   );
