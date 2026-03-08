@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
+import { useProductFavorites } from "../hooks/use-product-favorites";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear";
@@ -34,6 +35,9 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 ];
 
 function ProductCard({ product }: { product: any }) {
+  const { toggle, isFavorited } = useProductFavorites();
+  const productId = String(product.id);
+  const saved = isFavorited(productId);
   const name = product.name || "";
   const brandName = product.brandName || product.brand_name || "";
   const imageUrl = product.imageUrl || product.image_url;
@@ -41,17 +45,22 @@ function ProductCard({ product }: { product: any }) {
   const composition = product.composition;
   const shopUrl = product.url || null;
 
+  const CardWrapper = shopUrl ? 'a' : 'div';
+  const wrapperProps = shopUrl ? { href: shopUrl, target: "_blank" as const, rel: "noopener noreferrer" } : {};
+
   return (
-    <a
-      href={shopUrl || undefined}
-      target={shopUrl ? "_blank" : undefined}
-      rel={shopUrl ? "noopener noreferrer" : undefined}
-      className="group flex flex-col cursor-pointer relative"
-      data-testid={`product-card-${product.id}`}
-    >
+    <CardWrapper {...wrapperProps} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
+            className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
+            data-testid={`btn-favorite-${product.id}`}
+            aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+          >
+            <Heart className={`w-4 h-4 drop-shadow-sm transition-colors ${saved ? "fill-red-500 text-red-500" : "text-white/80"}`} />
+          </button>
         </div>
       ) : (
         <div className="aspect-[3/4] bg-[#f5f5f3] flex items-center justify-center">
@@ -68,7 +77,7 @@ function ProductCard({ product }: { product: any }) {
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>
         )}
       </div>
-    </a>
+    </CardWrapper>
   );
 }
 
@@ -93,10 +102,12 @@ export default function ShopClient({
   initialProducts,
   initialTotal,
   totalProductCount,
+  fiberCounts = {},
 }: {
   initialProducts: any[];
   initialTotal: number;
   totalProductCount: number;
+  fiberCounts?: Record<string, number>;
 }) {
   const [fiberTab, setFiberTab] = useState<FiberTab>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -107,9 +118,9 @@ export default function ShopClient({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [products, setProducts] = useState(initialProducts);
-  const [resultTotal, setResultTotal] = useState(initialTotal);
-  const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState(initialProducts || []);
+  const [resultTotal, setResultTotal] = useState(initialTotal || 0);
+  const [isLoading, setIsLoading] = useState(!initialProducts?.length);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -120,9 +131,12 @@ export default function ShopClient({
   }, [searchQuery]);
 
   useEffect(() => {
-    if (fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && !debouncedSearch && visibleCount === 60) {
+    const isDefaultState = fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && !debouncedSearch && visibleCount === 60;
+
+    if (isDefaultState && initialProducts?.length > 0) {
       setProducts(initialProducts);
       setResultTotal(initialTotal);
+      setIsLoading(false);
       return;
     }
 
@@ -208,6 +222,9 @@ export default function ShopClient({
                 data-testid={`tab-fiber-${tab.key}`}
               >
                 {tab.label}
+                {tab.key !== "all" && fiberCounts[tab.key] ? (
+                  <span className="ml-1.5 opacity-50">({fiberCounts[tab.key]})</span>
+                ) : null}
               </button>
             ))}
           </div>

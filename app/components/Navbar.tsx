@@ -19,9 +19,13 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
+    setHasMounted(true);
+    const token = typeof window !== "undefined" ? localStorage.getItem("intertexe_auth_token") : null;
+    if (!token) return;
+    fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.ok ? r.json() : null)
       .then((user) => setIsAuthenticated(!!user))
       .catch(() => setIsAuthenticated(false));
@@ -58,7 +62,7 @@ export function Navbar() {
     { name: "Fabrics", href: "/materials", icon: Layers },
     { name: "Scan", href: "/scanner", icon: Scan },
     { name: "Shop", href: "/shop", icon: ShoppingBag },
-    { name: "Account", href: "/account", icon: isAuthenticated ? UserCheck : User },
+    { name: "Account", href: "/account", icon: (hasMounted && isAuthenticated) ? UserCheck : User },
   ];
 
   return (
@@ -93,7 +97,7 @@ export function Navbar() {
               {searchOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Search className="w-5 h-5" strokeWidth={1.5} />}
             </button>
             <Link href="/account" className="hidden md:block p-2 text-foreground hover:text-foreground/70 transition-colors" data-testid="link-account">
-              {isAuthenticated ? (
+              {hasMounted && isAuthenticated ? (
                 <UserCheck className="w-5 h-5" strokeWidth={1.5} />
               ) : (
                 <User className="w-5 h-5" strokeWidth={1.5} />

@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
-import { ScrollToTop } from "./components/ScrollToTop";
-import { Analytics } from "./components/Analytics";
+import { ClientShell } from "./components/ClientShell";
 
 export const metadata: Metadata = {
   title: {
@@ -99,16 +97,10 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <Analytics />
         <Providers>
-          <div className="min-h-screen flex flex-col bg-background text-foreground">
-            <Navbar />
-            <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-20 md:pb-0">
-              {children}
-            </main>
-            <Footer />
-            <ScrollToTop />
-          </div>
+          <ClientShell footer={<Footer />}>
+            {children}
+          </ClientShell>
         </Providers>
       </body>
     </html>
