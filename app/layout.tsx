@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClientApp } from "./components/ClientApp";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: {
@@ -104,6 +106,8 @@ export default function RootLayout({
         <ClientApp>
           {children}
         </ClientApp>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
