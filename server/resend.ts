@@ -62,6 +62,53 @@ export async function sendWelcomeEmail(toEmail: string, name?: string | null) {
   }
 }
 
+export async function sendPasswordResetEmail(toEmail: string, name: string, resetUrl: string) {
+  try {
+    const { client, fromEmail } = await getFreshResendClient();
+
+    await client.emails.send({
+      from: fromEmail || "INTERTEXE <noreply@intertexe.com>",
+      to: toEmail,
+      subject: "Reset Your INTERTEXE Password",
+      html: buildResetHtml(name, resetUrl),
+    });
+
+    console.log(`Password reset email sent to ${toEmail}`);
+  } catch (err: any) {
+    console.error("Failed to send password reset email:", err.message);
+  }
+}
+
+function buildResetHtml(name: string, resetUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#FAFAF8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAFAF8;padding:40px 20px;">
+<tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border:1px solid #e8e8e5;">
+<tr><td style="padding:40px 36px 20px;text-align:center;">
+<h1 style="margin:0;font-size:20px;font-weight:400;letter-spacing:0.15em;color:#111111;">INTERTEXE</h1>
+</td></tr>
+<tr><td style="padding:10px 36px 30px;text-align:center;">
+<h2 style="margin:0 0 16px;font-size:22px;font-weight:400;color:#111111;font-family:Georgia,serif;">Reset Your Password</h2>
+<p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#555555;">Hi ${name}, we received a request to reset your password. Click the button below to choose a new one.</p>
+<a href="${resetUrl}" style="display:inline-block;background-color:#111111;color:#ffffff;text-decoration:none;padding:14px 40px;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;">Reset Password</a>
+<p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#999999;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+</td></tr>
+<tr><td style="padding:24px 36px;border-top:1px solid #f0f0ee;text-align:center;">
+<p style="margin:0;font-size:11px;color:#bbbbbb;letter-spacing:0.1em;">INTERTEXE — Google for Natural-Fabric Fashion</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
 function buildWelcomeHtml(name: string): string {
   return `<!DOCTYPE html>
 <html lang="en">

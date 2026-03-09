@@ -99,6 +99,62 @@ export async function getUserByUsername(username: string) {
   }
 }
 
+export function createResetToken(userId: string): string {
+  const exp = Date.now() + 60 * 60 * 1000;
+  const payload = `reset.${userId}.${exp}`;
+  const sig = createHmac("sha256", TOKEN_SECRET).update(payload).digest("hex");
+  return Buffer.from(JSON.stringify({ userId, exp, sig, type: "reset" })).toString("base64url");
+}
+
+export function verifyResetToken(token: string): { userId: string } | null {
+  try {
+    const decoded = JSON.parse(Buffer.from(token, "base64url").toString());
+    const { userId, exp, sig, type } = decoded;
+    if (!userId || !exp || !sig || type !== "reset") return null;
+    if (Date.now() > exp) return null;
+    const expected = createHmac("sha256", TOKEN_SECRET).update(`reset.${userId}.${exp}`).digest("hex");
+    if (sig !== expected) return null;
+    return { userId };
+  } catch {
+    return null;
+  }
+}
+
+export async function updateUserPassword(userId: string, newHashedPassword: string): Promise<boolean> {
+  const supabase = getServerSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase.from("users").update({ password: newHashedPassword }).eq("id", userId);
+  return !error;
+}
+
+export async function updateUserProfile(userId: string, updates: { name?: string; email?: string }): Promise<any | null> {
+  const supabase = getServerSupabase();
+  if (!supabase) return null;
+  const cleanUpdates: Record<string, string> = {};
+  if (updates.name !== undefined) cleanUpdates.name = updates.name;
+  if (updates.email !== undefined) {
+    cleanUpdates.email = updates.email;
+    cleanUpdates.username = updates.email;
+  }
+  const { data, error } = await supabase.from("users").update(cleanUpdates).eq("id", userId).select().single();
+  if (error) {
+    if (error.code === "23505") throw new Error("This email is already in use");
+    throw new Error("Unable to update profile");
+  }
+  return data;
+}
+
+export async function deleteUserAccount(userId: string): Promise<boolean> {
+  const supabase = getServerSupabase();
+  if (!supabase) return false;
+  await supabase.from("product_favorites").delete().eq("user_id", userId);
+  await supabase.from("favorites").delete().eq("user_id", userId);
+  await supabase.from("quiz_results").delete().eq("user_id", userId);
+  await supabase.from("price_watches").delete().eq("user_id", userId);
+  const { error } = await supabase.from("users").delete().eq("id", userId);
+  return !error;
+}
+
 export async function createUser(userData: { username: string; email: string; password: string; name: string | null }) {
   const supabase = getServerSupabase();
   if (!supabase) throw new Error("Unable to create account. Please try again later.");

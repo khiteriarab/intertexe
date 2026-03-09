@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2, TrendingDown } from "lucide-react";
+import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2, TrendingDown, Settings, Pencil, KeyRound, Trash2, ArrowLeft, Check } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { usePriceAlerts } from "../hooks/use-price-alerts";
 import { FABRIC_PERSONAS } from "../../shared/personas";
@@ -35,11 +35,12 @@ interface UserData {
 export default function AccountClient() {
   const [user, setUser] = useState<UserData | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", name: "" });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const fetchMe = useCallback(async () => {
     const token = getToken();
@@ -76,6 +77,20 @@ export default function AccountClient() {
     setSubmitting(true);
 
     try {
+      if (mode === "forgot") {
+        const res = await fetch("/api/auth/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: form.email }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({ message: "Request failed" }));
+          throw new Error(body.message || "Request failed");
+        }
+        setForgotSent(true);
+        return;
+      }
+
       if (mode === "login") {
         const res = await fetch("/api/auth/login", {
           method: "POST",
@@ -141,6 +156,51 @@ export default function AccountClient() {
     return <AccountDashboard user={user} onLogout={handleLogout} />;
   }
 
+  if (mode === "forgot") {
+    return (
+      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-8 md:py-16 px-2">
+        <div className="flex flex-col items-center w-full max-w-md gap-8 md:gap-10">
+          <div className="text-center flex flex-col gap-3">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Reset</span>
+            <h1 className="text-3xl md:text-4xl font-serif">Forgot Password</h1>
+            <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-xs mx-auto">
+              {forgotSent
+                ? "If an account exists with that email, you'll receive a reset link shortly. Check your inbox."
+                : "Enter your email and we'll send you a link to reset your password."
+              }
+            </p>
+          </div>
+
+          {!forgotSent && (
+            <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Email</label>
+                <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                  placeholder="you@example.com"
+                  required data-testid="input-forgot-email" />
+              </div>
+
+              {error && <p className="text-sm text-red-600" data-testid="text-forgot-error">{error}</p>}
+
+              <button type="submit" disabled={submitting}
+                className="mt-2 bg-foreground text-background py-4 uppercase tracking-[0.2em] text-xs font-medium hover:bg-foreground/90 transition-all disabled:opacity-50 active:scale-[0.98]"
+                data-testid="button-send-reset">
+                {submitting ? "Please wait..." : "Send Reset Link"}
+              </button>
+            </form>
+          )}
+
+          <button onClick={() => { setMode("login"); setError(null); setForgotSent(false); }}
+            className="w-full border border-border/60 py-4 uppercase tracking-[0.2em] text-xs font-medium text-foreground hover:border-foreground transition-colors active:scale-[0.98]"
+            data-testid="button-back-to-login">
+            Back to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-8 md:py-16 px-2">
       <div className="flex flex-col items-center w-full max-w-md gap-8 md:gap-10">
@@ -177,7 +237,16 @@ export default function AccountClient() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Password</label>
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Password</label>
+              {mode === "login" && (
+                <button type="button" onClick={() => { setMode("forgot"); setError(null); }}
+                  className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="button-forgot-password">
+                  Forgot?
+                </button>
+              )}
+            </div>
             <div className="relative">
               <input type={showPassword ? "text" : "password"} value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
@@ -219,8 +288,9 @@ export default function AccountClient() {
   );
 }
 
-function AccountDashboard({ user, onLogout }: { user: UserData; onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<"account" | "wishlist" | "quiz">("account");
+function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onLogout: () => void }) {
+  const [user, setUser] = useState<UserData>(initialUser);
+  const [activeTab, setActiveTab] = useState<"account" | "wishlist" | "quiz" | "settings">("account");
   const contentRef = useRef<HTMLDivElement>(null);
   const { favorites: productFavIds, toggle: toggleProductFav, count: productFavCount } = useProductFavorites();
   const { getPriceDrop } = usePriceAlerts();
@@ -230,6 +300,15 @@ function AccountDashboard({ user, onLogout }: { user: UserData; onLogout: () => 
   const [savedProducts, setSavedProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [quizResults, setQuizResults] = useState<any[]>([]);
+
+  const [settingsView, setSettingsView] = useState<"menu" | "profile" | "password" | "delete">("menu");
+  const [profileForm, setProfileForm] = useState({ name: user.name || "", email: user.email || "" });
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [deletePassword, setDeletePassword] = useState("");
+  const [settingsSubmitting, setSettingsSubmitting] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
+  const [showSettingsPassword, setShowSettingsPassword] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -294,11 +373,92 @@ function AccountDashboard({ user, onLogout }: { user: UserData; onLogout: () => 
     } catch {}
   };
 
-  const handleTabChange = (tab: "account" | "wishlist" | "quiz") => {
+  const handleTabChange = (tab: "account" | "wishlist" | "quiz" | "settings") => {
     setActiveTab(tab);
+    if (tab === "settings") {
+      setSettingsView("menu");
+      setSettingsError(null);
+      setSettingsSuccess(null);
+    }
     setTimeout(() => {
       contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
+  };
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsError(null);
+    setSettingsSuccess(null);
+    setSettingsSubmitting(true);
+    try {
+      const token = getToken();
+      const res = await fetch("/api/auth/update-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ name: profileForm.name, email: profileForm.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update profile");
+      setUser(prev => ({ ...prev, name: data.name || profileForm.name, email: data.email || profileForm.email }));
+      setSettingsSuccess("Profile updated successfully");
+    } catch (err: any) {
+      setSettingsError(err.message || "Something went wrong");
+    } finally {
+      setSettingsSubmitting(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsError(null);
+    setSettingsSuccess(null);
+    if (passwordForm.newPassword.length < 6) {
+      setSettingsError("New password must be at least 6 characters");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setSettingsError("New passwords do not match");
+      return;
+    }
+    setSettingsSubmitting(true);
+    try {
+      const token = getToken();
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to change password");
+      setSettingsSuccess("Password changed successfully");
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err: any) {
+      setSettingsError(err.message || "Something went wrong");
+    } finally {
+      setSettingsSubmitting(false);
+    }
+  };
+
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsError(null);
+    setSettingsSubmitting(true);
+    try {
+      const token = getToken();
+      const res = await fetch("/api/auth/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to delete account");
+      clearToken();
+      window.location.href = "/";
+    } catch (err: any) {
+      setSettingsError(err.message || "Something went wrong");
+    } finally {
+      setSettingsSubmitting(false);
+    }
   };
 
   const persona = user.fabricPersona
@@ -309,6 +469,7 @@ function AccountDashboard({ user, onLogout }: { user: UserData; onLogout: () => 
     { id: "account" as const, icon: User, label: "Profile" },
     { id: "wishlist" as const, icon: Heart, label: "Wishlist" },
     { id: "quiz" as const, icon: List, label: "Quiz" },
+    { id: "settings" as const, icon: Settings, label: "Settings" },
   ];
 
   return (
@@ -579,6 +740,150 @@ function AccountDashboard({ user, onLogout }: { user: UserData; onLogout: () => 
                 <Heart className="w-8 h-8 text-muted-foreground/30" />
                 <p className="text-muted-foreground text-sm">You haven&apos;t saved any products or designers yet.</p>
                 <Link href="/shop" className="mt-2 inline-block text-xs uppercase tracking-[0.15em] border-b border-foreground pb-1 active:scale-95 transition-transform" data-testid="link-browse-shop">Browse Shop</Link>
+              </div>
+            )}
+          </section>
+        )}
+
+        {activeTab === "settings" && (
+          <section className="flex flex-col gap-5 md:gap-6 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-border/40 pb-3 md:pb-4">
+              <h2 className="text-xl md:text-2xl font-serif">Settings</h2>
+              <button onClick={() => handleTabChange("account")} className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors md:hidden active:scale-95 py-1 px-2" data-testid="button-back-account-settings">Back</button>
+            </div>
+
+            {settingsView === "menu" && (
+              <div className="flex flex-col gap-0">
+                <button onClick={() => { setSettingsView("profile"); setSettingsError(null); setSettingsSuccess(null); setProfileForm({ name: user.name || "", email: user.email || "" }); }}
+                  className="flex items-center gap-4 py-5 border-b border-border/20 hover:bg-secondary/30 transition-colors text-left px-1 active:scale-[0.99]"
+                  data-testid="button-edit-profile">
+                  <Pencil className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <div className="flex flex-col gap-0.5 flex-1">
+                    <span className="text-sm font-medium">Edit Profile</span>
+                    <span className="text-xs text-muted-foreground">Update your name and email</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </button>
+                <button onClick={() => { setSettingsView("password"); setSettingsError(null); setSettingsSuccess(null); setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" }); }}
+                  className="flex items-center gap-4 py-5 border-b border-border/20 hover:bg-secondary/30 transition-colors text-left px-1 active:scale-[0.99]"
+                  data-testid="button-change-password">
+                  <KeyRound className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <div className="flex flex-col gap-0.5 flex-1">
+                    <span className="text-sm font-medium">Change Password</span>
+                    <span className="text-xs text-muted-foreground">Update your account password</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </button>
+                <button onClick={() => { setSettingsView("delete"); setSettingsError(null); setSettingsSuccess(null); setDeletePassword(""); }}
+                  className="flex items-center gap-4 py-5 border-b border-border/20 hover:bg-secondary/30 transition-colors text-left px-1 active:scale-[0.99]"
+                  data-testid="button-delete-account">
+                  <Trash2 className="w-4 h-4 text-red-500 flex-shrink-0" />
+                  <div className="flex flex-col gap-0.5 flex-1">
+                    <span className="text-sm font-medium text-red-600">Delete Account</span>
+                    <span className="text-xs text-muted-foreground">Permanently remove your account and data</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </button>
+              </div>
+            )}
+
+            {settingsView === "profile" && (
+              <div className="flex flex-col gap-6">
+                <button onClick={() => setSettingsView("menu")} className="flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors self-start active:scale-95" data-testid="button-back-settings">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <form onSubmit={handleProfileUpdate} className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Name</label>
+                    <input type="text" value={profileForm.name} onChange={e => setProfileForm(f => ({ ...f, name: e.target.value }))}
+                      className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                      placeholder="Your name" data-testid="input-profile-name" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Email</label>
+                    <input type="email" value={profileForm.email} onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
+                      className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                      placeholder="you@example.com" required data-testid="input-profile-email" />
+                  </div>
+                  {settingsError && <p className="text-sm text-red-600" data-testid="text-settings-error">{settingsError}</p>}
+                  {settingsSuccess && <p className="text-sm text-emerald-700 flex items-center gap-2" data-testid="text-settings-success"><Check className="w-4 h-4" /> {settingsSuccess}</p>}
+                  <button type="submit" disabled={settingsSubmitting}
+                    className="bg-foreground text-background py-4 uppercase tracking-[0.2em] text-xs font-medium hover:bg-foreground/90 transition-all disabled:opacity-50 active:scale-[0.98]"
+                    data-testid="button-save-profile">
+                    {settingsSubmitting ? "Saving..." : "Save Changes"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {settingsView === "password" && (
+              <div className="flex flex-col gap-6">
+                <button onClick={() => setSettingsView("menu")} className="flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors self-start active:scale-95" data-testid="button-back-settings-pw">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <form onSubmit={handlePasswordChange} className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Current Password</label>
+                    <div className="relative">
+                      <input type={showSettingsPassword ? "text" : "password"} value={passwordForm.currentPassword}
+                        onChange={e => setPasswordForm(f => ({ ...f, currentPassword: e.target.value }))}
+                        className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors pr-14 placeholder:text-muted-foreground/40"
+                        placeholder="Your current password" required data-testid="input-current-password" />
+                      <button type="button" onClick={() => setShowSettingsPassword(!showSettingsPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-1.5 active:scale-90 transition-transform">
+                        {showSettingsPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">New Password</label>
+                    <input type={showSettingsPassword ? "text" : "password"} value={passwordForm.newPassword}
+                      onChange={e => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))}
+                      className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                      placeholder="At least 6 characters" required data-testid="input-new-password" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Confirm New Password</label>
+                    <input type={showSettingsPassword ? "text" : "password"} value={passwordForm.confirmPassword}
+                      onChange={e => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                      className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                      placeholder="Re-enter new password" required data-testid="input-confirm-new-password" />
+                  </div>
+                  {settingsError && <p className="text-sm text-red-600" data-testid="text-settings-error">{settingsError}</p>}
+                  {settingsSuccess && <p className="text-sm text-emerald-700 flex items-center gap-2" data-testid="text-settings-success"><Check className="w-4 h-4" /> {settingsSuccess}</p>}
+                  <button type="submit" disabled={settingsSubmitting}
+                    className="bg-foreground text-background py-4 uppercase tracking-[0.2em] text-xs font-medium hover:bg-foreground/90 transition-all disabled:opacity-50 active:scale-[0.98]"
+                    data-testid="button-update-password">
+                    {settingsSubmitting ? "Updating..." : "Change Password"}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {settingsView === "delete" && (
+              <div className="flex flex-col gap-6">
+                <button onClick={() => setSettingsView("menu")} className="flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors self-start active:scale-95" data-testid="button-back-settings-del">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <div className="border border-red-200 bg-red-50/50 p-5 flex flex-col gap-3">
+                  <h3 className="text-sm font-medium text-red-700">This action is permanent</h3>
+                  <p className="text-xs text-red-600/80 leading-relaxed">Deleting your account will permanently remove all your data including saved designers, product favorites, quiz history, and price watches. This cannot be undone.</p>
+                </div>
+                <form onSubmit={handleDeleteAccount} className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Confirm Your Password</label>
+                    <input type="password" value={deletePassword}
+                      onChange={e => setDeletePassword(e.target.value)}
+                      className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                      placeholder="Enter your password to confirm" required data-testid="input-delete-password" />
+                  </div>
+                  {settingsError && <p className="text-sm text-red-600" data-testid="text-settings-error">{settingsError}</p>}
+                  <button type="submit" disabled={settingsSubmitting}
+                    className="bg-red-600 text-white py-4 uppercase tracking-[0.2em] text-xs font-medium hover:bg-red-700 transition-all disabled:opacity-50 active:scale-[0.98]"
+                    data-testid="button-confirm-delete">
+                    {settingsSubmitting ? "Deleting..." : "Delete My Account"}
+                  </button>
+                </form>
               </div>
             )}
           </section>
