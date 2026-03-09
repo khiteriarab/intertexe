@@ -7,7 +7,11 @@ const scryptAsync = promisify(scrypt);
 let _tokenSecret: string | null = null;
 function getTokenSecret(): string {
   if (!_tokenSecret) {
-    _tokenSecret = process.env.TOKEN_SECRET || process.env.SUPABASE_ANON_KEY || null;
+    _tokenSecret = process.env.TOKEN_SECRET
+      || process.env.SUPABASE_ANON_KEY
+      || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      || process.env.VITE_SUPABASE_ANON_KEY
+      || null;
     if (!_tokenSecret) {
       if (process.env.VERCEL || process.env.NODE_ENV === "production") {
         throw new Error("TOKEN_SECRET or SUPABASE_ANON_KEY must be set in production");
