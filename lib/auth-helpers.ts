@@ -4,12 +4,19 @@ import { getServerSupabase } from "./supabase-server";
 
 const scryptAsync = promisify(scrypt);
 
-const TOKEN_SECRET = process.env.TOKEN_SECRET || process.env.SUPABASE_ANON_KEY || (() => {
-  if (process.env.VERCEL || process.env.NODE_ENV === "production") {
-    throw new Error("TOKEN_SECRET or SUPABASE_ANON_KEY must be set in production");
+let _tokenSecret: string | null = null;
+function getTokenSecret(): string {
+  if (!_tokenSecret) {
+    _tokenSecret = process.env.TOKEN_SECRET || process.env.SUPABASE_ANON_KEY || null;
+    if (!_tokenSecret) {
+      if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+        throw new Error("TOKEN_SECRET or SUPABASE_ANON_KEY must be set in production");
+      }
+      _tokenSecret = "intertexe-dev-only-secret-key";
+    }
   }
-  return "intertexe-dev-only-secret-key";
-})();
+  return _tokenSecret;
+}
 const TOKEN_TTL = 30 * 24 * 60 * 60 * 1000;
 
 export async function hashPassword(password: string): Promise<string> {
@@ -33,7 +40,7 @@ export async function comparePasswords(supplied: string, stored: string): Promis
 function signToken(userId: string): string {
   const exp = Date.now() + TOKEN_TTL;
   const payload = `${userId}.${exp}`;
-  const sig = createHmac("sha256", TOKEN_SECRET).update(payload).digest("hex");
+  const sig = createHmac("sha256", getTokenSecret()).update(payload).digest("hex");
   return Buffer.from(JSON.stringify({ userId, exp, sig })).toString("base64url");
 }
 
@@ -43,7 +50,7 @@ function verifyToken(token: string): { userId: string; exp: number } | null {
     const { userId, exp, sig } = decoded;
     if (!userId || !exp || !sig) return null;
     if (Date.now() > exp) return null;
-    const expected = createHmac("sha256", TOKEN_SECRET).update(`${userId}.${exp}`).digest("hex");
+    const expected = createHmac("sha256", getTokenSecret()).update(`${userId}.${exp}`).digest("hex");
     if (sig !== expected) return null;
     return { userId, exp };
   } catch {
@@ -102,7 +109,7 @@ export async function getUserByUsername(username: string) {
 export function createResetToken(userId: string): string {
   const exp = Date.now() + 60 * 60 * 1000;
   const payload = `reset.${userId}.${exp}`;
-  const sig = createHmac("sha256", TOKEN_SECRET).update(payload).digest("hex");
+  const sig = createHmac("sha256", getTokenSecret()).update(payload).digest("hex");
   return Buffer.from(JSON.stringify({ userId, exp, sig, type: "reset" })).toString("base64url");
 }
 
@@ -112,7 +119,7 @@ export function verifyResetToken(token: string): { userId: string } | null {
     const { userId, exp, sig, type } = decoded;
     if (!userId || !exp || !sig || type !== "reset") return null;
     if (Date.now() > exp) return null;
-    const expected = createHmac("sha256", TOKEN_SECRET).update(`reset.${userId}.${exp}`).digest("hex");
+    const expected = createHmac("sha256", getTokenSecret()).update(`reset.${userId}.${exp}`).digest("hex");
     if (sig !== expected) return null;
     return { userId };
   } catch {
