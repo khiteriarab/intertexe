@@ -351,6 +351,10 @@ export async function fetchProductsByFiber(fiber: string): Promise<Product[]> {
     .select("*")
     .eq("approved", "yes")
     .ilike("composition", `%${fiber}%`)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
     .order("natural_fiber_percent", { ascending: false });
   if (error || !data) return [];
   return data
@@ -367,6 +371,10 @@ export async function fetchProductsByBrandWithImages(brandSlug: string, limit = 
     .eq("approved", "yes")
     .eq("brand_slug", brandSlug)
     .not("image_url", "is", null)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
     .order("natural_fiber_percent", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
@@ -467,6 +475,10 @@ export async function fetchShopProducts(options: {
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category", { count: "exact" })
     .eq("approved", "yes")
     .not("image_url", "is", null)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
     .in("brand_slug", brandSlugs);
 
   if (search && search.trim().length >= 2) {
