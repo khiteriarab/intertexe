@@ -1,0 +1,51 @@
+11:45:09.738 Running build in Washington, D.C., USA (East) – iad1
+11:45:09.739 Build machine configuration: 2 cores, 8 GB
+11:45:09.749 Cloning github.com/khiteriarab/intertexe (Branch: main, Commit: e166d23)
+11:45:09.750 Skipping build cache, deployment was triggered without cache.
+11:45:22.216 Cloning completed: 12.466s
+11:45:22.658 Running "vercel build"
+11:45:23.324 Vercel CLI 50.28.0
+11:45:24.053 Running "install" command: `npm install`...
+11:45:29.974 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+11:45:29.977 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+11:45:32.524 npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+11:45:44.061 
+11:45:44.062 added 596 packages, and audited 597 packages in 19s
+11:45:44.063 
+11:45:44.063 101 packages are looking for funding
+11:45:44.063   run `npm fund` for details
+11:45:44.091 
+11:45:44.092 16 vulnerabilities (1 low, 8 moderate, 7 high)
+11:45:44.092 
+11:45:44.092 To address issues that do not require attention, run:
+11:45:44.092   npm audit fix
+11:45:44.093 
+11:45:44.093 To address all issues (including breaking changes), run:
+11:45:44.093   npm audit fix --force
+11:45:44.093 
+11:45:44.093 Run `npm audit` for details.
+11:45:44.170 Detected Next.js version: 15.5.12
+11:45:44.170 Running "rm -rf .next && npx next build"
+11:45:45.935 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+11:45:45.936 This information is used to shape Next.js' roadmap and prioritize features.
+11:45:45.936 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+11:45:45.936 https://nextjs.org/telemetry
+11:45:45.936 
+11:45:46.016    ▲ Next.js 15.5.12
+11:45:46.016    - Experiments (use with caution):
+11:45:46.016      · serverActions
+11:45:46.016 
+11:45:46.062    Creating an optimized production build ...
+11:45:58.849  ✓ Compiled successfully in 12.4s
+11:45:58.860    Skipping validation of types
+11:45:58.860    Skipping linting
+11:45:59.204    Collecting page data ...
+11:45:59.599 Error: TOKEN_SECRET or SUPABASE_ANON_KEY must be set in production
+11:45:59.601     at <unknown> (.next/server/chunks/3623.js:1:418)
+11:45:59.601     at <unknown> (.next/server/chunks/3623.js:1:488)
+11:45:59.602 
+11:45:59.603 > Build error occurred
+11:45:59.607 [Error: Failed to collect page data for /api/auth/change-password] {
+11:45:59.607   type: 'Error'
+11:45:59.608 }
+11:45:59.664 Error: Command "rm -rf .next && npx next build" exited with 1
