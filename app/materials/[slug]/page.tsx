@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchProductsByFiberAndCategory, fetchDesigners, fetchProductCount } from "../../../lib/supabase-server";
 import { MATERIALS } from "../../../lib/data";
+import FabricProductGrid from "./FabricProductGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -667,7 +668,6 @@ async function MainFiberPage({ slug }: { slug: string }) {
     })),
   };
 
-  const displayProducts = products.slice(0, 48);
   const fiberName = material?.name || slug.charAt(0).toUpperCase() + slug.slice(1);
 
   return (
@@ -714,59 +714,11 @@ async function MainFiberPage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto w-full px-4 py-8 md:py-10" data-testid="section-shop-fabric">
-        {displayProducts.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-muted-foreground text-sm">No {fiberName.toLowerCase()} products found yet.</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {displayProducts.map((product: any, index: number) => (
-                <a
-                  key={product.productId || index}
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
-                  data-testid={`card-fabric-product-${index}`}
-                >
-                  <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-                    {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={`${product.name} by ${product.brandName}`} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-30"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                      </div>
-                    )}
-                    {product.naturalFiberPercent > 0 && (
-                      <div className="absolute top-2 left-2">
-                        <span className={`px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm ${product.naturalFiberPercent >= 90 ? "bg-emerald-900/90 text-emerald-100" : product.naturalFiberPercent >= 70 ? "bg-emerald-800/80 text-emerald-100" : "bg-amber-800/80 text-amber-100"}`}>
-                          {product.naturalFiberPercent}% natural
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
-                    <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{product.brandName}</span>
-                    <h3 className="text-xs md:text-sm leading-snug font-medium line-clamp-2">{product.name}</h3>
-                    <p className="text-[10px] text-muted-foreground line-clamp-1">{product.composition}</p>
-                    <div className="flex items-center justify-between mt-auto pt-2">
-                      <span className="text-sm font-medium">{product.price}</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground group-hover:text-foreground transition-colors"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-            {products.length > 48 && (
-              <div className="text-center mt-8">
-                <p className="text-xs text-muted-foreground">Showing 48 of {products.length} verified pieces</p>
-              </div>
-            )}
-          </>
-        )}
-      </section>
+      <FabricProductGrid
+        products={products}
+        fiberName={fiberName}
+        totalCount={products.length}
+      />
 
       {material && (
         <section className="bg-foreground text-background" data-testid="section-buying-rules">
@@ -1045,61 +997,11 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
           </div>
         </section>
 
-        <section className="py-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
-              {productsWithImages.length} Verified Pieces
-            </h2>
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Every composition checked
-            </span>
-          </div>
-
-          {productsWithImages.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {productsWithImages.map((product: any, index: number) => (
-                <a
-                  key={product.productId || index}
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
-                  data-testid={`card-curated-product-${index}`}
-                >
-                  <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                      loading="lazy"
-                    />
-                    {product.naturalFiberPercent > 0 && (
-                      <div className="absolute top-2 left-2">
-                        <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                          {product.naturalFiberPercent}% natural
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
-                    <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{product.brandName}</span>
-                    <h3 className="text-xs md:text-sm leading-snug font-medium line-clamp-2">{product.name}</h3>
-                    <p className="text-[10px] text-muted-foreground line-clamp-1">{product.composition}</p>
-                    <div className="flex items-center justify-between mt-auto pt-2">
-                      <span className="text-sm font-medium">{product.price}</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground group-hover:text-foreground transition-colors"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center">
-              <p className="text-sm text-muted-foreground mb-2">No verified {config.fiber.toLowerCase()} pieces in this category yet.</p>
-              <p className="text-xs text-muted-foreground/70">We&apos;re actively adding new verified products. Sign up below to get notified.</p>
-            </div>
-          )}
-        </section>
+        <FabricProductGrid
+          products={productsWithImages}
+          fiberName={config.fiber}
+          totalCount={productsWithImages.length}
+        />
 
         <section className="py-8 border-t border-border/20">
           <div className="flex flex-col gap-4 p-6 md:p-8 bg-secondary/30 border border-border/20">
