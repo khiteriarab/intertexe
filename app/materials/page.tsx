@@ -73,27 +73,28 @@ export default async function MaterialsPage() {
 
   return (
     <div className="flex flex-col" data-testid="page-fabric-hub">
-      <section className="-mx-4 md:-mx-8">
-        <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="flex flex-col justify-center px-6 py-12 md:px-14 md:py-20 lg:px-20 order-2 md:order-1">
-            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-muted-foreground/60 mb-5 md:mb-6">{displayCount} Verified Products</p>
-            <h1 className="text-[2.2rem] md:text-[3.5rem] lg:text-[4.2rem] font-serif leading-[1.05] tracking-[-0.01em] mb-5 md:mb-6" data-testid="text-hub-headline">
+      <section className="relative -mx-4 md:-mx-8 overflow-hidden bg-[#111]">
+        <div className="relative h-[60vh] md:h-[70vh] min-h-[340px] max-h-[600px] md:max-h-[700px] flex flex-col">
+          <div className="absolute inset-0">
+            <img src="/fabric-hero.jpg" alt="Natural fabric texture" className="w-full h-full object-cover opacity-35" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#111]/60 via-[#111]/40 to-[#111]/80" />
+          </div>
+          <div className="relative flex-1 flex flex-col items-center justify-center text-center px-6 md:px-12">
+            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.45em] text-white/35 mb-4 md:mb-5">{displayCount} Verified Products</p>
+            <h1 className="text-[2.2rem] md:text-[4.5rem] lg:text-[5.5rem] font-serif text-white leading-[1] tracking-[-0.02em] mb-4 md:mb-5" data-testid="text-hub-headline">
               The Fabric Edit
             </h1>
-            <div className="w-10 h-[1px] bg-foreground/20 mb-5 md:mb-6" />
-            <p className="text-[13px] md:text-[15px] text-muted-foreground leading-[1.8] max-w-sm mb-8 md:mb-10">
-              The world&apos;s best fashion, organized by what it&apos;s made of. Every composition verified.
+            <div className="w-8 h-[1px] bg-white/20 mb-4 md:mb-5" />
+            <p className="text-[12px] md:text-[14px] text-white/40 max-w-sm leading-[1.7] font-light">
+              The world&apos;s best fashion, organized by what it&apos;s made of.
             </p>
-            <div className="flex flex-wrap gap-x-6 gap-y-3">
-              {FABRICS.map((f) => (
-                <Link key={f.slug} href={`/materials/${f.slug}`} className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 hover:text-foreground transition-colors duration-300 pb-1 border-b border-transparent hover:border-foreground/30">
-                  {f.fabric}
-                </Link>
-              ))}
-            </div>
           </div>
-          <div className="relative aspect-[3/4] md:aspect-auto md:min-h-[520px] lg:min-h-[600px] order-1 md:order-2 overflow-hidden">
-            <img src="/fabric-hero.jpg" alt="Natural fabric texture — silk, linen, cotton" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="relative flex justify-center gap-6 md:gap-12 pb-6 md:pb-8 px-6">
+            {["Cotton", "Linen", "Silk", "Wool", "Cashmere"].map((name) => (
+              <Link key={name} href={`/materials/${name.toLowerCase()}`} className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-white/25 hover:text-white/70 transition-colors duration-500">
+                {name}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
