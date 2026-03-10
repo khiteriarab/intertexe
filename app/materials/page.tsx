@@ -73,14 +73,29 @@ export default async function MaterialsPage() {
 
   return (
     <div className="flex flex-col" data-testid="page-fabric-hub">
-      <section className="relative -mx-4 md:-mx-8 overflow-hidden">
-        <div className="relative h-[50vh] md:h-[65vh] min-h-[380px]">
-          <img src="/fabric-hero.jpg" alt="Natural fabric texture — silk, linen, cotton" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/10" />
-          <div className="absolute bottom-0 left-0 right-0 px-5 md:px-10 pb-10 md:pb-14">
-            <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-white/60 mb-3">{displayCount} Verified Products</p>
-            <h1 className="text-3xl md:text-6xl font-serif text-white mb-3 md:mb-4 leading-[1.1]" data-testid="text-hub-headline">Shop by Fabric</h1>
-            <p className="text-sm md:text-lg text-white/70 max-w-lg leading-relaxed font-light">The world&apos;s best fashion, organized by what it&apos;s made of. Every composition verified.</p>
+      <section className="relative -mx-4 md:-mx-8 overflow-hidden bg-[#111]">
+        <div className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col">
+          <div className="absolute inset-0">
+            <img src="/fabric-hero.jpg" alt="Natural fabric texture" className="w-full h-full object-cover opacity-40" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#111]/80 via-[#111]/50 to-[#111]/90" />
+          </div>
+          <div className="relative flex-1 flex flex-col items-center justify-center text-center px-6 md:px-12">
+            <div className="w-8 h-[1px] bg-white/25 mb-8 md:mb-10" />
+            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.45em] text-white/40 mb-5 md:mb-6">{displayCount} Verified Products</p>
+            <h1 className="text-[2.5rem] md:text-[5.5rem] lg:text-[7rem] font-serif text-white leading-[0.95] tracking-[-0.02em] mb-6 md:mb-8" data-testid="text-hub-headline">
+              The Fabric<br />Edit
+            </h1>
+            <p className="text-[13px] md:text-[15px] text-white/45 max-w-md leading-[1.8] font-light tracking-wide">
+              The world&apos;s best fashion, organized by what it&apos;s made of.<br className="hidden md:block" /> Every composition verified. Every label checked.
+            </p>
+            <div className="w-8 h-[1px] bg-white/25 mt-8 md:mt-10" />
+          </div>
+          <div className="relative flex justify-center gap-8 md:gap-16 pb-10 md:pb-14 px-6">
+            {["Cotton", "Linen", "Silk", "Wool", "Cashmere"].map((name) => (
+              <Link key={name} href={`/materials/${name.toLowerCase()}`} className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-white/80 transition-colors duration-500">
+                {name}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
