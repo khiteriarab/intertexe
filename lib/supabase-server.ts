@@ -457,6 +457,13 @@ export async function fetchRecommendedProducts(
   return scored.slice(0, limit).map(({ row }) => mapProductRow(row));
 }
 
+function parsePrice(price: string | null | undefined): number {
+  if (!price) return Infinity;
+  const cleaned = price.replace(/[^0-9.]/g, "");
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? Infinity : num;
+}
+
 export async function fetchShopProducts(options: {
   fiber?: string;
   category?: string;
@@ -469,6 +476,7 @@ export async function fetchShopProducts(options: {
   if (!supabase) return { products: [], total: 0 };
   const { fiber, category, sort = "recommended", limit = 60, offset = 0, search } = options;
   const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
+  const isPriceSort = sort === "price-low" || sort === "price-high";
 
   let query = supabase
     .from("products")
@@ -487,10 +495,48 @@ export async function fetchShopProducts(options: {
   if (fiber) query = query.ilike("composition", `%${fiber}%`);
   if (category) query = query.ilike("category", `%${category}%`);
 
-  if (sort === "price-low") query = query.order("price", { ascending: true });
-  else if (sort === "price-high") query = query.order("price", { ascending: false });
-  else query = query.order("natural_fiber_percent", { ascending: false });
+  if (isPriceSort) {
+    const pageSize = 1000;
+    let allRows: any[] = [];
+    let fetchOffset = 0;
+    while (true) {
+      let q2 = supabase
+        .from("products")
+        .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
+        .eq("approved", "yes")
+        .not("image_url", "is", null)
+        .not("price", "is", null)
+        .neq("price", "")
+        .neq("price", "$0.00")
+        .neq("price", "0")
+        .in("brand_slug", brandSlugs);
+      if (search && search.trim().length >= 2) q2 = q2.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,composition.ilike.%${search}%`);
+      if (fiber) q2 = q2.ilike("composition", `%${fiber}%`);
+      if (category) q2 = q2.ilike("category", `%${category}%`);
+      q2 = q2.range(fetchOffset, fetchOffset + pageSize - 1);
+      const { data: chunk, error: chunkErr } = await q2;
+      if (chunkErr || !chunk || chunk.length === 0) break;
+      allRows.push(...chunk);
+      if (chunk.length < pageSize) break;
+      fetchOffset += pageSize;
+    }
 
+    const filtered = allRows
+      .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row));
+
+    filtered.sort((a: any, b: any) => {
+      const pa = parsePrice(a.price);
+      const pb = parsePrice(b.price);
+      return sort === "price-low" ? pa - pb : pb - pa;
+    });
+
+    return {
+      products: filtered.slice(offset, offset + limit).map(mapProductRow),
+      total: filtered.length,
+    };
+  }
+
+  query = query.order("natural_fiber_percent", { ascending: false });
   query = query.range(offset, offset + limit - 1);
   const { data, error, count } = await query;
   if (error || !data) return { products: [], total: 0 };
