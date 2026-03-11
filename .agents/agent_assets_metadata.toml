@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "ugCQe6A-o1u88Dz6FK7UI"
+uri = "file://INTERTEXE-SOURCE-CODE.txt"
+type = "text"
+title = "INTERTEXE Full Source Code (688KB)"
