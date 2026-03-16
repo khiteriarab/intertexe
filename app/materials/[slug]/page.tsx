@@ -67,6 +67,7 @@ const CATEGORY_LINKS: Record<string, { label: string; slug: string }[]> = {
     { label: "Tops", slug: "cotton-tops" },
     { label: "Shirts", slug: "cotton-shirts" },
     { label: "Pants", slug: "cotton-pants" },
+    { label: "Denim", slug: "cotton-denim" },
     { label: "Knitwear", slug: "cotton-knitwear" },
   ],
   linen: [
@@ -331,6 +332,28 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
       "\"Stretch denim\" with more than 5% elastane — loses shape quickly",
       "\"Cotton blend\" pants with over 30% polyester",
       "Very cheap cotton trousers — often thin, see-through cotton",
+    ],
+  },
+  "cotton-denim": {
+    slug: "cotton-denim",
+    title: "Best Denim & Jeans in 2026 — 100% Cotton Verified",
+    fiber: "Cotton",
+    category: "bottoms",
+    fiberQuery: ["denim"],
+    heroTitle: "Denim & Jeans",
+    heroSubtitle: "Raw, rigid, real. Every pair verified for 100% cotton construction.",
+    intro: "Real denim is 100% cotton — a sturdy twill weave that moulds to your body over time. But most \"denim\" today is stretch poly-cotton that pills, sags, and never develops character. We checked every label to find jeans and denim pieces made the right way.",
+    buyingTips: [
+      "Raw/selvedge denim is unwashed 100% cotton — it ages beautifully over time",
+      "Japanese selvedge is woven on vintage shuttle looms for tighter, denser weave",
+      "Rigid denim should feel stiff at first — it softens and moulds to your body",
+      "12-14oz weight is ideal for jeans; lighter weights suit jackets and shirts",
+    ],
+    redFlags: [
+      "\"Stretch denim\" with more than 3% elastane — will lose shape after washes",
+      "\"Jeggings\" or \"skinny stretch\" — usually 30%+ polyester, not real denim",
+      "Under $60 for \"premium\" denim — likely thin, low-quality cotton",
+      "\"Denim look\" or \"denim feel\" — this is printed polyester",
     ],
   },
   "silk-blouses": {

@@ -192,8 +192,11 @@ export async function fetchProductsByFiberAndCategory(
     cashmere: ["cashmere"],
   };
 
+  const denimNameTerms = ["denim", "jean"];
+
   const fiberInputs = fiber.split(",").map(f => f.trim().toLowerCase()).filter(Boolean);
   const terms = fiberInputs.flatMap(f => fiberTerms[f] || [f]);
+  const hasDenimTerm = fiberInputs.some(f => f === "denim" || f === "jeans" || f === "jean");
   let allProducts: any[] = [];
 
   for (const term of terms) {
@@ -210,6 +213,24 @@ export async function fetchProductsByFiberAndCategory(
 
     const { data } = await q;
     if (data) allProducts.push(...data);
+  }
+
+  if (hasDenimTerm) {
+    for (const nameTerm of denimNameTerms) {
+      let q = supabase
+        .from("products")
+        .select("*")
+        .ilike("name", `%${nameTerm}%`)
+        .order("natural_fiber_percent", { ascending: false })
+        .limit(limit);
+
+      if (category) {
+        q = q.ilike("category", `%${category}%`);
+      }
+
+      const { data } = await q;
+      if (data) allProducts.push(...data);
+    }
   }
 
   const seen = new Set<string>();
@@ -478,6 +499,18 @@ export async function fetchShopProducts(options: {
   const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
   const isPriceSort = sort === "price-low" || sort === "price-high";
 
+  const searchSynonyms: Record<string, string[]> = {
+    jeans: ["jean", "denim"],
+    jean: ["jeans", "denim"],
+    denim: ["jean", "jeans"],
+  };
+
+  let searchTerms: string[] = [];
+  if (search && search.trim().length >= 2) {
+    const s = search.trim().toLowerCase();
+    searchTerms = [s, ...(searchSynonyms[s] || [])];
+  }
+
   let query = supabase
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category", { count: "exact" })
@@ -489,8 +522,13 @@ export async function fetchShopProducts(options: {
     .neq("price", "0")
     .in("brand_slug", brandSlugs);
 
-  if (search && search.trim().length >= 2) {
-    query = query.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,composition.ilike.%${search}%`);
+  if (searchTerms.length > 0) {
+    const orClauses = searchTerms.flatMap(t => [
+      `name.ilike.%${t}%`,
+      `brand_name.ilike.%${t}%`,
+      `composition.ilike.%${t}%`,
+    ]);
+    query = query.or(orClauses.join(","));
   }
   if (fiber) query = query.ilike("composition", `%${fiber}%`);
   if (category) query = query.ilike("category", `%${category}%`);
@@ -510,7 +548,14 @@ export async function fetchShopProducts(options: {
         .neq("price", "$0.00")
         .neq("price", "0")
         .in("brand_slug", brandSlugs);
-      if (search && search.trim().length >= 2) q2 = q2.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,composition.ilike.%${search}%`);
+      if (searchTerms.length > 0) {
+        const orClauses = searchTerms.flatMap(t => [
+          `name.ilike.%${t}%`,
+          `brand_name.ilike.%${t}%`,
+          `composition.ilike.%${t}%`,
+        ]);
+        q2 = q2.or(orClauses.join(","));
+      }
       if (fiber) q2 = q2.ilike("composition", `%${fiber}%`);
       if (category) q2 = q2.ilike("category", `%${category}%`);
       q2 = q2.range(fetchOffset, fetchOffset + pageSize - 1);
