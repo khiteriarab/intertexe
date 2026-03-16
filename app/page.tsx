@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import HomeWrapper from "./components/HomeWrapper";
+import { getHomePageData } from "../lib/homepage-data";
+import { HomePageContent } from "./components/HomeClient";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "INTERTEXE — The Material Standard",
@@ -8,6 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com" },
 };
 
-export default function HomePage() {
-  return <HomeWrapper />;
+export default async function HomePage() {
+  const data = await getHomePageData();
+  return <HomePageContent initialData={data} />;
 }

@@ -236,9 +236,9 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     curatedDesigners: [],
     newInProducts: [],
   });
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    if (initialData && initialData.productCount > 0) return;
     fetch("/api/homepage")
       .then((r) => {
         if (!r.ok) throw new Error("API error");
@@ -249,8 +249,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           setData(d);
         }
       })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
+      .catch(() => {});
   }, []);
 
   const displayCount = data.productCount > 0
