@@ -3,6 +3,7 @@ import Link from "next/link";
 import { fetchProductsByFiberAndCategory, fetchDesigners, fetchProductCount } from "../../../lib/supabase-server";
 import { MATERIALS } from "../../../lib/data";
 import FabricProductGrid from "./FabricProductGrid";
+import EmailCapture from "../../components/EmailCapture";
 
 export const dynamic = "force-dynamic";
 
@@ -1004,30 +1005,7 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
         />
 
         <section className="py-8 border-t border-border/20">
-          <div className="flex flex-col gap-4 p-6 md:p-8 bg-secondary/30 border border-border/20">
-            <div className="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground/60"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <h3 className="text-xs uppercase tracking-[0.2em] font-medium">Get notified</h3>
-            </div>
-            <p className="text-sm text-foreground/70">
-              We add new verified pieces every week. Get notified when we find {config.fiber.toLowerCase()} items that meet our standards.
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="flex-1 px-4 py-3 bg-background border border-border/40 text-sm focus:outline-none focus:border-foreground/40 transition-colors"
-                data-testid="input-email-capture"
-              />
-              <button
-                type="button"
-                className="px-6 py-3 bg-foreground text-background text-xs uppercase tracking-widest hover:bg-foreground/90 transition-colors"
-                data-testid="button-email-submit"
-              >
-                Notify Me
-              </button>
-            </div>
-          </div>
+          <EmailCapture fiberName={config.fiber} />
         </section>
 
         {parentFiber && (

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import ShopWrapper from "./ShopWrapper";
+import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
+import ShopClient from "./ShopClient";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Shop Verified Products — Search by Fabric",
@@ -7,6 +10,19 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com/shop" },
 };
 
-export default function ShopPage() {
-  return <ShopWrapper />;
+export default async function ShopPage() {
+  const [shopData, totalProductCount, fiberCounts] = await Promise.all([
+    fetchShopProducts({ sort: "recommended", limit: 60, offset: 0 }),
+    fetchProductCount(),
+    fetchFiberCounts(),
+  ]);
+
+  return (
+    <ShopClient
+      initialProducts={shopData.products || []}
+      initialTotal={shopData.total || 0}
+      totalProductCount={totalProductCount}
+      fiberCounts={fiberCounts}
+    />
+  );
 }
