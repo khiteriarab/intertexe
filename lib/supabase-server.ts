@@ -142,7 +142,12 @@ export async function fetchDesigners(query?: string, limit?: number): Promise<De
   if (limit) q = q.limit(limit);
   const { data, error } = await q;
   if (error || !data) return [];
-  return data.map(mapDesignerRow);
+  const seen = new Set<string>();
+  return data.map(mapDesignerRow).filter(d => {
+    if (seen.has(d.slug)) return false;
+    seen.add(d.slug);
+    return true;
+  });
 }
 
 export async function fetchDesignerBySlug(slug: string): Promise<Designer | null> {
@@ -152,9 +157,9 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
     .from("designers")
     .select("*")
     .eq("slug", slug)
-    .single();
-  if (error || !data) return null;
-  return mapDesignerRow(data);
+    .limit(1);
+  if (error || !data || data.length === 0) return null;
+  return mapDesignerRow(data[0]);
 }
 
 export async function fetchProductById(id: string): Promise<Product | null> {
