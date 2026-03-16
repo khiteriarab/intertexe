@@ -368,7 +368,7 @@ export default function ScannerClient() {
             <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm mb-6" data-testid="text-scan-error">{error}</div>
           )}
 
-          <Link href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-scanner">
+          <Link href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98] mb-8" data-testid="link-chat-from-scanner">
             <MessageCircle className="w-4 h-4 flex-shrink-0" />
             <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Ask Our AI Advisor</span>
             <ArrowRight className="w-3.5 h-3.5 text-white/40 ml-auto flex-shrink-0" />
@@ -552,7 +552,7 @@ export default function ScannerClient() {
             </div>
           )}
 
-          <Link href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98]" data-testid="link-chat-from-results">
+          <Link href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98] mb-8" data-testid="link-chat-from-results">
             <MessageCircle className="w-4 h-4 flex-shrink-0" />
             <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Ask Our AI Advisor</span>
             <ArrowRight className="w-3.5 h-3.5 text-white/40 ml-auto flex-shrink-0" />

@@ -7,6 +7,7 @@ import { Navbar } from "./Navbar";
 import { ScrollToTop } from "./ScrollToTop";
 import { Analytics } from "./Analytics";
 import { Footer } from "./Footer";
+import { EmailBanner } from "./EmailBanner";
 
 export function ClientApp({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -38,6 +39,7 @@ export function ClientApp({ children }: { children: ReactNode }) {
           {children}
         </main>
         <Footer />
+        <EmailBanner />
         <ScrollToTop />
       </div>
       <Toaster position="top-right" />
