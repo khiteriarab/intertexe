@@ -130,7 +130,7 @@ export const BRAND_PROFILES: Record<string, BrandProfile> = {
     intro: "French luxury house founded in 1994, synonymous with effortless Parisian cool. Isabel Marant's collections balance bohemian spirit with sharp tailoring, built on a foundation of cotton, wool, silk, and linen. The Étoile diffusion line brings the same material philosophy at more accessible prices.",
     materialStrengths: ["Cotton", "Wool", "Silk", "Linen"],
     priceRange: "$150 – $2,500",
-    naturalFiberEstimate: 71,
+    naturalFiberEstimate: 73,
     foundedYear: 1994,
     headquarters: "Paris",
   },
