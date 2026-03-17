@@ -62,9 +62,18 @@ export async function getHomePageData(): Promise<HomePageData> {
   const seenIds = new Set<string>();
   const newInProducts: any[] = [];
   const maxPerBrand = 5;
+  const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts"]);
   for (const products of brandProductLists) {
+    const sorted = [...products].sort((a, b) => {
+      const aEditorial = editorialCategories.has(a.category) ? 1 : 0;
+      const bEditorial = editorialCategories.has(b.category) ? 1 : 0;
+      if (bEditorial !== aEditorial) return bEditorial - aEditorial;
+      const aPrice = parseFloat((a.price || "0").replace(/[^0-9.]/g, "")) || 0;
+      const bPrice = parseFloat((b.price || "0").replace(/[^0-9.]/g, "")) || 0;
+      return bPrice - aPrice;
+    });
     let count = 0;
-    for (const p of products) {
+    for (const p of sorted) {
       if (count >= maxPerBrand) break;
       if (seenIds.has(p.id)) continue;
       if (isZeroPrice(p.price)) continue;
