@@ -191,6 +191,7 @@ async function run() {
   const brands = [
     { slug: 'diesel', name: 'Diesel' },
     { slug: 'a-l-c-', name: 'A.L.C.' },
+    { slug: 'isabel-marant', name: 'Isabel Marant' },
   ];
 
   const results = {};
