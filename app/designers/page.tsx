@@ -28,6 +28,8 @@ const BRANDS_WITH_PRODUCTS: { slug: string; name: string; products: number }[] =
   { slug: "mother", name: "Mother Denim", products: 736 },
   { slug: "club-monaco", name: "Club Monaco", products: 695 },
   { slug: "faithfull-the-brand", name: "Faithfull the Brand", products: 694 },
+  { slug: "isabel-marant", name: "Isabel Marant", products: 543 },
+  { slug: "diesel", name: "Diesel", products: 536 },
   { slug: "ulla-johnson", name: "Ulla Johnson", products: 505 },
   { slug: "dl1961", name: "DL1961", products: 503 },
   { slug: "dissh", name: "Dissh", products: 499 },
