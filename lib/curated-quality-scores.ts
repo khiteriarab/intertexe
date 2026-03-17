@@ -17,7 +17,7 @@ export const CURATED_QUALITY_SCORES: Record<string, number> = {
   "chloe": 83,
   "stella mccartney": 80,
   "acne studios": 78,
-  "isabel marant": 71,
+  "isabel marant": 73,
   "nanushka": 75,
   "proenza schouler": 77,
   "frame": 74,
