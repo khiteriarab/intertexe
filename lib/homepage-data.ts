@@ -74,6 +74,7 @@ export async function getHomePageData(): Promise<HomePageData> {
       .toLowerCase();
   }
 
+  const brandQueues: any[][] = [];
   for (const products of brandProductLists) {
     const sorted = [...products].sort((a, b) => {
       const aEditorial = editorialCategories.has(a.category) ? 1 : 0;
@@ -86,19 +87,33 @@ export async function getHomePageData(): Promise<HomePageData> {
       const bPrice = parseFloat((b.price || "0").replace(/[^0-9.]/g, "")) || 0;
       return bPrice - aPrice;
     });
-    let count = 0;
+    const queue: any[] = [];
     for (const p of sorted) {
-      if (count >= maxPerBrand) break;
+      if (queue.length >= maxPerBrand) break;
       if (seenIds.has(p.id)) continue;
       if (isZeroPrice(p.price)) continue;
       const baseName = getBaseName(p.name);
       if (seenBaseNames.has(baseName)) continue;
-      if (p.image_url && !p.image_url.includes("-D.") && !p.image_url.includes("-E.")) continue;
+      if (p.brand_slug === "isabel-marant" && p.image_url && !p.image_url.includes("-D.")) continue;
       seenIds.add(p.id);
       seenBaseNames.add(baseName);
-      newInProducts.push(p);
-      count++;
+      queue.push(p);
     }
+    if (queue.length > 0) brandQueues.push(queue);
+  }
+
+  let round = 0;
+  while (newInProducts.length < 30) {
+    let added = false;
+    for (const queue of brandQueues) {
+      if (round < queue.length) {
+        newInProducts.push(queue[round]);
+        added = true;
+        if (newInProducts.length >= 30) break;
+      }
+    }
+    if (!added) break;
+    round++;
   }
 
   return {
@@ -109,6 +124,6 @@ export async function getHomePageData(): Promise<HomePageData> {
     linenProducts,
     productCountByBrand,
     curatedDesigners,
-    newInProducts: newInProducts.slice(0, 30),
+    newInProducts,
   };
 }
