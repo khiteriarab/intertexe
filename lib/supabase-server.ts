@@ -601,6 +601,8 @@ export async function fetchShopProducts(options: {
   };
 }
 
+const PRODUCT_CARD_COLS = "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price";
+
 export async function fetchMoreFromBrand(
   productId: string,
   brandSlug: string,
@@ -610,7 +612,7 @@ export async function fetchMoreFromBrand(
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select(PRODUCT_CARD_COLS)
     .eq("brand_slug", brandSlug)
     .eq("approved", "yes")
     .neq("id", productId)
@@ -635,7 +637,7 @@ export async function fetchMoreInFiber(
   if (!primaryFiber) return [];
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select(PRODUCT_CARD_COLS)
     .eq("approved", "yes")
     .neq("id", productId)
     .ilike("composition", `%${primaryFiber}%`)
@@ -660,13 +662,13 @@ export async function fetchMoreAtPrice(
   const high = numPrice * 1.2;
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select(PRODUCT_CARD_COLS)
     .eq("approved", "yes")
     .neq("id", productId)
     .not("image_url", "is", null)
     .not("price", "is", null)
     .order("natural_fiber_percent", { ascending: false })
-    .limit(200);
+    .limit(60);
   if (error || !data) return [];
   const filtered = data
     .filter(isClothingProduct)
