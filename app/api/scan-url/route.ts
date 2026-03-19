@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     let fibers: { fiber: string; percent: number; isNatural: boolean }[] = [];
 
     if (shopifyProduct) {
-      brandName = shopifyProduct.vendor || urlInfo.brand || "";
+      brandName = urlInfo.brand || shopifyProduct.vendor || "";
       productName = shopifyProduct.title || urlInfo.product || "";
       const variant = shopifyProduct.variants?.[0];
       price = variant?.price ? `$${variant.price}` : "";
@@ -178,10 +178,11 @@ export async function POST(request: NextRequest) {
       }
       const tags = (shopifyProduct.tags || []).map((t: string) => t.toLowerCase()).join(" ");
       const titleLower = productName.toLowerCase();
-      category = resolveCategory("", `${titleLower} ${tags}`);
+      const productType = (shopifyProduct.product_type || "").toLowerCase();
+      category = resolveCategory("", `${titleLower} ${tags} ${productType}`);
     }
 
-    if (!brandName || !productName || (!compositionText && !shopifyProduct)) {
+    if (!brandName || !productName || !compositionText) {
       const promptContent = shopifyProduct
         ? `Shopify product data: ${JSON.stringify({ title: shopifyProduct.title, vendor: shopifyProduct.vendor, body_html: shopifyProduct.body_html?.slice(0, 2000), tags: shopifyProduct.tags, product_type: shopifyProduct.product_type })}`
         : pageContent
