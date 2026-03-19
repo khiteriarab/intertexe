@@ -47,7 +47,7 @@ export default async function CashmereClothingPage() {
               </div>
               <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
                 <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{product.brandName}</span>
-                <h3 className="text-xs md:text-sm leading-snug font-medium line-clamp-2">{product.name}</h3>
+                <h3 className="text-xs md:text-sm leading-snug font-medium truncate">{product.name}</h3>
                 <p className="text-[10px] text-muted-foreground line-clamp-1">{product.composition}</p>
                 <div className="flex items-center justify-between mt-auto pt-2"><span className="text-sm font-medium">{product.price}</span><ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" /></div>
               </div>
