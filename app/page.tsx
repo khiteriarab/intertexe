@@ -13,5 +13,10 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const data = await getHomePageData();
-  return <HomePageContent initialData={data} />;
+  return (
+    <>
+      <h1 className="sr-only">INTERTEXE — Shop Fashion by Fabric | Natural Fiber Clothing</h1>
+      <HomePageContent initialData={data} />
+    </>
+  );
 }
