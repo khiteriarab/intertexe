@@ -226,7 +226,7 @@ export default async function ProductPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
           <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden" data-testid="product-image-container">
             {product.imageUrl ? (
-              <img src={product.imageUrl} alt={`${product.brandName} ${product.name}`} className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" data-testid="img-product" />
+              <img src={product.imageUrl + (product.imageUrl.includes("cdn.shopify.com") ? (product.imageUrl.includes("?") ? "&" : "?") + "width=800" : "")} alt={`${product.brandName} ${product.name}`} className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" data-testid="img-product" />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <ShoppingBag className="w-16 h-16 text-muted-foreground/20" />
@@ -362,7 +362,7 @@ export default async function ProductPage({
               {section.items.map((p) => (
                 <Link key={p.id} href={`/product/${p.id}`} className="group flex flex-col shrink-0 w-[42vw] md:w-[22%] snap-start" data-testid={`related-product-${p.id}`}>
                   <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
-                    <img src={p.imageUrl} alt={p.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
+                    <img src={p.imageUrl + (p.imageUrl?.includes("cdn.shopify.com") ? (p.imageUrl.includes("?") ? "&" : "?") + "width=400" : "")} alt={p.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
                     {p.naturalFiberPercent != null && p.naturalFiberPercent >= 90 && (
                       <div className="absolute top-2 left-2">
                         <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
