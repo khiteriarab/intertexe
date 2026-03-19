@@ -379,7 +379,6 @@ export async function fetchProductsByFiber(fiber: string): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .eq("approved", "yes")
     .ilike("composition", `%${fiber}%`)
     .not("price", "is", null)
     .neq("price", "")
@@ -398,7 +397,6 @@ export async function fetchProductsByBrandWithImages(brandSlug: string, limit = 
   const { data, error } = await supabase
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
-    .eq("approved", "yes")
     .eq("brand_slug", brandSlug)
     .not("image_url", "is", null)
     .not("price", "is", null)
@@ -422,7 +420,6 @@ export async function fetchProductCountsByBrand(slugs: string[]): Promise<Record
       .from("products")
       .select("*", { count: "exact", head: true })
       .eq("brand_slug", slug)
-      .eq("approved", "yes")
       .not("image_url", "is", null);
     counts[slug] = count || 0;
   }));
@@ -440,7 +437,6 @@ export async function fetchRecommendedProducts(
   let query = supabase
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
-    .eq("approved", "yes")
     .not("image_url", "is", null)
     .order("natural_fiber_percent", { ascending: false })
     .limit(limit * 5);
@@ -523,7 +519,6 @@ export async function fetchShopProducts(options: {
   let query = supabase
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category", { count: "exact" })
-    .eq("approved", "yes")
     .not("image_url", "is", null)
     .not("price", "is", null)
     .neq("price", "")
@@ -550,7 +545,6 @@ export async function fetchShopProducts(options: {
       let q2 = supabase
         .from("products")
         .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
-        .eq("approved", "yes")
         .not("image_url", "is", null)
         .not("price", "is", null)
         .neq("price", "")
@@ -614,7 +608,6 @@ export async function fetchMoreFromBrand(
     .from("products")
     .select(PRODUCT_CARD_COLS)
     .eq("brand_slug", brandSlug)
-    .eq("approved", "yes")
     .neq("id", productId)
     .not("image_url", "is", null)
     .not("price", "is", null)
@@ -638,7 +631,6 @@ export async function fetchMoreInFiber(
   const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_CARD_COLS)
-    .eq("approved", "yes")
     .neq("id", productId)
     .ilike("composition", `%${primaryFiber}%`)
     .not("image_url", "is", null)
@@ -663,7 +655,6 @@ export async function fetchMoreAtPrice(
   const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_CARD_COLS)
-    .eq("approved", "yes")
     .neq("id", productId)
     .not("image_url", "is", null)
     .not("price", "is", null)
@@ -693,7 +684,6 @@ export async function fetchSaleProducts(options: {
   let query = supabase
     .from("products")
     .select("*", { count: "exact" })
-    .eq("approved", "yes")
     .eq("is_sale", true)
     .not("image_url", "is", null)
     .not("price", "is", null);
