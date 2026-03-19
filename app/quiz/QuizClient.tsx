@@ -71,6 +71,33 @@ export default function QuizClient() {
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("intertexe_auth_token") : null;
     setIsAuthenticated(!!token);
+
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("intertexe_pending_quiz");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.profileType && parsed.recommendation) {
+            setSelections({
+              materials: parsed.materials || [],
+              spend: parsed.priceRange || "",
+              syntheticTolerance: parsed.syntheticTolerance || "",
+              brands: parsed.favoriteBrands || [],
+            });
+            setRecommendation({
+              profileType: parsed.profileType,
+              recommendation: parsed.recommendation,
+              personaId: parsed.personaId,
+              coreValue: parsed.coreValue,
+              buysFor: parsed.buysFor,
+              suggestedDesignerTypes: parsed.suggestedDesignerTypes,
+              recommendedMaterials: parsed.recommendedMaterials,
+            });
+            setCurrentStep(STEPS.length - 1);
+          }
+        } catch {}
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -108,6 +135,11 @@ export default function QuizClient() {
       favoriteBrands: selections.brands,
       profileType: data.profileType,
       recommendation: data.recommendation,
+      personaId: data.personaId,
+      coreValue: data.coreValue,
+      buysFor: data.buysFor,
+      suggestedDesignerTypes: data.suggestedDesignerTypes,
+      recommendedMaterials: data.recommendedMaterials,
       savedAt: new Date().toISOString(),
     };
     localStorage.setItem("intertexe_pending_quiz", JSON.stringify(quizData));
