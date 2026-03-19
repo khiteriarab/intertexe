@@ -53,8 +53,8 @@ const CURATED_IMAGES: Record<string, string> = {
   cotton: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319334/PRESPA/1319334.1.PRESPA?_s=RAABAB0",
   linen: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319452/DARK_OATMEAL/1319452.1.DARK_OATMEAL?_s=RAABAB0",
   silk: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319612/PLUTO_DOT/1319612.1.PLUTO_DOT?_s=RAABAB0",
-  wool: "https://cdn.shopify.com/s/files/1/1519/7996/files/ALEK-CARDIGAN_CLOUD_18117533-154_GHOST_jpg.jpg?v=1758812540&width=800",
-  cashmere: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_JACKSON_CARDIGAN_-_BLACK_A-09-10222-BLK37_009.jpg?v=1762188256&width=800",
+  wool: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_LOUIE_SWEATER_-_IVORY_A-09-11557-IVY1_042.jpg?v=1764179021&width=800",
+  cashmere: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_KIRA_SWEATER_-_BLACK_A-09-11556-BLK26_011.jpg?v=1761771250&width=800",
 };
 
 export default async function MaterialsPage() {
@@ -102,7 +102,7 @@ export default async function MaterialsPage() {
       <section className="-mx-4 md:-mx-8">
         {FABRICS.map((fabric, index) => {
           const isReversed = index % 2 === 1;
-          const imgSrc = images[fabric.slug] || CURATED_IMAGES[fabric.slug];
+          const imgSrc = CURATED_IMAGES[fabric.slug] || images[fabric.slug];
 
           return (
             <div key={fabric.slug} className="grid grid-cols-1 md:grid-cols-2 gap-0" data-testid={`hub-section-${fabric.slug}`}>
