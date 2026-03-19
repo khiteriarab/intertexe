@@ -11,7 +11,7 @@ export async function GET() {
     const baseUrl = "https://www.intertexe.com";
 
     const staticPages = [
-      "", "/materials", "/shop", "/designers", "/designers/all",
+      "", "/materials", "/shop", "/sale", "/designers", "/designers/all",
       "/quiz", "/scanner", "/chat", "/about", "/contact", "/privacy", "/terms",
       "/materials/silk", "/materials/cotton", "/materials/linen", "/materials/wool", "/materials/cashmere",
       "/materials/linen-dresses", "/materials/linen-pants", "/materials/linen-shirts", "/materials/linen-tops",
