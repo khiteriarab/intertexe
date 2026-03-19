@@ -34,6 +34,15 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "price-low", label: "Price: Low to High" },
 ];
 
+function optimizeImageUrl(url: string, width: number): string {
+  if (!url) return url;
+  if (url.includes("cdn.shopify.com")) {
+    const separator = url.includes("?") ? "&" : "?";
+    return url + separator + "width=" + width;
+  }
+  return url;
+}
+
 function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
   const { toggle, isFavorited } = useProductFavorites();
   const productId = String(product.id);
@@ -48,7 +57,7 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
     <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
-          <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} />
+          <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
             className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}

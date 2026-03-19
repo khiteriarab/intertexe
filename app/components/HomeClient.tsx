@@ -6,6 +6,15 @@ import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucid
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
 
+function optimizeImageUrl(url: string, width: number): string {
+  if (!url) return url;
+  if (url.includes("cdn.shopify.com")) {
+    const separator = url.includes("?") ? "&" : "?";
+    return url + separator + "width=" + width;
+  }
+  return url;
+}
+
 function ProductCardSmall({ product, eager }: { product: any; eager?: boolean }) {
   const name = product.name || "";
   const brandName = product.brandName || "";
@@ -22,7 +31,7 @@ function ProductCardSmall({ product, eager }: { product: any; eager?: boolean })
       <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
         {imageUrl ? (
           <img
-            src={imageUrl}
+            src={optimizeImageUrl(imageUrl, 440)}
             alt={name}
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
             loading={eager ? "eager" : "lazy"}
@@ -334,7 +343,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                   >
                     <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
                       {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
+                        <img src={optimizeImageUrl(product.imageUrl, 440)} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <ShoppingBag className="w-6 h-6 text-neutral-300" />
@@ -417,7 +426,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           <div className="absolute inset-0 bg-[#f5f5f5]">
             {data.silkProducts[0]?.imageUrl && (
               <img
-                src={data.silkProducts[0].imageUrl}
+                src={optimizeImageUrl(data.silkProducts[0].imageUrl, 600)}
                 alt="Silk Edit"
                 className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
                 loading="lazy"
@@ -441,7 +450,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           <div className="absolute inset-0 bg-[#f5f5f5]">
             {data.linenProducts[0]?.imageUrl && (
               <img
-                src={data.linenProducts[0].imageUrl}
+                src={optimizeImageUrl(data.linenProducts[0].imageUrl, 600)}
                 alt="Linen Edit"
                 className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
                 loading="lazy"
