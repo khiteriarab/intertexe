@@ -12,16 +12,10 @@ function ProductCardSmall({ product }: { product: any }) {
   const imageUrl = product.imageUrl || "";
   const price = product.price;
   const composition = product.composition;
-  const shopUrl = product.url || null;
-
-  const CardWrapper = shopUrl ? "a" : "div";
-  const wrapperProps = shopUrl
-    ? { href: shopUrl, target: "_blank" as const, rel: "noopener noreferrer" }
-    : {};
 
   return (
-    <CardWrapper
-      {...wrapperProps}
+    <Link
+      href={`/product/${product.id}`}
       className="group flex-shrink-0 w-[160px] md:w-[220px] flex flex-col cursor-pointer"
       data-testid={`product-home-${product.id}`}
     >
@@ -57,7 +51,7 @@ function ProductCardSmall({ product }: { product: any }) {
           <span className="text-[11px] md:text-[12px] mt-0.5">{price}</span>
         )}
       </div>
-    </CardWrapper>
+    </Link>
   );
 }
 

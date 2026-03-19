@@ -229,7 +229,7 @@ export function DesignerDetailProducts({
                     className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
                     data-testid={`card-product-${product.productId || product.id}`}
                   >
-                    <a href={product.url} target="_blank" rel="noopener noreferrer" className="block">
+                    <Link href={`/product/${product.id}`} className="block">
                       <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
                         {product.imageUrl ? (
                           <img
@@ -257,7 +257,7 @@ export function DesignerDetailProducts({
                           <Heart className={`w-3.5 h-3.5 ${favorites.has(String(product.id)) ? "fill-red-500 text-red-500" : "text-foreground/70"}`} />
                         </button>
                       </div>
-                    </a>
+                    </Link>
                     <div className="p-3 flex flex-col gap-1.5 flex-1">
                       <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
                       <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
