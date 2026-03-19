@@ -706,8 +706,29 @@ export async function fetchSaleProducts(options: {
     });
   }
 
+  const brandGroups: Record<string, any[]> = {};
+  for (const row of filtered) {
+    const b = row.brand_slug || "other";
+    if (!brandGroups[b]) brandGroups[b] = [];
+    brandGroups[b].push(row);
+  }
+  const queues = Object.values(brandGroups);
+  const interleaved: any[] = [];
+  let round = 0;
+  while (interleaved.length < filtered.length) {
+    let added = false;
+    for (const q of queues) {
+      if (round < q.length) {
+        interleaved.push(q[round]);
+        added = true;
+      }
+    }
+    if (!added) break;
+    round++;
+  }
+
   return {
-    products: filtered.slice(offset, offset + limit).map(mapProductRow),
-    total: filtered.length,
+    products: interleaved.slice(offset, offset + limit).map(mapProductRow),
+    total: interleaved.length,
   };
 }
