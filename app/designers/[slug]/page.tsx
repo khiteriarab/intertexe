@@ -38,12 +38,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function DesignerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [designer, products] = await Promise.all([
+  const [dbDesigner, products] = await Promise.all([
     fetchDesignerBySlug(slug),
     fetchProductsByBrand(slug),
   ]);
 
-  if (!designer) {
+  const profile = getBrandProfile(slug);
+
+  if (!dbDesigner && !profile) {
     return (
       <div className="py-20 text-center flex flex-col items-center gap-4 max-w-4xl mx-auto px-4">
         <h1 className="text-2xl font-serif" style={{ fontFamily: "Playfair Display, serif" }}>Designer not found</h1>
@@ -54,9 +56,17 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
     );
   }
 
-  const profile = getBrandProfile(slug);
+  const designer = dbDesigner || {
+    name: profile!.name,
+    slug: profile!.slug,
+    description: profile!.intro || "",
+    website: null,
+    naturalFiberPercent: profile!.naturalFiberEstimate ?? null,
+    logoUrl: null,
+  };
+
   const enrichedDesigner = designer.naturalFiberPercent == null
-    ? { ...designer, naturalFiberPercent: getCuratedScore(designer.name) }
+    ? { ...designer, naturalFiberPercent: profile?.naturalFiberEstimate ?? getCuratedScore(designer.name) }
     : designer;
   const tier = getQualityTier(enrichedDesigner.naturalFiberPercent);
 
