@@ -75,18 +75,26 @@ export async function POST(request: NextRequest) {
         content: [
           {
             type: "text",
-            text: `Read this clothing tag/label photo carefully. Extract ALL information visible on the tag.
+            text: `You are analyzing a photo of a clothing tag or label. This could be:
+- The sewn-in composition/care label (inside the garment)
+- The hanging price/brand tag (attached when purchasing)
+- Both tags together in one photo
+- A photo showing the garment itself
+
+Extract ALL information you can see. Use visual clues to determine the garment type — if you can see the garment in the photo, identify what it is (dress, skirt, pants, jacket, sweater, etc.). If you only see a tag, use any product name, description, or style number to infer the category.
 
 Return JSON with these fields:
 {
-  "brandName": "exact brand name from tag",
-  "productName": "product name if visible, or describe the garment type (e.g. 'Knit Sweater', 'Silk Blouse')",
-  "price": "price if visible, include currency symbol",
+  "brandName": "exact brand name visible on any tag",
+  "productName": "product name/style if visible, OR your best description of the garment type (e.g. 'Midi Dress', 'Knit Sweater', 'Tailored Trousers')",
+  "price": "price if visible on hanging tag, include currency symbol",
   "composition": "FULL fiber composition exactly as written, e.g. '70% Cotton, 30% Polyester'",
   "fibers": [{"fiber": "cotton", "percent": 70}, {"fiber": "polyester", "percent": 30}],
   "category": "one of: tops, bottoms, dresses, outerwear, knitwear, skirts, shorts, accessories, other",
+  "garmentType": "specific garment type if identifiable: dress, skirt, pants, jeans, blouse, t-shirt, sweater, cardigan, jacket, coat, blazer, shorts, jumpsuit, etc.",
   "madeIn": "country of manufacture if visible",
-  "careInstructions": "brief care notes if visible"
+  "careInstructions": "brief care notes if visible",
+  "size": "size if visible"
 }
 
 IMPORTANT:
@@ -94,6 +102,8 @@ IMPORTANT:
 - If you see "100% Cotton" return fibers as [{"fiber":"cotton","percent":100}]
 - Include ALL fibers listed, even at small percentages like 2% Elastane
 - If composition is not visible, set composition to null and fibers to []
+- For category: use the hanging tag product name, or garment shape if visible, to determine if it's a dress, skirt, top, etc.
+- If you can see the actual garment (not just a tag), use its visual appearance to determine the garment type and category
 - Only return valid JSON, no markdown.`
           },
           { type: "image_url", image_url: { url: image.startsWith("data:") ? image : `data:image/jpeg;base64,${image}` } },
@@ -128,8 +138,10 @@ IMPORTANT:
     const naturalPercent = Math.min(100, computeNaturalPercent(fibers));
     const isNatural = naturalPercent >= 70;
 
+    const garmentType = (tagInfo.garmentType || "").toLowerCase();
     const productNameLower = (tagInfo.productName || "").toLowerCase();
-    const resolvedCategory = resolveCategory(tagInfo.category || "", productNameLower);
+    const combinedName = `${productNameLower} ${garmentType}`.trim();
+    const resolvedCategory = resolveCategory(tagInfo.category || "", combinedName);
     const priceNum = parsePriceNumber(tagInfo.price || "");
 
     const [designerResult, fuzzyDesignerResult] = await Promise.all([
@@ -222,6 +234,8 @@ IMPORTANT:
         productName: tagInfo.productName || "",
         price: tagInfo.price || "",
         composition: compositionText,
+        garmentType: tagInfo.garmentType || "",
+        size: tagInfo.size || "",
         madeIn: tagInfo.madeIn || "",
         careInstructions: tagInfo.careInstructions || "",
         confidence: fibers.length > 0 ? "high" : compositionText ? "medium" : "low",

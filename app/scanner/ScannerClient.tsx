@@ -9,7 +9,7 @@ import { trackScanStart, trackScanComplete, trackScanError } from "../../lib/ana
 type FiberEntry = { fiber: string; percent: number; isNatural: boolean };
 
 type ScanResult = {
-  tagInfo: { brandName: string; productName: string; price: string; composition: string; madeIn?: string; careInstructions?: string; confidence: string; rawText: string };
+  tagInfo: { brandName: string; productName: string; price: string; composition: string; garmentType?: string; size?: string; madeIn?: string; careInstructions?: string; confidence: string; rawText: string };
   fiberBreakdown: FiberEntry[];
   naturalPercent: number;
   isNatural: boolean;
@@ -355,7 +355,7 @@ export default function ScannerClient() {
         <>
           <div className="pt-8 md:pt-14 pb-6 md:pb-8">
             <h1 className="text-2xl md:text-[40px] font-serif leading-tight mb-2" data-testid="text-scanner-title">Shopping Intelligence</h1>
-            <p className="text-[12px] md:text-sm text-muted-foreground">Photograph any clothing tag — we'll tell you exactly what it's made of.</p>
+            <p className="text-[12px] md:text-sm text-muted-foreground">Photograph any clothing tag — composition label, hanging tag, or both — and we'll tell you exactly what it's made of.</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
@@ -427,7 +427,15 @@ export default function ScannerClient() {
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl md:text-3xl font-serif mb-0.5" data-testid="text-result-brand">{result.tagInfo.brandName}</h2>
                 {result.tagInfo.productName && <p className="text-[13px] text-muted-foreground truncate" data-testid="text-result-product">{result.tagInfo.productName}</p>}
-                {result.tagInfo.price && <p className="text-sm font-medium mt-1" data-testid="text-result-price">{result.tagInfo.price}</p>}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {result.tagInfo.price && <span className="text-sm font-medium" data-testid="text-result-price">{result.tagInfo.price}</span>}
+                  {result.tagInfo.garmentType && (
+                    <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 uppercase tracking-[0.08em]">{result.tagInfo.garmentType}</span>
+                  )}
+                  {result.tagInfo.size && (
+                    <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 uppercase tracking-[0.08em]">Size {result.tagInfo.size}</span>
+                  )}
+                </div>
               </div>
               <NaturalScoreRing percent={pct} />
             </div>
