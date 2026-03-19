@@ -56,7 +56,7 @@ const FIBER_KNOWLEDGE: Record<string, { tip: string; care: string; slug: string 
   hemp: { tip: "Hemp fabric gets softer with every wash and is one of the most durable natural fibres available.", care: "Machine wash warm. It's very durable — the easiest natural fibre to care for.", slug: "cotton" },
 };
 
-function parseComposition(composition: string | null | undefined): { fiber: string; percent: number }[] {
+function parseComposition(composition: string | null | undefined, naturalFiberPercent?: number | null): { fiber: string; percent: number }[] {
   if (!composition) return [];
   const parts: { fiber: string; percent: number }[] = [];
   const matches = Array.from(composition.matchAll(/(\d+)\s*%\s*([a-zA-ZÀ-ÿ\s/()-]+)/g));
@@ -71,6 +71,17 @@ function parseComposition(composition: string | null | undefined): { fiber: stri
       const fiber = m[1].trim().replace(/[,;]+$/, "").trim();
       const percent = parseInt(m[2], 10);
       if (fiber && percent > 0) parts.push({ fiber, percent });
+    }
+  }
+  if (parts.length === 0 && naturalFiberPercent != null && naturalFiberPercent > 0) {
+    const KNOWN_FIBERS = ["silk", "cotton", "linen", "wool", "cashmere", "merino", "mohair", "alpaca", "hemp", "flax", "ramie"];
+    const lower = composition.toLowerCase();
+    const matched = KNOWN_FIBERS.find((f) => lower.includes(f));
+    if (matched) {
+      parts.push({ fiber: matched, percent: naturalFiberPercent });
+      if (naturalFiberPercent < 100) {
+        parts.push({ fiber: "Other", percent: 100 - naturalFiberPercent });
+      }
     }
   }
   return parts.sort((a, b) => b.percent - a.percent);
@@ -145,7 +156,7 @@ export default async function ProductPage({
     notFound();
   }
 
-  const compositionParts = parseComposition(product.composition);
+  const compositionParts = parseComposition(product.composition, product.naturalFiberPercent);
   const primaryFiber = getPrimaryFiber(product.composition);
 
   const [moreFromBrand, moreInFiber, moreAtPrice] = await Promise.all([
@@ -239,9 +250,21 @@ export default async function ProductPage({
                 {product.name}
               </h1>
               {product.price && (
-                <p className="text-lg md:text-xl font-medium mt-1" data-testid="text-price">
-                  {product.price}
-                </p>
+                <div className="flex items-center gap-3 mt-1" data-testid="text-price">
+                  <span className={`text-lg md:text-xl font-medium ${product.isSale ? "text-red-700" : ""}`}>
+                    {product.price}
+                  </span>
+                  {product.isSale && product.originalPrice && (
+                    <>
+                      <span className="text-base md:text-lg text-muted-foreground line-through">
+                        {product.originalPrice}
+                      </span>
+                      <span className="text-xs uppercase tracking-wider font-medium text-red-700 bg-red-50 px-2 py-0.5">
+                        {Math.round((1 - parseFloat(product.price.replace(/[^0-9.]/g, "")) / parseFloat(product.originalPrice.replace(/[^0-9.]/g, ""))) * 100)}% off
+                      </span>
+                    </>
+                  )}
+                </div>
               )}
             </div>
 

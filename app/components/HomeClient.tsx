@@ -217,6 +217,7 @@ interface HomePageData {
   productCountByBrand: Record<string, number>;
   curatedDesigners: any[];
   newInProducts: any[];
+  saleProducts: any[];
 }
 
 export function HomePageContent({ initialData }: { initialData?: HomePageData }) {
@@ -229,6 +230,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     productCountByBrand: {},
     curatedDesigners: [],
     newInProducts: [],
+    saleProducts: [],
   });
 
   useEffect(() => {
@@ -296,6 +298,79 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             linkHref="/shop"
             linkText="Shop New In"
           />
+        </section>
+      )}
+
+      {data.saleProducts && data.saleProducts.length > 0 && (
+        <section className="py-10 md:py-16 border-t border-border/30">
+          <div className="flex flex-col gap-5 md:gap-6">
+            <div className="flex items-center justify-between">
+              <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
+                <div className="flex flex-col">
+                  <span className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-red-700">
+                    The Edit
+                  </span>
+                  <h2 className="text-lg md:text-2xl font-serif group-hover:text-muted-foreground transition-colors">
+                    On Sale
+                  </h2>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            </div>
+            <div className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-2">
+              {data.saleProducts.map((product: any) => {
+                const originalNum = product.originalPrice ? parseFloat(product.originalPrice.replace(/[^0-9.]/g, "")) : 0;
+                const currentNum = product.price ? parseFloat(product.price.replace(/[^0-9.]/g, "")) : 0;
+                const discountPct = originalNum > 0 ? Math.round((1 - currentNum / originalNum) * 100) : 0;
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/product/${product.id}`}
+                    className="group flex-shrink-0 w-[160px] md:w-[220px] flex flex-col cursor-pointer"
+                    data-testid={`product-sale-${product.id}`}
+                  >
+                    <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <ShoppingBag className="w-6 h-6 text-neutral-300" />
+                        </div>
+                      )}
+                      {discountPct > 0 && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <span className="bg-red-700 text-white px-2 py-0.5 text-[9px] uppercase tracking-[0.05em] font-medium">
+                            {discountPct}% off
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-0.5 pt-2.5">
+                      <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">
+                        {product.brandName}
+                      </span>
+                      <h3 className="text-[11px] md:text-[12px] leading-snug line-clamp-2 text-muted-foreground">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px] md:text-[12px] font-medium text-red-700">{product.price}</span>
+                        {product.originalPrice && (
+                          <span className="text-[10px] md:text-[11px] text-muted-foreground line-through">{product.originalPrice}</span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            <Link
+              href="/sale"
+              className="self-start text-[10px] md:text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+              data-testid="link-shop-sale"
+            >
+              Shop All Sale <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
         </section>
       )}
 

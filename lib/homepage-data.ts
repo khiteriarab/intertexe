@@ -5,6 +5,7 @@ import {
   fetchProductsByBrandWithImages,
   fetchProductCount,
   fetchProductCountsByBrand,
+  fetchSaleProducts,
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
 
@@ -30,10 +31,11 @@ export interface HomePageData {
   productCountByBrand: Record<string, number>;
   curatedDesigners: any[];
   newInProducts: any[];
+  saleProducts: any[];
 }
 
 export async function getHomePageData(): Promise<HomePageData> {
-  const [designers, productCount, cashmereProducts, silkProducts, linenProducts, productCountByBrand] =
+  const [designers, productCount, cashmereProducts, silkProducts, linenProducts, productCountByBrand, saleResult] =
     await Promise.all([
       fetchDesigners(undefined, 100),
       fetchProductCount(),
@@ -41,7 +43,10 @@ export async function getHomePageData(): Promise<HomePageData> {
       fetchProductsByFiber("silk").then((p) => p.filter((x) => !isZeroPrice(x.price)).slice(0, 16)),
       fetchProductsByFiber("linen").then((p) => p.filter((x) => !isZeroPrice(x.price)).slice(0, 16)),
       fetchProductCountsByBrand(CURATED_BRAND_SLUGS),
+      fetchSaleProducts({ limit: 12 }),
     ]);
+
+  const saleProducts = saleResult.products.filter((p) => !isZeroPrice(p.price));
 
   const curatedDesignerResults = await Promise.all(
     CURATED_BRAND_SLUGS.map(async (slug) => {
@@ -125,5 +130,6 @@ export async function getHomePageData(): Promise<HomePageData> {
     productCountByBrand,
     curatedDesigners,
     newInProducts,
+    saleProducts,
   };
 }
