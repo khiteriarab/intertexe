@@ -226,7 +226,7 @@ export default async function ProductPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
           <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden" data-testid="product-image-container">
             {product.imageUrl ? (
-              <img src={product.imageUrl} alt={`${product.brandName} ${product.name}`} className="absolute inset-0 w-full h-full object-contain" data-testid="img-product" />
+              <img src={product.imageUrl} alt={`${product.brandName} ${product.name}`} className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" data-testid="img-product" />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <ShoppingBag className="w-16 h-16 text-muted-foreground/20" />

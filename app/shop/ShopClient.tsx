@@ -34,7 +34,7 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "price-low", label: "Price: Low to High" },
 ];
 
-function ProductCard({ product }: { product: any }) {
+function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
   const { toggle, isFavorited } = useProductFavorites();
   const productId = String(product.id);
   const saved = isFavorited(productId);
@@ -48,7 +48,7 @@ function ProductCard({ product }: { product: any }) {
     <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
-          <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
+          <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
             className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
@@ -334,8 +334,8 @@ export default function ShopClient({
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
-              {products.map((product: any) => (
-                <ProductCard key={product.id} product={product} />
+              {products.map((product: any, i: number) => (
+                <ProductCard key={product.id} product={product} eager={i < 8} />
               ))}
             </div>
 

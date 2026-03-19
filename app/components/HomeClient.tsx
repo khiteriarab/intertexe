@@ -6,7 +6,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucid
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
 
-function ProductCardSmall({ product }: { product: any }) {
+function ProductCardSmall({ product, eager }: { product: any; eager?: boolean }) {
   const name = product.name || "";
   const brandName = product.brandName || "";
   const imageUrl = product.imageUrl || "";
@@ -25,7 +25,7 @@ function ProductCardSmall({ product }: { product: any }) {
             src={imageUrl}
             alt={name}
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -61,12 +61,14 @@ export function HorizontalProductScroll({
   subtitle,
   linkHref,
   linkText,
+  eager,
 }: {
   products: any[];
   title: string;
   subtitle?: string;
   linkHref: string;
   linkText: string;
+  eager?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -120,8 +122,8 @@ export function HorizontalProductScroll({
         ref={scrollRef}
         className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-2"
       >
-        {products.map((product: any) => (
-          <ProductCardSmall key={product.id} product={product} />
+        {products.map((product: any, i: number) => (
+          <ProductCardSmall key={product.id} product={product} eager={eager && i < 4} />
         ))}
       </div>
 
@@ -148,7 +150,7 @@ function BrandCardImage({ name, count }: { name: string; count: number }) {
           src={heroUrl}
           alt={`${name} editorial`}
           className="absolute inset-0 w-full h-full object-cover"
-          loading="lazy"
+          loading="eager"
           onError={() => setFailed(true)}
         />
       ) : (
@@ -297,6 +299,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             subtitle={`${displayCount} verified products`}
             linkHref="/shop"
             linkText="Shop New In"
+            eager
           />
         </section>
       )}
