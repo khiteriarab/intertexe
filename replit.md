@@ -1,7 +1,7 @@
 # INTERTEXE
 
 ## Overview
-INTERTEXE is "Google for natural-fabric fashion" — the easiest way to shop luxury fashion made from natural fabrics. Find silk instead of polyester, linen instead of viscose, cotton instead of blends. The Fabric Hub organizes 17,000+ verified products by fiber type (cotton, linen, silk, wool, cashmere) with deep subcategory pages (cotton dresses, silk blouses, linen pants, etc.). Features include quality tier badges, prescriptive buying rules for every fabric, curated subcategory pages, a comprehensive brand directory with tier filters, AI-powered material advice, and verified product-level data scraped from brand websites.
+INTERTEXE is a luxury fashion platform focused on natural fabrics, acting as a "Google for natural-fabric fashion." It enables users to discover and shop for products made from specific natural fibers like cotton, linen, silk, wool, and cashmere, organizing over 17,000 verified products. Key features include quality tier badges, prescriptive buying rules, curated subcategory pages, a comprehensive brand directory, and AI-powered material advice. The platform aims to be the easiest way to shop luxury fashion while prioritizing natural materials, providing verified product-level data, and offering a highly curated shopping experience.
 
 ## User Preferences
 - Brand colors: Background #FAFAF8, Accent #111111
@@ -10,73 +10,39 @@ INTERTEXE is "Google for natural-fabric fashion" — the easiest way to shop lux
 - No border radius (sharp edges throughout)
 
 ## System Architecture
-The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, minimal, and editorial design aesthetic.
+The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, minimal, and editorial design aesthetic, and is optimized for performance and user experience.
 
 **UI/UX Decisions:**
-- **Visuals:** Features a clean, sharp-edged design with no border radius. Typography uses Playfair Display for headings and DM Sans for body text, adhering to a luxury aesthetic.
-- **Mobile-First Design:** The entire platform is responsive and optimized for mobile devices, including touch-optimized interactions and safe-area-inset support for notched phones.
-- **Navigation:** Desktop nav: Fabrics, Shop, Directory, Scanner, Quiz, Chat. Fabrics is the primary CTA. Mobile bottom nav: Home, Fabrics, Scan, Shop, Account.
-- **Shop Page:** Product-first `/shop` page showing 431 verified products organized by material (cashmere, silk, wool, cotton, linen). Fiber tabs filter products, category sub-filters (knitwear, tops, dresses, bottoms, outerwear). Each product card shows image, brand, name, composition, price, and "Shop Now" link via affiliate interstitial.
+- **Visuals:** Features a clean, sharp-edged design with no border radius, using Playfair Display for headings and DM Sans for body text.
+- **Mobile-First Design:** Fully responsive and optimized for mobile devices, including touch-optimized interactions and safe-area-inset support.
+- **Navigation:** Desktop navigation includes Fabrics, Shop, Sale, Directory, Scanner, Quiz, Chat. Mobile bottom navigation includes Home, Fabrics, Scan, Shop, Account.
+- **Shop Page:** Product-first `/shop` page organizes verified products by material with fiber and category sub-filters. Product cards display essential information and link to affiliate partners via an interstitial page.
 
 **Technical Implementations:**
-- **Frontend (Next.js):** Migrated from Vite+React SPA to Next.js 15 App Router for SSR/SSG. All pages in `app/` directory. Server Components for data fetching, Client Components (`"use client"`) for interactivity. Tailwind CSS v4 for styling. Deployed via Vercel.
-- **Previous Frontend (Legacy):** Vite+React SPA code remains in `client/src/` for reference. Uses wouter for routing, TanStack Query for data fetching.
-- **Backend:** All API routes fully migrated to Next.js API routes in `app/api/`. Auth and user-data routes use Supabase directly (no local PostgreSQL dependency). Next.js API routes handle: auth (signup/login/logout/me), designers, products, shop, sitemap, recommend, favorites, product-favorites, quiz, scan-url, scan-tag, conversations (chat).
-- **Server-Side Data:** `lib/supabase-server.ts` provides all Supabase queries for SSR/SSG pages (fetchDesigners, fetchProductById, fetchShopProducts, fetchProductsByFiberAndCategory, etc.).
-- **Database Management:** Supabase is the primary database for ALL data (users, auth, favorites, quiz results, products, designers). Local PostgreSQL (via `DATABASE_URL`) is available in Replit dev but NOT on Vercel. `server/db.ts` uses lazy initialization (Proxy pattern) to avoid build-time crashes when `DATABASE_URL` is missing. Auth tokens use self-contained HMAC-signed tokens (no `auth_tokens` table needed).
-- **Authentication:** `lib/auth-helpers.ts` — all auth operations (login, signup, token verification, user lookup, password reset) use Supabase directly. Tokens are HMAC-signed with the user ID and expiry embedded, verified without database lookup. Password hashing uses scrypt with random salt. Password reset tokens are HMAC-signed with 1-hour expiry.
-- **Product Favorites:** Heart button on all product cards (Shop, Quiz, Scanner, Designer Detail, Product Detail). Saves to localStorage for anonymous users. When logged in, syncs to `product_favorites` table in PostgreSQL via `/api/product-favorites` endpoints. DELETE uses path-based route `/api/product-favorites/[productId]`. On login/signup, any localStorage favorites merge into the user's account automatically. Hook: `app/hooks/use-product-favorites.ts`.
-- **Analytics:** GA4 event tracking via `lib/analytics.ts`. Tracks: affiliate redirects, scan start/complete/error, quiz start/complete, signup, login, product favorites, brand views, material filters, search, chat messages, email captures. GA4 ID: G-EVKFJLK9BP.
-- **Account Dashboard:** 4-tab layout (Profile, Wishlist, Quiz History, Settings) in `app/account/AccountClient.tsx`. Fabric Persona card from `shared/personas.ts`. Saved products with price drop detection. Saved designers with quality tier badges. Settings tab includes: Edit Profile (name/email), Change Password, Delete Account.
-- **Forgot Password Flow:** "Forgot?" link on login form opens inline forgot-password view. Sends HMAC-signed reset token via Resend email. User clicks link to `/reset-password?token=...` page to set new password. After reset, user is auto-logged in.
-- **Account Management APIs:** `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `POST /api/auth/change-password`, `POST /api/auth/update-profile`, `POST /api/auth/delete-account`. Delete account removes all associated data (favorites, product_favorites, quiz_results, price_watches).
-- **Price Watch System:** Shared Supabase `price_watches` table used by both web app and iPhone app. When a user favorites a product, the current price is recorded as `original_price`. The `getPriceDrop` function compares saved price vs current price to detect drops. Anonymous users get localStorage fallback (`intertexe_price_alerts` key). Authenticated users write directly to Supabase via `supabaseGetPriceWatches`, `supabaseSavePriceWatch`, `supabaseRemovePriceWatch` in `client/src/lib/supabase.ts`. Table schema: `id` UUID, `user_id` UUID, `product_id` UUID, `original_price` TEXT, `last_known_price` TEXT, `created_at` TIMESTAMPTZ, UNIQUE(user_id, product_id). Hook: `use-price-alerts.ts`.
-- **AI Integration:** Incorporates OpenAI's GPT-4o-mini for AI-driven material advice and quiz recommendations, with conversation persistence and history management.
-- **Authentication:** Features an email-based signup and login flow, with token persistence in the database. A dual-write sync mechanism ensures data consistency between the local PostgreSQL and Supabase for user-related data.
-- **Quality Tier System:** Implements a clear quality tier system (Exceptional, Excellent, Good, Caution, Under Review) displayed across designer cards and detailed verdicts.
-- **Fabric Persona System:** Assigns one of five fabric personas (e.g., The Purist, The Refined Romantic) to users based on quiz answers, enabling personalized recommendations and content.
-- **Product Verification:** 17,700+ verified women's fashion products across 46+ curated brands stored in Supabase products table with composition, natural fiber %, images, prices. Non-fashion brands cleaned out. Client-side whitelist (`WOMEN_FASHION_BRAND_SLUGS`) ensures only women's fashion brands display.
-- **Rakuten Affiliate Feed:** Diesel US product feed (536 women's clothing products) imported via Rakuten/LinkSynergy FTP feed (`ftp://aftp.linksynergy.com`). Products include affiliate tracking URLs. FTP credentials: user `rkp_4668007`, password in `RAKUTEN_FTP_PASSWORD` secret. Merchant ID 49384.
-- **SEO Product Pages:** 9 material+category pages under `/materials/` (e.g., `/materials/linen-dresses`, `/materials/silk-tops`, `/materials/cashmere-sweaters`) with SEO titles like "Best Linen Dresses in 2026 | INTERTEXE", buying tips, red flags, and email capture.
-- **Shop by Fabric:** General material pages (`/materials/cotton`, `/materials/cashmere`, etc.) now show verified products matching that fabric type with product cards, brand links, composition labels, and external shop links. Products queried via `fetchProductsByFiberAndCategory` with fiber-specific search terms.
-- **SEO Optimization:** Dynamic SEO for designer pages (e.g., "Reformation Quality Review 2026"), product pages, and curated collection pages.
-- **Fabric Hub:** Central `/materials` page organized by fiber type — Cotton, Linen, Silk, Wool, Cashmere — each with subcategory links (cotton-dresses, silk-blouses, linen-pants, etc.). 22 total subcategory pages with verified products, buying tips, and red flags.
-- **Navigation:** Desktop nav: Fabrics, Shop, Directory, Scanner, Quiz, Chat. Fabrics is the primary entry point. Mobile bottom nav: Home, Fabrics, Scan, Shop, Account.
-- **Composition Parsing:** Handles raw material names: "flax"→linen, "wood pulp"→viscose, "Good Earth Cotton"→cotton.
+- **Frontend:** Built with Next.js 15 App Router for SSR/SSG, utilizing Server Components for data fetching and Client Components for interactivity. Styling is managed with Tailwind CSS v4.
+- **Backend:** All API routes are implemented using Next.js API routes. Authentication and user data routes directly interact with Supabase.
+- **Database:** Supabase is the primary database for all application data, including users, authentication, products, and designers.
+- **Authentication:** Features an email-based signup/login flow using Supabase directly, with HMAC-signed tokens for secure user management and password resets. Product favorites are saved to `localStorage` for anonymous users and synced to Supabase upon login.
+- **AI Integration:** Utilizes OpenAI's GPT-4o-mini for AI-driven material advice and quiz recommendations, supporting conversation persistence.
+- **Analytics:** GA4 event tracking is implemented for key user actions and interactions.
+- **Account Management:** Provides a user dashboard with profile management, wishlists, quiz history, and settings, including password changes and account deletion. A price watch system monitors product prices for user favorites.
+- **Product Data:** Integrates a robust system for product verification, data scraping (Shopify JSON endpoints), and categorization, with over 17,000 verified women's fashion products. It includes a `price_watches` system for price drop alerts.
+- **SEO Optimization:** Dynamic SEO is implemented for designer pages, product pages, material/category pages, and curated collection pages, supported by a dynamic sitemap and canonical tags.
+- **Quality Tier System:** A defined quality tier system (Exceptional, Excellent, Good, Caution, Under Review) is applied to designers and products.
+- **Fabric Persona System:** Assigns users a fabric persona based on quiz answers for personalized recommendations.
 
 **Feature Specifications:**
-- **Designer Directory:** A comprehensive, searchable A-Z directory of designers with quality tier filters.
-- **Material Detail Pages:** Rich editorial content for various materials, including origin, characteristics, care, and sustainability, along with recommended designers.
-- **Interactive Quiz:** A multi-step quiz to ascertain user material preferences, leading to persona assignment and tailored recommendations.
-- **Personalized Shop:** A dedicated `shop` page that curates designers and products based on user preferences and fabric persona.
-- **Affiliate Integration:** Implements an interstitial `/leaving` page for affiliate redirects, displaying disclosures and maintaining brand consistency.
-- **Analytics:** Tracks key user events (signup, quiz completion, favorites) for insights.
-- **Products API:** `/api/products` with fiber/category filters, `/api/products/:brandSlug` for brand-specific products.
+- **Designer Directory:** A searchable A-Z directory of designers with quality tier filters.
+- **Material Detail Pages:** Rich editorial content for various materials with recommended designers.
+- **Interactive Quiz:** A multi-step quiz for user material preferences, leading to persona assignment and tailored recommendations.
+- **Personalized Shop:** A dedicated shop page that curates designers and products based on user preferences.
+- **Affiliate Integration:** Implements an interstitial `/leaving` page for affiliate redirects with disclosures.
+- **Product Pages:** Individual product pages (`/product/:id`) include JSON-LD, dynamic SEO, composition breakdown, and related product recommendations.
+- **Sale Page:** A dedicated `/sale` page with fiber type and price threshold filters, featuring products with discounts.
+- **Price Update System:** A daily script (`scripts/update-prices.cjs`) crawls product endpoints to update prices and flag sale items.
 
 ## External Dependencies
-- **OpenAI:** Utilized for AI recommendations and chat functionalities (GPT-4o-mini). Users can connect their own OpenAI API keys.
-- **Supabase:** Serves as the primary database for designer information and as a synchronized data store for user data and products, supporting direct frontend integration for Vercel deployments.
-- **PostgreSQL:** The core database for the Express.js backend, storing user accounts, quiz results, favorites, and verified products.
-- **Resend:** Used for sending branded welcome emails upon user signup.
+- **OpenAI:** Used for AI recommendations and chat functionalities (GPT-4o-mini).
+- **Supabase:** Primary database for all application data (users, auth, products, designers, favorites, quiz results).
+- **Resend:** Utilized for sending transactional emails, such as password reset links and welcome emails.
 - **thum.io:** Employed for generating website screenshots for brand images.
-
-## Product Data
-- **Supabase Migration:** `supabase-products-migration.sql` contains CREATE TABLE + 257 INSERT statements for syncing to Supabase.
-- **Scraper Scripts:** `scripts/scrape-brands.cjs` (Shopify JSON scrapers for Khaite, Anine Bing) and `scripts/sync-to-supabase.cjs` (Supabase sync + migration SQL generation).
-- **Mass Scraping:** `scripts/scrape-priority-brands.cjs` — Shopify JSON scraper targeting 68 known women's fashion brands. Scraped 22,949 products across 67 brands into Supabase. Handles material options, body HTML parsing, and keyword inference for composition extraction.
-- **Non-Scrapable Brands:** ba&sh, Sézane, Ganni, Isabel Marant, Vince, Zara, Theory, Eileen Fisher, COS, Filippa K, and others are protected by Cloudflare or use non-Shopify platforms.
-- **Homepage Brands:** Khaite, Anine Bing, Totême, Frame, Reformation, AGOLDE, Sandro, Acne Studios, Nanushka, The Row (women's-only brands with strong hero images). Diesel removed to prevent men's product images.
-- **Product Detail Pages:** Individual product pages at `/product/:id` for all 17,553 products. Each page includes JSON-LD structured data, dynamic SEO title/meta, composition breakdown, related products. Every product is a long-tail search entry point.
-- **Fabric Category Pages:** Top-level SEO pages: `/cotton-clothing`, `/linen-clothing`, `/silk-clothing`, `/wool-clothing`, `/cashmere-clothing`, `/natural-fabrics`. Target broad search queries.
-- **SEO Sitemap:** Dynamic sitemap at `/api/sitemap` with 17,600+ URLs (products, materials, verified brands). Only brand slugs confirmed in both products AND designers tables. Paginated Supabase queries for all products. `trailingSlash: false` in vercel.json.
-- **Dynamic Canonical Tags:** `DynamicCanonical` component in App.tsx updates `<link rel="canonical">` and `og:url` on every route change (fixes "Alternate page with proper canonical tag" GSC error).
-- **Men's Product Filter:** `isNotMensProduct()` filter in supabase.ts excludes men's products from brand product queries while preserving women's "boxer short" fashion items.
-
-## Brand Directory (Curated Profiles)
-- **Brand Profiles:** `client/src/lib/brand-profiles.ts` — 68 structured brand profiles with editorial intros, material strengths, price ranges, tier classification, HQ, and founding year.
-- **4-Tier System:** Anchor (18 brands), Material-Strong (23 brands), Aspirational Luxury (10 brands), Accessible Premium (17 brands).
-- **Quality Scores:** `client/src/lib/curated-quality-scores.ts` — 100+ brands with curated natural fiber % scores for enriching designer cards.
-- **Hero Images:** `client/src/lib/brand-hero-images.ts` — 40+ brand hero images from official brand websites for homepage and directory cards.
-- **Designer Detail Page:** Enhanced with brand profile data — material strength tags, price range, tier badge, HQ/founding year, editorial intro. Mobile hero image banner added. "Shop" button text updated for affiliate readiness.
-- **Supabase Migration:** `supabase-brand-profiles-migration.sql` — CREATE TABLE + 39 INSERT statements for `brand_profiles` table. Run in Supabase SQL editor to populate data for Vercel deployment.
-- **Navigation:** Desktop nav uses flexbox layout (no absolute positioning) to prevent logo overlap. Mobile bottom nav with safe-area-inset support.

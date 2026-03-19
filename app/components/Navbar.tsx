@@ -51,6 +51,7 @@ export function Navbar() {
   const navLinks = [
     { name: "Fabrics", href: "/materials" },
     { name: "Shop", href: "/shop" },
+    { name: "Sale", href: "/sale" },
     { name: "Directory", href: "/designers" },
     { name: "Scanner", href: "/scanner" },
     { name: "Quiz", href: "/quiz" },

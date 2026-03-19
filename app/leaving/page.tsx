@@ -32,8 +32,10 @@ function LeavingContent() {
     trackAffiliateRedirect(brand, url);
   }, [url, brand]);
 
+  const [manualClicked, setManualClicked] = useState(false);
+
   useEffect(() => {
-    if (!url) return;
+    if (!url || manualClicked) return;
 
     const interval = setInterval(() => {
       setCountdown((prev) => {
@@ -46,7 +48,7 @@ function LeavingContent() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [url]);
+  }, [url, manualClicked]);
 
   if (!url) {
     return (
@@ -81,7 +83,9 @@ function LeavingContent() {
       <div className="flex flex-col items-center gap-6 w-full">
         <a
           href={url}
+          target="_blank"
           rel="noopener noreferrer"
+          onClick={() => setManualClicked(true)}
           className="flex items-center justify-center gap-3 w-full max-w-sm bg-foreground text-background px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground/90 transition-colors active:scale-[0.98]"
           data-testid="link-continue-to-brand"
         >

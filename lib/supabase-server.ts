@@ -49,6 +49,8 @@ export interface Product {
   naturalFiberPercent: number;
   category: string;
   matchingSetId?: string | null;
+  isSale?: boolean;
+  originalPrice?: string | null;
 }
 
 const WOMEN_FASHION_BRAND_SLUGS = new Set([
@@ -71,6 +73,8 @@ function mapProductRow(row: any): Product {
     naturalFiberPercent: row.natural_fiber_percent || 0,
     category: row.category || "",
     matchingSetId: row.matching_set_id || null,
+    isSale: row.is_sale || false,
+    originalPrice: row.original_price || null,
   };
 }
 
@@ -594,5 +598,126 @@ export async function fetchShopProducts(options: {
   return {
     products: data.filter((row: any) => isClothingProduct(row) && isNotMensProduct(row)).map(mapProductRow),
     total: count || 0,
+  };
+}
+
+const PRODUCT_CARD_COLS = "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price";
+
+export async function fetchMoreFromBrand(
+  productId: string,
+  brandSlug: string,
+  limit = 4
+): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("products")
+    .select(PRODUCT_CARD_COLS)
+    .eq("brand_slug", brandSlug)
+    .eq("approved", "yes")
+    .neq("id", productId)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
+}
+
+export async function fetchMoreInFiber(
+  productId: string,
+  composition: string | null,
+  limit = 4
+): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase || !composition) return [];
+  const fibers = ["silk", "cotton", "linen", "wool", "cashmere", "merino", "mohair", "alpaca", "hemp"];
+  const lower = composition.toLowerCase();
+  const primaryFiber = fibers.find((f) => lower.includes(f));
+  if (!primaryFiber) return [];
+  const { data, error } = await supabase
+    .from("products")
+    .select(PRODUCT_CARD_COLS)
+    .eq("approved", "yes")
+    .neq("id", productId)
+    .ilike("composition", `%${primaryFiber}%`)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
+}
+
+export async function fetchMoreAtPrice(
+  productId: string,
+  price: string | null,
+  limit = 4
+): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase || !price) return [];
+  const numPrice = parseFloat(price.replace(/[^0-9.]/g, ""));
+  if (!numPrice || numPrice <= 0) return [];
+  const low = numPrice * 0.8;
+  const high = numPrice * 1.2;
+  const { data, error } = await supabase
+    .from("products")
+    .select(PRODUCT_CARD_COLS)
+    .eq("approved", "yes")
+    .neq("id", productId)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(60);
+  if (error || !data) return [];
+  const filtered = data
+    .filter(isClothingProduct)
+    .filter(isNotMensProduct)
+    .filter((row: any) => {
+      const p = parseFloat((row.price || "0").replace(/[^0-9.]/g, ""));
+      return p >= low && p <= high;
+    });
+  return filtered.slice(0, limit).map(mapProductRow);
+}
+
+export async function fetchSaleProducts(options: {
+  fiber?: string;
+  maxPrice?: number;
+  limit?: number;
+  offset?: number;
+}): Promise<{ products: Product[]; total: number }> {
+  const supabase = getServerSupabase();
+  if (!supabase) return { products: [], total: 0 };
+  const { fiber, maxPrice, limit = 60, offset = 0 } = options;
+
+  let query = supabase
+    .from("products")
+    .select("*", { count: "exact" })
+    .eq("approved", "yes")
+    .eq("is_sale", true)
+    .not("image_url", "is", null)
+    .not("price", "is", null);
+
+  if (fiber && fiber !== "all") {
+    query = query.ilike("composition", `%${fiber}%`);
+  }
+
+  query = query.order("natural_fiber_percent", { ascending: false });
+  const { data, error, count } = await query;
+  if (error || !data) return { products: [], total: 0 };
+
+  let filtered = data
+    .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row));
+
+  if (maxPrice) {
+    filtered = filtered.filter((row: any) => {
+      const p = parseFloat((row.price || "0").replace(/[^0-9.]/g, ""));
+      return p > 0 && p <= maxPrice;
+    });
+  }
+
+  return {
+    products: filtered.slice(offset, offset + limit).map(mapProductRow),
+    total: filtered.length,
   };
 }
