@@ -468,7 +468,9 @@ export default function ScannerClient() {
                 <div>
                   <p className={`text-sm font-medium mb-0.5 ${isGreat ? "text-emerald-900" : pct > 0 ? "text-amber-900" : "text-neutral-800"}`}>
                     {isGreat
-                      ? (result.tagInfo.confidence === "brand-average" ? "Brand Catalog Estimate" : "Natural Fiber Verified")
+                      ? (result.tagInfo.confidence === "brand-average" ? "Brand Catalog Estimate"
+                        : result.tagInfo.confidence === "inferred" ? "Natural Material Detected"
+                        : "Natural Fiber Verified")
                       : pct > 0 ? "Low Natural Fiber Content" : "Explore Natural Alternatives"}
                   </p>
                   <p className={`text-[12px] leading-relaxed ${isGreat ? "text-emerald-700" : pct > 0 ? "text-amber-700" : "text-muted-foreground"}`} data-testid="text-verdict">

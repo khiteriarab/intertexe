@@ -6,6 +6,7 @@ const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
   "jute", "ramie", "bamboo", "merino", "angora", "camel", "vicuna", "yak",
   "flax", "kapok", "coir", "lyocell", "tencel", "modal", "cupro", "viscose",
+  "leather", "suede", "nubuck", "shearling",
 ]);
 
 function parseComposition(raw: string): { fiber: string; percent: number; isNatural: boolean }[] {
@@ -41,7 +42,7 @@ function resolveCategory(aiCategory: string, productNameLower: string): string {
   if (productNameLower.match(/\b(top|blouse|shirt|tee|camisole|tank)\b/)) return "tops";
   if (productNameLower.match(/\b(skirt|skirts)\b/)) return "skirts";
   if (productNameLower.match(/\b(short|shorts)\b/)) return "shorts";
-  if (productNameLower.match(/\b(jacket|coat|blazer|parka|puffer)\b/)) return "outerwear";
+  if (productNameLower.match(/\b(jacket|coat|blazer|parka|puffer|bomber|chaqueta|abrigo|manteau|veste|giubbotto)\b/)) return "outerwear";
   if (productNameLower.match(/\b(sweater|knit|cardigan|pullover|jumper)\b/)) return "knitwear";
   return "";
 }
@@ -51,6 +52,31 @@ function parsePriceNumber(priceStr: string): number | null {
   const match = priceStr.replace(/[^0-9.,]/g, "").replace(/,/g, "");
   const num = parseFloat(match);
   return isNaN(num) ? null : num;
+}
+
+function inferFibersFromName(name: string): { fiber: string; percent: number; isNatural: boolean }[] {
+  const lower = name.toLowerCase();
+  const materialKeywords: Record<string, string> = {
+    "leather": "leather", "cuero": "leather", "piel": "leather", "leder": "leather", "cuir": "leather", "pelle": "leather",
+    "suede": "suede", "ante": "suede", "daim": "suede", "camoscio": "suede", "wildleder": "suede",
+    "silk": "silk", "seda": "silk", "soie": "silk", "seta": "silk", "seide": "silk",
+    "cotton": "cotton", "algodón": "cotton", "algodon": "cotton", "coton": "cotton", "cotone": "cotton", "baumwolle": "cotton",
+    "linen": "linen", "lino": "linen", "lin": "linen", "leinen": "linen",
+    "wool": "wool", "lana": "wool", "laine": "wool", "wolle": "wool",
+    "cashmere": "cashmere", "cachemire": "cashmere", "cachemira": "cashmere", "kaschmir": "cashmere",
+    "mohair": "mohair",
+    "alpaca": "alpaca",
+    "hemp": "hemp", "cáñamo": "hemp", "chanvre": "hemp", "canapa": "hemp",
+    "denim": "cotton",
+  };
+  for (const [keyword, fiber] of Object.entries(materialKeywords)) {
+    const re = new RegExp(`\\b${keyword}\\b`, "i");
+    if (re.test(lower)) {
+      const isNatural = NATURAL_FIBERS.has(fiber) || ["leather", "suede"].includes(fiber);
+      return [{ fiber, percent: 100, isNatural }];
+    }
+  }
+  return [];
 }
 
 function extractInfoFromUrl(url: string): { brand: string; product: string; retailer: string } {
@@ -150,7 +176,10 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
 }
 
 function buildVerdict(naturalPercent: number, compositionText: string): string {
-  if (naturalPercent >= 90) return `Excellent choice — ${naturalPercent}% natural fibers. This is a high-quality material composition.`;
+  const inferred = compositionText.includes("(inferred");
+  if (naturalPercent >= 90) return inferred
+    ? `This appears to be made from natural materials based on the product description — ${naturalPercent}% natural. Verify the label for exact composition.`
+    : `Excellent choice — ${naturalPercent}% natural fibers. This is a high-quality material composition.`;
   if (naturalPercent >= 70) return `Good composition — ${naturalPercent}% natural fibers. A solid natural-fiber garment.`;
   if (naturalPercent >= 40) return `Mixed composition — only ${naturalPercent}% natural fibers. Consider alternatives with higher natural fiber content.`;
   if (naturalPercent > 0) return `Low natural fiber content — only ${naturalPercent}%. This garment is primarily synthetic. We found natural-fiber alternatives below.`;
@@ -352,6 +381,13 @@ Use null for genuinely unknown. For composition, extract from product descriptio
     if (!fibers.length && compositionText) {
       fibers = parseComposition(compositionText);
     }
+    if (!fibers.length) {
+      const nameToCheck = [productName, compositionText, pageContent.slice(0, 500)].filter(Boolean).join(" ");
+      fibers = inferFibersFromName(nameToCheck);
+      if (fibers.length && !compositionText) {
+        compositionText = `${fibers[0].fiber.charAt(0).toUpperCase() + fibers[0].fiber.slice(1)} (inferred from product name)`;
+      }
+    }
     const naturalPercent = Math.min(100, computeNaturalPercent(fibers));
 
     const brandSlug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -389,7 +425,7 @@ Use null for genuinely unknown. For composition, extract from product descriptio
       brandName, productName, price, composition: compositionText,
       fibers, naturalPercent, category,
       brandProducts, designerInfo, alternatives,
-      confidence: compositionText ? "high" : pageContent ? "medium" : "low",
+      confidence: compositionText?.includes("(inferred") ? "inferred" : compositionText ? "high" : pageContent ? "medium" : "low",
       source: `From ${urlInfo.retailer || parsedUrl.hostname}`,
     }));
   } catch (err: any) {
