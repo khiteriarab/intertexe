@@ -268,17 +268,11 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           style={{ paddingBottom: "max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem))" }}
         >
           <h1
-            className="text-[32px] leading-[1.15] md:text-6xl font-serif text-white mb-4 md:mb-6"
+            className="text-[22px] leading-[1.2] md:text-4xl font-serif text-white mb-3 md:mb-5"
             data-testid="text-hero-headline"
           >
-            INTERTEXE
-          </h1>
-          <p
-            className="text-[15px] md:text-xl text-white/90 mb-2 md:mb-3 font-light"
-            data-testid="text-hero-tagline"
-          >
             Shop Fashion by Fabric
-          </p>
+          </h1>
           <p
             className="text-[13px] md:text-lg text-white/70 mb-6 md:mb-8 font-light leading-relaxed max-w-md"
             data-testid="text-hero-subtext"
@@ -520,24 +514,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </Link>
       </section>
 
-      <section className="border-t border-border/20 py-12 md:py-16">
-        <div className="max-w-3xl mx-auto flex flex-col gap-6 text-center">
-          <h2 className="text-lg md:text-xl font-serif">About INTERTEXE</h2>
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            INTERTEXE is the material standard for fashion. We verify the composition of every product we list, so you can shop by the fabric that matters to you. Whether you&apos;re looking for 100% cashmere sweaters, pure silk dresses, genuine linen clothing, or wool coats made from real wool, INTERTEXE makes it easy to find exactly what you want.
-          </p>
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            Unlike traditional fashion search, INTERTEXE ranks every product by its natural fiber content. Browse {displayCount} verified products across brands like Khaite, Toteme, Reformation, Isabel Marant, and more. Filter out polyester and synthetics. Shop smarter with INTERTEXE.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mt-2">
-            <Link href="/materials/silk" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 border border-border/30">Silk Clothing</Link>
-            <Link href="/materials/cashmere" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 border border-border/30">Cashmere Clothing</Link>
-            <Link href="/materials/linen" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 border border-border/30">Linen Clothing</Link>
-            <Link href="/materials/wool" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 border border-border/30">Wool Clothing</Link>
-            <Link href="/materials/cotton" className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 border border-border/30">Cotton Clothing</Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
