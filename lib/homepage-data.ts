@@ -99,7 +99,7 @@ export async function getHomePageData(): Promise<HomePageData> {
       if (isZeroPrice(p.price)) continue;
       const baseName = getBaseName(p.name);
       if (seenBaseNames.has(baseName)) continue;
-      if (p.brand_slug === "isabel-marant" && p.image_url && !p.image_url.includes("-A.")) continue;
+      if (p.brand_slug === "isabel-marant" && p.image_url && !p.image_url.includes("-D.")) continue;
       seenIds.add(p.id);
       seenBaseNames.add(baseName);
       queue.push(p);
