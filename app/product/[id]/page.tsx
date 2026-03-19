@@ -276,22 +276,21 @@ export default async function ProductPage({
               </div>
             )}
 
-            {compositionParts.length > 0 && (
-              <div className="flex flex-col gap-3 py-5 border-y border-border/30">
-                <h2 className="text-[10px] uppercase tracking-[0.2em] font-medium text-muted-foreground">Material Composition</h2>
-                <CompositionBar parts={compositionParts} />
-                {product.composition && (
-                  <p className="text-xs text-muted-foreground mt-1" data-testid="text-composition-raw">{product.composition}</p>
-                )}
+            <div className="flex flex-col gap-0 border border-border/30 bg-[#fafaf8]" data-testid="section-fabric-details">
+              <div className="px-5 py-4 border-b border-border/20">
+                <h2 className="text-[11px] uppercase tracking-[0.2em] font-semibold flex items-center gap-2">
+                  <Leaf className="w-4 h-4 text-emerald-600" />
+                  Fabric Details
+                </h2>
               </div>
-            )}
 
-            {product.naturalFiberPercent != null && (
-              <div className="flex items-center gap-3 px-4 py-3 bg-secondary/50 border border-border/20" data-testid="natural-fiber-indicator">
-                <Leaf className="w-5 h-5 text-emerald-600 shrink-0" />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{product.naturalFiberPercent}% Natural Fiber</span>
-                  <span className="text-[10px] text-muted-foreground">
+              {product.naturalFiberPercent != null && (
+                <div className="px-5 py-4 border-b border-border/20" data-testid="natural-fiber-indicator">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Natural Fiber Content</span>
+                    <span className="text-lg font-serif font-medium">{product.naturalFiberPercent}%</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">
                     {product.naturalFiberPercent >= 90
                       ? "Excellent — predominantly natural materials"
                       : product.naturalFiberPercent >= 70
@@ -299,25 +298,35 @@ export default async function ProductPage({
                         : product.naturalFiberPercent >= 50
                           ? "Moderate — mixed composition"
                           : "Low natural fiber content"}
-                  </span>
+                  </p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {primaryFiber && FIBER_KNOWLEDGE[primaryFiber] && (
-              <div className="flex flex-col gap-3 py-4 border-y border-border/20 bg-[#fafaf8]" data-testid="section-fabric-knowledge">
-                <h3 className="text-[10px] uppercase tracking-[0.2em] font-medium text-muted-foreground px-4">
-                  About {primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}
-                </h3>
-                <p className="text-[12px] text-muted-foreground leading-relaxed px-4">{FIBER_KNOWLEDGE[primaryFiber].tip}</p>
-                <p className="text-[11px] text-muted-foreground/70 px-4">
-                  <span className="font-medium text-muted-foreground">Care:</span> {FIBER_KNOWLEDGE[primaryFiber].care}
-                </p>
-                <Link href={`/materials/${FIBER_KNOWLEDGE[primaryFiber].slug}`} className="text-[10px] uppercase tracking-[0.15em] text-foreground hover:text-muted-foreground transition-colors flex items-center gap-1 px-4" data-testid="link-fiber-guide">
-                  Read the full {primaryFiber} guide <ArrowRight className="w-2.5 h-2.5" />
-                </Link>
-              </div>
-            )}
+              {compositionParts.length > 0 && (
+                <div className="px-5 py-4 border-b border-border/20">
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-3">Composition</p>
+                  <CompositionBar parts={compositionParts} />
+                  {product.composition && (
+                    <p className="text-[11px] text-muted-foreground mt-3" data-testid="text-composition-raw">{product.composition}</p>
+                  )}
+                </div>
+              )}
+
+              {primaryFiber && FIBER_KNOWLEDGE[primaryFiber] && (
+                <div className="px-5 py-4" data-testid="section-fabric-knowledge">
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-2">
+                    About {primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}
+                  </p>
+                  <p className="text-[12px] text-muted-foreground leading-relaxed">{FIBER_KNOWLEDGE[primaryFiber].tip}</p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-2">
+                    <span className="font-medium text-muted-foreground">Care:</span> {FIBER_KNOWLEDGE[primaryFiber].care}
+                  </p>
+                  <Link href={`/materials/${FIBER_KNOWLEDGE[primaryFiber].slug}`} className="text-[10px] uppercase tracking-[0.15em] text-foreground hover:text-muted-foreground transition-colors flex items-center gap-1 mt-3" data-testid="link-fiber-guide">
+                    Read the full {primaryFiber} guide <ArrowRight className="w-2.5 h-2.5" />
+                  </Link>
+                </div>
+              )}
+            </div>
 
             <ProductFavoriteButton productId={String(product.id)} />
 
