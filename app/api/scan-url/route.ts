@@ -169,17 +169,29 @@ function buildResponse(data: {
     : null;
   const brandRating = avgFiber === null ? null : avgFiber >= 95 ? "Exceptional" : avgFiber >= 85 ? "Excellent" : avgFiber >= 70 ? "Good" : "Caution";
 
+  let effectivePercent = data.naturalPercent;
+  let effectiveVerdict = "";
+  let usedBrandAvg = false;
+  if (effectivePercent === 0 && !data.composition && avgFiber !== null && avgFiber > 0) {
+    effectivePercent = avgFiber;
+    usedBrandAvg = true;
+    if (avgFiber >= 90) effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — an excellent brand for natural fabrics.`;
+    else if (avgFiber >= 70) effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — a solid choice for natural materials.`;
+    else effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers. Check the product label to confirm this item's exact composition.`;
+  }
+  if (!effectiveVerdict) effectiveVerdict = buildVerdict(data.naturalPercent, data.composition);
+
   return {
     tagInfo: {
       brandName: data.brandName, productName: data.productName, price: data.price,
       composition: data.composition, garmentType: "", size: "",
       madeIn: "", careInstructions: "",
-      confidence: data.confidence, rawText: data.source,
+      confidence: usedBrandAvg ? "brand-average" : data.confidence, rawText: data.source,
     },
     fiberBreakdown: data.fibers,
-    naturalPercent: data.naturalPercent,
-    isNatural: data.naturalPercent >= 70,
-    verdict: buildVerdict(data.naturalPercent, data.composition),
+    naturalPercent: effectivePercent,
+    isNatural: effectivePercent >= 70,
+    verdict: effectiveVerdict,
     category: data.category,
     products: data.brandProducts.slice(0, 12),
     matched: !!(data.designerInfo || data.brandProducts.length),
