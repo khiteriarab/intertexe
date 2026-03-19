@@ -74,7 +74,7 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
       )}
       <div className="flex flex-col gap-1 pt-3">
         <span className="text-[10px] md:text-[11px] uppercase tracking-[0.08em] text-muted-foreground">{brandName}</span>
-        <h3 className="text-[12px] md:text-[13px] leading-snug line-clamp-2 text-foreground">{name}</h3>
+        <h3 className="text-[12px] md:text-[13px] leading-snug truncate text-foreground">{name}</h3>
         <div className="flex items-center gap-2 mt-0.5">
           {price && <span className="text-[12px] md:text-[13px] font-medium">{price}</span>}
         </div>

@@ -53,7 +53,7 @@ function ProductCardSmall({ product, eager }: { product: any; eager?: boolean })
         <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">
           {brandName}
         </span>
-        <h3 className="text-[11px] md:text-[12px] leading-snug line-clamp-2 text-muted-foreground">
+        <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-muted-foreground">
           {name}
         </h3>
         {price && (
@@ -361,7 +361,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                       <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">
                         {product.brandName}
                       </span>
-                      <h3 className="text-[11px] md:text-[12px] leading-snug line-clamp-2 text-muted-foreground">
+                      <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-muted-foreground">
                         {product.name}
                       </h3>
                       <div className="flex items-center gap-2 mt-0.5">

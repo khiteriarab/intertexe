@@ -374,7 +374,7 @@ export default async function ProductPage({
                   </div>
                   <div className="flex flex-col gap-1 pt-3">
                     <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">{p.brandName}</span>
-                    <span className="text-[11px] md:text-xs text-muted-foreground line-clamp-2">{p.name}</span>
+                    <span className="text-[11px] md:text-xs text-muted-foreground truncate">{p.name}</span>
                     {p.price && <span className="text-[11px] md:text-xs">{p.price}</span>}
                   </div>
                 </Link>

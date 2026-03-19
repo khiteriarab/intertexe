@@ -171,7 +171,7 @@ export default function FabricProductGrid({
                   <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
                     {product.brandName}
                   </span>
-                  <h3 className="text-xs md:text-sm leading-snug font-medium line-clamp-2">
+                  <h3 className="text-xs md:text-sm leading-snug font-medium truncate">
                     {product.name}
                   </h3>
                   <p className="text-[10px] text-muted-foreground line-clamp-1">
