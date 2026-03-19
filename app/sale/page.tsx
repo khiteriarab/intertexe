@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { fetchSaleProducts } from "../../lib/supabase-server";
 import SaleClient from "./SaleClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "The Edit — On Sale | INTERTEXE",

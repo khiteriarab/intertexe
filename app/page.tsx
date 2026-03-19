@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { getHomePageData } from "../lib/homepage-data";
 import { HomePageContent } from "./components/HomeClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "INTERTEXE — The Material Standard",
+  title: "INTERTEXE — Shop Fashion by Fabric | Natural Fiber Clothing",
   description:
-    "Shop fashion by fabric, not just style. 17,000+ clothing items ranked by material quality. Filter polyester out and find natural fibers instantly across 60+ curated brands.",
+    "INTERTEXE is the easiest way to shop luxury fashion by fabric. Browse 17,000+ clothing items ranked by material quality — filter by silk, cashmere, linen, wool, and cotton across 60+ curated brands.",
   alternates: { canonical: "https://www.intertexe.com" },
 };
 
