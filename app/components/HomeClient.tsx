@@ -270,16 +270,16 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           style={{ paddingBottom: "max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem))" }}
         >
           <h2
-            className="text-[22px] leading-[1.2] md:text-4xl font-serif text-white mb-3 md:mb-5"
+            className="text-[28px] leading-[1.15] md:text-5xl font-serif text-white mb-4 md:mb-6"
             data-testid="text-hero-headline"
           >
-            Shop Fashion by Fabric
+            Shop Natural Fabrics
           </h2>
           <p
             className="text-[13px] md:text-lg text-white/70 mb-6 md:mb-8 font-light leading-relaxed max-w-md"
             data-testid="text-hero-subtext"
           >
-            {displayCount} verified products ranked by material quality. Filter by silk, cashmere, linen, wool, and cotton across 60+ curated brands.
+            {displayCount} verified products. Choose your fabrics, browse ranked pieces, shop better materials instantly.
           </p>
           <Link
             href="/materials"
