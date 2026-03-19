@@ -113,15 +113,19 @@ IMPORTANT:
     const brandName = tagInfo.brandName || "Unknown Brand";
     const brandSlug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const compositionText = tagInfo.composition || "";
-    let fibers = (tagInfo.fibers || []).map((f: any) => ({
-      fiber: (f.fiber || "").toLowerCase(),
-      percent: Number(f.percent) || 0,
-      isNatural: NATURAL_FIBERS.has((f.fiber || "").toLowerCase()),
-    }));
-    if (!fibers.length && compositionText) {
+    let fibers = (tagInfo.fibers || []).map((f: any) => {
+      const pctRaw = String(f.percent || "0").replace(/%/g, "").trim();
+      return {
+        fiber: (f.fiber || "").toLowerCase().trim(),
+        percent: parseFloat(pctRaw) || 0,
+        isNatural: NATURAL_FIBERS.has((f.fiber || "").toLowerCase().trim()),
+      };
+    }).filter((f: any) => f.fiber && f.percent > 0);
+    const fiberSum = fibers.reduce((s: number, f: any) => s + f.percent, 0);
+    if ((!fibers.length || fiberSum < 10) && compositionText) {
       fibers = parseComposition(compositionText);
     }
-    const naturalPercent = computeNaturalPercent(fibers);
+    const naturalPercent = Math.min(100, computeNaturalPercent(fibers));
     const isNatural = naturalPercent >= 70;
 
     const productNameLower = (tagInfo.productName || "").toLowerCase();
@@ -169,22 +173,27 @@ IMPORTANT:
       altQuery = altQuery.or(searchTerms.map(t => `name.ilike.%${t}%`).join(","));
     }
 
-    if (priceNum) {
-      const priceLow = Math.round(priceNum * 0.4);
-      const priceHigh = Math.round(priceNum * 2.5);
-      altQuery = altQuery.gte("price", `$${priceLow}`).lte("price", `$${priceHigh}`);
-    }
-
-    const { data: altData } = await altQuery.limit(12);
+    const { data: altData } = await altQuery.limit(40);
 
     let alternatives = altData || [];
+    if (priceNum && alternatives.length > 4) {
+      const priceLow = priceNum * 0.4;
+      const priceHigh = priceNum * 2.5;
+      const priceFiltered = alternatives.filter((p: any) => {
+        const pn = parsePriceNumber(p.price || "");
+        return pn !== null && pn >= priceLow && pn <= priceHigh;
+      });
+      if (priceFiltered.length >= 4) {
+        alternatives = priceFiltered;
+      }
+    }
     if (alternatives.length < 4 && searchTerms.length > 0) {
       let fallbackQuery = supabase.from("products").select("*")
         .gte("natural_fiber_percent", 80)
         .not("image_url", "is", null)
         .or(searchTerms.map(t => `name.ilike.%${t}%`).join(","))
         .order("natural_fiber_percent", { ascending: false })
-        .limit(12);
+        .limit(20);
       if (brandSlug !== "unknown-brand") {
         fallbackQuery = fallbackQuery.neq("brand_slug", brandSlug);
       }
