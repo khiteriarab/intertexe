@@ -11,8 +11,9 @@ const NATURAL_FIBERS = new Set([
 function parseComposition(raw: string): { fiber: string; percent: number; isNatural: boolean }[] {
   if (!raw) return [];
   const fibers: { fiber: string; percent: number; isNatural: boolean }[] = [];
-  const matches = raw.matchAll(/(\d+(?:\.\d+)?)\s*%\s*([a-zA-Zéèêëàâîïôùûüÿçæœ\s/]+)|([a-zA-Zéèêëàâîïôùûüÿçæœ\s/]+?)\s*(\d+(?:\.\d+)?)\s*%/g);
-  for (const m of matches) {
+  const regex = /(\d+(?:\.\d+)?)\s*%\s*([a-zA-Z\s/]+)|([a-zA-Z\s/]+?)\s*(\d+(?:\.\d+)?)\s*%/g;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(raw)) !== null) {
     const pct = parseFloat(m[1] || m[4]);
     const name = (m[2] || m[3]).trim().toLowerCase();
     if (pct > 0 && name) {
@@ -269,8 +270,9 @@ export async function POST(request: NextRequest) {
             structuredData = jsonLdMatch.map(m => m.replace(/<\/?script[^>]*>/gi, "").trim()).join("\n").slice(0, 3000);
           }
           const ogTags: string[] = [];
-          const metaMatches = html.matchAll(/<meta[^>]*property=["']og:([^"']+)["'][^>]*content=["']([^"']*)["'][^>]*>/gi);
-          for (const m of metaMatches) ogTags.push(`og:${m[1]}=${m[2]}`);
+          const metaRegex = /<meta[^>]*property=["']og:([^"']+)["'][^>]*content=["']([^"']*)["'][^>]*>/gi;
+          let metaMatch: RegExpExecArray | null;
+          while ((metaMatch = metaRegex.exec(html)) !== null) ogTags.push(`og:${metaMatch[1]}=${metaMatch[2]}`);
           const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
           const titleText = titleMatch ? titleMatch[1].trim() : "";
           const bodyText = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 4000);
