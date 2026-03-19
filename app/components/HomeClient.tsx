@@ -267,12 +267,12 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           className="relative z-10 px-5 md:px-10 pb-12 md:pb-16 max-w-2xl flex flex-col"
           style={{ paddingBottom: "max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem))" }}
         >
-          <h1
+          <h2
             className="text-[22px] leading-[1.2] md:text-4xl font-serif text-white mb-3 md:mb-5"
             data-testid="text-hero-headline"
           >
             Shop Fashion by Fabric
-          </h1>
+          </h2>
           <p
             className="text-[13px] md:text-lg text-white/70 mb-6 md:mb-8 font-light leading-relaxed max-w-md"
             data-testid="text-hero-subtext"
