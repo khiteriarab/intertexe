@@ -59,7 +59,7 @@ export async function getHomePageData(): Promise<HomePageData> {
   );
   const curatedDesigners = curatedDesignerResults.filter(Boolean);
 
-  const newInBrandSlugs = ["isabel-marant", "a-l-c-", "diesel", "khaite", "anine-bing", "toteme", "reformation", "sandro", "nanushka", "frame"];
+  const newInBrandSlugs = ["isabel-marant", "a-l-c-", "diesel"];
   const brandProductLists = await Promise.all(
     newInBrandSlugs.map((slug) => fetchProductsByBrandWithImages(slug, 30))
   );
@@ -99,7 +99,7 @@ export async function getHomePageData(): Promise<HomePageData> {
       if (isZeroPrice(p.price)) continue;
       const baseName = getBaseName(p.name);
       if (seenBaseNames.has(baseName)) continue;
-      if (p.brand_slug === "isabel-marant" && p.image_url && !p.image_url.includes("-D.")) continue;
+      if (p.brand_slug === "isabel-marant" && p.image_url && !p.image_url.includes("-E.")) continue;
       seenIds.add(p.id);
       seenBaseNames.add(baseName);
       queue.push(p);
