@@ -43,13 +43,9 @@ function ProductCard({ product }: { product: any }) {
   const imageUrl = product.imageUrl || product.image_url;
   const price = product.price;
   const composition = product.composition;
-  const shopUrl = product.url || null;
-
-  const CardWrapper = shopUrl ? 'a' : 'div';
-  const wrapperProps = shopUrl ? { href: shopUrl, target: "_blank" as const, rel: "noopener noreferrer" } : {};
 
   return (
-    <CardWrapper {...wrapperProps} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
+    <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
@@ -77,7 +73,7 @@ function ProductCard({ product }: { product: any }) {
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>
         )}
       </div>
-    </CardWrapper>
+    </Link>
   );
 }
 

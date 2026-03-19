@@ -524,11 +524,9 @@ function QuizProductCard({ product }: { product: any }) {
   const imageUrl = product.imageUrl || product.image_url;
   const brandName = product.brandName || product.brand_name || "";
   const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
-  const shopUrl = product.url || null;
-  const CardWrapper = shopUrl ? 'a' : 'div';
-  const wrapperProps = shopUrl ? { href: shopUrl, target: "_blank" as const, rel: "noopener noreferrer" } : {};
+  const internalId = product.id || product.productId || product.product_id;
   return (
-    <CardWrapper {...wrapperProps} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all cursor-pointer" data-testid={`card-quiz-product-${product.productId || product.product_id}`}>
+    <Link href={`/product/${internalId}`} className="group flex flex-col bg-background border border-border/40 hover:border-foreground/30 transition-all cursor-pointer" data-testid={`card-quiz-product-${product.productId || product.product_id}`}>
       <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
         <img
           src={imageUrl}
@@ -569,7 +567,7 @@ function QuizProductCard({ product }: { product: any }) {
       <div className="flex items-center justify-center gap-2 bg-foreground text-background py-3 text-[10px] uppercase tracking-[0.2em] group-hover:bg-foreground/90 transition-colors">
         Shop Now <ExternalLink className="w-3 h-3" />
       </div>
-    </CardWrapper>
+    </Link>
   );
 }
 

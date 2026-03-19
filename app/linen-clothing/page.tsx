@@ -49,7 +49,7 @@ export default async function LinenClothingPage() {
       {productsWithImages.length > 0 && (
         <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mb-12 md:mb-16">
           {productsWithImages.slice(0, 24).map((product, i) => (
-            <a key={product.id} href={product.url} target="_blank" rel="noopener noreferrer" className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col">
+            <Link key={product.id} href={`/product/${product.id}`} className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col">
               <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
                 <img src={product.imageUrl} alt={`${product.name} by ${product.brandName}`} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" loading="lazy" />
                 {product.naturalFiberPercent >= 90 && (
@@ -65,7 +65,7 @@ export default async function LinenClothingPage() {
                   <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </section>
       )}

@@ -46,7 +46,7 @@ export default async function SilkClothingPage() {
       {productsWithImages.length > 0 && (
         <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mb-12 md:mb-16">
           {productsWithImages.slice(0, 24).map((product, i) => (
-            <a key={product.id} href={product.url} target="_blank" rel="noopener noreferrer" className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col">
+            <Link key={product.id} href={`/product/${product.id}`} className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col">
               <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
                 <img src={product.imageUrl} alt={`${product.name} by ${product.brandName}`} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" loading="lazy" />
                 {product.naturalFiberPercent >= 90 && (<div className="absolute top-2 left-2"><span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">{product.naturalFiberPercent}% natural</span></div>)}
@@ -57,7 +57,7 @@ export default async function SilkClothingPage() {
                 <p className="text-[10px] text-muted-foreground line-clamp-1">{product.composition}</p>
                 <div className="flex items-center justify-between mt-auto pt-2"><span className="text-sm font-medium">{product.price}</span><ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" /></div>
               </div>
-            </a>
+            </Link>
           ))}
         </section>
       )}

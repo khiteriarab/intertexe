@@ -61,7 +61,7 @@ function ProductCard({ product }: { product: any }) {
   const naturalFiber = product.natural_fiber_percent;
 
   return (
-    <a href={shopUrl || "#"} target="_blank" rel="noopener noreferrer" className="group flex flex-col" data-testid={`product-scan-${product.id}`}>
+    <Link href={`/product/${product.id}`} className="group flex flex-col" data-testid={`product-scan-${product.id}`}>
       <div className="aspect-[3/4] bg-[#f0f0ee] relative overflow-hidden">
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
@@ -95,7 +95,7 @@ function ProductCard({ product }: { product: any }) {
         <h3 className="text-[11px] md:text-[12px] leading-snug line-clamp-2 text-muted-foreground">{name}</h3>
         {price && <span className="text-[11px] md:text-[12px] mt-0.5 font-medium">{price}</span>}
       </div>
-    </a>
+    </Link>
   );
 }
 
