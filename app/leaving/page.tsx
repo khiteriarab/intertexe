@@ -39,7 +39,7 @@ function LeavingContent() {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          window.location.href = url;
+          window.open(url, "_blank", "noopener,noreferrer");
           return 0;
         }
         return prev - 1;
@@ -81,6 +81,7 @@ function LeavingContent() {
       <div className="flex flex-col items-center gap-6 w-full">
         <a
           href={url}
+          target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-3 w-full max-w-sm bg-foreground text-background px-8 py-4 uppercase tracking-widest text-[10px] md:text-xs hover:bg-foreground/90 transition-colors active:scale-[0.98]"
           data-testid="link-continue-to-brand"

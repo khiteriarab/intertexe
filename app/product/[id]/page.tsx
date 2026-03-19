@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, ExternalLink, ShoppingBag, Leaf, ArrowRight } from "lucide-react";
 import {
   fetchProductById,
-  fetchRelatedProducts,
+  fetchMoreFromBrand,
+  fetchMoreInFiber,
+  fetchMoreAtPrice,
   fetchAllProductIds,
 } from "../../../lib/supabase-server";
 import { ProductFavoriteButton, ProductCardHeart } from "./ProductFavoriteButton";
@@ -145,9 +147,12 @@ export default async function ProductPage({
 
   const compositionParts = parseComposition(product.composition);
   const primaryFiber = getPrimaryFiber(product.composition);
-  const relatedProducts = primaryFiber
-    ? (await fetchRelatedProducts(product, 8)).filter((p) => p.imageUrl)
-    : [];
+
+  const [moreFromBrand, moreInFiber, moreAtPrice] = await Promise.all([
+    fetchMoreFromBrand(String(product.id), product.brandSlug, 4),
+    fetchMoreInFiber(String(product.id), product.composition, 4),
+    fetchMoreAtPrice(String(product.id), product.price, 4),
+  ]);
 
   const breadcrumbItems: any[] = [
     { "@type": "ListItem", position: 1, name: "Home", item: "https://www.intertexe.com/" },
@@ -312,14 +317,18 @@ export default async function ProductPage({
           </div>
         </div>
 
-        {relatedProducts.length > 0 && primaryFiber && (
-          <section className="flex flex-col gap-5 border-t border-border/30 pt-8" data-testid="section-related-products">
+        {[
+          { items: moreFromBrand, title: `More from ${product.brandName}`, testId: "section-more-from-brand" },
+          { items: moreInFiber, title: primaryFiber ? `More in ${primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}` : "Similar Materials", testId: "section-more-in-fiber" },
+          { items: moreAtPrice, title: "More at This Price", testId: "section-more-at-price" },
+        ].filter((s) => s.items.length > 0).map((section) => (
+          <section key={section.testId} className="flex flex-col gap-5 border-t border-border/30 pt-8" data-testid={section.testId}>
             <h2 className="text-xs uppercase tracking-[0.2em] font-medium text-muted-foreground">
-              More in {primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}
+              {section.title}
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-              {relatedProducts.map((p) => (
-                <Link key={p.id} href={`/product/${p.id}`} className="group flex flex-col" data-testid={`related-product-${p.id}`}>
+            <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
+              {section.items.map((p) => (
+                <Link key={p.id} href={`/product/${p.id}`} className="group flex flex-col shrink-0 w-[42vw] md:w-[22%] snap-start" data-testid={`related-product-${p.id}`}>
                   <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
                     <img src={p.imageUrl} alt={p.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
                     {p.naturalFiberPercent != null && p.naturalFiberPercent >= 90 && (
@@ -340,7 +349,7 @@ export default async function ProductPage({
               ))}
             </div>
           </section>
-        )}
+        ))}
       </div>
     </div>
   );
