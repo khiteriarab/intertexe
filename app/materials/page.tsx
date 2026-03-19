@@ -54,7 +54,7 @@ const CURATED_IMAGES: Record<string, string> = {
   linen: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319452/DARK_OATMEAL/1319452.1.DARK_OATMEAL?_s=RAABAB0",
   silk: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319612/PLUTO_DOT/1319612.1.PLUTO_DOT?_s=RAABAB0",
   wool: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_LOUIE_SWEATER_-_IVORY_A-09-11557-IVY1_042.jpg?v=1764179021&width=800",
-  cashmere: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_KIRA_SWEATER_-_BLACK_A-09-11556-BLK26_011.jpg?v=1761771250&width=800",
+  cashmere: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_JACKSON_SWEATER_-_MEDIUM_HEATHER_GREY_A-09-10175-MHG1_0017.jpg?v=1752193948&width=800",
 };
 
 export default async function MaterialsPage() {
