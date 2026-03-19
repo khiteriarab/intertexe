@@ -6,16 +6,16 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: {
-    default: "INTERTEXE — The Material Standard",
+    default: "INTERTEXE — Shop Fashion by Fabric | Natural Fiber Clothing",
     template: "%s | INTERTEXE",
   },
   description:
-    "Shop fashion by fabric, not just style. 17,000+ clothing items ranked by material quality. Filter polyester out and find natural fibers instantly across 60+ curated brands.",
+    "INTERTEXE is the easiest way to shop luxury fashion by fabric. Browse 17,000+ clothing items ranked by material quality — filter by silk, cashmere, linen, wool, and cotton across 60+ curated brands.",
   metadataBase: new URL("https://www.intertexe.com"),
   openGraph: {
-    title: "INTERTEXE",
+    title: "INTERTEXE — Shop Fashion by Fabric",
     description:
-      "Shop fashion by fabric, not just style. 17,000+ items ranked by material quality. Filter polyester out. Find natural fibers instantly.",
+      "INTERTEXE is the easiest way to shop luxury fashion by fabric. 17,000+ items ranked by material quality. Filter by silk, cashmere, linen, wool, and cotton.",
     url: "https://www.intertexe.com",
     siteName: "INTERTEXE",
     type: "website",
@@ -24,9 +24,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     site: "@shopintertexe",
-    title: "INTERTEXE",
+    title: "INTERTEXE — Shop Fashion by Fabric",
     description:
-      "Shop fashion by fabric, not just style. 17,000+ items ranked by material quality. Filter polyester out. Find natural fibers instantly.",
+      "INTERTEXE is the easiest way to shop luxury fashion by fabric. 17,000+ items ranked by material quality. Filter by silk, cashmere, linen, wool, and cotton.",
     images: ["/opengraph.jpg"],
   },
   icons: {

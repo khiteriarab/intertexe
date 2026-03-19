@@ -27,7 +27,7 @@ The INTERTEXE platform is built with a modern web stack, emphasizing a luxury, m
 - **Analytics:** GA4 event tracking is implemented for key user actions and interactions.
 - **Account Management:** Provides a user dashboard with profile management, wishlists, quiz history, and settings, including password changes and account deletion. A price watch system monitors product prices for user favorites.
 - **Product Data:** Integrates a robust system for product verification, data scraping (Shopify JSON endpoints), and categorization, with over 17,000 verified women's fashion products. It includes a `price_watches` system for price drop alerts.
-- **SEO Optimization:** Dynamic SEO is implemented for designer pages, product pages, material/category pages, and curated collection pages, supported by a dynamic sitemap and canonical tags.
+- **SEO Optimization:** ISR (Incremental Static Regeneration) with 1-hour revalidation on all pages for proper cache headers. Sitemap index at `/api/sitemap` splits into pages, designers, and product chunks (5,000 per file). Organization + WebSite JSON-LD on every page. Brand name "INTERTEXE" in H1, title tags, meta descriptions, and footer content. Canonical tags on all pages.
 - **Quality Tier System:** A defined quality tier system (Exceptional, Excellent, Good, Caution, Under Review) is applied to designers and products.
 - **Fabric Persona System:** Assigns users a fabric persona based on quiz answers for personalized recommendations.
 

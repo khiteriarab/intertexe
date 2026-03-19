@@ -5,7 +5,7 @@ import { MATERIALS } from "../../../lib/data";
 import FabricProductGrid from "./FabricProductGrid";
 import EmailCapture from "../../components/EmailCapture";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const MAIN_FIBERS = ["silk", "cotton", "linen", "wool", "cashmere"];
 
