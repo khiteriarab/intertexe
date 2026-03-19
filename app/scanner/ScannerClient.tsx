@@ -440,18 +440,20 @@ export default function ScannerClient() {
               <NaturalScoreRing percent={pct} />
             </div>
 
-            <div className={`p-4 md:p-5 mb-6 ${isGreat ? "bg-emerald-50 border border-emerald-200" : "bg-amber-50 border border-amber-200"}`}>
+            <div className={`p-4 md:p-5 mb-6 ${isGreat ? "bg-emerald-50 border border-emerald-200" : pct > 0 ? "bg-amber-50 border border-amber-200" : "bg-neutral-50 border border-neutral-200"}`}>
               <div className="flex items-start gap-3">
                 {isGreat ? (
                   <ShieldCheck className="w-5 h-5 text-emerald-700 flex-shrink-0 mt-0.5" />
-                ) : (
+                ) : pct > 0 ? (
                   <AlertTriangle className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <Sparkles className="w-5 h-5 text-neutral-500 flex-shrink-0 mt-0.5" />
                 )}
                 <div>
-                  <p className={`text-sm font-medium mb-0.5 ${isGreat ? "text-emerald-900" : "text-amber-900"}`}>
-                    {isGreat ? "Natural Fiber Verified" : "Low Natural Fiber Content"}
+                  <p className={`text-sm font-medium mb-0.5 ${isGreat ? "text-emerald-900" : pct > 0 ? "text-amber-900" : "text-neutral-800"}`}>
+                    {isGreat ? "Natural Fiber Verified" : pct > 0 ? "Low Natural Fiber Content" : "Explore Natural Alternatives"}
                   </p>
-                  <p className={`text-[12px] leading-relaxed ${isGreat ? "text-emerald-700" : "text-amber-700"}`} data-testid="text-verdict">
+                  <p className={`text-[12px] leading-relaxed ${isGreat ? "text-emerald-700" : pct > 0 ? "text-amber-700" : "text-muted-foreground"}`} data-testid="text-verdict">
                     {result.verdict}
                   </p>
                 </div>
