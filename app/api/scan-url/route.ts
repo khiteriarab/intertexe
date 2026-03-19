@@ -217,8 +217,11 @@ export async function POST(request: NextRequest) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  let requestUrl = "";
   try {
-    const { url } = await request.json();
+    const body = await request.json();
+    requestUrl = body.url || "";
+    const url = requestUrl;
     if (!url) return NextResponse.json({ error: "Product URL required" }, { status: 400 });
     let parsedUrl: URL;
     try { parsedUrl = new URL(url); } catch { return NextResponse.json({ error: "Invalid URL" }, { status: 400 }); }
@@ -392,15 +395,22 @@ Use null for genuinely unknown. For composition, extract from product descriptio
   } catch (err: any) {
     console.error("Scan URL error:", err.message);
     try {
+      const urlInfo = extractInfoFromUrl(requestUrl || "");
+      const brandName = urlInfo.brand || "Unknown";
       const alternatives = await fetchAlternatives(supabase, "", "", null);
       return NextResponse.json(buildResponse({
-        brandName: "Unknown", productName: "", price: "", composition: "",
+        brandName, productName: urlInfo.product || "", price: "", composition: "",
         fibers: [], naturalPercent: 0, category: "",
         brandProducts: [], designerInfo: null, alternatives,
         confidence: "low", source: "URL scan",
       }));
     } catch {
-      return NextResponse.json({ error: "Something went wrong, but please try again." }, { status: 500 });
+      return NextResponse.json({
+        tagInfo: { brandName: "Unknown", productName: "", price: "", composition: "", garmentType: "", size: "", madeIn: "", careInstructions: "", confidence: "low", rawText: "" },
+        fiberBreakdown: [], naturalPercent: 0, isNatural: false,
+        verdict: "We couldn't analyze this product right now. Browse our curated natural-fiber products below.",
+        category: "", products: [], matched: false, brandStats: null, designerInfo: null, betterAlternatives: [],
+      });
     }
   }
 }

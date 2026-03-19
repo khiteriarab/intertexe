@@ -298,11 +298,27 @@ export default function ScannerClient() {
         body: JSON.stringify({ url: url.trim() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Scan failed");
-      setResult(data);
-      trackScanComplete(data.tagInfo?.brandName || "unknown", "url", data.matched);
+      if (data.tagInfo) {
+        setResult(data);
+        trackScanComplete(data.tagInfo?.brandName || "unknown", "url", data.matched);
+      } else if (!res.ok) {
+        throw new Error(data.error || "Scan failed");
+      } else {
+        setResult(data);
+      }
     } catch (err: any) {
-      setError(err.message || "Failed to analyze. Try again.");
+      try {
+        const hostname = new URL(url.trim()).hostname.replace("www.", "");
+        const brandGuess = hostname.split(".")[0].replace(/-store$|-shop$|-official$/i, "").replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        setResult({
+          tagInfo: { brandName: brandGuess, productName: "", price: "", composition: "", garmentType: "", size: "", madeIn: "", careInstructions: "", confidence: "low", rawText: url.trim() },
+          fiberBreakdown: [], naturalPercent: 0, isNatural: false,
+          verdict: `We couldn't fetch product details, but browse ${brandGuess}'s natural-fiber options below.`,
+          category: "", products: [], matched: false, brandStats: null, designerInfo: null, betterAlternatives: [],
+        });
+      } catch {
+        setError("Could not analyze this URL. Please check the link and try again.");
+      }
       trackScanError("url", err.message || "Scan failed");
     } finally {
       setLoading(false);
