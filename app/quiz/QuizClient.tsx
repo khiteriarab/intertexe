@@ -41,7 +41,7 @@ class QuizErrorBoundary extends Component<{ children: ReactNode; fallback: React
 
 const MATERIAL_OPTIONS = [
   "Cotton", "Silk", "Linen", "Wool", "Cashmere", "Leather / Suede",
-  "Tencel / Modal", "Viscose / Rayon", "Alpaca", "Denim", "Velvet", "Satin"
+  "Tencel / Modal", "Alpaca", "Denim", "Velvet", "Satin"
 ];
 
 const STEPS = [
@@ -518,7 +518,6 @@ const MATERIAL_TERMS: Record<string, string[]> = {
   "Tencel / Modal": ["tencel", "modal"],
   "Denim": ["denim"],
   "Alpaca": ["alpaca"],
-  "Viscose / Rayon": ["viscose", "rayon"],
   "Velvet": ["velvet"],
   "Satin": ["satin"],
 };
