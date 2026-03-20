@@ -54,7 +54,7 @@ export interface Product {
 }
 
 const WOMEN_FASHION_BRAND_SLUGS = new Set([
-  "a-l-c-", "agolde", "anine-bing", "diesel", "frame", "grlfrnd", "isabel-marant",
+  "a-l-c-", "agolde", "anine-bing", "diesel", "faithfull-the-brand", "frame", "grlfrnd", "isabel-marant",
   "khaite", "l-agence", "rachel-comey", "re-done", "reformation", "rixo",
   "sandro", "sea-new-york", "the-kooples", "tibi", "toteme"
 ]);

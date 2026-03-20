@@ -79,6 +79,17 @@ export const BRAND_PROFILES: Record<string, BrandProfile> = {
     foundedYear: 2002,
     headquarters: "New York",
   },
+  "faithfull-the-brand": {
+    slug: "faithfull-the-brand",
+    name: "Faithfull the Brand",
+    tier: "material-strong",
+    intro: "Born from island living and a love of vintage textiles, Faithfull the Brand has become the gold standard for linen and cotton resort wear. Nearly every piece is crafted from 100% European Flax linen or organic cotton — no blends, no compromises. A consistent top performer in natural fiber analysis, with sun-drenched prints and effortless silhouettes.",
+    materialStrengths: ["Linen", "Cotton", "European Flax", "Silk"],
+    priceRange: "$100 – $350",
+    naturalFiberEstimate: 95,
+    foundedYear: 2012,
+    headquarters: "Bali & Byron Bay",
+  },
   "frame": {
     slug: "frame",
     name: "Frame",
