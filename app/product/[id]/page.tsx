@@ -291,13 +291,11 @@ export default async function ProductPage({
                     <span className="text-lg font-serif font-medium">{product.naturalFiberPercent}%</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {product.naturalFiberPercent >= 90
+                    {product.naturalFiberPercent >= 95
                       ? "Excellent — predominantly natural materials"
                       : product.naturalFiberPercent >= 70
                         ? "Good — majority natural fibers"
-                        : product.naturalFiberPercent >= 50
-                          ? "Moderate — mixed composition"
-                          : "Low natural fiber content"}
+                        : "Low natural fiber content"}
                   </p>
                 </div>
               )}

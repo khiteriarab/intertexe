@@ -134,7 +134,7 @@ export function DesignerDetailProducts({
       {visibleProducts.length > 0 ? (
         <>
           <p className="text-sm text-foreground/70 leading-relaxed">
-            Every item below has been verified by INTERTEXE — only pieces with ≥50% natural fiber composition make this list.
+            Every item below has been verified by INTERTEXE — only pieces with ≥95% natural fiber composition make this list.
           </p>
 
           {(visibleProducts.length > 6 || categories.length > 1) && (

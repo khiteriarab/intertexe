@@ -38,7 +38,7 @@ function NaturalScoreRing({ percent }: { percent: number }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
-  const color = percent >= 80 ? "#15803d" : percent >= 50 ? "#b45309" : "#dc2626";
+  const color = percent >= 95 ? "#15803d" : percent >= 70 ? "#b45309" : "#dc2626";
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
