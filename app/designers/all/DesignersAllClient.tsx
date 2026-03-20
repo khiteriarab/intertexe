@@ -163,7 +163,7 @@ export function DesignersAllClient({ designers }: { designers: DesignerItem[] })
                         )}
                         <div className="flex items-center justify-between">
                           {designer.naturalFiberPercent != null ? (
-                            <span className="text-xs text-muted-foreground">{designer.naturalFiberPercent}% Natural</span>
+                            <span className="text-xs text-muted-foreground">{designer.naturalFiberPercent >= 95 ? "100% Natural" : `${designer.naturalFiberPercent}% Natural`}</span>
                           ) : (
                             <span className="text-xs text-muted-foreground/50">Pending review</span>
                           )}

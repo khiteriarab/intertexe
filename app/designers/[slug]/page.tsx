@@ -65,8 +65,9 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
     logoUrl: null,
   };
 
-  const computedFiberPercent = products.length > 0
-    ? Math.round(products.reduce((sum, p) => sum + (p.naturalFiberPercent || 0), 0) / products.length)
+  const productsWithFiber = products.filter(p => p.naturalFiberPercent != null && p.naturalFiberPercent > 0);
+  const computedFiberPercent = productsWithFiber.length > 0
+    ? Math.round(productsWithFiber.reduce((sum, p) => sum + p.naturalFiberPercent, 0) / productsWithFiber.length)
     : null;
   const enrichedDesigner = {
     ...designer,
