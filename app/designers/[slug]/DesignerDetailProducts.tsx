@@ -63,6 +63,7 @@ export function DesignerDetailProducts({
   profileMaterialStrengths: string[];
 }) {
   const [activeCategory, setActiveCategory] = useState("all");
+  const [showSaleOnly, setShowSaleOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
   const [priceSort, setPriceSort] = useState<PriceSort>("default");
@@ -85,8 +86,15 @@ export function DesignerDetailProducts({
       .map(([cat, count]) => ({ key: cat, label: CATEGORY_LABELS[cat] || cat.charAt(0).toUpperCase() + cat.slice(1), count }));
   }, [visibleProducts]);
 
+  const saleCount = useMemo(() => {
+    return visibleProducts.filter((p) => p.isSale).length;
+  }, [visibleProducts]);
+
   const filteredProducts = useMemo(() => {
     let filtered = visibleProducts;
+    if (showSaleOnly) {
+      filtered = filtered.filter((p) => p.isSale);
+    }
     if (activeCategory !== "all") {
       filtered = filtered.filter((p) => (p.category || "").toLowerCase().trim() === activeCategory);
     }
@@ -105,7 +113,7 @@ export function DesignerDetailProducts({
       });
     }
     return filtered;
-  }, [visibleProducts, activeCategory, searchQuery, priceSort]);
+  }, [visibleProducts, activeCategory, showSaleOnly, searchQuery, priceSort]);
 
   const paginatedProducts = useMemo(() => {
     return filteredProducts.slice(0, visibleCount);
@@ -154,9 +162,9 @@ export function DesignerDetailProducts({
               {categories.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                   <button
-                    onClick={() => handleCategoryChange("all")}
+                    onClick={() => { handleCategoryChange("all"); setShowSaleOnly(false); }}
                     className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                      activeCategory === "all"
+                      activeCategory === "all" && !showSaleOnly
                         ? "bg-foreground text-background"
                         : "bg-secondary/60 text-foreground/70 hover:bg-secondary"
                     }`}
@@ -164,12 +172,25 @@ export function DesignerDetailProducts({
                   >
                     All ({visibleProducts.length})
                   </button>
+                  {saleCount > 0 && (
+                    <button
+                      onClick={() => { setShowSaleOnly(!showSaleOnly); setActiveCategory("all"); setVisibleCount(PRODUCTS_PER_PAGE); }}
+                      className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                        showSaleOnly
+                          ? "bg-[#b91c1c] text-white"
+                          : "bg-secondary/60 text-[#b91c1c] hover:bg-secondary"
+                      }`}
+                      data-testid="filter-sale"
+                    >
+                      Sale ({saleCount})
+                    </button>
+                  )}
                   {categories.map(({ key, label, count }) => (
                     <button
                       key={key}
-                      onClick={() => handleCategoryChange(key)}
+                      onClick={() => { handleCategoryChange(key); setShowSaleOnly(false); }}
                       className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                        activeCategory === key
+                        activeCategory === key && !showSaleOnly
                           ? "bg-foreground text-background"
                           : "bg-secondary/60 text-foreground/70 hover:bg-secondary"
                       }`}
@@ -262,7 +283,20 @@ export function DesignerDetailProducts({
                       <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
                       <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
                       {product.price && (
-                        <p className="text-xs font-medium mt-auto pt-1">{product.price}</p>
+                        <div className="flex items-center gap-2 mt-auto pt-1">
+                          <p className={`text-xs font-medium ${product.isSale ? "text-[#b91c1c]" : ""}`}>{product.price}</p>
+                          {product.isSale && product.originalPrice && (
+                            <>
+                              <p className="text-[10px] text-muted-foreground line-through">{product.originalPrice}</p>
+                              {(() => {
+                                const cur = parsePrice(product.price);
+                                const orig = parsePrice(product.originalPrice);
+                                const disc = orig > 0 ? Math.round((1 - cur / orig) * 100) : 0;
+                                return disc > 0 ? <span className="text-[10px] font-medium text-[#b91c1c]">{disc}% OFF</span> : null;
+                              })()}
+                            </>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
