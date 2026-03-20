@@ -40,7 +40,7 @@ export function getQualityTier(naturalFiberPercent: number | null | undefined): 
       buyingAdvice: 'A strong choice. Check individual garment labels for specific fiber content.',
     };
   }
-  if (naturalFiberPercent >= 50) {
+  if (naturalFiberPercent >= 70) {
     return {
       tier: 'good',
       label: 'Good',

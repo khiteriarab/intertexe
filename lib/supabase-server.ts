@@ -685,7 +685,7 @@ export async function fetchSaleProducts(options: {
     .from("products")
     .select("*", { count: "exact" })
     .eq("is_sale", true)
-    .gte("natural_fiber_percent", 50)
+    .gte("natural_fiber_percent", 95)
     .not("image_url", "is", null)
     .not("price", "is", null);
 
