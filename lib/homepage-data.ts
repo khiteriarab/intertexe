@@ -18,8 +18,8 @@ function isZeroPrice(price: string | null | undefined): boolean {
 }
 
 export const CURATED_BRAND_SLUGS = [
-  "khaite", "anine-bing", "toteme", "frame", "diesel",
-  "nanushka", "isabel-marant", "the-row", "sandro", "agolde",
+  "khaite", "anine-bing", "toteme", "frame", "faithfull-the-brand",
+  "nanushka", "isabel-marant", "diesel", "sandro", "agolde",
 ];
 
 export interface HomePageData {
@@ -59,7 +59,7 @@ export async function getHomePageData(): Promise<HomePageData> {
   );
   const curatedDesigners = curatedDesignerResults.filter(Boolean);
 
-  const newInBrandSlugs = ["isabel-marant", "a-l-c-", "diesel"];
+  const newInBrandSlugs = ["isabel-marant", "a-l-c-", "diesel", "faithfull-the-brand"];
   const brandProductLists = await Promise.all(
     newInBrandSlugs.map((slug) => fetchProductsByBrandWithImages(slug, 30))
   );

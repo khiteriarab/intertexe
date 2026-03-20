@@ -98,7 +98,7 @@ function extractInfoFromUrl(url: string): { brand: string; product: string; reta
       "nanushka.com": "Nanushka", "acnestudios.com": "Acne Studios", "therow.com": "The Row",
       "alcltd.com": "A.L.C.", "agolde.com": "AGOLDE", "rag-bone.com": "Rag & Bone",
       "ganni.com": "Ganni", "isabelmarant.com": "Isabel Marant", "allsaints.com": "AllSaints",
-      "diesel.com": "Diesel", "onequince.com": "Quince", "massimodutti.com": "Massimo Dutti",
+      "diesel.com": "Diesel", "faithfullthebrand.com": "Faithfull the Brand", "onequince.com": "Quince", "massimodutti.com": "Massimo Dutti",
       "proenzaschouler.com": "Proenza Schouler", "stellamccartney.com": "Stella McCartney",
       "loewe.com": "Loewe", "chloe.com": "Chloé", "maxmara.com": "Max Mara",
       "tibi.com": "Tibi", "lagence.com": "L'Agence", "rixo.co.uk": "RIXO",
