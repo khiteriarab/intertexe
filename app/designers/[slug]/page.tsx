@@ -65,9 +65,14 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
     logoUrl: null,
   };
 
-  const enrichedDesigner = designer.naturalFiberPercent == null
-    ? { ...designer, naturalFiberPercent: profile?.naturalFiberEstimate ?? getCuratedScore(designer.name) }
-    : designer;
+  const productsWithFiber = products.filter(p => p.naturalFiberPercent != null && p.naturalFiberPercent > 0);
+  const computedFiberPercent = productsWithFiber.length > 0
+    ? Math.round(productsWithFiber.reduce((sum, p) => sum + p.naturalFiberPercent, 0) / productsWithFiber.length)
+    : null;
+  const enrichedDesigner = {
+    ...designer,
+    naturalFiberPercent: computedFiberPercent ?? designer.naturalFiberPercent ?? profile?.naturalFiberEstimate ?? getCuratedScore(designer.name),
+  };
   const tier = getQualityTier(enrichedDesigner.naturalFiberPercent);
 
   const aboutText = profile?.intro
@@ -153,6 +158,11 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
                   style={{ width: `${enrichedDesigner.naturalFiberPercent}%` }}
                 />
               </div>
+              {products.length > 0 && (
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">
+                  Average across {products.length} verified pieces in our inventory. Where a piece is below 100%, the non-natural content is typically from functional components like linings, trims, or elastic.
+                </p>
+              )}
             </>
           ) : (
             <div className="flex items-baseline gap-3">

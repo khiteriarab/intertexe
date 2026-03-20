@@ -660,7 +660,7 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
                               <div className="absolute top-2 left-2">
                                 <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-wider backdrop-blur-sm">
                                   <CheckCircle2 className="w-2.5 h-2.5" />
-                                  {fiberPercent}% natural
+                                  {fiberPercent >= 95 ? "100% Natural" : `${fiberPercent}% Natural`}
                                 </span>
                               </div>
                             )}
@@ -689,7 +689,7 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
                                 product.price && <span className="text-xs font-medium">{product.price}</span>
                               )}
                               {fiberPercent != null && fiberPercent < 90 && (
-                                <span className="text-[9px] text-muted-foreground">{fiberPercent}% natural</span>
+                                <span className="text-[9px] text-muted-foreground">{fiberPercent >= 95 ? "100% Natural" : `${fiberPercent}% Natural`}</span>
                               )}
                             </div>
                           </div>

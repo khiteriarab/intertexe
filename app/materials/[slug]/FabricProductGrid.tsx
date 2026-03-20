@@ -162,7 +162,7 @@ export default function FabricProductGrid({
                             : "bg-amber-800/80 text-amber-100"
                         }`}
                       >
-                        {product.naturalFiberPercent}% natural
+                        {product.naturalFiberPercent >= 95 ? "100% Natural" : `${product.naturalFiberPercent}% Natural`}
                       </span>
                     </div>
                   )}
