@@ -277,18 +277,17 @@ function buildResponse(data: {
   const brandRating = avgFiber === null ? null : avgFiber >= 95 ? "Exceptional" : avgFiber >= 85 ? "Excellent" : avgFiber >= 70 ? "Good" : "Caution";
 
   let effectivePercent = data.naturalPercent;
-  let effectiveVerdict = data.verdict;
+  let effectiveVerdict = "";
   let usedBrandAvg = false;
   if (effectivePercent === 0 && !data.composition && avgFiber !== null && avgFiber > 0) {
     effectivePercent = avgFiber;
     usedBrandAvg = true;
-    if (!effectiveVerdict) {
-      if (avgFiber >= 90) effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — an excellent brand for natural fabrics.`;
-      else if (avgFiber >= 70) effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — a solid choice for natural materials.`;
-      else effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers. Check the product label to confirm this item's exact composition.`;
-    }
+    if (avgFiber >= 90) effectiveVerdict = `We couldn't confirm this specific item's composition, but based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — an excellent brand for natural fabrics. Check the product label to confirm.`;
+    else if (avgFiber >= 70) effectiveVerdict = `We couldn't confirm this specific item's composition, but based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers. Check the product label to verify.`;
+    else effectiveVerdict = `We couldn't confirm this specific item's composition. Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — some items may contain synthetics. Check the product label.`;
+  } else {
+    effectiveVerdict = data.verdict || buildFallbackVerdict(data.naturalPercent, data.composition, data.fibers);
   }
-  if (!effectiveVerdict) effectiveVerdict = buildFallbackVerdict(data.naturalPercent, data.composition, data.fibers);
 
   return {
     tagInfo: {
@@ -410,15 +409,23 @@ export async function POST(request: NextRequest) {
           let structuredData = "";
           if (jsonLdMatch) {
             structuredData = jsonLdMatch.map(m => m.replace(/<\/?script[^>]*>/gi, "").trim()).join("\n").slice(0, 3000);
-            try {
-              for (const match of jsonLdMatch) {
+            for (const match of jsonLdMatch) {
+              try {
                 const jsonStr = match.replace(/<\/?script[^>]*>/gi, "").trim();
                 const parsed = JSON.parse(jsonStr);
-                if (!imageUrl && parsed.image) {
-                  imageUrl = Array.isArray(parsed.image) ? parsed.image[0] : (typeof parsed.image === 'string' ? parsed.image : parsed.image?.url || "");
+                const items = parsed["@graph"] ? parsed["@graph"] : [parsed];
+                for (const item of (Array.isArray(items) ? items : [items])) {
+                  if (!imageUrl && item.image) {
+                    const img = Array.isArray(item.image) ? item.image[0] : item.image;
+                    imageUrl = typeof img === 'string' ? img : img?.url || img?.contentUrl || "";
+                  }
                 }
-              }
-            } catch {}
+              } catch {}
+            }
+          }
+
+          if (imageUrl && !imageUrl.startsWith("http")) {
+            try { imageUrl = new URL(imageUrl, url).toString(); } catch { imageUrl = ""; }
           }
 
           const ogTags: string[] = [];
