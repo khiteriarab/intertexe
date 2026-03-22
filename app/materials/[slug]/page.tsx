@@ -65,6 +65,7 @@ const CATEGORY_LINKS: Record<string, { label: string; slug: string }[]> = {
   cotton: [
     { label: "Dresses", slug: "cotton-dresses" },
     { label: "Tops", slug: "cotton-tops" },
+    { label: "T-Shirts", slug: "cotton-t-shirts" },
     { label: "Shirts", slug: "cotton-shirts" },
     { label: "Pants", slug: "cotton-pants" },
     { label: "Denim", slug: "cotton-denim" },
@@ -311,6 +312,27 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
       "\"Cotton rich\" usually means 60% cotton, 40% polyester",
       "\"Easy iron\" or \"non-iron\" shirts are coated with formaldehyde resins",
       "Under $40 for a cotton shirt — likely blended with synthetics",
+    ],
+  },
+  "cotton-t-shirts": {
+    slug: "cotton-t-shirts",
+    title: "Best Cotton T-Shirts in 2026 — Verified Compositions",
+    fiber: "Cotton",
+    category: "tops",
+    fiberQuery: ["cotton"],
+    heroTitle: "Cotton T-Shirts",
+    heroSubtitle: "The everyday essential — verified for 100% cotton content.",
+    intro: "A cotton t-shirt should be simple — 100% cotton, no hidden polyester blends. We verified every label to find tees made from genuine cotton: Pima, Supima, organic, and heavyweight jersey. No synthetic surprises.",
+    buyingTips: [
+      "100% cotton jersey is the standard — avoid poly-cotton blends",
+      "Supima cotton tees are softer and last longer than regular cotton",
+      "Heavyweight cotton (180+ GSM) holds its shape better than thin jersey",
+      "Organic cotton (GOTS certified) is grown without synthetic pesticides",
+    ],
+    redFlags: [
+      "\"Cotton feel\" or \"cotton touch\" means synthetic",
+      "\"Cotton blend\" without specifying percentages",
+      "Very cheap t-shirts under $15 are almost always poly-cotton",
     ],
   },
   "cotton-pants": {
