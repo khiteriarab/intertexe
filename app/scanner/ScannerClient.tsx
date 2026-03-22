@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from "react";
-import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, MessageCircle, Heart, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, MessageCircle, Heart, CheckCircle2, AlertTriangle, ShieldCheck, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { trackScanStart, trackScanComplete, trackScanError } from "../../lib/analytics";
@@ -10,6 +10,7 @@ type FiberEntry = { fiber: string; percent: number; isNatural: boolean };
 
 type ScanResult = {
   tagInfo: { brandName: string; productName: string; price: string; composition: string; garmentType?: string; size?: string; madeIn?: string; careInstructions?: string; confidence: string; rawText: string };
+  imageUrl?: string;
   fiberBreakdown: FiberEntry[];
   naturalPercent: number;
   isNatural: boolean;
@@ -64,10 +65,10 @@ function FiberBreakdownBar({ fibers }: { fibers: FiberEntry[] }) {
     <div className="space-y-2">
       {sorted.map((f, i) => (
         <div key={i} className="flex items-center gap-3">
-          <div className="w-20 text-[11px] capitalize text-right font-medium">{f.fiber}</div>
+          <div className="w-24 text-[11px] capitalize text-right font-medium">{f.fiber}</div>
           <div className="flex-1 h-2 bg-neutral-100 overflow-hidden">
             <div
-              className={`h-full transition-all duration-700 ${f.isNatural ? "bg-emerald-600" : "bg-neutral-400"}`}
+              className={`h-full transition-all duration-700 ${f.isNatural ? "bg-emerald-600" : "bg-red-400"}`}
               style={{ width: `${f.percent}%` }}
             />
           </div>
@@ -75,7 +76,7 @@ function FiberBreakdownBar({ fibers }: { fibers: FiberEntry[] }) {
           {f.isNatural ? (
             <Leaf className="w-3 h-3 text-emerald-600 flex-shrink-0" />
           ) : (
-            <div className="w-3 h-3 flex-shrink-0" />
+            <X className="w-3 h-3 text-red-400 flex-shrink-0" />
           )}
         </div>
       ))}
@@ -91,7 +92,6 @@ function ProductCard({ product }: { product: any }) {
   const brandName = product.brand_name || product.brandName || "";
   const imageUrl = product.image_url || product.imageUrl;
   const price = product.price;
-  const composition = product.composition;
   const naturalFiber = product.natural_fiber_percent;
 
   return (
@@ -194,6 +194,7 @@ export default function ScannerClient() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [scannedUrl, setScannedUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -290,6 +291,7 @@ export default function ScannerClient() {
     setLoading(true);
     setError("");
     setResult(null);
+    setScannedUrl(url.trim());
     trackScanStart("url");
     try {
       const res = await fetch("/api/scan-url", {
@@ -330,6 +332,7 @@ export default function ScannerClient() {
     setResult(null);
     setError("");
     setUrl("");
+    setScannedUrl("");
     setMode("idle");
     setLoading(false);
   };
@@ -371,7 +374,7 @@ export default function ScannerClient() {
         <>
           <div className="pt-8 md:pt-14 pb-6 md:pb-8">
             <h1 className="text-2xl md:text-[40px] font-serif leading-tight mb-2" data-testid="text-scanner-title">Shopping Intelligence</h1>
-            <p className="text-[12px] md:text-sm text-muted-foreground">Photograph any clothing tag — composition label, hanging tag, or both — and we'll tell you exactly what it's made of.</p>
+            <p className="text-[12px] md:text-sm text-muted-foreground">Paste any product link or photograph a clothing tag — we'll analyze the composition and show you natural-fiber alternatives.</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
@@ -423,8 +426,8 @@ export default function ScannerClient() {
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 animate-ping" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium mb-1">Reading your tag</p>
-            <p className="text-[11px] text-muted-foreground">Analyzing composition & finding alternatives</p>
+            <p className="text-sm font-medium mb-1">Analyzing product</p>
+            <p className="text-[11px] text-muted-foreground">Scraping composition, identifying fibers & finding alternatives</p>
           </div>
         </div>
       )}
@@ -432,6 +435,7 @@ export default function ScannerClient() {
       {result && (() => {
         const pct = result.naturalPercent;
         const isGreat = pct >= 70;
+        const hasImage = !!result.imageUrl;
 
         return (
           <div className="pt-6 md:pt-10 pb-8">
@@ -439,41 +443,66 @@ export default function ScannerClient() {
               <ChevronLeft className="w-3.5 h-3.5" /> New scan
             </button>
 
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xl md:text-3xl font-serif mb-0.5" data-testid="text-result-brand">{result.tagInfo.brandName}</h2>
-                {result.tagInfo.productName && <p className="text-[13px] text-muted-foreground truncate" data-testid="text-result-product">{result.tagInfo.productName}</p>}
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {result.tagInfo.price && <span className="text-sm font-medium" data-testid="text-result-price">{result.tagInfo.price}</span>}
-                  {result.tagInfo.garmentType && (
-                    <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 uppercase tracking-[0.08em]">{result.tagInfo.garmentType}</span>
-                  )}
-                  {result.tagInfo.size && (
-                    <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 uppercase tracking-[0.08em]">Size {result.tagInfo.size}</span>
+            <div className={`mb-6 ${hasImage ? "flex gap-5" : ""}`}>
+              {hasImage && (
+                <div className="w-28 md:w-40 flex-shrink-0">
+                  <div className="aspect-[3/4] bg-[#f0f0ee] relative overflow-hidden">
+                    <img
+                      src={result.imageUrl}
+                      alt={result.tagInfo.productName || result.tagInfo.brandName}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      data-testid="img-scanned-product"
+                    />
+                    <div className="absolute top-2 left-2">
+                      <span className={`flex items-center gap-1 px-1.5 py-0.5 text-[8px] font-bold backdrop-blur-sm text-white ${pct >= 95 ? "bg-emerald-900/90" : pct >= 70 ? "bg-amber-700/90" : "bg-red-700/90"}`}>
+                        {pct}%
+                      </span>
+                    </div>
+                  </div>
+                  {scannedUrl && (
+                    <a href={scannedUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors" data-testid="link-original-product">
+                      <ExternalLink className="w-3 h-3" />
+                      <span>View original</span>
+                    </a>
                   )}
                 </div>
+              )}
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl md:text-3xl font-serif mb-0.5" data-testid="text-result-brand">{result.tagInfo.brandName}</h2>
+                    {result.tagInfo.productName && <p className="text-[13px] text-muted-foreground" data-testid="text-result-product">{result.tagInfo.productName}</p>}
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {result.tagInfo.price && <span className="text-sm font-medium" data-testid="text-result-price">{result.tagInfo.price}</span>}
+                      {result.tagInfo.garmentType && (
+                        <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 uppercase tracking-[0.08em]">{result.tagInfo.garmentType}</span>
+                      )}
+                    </div>
+                  </div>
+                  {!hasImage && <NaturalScoreRing percent={pct} />}
+                </div>
               </div>
-              <NaturalScoreRing percent={pct} />
             </div>
 
-            <div className={`p-4 md:p-5 mb-6 ${isGreat ? "bg-emerald-50 border border-emerald-200" : pct > 0 ? "bg-amber-50 border border-amber-200" : "bg-neutral-50 border border-neutral-200"}`}>
+            <div className={`p-4 md:p-5 mb-6 ${isGreat ? "bg-emerald-50 border border-emerald-200" : pct > 0 ? "bg-red-50 border border-red-200" : "bg-neutral-50 border border-neutral-200"}`}>
               <div className="flex items-start gap-3">
                 {isGreat ? (
                   <ShieldCheck className="w-5 h-5 text-emerald-700 flex-shrink-0 mt-0.5" />
                 ) : pct > 0 ? (
-                  <AlertTriangle className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 ) : (
                   <Sparkles className="w-5 h-5 text-neutral-500 flex-shrink-0 mt-0.5" />
                 )}
                 <div>
-                  <p className={`text-sm font-medium mb-0.5 ${isGreat ? "text-emerald-900" : pct > 0 ? "text-amber-900" : "text-neutral-800"}`}>
+                  <p className={`text-sm font-medium mb-1 ${isGreat ? "text-emerald-900" : pct > 0 ? "text-red-900" : "text-neutral-800"}`}>
                     {isGreat
                       ? (result.tagInfo.confidence === "brand-average" ? "Brand Catalog Estimate"
                         : result.tagInfo.confidence === "inferred" ? "Natural Material Detected"
                         : "Natural Fiber Verified")
-                      : pct > 0 ? "Low Natural Fiber Content" : "Explore Natural Alternatives"}
+                      : pct > 0 ? "Synthetic Material Detected" : "Explore Natural Alternatives"}
                   </p>
-                  <p className={`text-[12px] leading-relaxed ${isGreat ? "text-emerald-700" : pct > 0 ? "text-amber-700" : "text-muted-foreground"}`} data-testid="text-verdict">
+                  <p className={`text-[12px] leading-relaxed ${isGreat ? "text-emerald-700" : pct > 0 ? "text-red-700" : "text-muted-foreground"}`} data-testid="text-verdict">
                     {result.verdict}
                   </p>
                 </div>
@@ -483,7 +512,7 @@ export default function ScannerClient() {
             {result.tagInfo.composition && (
               <div className="mb-6">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">Composition</p>
-                <p className="text-[13px] mb-4" data-testid="text-result-composition">{result.tagInfo.composition}</p>
+                <p className="text-[13px] mb-4 font-medium" data-testid="text-result-composition">{result.tagInfo.composition}</p>
                 {result.fiberBreakdown.length > 0 && (
                   <FiberBreakdownBar fibers={result.fiberBreakdown} />
                 )}
@@ -551,12 +580,12 @@ export default function ScannerClient() {
                   </p>
                   <p className="text-[11px] text-muted-foreground">
                     {isGreat
-                      ? "Shop similar pieces made with natural fibers from verified brands"
-                      : "Same category, verified natural fiber content from brands in our database"}
+                      ? "Similar pieces from verified brands — all 95%+ natural fiber"
+                      : `${result.betterAlternatives.length} alternatives from ${new Set(result.betterAlternatives.map((p: any) => p.brand_name || p.brandName)).size} different brands — all verified natural fiber`}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                  {result.betterAlternatives.slice(0, 8).map((p: any) => <ProductCard key={p.id} product={p} />)}
+                  {result.betterAlternatives.map((p: any) => <ProductCard key={p.id} product={p} />)}
                 </div>
               </div>
             )}

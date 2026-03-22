@@ -5,8 +5,15 @@ import OpenAI from "openai";
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
   "jute", "ramie", "bamboo", "merino", "angora", "camel", "vicuna", "yak",
-  "flax", "kapok", "coir", "lyocell", "tencel", "modal", "cupro", "viscose",
+  "flax", "kapok", "coir", "lyocell", "tencel", "modal", "cupro",
   "leather", "suede", "nubuck", "shearling",
+]);
+
+const SYNTHETIC_FIBERS = new Set([
+  "polyester", "nylon", "acrylic", "spandex", "elastane", "lycra", "polyamide",
+  "polypropylene", "polyurethane", "pvc", "vinyl", "rayon", "viscose",
+  "acetate", "triacetate", "modacrylic", "olefin", "recycled polyester",
+  "recycled nylon", "recycled polyamide", "econyl",
 ]);
 
 function parseComposition(raw: string): { fiber: string; percent: number; isNatural: boolean }[] {
@@ -16,9 +23,13 @@ function parseComposition(raw: string): { fiber: string; percent: number; isNatu
   let m: RegExpExecArray | null;
   while ((m = regex.exec(raw)) !== null) {
     const pct = parseFloat(m[1] || m[4]);
-    const name = (m[2] || m[3]).trim().toLowerCase();
+    let name = (m[2] || m[3]).trim().toLowerCase();
     if (pct > 0 && name) {
-      fibers.push({ fiber: name, percent: pct, isNatural: NATURAL_FIBERS.has(name) });
+      name = name.replace(/\s+(in|with|for|from|featuring|fabrication|jersey|fleece|french|terry|poplin|weave|fabric).*$/i, "").trim();
+      const isRecycledSynthetic = /^recycled\s+(polyester|nylon|polyamide|plastic)$/i.test(name);
+      const baseFiber = name.replace(/^recycled\s+/i, "").trim();
+      const isNat = isRecycledSynthetic ? false : (NATURAL_FIBERS.has(baseFiber) || NATURAL_FIBERS.has(name));
+      fibers.push({ fiber: name, percent: pct, isNatural: isNat });
     }
   }
   return fibers;
@@ -103,6 +114,7 @@ function extractInfoFromUrl(url: string): { brand: string; product: string; reta
       "loewe.com": "Loewe", "chloe.com": "Chloé", "maxmara.com": "Max Mara",
       "tibi.com": "Tibi", "lagence.com": "L'Agence", "rixo.co.uk": "RIXO",
       "redone.com": "Re/Done", "seanewyork.com": "Sea New York",
+      "julia-heuer.com": "Julia Heuer",
     };
     const retailer = brandMap[hostname] || hostname.split(".")[0].charAt(0).toUpperCase() + hostname.split(".")[0].slice(1);
     const pathParts = parsed.pathname.split("/").filter(Boolean);
@@ -125,7 +137,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   const searchTerms = categoryKeywords[category] || [];
 
   let altQuery = supabase.from("products").select("*")
-    .gte("natural_fiber_percent", 80)
+    .gte("natural_fiber_percent", 95)
     .not("image_url", "is", null)
     .order("natural_fiber_percent", { ascending: false });
 
@@ -136,26 +148,26 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
     altQuery = altQuery.or(searchTerms.map(t => `name.ilike.%${t}%`).join(","));
   }
 
-  const { data: altData } = await altQuery.limit(40);
+  const { data: altData } = await altQuery.limit(80);
   let alternatives = altData || [];
 
   if (priceNum && alternatives.length > 4) {
-    const priceLow = priceNum * 0.4;
-    const priceHigh = priceNum * 2.5;
+    const priceLow = priceNum * 0.3;
+    const priceHigh = priceNum * 3.0;
     const priceFiltered = alternatives.filter((p: any) => {
       const pn = parsePriceNumber(p.price || "");
       return pn !== null && pn >= priceLow && pn <= priceHigh;
     });
-    if (priceFiltered.length >= 4) alternatives = priceFiltered;
+    if (priceFiltered.length >= 8) alternatives = priceFiltered;
   }
 
   if (alternatives.length < 4 && searchTerms.length > 0) {
     let fallbackQuery = supabase.from("products").select("*")
-      .gte("natural_fiber_percent", 80)
+      .gte("natural_fiber_percent", 95)
       .not("image_url", "is", null)
       .or(searchTerms.map(t => `name.ilike.%${t}%`).join(","))
       .order("natural_fiber_percent", { ascending: false })
-      .limit(20);
+      .limit(40);
     if (brandSlug && brandSlug !== "unknown") {
       fallbackQuery = fallbackQuery.neq("brand_slug", brandSlug);
     }
@@ -165,25 +177,91 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
 
   if (alternatives.length < 4) {
     const { data: anyData } = await supabase.from("products").select("*")
-      .gte("natural_fiber_percent", 90)
+      .gte("natural_fiber_percent", 95)
       .not("image_url", "is", null)
       .order("natural_fiber_percent", { ascending: false })
-      .limit(12);
+      .limit(30);
     if (anyData && anyData.length > alternatives.length) alternatives = anyData;
   }
 
-  return alternatives.slice(0, 8);
+  const brandBuckets: Record<string, any[]> = {};
+  for (const p of alternatives) {
+    const bs = p.brand_slug || "unknown";
+    if (!brandBuckets[bs]) brandBuckets[bs] = [];
+    brandBuckets[bs].push(p);
+  }
+
+  const diversified: any[] = [];
+  const brandSlugs = Object.keys(brandBuckets);
+  let idx = 0;
+  while (diversified.length < 12 && idx < 100) {
+    const bs = brandSlugs[idx % brandSlugs.length];
+    if (brandBuckets[bs] && brandBuckets[bs].length > 0) {
+      diversified.push(brandBuckets[bs].shift()!);
+    }
+    idx++;
+    if (brandSlugs.every(b => !brandBuckets[b] || brandBuckets[b].length === 0)) break;
+  }
+
+  return diversified.slice(0, 12);
 }
 
-function buildVerdict(naturalPercent: number, compositionText: string): string {
+async function generateAIVerdict(
+  openai: OpenAI,
+  brandName: string,
+  productName: string,
+  composition: string,
+  naturalPercent: number,
+  fibers: { fiber: string; percent: number; isNatural: boolean }[],
+  price: string,
+  category: string
+): Promise<string> {
+  try {
+    const fiberList = fibers.map(f => `${f.percent}% ${f.fiber} (${f.isNatural ? "natural" : "synthetic"})`).join(", ");
+    const res = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are a fabric expert for INTERTEXE, a luxury natural-fabric fashion platform. Give a concise 2-3 sentence verdict about this garment's material quality. Be specific about the fibers used. If it's synthetic or low natural content, explain why natural alternatives are better (breathability, durability, sustainability). If it's high natural content, praise the specific fiber quality. Mention "recycled" polyester/nylon is still plastic on skin. Never use bullet points. Be direct, knowledgeable, editorial — like a luxury fashion editor.`
+        },
+        {
+          role: "user",
+          content: `Brand: ${brandName}\nProduct: ${productName}\nPrice: ${price}\nComposition: ${composition || "Unknown"}\nFiber breakdown: ${fiberList || "None detected"}\nNatural fiber %: ${naturalPercent}%\nCategory: ${category}`
+        }
+      ],
+      max_tokens: 200,
+      temperature: 0.7,
+    });
+    return res.choices[0]?.message?.content?.trim() || "";
+  } catch {
+    return "";
+  }
+}
+
+function buildFallbackVerdict(naturalPercent: number, compositionText: string, fibers: { fiber: string; percent: number; isNatural: boolean }[]): string {
   const inferred = compositionText.includes("(inferred");
-  if (naturalPercent >= 90) return inferred
+  const syntheticFibers = fibers.filter(f => !f.isNatural).map(f => f.fiber);
+  const hasRecycledSynthetic = syntheticFibers.some(f => /recycled/i.test(f));
+
+  if (naturalPercent >= 95) return inferred
     ? `This appears to be made from natural materials based on the product description — ${naturalPercent}% natural. Verify the label for exact composition.`
     : `Excellent choice — ${naturalPercent}% natural fibers. This is a high-quality material composition.`;
   if (naturalPercent >= 70) return `Good composition — ${naturalPercent}% natural fibers. A solid natural-fiber garment.`;
-  if (naturalPercent >= 40) return `Mixed composition — only ${naturalPercent}% natural fibers. Consider alternatives with higher natural fiber content.`;
-  if (naturalPercent > 0) return `Low natural fiber content — only ${naturalPercent}%. This garment is primarily synthetic. We found natural-fiber alternatives below.`;
-  if (compositionText) return "This garment appears to be primarily synthetic. See natural-fiber alternatives below.";
+  if (naturalPercent >= 40) {
+    const synthNote = hasRecycledSynthetic ? " \"Recycled\" polyester/nylon is still synthetic plastic on your skin." : "";
+    return `Mixed composition — only ${naturalPercent}% natural fibers.${synthNote} Consider alternatives with higher natural fiber content.`;
+  }
+  if (naturalPercent > 0) {
+    const synthNote = hasRecycledSynthetic ? " Recycled synthetics are still plastic — they don't breathe or age like natural fibers." : "";
+    return `Low natural fiber content — only ${naturalPercent}%.${synthNote} This garment is primarily synthetic. We found natural-fiber alternatives below.`;
+  }
+  if (compositionText) {
+    if (/recycled/i.test(compositionText)) {
+      return "This garment uses recycled materials, but they're still synthetic fibers — plastic on your skin. See natural-fiber alternatives below that breathe better and last longer.";
+    }
+    return "This garment appears to be primarily synthetic. See natural-fiber alternatives below.";
+  }
   return "We couldn't determine the exact composition. Browse our curated natural-fiber products below.";
 }
 
@@ -191,7 +269,7 @@ function buildResponse(data: {
   brandName: string; productName: string; price: string; composition: string;
   fibers: any[]; naturalPercent: number; category: string;
   brandProducts: any[]; designerInfo: any; alternatives: any[];
-  confidence: string; source: string;
+  confidence: string; source: string; imageUrl: string; verdict: string;
 }) {
   const avgFiber = data.brandProducts.length
     ? Math.round(data.brandProducts.reduce((s: number, p: any) => s + (p.natural_fiber_percent || 0), 0) / data.brandProducts.length)
@@ -199,16 +277,18 @@ function buildResponse(data: {
   const brandRating = avgFiber === null ? null : avgFiber >= 95 ? "Exceptional" : avgFiber >= 85 ? "Excellent" : avgFiber >= 70 ? "Good" : "Caution";
 
   let effectivePercent = data.naturalPercent;
-  let effectiveVerdict = "";
+  let effectiveVerdict = data.verdict;
   let usedBrandAvg = false;
   if (effectivePercent === 0 && !data.composition && avgFiber !== null && avgFiber > 0) {
     effectivePercent = avgFiber;
     usedBrandAvg = true;
-    if (avgFiber >= 90) effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — an excellent brand for natural fabrics.`;
-    else if (avgFiber >= 70) effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — a solid choice for natural materials.`;
-    else effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers. Check the product label to confirm this item's exact composition.`;
+    if (!effectiveVerdict) {
+      if (avgFiber >= 90) effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — an excellent brand for natural fabrics.`;
+      else if (avgFiber >= 70) effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers — a solid choice for natural materials.`;
+      else effectiveVerdict = `Based on ${data.brandName}'s catalog, their pieces average ${avgFiber}% natural fibers. Check the product label to confirm this item's exact composition.`;
+    }
   }
-  if (!effectiveVerdict) effectiveVerdict = buildVerdict(data.naturalPercent, data.composition);
+  if (!effectiveVerdict) effectiveVerdict = buildFallbackVerdict(data.naturalPercent, data.composition, data.fibers);
 
   return {
     tagInfo: {
@@ -217,6 +297,7 @@ function buildResponse(data: {
       madeIn: "", careInstructions: "",
       confidence: usedBrandAvg ? "brand-average" : data.confidence, rawText: data.source,
     },
+    imageUrl: data.imageUrl,
     fiberBreakdown: data.fibers,
     naturalPercent: effectivePercent,
     isNatural: effectivePercent >= 70,
@@ -266,6 +347,7 @@ export async function POST(request: NextRequest) {
     let price = "";
     let compositionText = "";
     let category = "";
+    let imageUrl = "";
     let fibers: { fiber: string; percent: number; isNatural: boolean }[] = [];
     let pageContent = "";
 
@@ -284,6 +366,12 @@ export async function POST(request: NextRequest) {
           const variant = sp.variants?.[0];
           price = variant?.price ? `$${variant.price}` : "";
 
+          if (sp.image?.src) {
+            imageUrl = sp.image.src;
+          } else if (sp.images?.length > 0) {
+            imageUrl = sp.images[0].src || sp.images[0];
+          }
+
           const bodyText = (sp.body_html || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
           const compMatch = bodyText.match(/(\d+%\s*[a-zA-Z]+(?:\s*[,\/;]\s*\d+%\s*[a-zA-Z]+)*)/);
           if (compMatch) compositionText = compMatch[0].trim();
@@ -296,7 +384,7 @@ export async function POST(request: NextRequest) {
       }
     } catch {}
 
-    if (!compositionText || !productName) {
+    if (!compositionText || !productName || !imageUrl) {
       try {
         const pageRes = await fetch(url, {
           headers: {
@@ -308,11 +396,31 @@ export async function POST(request: NextRequest) {
         });
         if (pageRes.ok) {
           const html = await pageRes.text();
+
+          if (!imageUrl) {
+            const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+            if (ogImageMatch) imageUrl = ogImageMatch[1];
+          }
+          if (!imageUrl) {
+            const twitterImageMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
+            if (twitterImageMatch) imageUrl = twitterImageMatch[1];
+          }
+
           const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
           let structuredData = "";
           if (jsonLdMatch) {
             structuredData = jsonLdMatch.map(m => m.replace(/<\/?script[^>]*>/gi, "").trim()).join("\n").slice(0, 3000);
+            try {
+              for (const match of jsonLdMatch) {
+                const jsonStr = match.replace(/<\/?script[^>]*>/gi, "").trim();
+                const parsed = JSON.parse(jsonStr);
+                if (!imageUrl && parsed.image) {
+                  imageUrl = Array.isArray(parsed.image) ? parsed.image[0] : (typeof parsed.image === 'string' ? parsed.image : parsed.image?.url || "");
+                }
+              }
+            } catch {}
           }
+
           const ogTags: string[] = [];
           const metaRegex = /<meta[^>]*property=["']og:([^"']+)["'][^>]*content=["']([^"']*)["'][^>]*>/gi;
           let metaMatch: RegExpExecArray | null;
@@ -325,9 +433,13 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
-    if (openaiKey && (!compositionText || !productName || !brandName)) {
+    let openai: OpenAI | null = null;
+    if (openaiKey) {
+      openai = new OpenAI({ apiKey: openaiKey });
+    }
+
+    if (openai && (!compositionText || !productName || !brandName || !imageUrl)) {
       try {
-        const openai = new OpenAI({ apiKey: openaiKey });
         const promptContent = pageContent
           ? `URL: ${url}\n\n${pageContent}`
           : `URL: ${url}\nRetailer: ${urlInfo.retailer}\nBrand (from URL): ${urlInfo.brand || "unknown"}\nProduct (from URL path): ${urlInfo.product || "unknown"}\n\nThe page could not be scraped. Use your knowledge of this brand and product.`;
@@ -335,17 +447,18 @@ export async function POST(request: NextRequest) {
         const extractRes = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           messages: [
-            { role: "system", content: `Extract product info. Return JSON:
+            { role: "system", content: `Extract product info from a fashion product page. Return ONLY valid JSON:
 {
   "brandName": "brand",
-  "productName": "product name",
-  "price": "price with currency",
-  "composition": "full fiber composition e.g. '98% Cotton, 2% Elastane'",
+  "productName": "product name (clean, no extra text)",
+  "price": "price with currency symbol",
+  "composition": "full fiber composition e.g. '98% Cotton, 2% Elastane'. Be specific: 'recycled polyester' is NOT natural. 'Recycled' = still synthetic unless it's recycled cotton/wool.",
   "fibers": [{"fiber":"cotton","percent":98},{"fiber":"elastane","percent":2}],
   "category": "tops/bottoms/dresses/outerwear/knitwear/skirts/shorts/other",
-  "garmentType": "specific type: dress, pants, jeans, sweater, etc."
+  "garmentType": "specific type: dress, pants, jeans, sweater, top, blouse, etc.",
+  "imageUrl": "primary product image URL (full https URL)"
 }
-Use null for genuinely unknown. For composition, extract from product description if available. ONLY valid JSON.` },
+Use null for genuinely unknown. For composition, extract from product description if available. IMPORTANT: 'Recycled polyester', 'recycled nylon', 'ECONYL' are ALL synthetic. Only cotton, silk, wool, linen, cashmere, hemp, etc. are natural.` },
             { role: "user", content: promptContent }
           ],
           max_tokens: 500,
@@ -357,15 +470,19 @@ Use null for genuinely unknown. For composition, extract from product descriptio
         productName = productName || pageInfo.productName || "";
         price = price || pageInfo.price || "";
         compositionText = compositionText || pageInfo.composition || "";
+        if (!imageUrl && pageInfo.imageUrl) imageUrl = pageInfo.imageUrl;
         category = category || resolveCategory(pageInfo.category || "", `${(pageInfo.productName || "").toLowerCase()} ${(pageInfo.garmentType || "").toLowerCase()}`);
 
         if (!fibers.length && pageInfo.fibers?.length) {
           fibers = pageInfo.fibers.map((f: any) => {
             const pctRaw = String(f.percent || "0").replace(/%/g, "").trim();
+            const fiberName = (f.fiber || "").toLowerCase().trim();
+            const isRecycledSynthetic = /^recycled\s+(polyester|nylon|polyamide|plastic)$/i.test(fiberName);
+            const baseFiber = fiberName.replace(/^recycled\s+/i, "").trim();
             return {
-              fiber: (f.fiber || "").toLowerCase().trim(),
+              fiber: fiberName,
               percent: parseFloat(pctRaw) || 0,
-              isNatural: NATURAL_FIBERS.has((f.fiber || "").toLowerCase().trim()),
+              isNatural: isRecycledSynthetic ? false : (NATURAL_FIBERS.has(baseFiber) || NATURAL_FIBERS.has(fiberName)),
             };
           }).filter((f: any) => f.fiber && f.percent > 0);
         }
@@ -421,12 +538,19 @@ Use null for genuinely unknown. For composition, extract from product descriptio
       console.error("Alternatives fetch failed:", altErr.message);
     }
 
+    let aiVerdict = "";
+    if (openai) {
+      aiVerdict = await generateAIVerdict(openai, brandName, productName, compositionText, naturalPercent, fibers, price, category);
+    }
+
     return NextResponse.json(buildResponse({
       brandName, productName, price, composition: compositionText,
       fibers, naturalPercent, category,
       brandProducts, designerInfo, alternatives,
       confidence: compositionText?.includes("(inferred") ? "inferred" : compositionText ? "high" : pageContent ? "medium" : "low",
       source: `From ${urlInfo.retailer || parsedUrl.hostname}`,
+      imageUrl,
+      verdict: aiVerdict,
     }));
   } catch (err: any) {
     console.error("Scan URL error:", err.message);
@@ -439,10 +563,13 @@ Use null for genuinely unknown. For composition, extract from product descriptio
         fibers: [], naturalPercent: 0, category: "",
         brandProducts: [], designerInfo: null, alternatives,
         confidence: "low", source: "URL scan",
+        imageUrl: "",
+        verdict: "",
       }));
     } catch {
       return NextResponse.json({
         tagInfo: { brandName: "Unknown", productName: "", price: "", composition: "", garmentType: "", size: "", madeIn: "", careInstructions: "", confidence: "low", rawText: "" },
+        imageUrl: "",
         fiberBreakdown: [], naturalPercent: 0, isNatural: false,
         verdict: "We couldn't analyze this product right now. Browse our curated natural-fiber products below.",
         category: "", products: [], matched: false, brandStats: null, designerInfo: null, betterAlternatives: [],
