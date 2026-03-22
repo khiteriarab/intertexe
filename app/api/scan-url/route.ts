@@ -16,20 +16,77 @@ const SYNTHETIC_FIBERS = new Set([
   "recycled nylon", "recycled polyamide", "econyl",
 ]);
 
+const FIBER_NORMALIZATION: [RegExp, string][] = [
+  [/\b(european\s+)?flax(\s+linen)?\b/i, "linen"],
+  [/\b(european\s+)?linen(\s+flax)?\b/i, "linen"],
+  [/\bflax\b/i, "linen"],
+  [/\bpima\s+cotton\b/i, "cotton"],
+  [/\bsupima\s+cotton\b/i, "cotton"],
+  [/\begyptian\s+cotton\b/i, "cotton"],
+  [/\borganic\s+cotton\b/i, "cotton"],
+  [/\bsea\s+island\s+cotton\b/i, "cotton"],
+  [/\bbci\s+certified\s+cotton\b/i, "cotton"],
+  [/\braw\s+denim\b/i, "cotton"],
+  [/\bselvedge\s+denim\b/i, "cotton"],
+  [/\bdenim\b/i, "cotton"],
+  [/\bmerino\s+wool\b/i, "merino"],
+  [/\bvirgin\s+wool\b/i, "wool"],
+  [/\bshetland\s+wool\b/i, "wool"],
+  [/\blambswool\b/i, "wool"],
+  [/\bmongolian\s+cashmere\b/i, "cashmere"],
+  [/\bscottish\s+cashmere\b/i, "cashmere"],
+  [/\bbaby\s+alpaca\b/i, "alpaca"],
+  [/\bsuri\s+alpaca\b/i, "alpaca"],
+  [/\bmulberry\s+silk\b/i, "silk"],
+  [/\bcharmeuse\s+silk\b/i, "silk"],
+  [/\bhabotai\s+silk\b/i, "silk"],
+  [/\bcrêpe\s+de\s+chine\b/i, "silk"],
+  [/\bwashed\s+silk\b/i, "silk"],
+  [/\brecycled\s+polyester\b/i, "recycled polyester"],
+  [/\brecycled\s+nylon\b/i, "recycled nylon"],
+  [/\brecycled\s+polyamide\b/i, "recycled nylon"],
+  [/\beconyl\b/i, "recycled nylon"],
+  [/\brecycled\s+cotton\b/i, "cotton"],
+  [/\brecycled\s+wool\b/i, "wool"],
+  [/\brecycled\s+cashmere\b/i, "cashmere"],
+  [/\beuropean\b/i, "linen"],
+];
+
+function normalizeFiberName(raw: string): string {
+  const cleaned = raw.trim().toLowerCase()
+    .replace(/\s+(in|with|for|from|featuring|fabrication|jersey|fleece|french|terry|poplin|weave|fabric|certified|standard|oeko|tex|bci|gots).*$/i, "")
+    .replace(/[®™©]/g, "")
+    .trim();
+
+  for (const [pattern, normalized] of FIBER_NORMALIZATION) {
+    if (pattern.test(cleaned)) return normalized;
+  }
+
+  const words = cleaned.split(/\s+/);
+  for (const word of words) {
+    if (NATURAL_FIBERS.has(word)) return word;
+    if (SYNTHETIC_FIBERS.has(word)) return word;
+  }
+
+  return cleaned;
+}
+
 function parseComposition(raw: string): { fiber: string; percent: number; isNatural: boolean }[] {
   if (!raw) return [];
   const fibers: { fiber: string; percent: number; isNatural: boolean }[] = [];
-  const regex = /(\d+(?:\.\d+)?)\s*%\s*([a-zA-Z\s/]+)|([a-zA-Z\s/]+?)\s*(\d+(?:\.\d+)?)\s*%/g;
+  const regex = /(\d+(?:\.\d+)?)\s*%\s*([a-zA-Z\s/®™]+?)(?=[,;/&]|\d+\s*%|$)|([a-zA-Z\s/®™]+?)\s*(\d+(?:\.\d+)?)\s*%/g;
   let m: RegExpExecArray | null;
   while ((m = regex.exec(raw)) !== null) {
     const pct = parseFloat(m[1] || m[4]);
-    let name = (m[2] || m[3]).trim().toLowerCase();
-    if (pct > 0 && name) {
-      name = name.replace(/\s+(in|with|for|from|featuring|fabrication|jersey|fleece|french|terry|poplin|weave|fabric).*$/i, "").trim();
+    const rawName = (m[2] || m[3]).trim();
+    if (pct > 0 && rawName) {
+      const name = normalizeFiberName(rawName);
+      if (!name || /^\s*$/.test(name)) continue;
       const isRecycledSynthetic = /^recycled\s+(polyester|nylon|polyamide|plastic)$/i.test(name);
       const baseFiber = name.replace(/^recycled\s+/i, "").trim();
       const isNat = isRecycledSynthetic ? false : (NATURAL_FIBERS.has(baseFiber) || NATURAL_FIBERS.has(name));
-      fibers.push({ fiber: name, percent: pct, isNatural: isNat });
+      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+      fibers.push({ fiber: displayName, percent: pct, isNatural: isNat });
     }
   }
   return fibers;
@@ -109,18 +166,21 @@ function extractInfoFromUrl(url: string): { brand: string; product: string; reta
       "nanushka.com": "Nanushka", "acnestudios.com": "Acne Studios", "therow.com": "The Row",
       "alcltd.com": "A.L.C.", "agolde.com": "AGOLDE", "rag-bone.com": "Rag & Bone",
       "ganni.com": "Ganni", "isabelmarant.com": "Isabel Marant", "allsaints.com": "AllSaints",
-      "diesel.com": "Diesel", "faithfullthebrand.com": "Faithfull the Brand", "onequince.com": "Quince", "massimodutti.com": "Massimo Dutti",
+      "diesel.com": "Diesel", "faithfullthebrand.com": "Faithfull the Brand", "au.faithfullthebrand.com": "Faithfull the Brand", "onequince.com": "Quince", "massimodutti.com": "Massimo Dutti",
       "proenzaschouler.com": "Proenza Schouler", "stellamccartney.com": "Stella McCartney",
       "loewe.com": "Loewe", "chloe.com": "Chloé", "maxmara.com": "Max Mara",
       "tibi.com": "Tibi", "lagence.com": "L'Agence", "rixo.co.uk": "RIXO",
       "redone.com": "Re/Done", "seanewyork.com": "Sea New York",
       "julia-heuer.com": "Julia Heuer",
     };
-    const retailer = brandMap[hostname] || hostname.split(".")[0].charAt(0).toUpperCase() + hostname.split(".")[0].slice(1);
+    const hostnameParts = hostname.split(".");
+    const baseDomain = hostnameParts.length > 2 ? hostnameParts.slice(-2).join(".") : hostname;
+    const retailer = brandMap[hostname] || brandMap[baseDomain] || hostname.split(".")[0].charAt(0).toUpperCase() + hostname.split(".")[0].slice(1);
     const pathParts = parsed.pathname.split("/").filter(Boolean);
     const productSlug = pathParts.filter(p => !["products", "s", "p", "shop", "collections", "en", "us", "en-us", "en-es", "en-gb", "womens", "women", "clothing", "new-arrivals"].includes(p.toLowerCase())).pop() || "";
     const product = productSlug.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase()).trim();
-    const isMultiBrand = ["nordstrom.com", "net-a-porter.com", "ssense.com", "farfetch.com", "mytheresa.com", "shopbop.com", "saksfifthavenue.com", "revolve.com", "asos.com"].includes(hostname);
+    const multiBrandDomains = ["nordstrom.com", "net-a-porter.com", "ssense.com", "farfetch.com", "mytheresa.com", "shopbop.com", "saksfifthavenue.com", "revolve.com", "asos.com"];
+    const isMultiBrand = multiBrandDomains.includes(hostname) || multiBrandDomains.includes(baseDomain);
     return { brand: isMultiBrand ? "" : retailer, product, retailer };
   } catch {
     return { brand: "", product: "", retailer: "" };
@@ -372,7 +432,7 @@ export async function POST(request: NextRequest) {
           }
 
           const bodyText = (sp.body_html || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-          const compMatch = bodyText.match(/(\d+%\s*[a-zA-Z]+(?:\s*[,\/;]\s*\d+%\s*[a-zA-Z]+)*)/);
+          const compMatch = bodyText.match(/(\d+(?:\.\d+)?%\s*[a-zA-Z][a-zA-Z\s]*?(?:,\s*\d+(?:\.\d+)?%\s*[a-zA-Z][a-zA-Z\s]*?)*?)(?=\s*[.&]|\s*OEKO|\s*BCI|\s*GOTS|\s*certified|\s*standard|$)/i);
           if (compMatch) compositionText = compMatch[0].trim();
 
           const titleLower = productName.toLowerCase();
@@ -459,13 +519,24 @@ export async function POST(request: NextRequest) {
   "brandName": "brand",
   "productName": "product name (clean, no extra text)",
   "price": "price with currency symbol",
-  "composition": "full fiber composition e.g. '98% Cotton, 2% Elastane'. Be specific: 'recycled polyester' is NOT natural. 'Recycled' = still synthetic unless it's recycled cotton/wool.",
+  "composition": "full fiber composition e.g. '98% Cotton, 2% Elastane'",
   "fibers": [{"fiber":"cotton","percent":98},{"fiber":"elastane","percent":2}],
   "category": "tops/bottoms/dresses/outerwear/knitwear/skirts/shorts/other",
   "garmentType": "specific type: dress, pants, jeans, sweater, top, blouse, etc.",
   "imageUrl": "primary product image URL (full https URL)"
 }
-Use null for genuinely unknown. For composition, extract from product description if available. IMPORTANT: 'Recycled polyester', 'recycled nylon', 'ECONYL' are ALL synthetic. Only cotton, silk, wool, linen, cashmere, hemp, etc. are natural.` },
+CRITICAL FIBER NAMING RULES:
+- Use STANDARD fiber names: cotton, linen, silk, wool, cashmere, polyester, nylon, elastane, etc.
+- "European Flax" or "Flax" or "European Linen" = linen
+- "Pima Cotton" or "Supima Cotton" or "Egyptian Cotton" or "Organic Cotton" or "BCI Cotton" = cotton
+- "Merino Wool" or "Virgin Wool" or "Lambswool" = wool (or merino for merino wool)
+- "Mongolian Cashmere" = cashmere
+- "Mulberry Silk" = silk
+- "Recycled Polyester" = recycled polyester (STILL synthetic)
+- "Recycled Nylon" or "ECONYL" = recycled nylon (STILL synthetic)
+- NEVER use geographic terms (European, Egyptian, Mongolian) as the fiber name itself
+- Always extract the ACTUAL FIBER (linen, cotton, wool, silk, etc.)
+Use null for genuinely unknown.` },
             { role: "user", content: promptContent }
           ],
           max_tokens: 500,
@@ -483,15 +554,18 @@ Use null for genuinely unknown. For composition, extract from product descriptio
         if (!fibers.length && pageInfo.fibers?.length) {
           fibers = pageInfo.fibers.map((f: any) => {
             const pctRaw = String(f.percent || "0").replace(/%/g, "").trim();
-            const fiberName = (f.fiber || "").toLowerCase().trim();
-            const isRecycledSynthetic = /^recycled\s+(polyester|nylon|polyamide|plastic)$/i.test(fiberName);
-            const baseFiber = fiberName.replace(/^recycled\s+/i, "").trim();
+            const rawFiberName = (f.fiber || "").trim();
+            const name = normalizeFiberName(rawFiberName);
+            if (!name) return null;
+            const isRecycledSynthetic = /^recycled\s+(polyester|nylon|polyamide|plastic)$/i.test(name);
+            const baseFiber = name.replace(/^recycled\s+/i, "").trim();
+            const displayName = name.charAt(0).toUpperCase() + name.slice(1);
             return {
-              fiber: fiberName,
+              fiber: displayName,
               percent: parseFloat(pctRaw) || 0,
-              isNatural: isRecycledSynthetic ? false : (NATURAL_FIBERS.has(baseFiber) || NATURAL_FIBERS.has(fiberName)),
+              isNatural: isRecycledSynthetic ? false : (NATURAL_FIBERS.has(baseFiber) || NATURAL_FIBERS.has(name)),
             };
-          }).filter((f: any) => f.fiber && f.percent > 0);
+          }).filter((f: any) => f && f.fiber && f.percent > 0);
         }
       } catch (aiErr: any) {
         console.error("AI extraction failed:", aiErr.message);
