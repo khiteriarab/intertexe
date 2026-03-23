@@ -100,6 +100,7 @@ interface PageConfig {
   intro: string;
   buyingTips: string[];
   redFlags: string[];
+  featuredBrands?: string[];
 }
 
 const PAGE_CONFIGS: Record<string, PageConfig> = {
@@ -199,6 +200,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton", "denim"],
     heroTitle: "Cotton Dresses",
     heroSubtitle: "Every label checked. 95%+ natural cotton.",
+    featuredBrands: ["Faithfull the Brand", "Khaite", "Ulla Johnson"],
     intro: "Cotton is the most versatile fabric in fashion — from crisp poplin shirt dresses to soft jersey maxis to structured denim. But quality varies wildly: fast fashion brands routinely cut cotton with 30–50% polyester, which traps heat, pills quickly, and doesn't breathe. We verified every label to find cotton dresses actually worth wearing in warm weather.",
     buyingTips: [
       "Organic cotton (GOTS certified) uses no synthetic pesticides and is softer from the start",
@@ -957,7 +959,19 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
     return true;
   });
 
-  const productsWithImages = products.filter((p: any) => p.imageUrl);
+  let productsWithImages = products.filter((p: any) => p.imageUrl);
+
+  if (config.featuredBrands && config.featuredBrands.length > 0) {
+    const featured = config.featuredBrands.map(b => b.toLowerCase());
+    productsWithImages.sort((a: any, b: any) => {
+      const aFeat = featured.indexOf(a.brandName?.toLowerCase());
+      const bFeat = featured.indexOf(b.brandName?.toLowerCase());
+      if (aFeat >= 0 && bFeat < 0) return -1;
+      if (bFeat >= 0 && aFeat < 0) return 1;
+      if (aFeat >= 0 && bFeat >= 0) return aFeat - bFeat;
+      return 0;
+    });
+  }
 
   const parentName = parentFiber ? parentFiber.charAt(0).toUpperCase() + parentFiber.slice(1) : config.fiber;
 
