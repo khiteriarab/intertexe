@@ -69,7 +69,7 @@ export async function getHomePageData(): Promise<HomePageData> {
   const seenBaseNames = new Set<string>();
   const newInProducts: any[] = [];
   const maxPerBrand = 5;
-  const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts", "jumpsuits"]);
+  const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts", "jumpsuits", "lingerie", "swimwear"]);
   const basicPatterns = /^(t-shirt|tee|sweatshirt|tank|vest)\b/i;
 
   function getBaseName(name: string): string {

@@ -16,22 +16,11 @@ const FTP_FILE = '50739_4668007_mp_template.txt.gz';
 const NATURAL_FIBERS = ['cotton', 'silk', 'wool', 'linen', 'flax', 'cashmere', 'mohair', 'alpaca', 'hemp', 'ramie', 'jute', 'merino', 'angora', 'camel', 'yak', 'pima', 'supima', 'virgin wool'];
 const SYNTHETIC_FIBERS = ['polyester', 'nylon', 'polyamide', 'acrylic', 'elastane', 'spandex', 'lycra', 'metallic', 'viscose', 'rayon', 'modal', 'lyocell', 'tencel', 'cupro', 'acetate', 'triacetate', 'rubber', 'polyurethane'];
 
-const CLOTHING_CATS = [
-  'Clothing > Dresses',
-  'Clothing > Tops',
-  'Clothing > Skirts',
-  'Clothing > pants',
-  'Clothing > Shorts',
-  'Clothing > Coat',
-  'Clothing > Jumpsuits',
-  'Clothing > Robes',
-  'Clothing > PJs',
-  'Clothing > Camis',
-  'Clothing > Kimonos',
-  'Clothing > TopsBustiers',
-  'Clothing > DressesClothing',
-  'Clothing > TopsClothing',
+const ALLOWED_TOP_CATS = [
+  'Clothing',
   'Camis & Tanks',
+  'Lingerie',
+  'Swim',
 ];
 
 function downloadFeed() {
@@ -85,14 +74,20 @@ function parseFeedLine(line) {
   };
 }
 
-function isWomensClothing(item) {
-  if (item.gender && item.gender.toLowerCase() !== 'female') return false;
+function isWomensProduct(item) {
+  const gender = (item.gender || '').toLowerCase();
+  if (gender && gender !== 'female' && gender !== 'unisex') return false;
   const mc = item.merchantCategory || '';
-  return CLOTHING_CATS.some(c => mc.startsWith(c));
+  const topCat = mc.split(' > ')[0];
+  return ALLOWED_TOP_CATS.some(c => topCat.startsWith(c));
 }
 
 function mapCategory(mc) {
   const cat = mc.toLowerCase();
+  const topCat = cat.split(' > ')[0].trim();
+  if (topCat === 'lingerie') return 'lingerie';
+  if (topCat === 'swim') return 'swimwear';
+  if (topCat === 'camis & tanks') return 'tops';
   if (cat.includes('dress')) return 'dresses';
   if (cat.includes('top') || cat.includes('cami') || cat.includes('tank')) return 'tops';
   if (cat.includes('skirt')) return 'bottoms';
@@ -109,15 +104,16 @@ function extractComposition(desc) {
 
   let text = desc.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/\s+/g, ' ');
 
-  text = text.replace(/(Body|Shell|Outer|Combo|Contrast|Trim|Panel|Lining|Gusset|Elastic|Rib|Filling|Pocket|Sleeves|Collar|Hood|Insert|Waistband)\s*:/gi, '\n$1:');
+  const LABELS = 'Body|Shell|Outer|Combo\\s*\\d*|Contrast|Trim|Panel|Lining|Gusset|Elastic|Rib|Filling|Pocket|Sleeves|Collar|Hood|Insert|Waistband|Lace|Cup|Strap|Band|Wire|Frame';
+  text = text.replace(new RegExp('(' + LABELS + ')\\s*:', 'gi'), '\n$1:');
 
   const sections = [];
   const sectionLines = text.split('\n').filter(l => l.trim());
 
   for (const line of sectionLines) {
-    const labelMatch = line.match(/^(Body|Shell|Outer|Combo|Contrast|Trim|Panel|Lining|Gusset|Elastic|Rib|Filling|Pocket|Sleeves|Collar|Hood|Insert|Waistband)\s*:\s*/i);
+    const labelMatch = line.match(new RegExp('^(' + LABELS + ')\\s*:\\s*', 'i'));
     if (labelMatch) {
-      let label = labelMatch[1].toLowerCase();
+      let label = labelMatch[1].toLowerCase().replace(/\s*\d+$/, '');
       if (label === 'shell' || label === 'outer') label = 'body';
       const fiberStr = line.replace(labelMatch[0], '');
       const fibers = parseFiberGroup(fiberStr);
@@ -132,12 +128,17 @@ function extractComposition(desc) {
 
   if (sections.length === 0) return { composition: null, pct: null };
 
+  const hasBody = sections.some(s => s.label === 'body');
+  if (!hasBody) return { composition: null, pct: null };
+
   const PART_WEIGHTS = {
     'body': 0.70, 'combo': 0.15, 'contrast': 0.10, 'trim': 0.05,
     'panel': 0.10, 'lining': 0.15, 'gusset': 0.05,
     'elastic': 0.03, 'rib': 0.05, 'filling': 0.10,
     'pocket': 0.03, 'sleeves': 0.15, 'collar': 0.03,
     'hood': 0.05, 'insert': 0.05, 'waistband': 0.05,
+    'lace': 0.20, 'cup': 0.15, 'strap': 0.05,
+    'band': 0.05, 'wire': 0.02, 'frame': 0.05,
   };
 
   const compParts = sections.map(s => {
@@ -220,8 +221,8 @@ async function run() {
   const items = lines.map(parseFeedLine).filter(Boolean);
   console.log(`Parsed items: ${items.length}`);
 
-  const womensClothing = items.filter(isWomensClothing);
-  console.log(`Women's clothing items (with size variants): ${womensClothing.length}`);
+  const womensClothing = items.filter(isWomensProduct);
+  console.log(`Women's products (with size variants): ${womensClothing.length}`);
 
   const uniqueProducts = new Map();
   for (const item of womensClothing) {

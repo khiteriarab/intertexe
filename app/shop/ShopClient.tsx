@@ -6,7 +6,7 @@ import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-r
 import { useProductFavorites } from "../hooks/use-product-favorites";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
-type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear";
+type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
 type SortOption = "recommended" | "new" | "price-high" | "price-low";
 
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
@@ -25,6 +25,8 @@ const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
   { key: "dresses", label: "Dresses" },
   { key: "bottoms", label: "Bottoms" },
   { key: "outerwear", label: "Outerwear" },
+  { key: "lingerie", label: "Lingerie" },
+  { key: "swimwear", label: "Swimwear" },
 ];
 
 const SORT_OPTIONS: { key: SortOption; label: string }[] = [
