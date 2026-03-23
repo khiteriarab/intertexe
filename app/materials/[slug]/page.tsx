@@ -637,11 +637,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         url: `https://www.intertexe.com/materials/${slug}`,
         siteName: "INTERTEXE",
         type: "website",
+        images: ["/opengraph.jpg"],
       },
       twitter: {
         card: "summary_large_image",
         title: config.heroTitle,
         description: desc,
+        images: ["/opengraph.jpg"],
       },
     };
   }
@@ -1035,7 +1037,7 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
               INTERTEXE Verified
             </span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">•</span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{productsWithImages.length} {config.fiber} dresses</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{productsWithImages.length} verified pieces</span>
           </div>
           <h1 className="font-serif text-3xl md:text-5xl leading-tight" data-testid="text-page-title">
             {config.heroTitle}
@@ -1101,7 +1103,7 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
 
         <section className="py-10 border-t border-border/20 bg-secondary/20 -mx-4 px-4 md:-mx-8 md:px-8">
           <div className="max-w-xl mx-auto text-center flex flex-col items-center gap-4">
-            <h2 className="font-serif text-xl md:text-2xl">Have a Dress in Mind?</h2>
+            <h2 className="font-serif text-xl md:text-2xl">Found Something You Like?</h2>
             <p className="text-sm text-foreground/70 leading-relaxed">
               Paste any product URL into our Scanner and we&apos;ll verify the fabric composition instantly — telling you exactly what percentage is natural fiber.
             </p>

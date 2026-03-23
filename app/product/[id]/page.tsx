@@ -76,7 +76,6 @@ const FIBER_DISPLAY_MAP: [RegExp, string][] = [
   [/\brecycled\s+polyester\b/i, "Recycled Polyester"],
   [/\brecycled\s+nylon\b/i, "Recycled Nylon"],
   [/\beconyl\b/i, "Recycled Nylon (ECONYL)"],
-  [/\beuropean\b/i, "Linen"],
 ];
 
 function normalizeFiberDisplay(raw: string): string {
@@ -95,18 +94,18 @@ function normalizeFiberDisplay(raw: string): string {
 function parseComposition(composition: string | null | undefined, naturalFiberPercent?: number | null): { fiber: string; percent: number }[] {
   if (!composition) return [];
   const parts: { fiber: string; percent: number }[] = [];
-  const matches = Array.from(composition.matchAll(/(\d+)\s*%\s*([a-zA-ZÀ-ÿ\s/()-®™]+?)(?=[,;]|\d+\s*%|$)/g));
+  const matches = Array.from(composition.matchAll(/(\d+)\s*%\s*([a-zA-ZÀ-ÿ\s()\-/®™]+?)(?=[,;]|\d+\s*%|$)/g));
   for (const m of matches) {
     const percent = parseInt(m[1], 10);
-    const rawFiber = m[2].trim().replace(/[,;]+$/, "").trim();
+    const rawFiber = m[2].trim().replace(/[,;/\s]+$/, "").trim();
     if (rawFiber && percent > 0) {
       parts.push({ fiber: normalizeFiberDisplay(rawFiber), percent });
     }
   }
   if (parts.length === 0) {
-    const reverse = Array.from(composition.matchAll(/([a-zA-ZÀ-ÿ\s/()-®™]+?)\s*(\d+)\s*%/g));
+    const reverse = Array.from(composition.matchAll(/([a-zA-ZÀ-ÿ\s()\-/®™]+?)\s*(\d+)\s*%/g));
     for (const m of reverse) {
-      const rawFiber = m[1].trim().replace(/[,;]+$/, "").trim();
+      const rawFiber = m[1].trim().replace(/[,;/\s]+$/, "").trim();
       const percent = parseInt(m[2], 10);
       if (rawFiber && percent > 0) {
         parts.push({ fiber: normalizeFiberDisplay(rawFiber), percent });
@@ -118,7 +117,7 @@ function parseComposition(composition: string | null | undefined, naturalFiberPe
     const lower = composition.toLowerCase();
     const matched = KNOWN_FIBERS.find((f) => lower.includes(f));
     if (matched) {
-      parts.push({ fiber: normalizeFiberDisplay(composition), percent: naturalFiberPercent });
+      parts.push({ fiber: matched.charAt(0).toUpperCase() + matched.slice(1), percent: naturalFiberPercent });
       if (naturalFiberPercent < 100) {
         parts.push({ fiber: "Other", percent: 100 - naturalFiberPercent });
       }
