@@ -17,6 +17,30 @@ function isZeroPrice(price: string | null | undefined): boolean {
   return isNaN(num) || num <= 0;
 }
 
+function getStyleBaseName(name: string): string {
+  return name
+    .replace(/\s*-\s*(black|white|grey|gray|ecru|navy|blue|red|pink|green|beige|khaki|brown|camel|cream|ivory|nude|sand|taupe|chocolate|burgundy|plum|powder|midnight|heather|medium|deep|light|dark|washed|faded).*$/i, "")
+    .trim()
+    .toLowerCase();
+}
+
+function diversifyByBrand(products: any[], max: number, maxPerBrand: number): any[] {
+  const result: any[] = [];
+  const brandCount: Record<string, number> = {};
+  const seenStyles = new Set<string>();
+  for (const p of products) {
+    if (result.length >= max) break;
+    const brand = p.brandSlug || p.brand_slug || "";
+    const styleName = getStyleBaseName(p.name || "");
+    if ((brandCount[brand] || 0) >= maxPerBrand) continue;
+    if (seenStyles.has(styleName)) continue;
+    brandCount[brand] = (brandCount[brand] || 0) + 1;
+    seenStyles.add(styleName);
+    result.push(p);
+  }
+  return result;
+}
+
 export const CURATED_BRAND_SLUGS = [
   "fleur-du-mal", "faithfull-the-brand", "isabel-marant", "khaite",
   "anine-bing", "frame", "diesel", "nanushka", "sandro", "agolde",
@@ -39,9 +63,9 @@ export async function getHomePageData(): Promise<HomePageData> {
     await Promise.all([
       fetchDesigners(undefined, 100),
       fetchProductCount(),
-      fetchProductsByFiber("cashmere").then((p) => p.filter((x) => !isZeroPrice(x.price)).slice(0, 16)),
-      fetchProductsByFiber("silk").then((p) => p.filter((x) => !isZeroPrice(x.price)).slice(0, 16)),
-      fetchProductsByFiber("linen").then((p) => p.filter((x) => !isZeroPrice(x.price)).slice(0, 16)),
+      fetchProductsByFiber("cashmere").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
+      fetchProductsByFiber("silk").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
+      fetchProductsByFiber("linen").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
       fetchProductCountsByBrand(CURATED_BRAND_SLUGS),
       fetchSaleProducts({ limit: 12 }),
     ]);
