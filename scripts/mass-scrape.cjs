@@ -90,7 +90,8 @@ function categorizeProduct(title, tags = [], productType = "") {
   const t = (title + " " + productType).toLowerCase();
   const allTags = (Array.isArray(tags) ? tags.join(" ") : String(tags || "")).toLowerCase();
   const combined = t + " " + allTags;
-  if (combined.includes("dress") || combined.includes("skirt")) return "dresses";
+  if (combined.includes("skirt")) return "bottoms";
+  if (combined.includes("dress")) return "dresses";
   if (combined.includes("sweater") || combined.includes("knit") || combined.includes("cardigan") || combined.includes("pullover") || combined.includes("jumper")) return "knitwear";
   if (combined.includes("top") || combined.includes("shirt") || combined.includes("blouse") || combined.includes("tee") || combined.includes("t-shirt") || combined.includes("tank") || combined.includes("camisole") || combined.includes("bodysuit")) return "tops";
   if (combined.includes("jacket") || combined.includes("coat") || combined.includes("blazer") || combined.includes("vest") || combined.includes("trench") || combined.includes("parka")) return "outerwear";
