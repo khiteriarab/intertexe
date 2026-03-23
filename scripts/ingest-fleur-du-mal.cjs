@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
-const https = require('https');
+const Client = require('ftp');
+const zlib = require('zlib');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -8,54 +9,125 @@ const MID = '50739';
 const BRAND_NAME = 'Fleur du Mal';
 const BRAND_SLUG = 'fleur-du-mal';
 
-const NATURAL_FIBERS = ['cotton', 'silk', 'wool', 'linen', 'flax', 'cashmere', 'mohair', 'alpaca', 'hemp', 'ramie', 'jute', 'merino', 'angora', 'camel', 'yak'];
+const FTP_HOST = 'aftp.linksynergy.com';
+const FTP_USER = 'rkp_4668007';
+const FTP_FILE = '50739_4668007_mp_template.txt.gz';
+
+const NATURAL_FIBERS = ['cotton', 'silk', 'wool', 'linen', 'flax', 'cashmere', 'mohair', 'alpaca', 'hemp', 'ramie', 'jute', 'merino', 'angora', 'camel', 'yak', 'pima', 'supima', 'virgin wool'];
 const SYNTHETIC_FIBERS = ['polyester', 'nylon', 'polyamide', 'acrylic', 'elastane', 'spandex', 'lycra', 'metallic', 'viscose', 'rayon', 'modal', 'lyocell', 'tencel', 'cupro', 'acetate', 'triacetate', 'rubber', 'polyurethane'];
 
-const CLOTHING_TYPES = new Set([
-  'Dresses', 'Tops', 'Skirts', 'pants', 'Shorts', 'Coat',
-  'Jumpsuits', 'Bodysuits', 'Camis & Tanks', 'Robes', 'Slips', 'PJs'
-]);
+const CLOTHING_CATS = [
+  'Clothing > Dresses',
+  'Clothing > Tops',
+  'Clothing > Skirts',
+  'Clothing > pants',
+  'Clothing > Shorts',
+  'Clothing > Coat',
+  'Clothing > Jumpsuits',
+  'Clothing > Robes',
+  'Clothing > PJs',
+  'Clothing > Camis',
+  'Clothing > Kimonos',
+  'Clothing > TopsBustiers',
+  'Clothing > DressesClothing',
+  'Clothing > TopsClothing',
+  'Camis & Tanks',
+];
 
-function fetchPage(page) {
+function downloadFeed() {
   return new Promise((resolve, reject) => {
-    https.get('https://www.fleurdumal.com/products.json?limit=250&page=' + page, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
-    }, res => {
-      let body = '';
-      res.on('data', c => body += c);
-      res.on('end', () => {
-        try { resolve(JSON.parse(body)); }
-        catch (e) { resolve({ products: [] }); }
+    const c = new Client();
+    c.on('ready', () => {
+      console.log('Connected to Rakuten FTP');
+      c.get(FTP_FILE, (err, stream) => {
+        if (err) { c.end(); return reject(err); }
+        const chunks = [];
+        stream.on('data', chunk => chunks.push(chunk));
+        stream.on('end', () => {
+          const gz = Buffer.concat(chunks);
+          console.log('Downloaded:', gz.length, 'bytes');
+          const data = zlib.gunzipSync(gz).toString('utf8');
+          console.log('Uncompressed:', data.length, 'chars');
+          c.end();
+          resolve(data);
+        });
       });
-    }).on('error', reject);
+    });
+    c.on('error', reject);
+    c.connect({
+      host: FTP_HOST,
+      user: FTP_USER,
+      password: process.env.RAKUTEN_FTP_PASSWORD,
+      connTimeout: 15000
+    });
   });
 }
 
-function parseComposition(html) {
-  if (!html) return { composition: null, pct: null };
+function parseFeedLine(line) {
+  const f = line.split('|');
+  if (f.length < 34) return null;
+  return {
+    id: f[0],
+    name: f[1],
+    sku: f[2],
+    category: f[3],
+    affiliateUrl: f[5],
+    imageUrl: f[6],
+    shortDesc: f[8],
+    longDesc: f[9],
+    price: f[13],
+    brand: f[16] || f[20],
+    currency: f[25],
+    merchantCategory: f[29],
+    size: f[30],
+    color: f[32],
+    gender: f[33],
+  };
+}
 
-  const detailsMatch = html.match(/<!-- details -->(.*?)<!-- end details -->/s);
-  const raw = detailsMatch ? detailsMatch[1] : html;
-  const text = raw.replace(/<[^>]+>/g, '\n').replace(/&amp;/g, '&').replace(/&#39;/g, "'");
+function isWomensClothing(item) {
+  if (item.gender && item.gender.toLowerCase() !== 'female') return false;
+  const mc = item.merchantCategory || '';
+  return CLOTHING_CATS.some(c => mc.startsWith(c));
+}
+
+function mapCategory(mc) {
+  const cat = mc.toLowerCase();
+  if (cat.includes('dress')) return 'dresses';
+  if (cat.includes('top') || cat.includes('cami') || cat.includes('tank')) return 'tops';
+  if (cat.includes('skirt')) return 'bottoms';
+  if (cat.includes('pant') || cat.includes('short')) return 'bottoms';
+  if (cat.includes('coat') || cat.includes('kimono')) return 'outerwear';
+  if (cat.includes('jumpsuit')) return 'dresses';
+  if (cat.includes('robe') || cat.includes('pj')) return 'dresses';
+  if (cat.includes('bustier')) return 'tops';
+  return 'tops';
+}
+
+function extractComposition(desc) {
+  if (!desc) return { composition: null, pct: null };
+
+  let text = desc.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/\s+/g, ' ');
+
+  text = text.replace(/(Body|Shell|Outer|Combo|Contrast|Trim|Panel|Lining|Gusset|Elastic|Rib|Filling|Pocket|Sleeves|Collar|Hood|Insert|Waistband)\s*:/gi, '\n$1:');
 
   const sections = [];
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  const LABEL_RE = /^(body|shell|outer|combo|contrast|trim|panel|lining|gusset|elastic|rib|filling|pocket|sleeves|collar|hood|insert|waistband)\s*:\s*/i;
+  const sectionLines = text.split('\n').filter(l => l.trim());
 
-  for (const line of lines) {
-    const labelMatch = line.match(LABEL_RE);
+  for (const line of sectionLines) {
+    const labelMatch = line.match(/^(Body|Shell|Outer|Combo|Contrast|Trim|Panel|Lining|Gusset|Elastic|Rib|Filling|Pocket|Sleeves|Collar|Hood|Insert|Waistband)\s*:\s*/i);
     if (labelMatch) {
       let label = labelMatch[1].toLowerCase();
       if (label === 'shell' || label === 'outer') label = 'body';
-      const fiberStr = line.replace(LABEL_RE, '');
+      const fiberStr = line.replace(labelMatch[0], '');
       const fibers = parseFiberGroup(fiberStr);
       if (fibers.length > 0) sections.push({ label, fibers });
-    } else {
-      const fibers = parseFiberGroup(line);
-      if (fibers.length > 0 && sections.length === 0) {
-        sections.push({ label: 'body', fibers });
-      }
     }
+  }
+
+  if (sections.length === 0) {
+    const fibers = parseFiberGroup(text);
+    if (fibers.length > 0) sections.push({ label: 'body', fibers });
   }
 
   if (sections.length === 0) return { composition: null, pct: null };
@@ -118,45 +190,47 @@ function parseFiberGroup(str) {
   return fibers;
 }
 
-function categorize(type, title) {
-  const t = (type || '').toLowerCase();
-  const n = (title || '').toLowerCase();
-  if (t.includes('dress') || n.includes('dress')) return 'dresses';
-  if (t.includes('skirt') || n.includes('skirt')) return 'bottoms';
-  if (t.includes('pant') || n.includes('pant') || n.includes('trouser')) return 'bottoms';
-  if (t.includes('short') || n.includes('short')) return 'bottoms';
-  if (t.includes('top') || t.includes('cami') || n.includes('cami') || n.includes('tank')) return 'tops';
-  if (t.includes('bodysuit') || n.includes('bodysuit')) return 'tops';
-  if (t.includes('coat') || t.includes('jacket') || n.includes('coat') || n.includes('jacket')) return 'outerwear';
-  if (t.includes('jumpsuit') || n.includes('jumpsuit') || n.includes('catsuit')) return 'dresses';
-  if (t.includes('robe') || n.includes('robe')) return 'dresses';
-  if (t.includes('slip') || n.includes('slip dress')) return 'dresses';
-  if (t.includes('pj') || n.includes('pajama')) return 'tops';
-  return null;
+function buildAffiliateUrl(feedUrl) {
+  return feedUrl
+    .replace('<LSN EID>', AFFILIATE_ID)
+    .replace('<LSN OID>', MID);
 }
 
-function buildAffiliateUrl(productHandle) {
-  const productUrl = encodeURIComponent('https://www.fleurdumal.com/products/' + productHandle);
-  return `https://click.linksynergy.com/link?id=${AFFILIATE_ID}&offerid=${MID}.&type=15&murl=${productUrl}`;
+function getProductSlug(item) {
+  const murlMatch = item.affiliateUrl.match(/murl=([^&]+)/);
+  if (murlMatch) {
+    const url = decodeURIComponent(murlMatch[1]);
+    const handleMatch = url.match(/\/products\/([^?&#]+)/);
+    if (handleMatch) return handleMatch[1];
+  }
+  return item.sku || item.id;
 }
 
 async function run() {
   const isDryRun = process.argv.includes('--dry-run');
   console.log('INTERTEXE — Fleur du Mal Rakuten Feed Ingestion');
   console.log(`Mode: ${isDryRun ? 'DRY RUN' : 'LIVE'}`);
+  console.log(`Source: Rakuten FTP (MID ${MID})`);
   console.log(`Started: ${new Date().toISOString()}\n`);
 
-  let allProducts = [];
-  let page = 1;
-  while (true) {
-    const data = await fetchPage(page);
-    if (!data.products || data.products.length === 0) break;
-    allProducts = allProducts.concat(data.products);
-    console.log(`Fetched page ${page}: ${data.products.length} products`);
-    page++;
-    await new Promise(r => setTimeout(r, 500));
+  const feedData = await downloadFeed();
+  const lines = feedData.split('\n').filter(l => l.trim() && !l.startsWith('HDR'));
+  console.log(`Feed lines: ${lines.length}`);
+
+  const items = lines.map(parseFeedLine).filter(Boolean);
+  console.log(`Parsed items: ${items.length}`);
+
+  const womensClothing = items.filter(isWomensClothing);
+  console.log(`Women's clothing items (with size variants): ${womensClothing.length}`);
+
+  const uniqueProducts = new Map();
+  for (const item of womensClothing) {
+    const slug = getProductSlug(item);
+    if (!uniqueProducts.has(slug)) {
+      uniqueProducts.set(slug, item);
+    }
   }
-  console.log(`Total Shopify products: ${allProducts.length}\n`);
+  console.log(`Unique products (deduplicated): ${uniqueProducts.size}`);
 
   const { data: existing } = await supabase
     .from('products')
@@ -166,55 +240,44 @@ async function run() {
   console.log(`Already in DB: ${existingIds.size}`);
 
   const qualifying = [];
-  const seenHandles = new Set();
-  let skippedType = 0, skippedFiber = 0, noComp = 0, alreadyExists = 0, duplicates = 0;
+  let skippedFiber = 0, noComp = 0, alreadyExists = 0;
 
-  for (const p of allProducts) {
-    if (!CLOTHING_TYPES.has(p.product_type)) { skippedType++; continue; }
+  for (const [slug, item] of uniqueProducts) {
+    if (existingIds.has(slug)) { alreadyExists++; continue; }
 
-    const cat = categorize(p.product_type, p.title);
-    if (!cat) { skippedType++; continue; }
-
-    const handle = p.handle;
-    if (seenHandles.has(handle)) { duplicates++; continue; }
-    seenHandles.add(handle);
-
-    if (existingIds.has(handle)) { alreadyExists++; continue; }
-
-    const { composition, pct } = parseComposition(p.body_html);
+    const desc = item.longDesc || item.shortDesc;
+    const { composition, pct } = extractComposition(desc);
     if (!composition || pct === null) { noComp++; continue; }
     if (pct < 95) { skippedFiber++; continue; }
 
-    const variant = p.variants?.[0];
-    const price = variant ? '$' + parseFloat(variant.price).toFixed(2) : null;
-    const image = p.images?.[0]?.src || null;
+    const category = mapCategory(item.merchantCategory);
+    const price = item.currency === 'USD' ? `$${parseFloat(item.price).toFixed(2)}` : `${parseFloat(item.price).toFixed(2)}`;
+    const affiliateUrl = buildAffiliateUrl(item.affiliateUrl);
 
     qualifying.push({
-      name: p.title,
+      name: item.name.replace(/^Fleur du Mal\s+/i, ''),
       brand_name: BRAND_NAME,
       brand_slug: BRAND_SLUG,
-      product_id: handle,
+      product_id: slug,
       price,
-      url: buildAffiliateUrl(handle),
-      image_url: image,
+      url: affiliateUrl,
+      image_url: item.imageUrl,
       composition,
       natural_fiber_percent: pct,
-      category: cat,
+      category,
     });
   }
 
   console.log(`\nResults:`);
-  console.log(`  Skipped (wrong type): ${skippedType}`);
-  console.log(`  Skipped (no composition): ${noComp}`);
-  console.log(`  Skipped (<95% natural): ${skippedFiber}`);
-  console.log(`  Duplicates: ${duplicates}`);
+  console.log(`  No composition: ${noComp}`);
+  console.log(`  Below 95% natural: ${skippedFiber}`);
   console.log(`  Already in DB: ${alreadyExists}`);
-  console.log(`  Qualifying products: ${qualifying.length}`);
+  console.log(`  Qualifying new products: ${qualifying.length}`);
 
   const byCat = {};
   qualifying.forEach(q => { byCat[q.category] = (byCat[q.category] || 0) + 1; });
   console.log(`\nBy category:`);
-  Object.entries(byCat).forEach(([c, n]) => console.log(`  ${c}: ${n}`));
+  Object.entries(byCat).sort((a, b) => b[1] - a[1]).forEach(([c, n]) => console.log(`  ${c}: ${n}`));
 
   console.log(`\nQualifying products:`);
   qualifying.forEach((q, i) => console.log(`  ${i + 1}. ${q.name} | ${q.category} | ${q.price} | ${q.composition} | ${q.natural_fiber_percent}%`));
@@ -235,7 +298,7 @@ async function run() {
     const batch = qualifying.slice(i, i + BATCH_SIZE);
     const { data, error } = await supabase
       .from('products')
-      .insert(batch)
+      .upsert(batch, { onConflict: 'product_id' })
       .select('id');
     if (error) {
       console.error(`Insert error at batch ${i}: ${error.message}`);
@@ -244,7 +307,7 @@ async function run() {
       inserted += data.length;
     }
   }
-  console.log(`\nInserted: ${inserted} products`);
+  console.log(`\nInserted/updated: ${inserted} products`);
   if (errors > 0) console.log(`Insert errors: ${errors}`);
 
   const { data: designerExists } = await supabase
