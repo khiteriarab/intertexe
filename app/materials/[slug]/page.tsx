@@ -105,23 +105,25 @@ interface PageConfig {
 const PAGE_CONFIGS: Record<string, PageConfig> = {
   "linen-dresses": {
     slug: "linen-dresses",
-    title: "Best Linen Dresses in 2026",
+    title: "Best Linen Dresses in 2026 — Verified 100% Linen | INTERTEXE",
     fiber: "Linen",
     category: "dresses",
     fiberQuery: ["linen", "flax"],
-    heroTitle: "Linen Dresses",
-    heroSubtitle: "We tested the composition of every dress. These are the ones worth your money.",
-    intro: "Linen is one of the oldest and most sustainable fabrics — breathable, naturally cooling, and it only gets softer with every wash. But most brands cut it with polyester. We found the ones that don't.",
+    heroTitle: "The Best Linen Dresses in 2026",
+    heroSubtitle: "We checked the composition of every dress. These are made from real linen — not polyester blends marketed as \"linen look.\"",
+    intro: "Linen is one of the oldest and most sustainable fabrics on earth — breathable, naturally cooling, and it only gets softer with every wash. The problem? Most brands cut their \"linen\" dresses with 30–50% polyester, which defeats the entire purpose. We verified every composition label to find dresses made from real linen, including European Flax — the highest quality linen fiber, grown in France, Belgium, and the Netherlands.",
     buyingTips: [
-      "Look for 100% linen or linen-viscose blends",
-      "European flax (Belgian, French) is the gold standard",
-      "Expect a natural, relaxed drape — stiff linen softens with wear",
-      "Pre-washed or garment-dyed linen has minimal shrinkage",
+      "European Flax (certified by CELC) is the gold standard — flax is the plant, linen is the fabric",
+      "100% linen is best for hot weather — it's 3x more absorbent than cotton",
+      "Pre-washed or garment-dyed linen has minimal shrinkage and a softer hand from day one",
+      "Linen wrinkles are part of the fabric's character — if it doesn't wrinkle, it's probably not real linen",
+      "Linen-cotton blends (70/30) offer some crease resistance while keeping the breathability",
     ],
     redFlags: [
-      "\"Linen blend\" with no percentage listed",
-      "Polyester lining in a \"linen\" dress",
-      "Under $80 for a linen dress — likely mixed with synthetic",
+      "\"Linen look\" or \"linen style\" — this means 100% polyester",
+      "\"Linen blend\" with no percentage — usually means under 50% linen",
+      "Polyester lining in a \"linen\" dress — completely defeats the breathability",
+      "Under $80 for a linen dress — likely mixed with synthetic to cut costs",
     ],
   },
   "linen-tops": {
@@ -147,23 +149,25 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
   },
   "silk-dresses": {
     slug: "silk-dresses",
-    title: "Best Silk Dresses in 2026",
+    title: "Best Silk Dresses in 2026 — Verified 100% Silk | INTERTEXE",
     fiber: "Silk",
     category: "dresses",
     fiberQuery: ["silk"],
-    heroTitle: "Silk Dresses",
-    heroSubtitle: "Verified 100% silk. No polyester masquerading as luxury.",
-    intro: "Real silk has a distinct, cool-to-the-touch feel that no synthetic can replicate. It's naturally temperature-regulating, hypoallergenic, and has a luminous drape that polyester satin will never match. We verified every composition label.",
+    heroTitle: "The Best Silk Dresses in 2026",
+    heroSubtitle: "Every dress verified for real silk content. No polyester satin masquerading as luxury. From bias-cut slips to structured midi dresses — only genuine silk makes the cut.",
+    intro: "Real silk has a distinct, cool-to-the-touch feel that no synthetic can replicate. It's naturally temperature-regulating, hypoallergenic, and has a luminous drape that polyester satin will never match. We checked the composition label of every single dress on this page — because at $200–$800, you deserve to know what you're actually paying for.",
     buyingTips: [
-      "Mulberry silk is the highest quality (smooth, lustrous)",
-      "Look for momme weight — 19mm+ for dresses, 22mm+ for heavier drapes",
-      "Silk charmeuse has a satin face and matte back",
-      "Silk crepe de chine is matte, breathable, and less delicate",
+      "Mulberry silk is the highest quality — smooth, lustrous, and naturally hypoallergenic",
+      "Momme weight matters: 19mm+ for dresses (heavier = more opaque and durable)",
+      "Silk charmeuse has a glossy satin face and matte back — the classic evening dress fabric",
+      "Silk crepe de chine is matte, breathable, and more forgiving — perfect for everyday luxury",
+      "Bias-cut silk dresses drape close to the body — the hallmark of quality construction",
     ],
     redFlags: [
-      "\"Silky\" or \"silk-feel\" — this means polyester",
-      "\"Satin\" without specifying silk — usually polyester satin",
-      "Under $100 for a silk dress — almost certainly synthetic",
+      "\"Silky\" or \"silk-feel\" — this means polyester, every time",
+      "\"Satin dress\" without specifying silk — 90% of satin dresses are polyester",
+      "Under $100 for a silk dress — almost certainly synthetic or a very thin silk",
+      "\"Silk blend\" under 70% silk — you're mostly paying for polyester",
     ],
   },
   "silk-tops": {
@@ -189,23 +193,25 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
   },
   "cotton-dresses": {
     slug: "cotton-dresses",
-    title: "Best Cotton & Denim Dresses in 2026",
+    title: "Best Cotton Dresses in 2026 — Verified Natural Cotton | INTERTEXE",
     fiber: "Cotton",
     category: "dresses",
     fiberQuery: ["cotton", "denim"],
-    heroTitle: "Cotton & Denim Dresses",
-    heroSubtitle: "Breathable, durable, and honestly made. Every piece verified.",
-    intro: "Cotton is the most versatile fabric in fashion — from crisp shirting to soft jersey to raw denim. But quality varies wildly. We found the pieces made with real cotton, organic where possible, without the synthetic shortcuts.",
+    heroTitle: "The Best Cotton Dresses in 2026",
+    heroSubtitle: "Breathable, durable, and honestly made. We checked every composition label — these are 95%+ real cotton, no synthetic shortcuts.",
+    intro: "Cotton is the most versatile fabric in fashion — from crisp poplin shirt dresses to soft jersey maxis to structured denim. But quality varies wildly: fast fashion brands routinely cut cotton with 30–50% polyester, which traps heat, pills quickly, and doesn't breathe. We verified every label to find cotton dresses actually worth wearing in warm weather.",
     buyingTips: [
-      "Organic cotton (GOTS certified) uses no synthetic pesticides",
-      "Egyptian and Pima cotton have longer fibers = softer, more durable",
-      "Raw/selvedge denim is 100% cotton with no stretch",
-      "Poplin and chambray are lightweight cotton weaves ideal for dresses",
+      "Organic cotton (GOTS certified) uses no synthetic pesticides and is softer from the start",
+      "Pima and Egyptian cotton have longer staple fibers — softer, stronger, less pilling",
+      "Poplin, chambray, and voile are lightweight cotton weaves ideal for summer dresses",
+      "Raw/selvedge denim is 100% cotton with no stretch — it molds to your body over time",
+      "Pre-washed cotton has minimal shrinkage — check for garment-dyed or enzyme-washed labels",
     ],
     redFlags: [
-      "\"Cotton blend\" with more than 30% polyester",
-      "Jersey dresses with no composition listed",
-      "\"Denim\" pieces that are actually stretch poly-cotton",
+      "\"Cotton blend\" with no percentage — usually means under 50% cotton",
+      "Jersey dresses with no composition listed — often poly-cotton",
+      "\"Cotton feel\" or \"cotton touch\" — marketing speak for polyester",
+      "Under $40 for a cotton dress — likely blended with synthetic fibers",
     ],
   },
   "cotton-tops": {
@@ -620,10 +626,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const config = PAGE_CONFIGS[slug];
   if (config) {
+    const desc = config.heroSubtitle.length > 100 ? config.heroSubtitle.slice(0, 155) + "…" : config.heroSubtitle;
     return {
       title: config.title,
-      description: config.intro.slice(0, 160),
+      description: desc,
       alternates: { canonical: `https://www.intertexe.com/materials/${slug}` },
+      openGraph: {
+        title: config.heroTitle,
+        description: desc,
+        url: `https://www.intertexe.com/materials/${slug}`,
+        siteName: "INTERTEXE",
+        type: "website",
+        images: ["/opengraph.jpg"],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: config.heroTitle,
+        description: desc,
+        images: ["/opengraph.jpg"],
+      },
     };
   }
 
@@ -970,6 +991,23 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
     .filter(([key]) => key !== slug)
     .slice(0, 6);
 
+  const FIBER_EDUCATION: Record<string, { title: string; content: string }> = {
+    "linen-dresses": {
+      title: "European Flax = Linen — What You Need to Know",
+      content: "Flax is the plant, linen is the fabric. When a label says \"European Flax\" or \"European Flax®\" it means the linen fiber was grown in Western Europe (France, Belgium, Netherlands) under CELC certification — the highest quality linen in the world. These regions have the ideal climate for flax cultivation, producing longer, finer fibers that result in softer, more durable linen fabric. If you see \"European Flax\" on a composition label, you're getting premium linen.",
+    },
+    "silk-dresses": {
+      title: "How to Tell Real Silk from Polyester Satin",
+      content: "Real silk feels cool to the touch, while polyester feels room temperature. Silk has a subtle, shifting luster — polyester has a uniform, plasticky shine. The easiest test: rub the fabric between your fingers. Real silk generates warmth from friction; polyester slides without warming. At INTERTEXE, we've verified the composition label of every dress on this page so you don't have to guess.",
+    },
+    "cotton-dresses": {
+      title: "Not All Cotton Is Created Equal",
+      content: "Standard cotton uses short staple fibers that pill easily and lose shape. Pima cotton (grown in Peru and the American Southwest) and Egyptian cotton (Nile Delta) use extra-long staple fibers that are 35% stronger, significantly softer, and more resistant to pilling. Organic cotton (GOTS certified) skips synthetic pesticides entirely. Look for these quality markers — they're the difference between a dress you wear once and one you reach for every week.",
+    },
+  };
+
+  const education = FIBER_EDUCATION[slug];
+
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-16" data-testid={`page-curated-${slug}`}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
@@ -993,8 +1031,13 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
         </div>
 
         <header className="flex flex-col gap-4 pb-8 border-b border-border/20">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">INTERTEXE Verified</span>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-700"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+              INTERTEXE Verified
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">•</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{productsWithImages.length} verified pieces</span>
           </div>
           <h1 className="font-serif text-3xl md:text-5xl leading-tight" data-testid="text-page-title">
             {config.heroTitle}
@@ -1009,6 +1052,15 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
             {config.intro}
           </p>
         </section>
+
+        {education && (
+          <section className="py-8 border-b border-border/20 bg-secondary/30 -mx-4 px-4 md:-mx-8 md:px-8">
+            <h2 className="font-serif text-lg md:text-xl mb-3">{education.title}</h2>
+            <p className="text-sm md:text-base text-foreground/75 leading-relaxed max-w-2xl">
+              {education.content}
+            </p>
+          </section>
+        )}
 
         <section className="py-8 border-b border-border/20">
           <div className="grid md:grid-cols-2 gap-6">
@@ -1048,6 +1100,23 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
           fiberName={config.fiber}
           totalCount={productsWithImages.length}
         />
+
+        <section className="py-10 border-t border-border/20 bg-secondary/20 -mx-4 px-4 md:-mx-8 md:px-8">
+          <div className="max-w-xl mx-auto text-center flex flex-col items-center gap-4">
+            <h2 className="font-serif text-xl md:text-2xl">Found Something You Like?</h2>
+            <p className="text-sm text-foreground/70 leading-relaxed">
+              Paste any product URL into our Scanner and we&apos;ll verify the fabric composition instantly — telling you exactly what percentage is natural fiber.
+            </p>
+            <Link
+              href="/scanner"
+              className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 text-xs uppercase tracking-[0.15em] font-medium hover:opacity-90 transition-opacity"
+              data-testid="cta-scanner"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="17" y1="12" y2="12"/></svg>
+              Scan Any Product
+            </Link>
+          </div>
+        </section>
 
         <section className="py-8 border-t border-border/20">
           <EmailCapture fiberName={config.fiber} />

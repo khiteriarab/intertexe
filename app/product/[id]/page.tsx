@@ -56,21 +56,60 @@ const FIBER_KNOWLEDGE: Record<string, { tip: string; care: string; slug: string 
   hemp: { tip: "Hemp fabric gets softer with every wash and is one of the most durable natural fibres available.", care: "Machine wash warm. It's very durable — the easiest natural fibre to care for.", slug: "cotton" },
 };
 
+const FIBER_DISPLAY_MAP: [RegExp, string][] = [
+  [/\beuropean\s+flax\b/i, "Linen (European Flax)"],
+  [/\beuropean\s+linen\b/i, "Linen (European Flax)"],
+  [/\bflax\b/i, "Linen"],
+  [/\bpima\s+cotton\b/i, "Cotton (Pima)"],
+  [/\bsupima\s+cotton\b/i, "Cotton (Supima)"],
+  [/\begyptian\s+cotton\b/i, "Cotton (Egyptian)"],
+  [/\borganic\s+cotton\b/i, "Cotton (Organic)"],
+  [/\bsea\s+island\s+cotton\b/i, "Cotton (Sea Island)"],
+  [/\bmerino\s+wool\b/i, "Merino Wool"],
+  [/\bvirgin\s+wool\b/i, "Wool (Virgin)"],
+  [/\blambswool\b/i, "Lambswool"],
+  [/\bmulberry\s+silk\b/i, "Silk (Mulberry)"],
+  [/\bcharmeuse\b/i, "Silk (Charmeuse)"],
+  [/\bmongolian\s+cashmere\b/i, "Cashmere (Mongolian)"],
+  [/\bscottish\s+cashmere\b/i, "Cashmere (Scottish)"],
+  [/\bbaby\s+alpaca\b/i, "Alpaca (Baby)"],
+  [/\brecycled\s+polyester\b/i, "Recycled Polyester"],
+  [/\brecycled\s+nylon\b/i, "Recycled Nylon"],
+  [/\beconyl\b/i, "Recycled Nylon (ECONYL)"],
+];
+
+function normalizeFiberDisplay(raw: string): string {
+  const cleaned = raw.trim()
+    .replace(/\s+(certified|standard|oeko|tex|bci|gots|fabrication|jersey|fleece|poplin|weave).*$/i, "")
+    .replace(/[®™©]/g, "")
+    .trim();
+
+  for (const [pattern, display] of FIBER_DISPLAY_MAP) {
+    if (pattern.test(cleaned)) return display;
+  }
+
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+}
+
 function parseComposition(composition: string | null | undefined, naturalFiberPercent?: number | null): { fiber: string; percent: number }[] {
   if (!composition) return [];
   const parts: { fiber: string; percent: number }[] = [];
-  const matches = Array.from(composition.matchAll(/(\d+)\s*%\s*([a-zA-ZÀ-ÿ\s/()-]+)/g));
+  const matches = Array.from(composition.matchAll(/(\d+)\s*%\s*([a-zA-ZÀ-ÿ\s()\-/®™]+?)(?=[,;]|\d+\s*%|$)/g));
   for (const m of matches) {
     const percent = parseInt(m[1], 10);
-    const fiber = m[2].trim().replace(/[,;]+$/, "").trim();
-    if (fiber && percent > 0) parts.push({ fiber, percent });
+    const rawFiber = m[2].trim().replace(/[,;/\s]+$/, "").trim();
+    if (rawFiber && percent > 0) {
+      parts.push({ fiber: normalizeFiberDisplay(rawFiber), percent });
+    }
   }
   if (parts.length === 0) {
-    const reverse = Array.from(composition.matchAll(/([a-zA-ZÀ-ÿ\s/()-]+?)\s*(\d+)\s*%/g));
+    const reverse = Array.from(composition.matchAll(/([a-zA-ZÀ-ÿ\s()\-/®™]+?)\s*(\d+)\s*%/g));
     for (const m of reverse) {
-      const fiber = m[1].trim().replace(/[,;]+$/, "").trim();
+      const rawFiber = m[1].trim().replace(/[,;/\s]+$/, "").trim();
       const percent = parseInt(m[2], 10);
-      if (fiber && percent > 0) parts.push({ fiber, percent });
+      if (rawFiber && percent > 0) {
+        parts.push({ fiber: normalizeFiberDisplay(rawFiber), percent });
+      }
     }
   }
   if (parts.length === 0 && naturalFiberPercent != null && naturalFiberPercent > 0) {
@@ -78,7 +117,7 @@ function parseComposition(composition: string | null | undefined, naturalFiberPe
     const lower = composition.toLowerCase();
     const matched = KNOWN_FIBERS.find((f) => lower.includes(f));
     if (matched) {
-      parts.push({ fiber: matched, percent: naturalFiberPercent });
+      parts.push({ fiber: matched.charAt(0).toUpperCase() + matched.slice(1), percent: naturalFiberPercent });
       if (naturalFiberPercent < 100) {
         parts.push({ fiber: "Other", percent: 100 - naturalFiberPercent });
       }
@@ -91,7 +130,7 @@ function getPrimaryFiber(composition: string | null | undefined): string | null 
   const parts = parseComposition(composition);
   if (parts.length === 0) return null;
   const fiber = parts[0].fiber.toLowerCase();
-  const NATURAL_FIBERS = ["silk", "linen", "cotton", "wool", "cashmere", "merino", "mohair", "alpaca", "hemp", "flax", "ramie"];
+  const NATURAL_FIBERS = ["silk", "linen", "cotton", "wool", "cashmere", "merino", "mohair", "alpaca", "hemp", "flax", "ramie", "lambswool"];
   for (const nf of NATURAL_FIBERS) {
     if (fiber.includes(nf)) return nf;
   }
