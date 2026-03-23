@@ -10,8 +10,8 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-const NATURAL_FIBERS = ["linen", "flax", "cotton", "silk", "wool", "cashmere", "alpaca", "mohair", "hemp", "jute", "ramie"];
-const SEMI_NATURAL = ["lyocell", "tencel", "modal", "viscose", "rayon", "cupro", "bamboo", "acetate"];
+const NATURAL_FIBERS = ["linen", "flax", "cotton", "silk", "wool", "cashmere", "alpaca", "mohair", "hemp", "jute", "ramie", "merino", "angora", "camel", "yak", "pima", "supima"];
+const SYNTHETIC_FIBERS = ["polyester", "nylon", "polyamide", "acrylic", "elastane", "spandex", "lycra", "metallic", "rubber", "polyurethane", "polypropylene", "viscose", "rayon", "modal", "lyocell", "tencel", "cupro", "acetate", "triacetate"];
 
 const WOMEN_CLOTHING_TYPES = [
   "dresses", "dress", "tops", "top", "blouses", "blouse", "shirts", "shirt",
@@ -67,11 +67,13 @@ const KNOWN_MEN_ONLY = new Set([
 function parseComposition(raw) {
   if (!raw) return { composition: "Unknown", naturalFiberPercent: 0 };
   const cleaned = raw.replace(/\s+/g, " ").trim();
-  const percentMatches = cleaned.match(/(\d+)%\s*([a-zA-Z\s]+)/g);
+  const percentMatches = cleaned.match(/(\d+)%\s*([a-zA-Z\s\-]+)/g);
   if (!percentMatches) {
     const lower = cleaned.toLowerCase();
-    const isNatural = [...NATURAL_FIBERS, ...SEMI_NATURAL].some(f => lower.includes(f));
-    return { composition: cleaned, naturalFiberPercent: isNatural ? 80 : 20 };
+    const isNatural = NATURAL_FIBERS.some(f => lower.includes(f));
+    const isSynthetic = SYNTHETIC_FIBERS.some(f => lower.includes(f));
+    if (isNatural && !isSynthetic) return { composition: cleaned, naturalFiberPercent: 100 };
+    return { composition: cleaned, naturalFiberPercent: 0 };
   }
   let naturalTotal = 0;
   for (const match of percentMatches) {
@@ -79,9 +81,9 @@ function parseComposition(raw) {
     if (!m) continue;
     const pct = parseInt(m[1]);
     const fiber = m[2].trim().toLowerCase().replace(/[,;]/g, "").trim();
-    if (fiber.includes("wood pulp") || fiber.includes("flax")) naturalTotal += pct;
-    else if (NATURAL_FIBERS.some(f => fiber.includes(f))) naturalTotal += pct;
-    else if (SEMI_NATURAL.some(f => fiber.includes(f))) naturalTotal += pct;
+    const isNatural = NATURAL_FIBERS.some(f => fiber.includes(f));
+    const isSynthetic = SYNTHETIC_FIBERS.some(f => fiber.includes(f));
+    if (isNatural && !isSynthetic) naturalTotal += pct;
   }
   return { composition: cleaned, naturalFiberPercent: Math.min(naturalTotal, 100) };
 }
@@ -237,7 +239,7 @@ async function processProducts(rawProducts, brandSlug, brandName, baseUrl) {
     if (!rawComp) continue;
 
     const { composition, naturalFiberPercent } = parseComposition(rawComp);
-    if (naturalFiberPercent < 40) continue;
+    if (naturalFiberPercent < 95) continue;
 
     const variant = product.variants?.[0];
     const image = product.images?.[0];

@@ -5,5 +5,11 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/data-quality",
+      "schedule": "0 * * * *"
+    }
   ]
 }
