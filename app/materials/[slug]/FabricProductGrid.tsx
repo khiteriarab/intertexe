@@ -63,7 +63,7 @@ export default function FabricProductGrid({
   }, [products, search, sort]);
 
   return (
-    <section className="max-w-5xl mx-auto w-full px-4 py-8 md:py-10" data-testid="section-shop-fabric">
+    <section className="w-full py-6 md:py-8" data-testid="section-shop-fabric">
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">

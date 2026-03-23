@@ -1013,8 +1013,8 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8">
-        <div className="pt-6 pb-4 flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="max-w-6xl mx-auto px-4 md:px-6">
+        <div className="pt-6 pb-3 flex items-center gap-2 text-xs text-muted-foreground">
           <Link href="/materials" className="hover:text-foreground transition-colors" data-testid="link-back-materials">
             Materials
           </Link>
@@ -1030,70 +1030,15 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
           <span className="text-foreground">{config.heroTitle}</span>
         </div>
 
-        <header className="flex flex-col gap-4 pb-8 border-b border-border/20">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-700"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-              INTERTEXE Verified
-            </span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">•</span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{productsWithImages.length} verified pieces</span>
-          </div>
-          <h1 className="font-serif text-3xl md:text-5xl leading-tight" data-testid="text-page-title">
+        <header className="flex flex-col gap-2 pb-6">
+          <h1 className="font-serif text-2xl md:text-4xl leading-tight" data-testid="text-page-title">
             {config.heroTitle}
           </h1>
-          <p className="text-sm md:text-base text-foreground/70 max-w-2xl leading-relaxed">
-            {config.heroSubtitle}
+          <p className="text-sm text-foreground/60 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-700"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+            {productsWithImages.length} verified pieces — every composition label checked
           </p>
         </header>
-
-        <section className="py-8 border-b border-border/20">
-          <p className="text-sm md:text-base text-foreground/80 leading-relaxed max-w-2xl">
-            {config.intro}
-          </p>
-        </section>
-
-        {education && (
-          <section className="py-8 border-b border-border/20 bg-secondary/30 -mx-4 px-4 md:-mx-8 md:px-8">
-            <h2 className="font-serif text-lg md:text-xl mb-3">{education.title}</h2>
-            <p className="text-sm md:text-base text-foreground/75 leading-relaxed max-w-2xl">
-              {education.content}
-            </p>
-          </section>
-        )}
-
-        <section className="py-8 border-b border-border/20">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h2 className="text-xs uppercase tracking-[0.2em] font-medium mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-700"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-                What to Look For
-              </h2>
-              <ul className="flex flex-col gap-2.5">
-                {config.buyingTips.map((tip, i) => (
-                  <li key={i} className="text-sm text-foreground/70 flex items-start gap-2">
-                    <span className="text-emerald-700 mt-0.5">+</span>
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h2 className="text-xs uppercase tracking-[0.2em] font-medium mb-4 flex items-center gap-2">
-                <span className="text-red-600 text-sm">⚑</span>
-                Red Flags
-              </h2>
-              <ul className="flex flex-col gap-2.5">
-                {config.redFlags.map((flag, i) => (
-                  <li key={i} className="text-sm text-foreground/70 flex items-start gap-2">
-                    <span className="text-red-600 mt-0.5">−</span>
-                    {flag}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
 
         <FabricProductGrid
           products={productsWithImages}
@@ -1101,15 +1046,65 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
           totalCount={productsWithImages.length}
         />
 
-        <section className="py-10 border-t border-border/20 bg-secondary/20 -mx-4 px-4 md:-mx-8 md:px-8">
-          <div className="max-w-xl mx-auto text-center flex flex-col items-center gap-4">
-            <h2 className="font-serif text-xl md:text-2xl">Found Something You Like?</h2>
-            <p className="text-sm text-foreground/70 leading-relaxed">
-              Paste any product URL into our Scanner and we&apos;ll verify the fabric composition instantly — telling you exactly what percentage is natural fiber.
+        <section className="py-10 border-t border-border/20">
+          <div className="max-w-3xl">
+            <h2 className="font-serif text-xl md:text-2xl mb-4">{config.fiber} Buying Guide</h2>
+            <p className="text-sm text-foreground/75 leading-relaxed mb-6">
+              {config.intro}
             </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-xs uppercase tracking-[0.2em] font-medium mb-3 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-700"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                  What to Look For
+                </h3>
+                <ul className="flex flex-col gap-2">
+                  {config.buyingTips.map((tip, i) => (
+                    <li key={i} className="text-sm text-foreground/70 flex items-start gap-2">
+                      <span className="text-emerald-700 mt-0.5 flex-shrink-0">+</span>
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-xs uppercase tracking-[0.2em] font-medium mb-3 flex items-center gap-2">
+                  <span className="text-red-600 text-sm">⚑</span>
+                  Red Flags
+                </h3>
+                <ul className="flex flex-col gap-2">
+                  {config.redFlags.map((flag, i) => (
+                    <li key={i} className="text-sm text-foreground/70 flex items-start gap-2">
+                      <span className="text-red-600 mt-0.5 flex-shrink-0">−</span>
+                      {flag}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {education && (
+          <section className="py-8 border-t border-border/20">
+            <div className="max-w-3xl">
+              <h2 className="font-serif text-lg md:text-xl mb-3">{education.title}</h2>
+              <p className="text-sm text-foreground/70 leading-relaxed">
+                {education.content}
+              </p>
+            </div>
+          </section>
+        )}
+
+        <section className="py-8 border-t border-border/20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+            <div className="flex-1">
+              <p className="text-sm font-medium">Have a specific piece in mind?</p>
+              <p className="text-xs text-foreground/60 mt-0.5">Paste any product URL and we&apos;ll verify the fabric instantly.</p>
+            </div>
             <Link
               href="/scanner"
-              className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 text-xs uppercase tracking-[0.15em] font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 bg-foreground text-background px-5 py-2.5 text-xs uppercase tracking-[0.15em] font-medium hover:opacity-90 transition-opacity flex-shrink-0"
               data-testid="cta-scanner"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="17" y1="12" y2="12"/></svg>
