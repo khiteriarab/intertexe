@@ -19,6 +19,7 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "equipment": "/brands/equipment.jpg",
   "esse-studios": "/brands/esse-studios.jpg",
   "faithfull-the-brand": "/brands/faithfull-the-brand.jpg",
+  "fleur-du-mal": "/brands/fleur-du-mal.jpg",
   "frame": "/brands/frame.jpg",
   "ganni": "/brands/ganni.jpg",
   "iro": "/brands/iro.jpg",
