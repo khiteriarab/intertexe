@@ -50,7 +50,7 @@ const KNOWN_WOMEN_BRANDS = new Set([
   "tibi", "tory-burch", "kate-spade", "rebecca-taylor",
   "joie", "veda", "la-ligne", "staud", "rouje", "ba-sh",
   "aje", "camilla-and-marc", "sir-the-label", "esse-studios",
-  "dissh", "faithfull-the-brand", "cult-gaia", "zimmermann",
+  "dissh", "faithfull-the-brand", "cult-gaia", "zimmermann", "fleur-du-mal",
   "dion-lee", "self-portrait", "rixo", "ganni", "rotate",
   "stine-goya", "gestuz", "remain", "by-malene-birger",
   "dagmar", "rodebjer", "hope-stockholm", "tiger-of-sweden",

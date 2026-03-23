@@ -192,6 +192,7 @@ async function run() {
     { slug: 'diesel', name: 'Diesel' },
     { slug: 'a-l-c-', name: 'A.L.C.' },
     { slug: 'isabel-marant', name: 'Isabel Marant' },
+    { slug: 'fleur-du-mal', name: 'Fleur du Mal' },
   ];
 
   const results = {};
