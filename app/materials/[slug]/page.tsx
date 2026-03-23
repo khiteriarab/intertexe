@@ -606,12 +606,10 @@ function getParentFiber(slug: string): string | null {
   return config.fiber.toLowerCase();
 }
 
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
-  const params = [
-    ...MAIN_FIBERS.map(slug => ({ slug })),
-    ...ALL_CURATED_SLUGS.map(slug => ({ slug })),
-  ];
-  return params;
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
