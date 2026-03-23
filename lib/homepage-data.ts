@@ -70,7 +70,8 @@ export async function getHomePageData(): Promise<HomePageData> {
       fetchSaleProducts({ limit: 12 }),
     ]);
 
-  const saleProducts = saleResult.products.filter((p) => !isZeroPrice(p.price));
+  const EXCLUDED_SALE_BRANDS = new Set(["l-agence", "lagence"]);
+  const saleProducts = saleResult.products.filter((p) => !isZeroPrice(p.price) && !EXCLUDED_SALE_BRANDS.has(p.brandSlug));
 
   const curatedDesignerResults = await Promise.all(
     CURATED_BRAND_SLUGS.map(async (slug) => {
