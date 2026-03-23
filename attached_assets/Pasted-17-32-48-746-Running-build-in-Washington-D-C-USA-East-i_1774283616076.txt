@@ -1,0 +1,48 @@
+17:32:48.746 Running build in Washington, D.C., USA (East) – iad1
+17:32:48.747 Build machine configuration: 2 cores, 8 GB
+17:32:48.865 Cloning github.com/khiteriarab/intertexe (Branch: vercel/vercel-speed-insights-to-nextj-chyv47, Commit: 7d661b7)
+17:32:53.672 Cloning completed: 4.807s
+17:32:53.842 Restored build cache from previous deployment (KxXGEFm4foqzWTx9XVhPzM3w4bFk)
+17:32:54.119 Running "vercel build"
+17:32:54.854 Vercel CLI 50.35.0
+17:32:55.599 Running "install" command: `npm install`...
+17:32:59.744 
+17:32:59.744 up to date, audited 599 packages in 4s
+17:32:59.744 
+17:32:59.745 101 packages are looking for funding
+17:32:59.745   run `npm fund` for details
+17:32:59.806 
+17:32:59.807 17 vulnerabilities (1 low, 8 moderate, 8 high)
+17:32:59.807 
+17:32:59.808 To address issues that do not require attention, run:
+17:32:59.808   npm audit fix
+17:32:59.808 
+17:32:59.809 To address all issues (including breaking changes), run:
+17:32:59.809   npm audit fix --force
+17:32:59.809 
+17:32:59.810 Run `npm audit` for details.
+17:32:59.842 Detected Next.js version: 15.5.12
+17:32:59.843 Running "rm -rf .next && npx next build"
+17:33:00.952 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+17:33:00.953 This information is used to shape Next.js' roadmap and prioritize features.
+17:33:00.953 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+17:33:00.954 https://nextjs.org/telemetry
+17:33:00.954 
+17:33:01.034    ▲ Next.js 15.5.12
+17:33:01.035    - Experiments (use with caution):
+17:33:01.035      · serverActions
+17:33:01.035 
+17:33:01.077    Creating an optimized production build ...
+17:33:14.858  ✓ Compiled successfully in 13.3s
+17:33:14.863    Skipping validation of types
+17:33:14.863    Skipping linting
+17:33:15.146    Collecting page data ...
+17:33:15.536 Error: TOKEN_SECRET or SUPABASE_ANON_KEY must be set in production
+17:33:15.536     at <unknown> (.next/server/chunks/3623.js:1:418)
+17:33:15.537     at <unknown> (.next/server/chunks/3623.js:1:488)
+17:33:15.539 
+17:33:15.539 > Build error occurred
+17:33:15.544 [Error: Failed to collect page data for /api/auth/change-password] {
+17:33:15.544   type: 'Error'
+17:33:15.544 }
+17:33:15.596 Error: Command "rm -rf .next && npx next build" exited with 1
