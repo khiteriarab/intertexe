@@ -383,7 +383,7 @@ function isWomensFashionBrand(slug: string): boolean {
   return WOMEN_FASHION_BRAND_SLUGS.has(slug);
 }
 
-export async function fetchProductsByFiber(fiber: string): Promise<Product[]> {
+export async function fetchProductsByFiber(fiber: string, limit = 200): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
   const { data, error } = await supabase
@@ -395,7 +395,9 @@ export async function fetchProductsByFiber(fiber: string): Promise<Product[]> {
     .neq("price", "")
     .neq("price", "$0.00")
     .neq("price", "0")
-    .order("natural_fiber_percent", { ascending: false });
+    .not("image_url", "is", null)
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(limit);
   if (error || !data) return [];
   return data
     .filter((row: any) => isClothingProduct(row) && isWomensFashionBrand(row.brand_slug || "") && isNotMensProduct(row))
