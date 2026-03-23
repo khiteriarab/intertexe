@@ -200,7 +200,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton", "denim"],
     heroTitle: "Cotton Dresses",
     heroSubtitle: "Every label checked. 95%+ natural cotton.",
-    featuredBrands: ["Faithfull the Brand", "Khaite", "Ulla Johnson"],
+    featuredBrands: ["Faithfull the Brand", "Khaite", "A.L.C.", "Reformation", "Anine Bing", "Sandro", "Frame"],
     intro: "Cotton is the most versatile fabric in fashion — from crisp poplin shirt dresses to soft jersey maxis to structured denim. But quality varies wildly: fast fashion brands routinely cut cotton with 30–50% polyester, which traps heat, pills quickly, and doesn't breathe. We verified every label to find cotton dresses actually worth wearing in warm weather.",
     buyingTips: [
       "Organic cotton (GOTS certified) uses no synthetic pesticides and is softer from the start",
@@ -961,16 +961,36 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
 
   let productsWithImages = products.filter((p: any) => p.imageUrl);
 
-  if (config.featuredBrands && config.featuredBrands.length > 0) {
-    const featured = config.featuredBrands.map(b => b.toLowerCase());
-    productsWithImages.sort((a: any, b: any) => {
-      const aFeat = featured.indexOf(a.brandName?.toLowerCase());
-      const bFeat = featured.indexOf(b.brandName?.toLowerCase());
-      if (aFeat >= 0 && bFeat < 0) return -1;
-      if (bFeat >= 0 && aFeat < 0) return 1;
-      if (aFeat >= 0 && bFeat >= 0) return aFeat - bFeat;
-      return 0;
-    });
+  {
+    const brandGroups: Record<string, any[]> = {};
+    for (const p of productsWithImages) {
+      const brand = p.brandName || "Unknown";
+      if (!brandGroups[brand]) brandGroups[brand] = [];
+      brandGroups[brand].push(p);
+    }
+
+    const brandOrder = config.featuredBrands
+      ? [...config.featuredBrands.filter(b => brandGroups[b]), ...Object.keys(brandGroups).filter(b => !config.featuredBrands!.includes(b))]
+      : Object.keys(brandGroups).sort((a, b) => brandGroups[b].length - brandGroups[a].length);
+
+    const diversified: any[] = [];
+    const indices: Record<string, number> = {};
+    for (const b of brandOrder) indices[b] = 0;
+
+    let added = true;
+    while (added) {
+      added = false;
+      for (const brand of brandOrder) {
+        const idx = indices[brand] || 0;
+        if (brandGroups[brand] && idx < brandGroups[brand].length) {
+          diversified.push(brandGroups[brand][idx]);
+          indices[brand] = idx + 1;
+          added = true;
+        }
+      }
+    }
+
+    productsWithImages = diversified;
   }
 
   const parentName = parentFiber ? parentFiber.charAt(0).toUpperCase() + parentFiber.slice(1) : config.fiber;
