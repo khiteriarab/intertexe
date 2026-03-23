@@ -18,9 +18,8 @@ function isZeroPrice(price: string | null | undefined): boolean {
 }
 
 export const CURATED_BRAND_SLUGS = [
-  "faithfull-the-brand", "isabel-marant", "diesel", "khaite",
-  "anine-bing", "toteme", "frame", "nanushka", "sandro", "agolde",
-  "fleur-du-mal",
+  "fleur-du-mal", "faithfull-the-brand", "isabel-marant", "khaite",
+  "anine-bing", "frame", "diesel", "nanushka", "sandro", "agolde",
 ];
 
 export interface HomePageData {
