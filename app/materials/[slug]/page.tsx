@@ -109,8 +109,8 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiber: "Linen",
     category: "dresses",
     fiberQuery: ["linen", "flax"],
-    heroTitle: "The Best Linen Dresses in 2026",
-    heroSubtitle: "We checked the composition of every dress. These are made from real linen — not polyester blends marketed as \"linen look.\"",
+    heroTitle: "Linen Dresses",
+    heroSubtitle: "Every composition verified. Real linen only.",
     intro: "Linen is one of the oldest and most sustainable fabrics on earth — breathable, naturally cooling, and it only gets softer with every wash. The problem? Most brands cut their \"linen\" dresses with 30–50% polyester, which defeats the entire purpose. We verified every composition label to find dresses made from real linen, including European Flax — the highest quality linen fiber, grown in France, Belgium, and the Netherlands.",
     buyingTips: [
       "European Flax (certified by CELC) is the gold standard — flax is the plant, linen is the fabric",
@@ -153,8 +153,8 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiber: "Silk",
     category: "dresses",
     fiberQuery: ["silk"],
-    heroTitle: "The Best Silk Dresses in 2026",
-    heroSubtitle: "Every dress verified for real silk content. No polyester satin masquerading as luxury. From bias-cut slips to structured midi dresses — only genuine silk makes the cut.",
+    heroTitle: "Silk Dresses",
+    heroSubtitle: "Verified real silk. No polyester satin.",
     intro: "Real silk has a distinct, cool-to-the-touch feel that no synthetic can replicate. It's naturally temperature-regulating, hypoallergenic, and has a luminous drape that polyester satin will never match. We checked the composition label of every single dress on this page — because at $200–$800, you deserve to know what you're actually paying for.",
     buyingTips: [
       "Mulberry silk is the highest quality — smooth, lustrous, and naturally hypoallergenic",
@@ -197,8 +197,8 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiber: "Cotton",
     category: "dresses",
     fiberQuery: ["cotton", "denim"],
-    heroTitle: "The Best Cotton Dresses in 2026",
-    heroSubtitle: "Breathable, durable, and honestly made. We checked every composition label — these are 95%+ real cotton, no synthetic shortcuts.",
+    heroTitle: "Cotton Dresses",
+    heroSubtitle: "Every label checked. 95%+ natural cotton.",
     intro: "Cotton is the most versatile fabric in fashion — from crisp poplin shirt dresses to soft jersey maxis to structured denim. But quality varies wildly: fast fashion brands routinely cut cotton with 30–50% polyester, which traps heat, pills quickly, and doesn't breathe. We verified every label to find cotton dresses actually worth wearing in warm weather.",
     buyingTips: [
       "Organic cotton (GOTS certified) uses no synthetic pesticides and is softer from the start",
@@ -1013,30 +1013,29 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6">
-        <div className="pt-6 pb-3 flex items-center gap-2 text-xs text-muted-foreground">
-          <Link href="/materials" className="hover:text-foreground transition-colors" data-testid="link-back-materials">
+      <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8">
+        <div className="pt-4 pb-2 flex items-center gap-2 text-[11px] text-foreground/30 tracking-wide">
+          <Link href="/materials" className="hover:text-foreground/60 transition-colors" data-testid="link-back-materials">
             Materials
           </Link>
           <span>/</span>
           {parentFiber && (
             <>
-              <Link href={`/materials/${parentFiber}`} className="hover:text-foreground transition-colors" data-testid="link-back-parent">
+              <Link href={`/materials/${parentFiber}`} className="hover:text-foreground/60 transition-colors" data-testid="link-back-parent">
                 {parentName}
               </Link>
               <span>/</span>
             </>
           )}
-          <span className="text-foreground">{config.heroTitle}</span>
+          <span className="text-foreground/50">{config.heroTitle}</span>
         </div>
 
-        <header className="flex flex-col gap-2 pb-6">
-          <h1 className="font-serif text-2xl md:text-4xl leading-tight" data-testid="text-page-title">
+        <header className="pt-4 pb-8 md:pt-6 md:pb-10 text-center">
+          <h1 className="font-serif text-2xl md:text-[2.75rem] md:leading-[1.15] tracking-[-0.01em]" data-testid="text-page-title">
             {config.heroTitle}
           </h1>
-          <p className="text-sm text-foreground/60 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-700"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-            {productsWithImages.length} verified pieces — every composition label checked
+          <p className="text-[13px] text-foreground/45 mt-2 max-w-md mx-auto leading-relaxed">
+            {config.heroSubtitle}
           </p>
         </header>
 
