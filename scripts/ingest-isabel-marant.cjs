@@ -8,7 +8,7 @@ const MID = '49987';
 const BRAND_NAME = 'Isabel Marant';
 const BRAND_SLUG = 'isabel-marant';
 
-const NATURAL_FIBERS = ['cotton', 'wool', 'silk', 'linen', 'flax', 'cashmere', 'mohair', 'alpaca', 'hemp', 'ramie', 'jute', 'leather', 'tencel', 'lyocell', 'modal', 'virgin wool', 'cowhide'];
+const NATURAL_FIBERS = ['cotton', 'wool', 'silk', 'linen', 'flax', 'cashmere', 'mohair', 'alpaca', 'hemp', 'ramie', 'jute', 'merino', 'angora', 'camel', 'yak', 'pima', 'supima', 'virgin wool'];
 
 const FR_TO_EN = {
   'coton': 'cotton', 'laine': 'wool', 'soie': 'silk', 'lin': 'linen',

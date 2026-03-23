@@ -88,6 +88,7 @@ const NAME_TO_SLUG: Record<string, string> = {
   "equipment": "equipment",
   "esse studios": "esse-studios",
   "faithfull the brand": "faithfull-the-brand",
+  "fleur du mal": "fleur-du-mal",
   "frame": "frame",
   "ganni": "ganni",
   "iro": "iro",

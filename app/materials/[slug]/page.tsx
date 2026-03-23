@@ -156,6 +156,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["silk"],
     heroTitle: "Silk Dresses",
     heroSubtitle: "Verified real silk. No polyester satin.",
+    featuredBrands: ["Fleur du Mal", "Khaite", "Reformation", "Anine Bing", "Sandro", "Frame"],
     intro: "Real silk has a distinct, cool-to-the-touch feel that no synthetic can replicate. It's naturally temperature-regulating, hypoallergenic, and has a luminous drape that polyester satin will never match. We checked the composition label of every single dress on this page — because at $200–$800, you deserve to know what you're actually paying for.",
     buyingTips: [
       "Mulberry silk is the highest quality — smooth, lustrous, and naturally hypoallergenic",
