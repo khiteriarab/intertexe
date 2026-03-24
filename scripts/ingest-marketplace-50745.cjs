@@ -181,7 +181,8 @@ function extractComposition(desc) {
       .reduce((sum, f) => sum + f.pct, 0);
     naturalWeighted += (partNatural / 100) * weight;
   }
-  const pct = totalWeight > 0 ? Math.round((naturalWeighted / totalWeight) * 100) : null;
+  let pct = totalWeight > 0 ? Math.round((naturalWeighted / totalWeight) * 100) : null;
+  if (pct !== null && pct > 100) pct = 100;
 
   return { composition, pct };
 }
