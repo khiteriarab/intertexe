@@ -63,6 +63,8 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "vince": "/brands/vince.webp",
   "zadig-voltaire": "/brands/zadig-voltaire.jpg",
   "zimmermann": "/brands/zimmermann.jpg",
+  "7-for-all-mankind": "/brands/7-for-all-mankind.jpg",
+  "splendid": "/brands/splendid.jpg",
 };
 
 const NAME_TO_SLUG: Record<string, string> = {
@@ -145,6 +147,9 @@ const NAME_TO_SLUG: Record<string, string> = {
   "zadig & voltaire": "zadig-voltaire",
   "zadig voltaire": "zadig-voltaire",
   "zimmermann": "zimmermann",
+  "7 for all mankind": "7-for-all-mankind",
+  "7forallmankind": "7-for-all-mankind",
+  "splendid": "splendid",
 };
 
 export function getBrandHeroImage(brandName: string): string | null {
