@@ -112,6 +112,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["linen", "flax"],
     heroTitle: "Linen Dresses",
     heroSubtitle: "Every composition verified. Real linen only.",
+    featuredBrands: ["Faithfull the Brand", "Rails", "Johnny Was", "Free People", "Cleobella", "Frame"],
     intro: "Linen is one of the oldest and most sustainable fabrics on earth — breathable, naturally cooling, and it only gets softer with every wash. The problem? Most brands cut their \"linen\" dresses with 30–50% polyester, which defeats the entire purpose. We verified every composition label to find dresses made from real linen, including European Flax — the highest quality linen fiber, grown in France, Belgium, and the Netherlands.",
     buyingTips: [
       "European Flax (certified by CELC) is the gold standard — flax is the plant, linen is the fabric",
@@ -135,6 +136,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["linen", "flax"],
     heroTitle: "Linen Tops & Shirts",
     heroSubtitle: "Breezy, breathable, and built for warm weather. Every composition verified.",
+    featuredBrands: ["Faithfull the Brand", "Rails", "Johnny Was", "Free People", "Frame", "Bella Dahl"],
     intro: "A linen shirt is the backbone of any summer wardrobe. The problem? Most \"linen\" tops are blended with polyester to cut costs. We checked every label to find the real thing.",
     buyingTips: [
       "100% linen shirts get softer with every wash",
@@ -180,6 +182,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["silk"],
     heroTitle: "Silk Tops & Blouses",
     heroSubtitle: "The real thing. No poly-satin pretenders.",
+    featuredBrands: ["Fleur du Mal", "L'Agence", "Theory", "Johnny Was", "Rails", "Frame"],
     intro: "A silk blouse is a wardrobe investment that lasts decades — if it's actually silk. We verified every composition to find tops made from genuine silk, not the polyester satin sold at similar price points.",
     buyingTips: [
       "Silk charmeuse for a dressier drape, crepe de chine for everyday wear",
@@ -225,6 +228,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton", "denim"],
     heroTitle: "Cotton Tops & Shirts",
     heroSubtitle: "Classic cotton. No synthetic fillers. Every label checked.",
+    featuredBrands: ["Faithfull the Brand", "rag & bone", "A.L.C.", "Free People", "Rails", "Johnny Was"],
     intro: "Cotton shirts should be simple — but brands love cutting corners with polyester blends that pill, trap heat, and look cheap after a few washes. We verified every label to find the ones made from real, quality cotton.",
     buyingTips: [
       "100% cotton oxford cloth is the gold standard for casual shirts",
@@ -246,6 +250,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cashmere"],
     heroTitle: "Cashmere Sweaters",
     heroSubtitle: "The luxury knit. Verified compositions — no blended imitations.",
+    featuredBrands: ["Theory", "Vince", "Lafayette 148", "rag & bone", "Frame", "J.McLaughlin"],
     intro: "Cashmere is the most coveted knitwear fiber in the world — lighter, warmer, and softer than wool. But the market is flooded with blends that use as little as 5% cashmere and call it \"cashmere.\" We checked every label.",
     buyingTips: [
       "Grade A cashmere uses the longest, finest fibers (under 15.5 microns)",
@@ -268,6 +273,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["wool", "merino"],
     heroTitle: "Wool Sweaters & Knitwear",
     heroSubtitle: "Warm, breathable, and naturally odor-resistant. Every fiber verified.",
+    featuredBrands: ["Theory", "Vince", "rag & bone", "Veronica Beard", "Lafayette 148", "Isabel Marant"],
     intro: "Good wool knitwear lasts a lifetime. Merino, lambswool, and virgin wool are naturally temperature-regulating and antimicrobial. But cheap acrylic blends dominate the market. We found the pieces worth investing in.",
     buyingTips: [
       "Merino wool (under 18.5 microns) is the softest and least itchy",
@@ -310,6 +316,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton"],
     heroTitle: "Cotton Shirts",
     heroSubtitle: "Oxford, poplin, chambray — every label verified for real cotton.",
+    featuredBrands: ["Faithfull the Brand", "rag & bone", "Rails", "Free People", "Frame", "Paige"],
     intro: "A cotton shirt is the foundation of any wardrobe. But most \"cotton\" shirts today are blended with polyester or elastane. We checked every composition to find shirts made from real, quality cotton — Pima, Supima, organic, and Egyptian.",
     buyingTips: [
       "Oxford cloth button-downs in 100% cotton are the gold standard",
@@ -331,6 +338,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton"],
     heroTitle: "Cotton T-Shirts",
     heroSubtitle: "The everyday essential — verified for 100% cotton content.",
+    featuredBrands: ["rag & bone", "Vince", "Rails", "Splendid", "Free People", "RE/DONE"],
     intro: "A cotton t-shirt should be simple — 100% cotton, no hidden polyester blends. We verified every label to find tees made from genuine cotton: Pima, Supima, organic, and heavyweight jersey. No synthetic surprises.",
     buyingTips: [
       "100% cotton jersey is the standard — avoid poly-cotton blends",
@@ -352,6 +360,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton", "denim"],
     heroTitle: "Cotton Pants & Trousers",
     heroSubtitle: "Chinos, denim, wide-leg — all verified for real cotton content.",
+    featuredBrands: ["rag & bone", "Paige", "AGOLDE", "Citizens of Humanity", "Frame", "DL1961"],
     intro: "From raw selvedge denim to tailored chinos, the best pants start with quality cotton. We verified every composition to find trousers made from genuine cotton — not synthetic stretch blends that lose shape after a few wears.",
     buyingTips: [
       "Raw selvedge denim is 100% cotton with no stretch additives",
@@ -373,6 +382,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["denim"],
     heroTitle: "Denim & Jeans",
     heroSubtitle: "Raw, rigid, real. Every pair verified for 100% cotton construction.",
+    featuredBrands: ["AGOLDE", "Citizens of Humanity", "rag & bone", "Paige", "Frame", "DL1961"],
     intro: "Real denim is 100% cotton — a sturdy twill weave that moulds to your body over time. But most \"denim\" today is stretch poly-cotton that pills, sags, and never develops character. We checked every label to find jeans and denim pieces made the right way.",
     buyingTips: [
       "Raw/selvedge denim is unwashed 100% cotton — it ages beautifully over time",
@@ -395,6 +405,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["silk"],
     heroTitle: "Silk Blouses",
     heroSubtitle: "The wardrobe essential. Every blouse verified for genuine silk.",
+    featuredBrands: ["Fleur du Mal", "L'Agence", "Theory", "Johnny Was", "Rails", "Frame"],
     intro: "A silk blouse is the most elegant layering piece in fashion — but the market is flooded with polyester satin sold at silk prices. We verified every label to find blouses made from real mulberry silk, silk crepe de chine, and silk charmeuse.",
     buyingTips: [
       "Silk crepe de chine is the most versatile — matte finish, breathable",
@@ -416,6 +427,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["silk"],
     heroTitle: "Silk Skirts",
     heroSubtitle: "Midi, maxi, and slip skirts in verified real silk.",
+    featuredBrands: ["Fleur du Mal", "L'Agence", "Theory", "Ramy Brook", "Frame", "Rails"],
     intro: "A silk skirt moves like nothing else — fluid, luminous, and cool to the touch. But most \"silk\" skirts on the market are actually polyester. We verified every composition so you get the real thing.",
     buyingTips: [
       "Silk slip skirts in charmeuse have the classic fluid drape",
@@ -437,6 +449,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["linen", "flax"],
     heroTitle: "Linen Pants",
     heroSubtitle: "Breathable summer trousers. Every pair verified for real linen.",
+    featuredBrands: ["Faithfull the Brand", "Rails", "Free People", "Frame", "Bella Dahl", "Johnny Was"],
     intro: "Linen pants are the ultimate warm-weather essential — naturally cooling, moisture-wicking, and they only get softer with each wash. But many brands blend linen with polyester to cut costs. We found the ones that don't.",
     buyingTips: [
       "100% linen pants soften beautifully over time",
@@ -458,6 +471,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["linen", "flax"],
     heroTitle: "Linen Shirts",
     heroSubtitle: "Camp collars, button-downs, and blouses in real linen.",
+    featuredBrands: ["Faithfull the Brand", "Rails", "Frame", "Free People", "Bella Dahl", "Johnny Was"],
     intro: "A linen shirt is the cornerstone of any summer wardrobe — but most brands blend linen with polyester to reduce wrinkling and cost. We verified every composition to find shirts made from genuine linen fiber.",
     buyingTips: [
       "100% linen shirts get softer and more comfortable with every wash",
@@ -478,6 +492,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["linen", "flax"],
     heroTitle: "Linen Sets",
     heroSubtitle: "Matching co-ords and resort sets in verified linen.",
+    featuredBrands: ["Faithfull the Brand", "Rails", "Free People", "Frame", "Cleobella", "Johnny Was"],
     intro: "Linen sets — matching tops and bottoms — are the easiest way to look pulled-together in warm weather. We verified the composition of each piece to make sure you're getting real linen, not synthetic imitations.",
     buyingTips: [
       "Look for 100% linen or linen-cotton blends in both pieces",
@@ -499,6 +514,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["wool", "merino"],
     heroTitle: "Wool Coats",
     heroSubtitle: "Investment outerwear in verified real wool.",
+    featuredBrands: ["Theory", "Vince", "rag & bone", "Veronica Beard", "Isabel Marant", "Lafayette 148"],
     intro: "A wool coat is one of the most important investments in your wardrobe — it should last a decade or more. But many \"wool\" coats are blended with polyester, which pills, traps odor, and doesn't breathe. We verified every label.",
     buyingTips: [
       "Virgin wool coats are the most durable — first-shearing fiber",
@@ -520,6 +536,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["wool", "merino"],
     heroTitle: "Wool Trousers",
     heroSubtitle: "Tailored, breathable, and naturally wrinkle-resistant.",
+    featuredBrands: ["Theory", "Vince", "rag & bone", "Veronica Beard", "Lafayette 148", "Frame"],
     intro: "Wool trousers are the foundation of smart dressing — they drape beautifully, resist wrinkles, and regulate temperature year-round. We verified every composition to find trousers made from real wool, not synthetic imitations.",
     buyingTips: [
       "Tropical wool (lighter weight) works year-round in most climates",
@@ -541,6 +558,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cashmere"],
     heroTitle: "Cashmere Cardigans & Knits",
     heroSubtitle: "Beyond sweaters — cardigans, vests, and knit dresses in real cashmere.",
+    featuredBrands: ["Theory", "Vince", "Lafayette 148", "rag & bone", "J.McLaughlin", "Frame"],
     intro: "Cashmere knitwear goes far beyond the classic crewneck sweater. Cardigans, knit dresses, vests, and wraps — all verified for genuine cashmere content. No acrylic blends marketed as luxury.",
     buyingTips: [
       "2-ply cashmere is more durable and pills less than single-ply",
@@ -562,6 +580,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton"],
     heroTitle: "Cotton Knitwear",
     heroSubtitle: "Lightweight sweaters and knits in verified cotton.",
+    featuredBrands: ["Vince", "Rails", "Theory", "rag & bone", "Splendid", "Lilla P"],
     intro: "Cotton knitwear is the year-round alternative to wool — lighter, machine-washable, and naturally hypoallergenic. We verified every composition to find knits made from real cotton, not acrylic or polyester blends.",
     buyingTips: [
       "Pima and Supima cotton knits are softer and more lustrous",
