@@ -24,6 +24,30 @@ function getStyleBaseName(name: string): string {
     .toLowerCase();
 }
 
+const EDITORIAL_CATEGORIES = new Set(["dresses", "lingerie", "swimwear", "jumpsuits", "knitwear", "outerwear", "skirts", "tops"]);
+const NON_EDITORIAL_CATEGORIES = new Set(["accessories", "scarves", "bags", "shoes", "jewelry"]);
+const NON_EDITORIAL_NAMES = /\b(scarf|scarves|hat|cap|belt|bag|wallet|glove|sock|sunglasses|keychain|pouch|wrap|stole|shawl)\b/i;
+
+function pickEditorialProduct(products: any[]): any | null {
+  const scored = products
+    .filter((p: any) => p.imageUrl || p.image_url)
+    .map((p: any) => {
+      let score = 0;
+      const cat = (p.category || "").toLowerCase();
+      const name = (p.name || "").toLowerCase();
+      if (EDITORIAL_CATEGORIES.has(cat)) score += 10;
+      if (NON_EDITORIAL_CATEGORIES.has(cat)) score -= 20;
+      if (NON_EDITORIAL_NAMES.test(name)) score -= 20;
+      if (cat === "dresses" || cat === "lingerie") score += 5;
+      const price = parseFloat(((p.price || "0") + "").replace(/[^0-9.]/g, "")) || 0;
+      if (price > 300) score += 3;
+      if (price > 600) score += 2;
+      return { product: p, score };
+    })
+    .sort((a: any, b: any) => b.score - a.score);
+  return scored[0]?.product || products[0] || null;
+}
+
 function diversifyByBrand(products: any[], max: number, maxPerBrand: number): any[] {
   const result: any[] = [];
   const brandCount: Record<string, number> = {};
@@ -52,6 +76,8 @@ export interface HomePageData {
   cashmereProducts: any[];
   silkProducts: any[];
   linenProducts: any[];
+  silkEditorialProduct: any | null;
+  linenEditorialProduct: any | null;
   productCountByBrand: Record<string, number>;
   curatedDesigners: any[];
   newInProducts: any[];
@@ -146,12 +172,17 @@ export async function getHomePageData(): Promise<HomePageData> {
     round++;
   }
 
+  const silkEditorialProduct = pickEditorialProduct(silkProducts);
+  const linenEditorialProduct = pickEditorialProduct(linenProducts);
+
   return {
     designers,
     productCount,
     cashmereProducts,
     silkProducts,
     linenProducts,
+    silkEditorialProduct,
+    linenEditorialProduct,
     productCountByBrand,
     curatedDesigners,
     newInProducts,

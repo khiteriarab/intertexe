@@ -2,8 +2,8 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, Heart } from "lucide-react";
-import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
+import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { getQualityTier } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
 
 function optimizeImageUrl(url: string, width: number): string {
@@ -15,30 +15,33 @@ function optimizeImageUrl(url: string, width: number): string {
   return url;
 }
 
-function ProductCardSmall({ product, eager }: { product: any; eager?: boolean }) {
+function ProductCard({ product, eager, variant = "default" }: { product: any; eager?: boolean; variant?: "default" | "sale" }) {
   const name = product.name || "";
   const brandName = product.brandName || "";
   const imageUrl = product.imageUrl || "";
   const price = product.price;
   const composition = product.composition;
+  const originalNum = product.originalPrice ? parseFloat(product.originalPrice.replace(/[^0-9.]/g, "")) : 0;
+  const currentNum = product.price ? parseFloat(product.price.replace(/[^0-9.]/g, "")) : 0;
+  const discountPct = originalNum > 0 ? Math.round((1 - currentNum / originalNum) * 100) : 0;
 
   return (
     <Link
       href={`/product/${product.id}`}
-      className="group flex-shrink-0 w-[160px] md:w-[220px] flex flex-col cursor-pointer"
+      className="group flex-shrink-0 w-[165px] md:w-[240px] flex flex-col cursor-pointer"
       data-testid={`product-home-${product.id}`}
     >
-      <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
+      <div className="aspect-[3/4] bg-[#f2f1ef] relative overflow-hidden">
         {imageUrl ? (
           <img
-            src={optimizeImageUrl(imageUrl, 440)}
+            src={optimizeImageUrl(imageUrl, 480)}
             alt={name}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
             loading={eager ? "eager" : "lazy"}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <ShoppingBag className="w-6 h-6 text-neutral-300" />
+            <ShoppingBag className="w-5 h-5 text-neutral-300" />
           </div>
         )}
         {composition && (
@@ -48,17 +51,27 @@ function ProductCardSmall({ product, eager }: { product: any; eager?: boolean })
             </span>
           </div>
         )}
+        {variant === "sale" && discountPct > 0 && (
+          <div className="absolute top-2.5 left-2.5 z-10">
+            <span className="bg-black text-white px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] font-medium">
+              {discountPct}% off
+            </span>
+          </div>
+        )}
       </div>
-      <div className="flex flex-col gap-0.5 pt-2.5">
-        <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">
+      <div className="flex flex-col gap-0.5 pt-3 md:pt-3.5">
+        <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em]">
           {brandName}
         </span>
-        <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-muted-foreground">
+        <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-neutral-500">
           {name}
         </h3>
-        {price && (
-          <span className="text-[11px] md:text-[12px] mt-0.5">{price}</span>
-        )}
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-[11px] md:text-[12px]">{price}</span>
+          {variant === "sale" && product.originalPrice && (
+            <span className="text-[10px] md:text-[11px] text-neutral-400 line-through">{product.originalPrice}</span>
+          )}
+        </div>
       </div>
     </Link>
   );
@@ -83,43 +96,43 @@ export function HorizontalProductScroll({
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
-    const amount = direction === "left" ? -400 : 400;
+    const amount = direction === "left" ? -420 : 420;
     scrollRef.current.scrollBy({ left: amount, behavior: "smooth" });
   };
 
   if (!products || products.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-7 md:gap-10">
+      <div className="flex items-end justify-between">
         <Link
           href={linkHref}
           className="flex items-center gap-3 group"
           data-testid={`link-${title.toLowerCase().replace(/\s+/g, "-")}`}
         >
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1">
             {subtitle && (
-              <span className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-neutral-400">
                 {subtitle}
               </span>
             )}
-            <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-muted-foreground transition-colors leading-tight">
+            <h2 className="text-[22px] md:text-[30px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
               {title}
             </h2>
           </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
         <div className="hidden md:flex items-center gap-1">
           <button
             onClick={() => scroll("left")}
-            className="w-9 h-9 border border-border/50 flex items-center justify-center hover:border-foreground/40 transition-colors"
+            className="w-10 h-10 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors duration-200"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="w-9 h-9 border border-border/50 flex items-center justify-center hover:border-foreground/40 transition-colors"
+            className="w-10 h-10 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors duration-200"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-4 h-4" />
@@ -129,16 +142,16 @@ export function HorizontalProductScroll({
 
       <div
         ref={scrollRef}
-        className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-2"
+        className="flex gap-3 md:gap-5 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-2"
       >
         {products.map((product: any, i: number) => (
-          <ProductCardSmall key={product.id} product={product} eager={eager && i < 4} />
+          <ProductCard key={product.id} product={product} eager={eager && i < 4} />
         ))}
       </div>
 
       <Link
         href={linkHref}
-        className="self-start text-[10px] md:text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+        className="self-start text-[10px] md:text-xs uppercase tracking-[0.18em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
         data-testid={`link-shop-${title.toLowerCase().replace(/\s+/g, "-")}`}
       >
         {linkText} <ArrowRight className="w-3 h-3" />
@@ -153,28 +166,27 @@ function BrandCardImage({ name, count }: { name: string; count: number }) {
   const hasImage = heroUrl && !failed;
 
   return (
-    <div className={`aspect-[3/4] w-full overflow-hidden relative ${hasImage ? 'bg-secondary' : 'bg-[#f0ece6]'}`}>
+    <div className={`aspect-[3/4] w-full overflow-hidden relative ${hasImage ? 'bg-neutral-100' : 'bg-[#f0ece6]'}`}>
       {hasImage ? (
         <img
           src={heroUrl}
           alt={`${name} editorial`}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
           loading="eager"
           onError={() => setFailed(true)}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center px-4">
-          <span className="font-serif text-lg md:text-xl text-foreground/30 tracking-[0.15em] uppercase text-center leading-relaxed">
+          <span className="font-serif text-lg md:text-xl text-neutral-300 tracking-[0.15em] uppercase text-center leading-relaxed">
             {name}
           </span>
         </div>
       )}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
       {count > 0 && (
-        <div className="absolute bottom-2.5 right-2.5">
-          <span className="flex items-center gap-1 bg-white/90 text-black px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+        <div className="absolute bottom-3 right-3">
+          <span className="flex items-center gap-1 bg-white/90 text-neutral-800 px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] font-medium backdrop-blur-sm">
             <ShoppingBag className="w-2.5 h-2.5" />
-            {count} products
+            {count}
           </span>
         </div>
       )}
@@ -192,7 +204,7 @@ export function BrandGrid({
   if (!designers || designers.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-5">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
       {designers.map((designer: any) => {
         const tier = getQualityTier(designer.naturalFiberPercent);
         const count = productCounts[designer.slug] || 0;
@@ -200,15 +212,15 @@ export function BrandGrid({
           <Link
             key={designer.id}
             href={`/designers/${designer.slug}`}
-            className="group flex flex-col gap-2.5 active:scale-[0.98] transition-transform"
+            className="group flex flex-col gap-3 active:scale-[0.98] transition-transform"
             data-testid={`card-designer-${designer.id}`}
           >
             <BrandCardImage name={designer.name} count={count} />
             <div className="flex flex-col gap-0.5">
-              <h3 className="text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.06em] group-hover:text-muted-foreground transition-colors">
+              <h3 className="text-[11px] md:text-[13px] font-semibold uppercase tracking-[0.08em] group-hover:text-neutral-400 transition-colors duration-300">
                 {designer.name}
               </h3>
-              <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-neutral-400">
                 {tier.label}
               </p>
             </div>
@@ -219,12 +231,61 @@ export function BrandGrid({
   );
 }
 
+function EditorialPanel({
+  href,
+  imageUrl,
+  label,
+  title,
+  subtitle,
+  testId,
+  layout = "full",
+}: {
+  href: string;
+  imageUrl: string;
+  label: string;
+  title: string;
+  subtitle: string;
+  testId: string;
+  layout?: "full" | "left" | "right";
+}) {
+  return (
+    <Link
+      href={href}
+      className="group relative w-full overflow-hidden flex items-end bg-[#f2f1ef]"
+      style={{ aspectRatio: layout === "full" ? "16/10" : "4/5" }}
+      data-testid={testId}
+    >
+      <div className="absolute inset-0">
+        {imageUrl && (
+          <img
+            src={optimizeImageUrl(imageUrl, 1200)}
+            alt={title}
+            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-[1200ms] ease-out"
+            loading="lazy"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+      </div>
+      <div className="relative z-10 p-8 md:p-14 flex flex-col gap-2">
+        <span className="text-white/45 text-[9px] md:text-[10px] uppercase tracking-[0.35em] font-light">{label}</span>
+        <h3 className="text-white text-[26px] md:text-[40px] font-serif leading-[1.1] max-w-md">{title}</h3>
+        <p className="text-white/55 text-[12px] md:text-[15px] font-light max-w-sm leading-relaxed">{subtitle}</p>
+        <span className="text-white/70 text-[10px] uppercase tracking-[0.2em] mt-4 flex items-center gap-2 group-hover:gap-3 group-hover:text-white transition-all duration-300">
+          Discover <ArrowRight className="w-3.5 h-3.5" />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 interface HomePageData {
   designers: any[];
   productCount: number;
   cashmereProducts: any[];
   silkProducts: any[];
   linenProducts: any[];
+  silkEditorialProduct: any | null;
+  linenEditorialProduct: any | null;
   productCountByBrand: Record<string, number>;
   curatedDesigners: any[];
   newInProducts: any[];
@@ -238,6 +299,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     cashmereProducts: [],
     silkProducts: [],
     linenProducts: [],
+    silkEditorialProduct: null,
+    linenEditorialProduct: null,
     productCountByBrand: {},
     curatedDesigners: [],
     newInProducts: [],
@@ -263,215 +326,74 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     ? new Intl.NumberFormat("en-US").format(data.productCount)
     : "17,553";
 
+  const silkEditorialImage = data.silkEditorialProduct?.imageUrl || data.silkEditorialProduct?.image_url || data.silkProducts[0]?.imageUrl || "";
+  const linenEditorialImage = data.linenEditorialProduct?.imageUrl || data.linenEditorialProduct?.image_url || data.linenProducts[0]?.imageUrl || "";
+
   return (
-    <div className="flex flex-col gap-0">
-      <section className="relative h-[85vh] md:h-[90vh] min-h-[560px] flex items-end overflow-hidden -mx-4 md:-mx-8">
+    <div className="flex flex-col">
+
+      <section className="relative h-[88vh] md:h-[92vh] min-h-[600px] flex items-end overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img
             src="/hero-editorial.jpg"
             alt="INTERTEXE — Luxury natural-fabric fashion"
             className="w-full h-full object-cover object-top"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         </div>
         <div
-          className="relative z-10 px-6 md:px-12 pb-14 md:pb-20 max-w-xl flex flex-col"
-          style={{ paddingBottom: "max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem))" }}
+          className="relative z-10 px-6 md:px-14 pb-16 md:pb-24 max-w-xl flex flex-col"
+          style={{ paddingBottom: "max(4rem, calc(env(safe-area-inset-bottom, 0px) + 3.5rem))" }}
         >
           <h2
-            className="text-[32px] leading-[1.08] md:text-[56px] font-serif text-white mb-3 md:mb-5"
+            className="text-[34px] leading-[1.06] md:text-[60px] font-serif text-white mb-4 md:mb-6"
             data-testid="text-hero-headline"
           >
             The fabric<br />makes the piece
           </h2>
           <p
-            className="text-[13px] md:text-[17px] text-white/65 mb-7 md:mb-9 font-light leading-relaxed max-w-sm"
+            className="text-[13px] md:text-[17px] text-white/60 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
             data-testid="text-hero-subtext"
           >
             {displayCount} verified pieces in silk, cashmere, linen &amp; wool — every composition checked, every brand vetted.
           </p>
           <Link
             href="/shop"
-            className="border border-white text-white px-7 py-3.5 md:px-9 md:py-4 uppercase tracking-[0.18em] text-[11px] md:text-xs font-medium hover:bg-white hover:text-black transition-all duration-300 flex items-center gap-2 w-fit active:scale-[0.97]"
+            className="border border-white/80 text-white px-8 py-3.5 md:px-10 md:py-4 uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-light hover:bg-white hover:text-black transition-all duration-500 flex items-center gap-2.5 w-fit active:scale-[0.97]"
             data-testid="button-shop-now"
           >
-            Shop now
+            Shop the collection <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </section>
 
       {data.newInProducts.length > 0 && (
-        <section className="py-12 md:py-20">
+        <section className="py-16 md:py-28">
           <HorizontalProductScroll
             products={data.newInProducts}
             title="New In"
-            subtitle={`${displayCount} verified pieces`}
+            subtitle="Just landed"
             linkHref="/shop"
-            linkText="Shop New In"
+            linkText="Shop all new arrivals"
             eager
           />
         </section>
       )}
 
-      {data.saleProducts && data.saleProducts.length > 0 && (
-        <section className="py-12 md:py-20 border-t border-border/30">
-          <div className="flex flex-col gap-6 md:gap-8">
-            <div className="flex items-center justify-between">
-              <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                    The edit
-                  </span>
-                  <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-muted-foreground transition-colors leading-tight">
-                    On Sale
-                  </h2>
-                </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-            </div>
-            <div className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-2">
-              {data.saleProducts.map((product: any) => {
-                const originalNum = product.originalPrice ? parseFloat(product.originalPrice.replace(/[^0-9.]/g, "")) : 0;
-                const currentNum = product.price ? parseFloat(product.price.replace(/[^0-9.]/g, "")) : 0;
-                const discountPct = originalNum > 0 ? Math.round((1 - currentNum / originalNum) * 100) : 0;
-                return (
-                  <Link
-                    key={product.id}
-                    href={`/product/${product.id}`}
-                    className="group flex-shrink-0 w-[160px] md:w-[220px] flex flex-col cursor-pointer"
-                    data-testid={`product-sale-${product.id}`}
-                  >
-                    <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
-                      {product.imageUrl ? (
-                        <img src={optimizeImageUrl(product.imageUrl, 440)} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <ShoppingBag className="w-6 h-6 text-neutral-300" />
-                        </div>
-                      )}
-                      {discountPct > 0 && (
-                        <div className="absolute top-2 left-2 z-10">
-                          <span className="bg-black/80 text-white px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                            {discountPct}% off
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-0.5 pt-2.5">
-                      <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">
-                        {product.brandName}
-                      </span>
-                      <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-muted-foreground">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] md:text-[12px] font-medium">{product.price}</span>
-                        {product.originalPrice && (
-                          <span className="text-[10px] md:text-[11px] text-muted-foreground line-through">{product.originalPrice}</span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-            <Link
-              href="/sale"
-              className="self-start text-[10px] md:text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
-              data-testid="link-shop-sale"
-            >
-              Shop All Sale <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </section>
-      )}
-
-      <section className="py-12 md:py-20 border-t border-border/30">
-        <div className="flex justify-between items-end mb-10 md:mb-14">
-          <div>
-            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-1.5">
-              Curated selection
-            </p>
-            <h2 className="text-[22px] md:text-[32px] font-serif leading-tight">The Brands We Love</h2>
-          </div>
-          <Link
-            href="/designers"
-            className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
-            data-testid="link-view-all-designers"
-          >
-            View all <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-        <BrandGrid designers={data.curatedDesigners} productCounts={data.productCountByBrand} />
-      </section>
-
-      {data.cashmereProducts.length > 0 && (
-        <section className="py-8 md:py-14 border-t border-border/30">
-          <HorizontalProductScroll
-            products={data.cashmereProducts}
-            title="The Cashmere Edit"
-            subtitle="Pure luxury, verified"
-            linkHref="/materials/cashmere"
-            linkText="Shop all cashmere"
-          />
-        </section>
-      )}
-
-      <section className="-mx-4 md:-mx-8 grid grid-cols-1 md:grid-cols-2 gap-[1px] bg-border/20">
-        <Link
+      <section className="-mx-4 md:-mx-8">
+        <EditorialPanel
           href="/materials/silk-tops"
-          className="group relative aspect-[4/5] md:aspect-[3/4] overflow-hidden flex items-end bg-[#f5f5f5]"
-          data-testid="link-edit-silk"
-        >
-          <div className="absolute inset-0">
-            {data.silkProducts[0]?.imageUrl && (
-              <img
-                src={optimizeImageUrl(data.silkProducts[0].imageUrl, 800)}
-                alt="The Silk Edit"
-                className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-1000 ease-out"
-                loading="lazy"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          </div>
-          <div className="relative z-10 p-7 md:p-10 flex flex-col gap-1.5">
-            <span className="text-white/50 text-[9px] md:text-[10px] uppercase tracking-[0.25em]">In focus</span>
-            <h3 className="text-white text-[22px] md:text-3xl font-serif leading-tight">The Silk Edit</h3>
-            <p className="text-white/60 text-[11px] md:text-sm font-light">Blouses, dresses &amp; camisoles in pure silk</p>
-            <span className="text-white/80 text-[10px] uppercase tracking-[0.15em] mt-3 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-              Discover <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
-        </Link>
-        <Link
-          href="/materials/linen-dresses"
-          className="group relative aspect-[4/5] md:aspect-[3/4] overflow-hidden flex items-end bg-[#f5f5f5]"
-          data-testid="link-edit-linen"
-        >
-          <div className="absolute inset-0">
-            {data.linenProducts[0]?.imageUrl && (
-              <img
-                src={optimizeImageUrl(data.linenProducts[0].imageUrl, 800)}
-                alt="Linen for Every Day"
-                className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-1000 ease-out"
-                loading="lazy"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          </div>
-          <div className="relative z-10 p-7 md:p-10 flex flex-col gap-1.5">
-            <span className="text-white/50 text-[9px] md:text-[10px] uppercase tracking-[0.25em]">The edit</span>
-            <h3 className="text-white text-[22px] md:text-3xl font-serif leading-tight">Linen for Every Day</h3>
-            <p className="text-white/60 text-[11px] md:text-sm font-light">Dresses, tops &amp; suiting in natural linen</p>
-            <span className="text-white/80 text-[10px] uppercase tracking-[0.15em] mt-3 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-              Discover <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
-        </Link>
+          imageUrl={silkEditorialImage}
+          label="In focus"
+          title="The Silk Edit"
+          subtitle="Blouses, dresses and camisoles in pure silk — pieces that move with you."
+          testId="link-edit-silk"
+          layout="full"
+        />
       </section>
 
       {data.silkProducts.length > 0 && (
-        <section className="py-8 md:py-14">
+        <section className="py-16 md:py-28">
           <HorizontalProductScroll
             products={data.silkProducts}
             title="Silk Essentials"
@@ -482,46 +404,123 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </section>
       )}
 
-      <section className="border-t border-b border-border/20 -mx-4 md:-mx-8 px-4 md:px-8 bg-[#F7F6F3]">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/20">
-          <div className="py-10 md:py-14 flex flex-col items-center text-center gap-1.5">
-            <span className="text-[28px] md:text-[42px] font-serif leading-none">{data.designers.length > 0 ? `${new Intl.NumberFormat("en-US").format(data.designers.length)}+` : "100+"}</span>
-            <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Brands vetted
-            </span>
+      <section className="py-16 md:py-28 border-t border-neutral-200/60">
+        <div className="flex justify-between items-end mb-12 md:mb-16">
+          <div className="flex flex-col gap-1">
+            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
+              Curated selection
+            </p>
+            <h2 className="text-[24px] md:text-[36px] font-serif leading-tight">The Brands We Love</h2>
           </div>
-          <div className="py-10 md:py-14 flex flex-col items-center text-center gap-1.5">
-            <span className="text-[28px] md:text-[42px] font-serif leading-none">{displayCount}</span>
-            <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Verified pieces
-            </span>
+          <Link
+            href="/designers"
+            className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+            data-testid="link-view-all-designers"
+          >
+            View all <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+        <BrandGrid designers={data.curatedDesigners} productCounts={data.productCountByBrand} />
+      </section>
+
+      <section className="-mx-4 md:-mx-8">
+        <EditorialPanel
+          href="/materials/linen-dresses"
+          imageUrl={linenEditorialImage}
+          label="The edit"
+          title="Linen for Every Day"
+          subtitle="Dresses, tops and suiting in natural linen — relaxed luxury, all season."
+          testId="link-edit-linen"
+          layout="full"
+        />
+      </section>
+
+      {data.cashmereProducts.length > 0 && (
+        <section className="py-16 md:py-28">
+          <HorizontalProductScroll
+            products={data.cashmereProducts}
+            title="The Cashmere Edit"
+            subtitle="Pure luxury, verified"
+            linkHref="/materials/cashmere"
+            linkText="Shop all cashmere"
+          />
+        </section>
+      )}
+
+      {data.saleProducts && data.saleProducts.length > 0 && (
+        <section className="py-16 md:py-28 border-t border-neutral-200/60">
+          <div className="flex flex-col gap-7 md:gap-10">
+            <div className="flex items-end justify-between">
+              <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-neutral-400">
+                    The edit
+                  </span>
+                  <h2 className="text-[22px] md:text-[30px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
+                    On Sale
+                  </h2>
+                </div>
+                <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            </div>
+            <div className="flex gap-3 md:gap-5 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-2">
+              {data.saleProducts.map((product: any) => (
+                <ProductCard key={product.id} product={product} variant="sale" />
+              ))}
+            </div>
+            <Link
+              href="/sale"
+              className="self-start text-[10px] md:text-xs uppercase tracking-[0.18em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+              data-testid="link-shop-sale"
+            >
+              Shop all sale <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
-          <div className="py-10 md:py-14 flex flex-col items-center text-center gap-1.5">
-            <span className="text-[28px] md:text-[42px] font-serif leading-none">5</span>
-            <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Material guides
-            </span>
-          </div>
-          <div className="py-10 md:py-14 flex flex-col items-center text-center gap-1.5">
-            <span className="text-[28px] md:text-[42px] font-serif leading-none">100%</span>
-            <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Composition verified
-            </span>
+        </section>
+      )}
+
+      <section className="-mx-4 md:-mx-8 bg-[#f8f7f5]">
+        <div className="max-w-5xl mx-auto py-20 md:py-32 px-6 md:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x md:divide-neutral-300/40">
+            <div className="flex flex-col items-center text-center gap-2 md:px-8">
+              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{data.designers.length > 0 ? `${new Intl.NumberFormat("en-US").format(data.designers.length)}+` : "100+"}</span>
+              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
+                Brands vetted
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-2 md:px-8">
+              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{displayCount}</span>
+              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
+                Verified pieces
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-2 md:px-8">
+              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">95%+</span>
+              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
+                Natural fibers
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-2 md:px-8">
+              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">100%</span>
+              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
+                Composition verified
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="text-center py-16 md:py-28 max-w-xl mx-auto flex flex-col items-center gap-5 md:gap-7">
-        <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+      <section className="py-24 md:py-40 flex flex-col items-center text-center">
+        <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-neutral-400 mb-5 md:mb-7">
           Personalized for you
         </p>
-        <h2 className="text-[24px] md:text-[40px] font-serif leading-[1.15]">Find your fabric persona</h2>
-        <p className="text-muted-foreground text-[13px] md:text-[15px] max-w-md leading-relaxed font-light">
+        <h2 className="text-[28px] md:text-[44px] font-serif leading-[1.1] mb-5 md:mb-7 max-w-lg">Find your fabric persona</h2>
+        <p className="text-neutral-500 text-[13px] md:text-[16px] max-w-md leading-relaxed font-light mb-8 md:mb-12">
           Take our 2-minute quiz. We&apos;ll match you with your fabric identity and recommend the designers you&apos;ll love.
         </p>
         <Link
           href="/quiz"
-          className="border border-foreground text-foreground px-9 py-3.5 uppercase tracking-[0.18em] text-[11px] md:text-xs font-medium hover:bg-foreground hover:text-background transition-all duration-300 mt-2 active:scale-[0.97]"
+          className="border border-neutral-800 text-neutral-800 px-10 py-4 uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-light hover:bg-neutral-800 hover:text-white transition-all duration-500 active:scale-[0.97]"
           data-testid="button-cta-quiz"
         >
           Take the quiz
