@@ -30,7 +30,7 @@ export function getQualityTier(naturalFiberPercent: number | null | undefined): 
       buyingAdvice: 'Buy with confidence. This brand consistently delivers exceptional material quality.',
     };
   }
-  if (naturalFiberPercent >= 70) {
+  if (naturalFiberPercent >= 75) {
     return {
       tier: 'excellent',
       label: 'Excellent',
@@ -40,7 +40,7 @@ export function getQualityTier(naturalFiberPercent: number | null | undefined): 
       buyingAdvice: 'A strong choice. Check individual garment labels for specific fiber content.',
     };
   }
-  if (naturalFiberPercent >= 70) {
+  if (naturalFiberPercent >= 60) {
     return {
       tier: 'good',
       label: 'Good',
