@@ -42,8 +42,8 @@ function ProductCardSmall({ product, eager }: { product: any; eager?: boolean })
           </div>
         )}
         {composition && (
-          <div className="absolute bottom-2 left-2 z-10">
-            <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.05em] font-medium backdrop-blur-sm line-clamp-1 max-w-[140px] md:max-w-[200px]">
+          <div className="absolute bottom-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="bg-black/70 text-white px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.05em] font-medium backdrop-blur-sm line-clamp-1 max-w-[140px] md:max-w-[200px]">
               {composition}
             </span>
           </div>
@@ -90,20 +90,20 @@ export function HorizontalProductScroll({
   if (!products || products.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-5 md:gap-6">
+    <div className="flex flex-col gap-6 md:gap-8">
       <div className="flex items-center justify-between">
         <Link
           href={linkHref}
           className="flex items-center gap-3 group"
           data-testid={`link-${title.toLowerCase().replace(/\s+/g, "-")}`}
         >
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-0.5">
             {subtitle && (
-              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
                 {subtitle}
               </span>
             )}
-            <h2 className="text-lg md:text-2xl font-serif group-hover:text-muted-foreground transition-colors">
+            <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-muted-foreground transition-colors leading-tight">
               {title}
             </h2>
           </div>
@@ -265,47 +265,47 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
   return (
     <div className="flex flex-col gap-0">
-      <section className="relative h-[75vh] md:h-[80vh] min-h-[480px] flex items-end overflow-hidden -mx-4 md:-mx-8">
+      <section className="relative h-[85vh] md:h-[90vh] min-h-[560px] flex items-end overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img
-            src="/hero-fashion.jpg"
-            alt="Luxury Fashion Editorial"
-            className="w-full h-full object-cover object-center"
+            src="/hero-editorial.jpg"
+            alt="INTERTEXE — Luxury natural-fabric fashion"
+            className="w-full h-full object-cover object-top"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-black/5" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
         </div>
         <div
-          className="relative z-10 px-5 md:px-10 pb-12 md:pb-16 max-w-2xl flex flex-col"
-          style={{ paddingBottom: "max(3rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem))" }}
+          className="relative z-10 px-6 md:px-12 pb-14 md:pb-20 max-w-xl flex flex-col"
+          style={{ paddingBottom: "max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem))" }}
         >
           <h2
-            className="text-[28px] leading-[1.15] md:text-5xl font-serif text-white mb-4 md:mb-6"
+            className="text-[32px] leading-[1.08] md:text-[56px] font-serif text-white mb-3 md:mb-5"
             data-testid="text-hero-headline"
           >
-            Shop Natural Fabrics
+            The fabric<br />makes the piece
           </h2>
           <p
-            className="text-[13px] md:text-lg text-white/70 mb-6 md:mb-8 font-light leading-relaxed max-w-md"
+            className="text-[13px] md:text-[17px] text-white/65 mb-7 md:mb-9 font-light leading-relaxed max-w-sm"
             data-testid="text-hero-subtext"
           >
-            {displayCount} verified products. Choose your fabrics, browse ranked pieces, shop better materials instantly.
+            {displayCount} verified pieces in silk, cashmere, linen &amp; wool — every composition checked, every brand vetted.
           </p>
           <Link
-            href="/materials"
-            className="bg-white text-black px-6 py-3.5 md:px-8 md:py-4 uppercase tracking-[0.15em] text-xs md:text-sm font-medium hover:bg-white/90 transition-colors flex items-center gap-2 w-fit active:scale-[0.97]"
+            href="/shop"
+            className="border border-white text-white px-7 py-3.5 md:px-9 md:py-4 uppercase tracking-[0.18em] text-[11px] md:text-xs font-medium hover:bg-white hover:text-black transition-all duration-300 flex items-center gap-2 w-fit active:scale-[0.97]"
             data-testid="button-shop-now"
           >
-            Browse Fabrics <ArrowRight className="w-4 h-4" />
+            Shop now
           </Link>
         </div>
       </section>
 
       {data.newInProducts.length > 0 && (
-        <section className="py-10 md:py-16">
+        <section className="py-12 md:py-20">
           <HorizontalProductScroll
             products={data.newInProducts}
             title="New In"
-            subtitle={`${displayCount} verified products`}
+            subtitle={`${displayCount} verified pieces`}
             linkHref="/shop"
             linkText="Shop New In"
             eager
@@ -314,15 +314,15 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       )}
 
       {data.saleProducts && data.saleProducts.length > 0 && (
-        <section className="py-10 md:py-16 border-t border-border/30">
-          <div className="flex flex-col gap-5 md:gap-6">
+        <section className="py-12 md:py-20 border-t border-border/30">
+          <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex items-center justify-between">
               <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
-                <div className="flex flex-col">
-                  <span className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-red-700">
-                    The Edit
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                    The edit
                   </span>
-                  <h2 className="text-lg md:text-2xl font-serif group-hover:text-muted-foreground transition-colors">
+                  <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-muted-foreground transition-colors leading-tight">
                     On Sale
                   </h2>
                 </div>
@@ -351,7 +351,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                       )}
                       {discountPct > 0 && (
                         <div className="absolute top-2 left-2 z-10">
-                          <span className="bg-red-700 text-white px-2 py-0.5 text-[9px] uppercase tracking-[0.05em] font-medium">
+                          <span className="bg-black/80 text-white px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
                             {discountPct}% off
                           </span>
                         </div>
@@ -365,7 +365,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                         {product.name}
                       </h3>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] md:text-[12px] font-medium text-red-700">{product.price}</span>
+                        <span className="text-[11px] md:text-[12px] font-medium">{product.price}</span>
                         {product.originalPrice && (
                           <span className="text-[10px] md:text-[11px] text-muted-foreground line-through">{product.originalPrice}</span>
                         )}
@@ -386,20 +386,20 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </section>
       )}
 
-      <section className="py-8 md:py-14 border-t border-border/30">
-        <div className="flex justify-between items-end mb-8 md:mb-10">
+      <section className="py-12 md:py-20 border-t border-border/30">
+        <div className="flex justify-between items-end mb-10 md:mb-14">
           <div>
-            <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground mb-1">
-              INTERTEXE Approved
+            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-1.5">
+              Curated selection
             </p>
-            <h2 className="text-2xl md:text-3xl font-serif">The Brands We Love</h2>
+            <h2 className="text-[22px] md:text-[32px] font-serif leading-tight">The Brands We Love</h2>
           </div>
           <Link
             href="/designers"
-            className="text-[10px] md:text-sm uppercase tracking-[0.15em] hover:text-muted-foreground transition-colors"
+            className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
             data-testid="link-view-all-designers"
           >
-            View All
+            View all <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
         <BrandGrid designers={data.curatedDesigners} productCounts={data.productCountByBrand} />
@@ -417,52 +417,54 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </section>
       )}
 
-      <section className="-mx-4 md:-mx-8 grid grid-cols-1 md:grid-cols-2">
+      <section className="-mx-4 md:-mx-8 grid grid-cols-1 md:grid-cols-2 gap-[1px] bg-border/20">
         <Link
           href="/materials/silk-tops"
-          className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end"
+          className="group relative aspect-[4/5] md:aspect-[3/4] overflow-hidden flex items-end bg-[#f5f5f5]"
           data-testid="link-edit-silk"
         >
-          <div className="absolute inset-0 bg-[#f5f5f5]">
+          <div className="absolute inset-0">
             {data.silkProducts[0]?.imageUrl && (
               <img
-                src={optimizeImageUrl(data.silkProducts[0].imageUrl, 600)}
-                alt="Silk Edit"
-                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                src={optimizeImageUrl(data.silkProducts[0].imageUrl, 800)}
+                alt="The Silk Edit"
+                className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-1000 ease-out"
                 loading="lazy"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           </div>
-          <div className="relative z-10 p-6 md:p-8 flex flex-col gap-1">
-            <h3 className="text-white text-xl md:text-2xl font-serif">The Silk Edit</h3>
-            <p className="text-white/70 text-xs md:text-sm">Blouses, dresses, and camisoles in pure silk</p>
-            <span className="text-white/90 text-[10px] uppercase tracking-[0.15em] mt-2 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-              Shop the edit <ArrowRight className="w-3 h-3" />
+          <div className="relative z-10 p-7 md:p-10 flex flex-col gap-1.5">
+            <span className="text-white/50 text-[9px] md:text-[10px] uppercase tracking-[0.25em]">In focus</span>
+            <h3 className="text-white text-[22px] md:text-3xl font-serif leading-tight">The Silk Edit</h3>
+            <p className="text-white/60 text-[11px] md:text-sm font-light">Blouses, dresses &amp; camisoles in pure silk</p>
+            <span className="text-white/80 text-[10px] uppercase tracking-[0.15em] mt-3 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+              Discover <ArrowRight className="w-3 h-3" />
             </span>
           </div>
         </Link>
         <Link
           href="/materials/linen-dresses"
-          className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end"
+          className="group relative aspect-[4/5] md:aspect-[3/4] overflow-hidden flex items-end bg-[#f5f5f5]"
           data-testid="link-edit-linen"
         >
-          <div className="absolute inset-0 bg-[#f5f5f5]">
+          <div className="absolute inset-0">
             {data.linenProducts[0]?.imageUrl && (
               <img
-                src={optimizeImageUrl(data.linenProducts[0].imageUrl, 600)}
-                alt="Linen Edit"
-                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                src={optimizeImageUrl(data.linenProducts[0].imageUrl, 800)}
+                alt="Linen for Every Day"
+                className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-1000 ease-out"
                 loading="lazy"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           </div>
-          <div className="relative z-10 p-6 md:p-8 flex flex-col gap-1">
-            <h3 className="text-white text-xl md:text-2xl font-serif">Linen for Every Day</h3>
-            <p className="text-white/70 text-xs md:text-sm">Dresses, tops, and suiting in natural linen</p>
-            <span className="text-white/90 text-[10px] uppercase tracking-[0.15em] mt-2 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
-              Shop the edit <ArrowRight className="w-3 h-3" />
+          <div className="relative z-10 p-7 md:p-10 flex flex-col gap-1.5">
+            <span className="text-white/50 text-[9px] md:text-[10px] uppercase tracking-[0.25em]">The edit</span>
+            <h3 className="text-white text-[22px] md:text-3xl font-serif leading-tight">Linen for Every Day</h3>
+            <p className="text-white/60 text-[11px] md:text-sm font-light">Dresses, tops &amp; suiting in natural linen</p>
+            <span className="text-white/80 text-[10px] uppercase tracking-[0.15em] mt-3 flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+              Discover <ArrowRight className="w-3 h-3" />
             </span>
           </div>
         </Link>
@@ -480,49 +482,49 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </section>
       )}
 
-      <section className="border-t border-b border-border/30 -mx-4 md:-mx-8 px-4 md:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/30">
-          <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
-            <span className="text-2xl md:text-4xl font-serif">{data.designers.length > 0 ? `${new Intl.NumberFormat("en-US").format(data.designers.length)}+` : "100+"}</span>
-            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Brands Vetted
+      <section className="border-t border-b border-border/20 -mx-4 md:-mx-8 px-4 md:px-8 bg-[#F7F6F3]">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/20">
+          <div className="py-10 md:py-14 flex flex-col items-center text-center gap-1.5">
+            <span className="text-[28px] md:text-[42px] font-serif leading-none">{data.designers.length > 0 ? `${new Intl.NumberFormat("en-US").format(data.designers.length)}+` : "100+"}</span>
+            <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Brands vetted
             </span>
           </div>
-          <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
-            <span className="text-2xl md:text-4xl font-serif">{displayCount}</span>
-            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Verified Products
+          <div className="py-10 md:py-14 flex flex-col items-center text-center gap-1.5">
+            <span className="text-[28px] md:text-[42px] font-serif leading-none">{displayCount}</span>
+            <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Verified pieces
             </span>
           </div>
-          <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
-            <span className="text-2xl md:text-4xl font-serif">5</span>
-            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Material Guides
+          <div className="py-10 md:py-14 flex flex-col items-center text-center gap-1.5">
+            <span className="text-[28px] md:text-[42px] font-serif leading-none">5</span>
+            <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Material guides
             </span>
           </div>
-          <div className="py-8 md:py-12 flex flex-col items-center text-center gap-1">
-            <span className="text-2xl md:text-4xl font-serif">100%</span>
-            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Composition Verified
+          <div className="py-10 md:py-14 flex flex-col items-center text-center gap-1.5">
+            <span className="text-[28px] md:text-[42px] font-serif leading-none">100%</span>
+            <span className="text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Composition verified
             </span>
           </div>
         </div>
       </section>
 
-      <section className="text-center py-12 md:py-20 max-w-2xl mx-auto flex flex-col items-center gap-4 md:gap-6">
-        <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground">
-          Personalized For You
+      <section className="text-center py-16 md:py-28 max-w-xl mx-auto flex flex-col items-center gap-5 md:gap-7">
+        <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          Personalized for you
         </p>
-        <h2 className="text-2xl md:text-4xl font-serif leading-tight">Not Sure Where to Start?</h2>
-        <p className="text-muted-foreground text-sm md:text-base max-w-md leading-relaxed">
-          Take our 2-minute quiz. We&apos;ll match you with your fabric persona and recommend the designers you&apos;ll love.
+        <h2 className="text-[24px] md:text-[40px] font-serif leading-[1.15]">Find your fabric persona</h2>
+        <p className="text-muted-foreground text-[13px] md:text-[15px] max-w-md leading-relaxed font-light">
+          Take our 2-minute quiz. We&apos;ll match you with your fabric identity and recommend the designers you&apos;ll love.
         </p>
         <Link
           href="/quiz"
-          className="bg-foreground text-background px-8 py-3.5 uppercase tracking-[0.15em] text-xs font-medium hover:bg-foreground/90 transition-colors mt-2 active:scale-95"
+          className="border border-foreground text-foreground px-9 py-3.5 uppercase tracking-[0.18em] text-[11px] md:text-xs font-medium hover:bg-foreground hover:text-background transition-all duration-300 mt-2 active:scale-[0.97]"
           data-testid="button-cta-quiz"
         >
-          Find My Designers
+          Take the quiz
         </Link>
       </section>
 
