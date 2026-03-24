@@ -64,7 +64,7 @@ async function pushToGitHub() {
   console.log(`Uploading ${trackedFiles.length} tracked files via GitHub API...`);
 
   const blobs: { path: string; sha: string; mode: string; type: string }[] = [];
-  const BATCH_SIZE = 5;
+  const BATCH_SIZE = 20;
 
   async function uploadBlob(filePath: string, retries = 3): Promise<{ path: string; sha: string; mode: string; type: string } | null> {
     const fullPath = path.join("/home/runner/workspace", filePath);
@@ -138,6 +138,19 @@ async function pushToGitHub() {
   } catch {
     await octokit.git.createRef({ owner, repo, ref: "refs/heads/main", sha: commit.sha });
     console.log("Created main branch.");
+  }
+
+  const vercelBranch = "vercel/vercel-speed-insights-to-nextj-chyv47";
+  try {
+    await octokit.git.updateRef({ owner, repo, ref: `heads/${vercelBranch}`, sha: commit.sha, force: true });
+    console.log("Updated vercel production branch.");
+  } catch {
+    try {
+      await octokit.git.createRef({ owner, repo, ref: `refs/heads/${vercelBranch}`, sha: commit.sha });
+      console.log("Created vercel production branch.");
+    } catch (e2: any) {
+      console.log("Vercel branch update skipped:", e2.message);
+    }
   }
 
   console.log(`\nSuccessfully pushed to https://github.com/${owner}/${repo}`);
