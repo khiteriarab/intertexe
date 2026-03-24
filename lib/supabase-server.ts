@@ -62,15 +62,24 @@ const WOMEN_FASHION_BRAND_SLUGS = new Set([
   "sandro", "sea-new-york", "the-kooples", "tibi", "toteme"
 ]);
 
+function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
+  if (brandSlug === "isabel-marant" && imageUrl && imageUrl.includes("-E.")) {
+    return imageUrl.replace(/-E\./, "-A.");
+  }
+  return imageUrl;
+}
+
 function mapProductRow(row: any): Product {
+  const brandSlug = row.brand_slug || "";
+  const rawImageUrl = row.image_url || "";
   return {
     id: row.id,
-    brandSlug: row.brand_slug || "",
+    brandSlug,
     brandName: row.brand_name || "",
     name: row.title || row.name || "",
     productId: row.product_id || row.id,
     url: row.url || "",
-    imageUrl: row.image_url || "",
+    imageUrl: fixIsabelMarantImage(brandSlug, rawImageUrl),
     price: row.price || "",
     composition: row.composition || "",
     naturalFiberPercent: row.natural_fiber_percent || 0,
