@@ -57,9 +57,19 @@ export interface Product {
 }
 
 const WOMEN_FASHION_BRAND_SLUGS = new Set([
-  "a-l-c-", "agolde", "anine-bing", "diesel", "faithfull-the-brand", "frame", "grlfrnd", "isabel-marant",
-  "khaite", "l-agence", "rachel-comey", "re-done", "reformation", "rixo",
-  "sandro", "sea-new-york", "the-kooples", "tibi", "toteme"
+  "a-l-c-", "a-l-c", "agolde", "aje", "amanda-uprichard", "anine-bing", "anne-klein", "astr",
+  "bella-dahl", "camilla-and-marc", "cece", "citizens-of-humanity", "cleobella", "club-monaco",
+  "derek-lam", "diesel", "dissh", "dl1961", "elan", "esse-studios",
+  "faithfull-the-brand", "fleur-du-mal", "frame", "free-people", "grlfrnd",
+  "hale-bob", "hutch", "isabel-marant",
+  "j-mclaughlin", "joes-jeans", "johnny-was", "joseph",
+  "khaite", "l-agence", "lafayette-148", "lilla-p",
+  "marie-oliver", "mother", "nation-ltd", "nic-and-zoe", "nicole-miller", "nili-lotan", "nydj",
+  "paige", "pj-salvage", "pistola",
+  "rachel-comey", "rag-and-bone", "rails", "ramy-brook", "re-done", "rebecca-taylor", "reformation", "rixo",
+  "sanctuary", "sandro", "sea-new-york", "something-navy", "splendid", "st-agni",
+  "ted-baker", "the-kooples", "theory", "tibi", "toteme", "trina-turk",
+  "ulla-johnson", "veronica-beard", "vince"
 ]);
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
