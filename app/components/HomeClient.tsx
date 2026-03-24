@@ -379,7 +379,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <section className="-mx-4 md:-mx-8">
         <EditorialPanel
-          href="/materials/silk-tops"
+          href="/materials/silk"
           imageUrl={silkEditorialImage}
           label="In focus"
           title="The Silk Edit"
@@ -421,7 +421,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <section className="-mx-4 md:-mx-8">
         <EditorialPanel
-          href="/materials/linen-dresses"
+          href="/materials/linen"
           imageUrl={linenEditorialImage}
           label="The edit"
           title="Linen for Every Day"

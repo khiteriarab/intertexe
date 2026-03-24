@@ -314,7 +314,7 @@ export default function Home() {
       )}
 
       <section className="-mx-4 md:-mx-8 grid grid-cols-1 md:grid-cols-2">
-        <Link href="/materials/silk-tops" className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end" data-testid="link-edit-silk">
+        <Link href="/materials/silk" className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end" data-testid="link-edit-silk">
           <div className="absolute inset-0 bg-[#f5f5f5]">
             {silkProducts[0] && (silkProducts[0].image_url || silkProducts[0].imageUrl) && (
               <img
@@ -334,7 +334,7 @@ export default function Home() {
             </span>
           </div>
         </Link>
-        <Link href="/materials/linen-dresses" className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end" data-testid="link-edit-linen">
+        <Link href="/materials/linen" className="group relative aspect-[4/3] md:aspect-[3/2] overflow-hidden flex items-end" data-testid="link-edit-linen">
           <div className="absolute inset-0 bg-[#f5f5f5]">
             {linenProducts[0] && (linenProducts[0].image_url || linenProducts[0].imageUrl) && (
               <img
