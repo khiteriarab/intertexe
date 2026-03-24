@@ -238,7 +238,6 @@ function EditorialPanel({
   title,
   subtitle,
   testId,
-  layout = "full",
 }: {
   href: string;
   imageUrl: string;
@@ -246,31 +245,29 @@ function EditorialPanel({
   title: string;
   subtitle: string;
   testId: string;
-  layout?: "full" | "left" | "right";
 }) {
   return (
     <Link
       href={href}
-      className="group relative w-full overflow-hidden flex items-end bg-[#f2f1ef]"
-      style={{ aspectRatio: layout === "full" ? "16/10" : "4/5" }}
+      className="group relative w-full overflow-hidden flex items-end bg-[#f2f1ef] aspect-[3/4] md:aspect-[16/9]"
       data-testid={testId}
     >
       <div className="absolute inset-0">
         {imageUrl && (
           <img
-            src={optimizeImageUrl(imageUrl, 1200)}
+            src={imageUrl}
             alt={title}
-            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-[1200ms] ease-out"
+            className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-[1200ms] ease-out"
             loading="lazy"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
       </div>
-      <div className="relative z-10 p-8 md:p-14 flex flex-col gap-2">
+      <div className="relative z-10 p-7 pb-10 md:p-14 md:pb-16 flex flex-col gap-2">
         <span className="text-white/45 text-[9px] md:text-[10px] uppercase tracking-[0.35em] font-light">{label}</span>
-        <h3 className="text-white text-[26px] md:text-[40px] font-serif leading-[1.1] max-w-md">{title}</h3>
-        <p className="text-white/55 text-[12px] md:text-[15px] font-light max-w-sm leading-relaxed">{subtitle}</p>
-        <span className="text-white/70 text-[10px] uppercase tracking-[0.2em] mt-4 flex items-center gap-2 group-hover:gap-3 group-hover:text-white transition-all duration-300">
+        <h3 className="text-white text-[28px] md:text-[44px] font-serif leading-[1.08] max-w-md">{title}</h3>
+        <p className="text-white/55 text-[12px] md:text-[15px] font-light max-w-sm leading-relaxed mt-1">{subtitle}</p>
+        <span className="text-white/70 text-[10px] uppercase tracking-[0.2em] mt-4 md:mt-5 flex items-center gap-2 group-hover:gap-3 group-hover:text-white transition-all duration-300">
           Discover <ArrowRight className="w-3.5 h-3.5" />
         </span>
       </div>
@@ -326,8 +323,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     ? new Intl.NumberFormat("en-US").format(data.productCount)
     : "17,553";
 
-  const silkEditorialImage = data.silkEditorialProduct?.imageUrl || data.silkEditorialProduct?.image_url || data.silkProducts[0]?.imageUrl || "";
-  const linenEditorialImage = data.linenEditorialProduct?.imageUrl || data.linenEditorialProduct?.image_url || data.linenProducts[0]?.imageUrl || "";
+  const silkEditorialImage = "/editorial-silk.jpg";
+  const linenEditorialImage = "/editorial-linen.jpg";
 
   return (
     <div className="flex flex-col">
@@ -388,7 +385,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           title="The Silk Edit"
           subtitle="Blouses, dresses and camisoles in pure silk — pieces that move with you."
           testId="link-edit-silk"
-          layout="full"
         />
       </section>
 
@@ -431,7 +427,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           title="Linen for Every Day"
           subtitle="Dresses, tops and suiting in natural linen — relaxed luxury, all season."
           testId="link-edit-linen"
-          layout="full"
         />
       </section>
 
