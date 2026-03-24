@@ -217,9 +217,14 @@ function parseFiberGroup(str) {
 }
 
 function buildAffiliateUrl(feedUrl) {
-  return feedUrl
+  const filled = feedUrl
     .replace('<LSN EID>', AFFILIATE_ID)
     .replace('<LSN OID>', MID);
+  const murlMatch = filled.match(/murl=([^&]+)/);
+  if (murlMatch) {
+    return 'https://click.linksynergy.com/deeplink?id=' + AFFILIATE_ID + '&mid=' + MID + '&murl=' + murlMatch[1];
+  }
+  return filled;
 }
 
 function getProductSlug(item, brandSlug) {
