@@ -68,6 +68,7 @@ function diversifyByBrand(products: any[], max: number, maxPerBrand: number): an
 export const CURATED_BRAND_SLUGS = [
   "theory", "rag-and-bone", "vince", "l-agence", "frame",
   "fleur-du-mal", "faithfull-the-brand", "isabel-marant", "diesel", "rails",
+  "7-for-all-mankind", "splendid",
 ];
 
 export interface HomePageData {
@@ -113,6 +114,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     "theory", "rag-and-bone", "vince", "l-agence", "johnny-was",
     "rails", "paige", "frame", "isabel-marant", "fleur-du-mal",
     "faithfull-the-brand", "diesel", "ramy-brook", "free-people", "a-l-c",
+    "splendid", "7-for-all-mankind",
   ];
   const brandProductLists = await Promise.all(
     newInBrandSlugs.map((slug) => fetchProductsByBrandWithImages(slug, 30))

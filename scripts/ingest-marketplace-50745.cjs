@@ -187,6 +187,21 @@ function extractComposition(desc) {
   return { composition, pct };
 }
 
+const KNOWN_FIBERS = [
+  'cotton', 'silk', 'wool', 'linen', 'flax', 'cashmere', 'mohair', 'alpaca',
+  'hemp', 'ramie', 'jute', 'merino', 'angora', 'camel', 'yak', 'pima',
+  'supima', 'virgin wool', 'organic cotton', 'sea island cotton',
+  'polyester', 'nylon', 'acrylic', 'spandex', 'elastane', 'lycra',
+  'viscose', 'rayon', 'modal', 'lyocell', 'tencel', 'acetate', 'polyamide',
+  'polypropylene', 'rubber', 'polyurethane', 'cupro', 'triacetate',
+  'metallic', 'lurex', 'down', 'feather', 'leather', 'suede',
+];
+
+function isKnownFiber(name) {
+  const lower = name.toLowerCase().trim();
+  return KNOWN_FIBERS.some(f => lower === f || lower === f + 's');
+}
+
 function parseFiberGroup(str) {
   const cleaned = str
     .replace(/[,&]/g, ' ')
@@ -207,9 +222,12 @@ function parseFiberGroup(str) {
     const pct = parseInt(m[1]);
     let name = m[2].trim();
     if (pct <= 0 || name.length >= 30) continue;
+    const firstWord = name.split(/\s+/)[0].toLowerCase();
+    if (!isKnownFiber(firstWord) && !isKnownFiber(name)) continue;
     if (name.toLowerCase() === 'spandex') name = 'Elastane';
     if (name.toLowerCase() === 'rayon') name = 'Viscose';
-    name = name.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    name = name.split(/\s+/).filter(w => isKnownFiber(w) || isKnownFiber(w.replace(/s$/, ''))).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    if (!name) continue;
     if (runningTotal >= 100) break;
     fibers.push({ pct, name });
     runningTotal += pct;

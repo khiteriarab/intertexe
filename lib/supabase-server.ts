@@ -57,6 +57,7 @@ export interface Product {
 }
 
 const WOMEN_FASHION_BRAND_SLUGS = new Set([
+  "7-for-all-mankind",
   "a-l-c-", "a-l-c", "agolde", "aje", "amanda-uprichard", "anine-bing", "anne-klein", "astr",
   "bella-dahl", "camilla-and-marc", "cece", "citizens-of-humanity", "cleobella", "club-monaco",
   "derek-lam", "diesel", "dissh", "dl1961", "elan", "esse-studios",

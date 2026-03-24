@@ -360,7 +360,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton", "denim"],
     heroTitle: "Cotton Pants & Trousers",
     heroSubtitle: "Chinos, denim, wide-leg — all verified for real cotton content.",
-    featuredBrands: ["rag & bone", "Paige", "AGOLDE", "Citizens of Humanity", "Frame", "DL1961"],
+    featuredBrands: ["rag & bone", "Paige", "AGOLDE", "Citizens of Humanity", "7 For All Mankind", "Frame"],
     intro: "From raw selvedge denim to tailored chinos, the best pants start with quality cotton. We verified every composition to find trousers made from genuine cotton — not synthetic stretch blends that lose shape after a few wears.",
     buyingTips: [
       "Raw selvedge denim is 100% cotton with no stretch additives",
@@ -382,7 +382,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["denim"],
     heroTitle: "Denim & Jeans",
     heroSubtitle: "Raw, rigid, real. Every pair verified for 100% cotton construction.",
-    featuredBrands: ["AGOLDE", "Citizens of Humanity", "rag & bone", "Paige", "Frame", "DL1961"],
+    featuredBrands: ["AGOLDE", "Citizens of Humanity", "7 For All Mankind", "rag & bone", "Paige", "Frame"],
     intro: "Real denim is 100% cotton — a sturdy twill weave that moulds to your body over time. But most \"denim\" today is stretch poly-cotton that pills, sags, and never develops character. We checked every label to find jeans and denim pieces made the right way.",
     buyingTips: [
       "Raw/selvedge denim is unwashed 100% cotton — it ages beautifully over time",

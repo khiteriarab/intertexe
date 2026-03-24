@@ -100,6 +100,8 @@ export const CURATED_QUALITY_SCORES: Record<string, number> = {
   "34 heritage": 62,
   "veda": 70,
   "diesel": 80,
+  "7 for all mankind": 70,
+  "splendid": 65,
 };
 
 export function getCuratedScore(brandName: string): number | null {
