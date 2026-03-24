@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getHomePageData } from "../lib/homepage-data";
 import { HomePageContent } from "./components/HomeClient";
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "INTERTEXE — Shop Fashion by Fabric | Natural Fiber Clothing",

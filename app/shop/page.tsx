@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Shop Verified Products — Search by Fabric",

@@ -11,7 +11,7 @@ import {
 } from "../../../lib/supabase-server";
 import { ProductFavoriteButton, ProductCardHeart } from "./ProductFavoriteButton";
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 export const dynamicParams = true;
 
