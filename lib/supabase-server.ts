@@ -63,8 +63,10 @@ const WOMEN_FASHION_BRAND_SLUGS = new Set([
 ]);
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
-  if (brandSlug === "isabel-marant" && imageUrl && imageUrl.includes("-E.")) {
-    return imageUrl.replace(/-E\./, "-A.");
+  if (brandSlug === "isabel-marant" && imageUrl) {
+    if (imageUrl.includes("-A.")) {
+      return imageUrl.replace(/-A\./, "-E.");
+    }
   }
   return imageUrl;
 }

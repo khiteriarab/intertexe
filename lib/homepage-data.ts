@@ -66,8 +66,8 @@ function diversifyByBrand(products: any[], max: number, maxPerBrand: number): an
 }
 
 export const CURATED_BRAND_SLUGS = [
-  "fleur-du-mal", "faithfull-the-brand", "isabel-marant", "khaite",
-  "anine-bing", "frame", "diesel", "nanushka", "sandro", "agolde",
+  "theory", "rag-and-bone", "vince", "l-agence", "frame",
+  "fleur-du-mal", "faithfull-the-brand", "isabel-marant", "diesel", "rails",
 ];
 
 export interface HomePageData {
@@ -96,8 +96,7 @@ export async function getHomePageData(): Promise<HomePageData> {
       fetchSaleProducts({ limit: 12 }),
     ]);
 
-  const EXCLUDED_SALE_BRANDS = new Set(["l-agence", "lagence"]);
-  const saleProducts = saleResult.products.filter((p) => !isZeroPrice(p.price) && !EXCLUDED_SALE_BRANDS.has(p.brandSlug));
+  const saleProducts = saleResult.products.filter((p) => !isZeroPrice(p.price));
 
   const curatedDesignerResults = await Promise.all(
     CURATED_BRAND_SLUGS.map(async (slug) => {
@@ -110,7 +109,11 @@ export async function getHomePageData(): Promise<HomePageData> {
   );
   const curatedDesigners = curatedDesignerResults.filter(Boolean);
 
-  const newInBrandSlugs = ["isabel-marant", "a-l-c-", "diesel", "faithfull-the-brand", "fleur-du-mal"];
+  const newInBrandSlugs = [
+    "theory", "rag-and-bone", "vince", "l-agence", "johnny-was",
+    "rails", "paige", "frame", "isabel-marant", "fleur-du-mal",
+    "faithfull-the-brand", "diesel", "ramy-brook", "free-people", "a-l-c",
+  ];
   const brandProductLists = await Promise.all(
     newInBrandSlugs.map((slug) => fetchProductsByBrandWithImages(slug, 30))
   );
@@ -118,7 +121,7 @@ export async function getHomePageData(): Promise<HomePageData> {
   const seenIds = new Set<string>();
   const seenBaseNames = new Set<string>();
   const newInProducts: any[] = [];
-  const maxPerBrand = 5;
+  const maxPerBrand = 3;
   const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts", "jumpsuits", "lingerie", "swimwear"]);
   const basicPatterns = /^(t-shirt|tee|sweatshirt|tank|vest)\b/i;
 
@@ -152,7 +155,6 @@ export async function getHomePageData(): Promise<HomePageData> {
       if (seenBaseNames.has(baseName)) continue;
       if (p.brand_slug === "isabel-marant" && p.image_url) {
         if (!p.image_url.includes("-E.") && !p.image_url.includes("-A.")) continue;
-        p.image_url = p.image_url.replace(/-E\./, "-A.");
       }
       seenIds.add(p.id);
       seenBaseNames.add(baseName);

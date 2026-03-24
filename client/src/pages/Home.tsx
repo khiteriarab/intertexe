@@ -11,16 +11,16 @@ import { useProductFavorites } from "@/hooks/use-product-favorites";
 import heroImage from "@/assets/images/hero-fashion.jpg";
 
 const CURATED_BRAND_SLUGS = [
-  "khaite",
-  "anine-bing",
-  "toteme",
+  "theory",
+  "rag-and-bone",
+  "vince",
+  "l-agence",
   "frame",
   "diesel",
-  "nanushka",
-  "acne-studios",
-  "the-row",
-  "sandro",
-  "agolde",
+  "rails",
+  "fleur-du-mal",
+  "faithfull-the-brand",
+  "isabel-marant",
 ];
 
 function ProductCardSmall({ product }: { product: any }) {

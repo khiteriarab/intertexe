@@ -11,13 +11,13 @@ import { getBrandProfile } from "@/lib/brand-profiles";
 import { useProductFavorites } from "@/hooks/use-product-favorites";
 
 const FEATURED_BRANDS = [
-  { slug: "khaite", name: "Khaite" },
-  { slug: "anine-bing", name: "Anine Bing" },
-  { slug: "diesel", name: "Diesel" },
-  { slug: "nili-lotan", name: "Nili Lotan" },
+  { slug: "theory", name: "Theory" },
+  { slug: "rag-and-bone", name: "rag & bone" },
+  { slug: "vince", name: "Vince" },
+  { slug: "l-agence", name: "L'Agence" },
   { slug: "frame", name: "Frame" },
-  { slug: "st-agni", name: "St. Agni" },
-  { slug: "ulla-johnson", name: "Ulla Johnson" },
+  { slug: "diesel", name: "Diesel" },
+  { slug: "rails", name: "Rails" },
 ];
 
 const FILTER_TABS = [

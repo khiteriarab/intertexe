@@ -156,7 +156,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["silk"],
     heroTitle: "Silk Dresses",
     heroSubtitle: "Verified real silk. No polyester satin.",
-    featuredBrands: ["Fleur du Mal", "Khaite", "Reformation", "Anine Bing", "Sandro", "Frame"],
+    featuredBrands: ["Fleur du Mal", "Theory", "Ramy Brook", "L'Agence", "Johnny Was", "Frame"],
     intro: "Real silk has a distinct, cool-to-the-touch feel that no synthetic can replicate. It's naturally temperature-regulating, hypoallergenic, and has a luminous drape that polyester satin will never match. We checked the composition label of every single dress on this page — because at $200–$800, you deserve to know what you're actually paying for.",
     buyingTips: [
       "Mulberry silk is the highest quality — smooth, lustrous, and naturally hypoallergenic",
@@ -201,7 +201,7 @@ const PAGE_CONFIGS: Record<string, PageConfig> = {
     fiberQuery: ["cotton", "denim"],
     heroTitle: "Cotton Dresses",
     heroSubtitle: "Every label checked. 95%+ natural cotton.",
-    featuredBrands: ["Faithfull the Brand", "Khaite", "A.L.C.", "Reformation", "Anine Bing", "Sandro", "Frame"],
+    featuredBrands: ["Faithfull the Brand", "rag & bone", "A.L.C.", "Free People", "Paige", "Frame"],
     intro: "Cotton is the most versatile fabric in fashion — from crisp poplin shirt dresses to soft jersey maxis to structured denim. But quality varies wildly: fast fashion brands routinely cut cotton with 30–50% polyester, which traps heat, pills quickly, and doesn't breathe. We verified every label to find cotton dresses actually worth wearing in warm weather.",
     buyingTips: [
       "Organic cotton (GOTS certified) uses no synthetic pesticides and is softer from the start",
