@@ -375,11 +375,11 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       <section className="relative h-[88vh] md:h-[92vh] min-h-[600px] flex items-end overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img
-            src="/hero-editorial-new.png"
+            src="/hero-editorial-v8.png"
             alt="INTERTEXE — Luxury natural-fabric fashion"
-            className="w-full h-full object-cover object-[center_20%]"
+            className="w-full h-full object-cover object-[center_25%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
         </div>
         <div
           className="relative z-10 px-6 md:px-14 pb-16 md:pb-24 max-w-xl flex flex-col"
@@ -389,17 +389,17 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             className="text-[34px] leading-[1.06] md:text-[60px] font-serif text-white mb-4 md:mb-6"
             data-testid="text-hero-headline"
           >
-            Every thread<br />verified
+            What to<br />wear now
           </h2>
           <p
-            className="text-[13px] md:text-[17px] text-white/80 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
+            className="text-[13px] md:text-[16px] text-white/70 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
             data-testid="text-hero-subtext"
           >
-            Shop {displayCount} luxury pieces — only 95%+ natural fibers. Every composition checked, every brand vetted.
+            {displayCount} verified pieces in silk, cashmere, linen &amp; wool.
           </p>
           <Link
             href="/shop"
-            className="bg-white text-black px-8 py-3.5 md:px-10 md:py-4 uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-medium hover:bg-white/90 transition-all duration-500 flex items-center gap-2.5 w-fit active:scale-[0.97]"
+            className="bg-white text-black px-10 py-3.5 md:px-12 md:py-4 uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-medium hover:bg-white/90 transition-all duration-500 flex items-center gap-2.5 w-fit active:scale-[0.97]"
             data-testid="button-shop-now"
           >
             Shop now <ArrowRight className="w-3.5 h-3.5" />
@@ -449,7 +449,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
               Curated selection
             </p>
-            <h2 className="text-[24px] md:text-[36px] font-serif leading-tight">The Brands We Love</h2>
+            <h2 className="text-[20px] md:text-[28px] font-serif leading-tight">The Brands We Love</h2>
           </div>
           <Link
             href="/designers"
@@ -487,21 +487,21 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       {data.saleProducts && data.saleProducts.length > 0 && (
         <section className="py-10 md:py-20 border-t border-neutral-200/60">
-          <div className="flex flex-col gap-7 md:gap-10">
+          <div className="flex flex-col gap-5 md:gap-7">
             <div className="flex items-end justify-between">
               <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0.5">
                   <span className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-neutral-400">
                     The edit
                   </span>
-                  <h2 className="text-[22px] md:text-[30px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
+                  <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
                     On Sale
                   </h2>
                 </div>
                 <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </div>
-            <div className="flex gap-3 md:gap-5 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-2">
+            <div className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1">
               {data.saleProducts.map((product: any) => (
                 <ProductCard key={product.id} product={product} variant="sale" />
               ))}
