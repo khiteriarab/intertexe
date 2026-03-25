@@ -35,15 +35,15 @@ function AppDownloadBanner() {
         <span className="text-[#111] text-[5px] font-semibold tracking-[0.12em] uppercase leading-tight text-center">INTER<br />TEXE</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold leading-tight">The INTERTEXE App</p>
-        <p className="text-[10px] text-white/50 leading-tight mt-0.5">Coming June 1 — be first to shop natural luxury.</p>
+        <p className="text-[11px] leading-tight"><span className="font-semibold">Enjoy 10% off</span></p>
+        <p className="text-[10px] text-white/60 leading-tight mt-0.5">Get 10% off your first app order on selected items with code <span className="font-semibold">APP10</span>. <span className="underline">T&amp;Cs apply</span>.</p>
       </div>
       <a
         href="#"
         className="flex-shrink-0 border border-white text-white px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-colors"
         data-testid="link-app-download"
       >
-        Notify me
+        Download
       </a>
     </div>
   );
@@ -392,10 +392,10 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             What to<br />wear now
           </h2>
           <p
-            className="text-[13px] md:text-[16px] text-white/70 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
+            className="text-[12px] md:text-[15px] text-white/65 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
             data-testid="text-hero-subtext"
           >
-            {displayCount} verified pieces in silk, cashmere, linen &amp; wool.
+            {displayCount} verified pieces in silk, cashmere, linen &amp; wool — every composition checked, every brand vetted.
           </p>
           <Link
             href="/shop"
