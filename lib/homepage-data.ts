@@ -161,10 +161,9 @@ export async function getHomePageData(): Promise<HomePageData> {
       if (basicPatterns.test(p.name) || basicNamePatterns.test(p.name)) continue;
       const baseName = getBaseName(p.name);
       if (seenBaseNames.has(baseName)) continue;
-      if (p.brand_slug === "isabel-marant" && p.image_url) {
-        const imgUrl = p.image_url;
-        const hasModelShot = imgUrl.includes("_E1") || imgUrl.includes("_E2") || imgUrl.includes("-E1") || imgUrl.includes("-E2") || (imgUrl.includes("-E.") && !imgUrl.includes("_B.") && !imgUrl.includes("_D."));
-        if (!hasModelShot) continue;
+      const pSlug = p.brandSlug || p.brand_slug || "";
+      if (pSlug === "isabel-marant" && p.imageUrl) {
+        if (!p.imageUrl.includes("-E.")) continue;
       }
       seenIds.add(p.id);
       seenBaseNames.add(baseName);

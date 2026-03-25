@@ -74,12 +74,21 @@ const WOMEN_FASHION_BRAND_SLUGS = new Set([
 ]);
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
-  if (brandSlug === "isabel-marant" && imageUrl) {
-    if (imageUrl.includes("-A.")) {
-      return imageUrl.replace(/-A\./, "-E.");
-    }
+  if (brandSlug !== "isabel-marant" || !imageUrl) return imageUrl;
+  let url = imageUrl;
+  if (url.includes("-A.")) {
+    url = url.replace(/-A\./, "-E.");
   }
-  return imageUrl;
+  if (url.includes("-B.")) {
+    url = url.replace(/-B\./, "-E.");
+  }
+  if (url.includes("-D.")) {
+    url = url.replace(/-D\./, "-E.");
+  }
+  if (url.includes("-C.")) {
+    url = url.replace(/-C\./, "-E.");
+  }
+  return url;
 }
 
 function mapProductRow(row: any): Product {
