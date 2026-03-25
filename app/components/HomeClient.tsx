@@ -22,28 +22,28 @@ function AppDownloadBanner() {
   };
 
   return (
-    <div className="bg-white border-b border-neutral-200 flex items-center gap-3 px-4 py-3 -mx-4 md:-mx-8" data-testid="banner-app-download">
+    <div className="bg-[#111] text-white flex items-center gap-3 px-4 py-2.5 -mx-4 md:-mx-8" data-testid="banner-app-download">
       <button
         onClick={handleDismiss}
-        className="flex-shrink-0 p-0.5 text-neutral-400 hover:text-neutral-600 transition-colors"
+        className="flex-shrink-0 p-0.5 text-white/50 hover:text-white transition-colors"
         aria-label="Dismiss"
         data-testid="button-dismiss-banner"
       >
         <X className="w-3.5 h-3.5" />
       </button>
-      <div className="w-10 h-10 bg-[#111] flex items-center justify-center flex-shrink-0">
-        <span className="text-white text-[5.5px] font-semibold tracking-[0.12em] uppercase leading-tight text-center">INTER<br />TEXE</span>
+      <div className="w-9 h-9 bg-white flex items-center justify-center flex-shrink-0">
+        <span className="text-[#111] text-[5px] font-semibold tracking-[0.12em] uppercase leading-tight text-center">INTER<br />TEXE</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] font-semibold text-[#111] leading-tight">Shop on the app</p>
-        <p className="text-[11px] text-neutral-500 leading-tight mt-0.5">Get the INTERTEXE app for the best experience.</p>
+        <p className="text-[11px] font-semibold leading-tight">The INTERTEXE App</p>
+        <p className="text-[10px] text-white/50 leading-tight mt-0.5">Coming June 1 — be first to shop natural luxury.</p>
       </div>
       <a
         href="#"
-        className="flex-shrink-0 border border-[#111] text-[#111] px-4 py-1.5 text-[11px] font-semibold hover:bg-[#111] hover:text-white transition-colors"
+        className="flex-shrink-0 border border-white text-white px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-colors"
         data-testid="link-app-download"
       >
-        Download
+        Notify me
       </a>
     </div>
   );
@@ -389,13 +389,13 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             className="text-[34px] leading-[1.06] md:text-[60px] font-serif text-white mb-4 md:mb-6"
             data-testid="text-hero-headline"
           >
-            Only what&apos;s<br />worth wearing
+            Every thread<br />verified
           </h2>
           <p
             className="text-[13px] md:text-[17px] text-white/80 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
             data-testid="text-hero-subtext"
           >
-            {displayCount} verified pieces in silk, cashmere, linen &amp; wool — every composition checked, every brand vetted.
+            Shop {displayCount} luxury pieces — only 95%+ natural fibers. Every composition checked, every brand vetted.
           </p>
           <Link
             href="/shop"
