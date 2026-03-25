@@ -375,7 +375,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       <section className="relative h-[88vh] md:h-[92vh] min-h-[600px] flex items-end overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img
-            src="/hero-editorial-v3.png"
+            src="/hero-editorial-new.png"
             alt="INTERTEXE — Luxury natural-fabric fashion"
             className="w-full h-full object-cover object-[center_20%]"
           />
