@@ -162,7 +162,9 @@ export async function getHomePageData(): Promise<HomePageData> {
       const baseName = getBaseName(p.name);
       if (seenBaseNames.has(baseName)) continue;
       if (p.brand_slug === "isabel-marant" && p.image_url) {
-        if (!p.image_url.includes("-E.")) continue;
+        const imgUrl = p.image_url;
+        const hasModelShot = imgUrl.includes("_E1") || imgUrl.includes("_E2") || imgUrl.includes("-E1") || imgUrl.includes("-E2") || (imgUrl.includes("-E.") && !imgUrl.includes("_B.") && !imgUrl.includes("_D."));
+        if (!hasModelShot) continue;
       }
       seenIds.add(p.id);
       seenBaseNames.add(baseName);
