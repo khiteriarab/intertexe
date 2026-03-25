@@ -36,7 +36,7 @@ function AppDownloadBanner() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[11px] leading-tight"><span className="font-semibold">Enjoy 10% off</span></p>
-        <p className="text-[10px] text-white/60 leading-tight mt-0.5">Get 10% off your first app order on selected items with code <span className="font-semibold">APP10</span>. <span className="underline">T&amp;Cs apply</span>.</p>
+        <p className="text-[10px] text-white/60 leading-tight mt-0.5">Get 10% off your first app order on select items with code <span className="font-semibold">APP10</span>. <span className="underline">T&amp;Cs apply</span>.</p>
       </div>
       <a
         href="#"
