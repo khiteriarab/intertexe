@@ -111,21 +111,24 @@ export async function getHomePageData(): Promise<HomePageData> {
   const curatedDesigners = curatedDesignerResults.filter(Boolean);
 
   const newInBrandSlugs = [
-    "theory", "rag-and-bone", "vince", "l-agence", "johnny-was",
-    "rails", "paige", "frame", "isabel-marant", "fleur-du-mal",
-    "faithfull-the-brand", "diesel", "ramy-brook", "free-people", "a-l-c",
-    "splendid", "7-for-all-mankind",
+    "isabel-marant", "theory", "vince", "l-agence", "fleur-du-mal",
+    "rag-and-bone", "frame", "a-l-c", "faithfull-the-brand",
+    "johnny-was", "ramy-brook", "rails", "free-people",
+    "paige", "diesel", "splendid", "7-for-all-mankind",
   ];
   const brandProductLists = await Promise.all(
-    newInBrandSlugs.map((slug) => fetchProductsByBrandWithImages(slug, 30))
+    newInBrandSlugs.map((slug) => fetchProductsByBrandWithImages(slug, 40))
   );
 
   const seenIds = new Set<string>();
   const seenBaseNames = new Set<string>();
   const newInProducts: any[] = [];
   const maxPerBrand = 3;
-  const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts", "jumpsuits", "lingerie", "swimwear"]);
-  const basicPatterns = /^(t-shirt|tee|sweatshirt|tank|vest)\b/i;
+  const heroCategories = new Set(["dresses", "outerwear", "knitwear", "jumpsuits"]);
+  const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts", "jumpsuits", "lingerie", "swimwear", "tops"]);
+  const basicPatterns = /\b(t-shirt|tee|sweatshirt|tank top|vest|cargo|jogger|hoodie|henley|polo|baseball|cap|beanie|sock|belt|scarf|glove|wallet|bag|hat|mask)\b/i;
+  const basicNamePatterns = /\b(basic|essential|everyday|classic crew|crewneck tee|v-?neck tee|pocket tee|jersey tee)\b/i;
+  const minPrice = 80;
 
   function getBaseName(name: string): string {
     return name
@@ -138,11 +141,11 @@ export async function getHomePageData(): Promise<HomePageData> {
   const brandQueues: any[][] = [];
   for (const products of brandProductLists) {
     const sorted = [...products].sort((a, b) => {
-      const aEditorial = editorialCategories.has(a.category) ? 1 : 0;
-      const bEditorial = editorialCategories.has(b.category) ? 1 : 0;
-      if (bEditorial !== aEditorial) return bEditorial - aEditorial;
-      const aBasic = basicPatterns.test(a.name) ? 1 : 0;
-      const bBasic = basicPatterns.test(b.name) ? 1 : 0;
+      const aHero = heroCategories.has(a.category) ? 2 : editorialCategories.has(a.category) ? 1 : 0;
+      const bHero = heroCategories.has(b.category) ? 2 : editorialCategories.has(b.category) ? 1 : 0;
+      if (bHero !== aHero) return bHero - aHero;
+      const aBasic = (basicPatterns.test(a.name) || basicNamePatterns.test(a.name)) ? 1 : 0;
+      const bBasic = (basicPatterns.test(b.name) || basicNamePatterns.test(b.name)) ? 1 : 0;
       if (aBasic !== bBasic) return aBasic - bBasic;
       const aPrice = parseFloat((a.price || "0").replace(/[^0-9.]/g, "")) || 0;
       const bPrice = parseFloat((b.price || "0").replace(/[^0-9.]/g, "")) || 0;
@@ -153,10 +156,13 @@ export async function getHomePageData(): Promise<HomePageData> {
       if (queue.length >= maxPerBrand) break;
       if (seenIds.has(p.id)) continue;
       if (isZeroPrice(p.price)) continue;
+      const price = parseFloat((p.price || "0").replace(/[^0-9.]/g, "")) || 0;
+      if (price < minPrice) continue;
+      if (basicPatterns.test(p.name) || basicNamePatterns.test(p.name)) continue;
       const baseName = getBaseName(p.name);
       if (seenBaseNames.has(baseName)) continue;
       if (p.brand_slug === "isabel-marant" && p.image_url) {
-        if (!p.image_url.includes("-E.") && !p.image_url.includes("-A.")) continue;
+        if (!p.image_url.includes("-E.")) continue;
       }
       seenIds.add(p.id);
       seenBaseNames.add(baseName);

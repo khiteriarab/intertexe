@@ -22,29 +22,29 @@ function AppDownloadBanner() {
   };
 
   return (
-    <div className="bg-[#111] text-white flex items-center gap-3 px-4 py-2.5 -mx-4 md:-mx-8 relative" data-testid="banner-app-download">
+    <div className="bg-white border-b border-neutral-200 flex items-center gap-3 px-4 py-3 -mx-4 md:-mx-8" data-testid="banner-app-download">
       <button
         onClick={handleDismiss}
-        className="flex-shrink-0 p-0.5 hover:opacity-70 transition-opacity"
+        className="flex-shrink-0 p-0.5 text-neutral-400 hover:text-neutral-600 transition-colors"
         aria-label="Dismiss"
         data-testid="button-dismiss-banner"
       >
         <X className="w-3.5 h-3.5" />
       </button>
-      <div className="w-9 h-9 bg-[#FAFAF8] flex items-center justify-center flex-shrink-0">
-        <span className="text-[#111] text-[6px] font-semibold tracking-[0.15em] uppercase leading-tight text-center">INTER<br />TEXE</span>
+      <div className="w-10 h-10 bg-[#111] flex items-center justify-center flex-shrink-0">
+        <span className="text-white text-[5.5px] font-semibold tracking-[0.12em] uppercase leading-tight text-center">INTER<br />TEXE</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-medium leading-tight">The INTERTEXE App</p>
-        <p className="text-[10px] text-white/60 leading-tight mt-0.5">Coming June 1 — be first to shop natural luxury.</p>
+        <p className="text-[12px] font-semibold text-[#111] leading-tight">Shop on the app</p>
+        <p className="text-[11px] text-neutral-500 leading-tight mt-0.5">Get the INTERTEXE app for the best experience.</p>
       </div>
-      <Link
-        href="/quiz"
-        className="flex-shrink-0 bg-white text-black px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] hover:bg-white/90 transition-colors"
-        data-testid="link-app-notify"
+      <a
+        href="#"
+        className="flex-shrink-0 border border-[#111] text-[#111] px-4 py-1.5 text-[11px] font-semibold hover:bg-[#111] hover:text-white transition-colors"
+        data-testid="link-app-download"
       >
-        Notify me
-      </Link>
+        Download
+      </a>
     </div>
   );
 }
@@ -71,10 +71,10 @@ function ProductCard({ product, eager, variant = "default" }: { product: any; ea
   return (
     <Link
       href={`/product/${product.id}`}
-      className="group flex-shrink-0 w-[165px] md:w-[240px] flex flex-col cursor-pointer"
+      className="group flex-shrink-0 w-[155px] md:w-[220px] flex flex-col cursor-pointer"
       data-testid={`product-home-${product.id}`}
     >
-      <div className="aspect-[3/4] bg-[#f2f1ef] relative overflow-hidden">
+      <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
         {imageUrl ? (
           <img
             src={optimizeImageUrl(imageUrl, 480)}
@@ -95,26 +95,24 @@ function ProductCard({ product, eager, variant = "default" }: { product: any; ea
           </div>
         )}
         {variant === "sale" && discountPct > 0 && (
-          <div className="absolute top-2.5 left-2.5 z-10">
-            <span className="bg-black text-white px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] font-medium">
+          <div className="absolute top-2 left-2 z-10">
+            <span className="bg-black text-white px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium">
               {discountPct}% off
             </span>
           </div>
         )}
       </div>
-      <div className="flex flex-col gap-0.5 pt-3 md:pt-3.5">
-        <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em]">
+      <div className="flex flex-col pt-2.5">
+        <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">
           {brandName}
         </span>
-        <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-neutral-500">
+        <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-neutral-500 mt-px">
           {name}
         </h3>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[11px] md:text-[12px]">{price}</span>
-          {variant === "sale" && product.originalPrice && (
-            <span className="text-[10px] md:text-[11px] text-neutral-400 line-through">{product.originalPrice}</span>
-          )}
-        </div>
+        <span className="text-[11px] md:text-[12px] mt-0.5">{price}</span>
+        {variant === "sale" && product.originalPrice && (
+          <span className="text-[10px] text-neutral-400 line-through">{product.originalPrice}</span>
+        )}
       </div>
     </Link>
   );
@@ -146,20 +144,20 @@ export function HorizontalProductScroll({
   if (!products || products.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-7 md:gap-10">
+    <div className="flex flex-col gap-5 md:gap-7">
       <div className="flex items-end justify-between">
         <Link
           href={linkHref}
           className="flex items-center gap-3 group"
           data-testid={`link-${title.toLowerCase().replace(/\s+/g, "-")}`}
         >
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-0.5">
             {subtitle && (
               <span className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-neutral-400">
                 {subtitle}
               </span>
             )}
-            <h2 className="text-[22px] md:text-[30px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
+            <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
               {title}
             </h2>
           </div>
@@ -168,24 +166,24 @@ export function HorizontalProductScroll({
         <div className="hidden md:flex items-center gap-1">
           <button
             onClick={() => scroll("left")}
-            className="w-10 h-10 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors duration-200"
+            className="w-9 h-9 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors duration-200"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="w-10 h-10 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors duration-200"
+            className="w-9 h-9 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors duration-200"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       <div
         ref={scrollRef}
-        className="flex gap-3 md:gap-5 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-2"
+        className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1"
       >
         {products.map((product: any, i: number) => (
           <ProductCard key={product.id} product={product} eager={eager && i < 4} />
@@ -194,7 +192,7 @@ export function HorizontalProductScroll({
 
       <Link
         href={linkHref}
-        className="self-start text-[10px] md:text-xs uppercase tracking-[0.18em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+        className="self-start text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
         data-testid={`link-shop-${title.toLowerCase().replace(/\s+/g, "-")}`}
       >
         {linkText} <ArrowRight className="w-3 h-3" />
@@ -377,11 +375,11 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       <section className="relative h-[88vh] md:h-[92vh] min-h-[600px] flex items-end overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img
-            src="/hero-editorial-new.png"
+            src="/hero-editorial-v3.png"
             alt="INTERTEXE — Luxury natural-fabric fashion"
-            className="w-full h-full object-cover object-[center_15%]"
+            className="w-full h-full object-cover object-[center_20%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
         </div>
         <div
           className="relative z-10 px-6 md:px-14 pb-16 md:pb-24 max-w-xl flex flex-col"
@@ -391,7 +389,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             className="text-[34px] leading-[1.06] md:text-[60px] font-serif text-white mb-4 md:mb-6"
             data-testid="text-hero-headline"
           >
-            The new season<br />starts here
+            Only what&apos;s<br />worth wearing
           </h2>
           <p
             className="text-[13px] md:text-[17px] text-white/80 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
@@ -410,7 +408,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       </section>
 
       {data.newInProducts.length > 0 && (
-        <section className="py-16 md:py-28">
+        <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.newInProducts}
             title="New In"
@@ -434,7 +432,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       </section>
 
       {data.silkProducts.length > 0 && (
-        <section className="py-16 md:py-28">
+        <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.silkProducts}
             title="Silk Essentials"
@@ -445,8 +443,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </section>
       )}
 
-      <section className="py-16 md:py-28 border-t border-neutral-200/60">
-        <div className="flex justify-between items-end mb-12 md:mb-16">
+      <section className="py-10 md:py-20 border-t border-neutral-200/60">
+        <div className="flex justify-between items-end mb-8 md:mb-12">
           <div className="flex flex-col gap-1">
             <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
               Curated selection
@@ -476,7 +474,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       </section>
 
       {data.cashmereProducts.length > 0 && (
-        <section className="py-16 md:py-28">
+        <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.cashmereProducts}
             title="The Cashmere Edit"
@@ -488,7 +486,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       )}
 
       {data.saleProducts && data.saleProducts.length > 0 && (
-        <section className="py-16 md:py-28 border-t border-neutral-200/60">
+        <section className="py-10 md:py-20 border-t border-neutral-200/60">
           <div className="flex flex-col gap-7 md:gap-10">
             <div className="flex items-end justify-between">
               <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
@@ -520,7 +518,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       )}
 
       <section className="-mx-4 md:-mx-8 bg-[#f8f7f5]">
-        <div className="max-w-5xl mx-auto py-20 md:py-32 px-6 md:px-12">
+        <div className="max-w-5xl mx-auto py-14 md:py-24 px-6 md:px-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x md:divide-neutral-300/40">
             <div className="flex flex-col items-center text-center gap-2 md:px-8">
               <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{data.designers.length > 0 ? `${new Intl.NumberFormat("en-US").format(data.designers.length)}+` : "100+"}</span>
@@ -550,7 +548,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </div>
       </section>
 
-      <section className="py-24 md:py-40 flex flex-col items-center text-center">
+      <section className="py-16 md:py-28 flex flex-col items-center text-center">
         <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-neutral-400 mb-5 md:mb-7">
           Personalized for you
         </p>
