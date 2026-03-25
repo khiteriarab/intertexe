@@ -2,9 +2,52 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, X } from "lucide-react";
 import { getQualityTier } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
+
+function AppDownloadBanner() {
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    const hidden = localStorage.getItem("app-banner-dismissed");
+    if (!hidden) setDismissed(false);
+  }, []);
+
+  if (dismissed) return null;
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    localStorage.setItem("app-banner-dismissed", "1");
+  };
+
+  return (
+    <div className="bg-[#111] text-white flex items-center gap-3 px-4 py-2.5 -mx-4 md:-mx-8 relative" data-testid="banner-app-download">
+      <button
+        onClick={handleDismiss}
+        className="flex-shrink-0 p-0.5 hover:opacity-70 transition-opacity"
+        aria-label="Dismiss"
+        data-testid="button-dismiss-banner"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+      <div className="w-9 h-9 bg-[#FAFAF8] flex items-center justify-center flex-shrink-0">
+        <span className="text-[#111] text-[6px] font-semibold tracking-[0.15em] uppercase leading-tight text-center">INTER<br />TEXE</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-medium leading-tight">The INTERTEXE App</p>
+        <p className="text-[10px] text-white/60 leading-tight mt-0.5">Coming June 1 — be first to shop natural luxury.</p>
+      </div>
+      <Link
+        href="/quiz"
+        className="flex-shrink-0 bg-white text-black px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] hover:bg-white/90 transition-colors"
+        data-testid="link-app-notify"
+      >
+        Notify me
+      </Link>
+    </div>
+  );
+}
 
 function optimizeImageUrl(url: string, width: number): string {
   if (!url) return url;
@@ -329,14 +372,16 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
   return (
     <div className="flex flex-col">
 
+      <AppDownloadBanner />
+
       <section className="relative h-[88vh] md:h-[92vh] min-h-[600px] flex items-end overflow-hidden -mx-4 md:-mx-8">
         <div className="absolute inset-0 z-0">
           <img
-            src="/hero-editorial.jpg"
+            src="/hero-editorial-new.png"
             alt="INTERTEXE — Luxury natural-fabric fashion"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-full object-cover object-[center_15%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
         </div>
         <div
           className="relative z-10 px-6 md:px-14 pb-16 md:pb-24 max-w-xl flex flex-col"
@@ -346,20 +391,20 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             className="text-[34px] leading-[1.06] md:text-[60px] font-serif text-white mb-4 md:mb-6"
             data-testid="text-hero-headline"
           >
-            The fabric<br />makes the piece
+            The new season<br />starts here
           </h2>
           <p
-            className="text-[13px] md:text-[17px] text-white/60 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
+            className="text-[13px] md:text-[17px] text-white/80 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
             data-testid="text-hero-subtext"
           >
             {displayCount} verified pieces in silk, cashmere, linen &amp; wool — every composition checked, every brand vetted.
           </p>
           <Link
             href="/shop"
-            className="border border-white/80 text-white px-8 py-3.5 md:px-10 md:py-4 uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-light hover:bg-white hover:text-black transition-all duration-500 flex items-center gap-2.5 w-fit active:scale-[0.97]"
+            className="bg-white text-black px-8 py-3.5 md:px-10 md:py-4 uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-medium hover:bg-white/90 transition-all duration-500 flex items-center gap-2.5 w-fit active:scale-[0.97]"
             data-testid="button-shop-now"
           >
-            Shop the collection <ArrowRight className="w-3.5 h-3.5" />
+            Shop now <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </section>
