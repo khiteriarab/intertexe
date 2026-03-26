@@ -196,9 +196,10 @@ async function main() {
       is_sale: false,
     };
 
-    const { data: existing } = await sb.from('products').select('id').eq('brand_slug', BRAND_SLUG).eq('name', name).limit(1);
+    const { data: existing } = await sb.from('products').select('id').eq('brand_slug', BRAND_SLUG).eq('product_id', item.feedId).limit(1);
     if (existing && existing.length > 0) {
       const { error } = await sb.from('products').update({
+        name: record.name,
         url: record.url,
         image_url: record.image_url,
         price: record.price,
@@ -222,7 +223,6 @@ async function main() {
       description: "L'AGENCE is a Los Angeles-based luxury fashion house known for impeccable tailoring, French-inspired sophistication, and effortlessly chic wardrobe staples. Founded by Jeff and Margaret Rudes, the brand specializes in blazers, denim, silk blouses, and refined ready-to-wear — all crafted with exceptional fabrics and a focus on fit.",
       website: 'https://www.lagence.com',
       natural_fiber_percent: 85,
-      quality_score: 80,
     });
     if (error) console.error('Designer insert error:', error.message);
     else console.log('Created designer record for L\'AGENCE');
@@ -231,7 +231,6 @@ async function main() {
       description: "L'AGENCE is a Los Angeles-based luxury fashion house known for impeccable tailoring, French-inspired sophistication, and effortlessly chic wardrobe staples. Founded by Jeff and Margaret Rudes, the brand specializes in blazers, denim, silk blouses, and refined ready-to-wear — all crafted with exceptional fabrics and a focus on fit.",
       website: 'https://www.lagence.com',
       natural_fiber_percent: 85,
-      quality_score: 80,
     }).eq('id', designerExists[0].id);
     if (error) console.error('Designer update error:', error.message);
     else console.log('Updated designer record for L\'AGENCE');
