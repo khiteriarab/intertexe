@@ -14,7 +14,7 @@ export async function getShopProducts(options: {
     fiber: options.fiber === "all" ? undefined : options.fiber,
     category: options.category === "all" ? undefined : options.category,
     sort: options.sort || "recommended",
-    limit: options.limit || 60,
+    limit: options.limit || 40,
     offset: options.offset || 0,
     search: options.search,
   });

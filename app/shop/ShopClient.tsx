@@ -43,7 +43,7 @@ function optimizeImageUrl(url: string, width: number): string {
   if (!url) return url;
   if (url.includes("cdn.shopify.com")) {
     const separator = url.includes("?") ? "&" : "?";
-    return url + separator + "width=" + width;
+    return url + separator + "width=" + width + "&format=webp";
   }
   return url;
 }
@@ -62,7 +62,7 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
     <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
-          <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} />
+          <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} decoding={eager ? "sync" : "async"} fetchPriority={eager ? "high" : "low"} />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
             className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
@@ -131,7 +131,7 @@ export default function ShopClient({
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(initialCategory);
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [showSortMenu, setShowSortMenu] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(60);
+  const [visibleCount, setVisibleCount] = useState(40);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -171,13 +171,13 @@ export default function ShopClient({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setVisibleCount(60);
+      setVisibleCount(40);
     }, 400);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   useEffect(() => {
-    const isDefaultState = fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && !debouncedSearch && visibleCount === 60;
+    const isDefaultState = fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && !debouncedSearch && visibleCount === 40;
 
     if (isDefaultState && initialProducts?.length > 0) {
       setProducts(initialProducts);
@@ -259,7 +259,7 @@ export default function ShopClient({
             {FIBER_TABS.map(tab => (
               <button
                 key={tab.key}
-                onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setVisibleCount(60); }}
+                onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setVisibleCount(40); }}
                 className={`px-4 md:px-5 py-2 text-[10px] md:text-[11px] uppercase tracking-[0.15em] whitespace-nowrap transition-all flex-shrink-0 ${
                   fiberTab === tab.key ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -277,7 +277,7 @@ export default function ShopClient({
             {CATEGORY_FILTERS.map(cat => (
               <button
                 key={cat.key}
-                onClick={() => { setCategoryFilter(cat.key); setVisibleCount(60); }}
+                onClick={() => { setCategoryFilter(cat.key); setVisibleCount(40); }}
                 className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap transition-all flex-shrink-0 ${
                   categoryFilter === cat.key ? "border-b-2 border-foreground text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -376,7 +376,7 @@ export default function ShopClient({
             {resultTotal > visibleCount && (
               <div className="flex justify-center pt-10 md:pt-12">
                 <button
-                  onClick={() => setVisibleCount(prev => prev + 60)}
+                  onClick={() => setVisibleCount(prev => prev + 40)}
                   className="px-10 py-3.5 bg-foreground text-background text-[11px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors"
                   data-testid="btn-load-more"
                 >

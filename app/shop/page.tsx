@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function ShopPage() {
   const [shopData, totalProductCount, fiberCounts] = await Promise.all([
-    fetchShopProducts({ sort: "recommended", limit: 60, offset: 0 }),
+    fetchShopProducts({ sort: "recommended", limit: 40, offset: 0 }),
     fetchProductCount(),
     fetchFiberCounts(),
   ]);

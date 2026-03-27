@@ -561,6 +561,7 @@ export async function fetchShopProducts(options: {
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category", { count: "exact" })
     .not("image_url", "is", null)
+    .neq("image_url", "")
     .not("price", "is", null)
     .neq("price", "")
     .neq("price", "$0.00")
