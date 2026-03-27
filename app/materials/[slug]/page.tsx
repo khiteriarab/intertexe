@@ -885,7 +885,7 @@ async function MainFiberPage({ slug }: { slug: string }) {
                   {designer.naturalFiberPercent != null && (
                     <div className="absolute bottom-0 left-0 right-0 p-2.5 md:p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
                       <span className="px-2 py-0.5 text-[8px] md:text-[9px] uppercase tracking-[0.1em] font-medium bg-emerald-900/90 text-emerald-100">
-                        {designer.naturalFiberPercent >= 95 ? "100% Natural" : `${designer.naturalFiberPercent}% Natural`}
+                        {designer.naturalFiberPercent}% Natural
                       </span>
                     </div>
                   )}
@@ -894,7 +894,7 @@ async function MainFiberPage({ slug }: { slug: string }) {
                   <h3 className="text-sm md:text-base font-serif group-hover:text-muted-foreground transition-colors leading-tight">{designer.name}</h3>
                   {designer.naturalFiberPercent != null && (
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">
-                      {designer.naturalFiberPercent >= 95 ? "100% Natural" : `${designer.naturalFiberPercent}% Natural`}
+                      {designer.naturalFiberPercent}% Natural
                     </p>
                   )}
                 </div>

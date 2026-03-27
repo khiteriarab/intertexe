@@ -272,7 +272,7 @@ export default async function ProductPage({
             {product.naturalFiberPercent != null && product.naturalFiberPercent >= 90 && (
               <div className="absolute top-3 left-3">
                 <span className="bg-emerald-900/90 text-emerald-100 px-3 py-1 text-[9px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm" data-testid="badge-natural-fiber">
-                  {product.naturalFiberPercent >= 95 ? "100% Natural Fiber" : `${product.naturalFiberPercent}% Natural Fiber`}
+                  {product.naturalFiberPercent}% Natural Fiber
                 </span>
               </div>
             )}
@@ -403,7 +403,7 @@ export default async function ProductPage({
                     {p.naturalFiberPercent != null && p.naturalFiberPercent >= 90 && (
                       <div className="absolute top-2 left-2">
                         <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                          {p.naturalFiberPercent >= 95 ? "100% Natural" : `${p.naturalFiberPercent}% Natural`}
+                          {p.naturalFiberPercent}% Natural
                         </span>
                       </div>
                     )}

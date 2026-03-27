@@ -1,132 +1,140 @@
 import { NextResponse } from "next/server";
-import { fetchAllProductIds, fetchAllDesignerSlugs } from "../../../lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 
 export const revalidate = 86400;
+
+const supabase = createClient(
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+);
+
+const BASE = "https://www.intertexe.com";
+const TODAY = new Date().toISOString().split("T")[0];
+const CHUNK = 1000;
+
+function xmlHeader() {
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+}
+
+function urlEntry(path: string, opts: { priority: string; freq: string; lastmod?: string }) {
+  const loc = path ? `${BASE}${path}` : BASE;
+  return `  <url><loc>${loc}</loc><lastmod>${opts.lastmod || TODAY}</lastmod><changefreq>${opts.freq}</changefreq><priority>${opts.priority}</priority></url>\n`;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
   const page = parseInt(searchParams.get("page") || "0", 10);
 
-  const baseUrl = "https://www.intertexe.com";
-
   try {
     if (!type) {
-      const [productIds] = await Promise.all([fetchAllProductIds()]);
-      const productPages = Math.ceil(productIds.length / 5000);
+      const { count: designerCount } = await supabase.from("designers").select("*", { count: "exact", head: true });
+      const { count: productCount } = await supabase.from("products").select("*", { count: "exact", head: true }).gte("natural_fiber_percent", 80).not("image_url", "is", null).neq("image_url", "");
+
+      const designerPages = Math.ceil((designerCount || 0) / CHUNK);
+      const productPages = Math.ceil((productCount || 0) / CHUNK);
 
       let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
       xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-      xml += `  <sitemap><loc>${baseUrl}/api/sitemap?type=pages</loc></sitemap>\n`;
-      xml += `  <sitemap><loc>${baseUrl}/api/sitemap?type=designers</loc></sitemap>\n`;
+      xml += `  <sitemap><loc>${BASE}/api/sitemap?type=pages</loc><lastmod>${TODAY}</lastmod></sitemap>\n`;
+      for (let i = 0; i < designerPages; i++) {
+        xml += `  <sitemap><loc>${BASE}/api/sitemap?type=designers&amp;page=${i}</loc><lastmod>${TODAY}</lastmod></sitemap>\n`;
+      }
       for (let i = 0; i < productPages; i++) {
-        xml += `  <sitemap><loc>${baseUrl}/api/sitemap?type=products&amp;page=${i}</loc></sitemap>\n`;
+        xml += `  <sitemap><loc>${BASE}/api/sitemap?type=products&amp;page=${i}</loc><lastmod>${TODAY}</lastmod></sitemap>\n`;
       }
       xml += '</sitemapindex>';
 
       return new NextResponse(xml, {
-        headers: {
-          "Content-Type": "application/xml",
-          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
-        },
+        headers: { "Content-Type": "application/xml", "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400" },
       });
     }
 
     if (type === "pages") {
-      const staticPages = [
-        { path: "", priority: "1.0", freq: "daily" },
-        { path: "/materials", priority: "0.9", freq: "weekly" },
-        { path: "/shop", priority: "0.9", freq: "daily" },
-        { path: "/sale", priority: "0.8", freq: "daily" },
-        { path: "/designers", priority: "0.9", freq: "weekly" },
-        { path: "/designers/all", priority: "0.7", freq: "weekly" },
-        { path: "/quiz", priority: "0.7", freq: "monthly" },
-        { path: "/scanner", priority: "0.7", freq: "monthly" },
-        { path: "/chat", priority: "0.6", freq: "monthly" },
-        { path: "/about", priority: "0.5", freq: "monthly" },
-        { path: "/contact", priority: "0.5", freq: "monthly" },
-        { path: "/privacy", priority: "0.3", freq: "yearly" },
-        { path: "/terms", priority: "0.3", freq: "yearly" },
-        { path: "/materials/silk", priority: "0.8", freq: "weekly" },
-        { path: "/materials/cotton", priority: "0.8", freq: "weekly" },
-        { path: "/materials/linen", priority: "0.8", freq: "weekly" },
-        { path: "/materials/wool", priority: "0.8", freq: "weekly" },
-        { path: "/materials/cashmere", priority: "0.8", freq: "weekly" },
-        { path: "/materials/linen-dresses", priority: "0.7", freq: "weekly" },
-        { path: "/materials/linen-pants", priority: "0.7", freq: "weekly" },
-        { path: "/materials/linen-shirts", priority: "0.7", freq: "weekly" },
-        { path: "/materials/linen-tops", priority: "0.7", freq: "weekly" },
-        { path: "/materials/silk-dresses", priority: "0.7", freq: "weekly" },
-        { path: "/materials/silk-tops", priority: "0.7", freq: "weekly" },
-        { path: "/materials/silk-blouses", priority: "0.7", freq: "weekly" },
-        { path: "/materials/silk-skirts", priority: "0.7", freq: "weekly" },
-        { path: "/materials/cotton-dresses", priority: "0.7", freq: "weekly" },
-        { path: "/materials/cotton-tops", priority: "0.7", freq: "weekly" },
-        { path: "/materials/cotton-shirts", priority: "0.7", freq: "weekly" },
-        { path: "/materials/cotton-pants", priority: "0.7", freq: "weekly" },
-        { path: "/materials/cashmere-sweaters", priority: "0.7", freq: "weekly" },
-        { path: "/materials/cashmere-knits", priority: "0.7", freq: "weekly" },
-        { path: "/materials/wool-sweaters", priority: "0.7", freq: "weekly" },
-        { path: "/materials/wool-coats", priority: "0.7", freq: "weekly" },
-        { path: "/materials/wool-pants", priority: "0.7", freq: "weekly" },
-        { path: "/cotton-clothing", priority: "0.8", freq: "weekly" },
-        { path: "/linen-clothing", priority: "0.8", freq: "weekly" },
-        { path: "/silk-clothing", priority: "0.8", freq: "weekly" },
-        { path: "/wool-clothing", priority: "0.8", freq: "weekly" },
-        { path: "/cashmere-clothing", priority: "0.8", freq: "weekly" },
-        { path: "/natural-fabrics", priority: "0.8", freq: "weekly" },
-      ];
+      let xml = xmlHeader();
 
-      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-      for (const p of staticPages) {
-        xml += `  <url><loc>${baseUrl}${p.path}</loc><changefreq>${p.freq}</changefreq><priority>${p.priority}</priority></url>\n`;
+      xml += urlEntry("", { priority: "1.0", freq: "daily" });
+      xml += urlEntry("/shop", { priority: "0.9", freq: "daily" });
+      xml += urlEntry("/sale", { priority: "0.8", freq: "daily" });
+      xml += urlEntry("/materials", { priority: "0.9", freq: "weekly" });
+      xml += urlEntry("/designers", { priority: "0.9", freq: "weekly" });
+      xml += urlEntry("/designers/all", { priority: "0.8", freq: "weekly" });
+
+      const materials = ["silk", "cotton", "linen", "wool", "cashmere"];
+      for (const m of materials) {
+        xml += urlEntry(`/materials/${m}`, { priority: "0.8", freq: "weekly" });
       }
-      xml += '</urlset>';
 
+      const subcategories = [
+        "silk-dresses", "silk-tops", "silk-blouses", "silk-skirts",
+        "linen-dresses", "linen-pants", "linen-shirts", "linen-tops",
+        "cotton-dresses", "cotton-tops", "cotton-shirts", "cotton-pants",
+        "cashmere-sweaters", "cashmere-knits",
+        "wool-sweaters", "wool-coats", "wool-pants",
+      ];
+      for (const s of subcategories) {
+        xml += urlEntry(`/materials/${s}`, { priority: "0.7", freq: "weekly" });
+      }
+
+      const clothingPages = ["cotton-clothing", "linen-clothing", "silk-clothing", "wool-clothing", "cashmere-clothing", "natural-fabrics"];
+      for (const p of clothingPages) {
+        xml += urlEntry(`/${p}`, { priority: "0.8", freq: "weekly" });
+      }
+
+      xml += urlEntry("/quiz", { priority: "0.6", freq: "monthly" });
+      xml += urlEntry("/scanner", { priority: "0.6", freq: "monthly" });
+      xml += urlEntry("/chat", { priority: "0.5", freq: "monthly" });
+      xml += urlEntry("/about", { priority: "0.4", freq: "monthly" });
+      xml += urlEntry("/contact", { priority: "0.4", freq: "monthly" });
+      xml += urlEntry("/privacy", { priority: "0.2", freq: "yearly" });
+      xml += urlEntry("/terms", { priority: "0.2", freq: "yearly" });
+
+      xml += '</urlset>';
       return new NextResponse(xml, {
-        headers: {
-          "Content-Type": "application/xml",
-          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
-        },
+        headers: { "Content-Type": "application/xml", "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400" },
       });
     }
 
     if (type === "designers") {
-      const designerSlugs = await fetchAllDesignerSlugs();
+      const start = page * CHUNK;
+      const { data: designers } = await supabase
+        .from("designers")
+        .select("slug, natural_fiber_percent")
+        .order("name")
+        .range(start, start + CHUNK - 1);
 
-      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-      for (const slug of designerSlugs) {
-        xml += `  <url><loc>${baseUrl}/designers/${slug}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n`;
+      let xml = xmlHeader();
+      for (const d of (designers || [])) {
+        const hasFiberData = d.natural_fiber_percent != null && d.natural_fiber_percent > 0;
+        xml += urlEntry(`/designers/${d.slug}`, {
+          priority: hasFiberData ? "0.7" : "0.4",
+          freq: hasFiberData ? "weekly" : "monthly",
+        });
       }
       xml += '</urlset>';
-
       return new NextResponse(xml, {
-        headers: {
-          "Content-Type": "application/xml",
-          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
-        },
+        headers: { "Content-Type": "application/xml", "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400" },
       });
     }
 
     if (type === "products") {
-      const productIds = await fetchAllProductIds();
-      const start = page * 5000;
-      const chunk = productIds.slice(start, start + 5000);
+      const start = page * CHUNK;
+      const { data: products } = await supabase
+        .from("products")
+        .select("id")
+        .gte("natural_fiber_percent", 80)
+        .not("image_url", "is", null)
+        .neq("image_url", "")
+        .order("natural_fiber_percent", { ascending: false })
+        .range(start, start + CHUNK - 1);
 
-      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-      for (const id of chunk) {
-        xml += `  <url><loc>${baseUrl}/product/${id}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>\n`;
+      let xml = xmlHeader();
+      for (const p of (products || [])) {
+        xml += urlEntry(`/product/${p.id}`, { priority: "0.5", freq: "weekly" });
       }
       xml += '</urlset>';
-
       return new NextResponse(xml, {
-        headers: {
-          "Content-Type": "application/xml",
-          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
-        },
+        headers: { "Content-Type": "application/xml", "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400" },
       });
     }
 

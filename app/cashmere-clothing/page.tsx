@@ -43,7 +43,7 @@ export default async function CashmereClothingPage() {
             <Link key={product.id} href={`/product/${product.id}`} className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col">
               <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
                 <img src={product.imageUrl} alt={`${product.name} by ${product.brandName}`} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" loading="lazy" />
-                {product.naturalFiberPercent >= 90 && (<div className="absolute top-2 left-2"><span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">{product.naturalFiberPercent >= 95 ? "100% Natural" : `${product.naturalFiberPercent}% Natural`}</span></div>)}
+                {product.naturalFiberPercent >= 90 && (<div className="absolute top-2 left-2"><span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">{product.naturalFiberPercent}% Natural</span></div>)}
               </div>
               <div className="p-3 md:p-4 flex flex-col gap-1.5 flex-1">
                 <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{product.brandName}</span>

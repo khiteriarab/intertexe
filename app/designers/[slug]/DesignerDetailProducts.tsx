@@ -266,7 +266,7 @@ export function DesignerDetailProducts({
                         )}
                         <div className="absolute top-2 left-2">
                           <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                            {product.naturalFiberPercent >= 95 ? "100% Natural" : `${product.naturalFiberPercent}% Natural`}
+                            {product.naturalFiberPercent}% Natural
                           </span>
                         </div>
                         <button
