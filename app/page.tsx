@@ -5,9 +5,9 @@ import { HomePageContent } from "./components/HomeClient";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "INTERTEXE — Shop Fashion by Fabric | Natural Fiber Clothing",
+  title: "INTERTEXE | The Luxury Fashion Search Engine for Natural Fabrics",
   description:
-    "INTERTEXE is the easiest way to shop luxury fashion by fabric. Browse 17,000+ clothing items ranked by material quality — filter by silk, cashmere, linen, wool, and cotton across 60+ curated brands.",
+    "INTERTEXE is the luxury fashion search engine for natural fabrics. Shop 17,000+ verified silk, cashmere, linen, wool, and cotton clothing across 90+ curated brands. The easiest way to find quality clothing by fabric.",
   alternates: { canonical: "https://www.intertexe.com" },
 };
 

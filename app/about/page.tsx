@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About Us",
-  description: "Learn about INTERTEXE — the first fashion discovery platform that ranks designers by the quality of their materials and commitment to natural fibers.",
+  title: "About INTERTEXE — The Natural Fabric Fashion Search Engine",
+  description: "INTERTEXE is the first fashion discovery platform that ranks designers by the quality of their materials and commitment to natural fibers. Learn about our mission to make fabric-first shopping the standard.",
   alternates: { canonical: "https://www.intertexe.com/about" },
 };
 

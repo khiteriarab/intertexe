@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.intertexe.com/api/sitemap
+Sitemap: https://www.intertexe.com/sitemap.xml

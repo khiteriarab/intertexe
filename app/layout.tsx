@@ -6,16 +6,18 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: {
-    default: "INTERTEXE — Shop Fashion by Fabric | Natural Fiber Clothing",
+    default: "INTERTEXE | Shop Luxury Fashion by Fabric — Natural Fiber Clothing",
     template: "%s | INTERTEXE",
   },
   description:
-    "INTERTEXE is the easiest way to shop luxury fashion by fabric. Browse 17,000+ clothing items ranked by material quality — filter by silk, cashmere, linen, wool, and cotton across 60+ curated brands.",
+    "INTERTEXE is the luxury fashion search engine for natural fabrics. Shop 17,000+ verified silk, cashmere, linen, wool, and cotton clothing items across 90+ curated brands. Find quality clothing, filtered by fabric.",
+  keywords: ["INTERTEXE", "intertexe", "natural fiber fashion", "shop by fabric", "silk clothing", "cashmere clothing", "linen clothing", "wool clothing", "cotton clothing", "luxury fashion", "natural fabric clothing"],
   metadataBase: new URL("https://www.intertexe.com"),
+  alternates: { canonical: "https://www.intertexe.com" },
   openGraph: {
-    title: "INTERTEXE — Shop Fashion by Fabric",
+    title: "INTERTEXE | Shop Luxury Fashion by Fabric",
     description:
-      "INTERTEXE is the easiest way to shop luxury fashion by fabric. 17,000+ items ranked by material quality. Filter by silk, cashmere, linen, wool, and cotton.",
+      "INTERTEXE is the luxury fashion search engine for natural fabrics. 17,000+ verified items across 90+ curated brands. Filter by silk, cashmere, linen, wool, and cotton.",
     url: "https://www.intertexe.com",
     siteName: "INTERTEXE",
     type: "website",
@@ -24,9 +26,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     site: "@shopintertexe",
-    title: "INTERTEXE — Shop Fashion by Fabric",
+    title: "INTERTEXE | Shop Luxury Fashion by Fabric",
     description:
-      "INTERTEXE is the easiest way to shop luxury fashion by fabric. 17,000+ items ranked by material quality. Filter by silk, cashmere, linen, wool, and cotton.",
+      "INTERTEXE is the luxury fashion search engine for natural fabrics. 17,000+ verified items across 90+ curated brands. Filter by silk, cashmere, linen, wool, and cotton.",
     images: ["/opengraph.jpg"],
   },
   icons: {
@@ -46,11 +48,14 @@ const orgSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "INTERTEXE",
+  alternateName: ["intertexe", "Intertexe", "INTERTEXE.COM"],
   url: "https://www.intertexe.com",
   logo: "https://www.intertexe.com/favicon.svg",
   description:
-    "Shop fashion by fabric, not just style. 17,000+ clothing items ranked by material quality. Filter polyester out and find natural fibers instantly across 60+ curated brands.",
+    "INTERTEXE is the luxury fashion search engine for natural fabrics. Shop 17,000+ clothing items verified for material quality — silk, cashmere, linen, wool, and cotton across 90+ curated brands.",
   sameAs: ["https://twitter.com/shopintertexe"],
+  foundingDate: "2025",
+  knowsAbout: ["natural fiber fashion", "silk clothing", "cashmere clothing", "linen clothing", "wool clothing", "cotton clothing", "luxury fashion", "sustainable fashion"],
 };
 
 const websiteSchema = {
