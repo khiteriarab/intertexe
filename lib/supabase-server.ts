@@ -236,7 +236,7 @@ export async function fetchProductsByFiberAndCategory(
       .from("products")
       .select("*")
       .ilike("composition", `%${term}%`)
-      .gte("natural_fiber_percent", 85)
+      .gte("natural_fiber_percent", 80)
       .order("natural_fiber_percent", { ascending: false })
       .limit(limit);
 
@@ -254,7 +254,7 @@ export async function fetchProductsByFiberAndCategory(
         .from("products")
         .select("*")
         .ilike("name", `%${nameTerm}%`)
-        .gte("natural_fiber_percent", 85)
+        .gte("natural_fiber_percent", 80)
         .order("natural_fiber_percent", { ascending: false })
         .limit(limit);
 
@@ -288,7 +288,7 @@ export async function fetchProductsByBrand(brandSlug: string): Promise<Product[]
     .from("products")
     .select("*")
     .eq("brand_slug", brandSlug)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .order("natural_fiber_percent", { ascending: false });
 
   if (error || !data) return [];
@@ -301,7 +301,7 @@ export async function fetchAllProducts(limit = 200, offset = 0, category?: strin
   let q = supabase
     .from("products")
     .select("*")
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .order("natural_fiber_percent", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -335,7 +335,7 @@ export async function fetchFiberCounts(): Promise<Record<string, number>> {
       .from("products")
       .select("*", { count: "exact", head: true })
       .ilike("composition", `%${fiber}%`)
-      .gte("natural_fiber_percent", 85);
+      .gte("natural_fiber_percent", 80);
     if (!error && count) counts[fiber] = count;
   }));
   return counts;
@@ -347,7 +347,7 @@ export async function fetchProductCount(): Promise<number> {
   const { count, error } = await supabase
     .from("products")
     .select("*", { count: "exact", head: true })
-    .gte("natural_fiber_percent", 85);
+    .gte("natural_fiber_percent", 80);
   if (error) return 0;
   return count || 0;
 }
@@ -396,7 +396,7 @@ export async function fetchRelatedProducts(
     .select("*")
     .eq("brand_slug", product.brandSlug)
     .neq("id", product.id)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .order("natural_fiber_percent", { ascending: false })
     .limit(limit);
 
@@ -415,7 +415,7 @@ export async function fetchProductsByFiber(fiber: string, limit = 200): Promise<
     .from("products")
     .select("*")
     .ilike("composition", `%${fiber}%`)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .not("price", "is", null)
     .neq("price", "")
     .neq("price", "$0.00")
@@ -436,7 +436,7 @@ export async function fetchProductsByBrandWithImages(brandSlug: string, limit = 
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
     .eq("brand_slug", brandSlug)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null)
     .neq("price", "")
@@ -459,7 +459,7 @@ export async function fetchProductCountsByBrand(slugs: string[]): Promise<Record
       .from("products")
       .select("*", { count: "exact", head: true })
       .eq("brand_slug", slug)
-      .gte("natural_fiber_percent", 85)
+      .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null);
     counts[slug] = count || 0;
   }));
@@ -478,7 +478,7 @@ export async function fetchRecommendedProducts(
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
     .not("image_url", "is", null)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .order("natural_fiber_percent", { ascending: false })
     .limit(limit * 5);
 
@@ -566,7 +566,7 @@ export async function fetchShopProducts(options: {
     .neq("price", "")
     .neq("price", "$0.00")
     .neq("price", "0")
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .in("brand_slug", brandSlugs);
 
   if (searchTerms.length > 0) {
@@ -593,7 +593,7 @@ export async function fetchShopProducts(options: {
         .neq("price", "")
         .neq("price", "$0.00")
         .neq("price", "0")
-        .gte("natural_fiber_percent", 85)
+        .gte("natural_fiber_percent", 80)
         .in("brand_slug", brandSlugs);
       if (searchTerms.length > 0) {
         const orClauses = searchTerms.flatMap(t => [
@@ -653,7 +653,7 @@ export async function fetchMoreFromBrand(
     .select(PRODUCT_CARD_COLS)
     .eq("brand_slug", brandSlug)
     .neq("id", productId)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null)
     .order("natural_fiber_percent", { ascending: false })
@@ -678,7 +678,7 @@ export async function fetchMoreInFiber(
     .select(PRODUCT_CARD_COLS)
     .neq("id", productId)
     .ilike("composition", `%${primaryFiber}%`)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null)
     .order("natural_fiber_percent", { ascending: false })
@@ -702,7 +702,7 @@ export async function fetchMoreAtPrice(
     .from("products")
     .select(PRODUCT_CARD_COLS)
     .neq("id", productId)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null)
     .order("natural_fiber_percent", { ascending: false })
@@ -732,7 +732,7 @@ export async function fetchSaleProducts(options: {
     .from("products")
     .select("*", { count: "exact" })
     .eq("is_sale", true)
-    .gte("natural_fiber_percent", 85)
+    .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null);
 
@@ -795,7 +795,7 @@ export async function fetchBrandStats(): Promise<{ slug: string; name: string; c
       .from("products")
       .select("brand_slug, brand_name, natural_fiber_percent")
       .in("brand_slug", brandSlugs)
-      .gte("natural_fiber_percent", 85)
+      .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
       .neq("image_url", "")
       .not("price", "is", null)
