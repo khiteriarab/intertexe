@@ -58,8 +58,13 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
   const price = product.price;
   const composition = product.composition;
 
+  const saveScrollPosition = () => {
+    sessionStorage.setItem("shop_scroll", String(window.scrollY));
+    sessionStorage.setItem("shop_visible_count", String(document.querySelectorAll('[data-testid^="product-card-"]').length));
+  };
+
   return (
-    <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
+    <Link href={`/product/${product.id}`} onClick={saveScrollPosition} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} decoding={eager ? "sync" : "async"} fetchPriority={eager ? "high" : "low"} />
@@ -150,6 +155,28 @@ export default function ShopClient({
   useEffect(() => {
     syncUrl(fiberTab, categoryFilter, sortBy, debouncedSearch);
   }, [fiberTab, categoryFilter, sortBy, debouncedSearch, syncUrl]);
+
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem("shop_scroll");
+    const savedCount = sessionStorage.getItem("shop_visible_count");
+    if (savedCount) {
+      const count = parseInt(savedCount, 10);
+      if (count > 40) setVisibleCount(count);
+    }
+    if (savedScroll) {
+      const scrollY = parseInt(savedScroll, 10);
+      const tryRestore = () => {
+        if (document.body.scrollHeight > scrollY + window.innerHeight) {
+          window.scrollTo(0, scrollY);
+          sessionStorage.removeItem("shop_scroll");
+          sessionStorage.removeItem("shop_visible_count");
+        } else {
+          requestAnimationFrame(tryRestore);
+        }
+      };
+      requestAnimationFrame(tryRestore);
+    }
+  }, []);
 
   const [products, setProducts] = useState(initialProducts || []);
   const [resultTotal, setResultTotal] = useState(initialTotal || 0);
