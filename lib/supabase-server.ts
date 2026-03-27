@@ -780,3 +780,58 @@ export async function fetchSaleProducts(options: {
     total: interleaved.length,
   };
 }
+
+export async function fetchBrandStats(): Promise<{ slug: string; name: string; count: number; avgNaturalFiber: number }[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
+  const allProducts: { brand_slug: string; brand_name: string; natural_fiber_percent: number }[] = [];
+  let offset = 0;
+  const pageSize = 1000;
+
+  while (true) {
+    const { data } = await supabase
+      .from("products")
+      .select("brand_slug, brand_name, natural_fiber_percent")
+      .in("brand_slug", brandSlugs)
+      .gte("natural_fiber_percent", 85)
+      .not("image_url", "is", null)
+      .neq("image_url", "")
+      .not("price", "is", null)
+      .neq("price", "")
+      .range(offset, offset + pageSize - 1);
+
+    if (!data || data.length === 0) break;
+    allProducts.push(...data);
+    if (data.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  const brandMap = new Map<string, { name: string; totalFiber: number; count: number }>();
+  for (const p of allProducts) {
+    const existing = brandMap.get(p.brand_slug);
+    if (existing) {
+      existing.totalFiber += (p.natural_fiber_percent || 0);
+      existing.count += 1;
+    } else {
+      brandMap.set(p.brand_slug, {
+        name: p.brand_name,
+        totalFiber: p.natural_fiber_percent || 0,
+        count: 1,
+      });
+    }
+  }
+
+  const results = Array.from(brandMap.entries())
+    .map(([slug, data]) => ({
+      slug,
+      name: data.name,
+      count: data.count,
+      avgNaturalFiber: Math.round(data.totalFiber / data.count),
+    }))
+    .filter(b => b.count >= 2)
+    .sort((a, b) => b.count - a.count);
+
+  return results;
+}
