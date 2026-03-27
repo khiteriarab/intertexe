@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { hashPassword, storeToken, getUserByEmail, getUserByUsername, createUser } from "../../../../lib/auth-helpers";
 import { sendWelcomeEmail } from "../../../../server/resend";

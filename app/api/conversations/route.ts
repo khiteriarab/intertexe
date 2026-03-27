@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 
 const conversations = new Map<number, { id: number; title: string; createdAt: string; messages: Array<{ role: string; content: string }> }>();

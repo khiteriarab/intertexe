@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByEmail, createResetToken } from "../../../../lib/auth-helpers";
 import { sendPasswordResetEmail } from "../../../../server/resend";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByEmail, hashPassword, createUser, storeToken } from "../../../../lib/auth-helpers";
 import { snakeToCamel } from "../../../../lib/case-utils";

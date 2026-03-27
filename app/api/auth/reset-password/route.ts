@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyResetToken, hashPassword, updateUserPassword, storeToken } from "../../../../lib/auth-helpers";
 

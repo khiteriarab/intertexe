@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { fetchProductsByFiberAndCategory, fetchProductsByBrand, fetchAllProducts, fetchProductsByIds } from "../../../lib/supabase-server";
 
