@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       const products = await fetchProductsByFiberAndCategory(fiber, category || undefined, limit);
       return NextResponse.json(products);
     }
-    const products = await fetchAllProducts(limit);
+    const products = await fetchAllProducts(limit, 0, category || undefined);
     return NextResponse.json(products);
   } catch (error) {
     return NextResponse.json([], { status: 500 });

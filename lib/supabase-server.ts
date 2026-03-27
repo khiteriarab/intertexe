@@ -308,16 +308,21 @@ export async function fetchProductsByBrand(brandSlug: string): Promise<Product[]
   return data.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
 }
 
-export async function fetchAllProducts(limit = 200, offset = 0): Promise<Product[]> {
+export async function fetchAllProducts(limit = 200, offset = 0, category?: string): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
-  const { data, error } = await supabase
+  let q = supabase
     .from("products")
     .select("*")
     .gte("natural_fiber_percent", 85)
     .order("natural_fiber_percent", { ascending: false })
     .range(offset, offset + limit - 1);
 
+  if (category) {
+    q = q.ilike("category", `%${category}%`);
+  }
+
+  const { data, error } = await q;
   if (error || !data) return [];
   return data.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
 }
