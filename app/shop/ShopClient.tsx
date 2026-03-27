@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
+import { getShopProducts, getShopMeta } from "./actions";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
@@ -133,8 +134,7 @@ export default function ShopClient({
 
   useEffect(() => {
     if (!globalCount || !Object.keys(fiberCountsState).length) {
-      fetch("/api/shop?meta=true")
-        .then(r => r.json())
+      getShopMeta()
         .then(d => {
           if (d.totalProductCount) setGlobalCount(d.totalProductCount);
           if (d.fiberCounts) setFiberCountsState(d.fiberCounts);
@@ -164,18 +164,16 @@ export default function ShopClient({
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams();
-        if (fiberTab !== "all") params.set("fiber", fiberTab);
-        if (categoryFilter !== "all") params.set("category", categoryFilter);
-        params.set("sort", sortBy);
-        params.set("limit", visibleCount.toString());
-        params.set("offset", "0");
-        if (debouncedSearch) params.set("search", debouncedSearch);
-
-        const res = await fetch(`/api/shop?${params.toString()}`);
-        const data = await res.json();
-        setProducts(data.products || []);
-        setResultTotal(data.total || 0);
+        const result = await getShopProducts({
+          fiber: fiberTab !== "all" ? fiberTab : undefined,
+          category: categoryFilter !== "all" ? categoryFilter : undefined,
+          sort: sortBy,
+          limit: visibleCount,
+          offset: 0,
+          search: debouncedSearch || undefined,
+        });
+        setProducts(result.products || []);
+        setResultTotal(result.total || 0);
       } catch {
         setProducts([]);
         setResultTotal(0);
