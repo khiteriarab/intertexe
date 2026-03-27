@@ -156,31 +156,34 @@ export default function ShopClient({
     syncUrl(fiberTab, categoryFilter, sortBy, debouncedSearch);
   }, [fiberTab, categoryFilter, sortBy, debouncedSearch, syncUrl]);
 
+  const [products, setProducts] = useState(initialProducts || []);
+  const [resultTotal, setResultTotal] = useState(initialTotal || 0);
+  const [isLoading, setIsLoading] = useState(!initialProducts?.length);
+
+  const scrollRestored = useRef(false);
+
   useEffect(() => {
-    const savedScroll = sessionStorage.getItem("shop_scroll");
     const savedCount = sessionStorage.getItem("shop_visible_count");
     if (savedCount) {
       const count = parseInt(savedCount, 10);
       if (count > 40) setVisibleCount(count);
     }
-    if (savedScroll) {
-      const scrollY = parseInt(savedScroll, 10);
-      const tryRestore = () => {
-        if (document.body.scrollHeight > scrollY + window.innerHeight) {
-          window.scrollTo(0, scrollY);
-          sessionStorage.removeItem("shop_scroll");
-          sessionStorage.removeItem("shop_visible_count");
-        } else {
-          requestAnimationFrame(tryRestore);
-        }
-      };
-      requestAnimationFrame(tryRestore);
-    }
   }, []);
 
-  const [products, setProducts] = useState(initialProducts || []);
-  const [resultTotal, setResultTotal] = useState(initialTotal || 0);
-  const [isLoading, setIsLoading] = useState(!initialProducts?.length);
+  useEffect(() => {
+    if (scrollRestored.current || isLoading) return;
+    const savedScroll = sessionStorage.getItem("shop_scroll");
+    if (!savedScroll) return;
+    const scrollY = parseInt(savedScroll, 10);
+    if (products.length > 0) {
+      scrollRestored.current = true;
+      sessionStorage.removeItem("shop_scroll");
+      sessionStorage.removeItem("shop_visible_count");
+      setTimeout(() => {
+        window.scrollTo(0, Math.min(scrollY, document.body.scrollHeight - window.innerHeight));
+      }, 50);
+    }
+  }, [products, isLoading]);
   const [globalCount, setGlobalCount] = useState(totalProductCount);
   const [fiberCountsState, setFiberCountsState] = useState(fiberCounts);
 
