@@ -197,7 +197,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   const searchTerms = categoryKeywords[category] || [];
 
   let altQuery = supabase.from("products").select("*")
-    .gte("natural_fiber_percent", 95)
+    .gte("natural_fiber_percent", 85)
     .not("image_url", "is", null)
     .order("natural_fiber_percent", { ascending: false });
 
@@ -223,7 +223,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
 
   if (alternatives.length < 4 && searchTerms.length > 0) {
     let fallbackQuery = supabase.from("products").select("*")
-      .gte("natural_fiber_percent", 95)
+      .gte("natural_fiber_percent", 85)
       .not("image_url", "is", null)
       .or(searchTerms.map(t => `name.ilike.%${t}%`).join(","))
       .order("natural_fiber_percent", { ascending: false })
@@ -237,7 +237,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
 
   if (alternatives.length < 4) {
     const { data: anyData } = await supabase.from("products").select("*")
-      .gte("natural_fiber_percent", 95)
+      .gte("natural_fiber_percent", 85)
       .not("image_url", "is", null)
       .order("natural_fiber_percent", { ascending: false })
       .limit(30);
