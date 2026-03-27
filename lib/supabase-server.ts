@@ -128,9 +128,11 @@ function mapDesignerRow(row: any): Designer {
 function isClothingProduct(p: any): boolean {
   const cat = (p.category || "").toLowerCase();
   const name = (p.title || p.name || "").toLowerCase();
-  const nonClothing = ["perfume", "cologne", "fragrance", "candle", "soap", "cream", "lotion", "serum", "mask", "oil", "balm", "mist", "shampoo", "conditioner", "body wash", "deodorant", "sunscreen", "sunglasses", "eyewear", "watch", "jewelry", "earring", "necklace", "bracelet", "ring", "charm", "pendant", "brooch", "phone case", "laptop", "tablet", "headband", "hair clip", "scrunchie", "umbrella", "blanket", "pillow", "towel", "candle holder", "vase", "mug", "cup", "plate", "bowl", "tray", "keychain", "sticker", "magnet", "poster", "print", "book", "notebook", "pen", "pencil", "gift card"];
+  const nonClothing = ["perfume", "cologne", "fragrance", "candle", "soap", "cream", "lotion", "serum", "mask", "shampoo", "conditioner", "body wash", "deodorant", "sunscreen", "sunglasses", "eyewear", "watch", "jewelry", "earring", "necklace", "bracelet", "phone case", "laptop", "tablet", "headband", "hair clip", "scrunchie", "umbrella", "blanket", "pillow", "towel", "candle holder", "vase", "keychain", "sticker", "magnet", "poster", "notebook", "pencil", "gift card"];
+  const text = cat + " " + name;
   for (const term of nonClothing) {
-    if (cat.includes(term) || name.includes(term)) return false;
+    const re = new RegExp(`\\b${term}\\b`);
+    if (re.test(text)) return false;
   }
   return true;
 }
