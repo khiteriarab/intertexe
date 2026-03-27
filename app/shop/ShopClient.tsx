@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopMeta } from "./actions";
@@ -118,14 +119,37 @@ export default function ShopClient({
   totalProductCount: number;
   fiberCounts?: Record<string, number>;
 }) {
-  const [fiberTab, setFiberTab] = useState<FiberTab>("all");
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-  const [sortBy, setSortBy] = useState<SortOption>("recommended");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const initialFiber = (searchParams.get("fiber") as FiberTab) || "all";
+  const initialCategory = (searchParams.get("category") as CategoryFilter) || "all";
+  const initialSort = (searchParams.get("sort") as SortOption) || "recommended";
+  const initialSearch = searchParams.get("q") || "";
+
+  const [fiberTab, setFiberTab] = useState<FiberTab>(initialFiber);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(initialCategory);
+  const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [visibleCount, setVisibleCount] = useState(60);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const syncUrl = useCallback((fiber: string, category: string, sort: string, search: string) => {
+    const params = new URLSearchParams();
+    if (fiber !== "all") params.set("fiber", fiber);
+    if (category !== "all") params.set("category", category);
+    if (sort !== "recommended") params.set("sort", sort);
+    if (search) params.set("q", search);
+    const qs = params.toString();
+    const newUrl = qs ? `/shop?${qs}` : "/shop";
+    window.history.replaceState(null, "", newUrl);
+  }, []);
+
+  useEffect(() => {
+    syncUrl(fiberTab, categoryFilter, sortBy, debouncedSearch);
+  }, [fiberTab, categoryFilter, sortBy, debouncedSearch, syncUrl]);
 
   const [products, setProducts] = useState(initialProducts || []);
   const [resultTotal, setResultTotal] = useState(initialTotal || 0);

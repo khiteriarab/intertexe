@@ -10,6 +10,7 @@ import {
   fetchAllProductIds,
 } from "../../../lib/supabase-server";
 import { ProductFavoriteButton, ProductCardHeart } from "./ProductFavoriteButton";
+import BackToShop from "./BackToShop";
 
 export const revalidate = 0;
 
@@ -246,10 +247,7 @@ export default async function ProductPage({
 
       <div className="py-6 md:py-8 flex flex-col gap-8 md:gap-12">
         <nav className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="breadcrumb">
-          <Link href="/shop" className="flex items-center gap-1 hover:text-foreground transition-colors" data-testid="link-breadcrumb-shop">
-            <ChevronLeft className="w-3 h-3" />
-            Shop
-          </Link>
+          <BackToShop />
           <span>/</span>
           {product.brandSlug && (
             <>
