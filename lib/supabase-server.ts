@@ -69,26 +69,13 @@ const WOMEN_FASHION_BRAND_SLUGS = new Set([
   "paige", "pj-salvage", "pistola",
   "rachel-comey", "rag-and-bone", "rails", "ramy-brook", "re-done", "rebecca-taylor", "reformation", "rixo",
   "sanctuary", "sandro", "sea-new-york", "something-navy", "splendid", "st-agni",
-  "ted-baker", "the-kooples", "theory", "tibi", "toteme", "trina-turk",
-  "ulla-johnson", "veronica-beard", "vince"
+  "tanya-taylor", "ted-baker", "the-kooples", "theory", "tibi", "toteme", "trina-turk",
+  "ulla-johnson", "veda", "velvet-by-graham-spencer", "veronica-beard", "vince",
+  "cult-gaia", "stine-goya"
 ]);
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
-  if (brandSlug !== "isabel-marant" || !imageUrl) return imageUrl;
-  let url = imageUrl;
-  if (url.includes("-A.")) {
-    url = url.replace(/-A\./, "-E.");
-  }
-  if (url.includes("-B.")) {
-    url = url.replace(/-B\./, "-E.");
-  }
-  if (url.includes("-D.")) {
-    url = url.replace(/-D\./, "-E.");
-  }
-  if (url.includes("-C.")) {
-    url = url.replace(/-C\./, "-E.");
-  }
-  return url;
+  return imageUrl;
 }
 
 function mapProductRow(row: any): Product {
