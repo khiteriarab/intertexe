@@ -58,13 +58,14 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
   const price = product.price;
   const composition = product.composition;
 
-  const saveScrollPosition = () => {
-    sessionStorage.setItem("shop_scroll", String(window.scrollY));
+  const saveShopState = () => {
+    sessionStorage.setItem("shop_return_url", window.location.pathname + window.location.search);
+    sessionStorage.setItem("shop_return_product", String(product.id));
     sessionStorage.setItem("shop_visible_count", String(document.querySelectorAll('[data-testid^="product-card-"]').length));
   };
 
   return (
-    <Link href={`/product/${product.id}`} onClick={saveScrollPosition} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
+    <Link href={`/product/${product.id}`} onClick={saveShopState} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} decoding={eager ? "sync" : "async"} fetchPriority={eager ? "high" : "low"} />
@@ -172,16 +173,19 @@ export default function ShopClient({
 
   useEffect(() => {
     if (scrollRestored.current || isLoading) return;
-    const savedScroll = sessionStorage.getItem("shop_scroll");
-    if (!savedScroll) return;
-    const scrollY = parseInt(savedScroll, 10);
+    const productId = sessionStorage.getItem("shop_return_product");
+    if (!productId) return;
     if (products.length > 0) {
       scrollRestored.current = true;
-      sessionStorage.removeItem("shop_scroll");
+      sessionStorage.removeItem("shop_return_product");
+      sessionStorage.removeItem("shop_return_url");
       sessionStorage.removeItem("shop_visible_count");
       setTimeout(() => {
-        window.scrollTo(0, Math.min(scrollY, document.body.scrollHeight - window.innerHeight));
-      }, 50);
+        const el = document.querySelector(`[data-testid="product-card-${productId}"]`);
+        if (el) {
+          el.scrollIntoView({ block: "center" });
+        }
+      }, 100);
     }
   }, [products, isLoading]);
   const [globalCount, setGlobalCount] = useState(totalProductCount);

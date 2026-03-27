@@ -8,8 +8,9 @@ export default function BackToShop() {
 
   const handleBack = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (typeof window !== "undefined" && document.referrer.includes("/shop")) {
-      router.back();
+    const savedUrl = typeof window !== "undefined" ? sessionStorage.getItem("shop_return_url") : null;
+    if (savedUrl) {
+      router.push(savedUrl);
     } else {
       router.push("/shop");
     }
