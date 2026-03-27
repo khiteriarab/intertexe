@@ -7,7 +7,7 @@ import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopMeta } from "./actions";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
-type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
+type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
 type SortOption = "recommended" | "new" | "price-high" | "price-low";
 
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
@@ -24,6 +24,7 @@ const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
   { key: "knitwear", label: "Knitwear" },
   { key: "tops", label: "Tops" },
   { key: "dresses", label: "Dresses" },
+  { key: "skirts", label: "Skirts" },
   { key: "bottoms", label: "Bottoms" },
   { key: "outerwear", label: "Outerwear" },
   { key: "lingerie", label: "Lingerie" },

@@ -241,7 +241,7 @@ export async function fetchProductsByFiberAndCategory(
       .limit(limit);
 
     if (category) {
-      q = q.ilike("category", `%${category}%`);
+      q = q.eq("category", category);
     }
 
     const { data } = await q;
@@ -259,7 +259,7 @@ export async function fetchProductsByFiberAndCategory(
         .limit(limit);
 
       if (category) {
-        q = q.ilike("category", `%${category}%`);
+        q = q.eq("category", category);
       }
 
       const { data } = await q;
@@ -306,7 +306,7 @@ export async function fetchAllProducts(limit = 200, offset = 0, category?: strin
     .range(offset, offset + limit - 1);
 
   if (category) {
-    q = q.ilike("category", `%${category}%`);
+    q = q.eq("category", category);
   }
 
   const { data, error } = await q;
@@ -577,7 +577,7 @@ export async function fetchShopProducts(options: {
     query = query.or(orClauses.join(","));
   }
   if (fiber) query = query.ilike("composition", `%${fiber}%`);
-  if (category) query = query.ilike("category", `%${category}%`);
+  if (category) query = query.eq("category", category);
 
   if (isPriceSort) {
     const pageSize = 1000;
@@ -603,7 +603,7 @@ export async function fetchShopProducts(options: {
         q2 = q2.or(orClauses.join(","));
       }
       if (fiber) q2 = q2.ilike("composition", `%${fiber}%`);
-      if (category) q2 = q2.ilike("category", `%${category}%`);
+      if (category) q2 = q2.eq("category", category);
       q2 = q2.range(fetchOffset, fetchOffset + pageSize - 1);
       const { data: chunk, error: chunkErr } = await q2;
       if (chunkErr || !chunk || chunk.length === 0) break;
