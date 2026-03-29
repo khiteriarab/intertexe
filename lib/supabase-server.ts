@@ -206,7 +206,9 @@ export async function fetchProductById(id: string): Promise<Product | null> {
 
   const { data, error } = await query;
   if (error || !data || data.length === 0) return null;
-  return mapProductRow(data[0]);
+  const row = data[0];
+  if (row.natural_fiber_percent != null && row.natural_fiber_percent < 80) return null;
+  return mapProductRow(row);
 }
 
 export async function fetchProductsByFiberAndCategory(
