@@ -136,6 +136,7 @@ function inferFibersFromName(name: string): { fiber: string; percent: number; is
     "mohair": "mohair",
     "alpaca": "alpaca",
     "hemp": "hemp", "cáñamo": "hemp", "chanvre": "hemp", "canapa": "hemp",
+    "ramie": "ramie", "ramio": "ramie",
     "denim": "cotton",
   };
   for (const [keyword, fiber] of Object.entries(materialKeywords)) {
@@ -173,13 +174,17 @@ function extractInfoFromUrl(url: string): { brand: string; product: string; reta
       "tibi.com": "Tibi", "lagence.com": "L'Agence", "rixo.co.uk": "RIXO",
       "redone.com": "Re/Done", "seanewyork.com": "Sea New York",
       "julia-heuer.com": "Julia Heuer",
+      "adolfodominguez.com": "Adolfo Dominguez", "mangooutlet.com": "Mango", "mango.com": "Mango",
+      "brunellocucinelli.com": "Brunello Cucinelli", "loropiana.com": "Loro Piana",
+      "hermes.com": "Hermès", "bottegaveneta.com": "Bottega Veneta",
+      "massimodutti.com": "Massimo Dutti", "chloe.com": "Chloé", "maxmara.com": "Max Mara",
     };
     const hostnameParts = hostname.split(".");
     const baseDomain = hostnameParts.length > 2 ? hostnameParts.slice(-2).join(".") : hostname;
     const retailer = brandMap[hostname] || brandMap[baseDomain] || hostname.split(".")[0].charAt(0).toUpperCase() + hostname.split(".")[0].slice(1);
     const pathParts = parsed.pathname.split("/").filter(Boolean);
-    const productSlug = pathParts.filter(p => !["products", "s", "p", "shop", "collections", "en", "us", "en-us", "en-es", "en-gb", "womens", "women", "clothing", "new-arrivals"].includes(p.toLowerCase())).pop() || "";
-    const product = productSlug.replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase()).trim();
+    const productSlug = pathParts.filter(p => !["products", "s", "p", "shop", "collections", "en", "us", "en-us", "en-es", "en-gb", "es-es", "fr-fr", "de-de", "it-it", "pt-pt", "en-de", "en-fr", "womens", "women", "clothing", "new-arrivals", "mujer", "femme", "donna", "damen", "ropa", "vetements"].includes(p.toLowerCase())).pop() || "";
+    const product = productSlug.replace(/\.\w+$/, "").replace(/[-_]/g, " ").replace(/\d{8,}/, "").replace(/\s+/g, " ").replace(/\b\w/g, c => c.toUpperCase()).trim();
     const multiBrandDomains = ["nordstrom.com", "net-a-porter.com", "ssense.com", "farfetch.com", "mytheresa.com", "shopbop.com", "saksfifthavenue.com", "revolve.com", "asos.com"];
     const isMultiBrand = multiBrandDomains.includes(hostname) || multiBrandDomains.includes(baseDomain);
     return { brand: isMultiBrand ? "" : retailer, product, retailer };
@@ -515,10 +520,10 @@ export async function POST(request: NextRequest) {
         const extractRes = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           messages: [
-            { role: "system", content: `Extract product info from a fashion product page. Return ONLY valid JSON:
+            { role: "system", content: `Extract product info from a fashion product page. The page may be in ANY language (Spanish, French, Italian, German, Portuguese, etc.) — translate product names to English. Return ONLY valid JSON:
 {
   "brandName": "brand",
-  "productName": "product name (clean, no extra text)",
+  "productName": "product name in English (clean, no extra text)",
   "price": "price with currency symbol",
   "composition": "full fiber composition e.g. '98% Cotton, 2% Elastane'",
   "fibers": [{"fiber":"cotton","percent":98},{"fiber":"elastane","percent":2}],
@@ -527,7 +532,8 @@ export async function POST(request: NextRequest) {
   "imageUrl": "primary product image URL (full https URL)"
 }
 CRITICAL FIBER NAMING RULES:
-- Use STANDARD fiber names: cotton, linen, silk, wool, cashmere, polyester, nylon, elastane, etc.
+- Use STANDARD English fiber names: cotton, linen, silk, wool, cashmere, polyester, nylon, elastane, ramie, etc.
+- Translate foreign fiber names: ramio=ramie, algodón/algodon=cotton, seda=silk, lana=wool, lino=linen, cachemir/cachemire=cashmere, soie=silk, coton=cotton, baumwolle=cotton, seide=silk, cotone=cotton, seta=silk, canapa=hemp
 - "European Flax" or "Flax" or "European Linen" = linen
 - "Pima Cotton" or "Supima Cotton" or "Egyptian Cotton" or "Organic Cotton" or "BCI Cotton" = cotton
 - "Merino Wool" or "Virgin Wool" or "Lambswool" = wool (or merino for merino wool)
@@ -537,6 +543,7 @@ CRITICAL FIBER NAMING RULES:
 - "Recycled Nylon" or "ECONYL" = recycled nylon (STILL synthetic)
 - NEVER use geographic terms (European, Egyptian, Mongolian) as the fiber name itself
 - Always extract the ACTUAL FIBER (linen, cotton, wool, silk, etc.)
+- If composition is in the URL path (e.g. "ramio" or "lino" in the URL slug), use that as a fiber hint
 Use null for genuinely unknown.` },
             { role: "user", content: promptContent }
           ],

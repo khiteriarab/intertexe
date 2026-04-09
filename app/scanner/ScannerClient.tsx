@@ -1,18 +1,24 @@
 'use client';
 
-import { useState, useRef, useCallback } from "react";
-import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, MessageCircle, Heart, CheckCircle2, AlertTriangle, ShieldCheck, ExternalLink } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, MessageCircle, Heart, CheckCircle2, AlertTriangle, ShieldCheck, ExternalLink, Link2, ScanBarcode, ImageIcon, Globe, Zap } from "lucide-react";
 import Link from "next/link";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { trackScanStart, trackScanComplete, trackScanError } from "../../lib/analytics";
 
-type FiberEntry = { fiber: string; percent: number; isNatural: boolean };
+type FiberEntry = { fiber: string; percent: number; isNatural: boolean; classification?: string };
 
 type ScanResult = {
-  tagInfo: { brandName: string; productName: string; price: string; composition: string; garmentType?: string; size?: string; madeIn?: string; careInstructions?: string; confidence: string; rawText: string };
+  tagInfo: {
+    brandName: string; productName: string; price: string; composition: string;
+    garmentType?: string; size?: string; madeIn?: string; careInstructions?: string;
+    confidence: string; rawText: string; inputType?: string;
+    color?: string; silhouette?: string; barcode?: string;
+  };
   imageUrl?: string;
   fiberBreakdown: FiberEntry[];
   naturalPercent: number;
+  qualityScore?: number;
   isNatural: boolean;
   verdict: string;
   category: string;
@@ -21,7 +27,10 @@ type ScanResult = {
   brandStats: { avgFiber: number; rating: string; productCount: number } | null;
   designerInfo: { name: string; slug: string; logo_url: string; website: string; description: string; rating: string; hasProducts: boolean } | null;
   betterAlternatives: any[];
+  confirmationPrompt?: string | null;
 };
+
+type ScanMode = "idle" | "camera-photo" | "camera-barcode";
 
 function ratingColor(rating: string) {
   switch (rating) {
@@ -33,8 +42,19 @@ function ratingColor(rating: string) {
   }
 }
 
-function NaturalScoreRing({ percent }: { percent: number }) {
-  const size = 80;
+function classificationColor(cls?: string) {
+  if (cls === "natural") return "bg-emerald-600";
+  if (cls === "semi-synthetic") return "bg-amber-500";
+  return "bg-red-400";
+}
+
+function classificationLabel(cls?: string) {
+  if (cls === "natural") return "Natural";
+  if (cls === "semi-synthetic") return "Semi-Synthetic";
+  return "Synthetic";
+}
+
+function NaturalScoreRing({ percent, size = 80 }: { percent: number; size?: number }) {
   const strokeWidth = 5;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -57,6 +77,19 @@ function NaturalScoreRing({ percent }: { percent: number }) {
   );
 }
 
+function QualityScoreBar({ score }: { score: number }) {
+  const color = score >= 90 ? "bg-emerald-600" : score >= 70 ? "bg-amber-500" : "bg-red-400";
+  const label = score >= 90 ? "Excellent" : score >= 70 ? "Good" : score >= 40 ? "Fair" : "Low";
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-1 h-1.5 bg-neutral-100 overflow-hidden">
+        <div className={`h-full transition-all duration-700 ${color}`} style={{ width: `${score}%` }} />
+      </div>
+      <span className="text-[10px] font-medium text-muted-foreground w-14 text-right">{label} ({score})</span>
+    </div>
+  );
+}
+
 function FiberBreakdownBar({ fibers }: { fibers: FiberEntry[] }) {
   if (!fibers.length) return null;
   const sorted = [...fibers].sort((a, b) => b.percent - a.percent);
@@ -68,16 +101,18 @@ function FiberBreakdownBar({ fibers }: { fibers: FiberEntry[] }) {
           <div className="w-24 text-[11px] capitalize text-right font-medium">{f.fiber}</div>
           <div className="flex-1 h-2 bg-neutral-100 overflow-hidden">
             <div
-              className={`h-full transition-all duration-700 ${f.isNatural ? "bg-emerald-600" : "bg-red-400"}`}
+              className={`h-full transition-all duration-700 ${classificationColor(f.classification)}`}
               style={{ width: `${f.percent}%` }}
             />
           </div>
           <div className="w-10 text-[11px] text-muted-foreground">{f.percent}%</div>
-          {f.isNatural ? (
-            <Leaf className="w-3 h-3 text-emerald-600 flex-shrink-0" />
-          ) : (
-            <X className="w-3 h-3 text-red-400 flex-shrink-0" />
-          )}
+          <span className={`text-[8px] px-1 py-0.5 uppercase tracking-wide font-medium ${
+            f.classification === "natural" ? "text-emerald-700 bg-emerald-50" :
+            f.classification === "semi-synthetic" ? "text-amber-700 bg-amber-50" :
+            "text-red-700 bg-red-50"
+          }`}>
+            {classificationLabel(f.classification)}
+          </span>
         </div>
       ))}
     </div>
@@ -186,8 +221,98 @@ function EmailGate({ onUnlock, onClose }: { onUnlock: () => void; onClose: () =>
   );
 }
 
+function ConfirmationOverlay({
+  prompt,
+  category,
+  color,
+  garmentType,
+  onConfirm,
+  onCorrect,
+}: {
+  prompt: string;
+  category: string;
+  color: string;
+  garmentType: string;
+  onConfirm: () => void;
+  onCorrect: (corrections: { category?: string; color?: string; garmentType?: string }) => void;
+}) {
+  const [correcting, setCorrecting] = useState(false);
+  const [editCat, setEditCat] = useState(category);
+  const [editColor, setEditColor] = useState(color);
+  const [editType, setEditType] = useState(garmentType);
+
+  const categories = ["tops", "bottoms", "dresses", "outerwear", "knitwear", "skirts", "shorts", "swimwear", "loungewear"];
+
+  return (
+    <div className="p-4 md:p-5 mb-6 bg-amber-50 border border-amber-200" data-testid="confirmation-overlay">
+      <div className="flex items-start gap-3">
+        <Zap className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-amber-900 mb-1">Quick Confirmation</p>
+          <p className="text-[12px] text-amber-700 mb-3">{prompt}</p>
+          {!correcting ? (
+            <div className="flex gap-2">
+              <button onClick={onConfirm}
+                className="px-4 py-2 bg-[#111] text-white text-[10px] uppercase tracking-[0.12em] font-medium hover:bg-neutral-800 transition-colors"
+                data-testid="button-confirm-yes"
+              >
+                Yes, that's right
+              </button>
+              <button onClick={() => setCorrecting(true)}
+                className="px-4 py-2 bg-white border border-neutral-300 text-[10px] uppercase tracking-[0.12em] font-medium hover:border-neutral-500 transition-colors"
+                data-testid="button-confirm-no"
+              >
+                Not quite
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground block mb-1">Category</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {categories.map(cat => (
+                    <button key={cat} onClick={() => setEditCat(cat)}
+                      className={`px-2.5 py-1 text-[10px] uppercase tracking-[0.08em] border transition-colors ${editCat === cat ? "bg-[#111] text-white border-[#111]" : "bg-white border-neutral-200 hover:border-neutral-400"}`}
+                      data-testid={`button-cat-${cat}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground block mb-1">Color</label>
+                <input value={editColor} onChange={e => setEditColor(e.target.value)}
+                  className="w-full px-3 py-2 text-[13px] border border-neutral-200 bg-white focus:outline-none focus:border-neutral-400"
+                  placeholder="e.g. black, navy blue"
+                  data-testid="input-correct-color"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground block mb-1">Garment Type</label>
+                <input value={editType} onChange={e => setEditType(e.target.value)}
+                  className="w-full px-3 py-2 text-[13px] border border-neutral-200 bg-white focus:outline-none focus:border-neutral-400"
+                  placeholder="e.g. midi dress, slim jeans"
+                  data-testid="input-correct-type"
+                />
+              </div>
+              <button
+                onClick={() => onCorrect({ category: editCat, color: editColor, garmentType: editType })}
+                className="px-4 py-2 bg-[#111] text-white text-[10px] uppercase tracking-[0.12em] font-medium hover:bg-neutral-800 transition-colors"
+                data-testid="button-submit-corrections"
+              >
+                Update & Find Alternatives
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ScannerClient() {
-  const [mode, setMode] = useState<"idle" | "camera">("idle");
+  const [mode, setMode] = useState<ScanMode>("idle");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -195,10 +320,14 @@ export default function ScannerClient() {
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [scannedUrl, setScannedUrl] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [barcodeDetected, setBarcodeDetected] = useState("");
+  const [activeTab, setActiveTab] = useState<"photo" | "barcode" | "url">("photo");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const barcodeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const hasAccess = () => !!localStorage.getItem("intertexe_scanner_email");
 
@@ -214,27 +343,53 @@ export default function ScannerClient() {
   };
 
   const stopCamera = useCallback(() => {
+    if (barcodeIntervalRef.current) {
+      clearInterval(barcodeIntervalRef.current);
+      barcodeIntervalRef.current = null;
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
   }, []);
 
-  const startCamera = useCallback(async () => {
-    setMode("camera");
+  const startCamera = useCallback(async (forBarcode = false) => {
+    setMode(forBarcode ? "camera-barcode" : "camera-photo");
     setError("");
+    setBarcodeDetected("");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } }
+      });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
       }
+
+      if (forBarcode && typeof (window as any).BarcodeDetector !== "undefined") {
+        const detector = new (window as any).BarcodeDetector({
+          formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "qr_code"],
+        });
+        barcodeIntervalRef.current = setInterval(async () => {
+          if (!videoRef.current || videoRef.current.readyState < 2) return;
+          try {
+            const barcodes = await detector.detect(videoRef.current);
+            if (barcodes.length > 0) {
+              const code = barcodes[0].rawValue;
+              setBarcodeDetected(code);
+              stopCamera();
+              setMode("idle");
+              await scanBarcode(code);
+            }
+          } catch {}
+        }, 500);
+      }
     } catch {
       setError("Camera access denied. Try uploading a photo instead.");
       setMode("idle");
     }
-  }, []);
+  }, [stopCamera]);
 
   const capturePhoto = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -251,24 +406,95 @@ export default function ScannerClient() {
     await scanImage(dataUrl);
   }, [stopCamera]);
 
+  const callScanApi = async (body: any): Promise<ScanResult> => {
+    const res = await fetch("/api/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Scan failed");
+    return data;
+  };
+
   const scanImage = async (base64: string) => {
     setLoading(true);
     setError("");
     setResult(null);
+    setShowConfirmation(false);
     trackScanStart("upload");
     try {
-      const res = await fetch("/api/scan-tag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64 }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Scan failed");
+      const data = await callScanApi({ image: base64 });
       setResult(data);
+      if (data.confirmationPrompt && data.tagInfo?.confidence !== "high") {
+        setShowConfirmation(true);
+      }
       trackScanComplete(data.tagInfo?.brandName || "unknown", "upload", data.matched);
     } catch (err: any) {
       setError(err.message || "Failed to scan. Try again.");
       trackScanError("upload", err.message || "Scan failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scanBarcode = async (code: string) => {
+    setLoading(true);
+    setError("");
+    setResult(null);
+    setShowConfirmation(false);
+    trackScanStart("barcode");
+    try {
+      const data = await callScanApi({ barcode: code });
+      setResult(data);
+      if (data.confirmationPrompt) setShowConfirmation(true);
+      trackScanComplete(data.tagInfo?.brandName || "unknown", "barcode", data.matched);
+    } catch (err: any) {
+      setError(err.message || "Barcode scan failed.");
+      trackScanError("barcode", err.message || "Scan failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scanUrl = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setError("");
+    setResult(null);
+    setScannedUrl(url.trim());
+    setShowConfirmation(false);
+    trackScanStart("url");
+    try {
+      const data = await callScanApi({ url: url.trim() });
+      setResult(data);
+      if (data.confirmationPrompt && data.tagInfo?.confidence !== "high") {
+        setShowConfirmation(true);
+      }
+      trackScanComplete(data.tagInfo?.brandName || "unknown", "url", data.matched);
+    } catch (err: any) {
+      setError(err.message || "Could not analyze this URL.");
+      trackScanError("url", err.message || "Scan failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirm = () => {
+    setShowConfirmation(false);
+  };
+
+  const handleCorrections = async (corrections: { category?: string; color?: string; garmentType?: string }) => {
+    setShowConfirmation(false);
+    setLoading(true);
+    try {
+      const body: any = { confirmation: corrections };
+      if (scannedUrl) body.url = scannedUrl;
+      else if (result?.tagInfo?.barcode) body.barcode = result.tagInfo.barcode;
+      const data = await callScanApi(body);
+      setResult(data);
+    } catch (err: any) {
+      setError(err.message || "Update failed.");
     } finally {
       setLoading(false);
     }
@@ -286,47 +512,6 @@ export default function ScannerClient() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const scanUrl = async () => {
-    if (!url.trim()) return;
-    setLoading(true);
-    setError("");
-    setResult(null);
-    setScannedUrl(url.trim());
-    trackScanStart("url");
-    try {
-      const res = await fetch("/api/scan-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
-      });
-      const data = await res.json();
-      if (data.tagInfo) {
-        setResult(data);
-        trackScanComplete(data.tagInfo?.brandName || "unknown", "url", data.matched);
-      } else if (!res.ok) {
-        throw new Error(data.error || "Scan failed");
-      } else {
-        setResult(data);
-      }
-    } catch (err: any) {
-      try {
-        const hostname = new URL(url.trim()).hostname.replace("www.", "");
-        const brandGuess = hostname.split(".")[0].replace(/-store$|-shop$|-official$/i, "").replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-        setResult({
-          tagInfo: { brandName: brandGuess, productName: "", price: "", composition: "", garmentType: "", size: "", madeIn: "", careInstructions: "", confidence: "low", rawText: url.trim() },
-          fiberBreakdown: [], naturalPercent: 0, isNatural: false,
-          verdict: `We couldn't fetch product details, but browse ${brandGuess}'s natural-fiber options below.`,
-          category: "", products: [], matched: false, brandStats: null, designerInfo: null, betterAlternatives: [],
-        });
-      } catch {
-        setError("Could not analyze this URL. Please check the link and try again.");
-      }
-      trackScanError("url", err.message || "Scan failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const reset = () => {
     stopCamera();
     setResult(null);
@@ -335,33 +520,59 @@ export default function ScannerClient() {
     setScannedUrl("");
     setMode("idle");
     setLoading(false);
+    setShowConfirmation(false);
+    setBarcodeDetected("");
   };
 
-  if (mode === "camera") {
+  useEffect(() => {
+    return () => { stopCamera(); };
+  }, [stopCamera]);
+
+  if (mode === "camera-photo" || mode === "camera-barcode") {
+    const isBarcode = mode === "camera-barcode";
     return (
       <div className="fixed inset-0 bg-black z-50 flex flex-col">
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
           <button onClick={() => { stopCamera(); setMode("idle"); }} className="text-white/80 p-1" data-testid="button-close-camera">
             <X className="w-6 h-6" />
           </button>
-          <span className="text-white/60 text-xs uppercase tracking-widest">Scan Tag</span>
+          <span className="text-white/60 text-xs uppercase tracking-widest">
+            {isBarcode ? "Scan Barcode" : "Scan Tag / Garment"}
+          </span>
           <div className="w-6" />
         </div>
         <video ref={videoRef} className="flex-1 object-cover" playsInline autoPlay muted />
         <canvas ref={canvasRef} className="hidden" />
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-64 h-40 md:w-80 md:h-52 border-2 border-white/30 relative">
+          <div className={`border-2 border-white/30 relative ${isBarcode ? "w-72 h-28 md:w-96 md:h-36" : "w-64 h-40 md:w-80 md:h-52"}`}>
             <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-white" />
             <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-white" />
             <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-white" />
             <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-white" />
+            {isBarcode && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-[90%] h-[1px] bg-red-500/60 animate-pulse" />
+              </div>
+            )}
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-4 pb-[max(2rem,calc(env(safe-area-inset-bottom)+1rem))]">
-          <p className="text-white/50 text-[11px] tracking-wide">Align the tag within the frame</p>
-          <button onClick={capturePhoto} className="w-[68px] h-[68px] rounded-full border-[3px] border-white/80 flex items-center justify-center active:scale-95 transition-transform" data-testid="button-capture">
-            <div className="w-[56px] h-[56px] rounded-full bg-white" />
-          </button>
+          <p className="text-white/50 text-[11px] tracking-wide">
+            {isBarcode ? "Point at the barcode — it will scan automatically" : "Point at the clothing tag or garment"}
+          </p>
+          {!isBarcode && (
+            <button onClick={capturePhoto} className="w-[68px] h-[68px] rounded-full border-[3px] border-white/80 flex items-center justify-center active:scale-95 transition-transform" data-testid="button-capture">
+              <div className="w-[56px] h-[56px] rounded-full bg-white" />
+            </button>
+          )}
+          {isBarcode && (
+            <button onClick={capturePhoto}
+              className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white text-[10px] uppercase tracking-[0.15em] active:scale-95 transition-transform"
+              data-testid="button-capture-barcode-manual"
+            >
+              Take photo instead
+            </button>
+          )}
         </div>
       </div>
     );
@@ -374,36 +585,102 @@ export default function ScannerClient() {
         <>
           <div className="pt-8 md:pt-14 pb-6 md:pb-8">
             <h1 className="text-2xl md:text-[40px] font-serif leading-tight mb-2" data-testid="text-scanner-title">Shopping Intelligence</h1>
-            <p className="text-[12px] md:text-sm text-muted-foreground">Paste any product link or photograph a clothing tag — we'll analyze the composition and show you natural-fiber alternatives.</p>
+            <p className="text-[12px] md:text-sm text-muted-foreground leading-relaxed">
+              Scan a barcode, photograph a tag or garment, or paste a product link — we'll analyze the fiber composition and find natural-fiber alternatives.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
-            <button onClick={() => requireEmail(startCamera)} className="col-span-1 group flex flex-col items-center gap-2 p-5 md:p-7 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]" data-testid="button-camera-scan">
-              <Camera className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Scan Tag</span>
-            </button>
+          <div className="flex border-b border-neutral-200 mb-5">
+            {([
+              { key: "photo" as const, icon: ImageIcon, label: "Photo" },
+              { key: "barcode" as const, icon: ScanBarcode, label: "Barcode" },
+              { key: "url" as const, icon: Globe, label: "URL" },
+            ]).map(tab => (
+              <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.12em] font-medium border-b-2 transition-colors ${
+                  activeTab === tab.key ? "border-[#111] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+                data-testid={`tab-${tab.key}`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-            <button onClick={() => requireEmail(() => fileInputRef.current?.click())} className="col-span-1 group flex flex-col items-center gap-2 p-5 md:p-7 bg-white border border-neutral-200 hover:border-neutral-400 transition-all active:scale-[0.98]" data-testid="button-upload-photo">
-              <Upload className="w-5 h-5 md:w-6 md:h-6 text-neutral-600" />
-              <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Upload</span>
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} data-testid="input-file-upload" />
-
-            <div className="col-span-2 md:col-span-1 bg-white border border-neutral-200 p-4 md:p-5 flex flex-col">
-              <div className="flex gap-2">
-                <input
-                  type="url" value={url} onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Paste product URL..."
-                  className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
-                  onKeyDown={(e) => e.key === "Enter" && requireEmail(scanUrl)}
-                  data-testid="input-product-url"
-                />
-                <button onClick={() => requireEmail(scanUrl)} disabled={!url.trim()} className="px-4 py-2.5 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em] font-medium disabled:opacity-30 hover:bg-neutral-800 transition-colors flex-shrink-0" data-testid="button-scan-url">
-                  Scan
+          {activeTab === "photo" && (
+            <div className="space-y-3 mb-6">
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => requireEmail(() => startCamera(false))}
+                  className="group flex flex-col items-center gap-3 p-6 md:p-8 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]"
+                  data-testid="button-camera-scan"
+                >
+                  <Camera className="w-6 h-6" />
+                  <div className="text-center">
+                    <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em] block">Open Camera</span>
+                    <span className="text-[9px] text-white/40 mt-1 block">Tag or garment</span>
+                  </div>
+                </button>
+                <button onClick={() => requireEmail(() => fileInputRef.current?.click())}
+                  className="group flex flex-col items-center gap-3 p-6 md:p-8 bg-white border border-neutral-200 hover:border-neutral-400 transition-all active:scale-[0.98]"
+                  data-testid="button-upload-photo"
+                >
+                  <Upload className="w-6 h-6 text-neutral-600" />
+                  <div className="text-center">
+                    <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em] block">Upload Photo</span>
+                    <span className="text-[9px] text-muted-foreground/50 mt-1 block">From gallery</span>
+                  </div>
                 </button>
               </div>
+              <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileUpload} data-testid="input-file-upload" />
+              <p className="text-[11px] text-muted-foreground/50 text-center">
+                Works with composition labels, price tags, or photos of the garment itself
+              </p>
             </div>
-          </div>
+          )}
+
+          {activeTab === "barcode" && (
+            <div className="space-y-3 mb-6">
+              <button onClick={() => requireEmail(() => startCamera(true))}
+                className="w-full group flex flex-col items-center gap-3 p-8 md:p-10 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]"
+                data-testid="button-barcode-scan"
+              >
+                <ScanBarcode className="w-8 h-8" />
+                <div className="text-center">
+                  <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em] block">Scan Barcode</span>
+                  <span className="text-[9px] text-white/40 mt-1 block">Auto-detects EAN, UPC, QR codes</span>
+                </div>
+              </button>
+              <p className="text-[11px] text-muted-foreground/50 text-center">
+                Point your camera at the barcode on the price tag. If barcode data is limited, we'll ask you to confirm the item details.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "url" && (
+            <div className="space-y-3 mb-6">
+              <div className="bg-white border border-neutral-200 p-4 md:p-5">
+                <div className="flex gap-2">
+                  <input
+                    type="url" value={url} onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Paste product URL..."
+                    className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
+                    onKeyDown={(e) => e.key === "Enter" && requireEmail(scanUrl)}
+                    data-testid="input-product-url"
+                  />
+                  <button onClick={() => requireEmail(scanUrl)} disabled={!url.trim()}
+                    className="px-4 py-2.5 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em] font-medium disabled:opacity-30 hover:bg-neutral-800 transition-colors flex-shrink-0"
+                    data-testid="button-scan-url"
+                  >
+                    Scan
+                  </button>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground/50 text-center">
+                Works with most fashion retailer websites — Zara, Mango, Net-a-Porter, SSENSE, and more
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm mb-6" data-testid="text-scan-error">{error}</div>
@@ -427,7 +704,7 @@ export default function ScannerClient() {
           </div>
           <div className="text-center">
             <p className="text-sm font-medium mb-1">Analyzing product</p>
-            <p className="text-[11px] text-muted-foreground">Scraping composition, identifying fibers & finding alternatives</p>
+            <p className="text-[11px] text-muted-foreground">Extracting composition, classifying fibers & finding alternatives</p>
           </div>
         </div>
       )}
@@ -436,6 +713,7 @@ export default function ScannerClient() {
         const pct = result.naturalPercent;
         const isGreat = pct >= 70;
         const hasImage = !!result.imageUrl;
+        const hasQualityScore = typeof result.qualityScore === "number" && result.qualityScore > 0;
 
         return (
           <div className="pt-6 md:pt-10 pb-8">
@@ -478,12 +756,35 @@ export default function ScannerClient() {
                       {result.tagInfo.garmentType && (
                         <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 uppercase tracking-[0.08em]">{result.tagInfo.garmentType}</span>
                       )}
+                      {result.tagInfo.color && (
+                        <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 capitalize">{result.tagInfo.color}</span>
+                      )}
+                      {result.tagInfo.confidence && (
+                        <span className={`text-[8px] px-1.5 py-0.5 uppercase tracking-[0.1em] font-medium ${
+                          result.tagInfo.confidence === "high" || result.tagInfo.confidence === "confirmed" ? "bg-emerald-50 text-emerald-700" :
+                          result.tagInfo.confidence === "medium" ? "bg-amber-50 text-amber-700" :
+                          "bg-neutral-100 text-muted-foreground"
+                        }`} data-testid="text-confidence">
+                          {result.tagInfo.confidence === "brand-average" ? "estimated" : result.tagInfo.confidence}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {!hasImage && <NaturalScoreRing percent={pct} />}
                 </div>
               </div>
             </div>
+
+            {showConfirmation && result.confirmationPrompt && (
+              <ConfirmationOverlay
+                prompt={result.confirmationPrompt}
+                category={result.category}
+                color={result.tagInfo.color || ""}
+                garmentType={result.tagInfo.garmentType || ""}
+                onConfirm={handleConfirm}
+                onCorrect={handleCorrections}
+              />
+            )}
 
             <div className={`p-4 md:p-5 mb-6 ${isGreat ? "bg-emerald-50 border border-emerald-200" : pct > 0 ? "bg-red-50 border border-red-200" : "bg-neutral-50 border border-neutral-200"}`}>
               <div className="flex items-start gap-3">
@@ -494,7 +795,7 @@ export default function ScannerClient() {
                 ) : (
                   <Sparkles className="w-5 h-5 text-neutral-500 flex-shrink-0 mt-0.5" />
                 )}
-                <div>
+                <div className="flex-1">
                   <p className={`text-sm font-medium mb-1 ${isGreat ? "text-emerald-900" : pct > 0 ? "text-red-900" : "text-neutral-800"}`}>
                     {isGreat
                       ? (result.tagInfo.confidence === "brand-average" ? "Brand Catalog Estimate"
@@ -506,25 +807,38 @@ export default function ScannerClient() {
                     {result.verdict}
                   </p>
                 </div>
+                {hasImage && <NaturalScoreRing percent={pct} size={64} />}
               </div>
             </div>
 
             {result.tagInfo.composition && (
               <div className="mb-6">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">Composition</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">Fiber Analysis</p>
                 <p className="text-[13px] mb-4 font-medium" data-testid="text-result-composition">{result.tagInfo.composition}</p>
                 {result.fiberBreakdown.length > 0 && (
                   <FiberBreakdownBar fibers={result.fiberBreakdown} />
                 )}
+                {hasQualityScore && (
+                  <div className="mt-4">
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5">Quality Score</p>
+                    <QualityScoreBar score={result.qualityScore!} />
+                  </div>
+                )}
               </div>
             )}
 
-            {(result.tagInfo.madeIn || result.tagInfo.careInstructions) && (
-              <div className="grid grid-cols-2 gap-3 mb-6">
+            {(result.tagInfo.madeIn || result.tagInfo.careInstructions || result.tagInfo.silhouette) && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                 {result.tagInfo.madeIn && (
                   <div className="p-3 bg-neutral-50 border border-neutral-200">
                     <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Made In</p>
                     <p className="text-[13px]">{result.tagInfo.madeIn}</p>
+                  </div>
+                )}
+                {result.tagInfo.silhouette && (
+                  <div className="p-3 bg-neutral-50 border border-neutral-200">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Silhouette</p>
+                    <p className="text-[13px] capitalize">{result.tagInfo.silhouette}</p>
                   </div>
                 )}
                 {result.tagInfo.careInstructions && (
@@ -580,7 +894,7 @@ export default function ScannerClient() {
                   </p>
                   <p className="text-[11px] text-muted-foreground">
                     {isGreat
-                      ? "Similar pieces from verified brands — all 95%+ natural fiber"
+                      ? "Similar pieces from verified brands — all 80%+ natural fiber"
                       : `${result.betterAlternatives.length} alternatives from ${new Set(result.betterAlternatives.map((p: any) => p.brand_name || p.brandName)).size} different brands — all verified natural fiber`}
                   </p>
                 </div>

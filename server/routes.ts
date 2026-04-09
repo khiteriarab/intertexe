@@ -838,6 +838,26 @@ ${allPages.map(p => `  <url>
       if (!url) return res.status(400).json({ error: "Product URL required" });
       try { new URL(url); } catch { return res.status(400).json({ error: "Invalid URL" }); }
 
+      const naturalFiberNames: Record<string, string> = {
+        cotton: "Cotton", silk: "Silk", wool: "Wool", linen: "Linen", cashmere: "Cashmere",
+        hemp: "Hemp", flax: "Linen", merino: "Merino Wool", alpaca: "Alpaca", mohair: "Mohair",
+        ramie: "Ramie", ramio: "Ramie", jute: "Jute", angora: "Angora",
+        algodon: "Cotton", seda: "Silk", lana: "Wool", lino: "Linen", cachemir: "Cashmere",
+        cachemire: "Cashmere", coton: "Cotton", soie: "Silk", laine: "Wool", lin: "Linen",
+        baumwolle: "Cotton", seide: "Silk", wolle: "Wool", leinen: "Linen", kaschmir: "Cashmere",
+        cotone: "Cotton", seta: "Silk", canapa: "Hemp",
+      };
+
+      const categoryTerms: Record<string, string[]> = {
+        tops: ["top", "blouse", "shirt", "tee", "camisole", "tank", "camiseta", "camisa", "blusa", "polo", "henley", "bodysuit"],
+        dresses: ["dress", "gown", "vestido", "robe", "kleid", "abito", "jumpsuit", "romper", "mono"],
+        bottoms: ["pant", "trouser", "jean", "chino", "short", "skirt", "pantalon", "falda", "gonna", "hose", "jupe", "bermuda", "legging"],
+        outerwear: ["jacket", "coat", "blazer", "parka", "chaqueta", "abrigo", "manteau", "veste", "cappotto", "giacca", "hoodie", "cardigan", "poncho", "cape"],
+        knitwear: ["sweater", "knit", "pullover", "jersey", "punto", "maglia", "tricot", "pull", "strick", "sueter"],
+        swimwear: ["swim", "bikini", "bañador", "maillot"],
+        loungewear: ["pajama", "robe", "lounge", "pijama"],
+      };
+
       const extractUrlInfo = (rawUrl: string) => {
         try {
           const parsed = new URL(rawUrl);
@@ -860,14 +880,30 @@ ${allPages.map(p => `  <url>
             "loewe.com": "Loewe", "chloe.com": "Chloé", "maxmara.com": "Max Mara",
             "bergdorfgoodman.com": "Bergdorf Goodman", "stories.com": "& Other Stories", "hm.com": "H&M",
             "frame-store.com": "Frame", "clubmonaco.com": "Club Monaco",
+            "adolfodominguez.com": "Adolfo Dominguez", "mangooutlet.com": "Mango", "mango.com": "Mango",
+            "massimogentile.com": "Massimo Gentile", "brunellocucinelli.com": "Brunello Cucinelli",
+            "loropiana.com": "Loro Piana", "hermes.com": "Hermès", "bottegaveneta.com": "Bottega Veneta",
           };
-          const retailer = brandMap[hostname] || hostname.split(".")[0].charAt(0).toUpperCase() + hostname.split(".")[0].slice(1);
+          const rawBrand = hostname.split(".")[0];
+          const retailer = brandMap[hostname] || rawBrand.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
           const pathParts = parsed.pathname.split("/").filter(Boolean);
-          const productSlug = pathParts.filter(p => !["products", "s", "p", "shop", "collections", "en", "us", "en-us", "womens", "women", "clothing"].includes(p.toLowerCase())).pop() || "";
-          const product = productSlug.replace(/[-_]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()).trim();
+          const skipSlugs = ["products", "s", "p", "shop", "collections", "en", "us", "en-us", "es-es", "fr-fr", "de-de", "it-it", "womens", "women", "clothing", "mujer", "femme", "donna", "damen"];
+          const productSlug = pathParts.filter(p => !skipSlugs.includes(p.toLowerCase())).pop() || "";
+          const productClean = productSlug.replace(/[-_]/g, " ").replace(/\.\w+$/, "").replace(/\d{10,}/, "").replace(/\b\w/g, (c: string) => c.toUpperCase()).trim();
           const isMultiBrand = ["nordstrom.com", "net-a-porter.com", "ssense.com", "farfetch.com", "mytheresa.com", "shopbop.com", "saksfifthavenue.com", "bergdorfgoodman.com", "revolve.com", "asos.com"].includes(hostname);
-          return { brand: isMultiBrand ? "" : retailer, product, retailer };
-        } catch { return { brand: "", product: "", retailer: "" }; }
+
+          const fullPath = (parsed.pathname + " " + productSlug).toLowerCase();
+          const detectedFibers: string[] = [];
+          for (const [key, name] of Object.entries(naturalFiberNames)) {
+            if (fullPath.includes(key)) detectedFibers.push(name);
+          }
+          let detectedCategory = "other";
+          for (const [cat, terms] of Object.entries(categoryTerms)) {
+            if (terms.some(t => fullPath.includes(t))) { detectedCategory = cat; break; }
+          }
+
+          return { brand: isMultiBrand ? "" : retailer, product: productClean, retailer, detectedFibers: [...new Set(detectedFibers)], detectedCategory };
+        } catch { return { brand: "", product: "", retailer: "", detectedFibers: [] as string[], detectedCategory: "other" }; }
       };
 
       const urlInfo = extractUrlInfo(url);
@@ -878,9 +914,9 @@ ${allPages.map(p => `  <url>
           headers: {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Language": "en-US,en;q=0.9,es;q=0.8,fr;q=0.7,it;q=0.6,de;q=0.5",
           },
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(12000),
           redirect: "follow",
         });
         if (pageRes.ok) {
@@ -895,7 +931,7 @@ ${allPages.map(p => `  <url>
           for (const m of metaMatches) ogTags.push(`og:${m[1]}=${m[2]}`);
           const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
           const titleText = titleMatch ? titleMatch[1].trim() : "";
-          const bodyText = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 4000);
+          const bodyText = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 5000);
           pageContent = [
             titleText ? `Title: ${titleText}` : "",
             ogTags.length ? `Meta: ${ogTags.join(", ")}` : "",
@@ -910,30 +946,72 @@ ${allPages.map(p => `  <url>
         baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
       });
 
-      const promptContent = pageContent
-        ? `URL: ${url}\n\n${pageContent}`
-        : `URL: ${url}\nRetailer: ${urlInfo.retailer}\nBrand (from URL): ${urlInfo.brand || "unknown — determine from URL structure"}\nProduct (from URL path): ${urlInfo.product || "unknown"}\n\nThe page could not be scraped. Use your knowledge of this brand/retailer and the URL structure to extract what you can.`;
+      const fiberHintFromUrl = urlInfo.detectedFibers.length ? `\nFibers detected in URL: ${urlInfo.detectedFibers.join(", ")}` : "";
+      const categoryHintFromUrl = urlInfo.detectedCategory !== "other" ? `\nCategory detected from URL: ${urlInfo.detectedCategory}` : "";
 
-      const extractRes = await scanOpenai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: 'Extract product info from the URL and any available page content. Return JSON: {"brandName":"","productName":"","price":"","composition":"","category":"tops/bottoms/dresses/outerwear/knitwear/other","retailer":""}. Use null for genuinely unknown fields. For multi-brand retailers, identify the specific brand from the URL/content. ONLY valid JSON.' },
-          { role: "user", content: promptContent }
-        ],
-        max_tokens: 400,
-      });
-      let pageInfo;
+      const promptContent = pageContent
+        ? `URL: ${url}${fiberHintFromUrl}${categoryHintFromUrl}\n\n${pageContent}`
+        : `URL: ${url}\nRetailer: ${urlInfo.retailer}\nBrand (from URL): ${urlInfo.brand || "unknown — determine from URL structure"}\nProduct (from URL path): ${urlInfo.product || "unknown"}${fiberHintFromUrl}${categoryHintFromUrl}\n\nThe page could not be scraped. Use your knowledge of this brand/retailer and the URL structure to extract what you can.`;
+
+      let pageInfo: any = {};
       try {
-        pageInfo = JSON.parse(extractRes.choices[0]?.message?.content?.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim() || "{}");
-      } catch { return res.status(500).json({ error: "Could not parse product details." }); }
+        const extractRes = await scanOpenai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: 'Extract product info from the URL and any available page content. The page may be in any language (Spanish, French, Italian, etc.) — translate product names to English. Return JSON: {"brandName":"","productName":"","price":"","composition":"e.g. 100% Ramie or 70% Cotton, 30% Linen","category":"tops/bottoms/dresses/outerwear/knitwear/swimwear/loungewear/other","garmentType":"e.g. wrap top, midi dress","madeIn":"","retailer":""}. For composition, look for fabric/material info in ANY language: ramio=ramie, algodon=cotton, seda=silk, lana=wool, lino=linen, cachemir=cashmere, soie=silk, coton=cotton, baumwolle=cotton, seide=silk. Use null for genuinely unknown fields. For multi-brand retailers, identify the specific brand from the URL/content. ONLY valid JSON.' },
+            { role: "user", content: promptContent }
+          ],
+          max_tokens: 500,
+        });
+        try {
+          pageInfo = JSON.parse(extractRes.choices[0]?.message?.content?.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim() || "{}");
+        } catch { pageInfo = {}; }
+      } catch (aiErr: any) {
+        console.error("AI extraction failed:", aiErr.message);
+      }
 
       const brandName = pageInfo.brandName || urlInfo.brand || "Unknown";
       const brandSlug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
+      const compositionStr = pageInfo.composition || "";
+      const naturalFiberList = ["cotton","silk","wool","linen","cashmere","hemp","flax","merino","alpaca","mohair","ramie","angora","jute"];
+      const syntheticFiberList = ["polyester","nylon","acrylic","spandex","elastane","lycra","viscose","rayon","modal","lyocell","tencel","acetate","polyamide","cupro"];
+      let naturalPercent = 0;
+      const fiberBreakdown: { fiber: string; percent: number; isNatural: boolean }[] = [];
+
+      if (compositionStr) {
+        const compMatches = [...compositionStr.matchAll(/(\d+)%\s*([A-Za-zÀ-ÿ\s]+?)(?=,|\.|;|\d+%|$)/g)];
+        let total = 0;
+        for (const m of compMatches) {
+          if (total >= 100) break;
+          const pct = parseInt(m[1]);
+          let name = m[2].trim();
+          const lower = name.toLowerCase();
+          const isNat = naturalFiberList.some(f => lower.includes(f)) || Object.keys(naturalFiberNames).some(k => lower.includes(k));
+          const isSyn = syntheticFiberList.some(f => lower.includes(f));
+          if (!isNat && !isSyn) continue;
+          const mapped = Object.entries(naturalFiberNames).find(([k]) => lower.includes(k));
+          if (mapped) name = mapped[1];
+          else name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+          fiberBreakdown.push({ fiber: name, percent: pct, isNatural: isNat });
+          if (isNat) naturalPercent += pct;
+          total += pct;
+        }
+        naturalPercent = Math.min(naturalPercent, 100);
+      }
+
+      if (naturalPercent === 0 && urlInfo.detectedFibers.length > 0) {
+        for (const fiber of urlInfo.detectedFibers) {
+          fiberBreakdown.push({ fiber, percent: 100, isNatural: true });
+        }
+        naturalPercent = 100;
+        if (!pageInfo.composition) pageInfo.composition = urlInfo.detectedFibers.map(f => `100% ${f}`).join(", ") + " (from URL)";
+      }
+
       if (!supabaseAdmin) return res.status(500).json({ error: "Database not configured" });
 
       const [productResult, designerResult, fuzzyDesignerResult] = await Promise.all([
-        supabaseAdmin.from("products").select("*").eq("approved", "yes").eq("brand_slug", brandSlug).limit(12),
+        supabaseAdmin.from("products").select("*").eq("brand_slug", brandSlug).gte("natural_fiber_percent", 80).not("image_url", "is", null).limit(12),
         supabaseAdmin.from("designers").select("*").eq("slug", brandSlug).limit(1),
         supabaseAdmin.from("designers").select("*").ilike("name", `%${brandName}%`).limit(1),
       ]);
@@ -943,59 +1021,119 @@ ${allPages.map(p => `  <url>
       let matched = !!(designerInfo || products.length);
 
       if (!products.length) {
-        const { data } = await supabaseAdmin.from("products").select("*").eq("approved", "yes")
-          .or(`brand_name.ilike.%${brandName}%,brand_slug.ilike.%${brandSlug}%`).limit(12);
+        const { data } = await supabaseAdmin.from("products").select("*")
+          .or(`brand_name.ilike.%${brandName}%,brand_slug.ilike.%${brandSlug}%`)
+          .gte("natural_fiber_percent", 80).not("image_url", "is", null).limit(12);
         if (data?.length) { products = data; matched = true; }
       }
 
       const totalFiber = products.reduce((s: number, p: any) => s + (p.natural_fiber_percent || 0), 0);
-      const avgFiber = products.length ? Math.round(totalFiber / products.length) : null;
+      const avgFiber = products.length ? Math.min(Math.round(totalFiber / products.length), 99) : null;
       const brandRating = avgFiber === null ? null : avgFiber >= 95 ? "Exceptional" : avgFiber >= 85 ? "Excellent" : avgFiber >= 70 ? "Good" : "Caution";
 
-      const productNameLower2 = (pageInfo.productName || "").toLowerCase();
-      const resolvedCategory2 = resolveCategory(pageInfo.category || "", productNameLower2);
-      const categoryKeywords: Record<string, string[]> = {
-        dresses: ["dress", "gown", "midi dress", "maxi dress", "mini dress"],
+      const productNameLower2 = (pageInfo.productName || urlInfo.product || "").toLowerCase();
+      const fullTextForCategory = productNameLower2 + " " + (pageInfo.garmentType || "").toLowerCase() + " " + (pageInfo.category || "").toLowerCase();
+      let resolvedCategory2 = resolveCategory(pageInfo.category || "", productNameLower2);
+      if (resolvedCategory2 === "other" && urlInfo.detectedCategory !== "other") {
+        resolvedCategory2 = urlInfo.detectedCategory;
+      }
+      if (resolvedCategory2 === "other") {
+        for (const [cat, terms] of Object.entries(categoryTerms)) {
+          if (terms.some(t => fullTextForCategory.includes(t))) { resolvedCategory2 = cat; break; }
+        }
+      }
+
+      const searchKeywords: Record<string, string[]> = {
+        dresses: ["dress", "gown"],
         tops: ["top", "blouse", "shirt", "tee", "camisole", "tank"],
-        bottoms: ["pant", "trouser", "jean", "chino", "wide leg", "straight leg", "slim fit", "flare"],
-        skirts: ["skirt"],
-        shorts: ["short"],
+        bottoms: ["pant", "trouser", "jean", "skirt", "short"],
         outerwear: ["jacket", "coat", "blazer"],
         knitwear: ["sweater", "knit", "cardigan", "pullover"],
+        swimwear: ["swim", "bikini"],
+        loungewear: ["pajama", "robe", "lounge"],
       };
-      const searchTerms = categoryKeywords[resolvedCategory2] || [];
-      let altQuery = supabaseAdmin.from("products").select("*").eq("approved", "yes")
-        .gte("natural_fiber_percent", 80).neq("brand_slug", brandSlug)
-        .order("natural_fiber_percent", { ascending: false });
-      if (searchTerms.length > 0) {
-        altQuery = altQuery.or(searchTerms.map(t => `name.ilike.%${t}%`).join(","));
-      }
-      const { data: altData } = await altQuery.limit(6);
+      const searchTerms = searchKeywords[resolvedCategory2] || [];
 
-      const webIntel = await webResearch(brandName, pageInfo.productName || "", pageInfo.price || "", designerInfo?.website);
-      if (webIntel && pageInfo.composition) {
-        webIntel.composition = pageInfo.composition;
-        const naturalFibers = ["cotton","silk","wool","linen","cashmere","hemp","flax","merino","alpaca","mohair"];
-        let totalNatural = 0;
-        for (const f of naturalFibers) { const m = pageInfo.composition.toLowerCase().match(new RegExp(`(\\d+)%\\s*${f}`)); if (m) totalNatural += parseInt(m[1]); }
-        if (totalNatural > 0) webIntel.naturalFiberPercent = Math.min(totalNatural, 100);
+      let fiberFilter = "";
+      const detectedFiberForSearch = urlInfo.detectedFibers[0] || (fiberBreakdown.find(f => f.isNatural)?.fiber) || "";
+      if (detectedFiberForSearch) {
+        fiberFilter = detectedFiberForSearch.toLowerCase().split(" ")[0];
       }
+
+      let altQuery = supabaseAdmin.from("products").select("*")
+        .gte("natural_fiber_percent", 80).not("image_url", "is", null).neq("image_url", "")
+        .neq("brand_slug", brandSlug)
+        .order("natural_fiber_percent", { ascending: false });
+
+      const orConditions: string[] = [];
+      if (searchTerms.length > 0) {
+        orConditions.push(...searchTerms.map(t => `name.ilike.%${t}%`));
+      }
+      if (fiberFilter) {
+        orConditions.push(`composition.ilike.%${fiberFilter}%`);
+      }
+      if (orConditions.length > 0) {
+        altQuery = altQuery.or(orConditions.join(","));
+      }
+      const { data: altData } = await altQuery.limit(12);
+
+      let alternatives = altData || [];
+      if (alternatives.length < 6) {
+        const existingIds = alternatives.map(p => p.id);
+        const { data: fallbackAlts } = await supabaseAdmin.from("products").select("*")
+          .gte("natural_fiber_percent", 90).not("image_url", "is", null).neq("image_url", "")
+          .neq("brand_slug", brandSlug)
+          .order("natural_fiber_percent", { ascending: false }).limit(12);
+        if (fallbackAlts) {
+          for (const p of fallbackAlts) {
+            if (!existingIds.includes(p.id) && alternatives.length < 12) alternatives.push(p);
+          }
+        }
+      }
+
+      const isNatural = naturalPercent >= 80;
+      const verdict = naturalPercent >= 95
+        ? `This ${pageInfo.garmentType || "item"} from ${brandName} is made with ${compositionStr || "high natural fiber content"}. Excellent choice for natural materials.`
+        : naturalPercent >= 80
+        ? `This ${pageInfo.garmentType || "item"} contains ${naturalPercent}% natural fiber. A good choice, though blended with some synthetics.`
+        : naturalPercent > 0
+        ? `This ${pageInfo.garmentType || "item"} contains only ${naturalPercent}% natural fiber. Consider the natural-fiber alternatives below.`
+        : urlInfo.detectedFibers.length > 0
+        ? `This ${pageInfo.garmentType || "item"} from ${brandName} appears to contain ${urlInfo.detectedFibers.join(", ")}. Browse similar natural-fiber options below.`
+        : `We couldn't verify the exact fiber content. Browse natural-fiber ${resolvedCategory2 !== "other" ? resolvedCategory2 : "options"} below.`;
+
+      let webIntel = null;
+      try {
+        webIntel = await webResearch(brandName, pageInfo.productName || "", pageInfo.price || "", designerInfo?.website);
+        if (webIntel && compositionStr) {
+          webIntel.composition = compositionStr;
+          if (naturalPercent > 0) webIntel.naturalFiberPercent = naturalPercent;
+        }
+      } catch {}
 
       res.json({
         tagInfo: {
           brandName,
           productName: pageInfo.productName || urlInfo.product || "",
           price: pageInfo.price || "",
-          composition: pageInfo.composition || "",
-          confidence: pageContent ? "high" : "medium",
+          composition: compositionStr || "",
+          garmentType: pageInfo.garmentType || "",
+          madeIn: pageInfo.madeIn || "",
+          careInstructions: "",
+          confidence: pageContent ? "high" : compositionStr ? "medium" : urlInfo.detectedFibers.length ? "inferred" : "low",
           rawText: `From ${pageInfo.retailer || urlInfo.retailer || new URL(url).hostname}`,
         },
+        fiberBreakdown,
+        naturalPercent,
+        isNatural,
+        verdict,
+        category: resolvedCategory2,
         products: products.slice(0, 12),
         matched,
         brandStats: matched && avgFiber !== null ? { avgFiber, rating: brandRating, productCount: products.length } : null,
         designerInfo: designerInfo ? { name: designerInfo.name, slug: designerInfo.slug, logo_url: designerInfo.logo_url, website: designerInfo.website, description: designerInfo.description, rating: designerInfo.rating, hasProducts: products.length > 0 } : null,
         webIntel,
-        betterAlternatives: (altData || []).slice(0, 6),
+        betterAlternatives: alternatives.slice(0, 12),
       });
     } catch (err) {
       console.error("Scan URL error:", err);
