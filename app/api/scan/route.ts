@@ -493,7 +493,11 @@ export async function POST(request: NextRequest) {
     } else if (url) {
       let parsedUrl: URL;
       try { parsedUrl = new URL(url); } catch { return NextResponse.json({ error: "Invalid URL" }, { status: 400 }); }
-      extracted = await extractFromUrl(openai, url);
+      for (const p of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gad_source", "gad_campaignid", "gbraid", "gclid", "fbclid", "mc_cid", "mc_eid"]) {
+        parsedUrl.searchParams.delete(p);
+      }
+      const cleanUrl = parsedUrl.toString();
+      extracted = await extractFromUrl(openai, cleanUrl);
     } else if (barcode) {
       extracted = {
         barcode,

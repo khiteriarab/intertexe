@@ -662,7 +662,7 @@ export default function ScannerClient() {
               <div className="bg-white border border-neutral-200 p-4 md:p-5">
                 <div className="flex gap-2">
                   <input
-                    type="url" value={url} onChange={(e) => setUrl(e.target.value)}
+                    type="text" value={url} onChange={(e) => setUrl(e.target.value)}
                     placeholder="Paste product URL..."
                     className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
                     onKeyDown={(e) => e.key === "Enter" && requireEmail(scanUrl)}
