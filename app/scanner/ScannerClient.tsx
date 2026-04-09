@@ -460,16 +460,25 @@ export default function ScannerClient() {
     }
   };
 
+  const normalizeUrl = (raw: string): string => {
+    let u = raw.trim();
+    if (u && !u.match(/^https?:\/\//i)) {
+      u = "https://" + u;
+    }
+    return u;
+  };
+
   const scanUrl = async () => {
     if (!url.trim()) return;
+    const cleanUrl = normalizeUrl(url);
     setLoading(true);
     setError("");
     setResult(null);
-    setScannedUrl(url.trim());
+    setScannedUrl(cleanUrl);
     setShowConfirmation(false);
     trackScanStart("url");
     try {
-      const data = await callScanApi({ url: url.trim() });
+      const data = await callScanApi({ url: cleanUrl });
       setResult(data);
       if (data.confirmationPrompt && data.tagInfo?.confidence !== "high") {
         setShowConfirmation(true);

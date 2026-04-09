@@ -491,8 +491,10 @@ export async function POST(request: NextRequest) {
       if (!openai) return NextResponse.json({ error: "AI service not available" }, { status: 500 });
       extracted = await extractFromImage(openai, image);
     } else if (url) {
+      let cleanedUrl = url.trim();
+      if (cleanedUrl && !/^https?:\/\//i.test(cleanedUrl)) cleanedUrl = "https://" + cleanedUrl;
       let parsedUrl: URL;
-      try { parsedUrl = new URL(url); } catch { return NextResponse.json({ error: "Invalid URL" }, { status: 400 }); }
+      try { parsedUrl = new URL(cleanedUrl); } catch { return NextResponse.json({ error: "Invalid URL" }, { status: 400 }); }
       for (const p of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gad_source", "gad_campaignid", "gbraid", "gclid", "fbclid", "mc_cid", "mc_eid"]) {
         parsedUrl.searchParams.delete(p);
       }
