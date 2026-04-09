@@ -200,12 +200,13 @@ function EmailGate({ onUnlock, onClose }: { onUnlock: () => void; onClose: () =>
         <p className="text-[13px] text-muted-foreground mb-6 leading-relaxed max-w-xs">
           Enter your email to scan products, check compositions, and get AI-powered material advice — free.
         </p>
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3" noValidate>
           <input
-            type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="Your email address"
             className="w-full px-4 py-3 text-[14px] border border-neutral-200 bg-white focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
             autoFocus data-testid="input-gate-email"
+            autoComplete="email"
           />
           {err && <p className="text-[12px] text-red-500">{err}</p>}
           <button type="submit" disabled={submitting}
@@ -329,7 +330,9 @@ export default function ScannerClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const barcodeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const hasAccess = () => !!localStorage.getItem("intertexe_scanner_email");
+  const hasAccess = () => {
+    try { return !!localStorage.getItem("intertexe_scanner_email"); } catch { return false; }
+  };
 
   const requireEmail = (action: () => void) => {
     if (hasAccess()) { action(); return; }
@@ -662,13 +665,15 @@ export default function ScannerClient() {
               <div className="bg-white border border-neutral-200 p-4 md:p-5">
                 <div className="flex gap-2">
                   <input
-                    type="text" value={url} onChange={(e) => setUrl(e.target.value)}
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
                     placeholder="Paste product URL..."
                     className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
-                    onKeyDown={(e) => e.key === "Enter" && requireEmail(scanUrl)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); requireEmail(scanUrl); } }}
+                    autoComplete="off"
                     data-testid="input-product-url"
                   />
-                  <button onClick={() => requireEmail(scanUrl)} disabled={!url.trim()}
+                  <button type="button" onClick={() => requireEmail(scanUrl)} disabled={!url.trim()}
                     className="px-4 py-2.5 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em] font-medium disabled:opacity-30 hover:bg-neutral-800 transition-colors flex-shrink-0"
                     data-testid="button-scan-url"
                   >
