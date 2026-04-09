@@ -396,10 +396,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     requestUrl = body.url || "";
-    const url = requestUrl;
+    let url = requestUrl;
     if (!url) return NextResponse.json({ error: "Product URL required" }, { status: 400 });
+    url = url.trim();
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
     let parsedUrl: URL;
     try { parsedUrl = new URL(url); } catch { return NextResponse.json({ error: "Invalid URL" }, { status: 400 }); }
+    for (const p of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gad_source", "gad_campaignid", "gbraid", "gclid", "fbclid", "mc_cid", "mc_eid"]) {
+      parsedUrl.searchParams.delete(p);
+    }
+    url = parsedUrl.toString();
     if (!["http:", "https:"].includes(parsedUrl.protocol)) return NextResponse.json({ error: "Only HTTP/HTTPS URLs allowed" }, { status: 400 });
     const blockedHosts = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]", "169.254.169.254", "metadata.google.internal"];
     if (blockedHosts.some(h => parsedUrl.hostname === h) || parsedUrl.hostname.endsWith(".internal") || parsedUrl.hostname.startsWith("10.") || parsedUrl.hostname.startsWith("172.") || parsedUrl.hostname.startsWith("192.168.")) {
