@@ -86,12 +86,15 @@ function applyCatalogFilter(query: any, market?: string) {
   if (market === "us-ca") {
     return (query as any)
       .not("product_id", "ilike", `${MYTHERESA_PRODUCT_PREFIXES["eu-uk-me"]}%`)
-      .or(`brand_slug.in.(${brandSlugs}),product_id.ilike.${MYTHERESA_PRODUCT_PREFIXES["us-ca"]}%`);
+      .not("price", "ilike", "\u00A3%")
+      .not("price", "ilike", "\u20AC%");
   }
-  const prefix = MYTHERESA_PRODUCT_PREFIXES[market as MarketFilter];
-  return prefix
-    ? (query as any).ilike("product_id", `${prefix}%`)
-    : (query as any).or(`brand_slug.in.(${brandSlugs}),product_id.ilike.mytheresa-%`);
+  if (market === "eu-uk-me") {
+    return (query as any).or(
+      `product_id.ilike.${MYTHERESA_PRODUCT_PREFIXES["eu-uk-me"]}%,price.ilike.\u00A3%,price.ilike.\u20AC%`
+    );
+  }
+  return (query as any).or(`brand_slug.in.(${brandSlugs}),product_id.ilike.mytheresa-%`);
 }
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
