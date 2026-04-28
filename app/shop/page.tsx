@@ -12,9 +12,15 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com/shop" },
 };
 
-export default async function ShopPage() {
+export default async function ShopPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ market?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const market = params?.market;
   const [shopData, totalProductCount, fiberCounts] = await Promise.all([
-    fetchShopProducts({ sort: "recommended", limit: 40, offset: 0 }),
+    fetchShopProducts({ sort: "recommended", limit: 40, offset: 0, market }),
     fetchProductCount(),
     fetchFiberCounts(),
   ]);
@@ -28,6 +34,7 @@ export default async function ShopPage() {
         initialTotal={shopData.total || 0}
         totalProductCount={totalProductCount}
         fiberCounts={fiberCounts}
+        initialMarket={market}
       />
 
       <section className="max-w-6xl mx-auto px-4 py-12">

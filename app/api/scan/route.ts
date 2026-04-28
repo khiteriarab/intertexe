@@ -93,6 +93,10 @@ function computeFiberQualityScore(fibers: FiberEntry[], naturalPercent: number):
   return Math.max(0, Math.min(100, score));
 }
 
+function slugifyBrand(value: string): string {
+  return value.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 const CATEGORY_TERMS: Record<string, string[]> = {
   dresses: ["dress", "gown", "vestido", "robe", "kleid", "abito", "jumpsuit", "romper"],
   tops: ["top", "blouse", "shirt", "tee", "t-shirt", "camisole", "tank", "polo", "henley", "bodysuit", "camisa", "blusa", "camiseta"],
@@ -520,7 +524,7 @@ export async function POST(request: NextRequest) {
     }
 
     const brandName = extracted.brandName || "Unknown";
-    const brandSlug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const brandSlug = slugifyBrand(brandName);
     const productName = extracted.productName || "";
     const price = extracted.price || "";
     const imageUrl = extracted.imageUrl || "";
@@ -539,12 +543,31 @@ export async function POST(request: NextRequest) {
       ]);
       designerInfo = dr.data?.[0] || fdr.data?.[0] || null;
       if (brandSlug !== "unknown") {
+        const normalizedBrandName = brandName.replace(/'/g, "''");
         const { data } = await supabase.from("products").select("*")
-          .or(`brand_slug.eq.${brandSlug},brand_name.ilike.%${brandName}%`)
+          .or(`brand_slug.eq.${brandSlug},brand_name.ilike.%${normalizedBrandName}%`)
           .not("image_url", "is", null).neq("image_url", "")
           .gte("natural_fiber_percent", 80)
           .order("natural_fiber_percent", { ascending: false }).limit(12);
         brandProducts = data || [];
+
+        if (brandProducts.length === 0 && productName) {
+          const terms = [productName, extracted.garmentType, category]
+            .filter(Boolean)
+            .join(" ")
+            .split(/\s+/)
+            .map((term: string) => term.toLowerCase().replace(/[^a-z0-9]/g, ""))
+            .filter((term: string) => term.length >= 4)
+            .slice(0, 4);
+          if (terms.length > 0) {
+            const { data: productMatches } = await supabase.from("products").select("*")
+              .or(terms.map((term: string) => `name.ilike.%${term}%`).join(","))
+              .not("image_url", "is", null).neq("image_url", "")
+              .gte("natural_fiber_percent", 80)
+              .order("natural_fiber_percent", { ascending: false }).limit(12);
+            brandProducts = productMatches || [];
+          }
+        }
       }
     } catch (e: any) {
       console.error("Brand lookup failed:", e.message);
@@ -620,7 +643,7 @@ export async function POST(request: NextRequest) {
       verdict,
       category,
       products: brandProducts.slice(0, 12),
-      matched: !!(designerInfo || brandProducts.length),
+      matched: !!(designerInfo || brandProducts.length || alternatives.length),
       brandStats: brandProducts.length && avgFiber !== null ? { avgFiber, rating: brandRating, productCount: brandProducts.length } : null,
       designerInfo: designerInfo ? {
         name: designerInfo.name, slug: designerInfo.slug,

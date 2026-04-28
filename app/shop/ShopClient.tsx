@@ -10,6 +10,7 @@ import { getShopProducts, getShopMeta } from "./actions";
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
 type SortOption = "recommended" | "new" | "price-high" | "price-low";
+type MarketFilter = "all" | "us-ca" | "eu-uk-me";
 
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "all", label: "All" },
@@ -37,6 +38,12 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "new", label: "New In" },
   { key: "price-high", label: "Price: High to Low" },
   { key: "price-low", label: "Price: Low to High" },
+];
+
+const MARKET_FILTERS: { key: MarketFilter; label: string }[] = [
+  { key: "all", label: "All Markets" },
+  { key: "us-ca", label: "US / Canada" },
+  { key: "eu-uk-me", label: "EU / UK / ME" },
 ];
 
 function optimizeImageUrl(url: string, width: number): string {
@@ -119,11 +126,13 @@ export default function ShopClient({
   initialTotal,
   totalProductCount,
   fiberCounts = {},
+  initialMarket,
 }: {
   initialProducts: any[];
   initialTotal: number;
   totalProductCount: number;
   fiberCounts?: Record<string, number>;
+  initialMarket?: string;
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -131,22 +140,25 @@ export default function ShopClient({
   const initialFiber = (searchParams.get("fiber") as FiberTab) || "all";
   const initialCategory = (searchParams.get("category") as CategoryFilter) || "all";
   const initialSort = (searchParams.get("sort") as SortOption) || "recommended";
+  const initialMarketFilter = ((initialMarket || searchParams.get("market") || "all") as MarketFilter);
   const initialSearch = searchParams.get("q") || "";
 
   const [fiberTab, setFiberTab] = useState<FiberTab>(initialFiber);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(initialCategory);
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
+  const [marketFilter, setMarketFilter] = useState<MarketFilter>(initialMarketFilter);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [visibleCount, setVisibleCount] = useState(40);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const syncUrl = useCallback((fiber: string, category: string, sort: string, search: string) => {
+  const syncUrl = useCallback((fiber: string, category: string, sort: string, market: string, search: string) => {
     const params = new URLSearchParams();
     if (fiber !== "all") params.set("fiber", fiber);
     if (category !== "all") params.set("category", category);
     if (sort !== "recommended") params.set("sort", sort);
+    if (market !== "all") params.set("market", market);
     if (search) params.set("q", search);
     const qs = params.toString();
     const newUrl = qs ? `/shop?${qs}` : "/shop";
@@ -154,8 +166,8 @@ export default function ShopClient({
   }, []);
 
   useEffect(() => {
-    syncUrl(fiberTab, categoryFilter, sortBy, debouncedSearch);
-  }, [fiberTab, categoryFilter, sortBy, debouncedSearch, syncUrl]);
+    syncUrl(fiberTab, categoryFilter, sortBy, marketFilter, debouncedSearch);
+  }, [fiberTab, categoryFilter, sortBy, marketFilter, debouncedSearch, syncUrl]);
 
   const [products, setProducts] = useState(initialProducts || []);
   const [resultTotal, setResultTotal] = useState(initialTotal || 0);
@@ -211,7 +223,7 @@ export default function ShopClient({
   }, [searchQuery]);
 
   useEffect(() => {
-    const isDefaultState = fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && !debouncedSearch && visibleCount === 40;
+    const isDefaultState = fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && marketFilter === "all" && !debouncedSearch && visibleCount === 40;
 
     if (isDefaultState && initialProducts?.length > 0) {
       setProducts(initialProducts);
@@ -227,6 +239,7 @@ export default function ShopClient({
           fiber: fiberTab !== "all" ? fiberTab : undefined,
           category: categoryFilter !== "all" ? categoryFilter : undefined,
           sort: sortBy,
+          market: marketFilter !== "all" ? marketFilter : undefined,
           limit: visibleCount,
           offset: 0,
           search: debouncedSearch || undefined,
@@ -241,7 +254,7 @@ export default function ShopClient({
     };
 
     fetchProducts();
-  }, [fiberTab, categoryFilter, sortBy, visibleCount, debouncedSearch, initialProducts, initialTotal]);
+  }, [fiberTab, categoryFilter, sortBy, marketFilter, visibleCount, debouncedSearch, initialProducts, initialTotal]);
 
   const isSearchActive = debouncedSearch.length >= 2;
   const displayCount = fiberTab === "all" && categoryFilter === "all" && !isSearchActive
@@ -321,6 +334,22 @@ export default function ShopClient({
               </button>
             ))}
           </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pt-1">
+            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground whitespace-nowrap">Market</span>
+            {MARKET_FILTERS.map(market => (
+              <button
+                key={market.key}
+                onClick={() => { setMarketFilter(market.key); setVisibleCount(40); }}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap transition-all flex-shrink-0 ${
+                  marketFilter === market.key ? "bg-[#f5f5f3] text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+                data-testid={`tab-market-${market.key}`}
+              >
+                {market.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8">
@@ -334,7 +363,7 @@ export default function ShopClient({
 
           {isSearchActive && (
             <button
-              onClick={() => { setSearchQuery(""); setDebouncedSearch(""); setFiberTab("all"); setCategoryFilter("all"); }}
+              onClick={() => { setSearchQuery(""); setDebouncedSearch(""); setFiberTab("all"); setCategoryFilter("all"); setMarketFilter("all"); }}
               className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
               data-testid="button-clear-all"
             >
@@ -392,7 +421,7 @@ export default function ShopClient({
             <ShoppingBag className="w-12 h-12 text-muted-foreground/15" />
             <p className="text-muted-foreground text-sm">No products match this combination.</p>
             <button
-              onClick={() => { setFiberTab("all"); setCategoryFilter("all"); }}
+              onClick={() => { setFiberTab("all"); setCategoryFilter("all"); setMarketFilter("all"); }}
               className="text-[11px] uppercase tracking-[0.15em] text-foreground hover:text-muted-foreground transition-colors"
               data-testid="button-reset-filters"
             >

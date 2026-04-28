@@ -5,6 +5,7 @@ import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../li
 export async function getShopProducts(options: {
   fiber?: string;
   category?: string;
+  market?: string;
   sort?: string;
   limit?: number;
   offset?: number;
@@ -13,6 +14,7 @@ export async function getShopProducts(options: {
   const result = await fetchShopProducts({
     fiber: options.fiber === "all" ? undefined : options.fiber,
     category: options.category === "all" ? undefined : options.category,
+    market: options.market === "all" ? undefined : options.market,
     sort: options.sort || "recommended",
     limit: options.limit || 40,
     offset: options.offset || 0,

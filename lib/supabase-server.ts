@@ -56,6 +56,8 @@ export interface Product {
   originalPrice?: string | null;
 }
 
+type MarketFilter = "us-ca" | "eu-uk-me";
+
 const WOMEN_FASHION_BRAND_SLUGS = new Set([
   "7-for-all-mankind",
   "a-l-c-", "a-l-c", "agolde", "aje", "amanda-uprichard", "anine-bing", "anne-klein", "astr",
@@ -73,6 +75,21 @@ const WOMEN_FASHION_BRAND_SLUGS = new Set([
   "ulla-johnson", "veda", "velvet-by-graham-spencer", "veronica-beard", "vince",
   "cult-gaia", "stine-goya"
 ]);
+
+const MYTHERESA_PRODUCT_PREFIXES: Record<MarketFilter, string> = {
+  "us-ca": "mytheresa-us-ca-",
+  "eu-uk-me": "mytheresa-eu-uk-me-",
+};
+
+function applyCuratedBrandFilter(query: any) {
+  const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS].join(",");
+  return (query as any).or(`brand_slug.in.(${brandSlugs}),product_id.ilike.mytheresa-%`);
+}
+
+function applyMarketFilter(query: any, market?: string) {
+  const prefix = MYTHERESA_PRODUCT_PREFIXES[market as MarketFilter];
+  return prefix ? (query as any).ilike("product_id", `${prefix}%`) : query;
+}
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
   return imageUrl;
@@ -536,6 +553,7 @@ function parsePrice(price: string | null | undefined): number {
 export async function fetchShopProducts(options: {
   fiber?: string;
   category?: string;
+  market?: string;
   sort?: string;
   limit?: number;
   offset?: number;
@@ -543,8 +561,7 @@ export async function fetchShopProducts(options: {
 }): Promise<{ products: Product[]; total: number }> {
   const supabase = getServerSupabase();
   if (!supabase) return { products: [], total: 0 };
-  const { fiber, category, sort = "recommended", limit = 60, offset = 0, search } = options;
-  const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
+  const { fiber, category, market, sort = "recommended", limit = 60, offset = 0, search } = options;
   const isPriceSort = sort === "price-low" || sort === "price-high";
 
   const searchSynonyms: Record<string, string[]> = {
@@ -559,7 +576,7 @@ export async function fetchShopProducts(options: {
     searchTerms = [s, ...(searchSynonyms[s] || [])];
   }
 
-  let query = supabase
+  let query = applyMarketFilter(applyCuratedBrandFilter(supabase
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category", { count: "exact" })
     .not("image_url", "is", null)
@@ -568,8 +585,7 @@ export async function fetchShopProducts(options: {
     .neq("price", "")
     .neq("price", "$0.00")
     .neq("price", "0")
-    .gte("natural_fiber_percent", 80)
-    .in("brand_slug", brandSlugs);
+    .gte("natural_fiber_percent", 80)), market);
 
   if (searchTerms.length > 0) {
     const orClauses = searchTerms.flatMap(t => [
@@ -587,7 +603,7 @@ export async function fetchShopProducts(options: {
     let allRows: any[] = [];
     let fetchOffset = 0;
     while (true) {
-      let q2 = supabase
+      let q2 = applyMarketFilter(applyCuratedBrandFilter(supabase
         .from("products")
         .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
         .not("image_url", "is", null)
@@ -595,8 +611,7 @@ export async function fetchShopProducts(options: {
         .neq("price", "")
         .neq("price", "$0.00")
         .neq("price", "0")
-        .gte("natural_fiber_percent", 80)
-        .in("brand_slug", brandSlugs);
+        .gte("natural_fiber_percent", 80)), market);
       if (searchTerms.length > 0) {
         const orClauses = searchTerms.flatMap(t => [
           `name.ilike.%${t}%`,
@@ -793,16 +808,15 @@ export async function fetchBrandStats(): Promise<{ slug: string; name: string; c
   const pageSize = 1000;
 
   while (true) {
-    const { data } = await supabase
+    const { data } = await applyCuratedBrandFilter(supabase
       .from("products")
       .select("brand_slug, brand_name, natural_fiber_percent")
-      .in("brand_slug", brandSlugs)
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
       .neq("image_url", "")
       .not("price", "is", null)
       .neq("price", "")
-      .range(offset, offset + pageSize - 1);
+      .range(offset, offset + pageSize - 1));
 
     if (!data || data.length === 0) break;
     allProducts.push(...data);

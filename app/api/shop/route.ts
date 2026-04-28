@@ -23,11 +23,13 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "60", 10);
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const search = searchParams.get("search") || undefined;
+  const market = searchParams.get("market") || undefined;
 
   try {
     const result = await fetchShopProducts({
       fiber: fiber === "all" ? undefined : fiber,
       category: category === "all" ? undefined : category,
+      market: market === "all" ? undefined : market,
       sort,
       limit,
       offset,
