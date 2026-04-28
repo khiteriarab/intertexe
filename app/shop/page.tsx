@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
 
@@ -12,13 +13,35 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com/shop" },
 };
 
+const EU_UK_ME_COUNTRIES = new Set([
+  "GB", "IE", "FR", "ES", "IT", "DE", "NL", "PT", "BE", "AT", "DK", "SE", "NO", "FI",
+  "CH", "LU", "MC", "AE", "SA", "KW", "QA", "BH", "OM",
+]);
+
+function marketFromCountry(countryCode?: string | null): "us-ca" | "eu-uk-me" | undefined {
+  const code = (countryCode || "").toUpperCase();
+  if (code === "US" || code === "CA") return "us-ca";
+  if (EU_UK_ME_COUNTRIES.has(code)) return "eu-uk-me";
+  return undefined;
+}
+
+function detectCountryFromHeaders(headerList: Headers): string | undefined {
+  return headerList.get("x-vercel-ip-country")
+    || headerList.get("cf-ipcountry")
+    || headerList.get("x-country-code")
+    || headerList.get("x-geo-country")
+    || undefined;
+}
+
 export default async function ShopPage({
   searchParams,
 }: {
   searchParams?: Promise<{ market?: string }>;
 }) {
   const params = searchParams ? await searchParams : {};
-  const market = params?.market;
+  const detectedCountry = detectCountryFromHeaders(await headers());
+  const detectedMarket = marketFromCountry(detectedCountry);
+  const market = params?.market || detectedMarket;
   const [shopData, totalProductCount, fiberCounts] = await Promise.all([
     fetchShopProducts({ sort: "recommended", limit: 40, offset: 0, market }),
     fetchProductCount(),
@@ -35,6 +58,7 @@ export default async function ShopPage({
         totalProductCount={totalProductCount}
         fiberCounts={fiberCounts}
         initialMarket={market}
+        detectedCountry={detectedCountry}
       />
 
       <section className="max-w-6xl mx-auto px-4 py-12">

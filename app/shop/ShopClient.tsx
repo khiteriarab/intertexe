@@ -40,21 +40,21 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "price-low", label: "Price: Low to High" },
 ];
 
-const LOCATION_OPTIONS: { country: string; flag: string; currency: string; market: MarketFilter; featured?: boolean }[] = [
-  { country: "United States", flag: "🇺🇸", currency: "$USD", market: "us-ca", featured: true },
-  { country: "Canada", flag: "🇨🇦", currency: "$USD", market: "us-ca", featured: true },
-  { country: "United Kingdom", flag: "🇬🇧", currency: "£GBP", market: "eu-uk-me", featured: true },
-  { country: "Spain", flag: "🇪🇸", currency: "€EUR", market: "eu-uk-me", featured: true },
-  { country: "France", flag: "🇫🇷", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Italy", flag: "🇮🇹", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Germany", flag: "🇩🇪", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Netherlands", flag: "🇳🇱", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Ireland", flag: "🇮🇪", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Portugal", flag: "🇵🇹", currency: "€EUR", market: "eu-uk-me" },
-  { country: "United Arab Emirates", flag: "🇦🇪", currency: "£GBP", market: "eu-uk-me" },
-  { country: "Saudi Arabia", flag: "🇸🇦", currency: "£GBP", market: "eu-uk-me" },
-  { country: "Kuwait", flag: "🇰🇼", currency: "£GBP", market: "eu-uk-me" },
-  { country: "Qatar", flag: "🇶🇦", currency: "£GBP", market: "eu-uk-me" },
+const LOCATION_OPTIONS: { country: string; code?: string; flag: string; currency: string; market: MarketFilter; featured?: boolean }[] = [
+  { country: "United States", code: "US", flag: "🇺🇸", currency: "$USD", market: "us-ca", featured: true },
+  { country: "Canada", code: "CA", flag: "🇨🇦", currency: "$USD", market: "us-ca", featured: true },
+  { country: "United Kingdom", code: "GB", flag: "🇬🇧", currency: "£GBP", market: "eu-uk-me", featured: true },
+  { country: "Spain", code: "ES", flag: "🇪🇸", currency: "€EUR", market: "eu-uk-me", featured: true },
+  { country: "France", code: "FR", flag: "🇫🇷", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Italy", code: "IT", flag: "🇮🇹", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Germany", code: "DE", flag: "🇩🇪", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Netherlands", code: "NL", flag: "🇳🇱", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Ireland", code: "IE", flag: "🇮🇪", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Portugal", code: "PT", flag: "🇵🇹", currency: "€EUR", market: "eu-uk-me" },
+  { country: "United Arab Emirates", code: "AE", flag: "🇦🇪", currency: "£GBP", market: "eu-uk-me" },
+  { country: "Saudi Arabia", code: "SA", flag: "🇸🇦", currency: "£GBP", market: "eu-uk-me" },
+  { country: "Kuwait", code: "KW", flag: "🇰🇼", currency: "£GBP", market: "eu-uk-me" },
+  { country: "Qatar", code: "QA", flag: "🇶🇦", currency: "£GBP", market: "eu-uk-me" },
   { country: "All Destinations", flag: "🌐", currency: "ALL", market: "all" },
 ];
 
@@ -145,12 +145,14 @@ export default function ShopClient({
   totalProductCount,
   fiberCounts = {},
   initialMarket,
+  detectedCountry,
 }: {
   initialProducts: any[];
   initialTotal: number;
   totalProductCount: number;
   fiberCounts?: Record<string, number>;
   initialMarket?: string;
+  detectedCountry?: string;
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -158,7 +160,9 @@ export default function ShopClient({
   const initialFiber = (searchParams.get("fiber") as FiberTab) || "all";
   const initialCategory = (searchParams.get("category") as CategoryFilter) || "all";
   const initialSort = (searchParams.get("sort") as SortOption) || "recommended";
-  const initialMarketFilter = ((initialMarket || searchParams.get("market") || "all") as MarketFilter);
+  const detectedLocation = LOCATION_OPTIONS.find((option) => option.code === detectedCountry);
+  const detectedMarket = detectedLocation?.market;
+  const initialMarketFilter = ((initialMarket || searchParams.get("market") || detectedMarket || "all") as MarketFilter);
   const initialSearch = searchParams.get("q") || "";
 
   const [fiberTab, setFiberTab] = useState<FiberTab>(initialFiber);
@@ -174,7 +178,9 @@ export default function ShopClient({
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const currentLocation = getLocationForMarket(marketFilter);
+  const currentLocation = detectedLocation && marketFilter === detectedLocation.market
+    ? detectedLocation
+    : getLocationForMarket(marketFilter);
   const filteredLocations = LOCATION_OPTIONS.filter((option) =>
     option.country.toLowerCase().includes(locationQuery.trim().toLowerCase())
     || option.currency.toLowerCase().includes(locationQuery.trim().toLowerCase())
