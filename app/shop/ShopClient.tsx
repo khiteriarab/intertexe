@@ -41,9 +41,9 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 ];
 
 const MARKET_FILTERS: { key: MarketFilter; label: string }[] = [
-  { key: "all", label: "All Markets" },
-  { key: "us-ca", label: "US / Canada" },
-  { key: "eu-uk-me", label: "EU / UK / ME" },
+  { key: "all", label: "All Destinations" },
+  { key: "us-ca", label: "United States / Canada" },
+  { key: "eu-uk-me", label: "Europe / UK / Middle East" },
 ];
 
 function optimizeImageUrl(url: string, width: number): string {
@@ -336,7 +336,7 @@ export default function ShopClient({
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pt-1">
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground whitespace-nowrap">Market</span>
+            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground whitespace-nowrap">Shopping destination</span>
             {MARKET_FILTERS.map(market => (
               <button
                 key={market.key}

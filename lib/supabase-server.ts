@@ -81,14 +81,17 @@ const MYTHERESA_PRODUCT_PREFIXES: Record<MarketFilter, string> = {
   "eu-uk-me": "mytheresa-eu-uk-me-",
 };
 
-function applyCuratedBrandFilter(query: any) {
+function applyCatalogFilter(query: any, market?: string) {
   const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS].join(",");
-  return (query as any).or(`brand_slug.in.(${brandSlugs}),product_id.ilike.mytheresa-%`);
-}
-
-function applyMarketFilter(query: any, market?: string) {
+  if (market === "us-ca") {
+    return (query as any)
+      .not("product_id", "ilike", `${MYTHERESA_PRODUCT_PREFIXES["eu-uk-me"]}%`)
+      .or(`brand_slug.in.(${brandSlugs}),product_id.ilike.${MYTHERESA_PRODUCT_PREFIXES["us-ca"]}%`);
+  }
   const prefix = MYTHERESA_PRODUCT_PREFIXES[market as MarketFilter];
-  return prefix ? (query as any).ilike("product_id", `${prefix}%`) : query;
+  return prefix
+    ? (query as any).ilike("product_id", `${prefix}%`)
+    : (query as any).or(`brand_slug.in.(${brandSlugs}),product_id.ilike.mytheresa-%`);
 }
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
@@ -576,7 +579,7 @@ export async function fetchShopProducts(options: {
     searchTerms = [s, ...(searchSynonyms[s] || [])];
   }
 
-  let query = applyMarketFilter(applyCuratedBrandFilter(supabase
+  let query = applyCatalogFilter(supabase
     .from("products")
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category", { count: "exact" })
     .not("image_url", "is", null)
@@ -585,7 +588,7 @@ export async function fetchShopProducts(options: {
     .neq("price", "")
     .neq("price", "$0.00")
     .neq("price", "0")
-    .gte("natural_fiber_percent", 80)), market);
+    .gte("natural_fiber_percent", 80), market);
 
   if (searchTerms.length > 0) {
     const orClauses = searchTerms.flatMap(t => [
@@ -603,7 +606,7 @@ export async function fetchShopProducts(options: {
     let allRows: any[] = [];
     let fetchOffset = 0;
     while (true) {
-      let q2 = applyMarketFilter(applyCuratedBrandFilter(supabase
+      let q2 = applyCatalogFilter(supabase
         .from("products")
         .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
         .not("image_url", "is", null)
@@ -611,7 +614,7 @@ export async function fetchShopProducts(options: {
         .neq("price", "")
         .neq("price", "$0.00")
         .neq("price", "0")
-        .gte("natural_fiber_percent", 80)), market);
+        .gte("natural_fiber_percent", 80), market);
       if (searchTerms.length > 0) {
         const orClauses = searchTerms.flatMap(t => [
           `name.ilike.%${t}%`,
@@ -808,7 +811,7 @@ export async function fetchBrandStats(): Promise<{ slug: string; name: string; c
   const pageSize = 1000;
 
   while (true) {
-    const { data } = await applyCuratedBrandFilter(supabase
+    const { data } = await applyCatalogFilter(supabase
       .from("products")
       .select("brand_slug, brand_name, natural_fiber_percent")
       .gte("natural_fiber_percent", 80)

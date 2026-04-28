@@ -9,7 +9,7 @@ const FTP_HOST = process.env.RAKUTEN_FTP_HOST || "aftp.linksynergy.com";
 const FTP_USER = process.env.RAKUTEN_FTP_USER || "rkp_4668007";
 const FTP_PASSWORD = process.env.RAKUTEN_FTP_PASSWORD;
 const AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID || "*8b0zWDyXo0";
-const MIN_NATURAL_PERCENT = parseInt(process.env.MIN_NATURAL_PERCENT || "95", 10);
+const MIN_NATURAL_PERCENT = parseInt(process.env.MIN_NATURAL_PERCENT || "90", 10);
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
