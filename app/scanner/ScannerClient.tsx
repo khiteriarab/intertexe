@@ -461,7 +461,10 @@ export default function ScannerClient() {
   };
 
   const normalizeUrl = (raw: string): string => {
-    let u = raw.trim();
+    let u = raw
+      .trim()
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .replace(/\s+/g, "");
     if (u && !u.match(/^https?:\/\//i)) {
       u = "https://" + u;
     }
@@ -471,6 +474,12 @@ export default function ScannerClient() {
   const scanUrl = async () => {
     if (!url.trim()) return;
     const cleanUrl = normalizeUrl(url);
+    try {
+      new URL(cleanUrl);
+    } catch {
+      setError("Paste a full product link, for example https://www.example.com/product-name");
+      return;
+    }
     setLoading(true);
     setError("");
     setResult(null);

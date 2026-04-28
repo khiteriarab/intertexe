@@ -67,8 +67,9 @@ function diversifyByBrand(products: any[], max: number, maxPerBrand: number): an
 
 export const CURATED_BRAND_SLUGS = [
   "theory", "rag-and-bone", "vince", "l-agence", "frame",
-  "fleur-du-mal", "faithfull-the-brand", "isabel-marant", "diesel", "rails",
-  "7-for-all-mankind", "splendid",
+  "khaite", "toteme", "loro-piana", "staud", "ganni",
+  "velvet", "fleur-du-mal", "faithfull-the-brand", "isabel-marant", "diesel",
+  "rails", "re-done", "citizens-of-humanity", "7-for-all-mankind", "splendid",
 ];
 
 export interface HomePageData {
@@ -103,16 +104,21 @@ export async function getHomePageData(): Promise<HomePageData> {
     CURATED_BRAND_SLUGS.map(async (slug) => {
       const designer = await fetchDesignerBySlug(slug);
       if (!designer) return null;
-      if (designer.naturalFiberPercent != null) return designer;
+      const products = await fetchProductsByBrandWithImages(slug, 12);
+      const heroProduct = pickEditorialProduct(products);
+      const withHero = heroProduct?.imageUrl ? { ...designer, heroImageUrl: heroProduct.imageUrl } : designer;
+      if (designer.naturalFiberPercent != null) return withHero;
       const score = getCuratedScore(designer.name);
-      return score != null ? { ...designer, naturalFiberPercent: score } : designer;
+      return score != null ? { ...withHero, naturalFiberPercent: score } : withHero;
     })
   );
   const curatedDesigners = curatedDesignerResults.filter(Boolean);
 
   const newInBrandSlugs = [
-    "isabel-marant", "theory", "vince", "l-agence", "fleur-du-mal",
-    "rag-and-bone", "frame", "a-l-c", "faithfull-the-brand",
+    "frame", "vince", "rag-and-bone", "theory", "l-agence",
+    "khaite", "toteme", "loro-piana", "staud", "ganni",
+    "velvet", "isabel-marant", "re-done", "citizens-of-humanity",
+    "fleur-du-mal", "a-l-c", "faithfull-the-brand",
     "johnny-was", "ramy-brook", "rails", "free-people",
     "paige", "diesel", "splendid", "7-for-all-mankind",
   ];
@@ -161,7 +167,7 @@ export async function getHomePageData(): Promise<HomePageData> {
       if (basicPatterns.test(p.name) || basicNamePatterns.test(p.name)) continue;
       const baseName = getBaseName(p.name);
       if (seenBaseNames.has(baseName)) continue;
-      const pSlug = p.brandSlug || p.brand_slug || "";
+      const pSlug = p.brandSlug || "";
       if (pSlug === "isabel-marant" && p.imageUrl) {
         if (!p.imageUrl.includes("-E.")) continue;
       }

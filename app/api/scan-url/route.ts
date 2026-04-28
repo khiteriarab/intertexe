@@ -123,6 +123,15 @@ function parsePriceNumber(priceStr: string): number | null {
   return isNaN(num) ? null : num;
 }
 
+function normalizeProductUrl(raw: string): string {
+  let cleaned = String(raw || "")
+    .trim()
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "");
+  if (cleaned && !/^https?:\/\//i.test(cleaned)) cleaned = "https://" + cleaned;
+  return cleaned;
+}
+
 function inferFibersFromName(name: string): { fiber: string; percent: number; isNatural: boolean }[] {
   const lower = name.toLowerCase();
   const materialKeywords: Record<string, string> = {
@@ -177,7 +186,6 @@ function extractInfoFromUrl(url: string): { brand: string; product: string; reta
       "adolfodominguez.com": "Adolfo Dominguez", "mangooutlet.com": "Mango", "mango.com": "Mango",
       "brunellocucinelli.com": "Brunello Cucinelli", "loropiana.com": "Loro Piana",
       "hermes.com": "Hermès", "bottegaveneta.com": "Bottega Veneta",
-      "massimodutti.com": "Massimo Dutti", "chloe.com": "Chloé", "maxmara.com": "Max Mara",
     };
     const hostnameParts = hostname.split(".");
     const baseDomain = hostnameParts.length > 2 ? hostnameParts.slice(-2).join(".") : hostname;
@@ -396,12 +404,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     requestUrl = body.url || "";
-    let url = requestUrl;
+    let url = normalizeProductUrl(requestUrl);
     if (!url) return NextResponse.json({ error: "Product URL required" }, { status: 400 });
-    url = url.trim();
-    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
     let parsedUrl: URL;
-    try { parsedUrl = new URL(url); } catch { return NextResponse.json({ error: "Invalid URL" }, { status: 400 }); }
+    try { parsedUrl = new URL(url); } catch { return NextResponse.json({ error: "Please paste a full product URL." }, { status: 400 }); }
     for (const p of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gad_source", "gad_campaignid", "gbraid", "gclid", "fbclid", "mc_cid", "mc_eid"]) {
       parsedUrl.searchParams.delete(p);
     }

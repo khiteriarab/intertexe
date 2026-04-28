@@ -282,8 +282,17 @@ export default function Scanner() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const normalizeUrl = (raw: string): string => {
+    let normalized = raw.trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
+    if (normalized && !/^https?:\/\//i.test(normalized)) {
+      normalized = "https://" + normalized;
+    }
+    return normalized;
+  };
+
   const scanUrl = async () => {
     if (!url.trim()) return;
+    const cleanUrl = normalizeUrl(url);
     setLoading(true);
     setError("");
     setResult(null);
@@ -292,7 +301,7 @@ export default function Scanner() {
       const res = await fetch("/api/scan-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: cleanUrl }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Scan failed");
@@ -370,12 +379,14 @@ export default function Scanner() {
             <div className="col-span-2 md:col-span-1 bg-white border border-neutral-200 p-4 md:p-5 flex flex-col">
               <div className="flex gap-2">
                 <input
-                  type="url"
+                  type="text"
+                  inputMode="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Paste product URL..."
                   className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
-                  onKeyDown={(e) => e.key === "Enter" && requireEmail(scanUrl)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); requireEmail(scanUrl); } }}
+                  autoComplete="off"
                   data-testid="input-product-url"
                 />
                 <button onClick={() => requireEmail(scanUrl)} disabled={!url.trim()} className="px-4 py-2.5 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em] font-medium disabled:opacity-30 hover:bg-neutral-800 transition-colors flex-shrink-0" data-testid="button-scan-url">

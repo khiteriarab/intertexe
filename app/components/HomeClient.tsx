@@ -201,37 +201,53 @@ export function HorizontalProductScroll({
   );
 }
 
-function BrandCardImage({ name, count }: { name: string; count: number }) {
+function BrandCard({ designer, count }: { designer: any; count: number }) {
   const [failed, setFailed] = useState(false);
-  const heroUrl = getBrandHeroImage(name);
-  const hasImage = heroUrl && !failed;
+  const heroUrl = getBrandHeroImage(designer.name);
+  const productImageUrl = designer.heroImageUrl || "";
+  const imageUrl = !failed ? (heroUrl || productImageUrl) : "";
+  const tier = getQualityTier(designer.naturalFiberPercent);
 
   return (
-    <div className={`aspect-[3/4] w-full overflow-hidden relative ${hasImage ? 'bg-neutral-100' : 'bg-[#f0ece6]'}`}>
-      {hasImage ? (
-        <img
-          src={heroUrl}
-          alt={`${name} editorial`}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
-          loading="eager"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center px-4">
-          <span className="font-serif text-lg md:text-xl text-neutral-300 tracking-[0.15em] uppercase text-center leading-relaxed">
-            {name}
-          </span>
-        </div>
-      )}
-      {count > 0 && (
-        <div className="absolute bottom-3 right-3">
-          <span className="flex items-center gap-1 bg-white/90 text-neutral-800 px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] font-medium backdrop-blur-sm">
-            <ShoppingBag className="w-2.5 h-2.5" />
-            {count}
-          </span>
-        </div>
-      )}
-    </div>
+    <Link
+      href={`/designers/${designer.slug}`}
+      className="group flex flex-col gap-3 active:scale-[0.98] transition-transform"
+      data-testid={`card-designer-${designer.id}`}
+    >
+      <div className={`aspect-[3/4] w-full overflow-hidden relative ${imageUrl ? "bg-neutral-100" : "bg-[#f0ece6]"}`}>
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={`${designer.name} editorial`}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            loading="eager"
+            onError={() => setFailed(true)}
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center px-4">
+            <span className="font-serif text-lg md:text-xl text-neutral-300 tracking-[0.15em] uppercase text-center leading-relaxed">
+              {designer.name}
+            </span>
+          </div>
+        )}
+        {count > 0 && (
+          <div className="absolute bottom-3 right-3">
+            <span className="flex items-center gap-1 bg-white/90 text-neutral-800 px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] font-medium backdrop-blur-sm">
+              <ShoppingBag className="w-2.5 h-2.5" />
+              {count}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-[11px] md:text-[13px] font-semibold uppercase tracking-[0.08em] group-hover:text-neutral-400 transition-colors duration-300">
+          {designer.name}
+        </h3>
+        <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-neutral-400">
+          {tier.label}
+        </p>
+      </div>
+    </Link>
   );
 }
 
@@ -247,26 +263,8 @@ export function BrandGrid({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
       {designers.map((designer: any) => {
-        const tier = getQualityTier(designer.naturalFiberPercent);
         const count = productCounts[designer.slug] || 0;
-        return (
-          <Link
-            key={designer.id}
-            href={`/designers/${designer.slug}`}
-            className="group flex flex-col gap-3 active:scale-[0.98] transition-transform"
-            data-testid={`card-designer-${designer.id}`}
-          >
-            <BrandCardImage name={designer.name} count={count} />
-            <div className="flex flex-col gap-0.5">
-              <h3 className="text-[11px] md:text-[13px] font-semibold uppercase tracking-[0.08em] group-hover:text-neutral-400 transition-colors duration-300">
-                {designer.name}
-              </h3>
-              <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-neutral-400">
-                {tier.label}
-              </p>
-            </div>
-          </Link>
-        );
+        return <BrandCard key={designer.id} designer={designer} count={count} />;
       })}
     </div>
   );

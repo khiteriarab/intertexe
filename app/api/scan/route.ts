@@ -97,6 +97,15 @@ function slugifyBrand(value: string): string {
   return value.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+function normalizeProductUrl(raw: string): string {
+  let cleaned = String(raw || "")
+    .trim()
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "");
+  if (cleaned && !/^https?:\/\//i.test(cleaned)) cleaned = "https://" + cleaned;
+  return cleaned;
+}
+
 const CATEGORY_TERMS: Record<string, string[]> = {
   dresses: ["dress", "gown", "vestido", "robe", "kleid", "abito", "jumpsuit", "romper"],
   tops: ["top", "blouse", "shirt", "tee", "t-shirt", "camisole", "tank", "polo", "henley", "bodysuit", "camisa", "blusa", "camiseta"],
@@ -488,6 +497,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { image, url, barcode, confirmation } = body;
+    let sourceHost = "";
 
     let extracted: any = {};
 
@@ -495,15 +505,26 @@ export async function POST(request: NextRequest) {
       if (!openai) return NextResponse.json({ error: "AI service not available" }, { status: 500 });
       extracted = await extractFromImage(openai, image);
     } else if (url) {
-      let cleanedUrl = url.trim();
-      if (cleanedUrl && !/^https?:\/\//i.test(cleanedUrl)) cleanedUrl = "https://" + cleanedUrl;
+      const cleanedUrl = normalizeProductUrl(url);
       let parsedUrl: URL;
-      try { parsedUrl = new URL(cleanedUrl); } catch { return NextResponse.json({ error: "Invalid URL" }, { status: 400 }); }
+      try { parsedUrl = new URL(cleanedUrl); } catch { return NextResponse.json({ error: "Please paste a full product URL." }, { status: 400 }); }
       for (const p of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gad_source", "gad_campaignid", "gbraid", "gclid", "fbclid", "mc_cid", "mc_eid"]) {
         parsedUrl.searchParams.delete(p);
       }
       const cleanUrl = parsedUrl.toString();
-      extracted = await extractFromUrl(openai, cleanUrl);
+      sourceHost = parsedUrl.hostname;
+      try {
+        extracted = await extractFromUrl(openai, cleanUrl);
+      } catch (e: any) {
+        console.error("URL extraction failed:", e.message);
+        extracted = {
+          brandName: parsedUrl.hostname.replace(/^www\./, "").split(".")[0].replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+          productName: parsedUrl.pathname.split("/").filter(Boolean).pop()?.replace(/\.\w+$/, "").replace(/[-_]/g, " ") || "",
+          inputType: "url",
+          confidence: "low",
+          fibers: [],
+        };
+      }
     } else if (barcode) {
       extracted = {
         barcode,
@@ -629,7 +650,7 @@ export async function POST(request: NextRequest) {
         madeIn: extracted.madeIn || "",
         careInstructions: extracted.careInstructions || "",
         confidence: usedBrandAvg ? "brand-average" : extracted.confidence || "low",
-        rawText: image ? "From photo scan" : url ? `From ${new URL(url).hostname}` : "From barcode",
+        rawText: image ? "From photo scan" : url ? `From ${sourceHost || "product URL"}` : "From barcode",
         inputType: extracted.inputType || "unknown",
         color,
         silhouette: extracted.silhouette || "",
