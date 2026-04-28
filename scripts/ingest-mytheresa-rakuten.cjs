@@ -403,6 +403,7 @@ async function streamMarketFeed(marketKey, market, options) {
     }
 
     let inserted = 0;
+    let productErrors = 0;
     const batchSize = 50;
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
@@ -411,6 +412,7 @@ async function streamMarketFeed(marketKey, market, options) {
         .upsert(batch, { onConflict: "product_id" })
         .select("id");
       if (error) {
+        productErrors++;
         console.error(`  Product upsert error at ${i}: ${error.message}`);
       } else {
         inserted += data.length;
@@ -442,7 +444,9 @@ async function streamMarketFeed(marketKey, market, options) {
       .from("designers")
       .select("slug, description, website")
       .in("slug", designerRows.map(d => d.slug));
-    if (existingDesignerError) console.error(`  Designer lookup error: ${existingDesignerError.message}`);
+    if (existingDesignerError) {
+      throw new Error(`Designer lookup failed: ${existingDesignerError.message}`);
+    }
 
     const existingBySlug = new Map((existingDesigners || []).map(d => [d.slug, d]));
     const existingSlugs = new Set(existingBySlug.keys());
@@ -450,12 +454,16 @@ async function streamMarketFeed(marketKey, market, options) {
     const existingDesignerUpdates = designerRows.filter(d => existingSlugs.has(d.slug));
 
     let insertedDesigners = 0;
+    let designerErrors = 0;
     for (let i = 0; i < newDesigners.length; i += batchSize) {
       const { data, error } = await supabase
         .from("designers")
         .insert(newDesigners.slice(i, i + batchSize))
         .select("id");
-      if (error) console.error(`  Designer insert error at ${i}: ${error.message}`);
+      if (error) {
+        designerErrors++;
+        console.error(`  Designer insert error at ${i}: ${error.message}`);
+      }
       else insertedDesigners += data.length;
     }
 
@@ -473,12 +481,18 @@ async function streamMarketFeed(marketKey, market, options) {
         .from("designers")
         .update(update)
         .eq("slug", designer.slug);
-      if (error) console.error(`  Designer update error for ${designer.slug}: ${error.message}`);
+      if (error) {
+        designerErrors++;
+        console.error(`  Designer update error for ${designer.slug}: ${error.message}`);
+      }
       else updatedDesigners++;
     }
 
     console.log(`  Upserted products: ${inserted}`);
     console.log(`  Inserted designers: ${insertedDesigners}; updated existing designers: ${updatedDesigners}`);
+    if (productErrors > 0 || designerErrors > 0) {
+      throw new Error(`Import completed with ${productErrors} product batch errors and ${designerErrors} designer errors`);
+    }
     return { products: rows.length, brands: brands.size, inserted };
   } finally {
     client.end();
