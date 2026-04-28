@@ -485,7 +485,12 @@ export async function fetchProductCountsByBrand(slugs: string[]): Promise<Record
       .select("*", { count: "exact", head: true })
       .eq("brand_slug", slug)
       .gte("natural_fiber_percent", 80)
-      .not("image_url", "is", null);
+      .not("image_url", "is", null)
+      .neq("image_url", "")
+      .not("price", "is", null)
+      .neq("price", "")
+      .neq("price", "$0.00")
+      .neq("price", "0");
     counts[slug] = count || 0;
   }));
   return counts;
