@@ -499,14 +499,95 @@ async function streamMarketFeed(marketKey, market, options) {
   }
 }
 
+async function refreshDesignerScores() {
+  console.log("\nRefreshing designer scores from full product catalog...");
+  const designerStats = new Map();
+  const pageSize = 1000;
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("brand_slug, brand_name, natural_fiber_percent")
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .neq("image_url", "")
+      .not("price", "is", null)
+      .neq("price", "")
+      .neq("price", "$0.00")
+      .neq("price", "0")
+      .range(offset, offset + pageSize - 1);
+
+    if (error) throw new Error(`Designer score product lookup failed: ${error.message}`);
+    if (!data || data.length === 0) break;
+
+    for (const row of data) {
+      if (!row.brand_slug) continue;
+      const current = designerStats.get(row.brand_slug) || {
+        name: row.brand_name,
+        count: 0,
+        fiberTotal: 0,
+      };
+      current.count += 1;
+      current.fiberTotal += row.natural_fiber_percent || 0;
+      designerStats.set(row.brand_slug, current);
+    }
+
+    if (data.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  let updated = 0;
+  let inserted = 0;
+  for (const [slug, stats] of designerStats) {
+    const naturalFiberPercent = Math.round(stats.fiberTotal / stats.count);
+    const { data: existing, error: lookupError } = await supabase
+      .from("designers")
+      .select("id, description, website")
+      .eq("slug", slug)
+      .limit(1);
+    if (lookupError) throw new Error(`Designer lookup failed for ${slug}: ${lookupError.message}`);
+
+    if (existing && existing.length > 0) {
+      const { error } = await supabase
+        .from("designers")
+        .update({ status: "active", natural_fiber_percent: naturalFiberPercent })
+        .eq("slug", slug);
+      if (error) throw new Error(`Designer score update failed for ${slug}: ${error.message}`);
+      updated++;
+    } else {
+      const { error } = await supabase
+        .from("designers")
+        .insert({
+          name: stats.name,
+          slug,
+          status: "active",
+          natural_fiber_percent: naturalFiberPercent,
+          description: `${stats.name} pieces verified by INTERTEXE natural-fiber standards.`,
+        });
+      if (error) throw new Error(`Designer insert failed for ${slug}: ${error.message}`);
+      inserted++;
+    }
+  }
+
+  console.log(`Designer scores refreshed: ${updated} updated, ${inserted} inserted`);
+  return { updated, inserted, total: designerStats.size };
+}
+
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
+  const refreshScoresOnly = process.argv.includes("--refresh-designer-scores");
   const limitArg = process.argv.find(arg => arg.startsWith("--limit="));
   const marketArg = process.argv.find(arg => arg.startsWith("--market="));
   const options = {
     dryRun,
     limit: limitArg ? parseInt(limitArg.split("=")[1], 10) : 0,
   };
+
+  if (refreshScoresOnly) {
+    await refreshDesignerScores();
+    return;
+  }
 
   const selectedMarkets = marketArg
     ? marketArg.split("=")[1].split(",").map(m => m.trim()).filter(Boolean)
@@ -527,6 +608,9 @@ async function main() {
   console.log("\n========== SUMMARY ==========");
   for (const [key, result] of Object.entries(summary)) {
     console.log(`${key}: ${result.products} qualifying products, ${result.brands} designers, ${result.inserted} upserted`);
+  }
+  if (!dryRun) {
+    await refreshDesignerScores();
   }
   console.log(`Completed: ${new Date().toISOString()}`);
 }
