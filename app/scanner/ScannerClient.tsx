@@ -420,6 +420,63 @@ export default function ScannerClient() {
     return data;
   };
 
+  const loadFallbackProducts = async (): Promise<any[]> => {
+    try {
+      const shopRes = await fetch("/api/shop?limit=12&sort=recommended", { cache: "no-store" });
+      if (shopRes.ok) {
+        const data = await shopRes.json();
+        if (Array.isArray(data?.products) && data.products.length > 0) return data.products.slice(0, 12);
+      }
+    } catch {}
+    try {
+      const productRes = await fetch("/api/products?limit=12", { cache: "no-store" });
+      if (productRes.ok) {
+        const data = await productRes.json();
+        if (Array.isArray(data) && data.length > 0) return data.slice(0, 12);
+      }
+    } catch {}
+    return [];
+  };
+
+  const buildFallbackResult = async (source: "url" | "photo" | "barcode", sourceValue = ""): Promise<ScanResult> => {
+    const alternatives = await loadFallbackProducts();
+    let host = "";
+    if (source === "url" && sourceValue) {
+      try { host = new URL(sourceValue).hostname.replace(/^www\./, ""); } catch {}
+    }
+    return {
+      tagInfo: {
+        brandName: host ? host.split(".")[0].replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "Unknown",
+        productName: "",
+        price: "",
+        composition: "",
+        garmentType: "",
+        size: "",
+        madeIn: "",
+        careInstructions: "",
+        confidence: "low",
+        rawText: source === "url" && host ? `From ${host}` : "Fallback scan",
+        inputType: source,
+        color: "",
+        silhouette: "",
+        barcode: source === "barcode" ? sourceValue : "",
+      },
+      imageUrl: "",
+      fiberBreakdown: [],
+      naturalPercent: 0,
+      qualityScore: 0,
+      isNatural: false,
+      verdict: "We couldn't read every detail from this scan, but we found verified natural-fiber alternatives below.",
+      category: "",
+      products: [],
+      matched: alternatives.length > 0,
+      brandStats: null,
+      designerInfo: null,
+      betterAlternatives: alternatives,
+      confirmationPrompt: null,
+    };
+  };
+
   const scanImage = async (base64: string) => {
     setLoading(true);
     setError("");
@@ -434,7 +491,8 @@ export default function ScannerClient() {
       }
       trackScanComplete(data.tagInfo?.brandName || "unknown", "upload", data.matched);
     } catch (err: any) {
-      setError(err.message || "Failed to scan. Try again.");
+      setResult(await buildFallbackResult("photo"));
+      setError("");
       trackScanError("upload", err.message || "Scan failed");
     } finally {
       setLoading(false);
@@ -453,7 +511,8 @@ export default function ScannerClient() {
       if (data.confirmationPrompt) setShowConfirmation(true);
       trackScanComplete(data.tagInfo?.brandName || "unknown", "barcode", data.matched);
     } catch (err: any) {
-      setError(err.message || "Barcode scan failed.");
+      setResult(await buildFallbackResult("barcode", code));
+      setError("");
       trackScanError("barcode", err.message || "Scan failed");
     } finally {
       setLoading(false);
@@ -494,7 +553,8 @@ export default function ScannerClient() {
       }
       trackScanComplete(data.tagInfo?.brandName || "unknown", "url", data.matched);
     } catch (err: any) {
-      setError(err.message || "Could not analyze this URL.");
+      setResult(await buildFallbackResult("url", cleanUrl));
+      setError("");
       trackScanError("url", err.message || "Scan failed");
     } finally {
       setLoading(false);

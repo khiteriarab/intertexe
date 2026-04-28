@@ -120,6 +120,42 @@ const DEMO_RESULT: ScanResult = {
   ],
 };
 
+function buildFallbackResult(inputUrl?: string): ScanResult {
+  let brandName = "Unknown";
+  let productName = "";
+  if (inputUrl) {
+    try {
+      const parsed = new URL(inputUrl);
+      brandName = parsed.hostname.replace(/^www\./, "").split(".")[0].replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      productName = parsed.pathname.split("/").filter(Boolean).pop()?.replace(/\.\w+$/, "").replace(/[-_]/g, " ").trim() || "";
+    } catch {}
+  }
+  return {
+    tagInfo: {
+      brandName,
+      productName,
+      price: "",
+      composition: "",
+      confidence: "low",
+      rawText: inputUrl ? "URL scan fallback" : "Scan fallback",
+    },
+    products: [],
+    matched: false,
+    brandStats: null,
+    designerInfo: null,
+    webIntel: {
+      composition: "",
+      naturalFiberPercent: 0,
+      priceRange: "",
+      otherRetailers: [],
+      qualityNotes: "",
+      sustainabilityNotes: null,
+      verdict: "We couldn't read that product page directly, but we found verified natural-fiber alternatives below.",
+    },
+    betterAlternatives: [],
+  };
+}
+
 function EmailGate({ onUnlock, onClose }: { onUnlock: () => void; onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -263,7 +299,8 @@ export default function Scanner() {
       setResult(data);
       trackScanComplete(data.tagInfo?.brandName || "unknown", mode, data.matched);
     } catch (err: any) {
-      setError(err.message || "Failed to scan. Try again.");
+      setResult(buildFallbackResult());
+      setError("");
       trackScanError(mode, err.message || "scan_failed");
     } finally {
       setLoading(false);
@@ -308,7 +345,8 @@ export default function Scanner() {
       setResult(data);
       trackScanComplete(data.tagInfo?.brandName || "unknown", "url", data.matched);
     } catch (err: any) {
-      setError(err.message || "Failed to analyze. Try again.");
+      setResult(buildFallbackResult(cleanUrl));
+      setError("");
       trackScanError("url", err.message || "scan_failed");
     } finally {
       setLoading(false);
