@@ -417,22 +417,38 @@ async function streamMarketFeed(marketKey, market, options) {
       }
     }
 
-    const designerRows = [...brands.entries()].map(([slug, name]) => ({
-      name,
+    const brandStats = new Map();
+    for (const row of rows) {
+      const current = brandStats.get(row.brand_slug) || {
+        name: row.brand_name,
+        count: 0,
+        fiberTotal: 0,
+      };
+      current.count += 1;
+      current.fiberTotal += row.natural_fiber_percent || 0;
+      brandStats.set(row.brand_slug, current);
+    }
+
+    const designerRows = [...brandStats.entries()].map(([slug, stats]) => ({
+      name: stats.name,
       slug,
       status: "active",
-      description: `${name} pieces selected from Mytheresa's ${market.label} designer assortment for INTERTEXE natural-fiber standards.`,
+      natural_fiber_percent: Math.round(stats.fiberTotal / stats.count),
+      description: `${stats.name} pieces selected from Mytheresa's ${market.label} designer assortment for INTERTEXE natural-fiber standards.`,
       website: "https://www.mytheresa.com/",
     }));
 
     const { data: existingDesigners, error: existingDesignerError } = await supabase
       .from("designers")
-      .select("slug")
+      .select("slug, description, website")
       .in("slug", designerRows.map(d => d.slug));
     if (existingDesignerError) console.error(`  Designer lookup error: ${existingDesignerError.message}`);
 
-    const existingSlugs = new Set((existingDesigners || []).map(d => d.slug));
+    const existingBySlug = new Map((existingDesigners || []).map(d => [d.slug, d]));
+    const existingSlugs = new Set(existingBySlug.keys());
     const newDesigners = designerRows.filter(d => !existingSlugs.has(d.slug));
+    const existingDesignerUpdates = designerRows.filter(d => existingSlugs.has(d.slug));
+
     let insertedDesigners = 0;
     for (let i = 0; i < newDesigners.length; i += batchSize) {
       const { data, error } = await supabase
@@ -443,8 +459,26 @@ async function streamMarketFeed(marketKey, market, options) {
       else insertedDesigners += data.length;
     }
 
+    let updatedDesigners = 0;
+    for (const designer of existingDesignerUpdates) {
+      const existing = existingBySlug.get(designer.slug) || {};
+      const update = {
+        status: "active",
+        natural_fiber_percent: designer.natural_fiber_percent,
+      };
+      if (!existing.description) update.description = designer.description;
+      if (!existing.website) update.website = designer.website;
+
+      const { error } = await supabase
+        .from("designers")
+        .update(update)
+        .eq("slug", designer.slug);
+      if (error) console.error(`  Designer update error for ${designer.slug}: ${error.message}`);
+      else updatedDesigners++;
+    }
+
     console.log(`  Upserted products: ${inserted}`);
-    console.log(`  Inserted designers: ${insertedDesigners} (${designerRows.length - insertedDesigners} already existed)`);
+    console.log(`  Inserted designers: ${insertedDesigners}; updated existing designers: ${updatedDesigners}`);
     return { products: rows.length, brands: brands.size, inserted };
   } finally {
     client.end();
