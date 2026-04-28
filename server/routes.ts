@@ -834,9 +834,21 @@ ${allPages.map(p => `  <url>
 
   app.post("/api/scan-url", async (req, res) => {
     try {
-      const { url } = req.body;
+      const normalizeProductUrl = (raw: string) => {
+        let cleaned = String(raw || "")
+          .trim()
+          .replace(/[\u200B-\u200D\uFEFF]/g, "")
+          .replace(/\s+/g, "");
+        if (cleaned && !/^https?:\/\//i.test(cleaned)) cleaned = `https://${cleaned}`;
+        return cleaned;
+      };
+
+      let { url } = req.body;
+      url = normalizeProductUrl(url);
       if (!url) return res.status(400).json({ error: "Product URL required" });
-      try { new URL(url); } catch { return res.status(400).json({ error: "Invalid URL" }); }
+      let parsedScanUrl: URL;
+      try { parsedScanUrl = new URL(url); } catch { return res.status(400).json({ error: "Please paste a full product URL." }); }
+      url = parsedScanUrl.toString();
 
       const naturalFiberNames: Record<string, string> = {
         cotton: "Cotton", silk: "Silk", wool: "Wool", linen: "Linen", cashmere: "Cashmere",
@@ -1121,7 +1133,7 @@ ${allPages.map(p => `  <url>
           madeIn: pageInfo.madeIn || "",
           careInstructions: "",
           confidence: pageContent ? "high" : compositionStr ? "medium" : urlInfo.detectedFibers.length ? "inferred" : "low",
-          rawText: `From ${pageInfo.retailer || urlInfo.retailer || new URL(url).hostname}`,
+          rawText: `From ${pageInfo.retailer || urlInfo.retailer || parsedScanUrl.hostname}`,
         },
         fiberBreakdown,
         naturalPercent,
@@ -1137,7 +1149,37 @@ ${allPages.map(p => `  <url>
       });
     } catch (err) {
       console.error("Scan URL error:", err);
-      res.status(500).json({ error: "Failed to analyze this product" });
+      try {
+        if (!supabaseAdmin) return res.status(500).json({ error: "Database not configured" });
+        const { data: alternatives } = await supabaseAdmin.from("products").select("*")
+          .gte("natural_fiber_percent", 90)
+          .not("image_url", "is", null).neq("image_url", "")
+          .order("natural_fiber_percent", { ascending: false })
+          .limit(12);
+        res.json({
+          tagInfo: {
+            brandName: "Unknown",
+            productName: "",
+            price: "",
+            composition: "",
+            confidence: "low",
+            rawText: "URL scan fallback",
+          },
+          fiberBreakdown: [],
+          naturalPercent: 0,
+          isNatural: false,
+          verdict: "We couldn't analyze this product URL right now. Browse verified natural-fiber alternatives below.",
+          category: "",
+          products: [],
+          matched: !!alternatives?.length,
+          brandStats: null,
+          designerInfo: null,
+          webIntel: null,
+          betterAlternatives: alternatives || [],
+        });
+      } catch {
+        res.status(500).json({ error: "Failed to analyze this product" });
+      }
     }
   });
 
