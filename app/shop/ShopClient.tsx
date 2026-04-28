@@ -168,6 +168,7 @@ export default function ShopClient({
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [locationQuery, setLocationQuery] = useState("");
+  const [showLocationPrompt, setShowLocationPrompt] = useState(initialMarketFilter === "all");
   const [visibleCount, setVisibleCount] = useState(40);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
@@ -182,6 +183,11 @@ export default function ShopClient({
   const selectLocation = (market: MarketFilter) => {
     setMarketFilter(market);
     setVisibleCount(40);
+    setShowLocationPrompt(false);
+    try {
+      localStorage.setItem("intertexe_shop_market", market);
+      localStorage.setItem("intertexe_shop_location_prompt_seen", "1");
+    } catch {}
     setShowLocationModal(false);
     setLocationQuery("");
   };
@@ -207,6 +213,18 @@ export default function ShopClient({
   const [isLoading, setIsLoading] = useState(!initialProducts?.length);
 
   const scrollRestored = useRef(false);
+
+  useEffect(() => {
+    try {
+      const savedMarket = localStorage.getItem("intertexe_shop_market") as MarketFilter | null;
+      if (savedMarket && ["all", "us-ca", "eu-uk-me"].includes(savedMarket) && savedMarket !== marketFilter) {
+        setMarketFilter(savedMarket);
+      }
+      if (localStorage.getItem("intertexe_shop_location_prompt_seen") === "1") {
+        setShowLocationPrompt(false);
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const savedCount = sessionStorage.getItem("shop_visible_count");
@@ -333,6 +351,26 @@ export default function ShopClient({
             </div>
           </div>
         </header>
+
+        {showLocationPrompt && (
+          <div className="mb-6 md:mb-8 border border-border/30 bg-[#fbfaf8] p-5 md:p-6 flex flex-col gap-4" data-testid="location-prompt">
+            <p className="text-xl md:text-2xl font-serif leading-snug text-foreground/75">
+              Update your location to see products and content relevant to you
+            </p>
+            <div className="flex items-center gap-3 text-lg md:text-xl">
+              <span className="text-2xl">{currentLocation.flag}</span>
+              <span className="font-serif">{currentLocation.country} ({currentLocation.currency})</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLocationModal(true)}
+              className="w-full bg-[#111] text-white py-3.5 md:py-4 text-sm md:text-base tracking-[0.08em] hover:bg-neutral-800 transition-colors"
+              data-testid="button-location-prompt"
+            >
+              Change Location
+            </button>
+          </div>
+        )}
 
         <div className="flex flex-col gap-4 mb-6 md:mb-8">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
