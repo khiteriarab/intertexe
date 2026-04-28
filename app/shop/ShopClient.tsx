@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
+import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X, Globe2 } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopMeta } from "./actions";
 
@@ -40,11 +40,29 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "price-low", label: "Price: Low to High" },
 ];
 
-const MARKET_FILTERS: { key: MarketFilter; label: string }[] = [
-  { key: "all", label: "All Destinations" },
-  { key: "us-ca", label: "United States / Canada" },
-  { key: "eu-uk-me", label: "Europe / UK / Middle East" },
+const LOCATION_OPTIONS: { country: string; flag: string; currency: string; market: MarketFilter; featured?: boolean }[] = [
+  { country: "United States", flag: "🇺🇸", currency: "$USD", market: "us-ca", featured: true },
+  { country: "Canada", flag: "🇨🇦", currency: "$USD", market: "us-ca", featured: true },
+  { country: "United Kingdom", flag: "🇬🇧", currency: "£GBP", market: "eu-uk-me", featured: true },
+  { country: "Spain", flag: "🇪🇸", currency: "€EUR", market: "eu-uk-me", featured: true },
+  { country: "France", flag: "🇫🇷", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Italy", flag: "🇮🇹", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Germany", flag: "🇩🇪", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Netherlands", flag: "🇳🇱", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Ireland", flag: "🇮🇪", currency: "€EUR", market: "eu-uk-me" },
+  { country: "Portugal", flag: "🇵🇹", currency: "€EUR", market: "eu-uk-me" },
+  { country: "United Arab Emirates", flag: "🇦🇪", currency: "£GBP", market: "eu-uk-me" },
+  { country: "Saudi Arabia", flag: "🇸🇦", currency: "£GBP", market: "eu-uk-me" },
+  { country: "Kuwait", flag: "🇰🇼", currency: "£GBP", market: "eu-uk-me" },
+  { country: "Qatar", flag: "🇶🇦", currency: "£GBP", market: "eu-uk-me" },
+  { country: "All Destinations", flag: "🌐", currency: "ALL", market: "all" },
 ];
+
+function getLocationForMarket(market: MarketFilter) {
+  return LOCATION_OPTIONS.find((option) => option.market === market && option.featured)
+    || LOCATION_OPTIONS.find((option) => option.market === market)
+    || LOCATION_OPTIONS[LOCATION_OPTIONS.length - 1];
+}
 
 function optimizeImageUrl(url: string, width: number): string {
   if (!url) return url;
@@ -148,10 +166,25 @@ export default function ShopClient({
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [marketFilter, setMarketFilter] = useState<MarketFilter>(initialMarketFilter);
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(40);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const currentLocation = getLocationForMarket(marketFilter);
+  const filteredLocations = LOCATION_OPTIONS.filter((option) =>
+    option.country.toLowerCase().includes(locationQuery.trim().toLowerCase())
+    || option.currency.toLowerCase().includes(locationQuery.trim().toLowerCase())
+  );
+
+  const selectLocation = (market: MarketFilter) => {
+    setMarketFilter(market);
+    setVisibleCount(40);
+    setShowLocationModal(false);
+    setLocationQuery("");
+  };
 
   const syncUrl = useCallback((fiber: string, category: string, sort: string, market: string, search: string) => {
     const params = new URLSearchParams();
@@ -335,20 +368,21 @@ export default function ShopClient({
             ))}
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pt-1">
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground whitespace-nowrap">Shopping destination</span>
-            {MARKET_FILTERS.map(market => (
-              <button
-                key={market.key}
-                onClick={() => { setMarketFilter(market.key); setVisibleCount(40); }}
-                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap transition-all flex-shrink-0 ${
-                  marketFilter === market.key ? "bg-[#f5f5f3] text-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-                data-testid={`tab-market-${market.key}`}
-              >
-                {market.label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between gap-3 -mx-1 px-1 pt-1">
+            <button
+              type="button"
+              onClick={() => setShowLocationModal(true)}
+              className="flex items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-foreground hover:text-muted-foreground transition-colors"
+              data-testid="button-change-location"
+            >
+              <span className="text-base leading-none">{currentLocation.flag}</span>
+              <span>{currentLocation.country}</span>
+              <span className="text-muted-foreground">{currentLocation.currency}</span>
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            <span className="hidden md:inline text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+              Shopping destination
+            </span>
           </div>
         </div>
 
@@ -411,6 +445,56 @@ export default function ShopClient({
             >
               {fiberTab} buying guide <ArrowRight className="w-3 h-3" />
             </Link>
+          </div>
+        )}
+
+        {showLocationModal && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/55 px-4 py-8 md:py-16" data-testid="modal-location-selector">
+            <div className="w-full max-w-3xl bg-background shadow-2xl">
+              <div className="flex items-center justify-between border-b border-border/40 px-5 md:px-8 py-5">
+                <h2 className="text-lg md:text-2xl font-semibold uppercase tracking-[0.08em]">Change location</h2>
+                <button
+                  onClick={() => { setShowLocationModal(false); setLocationQuery(""); }}
+                  className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Close location selector"
+                  data-testid="button-close-location"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="px-5 md:px-8 py-5">
+                <div className="relative mb-5">
+                  <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    value={locationQuery}
+                    onChange={(e) => setLocationQuery(e.target.value)}
+                    placeholder="Search location"
+                    className="w-full border-0 border-b border-border/40 bg-transparent py-3 pl-8 pr-3 text-base focus:outline-none focus:border-foreground placeholder:text-muted-foreground/40"
+                    autoFocus
+                    data-testid="input-location-search"
+                  />
+                </div>
+                <div className="max-h-[55vh] overflow-y-auto pr-2">
+                  {filteredLocations.map((location, index) => (
+                    <button
+                      key={location.country}
+                      onClick={() => selectLocation(location.market)}
+                      className={`w-full flex items-center justify-between gap-4 py-3.5 text-left hover:bg-[#f5f5f3] transition-colors ${index === 3 && !locationQuery ? "border-t border-border/40 mt-2 pt-5" : ""}`}
+                      data-testid={`location-${location.country.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      <span className="flex items-center gap-3 min-w-0">
+                        <span className="text-2xl" aria-hidden="true">{location.flag}</span>
+                        <span className="text-base md:text-lg truncate">{location.country}</span>
+                      </span>
+                      <span className="text-sm md:text-base text-muted-foreground flex-shrink-0">{location.currency}</span>
+                    </button>
+                  ))}
+                  {filteredLocations.length === 0 && (
+                    <p className="py-10 text-center text-sm text-muted-foreground">No locations match your search.</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
