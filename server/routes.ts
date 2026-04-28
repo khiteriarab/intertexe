@@ -901,7 +901,13 @@ ${allPages.map(p => `  <url>
           const pathParts = parsed.pathname.split("/").filter(Boolean);
           const skipSlugs = ["products", "s", "p", "shop", "collections", "en", "us", "en-us", "es-es", "fr-fr", "de-de", "it-it", "womens", "women", "clothing", "mujer", "femme", "donna", "damen"];
           const productSlug = pathParts.filter(p => !skipSlugs.includes(p.toLowerCase())).pop() || "";
-          const productClean = productSlug.replace(/[-_]/g, " ").replace(/\.\w+$/, "").replace(/\d{10,}/, "").replace(/\b\w/g, (c: string) => c.toUpperCase()).trim();
+          const productClean = productSlug
+            .replace(/\.\w+$/, "")
+            .replace(/[-_]/g, " ")
+            .replace(/\bp?\d{5,}\b/gi, "")
+            .replace(/\s+/g, " ")
+            .replace(/\b\w/g, (c: string) => c.toUpperCase())
+            .trim();
           const isMultiBrand = ["nordstrom.com", "net-a-porter.com", "ssense.com", "farfetch.com", "mytheresa.com", "shopbop.com", "saksfifthavenue.com", "bergdorfgoodman.com", "revolve.com", "asos.com"].includes(hostname);
 
           const fullPath = (parsed.pathname + " " + productSlug).toLowerCase();
@@ -953,11 +959,6 @@ ${allPages.map(p => `  <url>
         }
       } catch {}
 
-      const scanOpenai = new OpenAI({
-        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-      });
-
       const fiberHintFromUrl = urlInfo.detectedFibers.length ? `\nFibers detected in URL: ${urlInfo.detectedFibers.join(", ")}` : "";
       const categoryHintFromUrl = urlInfo.detectedCategory !== "other" ? `\nCategory detected from URL: ${urlInfo.detectedCategory}` : "";
 
@@ -966,20 +967,27 @@ ${allPages.map(p => `  <url>
         : `URL: ${url}\nRetailer: ${urlInfo.retailer}\nBrand (from URL): ${urlInfo.brand || "unknown — determine from URL structure"}\nProduct (from URL path): ${urlInfo.product || "unknown"}${fiberHintFromUrl}${categoryHintFromUrl}\n\nThe page could not be scraped. Use your knowledge of this brand/retailer and the URL structure to extract what you can.`;
 
       let pageInfo: any = {};
-      try {
-        const extractRes = await scanOpenai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: 'Extract product info from the URL and any available page content. The page may be in any language (Spanish, French, Italian, etc.) — translate product names to English. Return JSON: {"brandName":"","productName":"","price":"","composition":"e.g. 100% Ramie or 70% Cotton, 30% Linen","category":"tops/bottoms/dresses/outerwear/knitwear/swimwear/loungewear/other","garmentType":"e.g. wrap top, midi dress","madeIn":"","retailer":""}. For composition, look for fabric/material info in ANY language: ramio=ramie, algodon=cotton, seda=silk, lana=wool, lino=linen, cachemir=cashmere, soie=silk, coton=cotton, baumwolle=cotton, seide=silk. Use null for genuinely unknown fields. For multi-brand retailers, identify the specific brand from the URL/content. ONLY valid JSON.' },
-            { role: "user", content: promptContent }
-          ],
-          max_tokens: 500,
-        });
+      const scanApiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+      if (scanApiKey) {
         try {
-          pageInfo = JSON.parse(extractRes.choices[0]?.message?.content?.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim() || "{}");
-        } catch { pageInfo = {}; }
-      } catch (aiErr: any) {
-        console.error("AI extraction failed:", aiErr.message);
+          const scanOpenai = new OpenAI({
+            apiKey: scanApiKey,
+            baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+          });
+          const extractRes = await scanOpenai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: 'Extract product info from the URL and any available page content. The page may be in any language (Spanish, French, Italian, etc.) — translate product names to English. Return JSON: {"brandName":"","productName":"","price":"","composition":"e.g. 100% Ramie or 70% Cotton, 30% Linen","category":"tops/bottoms/dresses/outerwear/knitwear/swimwear/loungewear/other","garmentType":"e.g. wrap top, midi dress","madeIn":"","retailer":""}. For composition, look for fabric/material info in ANY language: ramio=ramie, algodon=cotton, seda=silk, lana=wool, lino=linen, cachemir=cashmere, soie=silk, coton=cotton, baumwolle=cotton, seide=silk. Use null for genuinely unknown fields. For multi-brand retailers, identify the specific brand from the URL/content. ONLY valid JSON.' },
+              { role: "user", content: promptContent }
+            ],
+            max_tokens: 500,
+          });
+          try {
+            pageInfo = JSON.parse(extractRes.choices[0]?.message?.content?.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim() || "{}");
+          } catch { pageInfo = {}; }
+        } catch (aiErr: any) {
+          console.error("AI extraction failed:", aiErr.message);
+        }
       }
 
       const brandName = pageInfo.brandName || urlInfo.brand || "Unknown";
@@ -1019,6 +1027,9 @@ ${allPages.map(p => `  <url>
         naturalPercent = 100;
         if (!pageInfo.composition) pageInfo.composition = urlInfo.detectedFibers.map(f => `100% ${f}`).join(", ") + " (from URL)";
       }
+
+      if (!pageInfo.productName && urlInfo.product) pageInfo.productName = urlInfo.product;
+      if (!pageInfo.garmentType && urlInfo.product) pageInfo.garmentType = urlInfo.product.replace(/\b(ramie|cotton|linen|silk|wool|cashmere|blend)\b/gi, "").replace(/\s+/g, " ").trim();
 
       if (!supabaseAdmin) return res.status(500).json({ error: "Database not configured" });
 
@@ -1072,24 +1083,50 @@ ${allPages.map(p => `  <url>
         fiberFilter = detectedFiberForSearch.toLowerCase().split(" ")[0];
       }
 
-      let altQuery = supabaseAdmin.from("products").select("*")
-        .gte("natural_fiber_percent", 80).not("image_url", "is", null).neq("image_url", "")
-        .neq("brand_slug", brandSlug)
-        .order("natural_fiber_percent", { ascending: false });
+      const getAlternativeRows = async (orConditions: string[], limit = 40) => {
+        let query = supabaseAdmin.from("products").select("*")
+          .gte("natural_fiber_percent", 80)
+          .not("image_url", "is", null).neq("image_url", "")
+          .not("price", "is", null).neq("price", "")
+          .neq("brand_slug", brandSlug)
+          .order("natural_fiber_percent", { ascending: false })
+          .limit(limit);
+        if (orConditions.length > 0) query = query.or(orConditions.join(","));
+        const { data } = await query;
+        return data || [];
+      };
 
-      const orConditions: string[] = [];
-      if (searchTerms.length > 0) {
-        orConditions.push(...searchTerms.map(t => `name.ilike.%${t}%`));
-      }
-      if (fiberFilter) {
-        orConditions.push(`composition.ilike.%${fiberFilter}%`);
-      }
-      if (orConditions.length > 0) {
-        altQuery = altQuery.or(orConditions.join(","));
-      }
-      const { data: altData } = await altQuery.limit(12);
+      const rankedAlternatives: any[] = [];
+      const seenAlternativeIds = new Set();
+      const addAlternatives = (rows: any[]) => {
+        for (const row of rows) {
+          if (seenAlternativeIds.has(row.id)) continue;
+          seenAlternativeIds.add(row.id);
+          rankedAlternatives.push(row);
+        }
+      };
 
-      let alternatives = altData || [];
+      const categoryConditions = searchTerms.map(t => `name.ilike.%${t}%`);
+      if (categoryConditions.length && fiberFilter) {
+        addAlternatives(await getAlternativeRows([...categoryConditions, `composition.ilike.%${fiberFilter}%`]));
+      }
+      if (rankedAlternatives.length < 8 && categoryConditions.length) {
+        addAlternatives(await getAlternativeRows(categoryConditions));
+      }
+      if (rankedAlternatives.length < 8 && fiberFilter) {
+        addAlternatives(await getAlternativeRows([`composition.ilike.%${fiberFilter}%`]));
+      }
+      let alternatives = rankedAlternatives;
+      if (priceNum && alternatives.length > 1) {
+        alternatives = [...alternatives].sort((a: any, b: any) => {
+          const ap = parseFloat((a.price || "").replace(/[^0-9.]/g, "")) || Number.MAX_SAFE_INTEGER;
+          const bp = parseFloat((b.price || "").replace(/[^0-9.]/g, "")) || Number.MAX_SAFE_INTEGER;
+          const aWithin = ap <= priceNum * 1.5 ? 0 : 1;
+          const bWithin = bp <= priceNum * 1.5 ? 0 : 1;
+          if (aWithin !== bWithin) return aWithin - bWithin;
+          return (b.natural_fiber_percent || 0) - (a.natural_fiber_percent || 0);
+        });
+      }
       if (alternatives.length < 6) {
         const existingIds = alternatives.map(p => p.id);
         const { data: fallbackAlts } = await supabaseAdmin.from("products").select("*")

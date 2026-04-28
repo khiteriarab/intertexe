@@ -158,7 +158,19 @@ function inferFibersFromName(name: string): { fiber: string; percent: number; is
   return [];
 }
 
-function extractInfoFromUrl(url: string): { brand: string; product: string; retailer: string } {
+function humanizeProductSlug(slug: string): string {
+  return slug
+    .replace(/\.\w+$/, "")
+    .replace(/[-_]/g, " ")
+    .replace(/\bp\d{5,}\b/gi, "")
+    .replace(/\bv\d+\b/gi, "")
+    .replace(/\d{6,}/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function extractInfoFromUrl(url: string): { brand: string; product: string; retailer: string; detectedFibers: string[]; detectedCategory: string } {
   try {
     const parsed = new URL(url);
     const hostname = parsed.hostname.replace("www.", "");
@@ -192,16 +204,55 @@ function extractInfoFromUrl(url: string): { brand: string; product: string; reta
     const retailer = brandMap[hostname] || brandMap[baseDomain] || hostname.split(".")[0].charAt(0).toUpperCase() + hostname.split(".")[0].slice(1);
     const pathParts = parsed.pathname.split("/").filter(Boolean);
     const productSlug = pathParts.filter(p => !["products", "s", "p", "shop", "collections", "en", "us", "en-us", "en-es", "en-gb", "es-es", "fr-fr", "de-de", "it-it", "pt-pt", "en-de", "en-fr", "womens", "women", "clothing", "new-arrivals", "mujer", "femme", "donna", "damen", "ropa", "vetements"].includes(p.toLowerCase())).pop() || "";
-    const product = productSlug.replace(/\.\w+$/, "").replace(/[-_]/g, " ").replace(/\d{8,}/, "").replace(/\s+/g, " ").replace(/\b\w/g, c => c.toUpperCase()).trim();
+    const product = humanizeProductSlug(productSlug);
+    const fullPath = (parsed.pathname + " " + productSlug).toLowerCase();
+    const fiberAliases: Record<string, string> = {
+      ramie: "Ramie", ramio: "Ramie", linen: "Linen", lino: "Linen", lin: "Linen", flax: "Linen",
+      cotton: "Cotton", algodon: "Cotton", "algodón": "Cotton", silk: "Silk", seda: "Silk",
+      wool: "Wool", lana: "Wool", cashmere: "Cashmere", cachemir: "Cashmere",
+      hemp: "Hemp", canapa: "Hemp",
+    };
+    const detectedFibers = [...new Set(Object.entries(fiberAliases).filter(([key]) => fullPath.includes(key)).map(([, value]) => value))];
+    const categoryTerms: Record<string, string[]> = {
+      outerwear: ["jacket", "coat", "blazer", "parka", "trench", "chaqueta", "abrigo"],
+      dresses: ["dress", "gown", "vestido", "robe"],
+      tops: ["top", "shirt", "blouse", "camisole", "tank"],
+      knitwear: ["sweater", "knit", "cardigan", "pullover"],
+      bottoms: ["pant", "trouser", "jean", "short"],
+      skirts: ["skirt"],
+    };
+    let detectedCategory = "";
+    for (const [cat, terms] of Object.entries(categoryTerms)) {
+      if (terms.some(term => fullPath.includes(term))) { detectedCategory = cat; break; }
+    }
     const multiBrandDomains = ["nordstrom.com", "net-a-porter.com", "ssense.com", "farfetch.com", "mytheresa.com", "shopbop.com", "saksfifthavenue.com", "revolve.com", "asos.com"];
     const isMultiBrand = multiBrandDomains.includes(hostname) || multiBrandDomains.includes(baseDomain);
-    return { brand: isMultiBrand ? "" : retailer, product, retailer };
+    return { brand: isMultiBrand ? "" : retailer, product, retailer, detectedFibers, detectedCategory };
   } catch {
-    return { brand: "", product: "", retailer: "" };
+    return { brand: "", product: "", retailer: "", detectedFibers: [], detectedCategory: "" };
   }
 }
 
-async function fetchAlternatives(supabase: any, category: string, brandSlug: string, priceNum: number | null) {
+function sortAlternatives(products: any[], priceNum: number | null, fiberFilter: string): any[] {
+  return [...products].sort((a: any, b: any) => {
+    const aFiber = fiberFilter && (a.composition || "").toLowerCase().includes(fiberFilter) ? 1 : 0;
+    const bFiber = fiberFilter && (b.composition || "").toLowerCase().includes(fiberFilter) ? 1 : 0;
+    if (bFiber !== aFiber) return bFiber - aFiber;
+    if (priceNum) {
+      const ap = parsePriceNumber(a.price || "");
+      const bp = parsePriceNumber(b.price || "");
+      const aBetter = ap !== null && ap <= priceNum ? 1 : 0;
+      const bBetter = bp !== null && bp <= priceNum ? 1 : 0;
+      if (bBetter !== aBetter) return bBetter - aBetter;
+      const aDistance = ap === null ? Infinity : Math.abs(ap - priceNum);
+      const bDistance = bp === null ? Infinity : Math.abs(bp - priceNum);
+      if (aDistance !== bDistance) return aDistance - bDistance;
+    }
+    return (b.natural_fiber_percent || 0) - (a.natural_fiber_percent || 0);
+  });
+}
+
+async function fetchAlternatives(supabase: any, category: string, brandSlug: string, priceNum: number | null, fiberFilter = "") {
   const categoryKeywords: Record<string, string[]> = {
     dresses: ["dress", "gown"], tops: ["top", "blouse", "shirt", "tee", "camisole"],
     bottoms: ["pant", "trouser", "jean", "denim", "palazzo", "wide-leg", "slim"],
@@ -218,21 +269,30 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   if (brandSlug && brandSlug !== "unknown") {
     altQuery = altQuery.neq("brand_slug", brandSlug);
   }
-  if (searchTerms.length > 0) {
+  if (category) {
+    altQuery = altQuery.eq("category", category);
+  }
+  if (fiberFilter) {
+    altQuery = altQuery.ilike("composition", `%${fiberFilter}%`);
+  } else if (searchTerms.length > 0) {
     altQuery = altQuery.or(searchTerms.map(t => `name.ilike.%${t}%`).join(","));
   }
 
   const { data: altData } = await altQuery.limit(80);
-  let alternatives = altData || [];
+  let alternatives = sortAlternatives(altData || [], priceNum, fiberFilter);
 
-  if (priceNum && alternatives.length > 4) {
-    const priceLow = priceNum * 0.3;
-    const priceHigh = priceNum * 3.0;
-    const priceFiltered = alternatives.filter((p: any) => {
-      const pn = parsePriceNumber(p.price || "");
-      return pn !== null && pn >= priceLow && pn <= priceHigh;
-    });
-    if (priceFiltered.length >= 8) alternatives = priceFiltered;
+  if (alternatives.length < 6 && fiberFilter && category) {
+    let categoryQuery = supabase.from("products").select("*")
+      .eq("category", category)
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .order("natural_fiber_percent", { ascending: false })
+      .limit(80);
+    if (brandSlug && brandSlug !== "unknown") {
+      categoryQuery = categoryQuery.neq("brand_slug", brandSlug);
+    }
+    const { data: categoryData } = await categoryQuery;
+    if (categoryData?.length) alternatives = sortAlternatives([...alternatives, ...categoryData], priceNum, fiberFilter);
   }
 
   if (alternatives.length < 4 && searchTerms.length > 0) {
@@ -246,7 +306,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
       fallbackQuery = fallbackQuery.neq("brand_slug", brandSlug);
     }
     const { data: fallbackData } = await fallbackQuery;
-    if (fallbackData && fallbackData.length > alternatives.length) alternatives = fallbackData;
+    if (fallbackData && fallbackData.length > alternatives.length) alternatives = sortAlternatives(fallbackData, priceNum, fiberFilter);
   }
 
   if (alternatives.length < 4) {
@@ -255,7 +315,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
       .not("image_url", "is", null)
       .order("natural_fiber_percent", { ascending: false })
       .limit(30);
-    if (anyData && anyData.length > alternatives.length) alternatives = anyData;
+    if (anyData && anyData.length > alternatives.length) alternatives = sortAlternatives(anyData, priceNum, fiberFilter);
   }
 
   const brandBuckets: Record<string, any[]> = {};
@@ -595,6 +655,7 @@ Use null for genuinely unknown.` },
     brandName = brandName || urlInfo.brand || "Unknown";
     productName = productName || urlInfo.product || "Product";
     if (!category) category = resolveCategory("", productName.toLowerCase());
+    if ((!category || category === "other") && urlInfo.detectedCategory) category = urlInfo.detectedCategory;
 
     if (!fibers.length && compositionText) {
       fibers = parseComposition(compositionText);
@@ -602,6 +663,13 @@ Use null for genuinely unknown.` },
     if (!fibers.length) {
       const nameToCheck = [productName, compositionText, pageContent.slice(0, 500)].filter(Boolean).join(" ");
       fibers = inferFibersFromName(nameToCheck);
+      if (!fibers.length && urlInfo.detectedFibers.length > 0) {
+        fibers = urlInfo.detectedFibers.map((fiber) => ({
+          fiber,
+          percent: 100,
+          isNatural: true,
+        }));
+      }
       if (fibers.length && !compositionText) {
         compositionText = `${fibers[0].fiber.charAt(0).toUpperCase() + fibers[0].fiber.slice(1)} (inferred from product name)`;
       }
@@ -610,6 +678,8 @@ Use null for genuinely unknown.` },
 
     const brandSlug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const priceNum = parsePriceNumber(price);
+    const detectedFiberForSearch = urlInfo.detectedFibers[0] || (fibers.find(f => f.isNatural)?.fiber) || "";
+    const fiberFilter = detectedFiberForSearch.toLowerCase().split(" ")[0];
 
     let designerInfo = null;
     let brandProducts: any[] = [];
@@ -634,7 +704,7 @@ Use null for genuinely unknown.` },
 
     let alternatives: any[] = [];
     try {
-      alternatives = await fetchAlternatives(supabase, category, brandSlug, priceNum);
+      alternatives = await fetchAlternatives(supabase, category, brandSlug, priceNum, fiberFilter);
     } catch (altErr: any) {
       console.error("Alternatives fetch failed:", altErr.message);
     }
