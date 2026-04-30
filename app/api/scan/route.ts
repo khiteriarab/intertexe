@@ -106,6 +106,19 @@ function normalizeProductUrl(raw: string): string {
   return cleaned;
 }
 
+function humanizeProductSlug(slug: string): string {
+  return slug
+    .replace(/\.\w+$/, "")
+    .replace(/^productpage[.\s-]*\d*/i, "")
+    .replace(/[-_]/g, " ")
+    .replace(/\bp\d{5,}\b/gi, "")
+    .replace(/\bv\d+\b/gi, "")
+    .replace(/\d{6,}/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
   if (!apiKey) return null;
@@ -264,7 +277,7 @@ async function extractFromUrl(openai: OpenAI | null, url: string): Promise<any> 
     "nordstrom.com": "Nordstrom", "net-a-porter.com": "Net-a-Porter", "ssense.com": "SSENSE",
     "farfetch.com": "Farfetch", "mytheresa.com": "Mytheresa", "shopbop.com": "Shopbop",
     "saksfifthavenue.com": "Saks Fifth Avenue", "revolve.com": "Revolve", "asos.com": "ASOS",
-    "zara.com": "Zara", "everlane.com": "Everlane", "thereformation.com": "Reformation",
+    "zara.com": "Zara", "hm.com": "H&M", "everlane.com": "Everlane", "thereformation.com": "Reformation",
     "cos.com": "COS", "arket.com": "Arket", "khaite.com": "Khaite",
     "aninebing.com": "Anine Bing", "toteme.com": "Totême", "vince.com": "Vince",
     "sandro-paris.com": "Sandro", "maje.com": "Maje", "ba-sh.com": "ba&sh",
@@ -284,7 +297,7 @@ async function extractFromUrl(openai: OpenAI | null, url: string): Promise<any> 
   const skipSlugs = new Set(["products", "s", "p", "shop", "collections", "en", "us", "en-us", "es-es", "fr-fr", "de-de", "it-it", "womens", "women", "clothing", "mujer", "femme", "donna", "ropa"]);
   const pathParts = parsed.pathname.split("/").filter(Boolean);
   const productSlug = pathParts.filter(p => !skipSlugs.has(p.toLowerCase())).pop() || "";
-  const productFromUrl = productSlug.replace(/\.\w+$/, "").replace(/[-_]/g, " ").replace(/\d{8,}/, "").replace(/\s+/g, " ").replace(/\b\w/g, c => c.toUpperCase()).trim();
+  const productFromUrl = humanizeProductSlug(productSlug);
 
   const pathLower = parsed.pathname.toLowerCase();
   const fiberHints: string[] = [];
@@ -381,12 +394,29 @@ function identifyProduct(extracted: any): {
   return { fibers, naturalPercent, qualityScore, compositionText };
 }
 
+function sortAlternativeRows(rows: any[], priceNum: number | null, fiberFilter: string): any[] {
+  return [...rows].sort((a: any, b: any) => {
+    const aFiber = fiberFilter && (a.composition || "").toLowerCase().includes(fiberFilter) ? 1 : 0;
+    const bFiber = fiberFilter && (b.composition || "").toLowerCase().includes(fiberFilter) ? 1 : 0;
+    if (bFiber !== aFiber) return bFiber - aFiber;
+    if (priceNum) {
+      const ap = parsePriceNumber(a.price || "");
+      const bp = parsePriceNumber(b.price || "");
+      const aBetter = ap !== null && ap <= priceNum ? 1 : 0;
+      const bBetter = bp !== null && bp <= priceNum ? 1 : 0;
+      if (bBetter !== aBetter) return bBetter - aBetter;
+    }
+    return (b.natural_fiber_percent || 0) - (a.natural_fiber_percent || 0);
+  });
+}
+
 async function searchAlternatives(
   supabase: any,
   category: string,
   brandSlug: string,
   priceNum: number | null,
   color: string,
+  fiberFilter = "",
 ): Promise<any[]> {
   const categoryKeywords: Record<string, string[]> = {
     dresses: ["dress", "gown"], tops: ["top", "blouse", "shirt", "tee", "camisole", "tank"],
@@ -405,30 +435,40 @@ async function searchAlternatives(
   if (brandSlug && brandSlug !== "unknown") {
     altQuery = altQuery.neq("brand_slug", brandSlug);
   }
-  if (searchTerms.length > 0) {
+  if (category) {
+    altQuery = altQuery.eq("category", category);
+  }
+  if (fiberFilter) {
+    altQuery = altQuery.ilike("composition", `%${fiberFilter}%`);
+  } else if (searchTerms.length > 0) {
     altQuery = altQuery.or(searchTerms.map(t => `name.ilike.%${t}%`).join(","));
   }
 
   const { data: altData } = await altQuery.limit(60);
-  let alternatives = altData || [];
+  let alternatives = sortAlternativeRows(altData || [], priceNum, fiberFilter);
 
-  if (priceNum && alternatives.length > 6) {
-    const priceLow = priceNum * 0.3;
-    const priceHigh = priceNum * 3.0;
-    const priceFiltered = alternatives.filter((p: any) => {
-      const pn = parsePriceNumber(p.price || "");
-      return pn !== null && pn >= priceLow && pn <= priceHigh;
-    });
-    if (priceFiltered.length >= 6) alternatives = priceFiltered;
+  if (alternatives.length < 6 && fiberFilter && category) {
+    let categoryQuery = supabase.from("products").select("*")
+      .eq("category", category)
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null).neq("image_url", "")
+      .order("natural_fiber_percent", { ascending: false })
+      .limit(60);
+    if (brandSlug && brandSlug !== "unknown") {
+      categoryQuery = categoryQuery.neq("brand_slug", brandSlug);
+    }
+    const { data: categoryData } = await categoryQuery;
+    if (categoryData?.length) alternatives = sortAlternativeRows([...alternatives, ...categoryData], priceNum, fiberFilter);
   }
 
   if (alternatives.length < 6) {
     const { data: fallback } = await supabase.from("products").select("*")
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null).neq("image_url", "")
+      .not("price", "is", null).neq("price", "")
       .order("natural_fiber_percent", { ascending: false })
       .limit(30);
-    if (fallback && fallback.length > alternatives.length) alternatives = fallback;
+    if (fallback && fallback.length > alternatives.length) alternatives = sortAlternativeRows(fallback, priceNum, fiberFilter);
   }
 
   const brandBuckets: Record<string, any[]> = {};
@@ -612,9 +652,11 @@ export async function POST(request: NextRequest) {
     }
 
     const priceNum = parsePriceNumber(price);
+    const detectedFiberForSearch = analysis.fibers.find(f => f.isNatural)?.fiber || "";
+    const fiberFilter = detectedFiberForSearch.toLowerCase().split(" ")[0] || "";
     let alternatives: any[] = [];
     try {
-      alternatives = await searchAlternatives(supabase, category, brandSlug, priceNum, color);
+      alternatives = await searchAlternatives(supabase, category, brandSlug, priceNum, color, fiberFilter);
     } catch (e: any) {
       console.error("Alternatives search failed:", e.message);
     }
