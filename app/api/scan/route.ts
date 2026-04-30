@@ -106,6 +106,15 @@ function normalizeProductUrl(raw: string): string {
   return cleaned;
 }
 
+function getOpenAIClient(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  if (!apiKey) return null;
+  return new OpenAI({
+    apiKey,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || undefined,
+  });
+}
+
 const CATEGORY_TERMS: Record<string, string[]> = {
   dresses: ["dress", "gown", "vestido", "robe", "kleid", "abito", "jumpsuit", "romper"],
   tops: ["top", "blouse", "shirt", "tee", "t-shirt", "camisole", "tank", "polo", "henley", "bodysuit", "camisa", "blusa", "camiseta"],
@@ -490,9 +499,7 @@ export async function POST(request: NextRequest) {
   if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: "Server not configured" }, { status: 500 });
 
   const supabase = createClient(supabaseUrl, supabaseKey);
-  const openaiKey = process.env.OPENAI_API_KEY;
-  let openai: OpenAI | null = null;
-  if (openaiKey) openai = new OpenAI({ apiKey: openaiKey });
+  const openai = getOpenAIClient();
 
   try {
     const body = await request.json();

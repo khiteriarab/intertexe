@@ -9,6 +9,15 @@ const NATURAL_FIBERS = new Set([
   "flax", "kapok", "coir", "lyocell", "tencel", "modal", "cupro", "viscose",
 ]);
 
+function getOpenAIClient(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  if (!apiKey) return null;
+  return new OpenAI({
+    apiKey,
+    baseURL: process.env.OPENAI_BASE_URL || process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+}
+
 function parseComposition(raw: string): { fiber: string; percent: number; isNatural: boolean }[] {
   if (!raw) return [];
   const parts = raw.split(/[,;·•]+/).map(s => s.trim()).filter(Boolean);
@@ -160,7 +169,7 @@ function buildResponse(data: {
 }
 
 export async function POST(request: NextRequest) {
-  const openaiKey = process.env.OPENAI_API_KEY;
+  const openai = getOpenAIClient();
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
@@ -177,9 +186,8 @@ export async function POST(request: NextRequest) {
     let tagInfo: any = {};
     let aiFailed = false;
 
-    if (openaiKey) {
+    if (openai) {
       try {
-        const openai = new OpenAI({ apiKey: openaiKey });
         const visionRes = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           messages: [{

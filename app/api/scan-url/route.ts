@@ -123,6 +123,15 @@ function parsePriceNumber(priceStr: string): number | null {
   return isNaN(num) ? null : num;
 }
 
+function getOpenAIClient(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  if (!apiKey) return null;
+  return new OpenAI({
+    apiKey,
+    baseURL: process.env.OPENAI_BASE_URL || process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+}
+
 function normalizeProductUrl(raw: string): string {
   let cleaned = String(raw || "")
     .trim()
@@ -450,7 +459,7 @@ function buildResponse(data: {
 }
 
 export async function POST(request: NextRequest) {
-  const openaiKey = process.env.OPENAI_API_KEY;
+  const openai = getOpenAIClient();
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
@@ -576,11 +585,6 @@ export async function POST(request: NextRequest) {
           pageContent = [titleText ? `Title: ${titleText}` : "", ogTags.length ? `Meta: ${ogTags.join(", ")}` : "", structuredData ? `Structured data: ${structuredData}` : "", bodyText ? `Page text: ${bodyText}` : ""].filter(Boolean).join("\n\n");
         }
       } catch {}
-    }
-
-    let openai: OpenAI | null = null;
-    if (openaiKey) {
-      openai = new OpenAI({ apiKey: openaiKey });
     }
 
     if (openai && (!compositionText || !productName || !brandName || !imageUrl)) {
