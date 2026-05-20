@@ -6,6 +6,8 @@ import {
   fetchProductCount,
   fetchProductCountsByBrand,
   fetchSaleProducts,
+  fetchSilkEditProducts,
+  fetchVacationShopProducts,
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
 
@@ -77,6 +79,7 @@ export interface HomePageData {
   productCount: number;
   cashmereProducts: any[];
   silkProducts: any[];
+  vacationProducts: any[];
   linenProducts: any[];
   silkEditorialProduct: any | null;
   linenEditorialProduct: any | null;
@@ -87,12 +90,13 @@ export interface HomePageData {
 }
 
 export async function getHomePageData(): Promise<HomePageData> {
-  const [designers, productCount, cashmereProducts, silkProducts, linenProducts, productCountByBrand, saleResult] =
+  const [designers, productCount, cashmereProducts, silkProducts, vacationProducts, linenProducts, productCountByBrand, saleResult] =
     await Promise.all([
       fetchDesigners(undefined, 100),
       fetchProductCount(),
       fetchProductsByFiber("cashmere").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
-      fetchProductsByFiber("silk").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
+      fetchSilkEditProducts(96).then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
+      fetchVacationShopProducts(96).then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
       fetchProductsByFiber("linen").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
       fetchProductCountsByBrand(CURATED_BRAND_SLUGS),
       fetchSaleProducts({ limit: 12 }),
@@ -200,6 +204,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     productCount,
     cashmereProducts,
     silkProducts,
+    vacationProducts,
     linenProducts,
     silkEditorialProduct,
     linenEditorialProduct,

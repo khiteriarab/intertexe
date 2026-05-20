@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getHomePageData } from "../lib/homepage-data";
 import { HomePageContent } from "./components/HomeClient";
 import { createClient } from "@supabase/supabase-js";
+import { fetchProductCount } from "../lib/supabase-server";
 
 export const revalidate = 0;
 
@@ -19,16 +20,23 @@ async function getSSRStats() {
     process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
     process.env.SUPABASE_SERVICE_ROLE_KEY || ""
   );
-  const [
-    { count: productCount },
-    { count: brandCount },
-    { data: topBrands },
-  ] = await Promise.all([
-    supabase.from("products").select("*", { count: "exact", head: true }).gte("natural_fiber_percent", 80).not("image_url", "is", null).neq("image_url", ""),
+  const [catalogProductCount, { count: brandCount }, { data: topBrands }] = await Promise.all([
+    fetchProductCount(),
     supabase.from("designers").select("*", { count: "exact", head: true }),
-    supabase.from("designers").select("name, slug, natural_fiber_percent").not("natural_fiber_percent", "is", null).gte("natural_fiber_percent", 1).lte("natural_fiber_percent", 100).order("natural_fiber_percent", { ascending: false }).limit(12),
+    supabase
+      .from("designers")
+      .select("name, slug, natural_fiber_percent")
+      .not("natural_fiber_percent", "is", null)
+      .gte("natural_fiber_percent", 1)
+      .lte("natural_fiber_percent", 100)
+      .order("natural_fiber_percent", { ascending: false })
+      .limit(12),
   ]);
-  return { productCount: productCount || 0, brandCount: brandCount || 0, topBrands: topBrands || [] };
+  return {
+    productCount: catalogProductCount || 0,
+    brandCount: brandCount || 0,
+    topBrands: topBrands || [],
+  };
 }
 
 export default async function HomePage() {

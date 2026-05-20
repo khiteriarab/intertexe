@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, XCircle, AlertTriangle, ExternalLink } from "lucide-react";
-import { fetchProductsByFiberAndCategory, fetchProductCount } from "../../lib/supabase-server";
+import { fetchSilkEditProducts, fetchProductCount } from "../../lib/supabase-server";
 
 export const revalidate = 0;
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function SilkClothingPage() {
   const [products, productCount] = await Promise.all([
-    fetchProductsByFiberAndCategory("silk", undefined, 48),
+    fetchSilkEditProducts(48),
     fetchProductCount(),
   ]);
   const productsWithImages = products.filter(p => p.imageUrl);

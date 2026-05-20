@@ -319,6 +319,7 @@ interface HomePageData {
   productCount: number;
   cashmereProducts: any[];
   silkProducts: any[];
+  vacationProducts: any[];
   linenProducts: any[];
   silkEditorialProduct: any | null;
   linenEditorialProduct: any | null;
@@ -334,6 +335,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     productCount: 0,
     cashmereProducts: [],
     silkProducts: [],
+    vacationProducts: [],
     linenProducts: [],
     silkEditorialProduct: null,
     linenEditorialProduct: null,
@@ -434,9 +436,21 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           <HorizontalProductScroll
             products={data.silkProducts}
             title="Silk Essentials"
-            subtitle="Effortless elegance"
-            linkHref="/materials/silk"
-            linkText="Shop all silk"
+            subtitle="Effortless elegance — The Silk Edit"
+            linkHref="/silk-clothing"
+            linkText="Shop the silk edit"
+          />
+        </section>
+      )}
+
+      {data.vacationProducts.length > 0 && (
+        <section className="py-10 md:py-20 border-t border-neutral-200/60">
+          <HorizontalProductScroll
+            products={data.vacationProducts}
+            title="Vacation Shop"
+            subtitle="Holiday & resort-ready natural fabrics"
+            linkHref="/shop"
+            linkText="Browse vacation-ready pieces"
           />
         </section>
       )}
