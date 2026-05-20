@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Search, X, Home, Layers, Scan, ShoppingBag, User, UserCheck, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
+import { MERCH_NAV } from "../../lib/merch-nav";
 
 type MarketFilter = "all" | "us-ca" | "eu-uk-me";
 
@@ -108,22 +109,14 @@ export function Navbar() {
     setSearchQuery("");
   }, [pathname]);
 
-  const navLinks = [
-    { name: "Fabrics", href: "/materials" },
-    { name: "Shop", href: "/shop" },
-    { name: "Sale", href: "/sale" },
-    { name: "Directory", href: "/designers" },
-    { name: "Scanner", href: "/scanner" },
-    { name: "Quiz", href: "/quiz" },
-    { name: "Chat", href: "/chat" },
-  ];
+  const navLinks = MERCH_NAV.map((item) => ({ name: item.name, href: item.href }));
 
   const mobileNavLinks = [
     { name: "Home", href: "/", icon: Home },
+    { name: "New In", href: "/shop?sort=new", icon: ShoppingBag },
     { name: "Fabrics", href: "/materials", icon: Layers },
-    { name: "Scan", href: "/scanner", icon: Scan },
-    { name: "Shop", href: "/shop", icon: ShoppingBag },
-    { name: "Account", href: "/account", icon: (hasMounted && isAuthenticated) ? UserCheck : User },
+    { name: "Designers", href: "/designers", icon: User },
+    { name: "Sale", href: "/sale", icon: ShoppingBag },
   ];
 
   return (

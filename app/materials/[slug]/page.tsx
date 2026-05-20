@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { fetchProductsByFiberAndCategory, fetchDesigners, fetchProductCount } from "../../../lib/supabase-server";
+import {
+  fetchProductsByFiberAndCategory,
+  fetchDesigners,
+  fetchMaterialHubDisplayCount,
+} from "../../../lib/supabase-server";
 import { MATERIALS } from "../../../lib/data";
 import FabricProductGrid from "./FabricProductGrid";
 import EmailCapture from "../../components/EmailCapture";
@@ -707,7 +711,7 @@ async function MainFiberPage({ slug }: { slug: string }) {
     (async () => {
       const allProducts: any[] = [];
       for (const fiber of fiberQueries) {
-        const results = await fetchProductsByFiberAndCategory(fiber);
+        const results = await fetchProductsByFiberAndCategory(fiber, undefined, 64);
         allProducts.push(...results);
       }
       const seen = new Set<string>();
@@ -720,7 +724,7 @@ async function MainFiberPage({ slug }: { slug: string }) {
       });
     })(),
     fetchDesigners(undefined, 200),
-    fetchProductCount(),
+    fetchMaterialHubDisplayCount(slug),
   ]);
 
   const brandCount = new Set(products.map((p: any) => p.brandSlug)).size;

@@ -6,6 +6,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, X } from "lucide-re
 import { getQualityTier } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
+import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -431,10 +432,10 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.newInProducts}
-            title="New In"
-            subtitle="Just landed"
-            linkHref="/shop"
-            linkText="Shop all new arrivals"
+            title={HOMEPAGE_RAIL_LABELS.newInProducts.title}
+            subtitle={HOMEPAGE_RAIL_LABELS.newInProducts.subtitle}
+            linkHref="/shop?sort=new"
+            linkText="Shop New In"
             eager
           />
         </section>
@@ -453,20 +454,20 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.silkProducts}
-            title="Silk Essentials"
-            subtitle="Effortless elegance — The Silk Edit"
-            linkHref="/silk-clothing"
-            linkText="Shop the silk edit"
+            title={HOMEPAGE_RAIL_LABELS.silkProducts.title}
+            subtitle={HOMEPAGE_RAIL_LABELS.silkProducts.subtitle}
+            linkHref="/materials/silk"
+            linkText="Shop Silk"
           />
         </section>
 
       <section className="py-10 md:py-20 border-t border-neutral-200/60">
           <HorizontalProductScroll
             products={data.vacationProducts}
-            title="Vacation Shop"
-            subtitle="Holiday & resort-ready natural fabrics"
+            title={HOMEPAGE_RAIL_LABELS.vacationProducts.title}
+            subtitle={HOMEPAGE_RAIL_LABELS.vacationProducts.subtitle}
             linkHref="/shop"
-            linkText="Browse vacation-ready pieces"
+            linkText="Shop Vacation"
           />
         </section>
 
@@ -476,7 +477,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
               Curated selection
             </p>
-            <h2 className="text-[20px] md:text-[28px] font-serif leading-tight">The Brands We Love</h2>
+            <h2 className="text-[20px] md:text-[28px] font-serif leading-tight">Designers</h2>
           </div>
           <Link
             href="/designers"
@@ -494,8 +495,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           href="/materials/linen"
           imageUrl={linenHero}
           label="The edit"
-          title="Linen for Every Day"
-          subtitle="Dresses, tops and suiting in natural linen — relaxed luxury, all season."
+          title={HOMEPAGE_RAIL_LABELS.linenProducts.title}
+          subtitle={HOMEPAGE_RAIL_LABELS.linenProducts.subtitle}
           testId="link-edit-linen"
         />
       </section>
@@ -503,10 +504,10 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.cashmereProducts}
-            title="The Cashmere Edit"
-            subtitle="Pure luxury, verified"
+            title={HOMEPAGE_RAIL_LABELS.cashmereProducts.title}
+            subtitle={HOMEPAGE_RAIL_LABELS.cashmereProducts.subtitle}
             linkHref="/materials/cashmere"
-            linkText="Shop all cashmere"
+            linkText="Shop Cashmere"
           />
         </section>
 
@@ -519,7 +520,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                     The edit
                   </span>
                   <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
-                    On Sale
+                    {HOMEPAGE_RAIL_LABELS.saleProducts.title}
                   </h2>
                 </div>
                 <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />

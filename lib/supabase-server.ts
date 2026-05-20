@@ -597,6 +597,19 @@ export async function fetchProductsByFiberAndCategory(
   category?: string,
   limit = 100
 ): Promise<Product[]> {
+  const { fetchMerchRailProducts, isMerchFeedEnabled, MATERIAL_SLUG_TO_RAIL } =
+    await import("./merch-feed");
+
+  const primaryFiber = fiber.split(",")[0]?.trim().toLowerCase();
+  const railKey = primaryFiber ? MATERIAL_SLUG_TO_RAIL[primaryFiber] : undefined;
+
+  if (isMerchFeedEnabled() && railKey && !category) {
+    const rows = await fetchMerchRailProducts(railKey, { limit: Math.min(limit, 64) });
+    if (rows.length > 0) {
+      return rows.filter((p) => isClothingProduct(p) && isNotMensProduct(p));
+    }
+  }
+
   const supabase = getServerSupabase();
   if (!supabase) return [];
 
@@ -813,6 +826,12 @@ export async function fetchFiberCounts(): Promise<Record<string, number>> {
 }
 
 export async function fetchProductCount(): Promise<number> {
+  const { fetchMerchGlobalDisplayCount, isMerchFeedEnabled } = await import("./merch-feed");
+  if (isMerchFeedEnabled()) {
+    const n = await fetchMerchGlobalDisplayCount();
+    if (n > 0) return n;
+  }
+
   const supabase = getServerSupabase();
   if (!supabase) return 0;
   const fromRpc = await rpcCatalogListCount(supabase, {
@@ -828,10 +847,19 @@ export async function fetchProductCount(): Promise<number> {
 
   const { count, error } = await supabase
     .from("live_products_apparel")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .gte("natural_fiber_percent", 80);
   if (!error && count != null) return count;
   return 0;
+}
+
+/** Per-material hub count from precomputed meta (no catalog_list_count). */
+export async function fetchMaterialHubDisplayCount(materialSlug: string): Promise<number> {
+  const { fetchMerchRailDisplayCount, MATERIAL_SLUG_TO_RAIL } = await import("./merch-feed");
+  const railKey = MATERIAL_SLUG_TO_RAIL[materialSlug];
+  if (!railKey) return 0;
+  const n = await fetchMerchRailDisplayCount(railKey);
+  return n > 0 ? n : 0;
 }
 
 export async function fetchAllProductIds(): Promise<string[]> {

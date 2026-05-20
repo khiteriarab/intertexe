@@ -12,17 +12,19 @@ import {
 import { getCuratedScore } from "./curated-quality-scores";
 import { CURATED_BRAND_SLUGS } from "./homepage-constants";
 import {
-  HOMEPAGE_FEED_RAIL_KEYS,
-  fetchHomepageFeedRail,
-  isHomepageFeedCacheEnabled,
-} from "./homepage-feed";
+  MERCH_RAIL_KEYS,
+  fetchMerchGlobalDisplayCount,
+  fetchMerchRailProducts,
+  isMerchFeedEnabled,
+} from "./merch-feed";
 
 /** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
 
 /** Small fetches only — homepage must not scan large slices of catalog. */
 const MATERIAL_RAIL_FETCH_LIMIT = 24;
-const MATERIAL_RAIL_DISPLAY_MAX = 10;
+const MATERIAL_RAIL_DISPLAY_MAX = 16;
+const MERCH_HOME_FETCH_LIMIT = 24;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
 const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
@@ -171,12 +173,13 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const [
     designers,
     curatedDesigners,
-    newInProducts,
-    silkProducts,
-    linenProducts,
-    cashmereProducts,
-    vacationProducts,
-    saleProducts,
+    productCount,
+    newInRaw,
+    silkRaw,
+    linenRaw,
+    cashmereRaw,
+    vacationRaw,
+    saleRaw,
   ] = await Promise.all([
     withHomepageRailTimeout(
       "rail:designers",
@@ -185,19 +188,27 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       []
     ),
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
-    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.newIn),
-    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.silk),
-    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.linen),
-    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.cashmere),
-    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.vacation),
-    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.sale),
+    fetchMerchGlobalDisplayCount(),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.silk, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.linen, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.cashmere, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.vacation, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: MERCH_HOME_FETCH_LIMIT }),
   ]);
+
+  const newInProducts = postProcessHomepageMaterialRail(newInRaw);
+  const silkProducts = postProcessHomepageMaterialRail(silkRaw);
+  const linenProducts = postProcessHomepageMaterialRail(linenRaw);
+  const cashmereProducts = postProcessHomepageMaterialRail(cashmereRaw);
+  const vacationProducts = postProcessHomepageMaterialRail(vacationRaw);
+  const saleProducts = saleRaw.slice(0, MERCH_HOME_FETCH_LIMIT);
 
   const silkEditorialProduct = pickEditorialProduct(silkProducts as any[]);
   const linenEditorialProduct = pickEditorialProduct(linenProducts as any[]);
 
   console.log(
-    "[homepage-feed-cache] payload:",
+    "[merch-feed] homepage payload:",
     `new-in=${newInProducts.length}`,
     `silk=${silkProducts.length}`,
     `cashmere=${cashmereProducts.length}`,
@@ -209,7 +220,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
 
   return {
     designers,
-    productCount: 0,
+    productCount,
     cashmereProducts,
     silkProducts,
     vacationProducts,
@@ -224,7 +235,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
 }
 
 export async function getHomePageData(): Promise<HomePageData> {
-  if (isHomepageFeedCacheEnabled()) {
+  if (isMerchFeedEnabled()) {
     return getHomePageDataFromFeedCache();
   }
 
