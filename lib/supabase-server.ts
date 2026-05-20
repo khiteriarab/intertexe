@@ -2,6 +2,17 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
 type UntypedSupabase = SupabaseClient<any, "public", any>;
+import { logSupabaseTiming } from "./supabase-timing";
+
+/** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
+type UntypedSupabase = SupabaseClient<any, "public", any>;
+
+/** When `preferLiveOnly`, skip catalog RPCs and query `live_products_apparel` (faster homepage / emergency path).
+ *  `liveRowCap` limits rows loaded on the live-only / fallback path (homepage). */
+export type CatalogFetchOpts = {
+  preferLiveOnly?: boolean;
+  liveRowCap?: number;
+};
 
 function getSupabaseUrl(): string {
   return process.env.SUPABASE_URL
@@ -57,6 +68,8 @@ export interface Product {
   matchingSetId?: string | null;
   isSale?: boolean;
   originalPrice?: string | null;
+  /** Used for formatting bare numeric DB prices ($ / € / £). */
+  listingRegion?: string | null;
 }
 
 type MarketFilter = "us-ca" | "eu-uk-me";
@@ -202,6 +215,7 @@ async function rpcCatalogList(
     offset: number;
   }
 ): Promise<any[] | null> {
+  const tRpc = Date.now();
   const { data, error } = await supabase.rpc("catalog_list", {
     p_preferred_region: args.preferred,
     p_fallback_region: args.fallback,
@@ -213,6 +227,11 @@ async function rpcCatalogList(
     p_limit: args.limit,
     p_offset: args.offset,
   });
+  logSupabaseTiming(
+    `rpc catalog_list fiber=${args.fiber ?? "-"} cat=${args.category ?? "-"} brand=${args.brandSlug ?? "-"}`,
+    tRpc,
+    error ? `error:${error.message}` : `rows:${(data || []).length}`
+  );
   if (error) {
     console.warn("catalog_list RPC failed, using live_products_apparel fallback:", error.message);
     return null;
@@ -232,6 +251,7 @@ async function rpcCatalogListCount(
     minNfp?: number;
   }
 ): Promise<number | null> {
+  const tRpc = Date.now();
   const { data, error } = await supabase.rpc("catalog_list_count", {
     p_preferred_region: args.preferred,
     p_fallback_region: args.fallback,
@@ -241,6 +261,11 @@ async function rpcCatalogListCount(
     p_search: args.search && String(args.search).trim() ? args.search : null,
     p_min_nfp: args.minNfp ?? 80,
   });
+  logSupabaseTiming(
+    `rpc catalog_list_count fiber=${args.fiber ?? "-"} brand=${args.brandSlug ?? "-"}`,
+    tRpc,
+    error ? `error:${error.message}` : `count:${data}`
+  );
   if (error) return null;
   const n = typeof data === "number" ? data : Number(data);
   return Number.isFinite(n) ? n : null;
@@ -288,17 +313,38 @@ export async function fetchCatalogProductsByFiber(opts: {
     .map(mapProductRow);
 }
 
-export async function fetchSilkEditProducts(limit = 96, market?: string): Promise<Product[]> {
+export async function fetchSilkEditProducts(
+  limit = 96,
+  market?: string,
+  opts?: CatalogFetchOpts
+): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
   const { preferred, fallback } = catalogRegionsFromMarket(market);
 
-  const { data, error } = await supabase.rpc("silk_edit_products", {
-    p_preferred_region: preferred,
-    p_limit: limit,
-  });
-  let rows = (data || []) as any[];
-  if (error || rows.length === 0) {
+  let rows: any[] = [];
+  if (!opts?.preferLiveOnly) {
+    const tRpc = Date.now();
+    const { data, error } = await supabase.rpc("silk_edit_products", {
+      p_preferred_region: preferred,
+      p_limit: limit,
+    });
+    logSupabaseTiming(`rpc silk_edit_products limit=${limit}`, tRpc, error ? `error:${error.message}` : `rows:${(data || []).length}`);
+    rows = (data || []) as any[];
+    if (error || rows.length === 0) {
+      const tLive = Date.now();
+      const { data: fb } = await supabase
+        .from("live_products_apparel")
+        .select("*")
+        .ilike("composition", "%silk%")
+        .gte("natural_fiber_percent", 80)
+        .order("natural_fiber_percent", { ascending: false })
+        .limit(limit);
+      logSupabaseTiming("live live_products_apparel silk_edit fallback", tLive, `rows:${(fb || []).length}`);
+      rows = fb || [];
+    }
+  } else {
+    const tLive = Date.now();
     const { data: fb } = await supabase
       .from("live_products_apparel")
       .select("*")
@@ -306,6 +352,7 @@ export async function fetchSilkEditProducts(limit = 96, market?: string): Promis
       .gte("natural_fiber_percent", 80)
       .order("natural_fiber_percent", { ascending: false })
       .limit(limit);
+    logSupabaseTiming("live live_products_apparel silk homepage fast", tLive, `rows:${(fb || []).length}`);
     rows = fb || [];
   }
 
@@ -318,17 +365,38 @@ export async function fetchSilkEditProducts(limit = 96, market?: string): Promis
     .map(mapProductRow);
 }
 
-export async function fetchVacationShopProducts(limit = 96, market?: string): Promise<Product[]> {
+export async function fetchVacationShopProducts(
+  limit = 96,
+  market?: string,
+  opts?: CatalogFetchOpts
+): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
   const { preferred, fallback } = catalogRegionsFromMarket(market);
 
-  const { data, error } = await supabase.rpc("vacation_edit_products", {
-    p_preferred_region: preferred,
-    p_limit: limit,
-  });
-  let rows = (data || []) as any[];
-  if (error || rows.length === 0) {
+  let rows: any[] = [];
+  if (!opts?.preferLiveOnly) {
+    const tRpc = Date.now();
+    const { data, error } = await supabase.rpc("vacation_edit_products", {
+      p_preferred_region: preferred,
+      p_limit: limit,
+    });
+    logSupabaseTiming(`rpc vacation_edit_products limit=${limit}`, tRpc, error ? `error:${error.message}` : `rows:${(data || []).length}`);
+    rows = (data || []) as any[];
+    if (error || rows.length === 0) {
+      const tLive = Date.now();
+      const { data: fb } = await supabase
+        .from("live_products_apparel")
+        .select("*")
+        .or("composition.ilike.%linen%,composition.ilike.%cotton%,composition.ilike.%silk%")
+        .gte("natural_fiber_percent", 80)
+        .order("natural_fiber_percent", { ascending: false })
+        .limit(limit);
+      logSupabaseTiming("live live_products_apparel vacation_edit fallback", tLive, `rows:${(fb || []).length}`);
+      rows = fb || [];
+    }
+  } else {
+    const tLive = Date.now();
     const { data: fb } = await supabase
       .from("live_products_apparel")
       .select("*")
@@ -336,6 +404,7 @@ export async function fetchVacationShopProducts(limit = 96, market?: string): Pr
       .gte("natural_fiber_percent", 80)
       .order("natural_fiber_percent", { ascending: false })
       .limit(limit);
+    logSupabaseTiming("live live_products_apparel vacation homepage fast", tLive, `rows:${(fb || []).length}`);
     rows = fb || [];
   }
 
@@ -355,6 +424,20 @@ function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
 function mapProductRow(row: any): Product {
   const brandSlug = row.brand_slug || "";
   const rawImageUrl = row.image_url || "";
+  const priceRaw = row.price;
+  const priceStr =
+    priceRaw === null || priceRaw === undefined
+      ? ""
+      : typeof priceRaw === "number" && Number.isFinite(priceRaw)
+        ? String(priceRaw)
+        : String(priceRaw);
+  const origRaw = row.original_price;
+  const origStr =
+    origRaw === null || origRaw === undefined
+      ? null
+      : typeof origRaw === "number" && Number.isFinite(origRaw)
+        ? String(origRaw)
+        : String(origRaw);
   return {
     id: row.id,
     brandSlug,
@@ -363,13 +446,14 @@ function mapProductRow(row: any): Product {
     productId: row.product_id || row.id,
     url: row.url || "",
     imageUrl: fixIsabelMarantImage(brandSlug, rawImageUrl),
-    price: row.price || "",
+    price: priceStr,
     composition: row.composition || "",
     naturalFiberPercent: row.natural_fiber_percent || 0,
     category: row.category || "",
     matchingSetId: row.matching_set_id || null,
     isSale: row.is_sale || false,
-    originalPrice: row.original_price || null,
+    originalPrice: origStr,
+    listingRegion: row.region != null && row.region !== "" ? String(row.region) : null,
   };
 }
 
@@ -461,6 +545,17 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
     .limit(1);
   if (error || !data || data.length === 0) return null;
   return mapDesignerRow(data[0]);
+}
+
+/** One round-trip for homepage “Brands we love” (avoids N× fetchDesignerBySlug). */
+export async function fetchDesignersBySlugs(slugs: string[]): Promise<Designer[]> {
+  const supabase = getServerSupabase();
+  if (!supabase || slugs.length === 0) return [];
+  const unique = [...new Set(slugs.map((s) => s.trim().toLowerCase()).filter(Boolean))];
+  const { data, error } = await supabase.from("designers").select("*").in("slug", unique);
+  if (error || !data) return [];
+  const bySlug = new Map(data.map((row: any) => [String(row.slug || "").toLowerCase(), mapDesignerRow(row)]));
+  return slugs.map((s) => bySlug.get(s.trim().toLowerCase())).filter(Boolean) as Designer[];
 }
 
 export async function fetchProductById(id: string): Promise<Product | null> {
@@ -581,11 +676,29 @@ export async function fetchProductsByFiberAndCategory(
     return true;
   });
 
-  return unique
-    .filter(isClothingProduct)
-    .filter(isNotMensProduct)
-    .slice(0, limit)
-    .map(mapProductRow);
+  let filtered = unique.filter(isClothingProduct).filter(isNotMensProduct);
+
+  /** Last resort: mirrors homepage live path but OR-composes synonyms in one scan (fixes empty linen hub when per-term RPC/live paths disagree). */
+  if (filtered.length === 0 && terms.length > 0) {
+    let q = supabase
+      .from("live_products_apparel")
+      .select("*")
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .not("price", "is", null);
+    if (category) q = q.eq("category", category);
+    const orParts = terms.map((t) => `composition.ilike.%${t}%`);
+    if (orParts.length === 1) q = q.ilike("composition", `%${terms[0]}%`);
+    else q = q.or(orParts.join(","));
+    const broadLimit = Math.max(limit * 2, 160);
+    const { data } = await q.order("natural_fiber_percent", { ascending: false }).limit(broadLimit);
+    filtered = dedupeLiveApparelRows(data || [], "us", "us")
+      .filter(isClothingProduct)
+      .filter(isNotMensProduct)
+      .filter(priceListedRow);
+  }
+
+  return filtered.slice(0, limit).map(mapProductRow);
 }
 
 function priceListedRow(row: any): boolean {
@@ -595,29 +708,39 @@ function priceListedRow(row: any): boolean {
   return true;
 }
 
-export async function fetchProductsByBrand(brandSlug: string): Promise<Product[]> {
+export async function fetchProductsByBrand(
+  brandSlug: string,
+  opts?: CatalogFetchOpts
+): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
-  let rows =
-    (await rpcCatalogList(supabase, {
-      preferred: "us",
-      fallback: "us",
-      fiber: null,
-      category: null,
-      brandSlug,
-      search: null,
-      minNfp: 80,
-      limit: 500,
-      offset: 0,
-    })) || [];
+  const cap = Math.min(Math.max(1, opts?.liveRowCap ?? 500), 500);
+
+  let rows: any[] = [];
+  if (!opts?.preferLiveOnly) {
+    rows =
+      (await rpcCatalogList(supabase, {
+        preferred: "us",
+        fallback: "us",
+        fiber: null,
+        category: null,
+        brandSlug,
+        search: null,
+        minNfp: 80,
+        limit: cap,
+        offset: 0,
+      })) || [];
+  }
   if (rows.length === 0) {
+    const tLive = Date.now();
     const { data } = await supabase
       .from("live_products_apparel")
       .select("*")
       .eq("brand_slug", brandSlug)
       .gte("natural_fiber_percent", 80)
       .order("natural_fiber_percent", { ascending: false })
-      .limit(500);
+      .limit(cap);
+    logSupabaseTiming(`live live_products_apparel brand=${brandSlug}`, tLive, `rows:${(data || []).length}`);
     rows = dedupeLiveApparelRows(data || [], "us", "us");
   }
 
@@ -767,24 +890,31 @@ function isWomensFashionBrand(slug: string): boolean {
   return WOMEN_FASHION_BRAND_SLUGS.has(slug);
 }
 
-export async function fetchProductsByFiber(fiber: string, limit = 200): Promise<Product[]> {
+export async function fetchProductsByFiber(
+  fiber: string,
+  limit = 200,
+  opts?: CatalogFetchOpts
+): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
 
-  let rows =
-    (await rpcCatalogList(supabase, {
-      preferred: "us",
-      fallback: "us",
-      fiber,
-      category: null,
-      brandSlug: null,
-      search: null,
-      minNfp: 80,
-      limit,
-      offset: 0,
-    })) || [];
-
+  let rows: any[] = [];
+  if (!opts?.preferLiveOnly) {
+    rows =
+      (await rpcCatalogList(supabase, {
+        preferred: "us",
+        fallback: "us",
+        fiber,
+        category: null,
+        brandSlug: null,
+        search: null,
+        minNfp: 80,
+        limit,
+        offset: 0,
+      })) || [];
+  }
   if (rows.length === 0) {
+    const tLive = Date.now();
     const { data } = await supabase
       .from("live_products_apparel")
       .select("*")
@@ -794,6 +924,7 @@ export async function fetchProductsByFiber(fiber: string, limit = 200): Promise<
       .not("image_url", "is", null)
       .order("natural_fiber_percent", { ascending: false })
       .limit(limit);
+    logSupabaseTiming(`live live_products_apparel fiber=${fiber}`, tLive, `rows:${(data || []).length}`);
     rows = data || [];
   }
 
@@ -805,8 +936,12 @@ export async function fetchProductsByFiber(fiber: string, limit = 200): Promise<
     .map(mapProductRow);
 }
 
-export async function fetchProductsByBrandWithImages(brandSlug: string, limit = 24): Promise<Product[]> {
-  const rows = await fetchProductsByBrand(brandSlug);
+export async function fetchProductsByBrandWithImages(
+  brandSlug: string,
+  limit = 24,
+  opts?: CatalogFetchOpts
+): Promise<Product[]> {
+  const rows = await fetchProductsByBrand(brandSlug, opts);
   return rows
     .filter((p) => !!p.imageUrl && !!p.price)
     .slice(0, limit);
@@ -1148,10 +1283,12 @@ export async function fetchSaleProducts(options: {
   maxPrice?: number;
   limit?: number;
   offset?: number;
+  /** Stop scanning after this many raw rows (homepage perf; sale page omits for full grid). */
+  maxSourceRows?: number;
 }): Promise<{ products: Product[]; total: number }> {
   const supabase = getServerSupabase();
   if (!supabase) return { products: [], total: 0 };
-  const { fiber, maxPrice, limit = 60, offset = 0 } = options;
+  const { fiber, maxPrice, limit = 60, offset = 0, maxSourceRows } = options;
   const dedupePreferred = "us";
   const dedupeFallback = "us";
 
@@ -1159,6 +1296,7 @@ export async function fetchSaleProducts(options: {
   let allRows: any[] = [];
   let qOffset = 0;
   while (true) {
+    if (maxSourceRows != null && allRows.length >= maxSourceRows) break;
     let q = supabase
       .from("live_products_apparel")
       .select("*")
@@ -1169,12 +1307,18 @@ export async function fetchSaleProducts(options: {
     if (fiber && fiber !== "all") {
       q = q.ilike("composition", `%${fiber}%`);
     }
-    q = q.order("natural_fiber_percent", { ascending: false }).range(qOffset, qOffset + pageSize - 1);
+    const rangeEnd =
+      maxSourceRows != null
+        ? qOffset + Math.min(pageSize, Math.max(0, maxSourceRows - allRows.length)) - 1
+        : qOffset + pageSize - 1;
+    if (maxSourceRows != null && rangeEnd < qOffset) break;
+    q = q.order("natural_fiber_percent", { ascending: false }).range(qOffset, rangeEnd);
     const { data: chunk, error } = await q;
     if (error || !chunk || chunk.length === 0) break;
     allRows.push(...chunk);
-    if (chunk.length < pageSize) break;
-    qOffset += pageSize;
+    if (chunk.length < rangeEnd - qOffset + 1) break;
+    if (maxSourceRows != null && allRows.length >= maxSourceRows) break;
+    qOffset += chunk.length;
   }
 
   let data = dedupeLiveApparelRows(allRows, dedupePreferred, dedupeFallback);

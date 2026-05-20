@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { useProductFavorites } from "../../hooks/use-product-favorites";
+import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../../lib/format-display-price";
 
 const CATEGORY_LABELS: Record<string, string> = {
   all: "All",
@@ -284,10 +285,14 @@ export function DesignerDetailProducts({
                       <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
                       {product.price && (
                         <div className="flex items-center gap-2 mt-auto pt-1">
-                          <p className={`text-xs font-medium ${product.isSale ? "text-[#b91c1c]" : ""}`}>{product.price}</p>
+                          <p className={`text-xs font-medium ${product.isSale ? "text-[#b91c1c]" : ""}`}>
+                            {formatDisplayPrice(product)}
+                          </p>
                           {product.isSale && product.originalPrice && (
                             <>
-                              <p className="text-[10px] text-muted-foreground line-through">{product.originalPrice}</p>
+                              <p className="text-[10px] text-muted-foreground line-through">
+                                {formatDisplayOriginalPrice(product)}
+                              </p>
                               {(() => {
                                 const cur = parsePrice(product.price);
                                 const orig = parsePrice(product.originalPrice);

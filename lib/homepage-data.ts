@@ -1,13 +1,77 @@
 import {
   fetchDesigners,
-  fetchDesignerBySlug,
+  fetchDesignersBySlugs,
   fetchProductsByFiber,
   fetchProductsByBrandWithImages,
-  fetchProductCount,
-  fetchProductCountsByBrand,
   fetchSaleProducts,
+  fetchSilkEditProducts,
+  fetchVacationShopProducts,
+  type Product,
+  type CatalogFetchOpts,
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
+import { CURATED_BRAND_SLUGS } from "./homepage-constants";
+
+/** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
+const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
+
+/** Small fetches only — homepage must not scan large slices of catalog. */
+const MATERIAL_RAIL_FETCH_LIMIT = 24;
+const MATERIAL_RAIL_DISPLAY_MAX = 10;
+const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
+const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
+/** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
+const NEW_IN_BRAND_SLUGS = [
+  "frame", "vince", "theory", "toteme", "ganni", "staud", "khaite", "isabel-marant",
+] as const;
+const NEW_IN_FETCH_PER_BRAND = 10;
+const NEW_IN_TARGET_ITEMS = 8;
+const HOMEPAGE_SALE_FETCH_LIMIT = 16;
+const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 180;
+const DESIGNERS_FETCH_LIMIT = 48;
+
+const RAIL_TIMEOUT_MS = 3800;
+const BRAND_FETCH_TIMEOUT_MS = 2800;
+const CURATED_SECTION_TIMEOUT_MS = 4500;
+const DESIGNERS_TIMEOUT_MS = 3200;
+
+const homeRailOpts: CatalogFetchOpts = {
+  preferLiveOnly: !HOMEPAGE_USE_CATALOG_RPC,
+};
+
+const homeBrandOpts: CatalogFetchOpts = {
+  preferLiveOnly: !HOMEPAGE_USE_CATALOG_RPC,
+  liveRowCap: HOMEPAGE_BRAND_LIVE_ROW_CAP,
+};
+
+export { CURATED_BRAND_SLUGS };
+
+function homepageTiming(label: string, startedAt: number, extra?: string) {
+  const ms = Date.now() - startedAt;
+  console.log(`[homepage-timing] ${label} ${ms}ms${extra ? ` ${extra}` : ""}`);
+}
+
+async function withHomepageRailTimeout<T>(
+  label: string,
+  ms: number,
+  fn: () => Promise<T>,
+  fallback: T
+): Promise<T> {
+  const t0 = Date.now();
+  try {
+    const out = await Promise.race([
+      fn(),
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`${label}_timeout`)), ms)
+      ),
+    ]);
+    homepageTiming(`${label}`, t0);
+    return out;
+  } catch (e: any) {
+    homepageTiming(`${label}`, t0, e?.message || "error");
+    return fallback;
+  }
+}
 
 function isZeroPrice(price: string | null | undefined): boolean {
   if (!price) return true;
@@ -65,18 +129,12 @@ function diversifyByBrand(products: any[], max: number, maxPerBrand: number): an
   return result;
 }
 
-export const CURATED_BRAND_SLUGS = [
-  "theory", "rag-and-bone", "vince", "l-agence", "frame",
-  "khaite", "toteme", "loro-piana", "staud", "ganni",
-  "velvet", "fleur-du-mal", "faithfull-the-brand", "isabel-marant", "diesel",
-  "rails", "re-done", "citizens-of-humanity", "7-for-all-mankind", "splendid",
-];
-
 export interface HomePageData {
   designers: any[];
   productCount: number;
   cashmereProducts: any[];
   silkProducts: any[];
+  vacationProducts: any[];
   linenProducts: any[];
   silkEditorialProduct: any | null;
   linenEditorialProduct: any | null;
@@ -86,53 +144,101 @@ export interface HomePageData {
   saleProducts: any[];
 }
 
+function postProcessHomepageMaterialRail(products: Product[]): Product[] {
+  return diversifyByBrand(
+    products.filter((x) => !isZeroPrice(x.price)),
+    MATERIAL_RAIL_DISPLAY_MAX,
+    MATERIAL_DIVERSITY_MAX_PER_BRAND
+  );
+}
+
+async function fetchCuratedDesignersFast(): Promise<any[]> {
+  const list = await fetchDesignersBySlugs([...CURATED_BRAND_SLUGS]);
+  return list.map((d) => {
+    if (d.naturalFiberPercent != null) return d;
+    const score = getCuratedScore(d.name);
+    return score != null ? { ...d, naturalFiberPercent: score } : d;
+  });
+}
+
 export async function getHomePageData(): Promise<HomePageData> {
-  const [designers, productCount, cashmereProducts, silkProducts, linenProducts, productCountByBrand, saleResult] =
+  const designers = await withHomepageRailTimeout(
+    "rail:designers",
+    DESIGNERS_TIMEOUT_MS,
+    () => fetchDesigners(undefined, DESIGNERS_FETCH_LIMIT),
+    []
+  );
+
+  const [cashmereProducts, silkProducts, vacationProducts, linenProducts, saleResult, curatedDesigners] =
     await Promise.all([
-      fetchDesigners(undefined, 100),
-      fetchProductCount(),
-      fetchProductsByFiber("cashmere").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
-      fetchProductsByFiber("silk").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
-      fetchProductsByFiber("linen").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
-      fetchProductCountsByBrand(CURATED_BRAND_SLUGS),
-      fetchSaleProducts({ limit: 12 }),
+      withHomepageRailTimeout(
+        "rail:cashmere",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchProductsByFiber("cashmere", MATERIAL_RAIL_FETCH_LIMIT, homeRailOpts).then(
+            postProcessHomepageMaterialRail
+          ),
+        []
+      ),
+      withHomepageRailTimeout(
+        "rail:silk",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchSilkEditProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
+            postProcessHomepageMaterialRail
+          ),
+        []
+      ),
+      withHomepageRailTimeout(
+        "rail:vacation",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchVacationShopProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
+            postProcessHomepageMaterialRail
+          ),
+        []
+      ),
+      withHomepageRailTimeout(
+        "rail:linen",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchProductsByFiber("linen", MATERIAL_RAIL_FETCH_LIMIT, homeRailOpts).then(
+            postProcessHomepageMaterialRail
+          ),
+        []
+      ),
+      withHomepageRailTimeout(
+        "rail:sale",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchSaleProducts({
+            limit: HOMEPAGE_SALE_FETCH_LIMIT,
+            offset: 0,
+            maxSourceRows: HOMEPAGE_SALE_MAX_SOURCE_ROWS,
+          }),
+        { products: [], total: 0 }
+      ),
+      withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
     ]);
 
-  const saleProducts = saleResult.products.filter((p) => !isZeroPrice(p.price));
+  const saleProducts = (saleResult.products || []).filter((p) => !isZeroPrice(p.price));
 
-  const curatedDesignerResults = await Promise.all(
-    CURATED_BRAND_SLUGS.map(async (slug) => {
-      const designer = await fetchDesignerBySlug(slug);
-      if (!designer) return null;
-      const products = await fetchProductsByBrandWithImages(slug, 12);
-      const heroProduct = pickEditorialProduct(products);
-      const withHero = heroProduct?.imageUrl ? { ...designer, heroImageUrl: heroProduct.imageUrl } : designer;
-      if (designer.naturalFiberPercent != null) return withHero;
-      const score = getCuratedScore(designer.name);
-      return score != null ? { ...withHero, naturalFiberPercent: score } : withHero;
-    })
-  );
-  const curatedDesigners = curatedDesignerResults.filter(Boolean);
-
-  const newInBrandSlugs = [
-    "frame", "vince", "rag-and-bone", "theory", "l-agence",
-    "khaite", "toteme", "loro-piana", "staud", "ganni",
-    "velvet", "isabel-marant", "re-done", "citizens-of-humanity",
-    "fleur-du-mal", "a-l-c", "faithfull-the-brand",
-    "johnny-was", "ramy-brook", "rails", "free-people",
-    "paige", "diesel", "splendid", "7-for-all-mankind",
-  ];
   const brandProductLists = await Promise.all(
-    newInBrandSlugs.map((slug) => fetchProductsByBrandWithImages(slug, 40))
+    [...NEW_IN_BRAND_SLUGS].map((slug) =>
+      withHomepageRailTimeout(`brandrail:new-in:${slug}`, BRAND_FETCH_TIMEOUT_MS, async () => {
+        return fetchProductsByBrandWithImages(slug, NEW_IN_FETCH_PER_BRAND, homeBrandOpts);
+      }, [])
+    )
   );
 
   const seenIds = new Set<string>();
   const seenBaseNames = new Set<string>();
   const newInProducts: any[] = [];
-  const maxPerBrand = 3;
+  const maxPerBrand = 2;
   const heroCategories = new Set(["dresses", "outerwear", "knitwear", "jumpsuits"]);
   const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts", "jumpsuits", "lingerie", "swimwear", "tops"]);
-  const basicPatterns = /\b(t-shirt|tee|sweatshirt|tank top|vest|cargo|jogger|hoodie|henley|polo|baseball|cap|beanie|sock|belt|scarf|glove|wallet|bag|hat|mask)\b/i;
+  const basicPatterns =
+    /\b(t-shirt|tee|sweatshirt|tank top|vest|cargo|jogger|hoodie|henley|polo|baseball|cap|beanie|sock|belt|scarf|glove|wallet|bag|hat|mask)\b/i;
   const basicNamePatterns = /\b(basic|essential|everyday|classic crew|crewneck tee|v-?neck tee|pocket tee|jersey tee)\b/i;
   const minPrice = 80;
 
@@ -150,8 +256,8 @@ export async function getHomePageData(): Promise<HomePageData> {
       const aHero = heroCategories.has(a.category) ? 2 : editorialCategories.has(a.category) ? 1 : 0;
       const bHero = heroCategories.has(b.category) ? 2 : editorialCategories.has(b.category) ? 1 : 0;
       if (bHero !== aHero) return bHero - aHero;
-      const aBasic = (basicPatterns.test(a.name) || basicNamePatterns.test(a.name)) ? 1 : 0;
-      const bBasic = (basicPatterns.test(b.name) || basicNamePatterns.test(b.name)) ? 1 : 0;
+      const aBasic = basicPatterns.test(a.name) || basicNamePatterns.test(a.name) ? 1 : 0;
+      const bBasic = basicPatterns.test(b.name) || basicNamePatterns.test(b.name) ? 1 : 0;
       if (aBasic !== bBasic) return aBasic - bBasic;
       const aPrice = parseFloat((a.price || "0").replace(/[^0-9.]/g, "")) || 0;
       const bPrice = parseFloat((b.price || "0").replace(/[^0-9.]/g, "")) || 0;
@@ -179,31 +285,34 @@ export async function getHomePageData(): Promise<HomePageData> {
   }
 
   let round = 0;
-  while (newInProducts.length < 30) {
+  const tNewInCompose = Date.now();
+  while (newInProducts.length < NEW_IN_TARGET_ITEMS) {
     let added = false;
     for (const queue of brandQueues) {
       if (round < queue.length) {
         newInProducts.push(queue[round]);
         added = true;
-        if (newInProducts.length >= 30) break;
+        if (newInProducts.length >= NEW_IN_TARGET_ITEMS) break;
       }
     }
     if (!added) break;
     round++;
   }
+  homepageTiming("phase:new-in-compose", tNewInCompose, `items=${newInProducts.length}`);
 
-  const silkEditorialProduct = pickEditorialProduct(silkProducts);
-  const linenEditorialProduct = pickEditorialProduct(linenProducts);
+  const silkEditorialProduct = pickEditorialProduct(silkProducts as any[]);
+  const linenEditorialProduct = pickEditorialProduct(linenProducts as any[]);
 
   return {
     designers,
-    productCount,
+    productCount: 0,
     cashmereProducts,
     silkProducts,
+    vacationProducts,
     linenProducts,
     silkEditorialProduct,
     linenEditorialProduct,
-    productCountByBrand,
+    productCountByBrand: {},
     curatedDesigners,
     newInProducts,
     saleProducts,

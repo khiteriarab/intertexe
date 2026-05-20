@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { formatDisplayPrice, type DisplayPriceProduct } from "../../../lib/format-display-price";
 
-interface Product {
+interface Product extends DisplayPriceProduct {
   productId?: string;
   id?: string;
   name: string;
@@ -153,7 +154,7 @@ export default function FabricProductGrid({
                 <h3 className="text-[12px] md:text-[13px] leading-[1.4] text-foreground/70 group-hover:text-foreground transition-colors duration-300 line-clamp-2 font-light">
                   {product.name}
                 </h3>
-                <span className="text-[12px] md:text-[13px] text-foreground/90 mt-1 tracking-wide">{product.price}</span>
+                <span className="text-[12px] md:text-[13px] text-foreground/90 mt-1 tracking-wide">{formatDisplayPrice(product)}</span>
               </div>
             </Link>
           ))}

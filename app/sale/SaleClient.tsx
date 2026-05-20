@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ShoppingBag, Heart, Tag } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
+import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type PriceFilter = "all" | "100" | "200" | "300";
@@ -26,8 +27,8 @@ const PRICE_FILTERS: { key: PriceFilter; label: string }[] = [
 
 function getDiscountPercent(originalPrice: string | null, currentPrice: string | null): number | null {
   if (!originalPrice || !currentPrice) return null;
-  const orig = parseFloat(originalPrice.replace(/[^0-9.]/g, ""));
-  const curr = parseFloat(currentPrice.replace(/[^0-9.]/g, ""));
+  const orig = parseFloat(String(originalPrice).replace(/[^0-9.]/g, ""));
+  const curr = parseFloat(String(currentPrice).replace(/[^0-9.]/g, ""));
   if (!orig || !curr || orig <= curr) return null;
   return Math.round(((orig - curr) / orig) * 100);
 }
@@ -43,6 +44,14 @@ function SaleProductCard({ product }: { product: any }) {
   const originalPrice = product.originalPrice || product.original_price;
   const composition = product.composition;
   const discount = getDiscountPercent(originalPrice, price);
+  const priceHints = {
+    price,
+    originalPrice,
+    listingRegion: product.listingRegion ?? product.listing_region,
+    productId: product.productId || product.product_id,
+  };
+  const priceShown = formatDisplayPrice(priceHints);
+  const originalShown = formatDisplayOriginalPrice(priceHints);
 
   return (
     <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
@@ -50,7 +59,7 @@ function SaleProductCard({ product }: { product: any }) {
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, priceShown || String(price)); }}
             className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
             data-testid={`btn-favorite-sale-${product.id}`}
             aria-label={saved ? "Remove from favorites" : "Save to favorites"}
@@ -74,9 +83,9 @@ function SaleProductCard({ product }: { product: any }) {
         <span className="text-[10px] md:text-[11px] uppercase tracking-[0.08em] text-muted-foreground">{brandName}</span>
         <h3 className="text-[12px] md:text-[13px] leading-snug line-clamp-2 text-foreground">{name}</h3>
         <div className="flex items-center gap-2 mt-0.5">
-          {price && <span className="text-[12px] md:text-[13px] font-medium text-red-600">{price}</span>}
-          {originalPrice && discount && (
-            <span className="text-[11px] text-muted-foreground line-through">{originalPrice}</span>
+          {priceShown && <span className="text-[12px] md:text-[13px] font-medium text-red-600">{priceShown}</span>}
+          {originalShown && discount && (
+            <span className="text-[11px] text-muted-foreground line-through">{originalShown}</span>
           )}
         </div>
         {composition && (
