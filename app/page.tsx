@@ -3,7 +3,6 @@ import Link from "next/link";
 import { getHomePageData } from "../lib/homepage-data";
 import { HomePageContent } from "./components/HomeClient";
 import { createClient } from "@supabase/supabase-js";
-import { fetchProductCount } from "../lib/supabase-server";
 
 export const revalidate = 0;
 
@@ -16,25 +15,21 @@ export const metadata: Metadata = {
 };
 
 async function getSSRStats() {
+  const t0 = Date.now();
   const supabase = createClient(
     process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
     process.env.SUPABASE_SERVICE_ROLE_KEY || ""
   );
-  const [catalogProductCount, { count: brandCount }, { data: topBrands }] = await Promise.all([
-    fetchProductCount(),
-    supabase.from("designers").select("*", { count: "exact", head: true }),
-    supabase
-      .from("designers")
-      .select("name, slug, natural_fiber_percent")
-      .not("natural_fiber_percent", "is", null)
-      .gte("natural_fiber_percent", 1)
-      .lte("natural_fiber_percent", 100)
-      .order("natural_fiber_percent", { ascending: false })
-      .limit(12),
-  ]);
+  const { data: topBrands, error } = await supabase
+    .from("designers")
+    .select("name, slug, natural_fiber_percent")
+    .not("natural_fiber_percent", "is", null)
+    .gte("natural_fiber_percent", 1)
+    .lte("natural_fiber_percent", 100)
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(12);
+  console.log(`[homepage-timing] ssr:top-brands ${Date.now() - t0}ms${error ? " error" : ""}`);
   return {
-    productCount: catalogProductCount || 0,
-    brandCount: brandCount || 0,
     topBrands: topBrands || [],
   };
 }
@@ -50,7 +45,7 @@ export default async function HomePage() {
         <section>
           <h1>INTERTEXE — The Fashion Search Engine for Natural Fabrics</h1>
           <p>
-            INTERTEXE makes it easy to shop luxury fashion by fabric. Browse {stats.productCount.toLocaleString()}+ verified clothing items across {stats.brandCount.toLocaleString()}+ brands,
+            INTERTEXE makes it easy to shop luxury fashion by fabric. Browse thousands of verified clothing items across curated brands,
             all filtered by natural fiber content. Every product is verified to contain 80% or more natural fibers — silk, cashmere, linen, wool, and cotton.
           </p>
 
@@ -84,7 +79,7 @@ export default async function HomePage() {
               </li>
             ))}
           </ul>
-          <Link href="/designers/all">View all {stats.brandCount.toLocaleString()}+ brands</Link>
+          <Link href="/designers/all">View all designers</Link>
 
           <h2>How INTERTEXE Works</h2>
           <p>Every product on INTERTEXE is verified to contain 80% or more natural fibers. We analyze fabric composition data so you can shop with confidence.</p>

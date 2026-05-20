@@ -3,13 +3,68 @@ import {
   fetchDesignerBySlug,
   fetchProductsByFiber,
   fetchProductsByBrandWithImages,
-  fetchProductCount,
-  fetchProductCountsByBrand,
   fetchSaleProducts,
   fetchSilkEditProducts,
   fetchVacationShopProducts,
+  type Product,
+  type CatalogFetchOpts,
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
+
+/** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default skips RPC → live_products_apparel only. */
+const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
+
+const MATERIAL_RAIL_FETCH_LIMIT = 48;
+const MATERIAL_RAIL_DISPLAY_MAX = 12;
+const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
+const HOMEPAGE_BRAND_LIVE_ROW_CAP = 48;
+const NEW_IN_FETCH_PER_BRAND = 24;
+const NEW_IN_TARGET_ITEMS = 18;
+const HOMEPAGE_SALE_FETCH_LIMIT = 24;
+/** Cap raw rows read for homepage sale stripe (sale page scans full catalog). */
+const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 480;
+const DESIGNERS_FETCH_LIMIT = 80;
+
+/** One slow rail must not block the whole page. */
+const RAIL_TIMEOUT_MS = 5200;
+const BRAND_RPC_TIMEOUT_MS = 4200;
+const DESIGNERS_TIMEOUT_MS = 4000;
+
+const homeRailOpts: CatalogFetchOpts = {
+  preferLiveOnly: !HOMEPAGE_USE_CATALOG_RPC,
+};
+
+const homeBrandOpts: CatalogFetchOpts = {
+  preferLiveOnly: !HOMEPAGE_USE_CATALOG_RPC,
+  liveRowCap: HOMEPAGE_BRAND_LIVE_ROW_CAP,
+};
+
+function homepageTiming(label: string, startedAt: number, extra?: string) {
+  const ms = Date.now() - startedAt;
+  console.log(`[homepage-timing] ${label} ${ms}ms${extra ? ` ${extra}` : ""}`);
+}
+
+async function withHomepageRailTimeout<T>(
+  label: string,
+  ms: number,
+  fn: () => Promise<T>,
+  fallback: T
+): Promise<T> {
+  const t0 = Date.now();
+  try {
+    const out = await Promise.race([
+      fn(),
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`${label}_timeout`)), ms)
+      ),
+    ]);
+    homepageTiming(`${label}`, t0);
+    return out;
+  } catch (e: any) {
+    homepageTiming(`${label}`, t0, e?.message || "error");
+    return fallback;
+  }
+}
 
 function isZeroPrice(price: string | null | undefined): boolean {
   if (!price) return true;
@@ -76,6 +131,7 @@ export const CURATED_BRAND_SLUGS = [
 
 export interface HomePageData {
   designers: any[];
+  /** 0 → client uses static hero copy (`HomeClient` fallback); homepage SSR skips expensive catalog counts. */
   productCount: number;
   cashmereProducts: any[];
   silkProducts: any[];
@@ -89,31 +145,88 @@ export interface HomePageData {
   saleProducts: any[];
 }
 
+/** Same diversification + price gate for material rails. */
+function postProcessHomepageMaterialRail(products: Product[]): Product[] {
+  return diversifyByBrand(
+    products.filter((x) => !isZeroPrice(x.price)),
+    MATERIAL_RAIL_DISPLAY_MAX,
+    MATERIAL_DIVERSITY_MAX_PER_BRAND
+  );
+}
+
 export async function getHomePageData(): Promise<HomePageData> {
-  const [designers, productCount, cashmereProducts, silkProducts, vacationProducts, linenProducts, productCountByBrand, saleResult] =
+  const designers = await withHomepageRailTimeout(
+    "rail:designers",
+    DESIGNERS_TIMEOUT_MS,
+    () => fetchDesigners(undefined, DESIGNERS_FETCH_LIMIT),
+    []
+  );
+
+  const [cashmereProducts, silkProducts, vacationProducts, linenProducts, saleResult] =
     await Promise.all([
-      fetchDesigners(undefined, 100),
-      fetchProductCount(),
-      fetchProductsByFiber("cashmere").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
-      fetchSilkEditProducts(96).then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
-      fetchVacationShopProducts(96).then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
-      fetchProductsByFiber("linen").then((p) => diversifyByBrand(p.filter((x) => !isZeroPrice(x.price)), 16, 3)),
-      fetchProductCountsByBrand(CURATED_BRAND_SLUGS),
-      fetchSaleProducts({ limit: 12 }),
+      withHomepageRailTimeout(
+        "rail:cashmere",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchProductsByFiber("cashmere", MATERIAL_RAIL_FETCH_LIMIT, homeRailOpts).then(
+            postProcessHomepageMaterialRail
+          ),
+        []
+      ),
+      withHomepageRailTimeout(
+        "rail:silk",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchSilkEditProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
+            postProcessHomepageMaterialRail
+          ),
+        []
+      ),
+      withHomepageRailTimeout(
+        "rail:vacation",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchVacationShopProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
+            postProcessHomepageMaterialRail
+          ),
+        []
+      ),
+      withHomepageRailTimeout(
+        "rail:linen",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchProductsByFiber("linen", MATERIAL_RAIL_FETCH_LIMIT, homeRailOpts).then(
+            postProcessHomepageMaterialRail
+          ),
+        []
+      ),
+      withHomepageRailTimeout(
+        "rail:sale",
+        RAIL_TIMEOUT_MS,
+        () =>
+          fetchSaleProducts({
+            limit: HOMEPAGE_SALE_FETCH_LIMIT,
+            offset: 0,
+            maxSourceRows: HOMEPAGE_SALE_MAX_SOURCE_ROWS,
+          }),
+        { products: [], total: 0 }
+      ),
     ]);
 
-  const saleProducts = saleResult.products.filter((p) => !isZeroPrice(p.price));
+  const saleProducts = (saleResult.products || []).filter((p) => !isZeroPrice(p.price));
 
   const curatedDesignerResults = await Promise.all(
     CURATED_BRAND_SLUGS.map(async (slug) => {
-      const designer = await fetchDesignerBySlug(slug);
-      if (!designer) return null;
-      const products = await fetchProductsByBrandWithImages(slug, 12);
-      const heroProduct = pickEditorialProduct(products);
-      const withHero = heroProduct?.imageUrl ? { ...designer, heroImageUrl: heroProduct.imageUrl } : designer;
-      if (designer.naturalFiberPercent != null) return withHero;
-      const score = getCuratedScore(designer.name);
-      return score != null ? { ...withHero, naturalFiberPercent: score } : withHero;
+      return withHomepageRailTimeout(`brandrail:curated:${slug}`, BRAND_RPC_TIMEOUT_MS, async () => {
+        const designer = await fetchDesignerBySlug(slug);
+        if (!designer) return null;
+        const products = await fetchProductsByBrandWithImages(slug, 12, homeBrandOpts);
+        const heroProduct = pickEditorialProduct(products);
+        const withHero = heroProduct?.imageUrl ? { ...designer, heroImageUrl: heroProduct.imageUrl } : designer;
+        if (designer.naturalFiberPercent != null) return withHero;
+        const score = getCuratedScore(designer.name);
+        return score != null ? { ...withHero, naturalFiberPercent: score } : withHero;
+      }, null);
     })
   );
   const curatedDesigners = curatedDesignerResults.filter(Boolean);
@@ -126,8 +239,13 @@ export async function getHomePageData(): Promise<HomePageData> {
     "johnny-was", "ramy-brook", "rails", "free-people",
     "paige", "diesel", "splendid", "7-for-all-mankind",
   ];
+
   const brandProductLists = await Promise.all(
-    newInBrandSlugs.map((slug) => fetchProductsByBrandWithImages(slug, 40))
+    newInBrandSlugs.map((slug) =>
+      withHomepageRailTimeout(`brandrail:new-in:${slug}`, BRAND_RPC_TIMEOUT_MS, async () => {
+        return fetchProductsByBrandWithImages(slug, NEW_IN_FETCH_PER_BRAND, homeBrandOpts);
+      }, [])
+    )
   );
 
   const seenIds = new Set<string>();
@@ -136,7 +254,8 @@ export async function getHomePageData(): Promise<HomePageData> {
   const maxPerBrand = 3;
   const heroCategories = new Set(["dresses", "outerwear", "knitwear", "jumpsuits"]);
   const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts", "jumpsuits", "lingerie", "swimwear", "tops"]);
-  const basicPatterns = /\b(t-shirt|tee|sweatshirt|tank top|vest|cargo|jogger|hoodie|henley|polo|baseball|cap|beanie|sock|belt|scarf|glove|wallet|bag|hat|mask)\b/i;
+  const basicPatterns =
+    /\b(t-shirt|tee|sweatshirt|tank top|vest|cargo|jogger|hoodie|henley|polo|baseball|cap|beanie|sock|belt|scarf|glove|wallet|bag|hat|mask)\b/i;
   const basicNamePatterns = /\b(basic|essential|everyday|classic crew|crewneck tee|v-?neck tee|pocket tee|jersey tee)\b/i;
   const minPrice = 80;
 
@@ -154,8 +273,8 @@ export async function getHomePageData(): Promise<HomePageData> {
       const aHero = heroCategories.has(a.category) ? 2 : editorialCategories.has(a.category) ? 1 : 0;
       const bHero = heroCategories.has(b.category) ? 2 : editorialCategories.has(b.category) ? 1 : 0;
       if (bHero !== aHero) return bHero - aHero;
-      const aBasic = (basicPatterns.test(a.name) || basicNamePatterns.test(a.name)) ? 1 : 0;
-      const bBasic = (basicPatterns.test(b.name) || basicNamePatterns.test(b.name)) ? 1 : 0;
+      const aBasic = basicPatterns.test(a.name) || basicNamePatterns.test(a.name) ? 1 : 0;
+      const bBasic = basicPatterns.test(b.name) || basicNamePatterns.test(b.name) ? 1 : 0;
       if (aBasic !== bBasic) return aBasic - bBasic;
       const aPrice = parseFloat((a.price || "0").replace(/[^0-9.]/g, "")) || 0;
       const bPrice = parseFloat((b.price || "0").replace(/[^0-9.]/g, "")) || 0;
@@ -183,32 +302,34 @@ export async function getHomePageData(): Promise<HomePageData> {
   }
 
   let round = 0;
-  while (newInProducts.length < 30) {
+  const tNewInCompose = Date.now();
+  while (newInProducts.length < NEW_IN_TARGET_ITEMS) {
     let added = false;
     for (const queue of brandQueues) {
       if (round < queue.length) {
         newInProducts.push(queue[round]);
         added = true;
-        if (newInProducts.length >= 30) break;
+        if (newInProducts.length >= NEW_IN_TARGET_ITEMS) break;
       }
     }
     if (!added) break;
     round++;
   }
+  homepageTiming("phase:new-in-compose", tNewInCompose, `items=${newInProducts.length}`);
 
-  const silkEditorialProduct = pickEditorialProduct(silkProducts);
-  const linenEditorialProduct = pickEditorialProduct(linenProducts);
+  const silkEditorialProduct = pickEditorialProduct(silkProducts as any[]);
+  const linenEditorialProduct = pickEditorialProduct(linenProducts as any[]);
 
   return {
     designers,
-    productCount,
+    productCount: 0,
     cashmereProducts,
     silkProducts,
     vacationProducts,
     linenProducts,
     silkEditorialProduct,
     linenEditorialProduct,
-    productCountByBrand,
+    productCountByBrand: {},
     curatedDesigners,
     newInProducts,
     saleProducts,
