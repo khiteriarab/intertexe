@@ -3,6 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
+import { formatListingPrice } from "../../lib/format-display-price";
 
 export const revalidate = 0;
 
@@ -91,10 +92,17 @@ export default async function ShopPage({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {products.slice(0, 16).map((p: any) => (
                 <Link key={p.id} href={`/product/${p.id}`} className="flex flex-col">
-                  {p.image_url && <img src={p.image_url} alt={`${p.brand_name} ${p.name}`} className="aspect-[3/4] object-cover" loading="lazy" />}
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground mt-2">{p.brand_name}</span>
+                  {p.imageUrl && <img src={p.imageUrl} alt={`${p.brandName} ${p.name}`} className="aspect-[3/4] object-cover" loading="lazy" />}
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground mt-2">{p.brandName}</span>
                   <span className="text-xs">{p.name}</span>
-                  {p.price && <span className="text-xs font-medium">{p.price}</span>}
+                  {p.price && (
+                    <span className="text-xs font-medium">
+                      {formatListingPrice(p.price, {
+                        listingRegion: p.listingRegion,
+                        productId: p.productId,
+                      })}
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>

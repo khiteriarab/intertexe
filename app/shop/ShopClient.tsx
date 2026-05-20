@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X, Globe2 } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopMeta } from "./actions";
+import { formatDisplayPrice } from "../../lib/format-display-price";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
@@ -80,7 +81,12 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
   const name = product.name || "";
   const brandName = product.brandName || product.brand_name || "";
   const imageUrl = product.imageUrl || product.image_url;
-  const price = product.price;
+  const priceShown = formatDisplayPrice({
+    price: product.price,
+    originalPrice: product.originalPrice,
+    listingRegion: product.listingRegion ?? product.listing_region,
+    productId: product.productId || product.product_id,
+  });
   const composition = product.composition;
 
   const saveShopState = () => {
@@ -95,7 +101,7 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} decoding={eager ? "sync" : "async"} fetchPriority={eager ? "high" : "low"} />
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, priceShown || String(product.price)); }}
             className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
             data-testid={`btn-favorite-${product.id}`}
             aria-label={saved ? "Remove from favorites" : "Save to favorites"}
@@ -112,7 +118,7 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
         <span className="text-[10px] md:text-[11px] uppercase tracking-[0.08em] text-muted-foreground">{brandName}</span>
         <h3 className="text-[12px] md:text-[13px] leading-snug truncate text-foreground">{name}</h3>
         <div className="flex items-center gap-2 mt-0.5">
-          {price && <span className="text-[12px] md:text-[13px] font-medium">{price}</span>}
+          {priceShown && <span className="text-[12px] md:text-[13px] font-medium">{priceShown}</span>}
         </div>
         {composition && (
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>

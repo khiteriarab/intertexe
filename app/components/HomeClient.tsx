@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, X } from "lucide-react";
 import { getQualityTier } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
+import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -62,10 +63,11 @@ function ProductCard({ product, eager, variant = "default" }: { product: any; ea
   const name = product.name || "";
   const brandName = product.brandName || "";
   const imageUrl = product.imageUrl || "";
-  const price = product.price;
+  const priceShown = formatDisplayPrice(product);
+  const originalShown = formatDisplayOriginalPrice(product);
   const composition = product.composition;
-  const originalNum = product.originalPrice ? parseFloat(product.originalPrice.replace(/[^0-9.]/g, "")) : 0;
-  const currentNum = product.price ? parseFloat(product.price.replace(/[^0-9.]/g, "")) : 0;
+  const originalNum = product.originalPrice ? parseFloat(String(product.originalPrice).replace(/[^0-9.]/g, "")) : 0;
+  const currentNum = product.price ? parseFloat(String(product.price).replace(/[^0-9.]/g, "")) : 0;
   const discountPct = originalNum > 0 ? Math.round((1 - currentNum / originalNum) * 100) : 0;
 
   return (
@@ -109,9 +111,9 @@ function ProductCard({ product, eager, variant = "default" }: { product: any; ea
         <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-neutral-500 mt-px">
           {name}
         </h3>
-        <span className="text-[11px] md:text-[12px] mt-0.5">{price}</span>
+        <span className="text-[11px] md:text-[12px] mt-0.5">{priceShown}</span>
         {variant === "sale" && product.originalPrice && (
-          <span className="text-[10px] text-neutral-400 line-through">{product.originalPrice}</span>
+          <span className="text-[10px] text-neutral-400 line-through">{originalShown}</span>
         )}
       </div>
     </Link>
@@ -141,7 +143,7 @@ export function HorizontalProductScroll({
     scrollRef.current.scrollBy({ left: amount, behavior: "smooth" });
   };
 
-  if (!products || products.length === 0) return null;
+  const hasItems = products && products.length > 0;
 
   return (
     <div className="flex flex-col gap-5 md:gap-7">
@@ -183,11 +185,17 @@ export function HorizontalProductScroll({
 
       <div
         ref={scrollRef}
-        className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1"
+        className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]"
       >
-        {products.map((product: any, i: number) => (
-          <ProductCard key={product.id} product={product} eager={eager && i < 4} />
-        ))}
+        {hasItems ? (
+          products.map((product: any, i: number) => (
+            <ProductCard key={product.id} product={product} eager={eager && i < 4} />
+          ))
+        ) : (
+          <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
+            These pieces took longer than usual to load. Try again shortly or browse the shop page for the full grid.
+          </p>
+        )}
       </div>
 
       <Link
@@ -258,7 +266,19 @@ export function BrandGrid({
   designers: any[];
   productCounts: Record<string, number>;
 }) {
-  if (!designers || designers.length === 0) return null;
+  if (!designers || designers.length === 0) {
+    return (
+      <div className="rounded-sm border border-neutral-200/80 bg-neutral-50/50 px-4 py-8 text-center">
+        <p className="text-[12px] text-neutral-500 max-w-md mx-auto leading-relaxed">
+          Designer highlights are refreshing. Explore the{" "}
+          <Link href="/designers" className="underline text-neutral-800">
+            brand directory
+          </Link>{" "}
+          for every label we track.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
@@ -346,7 +366,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
   });
 
   useEffect(() => {
-    if (initialData && initialData.productCount > 0) return;
+    /** Server already rendered with `getHomePageData` — avoid doubling Supabase work on mount. */
+    if (initialData !== undefined) return;
     fetch("/api/homepage")
       .then((r) => {
         if (!r.ok) throw new Error("API error");
@@ -358,14 +379,14 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         }
       })
       .catch(() => {});
-  }, []);
+  }, [initialData]);
 
   const displayCount = data.productCount > 0
     ? new Intl.NumberFormat("en-US").format(data.productCount)
     : "17,553";
 
-  const silkEditorialImage = "/editorial-silk.jpg";
-  const linenEditorialImage = "/editorial-linen.jpg";
+  const silkHero = data.silkEditorialProduct?.imageUrl || "/editorial-silk.jpg";
+  const linenHero = data.linenEditorialProduct?.imageUrl || "/editorial-linen.jpg";
 
   return (
     <div className="flex flex-col">
@@ -407,8 +428,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </div>
       </section>
 
-      {data.newInProducts.length > 0 && (
-        <section className="py-10 md:py-20">
+      <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.newInProducts}
             title="New In"
@@ -418,12 +438,11 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             eager
           />
         </section>
-      )}
 
       <section className="-mx-4 md:-mx-8">
         <EditorialPanel
           href="/materials/silk"
-          imageUrl={silkEditorialImage}
+          imageUrl={silkHero}
           label="In focus"
           title="The Silk Edit"
           subtitle="Blouses, dresses and camisoles in pure silk — pieces that move with you."
@@ -431,8 +450,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         />
       </section>
 
-      {data.silkProducts.length > 0 && (
-        <section className="py-10 md:py-20">
+      <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.silkProducts}
             title="Silk Essentials"
@@ -441,10 +459,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             linkText="Shop the silk edit"
           />
         </section>
-      )}
 
-      {data.vacationProducts.length > 0 && (
-        <section className="py-10 md:py-20 border-t border-neutral-200/60">
+      <section className="py-10 md:py-20 border-t border-neutral-200/60">
           <HorizontalProductScroll
             products={data.vacationProducts}
             title="Vacation Shop"
@@ -453,7 +469,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             linkText="Browse vacation-ready pieces"
           />
         </section>
-      )}
 
       <section className="py-10 md:py-20 border-t border-neutral-200/60">
         <div className="flex justify-between items-end mb-8 md:mb-12">
@@ -477,7 +492,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       <section className="-mx-4 md:-mx-8">
         <EditorialPanel
           href="/materials/linen"
-          imageUrl={linenEditorialImage}
+          imageUrl={linenHero}
           label="The edit"
           title="Linen for Every Day"
           subtitle="Dresses, tops and suiting in natural linen — relaxed luxury, all season."
@@ -485,8 +500,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         />
       </section>
 
-      {data.cashmereProducts.length > 0 && (
-        <section className="py-10 md:py-20">
+      <section className="py-10 md:py-20">
           <HorizontalProductScroll
             products={data.cashmereProducts}
             title="The Cashmere Edit"
@@ -495,10 +509,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             linkText="Shop all cashmere"
           />
         </section>
-      )}
 
-      {data.saleProducts && data.saleProducts.length > 0 && (
-        <section className="py-10 md:py-20 border-t border-neutral-200/60">
+      <section className="py-10 md:py-20 border-t border-neutral-200/60">
           <div className="flex flex-col gap-5 md:gap-7">
             <div className="flex items-end justify-between">
               <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
@@ -513,10 +525,16 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                 <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </div>
-            <div className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1">
-              {data.saleProducts.map((product: any) => (
-                <ProductCard key={product.id} product={product} variant="sale" />
-              ))}
+            <div className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]">
+              {data.saleProducts?.length ? (
+                data.saleProducts.map((product: any) => (
+                  <ProductCard key={product.id} product={product} variant="sale" />
+                ))
+              ) : (
+                <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
+                  Sale spotlight is refreshing. Browse the sale page for the full markdown grid.
+                </p>
+              )}
             </div>
             <Link
               href="/sale"
@@ -527,7 +545,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             </Link>
           </div>
         </section>
-      )}
 
       <section className="-mx-4 md:-mx-8 bg-[#f8f7f5]">
         <div className="max-w-5xl mx-auto py-14 md:py-24 px-6 md:px-12">

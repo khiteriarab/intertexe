@@ -65,6 +65,8 @@ export interface Product {
   matchingSetId?: string | null;
   isSale?: boolean;
   originalPrice?: string | null;
+  /** Used for formatting bare numeric DB prices ($ / € / £). */
+  listingRegion?: string | null;
 }
 
 type MarketFilter = "us-ca" | "eu-uk-me";
@@ -417,6 +419,20 @@ function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
 function mapProductRow(row: any): Product {
   const brandSlug = row.brand_slug || "";
   const rawImageUrl = row.image_url || "";
+  const priceRaw = row.price;
+  const priceStr =
+    priceRaw === null || priceRaw === undefined
+      ? ""
+      : typeof priceRaw === "number" && Number.isFinite(priceRaw)
+        ? String(priceRaw)
+        : String(priceRaw);
+  const origRaw = row.original_price;
+  const origStr =
+    origRaw === null || origRaw === undefined
+      ? null
+      : typeof origRaw === "number" && Number.isFinite(origRaw)
+        ? String(origRaw)
+        : String(origRaw);
   return {
     id: row.id,
     brandSlug,
@@ -425,13 +441,14 @@ function mapProductRow(row: any): Product {
     productId: row.product_id || row.id,
     url: row.url || "",
     imageUrl: fixIsabelMarantImage(brandSlug, rawImageUrl),
-    price: row.price || "",
+    price: priceStr,
     composition: row.composition || "",
     naturalFiberPercent: row.natural_fiber_percent || 0,
     category: row.category || "",
     matchingSetId: row.matching_set_id || null,
     isSale: row.is_sale || false,
-    originalPrice: row.original_price || null,
+    originalPrice: origStr,
+    listingRegion: row.region != null && row.region !== "" ? String(row.region) : null,
   };
 }
 
@@ -523,6 +540,17 @@ export async function fetchDesignerBySlug(slug: string): Promise<Designer | null
     .limit(1);
   if (error || !data || data.length === 0) return null;
   return mapDesignerRow(data[0]);
+}
+
+/** One round-trip for homepage “Brands we love” (avoids N× fetchDesignerBySlug). */
+export async function fetchDesignersBySlugs(slugs: string[]): Promise<Designer[]> {
+  const supabase = getServerSupabase();
+  if (!supabase || slugs.length === 0) return [];
+  const unique = [...new Set(slugs.map((s) => s.trim().toLowerCase()).filter(Boolean))];
+  const { data, error } = await supabase.from("designers").select("*").in("slug", unique);
+  if (error || !data) return [];
+  const bySlug = new Map(data.map((row: any) => [String(row.slug || "").toLowerCase(), mapDesignerRow(row)]));
+  return slugs.map((s) => bySlug.get(s.trim().toLowerCase())).filter(Boolean) as Designer[];
 }
 
 export async function fetchProductById(id: string): Promise<Product | null> {
@@ -643,11 +671,29 @@ export async function fetchProductsByFiberAndCategory(
     return true;
   });
 
-  return unique
-    .filter(isClothingProduct)
-    .filter(isNotMensProduct)
-    .slice(0, limit)
-    .map(mapProductRow);
+  let filtered = unique.filter(isClothingProduct).filter(isNotMensProduct);
+
+  /** Last resort: mirrors homepage live path but OR-composes synonyms in one scan (fixes empty linen hub when per-term RPC/live paths disagree). */
+  if (filtered.length === 0 && terms.length > 0) {
+    let q = supabase
+      .from("live_products_apparel")
+      .select("*")
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .not("price", "is", null);
+    if (category) q = q.eq("category", category);
+    const orParts = terms.map((t) => `composition.ilike.%${t}%`);
+    if (orParts.length === 1) q = q.ilike("composition", `%${terms[0]}%`);
+    else q = q.or(orParts.join(","));
+    const broadLimit = Math.max(limit * 2, 160);
+    const { data } = await q.order("natural_fiber_percent", { ascending: false }).limit(broadLimit);
+    filtered = dedupeLiveApparelRows(data || [], "us", "us")
+      .filter(isClothingProduct)
+      .filter(isNotMensProduct)
+      .filter(priceListedRow);
+  }
+
+  return filtered.slice(0, limit).map(mapProductRow);
 }
 
 function priceListedRow(row: any): boolean {

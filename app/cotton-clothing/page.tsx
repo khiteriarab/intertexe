@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, XCircle, AlertTriangle, ShoppingBag, ExternalLink } from "lucide-react";
 import { fetchProductsByFiberAndCategory, fetchProductCount } from "../../lib/supabase-server";
+import { formatDisplayPrice } from "../../lib/format-display-price";
 
 export const revalidate = 0;
 
@@ -98,7 +99,7 @@ function FabricCategoryLayout({
                 <h3 className="text-xs md:text-sm leading-snug font-medium truncate">{product.name}</h3>
                 <p className="text-[10px] text-muted-foreground line-clamp-1">{product.composition}</p>
                 <div className="flex items-center justify-between mt-auto pt-2">
-                  <span className="text-sm font-medium">{product.price}</span>
+                  <span className="text-sm font-medium">{formatDisplayPrice(product)}</span>
                   <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </div>
               </div>

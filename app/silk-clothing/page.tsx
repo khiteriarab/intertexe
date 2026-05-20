@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, XCircle, AlertTriangle, ExternalLink } from "lucide-react";
 import { fetchSilkEditProducts, fetchProductCount } from "../../lib/supabase-server";
+import { formatDisplayPrice } from "../../lib/format-display-price";
 
 export const revalidate = 0;
 
@@ -55,7 +56,7 @@ export default async function SilkClothingPage() {
                 <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{product.brandName}</span>
                 <h3 className="text-xs md:text-sm leading-snug font-medium truncate">{product.name}</h3>
                 <p className="text-[10px] text-muted-foreground line-clamp-1">{product.composition}</p>
-                <div className="flex items-center justify-between mt-auto pt-2"><span className="text-sm font-medium">{product.price}</span><ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" /></div>
+                <div className="flex items-center justify-between mt-auto pt-2"><span className="text-sm font-medium">{formatDisplayPrice(product)}</span><ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" /></div>
               </div>
             </Link>
           ))}

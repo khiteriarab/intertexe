@@ -11,6 +11,10 @@ import {
 } from "../../../lib/supabase-server";
 import { ProductFavoriteButton, ProductCardHeart } from "./ProductFavoriteButton";
 import BackToShop from "./BackToShop";
+import {
+  formatDisplayOriginalPrice,
+  formatDisplayPrice,
+} from "../../../lib/format-display-price";
 
 export const revalidate = 0;
 
@@ -199,6 +203,9 @@ export default async function ProductPage({
   const compositionParts = parseComposition(product.composition, product.naturalFiberPercent);
   const primaryFiber = getPrimaryFiber(product.composition);
 
+  const priceShown = formatDisplayPrice(product);
+  const originalShown = formatDisplayOriginalPrice(product);
+
   const [moreFromBrand, moreInFiber, moreAtPrice] = await Promise.all([
     fetchMoreFromBrand(String(product.id), product.brandSlug, 4),
     fetchMoreInFiber(String(product.id), product.composition, 4),
@@ -228,12 +235,15 @@ export default async function ProductPage({
   if (product.imageUrl) productJsonLd.image = product.imageUrl;
   if (product.composition) productJsonLd.material = product.composition;
   if (product.price) {
-    const numericPrice = product.price.replace(/[^0-9.]/g, "");
+    const numericPrice = String(product.price).replace(/[^0-9.]/g, "");
     if (numericPrice) {
+      const lr = (product.listingRegion || "").toLowerCase();
+      const priceCurrency =
+        lr.includes("uk") || lr.includes("gb") ? "GBP" : lr.includes("eu") || lr.includes("eur") ? "EUR" : "USD";
       productJsonLd.offers = {
         "@type": "Offer",
         price: numericPrice,
-        priceCurrency: "USD",
+        priceCurrency,
         availability: "https://schema.org/InStock",
         url: product.url,
       };
@@ -289,15 +299,15 @@ export default async function ProductPage({
               {product.price && (
                 <div className="flex items-center gap-3 mt-1" data-testid="text-price">
                   <span className={`text-lg md:text-xl font-medium ${product.isSale ? "text-red-700" : ""}`}>
-                    {product.price}
+                    {priceShown}
                   </span>
                   {product.isSale && product.originalPrice && (
                     <>
                       <span className="text-base md:text-lg text-muted-foreground line-through">
-                        {product.originalPrice}
+                        {originalShown}
                       </span>
                       <span className="text-xs uppercase tracking-wider font-medium text-red-700 bg-red-50 px-2 py-0.5">
-                        {Math.round((1 - parseFloat(product.price.replace(/[^0-9.]/g, "")) / parseFloat(product.originalPrice.replace(/[^0-9.]/g, ""))) * 100)}% off
+                        {Math.round((1 - parseFloat(String(product.price).replace(/[^0-9.]/g, "")) / parseFloat(String(product.originalPrice).replace(/[^0-9.]/g, ""))) * 100)}% off
                       </span>
                     </>
                   )}
@@ -412,7 +422,7 @@ export default async function ProductPage({
                   <div className="flex flex-col gap-1 pt-3">
                     <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">{p.brandName}</span>
                     <span className="text-[11px] md:text-xs text-muted-foreground truncate">{p.name}</span>
-                    {p.price && <span className="text-[11px] md:text-xs">{p.price}</span>}
+                    {p.price && <span className="text-[11px] md:text-xs">{formatDisplayPrice(p)}</span>}
                   </div>
                 </Link>
               ))}
