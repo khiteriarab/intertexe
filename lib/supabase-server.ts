@@ -1,4 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+/** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
+type UntypedSupabase = SupabaseClient<any, "public", any>;
 import { logSupabaseTiming } from "./supabase-timing";
 
 /** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
@@ -117,6 +120,8 @@ export function catalogRegionsFromMarket(market?: string): { preferred: string; 
 }
 
 function passesMarketRawRow(row: any, market?: string): boolean {
+  if (market == null || market === "" || market === "all") return true;
+
   const productId = String(row.product_id || "").toLowerCase();
   const price = String(row.price || "");
 
@@ -1028,6 +1033,50 @@ function parsePrice(price: string | null | undefined): number {
   return isNaN(num) ? Infinity : num;
 }
 
+async function fetchShopLiveApparelAllRows(
+  supabase: UntypedSupabase,
+  opts: {
+    market?: string;
+    rpcFiber: string | null;
+    rpcCategory: string | null;
+    searchTerms: string[];
+  }
+): Promise<any[]> {
+  const pageSize = 1000;
+  let allRows: any[] = [];
+  let fetchOffset = 0;
+  while (true) {
+    let q2 = applyCatalogFilter(
+      supabase
+        .from("live_products_apparel")
+        .select(
+          "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, region, created_at"
+        )
+        .gte("natural_fiber_percent", 80),
+      opts.market
+    );
+    q2 = q2.not("image_url", "is", null).not("price", "is", null);
+    q2 = q2.neq("price", "").neq("price", "$0.00").neq("price", "0");
+    if (opts.searchTerms.length > 0) {
+      const orClauses = opts.searchTerms.flatMap((t) => [
+        `name.ilike.%${t}%`,
+        `brand_name.ilike.%${t}%`,
+        `composition.ilike.%${t}%`,
+      ]);
+      q2 = q2.or(orClauses.join(","));
+    }
+    if (opts.rpcFiber) q2 = q2.ilike("composition", `%${opts.rpcFiber}%`);
+    if (opts.rpcCategory) q2 = q2.eq("category", opts.rpcCategory);
+    q2 = q2.range(fetchOffset, fetchOffset + pageSize - 1);
+    const { data: chunk, error: chunkErr } = await q2;
+    if (chunkErr || !chunk || chunk.length === 0) break;
+    allRows.push(...chunk);
+    if (chunk.length < pageSize) break;
+    fetchOffset += pageSize;
+  }
+  return allRows;
+}
+
 export async function fetchShopProducts(options: {
   fiber?: string;
   category?: string;
@@ -1087,7 +1136,11 @@ export async function fetchShopProducts(options: {
       rows = dedupeLiveApparelRows(data || [], preferred, fallback);
     }
 
-    const filtered = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, market));
+    let filtered = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, market));
+    if (filtered.length === 0 && market && market !== "all" && rows.length > 0) {
+      const broad = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, undefined));
+      if (broad.length > 0) filtered = broad;
+    }
 
     const total =
       (await rpcCatalogListCount(supabase, {
@@ -1106,44 +1159,33 @@ export async function fetchShopProducts(options: {
     };
   }
 
-  const pageSize = 1000;
-  let allRows: any[] = [];
-  let fetchOffset = 0;
-  while (true) {
-    let q2 = applyCatalogFilter(
-      supabase
-        .from("live_products_apparel")
-        .select(
-          "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, region, created_at"
-        )
-        .gte("natural_fiber_percent", 80),
-      market
-    );
-    q2 = q2.not("image_url", "is", null).not("price", "is", null);
-    q2 = q2.neq("price", "").neq("price", "$0.00").neq("price", "0");
-    if (searchTerms.length > 0) {
-      const orClauses = searchTerms.flatMap((t) => [
-        `name.ilike.%${t}%`,
-        `brand_name.ilike.%${t}%`,
-        `composition.ilike.%${t}%`,
-      ]);
-      q2 = q2.or(orClauses.join(","));
-    }
-    if (rpcFiber) q2 = q2.ilike("composition", `%${rpcFiber}%`);
-    if (rpcCategory) q2 = q2.eq("category", rpcCategory);
-    q2 = q2.range(fetchOffset, fetchOffset + pageSize - 1);
-    const { data: chunk, error: chunkErr } = await q2;
-    if (chunkErr || !chunk || chunk.length === 0) break;
-    allRows.push(...chunk);
-    if (chunk.length < pageSize) break;
-    fetchOffset += pageSize;
-  }
+  let allRows = await fetchShopLiveApparelAllRows(supabase, {
+    market,
+    rpcFiber,
+    rpcCategory,
+    searchTerms,
+  });
 
   let deduped = dedupeLiveApparelRows(allRows, preferred, fallback)
     .filter(priceListedRow)
     .filter((row: any) => passesMarketRawRow(row, market))
     .filter(isClothingProduct)
     .filter(isNotMensProduct);
+
+  if (deduped.length === 0 && market) {
+    const { preferred: p0, fallback: f0 } = catalogRegionsFromMarket(undefined);
+    allRows = await fetchShopLiveApparelAllRows(supabase, {
+      market: undefined,
+      rpcFiber,
+      rpcCategory,
+      searchTerms,
+    });
+    deduped = dedupeLiveApparelRows(allRows, p0, f0)
+      .filter(priceListedRow)
+      .filter((row: any) => passesMarketRawRow(row, undefined))
+      .filter(isClothingProduct)
+      .filter(isNotMensProduct);
+  }
 
   deduped.sort((a: any, b: any) => {
     const pa = parsePrice(a.price);

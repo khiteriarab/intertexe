@@ -14,19 +14,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com/shop" },
 };
 
-const EU_UK_ME_COUNTRIES = new Set([
-  "GB", "IE", "FR", "ES", "IT", "DE", "NL", "PT", "BE", "AT", "DK", "SE", "NO", "FI",
-  "CH", "LU", "MC", "AE", "SA", "KW", "QA", "BH", "OM",
-]);
-
-function marketFromCountry(countryCode?: string | null): "us-ca" | "eu-uk-me" | undefined {
-  const code = (countryCode || "").toUpperCase();
-  if (code === "US" || code === "CA") return "us-ca";
-  if (EU_UK_ME_COUNTRIES.has(code)) return "eu-uk-me";
-  return undefined;
-}
-
-function detectCountryFromHeaders(headerList: Headers): string | undefined {
   return headerList.get("x-vercel-ip-country")
     || headerList.get("cf-ipcountry")
     || headerList.get("x-country-code")
@@ -41,8 +28,8 @@ export default async function ShopPage({
 }) {
   const params = searchParams ? await searchParams : {};
   const detectedCountry = detectCountryFromHeaders(await headers());
-  const detectedMarket = marketFromCountry(detectedCountry);
-  const market = params?.market || detectedMarket;
+  const market =
+    params?.market === "us-ca" || params?.market === "eu-uk-me" ? params.market : undefined;
   const [shopData, totalProductCount, fiberCounts] = await Promise.all([
     fetchShopProducts({ sort: "recommended", limit: 40, offset: 0, market }),
     fetchProductCount(),
@@ -58,7 +45,6 @@ export default async function ShopPage({
         initialTotal={shopData.total || 0}
         totalProductCount={totalProductCount}
         fiberCounts={fiberCounts}
-        initialMarket={market}
         detectedCountry={detectedCountry}
       />
 
