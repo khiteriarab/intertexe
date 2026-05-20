@@ -14,11 +14,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com/shop" },
 };
 
-  return headerList.get("x-vercel-ip-country")
-    || headerList.get("cf-ipcountry")
-    || headerList.get("x-country-code")
-    || headerList.get("x-geo-country")
-    || undefined;
+function getDetectedCountry(headerList: Headers) {
+  return (
+    headerList.get("x-vercel-ip-country") ||
+    headerList.get("cf-ipcountry") ||
+    headerList.get("x-country-code") ||
+    headerList.get("x-geo-country") ||
+    undefined
+  );
 }
 
 export default async function ShopPage({
@@ -27,7 +30,7 @@ export default async function ShopPage({
   searchParams?: Promise<{ market?: string }>;
 }) {
   const params = searchParams ? await searchParams : {};
-  const detectedCountry = detectCountryFromHeaders(await headers());
+  const detectedCountry = getDetectedCountry(await headers());
   const market =
     params?.market === "us-ca" || params?.market === "eu-uk-me" ? params.market : undefined;
   const [shopData, totalProductCount, fiberCounts] = await Promise.all([
