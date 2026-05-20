@@ -4,8 +4,9 @@ import {
   fetchProductsByFiber,
   fetchProductsByBrandWithImages,
   fetchSaleProducts,
-  fetchSilkEditProducts,
-  fetchVacationShopProducts,
+  fetchHomepageSilkRailProducts,
+  fetchHomepageVacationRailProducts,
+  fetchHomepageGenericRailProducts,
   type Product,
   type CatalogFetchOpts,
 } from "./supabase-server";
@@ -152,6 +153,22 @@ function postProcessHomepageMaterialRail(products: Product[]): Product[] {
   );
 }
 
+async function fetchHomepageMaterialRailWithFallback(
+  label: "silk" | "vacation",
+  fetchPrimary: () => Promise<Product[]>
+): Promise<Product[]> {
+  let products = postProcessHomepageMaterialRail(await fetchPrimary());
+  if (products.length > 0) return products;
+  console.warn(`[homepage-rail] ${label}: primary fetch empty after post-process; trying generic fallback`);
+  products = postProcessHomepageMaterialRail(
+    await fetchHomepageGenericRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
+  );
+  if (products.length === 0) {
+    console.warn(`[homepage-rail] ${label}: generic fallback also empty`);
+  }
+  return products;
+}
+
 async function fetchCuratedDesignersFast(): Promise<any[]> {
   const list = await fetchDesignersBySlugs([...CURATED_BRAND_SLUGS]);
   return list.map((d) => {
@@ -184,8 +201,8 @@ export async function getHomePageData(): Promise<HomePageData> {
         "rail:silk",
         RAIL_TIMEOUT_MS,
         () =>
-          fetchSilkEditProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
-            postProcessHomepageMaterialRail
+          fetchHomepageMaterialRailWithFallback("silk", () =>
+            fetchHomepageSilkRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
           ),
         []
       ),
@@ -193,8 +210,8 @@ export async function getHomePageData(): Promise<HomePageData> {
         "rail:vacation",
         RAIL_TIMEOUT_MS,
         () =>
-          fetchVacationShopProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
-            postProcessHomepageMaterialRail
+          fetchHomepageMaterialRailWithFallback("vacation", () =>
+            fetchHomepageVacationRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
           ),
         []
       ),

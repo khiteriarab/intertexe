@@ -708,6 +708,120 @@ function priceListedRow(row: any): boolean {
   return true;
 }
 
+const HOMEPAGE_RAIL_LIVE_COLS =
+  "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, region, created_at";
+
+function mapHomepageLiveRailRows(rows: any[], label: string): Product[] {
+  const deduped = dedupeLiveApparelRows(rows, "us", "us");
+  const filtered = deduped
+    .filter(priceListedRow)
+    .filter(isClothingProduct)
+    .filter(isNotMensProduct);
+  if (rows.length === 0) {
+    console.warn(`[homepage-rail] ${label}: live_products_apparel returned 0 rows`);
+  } else if (filtered.length === 0) {
+    console.warn(
+      `[homepage-rail] ${label}: ${rows.length} live rows → 0 after dedupe/price/apparel filters`
+    );
+  }
+  return filtered.map(mapProductRow);
+}
+
+/** Homepage SSR only — single indexed live query, no editorial RPCs or market narrowing. */
+export async function fetchHomepageSilkRailProducts(limit = 24): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) {
+    console.warn("[homepage-rail] silk: no Supabase client");
+    return [];
+  }
+  const fetchLimit = Math.min(Math.max(limit * 2, limit), 72);
+  const t0 = Date.now();
+  const { data, error } = await supabase
+    .from("live_products_apparel")
+    .select(HOMEPAGE_RAIL_LIVE_COLS)
+    .ilike("composition", "%silk%")
+    .gte("natural_fiber_percent", 80)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(fetchLimit);
+  logSupabaseTiming(
+    "homepage rail silk live",
+    t0,
+    error ? `error:${error.message}` : `rows:${(data || []).length}`
+  );
+  if (error) {
+    console.warn("[homepage-rail] silk live query error:", error.message);
+    return [];
+  }
+  return mapHomepageLiveRailRows(data || [], "silk").slice(0, limit);
+}
+
+/** Homepage SSR only — linen/cotton/silk vacation edit via one live OR query. */
+export async function fetchHomepageVacationRailProducts(limit = 24): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) {
+    console.warn("[homepage-rail] vacation: no Supabase client");
+    return [];
+  }
+  const fetchLimit = Math.min(Math.max(limit * 2, limit), 72);
+  const t0 = Date.now();
+  const { data, error } = await supabase
+    .from("live_products_apparel")
+    .select(HOMEPAGE_RAIL_LIVE_COLS)
+    .or("composition.ilike.%linen%,composition.ilike.%cotton%,composition.ilike.%silk%")
+    .gte("natural_fiber_percent", 80)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(fetchLimit);
+  logSupabaseTiming(
+    "homepage rail vacation live",
+    t0,
+    error ? `error:${error.message}` : `rows:${(data || []).length}`
+  );
+  if (error) {
+    console.warn("[homepage-rail] vacation live query error:", error.message);
+    return [];
+  }
+  return mapHomepageLiveRailRows(data || [], "vacation").slice(0, limit);
+}
+
+/** Last-resort homepage rail when material-specific query returns nothing. */
+export async function fetchHomepageGenericRailProducts(limit = 24): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+  const fetchLimit = Math.min(Math.max(limit * 2, limit), 72);
+  const t0 = Date.now();
+  const { data, error } = await supabase
+    .from("live_products_apparel")
+    .select(HOMEPAGE_RAIL_LIVE_COLS)
+    .gte("natural_fiber_percent", 80)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(fetchLimit);
+  logSupabaseTiming(
+    "homepage rail generic live",
+    t0,
+    error ? `error:${error.message}` : `rows:${(data || []).length}`
+  );
+  if (error) {
+    console.warn("[homepage-rail] generic live query error:", error.message);
+    return [];
+  }
+  return mapHomepageLiveRailRows(data || [], "generic").slice(0, limit);
+}
+
 export async function fetchProductsByBrand(
   brandSlug: string,
   opts?: CatalogFetchOpts
