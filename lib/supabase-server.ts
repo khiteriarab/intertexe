@@ -768,6 +768,71 @@ async function fetchHomepageFiberRailProducts(
   return mapHomepageLiveRailRows(data || [], label).slice(0, limit);
 }
 
+const HOMEPAGE_MATERIAL_POOL_OR =
+  "composition.ilike.%silk%,composition.ilike.%cashmere%,composition.ilike.%linen%,composition.ilike.%cotton%";
+
+/** One live read for silk/cashmere/linen/vacation homepage rails (lower Disk IO than 4 parallel queries). */
+export async function fetchHomepageMaterialRailsPool(rowLimit = 96): Promise<any[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) {
+    console.warn("[homepage-rail] material-pool: no Supabase client");
+    return [];
+  }
+  const cap = Math.min(Math.max(rowLimit, 24), 120);
+  const t0 = Date.now();
+  const { data, error } = await supabase
+    .from("live_products_apparel")
+    .select(HOMEPAGE_RAIL_LIVE_COLS)
+    .or(HOMEPAGE_MATERIAL_POOL_OR)
+    .gte("natural_fiber_percent", 80)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(cap);
+  logSupabaseTiming(
+    "homepage rail material-pool live",
+    t0,
+    error ? `error:${error.message}` : `rows:${(data || []).length}`
+  );
+  if (error) {
+    console.warn("[homepage-rail] material-pool live query error:", error.message);
+    return [];
+  }
+  console.log(`[homepage-rail] material-pool: raw=${(data || []).length}`);
+  return data || [];
+}
+
+export type HomepageMaterialRailsSplit = {
+  silk: Product[];
+  cashmere: Product[];
+  linen: Product[];
+  vacation: Product[];
+};
+
+/** Split a shared pool in memory — no extra Supabase round-trips. */
+export function buildHomepageMaterialRailsFromPool(
+  rows: any[],
+  perRailLimit = 24
+): HomepageMaterialRailsSplit {
+  const comp = (r: any) => String(r.composition || "").toLowerCase();
+  const silkRows = rows.filter((r) => comp(r).includes("silk"));
+  const cashmereRows = rows.filter((r) => comp(r).includes("cashmere"));
+  const linenRows = rows.filter((r) => comp(r).includes("linen"));
+  const vacationRows = rows.filter((r) => {
+    const c = comp(r);
+    return c.includes("linen") || c.includes("cotton") || c.includes("silk");
+  });
+  return {
+    silk: mapHomepageLiveRailRows(silkRows, "silk").slice(0, perRailLimit),
+    cashmere: mapHomepageLiveRailRows(cashmereRows, "cashmere").slice(0, perRailLimit),
+    linen: mapHomepageLiveRailRows(linenRows, "linen").slice(0, perRailLimit),
+    vacation: mapHomepageLiveRailRows(vacationRows, "vacation").slice(0, perRailLimit),
+  };
+}
+
 export async function fetchHomepageSilkRailProducts(limit = 24): Promise<Product[]> {
   return fetchHomepageFiberRailProducts("silk", "silk", limit);
 }

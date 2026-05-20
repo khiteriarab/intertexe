@@ -1,10 +1,7 @@
 import {
-  fetchDesigners,
   fetchDesignersBySlugs,
-  fetchHomepageSilkRailProducts,
-  fetchHomepageCashmereRailProducts,
-  fetchHomepageLinenRailProducts,
-  fetchHomepageVacationRailProducts,
+  fetchHomepageMaterialRailsPool,
+  buildHomepageMaterialRailsFromPool,
   fetchHomepageNewInRailProducts,
   fetchHomepageSaleRailProducts,
   fetchHomepageGenericRailProducts,
@@ -15,8 +12,10 @@ import { CURATED_BRAND_SLUGS } from "./homepage-constants";
 
 /** Small fetches only — homepage must not scan large slices of catalog. */
 const MATERIAL_RAIL_FETCH_LIMIT = 24;
+const MATERIAL_POOL_LIMIT = 96;
 const MATERIAL_RAIL_DISPLAY_MAX = 10;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
+const GENERIC_FALLBACK_LIMIT = 48;
 /** New In: one batched live query across these brand slugs. */
 const NEW_IN_BRAND_SLUGS = [
   "frame", "vince", "theory", "toteme", "ganni", "staud", "khaite", "isabel-marant",
@@ -24,11 +23,9 @@ const NEW_IN_BRAND_SLUGS = [
 const NEW_IN_FETCH_LIMIT = 32;
 const NEW_IN_TARGET_ITEMS = 8;
 const HOMEPAGE_SALE_FETCH_LIMIT = 16;
-const DESIGNERS_FETCH_LIMIT = 48;
 
-const RAIL_TIMEOUT_MS = 3800;
+const RAIL_TIMEOUT_MS = 4500;
 const CURATED_SECTION_TIMEOUT_MS = 4500;
-const DESIGNERS_TIMEOUT_MS = 3200;
 
 export { CURATED_BRAND_SLUGS };
 
@@ -139,37 +136,17 @@ function postProcessHomepageMaterialRail(products: Product[]): Product[] {
   return out;
 }
 
-type HomepageMaterialRailLabel = "silk" | "cashmere" | "linen" | "vacation";
-
-async function fetchHomepageMaterialRailWithFallback(
-  label: HomepageMaterialRailLabel,
-  fetchPrimary: () => Promise<Product[]>
-): Promise<Product[]> {
-  let products = postProcessHomepageMaterialRail(await fetchPrimary());
-  if (products.length > 0) return products;
-  console.warn(`[homepage-rail] ${label}: primary fetch empty after post-process; trying generic fallback`);
-  products = postProcessHomepageMaterialRail(
-    await fetchHomepageGenericRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
-  );
-  if (products.length === 0) {
-    console.warn(`[homepage-rail] ${label}: generic fallback also empty`);
+function fillEmptyRailsFromGeneric(
+  rails: Record<"silk" | "cashmere" | "linen" | "vacation", Product[]>,
+  generic: Product[]
+): void {
+  const slice = generic.slice(0, MATERIAL_RAIL_DISPLAY_MAX);
+  for (const key of ["silk", "cashmere", "linen", "vacation"] as const) {
+    if (rails[key].length === 0 && slice.length > 0) {
+      console.warn(`[homepage-rail] ${key}: filled from shared generic pool`);
+      rails[key] = slice;
+    }
   }
-  return products;
-}
-
-async function fetchHomepageSaleRailWithFallback(): Promise<Product[]> {
-  let products = (await fetchHomepageSaleRailProducts(HOMEPAGE_SALE_FETCH_LIMIT)).filter(
-    (p) => !isZeroPrice(p.price)
-  );
-  if (products.length > 0) return products;
-  console.warn("[homepage-rail] sale: primary fetch empty; trying generic fallback");
-  products = postProcessHomepageMaterialRail(
-    await fetchHomepageGenericRailProducts(HOMEPAGE_SALE_FETCH_LIMIT)
-  );
-  if (products.length === 0) {
-    console.warn("[homepage-rail] sale: generic fallback also empty");
-  }
-  return products;
 }
 
 async function fetchCuratedDesignersFast(): Promise<any[]> {
@@ -181,55 +158,44 @@ async function fetchCuratedDesignersFast(): Promise<any[]> {
   });
 }
 
+/**
+ * Homepage SSR: sequential Supabase reads (no parallel fan-out), one pool query for
+ * silk/cashmere/linen/vacation, at most one generic fallback for empty rails.
+ */
 export async function getHomePageData(): Promise<HomePageData> {
-  const designers = await withHomepageRailTimeout(
-    "rail:designers",
-    DESIGNERS_TIMEOUT_MS,
-    () => fetchDesigners(undefined, DESIGNERS_FETCH_LIMIT),
+  const curatedDesigners = await withHomepageRailTimeout(
+    "rail:curated-designers",
+    CURATED_SECTION_TIMEOUT_MS,
+    fetchCuratedDesignersFast,
     []
   );
 
-  const [cashmereProducts, silkProducts, vacationProducts, linenProducts, saleProducts, curatedDesigners] =
-    await Promise.all([
-      withHomepageRailTimeout(
-        "rail:cashmere",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchHomepageMaterialRailWithFallback("cashmere", () =>
-            fetchHomepageCashmereRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
-          ),
-        []
-      ),
-      withHomepageRailTimeout(
-        "rail:silk",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchHomepageMaterialRailWithFallback("silk", () =>
-            fetchHomepageSilkRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
-          ),
-        []
-      ),
-      withHomepageRailTimeout(
-        "rail:vacation",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchHomepageMaterialRailWithFallback("vacation", () =>
-            fetchHomepageVacationRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
-          ),
-        []
-      ),
-      withHomepageRailTimeout(
-        "rail:linen",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchHomepageMaterialRailWithFallback("linen", () =>
-            fetchHomepageLinenRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
-          ),
-        []
-      ),
-      withHomepageRailTimeout("rail:sale", RAIL_TIMEOUT_MS, fetchHomepageSaleRailWithFallback, []),
-      withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
-    ]);
+  const poolRows = await withHomepageRailTimeout(
+    "rail:material-pool",
+    RAIL_TIMEOUT_MS,
+    () => fetchHomepageMaterialRailsPool(MATERIAL_POOL_LIMIT),
+    []
+  );
+  const split = buildHomepageMaterialRailsFromPool(poolRows, MATERIAL_RAIL_FETCH_LIMIT);
+  const rails = {
+    silk: postProcessHomepageMaterialRail(split.silk),
+    cashmere: postProcessHomepageMaterialRail(split.cashmere),
+    linen: postProcessHomepageMaterialRail(split.linen),
+    vacation: postProcessHomepageMaterialRail(split.vacation),
+  };
+
+  const anyEmpty =
+    !rails.silk.length ||
+    !rails.cashmere.length ||
+    !rails.linen.length ||
+    !rails.vacation.length;
+  if (anyEmpty) {
+    console.warn("[homepage-rail] material rails: shared generic fallback (single query)");
+    const generic = postProcessHomepageMaterialRail(
+      await fetchHomepageGenericRailProducts(GENERIC_FALLBACK_LIMIT)
+    );
+    fillEmptyRailsFromGeneric(rails, generic);
+  }
 
   let newInProducts = await withHomepageRailTimeout(
     "rail:new-in",
@@ -239,7 +205,7 @@ export async function getHomePageData(): Promise<HomePageData> {
         await fetchHomepageNewInRailProducts([...NEW_IN_BRAND_SLUGS], NEW_IN_FETCH_LIMIT)
       ).slice(0, NEW_IN_TARGET_ITEMS);
       if (items.length > 0) return items;
-      console.warn("[homepage-rail] new-in: brand query empty; trying generic fallback");
+      console.warn("[homepage-rail] new-in: trying generic fallback");
       return postProcessHomepageMaterialRail(
         await fetchHomepageGenericRailProducts(NEW_IN_FETCH_LIMIT)
       ).slice(0, NEW_IN_TARGET_ITEMS);
@@ -247,16 +213,32 @@ export async function getHomePageData(): Promise<HomePageData> {
     []
   );
 
-  const silkEditorialProduct = pickEditorialProduct(silkProducts as any[]);
-  const linenEditorialProduct = pickEditorialProduct(linenProducts as any[]);
+  let saleProducts = await withHomepageRailTimeout(
+    "rail:sale",
+    RAIL_TIMEOUT_MS,
+    async () => {
+      let items = (await fetchHomepageSaleRailProducts(HOMEPAGE_SALE_FETCH_LIMIT)).filter(
+        (p) => !isZeroPrice(p.price)
+      );
+      if (items.length > 0) return items;
+      console.warn("[homepage-rail] sale: trying generic fallback");
+      return postProcessHomepageMaterialRail(
+        await fetchHomepageGenericRailProducts(HOMEPAGE_SALE_FETCH_LIMIT)
+      ).slice(0, HOMEPAGE_SALE_FETCH_LIMIT);
+    },
+    []
+  );
+
+  const silkEditorialProduct = pickEditorialProduct(rails.silk as any[]);
+  const linenEditorialProduct = pickEditorialProduct(rails.linen as any[]);
 
   return {
-    designers,
+    designers: curatedDesigners,
     productCount: 0,
-    cashmereProducts,
-    silkProducts,
-    vacationProducts,
-    linenProducts,
+    cashmereProducts: rails.cashmere,
+    silkProducts: rails.silk,
+    vacationProducts: rails.vacation,
+    linenProducts: rails.linen,
     silkEditorialProduct,
     linenEditorialProduct,
     productCountByBrand: {},
