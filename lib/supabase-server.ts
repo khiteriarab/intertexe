@@ -709,17 +709,17 @@ function priceListedRow(row: any): boolean {
 }
 
 const HOMEPAGE_RAIL_LIVE_COLS =
-  "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, region, created_at";
+  "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, region, created_at, is_sale";
 
-function mapHomepageLiveRailRows(rows: any[], label: string): Product[] {
+export function mapHomepageLiveRailRows(rows: any[], label: string): Product[] {
   const deduped = dedupeLiveApparelRows(rows, "us", "us");
-  const filtered = deduped
-    .filter(priceListedRow)
-    .filter(isClothingProduct)
-    .filter(isNotMensProduct);
-  const mapped = filtered.map(mapProductRow);
+  const afterPrice = deduped.filter(priceListedRow);
+  const afterClothing = afterPrice.filter(isClothingProduct);
+  const afterMens = afterClothing.filter(isNotMensProduct);
+  const mapped = afterMens.map(mapProductRow);
   console.log(
-    `[homepage-rail] ${label}: raw=${rows.length} deduped=${deduped.length} mapped=${mapped.length}`
+    `[homepage-rail] ${label}: raw=${rows.length} deduped=${deduped.length} ` +
+      `price=${afterPrice.length} clothing=${afterClothing.length} mens=${afterMens.length} mapped=${mapped.length}`
   );
   if (rows.length === 0) {
     console.warn(`[homepage-rail] ${label}: live_products_apparel returned 0 rows`);
@@ -768,22 +768,26 @@ async function fetchHomepageFiberRailProducts(
   return mapHomepageLiveRailRows(data || [], label).slice(0, limit);
 }
 
-const HOMEPAGE_MATERIAL_POOL_OR =
-  "composition.ilike.%silk%,composition.ilike.%cashmere%,composition.ilike.%linen%,composition.ilike.%cotton%";
-
-/** One live read for silk/cashmere/linen/vacation homepage rails (lower Disk IO than 4 parallel queries). */
-export async function fetchHomepageMaterialRailsPool(rowLimit = 96): Promise<any[]> {
+/**
+ * Brand-scoped live read (indexed brand_slug) — avoids composition OR scans that
+ * hit Postgres statement timeout under Disk IO pressure.
+ */
+export async function fetchHomepageBrandScopedRailRows(
+  brandSlugs: string[],
+  rowLimit = 96
+): Promise<any[]> {
   const supabase = getServerSupabase();
-  if (!supabase) {
-    console.warn("[homepage-rail] material-pool: no Supabase client");
+  if (!supabase || brandSlugs.length === 0) {
+    console.warn("[homepage-rail] brand-pool: no Supabase client or brand list");
     return [];
   }
+  const slugs = [...new Set(brandSlugs.map((s) => s.trim().toLowerCase()).filter(Boolean))];
   const cap = Math.min(Math.max(rowLimit, 24), 120);
   const t0 = Date.now();
   const { data, error } = await supabase
     .from("live_products_apparel")
     .select(HOMEPAGE_RAIL_LIVE_COLS)
-    .or(HOMEPAGE_MATERIAL_POOL_OR)
+    .in("brand_slug", slugs)
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null)
@@ -793,16 +797,24 @@ export async function fetchHomepageMaterialRailsPool(rowLimit = 96): Promise<any
     .order("natural_fiber_percent", { ascending: false })
     .limit(cap);
   logSupabaseTiming(
-    "homepage rail material-pool live",
+    "homepage rail brand-pool live",
     t0,
-    error ? `error:${error.message}` : `rows:${(data || []).length}`
+    error ? `error:${error.message}` : `rows:${(data || []).length} brands=${slugs.length}`
   );
   if (error) {
-    console.warn("[homepage-rail] material-pool live query error:", error.message);
+    console.warn("[homepage-rail] brand-pool live query error:", error.message);
     return [];
   }
-  console.log(`[homepage-rail] material-pool: raw=${(data || []).length}`);
+  console.log(`[homepage-rail] brand-pool: raw=${(data || []).length}`);
   return data || [];
+}
+
+/** Material rails: fetch by brand list, split by composition in memory. */
+export async function fetchHomepageMaterialRailsPool(
+  brandSlugs: string[],
+  rowLimit = 96
+): Promise<any[]> {
+  return fetchHomepageBrandScopedRailRows(brandSlugs, rowLimit);
 }
 
 export type HomepageMaterialRailsSplit = {
@@ -915,33 +927,13 @@ export async function fetchHomepageNewInRailProducts(
   return mapHomepageLiveRailRows(data || [], "new-in").slice(0, limit);
 }
 
-/** Last-resort homepage rail when material-specific query returns nothing. */
-export async function fetchHomepageGenericRailProducts(limit = 24): Promise<Product[]> {
-  const supabase = getServerSupabase();
-  if (!supabase) return [];
-  const fetchLimit = Math.min(Math.max(limit * 2, limit), 72);
-  const t0 = Date.now();
-  const { data, error } = await supabase
-    .from("live_products_apparel")
-    .select(HOMEPAGE_RAIL_LIVE_COLS)
-    .gte("natural_fiber_percent", 80)
-    .not("image_url", "is", null)
-    .not("price", "is", null)
-    .neq("price", "")
-    .neq("price", "$0.00")
-    .neq("price", "0")
-    .order("natural_fiber_percent", { ascending: false })
-    .limit(fetchLimit);
-  logSupabaseTiming(
-    "homepage rail generic live",
-    t0,
-    error ? `error:${error.message}` : `rows:${(data || []).length}`
-  );
-  if (error) {
-    console.warn("[homepage-rail] generic live query error:", error.message);
-    return [];
-  }
-  return mapHomepageLiveRailRows(data || [], "generic").slice(0, limit);
+/** Last-resort: reuse brand-scoped read (no full-table scan). */
+export async function fetchHomepageGenericRailProducts(
+  brandSlugs: string[],
+  limit = 24
+): Promise<Product[]> {
+  const rows = await fetchHomepageBrandScopedRailRows(brandSlugs, limit);
+  return mapHomepageLiveRailRows(rows, "generic").slice(0, limit);
 }
 
 /** Homepage SSR — sale flag, live only, capped scan (no paginated sale sweep). */
