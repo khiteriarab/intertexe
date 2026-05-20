@@ -717,21 +717,29 @@ function mapHomepageLiveRailRows(rows: any[], label: string): Product[] {
     .filter(priceListedRow)
     .filter(isClothingProduct)
     .filter(isNotMensProduct);
+  const mapped = filtered.map(mapProductRow);
+  console.log(
+    `[homepage-rail] ${label}: raw=${rows.length} deduped=${deduped.length} mapped=${mapped.length}`
+  );
   if (rows.length === 0) {
     console.warn(`[homepage-rail] ${label}: live_products_apparel returned 0 rows`);
-  } else if (filtered.length === 0) {
+  } else if (mapped.length === 0) {
     console.warn(
       `[homepage-rail] ${label}: ${rows.length} live rows → 0 after dedupe/price/apparel filters`
     );
   }
-  return filtered.map(mapProductRow);
+  return mapped;
 }
 
-/** Homepage SSR only — single indexed live query, no editorial RPCs or market narrowing. */
-export async function fetchHomepageSilkRailProducts(limit = 24): Promise<Product[]> {
+/** Homepage SSR — composition ilike, live only, no editorial RPCs. */
+async function fetchHomepageFiberRailProducts(
+  fiber: string,
+  label: string,
+  limit = 24
+): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) {
-    console.warn("[homepage-rail] silk: no Supabase client");
+    console.warn(`[homepage-rail] ${label}: no Supabase client`);
     return [];
   }
   const fetchLimit = Math.min(Math.max(limit * 2, limit), 72);
@@ -739,7 +747,7 @@ export async function fetchHomepageSilkRailProducts(limit = 24): Promise<Product
   const { data, error } = await supabase
     .from("live_products_apparel")
     .select(HOMEPAGE_RAIL_LIVE_COLS)
-    .ilike("composition", "%silk%")
+    .ilike("composition", `%${fiber}%`)
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null)
@@ -749,15 +757,27 @@ export async function fetchHomepageSilkRailProducts(limit = 24): Promise<Product
     .order("natural_fiber_percent", { ascending: false })
     .limit(fetchLimit);
   logSupabaseTiming(
-    "homepage rail silk live",
+    `homepage rail ${label} live`,
     t0,
     error ? `error:${error.message}` : `rows:${(data || []).length}`
   );
   if (error) {
-    console.warn("[homepage-rail] silk live query error:", error.message);
+    console.warn(`[homepage-rail] ${label} live query error:`, error.message);
     return [];
   }
-  return mapHomepageLiveRailRows(data || [], "silk").slice(0, limit);
+  return mapHomepageLiveRailRows(data || [], label).slice(0, limit);
+}
+
+export async function fetchHomepageSilkRailProducts(limit = 24): Promise<Product[]> {
+  return fetchHomepageFiberRailProducts("silk", "silk", limit);
+}
+
+export async function fetchHomepageCashmereRailProducts(limit = 24): Promise<Product[]> {
+  return fetchHomepageFiberRailProducts("cashmere", "cashmere", limit);
+}
+
+export async function fetchHomepageLinenRailProducts(limit = 24): Promise<Product[]> {
+  return fetchHomepageFiberRailProducts("linen", "linen", limit);
 }
 
 /** Homepage SSR only — linen/cotton/silk vacation edit via one live OR query. */
@@ -857,6 +877,39 @@ export async function fetchHomepageGenericRailProducts(limit = 24): Promise<Prod
     return [];
   }
   return mapHomepageLiveRailRows(data || [], "generic").slice(0, limit);
+}
+
+/** Homepage SSR — sale flag, live only, capped scan (no paginated sale sweep). */
+export async function fetchHomepageSaleRailProducts(limit = 16): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) {
+    console.warn("[homepage-rail] sale: no Supabase client");
+    return [];
+  }
+  const fetchLimit = Math.min(Math.max(limit * 2, limit), 48);
+  const t0 = Date.now();
+  const { data, error } = await supabase
+    .from("live_products_apparel")
+    .select(HOMEPAGE_RAIL_LIVE_COLS)
+    .eq("is_sale", true)
+    .gte("natural_fiber_percent", 80)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(fetchLimit);
+  logSupabaseTiming(
+    "homepage rail sale live",
+    t0,
+    error ? `error:${error.message}` : `rows:${(data || []).length}`
+  );
+  if (error) {
+    console.warn("[homepage-rail] sale live query error:", error.message);
+    return [];
+  }
+  return mapHomepageLiveRailRows(data || [], "sale").slice(0, limit);
 }
 
 export async function fetchProductsByBrand(

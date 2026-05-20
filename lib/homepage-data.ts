@@ -1,20 +1,17 @@
 import {
   fetchDesigners,
   fetchDesignersBySlugs,
-  fetchProductsByFiber,
-  fetchSaleProducts,
   fetchHomepageSilkRailProducts,
+  fetchHomepageCashmereRailProducts,
+  fetchHomepageLinenRailProducts,
   fetchHomepageVacationRailProducts,
   fetchHomepageNewInRailProducts,
+  fetchHomepageSaleRailProducts,
   fetchHomepageGenericRailProducts,
   type Product,
-  type CatalogFetchOpts,
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
 import { CURATED_BRAND_SLUGS } from "./homepage-constants";
-
-/** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
-const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
 
 /** Small fetches only — homepage must not scan large slices of catalog. */
 const MATERIAL_RAIL_FETCH_LIMIT = 24;
@@ -27,16 +24,11 @@ const NEW_IN_BRAND_SLUGS = [
 const NEW_IN_FETCH_LIMIT = 32;
 const NEW_IN_TARGET_ITEMS = 8;
 const HOMEPAGE_SALE_FETCH_LIMIT = 16;
-const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 180;
 const DESIGNERS_FETCH_LIMIT = 48;
 
 const RAIL_TIMEOUT_MS = 3800;
 const CURATED_SECTION_TIMEOUT_MS = 4500;
 const DESIGNERS_TIMEOUT_MS = 3200;
-
-const homeRailOpts: CatalogFetchOpts = {
-  preferLiveOnly: !HOMEPAGE_USE_CATALOG_RPC,
-};
 
 export { CURATED_BRAND_SLUGS };
 
@@ -139,15 +131,18 @@ export interface HomePageData {
 }
 
 function postProcessHomepageMaterialRail(products: Product[]): Product[] {
-  return diversifyByBrand(
-    products.filter((x) => !isZeroPrice(x.price)),
-    MATERIAL_RAIL_DISPLAY_MAX,
-    MATERIAL_DIVERSITY_MAX_PER_BRAND
+  const priced = products.filter((x) => !isZeroPrice(x.price));
+  const out = diversifyByBrand(priced, MATERIAL_RAIL_DISPLAY_MAX, MATERIAL_DIVERSITY_MAX_PER_BRAND);
+  console.log(
+    `[homepage-rail] post-process: in=${products.length} priced=${priced.length} out=${out.length}`
   );
+  return out;
 }
 
+type HomepageMaterialRailLabel = "silk" | "cashmere" | "linen" | "vacation";
+
 async function fetchHomepageMaterialRailWithFallback(
-  label: "silk" | "vacation",
+  label: HomepageMaterialRailLabel,
   fetchPrimary: () => Promise<Product[]>
 ): Promise<Product[]> {
   let products = postProcessHomepageMaterialRail(await fetchPrimary());
@@ -158,6 +153,21 @@ async function fetchHomepageMaterialRailWithFallback(
   );
   if (products.length === 0) {
     console.warn(`[homepage-rail] ${label}: generic fallback also empty`);
+  }
+  return products;
+}
+
+async function fetchHomepageSaleRailWithFallback(): Promise<Product[]> {
+  let products = (await fetchHomepageSaleRailProducts(HOMEPAGE_SALE_FETCH_LIMIT)).filter(
+    (p) => !isZeroPrice(p.price)
+  );
+  if (products.length > 0) return products;
+  console.warn("[homepage-rail] sale: primary fetch empty; trying generic fallback");
+  products = postProcessHomepageMaterialRail(
+    await fetchHomepageGenericRailProducts(HOMEPAGE_SALE_FETCH_LIMIT)
+  );
+  if (products.length === 0) {
+    console.warn("[homepage-rail] sale: generic fallback also empty");
   }
   return products;
 }
@@ -179,14 +189,14 @@ export async function getHomePageData(): Promise<HomePageData> {
     []
   );
 
-  const [cashmereProducts, silkProducts, vacationProducts, linenProducts, saleResult, curatedDesigners] =
+  const [cashmereProducts, silkProducts, vacationProducts, linenProducts, saleProducts, curatedDesigners] =
     await Promise.all([
       withHomepageRailTimeout(
         "rail:cashmere",
         RAIL_TIMEOUT_MS,
         () =>
-          fetchProductsByFiber("cashmere", MATERIAL_RAIL_FETCH_LIMIT, homeRailOpts).then(
-            postProcessHomepageMaterialRail
+          fetchHomepageMaterialRailWithFallback("cashmere", () =>
+            fetchHomepageCashmereRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
           ),
         []
       ),
@@ -212,26 +222,14 @@ export async function getHomePageData(): Promise<HomePageData> {
         "rail:linen",
         RAIL_TIMEOUT_MS,
         () =>
-          fetchProductsByFiber("linen", MATERIAL_RAIL_FETCH_LIMIT, homeRailOpts).then(
-            postProcessHomepageMaterialRail
+          fetchHomepageMaterialRailWithFallback("linen", () =>
+            fetchHomepageLinenRailProducts(MATERIAL_RAIL_FETCH_LIMIT)
           ),
         []
       ),
-      withHomepageRailTimeout(
-        "rail:sale",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchSaleProducts({
-            limit: HOMEPAGE_SALE_FETCH_LIMIT,
-            offset: 0,
-            maxSourceRows: HOMEPAGE_SALE_MAX_SOURCE_ROWS,
-          }),
-        { products: [], total: 0 }
-      ),
+      withHomepageRailTimeout("rail:sale", RAIL_TIMEOUT_MS, fetchHomepageSaleRailWithFallback, []),
       withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
     ]);
-
-  const saleProducts = (saleResult.products || []).filter((p) => !isZeroPrice(p.price));
 
   let newInProducts = await withHomepageRailTimeout(
     "rail:new-in",
