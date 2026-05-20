@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
-import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X, Globe2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopMeta } from "./actions";
 
@@ -62,6 +62,11 @@ function getLocationForMarket(market: MarketFilter) {
   return LOCATION_OPTIONS.find((option) => option.market === market && option.featured)
     || LOCATION_OPTIONS.find((option) => option.market === market)
     || LOCATION_OPTIONS[LOCATION_OPTIONS.length - 1];
+}
+
+function marketFromSearchParam(raw: string | null): MarketFilter {
+  if (raw === "us-ca" || raw === "eu-uk-me") return raw;
+  return "all";
 }
 
 function optimizeImageUrl(url: string, width: number): string {
@@ -144,25 +149,21 @@ export default function ShopClient({
   initialTotal,
   totalProductCount,
   fiberCounts = {},
-  initialMarket,
   detectedCountry,
 }: {
   initialProducts: any[];
   initialTotal: number;
   totalProductCount: number;
   fiberCounts?: Record<string, number>;
-  initialMarket?: string;
   detectedCountry?: string;
 }) {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const initialFiber = (searchParams.get("fiber") as FiberTab) || "all";
   const initialCategory = (searchParams.get("category") as CategoryFilter) || "all";
   const initialSort = (searchParams.get("sort") as SortOption) || "recommended";
   const detectedLocation = LOCATION_OPTIONS.find((option) => option.code === detectedCountry);
-  const detectedMarket = detectedLocation?.market;
-  const initialMarketFilter = ((initialMarket || searchParams.get("market") || detectedMarket || "all") as MarketFilter);
+  const initialMarketFilter = marketFromSearchParam(searchParams.get("market"));
   const initialSearch = searchParams.get("q") || "";
 
   const [fiberTab, setFiberTab] = useState<FiberTab>(initialFiber);
@@ -181,6 +182,8 @@ export default function ShopClient({
   const currentLocation = detectedLocation && marketFilter === detectedLocation.market
     ? detectedLocation
     : getLocationForMarket(marketFilter);
+  const promptLocation =
+    marketFilter === "all" && detectedLocation ? detectedLocation : currentLocation;
   const filteredLocations = LOCATION_OPTIONS.filter((option) =>
     option.country.toLowerCase().includes(locationQuery.trim().toLowerCase())
     || option.currency.toLowerCase().includes(locationQuery.trim().toLowerCase())
@@ -222,10 +225,6 @@ export default function ShopClient({
 
   useEffect(() => {
     try {
-      const savedMarket = localStorage.getItem("intertexe_shop_market") as MarketFilter | null;
-      if (savedMarket && ["all", "us-ca", "eu-uk-me"].includes(savedMarket) && savedMarket !== marketFilter) {
-        setMarketFilter(savedMarket);
-      }
       if (localStorage.getItem("intertexe_shop_location_prompt_seen") === "1") {
         setShowLocationPrompt(false);
       }
@@ -314,7 +313,9 @@ export default function ShopClient({
   }, [fiberTab, categoryFilter, sortBy, marketFilter, visibleCount, debouncedSearch, initialProducts, initialTotal]);
 
   const isSearchActive = debouncedSearch.length >= 2;
-  const displayCount = fiberTab === "all" && categoryFilter === "all" && !isSearchActive
+  const showGlobalHeroCount =
+    fiberTab === "all" && categoryFilter === "all" && !isSearchActive && marketFilter === "all";
+  const heroVerifiedCount = showGlobalHeroCount
     ? (globalCount > 0 ? globalCount : 17000)
     : resultTotal;
 
@@ -330,7 +331,13 @@ export default function ShopClient({
                 {isSearchActive ? `Results for "${debouncedSearch}"` : "Shop"}
               </h1>
               <p className="text-[13px] md:text-sm text-muted-foreground">
-                {displayCount > 0 ? displayCount.toLocaleString() : "17,000+"} verified products
+                {isLoading && !products.length ? (
+                  <span className="animate-pulse">Loading verified products…</span>
+                ) : heroVerifiedCount > 0 ? (
+                  `${heroVerifiedCount.toLocaleString()} verified products`
+                ) : (
+                  "No verified products match this view"
+                )}
               </p>
             </div>
 
@@ -364,8 +371,8 @@ export default function ShopClient({
               Update your location to see products and content relevant to you
             </p>
             <div className="flex items-center gap-3 text-lg md:text-xl">
-              <span className="text-2xl">{currentLocation.flag}</span>
-              <span className="font-serif">{currentLocation.country} ({currentLocation.currency})</span>
+              <span className="text-2xl">{promptLocation.flag}</span>
+              <span className="font-serif">{promptLocation.country} ({promptLocation.currency})</span>
             </div>
             <button
               type="button"
@@ -441,7 +448,14 @@ export default function ShopClient({
 
           {isSearchActive && (
             <button
-              onClick={() => { setSearchQuery(""); setDebouncedSearch(""); setFiberTab("all"); setCategoryFilter("all"); setMarketFilter("all"); }}
+              onClick={() => {
+                setSearchQuery("");
+                setDebouncedSearch("");
+                setFiberTab("all");
+                setCategoryFilter("all");
+                setSortBy("recommended");
+                selectLocation("all");
+              }}
               className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
               data-testid="button-clear-all"
             >
@@ -549,7 +563,14 @@ export default function ShopClient({
             <ShoppingBag className="w-12 h-12 text-muted-foreground/15" />
             <p className="text-muted-foreground text-sm">No products match this combination.</p>
             <button
-              onClick={() => { setFiberTab("all"); setCategoryFilter("all"); setMarketFilter("all"); }}
+              onClick={() => {
+                setFiberTab("all");
+                setCategoryFilter("all");
+                setSortBy("recommended");
+                setSearchQuery("");
+                setDebouncedSearch("");
+                selectLocation("all");
+              }}
               className="text-[11px] uppercase tracking-[0.15em] text-foreground hover:text-muted-foreground transition-colors"
               data-testid="button-reset-filters"
             >
