@@ -11,6 +11,11 @@ import {
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
 import { CURATED_BRAND_SLUGS } from "./homepage-constants";
+import {
+  HOMEPAGE_FEED_RAIL_KEYS,
+  fetchHomepageFeedRail,
+  isHomepageFeedCacheEnabled,
+} from "./homepage-feed";
 
 /** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
@@ -161,7 +166,68 @@ async function fetchCuratedDesignersFast(): Promise<any[]> {
   });
 }
 
+async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
+  const t0 = Date.now();
+  const [
+    designers,
+    curatedDesigners,
+    newInProducts,
+    silkProducts,
+    linenProducts,
+    cashmereProducts,
+    vacationProducts,
+    saleProducts,
+  ] = await Promise.all([
+    withHomepageRailTimeout(
+      "rail:designers",
+      DESIGNERS_TIMEOUT_MS,
+      () => fetchDesigners(undefined, DESIGNERS_FETCH_LIMIT),
+      []
+    ),
+    withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
+    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.newIn),
+    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.silk),
+    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.linen),
+    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.cashmere),
+    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.vacation),
+    fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.sale),
+  ]);
+
+  const silkEditorialProduct = pickEditorialProduct(silkProducts as any[]);
+  const linenEditorialProduct = pickEditorialProduct(linenProducts as any[]);
+
+  console.log(
+    "[homepage-feed-cache] payload:",
+    `new-in=${newInProducts.length}`,
+    `silk=${silkProducts.length}`,
+    `cashmere=${cashmereProducts.length}`,
+    `linen=${linenProducts.length}`,
+    `vacation=${vacationProducts.length}`,
+    `sale=${saleProducts.length}`,
+    `ms=${Date.now() - t0}`
+  );
+
+  return {
+    designers,
+    productCount: 0,
+    cashmereProducts,
+    silkProducts,
+    vacationProducts,
+    linenProducts,
+    silkEditorialProduct,
+    linenEditorialProduct,
+    productCountByBrand: {},
+    curatedDesigners,
+    newInProducts,
+    saleProducts,
+  };
+}
+
 export async function getHomePageData(): Promise<HomePageData> {
+  if (isHomepageFeedCacheEnabled()) {
+    return getHomePageDataFromFeedCache();
+  }
+
   const designers = await withHomepageRailTimeout(
     "rail:designers",
     DESIGNERS_TIMEOUT_MS,
