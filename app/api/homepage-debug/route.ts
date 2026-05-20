@@ -3,52 +3,34 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import {
   HOMEPAGE_FEED_RAIL_KEYS,
+  fetchHomepageFeedItemCounts,
   fetchHomepageFeedMeta,
-  fetchHomepageFeedRail,
   isHomepageFeedCacheEnabled,
 } from "../../../lib/homepage-feed";
-import { getHomePageData } from "../../../lib/homepage-data";
 
+/** Lightweight cache health check — homepage_feed_meta + per-rail counts only. */
 export async function GET() {
-  const useCache = isHomepageFeedCacheEnabled();
+  const envFlag = process.env.HOMEPAGE_USE_FEED_CACHE ?? "";
 
-  if (useCache) {
-    const [meta, newIn, silk, linen, cashmere, vacation, sale] = await Promise.all([
-      fetchHomepageFeedMeta(),
-      fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.newIn),
-      fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.silk),
-      fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.linen),
-      fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.cashmere),
-      fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.vacation),
-      fetchHomepageFeedRail(HOMEPAGE_FEED_RAIL_KEYS.sale),
-    ]);
+  const [meta, { counts, errors }] = await Promise.all([
+    fetchHomepageFeedMeta(),
+    fetchHomepageFeedItemCounts(),
+  ]);
 
-    return NextResponse.json({
-      source: "homepage_feed_cache",
-      HOMEPAGE_USE_FEED_CACHE: true,
-      counts: {
-        newIn: newIn.length,
-        silk: silk.length,
-        linen: linen.length,
-        cashmere: cashmere.length,
-        vacation: vacation.length,
-        sale: sale.length,
-      },
-      meta,
-    });
-  }
-
-  const data = await getHomePageData();
   return NextResponse.json({
-    source: "live_catalog_fallback",
-    HOMEPAGE_USE_FEED_CACHE: false,
+    source: "homepage_feed_cache",
+    HOMEPAGE_USE_FEED_CACHE: envFlag,
+    HOMEPAGE_USE_FEED_CACHE_enabled: isHomepageFeedCacheEnabled(),
     counts: {
-      newIn: data.newInProducts.length,
-      silk: data.silkProducts.length,
-      linen: data.linenProducts.length,
-      cashmere: data.cashmereProducts.length,
-      vacation: data.vacationProducts.length,
-      sale: data.saleProducts.length,
+      newIn: counts[HOMEPAGE_FEED_RAIL_KEYS.newIn] ?? 0,
+      silk: counts[HOMEPAGE_FEED_RAIL_KEYS.silk] ?? 0,
+      linen: counts[HOMEPAGE_FEED_RAIL_KEYS.linen] ?? 0,
+      cashmere: counts[HOMEPAGE_FEED_RAIL_KEYS.cashmere] ?? 0,
+      vacation: counts[HOMEPAGE_FEED_RAIL_KEYS.vacation] ?? 0,
+      sale: counts[HOMEPAGE_FEED_RAIL_KEYS.sale] ?? 0,
     },
+    countsByRailKey: counts,
+    countErrors: Object.keys(errors).length > 0 ? errors : undefined,
+    meta,
   });
 }

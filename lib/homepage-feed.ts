@@ -93,3 +93,33 @@ export async function fetchHomepageFeedMeta(): Promise<HomepageFeedMetaRow[]> {
 
   return (data || []) as HomepageFeedMetaRow[];
 }
+
+/** Head counts per rail_key only — for /api/homepage-debug (no product row payload). */
+export async function fetchHomepageFeedItemCounts(): Promise<{
+  counts: Partial<Record<HomepageFeedRailKey, number>>;
+  errors: Partial<Record<HomepageFeedRailKey, string>>;
+}> {
+  const supabase = getServerSupabase();
+  if (!supabase) {
+    return { counts: {}, errors: { "top:new_in": "no_supabase_client" } };
+  }
+
+  const railKeys = Object.values(HOMEPAGE_FEED_RAIL_KEYS);
+  const results = await Promise.all(
+    railKeys.map(async (railKey) => {
+      const { count, error } = await supabase
+        .from("homepage_feed_items")
+        .select("rail_key", { count: "exact", head: true })
+        .eq("rail_key", railKey);
+      return { railKey, count: count ?? 0, error: error?.message };
+    })
+  );
+
+  const counts: Partial<Record<HomepageFeedRailKey, number>> = {};
+  const errors: Partial<Record<HomepageFeedRailKey, string>> = {};
+  for (const r of results) {
+    counts[r.railKey] = r.count;
+    if (r.error) errors[r.railKey] = r.error;
+  }
+  return { counts, errors };
+}
