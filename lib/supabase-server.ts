@@ -793,6 +793,43 @@ export async function fetchHomepageVacationRailProducts(limit = 24): Promise<Pro
   return mapHomepageLiveRailRows(data || [], "vacation").slice(0, limit);
 }
 
+/** Homepage “New In” — one live query across curated brand slugs (no per-brand RPC fan-out). */
+export async function fetchHomepageNewInRailProducts(
+  brandSlugs: string[],
+  limit = 8
+): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase || brandSlugs.length === 0) {
+    console.warn("[homepage-rail] new-in: no Supabase client or brand list");
+    return [];
+  }
+  const slugs = [...new Set(brandSlugs.map((s) => s.trim().toLowerCase()).filter(Boolean))];
+  const fetchLimit = Math.min(Math.max(limit * 4, 32), 96);
+  const t0 = Date.now();
+  const { data, error } = await supabase
+    .from("live_products_apparel")
+    .select(HOMEPAGE_RAIL_LIVE_COLS)
+    .in("brand_slug", slugs)
+    .gte("natural_fiber_percent", 80)
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .neq("price", "")
+    .neq("price", "$0.00")
+    .neq("price", "0")
+    .order("created_at", { ascending: false })
+    .limit(fetchLimit);
+  logSupabaseTiming(
+    "homepage rail new-in live",
+    t0,
+    error ? `error:${error.message}` : `rows:${(data || []).length} brands=${slugs.length}`
+  );
+  if (error) {
+    console.warn("[homepage-rail] new-in live query error:", error.message);
+    return [];
+  }
+  return mapHomepageLiveRailRows(data || [], "new-in").slice(0, limit);
+}
+
 /** Last-resort homepage rail when material-specific query returns nothing. */
 export async function fetchHomepageGenericRailProducts(limit = 24): Promise<Product[]> {
   const supabase = getServerSupabase();

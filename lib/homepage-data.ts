@@ -2,10 +2,10 @@ import {
   fetchDesigners,
   fetchDesignersBySlugs,
   fetchProductsByFiber,
-  fetchProductsByBrandWithImages,
   fetchSaleProducts,
   fetchHomepageSilkRailProducts,
   fetchHomepageVacationRailProducts,
+  fetchHomepageNewInRailProducts,
   fetchHomepageGenericRailProducts,
   type Product,
   type CatalogFetchOpts,
@@ -20,29 +20,22 @@ const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS 
 const MATERIAL_RAIL_FETCH_LIMIT = 24;
 const MATERIAL_RAIL_DISPLAY_MAX = 10;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
-const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
-/** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
+/** New In: one batched live query across these brand slugs. */
 const NEW_IN_BRAND_SLUGS = [
   "frame", "vince", "theory", "toteme", "ganni", "staud", "khaite", "isabel-marant",
 ] as const;
-const NEW_IN_FETCH_PER_BRAND = 10;
+const NEW_IN_FETCH_LIMIT = 32;
 const NEW_IN_TARGET_ITEMS = 8;
 const HOMEPAGE_SALE_FETCH_LIMIT = 16;
 const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 180;
 const DESIGNERS_FETCH_LIMIT = 48;
 
 const RAIL_TIMEOUT_MS = 3800;
-const BRAND_FETCH_TIMEOUT_MS = 2800;
 const CURATED_SECTION_TIMEOUT_MS = 4500;
 const DESIGNERS_TIMEOUT_MS = 3200;
 
 const homeRailOpts: CatalogFetchOpts = {
   preferLiveOnly: !HOMEPAGE_USE_CATALOG_RPC,
-};
-
-const homeBrandOpts: CatalogFetchOpts = {
-  preferLiveOnly: !HOMEPAGE_USE_CATALOG_RPC,
-  liveRowCap: HOMEPAGE_BRAND_LIVE_ROW_CAP,
 };
 
 export { CURATED_BRAND_SLUGS };
@@ -240,82 +233,21 @@ export async function getHomePageData(): Promise<HomePageData> {
 
   const saleProducts = (saleResult.products || []).filter((p) => !isZeroPrice(p.price));
 
-  const brandProductLists = await Promise.all(
-    [...NEW_IN_BRAND_SLUGS].map((slug) =>
-      withHomepageRailTimeout(`brandrail:new-in:${slug}`, BRAND_FETCH_TIMEOUT_MS, async () => {
-        return fetchProductsByBrandWithImages(slug, NEW_IN_FETCH_PER_BRAND, homeBrandOpts);
-      }, [])
-    )
+  let newInProducts = await withHomepageRailTimeout(
+    "rail:new-in",
+    RAIL_TIMEOUT_MS,
+    async () => {
+      let items = postProcessHomepageMaterialRail(
+        await fetchHomepageNewInRailProducts([...NEW_IN_BRAND_SLUGS], NEW_IN_FETCH_LIMIT)
+      ).slice(0, NEW_IN_TARGET_ITEMS);
+      if (items.length > 0) return items;
+      console.warn("[homepage-rail] new-in: brand query empty; trying generic fallback");
+      return postProcessHomepageMaterialRail(
+        await fetchHomepageGenericRailProducts(NEW_IN_FETCH_LIMIT)
+      ).slice(0, NEW_IN_TARGET_ITEMS);
+    },
+    []
   );
-
-  const seenIds = new Set<string>();
-  const seenBaseNames = new Set<string>();
-  const newInProducts: any[] = [];
-  const maxPerBrand = 2;
-  const heroCategories = new Set(["dresses", "outerwear", "knitwear", "jumpsuits"]);
-  const editorialCategories = new Set(["dresses", "outerwear", "knitwear", "skirts", "jumpsuits", "lingerie", "swimwear", "tops"]);
-  const basicPatterns =
-    /\b(t-shirt|tee|sweatshirt|tank top|vest|cargo|jogger|hoodie|henley|polo|baseball|cap|beanie|sock|belt|scarf|glove|wallet|bag|hat|mask)\b/i;
-  const basicNamePatterns = /\b(basic|essential|everyday|classic crew|crewneck tee|v-?neck tee|pocket tee|jersey tee)\b/i;
-  const minPrice = 80;
-
-  function getBaseName(name: string): string {
-    return name
-      .replace(/\s*-\s*(black|white|grey|gray|ecru|navy|blue|red|pink|green|beige|khaki|brown|camel|cream|ivory|nude|sand|taupe|chocolate|burgundy|plum|terracotta|gunmetal|silver|gold|dark|light|washed|faded|medium|deep).*$/i, "")
-      .replace(/\s*-\s*étoile$/i, "")
-      .trim()
-      .toLowerCase();
-  }
-
-  const brandQueues: any[][] = [];
-  for (const products of brandProductLists) {
-    const sorted = [...products].sort((a, b) => {
-      const aHero = heroCategories.has(a.category) ? 2 : editorialCategories.has(a.category) ? 1 : 0;
-      const bHero = heroCategories.has(b.category) ? 2 : editorialCategories.has(b.category) ? 1 : 0;
-      if (bHero !== aHero) return bHero - aHero;
-      const aBasic = basicPatterns.test(a.name) || basicNamePatterns.test(a.name) ? 1 : 0;
-      const bBasic = basicPatterns.test(b.name) || basicNamePatterns.test(b.name) ? 1 : 0;
-      if (aBasic !== bBasic) return aBasic - bBasic;
-      const aPrice = parseFloat((a.price || "0").replace(/[^0-9.]/g, "")) || 0;
-      const bPrice = parseFloat((b.price || "0").replace(/[^0-9.]/g, "")) || 0;
-      return bPrice - aPrice;
-    });
-    const queue: any[] = [];
-    for (const p of sorted) {
-      if (queue.length >= maxPerBrand) break;
-      if (seenIds.has(p.id)) continue;
-      if (isZeroPrice(p.price)) continue;
-      const price = parseFloat((p.price || "0").replace(/[^0-9.]/g, "")) || 0;
-      if (price < minPrice) continue;
-      if (basicPatterns.test(p.name) || basicNamePatterns.test(p.name)) continue;
-      const baseName = getBaseName(p.name);
-      if (seenBaseNames.has(baseName)) continue;
-      const pSlug = p.brandSlug || "";
-      if (pSlug === "isabel-marant" && p.imageUrl) {
-        if (!p.imageUrl.includes("-E.")) continue;
-      }
-      seenIds.add(p.id);
-      seenBaseNames.add(baseName);
-      queue.push(p);
-    }
-    if (queue.length > 0) brandQueues.push(queue);
-  }
-
-  let round = 0;
-  const tNewInCompose = Date.now();
-  while (newInProducts.length < NEW_IN_TARGET_ITEMS) {
-    let added = false;
-    for (const queue of brandQueues) {
-      if (round < queue.length) {
-        newInProducts.push(queue[round]);
-        added = true;
-        if (newInProducts.length >= NEW_IN_TARGET_ITEMS) break;
-      }
-    }
-    if (!added) break;
-    round++;
-  }
-  homepageTiming("phase:new-in-compose", tNewInCompose, `items=${newInProducts.length}`);
 
   const silkEditorialProduct = pickEditorialProduct(silkProducts as any[]);
   const linenEditorialProduct = pickEditorialProduct(linenProducts as any[]);
