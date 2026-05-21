@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, X } from "lucide-react";
 import { getQualityTier } from "../../lib/quality-tiers";
@@ -60,7 +60,45 @@ function optimizeImageUrl(url: string, width: number): string {
   return url;
 }
 
-function ProductCard({ product, eager, variant = "default" }: { product: any; eager?: boolean; variant?: "default" | "sale" }) {
+function useHorizontalScrollClickGuard() {
+  const draggingRef = useRef(false);
+  const startRef = useRef({ x: 0, y: 0 });
+
+  const scrollProps = {
+    onPointerDown: (e: ReactPointerEvent) => {
+      draggingRef.current = false;
+      startRef.current = { x: e.clientX, y: e.clientY };
+    },
+    onPointerMove: (e: ReactPointerEvent) => {
+      const dx = Math.abs(e.clientX - startRef.current.x);
+      const dy = Math.abs(e.clientY - startRef.current.y);
+      if (dx > 8 || dy > 8) draggingRef.current = true;
+    },
+    onPointerUp: () => {
+      window.setTimeout(() => {
+        draggingRef.current = false;
+      }, 80);
+    },
+  };
+
+  const onLinkClick = (e: ReactMouseEvent) => {
+    if (draggingRef.current) e.preventDefault();
+  };
+
+  return { scrollProps, onLinkClick };
+}
+
+function ProductCard({
+  product,
+  eager,
+  variant = "default",
+  onLinkClick,
+}: {
+  product: any;
+  eager?: boolean;
+  variant?: "default" | "sale";
+  onLinkClick?: (e: ReactMouseEvent) => void;
+}) {
   const name = product.name || "";
   const brandName = product.brandName || "";
   const imageUrl = product.imageUrl || "";
@@ -70,19 +108,20 @@ function ProductCard({ product, eager, variant = "default" }: { product: any; ea
   const originalNum = product.originalPrice ? parseFloat(String(product.originalPrice).replace(/[^0-9.]/g, "")) : 0;
   const currentNum = product.price ? parseFloat(String(product.price).replace(/[^0-9.]/g, "")) : 0;
   const discountPct = originalNum > 0 ? Math.round((1 - currentNum / originalNum) * 100) : 0;
-
   return (
     <Link
       href={`/product/${product.id}`}
-      className="group flex-shrink-0 w-[155px] md:w-[220px] flex flex-col cursor-pointer"
+      className="group flex-shrink-0 w-[155px] md:w-[220px] flex flex-col cursor-pointer touch-manipulation"
       data-testid={`product-home-${product.id}`}
+      onClick={onLinkClick}
     >
       <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
         {imageUrl ? (
           <img
             src={optimizeImageUrl(imageUrl, 480)}
             alt={name}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            draggable={false}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out pointer-events-none select-none"
             loading={eager ? "eager" : "lazy"}
           />
         ) : (
@@ -137,6 +176,7 @@ export function HorizontalProductScroll({
   eager?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { scrollProps, onLinkClick } = useHorizontalScrollClickGuard();
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -186,11 +226,17 @@ export function HorizontalProductScroll({
 
       <div
         ref={scrollRef}
-        className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]"
+        className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px] touch-pan-x"
+        {...scrollProps}
       >
         {hasItems ? (
           products.map((product: any, i: number) => (
-            <ProductCard key={product.id} product={product} eager={eager && i < 4} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              eager={eager && i < 4}
+              onLinkClick={onLinkClick}
+            />
           ))
         ) : (
           <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
@@ -210,6 +256,56 @@ export function HorizontalProductScroll({
   );
 }
 
+function SaleHomeRail({ products }: { products?: any[] }) {
+  const { scrollProps, onLinkClick } = useHorizontalScrollClickGuard();
+
+  return (
+    <section className="py-10 md:py-20 border-t border-neutral-200/60">
+      <div className="flex flex-col gap-5 md:gap-7">
+        <div className="flex items-end justify-between">
+          <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-neutral-400">
+                The edit
+              </span>
+              <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
+                {HOMEPAGE_RAIL_LABELS.saleProducts.title}
+              </h2>
+            </div>
+            <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Link>
+        </div>
+        <div
+          className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px] touch-pan-x"
+          {...scrollProps}
+        >
+          {products?.length ? (
+            products.map((product: any) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                variant="sale"
+                onLinkClick={onLinkClick}
+              />
+            ))
+          ) : (
+            <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
+              Sale spotlight is refreshing. Browse the sale page for the full markdown grid.
+            </p>
+          )}
+        </div>
+        <Link
+          href="/sale"
+          className="self-start text-[10px] md:text-xs uppercase tracking-[0.18em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+          data-testid="link-shop-sale"
+        >
+          Shop all sale <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 function BrandCard({ designer, count }: { designer: any; count: number }) {
   const [failed, setFailed] = useState(false);
   const heroUrl = getBrandHeroImage(designer.name);
@@ -220,7 +316,7 @@ function BrandCard({ designer, count }: { designer: any; count: number }) {
   return (
     <Link
       href={`/designers/${designer.slug}`}
-      className="group flex flex-col gap-3 active:scale-[0.98] transition-transform"
+      className="group flex flex-col gap-3 active:scale-[0.98] transition-transform touch-manipulation"
       data-testid={`card-designer-${designer.id}`}
     >
       <div className={`aspect-[3/4] w-full overflow-hidden relative ${imageUrl ? "bg-neutral-100" : "bg-[#f0ece6]"}`}>
@@ -309,7 +405,7 @@ function EditorialPanel({
   return (
     <Link
       href={href}
-      className="group relative w-full overflow-hidden flex items-end bg-[#f2f1ef] aspect-[3/4] md:aspect-[16/9]"
+      className="group relative w-full overflow-hidden flex items-end bg-[#f2f1ef] aspect-[3/4] md:aspect-[16/9] touch-manipulation"
       data-testid={testId}
     >
       <div className="absolute inset-0">
@@ -511,41 +607,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           />
         </section>
 
-      <section className="py-10 md:py-20 border-t border-neutral-200/60">
-          <div className="flex flex-col gap-5 md:gap-7">
-            <div className="flex items-end justify-between">
-              <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-neutral-400">
-                    The edit
-                  </span>
-                  <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
-                    {HOMEPAGE_RAIL_LABELS.saleProducts.title}
-                  </h2>
-                </div>
-                <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-            </div>
-            <div className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]">
-              {data.saleProducts?.length ? (
-                data.saleProducts.map((product: any) => (
-                  <ProductCard key={product.id} product={product} variant="sale" />
-                ))
-              ) : (
-                <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
-                  Sale spotlight is refreshing. Browse the sale page for the full markdown grid.
-                </p>
-              )}
-            </div>
-            <Link
-              href="/sale"
-              className="self-start text-[10px] md:text-xs uppercase tracking-[0.18em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
-              data-testid="link-shop-sale"
-            >
-              Shop all sale <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </section>
+      <SaleHomeRail products={data.saleProducts} />
 
       <section className="-mx-4 md:-mx-8 bg-[#f8f7f5]">
         <div className="max-w-5xl mx-auto py-14 md:py-24 px-6 md:px-12">

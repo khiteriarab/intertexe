@@ -421,6 +421,19 @@ function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
   return imageUrl;
 }
 
+function parseMoneyValue(val: unknown): number {
+  if (val == null) return 0;
+  const n = parseFloat(String(val).replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function rowIsOnSale(row: any): boolean {
+  if (row?.is_sale === true) return true;
+  const curr = parseMoneyValue(row?.price);
+  const orig = parseMoneyValue(row?.original_price);
+  return orig > curr && curr > 0;
+}
+
 function mapProductRow(row: any): Product {
   const brandSlug = row.brand_slug || "";
   const rawImageUrl = row.image_url || "";
@@ -451,7 +464,7 @@ function mapProductRow(row: any): Product {
     naturalFiberPercent: row.natural_fiber_percent || 0,
     category: row.category || "",
     matchingSetId: row.matching_set_id || null,
-    isSale: row.is_sale || false,
+    isSale: rowIsOnSale(row),
     originalPrice: origStr,
     listingRegion: row.region != null && row.region !== "" ? String(row.region) : null,
   };
@@ -1306,6 +1319,24 @@ export async function fetchMoreAtPrice(
   return filtered.slice(0, limit).map(mapProductRow);
 }
 
+function applySaleProductFilters(
+  products: Product[],
+  opts: { fiber?: string; maxPrice?: number }
+): Product[] {
+  let filtered = products.filter((p) => p.imageUrl && p.price);
+  if (opts.fiber && opts.fiber !== "all") {
+    const needle = opts.fiber.toLowerCase();
+    filtered = filtered.filter((p) => (p.composition || "").toLowerCase().includes(needle));
+  }
+  if (opts.maxPrice) {
+    filtered = filtered.filter((p) => {
+      const pr = parseMoneyValue(p.price);
+      return pr > 0 && pr <= opts.maxPrice!;
+    });
+  }
+  return filtered;
+}
+
 export async function fetchSaleProducts(options: {
   fiber?: string;
   maxPrice?: number;
@@ -1320,6 +1351,34 @@ export async function fetchSaleProducts(options: {
   const dedupePreferred = "us";
   const dedupeFallback = "us";
 
+  // Prefer homepage merchandising cache (same rail as homepage "On Sale" section).
+  try {
+    const { fetchMerchRailProducts, MERCH_RAIL_KEYS } = await import("./merch-feed");
+    const feedCap = maxSourceRows != null ? Math.min(maxSourceRows, 120) : 200;
+    const feedProducts = await fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: feedCap });
+    if (feedProducts.length > 0) {
+      const ids = feedProducts.map((p) => p.id).filter(Boolean);
+      const { data: liveRows } = await supabase
+        .from("live_products_apparel")
+        .select(PRODUCT_CARD_COLS)
+        .in("id", ids);
+      const liveById = new Map((liveRows || []).map((r: any) => [String(r.id), r]));
+      let products = feedProducts.map((fp) => {
+        const live = liveById.get(fp.id);
+        return live ? mapProductRow(live) : { ...fp, isSale: true };
+      });
+      products = applySaleProductFilters(products, { fiber, maxPrice });
+      if (products.length > 0) {
+        return {
+          products: products.slice(offset, offset + limit),
+          total: products.length,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("[fetchSaleProducts] merch feed path failed:", err);
+  }
+
   const pageSize = 1000;
   let allRows: any[] = [];
   let qOffset = 0;
@@ -1328,10 +1387,10 @@ export async function fetchSaleProducts(options: {
     let q = supabase
       .from("live_products_apparel")
       .select("*")
-      .eq("is_sale", true)
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
-      .not("price", "is", null);
+      .not("price", "is", null)
+      .not("original_price", "is", null);
     if (fiber && fiber !== "all") {
       q = q.ilike("composition", `%${fiber}%`);
     }
@@ -1343,17 +1402,30 @@ export async function fetchSaleProducts(options: {
     q = q.order("natural_fiber_percent", { ascending: false }).range(qOffset, rangeEnd);
     const { data: chunk, error } = await q;
     if (error || !chunk || chunk.length === 0) break;
-    allRows.push(...chunk);
+    allRows.push(...chunk.filter(rowIsOnSale));
     if (chunk.length < rangeEnd - qOffset + 1) break;
     if (maxSourceRows != null && allRows.length >= maxSourceRows) break;
     qOffset += chunk.length;
+  }
+
+  // Also pull explicit is_sale rows when discount scan is capped (homepage).
+  if (maxSourceRows != null && allRows.length < maxSourceRows) {
+    const { data: flagged } = await supabase
+      .from("live_products_apparel")
+      .select("*")
+      .eq("is_sale", true)
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .not("price", "is", null)
+      .limit(Math.max(0, maxSourceRows - allRows.length));
+    if (flagged?.length) allRows.push(...flagged);
   }
 
   let data = dedupeLiveApparelRows(allRows, dedupePreferred, dedupeFallback);
   if (data.length === 0) return { products: [], total: 0 };
 
   let filtered = data
-    .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row));
+    .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row) && rowIsOnSale(row));
 
   if (maxPrice) {
     filtered = filtered.filter((row: any) => {

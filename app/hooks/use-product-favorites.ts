@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useAuthLoginPrompt } from "./use-auth-login-prompt";
 
 const STORAGE_KEY = "intertexe_product_favorites";
 const TOKEN_KEY = "intertexe_auth_token";
@@ -34,6 +35,7 @@ function getToken(): string | null {
 }
 
 export function useProductFavorites() {
+  const { openLoginPrompt } = useAuthLoginPrompt();
   const [localFavorites, setLocalFavorites] = useState<Set<string>>(new Set());
   const [serverFavorites, setServerFavorites] = useState<string[]>([]);
   const hasSynced = useRef(false);
@@ -96,6 +98,11 @@ export function useProductFavorites() {
     const current = loadLocal();
     const adding = !current.has(productId);
 
+    if (adding && !getToken()) {
+      openLoginPrompt();
+      return;
+    }
+
     if (adding) {
       current.add(productId);
       if (price) {
@@ -129,7 +136,7 @@ export function useProductFavorites() {
         }).catch(() => {});
       }
     }
-  }, []);
+  }, [openLoginPrompt]);
 
   const isFavorited = useCallback(
     (productId: string) => merged.has(productId),

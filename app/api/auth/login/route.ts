@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
     }
 
-    const token = await storeToken(user.id);
+    const token = await storeToken(String(user.id));
     const { password: _, ...safeUser } = user;
     return NextResponse.json({ ...snakeToCamel(safeUser), token });
   } catch {

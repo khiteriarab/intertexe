@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     sendWelcomeEmail(email, name).catch(() => {});
 
-    const token = await storeToken(user.id);
+    const token = await storeToken(String(user.id));
     const { password: _, ...safeUser } = user;
     return NextResponse.json({ ...snakeToCamel(safeUser), token }, { status: 201 });
   } catch (err: any) {

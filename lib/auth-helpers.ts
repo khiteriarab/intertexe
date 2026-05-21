@@ -56,8 +56,12 @@ function verifyToken(token: string): { userId: string; exp: number } | null {
   }
 }
 
-export async function storeToken(userId: string): Promise<string> {
-  return signToken(userId);
+function normalizeUserId(userId: string | number): string {
+  return String(userId);
+}
+
+export async function storeToken(userId: string | number): Promise<string> {
+  return signToken(normalizeUserId(userId));
 }
 
 export async function getUserFromToken(authHeader: string | null): Promise<any | null> {
@@ -70,11 +74,11 @@ export async function getUserFromToken(authHeader: string | null): Promise<any |
     const supabase = getServerSupabase();
     if (!supabase) return null;
 
-    const { data } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", payload.userId)
-      .limit(1);
+    const id = normalizeUserId(payload.userId);
+    let { data } = await supabase.from("users").select("*").eq("id", id).limit(1);
+    if (!data?.[0] && /^\d+$/.test(id)) {
+      ({ data } = await supabase.from("users").select("*").eq("id", Number(id)).limit(1));
+    }
 
     return data?.[0] || null;
   } catch {

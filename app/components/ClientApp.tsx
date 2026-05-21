@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { Navbar } from "./Navbar";
@@ -8,9 +8,9 @@ import { ScrollToTop } from "./ScrollToTop";
 import { Analytics } from "./Analytics";
 import { Footer } from "./Footer";
 import { EmailBanner } from "./EmailBanner";
+import { AuthLoginPromptProvider } from "../hooks/use-auth-login-prompt";
 
 export function ClientApp({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -24,14 +24,9 @@ export function ClientApp({ children }: { children: ReactNode }) {
       })
   );
 
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthLoginPromptProvider>
       <Analytics />
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <Navbar />
@@ -43,6 +38,7 @@ export function ClientApp({ children }: { children: ReactNode }) {
         <ScrollToTop />
       </div>
       <Toaster position="top-right" />
+      </AuthLoginPromptProvider>
     </QueryClientProvider>
   );
 }
