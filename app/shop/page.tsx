@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
@@ -43,13 +44,15 @@ export default async function ShopPage({
 
   return (
     <>
-      <ShopClient
-        initialProducts={products}
-        initialTotal={shopData.total || 0}
-        totalProductCount={totalProductCount}
-        fiberCounts={fiberCounts}
-        detectedCountry={detectedCountry}
-      />
+      <Suspense fallback={null}>
+        <ShopClient
+          initialProducts={products}
+          initialTotal={shopData.total || 0}
+          totalProductCount={totalProductCount}
+          fiberCounts={fiberCounts}
+          detectedCountry={detectedCountry}
+        />
+      </Suspense>
 
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h1 className="text-2xl md:text-3xl font-serif text-center mb-4">

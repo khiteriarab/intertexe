@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ResetPasswordClient from "./ResetPasswordClient";
 
 export const metadata = {
@@ -6,5 +7,15 @@ export const metadata = {
 };
 
 export default function ResetPasswordPage() {
-  return <ResetPasswordClient />;
+  return (
+    <Suspense
+      fallback={
+        <div className="py-20 flex items-center justify-center min-h-[60vh]">
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      }
+    >
+      <ResetPasswordClient />
+    </Suspense>
+  );
 }
