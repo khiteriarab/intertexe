@@ -71,6 +71,8 @@ function marketFromSearchParam(raw: string | null): MarketFilter {
   return "all";
 }
 
+const SHOP_PAGE_SIZE = 40;
+
 function optimizeImageUrl(url: string, width: number): string {
   if (!url) return url;
   if (url.includes("cdn.shopify.com")) {
@@ -186,7 +188,8 @@ export default function ShopClient({
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [locationQuery, setLocationQuery] = useState("");
   const [showLocationPrompt, setShowLocationPrompt] = useState(initialMarketFilter === "all");
-  const [visibleCount, setVisibleCount] = useState(40);
+  const [listOffset, setListOffset] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -203,7 +206,7 @@ export default function ShopClient({
 
   const selectLocation = (market: MarketFilter) => {
     setMarketFilter(market);
-    setVisibleCount(40);
+    setListOffset(0);
     setShowLocationPrompt(false);
     try {
       localStorage.setItem("intertexe_shop_market", market);
@@ -247,7 +250,7 @@ export default function ShopClient({
     const savedCount = sessionStorage.getItem("shop_visible_count");
     if (savedCount) {
       const count = parseInt(savedCount, 10);
-      if (count > 40) setVisibleCount(count);
+      if (count > SHOP_PAGE_SIZE) setListOffset(Math.max(0, count - SHOP_PAGE_SIZE));
     }
   }, []);
 
@@ -285,13 +288,19 @@ export default function ShopClient({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setVisibleCount(40);
+      setListOffset(0);
     }, 400);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   useEffect(() => {
-    const isDefaultState = fiberTab === "all" && categoryFilter === "all" && sortBy === "recommended" && marketFilter === "all" && !debouncedSearch && visibleCount === 40;
+    const isDefaultState =
+      fiberTab === "all" &&
+      categoryFilter === "all" &&
+      sortBy === "recommended" &&
+      marketFilter === "all" &&
+      !debouncedSearch &&
+      listOffset === 0;
 
     if (isDefaultState && initialProducts?.length > 0) {
       setProducts(initialProducts);
@@ -308,21 +317,39 @@ export default function ShopClient({
           category: categoryFilter !== "all" ? categoryFilter : undefined,
           sort: sortBy,
           market: marketFilter !== "all" ? marketFilter : undefined,
-          limit: visibleCount,
-          offset: 0,
+          limit: SHOP_PAGE_SIZE,
+          offset: listOffset,
           search: debouncedSearch || undefined,
         });
-        setProducts(result.products || []);
+        if (listOffset === 0) {
+          setProducts(result.products || []);
+        } else {
+          setProducts((prev) => {
+            const seen = new Set(prev.map((p) => p.productId || p.id));
+            const next = [...prev];
+            for (const p of result.products || []) {
+              const id = p.productId || p.id;
+              if (!seen.has(id)) {
+                seen.add(id);
+                next.push(p);
+              }
+            }
+            return next;
+          });
+        }
         setResultTotal(result.total || 0);
       } catch {
-        setProducts([]);
-        setResultTotal(0);
+        if (listOffset === 0) {
+          setProducts([]);
+          setResultTotal(0);
+        }
       }
       setIsLoading(false);
+      setLoadingMore(false);
     };
 
     fetchProducts();
-  }, [fiberTab, categoryFilter, sortBy, marketFilter, visibleCount, debouncedSearch, initialProducts, initialTotal]);
+  }, [fiberTab, categoryFilter, sortBy, marketFilter, listOffset, debouncedSearch, initialProducts, initialTotal]);
 
   const isSearchActive = debouncedSearch.length >= 2;
   const showGlobalHeroCount =
@@ -402,7 +429,7 @@ export default function ShopClient({
             {FIBER_TABS.map(tab => (
               <button
                 key={tab.key}
-                onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setVisibleCount(40); }}
+                onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setListOffset(0); }}
                 className={`px-4 md:px-5 py-2 text-[10px] md:text-[11px] uppercase tracking-[0.15em] whitespace-nowrap transition-all flex-shrink-0 ${
                   fiberTab === tab.key ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -420,7 +447,7 @@ export default function ShopClient({
             {CATEGORY_FILTERS.map(cat => (
               <button
                 key={cat.key}
-                onClick={() => { setCategoryFilter(cat.key); setVisibleCount(40); }}
+                onClick={() => { setCategoryFilter(cat.key); setListOffset(0); }}
                 className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap transition-all flex-shrink-0 ${
                   categoryFilter === cat.key ? "border-b-2 border-foreground text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -491,7 +518,7 @@ export default function ShopClient({
                   {SORT_OPTIONS.map(option => (
                     <button
                       key={option.key}
-                      onClick={() => { setSortBy(option.key); setShowSortMenu(false); }}
+                      onClick={() => { setSortBy(option.key); setListOffset(0); setShowSortMenu(false); }}
                       className={`w-full text-left px-4 py-2.5 text-[11px] md:text-xs transition-colors ${
                         sortBy === option.key ? "bg-[#f5f5f3] text-foreground" : "text-muted-foreground hover:bg-[#f5f5f3] hover:text-foreground"
                       }`}
@@ -597,14 +624,21 @@ export default function ShopClient({
               ))}
             </div>
 
-            {resultTotal > visibleCount && (
+            {resultTotal > products.length && (
               <div className="flex justify-center pt-10 md:pt-12">
                 <button
-                  onClick={() => setVisibleCount(prev => prev + 40)}
-                  className="px-10 py-3.5 bg-foreground text-background text-[11px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors"
+                  onClick={() => {
+                    if (loadingMore || isLoading) return;
+                    setLoadingMore(true);
+                    setListOffset(products.length);
+                  }}
+                  disabled={loadingMore || isLoading}
+                  className="px-10 py-3.5 bg-foreground text-background text-[11px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors disabled:opacity-50"
                   data-testid="btn-load-more"
                 >
-                  Load More ({(resultTotal - visibleCount).toLocaleString()})
+                  {loadingMore
+                    ? "Loading…"
+                    : `Load More (${(resultTotal - products.length).toLocaleString()})`}
                 </button>
               </div>
             )}

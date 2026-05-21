@@ -711,7 +711,7 @@ async function MainFiberPage({ slug }: { slug: string }) {
     (async () => {
       const allProducts: any[] = [];
       for (const fiber of fiberQueries) {
-        const results = await fetchProductsByFiberAndCategory(fiber, undefined, 64);
+        const results = await fetchProductsByFiberAndCategory(fiber, undefined, 120);
         allProducts.push(...results);
       }
       const seen = new Set<string>();
