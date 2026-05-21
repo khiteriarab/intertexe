@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   fetchProductsByFiberAndCategory,
+  fetchCatalogProductsByFiber,
   fetchDesigners,
   fetchMaterialHubDisplayCount,
 } from "../../../lib/supabase-server";
+import { CATALOG_INITIAL_PAGE } from "../../../lib/catalog-rules";
 import { MATERIALS } from "../../../lib/data";
 import FabricProductGrid from "./FabricProductGrid";
 import EmailCapture from "../../components/EmailCapture";
@@ -711,7 +713,7 @@ async function MainFiberPage({ slug }: { slug: string }) {
     (async () => {
       const allProducts: any[] = [];
       for (const fiber of fiberQueries) {
-        const results = await fetchProductsByFiberAndCategory(fiber, undefined, 120);
+        const results = await fetchProductsByFiberAndCategory(fiber, undefined, CATALOG_INITIAL_PAGE, 0);
         allProducts.push(...results);
       }
       const seen = new Set<string>();
@@ -808,7 +810,8 @@ async function MainFiberPage({ slug }: { slug: string }) {
       <FabricProductGrid
         products={products}
         fiberName={fiberName}
-        totalCount={products.length}
+        totalCount={productCount || products.length}
+        catalogFiber={slug}
       />
 
       {material && (
@@ -967,19 +970,30 @@ async function MainFiberPage({ slug }: { slug: string }) {
 
 async function SubcategoryPage({ slug, config }: { slug: string; config: PageConfig }) {
   const parentFiber = getParentFiber(slug);
+  const primaryFiber = config.fiberQuery[0] || parentFiber;
 
-  const allProducts: any[] = [];
-  for (const fiber of config.fiberQuery) {
-    const results = await fetchProductsByFiberAndCategory(fiber, config.category);
-    allProducts.push(...results);
+  let products: any[] = [];
+  if (config.category) {
+    products = await fetchCatalogProductsByFiber({
+      fiber: primaryFiber,
+      category: config.category,
+      limit: CATALOG_INITIAL_PAGE,
+      offset: 0,
+    });
+  } else {
+    const allProducts: any[] = [];
+    for (const fiber of config.fiberQuery) {
+      const results = await fetchProductsByFiberAndCategory(fiber, config.category, CATALOG_INITIAL_PAGE, 0);
+      allProducts.push(...results);
+    }
+    const seen = new Set<string>();
+    products = allProducts.filter((p) => {
+      const id = p.productId || p.id;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
   }
-  const seen = new Set<string>();
-  const products = allProducts.filter((p) => {
-    const id = p.productId || p.id;
-    if (seen.has(id)) return false;
-    seen.add(id);
-    return true;
-  });
 
   let productsWithImages = products.filter((p: any) => p.imageUrl);
 
@@ -1099,6 +1113,8 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
           products={productsWithImages}
           fiberName={config.fiber}
           totalCount={productsWithImages.length}
+          catalogFiber={primaryFiber}
+          catalogCategory={config.category}
         />
 
         <section className="py-10 border-t border-border/20">

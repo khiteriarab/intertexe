@@ -109,13 +109,17 @@ export default function SaleClient({
   const [products, setProducts] = useState(initialProducts || []);
   const [total, setTotal] = useState(initialTotal || 0);
   const [isLoading, setIsLoading] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(60);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [offset, setOffset] = useState(initialProducts?.length || 0);
+
+  const pageSize = 40;
 
   useEffect(() => {
     const isDefault = fiberTab === "all" && priceFilter === "all";
     if (isDefault && initialProducts?.length) {
       setProducts(initialProducts);
       setTotal(initialTotal);
+      setOffset(initialProducts.length);
       return;
     }
 
@@ -123,20 +127,44 @@ export default function SaleClient({
     const params = new URLSearchParams();
     if (fiberTab !== "all") params.set("fiber", fiberTab);
     if (priceFilter !== "all") params.set("maxPrice", priceFilter);
-    params.set("limit", "200");
+    params.set("limit", String(pageSize));
+    params.set("offset", "0");
 
     fetch(`/api/sale?${params}`)
       .then((r) => r.json())
       .then((d) => {
         setProducts(d.products || []);
         setTotal(d.total || 0);
-        setVisibleCount(60);
+        setOffset((d.products || []).length);
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
-  }, [fiberTab, priceFilter]);
+  }, [fiberTab, priceFilter, initialProducts, initialTotal]);
 
-  const visibleProducts = products.slice(0, visibleCount);
+  const loadMore = () => {
+    if (loadingMore || products.length >= total) return;
+    setLoadingMore(true);
+    const params = new URLSearchParams();
+    if (fiberTab !== "all") params.set("fiber", fiberTab);
+    if (priceFilter !== "all") params.set("maxPrice", priceFilter);
+    params.set("limit", String(pageSize));
+    params.set("offset", String(offset));
+
+    fetch(`/api/sale?${params}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const next = d.products || [];
+        setProducts((prev) => {
+          const seen = new Set(prev.map((p: any) => p.id));
+          return [...prev, ...next.filter((p: any) => !seen.has(p.id))];
+        });
+        setOffset((o) => o + next.length);
+        if (d.total) setTotal(d.total);
+      })
+      .finally(() => setLoadingMore(false));
+  };
+
+  const hasMore = products.length < total;
 
   return (
     <div className="min-h-screen pb-20">
@@ -154,7 +182,7 @@ export default function SaleClient({
             {FIBER_TABS.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => { setFiberTab(tab.key); setVisibleCount(60); }}
+                onClick={() => setFiberTab(tab.key)}
                 className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${fiberTab === tab.key ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground hover:text-foreground"}`}
                 data-testid={`btn-fiber-${tab.key}`}
               >
@@ -167,7 +195,7 @@ export default function SaleClient({
             {PRICE_FILTERS.map((f) => (
               <button
                 key={f.key}
-                onClick={() => { setPriceFilter(f.key); setVisibleCount(60); }}
+                onClick={() => setPriceFilter(f.key)}
                 className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${priceFilter === f.key ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground hover:text-foreground"}`}
                 data-testid={`btn-price-${f.key}`}
               >
@@ -190,21 +218,22 @@ export default function SaleClient({
               </div>
             ))}
           </div>
-        ) : visibleProducts.length > 0 ? (
+        ) : products.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12" data-testid="sale-product-grid">
-              {visibleProducts.map((product: any) => (
+              {products.map((product: any) => (
                 <SaleProductCard key={product.id} product={product} />
               ))}
             </div>
-            {visibleCount < products.length && (
+            {hasMore && (
               <div className="flex justify-center pt-4">
                 <button
-                  onClick={() => setVisibleCount((prev) => prev + 60)}
-                  className="border border-foreground px-10 py-3 uppercase tracking-[0.2em] text-[10px] md:text-xs hover:bg-foreground hover:text-background transition-colors"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="border border-foreground px-10 py-3 uppercase tracking-[0.2em] text-[10px] md:text-xs hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
                   data-testid="btn-load-more-sale"
                 >
-                  Load More
+                  {loadingMore ? "Loading…" : "Load More"}
                 </button>
               </div>
             )}

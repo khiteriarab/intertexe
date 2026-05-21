@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice, type DisplayPriceProduct } from "../../../lib/format-display-price";
+import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 
 interface Product extends DisplayPriceProduct {
   productId?: string;
@@ -26,17 +27,53 @@ function parsePrice(p: string | undefined): number {
 type SortOption = "relevance" | "price-asc" | "price-desc";
 
 export default function FabricProductGrid({
-  products,
+  products: initialProducts,
   fiberName,
   totalCount,
+  catalogFiber,
+  catalogCategory,
 }: {
   products: Product[];
   fiberName: string;
   totalCount: number;
+  catalogFiber?: string;
+  catalogCategory?: string;
 }) {
+  const [products, setProducts] = useState(initialProducts);
+  const [offset, setOffset] = useState(initialProducts.length);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(
+    catalogFiber ? initialProducts.length >= Math.min(32, CATALOG_PAGE_SIZE) : false
+  );
+
   const [sort, setSort] = useState<SortOption>("relevance");
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
+
+  const loadMore = useCallback(async () => {
+    if (!catalogFiber || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const params = new URLSearchParams({
+      mode: "materials",
+      fiber: catalogFiber,
+      limit: String(CATALOG_PAGE_SIZE),
+      offset: String(offset),
+    });
+    if (catalogCategory) params.set("category", catalogCategory);
+    try {
+      const res = await fetch(`/api/catalog?${params}`);
+      const data = await res.json();
+      const next = (data.products || []) as Product[];
+      setProducts((prev) => {
+        const seen = new Set(prev.map((p) => p.productId || p.id));
+        return [...prev, ...next.filter((p) => !seen.has(p.productId || p.id))];
+      });
+      setOffset((o) => o + next.length);
+      setHasMore(Boolean(data.hasMore) && next.length > 0);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [catalogFiber, catalogCategory, offset, loadingMore, hasMore]);
 
   const filtered = useMemo(() => {
     let list = products;
@@ -158,6 +195,20 @@ export default function FabricProductGrid({
               </div>
             </ProductLink>
           ))}
+        </div>
+      )}
+
+      {hasMore && catalogFiber && filtered.length > 0 && (
+        <div className="flex justify-center pt-8">
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="border border-foreground/20 px-10 py-3 text-[10px] uppercase tracking-[0.2em] text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors disabled:opacity-40"
+            data-testid="btn-load-more-materials"
+          >
+            {loadingMore ? "Loading…" : "Load More"}
+          </button>
         </div>
       )}
     </section>

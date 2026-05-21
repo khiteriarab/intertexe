@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SalePage() {
-  const saleData = await fetchSaleProducts({ limit: 60, offset: 0 });
+  const saleData = await fetchSaleProducts({ limit: 32, offset: 0 });
 
   return (
     <SaleClient
