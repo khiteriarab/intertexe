@@ -40,6 +40,28 @@ export function isMerchFeedEnabled(): boolean {
   return process.env.HOMEPAGE_USE_FEED_CACHE !== "0";
 }
 
+/** Client guard when RPC unavailable — strip trim/embroidery tail before fiber match. */
+function compositionMatchesBodyFiber(composition: string, fiber: string): boolean {
+  const body = composition.split(/\b(trim|embroidery\s+fabric|embroidery|lining|contrast|pocket|rib)\s*:/i)[0] ?? "";
+  const b = body.toLowerCase();
+  switch (fiber) {
+    case "silk":
+      return /(silk|mulberry)/.test(b);
+    case "linen":
+      return /(linen|flax)/.test(b);
+    case "cashmere":
+      return /cashmere/.test(b);
+    case "wool":
+      return /(wool|merino|lambswool)/.test(b);
+    case "cotton":
+      return /cotton/.test(b);
+    case "leather_suede":
+      return /(leather|suede)/.test(b);
+    default:
+      return false;
+  }
+}
+
 function mapFeedRowToProduct(row: Record<string, unknown>): Product {
   return {
     id: String(row.source_id ?? ""),
@@ -165,6 +187,49 @@ async function fetchMerchRailLiveFallback(
   const fiber = railKey.startsWith("fabrics:") ? railKey.split(":")[1] : null;
   if (!fiber) return [];
 
+  const t0 = Date.now();
+  const fiberKey =
+    fiber === "leather-suede" ? "leather_suede" : fiber;
+
+  const { data: rpcData, error: rpcError } = await supabase.rpc(
+    "catalog_offers_for_material_rail",
+    { p_fiber: fiberKey, p_limit: Math.min(limit * 3, 180) }
+  );
+
+  if (!rpcError && rpcData?.length) {
+    logSupabaseTiming(
+      `merch-feed live-fallback ${railKey} (rpc)`,
+      t0,
+      `rows:${rpcData.length}`
+    );
+    const seen = new Set<string>();
+    const out: Product[] = [];
+    for (const row of rpcData as Record<string, unknown>[]) {
+      const key = String(row.product_id || row.id);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const price = String(row.price ?? "");
+      if (!price || price === "0" || price === "$0.00") continue;
+      out.push({
+        id: String(row.id ?? ""),
+        productId: key,
+        brandSlug: String(row.brand_slug ?? ""),
+        brandName: String(row.brand_name ?? ""),
+        name: String(row.name ?? ""),
+        url: String(row.url ?? ""),
+        imageUrl: String(row.image_url ?? ""),
+        price,
+        composition: String(row.composition ?? ""),
+        naturalFiberPercent: Number(row.natural_fiber_percent ?? 0),
+        category: row.category != null ? String(row.category) : "",
+        isSale: row.is_sale === true,
+        listingRegion: row.region != null ? String(row.region) : null,
+      });
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
   const patterns =
     fiber === "wool"
       ? ["%wool%", "%merino%", "%lambswool%"]
@@ -172,11 +237,10 @@ async function fetchMerchRailLiveFallback(
         ? ["%cotton%", "%organic cotton%"]
         : [`%${fiber}%`];
 
-  const t0 = Date.now();
   let q = supabase
     .from("live_products_apparel")
     .select(
-      "id, product_id, brand_slug, brand_name, name, url, image_url, price, composition, natural_fiber_percent, category, is_sale, region"
+      "id, product_id, brand_slug, brand_name, name, url, image_url, price, composition, natural_fiber_percent, category, is_sale, region, material_metadata"
     )
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
@@ -198,6 +262,8 @@ async function fetchMerchRailLiveFallback(
   const seen = new Set<string>();
   const out: Product[] = [];
   for (const row of data as Record<string, unknown>[]) {
+    const comp = String(row.composition ?? "");
+    if (comp && !compositionMatchesBodyFiber(comp, fiberKey)) continue;
     const key = String(row.product_id || row.id);
     if (seen.has(key)) continue;
     seen.add(key);
