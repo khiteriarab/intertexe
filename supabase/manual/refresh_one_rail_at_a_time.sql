@@ -1,5 +1,6 @@
 -- Run ONE block at a time. Copy ONLY from SET through END $$; then Run.
--- Uses live_products_apparel (consumer scope) — no editorial_collection_products RPC.
+-- Uses live_products_apparel + catalog_material_rail_eligible (body/shell only).
+-- Prereq: 20240022_catalog_material_body_parse.sql applied.
 
 -- ========== BLOCK A: fabrics:silk ==========
 SET statement_timeout = '90s';
@@ -12,8 +13,7 @@ BEGIN
     l.natural_fiber_percent, l.category, l.is_sale, l.created_at,
     row_number() OVER (ORDER BY l.natural_fiber_percent DESC NULLS LAST) AS sort_ord
   FROM public.live_products_apparel l
-  WHERE lower(coalesce(l.composition, '')) LIKE '%silk%'
-     OR lower(coalesce(l.composition, '')) LIKE '%mulberry%'
+  WHERE public.catalog_material_rail_eligible(l.composition, l.material_metadata, 'silk')
   LIMIT 800;
   SELECT COUNT(*)::int INTO v_cnt FROM _src;
   v_ins := public.homepage_feed_insert_picked(
@@ -39,8 +39,7 @@ BEGIN
     l.natural_fiber_percent, l.category, l.is_sale, l.created_at,
     row_number() OVER (ORDER BY l.natural_fiber_percent DESC NULLS LAST) AS sort_ord
   FROM public.live_products_apparel l
-  WHERE lower(coalesce(l.composition, '')) LIKE '%linen%'
-     OR lower(coalesce(l.composition, '')) LIKE '%flax%'
+  WHERE public.catalog_material_rail_eligible(l.composition, l.material_metadata, 'linen')
   LIMIT 800;
   SELECT COUNT(*)::int INTO v_cnt FROM _src;
   v_ins := public.homepage_feed_insert_picked(
@@ -66,7 +65,7 @@ BEGIN
     l.natural_fiber_percent, l.category, l.is_sale, l.created_at,
     row_number() OVER (ORDER BY l.natural_fiber_percent DESC NULLS LAST) AS sort_ord
   FROM public.live_products_apparel l
-  WHERE lower(coalesce(l.composition, '')) LIKE '%cashmere%'
+  WHERE public.catalog_material_rail_eligible(l.composition, l.material_metadata, 'cashmere')
   LIMIT 800;
   SELECT COUNT(*)::int INTO v_cnt FROM _src;
   v_ins := public.homepage_feed_insert_picked(
@@ -92,9 +91,7 @@ BEGIN
     l.natural_fiber_percent, l.category, l.is_sale, l.created_at,
     row_number() OVER (ORDER BY l.natural_fiber_percent DESC NULLS LAST) AS sort_ord
   FROM public.live_products_apparel l
-  WHERE lower(coalesce(l.composition, '')) LIKE '%wool%'
-     OR lower(coalesce(l.composition, '')) LIKE '%merino%'
-     OR lower(coalesce(l.composition, '')) LIKE '%lambswool%'
+  WHERE public.catalog_material_rail_eligible(l.composition, l.material_metadata, 'wool')
   LIMIT 800;
   SELECT COUNT(*)::int INTO v_cnt FROM _src;
   v_ins := public.homepage_feed_insert_picked(
@@ -120,7 +117,7 @@ BEGIN
     l.natural_fiber_percent, l.category, l.is_sale, l.created_at,
     row_number() OVER (ORDER BY l.natural_fiber_percent DESC NULLS LAST) AS sort_ord
   FROM public.live_products_apparel l
-  WHERE lower(coalesce(l.composition, '')) LIKE '%cotton%'
+  WHERE public.catalog_material_rail_eligible(l.composition, l.material_metadata, 'cotton')
   LIMIT 800;
   SELECT COUNT(*)::int INTO v_cnt FROM _src;
   v_ins := public.homepage_feed_insert_picked(
