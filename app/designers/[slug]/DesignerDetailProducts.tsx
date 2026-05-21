@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { ProductLink } from "../../components/ProductLink";
 import { Heart } from "lucide-react";
 import { useProductFavorites } from "../../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../../lib/format-display-price";
@@ -248,16 +249,17 @@ export function DesignerDetailProducts({
                 {paginatedProducts.map((product) => (
                   <div
                     key={product.productId || product.id}
-                    className="group bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
+                    className="group relative bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
                     data-testid={`card-product-${product.productId || product.id}`}
                   >
-                    <Link href={`/product/${product.id}`} className="block">
+                    <ProductLink href={`/product/${product.id}`} className="flex flex-col flex-1">
                       <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
                         {product.imageUrl ? (
                           <img
                             src={product.imageUrl}
                             alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                            draggable={false}
+                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 pointer-events-none"
                             loading="lazy"
                           />
                         ) : (
@@ -265,45 +267,46 @@ export function DesignerDetailProducts({
                             <svg className="w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2">
+                        <div className="absolute top-2 left-2 pointer-events-none">
                           <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
                             {product.naturalFiberPercent}% Natural
                           </span>
                         </div>
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProductFav(String(product.id)); }}
-                          className="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
-                          data-testid={`btn-fav-${product.id}`}
-                          aria-label={favorites.has(String(product.id)) ? "Remove from favorites" : "Add to favorites"}
-                        >
-                          <Heart className={`w-3.5 h-3.5 ${favorites.has(String(product.id)) ? "fill-red-500 text-red-500" : "text-foreground/70"}`} />
-                        </button>
                       </div>
-                    </Link>
-                    <div className="p-3 flex flex-col gap-1.5 flex-1">
-                      <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
-                      <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
-                      {product.price && (
-                        <div className="flex items-center gap-2 mt-auto pt-1">
-                          <p className={`text-xs font-medium ${product.isSale ? "text-[#b91c1c]" : ""}`}>
-                            {formatDisplayPrice(product)}
-                          </p>
-                          {product.isSale && product.originalPrice && (
-                            <>
-                              <p className="text-[10px] text-muted-foreground line-through">
-                                {formatDisplayOriginalPrice(product)}
-                              </p>
-                              {(() => {
-                                const cur = parsePrice(product.price);
-                                const orig = parsePrice(product.originalPrice);
-                                const disc = orig > 0 ? Math.round((1 - cur / orig) * 100) : 0;
-                                return disc > 0 ? <span className="text-[10px] font-medium text-[#b91c1c]">{disc}% OFF</span> : null;
-                              })()}
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                      <div className="p-3 flex flex-col gap-1.5 flex-1">
+                        <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>
+                        <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">{product.composition}</p>
+                        {product.price && (
+                          <div className="flex items-center gap-2 mt-auto pt-1">
+                            <p className={`text-xs font-medium ${product.isSale ? "text-[#b91c1c]" : ""}`}>
+                              {formatDisplayPrice(product)}
+                            </p>
+                            {product.isSale && product.originalPrice && (
+                              <>
+                                <p className="text-[10px] text-muted-foreground line-through">
+                                  {formatDisplayOriginalPrice(product)}
+                                </p>
+                                {(() => {
+                                  const cur = parsePrice(product.price);
+                                  const orig = parsePrice(product.originalPrice);
+                                  const disc = orig > 0 ? Math.round((1 - cur / orig) * 100) : 0;
+                                  return disc > 0 ? <span className="text-[10px] font-medium text-[#b91c1c]">{disc}% OFF</span> : null;
+                                })()}
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </ProductLink>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProductFav(String(product.id)); }}
+                      className="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+                      data-testid={`btn-fav-${product.id}`}
+                      aria-label={favorites.has(String(product.id)) ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${favorites.has(String(product.id)) ? "fill-red-500 text-red-500" : "text-foreground/70"}`} />
+                    </button>
                   </div>
                 ))}
               </div>

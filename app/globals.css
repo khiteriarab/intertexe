@@ -115,6 +115,18 @@
   display: none;
 }
 
+/* Horizontal product rails: avoid first-tap being eaten by scroll pan */
+.product-rail-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.product-rail-scroll > a {
+  touch-action: manipulation;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);

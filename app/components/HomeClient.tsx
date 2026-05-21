@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, useEffect, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import { ProductLink } from "./ProductLink";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, X } from "lucide-react";
 import { getQualityTier } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
@@ -60,44 +61,14 @@ function optimizeImageUrl(url: string, width: number): string {
   return url;
 }
 
-function useHorizontalScrollClickGuard() {
-  const draggingRef = useRef(false);
-  const startRef = useRef({ x: 0, y: 0 });
-
-  const scrollProps = {
-    onPointerDown: (e: ReactPointerEvent) => {
-      draggingRef.current = false;
-      startRef.current = { x: e.clientX, y: e.clientY };
-    },
-    onPointerMove: (e: ReactPointerEvent) => {
-      const dx = Math.abs(e.clientX - startRef.current.x);
-      const dy = Math.abs(e.clientY - startRef.current.y);
-      if (dx > 8 || dy > 8) draggingRef.current = true;
-    },
-    onPointerUp: () => {
-      window.setTimeout(() => {
-        draggingRef.current = false;
-      }, 80);
-    },
-  };
-
-  const onLinkClick = (e: ReactMouseEvent) => {
-    if (draggingRef.current) e.preventDefault();
-  };
-
-  return { scrollProps, onLinkClick };
-}
-
 function ProductCard({
   product,
   eager,
   variant = "default",
-  onLinkClick,
 }: {
   product: any;
   eager?: boolean;
   variant?: "default" | "sale";
-  onLinkClick?: (e: ReactMouseEvent) => void;
 }) {
   const name = product.name || "";
   const brandName = product.brandName || "";
@@ -109,11 +80,10 @@ function ProductCard({
   const currentNum = product.price ? parseFloat(String(product.price).replace(/[^0-9.]/g, "")) : 0;
   const discountPct = originalNum > 0 ? Math.round((1 - currentNum / originalNum) * 100) : 0;
   return (
-    <Link
+    <ProductLink
       href={`/product/${product.id}`}
-      className="group flex-shrink-0 w-[155px] md:w-[220px] flex flex-col cursor-pointer touch-manipulation"
+      className="group flex-shrink-0 w-[155px] md:w-[220px] flex flex-col cursor-pointer"
       data-testid={`product-home-${product.id}`}
-      onClick={onLinkClick}
     >
       <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
         {imageUrl ? (
@@ -156,7 +126,7 @@ function ProductCard({
           <span className="text-[10px] text-neutral-400 line-through">{originalShown}</span>
         )}
       </div>
-    </Link>
+    </ProductLink>
   );
 }
 
@@ -176,8 +146,6 @@ export function HorizontalProductScroll({
   eager?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { scrollProps, onLinkClick } = useHorizontalScrollClickGuard();
-
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
     const amount = direction === "left" ? -420 : 420;
@@ -226,17 +194,11 @@ export function HorizontalProductScroll({
 
       <div
         ref={scrollRef}
-        className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px] touch-pan-x"
-        {...scrollProps}
+        className="product-rail-scroll flex gap-2.5 md:gap-4 scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]"
       >
         {hasItems ? (
           products.map((product: any, i: number) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              eager={eager && i < 4}
-              onLinkClick={onLinkClick}
-            />
+            <ProductCard key={product.id} product={product} eager={eager && i < 4} />
           ))
         ) : (
           <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
@@ -257,8 +219,6 @@ export function HorizontalProductScroll({
 }
 
 function SaleHomeRail({ products }: { products?: any[] }) {
-  const { scrollProps, onLinkClick } = useHorizontalScrollClickGuard();
-
   return (
     <section className="py-10 md:py-20 border-t border-neutral-200/60">
       <div className="flex flex-col gap-5 md:gap-7">
@@ -275,18 +235,10 @@ function SaleHomeRail({ products }: { products?: any[] }) {
             <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
         </div>
-        <div
-          className="flex gap-2.5 md:gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px] touch-pan-x"
-          {...scrollProps}
-        >
+        <div className="product-rail-scroll flex gap-2.5 md:gap-4 scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]">
           {products?.length ? (
             products.map((product: any) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                variant="sale"
-                onLinkClick={onLinkClick}
-              />
+              <ProductCard key={product.id} product={product} variant="sale" />
             ))
           ) : (
             <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">

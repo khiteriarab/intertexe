@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice, type DisplayPriceProduct } from "../../../lib/format-display-price";
 
 interface Product extends DisplayPriceProduct {
@@ -126,7 +126,7 @@ export default function FabricProductGrid({
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-12">
           {filtered.map((product, index) => (
-            <Link
+            <ProductLink
               key={product.productId || product.id || index}
               href={`/product/${product.id || product.productId}`}
               className="group flex flex-col"
@@ -156,7 +156,7 @@ export default function FabricProductGrid({
                 </h3>
                 <span className="text-[12px] md:text-[13px] text-foreground/90 mt-1 tracking-wide">{formatDisplayPrice(product)}</span>
               </div>
-            </Link>
+            </ProductLink>
           ))}
         </div>
       )}

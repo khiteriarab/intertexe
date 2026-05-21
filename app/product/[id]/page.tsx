@@ -9,7 +9,8 @@ import {
   fetchMoreAtPrice,
   fetchAllProductIds,
 } from "../../../lib/supabase-server";
-import { ProductFavoriteButton, ProductCardHeart } from "./ProductFavoriteButton";
+import { ProductFavoriteButton } from "./ProductFavoriteButton";
+import { RelatedProductCard } from "./RelatedProductCard";
 import BackToShop from "./BackToShop";
 import {
   formatDisplayOriginalPrice,
@@ -405,26 +406,9 @@ export default async function ProductPage({
             <h2 className="text-xs uppercase tracking-[0.2em] font-medium text-muted-foreground">
               {section.title}
             </h2>
-            <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
+            <div className="product-rail-scroll flex gap-3 md:gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
               {section.items.map((p) => (
-                <Link key={p.id} href={`/product/${p.id}`} className="group flex flex-col shrink-0 w-[42vw] md:w-[22%] snap-start" data-testid={`related-product-${p.id}`}>
-                  <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden">
-                    <img src={p.imageUrl + (p.imageUrl?.includes("cdn.shopify.com") ? (p.imageUrl.includes("?") ? "&" : "?") + "width=400" : "")} alt={p.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
-                    {p.naturalFiberPercent != null && p.naturalFiberPercent >= 90 && (
-                      <div className="absolute top-2 left-2">
-                        <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                          {p.naturalFiberPercent}% Natural
-                        </span>
-                      </div>
-                    )}
-                    <ProductCardHeart productId={String(p.id)} />
-                  </div>
-                  <div className="flex flex-col gap-1 pt-3">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">{p.brandName}</span>
-                    <span className="text-[11px] md:text-xs text-muted-foreground truncate">{p.name}</span>
-                    {p.price && <span className="text-[11px] md:text-xs">{formatDisplayPrice(p)}</span>}
-                  </div>
-                </Link>
+                <RelatedProductCard key={p.id} product={p} />
               ))}
             </div>
           </section>

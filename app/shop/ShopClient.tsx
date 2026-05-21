@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { ProductLink } from "../components/ProductLink";
 import { useSearchParams } from "next/navigation";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
@@ -101,7 +102,7 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} onClick={saveShopState} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
+    <ProductLink href={`/product/${product.id}`} onClick={saveShopState} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} decoding={eager ? "sync" : "async"} fetchPriority={eager ? "high" : "low"} />
@@ -129,7 +130,7 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>
         )}
       </div>
-    </Link>
+    </ProductLink>
   );
 }
 

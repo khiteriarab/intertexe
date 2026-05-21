@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { ProductLink } from "../components/ProductLink";
 import { ShoppingBag, Heart, Tag } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
@@ -54,7 +55,7 @@ function SaleProductCard({ product }: { product: any }) {
   const originalShown = formatDisplayOriginalPrice(priceHints);
 
   return (
-    <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
+    <ProductLink href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
@@ -92,7 +93,7 @@ function SaleProductCard({ product }: { product: any }) {
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>
         )}
       </div>
-    </Link>
+    </ProductLink>
   );
 }
 
