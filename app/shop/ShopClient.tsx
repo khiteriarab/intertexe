@@ -102,35 +102,40 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
   };
 
   return (
-    <ProductLink href={`/product/${product.id}`} onClick={saveShopState} className="group flex flex-col cursor-pointer relative" data-testid={`product-card-${product.id}`}>
-      {imageUrl ? (
-        <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
-          <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} decoding={eager ? "sync" : "async"} fetchPriority={eager ? "high" : "low"} />
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, priceShown || String(product.price)); }}
-            className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
-            data-testid={`btn-favorite-${product.id}`}
-            aria-label={saved ? "Remove from favorites" : "Save to favorites"}
-          >
-            <Heart className={`w-4 h-4 drop-shadow-sm transition-colors ${saved ? "fill-red-500 text-red-500" : "text-white/80"}`} />
-          </button>
-        </div>
-      ) : (
-        <div className="aspect-[3/4] bg-[#f5f5f3] flex items-center justify-center">
-          <ShoppingBag className="w-8 h-8 text-neutral-300" />
-        </div>
+    <div className="group relative flex flex-col" data-testid={`product-card-${product.id}`}>
+      {imageUrl && (
+        <button
+          type="button"
+          onClick={() => toggle(productId, brandName, priceShown || String(product.price))}
+          className={`absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
+          data-testid={`btn-favorite-${product.id}`}
+          aria-label={saved ? "Remove from favorites" : "Save to favorites"}
+        >
+          <Heart className={`w-4 h-4 drop-shadow-sm transition-colors ${saved ? "fill-red-500 text-red-500" : "text-white/80"}`} />
+        </button>
       )}
-      <div className="flex flex-col gap-1 pt-3">
-        <span className="text-[10px] md:text-[11px] uppercase tracking-[0.08em] text-muted-foreground">{brandName}</span>
-        <h3 className="text-[12px] md:text-[13px] leading-snug truncate text-foreground">{name}</h3>
-        <div className="flex items-center gap-2 mt-0.5">
-          {priceShown && <span className="text-[12px] md:text-[13px] font-medium">{priceShown}</span>}
-        </div>
-        {composition && (
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>
+      <ProductLink href={`/product/${product.id}`} onClick={saveShopState} className="flex flex-col cursor-pointer">
+        {imageUrl ? (
+          <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
+            <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} decoding={eager ? "sync" : "async"} fetchPriority={eager ? "high" : "low"} />
+          </div>
+        ) : (
+          <div className="aspect-[3/4] bg-[#f5f5f3] flex items-center justify-center">
+            <ShoppingBag className="w-8 h-8 text-neutral-300" />
+          </div>
         )}
-      </div>
-    </ProductLink>
+        <div className="flex flex-col gap-1 pt-3">
+          <span className="text-[10px] md:text-[11px] uppercase tracking-[0.08em] text-muted-foreground">{brandName}</span>
+          <h3 className="text-[12px] md:text-[13px] leading-snug truncate text-foreground">{name}</h3>
+          <div className="flex items-center gap-2 mt-0.5">
+            {priceShown && <span className="text-[12px] md:text-[13px] font-medium">{priceShown}</span>}
+          </div>
+          {composition && (
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>
+          )}
+        </div>
+      </ProductLink>
+    </div>
   );
 }
 

@@ -120,6 +120,7 @@
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
 }
 .product-rail-scroll > a {
   touch-action: manipulation;

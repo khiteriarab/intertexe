@@ -1074,6 +1074,8 @@ function parsePrice(price: string | null | undefined): number {
   return isNaN(num) ? Infinity : num;
 }
 
+const SHOP_PRICE_SORT_MAX_ROWS = 2500;
+
 async function fetchShopLiveApparelAllRows(
   supabase: UntypedSupabase,
   opts: {
@@ -1086,7 +1088,7 @@ async function fetchShopLiveApparelAllRows(
   const pageSize = 1000;
   let allRows: any[] = [];
   let fetchOffset = 0;
-  while (true) {
+  while (allRows.length < SHOP_PRICE_SORT_MAX_ROWS) {
     let q2 = applyCatalogFilter(
       supabase
         .from("live_products_apparel")
@@ -1114,8 +1116,9 @@ async function fetchShopLiveApparelAllRows(
     allRows.push(...chunk);
     if (chunk.length < pageSize) break;
     fetchOffset += pageSize;
+    if (allRows.length >= SHOP_PRICE_SORT_MAX_ROWS) break;
   }
-  return allRows;
+  return allRows.slice(0, SHOP_PRICE_SORT_MAX_ROWS);
 }
 
 export async function fetchShopProducts(options: {

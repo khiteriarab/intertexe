@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { headers } from "next/headers";
-import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
+import { fetchShopProducts, fetchProductCount } from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
 import { formatListingPrice } from "../../lib/format-display-price";
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Shop Natural Fabric Clothing — INTERTEXE",
@@ -34,11 +34,11 @@ export default async function ShopPage({
   const detectedCountry = getDetectedCountry(await headers());
   const market =
     params?.market === "us-ca" || params?.market === "eu-uk-me" ? params.market : undefined;
-  const [shopData, totalProductCount, fiberCounts] = await Promise.all([
+  const [shopData, totalProductCount] = await Promise.all([
     fetchShopProducts({ sort: "recommended", limit: 40, offset: 0, market }),
     fetchProductCount(),
-    fetchFiberCounts(),
   ]);
+  const fiberCounts: Record<string, number> = {};
 
   const products = shopData.products || [];
 
