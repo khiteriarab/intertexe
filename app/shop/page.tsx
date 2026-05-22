@@ -35,7 +35,7 @@ export default async function ShopPage({
   const market =
     params?.market === "us-ca" || params?.market === "eu-uk-me" ? params.market : undefined;
   const [shopData, totalProductCount] = await Promise.all([
-    fetchShopProducts({ sort: "recommended", limit: 40, offset: 0, market }),
+    fetchShopProducts({ sort: "recommended", limit: 32, offset: 0, market }),
     fetchProductCount(),
   ]);
   const fiberCounts: Record<string, number> = {};

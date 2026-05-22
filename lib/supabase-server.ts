@@ -904,13 +904,43 @@ export async function fetchProductCount(): Promise<number> {
   return 0;
 }
 
-/** Per-material hub count from precomputed meta (no catalog_list_count). */
-export async function fetchMaterialHubDisplayCount(materialSlug: string): Promise<number> {
+/** Per-material hub count — catalog_material_hub_counts, then merch meta, then RPC. */
+export async function fetchMaterialHubDisplayCount(
+  materialSlug: string,
+  category?: string
+): Promise<number> {
+  const supabase = getServerSupabase();
+  if (supabase) {
+    const { data: hub } = await supabase
+      .from("catalog_material_hub_counts")
+      .select("card_count")
+      .eq("fiber", materialSlug)
+      .eq("category", category || "")
+      .maybeSingle();
+    if (hub?.card_count != null && Number(hub.card_count) > 0) {
+      return Number(hub.card_count);
+    }
+  }
+
   const { fetchMerchRailDisplayCount, MATERIAL_SLUG_TO_RAIL } = await import("./merch-feed");
   const railKey = MATERIAL_SLUG_TO_RAIL[materialSlug];
   if (!railKey) return 0;
   const n = await fetchMerchRailDisplayCount(railKey);
-  return n > 0 ? n : 0;
+  if (n > 0) return n;
+
+  if (supabase) {
+    const cnt = await rpcCatalogListCount(supabase, {
+      preferred: "us",
+      fallback: "us",
+      fiber: materialSlug,
+      category: category || null,
+      brandSlug: null,
+      search: null,
+      minNfp: 80,
+    });
+    if (cnt != null && cnt > 0) return cnt;
+  }
+  return 0;
 }
 
 export async function fetchAllProductIds(): Promise<string[]> {
