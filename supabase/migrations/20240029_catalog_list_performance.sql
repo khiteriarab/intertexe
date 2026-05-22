@@ -93,7 +93,7 @@ CREATE OR REPLACE FUNCTION public.catalog_list(
 )
 RETURNS SETOF public.live_products_apparel
 LANGUAGE plpgsql
-STABLE
+VOLATILE
 SECURITY DEFINER
 SET search_path = public
 AS $$
@@ -189,7 +189,7 @@ CREATE OR REPLACE FUNCTION public.catalog_list_count(
 )
 RETURNS bigint
 LANGUAGE plpgsql
-STABLE
+VOLATILE
 SECURITY DEFINER
 SET search_path = public
 AS $$
