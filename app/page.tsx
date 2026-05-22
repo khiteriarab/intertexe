@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getHomePageData } from "../lib/homepage-data";
 import { HomePageContent } from "./components/HomeClient";
 
-export const revalidate = 0;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "INTERTEXE | The Luxury Fashion Search Engine for Natural Fabrics",
