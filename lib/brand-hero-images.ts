@@ -13,7 +13,8 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "citizens-of-humanity": "/brands/citizens-of-humanity.jpg",
   "club-monaco": "/brands/club-monaco.jpg",
   "cult-gaia": "/brands/cult-gaia.jpg",
-  "diesel": "/brands/diesel.jpg",
+  "diesel":
+    "https://api.diesel.com/on/demandware.static/-/Sites-diesel-master-catalog/default/dw4bfd5d3c/images/large/A18577_0LKCT_02_F.jpg",
   "dissh": "/brands/dissh.jpg",
   "dl1961": "/brands/dl1961.jpg",
   "equipment": "/brands/equipment.jpg",
@@ -36,11 +37,13 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "nili-lotan": "/brands/nili-lotan.jpg",
   "proenza-schouler": "/brands/proenza-schouler.jpg",
   "rachel-comey": "/brands/rachel-comey.jpg",
-  "l-agence": "/brands/l-agence.jpg",
+  "l-agence":
+    "https://cdn.shopify.com/s/files/1/0054/3952/0871/files/61430CTB_IDY_BLACKGOLD_01.jpg?v=1752672402",
   "rag-bone": "/brands/rag-bone.jpg",
   "rag-and-bone": "/brands/rag-bone.jpg",
   "rails": "/brands/rails.jpg",
-  "re-done": "/brands/re-done.png",
+  "re-done":
+    "https://cdn.shopify.com/s/files/1/0501/1669/files/RDN130_179-05WRWDSKT_THUNDERSTRUC_THEREWINDSKIRT_THUNDERSTRUCK_Front_Crop_1.jpg?v=1765931594",
   "reformation": "/brands/reformation.jpg",
   "reiss": "/brands/reiss.jpg",
   "rixo": "/brands/rixo.jpg",
@@ -52,8 +55,10 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "stella-mccartney": "/brands/stella-mccartney.jpg",
   "stine-goya": "/brands/stine-goya.jpg",
   "ted-baker": "/brands/ted-baker.jpg",
-  "theory": "/brands/theory.jpg",
-  "staud": "/brands/faithfull-the-brand.jpg",
+  "theory":
+    "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/ceb9a30786784784a9dd0ca29bba5c2f_2f5a5213-e42a-4ef5-9f07-b04978d7d3e6.jpg?v=1713864394",
+  "staud":
+    "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/c5/P01074640.jpg",
   "the-row": "/brands/the-row.jpg",
   "tibi": "/brands/tibi.jpg",
   "toteme": "/brands/toteme.jpg",

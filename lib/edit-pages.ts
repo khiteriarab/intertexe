@@ -49,7 +49,7 @@ export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
     catalogHref: "/shop?fiber=linen",
     catalogLabel: "Shop all linen",
     materialHref: "/materials/linen",
-    editorialImage: "/editorial-linen.jpg",
+    editorialImage: EDITORIAL_HERO.linen,
   },
   cashmere: {
     slug: "cashmere",
