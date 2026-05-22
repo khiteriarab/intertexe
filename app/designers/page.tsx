@@ -5,7 +5,7 @@ import { getBrandProfile } from "../../lib/brand-profiles";
 import { DesignerSearchClient } from "./DesignerSearchClient";
 import { fetchBrandStats } from "../../lib/supabase-server";
 
-export const revalidate = 0;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Brand Directory — 11,000+ Brands Ranked by Natural Fiber Quality",
@@ -24,7 +24,7 @@ export default async function DesignersPage() {
       <header className="flex flex-col items-center text-center gap-4 md:gap-6 max-w-2xl mx-auto">
         <h1 className="text-3xl md:text-5xl font-serif" style={{ fontFamily: "Playfair Display, serif" }} data-testid="text-directory-title">The Directory</h1>
         <p className="text-muted-foreground text-sm md:text-base">
-          {totalProducts.toLocaleString()}+ verified products across {brandStats.length} brands, every item checked for natural fiber composition.
+          {totalProducts.toLocaleString()}+ products across {brandStats.length} brands in natural silk, linen, cotton, wool, and cashmere.
         </p>
       </header>
 

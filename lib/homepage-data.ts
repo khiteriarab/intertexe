@@ -11,6 +11,8 @@ import {
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
 import { CURATED_BRAND_SLUGS } from "./homepage-constants";
+import { isEditorialWomensApparel } from "./catalog-product-filters";
+import { EDITORIAL_HERO } from "./editorial-assets";
 import {
   MERCH_RAIL_KEYS,
   fetchMerchGlobalDisplayCount,
@@ -22,17 +24,17 @@ import {
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
 
 /** Small fetches only — homepage must not scan large slices of catalog. */
-const MATERIAL_RAIL_FETCH_LIMIT = 24;
-const MATERIAL_RAIL_DISPLAY_MAX = 16;
-const MERCH_HOME_FETCH_LIMIT = 24;
+const MATERIAL_RAIL_FETCH_LIMIT = 64;
+const MATERIAL_RAIL_DISPLAY_MAX = 50;
+const MERCH_HOME_FETCH_LIMIT = 64;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
 const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
 const NEW_IN_BRAND_SLUGS = [
   "frame", "vince", "theory", "toteme", "ganni", "staud", "khaite", "isabel-marant",
 ] as const;
-const NEW_IN_FETCH_PER_BRAND = 10;
-const NEW_IN_TARGET_ITEMS = 8;
+const NEW_IN_FETCH_PER_BRAND = 14;
+const NEW_IN_TARGET_ITEMS = 24;
 const HOMEPAGE_SALE_FETCH_LIMIT = 16;
 const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 180;
 const DESIGNERS_FETCH_LIMIT = 48;
@@ -109,6 +111,8 @@ function pickEditorialProduct(products: any[]): any | null {
       if (EDITORIAL_CATEGORIES.has(cat)) score += 10;
       if (NON_EDITORIAL_CATEGORIES.has(cat)) score -= 20;
       if (NON_EDITORIAL_NAMES.test(name)) score -= 20;
+      if (!isEditorialWomensApparel(p)) score -= 25;
+      if (/\b(jacket|blazer|coat|trouser|pant|tee|polo)\b/.test(name) && cat !== "dresses") score -= 15;
       if (cat === "dresses" || cat === "lingerie") score += 5;
       const price = parseFloat(((p.price || "0") + "").replace(/[^0-9.]/g, "")) || 0;
       if (price > 300) score += 3;

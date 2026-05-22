@@ -9,6 +9,7 @@ import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
+import { BRAND_WE_LOVE_IMAGES, EDITORIAL_HERO } from "../../lib/editorial-assets";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -282,7 +283,9 @@ function SaleHomeRail({ products }: { products?: any[] }) {
 
 function BrandCard({ designer, count }: { designer: any; count: number }) {
   const [failed, setFailed] = useState(false);
-  const heroUrl = getBrandHeroImage(designer.name);
+  const heroUrl =
+    BRAND_WE_LOVE_IMAGES[designer.slug as keyof typeof BRAND_WE_LOVE_IMAGES] ||
+    getBrandHeroImage(designer.name);
   const productImageUrl = designer.heroImageUrl || "";
   const imageUrl = !failed ? (heroUrl || productImageUrl) : "";
   const tier = getQualityTier(designer.naturalFiberPercent);
@@ -456,8 +459,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     ? new Intl.NumberFormat("en-US").format(data.productCount)
     : "17,553";
 
-  const silkHero = data.silkEditorialProduct?.imageUrl || "/editorial-silk.jpg";
-  const linenHero = data.linenEditorialProduct?.imageUrl || "/editorial-linen.jpg";
+  const silkHero = EDITORIAL_HERO.silk;
+  const linenHero = EDITORIAL_HERO.linen;
 
   return (
     <div className="flex flex-col">
@@ -487,7 +490,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             className="text-[12px] md:text-[15px] text-white/65 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
             data-testid="text-hero-subtext"
           >
-            {displayCount} verified pieces in silk, cashmere, linen &amp; wool — every composition checked, every brand vetted.
+            {displayCount} pieces in silk, cashmere, linen &amp; wool — curated natural-fiber fashion.
           </p>
           <Link
             href="/shop"
@@ -512,7 +515,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <section className="-mx-4 md:-mx-8">
         <EditorialPanel
-          href="/materials/silk"
+          href="/edits/silk"
           imageUrl={silkHero}
           label="In focus"
           title="The Silk Edit"
@@ -571,7 +574,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <section className="-mx-4 md:-mx-8">
         <EditorialPanel
-          href="/materials/linen"
+          href="/edits/linen"
           imageUrl={linenHero}
           label="The edit"
           title={HOMEPAGE_RAIL_LABELS.linenProducts.title}
@@ -585,7 +588,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             products={data.cashmereProducts}
             title={HOMEPAGE_RAIL_LABELS.cashmereProducts.title}
             subtitle={HOMEPAGE_RAIL_LABELS.cashmereProducts.subtitle}
-            linkHref="/materials/cashmere"
+            linkHref="/edits/cashmere"
             linkText="Shop Cashmere"
           />
         </section>
@@ -604,7 +607,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             <div className="flex flex-col items-center text-center gap-2 md:px-8">
               <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{displayCount}</span>
               <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
-                Verified pieces
+                Pieces
               </span>
             </div>
             <div className="flex flex-col items-center text-center gap-2 md:px-8">

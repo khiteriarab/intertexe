@@ -10,7 +10,7 @@ export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Shop Natural Fabric Clothing — INTERTEXE",
-  description: "Shop 15,000+ verified natural fabric clothing items. Filter by silk, linen, cotton, wool, cashmere. Every product verified for 80%+ natural fiber content across 11,000+ brands.",
+  description: "Shop natural fabric clothing in silk, linen, cotton, wool, and cashmere across curated luxury brands.",
   keywords: "shop natural fabric clothing, silk clothing, linen clothing, cotton clothing, wool clothing, cashmere clothing, verified natural fibers, INTERTEXE shop",
   alternates: { canonical: "https://www.intertexe.com/shop" },
 };
@@ -79,7 +79,7 @@ export default async function ShopPage({
           Shop Natural Fabric Clothing
         </h1>
         <p className="text-center text-muted-foreground text-sm max-w-2xl mx-auto mb-8 leading-relaxed">
-          Browse {(totalProductCount || 0).toLocaleString()}+ clothing items verified for natural fiber quality. 
+          Browse {(totalProductCount || 0).toLocaleString()}+ natural-fiber clothing items. 
           Filter by fabric type — silk, cashmere, linen, wool, or cotton — and shop with confidence knowing 
           every product contains 80% or more natural fibers.
         </p>

@@ -16,11 +16,14 @@ export const MERCH_NAV = [
   },
   {
     name: "Collections",
-    href: "/materials",
+    href: "/edits/silk",
     children: [
+      { name: "Silk Edit", href: "/edits/silk" },
+      { name: "Linen Edit", href: "/edits/linen" },
+      { name: "Cashmere Edit", href: "/edits/cashmere" },
       { name: "Vacation", href: "/vacation" },
-      { name: "Evening", href: "/shop" },
-      { name: "Tailoring", href: "/shop" },
+      { name: "Evening", href: "/edits/evening" },
+      { name: "Tailoring", href: "/edits/tailoring" },
     ],
   },
   { name: "Designers", href: "/designers" },
@@ -32,7 +35,7 @@ export const HOMEPAGE_RAIL_LABELS: Record<string, { title: string; subtitle: str
   newInProducts: { title: "New In", subtitle: "Just landed" },
   silkProducts: { title: "Silk", subtitle: "The Silk Edit" },
   linenProducts: { title: "Linen", subtitle: "Linen for every day" },
-  cashmereProducts: { title: "Cashmere", subtitle: "Pure luxury, verified" },
+  cashmereProducts: { title: "Cashmere", subtitle: "Pure luxury" },
   vacationProducts: { title: "Vacation", subtitle: "Resort-ready natural fabrics" },
   saleProducts: { title: "Sale", subtitle: "Natural fibers, reduced" },
 };

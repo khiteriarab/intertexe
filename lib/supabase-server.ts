@@ -16,6 +16,12 @@ import {
   offerCompletenessStatus,
   rowMatchesShopFiber,
 } from "./catalog-rules";
+import {
+  isEditorialWomensApparel,
+  isVacationResortPiece,
+  isZegnaWomensPiece,
+  productBodyMatchesFiber,
+} from "./catalog-product-filters";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
@@ -460,11 +466,8 @@ export async function fetchSilkEditProducts(
     .map(mapProductRow);
 }
 
-function isVacationLinenDressOrSkirt(row: { category?: string; name?: string; composition?: string }): boolean {
-  const cat = `${row.category || ""} ${row.name || ""}`.toLowerCase();
-  const comp = `${row.composition || ""}`.toLowerCase();
-  if (!/(linen|flax)/.test(comp)) return false;
-  return /(dress|skirt|gown|maxi|midi|kaftan|cover-up|coverup)/.test(cat);
+function passesWomensCatalogRow(row: any): boolean {
+  return isClothingProduct(row) && isNotMensProduct(row) && isZegnaWomensPiece(row);
 }
 
 export async function fetchVacationShopProducts(
@@ -516,7 +519,7 @@ export async function fetchVacationShopProducts(
     .filter((row: any) => (market ? passesMarketRawRow(row, market) : true))
     .filter(isClothingProduct)
     .filter(isNotMensProduct)
-    .filter(isVacationLinenDressOrSkirt)
+    .filter(isVacationResortPiece)
     .map(mapProductRow);
 }
 
@@ -541,14 +544,21 @@ export async function fetchVacationPageData(opts?: {
 
   const { fetchMerchRailProducts, MERCH_RAIL_KEYS, fetchMerchRailDisplayCount } = await import("./merch-feed");
 
-  let editProducts = await fetchMerchRailProducts(MERCH_RAIL_KEYS.vacation, { limit: editLimit });
-  if (editProducts.length === 0) {
-    editProducts = await fetchVacationShopProducts(editLimit);
+  let editProducts = await fetchVacationShopProducts(Math.max(editLimit, 64));
+  if (editProducts.length < 20) {
+    const rail = await fetchMerchRailProducts(MERCH_RAIL_KEYS.vacation, { limit: 120 });
+    const seen = new Set(editProducts.map((p) => p.productId || p.id));
+    for (const p of rail.filter(isVacationResortPiece)) {
+      const id = p.productId || p.id;
+      if (!seen.has(id)) {
+        seen.add(id);
+        editProducts.push(p);
+      }
+    }
   }
-  editProducts = editProducts.filter((p) => isVacationLinenDressOrSkirt(p));
+  editProducts = editProducts.filter(isVacationResortPiece).slice(0, editLimit);
 
-  const editCount =
-    (await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.vacation)) || editProducts.length;
+  const editCount = editProducts.length;
 
   const [linenDressCount, linenSkirtCount] = await Promise.all([
     fetchMaterialHubDisplayCount("linen", "dresses"),
@@ -558,14 +568,21 @@ export async function fetchVacationPageData(opts?: {
   let catalogProducts: Product[] = [];
   let catalogTotal = 0;
   if (category) {
-    const result = await fetchShopProducts({
-      fiber: "linen",
-      category,
-      limit: catalogLimit,
-      offset,
-    });
-    catalogProducts = result.products;
-    catalogTotal = result.total;
+    const [linenResult, cottonResult] = await Promise.all([
+      fetchShopProducts({ fiber: "linen", category, limit: catalogLimit * 2, offset }),
+      fetchShopProducts({ fiber: "cotton", category, limit: catalogLimit * 2, offset: 0 }),
+    ]);
+    const seen = new Set<string>();
+    catalogProducts = [];
+    for (const p of [...linenResult.products, ...cottonResult.products]) {
+      if (!isVacationResortPiece(p)) continue;
+      const id = p.productId || p.id;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      catalogProducts.push(p);
+    }
+    catalogProducts = catalogProducts.slice(0, catalogLimit);
+    catalogTotal = Math.max(linenResult.total, 0) + Math.max(cottonResult.total, 0);
   }
 
   return {
@@ -576,6 +593,76 @@ export async function fetchVacationPageData(opts?: {
     linenDressCount,
     linenSkirtCount,
   };
+}
+
+/** Curated homepage edit pages (/edits/[slug]). */
+export async function fetchEditPageData(
+  slug: string,
+  opts?: { limit?: number }
+): Promise<{
+  products: Product[];
+  editCount: number;
+  catalogTotal: number;
+  heroImageUrl: string;
+} | null> {
+  const { getEditConfig } = await import("./edit-pages");
+  const config = getEditConfig(slug);
+  if (!config || (config.canonicalPath && config.canonicalPath !== `/edits/${slug}`)) {
+    return null;
+  }
+
+  const { fetchMerchRailProducts } = await import("./merch-feed");
+  const { EDITORIAL_HERO } = await import("./editorial-assets");
+  const limit = Math.min(Math.max(opts?.limit ?? 56, 1), 64);
+  const offset = Math.max(opts?.offset ?? 0, 0);
+
+  let products = await fetchMerchRailProducts(config.railKey, { limit: 120, offset });
+  if (config.fiber) {
+    products = products.filter((p) => productBodyMatchesFiber(p.composition || "", config.fiber!));
+  }
+  products = products.filter(isEditorialWomensApparel).slice(offset, offset + limit);
+
+  if (products.length < 24 && config.fiber) {
+    const live = await fetchProductsByFiber(config.fiber, 120);
+    const seen = new Set(products.map((p) => p.productId || p.id));
+    for (const p of live.filter((x) => productBodyMatchesFiber(x.composition || "", config.fiber!))) {
+      const id = p.productId || p.id;
+      if (!seen.has(id)) {
+        seen.add(id);
+        products.push(p);
+      }
+      if (products.length >= limit) break;
+    }
+  }
+
+  const editCount = products.length;
+
+  let catalogTotal = 0;
+  if (config.fiber) {
+    catalogTotal = await fetchMaterialHubDisplayCount(config.fiber);
+  }
+
+  const heroImageUrl =
+    config.slug === "silk"
+      ? EDITORIAL_HERO.silk
+      : config.slug === "linen"
+        ? EDITORIAL_HERO.linen
+        : config.slug === "cashmere"
+          ? EDITORIAL_HERO.cashmere
+          : config.editorialImage;
+
+  return {
+    products,
+    editCount: Math.max(editCount, products.length),
+    catalogTotal,
+    heroImageUrl,
+  };
+}
+
+function sanitizeBrandName(name: string): string {
+  let n = name.replace(/^[''`"]+\s*/g, "").trim();
+  if (/^s\s+max\s+mara/i.test(n) || /^'s\s*max/i.test(n)) n = "Max Mara";
+  return n;
 }
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
@@ -615,7 +702,7 @@ function mapProductRow(row: any): Product {
   return {
     id: row.id,
     brandSlug,
-    brandName: row.brand_name || "",
+    brandName: sanitizeBrandName(row.brand_name || ""),
     name: row.title || row.name || "",
     productId: row.product_id || row.id,
     url: row.url || "",
@@ -1342,9 +1429,14 @@ export async function fetchShopProducts(options: {
     }
     if (!total || total < filtered.length) total = filtered.length;
 
+    let mapped = filtered.filter(passesWomensCatalogRow).map(mapProductRow);
+    if (rpcFiber) {
+      mapped = mapped.filter((p) => productBodyMatchesFiber(p.composition || "", rpcFiber));
+    }
+
     return {
-      products: filtered.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow),
-      total,
+      products: mapped,
+      total: rpcFiber ? mapped.length : total,
     };
   }
 
@@ -1613,52 +1705,26 @@ export async function fetchBrandStats(): Promise<{ slug: string; name: string; c
   const supabase = getServerSupabase();
   if (!supabase) return [];
 
-  const brandSlugs = [...WOMEN_FASHION_BRAND_SLUGS];
-  const allProducts: { brand_slug: string; brand_name: string; natural_fiber_percent: number }[] = [];
-  let offset = 0;
-  const pageSize = 1000;
+  const t0 = Date.now();
+  const { data: rpcRows, error } = await supabase.rpc("catalog_brand_directory", { p_limit: 800 });
+  logSupabaseTiming("rpc catalog_brand_directory", t0, error ? `error:${error.message}` : `rows:${(rpcRows || []).length}`);
 
-  while (true) {
-    const { data } = await applyCatalogFilter(supabase
-      .from("live_products_apparel")
-      .select("brand_slug, brand_name, natural_fiber_percent")
-      .gte("natural_fiber_percent", 80)
-      .not("image_url", "is", null)
-      .neq("image_url", "")
-      .not("price", "is", null)
-      .neq("price", "")
-      .range(offset, offset + pageSize - 1));
-
-    if (!data || data.length === 0) break;
-    allProducts.push(...data);
-    if (data.length < pageSize) break;
-    offset += pageSize;
+  if (!error && rpcRows?.length) {
+    return (rpcRows as { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[])
+      .map((r) => ({
+        slug: r.brand_slug,
+        name: r.brand_name,
+        count: Number(r.product_count) || 0,
+        avgNaturalFiber: Number(r.avg_natural_fiber) || 0,
+      }))
+      .filter((b) => b.slug && b.count >= 2);
   }
 
-  const brandMap = new Map<string, { name: string; totalFiber: number; count: number }>();
-  for (const p of allProducts) {
-    const existing = brandMap.get(p.brand_slug);
-    if (existing) {
-      existing.totalFiber += (p.natural_fiber_percent || 0);
-      existing.count += 1;
-    } else {
-      brandMap.set(p.brand_slug, {
-        name: p.brand_name,
-        totalFiber: p.natural_fiber_percent || 0,
-        count: 1,
-      });
-    }
-  }
-
-  const results = Array.from(brandMap.entries())
-    .map(([slug, data]) => ({
-      slug,
-      name: data.name,
-      count: data.count,
-      avgNaturalFiber: Math.round(data.totalFiber / data.count),
-    }))
-    .filter(b => b.count >= 2)
-    .sort((a, b) => b.count - a.count);
-
-  return results;
+  const designers = await fetchDesigners(undefined, 1200);
+  return designers.map((d) => ({
+    slug: d.slug,
+    name: d.name,
+    count: 0,
+    avgNaturalFiber: d.naturalFiberPercent ?? 0,
+  }));
 }

@@ -64,8 +64,8 @@ export default function VacationClient({
         <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-3">Curated collection</p>
         <h1 className="text-3xl md:text-5xl font-serif leading-tight mb-3">The Vacation Edit</h1>
         <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
-          Resort-ready <strong className="font-normal text-foreground">linen dresses and skirts</strong> — a
-          small curated edit on the homepage, not the full catalog.
+          Resort-ready <strong className="font-normal text-foreground">linen and cotton dresses &amp; skirts</strong> — a
+          curated edit, not the full catalog.
         </p>
         <p className="text-[11px] text-muted-foreground mt-4">
           <span className="text-foreground font-medium">{editCount} pieces</span> in this edit ·{" "}
@@ -119,7 +119,7 @@ export default function VacationClient({
           <p className="text-sm text-muted-foreground py-12 text-center">Loading…</p>
         ) : displayProducts.length === 0 ? (
           <p className="text-sm text-muted-foreground py-12 text-center">
-            No vacation pieces loaded. Try linen dresses or skirts, or browse{" "}
+            No pieces in this edit yet. Try linen dresses or skirts, or browse{" "}
             <Link href="/materials/linen" className="underline">
               all linen
             </Link>

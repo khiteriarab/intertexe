@@ -146,7 +146,7 @@ export async function fetchMerchRailProducts(
   const supabase = getServerSupabase();
   if (!supabase) return [];
 
-  const limit = Math.min(Math.max(opts?.limit ?? 48, 1), 64);
+  const limit = Math.min(Math.max(opts?.limit ?? 48, 1), 120);
   const offset = Math.max(opts?.offset ?? 0, 0);
   const t0 = Date.now();
 

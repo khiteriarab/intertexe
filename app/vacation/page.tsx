@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function VacationPage() {
-  const data = await fetchVacationPageData({ editLimit: 32, catalogLimit: 32, category: "dresses", offset: 0 });
+  const data = await fetchVacationPageData({ editLimit: 56, catalogLimit: 40, category: "dresses", offset: 0 });
 
   return (
     <>
