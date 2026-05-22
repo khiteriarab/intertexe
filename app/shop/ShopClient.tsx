@@ -311,6 +311,9 @@ export default function ShopClient({
 
     const fetchProducts = async () => {
       setIsLoading(true);
+      if (listOffset === 0) {
+        setProducts([]);
+      }
       try {
         const result = await getShopProducts({
           fiber: fiberTab !== "all" ? fiberTab : undefined,

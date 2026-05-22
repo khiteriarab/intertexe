@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchShopProducts, fetchCatalogProductsByFiber, fetchSaleProducts } from "../../../lib/supabase-server";
+import {
+  fetchShopProducts,
+  fetchCatalogProductsByFiber,
+  fetchSaleProducts,
+  fetchVacationPageData,
+} from "../../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +35,22 @@ export async function GET(request: NextRequest) {
         limit,
         offset,
         hasMore: offset + result.products.length < result.total,
+      });
+    }
+
+    if (mode === "vacation") {
+      const cat = category === "skirts" ? "skirts" : "dresses";
+      const data = await fetchVacationPageData({
+        catalogLimit: limit,
+        offset,
+        category: cat,
+      });
+      return NextResponse.json({
+        products: data.catalogProducts,
+        total: data.catalogTotal,
+        limit,
+        offset,
+        hasMore: offset + data.catalogProducts.length < data.catalogTotal,
       });
     }
 

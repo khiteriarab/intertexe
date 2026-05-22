@@ -18,7 +18,7 @@ export const MERCH_NAV = [
     name: "Collections",
     href: "/materials",
     children: [
-      { name: "Vacation", href: "/shop" },
+      { name: "Vacation", href: "/vacation" },
       { name: "Evening", href: "/shop" },
       { name: "Tailoring", href: "/shop" },
     ],

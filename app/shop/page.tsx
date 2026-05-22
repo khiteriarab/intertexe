@@ -25,17 +25,37 @@ function getDetectedCountry(headerList: Headers) {
   );
 }
 
+const SHOP_FIBERS = new Set(["cashmere", "silk", "wool", "cotton", "linen"]);
+const SHOP_CATEGORIES = new Set([
+  "knitwear", "tops", "dresses", "skirts", "bottoms", "outerwear", "lingerie", "swimwear",
+]);
+
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ market?: string }>;
+  searchParams?: Promise<{ market?: string; fiber?: string; category?: string; sort?: string; q?: string }>;
 }) {
   const params = searchParams ? await searchParams : {};
   const detectedCountry = getDetectedCountry(await headers());
   const market =
     params?.market === "us-ca" || params?.market === "eu-uk-me" ? params.market : undefined;
+  const fiber = params?.fiber && SHOP_FIBERS.has(params.fiber) ? params.fiber : undefined;
+  const category =
+    params?.category && SHOP_CATEGORIES.has(params.category) ? params.category : undefined;
+  const sort =
+    params?.sort === "new" || params?.sort === "price-high" || params?.sort === "price-low"
+      ? params.sort
+      : "recommended";
   const [shopData, totalProductCount] = await Promise.all([
-    fetchShopProducts({ sort: "recommended", limit: 32, offset: 0, market }),
+    fetchShopProducts({
+      sort,
+      limit: 32,
+      offset: 0,
+      market,
+      fiber,
+      category,
+      search: params?.q?.trim() || undefined,
+    }),
     fetchProductCount(),
   ]);
   const fiberCounts: Record<string, number> = {};

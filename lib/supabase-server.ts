@@ -460,6 +460,13 @@ export async function fetchSilkEditProducts(
     .map(mapProductRow);
 }
 
+function isVacationLinenDressOrSkirt(row: { category?: string; name?: string; composition?: string }): boolean {
+  const cat = `${row.category || ""} ${row.name || ""}`.toLowerCase();
+  const comp = `${row.composition || ""}`.toLowerCase();
+  if (!/(linen|flax)/.test(comp)) return false;
+  return /(dress|skirt|gown|maxi|midi|kaftan|cover-up|coverup)/.test(cat);
+}
+
 export async function fetchVacationShopProducts(
   limit = 96,
   market?: string,
@@ -509,7 +516,66 @@ export async function fetchVacationShopProducts(
     .filter((row: any) => (market ? passesMarketRawRow(row, market) : true))
     .filter(isClothingProduct)
     .filter(isNotMensProduct)
+    .filter(isVacationLinenDressOrSkirt)
     .map(mapProductRow);
+}
+
+/** Dedicated Vacation Edit page — curated rail + linen dress/skirt catalog counts. */
+export async function fetchVacationPageData(opts?: {
+  editLimit?: number;
+  catalogLimit?: number;
+  category?: "dresses" | "skirts";
+  offset?: number;
+}): Promise<{
+  editProducts: Product[];
+  catalogProducts: Product[];
+  catalogTotal: number;
+  editCount: number;
+  linenDressCount: number;
+  linenSkirtCount: number;
+}> {
+  const editLimit = opts?.editLimit ?? 32;
+  const catalogLimit = opts?.catalogLimit ?? 32;
+  const offset = opts?.offset ?? 0;
+  const category = opts?.category;
+
+  const { fetchMerchRailProducts, MERCH_RAIL_KEYS, fetchMerchRailDisplayCount } = await import("./merch-feed");
+
+  let editProducts = await fetchMerchRailProducts(MERCH_RAIL_KEYS.vacation, { limit: editLimit });
+  if (editProducts.length === 0) {
+    editProducts = await fetchVacationShopProducts(editLimit);
+  }
+  editProducts = editProducts.filter((p) => isVacationLinenDressOrSkirt(p));
+
+  const editCount =
+    (await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.vacation)) || editProducts.length;
+
+  const [linenDressCount, linenSkirtCount] = await Promise.all([
+    fetchMaterialHubDisplayCount("linen", "dresses"),
+    fetchMaterialHubDisplayCount("linen", "skirts"),
+  ]);
+
+  let catalogProducts: Product[] = [];
+  let catalogTotal = 0;
+  if (category) {
+    const result = await fetchShopProducts({
+      fiber: "linen",
+      category,
+      limit: catalogLimit,
+      offset,
+    });
+    catalogProducts = result.products;
+    catalogTotal = result.total;
+  }
+
+  return {
+    editProducts,
+    catalogProducts,
+    catalogTotal,
+    editCount: Math.max(editCount, editProducts.length),
+    linenDressCount,
+    linenSkirtCount,
+  };
 }
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {

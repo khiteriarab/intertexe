@@ -136,6 +136,8 @@ export function HorizontalProductScroll({
   subtitle,
   linkHref,
   linkText,
+  catalogHref,
+  catalogLinkText,
   eager,
 }: {
   products: any[];
@@ -143,6 +145,9 @@ export function HorizontalProductScroll({
   subtitle?: string;
   linkHref: string;
   linkText: string;
+  /** Optional second link when this rail is a small curated edit, not the full catalog. */
+  catalogHref?: string;
+  catalogLinkText?: string;
   eager?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -207,13 +212,29 @@ export function HorizontalProductScroll({
         )}
       </div>
 
-      <Link
-        href={linkHref}
-        className="self-start text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
-        data-testid={`link-shop-${title.toLowerCase().replace(/\s+/g, "-")}`}
-      >
-        {linkText} <ArrowRight className="w-3 h-3" />
-      </Link>
+      <div className="flex flex-col gap-2 items-start">
+        <Link
+          href={linkHref}
+          className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+          data-testid={`link-shop-${title.toLowerCase().replace(/\s+/g, "-")}`}
+        >
+          {linkText} <ArrowRight className="w-3 h-3" />
+        </Link>
+        {catalogHref && catalogLinkText && (
+          <Link
+            href={catalogHref}
+            className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+            data-testid={`link-catalog-${title.toLowerCase().replace(/\s+/g, "-")}`}
+          >
+            {catalogLinkText} <ArrowRight className="w-3 h-3" />
+          </Link>
+        )}
+        {hasItems && (
+          <p className="text-[10px] text-neutral-400 max-w-md leading-relaxed">
+            {products.length} pieces in this edit — not the full catalog.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -494,7 +515,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           imageUrl={silkHero}
           label="In focus"
           title="The Silk Edit"
-          subtitle="Blouses, dresses and camisoles in pure silk — pieces that move with you."
+          subtitle="A curated spotlight (~24 pieces). Shop all silk in the full catalog from the link below."
           testId="link-edit-silk"
         />
       </section>
@@ -505,7 +526,9 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             title={HOMEPAGE_RAIL_LABELS.silkProducts.title}
             subtitle={HOMEPAGE_RAIL_LABELS.silkProducts.subtitle}
             linkHref="/materials/silk"
-            linkText="Shop Silk"
+            linkText="View this edit"
+            catalogHref="/shop?fiber=silk"
+            catalogLinkText="Shop all silk (4,000+ pieces)"
           />
         </section>
 
@@ -514,8 +537,10 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             products={data.vacationProducts}
             title={HOMEPAGE_RAIL_LABELS.vacationProducts.title}
             subtitle={HOMEPAGE_RAIL_LABELS.vacationProducts.subtitle}
-            linkHref="/shop"
-            linkText="Shop Vacation"
+            linkHref="/vacation"
+            linkText="View the vacation edit"
+            catalogHref="/shop?fiber=linen&category=dresses"
+            catalogLinkText="Shop all linen dresses & skirts"
           />
         </section>
 

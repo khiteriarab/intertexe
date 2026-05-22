@@ -781,7 +781,11 @@ async function MainFiberPage({ slug }: { slug: string }) {
           {seo?.intro || material?.description || ""}
         </p>
         <p className="text-[11px] text-muted-foreground mt-4">
-          {products.length} verified pieces from {brandCount} brands
+          <span className="text-foreground font-medium">{products.length} pieces</span> in this curated
+          view ·{" "}
+          <Link href={`/shop?fiber=${slug}`} className="underline hover:text-foreground">
+            Shop all {fiberName.toLowerCase()} ({productCount > products.length ? productCount.toLocaleString() : "full catalog"})
+          </Link>
         </p>
       </section>
 
