@@ -1,6 +1,7 @@
 import { scrypt, randomBytes, timingSafeEqual, createHmac } from "crypto";
 import { promisify } from "util";
 import { getServerSupabase } from "./supabase-server";
+import { getSupabaseAuthUserId } from "./supabase-auth-server";
 
 const scryptAsync = promisify(scrypt);
 
@@ -64,9 +65,34 @@ export async function storeToken(userId: string | number): Promise<string> {
   return signToken(normalizeUserId(userId));
 }
 
+/** Auth user for account APIs — id is always Supabase Auth UUID when using ecosystem sync. */
 export async function getUserFromToken(authHeader: string | null): Promise<any | null> {
   if (!authHeader?.startsWith("Bearer ")) return null;
   const token = authHeader.slice(7);
+
+  const supabaseUid = await getSupabaseAuthUserId(token);
+  if (supabaseUid) {
+    const authClient = (await import("./supabase-auth-server")).getSupabaseAnonAuthClient();
+    const { data: authData } = authClient ? await authClient.auth.getUser(token) : { data: { user: null } };
+    const email = authData.user?.email;
+    const metaName = authData.user?.user_metadata?.name as string | undefined;
+
+    const supabase = getServerSupabase();
+    if (supabase && email) {
+      const { data: legacy } = await supabase.from("users").select("*").eq("email", email).limit(1);
+      if (legacy?.[0]) {
+        return { ...legacy[0], id: supabaseUid, supabase_user_id: supabaseUid };
+      }
+    }
+    return {
+      id: supabaseUid,
+      supabase_user_id: supabaseUid,
+      email: email || null,
+      name: metaName || null,
+      username: email || supabaseUid,
+    };
+  }
+
   const payload = verifyToken(token);
   if (!payload) return null;
 

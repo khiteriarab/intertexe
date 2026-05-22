@@ -8,6 +8,16 @@ import {
   marketFromSearchParam,
 } from "../../lib/shipping-regions";
 
+const TOKEN_KEY = "intertexe_auth_token";
+
+function getToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function useShoppingMarket(initial?: MarketFilter) {
   const [market, setMarketState] = useState<MarketFilter>(initial ?? "all");
 
@@ -18,6 +28,19 @@ export function useShoppingMarket(initial?: MarketFilter) {
         setMarketState(stored);
       }
     } catch {}
+
+    const token = getToken();
+    if (!token) return;
+    fetch("/api/user/preferences", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const m = data?.shopMarket;
+        if (m === "us-ca" || m === "eu-uk-me" || m === "all") {
+          setMarketState(m);
+          localStorage.setItem(SHOP_MARKET_STORAGE_KEY, m);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -37,6 +60,15 @@ export function useShoppingMarket(initial?: MarketFilter) {
       localStorage.setItem(SHOP_MARKET_STORAGE_KEY, next);
     } catch {}
     window.dispatchEvent(new CustomEvent(SHOP_MARKET_EVENT, { detail: next }));
+
+    const token = getToken();
+    if (token) {
+      fetch("/api/user/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ shopMarket: next }),
+      }).catch(() => {});
+    }
   }, []);
 
   return { market, setMarket };

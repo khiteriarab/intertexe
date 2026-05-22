@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useAuthLoginPrompt } from "./use-auth-login-prompt";
+import { canonicalProductId } from "../../lib/canonical-product-id";
 
 const STORAGE_KEY = "intertexe_product_favorites";
 const TOKEN_KEY = "intertexe_auth_token";
@@ -94,7 +95,13 @@ export function useProductFavorites() {
     ...serverFavorites,
   ]);
 
-  const toggle = useCallback((productId: string, brandName?: string, price?: string) => {
+  const toggle = useCallback((productRef: string | { id?: string; productId?: string; product_id?: string }, brandName?: string, price?: string) => {
+    const productId =
+      typeof productRef === "string"
+        ? productRef
+        : canonicalProductId(productRef);
+    if (!productId) return;
+
     const current = loadLocal();
     const adding = !current.has(productId);
 

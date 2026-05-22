@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { sanitizeBrandName } from "./brand-display";
 
 /** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
 type UntypedSupabase = SupabaseClient<any, "public", any>;
@@ -657,13 +658,6 @@ export async function fetchEditPageData(
     catalogTotal,
     heroImageUrl,
   };
-}
-
-function sanitizeBrandName(name: string): string {
-  let n = name.replace(/^[''`"]+\s*/g, "").trim();
-  if (/^'?s\s+max\s+mara/i.test(n) || /^'s\s*max/i.test(n) || /^s\s*max\s*mara/i.test(n)) n = "Max Mara";
-  if (/^max\s+mara$/i.test(n)) n = "Max Mara";
-  return n;
 }
 
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {

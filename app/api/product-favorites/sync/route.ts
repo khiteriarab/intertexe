@@ -13,10 +13,11 @@ export async function POST(request: NextRequest) {
   const supabase = getServerSupabase();
   if (!supabase) return NextResponse.json({ productIds: [] }, { status: 500 });
 
+  const userId = String(user.id);
   const { data: existing } = await supabase
     .from("product_favorites")
     .select("product_id")
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
   const existingIds = new Set((existing || []).map((e: any) => e.product_id));
   const newIds = productIds.filter((id: string) => !existingIds.has(id));
@@ -24,13 +25,13 @@ export async function POST(request: NextRequest) {
   if (newIds.length > 0) {
     await supabase
       .from("product_favorites")
-      .insert(newIds.map((productId: string) => ({ user_id: user.id, product_id: productId })));
+      .insert(newIds.map((productId: string) => ({ user_id: userId, product_id: productId })));
   }
 
   const { data: allFavs } = await supabase
     .from("product_favorites")
     .select("product_id")
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
   return NextResponse.json({ productIds: (allFavs || []).map((f: any) => f.product_id) });
 }

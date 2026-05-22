@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { hashPassword, storeToken, getUserByEmail, getUserByUsername, createUser } from "../../../../lib/auth-helpers";
+import { getUserByEmail, getUserByUsername } from "../../../../lib/auth-helpers";
+import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server";
 import { sendWelcomeEmail } from "../../../../server/resend";
 import { snakeToCamel } from "../../../../lib/case-utils";
 
@@ -12,8 +13,9 @@ export async function POST(request: NextRequest) {
     }
 
     const username = providedUsername || email;
+    const cleanEmail = String(email).trim();
 
-    const existingEmail = await getUserByEmail(email);
+    const existingEmail = await getUserByEmail(cleanEmail);
     if (existingEmail) {
       return NextResponse.json({ message: "Email already registered" }, { status: 400 });
     }
@@ -23,18 +25,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "An account with this email already exists" }, { status: 400 });
     }
 
-    const user = await createUser({
-      username,
-      email,
-      password: await hashPassword(password),
-      name: name || null,
+    const auth = getSupabaseAnonAuthClient();
+    if (!auth) {
+      return NextResponse.json({ message: "Unable to create account. Please try again later." }, { status: 500 });
+    }
+
+    const { data, error } = await auth.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: { data: { name: name || null } },
     });
 
-    sendWelcomeEmail(email, name).catch(() => {});
+    if (error) {
+      const msg = error.message?.toLowerCase().includes("already")
+        ? "An account with this email already exists"
+        : error.message || "Unable to create account";
+      return NextResponse.json({ message: msg }, { status: 400 });
+    }
 
-    const token = await storeToken(String(user.id));
-    const { password: _, ...safeUser } = user;
-    return NextResponse.json({ ...snakeToCamel(safeUser), token }, { status: 201 });
+    sendWelcomeEmail(cleanEmail, name).catch(() => {});
+
+    const session = data.session;
+    const user = data.user;
+    if (!session?.access_token || !user?.id) {
+      return NextResponse.json(
+        {
+          message: "Account created. Check your email to confirm, then sign in.",
+          needsEmailConfirmation: true,
+        },
+        { status: 201 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        ...snakeToCamel({
+          id: user.id,
+          email: user.email ?? cleanEmail,
+          name: name || null,
+          username: cleanEmail,
+        }),
+        token: session.access_token,
+      },
+      { status: 201 }
+    );
   } catch (err: any) {
     const msg = err?.message || "Something went wrong. Please try again.";
     const isUserError = msg.includes("already exists") || msg.includes("already registered");

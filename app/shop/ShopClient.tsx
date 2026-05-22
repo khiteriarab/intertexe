@@ -8,6 +8,7 @@ import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-r
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopMeta } from "./actions";
 import { formatDisplayPrice } from "../../lib/format-display-price";
+import { canonicalProductId } from "../../lib/canonical-product-id";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
@@ -89,7 +90,7 @@ function optimizeImageUrl(url: string, width: number): string {
 
 function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
   const { toggle, isFavorited } = useProductFavorites();
-  const productId = String(product.id);
+  const productId = canonicalProductId(product);
   const saved = isFavorited(productId);
   const name = product.name || "";
   const brandName = product.brandName || product.brand_name || "";
