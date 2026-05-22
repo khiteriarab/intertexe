@@ -18,25 +18,29 @@ export const metadata: Metadata = {
 
 export default async function DesignersPage() {
   const brandStats = await fetchBrandStats();
-  const totalProducts = brandStats.reduce((sum, b) => sum + b.count, 0);
+  const shoppableBrands = brandStats.filter((b) => b.count >= 2);
+  const totalProducts = shoppableBrands.reduce((sum, b) => sum + b.count, 0);
   return (
     <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-12 max-w-6xl mx-auto px-4">
       <header className="flex flex-col items-center text-center gap-4 md:gap-6 max-w-2xl mx-auto">
         <h1 className="text-3xl md:text-5xl font-serif" style={{ fontFamily: "Playfair Display, serif" }} data-testid="text-directory-title">The Directory</h1>
         <p className="text-muted-foreground text-sm md:text-base">
-          {totalProducts.toLocaleString()}+ products across {brandStats.length} brands in natural silk, linen, cotton, wool, and cashmere.
+          {totalProducts > 0
+            ? `${totalProducts.toLocaleString()} products across ${shoppableBrands.length} brands in natural silk, linen, cotton, wool, and cashmere.`
+            : "Loading shoppable brands…"}
         </p>
       </header>
 
       <DesignerSearchClient />
 
+      {shoppableBrands.length > 0 && (
       <section className="flex flex-col gap-6 md:gap-8" data-testid="section-brands-with-products">
         <div className="flex items-center justify-center gap-2">
           <h2 className="text-xl md:text-2xl font-serif" style={{ fontFamily: "Playfair Display, serif" }}>Brands You Can Shop</h2>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-          {brandStats.map(brand => {
+          {shoppableBrands.map(brand => {
             const tier = getQualityTier(brand.avgNaturalFiber);
             const profile = getBrandProfile(brand.slug);
             return (
@@ -85,6 +89,7 @@ export default async function DesignersPage() {
           </Link>
         </div>
       </section>
+      )}
     </div>
   );
 }

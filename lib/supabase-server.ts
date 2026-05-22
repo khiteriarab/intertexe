@@ -661,7 +661,8 @@ export async function fetchEditPageData(
 
 function sanitizeBrandName(name: string): string {
   let n = name.replace(/^[''`"]+\s*/g, "").trim();
-  if (/^s\s+max\s+mara/i.test(n) || /^'s\s*max/i.test(n)) n = "Max Mara";
+  if (/^'?s\s+max\s+mara/i.test(n) || /^'s\s*max/i.test(n) || /^s\s*max\s*mara/i.test(n)) n = "Max Mara";
+  if (/^max\s+mara$/i.test(n)) n = "Max Mara";
   return n;
 }
 
@@ -721,7 +722,7 @@ function mapProductRow(row: any): Product {
 function mapDesignerRow(row: any): Designer {
   return {
     id: row.id?.toString?.() ?? String(row.id),
-    name: row.name || "",
+    name: sanitizeBrandName(row.name || ""),
     slug: row.slug || "",
     status: row.status || "active",
     naturalFiberPercent: row.natural_fiber_percent ?? null,
@@ -1701,6 +1702,73 @@ export async function fetchSaleProducts(options: {
   };
 }
 
+function mapBrandDirectoryRows(
+  rows: { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[]
+): { slug: string; name: string; count: number; avgNaturalFiber: number }[] {
+  return rows
+    .map((r) => ({
+      slug: r.brand_slug,
+      name: sanitizeBrandName(r.brand_name || r.brand_slug),
+      count: Number(r.product_count) || 0,
+      avgNaturalFiber: Number(r.avg_natural_fiber) || 0,
+    }))
+    .filter((b) => b.slug && b.count >= 2);
+}
+
+/** Fallback when catalog_brand_directory RPC is not deployed yet. */
+async function fetchBrandStatsFromCatalogScan(
+  supabase: ReturnType<typeof getServerSupabase>,
+  limit = 800
+): Promise<{ slug: string; name: string; count: number; avgNaturalFiber: number }[]> {
+  if (!supabase) return [];
+
+  const agg = new Map<string, { name: string; count: number; nfpSum: number }>();
+  const pageSize = 1000;
+  let offset = 0;
+
+  for (let page = 0; page < 40; page++) {
+    const { data, error } = await supabase
+      .from("live_products_apparel")
+      .select("brand_slug, brand_name, natural_fiber_percent, image_url, price")
+      .gte("natural_fiber_percent", 80)
+      .not("brand_slug", "is", null)
+      .not("image_url", "is", null)
+      .range(offset, offset + pageSize - 1);
+
+    if (error || !data?.length) break;
+
+    for (const row of data) {
+      const slug = String(row.brand_slug || "").trim();
+      if (!slug) continue;
+      const price = parseMoneyValue(row.price);
+      const image = String(row.image_url || "").trim();
+      if (!image || price <= 0) continue;
+
+      const nfp = Number(row.natural_fiber_percent) || 0;
+      const name = sanitizeBrandName(String(row.brand_name || slug));
+      const cur = agg.get(slug) || { name, count: 0, nfpSum: 0 };
+      cur.count += 1;
+      cur.nfpSum += nfp;
+      if (!cur.name && name) cur.name = name;
+      agg.set(slug, cur);
+    }
+
+    offset += data.length;
+    if (data.length < pageSize) break;
+  }
+
+  return [...agg.entries()]
+    .map(([slug, v]) => ({
+      slug,
+      name: v.name || slug,
+      count: v.count,
+      avgNaturalFiber: v.count > 0 ? Math.round(v.nfpSum / v.count) : 0,
+    }))
+    .filter((b) => b.count >= 2)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+}
+
 export async function fetchBrandStats(): Promise<{ slug: string; name: string; count: number; avgNaturalFiber: number }[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
@@ -1710,21 +1778,13 @@ export async function fetchBrandStats(): Promise<{ slug: string; name: string; c
   logSupabaseTiming("rpc catalog_brand_directory", t0, error ? `error:${error.message}` : `rows:${(rpcRows || []).length}`);
 
   if (!error && rpcRows?.length) {
-    return (rpcRows as { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[])
-      .map((r) => ({
-        slug: r.brand_slug,
-        name: r.brand_name,
-        count: Number(r.product_count) || 0,
-        avgNaturalFiber: Number(r.avg_natural_fiber) || 0,
-      }))
-      .filter((b) => b.slug && b.count >= 2);
+    return mapBrandDirectoryRows(
+      rpcRows as { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[]
+    );
   }
 
-  const designers = await fetchDesigners(undefined, 1200);
-  return designers.map((d) => ({
-    slug: d.slug,
-    name: d.name,
-    count: 0,
-    avgNaturalFiber: d.naturalFiberPercent ?? 0,
-  }));
+  const t1 = Date.now();
+  const scanned = await fetchBrandStatsFromCatalogScan(supabase, 800);
+  logSupabaseTiming("fetchBrandStats catalog scan fallback", t1, `rows:${scanned.length}`);
+  return scanned;
 }

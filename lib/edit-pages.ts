@@ -84,7 +84,7 @@ export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
     railKey: MERCH_RAIL_KEYS.tailoring,
     catalogHref: "/shop?category=outerwear",
     catalogLabel: "Shop tailoring",
-    editorialImage: "/editorial-linen.jpg",
+    editorialImage: EDITORIAL_HERO.linen,
   },
   vacation: {
     slug: "vacation",
@@ -96,7 +96,7 @@ export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
     catalogHref: "/shop?fiber=linen&category=dresses",
     catalogLabel: "Shop all linen dresses",
     canonicalPath: "/vacation",
-    editorialImage: "/editorial-linen.jpg",
+    editorialImage: EDITORIAL_HERO.vacation,
   },
 };
 

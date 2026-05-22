@@ -360,11 +360,6 @@ export default function ShopClient({
   }, [fiberTab, categoryFilter, sortBy, marketFilter, listOffset, debouncedSearch, initialProducts, initialTotal]);
 
   const isSearchActive = debouncedSearch.length >= 2;
-  const showGlobalHeroCount =
-    fiberTab === "all" && categoryFilter === "all" && !isSearchActive && marketFilter === "all";
-  const heroVerifiedCount = showGlobalHeroCount
-    ? (globalCount > 0 ? globalCount : 17000)
-    : resultTotal;
 
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
 
@@ -374,18 +369,9 @@ export default function ShopClient({
         <header className="mb-8 md:mb-10">
           <div className="flex flex-col gap-6 md:gap-8">
             <div>
-              <h1 className="text-2xl md:text-4xl font-serif mb-2" data-testid="text-shop-title">
+              <h1 className="text-2xl md:text-4xl font-serif" data-testid="text-shop-title">
                 {isSearchActive ? `Results for "${debouncedSearch}"` : "Shop"}
               </h1>
-              <p className="text-[13px] md:text-sm text-muted-foreground">
-                {isLoading && !products.length ? (
-                  <span className="animate-pulse">Loading verified products…</span>
-                ) : heroVerifiedCount > 0 ? (
-                  `${heroVerifiedCount.toLocaleString()} verified products`
-                ) : (
-                  "No verified products match this view"
-                )}
-              </p>
             </div>
 
             <div className="relative">
