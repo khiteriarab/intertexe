@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { MERCH_NAV } from "../../lib/merch-nav";
 import { CountrySelector } from "./CountrySelector";
+import { MobileRegionBar } from "./MobileRegionBar";
 
 async function searchDesigners(query: string) {
   const res = await fetch(`/api/designers?q=${encodeURIComponent(query)}`);
@@ -49,11 +50,15 @@ export function Navbar() {
     setSearchQuery("");
   }, [pathname]);
 
-  const navLinks = MERCH_NAV.map((item) => ({ name: item.name, href: item.href }));
+  const navLinks = [
+    ...MERCH_NAV.map((item) => ({ name: item.name, href: item.href })),
+    { name: "Scanner", href: "/scanner" },
+  ];
 
   const mobileNavLinks = [
     { name: "Home", href: "/", icon: Home },
     { name: "New In", href: "/shop?sort=new", icon: ShoppingBag },
+    { name: "Scanner", href: "/scanner", icon: Scan },
     { name: "Fabrics", href: "/materials", icon: Layers },
     { name: "Designers", href: "/designers", icon: User },
     { name: "Sale", href: "/sale", icon: ShoppingBag },
@@ -149,6 +154,8 @@ export function Navbar() {
           </div>
         )}
       </header>
+
+      <MobileRegionBar />
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/30" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <div className="flex justify-around items-center h-[56px] px-1">

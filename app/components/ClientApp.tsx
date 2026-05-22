@@ -30,7 +30,7 @@ export function ClientApp({ children }: { children: ReactNode }) {
       <Analytics />
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <Navbar />
-        <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-20 md:pb-0">
+        <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           {children}
         </main>
         <Footer />

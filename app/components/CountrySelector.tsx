@@ -15,9 +15,11 @@ import { useShoppingMarket } from "../hooks/use-shopping-market";
 export function CountrySelector({
   detectedCountryCode,
   compact = true,
+  className = "",
 }: {
   detectedCountryCode?: string;
   compact?: boolean;
+  className?: string;
 }) {
   const { market, setMarket } = useShoppingMarket();
   const [open, setOpen] = useState(false);
@@ -58,7 +60,7 @@ export function CountrySelector({
   };
 
   return (
-    <div ref={rootRef} className="relative" data-testid="country-selector">
+    <div ref={rootRef} className={`relative ${className}`} data-testid="country-selector">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -75,7 +77,7 @@ export function CountrySelector({
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 z-[120] w-[min(100vw-2rem,320px)] bg-background border border-border/40 shadow-xl"
+          className="absolute right-0 bottom-full mb-2 md:bottom-auto md:mb-0 md:top-full md:mt-2 z-[120] w-[min(100vw-2rem,320px)] bg-background border border-border/40 shadow-xl"
           role="listbox"
           data-testid="dropdown-country-selector"
         >

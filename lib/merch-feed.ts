@@ -3,6 +3,7 @@
  * Source: homepage_merch_rails registry + homepage_feed_items cache + homepage_feed_meta counts.
  */
 import { getServerSupabase, catalogRegionsFromMarket, type Product } from "./supabase-server";
+import { displayNaturalFiberPercent } from "./display-natural-fiber";
 import { logSupabaseTiming } from "./supabase-timing";
 
 export const MERCH_RAIL_KEYS = {
@@ -73,7 +74,9 @@ function mapFeedRowToProduct(row: Record<string, unknown>): Product {
     imageUrl: String(row.image_url ?? ""),
     price: String(row.price ?? ""),
     composition: "",
-    naturalFiberPercent: Number(row.natural_fiber_percent ?? 0),
+    naturalFiberPercent: displayNaturalFiberPercent(
+      Number(row.natural_fiber_percent ?? 0)
+    ),
     category: row.category != null ? String(row.category) : "",
     isSale: row.is_sale === true,
   };
@@ -128,14 +131,11 @@ export async function fetchMerchGlobalDisplayCount(): Promise<number> {
   const row = rows[0];
   if (row) {
     const n = row.source_rows ?? row.row_count ?? 0;
-    if (n > 0) return Number(n);
+    if (n > 5000) return Number(n);
   }
-  const silk = await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.silk);
-  const linen = await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.linen);
-  const cashmere = await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.cashmere);
-  const wool = await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.wool);
-  const cotton = await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.cotton);
-  return Math.max(silk + linen + cashmere + wool + cotton, 1);
+  const { fetchPlatformStats } = await import("./platform-stats");
+  const stats = await fetchPlatformStats();
+  return stats.productCount;
 }
 
 /** Canonical shared product read for homepage, materials, collections. */
@@ -220,7 +220,9 @@ async function fetchMerchRailLiveFallback(
         imageUrl: String(row.image_url ?? ""),
         price,
         composition: String(row.composition ?? ""),
-        naturalFiberPercent: Number(row.natural_fiber_percent ?? 0),
+        naturalFiberPercent: displayNaturalFiberPercent(
+          Number(row.natural_fiber_percent ?? 0)
+        ),
         category: row.category != null ? String(row.category) : "",
         isSale: row.is_sale === true,
         listingRegion: row.region != null ? String(row.region) : null,
@@ -279,7 +281,9 @@ async function fetchMerchRailLiveFallback(
       imageUrl: String(row.image_url ?? ""),
       price,
       composition: String(row.composition ?? ""),
-      naturalFiberPercent: Number(row.natural_fiber_percent ?? 0),
+      naturalFiberPercent: displayNaturalFiberPercent(
+        Number(row.natural_fiber_percent ?? 0)
+      ),
       category: row.category != null ? String(row.category) : "",
       isSale: row.is_sale === true,
       listingRegion: row.region != null ? String(row.region) : null,

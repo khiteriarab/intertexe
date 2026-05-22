@@ -1,10 +1,14 @@
-/** Editorial campaign imagery from brand sites — not product thumbnails. */
+/** Editorial campaign imagery — not product thumbnails. */
 
 export const EDITORIAL_HERO = {
   silk: "/editorial-silk.png",
   linen: "/editorial-linen.png",
   cashmere: "/editorial-cashmere.jpg",
   vacation: "/editorial-vacation.jpg",
+  evening: "/editorial-silk.png",
+  tailoring: "/editorial-linen.png",
+  "summer-in-the-city": "/editorial-linen.png",
+  "white-edit": "/hero-editorial-v8.png",
   newIn: "/hero-editorial-v8.png",
 } as const;
 

@@ -10,6 +10,7 @@ import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format
 import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
 import { BRAND_WE_LOVE_IMAGES, EDITORIAL_HERO } from "../../lib/editorial-assets";
+import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -411,31 +412,65 @@ function EditorialPanel({
 interface HomePageData {
   designers: any[];
   productCount: number;
-  cashmereProducts: any[];
-  silkProducts: any[];
-  vacationProducts: any[];
-  linenProducts: any[];
-  silkEditorialProduct: any | null;
-  linenEditorialProduct: any | null;
+  brandCount: number;
   productCountByBrand: Record<string, number>;
   curatedDesigners: any[];
   newInProducts: any[];
+  vacationProducts: any[];
+  eveningProducts: any[];
+  tailoringProducts: any[];
+  summerInCityProducts: any[];
+  whiteEditProducts: any[];
   saleProducts: any[];
+}
+
+const COLLECTION_PRODUCTS_KEY: Record<string, keyof HomePageData> = {
+  vacation: "vacationProducts",
+  evening: "eveningProducts",
+  tailoring: "tailoringProducts",
+  "summer-in-the-city": "summerInCityProducts",
+  "white-edit": "whiteEditProducts",
+};
+
+function editorialHeroForSlug(slug: string): string {
+  const key = slug as keyof typeof EDITORIAL_HERO;
+  return EDITORIAL_HERO[key] ?? EDITORIAL_HERO.newIn;
+}
+
+function BrandsPairRow({
+  designers,
+  productCounts,
+}: {
+  designers: any[];
+  productCounts: Record<string, number>;
+}) {
+  if (!designers.length) return null;
+  return (
+    <div className="grid grid-cols-2 gap-4 md:gap-6">
+      {designers.map((designer: any) => (
+        <BrandCard
+          key={designer.id}
+          designer={designer}
+          count={productCounts[designer.slug] || 0}
+        />
+      ))}
+    </div>
+  );
 }
 
 export function HomePageContent({ initialData }: { initialData?: HomePageData }) {
   const [data, setData] = useState<HomePageData>(initialData || {
     designers: [],
     productCount: 0,
-    cashmereProducts: [],
-    silkProducts: [],
-    vacationProducts: [],
-    linenProducts: [],
-    silkEditorialProduct: null,
-    linenEditorialProduct: null,
+    brandCount: 0,
     productCountByBrand: {},
     curatedDesigners: [],
     newInProducts: [],
+    vacationProducts: [],
+    eveningProducts: [],
+    tailoringProducts: [],
+    summerInCityProducts: [],
+    whiteEditProducts: [],
     saleProducts: [],
   });
 
@@ -455,12 +490,23 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       .catch(() => {});
   }, [initialData]);
 
-  const displayCount = data.productCount > 0
-    ? new Intl.NumberFormat("en-US").format(data.productCount)
-    : "17,553";
+  const displayCount =
+    data.productCount > 0
+      ? new Intl.NumberFormat("en-US").format(data.productCount)
+      : "24,000";
+  const displayBrands =
+    data.brandCount > 0
+      ? `${new Intl.NumberFormat("en-US").format(data.brandCount)}+`
+      : "99+";
 
-  const silkHero = EDITORIAL_HERO.silk;
-  const linenHero = EDITORIAL_HERO.linen;
+  const curatedOrdered = CURATED_BRAND_SLUGS.map((slug) =>
+    data.curatedDesigners.find((d: { slug?: string }) => d.slug === slug)
+  ).filter(Boolean) as any[];
+
+  const brandPairs: any[][] = [];
+  for (let i = 0; i < curatedOrdered.length; i += 2) {
+    brandPairs.push(curatedOrdered.slice(i, i + 2));
+  }
 
   return (
     <div className="flex flex-col">
@@ -503,95 +549,66 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       </section>
 
       <section className="py-10 md:py-20">
-          <HorizontalProductScroll
-            products={data.newInProducts}
-            title={HOMEPAGE_RAIL_LABELS.newInProducts.title}
-            subtitle={HOMEPAGE_RAIL_LABELS.newInProducts.subtitle}
-            linkHref="/shop?sort=new"
-            linkText="Shop New In"
-            eager
-          />
-        </section>
-
-      <section className="-mx-4 md:-mx-8">
-        <EditorialPanel
-          href="/edits/silk"
-          imageUrl={silkHero}
-          label="In focus"
-          title="The Silk Edit"
-          subtitle="A curated spotlight (~24 pieces). Shop all silk in the full catalog from the link below."
-          testId="link-edit-silk"
+        <HorizontalProductScroll
+          products={data.newInProducts}
+          title={HOMEPAGE_RAIL_LABELS.newInProducts.title}
+          subtitle={HOMEPAGE_RAIL_LABELS.newInProducts.subtitle}
+          linkHref="/shop?sort=new"
+          linkText="Shop New In"
+          eager
         />
       </section>
 
-      <section className="py-10 md:py-20">
-          <HorizontalProductScroll
-            products={data.silkProducts}
-            title={HOMEPAGE_RAIL_LABELS.silkProducts.title}
-            subtitle={HOMEPAGE_RAIL_LABELS.silkProducts.subtitle}
-            linkHref="/materials/silk"
-            linkText="View this edit"
-            catalogHref="/shop?fiber=silk"
-            catalogLinkText="Shop all silk (4,000+ pieces)"
-          />
-        </section>
+      {COLLECTION_SECTIONS.map((collection, index) => {
+        const productsKey = COLLECTION_PRODUCTS_KEY[collection.slug];
+        const products = (data[productsKey] as any[]) || [];
+        const labels =
+          HOMEPAGE_RAIL_LABELS[`${productsKey}` as keyof typeof HOMEPAGE_RAIL_LABELS] ??
+          { title: collection.label, subtitle: collection.subtitle };
+        const pair = brandPairs[index % brandPairs.length];
 
-      <section className="py-10 md:py-20 border-t border-neutral-200/60">
-          <HorizontalProductScroll
-            products={data.vacationProducts}
-            title={HOMEPAGE_RAIL_LABELS.vacationProducts.title}
-            subtitle={HOMEPAGE_RAIL_LABELS.vacationProducts.subtitle}
-            linkHref="/vacation"
-            linkText="View the vacation edit"
-            catalogHref="/shop?fiber=linen&category=dresses"
-            catalogLinkText="Shop all linen dresses & skirts"
-          />
-        </section>
+        return (
+          <div key={collection.slug}>
+            <section className="-mx-4 md:-mx-8">
+              <EditorialPanel
+                href={collection.href}
+                imageUrl={editorialHeroForSlug(collection.slug)}
+                label={collection.kicker}
+                title={collection.label}
+                subtitle={collection.subtitle}
+                testId={`link-collection-${collection.slug}`}
+              />
+            </section>
 
-      <section className="py-10 md:py-20 border-t border-neutral-200/60">
-        <div className="flex justify-between items-end mb-8 md:mb-12">
-          <div className="flex flex-col gap-1">
-            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
-              Curated selection
-            </p>
-            <h2 className="text-[20px] md:text-[28px] font-serif leading-tight">Brands we love</h2>
+            <section className="py-10 md:py-20 border-t border-neutral-200/60">
+              <HorizontalProductScroll
+                products={products}
+                title={labels.title}
+                subtitle={labels.subtitle}
+                linkHref={collection.href}
+                linkText={`Shop ${collection.label}`}
+              />
+            </section>
+
+            {pair && pair.length > 0 && (
+              <section className="py-10 md:py-16 border-t border-neutral-200/60">
+                <div className="flex justify-between items-end mb-6 md:mb-8">
+                  <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
+                    Brands we love
+                  </p>
+                  <Link
+                    href="/designers"
+                    className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+                  >
+                    View all <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+                <BrandsPairRow designers={pair} productCounts={data.productCountByBrand} />
+              </section>
+            )}
           </div>
-          <Link
-            href="/designers"
-            className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
-            data-testid="link-view-all-designers"
-          >
-            View all <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-        <BrandGrid
-          designers={CURATED_BRAND_SLUGS.map((slug) =>
-            data.curatedDesigners.find((d: { slug?: string }) => d.slug === slug)
-          ).filter(Boolean)}
-          productCounts={data.productCountByBrand}
-        />
-      </section>
-
-      <section className="-mx-4 md:-mx-8">
-        <EditorialPanel
-          href="/edits/linen"
-          imageUrl={linenHero}
-          label="The edit"
-          title={HOMEPAGE_RAIL_LABELS.linenProducts.title}
-          subtitle={HOMEPAGE_RAIL_LABELS.linenProducts.subtitle}
-          testId="link-edit-linen"
-        />
-      </section>
-
-      <section className="py-10 md:py-20">
-          <HorizontalProductScroll
-            products={data.cashmereProducts}
-            title={HOMEPAGE_RAIL_LABELS.cashmereProducts.title}
-            subtitle={HOMEPAGE_RAIL_LABELS.cashmereProducts.subtitle}
-            linkHref="/edits/cashmere"
-            linkText="Shop Cashmere"
-          />
-        </section>
+        );
+      })}
 
       <SaleHomeRail products={data.saleProducts} />
 
@@ -599,7 +616,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         <div className="max-w-5xl mx-auto py-14 md:py-24 px-6 md:px-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x md:divide-neutral-300/40">
             <div className="flex flex-col items-center text-center gap-2 md:px-8">
-              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{data.designers.length > 0 ? `${new Intl.NumberFormat("en-US").format(data.designers.length)}+` : "100+"}</span>
+              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{displayBrands}</span>
               <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
                 Brands vetted
               </span>
@@ -607,7 +624,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             <div className="flex flex-col items-center text-center gap-2 md:px-8">
               <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{displayCount}</span>
               <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
-                Pieces
+                Verified pieces
               </span>
             </div>
             <div className="flex flex-col items-center text-center gap-2 md:px-8">

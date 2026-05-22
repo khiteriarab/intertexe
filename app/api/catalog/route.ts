@@ -5,6 +5,7 @@ import {
   fetchSaleProducts,
   fetchVacationPageData,
   fetchEditPageData,
+  fetchCollectionPageData,
 } from "../../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 
@@ -36,6 +37,21 @@ export async function GET(request: NextRequest) {
         limit,
         offset,
         hasMore: offset + result.products.length < result.total,
+      });
+    }
+
+    if (mode === "collection") {
+      const slug = sp.get("slug") || "";
+      const data = await fetchCollectionPageData(slug, { limit, offset });
+      if (!data) {
+        return NextResponse.json({ products: [], total: 0, limit, offset, hasMore: false });
+      }
+      return NextResponse.json({
+        products: data.products,
+        total: data.editCount,
+        limit,
+        offset,
+        hasMore: offset + data.products.length < data.editCount,
       });
     }
 

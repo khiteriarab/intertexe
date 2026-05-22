@@ -9,12 +9,17 @@ import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopMeta } from "./actions";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
+import { useShoppingMarket } from "../hooks/use-shopping-market";
+import { CountrySelector } from "../components/CountrySelector";
+import {
+  getRegionForCountryCode,
+  getRegionForMarket,
+  type MarketFilter,
+} from "../../lib/shipping-regions";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
 type SortOption = "recommended" | "new" | "price-high" | "price-low";
-type MarketFilter = "all" | "us-ca" | "eu-uk-me";
-
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "all", label: "All" },
   { key: "cashmere", label: "Cashmere" },
@@ -42,40 +47,6 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "price-high", label: "Price: High to Low" },
   { key: "price-low", label: "Price: Low to High" },
 ];
-
-const LOCATION_OPTIONS: { country: string; code?: string; currency: string; market: MarketFilter; featured?: boolean }[] = [
-  { country: "United States", code: "US", currency: "USD", market: "us-ca", featured: true },
-  { country: "Canada", code: "CA", currency: "USD", market: "us-ca", featured: true },
-  { country: "United Kingdom", code: "GB", currency: "GBP", market: "eu-uk-me", featured: true },
-  { country: "Spain", code: "ES", currency: "EUR", market: "eu-uk-me", featured: true },
-  { country: "France", code: "FR", currency: "EUR", market: "eu-uk-me" },
-  { country: "Italy", code: "IT", currency: "EUR", market: "eu-uk-me" },
-  { country: "Germany", code: "DE", currency: "EUR", market: "eu-uk-me" },
-  { country: "Netherlands", code: "NL", currency: "EUR", market: "eu-uk-me" },
-  { country: "Ireland", code: "IE", currency: "EUR", market: "eu-uk-me" },
-  { country: "Portugal", code: "PT", currency: "EUR", market: "eu-uk-me" },
-  { country: "United Arab Emirates", code: "AE", currency: "GBP", market: "eu-uk-me" },
-  { country: "Saudi Arabia", code: "SA", currency: "GBP", market: "eu-uk-me" },
-  { country: "Kuwait", code: "KW", currency: "GBP", market: "eu-uk-me" },
-  { country: "Qatar", code: "QA", currency: "GBP", market: "eu-uk-me" },
-  { country: "All destinations", currency: "ALL", market: "all" },
-];
-
-function formatLocationLabel(option: (typeof LOCATION_OPTIONS)[number]): string {
-  const cur = option.currency === "ALL" ? "" : option.currency;
-  return cur ? `${option.country} · ${cur}` : option.country;
-}
-
-function getLocationForMarket(market: MarketFilter) {
-  return LOCATION_OPTIONS.find((option) => option.market === market && option.featured)
-    || LOCATION_OPTIONS.find((option) => option.market === market)
-    || LOCATION_OPTIONS[LOCATION_OPTIONS.length - 1];
-}
-
-function marketFromSearchParam(raw: string | null): MarketFilter {
-  if (raw === "us-ca" || raw === "eu-uk-me") return raw;
-  return "all";
-}
 
 const SHOP_PAGE_SIZE = 40;
 
@@ -182,44 +153,31 @@ export default function ShopClient({
   const initialFiber = (searchParams.get("fiber") as FiberTab) || "all";
   const initialCategory = (searchParams.get("category") as CategoryFilter) || "all";
   const initialSort = (searchParams.get("sort") as SortOption) || "recommended";
-  const detectedLocation = LOCATION_OPTIONS.find((option) => option.code === detectedCountry);
-  const initialMarketFilter = marketFromSearchParam(searchParams.get("market"));
+  const initialMarketFilter = (searchParams.get("market") as MarketFilter) || "all";
   const initialSearch = searchParams.get("q") || "";
+  const { market: marketFilter, setMarket: setMarketFilter } = useShoppingMarket(
+    initialMarketFilter === "us-ca" || initialMarketFilter === "eu-uk-me" ? initialMarketFilter : "all"
+  );
 
   const [fiberTab, setFiberTab] = useState<FiberTab>(initialFiber);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(initialCategory);
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
-  const [marketFilter, setMarketFilter] = useState<MarketFilter>(initialMarketFilter);
   const [showSortMenu, setShowSortMenu] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [locationQuery, setLocationQuery] = useState("");
-  const [showLocationPrompt, setShowLocationPrompt] = useState(initialMarketFilter === "all");
   const [listOffset, setListOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const currentLocation = detectedLocation && marketFilter === detectedLocation.market
-    ? detectedLocation
-    : getLocationForMarket(marketFilter);
-  const promptLocation =
-    marketFilter === "all" && detectedLocation ? detectedLocation : currentLocation;
-  const filteredLocations = LOCATION_OPTIONS.filter((option) =>
-    option.country.toLowerCase().includes(locationQuery.trim().toLowerCase())
-    || option.currency.toLowerCase().includes(locationQuery.trim().toLowerCase())
-  );
+  const detectedRegion = getRegionForCountryCode(detectedCountry);
+  const activeRegion =
+    detectedRegion && marketFilter === detectedRegion.market
+      ? detectedRegion
+      : getRegionForMarket(marketFilter);
 
   const selectLocation = (market: MarketFilter) => {
     setMarketFilter(market);
     setListOffset(0);
-    setShowLocationPrompt(false);
-    try {
-      localStorage.setItem("intertexe_shop_market", market);
-      localStorage.setItem("intertexe_shop_location_prompt_seen", "1");
-    } catch {}
-    setShowLocationModal(false);
-    setLocationQuery("");
   };
 
   const syncUrl = useCallback((fiber: string, category: string, sort: string, market: string, search: string) => {
@@ -243,14 +201,6 @@ export default function ShopClient({
   const [isLoading, setIsLoading] = useState(!initialProducts?.length);
 
   const scrollRestored = useRef(false);
-
-  useEffect(() => {
-    try {
-      if (localStorage.getItem("intertexe_shop_location_prompt_seen") === "1") {
-        setShowLocationPrompt(false);
-      }
-    } catch {}
-  }, []);
 
   useEffect(() => {
     const savedCount = sessionStorage.getItem("shop_visible_count");
@@ -365,7 +315,7 @@ export default function ShopClient({
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
 
   return (
-    <div className="min-h-screen pb-24 md:pb-16">
+    <div className="min-h-screen pb-[7.5rem] md:pb-16">
       <div className="py-8 md:py-12 flex flex-col gap-0">
         <header className="mb-8 md:mb-10">
           <div className="flex flex-col gap-6 md:gap-8">
@@ -398,25 +348,6 @@ export default function ShopClient({
             </div>
           </div>
         </header>
-
-        {showLocationPrompt && (
-          <div className="mb-6 md:mb-8 border border-border/30 bg-[#fbfaf8] p-5 md:p-6 flex flex-col gap-4" data-testid="location-prompt">
-            <p className="text-xl md:text-2xl font-serif leading-snug text-foreground/75">
-              Update your location to see products and content relevant to you
-            </p>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-              {formatLocationLabel(promptLocation)}
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowLocationModal(true)}
-              className="w-full bg-[#111] text-white py-3.5 md:py-4 text-sm md:text-base tracking-[0.08em] hover:bg-neutral-800 transition-colors"
-              data-testid="button-location-prompt"
-            >
-              Change Location
-            </button>
-          </div>
-        )}
 
         <div className="flex flex-col gap-4 mb-6 md:mb-8">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
@@ -452,22 +383,16 @@ export default function ShopClient({
             ))}
           </div>
 
-          <div className="flex items-center justify-between gap-3 -mx-1 px-1 pt-1">
-            <button
-              type="button"
-              onClick={() => setShowLocationModal(true)}
-              className="flex items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-foreground hover:text-muted-foreground transition-colors"
-              data-testid="button-change-location"
-            >
-              <span className="text-base leading-none">{currentLocation.flag}</span>
-              <span>{currentLocation.country}</span>
-              <span className="text-muted-foreground">{currentLocation.currency}</span>
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            <span className="hidden md:inline text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-              Shopping destination
+          <div className="hidden md:flex items-center justify-end gap-3 -mx-1 px-1 pt-1">
+            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+              Delivering to
             </span>
+            <CountrySelector detectedCountryCode={detectedCountry} />
           </div>
+          <p className="md:hidden text-[10px] uppercase tracking-[0.14em] text-muted-foreground -mx-1 px-1 pt-1">
+            Delivering to {activeRegion.country}
+            {activeRegion.currency !== "ALL" ? ` · ${activeRegion.currency}` : ""}
+          </p>
         </div>
 
         <div className="flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8">
@@ -536,53 +461,6 @@ export default function ShopClient({
             >
               {fiberTab} buying guide <ArrowRight className="w-3 h-3" />
             </Link>
-          </div>
-        )}
-
-        {showLocationModal && (
-          <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/55 px-4 py-8 md:py-16" data-testid="modal-location-selector">
-            <div className="w-full max-w-3xl bg-background shadow-2xl">
-              <div className="flex items-center justify-between border-b border-border/40 px-5 md:px-8 py-5">
-                <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Shipping to</h2>
-                <button
-                  onClick={() => { setShowLocationModal(false); setLocationQuery(""); }}
-                  className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Close location selector"
-                  data-testid="button-close-location"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="px-5 md:px-8 py-5">
-                <div className="relative mb-5">
-                  <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    value={locationQuery}
-                    onChange={(e) => setLocationQuery(e.target.value)}
-                    placeholder="Search location"
-                    className="w-full border-0 border-b border-border/40 bg-transparent py-3 pl-8 pr-3 text-base focus:outline-none focus:border-foreground placeholder:text-muted-foreground/40"
-                    autoFocus
-                    data-testid="input-location-search"
-                  />
-                </div>
-                <div className="max-h-[55vh] overflow-y-auto pr-2">
-                  {filteredLocations.map((location, index) => (
-                    <button
-                      key={location.country}
-                      onClick={() => selectLocation(location.market)}
-                      className={`w-full flex items-center justify-between gap-4 py-3.5 text-left hover:bg-[#f5f5f3] transition-colors ${index === 3 && !locationQuery ? "border-t border-border/40 mt-2 pt-5" : ""}`}
-                      data-testid={`location-${location.country.toLowerCase().replace(/\s+/g, "-")}`}
-                    >
-                      <span className="text-[13px] truncate">{location.country}</span>
-                      <span className="text-[11px] text-muted-foreground flex-shrink-0 tabular-nums">{location.currency}</span>
-                    </button>
-                  ))}
-                  {filteredLocations.length === 0 && (
-                    <p className="py-10 text-center text-sm text-muted-foreground">No locations match your search.</p>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         )}
 

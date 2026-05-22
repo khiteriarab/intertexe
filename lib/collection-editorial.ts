@@ -1,0 +1,157 @@
+/**
+ * Editorial collection worlds — shared copy + relevance scoring (web + Supabase rail curation).
+ */
+import type { CollectionSlug } from "./collection-pages";
+
+export type CollectionEditorial = {
+  slug: CollectionSlug;
+  themes: string[];
+  /** Boost when name/category/composition matches these patterns */
+  patterns: RegExp[];
+  /** Penalize obvious mismatches */
+  exclude?: RegExp[];
+};
+
+export const COLLECTION_EDITORIAL: Record<CollectionSlug, CollectionEditorial> = {
+  vacation: {
+    slug: "vacation",
+    themes: [
+      "Mediterranean luxury",
+      "resort dressing",
+      "linen movement",
+      "silk at sunset",
+      "woven textures",
+      "raffia accessories",
+      "beach dinners",
+      "warm neutrals",
+      "white cotton",
+      "destination energy",
+      "Ibiza",
+      "Amalfi",
+      "Hydra",
+      "St. Barths",
+    ],
+    patterns: [
+      /linen|flax|raffia|resort|vacation|beach|midi dress|maxi dress|skirt|woven|sand|ecru|ivory|cream/i,
+    ],
+    exclude: [/blazer|suit|coat|wool trouser|evening gown|cocktail/i],
+  },
+  evening: {
+    slug: "evening",
+    themes: [
+      "elevated night dressing",
+      "silk draping",
+      "black tailoring",
+      "deep jewel tones",
+      "satin",
+      "structured elegance",
+      "minimal glamour",
+      "candlelit dinner",
+      "heels",
+      "clutches",
+      "fluid silhouettes",
+      "cinematic luxury",
+    ],
+    patterns: [
+      /evening|cocktail|gown|satin|silk|dress|jewel|burgundy|plum|emerald|navy|black/i,
+    ],
+    exclude: [/jogger|sweat|tee|beach|resort|linen short/i],
+  },
+  tailoring: {
+    slug: "tailoring",
+    themes: [
+      "sharp structure",
+      "relaxed luxury suiting",
+      "oversized blazers",
+      "wool trousers",
+      "monochrome styling",
+      "quiet luxury",
+      "strong silhouette",
+      "masculine",
+      "feminine tension",
+      "refined minimalism",
+      "investment dressing",
+    ],
+    patterns: [
+      /blazer|jacket|coat|trouser|pant|suit|tailor|structured|wool|crepe|pinstripe/i,
+    ],
+    exclude: [/swim|bikini|beach|resort/i],
+  },
+  "summer-in-the-city": {
+    slug: "summer-in-the-city",
+    themes: [
+      "urban summer dressing",
+      "lightweight tailoring",
+      "cotton poplin",
+      "polished daytime",
+      "city movement",
+      "neutrals",
+      "black",
+      "white",
+      "elevated basics",
+      "rooftop",
+      "chic practicality",
+      "downtown luxury",
+    ],
+    patterns: [
+      /shirt|blouse|trouser|pant|dress|jacket|blazer|poplin|cotton|linen|city|day/i,
+    ],
+    exclude: [/evening gown|cocktail|beach|resort|ski/i],
+  },
+  "white-edit": {
+    slug: "white-edit",
+    themes: [
+      "tonal dressing",
+      "whites",
+      "creams",
+      "ivory",
+      "stone",
+      "purity",
+      "softness",
+      "summer elegance",
+      "minimal styling",
+      "airy fabrics",
+      "luxury simplicity",
+      "visual calm",
+      "editorial restraint",
+      "expensive minimalism",
+    ],
+    patterns: [
+      /white|ivory|cream|ecru|stone|off[- ]?white|oatmeal|chalk/i,
+    ],
+    exclude: [/black dress|navy|burgundy|print|floral/i],
+  },
+};
+
+export function collectionEditorialScore(
+  product: {
+    name?: string | null;
+    category?: string | null;
+    composition?: string | null;
+    naturalFiberPercent?: number | null;
+  },
+  slug: CollectionSlug
+): number {
+  const ed = COLLECTION_EDITORIAL[slug];
+  const text = `${product.name || ""} ${product.category || ""} ${product.composition || ""}`.toLowerCase();
+  if (ed.exclude?.some((re) => re.test(text))) return -100;
+  let score = 0;
+  for (const re of ed.patterns) {
+    if (re.test(text)) score += 12;
+  }
+  const nfp = product.naturalFiberPercent ?? 0;
+  if (nfp >= 90) score += 4;
+  if (nfp >= 80) score += 2;
+  return score;
+}
+
+export function rankForCollection<T extends { name?: string | null; category?: string | null; composition?: string | null; naturalFiberPercent?: number | null }>(
+  products: T[],
+  slug: CollectionSlug
+): T[] {
+  return [...products]
+    .map((p) => ({ p, score: collectionEditorialScore(p, slug) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.p);
+}

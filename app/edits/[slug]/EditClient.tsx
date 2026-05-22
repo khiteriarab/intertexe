@@ -17,7 +17,7 @@ type Product = {
   price?: string;
 };
 
-const OTHER_EDITS = EDIT_SLUGS.filter((s) => s !== "vacation");
+const FABRIC_EDIT_SLUGS = ["silk", "linen", "cashmere"] as const;
 
 export default function EditClient({
   config,
@@ -88,9 +88,9 @@ export default function EditClient({
 
       <section className="border-b border-border/30 bg-[#FAFAF8]">
         <div className="max-w-6xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
-          {OTHER_EDITS.map((slug) => {
+          {FABRIC_EDIT_SLUGS.map((slug) => {
             const ed = EDIT_PAGES[slug];
-            const href = ed.canonicalPath || `/edits/${slug}`;
+            const href = `/edits/${slug}`;
             const active = slug === config.slug;
             return (
               <Link
@@ -107,14 +107,10 @@ export default function EditClient({
             );
           })}
           <Link
-            href="/vacation"
-            className={`flex-shrink-0 px-4 py-2 text-[10px] uppercase tracking-[0.14em] ${
-              config.slug === "vacation"
-                ? "bg-[#111] text-white"
-                : "bg-white border border-neutral-200 text-foreground/70"
-            }`}
+            href="/collections/vacation"
+            className="flex-shrink-0 px-4 py-2 text-[10px] uppercase tracking-[0.14em] bg-white border border-neutral-200 text-foreground/70 hover:text-foreground"
           >
-            Vacation
+            Collections →
           </Link>
         </div>
       </section>

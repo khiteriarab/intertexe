@@ -19,6 +19,7 @@ import {
   fetchMerchRailProducts,
   isMerchFeedEnabled,
 } from "./merch-feed";
+import { fetchPlatformStats } from "./platform-stats";
 
 /** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
@@ -143,15 +144,15 @@ function diversifyByBrand(products: any[], max: number, maxPerBrand: number): an
 export interface HomePageData {
   designers: any[];
   productCount: number;
-  cashmereProducts: any[];
-  silkProducts: any[];
-  vacationProducts: any[];
-  linenProducts: any[];
-  silkEditorialProduct: any | null;
-  linenEditorialProduct: any | null;
+  brandCount: number;
   productCountByBrand: Record<string, number>;
   curatedDesigners: any[];
   newInProducts: any[];
+  vacationProducts: any[];
+  eveningProducts: any[];
+  tailoringProducts: any[];
+  summerInCityProducts: any[];
+  whiteEditProducts: any[];
   saleProducts: any[];
 }
 
@@ -180,12 +181,14 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const [
     designers,
     curatedDesigners,
-    productCount,
+    platformStats,
+    _merchGlobalCount,
     newInRaw,
-    silkRaw,
-    linenRaw,
-    cashmereRaw,
     vacationRaw,
+    eveningRaw,
+    tailoringRaw,
+    summerInCityRaw,
+    whiteEditRaw,
     saleRaw,
   ] = await Promise.all([
     withHomepageRailTimeout(
@@ -195,48 +198,49 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       []
     ),
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
+    fetchPlatformStats(),
     fetchMerchGlobalDisplayCount(),
     fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.silk, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.linen, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.cashmere, { limit: MERCH_HOME_FETCH_LIMIT }),
     fetchMerchRailProducts(MERCH_RAIL_KEYS.vacation, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.evening, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.tailoring, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.summerInCity, { limit: MERCH_HOME_FETCH_LIMIT }),
+    fetchMerchRailProducts(MERCH_RAIL_KEYS.whiteEdit, { limit: MERCH_HOME_FETCH_LIMIT }),
     fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: MERCH_HOME_FETCH_LIMIT }),
   ]);
 
   const newInProducts = postProcessHomepageMaterialRail(newInRaw);
-  const silkProducts = postProcessHomepageMaterialRail(silkRaw);
-  const linenProducts = postProcessHomepageMaterialRail(linenRaw);
-  const cashmereProducts = postProcessHomepageMaterialRail(cashmereRaw);
   const vacationProducts = postProcessHomepageMaterialRail(vacationRaw);
+  const eveningProducts = postProcessHomepageMaterialRail(eveningRaw);
+  const tailoringProducts = postProcessHomepageMaterialRail(tailoringRaw);
+  const summerInCityProducts = postProcessHomepageMaterialRail(summerInCityRaw);
+  const whiteEditProducts = postProcessHomepageMaterialRail(whiteEditRaw);
   const saleProducts = saleRaw.slice(0, MERCH_HOME_FETCH_LIMIT);
-
-  const silkEditorialProduct = pickEditorialProduct(silkProducts as any[]);
-  const linenEditorialProduct = pickEditorialProduct(linenProducts as any[]);
 
   console.log(
     "[merch-feed] homepage payload:",
     `new-in=${newInProducts.length}`,
-    `silk=${silkProducts.length}`,
-    `cashmere=${cashmereProducts.length}`,
-    `linen=${linenProducts.length}`,
     `vacation=${vacationProducts.length}`,
+    `evening=${eveningProducts.length}`,
+    `tailoring=${tailoringProducts.length}`,
+    `summer-in-city=${summerInCityProducts.length}`,
+    `white-edit=${whiteEditProducts.length}`,
     `sale=${saleProducts.length}`,
     `ms=${Date.now() - t0}`
   );
 
   return {
     designers,
-    productCount,
-    cashmereProducts,
-    silkProducts,
-    vacationProducts,
-    linenProducts,
-    silkEditorialProduct,
-    linenEditorialProduct,
+    productCount: platformStats.productCount,
+    brandCount: platformStats.brandCount,
     productCountByBrand: {},
     curatedDesigners,
     newInProducts,
+    vacationProducts,
+    eveningProducts,
+    tailoringProducts,
+    summerInCityProducts,
+    whiteEditProducts,
     saleProducts,
   };
 }
@@ -253,59 +257,32 @@ export async function getHomePageData(): Promise<HomePageData> {
     []
   );
 
-  const [cashmereProducts, silkProducts, vacationProducts, linenProducts, saleResult, curatedDesigners] =
-    await Promise.all([
-      withHomepageRailTimeout(
-        "rail:cashmere",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchProductsByFiber("cashmere", MATERIAL_RAIL_FETCH_LIMIT, homeRailOpts).then(
-            postProcessHomepageMaterialRail
-          ),
-        []
-      ),
-      withHomepageRailTimeout(
-        "rail:silk",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchSilkEditProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
-            postProcessHomepageMaterialRail
-          ),
-        []
-      ),
-      withHomepageRailTimeout(
-        "rail:vacation",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchVacationShopProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
-            postProcessHomepageMaterialRail
-          ),
-        []
-      ),
-      withHomepageRailTimeout(
-        "rail:linen",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchProductsByFiber("linen", MATERIAL_RAIL_FETCH_LIMIT, homeRailOpts).then(
-            postProcessHomepageMaterialRail
-          ),
-        []
-      ),
-      withHomepageRailTimeout(
-        "rail:sale",
-        RAIL_TIMEOUT_MS,
-        () =>
-          fetchSaleProducts({
-            limit: HOMEPAGE_SALE_FETCH_LIMIT,
-            offset: 0,
-            maxSourceRows: HOMEPAGE_SALE_MAX_SOURCE_ROWS,
-          }),
-        { products: [], total: 0 }
-      ),
-      withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
-    ]);
+  const [vacationProducts, saleResult, curatedDesigners] = await Promise.all([
+    withHomepageRailTimeout(
+      "rail:vacation",
+      RAIL_TIMEOUT_MS,
+      () =>
+        fetchVacationShopProducts(MATERIAL_RAIL_FETCH_LIMIT, undefined, homeRailOpts).then(
+          postProcessHomepageMaterialRail
+        ),
+      []
+    ),
+    withHomepageRailTimeout(
+      "rail:sale",
+      RAIL_TIMEOUT_MS,
+      () =>
+        fetchSaleProducts({
+          limit: HOMEPAGE_SALE_FETCH_LIMIT,
+          offset: 0,
+          maxSourceRows: HOMEPAGE_SALE_MAX_SOURCE_ROWS,
+        }),
+      { products: [], total: 0 }
+    ),
+    withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
+  ]);
 
   const saleProducts = (saleResult.products || []).filter((p) => !isZeroPrice(p.price));
+  const platformStats = await fetchPlatformStats();
 
   const brandProductLists = await Promise.all(
     [...NEW_IN_BRAND_SLUGS].map((slug) =>
@@ -384,21 +361,18 @@ export async function getHomePageData(): Promise<HomePageData> {
   }
   homepageTiming("phase:new-in-compose", tNewInCompose, `items=${newInProducts.length}`);
 
-  const silkEditorialProduct = pickEditorialProduct(silkProducts as any[]);
-  const linenEditorialProduct = pickEditorialProduct(linenProducts as any[]);
-
   return {
     designers,
-    productCount: 0,
-    cashmereProducts,
-    silkProducts,
-    vacationProducts,
-    linenProducts,
-    silkEditorialProduct,
-    linenEditorialProduct,
+    productCount: platformStats.productCount,
+    brandCount: platformStats.brandCount,
     productCountByBrand: {},
     curatedDesigners,
     newInProducts,
+    vacationProducts,
+    eveningProducts: [] as Product[],
+    tailoringProducts: [] as Product[],
+    summerInCityProducts: [] as Product[],
+    whiteEditProducts: [] as Product[],
     saleProducts,
   };
 }

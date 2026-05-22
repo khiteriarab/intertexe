@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeBrandName } from "./brand-display";
+import { displayNaturalFiberPercent } from "./display-natural-fiber";
 
 /** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
 type UntypedSupabase = SupabaseClient<any, "public", any>;
@@ -660,6 +661,59 @@ export async function fetchEditPageData(
   };
 }
 
+/** Editorial collection worlds (/collections/[slug]). */
+export async function fetchCollectionPageData(
+  slug: string,
+  opts?: { limit?: number; offset?: number }
+): Promise<{
+  products: Product[];
+  editCount: number;
+  catalogTotal: number;
+  heroImageUrl: string;
+} | null> {
+  const { getCollectionConfig } = await import("./collection-pages");
+  const config = getCollectionConfig(slug);
+  if (!config) return null;
+
+  const { fetchMerchRailProducts } = await import("./merch-feed");
+  const limit = Math.min(Math.max(opts?.limit ?? 56, 1), 64);
+  const offset = Math.max(opts?.offset ?? 0, 0);
+
+  const { rankForCollection } = await import("./collection-editorial");
+  let products = await fetchMerchRailProducts(config.railKey, { limit: 120, offset: 0 });
+  products = products.filter(isEditorialWomensApparel);
+  if (slug === "vacation") {
+    products = products.filter(isVacationResortPiece);
+  }
+  products = rankForCollection(products, slug as import("./collection-pages").CollectionSlug);
+  if (products.length < 12) {
+    const { fetchMerchRailProducts: fetchRail } = await import("./merch-feed");
+    const pool = await fetchRail(config.railKey, { limit: 200 });
+    products = rankForCollection(
+      pool.filter(isEditorialWomensApparel),
+      slug as import("./collection-pages").CollectionSlug
+    );
+  }
+  products = products.slice(offset, offset + limit);
+  const editCount = products.length;
+
+  let catalogTotal = 0;
+  try {
+    const { fetchPlatformStats } = await import("./platform-stats");
+    const stats = await fetchPlatformStats();
+    catalogTotal = stats.productCount;
+  } catch {
+    catalogTotal = 0;
+  }
+
+  return {
+    products,
+    editCount: Math.max(editCount, products.length),
+    catalogTotal,
+    heroImageUrl: config.editorialImage,
+  };
+}
+
 function fixIsabelMarantImage(brandSlug: string, imageUrl: string): string {
   return imageUrl;
 }
@@ -704,7 +758,7 @@ function mapProductRow(row: any): Product {
     imageUrl: fixIsabelMarantImage(brandSlug, rawImageUrl),
     price: priceStr,
     composition: row.composition || "",
-    naturalFiberPercent: row.natural_fiber_percent || 0,
+    naturalFiberPercent: displayNaturalFiberPercent(row.natural_fiber_percent) ?? 0,
     category: row.category || "",
     matchingSetId: row.matching_set_id || null,
     isSale: rowIsOnSale(row),
@@ -719,7 +773,7 @@ function mapDesignerRow(row: any): Designer {
     name: sanitizeBrandName(row.name || ""),
     slug: row.slug || "",
     status: row.status || "active",
-    naturalFiberPercent: row.natural_fiber_percent ?? null,
+    naturalFiberPercent: displayNaturalFiberPercent(row.natural_fiber_percent),
     description: row.description || null,
     website: row.website || null,
     createdAt: row.created_at || null,

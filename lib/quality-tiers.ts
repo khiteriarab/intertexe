@@ -9,8 +9,11 @@ export interface TierInfo {
   buyingAdvice: string;
 }
 
+import { displayNaturalFiberPercent } from "./display-natural-fiber";
+
 export function getQualityTier(naturalFiberPercent: number | null | undefined): TierInfo {
-  if (naturalFiberPercent == null) {
+  const nfp = displayNaturalFiberPercent(naturalFiberPercent);
+  if (nfp == null) {
     return {
       tier: 'under-review',
       label: 'Under Review',
@@ -20,7 +23,7 @@ export function getQualityTier(naturalFiberPercent: number | null | undefined): 
       buyingAdvice: 'Check the fabric label before purchasing. We\'ll have a full assessment soon.',
     };
   }
-  if (naturalFiberPercent >= 90) {
+  if (nfp >= 90) {
     return {
       tier: 'exceptional',
       label: 'Exceptional',
@@ -40,7 +43,7 @@ export function getQualityTier(naturalFiberPercent: number | null | undefined): 
       buyingAdvice: 'A strong choice. Check individual garment labels for specific fiber content.',
     };
   }
-  if (naturalFiberPercent >= 60) {
+  if (nfp >= 60) {
     return {
       tier: 'good',
       label: 'Good',

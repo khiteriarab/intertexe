@@ -1,41 +1,31 @@
 /**
  * Shared top-level navigation (website; mirrors homepage_merch_rails axes).
  */
+import { COLLECTION_SECTIONS, FABRIC_SECTIONS } from "./site-architecture";
+
 export const MERCH_NAV = [
   { name: "New In", href: "/shop?sort=new" },
   {
     name: "Fabrics",
     href: "/materials",
-    children: [
-      { name: "Silk", href: "/materials/silk" },
-      { name: "Linen", href: "/materials/linen" },
-      { name: "Cashmere", href: "/materials/cashmere" },
-      { name: "Wool", href: "/materials/wool" },
-      { name: "Cotton", href: "/materials/cotton" },
-    ],
+    children: FABRIC_SECTIONS.map((f) => ({ name: f.label, href: f.href })),
   },
   {
     name: "Collections",
-    href: "/edits/silk",
-    children: [
-      { name: "Silk Edit", href: "/edits/silk" },
-      { name: "Linen Edit", href: "/edits/linen" },
-      { name: "Cashmere Edit", href: "/edits/cashmere" },
-      { name: "Vacation", href: "/vacation" },
-      { name: "Evening", href: "/edits/evening" },
-      { name: "Tailoring", href: "/edits/tailoring" },
-    ],
+    href: "/collections/vacation",
+    children: COLLECTION_SECTIONS.map((c) => ({ name: c.label, href: c.href })),
   },
   { name: "Designers", href: "/designers" },
   { name: "Sale", href: "/sale" },
 ] as const;
 
-/** Homepage section titles keyed by legacy data field */
+/** Legacy field labels — prefer collection rails on homepage. */
 export const HOMEPAGE_RAIL_LABELS: Record<string, { title: string; subtitle: string }> = {
   newInProducts: { title: "New In", subtitle: "Just landed" },
-  silkProducts: { title: "Silk", subtitle: "The Silk Edit" },
-  linenProducts: { title: "Linen", subtitle: "Linen for every day" },
-  cashmereProducts: { title: "Cashmere", subtitle: "Pure luxury" },
-  vacationProducts: { title: "Vacation", subtitle: "Resort-ready natural fabrics" },
+  vacationProducts: { title: "Vacation", subtitle: "Resort dressing · linen movement · destination energy" },
+  eveningProducts: { title: "Evening", subtitle: "Silk draping · jewel tones · candlelit glamour" },
+  tailoringProducts: { title: "Tailoring", subtitle: "Quiet luxury suiting · structure · investment dressing" },
+  summerInCityProducts: { title: "Summer in the City", subtitle: "Downtown luxury · lightweight tailoring" },
+  whiteEditProducts: { title: "The White Edit", subtitle: "Whites, creams, ivory — expensive minimalism" },
   saleProducts: { title: "Sale", subtitle: "Natural fibers, reduced" },
 };
