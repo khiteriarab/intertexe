@@ -161,11 +161,14 @@ function postProcessHomepageMaterialRail(products: Product[]): Product[] {
 
 async function fetchCuratedDesignersFast(): Promise<any[]> {
   const list = await fetchDesignersBySlugs([...CURATED_BRAND_SLUGS]);
-  return list.map((d) => {
+  const bySlug = new Map(list.map((d) => [d.slug, d]));
+  return CURATED_BRAND_SLUGS.map((slug) => {
+    const d = bySlug.get(slug);
+    if (!d) return null;
     if (d.naturalFiberPercent != null) return d;
     const score = getCuratedScore(d.name);
     return score != null ? { ...d, naturalFiberPercent: score } : d;
-  });
+  }).filter(Boolean) as any[];
 }
 
 async function getHomePageDataFromFeedCache(): Promise<HomePageData> {

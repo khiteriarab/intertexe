@@ -42,23 +42,28 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "price-low", label: "Price: Low to High" },
 ];
 
-const LOCATION_OPTIONS: { country: string; code?: string; flag: string; currency: string; market: MarketFilter; featured?: boolean }[] = [
-  { country: "United States", code: "US", flag: "🇺🇸", currency: "$USD", market: "us-ca", featured: true },
-  { country: "Canada", code: "CA", flag: "🇨🇦", currency: "$USD", market: "us-ca", featured: true },
-  { country: "United Kingdom", code: "GB", flag: "🇬🇧", currency: "£GBP", market: "eu-uk-me", featured: true },
-  { country: "Spain", code: "ES", flag: "🇪🇸", currency: "€EUR", market: "eu-uk-me", featured: true },
-  { country: "France", code: "FR", flag: "🇫🇷", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Italy", code: "IT", flag: "🇮🇹", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Germany", code: "DE", flag: "🇩🇪", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Netherlands", code: "NL", flag: "🇳🇱", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Ireland", code: "IE", flag: "🇮🇪", currency: "€EUR", market: "eu-uk-me" },
-  { country: "Portugal", code: "PT", flag: "🇵🇹", currency: "€EUR", market: "eu-uk-me" },
-  { country: "United Arab Emirates", code: "AE", flag: "🇦🇪", currency: "£GBP", market: "eu-uk-me" },
-  { country: "Saudi Arabia", code: "SA", flag: "🇸🇦", currency: "£GBP", market: "eu-uk-me" },
-  { country: "Kuwait", code: "KW", flag: "🇰🇼", currency: "£GBP", market: "eu-uk-me" },
-  { country: "Qatar", code: "QA", flag: "🇶🇦", currency: "£GBP", market: "eu-uk-me" },
-  { country: "All Destinations", flag: "🌐", currency: "ALL", market: "all" },
+const LOCATION_OPTIONS: { country: string; code?: string; currency: string; market: MarketFilter; featured?: boolean }[] = [
+  { country: "United States", code: "US", currency: "USD", market: "us-ca", featured: true },
+  { country: "Canada", code: "CA", currency: "USD", market: "us-ca", featured: true },
+  { country: "United Kingdom", code: "GB", currency: "GBP", market: "eu-uk-me", featured: true },
+  { country: "Spain", code: "ES", currency: "EUR", market: "eu-uk-me", featured: true },
+  { country: "France", code: "FR", currency: "EUR", market: "eu-uk-me" },
+  { country: "Italy", code: "IT", currency: "EUR", market: "eu-uk-me" },
+  { country: "Germany", code: "DE", currency: "EUR", market: "eu-uk-me" },
+  { country: "Netherlands", code: "NL", currency: "EUR", market: "eu-uk-me" },
+  { country: "Ireland", code: "IE", currency: "EUR", market: "eu-uk-me" },
+  { country: "Portugal", code: "PT", currency: "EUR", market: "eu-uk-me" },
+  { country: "United Arab Emirates", code: "AE", currency: "GBP", market: "eu-uk-me" },
+  { country: "Saudi Arabia", code: "SA", currency: "GBP", market: "eu-uk-me" },
+  { country: "Kuwait", code: "KW", currency: "GBP", market: "eu-uk-me" },
+  { country: "Qatar", code: "QA", currency: "GBP", market: "eu-uk-me" },
+  { country: "All destinations", currency: "ALL", market: "all" },
 ];
+
+function formatLocationLabel(option: (typeof LOCATION_OPTIONS)[number]): string {
+  const cur = option.currency === "ALL" ? "" : option.currency;
+  return cur ? `${option.country} · ${cur}` : option.country;
+}
 
 function getLocationForMarket(market: MarketFilter) {
   return LOCATION_OPTIONS.find((option) => option.market === market && option.featured)
@@ -412,10 +417,9 @@ export default function ShopClient({
             <p className="text-xl md:text-2xl font-serif leading-snug text-foreground/75">
               Update your location to see products and content relevant to you
             </p>
-            <div className="flex items-center gap-3 text-lg md:text-xl">
-              <span className="text-2xl">{promptLocation.flag}</span>
-              <span className="font-serif">{promptLocation.country} ({promptLocation.currency})</span>
-            </div>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              {formatLocationLabel(promptLocation)}
+            </p>
             <button
               type="button"
               onClick={() => setShowLocationModal(true)}
@@ -552,7 +556,7 @@ export default function ShopClient({
           <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/55 px-4 py-8 md:py-16" data-testid="modal-location-selector">
             <div className="w-full max-w-3xl bg-background shadow-2xl">
               <div className="flex items-center justify-between border-b border-border/40 px-5 md:px-8 py-5">
-                <h2 className="text-lg md:text-2xl font-semibold uppercase tracking-[0.08em]">Change location</h2>
+                <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Shipping to</h2>
                 <button
                   onClick={() => { setShowLocationModal(false); setLocationQuery(""); }}
                   className="p-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -582,11 +586,8 @@ export default function ShopClient({
                       className={`w-full flex items-center justify-between gap-4 py-3.5 text-left hover:bg-[#f5f5f3] transition-colors ${index === 3 && !locationQuery ? "border-t border-border/40 mt-2 pt-5" : ""}`}
                       data-testid={`location-${location.country.toLowerCase().replace(/\s+/g, "-")}`}
                     >
-                      <span className="flex items-center gap-3 min-w-0">
-                        <span className="text-2xl" aria-hidden="true">{location.flag}</span>
-                        <span className="text-base md:text-lg truncate">{location.country}</span>
-                      </span>
-                      <span className="text-sm md:text-base text-muted-foreground flex-shrink-0">{location.currency}</span>
+                      <span className="text-[13px] truncate">{location.country}</span>
+                      <span className="text-[11px] text-muted-foreground flex-shrink-0 tabular-nums">{location.currency}</span>
                     </button>
                   ))}
                   {filteredLocations.length === 0 && (

@@ -8,6 +8,7 @@ import { getQualityTier } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
+import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -351,7 +352,7 @@ export function BrandGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
       {designers.map((designer: any) => {
         const count = productCounts[designer.slug] || 0;
         return <BrandCard key={designer.id} designer={designer} count={count} />;
@@ -550,7 +551,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
               Curated selection
             </p>
-            <h2 className="text-[20px] md:text-[28px] font-serif leading-tight">Designers</h2>
+            <h2 className="text-[20px] md:text-[28px] font-serif leading-tight">Brands we love</h2>
           </div>
           <Link
             href="/designers"
@@ -560,7 +561,12 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             View all <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
-        <BrandGrid designers={data.curatedDesigners} productCounts={data.productCountByBrand} />
+        <BrandGrid
+          designers={CURATED_BRAND_SLUGS.map((slug) =>
+            data.curatedDesigners.find((d: { slug?: string }) => d.slug === slug)
+          ).filter(Boolean)}
+          productCounts={data.productCountByBrand}
+        />
       </section>
 
       <section className="-mx-4 md:-mx-8">
