@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeBrandName } from "./brand-display";
 import { displayNaturalFiberPercent } from "./display-natural-fiber";
@@ -93,6 +94,7 @@ export interface Product {
   originalPrice?: string | null;
   /** Used for formatting bare numeric DB prices ($ / € / £). */
   listingRegion?: string | null;
+  collectionSlugs?: string[];
 }
 
 type MarketFilter = "us-ca" | "eu-uk-me";
@@ -661,7 +663,7 @@ export async function fetchEditPageData(
   };
 }
 
-/** Editorial collection worlds (/collections/[slug]). */
+/** Editorial collection worlds (/collections/[slug]) — full paginated catalog, not homepage rail cache. */
 export async function fetchCollectionPageData(
   slug: string,
   opts?: { limit?: number; offset?: number }
@@ -675,41 +677,19 @@ export async function fetchCollectionPageData(
   const config = getCollectionConfig(slug);
   if (!config) return null;
 
-  const { fetchMerchRailProducts } = await import("./merch-feed");
-  const limit = Math.min(Math.max(opts?.limit ?? 56, 1), 64);
+  const { paginateCollectionCatalog } = await import("./collection-catalog");
+  const collectionSlug = slug as import("./collection-pages").CollectionSlug;
+  const limit = Math.min(Math.max(opts?.limit ?? 56, 1), 100);
   const offset = Math.max(opts?.offset ?? 0, 0);
 
-  const { rankForCollection } = await import("./collection-editorial");
-  let products = await fetchMerchRailProducts(config.railKey, { limit: 120, offset: 0 });
-  products = products.filter(isEditorialWomensApparel);
-  if (slug === "vacation") {
-    products = products.filter(isVacationResortPiece);
-  }
-  products = rankForCollection(products, slug as import("./collection-pages").CollectionSlug);
-  if (products.length < 12) {
-    const { fetchMerchRailProducts: fetchRail } = await import("./merch-feed");
-    const pool = await fetchRail(config.railKey, { limit: 200 });
-    products = rankForCollection(
-      pool.filter(isEditorialWomensApparel),
-      slug as import("./collection-pages").CollectionSlug
-    );
-  }
-  products = products.slice(offset, offset + limit);
-  const editCount = products.length;
-
-  let catalogTotal = 0;
-  try {
-    const { fetchPlatformStats } = await import("./platform-stats");
-    const stats = await fetchPlatformStats();
-    catalogTotal = stats.productCount;
-  } catch {
-    catalogTotal = 0;
-  }
+  const ranked = await getCachedRankedCollectionPool(collectionSlug);
+  const products = paginateCollectionCatalog(ranked, limit, offset);
+  const editCount = ranked.length;
 
   return {
     products,
-    editCount: Math.max(editCount, products.length),
-    catalogTotal,
+    editCount,
+    catalogTotal: editCount,
     heroImageUrl: config.editorialImage,
   };
 }
@@ -764,7 +744,84 @@ function mapProductRow(row: any): Product {
     isSale: rowIsOnSale(row),
     originalPrice: origStr,
     listingRegion: row.region != null && row.region !== "" ? String(row.region) : null,
+    collectionSlugs: Array.isArray(row.collection_slugs)
+      ? row.collection_slugs.map((s: unknown) => String(s))
+      : [],
   };
+}
+
+const COLLECTION_POOL_LIMIT_PER_QUERY = 100;
+const COLLECTION_POOL_PAGES_PER_QUERY = 2;
+
+async function fetchCollectionCatalogPoolUncached(
+  slug: import("./collection-pages").CollectionSlug
+): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  const { COLLECTION_CATALOG_QUERIES, buildRankedCollectionCatalog, isCollectionEligible } =
+    await import("./collection-catalog");
+
+  const queries = COLLECTION_CATALOG_QUERIES[slug];
+  const seen = new Set<string>();
+  const merged: Product[] = [];
+
+  const fetchTasks = queries.flatMap((q) =>
+    Array.from({ length: COLLECTION_POOL_PAGES_PER_QUERY }, (_, page) => async () => {
+      const offset = page * COLLECTION_POOL_LIMIT_PER_QUERY;
+      let rows =
+        (await rpcCatalogList(supabase, {
+          preferred: "us",
+          fallback: "us",
+          fiber: q.fiber ?? null,
+          category: q.category ?? null,
+          brandSlug: null,
+          search: q.search ?? null,
+          minNfp: 80,
+          limit: COLLECTION_POOL_LIMIT_PER_QUERY,
+          offset,
+        })) || [];
+
+      if (rows.length === 0) {
+        rows = await catalogListLiveFallback(supabase, {
+          fiber: q.fiber ?? null,
+          category: q.category ?? null,
+          search: q.search ?? null,
+          limit: COLLECTION_POOL_LIMIT_PER_QUERY,
+          offset,
+          minNfp: 80,
+          preferred: "us",
+          fallback: "us",
+        });
+      }
+      return rows;
+    })
+  );
+
+  const rowBatches = await Promise.all(fetchTasks.map((fn) => fn()));
+
+  for (const rows of rowBatches) {
+    for (const row of rows) {
+      if (!isNotMensProduct(row)) continue;
+      const p = mapProductRow(row);
+      if (!isEditorialWomensApparel(p)) continue;
+      if (!isCollectionEligible(p, slug)) continue;
+      const id = p.productId || p.id;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      merged.push(p);
+    }
+  }
+
+  return buildRankedCollectionCatalog(merged, slug);
+}
+
+function getCachedRankedCollectionPool(slug: import("./collection-pages").CollectionSlug) {
+  return unstable_cache(
+    () => fetchCollectionCatalogPoolUncached(slug),
+    ["collection-ranked-pool", slug],
+    { revalidate: 600, tags: [`collection-${slug}`] }
+  )();
 }
 
 function mapDesignerRow(row: any): Designer {

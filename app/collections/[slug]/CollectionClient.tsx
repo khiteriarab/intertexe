@@ -36,7 +36,10 @@ export default function CollectionClient({
   const [products, setProducts] = useState(initialProducts);
   const [offset, setOffset] = useState(initialProducts.length);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(initialProducts.length >= 48);
+  const [totalCount, setTotalCount] = useState(editCount);
+  const [hasMore, setHasMore] = useState(
+    initialProducts.length < editCount && initialProducts.length > 0
+  );
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
@@ -47,6 +50,8 @@ export default function CollectionClient({
       );
       const data = await res.json();
       const next = data.products || [];
+      const total = typeof data.total === "number" ? data.total : totalCount;
+      setTotalCount(total);
       if (next.length === 0) {
         setHasMore(false);
       } else {
@@ -62,8 +67,11 @@ export default function CollectionClient({
           }
           return merged;
         });
-        setOffset((o) => o + next.length);
-        if (next.length < 32) setHasMore(false);
+        setOffset((o) => {
+          const nextOffset = o + next.length;
+          setHasMore(nextOffset < total && next.length >= 32);
+          return nextOffset;
+        });
       }
     } finally {
       setLoadingMore(false);
@@ -130,9 +138,9 @@ export default function CollectionClient({
 
       <section className="py-8 md:py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
         <p className="text-[11px] text-neutral-500 mb-6">
-          <span className="font-medium text-neutral-800">{editCount} pieces</span> in this collection
-          {catalogTotal > editCount ? (
-            <> · <span>{catalogTotal.toLocaleString()}+</span> in the full catalog</>
+          <span className="font-medium text-neutral-800">{totalCount} pieces</span> in this collection
+          {products.length < totalCount ? (
+            <> · scroll or load more to explore the full edit</>
           ) : null}
         </p>
 

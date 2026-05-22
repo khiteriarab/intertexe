@@ -174,6 +174,42 @@ export async function fetchMerchRailProducts(
   return fetchMerchRailLiveFallback(railKey, limit, opts?.market);
 }
 
+/** One round-trip for all homepage rails (avoids 6+ sequential feed queries). */
+export async function fetchMerchRailsBatch(
+  railKeys: MerchRailKey[],
+  limitPerRail = 24
+): Promise<Record<string, Product[]>> {
+  const supabase = getServerSupabase();
+  const out: Record<string, Product[]> = {};
+  for (const k of railKeys) out[k] = [];
+  if (!supabase || railKeys.length === 0) return out;
+
+  const cap = Math.min(Math.max(limitPerRail, 1), 32);
+  const t0 = Date.now();
+  const { data, error } = await supabase
+    .from("homepage_feed_items")
+    .select(`${FEED_SELECT_COLS}, rail_key`)
+    .in("rail_key", railKeys)
+    .lte("rank", cap)
+    .order("rail_key", { ascending: true })
+    .order("rank", { ascending: true });
+
+  logSupabaseTiming(
+    `merch-feed batch keys=${railKeys.length}`,
+    t0,
+    error ? `error:${error.message}` : `rows:${(data || []).length}`
+  );
+
+  if (error || !data?.length) return out;
+
+  for (const row of data as Record<string, unknown>[]) {
+    const key = String(row.rail_key ?? "");
+    if (!out[key] || out[key].length >= cap) continue;
+    out[key].push(mapFeedRowToProduct(row));
+  }
+  return out;
+}
+
 /** Bounded live fallback — no catalog_list on hot path. */
 async function fetchMerchRailLiveFallback(
   railKey: MerchRailKey,

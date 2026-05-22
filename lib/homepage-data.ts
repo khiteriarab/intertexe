@@ -15,8 +15,7 @@ import { isEditorialWomensApparel } from "./catalog-product-filters";
 import { EDITORIAL_HERO } from "./editorial-assets";
 import {
   MERCH_RAIL_KEYS,
-  fetchMerchGlobalDisplayCount,
-  fetchMerchRailProducts,
+  fetchMerchRailsBatch,
   isMerchFeedEnabled,
 } from "./merch-feed";
 import { fetchPlatformStats } from "./platform-stats";
@@ -27,7 +26,8 @@ const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS 
 /** Small fetches only — homepage must not scan large slices of catalog. */
 const MATERIAL_RAIL_FETCH_LIMIT = 64;
 const MATERIAL_RAIL_DISPLAY_MAX = 50;
-const MERCH_HOME_FETCH_LIMIT = 64;
+/** Homepage rails are curated previews only — keep small for fast SSR. */
+const MERCH_HOME_FETCH_LIMIT = 24;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
 const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
@@ -178,44 +178,34 @@ async function fetchCuratedDesignersFast(): Promise<any[]> {
 
 async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const t0 = Date.now();
-  const [
-    designers,
-    curatedDesigners,
-    platformStats,
-    _merchGlobalCount,
-    newInRaw,
-    vacationRaw,
-    eveningRaw,
-    tailoringRaw,
-    summerInCityRaw,
-    whiteEditRaw,
-    saleRaw,
-  ] = await Promise.all([
-    withHomepageRailTimeout(
-      "rail:designers",
-      DESIGNERS_TIMEOUT_MS,
-      () => fetchDesigners(undefined, DESIGNERS_FETCH_LIMIT),
-      []
-    ),
+  const railKeys = [
+    MERCH_RAIL_KEYS.newIn,
+    MERCH_RAIL_KEYS.vacation,
+    MERCH_RAIL_KEYS.evening,
+    MERCH_RAIL_KEYS.tailoring,
+    MERCH_RAIL_KEYS.summerInCity,
+    MERCH_RAIL_KEYS.whiteEdit,
+    MERCH_RAIL_KEYS.sale,
+  ] as const;
+
+  const [curatedDesigners, platformStats, railsByKey] = await Promise.all([
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
     fetchPlatformStats(),
-    fetchMerchGlobalDisplayCount(),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.vacation, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.evening, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.tailoring, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.summerInCity, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.whiteEdit, { limit: MERCH_HOME_FETCH_LIMIT }),
-    fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: MERCH_HOME_FETCH_LIMIT }),
+    withHomepageRailTimeout(
+      "rail:batch",
+      RAIL_TIMEOUT_MS,
+      () => fetchMerchRailsBatch([...railKeys], MERCH_HOME_FETCH_LIMIT),
+      {} as Record<string, Product[]>
+    ),
   ]);
 
-  const newInProducts = postProcessHomepageMaterialRail(newInRaw);
-  const vacationProducts = postProcessHomepageMaterialRail(vacationRaw);
-  const eveningProducts = postProcessHomepageMaterialRail(eveningRaw);
-  const tailoringProducts = postProcessHomepageMaterialRail(tailoringRaw);
-  const summerInCityProducts = postProcessHomepageMaterialRail(summerInCityRaw);
-  const whiteEditProducts = postProcessHomepageMaterialRail(whiteEditRaw);
-  const saleProducts = saleRaw.slice(0, MERCH_HOME_FETCH_LIMIT);
+  const newInProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.newIn] || []);
+  const vacationProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.vacation] || []);
+  const eveningProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.evening] || []);
+  const tailoringProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.tailoring] || []);
+  const summerInCityProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.summerInCity] || []);
+  const whiteEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.whiteEdit] || []);
+  const saleProducts = (railsByKey[MERCH_RAIL_KEYS.sale] || []).slice(0, MERCH_HOME_FETCH_LIMIT);
 
   console.log(
     "[merch-feed] homepage payload:",
@@ -230,7 +220,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   );
 
   return {
-    designers,
+    designers: [],
     productCount: platformStats.productCount,
     brandCount: platformStats.brandCount,
     productCountByBrand: {},

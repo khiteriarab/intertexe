@@ -437,27 +437,6 @@ function editorialHeroForSlug(slug: string): string {
   return EDITORIAL_HERO[key] ?? EDITORIAL_HERO.newIn;
 }
 
-function BrandsPairRow({
-  designers,
-  productCounts,
-}: {
-  designers: any[];
-  productCounts: Record<string, number>;
-}) {
-  if (!designers.length) return null;
-  return (
-    <div className="grid grid-cols-2 gap-4 md:gap-6">
-      {designers.map((designer: any) => (
-        <BrandCard
-          key={designer.id}
-          designer={designer}
-          count={productCounts[designer.slug] || 0}
-        />
-      ))}
-    </div>
-  );
-}
-
 export function HomePageContent({ initialData }: { initialData?: HomePageData }) {
   const [data, setData] = useState<HomePageData>(initialData || {
     designers: [],
@@ -502,11 +481,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
   const curatedOrdered = CURATED_BRAND_SLUGS.map((slug) =>
     data.curatedDesigners.find((d: { slug?: string }) => d.slug === slug)
   ).filter(Boolean) as any[];
-
-  const brandPairs: any[][] = [];
-  for (let i = 0; i < curatedOrdered.length; i += 2) {
-    brandPairs.push(curatedOrdered.slice(i, i + 2));
-  }
 
   return (
     <div className="flex flex-col">
@@ -559,13 +533,29 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         />
       </section>
 
-      {COLLECTION_SECTIONS.map((collection, index) => {
+      {curatedOrdered.length > 0 && (
+        <section className="py-10 md:py-20 border-t border-neutral-200/60">
+          <div className="flex justify-between items-end mb-6 md:mb-8">
+            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
+              Brands we love
+            </p>
+            <Link
+              href="/designers"
+              className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+            >
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <BrandGrid designers={curatedOrdered} productCounts={data.productCountByBrand} />
+        </section>
+      )}
+
+      {COLLECTION_SECTIONS.map((collection) => {
         const productsKey = COLLECTION_PRODUCTS_KEY[collection.slug];
         const products = (data[productsKey] as any[]) || [];
         const labels =
           HOMEPAGE_RAIL_LABELS[`${productsKey}` as keyof typeof HOMEPAGE_RAIL_LABELS] ??
           { title: collection.label, subtitle: collection.subtitle };
-        const pair = brandPairs[index % brandPairs.length];
 
         return (
           <div key={collection.slug}>
@@ -587,25 +577,10 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                 subtitle={labels.subtitle}
                 linkHref={collection.href}
                 linkText={`Shop ${collection.label}`}
+                catalogHref={collection.href}
+                catalogLinkText="View full collection"
               />
             </section>
-
-            {pair && pair.length > 0 && (
-              <section className="py-10 md:py-16 border-t border-neutral-200/60">
-                <div className="flex justify-between items-end mb-6 md:mb-8">
-                  <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
-                    Brands we love
-                  </p>
-                  <Link
-                    href="/designers"
-                    className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
-                  >
-                    View all <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-                <BrandsPairRow designers={pair} productCounts={data.productCountByBrand} />
-              </section>
-            )}
           </div>
         );
       })}

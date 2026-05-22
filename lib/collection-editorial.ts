@@ -12,6 +12,15 @@ export type CollectionEditorial = {
   exclude?: RegExp[];
 };
 
+/** Product.collection_slugs that auto-qualify for a collection page */
+export const COLLECTION_CANONICAL_SLUGS: Record<CollectionSlug, string[]> = {
+  vacation: ["vacation-shop", "vacation-edit"],
+  evening: ["evening-edit", "evening"],
+  tailoring: ["tailoring-edit", "tailoring"],
+  "summer-in-the-city": ["city-wardrobe", "summer-in-the-city"],
+  "white-edit": ["white-edit", "the-white-edit"],
+};
+
 export const COLLECTION_EDITORIAL: Record<CollectionSlug, CollectionEditorial> = {
   vacation: {
     slug: "vacation",
@@ -32,9 +41,9 @@ export const COLLECTION_EDITORIAL: Record<CollectionSlug, CollectionEditorial> =
       "St. Barths",
     ],
     patterns: [
-      /linen|flax|raffia|resort|vacation|beach|midi dress|maxi dress|skirt|woven|sand|ecru|ivory|cream/i,
+      /linen|flax|raffia|resort|vacation|beach|summer|swim|bikini|kaftan|caftan|sundress|cover[- ]?up|coverup|midi dress|maxi dress|mini dress|dress|skirt|short|top|blouse|tank|woven|sand|ecru|ivory|cream|stone|oatmeal|silk|cotton|tote|espadrille|sandal|raffia/i,
     ],
-    exclude: [/blazer|suit|coat|wool trouser|evening gown|cocktail/i],
+    exclude: [/blazer|suit jacket|sport coat|wool trouser|evening gown|cocktail dress|ski|down coat|puffer/i],
   },
   evening: {
     slug: "evening",
@@ -135,6 +144,13 @@ export function collectionEditorialScore(
   const ed = COLLECTION_EDITORIAL[slug];
   const text = `${product.name || ""} ${product.category || ""} ${product.composition || ""}`.toLowerCase();
   if (ed.exclude?.some((re) => re.test(text))) return -100;
+
+  const canonical = COLLECTION_CANONICAL_SLUGS[slug];
+  const slugs = ((product as { collectionSlugs?: string[] }).collectionSlugs || []).map((s) =>
+    s.toLowerCase()
+  );
+  if (canonical.some((c) => slugs.includes(c))) return 200;
+
   let score = 0;
   for (const re of ed.patterns) {
     if (re.test(text)) score += 12;
