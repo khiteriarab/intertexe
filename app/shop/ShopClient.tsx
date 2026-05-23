@@ -156,9 +156,17 @@ export default function ShopClient({
 }) {
   const searchParams = useSearchParams();
 
-  const initialFiber = (searchParams.get("fiber") as FiberTab) || "all";
-  const initialCategory = (searchParams.get("category") as CategoryFilter) || "all";
-  const initialSort = (searchParams.get("sort") as SortOption) || "recommended";
+  const fiberParam = searchParams.get("fiber");
+  const initialFiber: FiberTab =
+    fiberParam && FIBER_TABS.some((t) => t.key === fiberParam) ? (fiberParam as FiberTab) : "all";
+  const categoryParam = searchParams.get("category");
+  const initialCategory: CategoryFilter =
+    categoryParam && CATEGORY_FILTERS.some((c) => c.key === categoryParam)
+      ? (categoryParam as CategoryFilter)
+      : "all";
+  const sortParam = searchParams.get("sort");
+  const initialSort: SortOption =
+    sortParam && SORT_OPTIONS.some((s) => s.key === sortParam) ? (sortParam as SortOption) : "recommended";
   const initialMarketFilter = (searchParams.get("market") as MarketFilter) || "all";
   const initialSearch = searchParams.get("q") || "";
   const { market: marketFilter, setMarket: setMarketFilter } = useShoppingMarket(
@@ -360,7 +368,7 @@ export default function ShopClient({
         ? fiberCountsState[fiberTab]
         : null);
 
-  const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy)!;
+  const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy) ?? SORT_OPTIONS[0];
 
   const activeFilterChips = [
     ...(fiberTab !== "all"

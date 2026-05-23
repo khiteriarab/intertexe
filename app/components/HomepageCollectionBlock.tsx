@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
+import { canonicalProductId } from "../../lib/canonical-product-id";
 import type { CollectionSectionConfig } from "../../lib/site-architecture";
 
 function optimizeImageUrl(url: string, width: number): string {
@@ -20,8 +21,9 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
   const name = product.name || "";
   const brandName = product.brandName || product.brand_name || "";
   const imageUrl = product.imageUrl || product.image_url || "";
+  const productHref = `/product/${canonicalProductId(product)}`;
   return (
-    <Link href={`/product/${product.id}`} className="group flex flex-col flex-shrink-0 w-[140px] xl:w-[155px]">
+    <Link href={productHref} className="group flex flex-col flex-shrink-0 w-[140px] xl:w-[155px]">
       <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
         {imageUrl ? (
           <img
@@ -43,6 +45,9 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
  * Homepage collection edit — mobile: image then rail below.
  * Desktop: image left, product rail right (avoids ultra-wide crop on landscape heroes).
  */
+/** When true, desktop layout is products left / editorial image right (Evening, Summer in the City). */
+const SHOP_ON_LEFT_SLUGS = new Set(["evening", "summer-in-the-city"]);
+
 export function HomepageCollectionBlock({
   collection,
   products,
@@ -54,6 +59,7 @@ export function HomepageCollectionBlock({
   title: string;
   subtitle: string;
 }) {
+  const shopOnLeft = SHOP_ON_LEFT_SLUGS.has(collection.slug);
   const scrollRef = useRef<HTMLDivElement>(null);
   const imageUrl = editorialHeroForSlug(collection.slug);
   const hasItems = products.length > 0;
@@ -139,12 +145,20 @@ export function HomepageCollectionBlock({
         )}
       </div>
 
-      <Link
-        href={collection.href}
-        className="mt-6 text-[10px] uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2 w-fit"
-      >
-        View full collection <ArrowRight className="w-3 h-3" />
-      </Link>
+      <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+        <Link
+          href={collection.href}
+          className="text-[10px] uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2 w-fit"
+        >
+          View full collection <ArrowRight className="w-3 h-3" />
+        </Link>
+        <Link
+          href="/shop"
+          className="text-[10px] uppercase tracking-[0.15em] text-neutral-800 hover:text-neutral-500 transition-colors flex items-center gap-2 w-fit font-medium"
+        >
+          Shop all <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
     </div>
   );
 
@@ -154,8 +168,17 @@ export function HomepageCollectionBlock({
       <section className="lg:hidden py-10 md:py-14 px-4 md:px-0">{shopRail}</section>
 
       <section className="hidden lg:grid lg:grid-cols-2 -mx-8 min-h-[min(68vh,620px)] max-h-[720px]">
-        <div className="relative overflow-hidden min-h-[520px]">{editorial}</div>
-        {shopRail}
+        {shopOnLeft ? (
+          <>
+            {shopRail}
+            <div className="relative overflow-hidden min-h-[520px]">{editorial}</div>
+          </>
+        ) : (
+          <>
+            <div className="relative overflow-hidden min-h-[520px]">{editorial}</div>
+            {shopRail}
+          </>
+        )}
       </section>
     </div>
   );
