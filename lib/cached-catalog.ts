@@ -18,13 +18,13 @@ export type BrandStat = {
 
 export const getCachedPlatformStats = unstable_cache(
   async (): Promise<PlatformStats> => fetchPlatformStats(),
-  ["platform-stats-v2"],
+  ["platform-stats-v3"],
   { revalidate: STATS_REVALIDATE, tags: ["platform-stats"] }
 );
 
 export const getCachedBrandStats = unstable_cache(
   async (): Promise<BrandStat[]> => fetchBrandStats(),
-  ["brand-directory-v2"],
+  ["brand-directory-v3"],
   { revalidate: BRAND_DIR_REVALIDATE, tags: ["brand-directory"] }
 );
 

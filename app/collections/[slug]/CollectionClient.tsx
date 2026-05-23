@@ -10,6 +10,8 @@ import {
   COLLECTION_SLUGS,
   type CollectionPageConfig,
 } from "../../../lib/collection-pages";
+import { EditorialHeroImage } from "../../components/EditorialHeroImage";
+import { MOOD_CATALOG, moodSlugFromLabel } from "../../../lib/mood-commerce";
 
 type Product = {
   id: string;
@@ -86,10 +88,10 @@ export default function CollectionClient({
 
   return (
     <div className="flex flex-col" data-testid={`page-collection-${config.slug}`}>
-      <section className="relative -mx-4 md:-mx-8 h-[52vh] md:h-[58vh] min-h-[320px] overflow-hidden">
-        <img src={heroImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10" />
-        <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-14 pb-12 md:pb-16 max-w-3xl">
+      <section className="relative -mx-4 md:-mx-8 overflow-hidden">
+        <EditorialHeroImage src={heroImageUrl} alt={config.title} variant="collection" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10 pointer-events-none" />
+        <div className="absolute inset-0 z-10 flex flex-col justify-end px-6 md:px-14 pb-12 md:pb-16 max-w-3xl">
           <p className="text-[10px] uppercase tracking-[0.32em] text-white/55 mb-2">{config.kicker}</p>
           <h1 className="text-3xl md:text-[52px] font-serif text-white leading-[1.05] mb-3">{config.title}</h1>
           <p className="text-sm md:text-base text-white/80 leading-relaxed max-w-xl mb-2">{config.description}</p>
@@ -102,14 +104,21 @@ export default function CollectionClient({
           <div className="max-w-6xl mx-auto">
             <p className="text-[10px] uppercase tracking-[0.28em] text-neutral-400 mb-4">The edit</p>
             <ul className="flex flex-wrap gap-2">
-              {config.themes.map((theme) => (
-                <li
-                  key={theme}
-                  className="px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] text-neutral-600 border border-neutral-200 bg-[#FAFAF8]"
-                >
-                  {theme}
-                </li>
-              ))}
+              {config.themes.map((theme) => {
+                const moodSlug = moodSlugFromLabel(theme);
+                const mood = moodSlug ? MOOD_CATALOG.find((m) => m.slug === moodSlug) : undefined;
+                const href = mood ? `/moods/${mood.slug}` : `/collections/${config.slug}`;
+                return (
+                  <li key={theme}>
+                    <Link
+                      href={href}
+                      className="block px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] text-neutral-600 border border-neutral-200 bg-[#FAFAF8] hover:border-neutral-400 hover:text-neutral-900 transition-colors"
+                    >
+                      {theme}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </section>
@@ -138,10 +147,11 @@ export default function CollectionClient({
       </section>
 
       <section className="py-8 md:py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
-        <p className="text-[11px] text-neutral-500 mb-6">
-          <span className="font-medium text-neutral-800">{totalCount} pieces</span> in this collection
+        <p className="text-[11px] text-neutral-500 mb-6" data-testid="text-collection-count">
+          <span className="font-medium text-neutral-800">{totalCount.toLocaleString()} pieces</span> in
+          this collection
           {products.length < totalCount ? (
-            <> · scroll or load more to explore the full edit</>
+            <> · scroll or load more to explore the full catalog</>
           ) : null}
         </p>
 

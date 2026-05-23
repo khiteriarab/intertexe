@@ -7,6 +7,7 @@ import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice } from "../../../lib/format-display-price";
 import type { EditPageConfig } from "../../../lib/edit-pages";
 import { EDIT_SLUGS, EDIT_PAGES, FABRIC_EDIT_SLUGS } from "../../../lib/edit-pages";
+import { EditorialHeroImage } from "../../components/EditorialHeroImage";
 
 type Product = {
   id: string;
@@ -82,10 +83,10 @@ export default function EditClient({
 
   return (
     <div className="flex flex-col" data-testid={`page-edit-${config.slug}`}>
-      <section className="relative -mx-4 md:-mx-8 h-[42vh] md:h-[48vh] min-h-[280px] overflow-hidden">
-        <img src={heroImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
-        <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-14 pb-10 md:pb-14 max-w-3xl">
+      <section className="relative -mx-4 md:-mx-8 overflow-hidden">
+        <EditorialHeroImage src={heroImageUrl} alt={config.title} variant="collection" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 z-10 flex flex-col justify-end px-6 md:px-14 pb-10 md:pb-14 max-w-3xl">
           <p className="text-[10px] uppercase tracking-[0.32em] text-white/60 mb-2">{config.kicker}</p>
           <h1 className="text-3xl md:text-5xl font-serif text-white leading-tight mb-3">{config.title}</h1>
           <p className="text-sm md:text-base text-white/75 leading-relaxed max-w-xl">{config.description}</p>

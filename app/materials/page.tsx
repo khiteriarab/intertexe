@@ -3,7 +3,12 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { fetchProductCount, fetchProductsByFiber } from "../../lib/supabase-server";
 import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
-import { formatBrandCountLabel, formatProductCountLabel, GENERIC_SITE_DESCRIPTION } from "../../lib/catalog-stats-labels";
+import {
+  formatBrandCountLabel,
+  formatProductCountLabel,
+  GENERIC_SITE_DESCRIPTION,
+  resolveShoppableBrandCount,
+} from "../../lib/catalog-stats-labels";
 
 export const revalidate = 600;
 
@@ -83,7 +88,10 @@ export default async function MaterialsPage() {
   const totalProducts = platformStats.productCount > 0 ? platformStats.productCount : productCount;
   const displayCount =
     totalProducts > 0 ? new Intl.NumberFormat("en-US").format(totalProducts) : "—";
-  const shoppableBrandCount = brandStats.filter((b) => b.count >= 2).length;
+  const shoppableBrandCount = resolveShoppableBrandCount(
+    platformStats.brandCount,
+    brandStats.filter((b) => b.count >= 2).length
+  );
   const directoryBlurb =
     shoppableBrandCount > 0
       ? `Browse ${formatBrandCountLabel(shoppableBrandCount)} brands ranked by natural fiber quality. Find your next favourite.`

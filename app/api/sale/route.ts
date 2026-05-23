@@ -10,11 +10,13 @@ export async function GET(request: NextRequest) {
   const offset = Math.max(Number(sp.get("offset") || 0), 0);
   const fiber = sp.get("fiber") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
+  const market = sp.get("market") || undefined;
 
   try {
     const result = await fetchSaleProducts({
       fiber: fiber && fiber !== "all" ? fiber : undefined,
       maxPrice,
+      market: market && market !== "all" ? market : undefined,
       limit,
       offset,
       useMerchFeedPreview: false,

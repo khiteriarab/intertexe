@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { type SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeBrandName } from "./brand-display";
 import { displayNaturalFiberPercent } from "./display-natural-fiber";
 import { consumerExclusionForRow, filterConsumerCatalogProducts } from "./catalog-consumer-guard";
@@ -27,6 +27,8 @@ import {
   isZegnaWomensPiece,
   productBodyMatchesFiber,
 } from "./catalog-product-filters";
+import { fetchShoppableBrands } from "./shoppable-brands";
+import { isMensCatalogRow, isMensOnlyBrand } from "./womens-catalog-guard";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
@@ -40,33 +42,8 @@ export type CatalogFetchOpts = {
   liveRowCap?: number;
 };
 
-function getSupabaseUrl(): string {
-  return process.env.SUPABASE_URL
-    || process.env.NEXT_PUBLIC_SUPABASE_URL
-    || process.env.VITE_SUPABASE_URL
-    || "";
-}
-
-function getServiceRoleKey(): string {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-}
-
-function getAnonKey(): string {
-  return process.env.SUPABASE_ANON_KEY
-    || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    || process.env.VITE_SUPABASE_ANON_KEY
-    || "";
-}
-
-export function getServerSupabase() {
-  const url = getSupabaseUrl();
-  const key = getServiceRoleKey() || getAnonKey();
-  if (!url || !key) {
-    console.warn("Missing Supabase environment variables — returning null client. Checked: SUPABASE_URL, NEXT_PUBLIC_SUPABASE_URL, VITE_SUPABASE_URL");
-    return null;
-  }
-  return createClient(url, key);
-}
+import { getServerSupabase } from "./supabase-service-client";
+export { getServerSupabase };
 
 export interface Designer {
   id: string;
@@ -890,6 +867,9 @@ function isClothingProduct(p: any): boolean {
 }
 
 function isNotMensProduct(p: any): boolean {
+  if (isMensCatalogRow(p)) return false;
+  const slug = String(p.brand_slug || p.brandSlug || "").toLowerCase();
+  if (isMensOnlyBrand(slug)) return false;
   const name = (p.title || p.name || "").toLowerCase();
   const cat = (p.category || "").toLowerCase();
   const mensTerms = ["men's", "mens ", " men ", "for men", "man's", "male ", " male", "boy's", "boys "];
@@ -1534,6 +1514,14 @@ export async function fetchShopProducts(options: {
       mapped = mapped.filter((p) => productBodyMatchesFiber(p.composition || "", rpcFiber));
     }
 
+    if (sort === "new") {
+      mapped.sort((a, b) => {
+        const ta = Date.parse(String(a.createdAt || "")) || 0;
+        const tb = Date.parse(String(b.createdAt || "")) || 0;
+        return tb - ta;
+      });
+    }
+
     const resolvedTotal = await resolveShopCatalogTotal(supabase, {
       preferred,
       fallback,
@@ -1690,6 +1678,7 @@ const SALE_FULL_SCAN_MAX_ROWS = 8000;
 export async function fetchSaleProducts(options: {
   fiber?: string;
   maxPrice?: number;
+  market?: string;
   limit?: number;
   offset?: number;
   /** Stop scanning after this many raw rows (homepage perf; sale page omits for full grid). */
@@ -1702,13 +1691,13 @@ export async function fetchSaleProducts(options: {
   const {
     fiber,
     maxPrice,
+    market,
     limit = 60,
     offset = 0,
     maxSourceRows,
     useMerchFeedPreview = maxSourceRows != null,
   } = options;
-  const dedupePreferred = "us";
-  const dedupeFallback = "us";
+  const { preferred: dedupePreferred, fallback: dedupeFallback } = catalogRegionsFromMarket(market);
 
   if (!useMerchFeedPreview) {
     try {
@@ -1847,111 +1836,14 @@ export async function fetchSaleProducts(options: {
   };
 }
 
-function mapBrandDirectoryRows(
-  rows: { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[]
-): { slug: string; name: string; count: number; avgNaturalFiber: number }[] {
-  const bySlug = new Map<string, { slug: string; name: string; count: number; avgNaturalFiber: number }>();
-  for (const r of rows) {
-    const slug = String(r.brand_slug || "")
-      .trim()
-      .toLowerCase();
-    if (!slug) continue;
-    const count = Number(r.product_count) || 0;
-    const avgNaturalFiber = Number(r.avg_natural_fiber) || 0;
-    const name = sanitizeBrandName(r.brand_name || slug);
-    const prev = bySlug.get(slug);
-    if (!prev || count > prev.count) {
-      bySlug.set(slug, { slug, name, count, avgNaturalFiber });
-    }
-  }
-  return [...bySlug.values()].filter((b) => b.count >= 2);
-}
-
-/** Fallback when catalog_brand_directory RPC is not deployed yet. */
-async function fetchBrandStatsFromCatalogScan(
-  supabase: ReturnType<typeof getServerSupabase>,
-  limit = 800,
-  maxPages = 3
-): Promise<{ slug: string; name: string; count: number; avgNaturalFiber: number }[]> {
-  if (!supabase) return [];
-
-  const agg = new Map<string, { name: string; count: number; nfpSum: number }>();
-  const pageSize = 1000;
-  let offset = 0;
-
-  for (let page = 0; page < maxPages; page++) {
-    const { data, error } = await supabase
-      .from("live_products_apparel")
-      .select("brand_slug, brand_name, natural_fiber_percent, image_url, price")
-      .gte("natural_fiber_percent", 80)
-      .not("brand_slug", "is", null)
-      .not("image_url", "is", null)
-      .range(offset, offset + pageSize - 1);
-
-    if (error || !data?.length) break;
-
-    for (const row of data) {
-      const slug = String(row.brand_slug || "").trim();
-      if (!slug) continue;
-      const price = parseMoneyValue(row.price);
-      const image = String(row.image_url || "").trim();
-      if (!image || price <= 0) continue;
-
-      const nfp = Number(row.natural_fiber_percent) || 0;
-      const name = sanitizeBrandName(String(row.brand_name || slug));
-      const cur = agg.get(slug) || { name, count: 0, nfpSum: 0 };
-      cur.count += 1;
-      cur.nfpSum += nfp;
-      if (!cur.name && name) cur.name = name;
-      agg.set(slug, cur);
-    }
-
-    offset += data.length;
-    if (data.length < pageSize) break;
-  }
-
-  return [...agg.entries()]
-    .map(([slug, v]) => ({
-      slug,
-      name: v.name || slug,
-      count: v.count,
-      avgNaturalFiber: v.count > 0 ? Math.round(v.nfpSum / v.count) : 0,
-    }))
-    .filter((b) => b.count >= 2)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, limit);
-}
-
-export async function fetchBrandStats(): Promise<{ slug: string; name: string; count: number; avgNaturalFiber: number }[]> {
-  const supabase = getServerSupabase();
-  if (!supabase) return [];
-
-  const t0 = Date.now();
-  try {
-    const rpcResult = await Promise.race([
-      supabase.rpc("catalog_brand_directory", { p_limit: 400 }),
-      new Promise<{ data: null; error: { message: string } }>((resolve) =>
-        setTimeout(() => resolve({ data: null, error: { message: "timeout" } }), 10_000)
-      ),
-    ]);
-    const { data: rpcRows, error } = rpcResult;
-    logSupabaseTiming(
-      "rpc catalog_brand_directory",
-      t0,
-      error ? `error:${error.message}` : `rows:${(rpcRows || []).length}`
-    );
-
-    if (!error && rpcRows?.length) {
-      return mapBrandDirectoryRows(
-        rpcRows as { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[]
-      );
-    }
-  } catch (e: any) {
-    logSupabaseTiming("rpc catalog_brand_directory", t0, `error:${e?.message || "failed"}`);
-  }
-
-  const t1 = Date.now();
-  const scanned = await fetchBrandStatsFromCatalogScan(supabase, 400, 6);
-  logSupabaseTiming("fetchBrandStats catalog scan fallback", t1, `rows:${scanned.length}`);
-  return scanned;
+export async function fetchBrandStats(): Promise<
+  { slug: string; name: string; count: number; avgNaturalFiber: number }[]
+> {
+  const brands = await fetchShoppableBrands({ maxBrands: 1200 });
+  return brands.map((b) => ({
+    slug: b.slug,
+    name: b.name,
+    count: b.count,
+    avgNaturalFiber: b.avgNaturalFiber,
+  }));
 }

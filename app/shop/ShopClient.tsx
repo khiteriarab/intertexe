@@ -9,7 +9,8 @@ import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopMeta } from "./actions";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
-import { useShoppingMarket } from "../hooks/use-shopping-market";
+import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
+import { CatalogProductImage } from "../components/CatalogProductImage";
 import { CountrySelector } from "../components/CountrySelector";
 import {
   getRegionForCountryCode,
@@ -95,9 +96,13 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
       )}
       <ProductLink href={`/product/${product.id}`} onClick={saveShopState} className="flex flex-col cursor-pointer">
         {imageUrl ? (
-          <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
-            <img src={optimizeImageUrl(imageUrl, 400)} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading={eager ? "eager" : "lazy"} decoding={eager ? "sync" : "async"} fetchPriority={eager ? "high" : "low"} />
-          </div>
+          <CatalogProductImage
+            src={optimizeImageUrl(imageUrl, 400)}
+            alt={name}
+            category={product.category}
+            name={name}
+            eager={eager}
+          />
         ) : (
           <div className="aspect-[3/4] bg-[#f5f5f3] flex items-center justify-center">
             <ShoppingBag className="w-8 h-8 text-neutral-300" />
@@ -163,6 +168,7 @@ export default function ShopClient({
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(initialCategory);
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [listOffset, setListOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
@@ -313,17 +319,32 @@ export default function ShopClient({
     fetchProducts();
   }, [fiberTab, categoryFilter, sortBy, marketFilter, listOffset, debouncedSearch]);
 
+  useEffect(() => {
+    const onMarket = () => {
+      setListOffset(0);
+      setProducts([]);
+      setIsLoading(true);
+    };
+    window.addEventListener(SHOP_MARKET_INVALIDATE, onMarket);
+    return () => window.removeEventListener(SHOP_MARKET_INVALIDATE, onMarket);
+  }, []);
+
   const isSearchActive = debouncedSearch.length >= 2;
 
-  const displayResultTotal = (() => {
-    if (fiberTab !== "all" && fiberCountsState[fiberTab]) {
-      return Math.max(resultTotal, fiberCountsState[fiberTab]);
-    }
-    if (fiberTab === "all" && globalCount > 0) {
-      return Math.max(resultTotal, globalCount);
-    }
-    return resultTotal;
-  })();
+  const useGlobalCountHint =
+    fiberTab === "all" &&
+    categoryFilter === "all" &&
+    sortBy === "recommended" &&
+    marketFilter === "all" &&
+    !debouncedSearch;
+
+  const displayResultTotal = useGlobalCountHint
+    ? fiberTab !== "all" && fiberCountsState[fiberTab]
+      ? Math.max(resultTotal, fiberCountsState[fiberTab])
+      : globalCount > 0
+        ? Math.max(resultTotal, globalCount)
+        : resultTotal
+    : resultTotal;
 
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
 
@@ -408,8 +429,8 @@ export default function ShopClient({
           </p>
         </div>
 
-        <div className="flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8">
-          <p className="text-[11px] md:text-xs text-muted-foreground" data-testid="text-result-count">
+        <div className="flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8 gap-4">
+          <p className="text-[11px] md:text-xs text-muted-foreground flex-shrink-0" data-testid="text-result-count">
             {isLoading ? (
               <span className="animate-pulse">Loading...</span>
             ) : (
@@ -417,53 +438,94 @@ export default function ShopClient({
             )}
           </p>
 
-          {isSearchActive && (
+          <div className="flex items-center gap-4 md:gap-6 ml-auto">
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setDebouncedSearch("");
-                setFiberTab("all");
-                setCategoryFilter("all");
-                setSortBy("recommended");
-                selectLocation("all");
-              }}
-              className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
-              data-testid="button-clear-all"
+              type="button"
+              onClick={() => setShowFilterSheet(true)}
+              className="text-[11px] md:text-xs uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="btn-filter"
             >
-              Clear all
+              Filter
             </button>
-          )}
-
-          <div className="relative">
-            <button
-              onClick={() => setShowSortMenu(!showSortMenu)}
-              className="flex items-center gap-1.5 text-[11px] md:text-xs text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="btn-sort"
-            >
-              Sort: {currentSort.label}
-              <ChevronDown className={`w-3 h-3 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
-            </button>
-            {showSortMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/40 shadow-xl min-w-[180px]">
-                  {SORT_OPTIONS.map(option => (
-                    <button
-                      key={option.key}
-                      onClick={() => { setSortBy(option.key); setListOffset(0); setShowSortMenu(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-[11px] md:text-xs transition-colors ${
-                        sortBy === option.key ? "bg-[#f5f5f3] text-foreground" : "text-muted-foreground hover:bg-[#f5f5f3] hover:text-foreground"
-                      }`}
-                      data-testid={`sort-${option.key}`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowSortMenu(!showSortMenu)}
+                className="flex items-center gap-1.5 text-[11px] md:text-xs uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="btn-sort"
+              >
+                Sort: {currentSort.label}
+                <ChevronDown className={`w-3 h-3 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
+              </button>
+              {showSortMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/40 shadow-xl min-w-[180px]">
+                    {SORT_OPTIONS.map(option => (
+                      <button
+                        key={option.key}
+                        type="button"
+                        onClick={() => { setSortBy(option.key); setListOffset(0); setShowSortMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-[11px] md:text-xs transition-colors ${
+                          sortBy === option.key ? "bg-[#f5f5f3] text-foreground" : "text-muted-foreground hover:bg-[#f5f5f3] hover:text-foreground"
+                        }`}
+                        data-testid={`sort-${option.key}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
+
+        {showFilterSheet && (
+          <>
+            <div className="fixed inset-0 z-[90] bg-black/40" onClick={() => setShowFilterSheet(false)} />
+            <div className="fixed inset-x-0 bottom-0 z-[100] bg-background border-t border-border/40 rounded-t-2xl max-h-[85vh] overflow-y-auto p-6 pb-10 md:hidden">
+              <p className="text-lg font-serif mb-1">Filter By</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-6">Material</p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {FIBER_TABS.map(tab => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setListOffset(0); }}
+                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                      fiberTab === tab.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {CATEGORY_FILTERS.map(cat => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => { setCategoryFilter(cat.key); setListOffset(0); }}
+                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                      categoryFilter === cat.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFilterSheet(false)}
+                className="w-full bg-foreground text-background py-3.5 text-[10px] uppercase tracking-[0.2em]"
+              >
+                View {displayResultTotal.toLocaleString()} results
+              </button>
+            </div>
+          </>
+        )}
 
         {fiberTab !== "all" && (
           <div className="flex items-center justify-end mb-4 -mt-2">

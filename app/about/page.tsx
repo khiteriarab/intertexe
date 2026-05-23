@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
-import { formatBrandCountLabel, formatProductCountLabel } from "../../lib/catalog-stats-labels";
+import {
+  formatBrandCountLabel,
+  formatProductCountLabel,
+  resolveShoppableBrandCount,
+} from "../../lib/catalog-stats-labels";
 
 export const metadata: Metadata = {
   title: "About INTERTEXE — The Natural Fabric Fashion Search Engine",
@@ -16,7 +20,10 @@ export default async function AboutPage() {
     getCachedPlatformStats(),
     getCachedBrandStats(),
   ]);
-  const shoppableBrands = brandStats.filter((b) => b.count >= 2).length;
+  const shoppableBrands = resolveShoppableBrandCount(
+    platformStats.brandCount,
+    brandStats.filter((b) => b.count >= 2).length
+  );
   const designerLabel = formatBrandCountLabel(shoppableBrands);
   const productLabel = formatProductCountLabel(platformStats.productCount);
 

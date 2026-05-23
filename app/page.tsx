@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCachedHomePageData } from "../lib/homepage-data";
 import { getCachedBrandStats, getCachedPlatformStats } from "../lib/cached-catalog";
-import { formatBrandCountLabel, formatProductCountLabel, GENERIC_SITE_DESCRIPTION } from "../lib/catalog-stats-labels";
+import {
+  formatBrandCountLabel,
+  formatProductCountLabel,
+  GENERIC_SITE_DESCRIPTION,
+  resolveShoppableBrandCount,
+} from "../lib/catalog-stats-labels";
 import { HomePageContent } from "./components/HomeClient";
 
 /** Cached editorial homepage — rails precomputed in Supabase, stats cached server-side. */
@@ -13,7 +18,10 @@ export async function generateMetadata(): Promise<Metadata> {
     getCachedPlatformStats(),
     getCachedBrandStats(),
   ]);
-  const shoppableBrands = brandStats.filter((b) => b.count >= 2).length;
+  const shoppableBrands = resolveShoppableBrandCount(
+    platformStats.brandCount,
+    brandStats.filter((b) => b.count >= 2).length
+  );
   const description =
     platformStats.productCount > 0 && shoppableBrands > 0
       ? `INTERTEXE is the luxury fashion search engine for natural fabrics. Shop ${formatProductCountLabel(platformStats.productCount)} verified silk, cashmere, linen, wool, and cotton clothing across ${formatBrandCountLabel(shoppableBrands)} brands.`

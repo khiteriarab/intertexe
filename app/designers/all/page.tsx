@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
 import { fetchDesigners } from "../../../lib/supabase-server";
 import { getCuratedScore } from "../../../lib/curated-quality-scores";
-import { getCachedBrandStats } from "../../../lib/cached-catalog";
-import { formatBrandCountLabel } from "../../../lib/catalog-stats-labels";
+import { getCachedBrandStats, getCachedPlatformStats } from "../../../lib/cached-catalog";
+import { formatBrandCountLabel, resolveShoppableBrandCount } from "../../../lib/catalog-stats-labels";
 import { DesignersAllClient } from "./DesignersAllClient";
 
 export const revalidate = 600;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const brandStats = await getCachedBrandStats();
-  const shoppable = brandStats.filter((b) => b.count >= 2).length;
+  const [platformStats, brandStats] = await Promise.all([
+    getCachedPlatformStats(),
+    getCachedBrandStats(),
+  ]);
+  const shoppable = resolveShoppableBrandCount(
+    platformStats.brandCount,
+    brandStats.filter((b) => b.count >= 2).length
+  );
   const label = formatBrandCountLabel(shoppable);
   return {
     title: "All Brands A-Z — Complete Fashion Brand Directory",

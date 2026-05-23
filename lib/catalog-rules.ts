@@ -76,6 +76,10 @@ export function consumerExclusionReason(row: {
   if (/(belt|scarf|hat|cap|glove|sunglass|eyewear|accessory|accessories)/.test(cat)) return "accessories";
   if ((cat.includes("mens") || cat.startsWith("men") || nam.includes(" for men") || nam.includes(" mens "))
     && !cat.includes("women") && !nam.includes("women")) return "mens";
+  const brandSlug = String((row as { brand_slug?: string; brandSlug?: string }).brand_slug
+    || (row as { brandSlug?: string }).brandSlug || "").toLowerCase();
+  if (brandSlug && /^(orlebar-brown|orlebarbrown|canali|hackett)/.test(brandSlug)) return "mens";
+  if (/\b(polo\s+shirt|dress\s+shirt|men'?s\s+polo)\b/.test(nam) && !/\bwomen'?s\b/.test(nam + cat)) return "mens";
   if (/(kid|kids|child|children|girl|boy|baby|infant)/.test(cat)) return "kids";
   if (/(beauty|fragrance|perfume|makeup|skincare|cosmetic|home|decor|furniture|candle)/.test(cat)) return "beauty_home";
   return null;

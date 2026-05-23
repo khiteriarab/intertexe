@@ -2,6 +2,7 @@
  * Consumer catalog guards — aligned with catalog-rules consumerExclusionReason.
  */
 import { consumerExclusionReason } from "./catalog-rules";
+import { isMensCatalogRow } from "./womens-catalog-guard";
 import type { Product } from "./supabase-server";
 
 export function consumerExclusionForProduct(p: {
@@ -11,7 +12,17 @@ export function consumerExclusionForProduct(p: {
   imageUrl?: string | null;
   price?: string | null;
   url?: string | null;
+  brandSlug?: string | null;
 }): string | null {
+  if (
+    isMensCatalogRow({
+      name: p.name ?? undefined,
+      category: p.category ?? undefined,
+      brand_slug: p.brandSlug ?? undefined,
+    })
+  ) {
+    return "mens";
+  }
   return consumerExclusionReason({
     name: p.name ?? "",
     category: p.category ?? "",

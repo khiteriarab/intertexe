@@ -101,9 +101,29 @@ export default function QuizClient() {
   }, []);
 
   useEffect(() => {
+    const instant = POPULAR_BRAND_NAMES.map((name) => {
+      const profile = getAllProfiles().find(
+        (p) => p.name.toLowerCase() === name.toLowerCase()
+      );
+      if (!profile) return null;
+      return {
+        id: profile.slug,
+        name: profile.name,
+        slug: profile.slug,
+        naturalFiberPercent: getCuratedScore(profile.name),
+      };
+    }).filter(Boolean);
+    if (instant.length > 0) {
+      setDesigners(instant);
+      setDesignersLoading(false);
+    }
+
     fetch(`/api/designers?names=${encodeURIComponent(POPULAR_BRAND_NAMES.join(","))}`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => { setDesigners(data); setDesignersLoading(false); })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setDesigners(data);
+        setDesignersLoading(false);
+      })
       .catch(() => setDesignersLoading(false));
   }, []);
 

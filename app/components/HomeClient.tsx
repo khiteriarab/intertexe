@@ -11,6 +11,7 @@ import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
 import { BRAND_WE_LOVE_IMAGES, EDITORIAL_HERO } from "../../lib/editorial-assets";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
+import { EditorialHeroImage } from "./EditorialHeroImage";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -94,7 +95,7 @@ function ProductCard({
             src={optimizeImageUrl(imageUrl, 480)}
             alt={name}
             draggable={false}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out pointer-events-none select-none"
+            className="absolute inset-0 w-full h-full object-cover object-[center_22%] md:object-[center_30%] group-hover:scale-[1.03] transition-transform duration-700 ease-out pointer-events-none select-none"
             loading={eager ? "eager" : "lazy"}
           />
         ) : (
@@ -302,7 +303,7 @@ function BrandCard({ designer, count }: { designer: any; count: number }) {
           <img
             src={imageUrl}
             alt={`${designer.name} editorial`}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            className="absolute inset-0 w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-700 ease-out"
             loading="eager"
             onError={() => setFailed(true)}
           />
@@ -383,21 +384,14 @@ function EditorialPanel({
   return (
     <Link
       href={href}
-      className="group relative w-full overflow-hidden flex items-end bg-[#f2f1ef] aspect-[3/4] md:aspect-[16/9] touch-manipulation"
+      className="group relative block w-full overflow-hidden touch-manipulation"
       data-testid={testId}
     >
-      <div className="absolute inset-0">
-        {imageUrl && (
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-[1200ms] ease-out"
-            loading="lazy"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-      </div>
-      <div className="relative z-10 p-7 pb-10 md:p-14 md:pb-16 flex flex-col gap-2">
+      {imageUrl && (
+        <EditorialHeroImage src={imageUrl} alt={title} variant="panel" hoverZoom />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 pb-10 md:p-14 md:pb-16 gap-2">
         <span className="text-white/45 text-[9px] md:text-[10px] uppercase tracking-[0.35em] font-light">{label}</span>
         <h3 className="text-white text-[28px] md:text-[44px] font-serif leading-[1.08] max-w-md">{title}</h3>
         <p className="text-white/55 text-[12px] md:text-[15px] font-light max-w-sm leading-relaxed mt-1">{subtitle}</p>
@@ -487,17 +481,15 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <AppDownloadBanner />
 
-      <section className="relative h-[88vh] md:h-[92vh] min-h-[600px] flex items-end overflow-hidden -mx-4 md:-mx-8">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/hero-editorial-v8.png"
-            alt="INTERTEXE — Luxury natural-fabric fashion"
-            className="w-full h-full object-cover object-[center_25%]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-        </div>
+      <section className="relative overflow-hidden -mx-4 md:-mx-8">
+        <EditorialHeroImage
+          src="/hero-editorial-v8.png"
+          alt="INTERTEXE — Luxury natural-fabric fashion"
+          variant="banner"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent pointer-events-none" />
         <div
-          className="relative z-10 px-6 md:px-14 pb-16 md:pb-24 max-w-xl flex flex-col"
+          className="absolute inset-0 z-10 flex items-end px-6 md:px-14 pb-16 md:pb-24 max-w-xl flex flex-col justify-end"
           style={{ paddingBottom: "max(4rem, calc(env(safe-area-inset-bottom, 0px) + 3.5rem))" }}
         >
           <h2

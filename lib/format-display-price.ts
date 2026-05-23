@@ -3,6 +3,8 @@
  * Never render raw DB numeric strings (e.g. "1260") — format with market-appropriate currency.
  */
 
+import { SHOP_MARKET_STORAGE_KEY } from "./shipping-regions";
+
 export type DisplayPriceProduct = {
   price?: string | number | null | undefined;
   originalPrice?: string | number | null | undefined;
@@ -13,7 +15,21 @@ export type DisplayPriceProduct = {
 
 type PriceRegion = "us" | "uk" | "eu";
 
+function regionFromShoppingMarket(): PriceRegion | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const market = localStorage.getItem(SHOP_MARKET_STORAGE_KEY);
+    if (market === "eu-uk-me") return "uk";
+    if (market === "us-ca") return "us";
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 function regionFromHints(product?: DisplayPriceProduct | null): PriceRegion {
+  const marketRegion = regionFromShoppingMarket();
+  if (marketRegion) return marketRegion;
   if (!product) return "us";
   const raw = String(product.listingRegion || "").trim().toLowerCase();
   if (!raw) return "us";

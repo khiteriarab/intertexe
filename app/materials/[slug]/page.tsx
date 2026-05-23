@@ -770,12 +770,11 @@ async function MainFiberPage({ slug }: { slug: string }) {
         <p className="text-[13px] md:text-base text-muted-foreground leading-relaxed max-w-2xl">
           {seo?.intro || material?.description || ""}
         </p>
-        <p className="text-[11px] text-muted-foreground mt-4">
-          <span className="text-foreground font-medium">{products.length} pieces</span> in this curated
-          view ·{" "}
-          <Link href={`/shop?fiber=${slug}`} className="underline hover:text-foreground">
-            Shop all {fiberName.toLowerCase()} ({productCount > products.length ? productCount.toLocaleString() : "full catalog"})
-          </Link>
+        <p className="text-[11px] text-muted-foreground mt-4" data-testid="text-material-catalog-count">
+          <span className="text-foreground font-medium">
+            {(productCount || products.length).toLocaleString()} pieces
+          </span>{" "}
+          in the full {fiberName.toLowerCase()} catalog — filter by category below.
         </p>
       </section>
 

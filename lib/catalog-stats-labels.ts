@@ -16,6 +16,15 @@ export function formatBrandCountLabel(n: number): string {
   return formatStatCount(n, 20);
 }
 
+/** Prefer fast count RPC; fall back to listed directory length when RPC unavailable. */
+export function resolveShoppableBrandCount(
+  platformBrandCount: number,
+  listedBrandCount: number
+): number {
+  if (platformBrandCount > 0) return platformBrandCount;
+  return listedBrandCount;
+}
+
 export function directoryHeadline(productCount: number, brandCount: number): string {
   return `${formatProductCountLabel(productCount)} verified products across ${formatBrandCountLabel(brandCount)} brands in natural silk, linen, cotton, wool, and cashmere.`;
 }

@@ -18,6 +18,8 @@ function getToken(): string | null {
   }
 }
 
+export const SHOP_MARKET_INVALIDATE = "intertexe-shop-market-invalidate";
+
 export function useShoppingMarket(initial?: MarketFilter) {
   const [market, setMarketState] = useState<MarketFilter>(initial ?? "all");
 
@@ -60,6 +62,7 @@ export function useShoppingMarket(initial?: MarketFilter) {
       localStorage.setItem(SHOP_MARKET_STORAGE_KEY, next);
     } catch {}
     window.dispatchEvent(new CustomEvent(SHOP_MARKET_EVENT, { detail: next }));
+    window.dispatchEvent(new CustomEvent(SHOP_MARKET_INVALIDATE, { detail: next }));
 
     const token = getToken();
     if (token) {

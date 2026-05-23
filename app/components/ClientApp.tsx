@@ -9,6 +9,7 @@ import { ScrollToTop } from "./ScrollToTop";
 import { Analytics } from "./Analytics";
 import { Footer } from "./Footer";
 import { EmailBanner } from "./EmailBanner";
+import { SignInBenefitsBanner } from "./SignInBenefitsBanner";
 import { AuthLoginPromptProvider } from "../hooks/use-auth-login-prompt";
 
 export function ClientApp({ children }: { children: ReactNode }) {
@@ -34,6 +35,7 @@ export function ClientApp({ children }: { children: ReactNode }) {
       </Suspense>
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <Navbar />
+        <SignInBenefitsBanner />
         <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           {children}
         </main>

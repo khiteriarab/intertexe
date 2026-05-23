@@ -3,12 +3,45 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ProductLink } from "../components/ProductLink";
-import { ShoppingBag, Heart, Tag } from "lucide-react";
+import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
+import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type PriceFilter = "all" | "100" | "200" | "300";
+type SaleSort = "newest" | "discount" | "price_asc" | "price_desc";
+
+const SORT_OPTIONS: { key: SaleSort; label: string }[] = [
+  { key: "newest", label: "Newest" },
+  { key: "discount", label: "Biggest discount" },
+  { key: "price_asc", label: "Price: Low to High" },
+  { key: "price_desc", label: "Price: High to Low" },
+];
+
+function parsePriceNum(price: string | null | undefined): number {
+  if (!price) return Number.POSITIVE_INFINITY;
+  const n = parseFloat(String(price).replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+}
+
+function sortSaleProducts(items: any[], sort: SaleSort): any[] {
+  const list = [...items];
+  if (sort === "newest") {
+    return list.sort((a, b) => String(b.createdAt || b.created_at || "").localeCompare(String(a.createdAt || a.created_at || "")));
+  }
+  if (sort === "discount") {
+    return list.sort((a, b) => {
+      const da = getDiscountPercent(a.originalPrice || a.original_price, a.price) ?? 0;
+      const db = getDiscountPercent(b.originalPrice || b.original_price, b.price) ?? 0;
+      return db - da;
+    });
+  }
+  if (sort === "price_asc") {
+    return list.sort((a, b) => parsePriceNum(a.price) - parsePriceNum(b.price));
+  }
+  return list.sort((a, b) => parsePriceNum(b.price) - parsePriceNum(a.price));
+}
 
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "all", label: "All" },
@@ -111,8 +144,24 @@ export default function SaleClient({
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(initialProducts?.length || 0);
+  const [sortBy, setSortBy] = useState<SaleSort>("newest");
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const { market } = useShoppingMarket();
+  const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
+  const sortedProducts = sortSaleProducts(products, sortBy);
 
   const pageSize = 40;
+
+  useEffect(() => {
+    const onMarket = () => {
+      setOffset(0);
+      setProducts([]);
+      setIsLoading(true);
+    };
+    window.addEventListener(SHOP_MARKET_INVALIDATE, onMarket);
+    return () => window.removeEventListener(SHOP_MARKET_INVALIDATE, onMarket);
+  }, []);
 
   useEffect(() => {
     const isDefault = fiberTab === "all" && priceFilter === "all";
@@ -127,6 +176,7 @@ export default function SaleClient({
     const params = new URLSearchParams();
     if (fiberTab !== "all") params.set("fiber", fiberTab);
     if (priceFilter !== "all") params.set("maxPrice", priceFilter);
+    if (market !== "all") params.set("market", market);
     params.set("limit", String(pageSize));
     params.set("offset", "0");
 
@@ -139,7 +189,7 @@ export default function SaleClient({
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
-  }, [fiberTab, priceFilter, initialProducts, initialTotal]);
+  }, [fiberTab, priceFilter, market, initialProducts, initialTotal]);
 
   const loadMore = () => {
     if (loadingMore || products.length >= total) return;
@@ -147,6 +197,7 @@ export default function SaleClient({
     const params = new URLSearchParams();
     if (fiberTab !== "all") params.set("fiber", fiberTab);
     if (priceFilter !== "all") params.set("maxPrice", priceFilter);
+    if (market !== "all") params.set("market", market);
     params.set("limit", String(pageSize));
     params.set("offset", String(offset));
 
@@ -177,7 +228,99 @@ export default function SaleClient({
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between border-y border-border/20 py-3 mb-2 gap-4">
+          <p className="text-[11px] text-muted-foreground flex-shrink-0">
+            <span className="text-foreground font-medium">{total.toLocaleString()}</span> on sale
+          </p>
+          <div className="flex items-center gap-4 md:gap-6 ml-auto">
+            <button
+              type="button"
+              onClick={() => setShowFilterSheet(true)}
+              className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="btn-sale-filter"
+            >
+              Filter
+            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowSortMenu(!showSortMenu)}
+                className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="btn-sale-sort"
+              >
+                Sort: {currentSort.label}
+                <ChevronDown className={`w-3 h-3 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
+              </button>
+              {showSortMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/40 shadow-xl min-w-[180px]">
+                    {SORT_OPTIONS.map((option) => (
+                      <button
+                        key={option.key}
+                        type="button"
+                        onClick={() => { setSortBy(option.key); setShowSortMenu(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-[11px] transition-colors ${
+                          sortBy === option.key ? "bg-[#f5f5f3] text-foreground" : "text-muted-foreground hover:bg-[#f5f5f3] hover:text-foreground"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {showFilterSheet && (
+          <>
+            <div className="fixed inset-0 z-[90] bg-black/40" onClick={() => setShowFilterSheet(false)} />
+            <div className="fixed inset-x-0 bottom-0 z-[100] bg-background border-t border-border/40 rounded-t-2xl max-h-[85vh] overflow-y-auto p-6 pb-10">
+              <p className="text-lg font-serif mb-1">Filter &amp; Sort</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-6">Material</p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {FIBER_TABS.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => { setFiberTab(tab.key); setOffset(0); }}
+                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                      fiberTab === tab.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Price</p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {PRICE_FILTERS.map((f) => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => { setPriceFilter(f.key); setOffset(0); }}
+                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                      priceFilter === f.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFilterSheet(false)}
+                className="w-full bg-foreground text-background py-3.5 text-[10px] uppercase tracking-[0.2em]"
+              >
+                View {total.toLocaleString()} on sale
+              </button>
+            </div>
+          </>
+        )}
+
+        <div className="hidden md:flex flex-col gap-4">
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {FIBER_TABS.map((tab) => (
               <button
@@ -218,10 +361,10 @@ export default function SaleClient({
               </div>
             ))}
           </div>
-        ) : products.length > 0 ? (
+        ) : sortedProducts.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12" data-testid="sale-product-grid">
-              {products.map((product: any) => (
+              {sortedProducts.map((product: any) => (
                 <SaleProductCard key={product.id} product={product} />
               ))}
             </div>

@@ -32,8 +32,8 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     atmosphere: "Beach dinners · raffia · white cotton · destination energy",
     themes: COLLECTION_EDITORIAL.vacation.themes,
     railKey: MERCH_RAIL_KEYS.vacation,
-    catalogHref: "/shop?fiber=linen&category=dresses",
-    catalogLabel: "Shop resort pieces",
+    catalogHref: "/collections/vacation",
+    catalogLabel: "Browse full vacation collection",
     editorialImage: EDITORIAL_HERO.vacation,
   },
   evening: {
@@ -58,8 +58,8 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     atmosphere: "Masculine/feminine tension · refined minimalism",
     themes: COLLECTION_EDITORIAL.tailoring.themes,
     railKey: MERCH_RAIL_KEYS.tailoring,
-    catalogHref: "/shop?category=outerwear",
-    catalogLabel: "Shop tailoring",
+    catalogHref: "/collections/tailoring",
+    catalogLabel: "Browse full tailoring collection",
     editorialImage: EDITORIAL_HERO.tailoring,
   },
   "summer-in-the-city": {
@@ -71,8 +71,8 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     atmosphere: "Black · white · elevated basics · city movement",
     themes: COLLECTION_EDITORIAL["summer-in-the-city"].themes,
     railKey: MERCH_RAIL_KEYS.summerInCity,
-    catalogHref: "/shop?fiber=cotton",
-    catalogLabel: "Shop city summer",
+    catalogHref: "/collections/summer-in-the-city",
+    catalogLabel: "Browse full city summer collection",
     editorialImage: EDITORIAL_HERO["summer-in-the-city"],
   },
   "white-edit": {
@@ -84,8 +84,8 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     atmosphere: "Visual calm · editorial restraint · luxury simplicity",
     themes: COLLECTION_EDITORIAL["white-edit"].themes,
     railKey: MERCH_RAIL_KEYS.whiteEdit,
-    catalogHref: "/shop?search=white",
-    catalogLabel: "Shop the white edit",
+    catalogHref: "/collections/white-edit",
+    catalogLabel: "Browse full white edit collection",
     editorialImage: EDITORIAL_HERO["white-edit"],
   },
 };
