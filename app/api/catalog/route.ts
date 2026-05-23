@@ -10,7 +10,8 @@ import {
 } from "../../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
