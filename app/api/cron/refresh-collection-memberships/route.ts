@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const maxDuration = 800;
+export const maxDuration = 300;
 
 import { NextResponse } from "next/server";
 import { refreshCollectionMemberships } from "../../../../lib/collection-memberships";
