@@ -30,7 +30,7 @@ export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
     title: "The Silk Edit",
     kicker: "In focus",
     description:
-      "A curated spotlight of silk pieces on the homepage — not the full silk catalog. Every piece is checked for natural-fiber composition.",
+      "Fluid, luminous silk — every piece verified for natural-fiber composition. Browse the full silk edit with pagination.",
     railKey: MERCH_RAIL_KEYS.silk,
     fiber: "silk",
     catalogHref: "/shop?fiber=silk",
@@ -43,7 +43,7 @@ export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
     title: "The Linen Edit",
     kicker: "The edit",
     description:
-      "Light, airy linen for every day — a small curated rail. Browse the full linen catalog when you want every dress, top, and pant.",
+      "Breathable linen for every day — dresses, tops, skirts, and pants with verified composition.",
     railKey: MERCH_RAIL_KEYS.linen,
     fiber: "linen",
     catalogHref: "/shop?fiber=linen",
@@ -56,7 +56,7 @@ export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
     title: "The Cashmere Edit",
     kicker: "Pure luxury",
     description:
-      "Soft warmth from genuine cashmere blends — homepage curation, not the entire cashmere shop.",
+      "Soft warmth from genuine cashmere — the full verified cashmere catalog.",
     railKey: MERCH_RAIL_KEYS.cashmere,
     fiber: "cashmere",
     catalogHref: "/shop?fiber=cashmere",

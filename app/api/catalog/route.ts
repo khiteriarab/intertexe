@@ -67,7 +67,8 @@ export async function GET(request: NextRequest) {
         total: data.editCount,
         limit,
         offset,
-        hasMore: offset + data.products.length < data.editCount,
+        hasMore:
+          offset + data.products.length < data.editCount && data.products.length >= limit,
       });
     }
 

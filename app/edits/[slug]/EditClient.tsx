@@ -35,7 +35,10 @@ export default function EditClient({
   const [products, setProducts] = useState(initialProducts);
   const [offset, setOffset] = useState(initialProducts.length);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(initialProducts.length >= 48);
+  const [totalCount, setTotalCount] = useState(Math.max(editCount, catalogTotal));
+  const [hasMore, setHasMore] = useState(
+    initialProducts.length < Math.max(editCount, catalogTotal) && initialProducts.length > 0
+  );
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
@@ -46,6 +49,8 @@ export default function EditClient({
       );
       const data = await res.json();
       const next = data.products || [];
+      const total = typeof data.total === "number" ? data.total : totalCount;
+      setTotalCount(total);
       if (next.length === 0) {
         setHasMore(false);
       } else {
@@ -61,8 +66,11 @@ export default function EditClient({
           }
           return merged;
         });
-        setOffset((o) => o + next.length);
-        if (next.length < 32) setHasMore(false);
+        setOffset((o) => {
+          const nextOffset = o + next.length;
+          setHasMore(nextOffset < total && next.length >= 32);
+          return nextOffset;
+        });
       }
     } finally {
       setLoadingMore(false);
@@ -117,7 +125,7 @@ export default function EditClient({
 
       <section className="max-w-6xl mx-auto w-full px-4 pt-8 pb-4">
         <p className="text-[11px] text-muted-foreground">
-          <span className="text-foreground font-medium">{editCount} pieces</span> in this edit
+          <span className="text-foreground font-medium">{totalCount.toLocaleString()} pieces</span> in this edit
           {catalogTotal > 0 && (
             <>
               {" "}

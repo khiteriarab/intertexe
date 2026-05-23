@@ -599,10 +599,15 @@ export async function fetchVacationPageData(opts?: {
   };
 }
 
-/** Curated homepage edit pages (/edits/[slug]). */
+const EDIT_TO_COLLECTION_SLUG: Partial<Record<string, import("./collection-pages").CollectionSlug>> = {
+  evening: "evening",
+  tailoring: "tailoring",
+};
+
+/** Fabric + lifestyle edit pages — full paginated catalog (homepage rail is preview only). */
 export async function fetchEditPageData(
   slug: string,
-  opts?: { limit?: number }
+  opts?: { limit?: number; offset?: number }
 ): Promise<{
   products: Product[];
   editCount: number;
@@ -615,35 +620,66 @@ export async function fetchEditPageData(
     return null;
   }
 
-  const { fetchMerchRailProducts } = await import("./merch-feed");
+  const collectionSlug = EDIT_TO_COLLECTION_SLUG[slug];
+  if (collectionSlug) {
+    const collection = await fetchCollectionPageData(collectionSlug, opts);
+    if (!collection) return null;
+    return {
+      products: collection.products,
+      editCount: collection.editCount,
+      catalogTotal: collection.catalogTotal,
+      heroImageUrl: config.editorialImage,
+    };
+  }
+
   const { EDITORIAL_HERO } = await import("./editorial-assets");
-  const limit = Math.min(Math.max(opts?.limit ?? 56, 1), 64);
+  const limit = Math.min(Math.max(opts?.limit ?? 56, 1), 100);
   const offset = Math.max(opts?.offset ?? 0, 0);
 
-  let products = await fetchMerchRailProducts(config.railKey, { limit: 120, offset });
-  if (config.fiber) {
-    products = products.filter((p) => productBodyMatchesFiber(p.composition || "", config.fiber!));
-  }
-  products = products.filter(isEditorialWomensApparel).slice(offset, offset + limit);
-
-  if (products.length < 24 && config.fiber) {
-    const live = await fetchProductsByFiber(config.fiber, 120);
-    const seen = new Set(products.map((p) => p.productId || p.id));
-    for (const p of live.filter((x) => productBodyMatchesFiber(x.composition || "", config.fiber!))) {
-      const id = p.productId || p.id;
-      if (!seen.has(id)) {
-        seen.add(id);
-        products.push(p);
-      }
-      if (products.length >= limit) break;
-    }
+  if (!config.fiber) {
+    return {
+      products: [],
+      editCount: 0,
+      catalogTotal: 0,
+      heroImageUrl: config.editorialImage,
+    };
   }
 
-  const editCount = products.length;
+  const fiber = config.fiber;
+  const category =
+    slug === "vacation" ? "dresses" : undefined;
 
-  let catalogTotal = 0;
-  if (config.fiber) {
-    catalogTotal = await fetchMaterialHubDisplayCount(config.fiber);
+  const { products: raw, total } = await fetchShopProducts({
+    fiber,
+    category,
+    limit: limit + 12,
+    offset,
+    sort: "recommended",
+  });
+
+  let products = raw
+    .filter((p) => productBodyMatchesFiber(p.composition || "", fiber))
+    .filter(isEditorialWomensApparel);
+
+  if (slug === "vacation") {
+    products = products.filter(isVacationResortPiece);
+  }
+
+  products = products.slice(0, limit);
+
+  const supabase = getServerSupabase();
+  let editCount = total;
+  if (supabase) {
+    const counted = await rpcCatalogListCount(supabase, {
+      preferred: "us",
+      fallback: "us",
+      fiber,
+      category: category ?? null,
+      brandSlug: null,
+      search: null,
+      minNfp: 80,
+    });
+    if (counted != null && counted > 0) editCount = counted;
   }
 
   const heroImageUrl =
@@ -657,8 +693,8 @@ export async function fetchEditPageData(
 
   return {
     products,
-    editCount: Math.max(editCount, products.length),
-    catalogTotal,
+    editCount: Math.max(editCount, offset + products.length),
+    catalogTotal: editCount,
     heroImageUrl,
   };
 }
