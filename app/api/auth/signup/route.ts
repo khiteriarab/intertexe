@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByEmail, getUserByUsername } from "../../../../lib/auth-helpers";
 import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server";
-const sendWelcomeEmail = async (...args: any[]) => {};
+import { sendWelcomeEmail } from "../../../../server/resend";
 import { snakeToCamel } from "../../../../lib/case-utils";
 
 export async function POST(request: NextRequest) {

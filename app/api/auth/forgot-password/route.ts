@@ -1,24 +1,25 @@
-export const dynamic = "force-dynamic";
-import { NextRequest, NextResponse } from "next/server";
-import { getUserByEmail, createResetToken } from "../../../../lib/auth-helpers";
-const sendPasswordResetEmail = async (...args: any[]) => {};
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { email } = await request.json();
+    const { email } = await req.json();
     if (!email) {
-      return NextResponse.json({ message: "Email is required" }, { status: 400 });
+      return NextResponse.json({ error: 'Email required', message: 'Email required' }, { status: 400 });
     }
 
-    const user = await getUserByEmail(email);
-    if (user) {
-      const token = createResetToken(user.id);
-      const resetUrl = `https://www.intertexe.com/reset-password?token=${token}`;
-      sendPasswordResetEmail(email, user.name || "there", resetUrl).catch(() => {});
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://www.intertexe.com/reset-password',
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message, message: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ message: "If an account with that email exists, we've sent a reset link." });
-  } catch {
-    return NextResponse.json({ message: "Something went wrong. Please try again." }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('forgot-password error:', err);
+    return NextResponse.json({ error: 'Internal server error', message: 'Internal server error' }, { status: 500 });
   }
 }
