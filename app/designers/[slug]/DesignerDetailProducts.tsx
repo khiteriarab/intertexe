@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { ProductLink } from "../../components/ProductLink";
+import { CatalogProductImage } from "../../components/CatalogProductImage";
 import { Heart } from "lucide-react";
 import { useProductFavorites } from "../../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../../lib/format-display-price";
@@ -56,6 +57,7 @@ export function DesignerDetailProducts({
   designerWebsite,
   hasProfile,
   profileMaterialStrengths,
+  shopMode = false,
 }: {
   products: ProductItem[];
   designerName: string;
@@ -63,6 +65,8 @@ export function DesignerDetailProducts({
   designerWebsite: string | null;
   hasProfile: boolean;
   profileMaterialStrengths: string[];
+  /** Outnet-style: grid first, minimal editorial copy above products. */
+  shopMode?: boolean;
 }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [showSaleOnly, setShowSaleOnly] = useState(false);
@@ -135,17 +139,21 @@ export function DesignerDetailProducts({
 
   return (
     <section className="flex flex-col gap-5" data-testid="section-browse-collection">
-      <div className="flex items-center gap-3">
-        <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
-          {visibleProducts.length > 0 ? `${visibleProducts.length} Verified Pieces` : `Browse ${designerName}`}
-        </h2>
-      </div>
+      {!shopMode && (
+        <div className="flex items-center gap-3">
+          <h2 className="text-xs uppercase tracking-[0.2em] font-medium">
+            {visibleProducts.length > 0 ? `${visibleProducts.length} Verified Pieces` : `Browse ${designerName}`}
+          </h2>
+        </div>
+      )}
 
       {visibleProducts.length > 0 ? (
         <>
-          <p className="text-sm text-foreground/70 leading-relaxed">
-            Every item below has been verified by INTERTEXE for natural fiber content. Where a piece shows less than 100%, the remaining percentage is typically from functional components like linings, trims, or elastic.
-          </p>
+          {!shopMode && (
+            <p className="text-sm text-foreground/70 leading-relaxed">
+              Every item below has been verified by INTERTEXE for natural fiber content. Where a piece shows less than 100%, the remaining percentage is typically from functional components like linings, trims, or elastic.
+            </p>
+          )}
 
           {(visibleProducts.length > 6 || categories.length > 1) && (
             <div className="flex flex-col gap-3">
@@ -253,25 +261,26 @@ export function DesignerDetailProducts({
                     data-testid={`card-product-${product.productId || product.id}`}
                   >
                     <ProductLink href={`/product/${product.id}`} className="flex flex-col flex-1">
-                      <div className="aspect-[3/4] bg-secondary relative overflow-hidden">
+                      <div className="relative">
                         {product.imageUrl ? (
-                          <img
+                          <CatalogProductImage
                             src={product.imageUrl}
                             alt={product.name}
-                            draggable={false}
-                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 pointer-events-none"
-                            loading="lazy"
+                            name={product.name}
+                            category={product.category}
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <div className="aspect-[3/4] bg-secondary flex items-center justify-center text-muted-foreground">
                             <svg className="w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                           </div>
                         )}
-                        <div className="absolute top-2 left-2 pointer-events-none">
-                          <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
-                            {product.naturalFiberPercent}% Natural
-                          </span>
-                        </div>
+                        {product.naturalFiberPercent > 0 && (
+                          <div className="absolute top-2 left-2 pointer-events-none">
+                            <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
+                              {product.naturalFiberPercent}% Natural
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="p-3 flex flex-col gap-1.5 flex-1">
                         <h3 className="text-xs md:text-sm leading-snug line-clamp-2 font-medium">{product.name}</h3>

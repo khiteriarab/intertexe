@@ -13,6 +13,7 @@ import { BRAND_WE_LOVE_IMAGES, editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from 
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
+import { HomepageHeroSection } from "./HomepageHeroSection";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -488,42 +489,9 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <AppDownloadBanner />
 
-      <section className="relative overflow-hidden w-full -mx-4 md:-mx-8">
-        <EditorialHeroImage
-          src={HOMEPAGE_HERO_IMAGE}
-          alt="INTERTEXE — Luxury natural-fabric fashion"
-          variant="banner"
-          slug="home-hero"
-          title="What to wear now"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent pointer-events-none" />
-        <div
-          className="absolute inset-0 z-10 flex items-end px-6 md:px-14 pb-16 md:pb-24 max-w-xl flex flex-col justify-end"
-          style={{ paddingBottom: "max(4rem, calc(env(safe-area-inset-bottom, 0px) + 3.5rem))" }}
-        >
-          <h2
-            className="text-[34px] leading-[1.06] md:text-[60px] font-serif text-white mb-4 md:mb-6"
-            data-testid="text-hero-headline"
-          >
-            What to<br />wear now
-          </h2>
-          <p
-            className="text-[12px] md:text-[15px] text-white/65 mb-8 md:mb-10 font-light leading-relaxed max-w-sm"
-            data-testid="text-hero-subtext"
-          >
-            {displayCount} pieces in silk, cashmere, linen &amp; wool — curated natural-fiber fashion.
-          </p>
-          <Link
-            href="/shop"
-            className="bg-white text-black px-10 py-3.5 md:px-12 md:py-4 uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-medium hover:bg-white/90 transition-all duration-500 flex items-center gap-2.5 w-fit active:scale-[0.97]"
-            data-testid="button-shop-now"
-          >
-            Shop now <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </section>
+      <HomepageHeroSection displayCount={displayCount} products={data.newInProducts} />
 
-      <section className="py-10 md:py-20">
+      <section className="py-10 md:py-20 lg:pt-16">
         <HorizontalProductScroll
           products={data.newInProducts}
           title={HOMEPAGE_RAIL_LABELS.newInProducts.title}

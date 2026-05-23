@@ -64,15 +64,17 @@ export function ShoppableDesignersList({ brands }: { brands: BrandStat[] }) {
                       className="flex items-center justify-between gap-4 py-4 md:py-4.5 group active:opacity-70"
                       data-testid={`card-shoppable-${brand.slug}`}
                     >
-                      <span className="text-sm md:text-base uppercase tracking-[0.06em] font-medium truncate group-hover:text-muted-foreground transition-colors">
-                        {brand.name}
-                      </span>
-                      <div className="flex items-center gap-4 shrink-0">
+                      <div className="flex items-baseline gap-3 min-w-0">
+                        <span className="text-sm md:text-base uppercase tracking-[0.06em] font-medium truncate group-hover:text-muted-foreground transition-colors">
+                          {brand.name}
+                        </span>
                         {nfp != null && (
-                          <span className="text-[10px] md:text-[11px] tabular-nums text-muted-foreground">
-                            {nfp}% natural
+                          <span className="text-[11px] md:text-xs tabular-nums text-muted-foreground shrink-0">
+                            {nfp}%
                           </span>
                         )}
+                      </div>
+                      <div className="flex items-center gap-4 shrink-0">
                         <span className="text-[10px] text-muted-foreground/80 hidden sm:inline">
                           {brand.count.toLocaleString()} pcs
                         </span>

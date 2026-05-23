@@ -137,6 +137,11 @@
   height: clamp(520px, 88vh, 900px);
 }
 
+/* Homepage portrait hero — mobile full width */
+.homepage-hero-frame-mobile {
+  height: clamp(480px, 85vh, 820px);
+}
+
 .editorial-frame-panel {
   position: relative;
   width: 100%;

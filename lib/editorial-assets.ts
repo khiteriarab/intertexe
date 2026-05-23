@@ -32,8 +32,8 @@ export function editorialHeroForSlug(slug: string): string {
   return EDITORIAL_HERO[key] ?? LANDSCAPE_SILK;
 }
 
-/** Homepage hero — landscape campaign (not portrait hero-editorial-v8). */
-export const HOMEPAGE_HERO_IMAGE = LANDSCAPE_SILK;
+/** Homepage hero — portrait editorial (mobile full-bleed; desktop split column). */
+export const HOMEPAGE_HERO_IMAGE = `${BASE}/hero-editorial-v8.png`;
 
 export const BRAND_WE_LOVE_IMAGES: Record<string, string> = {
   "re-done": "/brands/re-done.png",
