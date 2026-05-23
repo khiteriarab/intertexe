@@ -9,6 +9,7 @@ import {
 } from "./collection-editorial";
 import { isEditorialWomensApparel } from "./catalog-product-filters";
 import type { Product } from "./supabase-server";
+import { catalogDedupeKey } from "./catalog-rules";
 
 export type CollectionCatalogQuery = {
   fiber?: string;
@@ -61,6 +62,22 @@ export const COLLECTION_CATALOG_QUERIES: Record<CollectionSlug, CollectionCatalo
   ],
 };
 
+function isWhiteEditTonal(product: Product): boolean {
+  const name = (product.name || "").toLowerCase();
+  const comp = (product.composition || "").toLowerCase();
+  const text = `${name} ${comp}`;
+  const hasWhiteCue = /\b(white|ivory|cream|off[- ]?white|chalk|pearl|snow)\b/.test(text);
+  if (!hasWhiteCue) return false;
+  if (
+    /\b(tan|camel|khaki|yellow|mustard|gold|brown|beige|sand|taupe|nude|rust|terracotta|olive|orange|ecru dress)\b/.test(
+      name
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export function isCollectionEligible(
   product: Product,
   slug: CollectionSlug
@@ -69,7 +86,14 @@ export function isCollectionEligible(
 
   const slugs = (product.collectionSlugs || []).map((s) => s.toLowerCase());
   const canonical = COLLECTION_CANONICAL_SLUGS[slug] || [];
-  if (canonical.some((c) => slugs.includes(c))) return true;
+  if (canonical.some((c) => slugs.includes(c))) {
+    if (slug === "white-edit") return isWhiteEditTonal(product);
+    return true;
+  }
+
+  if (slug === "white-edit") {
+    return collectionEditorialScore(product, slug) > 0 && isWhiteEditTonal(product);
+  }
 
   return collectionEditorialScore(product, slug) > 0;
 }

@@ -3,6 +3,8 @@
  * Source: homepage_merch_rails registry + homepage_feed_items cache + homepage_feed_meta counts.
  */
 import { getServerSupabase, catalogRegionsFromMarket, type Product } from "./supabase-server";
+import { sanitizeBrandName } from "./brand-display";
+import { catalogDedupeKey } from "./catalog-rules";
 import { displayNaturalFiberPercent } from "./display-natural-fiber";
 import { logSupabaseTiming } from "./supabase-timing";
 
@@ -70,7 +72,7 @@ function mapFeedRowToProduct(row: Record<string, unknown>): Product {
     id: String(row.source_id ?? ""),
     productId: String(row.product_id ?? ""),
     brandSlug: String(row.brand_slug ?? ""),
-    brandName: String(row.brand_name ?? ""),
+    brandName: sanitizeBrandName(String(row.brand_name ?? "")),
     name: String(row.name ?? ""),
     url: String(row.url ?? ""),
     imageUrl: String(row.image_url ?? ""),
@@ -170,7 +172,15 @@ export async function fetchMerchRailProducts(
     return [];
   }
 
-  let products = ((data || []) as Record<string, unknown>[]).map(mapFeedRowToProduct);
+  const seen = new Set<string>();
+  const products: Product[] = [];
+  for (const row of (data || []) as Record<string, unknown>[]) {
+    const key = catalogDedupeKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    products.push(mapFeedRowToProduct(row));
+    if (products.length >= limit) break;
+  }
   if (products.length > 0) return products;
 
   return fetchMerchRailLiveFallback(railKey, limit, opts?.market);
@@ -204,10 +214,15 @@ export async function fetchMerchRailsBatch(
 
   if (error || !data?.length) return out;
 
+  const seenByRail: Record<string, Set<string>> = {};
   for (const row of data as Record<string, unknown>[]) {
-    const key = String(row.rail_key ?? "");
-    if (!out[key] || out[key].length >= cap) continue;
-    out[key].push(mapFeedRowToProduct(row));
+    const rail = String(row.rail_key ?? "");
+    if (!out[rail] || out[rail].length >= cap) continue;
+    if (!seenByRail[rail]) seenByRail[rail] = new Set();
+    const dedupeKey = catalogDedupeKey(row);
+    if (seenByRail[rail].has(dedupeKey)) continue;
+    seenByRail[rail].add(dedupeKey);
+    out[rail].push(mapFeedRowToProduct(row));
   }
   return out;
 }
@@ -243,7 +258,7 @@ async function fetchMerchRailLiveFallback(
     const seen = new Set<string>();
     const out: Product[] = [];
     for (const row of rpcData as Record<string, unknown>[]) {
-      const key = String(row.product_id || row.id);
+      const key = catalogDedupeKey(row);
       if (seen.has(key)) continue;
       seen.add(key);
       const price = String(row.price ?? "");
@@ -252,7 +267,7 @@ async function fetchMerchRailLiveFallback(
         id: String(row.id ?? ""),
         productId: key,
         brandSlug: String(row.brand_slug ?? ""),
-        brandName: String(row.brand_name ?? ""),
+        brandName: sanitizeBrandName(String(row.brand_name ?? "")),
         name: String(row.name ?? ""),
         url: String(row.url ?? ""),
         imageUrl: String(row.image_url ?? ""),
@@ -304,16 +319,16 @@ async function fetchMerchRailLiveFallback(
   for (const row of data as Record<string, unknown>[]) {
     const comp = String(row.composition ?? "");
     if (comp && !compositionMatchesBodyFiber(comp, fiberKey)) continue;
-    const key = String(row.product_id || row.id);
+    const key = catalogDedupeKey(row);
     if (seen.has(key)) continue;
     seen.add(key);
     const price = String(row.price ?? "");
     if (!price || price === "0" || price === "$0.00") continue;
     out.push({
       id: String(row.id ?? ""),
-      productId: key,
+      productId: String(row.product_id || row.id),
       brandSlug: String(row.brand_slug ?? ""),
-      brandName: String(row.brand_name ?? ""),
+      brandName: sanitizeBrandName(String(row.brand_name ?? "")),
       name: String(row.name ?? ""),
       url: String(row.url ?? ""),
       imageUrl: String(row.image_url ?? ""),

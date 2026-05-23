@@ -113,6 +113,17 @@ export function normTokenCatalog(input: string): string {
     .trim();
 }
 
+/** Strip color suffixes so regional/color variants dedupe to one style. */
+export function catalogStyleBaseName(name: string): string {
+  return String(name || "")
+    .replace(
+      /\s*[-–]\s*(black|white|grey|gray|ecru|navy|blue|red|pink|green|beige|khaki|brown|camel|cream|ivory|nude|sand|taupe|chocolate|burgundy|plum|powder|midnight|heather|medium|deep|light|dark|washed|faded|natural|stone|oatmeal|chalk|pearl|snow).*$/i,
+      ""
+    )
+    .trim()
+    .toLowerCase();
+}
+
 export function catalogNormalizeImageUrl(pImageUrl: string | null | undefined): string | null {
   if (!pImageUrl) return null;
   const trimmed = String(pImageUrl).split("#")[0].split("?")[0].trim().toLowerCase();
@@ -120,14 +131,18 @@ export function catalogNormalizeImageUrl(pImageUrl: string | null | undefined): 
 }
 
 export function catalogDedupeKey(row: Record<string, unknown>): string {
+  const b = normTokenCatalog(String(row.brand_name ?? row.brandName ?? ""));
+  const style = normTokenCatalog(
+    catalogStyleBaseName(String(row.name ?? row.title ?? ""))
+  );
+  if (b && style.length >= 6) return `style:${b}|${style}`;
+  const pid = String(row.product_id ?? row.productId ?? "").trim().toLowerCase();
+  if (pid) return `pid:${pid}`;
   const img = catalogNormalizeImageUrl((row.image_url ?? row.imageUrl) as string);
   if (img) return `img:${img}`;
-  const b = normTokenCatalog(String(row.brand_name ?? row.brandName ?? ""));
   const n = normTokenCatalog(String(row.name ?? ""));
   const c = normTokenCatalog(String(row.composition ?? ""));
   if (b && n && c) return `identity:${b}|${n}|${c}`;
-  const pid = String(row.product_id ?? row.productId ?? "").trim().toLowerCase();
-  if (pid) return `pid:${pid}`;
   return `id:${row.id}`;
 }
 

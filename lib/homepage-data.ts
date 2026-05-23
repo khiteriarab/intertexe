@@ -13,12 +13,13 @@ import { getCuratedScore } from "./curated-quality-scores";
 import { CURATED_BRAND_SLUGS } from "./homepage-constants";
 import { isEditorialWomensApparel } from "./catalog-product-filters";
 import { EDITORIAL_HERO } from "./editorial-assets";
+import { unstable_cache } from "next/cache";
 import {
   MERCH_RAIL_KEYS,
   fetchMerchRailsBatch,
   isMerchFeedEnabled,
 } from "./merch-feed";
-import { fetchPlatformStats } from "./platform-stats";
+import { getCachedPlatformStats } from "./cached-catalog";
 
 /** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
@@ -193,7 +194,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     withHomepageRailTimeout(
       "platform-stats",
       8_000,
-      () => fetchPlatformStats(),
+      () => getCachedPlatformStats(),
       { productCount: 24_000, brandCount: 99 }
     ),
     withHomepageRailTimeout(
@@ -270,6 +271,7 @@ export async function getHomePageData(): Promise<HomePageData> {
           limit: HOMEPAGE_SALE_FETCH_LIMIT,
           offset: 0,
           maxSourceRows: HOMEPAGE_SALE_MAX_SOURCE_ROWS,
+          useMerchFeedPreview: true,
         }),
       { products: [], total: 0 }
     ),
@@ -277,7 +279,7 @@ export async function getHomePageData(): Promise<HomePageData> {
   ]);
 
   const saleProducts = (saleResult.products || []).filter((p) => !isZeroPrice(p.price));
-  const platformStats = await fetchPlatformStats();
+  const platformStats = await getCachedPlatformStats();
 
   const brandProductLists = await Promise.all(
     [...NEW_IN_BRAND_SLUGS].map((slug) =>
@@ -371,3 +373,10 @@ export async function getHomePageData(): Promise<HomePageData> {
     saleProducts,
   };
 }
+
+/** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
+export const getCachedHomePageData = unstable_cache(
+  async () => getHomePageData(),
+  ["homepage-payload-v3"],
+  { revalidate: 300, tags: ["homepage"] }
+);

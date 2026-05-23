@@ -16,6 +16,7 @@ import {
   CATALOG_INITIAL_PAGE,
   CATALOG_PAGE_SIZE,
   classifyGarment,
+  catalogDedupeKey,
   dedupeCatalogRows,
   offerCompletenessStatus,
   rowMatchesShopFiber,
@@ -166,65 +167,8 @@ function passesMarketRawRow(row: any, market?: string): boolean {
   return WOMEN_FASHION_BRAND_SLUGS.has(brandSlug);
 }
 
-function normTokenCatalog(input: string): string {
-  return input
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function catalogNormalizeImageUrl(pImageUrl: string | null | undefined): string | null {
-  if (!pImageUrl) return null;
-  const trimmed = String(pImageUrl).split("#")[0].split("?")[0].trim().toLowerCase();
-  return trimmed || null;
-}
-
-function catalogDedupeKey(row: any): string {
-  const img = catalogNormalizeImageUrl(row.image_url);
-  if (img) return `img:${img}`;
-  const b = normTokenCatalog(row.brand_name || "");
-  const n = normTokenCatalog(row.name || "");
-  const c = normTokenCatalog(row.composition || "");
-  if (b && n && c) return `identity:${b}|${n}|${c}`;
-  const pid = String(row.product_id || "").trim().toLowerCase();
-  if (pid) return `pid:${pid}`;
-  return `id:${row.id}`;
-}
-
-function catalogRegionRank(region: string | null | undefined, preferred: string): number {
-  const r = (region || "us").toLowerCase();
-  const p = (preferred || "us").toLowerCase();
-  if (r === p) return 0;
-  if (r === "us") return 1;
-  if (r === "uk") return 2;
-  if (r === "eu") return 3;
-  return 4;
-}
-
-function pickDedupeWinner(rows: any[], preferred: string, fallback: string): any {
-  return [...rows].sort((a: any, b: any) => {
-    const d = catalogRegionRank(a.region, preferred) - catalogRegionRank(b.region, preferred);
-    if (d !== 0) return d;
-    const df = catalogRegionRank(a.region, fallback) - catalogRegionRank(b.region, fallback);
-    if (df !== 0) return df;
-    const nfp = (b.natural_fiber_percent || 0) - (a.natural_fiber_percent || 0);
-    if (nfp !== 0) return nfp;
-    const ca = new Date(a.created_at || 0).getTime();
-    const cb = new Date(b.created_at || 0).getTime();
-    return cb - ca;
-  })[0];
-}
-
 function dedupeLiveApparelRows(rows: any[], preferred: string, fallback: string): any[] {
-  const groups = new Map<string, any[]>();
-  for (const row of rows) {
-    const key = catalogDedupeKey(row);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(row);
-  }
-  return Array.from(groups.values()).map((g) => pickDedupeWinner(g, preferred, fallback));
+  return dedupeCatalogRows(rows, preferred, fallback);
 }
 
 async function rpcCatalogList(
@@ -832,10 +776,10 @@ async function fetchCollectionCatalogPoolUncached(
       const p = mapProductRow(row);
       if (!isEditorialWomensApparel(p)) continue;
       if (!isCollectionEligible(p, slug)) continue;
-        const id = p.productId || p.id;
-        if (seen.has(id)) continue;
-        seen.add(id);
-        merged.push(p);
+      const key = catalogDedupeKey(row);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(p);
     }
   }
 
@@ -1725,6 +1669,8 @@ function applySaleProductFilters(
   return filtered;
 }
 
+const SALE_FULL_SCAN_MAX_ROWS = 8000;
+
 export async function fetchSaleProducts(options: {
   fiber?: string;
   maxPrice?: number;
@@ -1732,46 +1678,57 @@ export async function fetchSaleProducts(options: {
   offset?: number;
   /** Stop scanning after this many raw rows (homepage perf; sale page omits for full grid). */
   maxSourceRows?: number;
+  /** Homepage only: use capped merch rail. Sale page / API must set false for full markdown catalog. */
+  useMerchFeedPreview?: boolean;
 }): Promise<{ products: Product[]; total: number }> {
   const supabase = getServerSupabase();
   if (!supabase) return { products: [], total: 0 };
-  const { fiber, maxPrice, limit = 60, offset = 0, maxSourceRows } = options;
+  const {
+    fiber,
+    maxPrice,
+    limit = 60,
+    offset = 0,
+    maxSourceRows,
+    useMerchFeedPreview = maxSourceRows != null,
+  } = options;
   const dedupePreferred = "us";
   const dedupeFallback = "us";
 
-  // Prefer homepage merchandising cache (same rail as homepage "On Sale" section).
-  try {
-    const { fetchMerchRailProducts, MERCH_RAIL_KEYS } = await import("./merch-feed");
-    const feedCap = maxSourceRows != null ? Math.min(maxSourceRows, 120) : 200;
-    const feedProducts = await fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: feedCap });
-    if (feedProducts.length > 0) {
-      const ids = feedProducts.map((p) => p.id).filter(Boolean);
-      const { data: liveRows } = await supabase
-        .from("live_products_apparel")
-        .select(PRODUCT_CARD_COLS)
-        .in("id", ids);
-      const liveById = new Map((liveRows || []).map((r: any) => [String(r.id), r]));
-      let products = feedProducts.map((fp) => {
-        const live = liveById.get(fp.id);
-        return live ? mapProductRow(live) : { ...fp, isSale: true };
-      });
-      products = applySaleProductFilters(products, { fiber, maxPrice });
-      if (products.length > 0) {
-        return {
-          products: products.slice(offset, offset + limit),
-          total: products.length,
-        };
+  if (useMerchFeedPreview) {
+    try {
+      const { fetchMerchRailProducts, MERCH_RAIL_KEYS } = await import("./merch-feed");
+      const feedCap = maxSourceRows != null ? Math.min(maxSourceRows, 120) : 200;
+      const feedProducts = await fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: feedCap });
+      if (feedProducts.length > 0) {
+        const ids = feedProducts.map((p) => p.id).filter(Boolean);
+        const { data: liveRows } = await supabase
+          .from("live_products_apparel")
+          .select(PRODUCT_CARD_COLS)
+          .in("id", ids);
+        const liveById = new Map((liveRows || []).map((r: any) => [String(r.id), r]));
+        let products = feedProducts.map((fp) => {
+          const live = liveById.get(fp.id);
+          return live ? mapProductRow(live) : { ...fp, isSale: true };
+        });
+        products = applySaleProductFilters(products, { fiber, maxPrice });
+        if (products.length > 0) {
+          return {
+            products: products.slice(offset, offset + limit),
+            total: products.length,
+          };
+        }
       }
+    } catch (err) {
+      console.warn("[fetchSaleProducts] merch feed path failed:", err);
     }
-  } catch (err) {
-    console.warn("[fetchSaleProducts] merch feed path failed:", err);
   }
 
+  const scanCap = maxSourceRows ?? SALE_FULL_SCAN_MAX_ROWS;
   const pageSize = 1000;
   let allRows: any[] = [];
   let qOffset = 0;
   while (true) {
-    if (maxSourceRows != null && allRows.length >= maxSourceRows) break;
+    if (allRows.length >= scanCap) break;
     let q = supabase
       .from("live_products_apparel")
       .select("*")
@@ -1782,22 +1739,18 @@ export async function fetchSaleProducts(options: {
     if (fiber && fiber !== "all") {
       q = q.ilike("composition", `%${fiber}%`);
     }
-    const rangeEnd =
-      maxSourceRows != null
-        ? qOffset + Math.min(pageSize, Math.max(0, maxSourceRows - allRows.length)) - 1
-        : qOffset + pageSize - 1;
-    if (maxSourceRows != null && rangeEnd < qOffset) break;
+    const rangeEnd = qOffset + Math.min(pageSize, Math.max(0, scanCap - allRows.length)) - 1;
+    if (rangeEnd < qOffset) break;
     q = q.order("natural_fiber_percent", { ascending: false }).range(qOffset, rangeEnd);
     const { data: chunk, error } = await q;
     if (error || !chunk || chunk.length === 0) break;
     allRows.push(...chunk.filter(rowIsOnSale));
     if (chunk.length < rangeEnd - qOffset + 1) break;
-    if (maxSourceRows != null && allRows.length >= maxSourceRows) break;
+    if (allRows.length >= scanCap) break;
     qOffset += chunk.length;
   }
 
-  // Also pull explicit is_sale rows when discount scan is capped (homepage).
-  if (maxSourceRows != null && allRows.length < maxSourceRows) {
+  if (useMerchFeedPreview && allRows.length < scanCap) {
     const { data: flagged } = await supabase
       .from("live_products_apparel")
       .select("*")
@@ -1805,7 +1758,7 @@ export async function fetchSaleProducts(options: {
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
       .not("price", "is", null)
-      .limit(Math.max(0, maxSourceRows - allRows.length));
+      .limit(Math.max(0, scanCap - allRows.length));
     if (flagged?.length) allRows.push(...flagged);
   }
 
@@ -1852,14 +1805,21 @@ export async function fetchSaleProducts(options: {
 function mapBrandDirectoryRows(
   rows: { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[]
 ): { slug: string; name: string; count: number; avgNaturalFiber: number }[] {
-  return rows
-    .map((r) => ({
-      slug: r.brand_slug,
-      name: sanitizeBrandName(r.brand_name || r.brand_slug),
-      count: Number(r.product_count) || 0,
-      avgNaturalFiber: Number(r.avg_natural_fiber) || 0,
-    }))
-    .filter((b) => b.slug && b.count >= 2);
+  const bySlug = new Map<string, { slug: string; name: string; count: number; avgNaturalFiber: number }>();
+  for (const r of rows) {
+    const slug = String(r.brand_slug || "")
+      .trim()
+      .toLowerCase();
+    if (!slug) continue;
+    const count = Number(r.product_count) || 0;
+    const avgNaturalFiber = Number(r.avg_natural_fiber) || 0;
+    const name = sanitizeBrandName(r.brand_name || slug);
+    const prev = bySlug.get(slug);
+    if (!prev || count > prev.count) {
+      bySlug.set(slug, { slug, name, count, avgNaturalFiber });
+    }
+  }
+  return [...bySlug.values()].filter((b) => b.count >= 2);
 }
 
 /** Fallback when catalog_brand_directory RPC is not deployed yet. */
@@ -1946,7 +1906,7 @@ export async function fetchBrandStats(): Promise<{ slug: string; name: string; c
   }
 
   const t1 = Date.now();
-  const scanned = await fetchBrandStatsFromCatalogScan(supabase, 400, 2);
+  const scanned = await fetchBrandStatsFromCatalogScan(supabase, 400, 6);
   logSupabaseTiming("fetchBrandStats catalog scan fallback", t1, `rows:${scanned.length}`);
   return scanned;
 }

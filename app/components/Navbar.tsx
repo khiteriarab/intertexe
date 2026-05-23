@@ -3,12 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, X, Home, Layers, Scan, ShoppingBag, User, UserCheck, ChevronDown } from "lucide-react";
+import { Search, X, User, UserCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { MERCH_NAV } from "../../lib/merch-nav";
 import { CountrySelector } from "./CountrySelector";
-import { MobileRegionBar } from "./MobileRegionBar";
+import { MobileBottomDock } from "./MobileBottomDock";
 
 async function searchDesigners(query: string) {
   const res = await fetch(`/api/designers?q=${encodeURIComponent(query)}`);
@@ -55,20 +55,11 @@ export function Navbar() {
     { name: "Scanner", href: "/scanner" },
   ];
 
-  const mobileNavLinks = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "New In", href: "/shop?sort=new", icon: ShoppingBag },
-    { name: "Scanner", href: "/scanner", icon: Scan },
-    { name: "Fabrics", href: "/materials", icon: Layers },
-    { name: "Designers", href: "/designers", icon: User },
-    { name: "Sale", href: "/sale", icon: ShoppingBag },
-  ];
-
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/40">
         <div className="container mx-auto px-4 md:px-8 h-16 flex items-center">
-          <div className="relative mr-3 md:mr-6 flex-shrink-0">
+          <div className="hidden md:block relative mr-6 flex-shrink-0">
             <CountrySelector />
           </div>
 
@@ -155,27 +146,7 @@ export function Navbar() {
         )}
       </header>
 
-      <MobileRegionBar />
-
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/30" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        <div className="flex justify-around items-center h-[56px] px-1">
-          {mobileNavLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
-            return (
-              <Link key={link.name} href={link.href}
-                className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors active:scale-95 min-w-[48px] min-h-[48px] ${
-                  isActive ? "text-foreground" : "text-muted-foreground/70"
-                }`}
-                data-testid={`link-mobile-nav-${link.name.toLowerCase()}`}
-              >
-                <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2 : 1.5} />
-                <span className="text-[9px] tracking-wider uppercase font-medium">{link.name}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      <MobileBottomDock />
     </>
   );
 }

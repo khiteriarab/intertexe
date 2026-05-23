@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
+import { RouteProgress } from "./RouteProgress";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { Navbar } from "./Navbar";
@@ -28,9 +29,12 @@ export function ClientApp({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthLoginPromptProvider>
       <Analytics />
+      <Suspense fallback={null}>
+        <RouteProgress />
+      </Suspense>
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <Navbar />
-        <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+        <main className="flex-1 flex flex-col w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
           {children}
         </main>
         <Footer />

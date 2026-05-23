@@ -1,22 +1,23 @@
 /**
- * Editorial campaign imagery — licensed stock (Unsplash), not product thumbnails or homepage hero reuse.
+ * Editorial campaign imagery from carried designers (hosted on intertexe.com / brand art).
+ * Not Unsplash stock or generic product thumbnails.
  */
 
-const U = "https://images.unsplash.com";
+const BASE = "https://www.intertexe.com";
 
 export const EDITORIAL_HERO = {
-  silk: `${U}/photo-1595777457583-95e059ef9437?w=1600&q=85`,
-  linen: `${U}/photo-1594633312681-425c7b97ccd1?w=1600&q=85`,
-  cashmere: `${U}/photo-1434389677669-e08b4cac3105?w=1600&q=85`,
-  wool: `${U}/photo-1591047139829-d91aecb6caea?w=1600&q=85`,
-  cotton: `${U}/photo-1496747614446-f389a2e2c6b5?w=1600&q=85`,
-  "leather-suede": `${U}/photo-1551028719-00167b16eac5?w=1600&q=85`,
-  vacation: `${U}/photo-1509631179647-0177331693ae?w=1600&q=85`,
-  evening: `${U}/photo-1566174053879-31528523f8ae?w=1600&q=85`,
-  tailoring: `${U}/photo-1594938298603-c8148c4dae35?w=1600&q=85`,
-  "summer-in-the-city": `${U}/photo-1483985988354-763728e3685b?w=1600&q=85`,
-  "white-edit": `${U}/photo-1515886657613-9f3515b0c78f?w=1600&q=85`,
-  newIn: `${U}/photo-1469334031218-e382b34bdf82?w=1600&q=85`,
+  silk: `${BASE}/editorial-silk.png`,
+  linen: `${BASE}/editorial-vacation.jpg`,
+  cashmere: `${BASE}/editorial-cashmere.jpg`,
+  wool: `${BASE}/brands/theory.jpg`,
+  cotton: `${BASE}/brands/l-agence.jpg`,
+  "leather-suede": `${BASE}/brands/staud.jpg`,
+  vacation: `${BASE}/editorial-vacation.jpg`,
+  evening: `${BASE}/brands/staud.jpg`,
+  tailoring: `${BASE}/brands/theory.jpg`,
+  "summer-in-the-city": `${BASE}/brands/l-agence.jpg`,
+  "white-edit": `${BASE}/brands/re-done.png`,
+  newIn: `${BASE}/hero-editorial-v8.png`,
 } as const;
 
 /** Homepage “Brands we love” — official site campaign / hero art. */

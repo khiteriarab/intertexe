@@ -9,7 +9,7 @@ import {
 } from "../../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
         maxPrice,
         limit,
         offset,
+        useMerchFeedPreview: false,
       });
       return NextResponse.json({
         products: result.products,

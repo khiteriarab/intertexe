@@ -3,10 +3,9 @@ import Link from "next/link";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getBrandProfile } from "../../lib/brand-profiles";
 import { DesignerSearchClient } from "./DesignerSearchClient";
-import { fetchBrandStats } from "../../lib/supabase-server";
+import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 300;
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Brand Directory — 11,000+ Brands Ranked by Natural Fiber Quality",
@@ -18,18 +17,31 @@ export const metadata: Metadata = {
 };
 
 export default async function DesignersPage() {
-  const brandStats = await fetchBrandStats();
+  const [platformStats, brandStats] = await Promise.all([
+    getCachedPlatformStats(),
+    getCachedBrandStats(),
+  ]);
   const shoppableBrands = brandStats.filter((b) => b.count >= 2);
-  const totalProducts = shoppableBrands.reduce((sum, b) => sum + b.count, 0);
+  const productLabel =
+    platformStats.productCount >= 1000
+      ? `${platformStats.productCount.toLocaleString()}+`
+      : platformStats.productCount.toLocaleString();
+  const brandLabel =
+    platformStats.brandCount >= 20
+      ? `${platformStats.brandCount}+`
+      : platformStats.brandCount.toLocaleString();
   return (
     <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-12 max-w-6xl mx-auto px-4">
       <header className="flex flex-col items-center text-center gap-4 md:gap-6 max-w-2xl mx-auto">
         <h1 className="text-3xl md:text-5xl font-serif" style={{ fontFamily: "Playfair Display, serif" }} data-testid="text-directory-title">The Directory</h1>
-        <p className="text-muted-foreground text-sm md:text-base">
-          {totalProducts > 0
-            ? `${totalProducts.toLocaleString()} products across ${shoppableBrands.length} brands in natural silk, linen, cotton, wool, and cashmere.`
-            : "Loading shoppable brands…"}
+        <p className="text-muted-foreground text-sm md:text-base" data-testid="text-directory-stats">
+          {productLabel} verified products across {brandLabel} brands in natural silk, linen, cotton, wool, and cashmere.
         </p>
+        {shoppableBrands.length > 0 && (
+          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/80">
+            Featured below — {shoppableBrands.length.toLocaleString()} brands with live inventory
+          </p>
+        )}
       </header>
 
       <DesignerSearchClient />

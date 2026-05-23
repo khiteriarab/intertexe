@@ -84,7 +84,7 @@ export const COLLECTION_EDITORIAL: Record<CollectionSlug, CollectionEditorial> =
     patterns: [
       /blazer|jacket|coat|trouser|pant|suit|tailor|structured|wool|crepe|pinstripe/i,
     ],
-    exclude: [/swim|bikini|beach|resort/i],
+    exclude: [/swim|bikini|beach|resort|men'?s|mens\b|male|boyfriend\s+fit/i],
   },
   "summer-in-the-city": {
     slug: "summer-in-the-city",
@@ -126,9 +126,12 @@ export const COLLECTION_EDITORIAL: Record<CollectionSlug, CollectionEditorial> =
       "expensive minimalism",
     ],
     patterns: [
-      /white|ivory|cream|ecru|stone|off[- ]?white|oatmeal|chalk/i,
+      /\bwhite\b|\bivory\b|\bcream\b|\boff[- ]?white\b|\bchalk\b|\bpearl\b|\bsnow\b/i,
     ],
-    exclude: [/black dress|navy|burgundy|print|floral/i],
+    exclude: [
+      /black dress|navy|burgundy|print|floral/i,
+      /\b(tan|camel|khaki|yellow|mustard|gold|brown|beige|sand|taupe|nude|rust|terracotta|olive|orange)\b/i,
+    ],
   },
 };
 

@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getHomePageData } from "../lib/homepage-data";
+import { getCachedHomePageData } from "../lib/homepage-data";
 import { HomePageContent } from "./components/HomeClient";
 
-/** Data-heavy Supabase fetch — do not block `next build` static generation (60s limit). */
-export const dynamic = "force-dynamic";
+/** Cached editorial homepage — rails precomputed in Supabase, stats cached server-side. */
 export const revalidate = 300;
 
 export const metadata: Metadata = {
@@ -16,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const data = await getHomePageData();
+  const data = await getCachedHomePageData();
 
   return (
     <>

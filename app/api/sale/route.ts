@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchSaleProducts } from "../../../lib/supabase-server";
-import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
-  const limit = Math.min(Math.max(Number(sp.get("limit") || CATALOG_PAGE_SIZE), 1), 100);
+  const limit = Math.min(Math.max(Number(sp.get("limit") || 40), 1), 80);
   const offset = Math.max(Number(sp.get("offset") || 0), 0);
   const fiber = sp.get("fiber") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
@@ -17,16 +16,24 @@ export async function GET(request: NextRequest) {
       maxPrice,
       limit,
       offset,
+      useMerchFeedPreview: false,
     });
-    return NextResponse.json({
-      products: result.products,
-      total: result.total,
-      limit,
-      offset,
-      hasMore: offset + result.products.length < result.total,
-    });
+    return NextResponse.json(
+      {
+        products: result.products,
+        total: result.total,
+        limit,
+        offset,
+        hasMore: offset + result.products.length < result.total,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        },
+      }
+    );
   } catch (err) {
     console.error("[api/sale]", err);
-    return NextResponse.json({ products: [], total: 0 }, { status: 500 });
+    return NextResponse.json({ products: [], total: 0, error: "sale_fetch_failed" }, { status: 500 });
   }
 }

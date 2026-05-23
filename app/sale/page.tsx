@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { fetchSaleProducts } from "../../lib/supabase-server";
+import { getCachedSalePageData } from "../../lib/cached-catalog";
 import SaleClient from "./SaleClient";
 
-export const revalidate = 0;
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "The Edit — On Sale | INTERTEXE",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SalePage() {
-  const saleData = await fetchSaleProducts({ limit: 32, offset: 0 });
+  const saleData = await getCachedSalePageData();
 
   return (
     <SaleClient
