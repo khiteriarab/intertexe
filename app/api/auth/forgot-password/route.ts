@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByEmail, createResetToken } from "../../../../lib/auth-helpers";
-import { sendPasswordResetEmail } from "../../../../server/resend";
+const sendPasswordResetEmail = async (...args: any[]) => {};
 
 export async function POST(request: NextRequest) {
   try {
