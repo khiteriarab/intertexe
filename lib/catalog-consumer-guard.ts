@@ -19,6 +19,7 @@ export function consumerExclusionForProduct(p: {
       name: p.name ?? undefined,
       category: p.category ?? undefined,
       brand_slug: p.brandSlug ?? undefined,
+      url: p.url ?? undefined,
     })
   ) {
     return "mens";

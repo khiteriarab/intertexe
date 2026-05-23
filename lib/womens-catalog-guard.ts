@@ -37,23 +37,35 @@ export function isMensCatalogRow(row: {
   category?: string;
   name?: string;
   title?: string;
+  url?: string;
 }): boolean {
   const slug = String(row.brand_slug || row.brandSlug || "").toLowerCase();
   if (isMensOnlyBrand(slug)) return true;
 
   const cat = String(row.category || "").toLowerCase();
   const name = String(row.name || row.title || "").toLowerCase();
-  const text = `${cat} ${name}`;
+  const url = String(row.url || "").toLowerCase();
+  const text = `${cat} ${name} ${url}`;
 
   if (WOMENS_OVERRIDE.test(text)) return false;
+
+  if (url) {
+    if (/\/(men|mens|menswear|man|homme|uomo)(\/|$|\?)/i.test(url)) return true;
+    if (/\/shop\/m\//i.test(url) || /gender=male/i.test(url)) return true;
+    if (/\bfor-men\b|\bmen-only\b/i.test(url)) return true;
+  }
+
   if (MENS_TEXT.test(text)) return true;
   if (MENS_GARMENT.test(text)) return true;
   if (UNISEX_POLO.test(text) && !WOMENS_OVERRIDE.test(text)) return true;
 
-  // The Attico etc. — men's polos / shirts without women's signal
-  if (/\b(cotton poplin|poplin)\s+shirt\b/.test(name) && /\bpolo\b/.test(name) && !WOMENS_OVERRIDE.test(text)) {
-    return true;
+  // Dual-gender brands (The Attico, etc.) — men's shirts often titled generically
+  if (/\b(cotton\s+)?poplin\s+shirt\b/i.test(name) && !WOMENS_OVERRIDE.test(text)) {
+    if (/\bpolo\b/i.test(name) || /\/(men|mens)/i.test(url)) return true;
+    if (/^(shirt|shirts|top|tops)$/i.test(cat.trim()) && /\/(men|mens)/i.test(url)) return true;
   }
+
+  if (/^(men|mens|men'?s|male|homme|uomo)\b/i.test(cat.trim())) return true;
 
   return false;
 }

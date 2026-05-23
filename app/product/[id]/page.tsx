@@ -208,7 +208,9 @@ export default async function ProductPage({
   const originalShown = formatDisplayOriginalPrice(product);
 
   const [moreFromBrand, moreInFiber, moreAtPrice] = await Promise.all([
-    fetchMoreFromBrand(String(product.id), product.brandSlug, 4),
+    product.brandSlug
+      ? fetchMoreFromBrand(String(product.id), product.brandSlug, 12)
+      : Promise.resolve([]),
     fetchMoreInFiber(String(product.id), product.composition, 4),
     fetchMoreAtPrice(String(product.id), product.price, 4),
   ]);

@@ -2,7 +2,11 @@ import { unstable_cache } from "next/cache";
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeBrandName } from "./brand-display";
 import { displayNaturalFiberPercent } from "./display-natural-fiber";
-import { consumerExclusionForRow, filterConsumerCatalogProducts } from "./catalog-consumer-guard";
+import {
+  consumerExclusionForProduct,
+  consumerExclusionForRow,
+  filterConsumerCatalogProducts,
+} from "./catalog-consumer-guard";
 
 /** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
 type UntypedSupabase = SupabaseClient<any, "public", any>;
@@ -994,7 +998,10 @@ export async function fetchProductById(id: string): Promise<Product | null> {
   if (error || !data || data.length === 0) return null;
   const row = data[0];
   if (row.natural_fiber_percent != null && row.natural_fiber_percent < 80) return null;
-  return mapProductRow(row);
+  if (isMensCatalogRow(row)) return null;
+  const mapped = mapProductRow(row);
+  if (consumerExclusionForProduct(mapped)) return null;
+  return mapped;
 }
 
 export async function fetchProductsByFiberAndCategory(
@@ -1094,7 +1101,9 @@ export async function fetchProductsByBrand(
     rows = dedupeLiveApparelRows(data || [], "us", "us");
   }
 
-  const products = rows.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
+  const products = filterConsumerCatalogProducts(
+    rows.filter(isClothingProduct).map(mapProductRow)
+  );
 
   if (skipTotal) {
     return { products, total: null, hasMore: products.length >= limit };
@@ -1668,25 +1677,74 @@ export async function fetchShopProducts(options: {
 
 const PRODUCT_CARD_COLS = "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price";
 
+/** PDP rail — same deduped women's catalog as designer shop, not raw live rows. */
 export async function fetchMoreFromBrand(
   productId: string,
   brandSlug: string,
-  limit = 4
+  limit = 12
 ): Promise<Product[]> {
+  const slug = String(brandSlug || "").trim().toLowerCase();
+  if (!slug) return [];
   const supabase = getServerSupabase();
   if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("live_products_apparel")
-    .select(PRODUCT_CARD_COLS)
-    .eq("brand_slug", brandSlug)
-    .neq("id", productId)
-    .gte("natural_fiber_percent", 80)
-    .not("image_url", "is", null)
-    .not("price", "is", null)
-    .order("natural_fiber_percent", { ascending: false })
-    .limit(limit);
-  if (error || !data) return [];
-  return data.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
+
+  const excludeIds = new Set(
+    [productId, String(productId)].map((s) => s.trim()).filter(Boolean)
+  );
+  const target = Math.min(Math.max(limit, 8), 16);
+  const fetchLimit = Math.min(target * 4, 48);
+
+  let rows =
+    (await rpcCatalogList(supabase, {
+      preferred: "us",
+      fallback: "us",
+      brandSlug: slug,
+      limit: fetchLimit,
+      offset: 0,
+      minNfp: 80,
+    })) || [];
+
+  if (rows.length === 0) {
+    const { data, error } = await supabase
+      .from("live_products_apparel")
+      .select("*")
+      .eq("brand_slug", slug)
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .not("price", "is", null)
+      .order("natural_fiber_percent", { ascending: false })
+      .limit(fetchLimit);
+    if (!error && data?.length) {
+      rows = dedupeLiveApparelRows(data, "us", "us");
+    }
+  }
+
+  const mapped = filterConsumerCatalogProducts(
+    rows
+      .filter((row: any) => priceListedRow(row) && isClothingProduct(row))
+      .map(mapProductRow)
+      .filter((p) => {
+        const id = String(p.id || "");
+        const pid = String(p.productId || "");
+        return !excludeIds.has(id) && !excludeIds.has(pid);
+      })
+  );
+
+  const seenKeys = new Set<string>();
+  const unique: Product[] = [];
+  for (const p of mapped) {
+    const key = catalogDedupeKey({
+      brand_name: p.brandName,
+      name: p.name,
+      product_id: p.productId,
+      image_url: p.imageUrl,
+    });
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+    unique.push(p);
+    if (unique.length >= target) break;
+  }
+  return unique;
 }
 
 export async function fetchMoreInFiber(
