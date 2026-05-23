@@ -84,7 +84,13 @@ export default function EditClient({
   return (
     <div className="flex flex-col" data-testid={`page-edit-${config.slug}`}>
       <section className="relative -mx-4 md:-mx-8 overflow-hidden">
-        <EditorialHeroImage src={heroImageUrl} alt={config.title} variant="collection" />
+        <EditorialHeroImage
+          src={heroImageUrl}
+          alt={config.title}
+          variant="collection"
+          slug={config.slug}
+          title={config.title}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
         <div className="absolute inset-0 z-10 flex flex-col justify-end px-6 md:px-14 pb-10 md:pb-14 max-w-3xl">
           <p className="text-[10px] uppercase tracking-[0.32em] text-white/60 mb-2">{config.kicker}</p>

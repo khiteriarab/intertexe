@@ -9,9 +9,10 @@ import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
-import { BRAND_WE_LOVE_IMAGES, EDITORIAL_HERO } from "../../lib/editorial-assets";
+import { BRAND_WE_LOVE_IMAGES, editorialHeroForSlug } from "../../lib/editorial-assets";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { EditorialHeroImage } from "./EditorialHeroImage";
+import { BrandEditorialImage } from "./BrandEditorialImage";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -298,14 +299,13 @@ function BrandCard({ designer, count }: { designer: any; count: number }) {
       className="group flex flex-col gap-3 active:scale-[0.98] transition-transform touch-manipulation"
       data-testid={`card-designer-${designer.id}`}
     >
-      <div className={`aspect-[3/4] w-full overflow-hidden relative ${imageUrl ? "bg-neutral-100" : "bg-[#f0ece6]"}`}>
-        {imageUrl ? (
-          <img
+      <div className={`w-full relative ${imageUrl && !failed ? "" : "aspect-[3/4] bg-[#f0ece6]"}`}>
+        {imageUrl && !failed ? (
+          <BrandEditorialImage
             src={imageUrl}
             alt={`${designer.name} editorial`}
-            className="absolute inset-0 w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-700 ease-out"
-            loading="eager"
-            onError={() => setFailed(true)}
+            slug={designer.slug}
+            onFailed={() => setFailed(true)}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-4">
@@ -388,7 +388,7 @@ function EditorialPanel({
       data-testid={testId}
     >
       {imageUrl && (
-        <EditorialHeroImage src={imageUrl} alt={title} variant="panel" hoverZoom />
+        <EditorialHeroImage src={imageUrl} alt={title} variant="panel" hoverZoom slug={slug} title={title} />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
       <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 pb-10 md:p-14 md:pb-16 gap-2">
@@ -425,11 +425,6 @@ const COLLECTION_PRODUCTS_KEY: Record<string, keyof HomePageData> = {
   "summer-in-the-city": "summerInCityProducts",
   "white-edit": "whiteEditProducts",
 };
-
-function editorialHeroForSlug(slug: string): string {
-  const key = slug as keyof typeof EDITORIAL_HERO;
-  return EDITORIAL_HERO[key] ?? EDITORIAL_HERO.newIn;
-}
 
 export function HomePageContent({ initialData }: { initialData?: HomePageData }) {
   const [data, setData] = useState<HomePageData>(initialData || {
@@ -486,6 +481,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           src="/hero-editorial-v8.png"
           alt="INTERTEXE — Luxury natural-fabric fashion"
           variant="banner"
+          slug="home-hero"
+          title="What to wear now"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/15 to-transparent pointer-events-none" />
         <div
@@ -559,6 +556,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                 title={collection.label}
                 subtitle={collection.subtitle}
                 testId={`link-collection-${collection.slug}`}
+                slug={collection.slug}
               />
             </section>
 

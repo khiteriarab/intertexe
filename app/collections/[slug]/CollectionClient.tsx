@@ -11,6 +11,7 @@ import {
   type CollectionPageConfig,
 } from "../../../lib/collection-pages";
 import { EditorialHeroImage } from "../../components/EditorialHeroImage";
+import { CatalogProductImage } from "../../components/CatalogProductImage";
 import { MOOD_CATALOG, moodSlugFromLabel } from "../../../lib/mood-commerce";
 
 type Product = {
@@ -89,7 +90,13 @@ export default function CollectionClient({
   return (
     <div className="flex flex-col" data-testid={`page-collection-${config.slug}`}>
       <section className="relative -mx-4 md:-mx-8 overflow-hidden">
-        <EditorialHeroImage src={heroImageUrl} alt={config.title} variant="collection" />
+        <EditorialHeroImage
+          src={heroImageUrl}
+          alt={config.title}
+          variant="collection"
+          slug={config.slug}
+          title={config.title}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10 pointer-events-none" />
         <div className="absolute inset-0 z-10 flex flex-col justify-end px-6 md:px-14 pb-12 md:pb-16 max-w-3xl">
           <p className="text-[10px] uppercase tracking-[0.32em] text-white/55 mb-2">{config.kicker}</p>
@@ -167,16 +174,18 @@ export default function CollectionClient({
                 href={`/product/${product.id}`}
                 className="group flex flex-col"
               >
-                <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
-                  {product.imageUrl ? (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-                      loading="lazy"
-                    />
-                  ) : null}
-                </div>
+                {product.imageUrl ? (
+                  <CatalogProductImage
+                    src={product.imageUrl}
+                    alt={product.name}
+                    variant="collection-grid"
+                    category={config.slug}
+                    name={product.name}
+                    className="group-hover:scale-[1.03]"
+                  />
+                ) : (
+                  <div className="aspect-[3/4] bg-[#f5f4f2]" />
+                )}
                 <div className="pt-2.5">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">{product.brandName}</span>
                   <h3 className="text-[11px] md:text-[12px] leading-snug text-neutral-500 mt-px line-clamp-2">
