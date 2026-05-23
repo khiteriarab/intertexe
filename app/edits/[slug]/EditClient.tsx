@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice } from "../../../lib/format-display-price";
 import type { EditPageConfig } from "../../../lib/edit-pages";
-import { EDIT_SLUGS, EDIT_PAGES } from "../../../lib/edit-pages";
+import { EDIT_SLUGS, EDIT_PAGES, FABRIC_EDIT_SLUGS } from "../../../lib/edit-pages";
 
 type Product = {
   id: string;
@@ -16,8 +16,6 @@ type Product = {
   imageUrl?: string;
   price?: string;
 };
-
-const FABRIC_EDIT_SLUGS = ["silk", "linen", "cashmere"] as const;
 
 export default function EditClient({
   config,

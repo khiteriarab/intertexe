@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeBrandName } from "./brand-display";
 import { displayNaturalFiberPercent } from "./display-natural-fiber";
+import { consumerExclusionForRow, filterConsumerCatalogProducts } from "./catalog-consumer-guard";
 
 /** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
 type UntypedSupabase = SupabaseClient<any, "public", any>;
@@ -471,6 +472,7 @@ export async function fetchSilkEditProducts(
 }
 
 function passesWomensCatalogRow(row: any): boolean {
+  if (consumerExclusionForRow(row)) return false;
   return isClothingProduct(row) && isNotMensProduct(row) && isZegnaWomensPiece(row);
 }
 
@@ -602,6 +604,7 @@ export async function fetchVacationPageData(opts?: {
 const EDIT_TO_COLLECTION_SLUG: Partial<Record<string, import("./collection-pages").CollectionSlug>> = {
   evening: "evening",
   tailoring: "tailoring",
+  vacation: "vacation",
 };
 
 /** Fabric + lifestyle edit pages — full paginated catalog (homepage rail is preview only). */
@@ -646,26 +649,20 @@ export async function fetchEditPageData(
   }
 
   const fiber = config.fiber;
-  const category =
-    slug === "vacation" ? "dresses" : undefined;
+  const shopFiber = config.shopFiber ?? config.fiber;
 
   const { products: raw, total } = await fetchShopProducts({
-    fiber,
-    category,
-    limit: limit + 12,
+    fiber: shopFiber,
+    limit: limit + 16,
     offset,
     sort: "recommended",
   });
 
-  let products = raw
-    .filter((p) => productBodyMatchesFiber(p.composition || "", fiber))
-    .filter(isEditorialWomensApparel);
-
-  if (slug === "vacation") {
-    products = products.filter(isVacationResortPiece);
-  }
-
-  products = products.slice(0, limit);
+  let products = filterConsumerCatalogProducts(
+    raw
+      .filter((p) => productBodyMatchesFiber(p.composition || "", fiber))
+      .filter(isEditorialWomensApparel)
+  ).slice(0, limit);
 
   const supabase = getServerSupabase();
   let editCount = total;
@@ -673,8 +670,8 @@ export async function fetchEditPageData(
     const counted = await rpcCatalogListCount(supabase, {
       preferred: "us",
       fallback: "us",
-      fiber,
-      category: category ?? null,
+      fiber: shopFiber,
+      category: null,
       brandSlug: null,
       search: null,
       minNfp: 80,
@@ -682,14 +679,7 @@ export async function fetchEditPageData(
     if (counted != null && counted > 0) editCount = counted;
   }
 
-  const heroImageUrl =
-    config.slug === "silk"
-      ? EDITORIAL_HERO.silk
-      : config.slug === "linen"
-        ? EDITORIAL_HERO.linen
-        : config.slug === "cashmere"
-          ? EDITORIAL_HERO.cashmere
-          : config.editorialImage;
+  const heroImageUrl = config.editorialImage;
 
   return {
     products,
@@ -842,14 +832,14 @@ async function fetchCollectionCatalogPoolUncached(
       const p = mapProductRow(row);
       if (!isEditorialWomensApparel(p)) continue;
       if (!isCollectionEligible(p, slug)) continue;
-      const id = p.productId || p.id;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      merged.push(p);
+        const id = p.productId || p.id;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        merged.push(p);
     }
   }
 
-  return buildRankedCollectionCatalog(merged, slug);
+  return buildRankedCollectionCatalog(filterConsumerCatalogProducts(merged), slug);
 }
 
 function getCachedRankedCollectionPool(slug: import("./collection-pages").CollectionSlug) {
@@ -876,7 +866,7 @@ function mapDesignerRow(row: any): Designer {
 function isClothingProduct(p: any): boolean {
   const cat = (p.category || "").toLowerCase();
   const name = (p.title || p.name || "").toLowerCase();
-  const nonClothing = ["perfume", "cologne", "fragrance", "candle", "soap", "cream", "lotion", "serum", "mask", "shampoo", "conditioner", "body wash", "deodorant", "sunscreen", "sunglasses", "eyewear", "watch", "jewelry", "earring", "necklace", "bracelet", "phone case", "laptop", "tablet", "headband", "hair clip", "scrunchie", "umbrella", "blanket", "pillow", "towel", "candle holder", "vase", "keychain", "sticker", "magnet", "poster", "notebook", "pencil", "gift card"];
+  const nonClothing = ["perfume", "cologne", "fragrance", "candle", "soap", "cream", "lotion", "serum", "mask", "shampoo", "conditioner", "body wash", "deodorant", "sunscreen", "sunglasses", "eyewear", "watch", "jewelry", "earring", "necklace", "bracelet", "phone case", "laptop", "tablet", "headband", "hair clip", "scrunchie", "umbrella", "blanket", "pillow", "towel", "candle holder", "vase", "keychain", "sticker", "magnet", "poster", "notebook", "pencil", "gift card", "shoe", "shoes", "footwear", "sandal", "boot", "sneaker", "heel", "pump", "loafer", "mule", "slipper"];
   const text = cat + " " + name;
   for (const term of nonClothing) {
     const re = new RegExp(`\\b${term}\\b`);
@@ -1571,14 +1561,30 @@ export async function fetchShopProducts(options: {
     }
     if (!total || total < filtered.length) total = filtered.length;
 
-    let mapped = filtered.filter(passesWomensCatalogRow).map(mapProductRow);
+    let mapped = filterConsumerCatalogProducts(
+      filtered.filter(passesWomensCatalogRow).map(mapProductRow)
+    );
     if (rpcFiber) {
       mapped = mapped.filter((p) => productBodyMatchesFiber(p.composition || "", rpcFiber));
     }
 
+    let resolvedTotal = total;
+    if (rpcFiber) {
+      const counted = await rpcCatalogListCount(supabase, {
+        preferred,
+        fallback,
+        fiber: rpcFiber,
+        category: rpcCategory,
+        brandSlug: null,
+        search: searchRpc,
+        minNfp: 80,
+      });
+      if (counted != null && counted > 0) resolvedTotal = counted;
+    }
+
     return {
       products: mapped,
-      total: rpcFiber ? mapped.length : total,
+      total: resolvedTotal,
     };
   }
 

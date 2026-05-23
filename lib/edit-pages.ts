@@ -1,13 +1,11 @@
 import { MERCH_RAIL_KEYS, type MerchRailKey } from "./merch-feed";
 import { EDITORIAL_HERO } from "./editorial-assets";
 
-export type EditSlug =
-  | "silk"
-  | "linen"
-  | "cashmere"
-  | "evening"
-  | "tailoring"
-  | "vacation";
+export type FabricEditSlug = "silk" | "linen" | "cashmere" | "wool" | "cotton" | "leather-suede";
+
+export type EditSlug = FabricEditSlug | "evening" | "tailoring" | "vacation";
+
+export type ShopFiber = "silk" | "linen" | "cashmere" | "wool" | "cotton" | "leather-suede";
 
 export type EditPageConfig = {
   slug: EditSlug;
@@ -15,14 +13,26 @@ export type EditPageConfig = {
   kicker: string;
   description: string;
   railKey: MerchRailKey;
-  fiber?: "silk" | "linen" | "cashmere" | "wool" | "cotton";
+  /** Body-composition check */
+  fiber?: ShopFiber;
+  /** `catalog_list` / shop fiber param (defaults to fiber) */
+  shopFiber?: ShopFiber;
   catalogHref: string;
   catalogLabel: string;
   materialHref?: string;
   editorialImage: string;
-  /** Dedicated route when different from /edits/[slug] */
+  /** Redirect to canonical route when different from /edits/[slug] */
   canonicalPath?: string;
 };
+
+export const FABRIC_EDIT_SLUGS: FabricEditSlug[] = [
+  "silk",
+  "linen",
+  "cashmere",
+  "wool",
+  "cotton",
+  "leather-suede",
+];
 
 export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
   silk: {
@@ -30,7 +40,7 @@ export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
     title: "The Silk Edit",
     kicker: "In focus",
     description:
-      "Fluid, luminous silk — every piece verified for natural-fiber composition. Browse the full silk edit with pagination.",
+      "Fluid, luminous silk — every piece verified for natural-fiber composition. Full catalog with pagination.",
     railKey: MERCH_RAIL_KEYS.silk,
     fiber: "silk",
     catalogHref: "/shop?fiber=silk",
@@ -64,38 +74,79 @@ export const EDIT_PAGES: Record<EditSlug, EditPageConfig> = {
     materialHref: "/materials/cashmere",
     editorialImage: EDITORIAL_HERO.cashmere,
   },
+  wool: {
+    slug: "wool",
+    title: "The Wool Edit",
+    kicker: "Structure",
+    description:
+      "Wool and merino with verified composition — sweaters, coats, and tailored pieces.",
+    railKey: MERCH_RAIL_KEYS.wool,
+    fiber: "wool",
+    catalogHref: "/shop?fiber=wool",
+    catalogLabel: "Shop all wool",
+    materialHref: "/materials/wool",
+    editorialImage: EDITORIAL_HERO.wool,
+  },
+  cotton: {
+    slug: "cotton",
+    title: "The Cotton Edit",
+    kicker: "Everyday",
+    description:
+      "Premium cotton dresses, tops, and essentials — full catalog, composition verified.",
+    railKey: MERCH_RAIL_KEYS.cotton,
+    fiber: "cotton",
+    catalogHref: "/shop?fiber=cotton",
+    catalogLabel: "Shop all cotton",
+    materialHref: "/materials/cotton",
+    editorialImage: EDITORIAL_HERO.cotton,
+  },
+  "leather-suede": {
+    slug: "leather-suede",
+    title: "Leather & Suede",
+    kicker: "Texture",
+    description:
+      "Leather and suede apparel with verified natural-fiber context — full shoppable catalog.",
+    railKey: MERCH_RAIL_KEYS.leatherSuede,
+    fiber: "leather-suede",
+    shopFiber: "leather-suede",
+    catalogHref: "/shop?fiber=leather",
+    catalogLabel: "Shop leather & suede",
+    materialHref: "/materials/leather-suede",
+    editorialImage: EDITORIAL_HERO["leather-suede"],
+  },
   evening: {
     slug: "evening",
     title: "The Evening Edit",
     kicker: "After dark",
     description:
-      "Polished silhouettes for evening — fluid silk and elevated natural fibers, hand-picked for the homepage.",
+      "Elevated night dressing — silk draping, jewel tones, and candlelit glamour.",
     railKey: MERCH_RAIL_KEYS.evening,
-    catalogHref: "/shop?fiber=silk&category=dresses",
-    catalogLabel: "Shop evening dresses",
-    editorialImage: EDITORIAL_HERO.silk,
+    catalogHref: "/collections/evening",
+    catalogLabel: "Shop the Evening collection",
+    canonicalPath: "/collections/evening",
+    editorialImage: EDITORIAL_HERO.evening,
   },
   tailoring: {
     slug: "tailoring",
     title: "The Tailoring Edit",
     kicker: "Structure",
     description:
-      "Sharp lines in wool, linen, and cotton — tailored pieces with verified natural-fiber content.",
+      "Sharp structure and quiet luxury — suiting and investment tailoring.",
     railKey: MERCH_RAIL_KEYS.tailoring,
-    catalogHref: "/shop?category=outerwear",
-    catalogLabel: "Shop tailoring",
-    editorialImage: EDITORIAL_HERO.linen,
+    catalogHref: "/collections/tailoring",
+    catalogLabel: "Shop the Tailoring collection",
+    canonicalPath: "/collections/tailoring",
+    editorialImage: EDITORIAL_HERO.tailoring,
   },
   vacation: {
     slug: "vacation",
     title: "The Vacation Edit",
     kicker: "Resort",
-    description: "Linen dresses and skirts for warm weather.",
+    description: "Mediterranean resort dressing — linen, cotton, and silk for warm destinations.",
     railKey: MERCH_RAIL_KEYS.vacation,
-    fiber: "linen",
-    catalogHref: "/shop?fiber=linen&category=dresses",
-    catalogLabel: "Shop all linen dresses",
-    canonicalPath: "/vacation",
+    catalogHref: "/collections/vacation",
+    catalogLabel: "Shop the Vacation collection",
+    canonicalPath: "/collections/vacation",
     editorialImage: EDITORIAL_HERO.vacation,
   },
 };

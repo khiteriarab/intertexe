@@ -17,6 +17,10 @@ export function productBodyMatchesFiber(composition: string, fiber: string): boo
       return /(wool|merino|lambswool)/.test(body);
     case "cotton":
       return /cotton/.test(body) && !/(^|[^a-z])(silk|wool|cashmere)([^a-z]|$)/.test(body);
+    case "leather":
+    case "leather-suede":
+    case "leather_suede":
+      return /(leather|suede|lambskin|calfskin|nubuck)/.test(body);
     default:
       return true;
   }

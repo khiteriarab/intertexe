@@ -32,6 +32,8 @@ export const MATERIAL_SLUG_TO_RAIL: Record<string, MerchRailKey> = {
   cashmere: MERCH_RAIL_KEYS.cashmere,
   wool: MERCH_RAIL_KEYS.wool,
   cotton: MERCH_RAIL_KEYS.cotton,
+  leather: MERCH_RAIL_KEYS.leatherSuede,
+  "leather-suede": MERCH_RAIL_KEYS.leatherSuede,
 };
 
 const FEED_SELECT_COLS =
