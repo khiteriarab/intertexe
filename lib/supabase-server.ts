@@ -649,39 +649,33 @@ export async function fetchCollectionPageData(
   const config = getCollectionConfig(slug);
   if (!config) return null;
 
-  const { paginateCollectionCatalog } = await import("./collection-catalog");
   const collectionSlug = slug as import("./collection-pages").CollectionSlug;
   const limit = Math.min(Math.max(opts?.limit ?? 56, 1), 100);
   const offset = Math.max(opts?.offset ?? 0, 0);
 
+  const { fetchCollectionPageFromMemberships } = await import("./collection-memberships");
+  const fromMemberships = await fetchCollectionPageFromMemberships(collectionSlug, {
+    limit,
+    offset,
+  });
+
+  if (fromMemberships && fromMemberships.total > 0) {
+    return {
+      products: fromMemberships.products,
+      editCount: fromMemberships.total,
+      catalogTotal: fromMemberships.total,
+      heroImageUrl: config.editorialImage,
+    };
+  }
+
+  const { paginateCollectionCatalog } = await import("./collection-catalog");
   const ranked = await getCachedRankedCollectionPool(collectionSlug);
   const products = paginateCollectionCatalog(ranked, limit, offset);
-  const poolCount = ranked.length;
-  let catalogTotal = poolCount;
-  const supabase = getServerSupabase();
-  if (supabase) {
-    const { COLLECTION_CATALOG_QUERIES } = await import("./collection-catalog");
-    const primary = COLLECTION_CATALOG_QUERIES[collectionSlug]?.[0];
-    if (primary) {
-      const rpcTotal = await rpcCatalogListCount(supabase, {
-        preferred: "us",
-        fallback: "us",
-        fiber: primary.fiber ?? null,
-        category: primary.category ?? null,
-        brandSlug: null,
-        search: primary.search ?? null,
-        minNfp: 80,
-      });
-      if (rpcTotal != null && rpcTotal > 0) {
-        catalogTotal = Math.max(poolCount, rpcTotal);
-      }
-    }
-  }
 
   return {
     products,
-    editCount: poolCount,
-    catalogTotal,
+    editCount: ranked.length,
+    catalogTotal: ranked.length,
     heroImageUrl: config.editorialImage,
   };
 }
@@ -703,7 +697,7 @@ function rowIsOnSale(row: any): boolean {
   return orig > curr && curr > 0;
 }
 
-function mapProductRow(row: any): Product {
+export function mapProductRow(row: any): Product {
   const brandSlug = row.brand_slug || "";
   const rawImageUrl = row.image_url || "";
   const priceRaw = row.price;
@@ -1694,6 +1688,35 @@ export async function fetchSaleProducts(options: {
   } = options;
   const dedupePreferred = "us";
   const dedupeFallback = "us";
+
+  if (!useMerchFeedPreview) {
+    try {
+      const { data: rows, error } = await supabase.rpc("sale_catalog_list", {
+        p_preferred_region: dedupePreferred,
+        p_fallback_region: dedupeFallback,
+        p_fiber: fiber && fiber !== "all" ? fiber : null,
+        p_max_price: maxPrice ?? null,
+        p_limit: limit,
+        p_offset: offset,
+      });
+      if (!error) {
+        const { data: countRaw } = await supabase.rpc("sale_catalog_count", {
+          p_fiber: fiber && fiber !== "all" ? fiber : null,
+          p_max_price: maxPrice ?? null,
+        });
+        const total = Number(countRaw ?? 0);
+        const products = filterConsumerCatalogProducts((rows || []).map(mapProductRow));
+        if (products.length > 0 || total > 0) {
+          return {
+            products,
+            total: total > 0 ? total : products.length,
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("[fetchSaleProducts] sale_catalog_list RPC failed:", err);
+    }
+  }
 
   if (useMerchFeedPreview) {
     try {
