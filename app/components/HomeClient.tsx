@@ -9,7 +9,7 @@ import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
-import { BRAND_WE_LOVE_IMAGES, editorialHeroForSlug } from "../../lib/editorial-assets";
+import { BRAND_WE_LOVE_IMAGES, editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
@@ -373,6 +373,7 @@ function EditorialPanel({
   title,
   subtitle,
   testId,
+  slug,
 }: {
   href: string;
   imageUrl: string;
@@ -380,6 +381,7 @@ function EditorialPanel({
   title: string;
   subtitle: string;
   testId: string;
+  slug?: string;
 }) {
   return (
     <Link
@@ -476,9 +478,9 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <AppDownloadBanner />
 
-      <section className="relative overflow-hidden -mx-4 md:-mx-8">
+      <section className="relative overflow-hidden w-full -mx-4 md:-mx-8">
         <EditorialHeroImage
-          src="/hero-editorial-v8.png"
+          src={HOMEPAGE_HERO_IMAGE}
           alt="INTERTEXE — Luxury natural-fabric fashion"
           variant="banner"
           slug="home-hero"

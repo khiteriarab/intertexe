@@ -12,6 +12,7 @@ import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
 import { CatalogProductImage } from "../components/CatalogProductImage";
 import { CountrySelector } from "../components/CountrySelector";
+import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import {
   getRegionForCountryCode,
   getRegionForMarket,
@@ -383,7 +384,7 @@ export default function ShopClient({
           </div>
         </header>
 
-        <div className="flex flex-col gap-4 mb-6 md:mb-8">
+        <div className="flex flex-col gap-4 mb-6 md:mb-8 lg:hidden">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
             {FIBER_TABS.map(tab => (
               <button
@@ -417,20 +418,41 @@ export default function ShopClient({
             ))}
           </div>
 
-          <div className="hidden md:flex items-center justify-end gap-3 -mx-1 px-1 pt-1">
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-              Delivering to
-            </span>
-            <CountrySelector detectedCountryCode={detectedCountry} />
-          </div>
           <p className="md:hidden text-[10px] uppercase tracking-[0.14em] text-muted-foreground -mx-1 px-1 pt-1">
             Delivering to {activeRegion.country}
             {activeRegion.currency !== "ALL" ? ` · ${activeRegion.currency}` : ""}
           </p>
         </div>
 
-        <div className="flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8 gap-4">
-          <p className="text-[11px] md:text-xs text-muted-foreground flex-shrink-0" data-testid="text-result-count">
+        <div className="lg:flex lg:gap-10 lg:items-start">
+          <CatalogFilterSidebar
+            resultCount={displayResultTotal}
+            isLoading={isLoading}
+            fiberTab={fiberTab}
+            categoryFilter={categoryFilter}
+            fiberOptions={FIBER_TABS}
+            categoryOptions={CATEGORY_FILTERS}
+            onFiberChange={(key) => {
+              setFiberTab(key);
+              setCategoryFilter("all");
+              setListOffset(0);
+            }}
+            onCategoryChange={(key) => {
+              setCategoryFilter(key);
+              setListOffset(0);
+            }}
+          />
+
+          <div className="flex-1 min-w-0">
+        <div className="hidden md:flex items-center justify-end gap-3 mb-6">
+          <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            Delivering to
+          </span>
+          <CountrySelector detectedCountryCode={detectedCountry} />
+        </div>
+
+        <div className="flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8 gap-4 lg:border-0 lg:py-0 lg:mb-6">
+          <p className="text-[11px] md:text-xs text-muted-foreground flex-shrink-0 lg:hidden" data-testid="text-result-count">
             {isLoading ? (
               <span className="animate-pulse">Loading...</span>
             ) : (
@@ -441,33 +463,34 @@ export default function ShopClient({
           <div className="flex items-center gap-4 md:gap-6 ml-auto">
             <button
               type="button"
-              onClick={() => setShowFilterSheet(true)}
-              className="text-[11px] md:text-xs uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="btn-filter"
+              onClick={() => { setShowFilterSheet(true); setShowSortMenu(false); }}
+              className="flex items-center gap-1.5 text-[11px] md:text-xs uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors lg:hidden"
+              data-testid="btn-filter-sort"
             >
-              Filter
+              Filter & Sort
+              <ChevronDown className="w-3 h-3" />
             </button>
-            <div className="relative">
+            <div className="relative hidden lg:block">
               <button
                 type="button"
                 onClick={() => setShowSortMenu(!showSortMenu)}
                 className="flex items-center gap-1.5 text-[11px] md:text-xs uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
                 data-testid="btn-sort"
               >
-                Sort: {currentSort.label}
+                <span className="text-foreground/80">Sort By</span> {currentSort.label}
                 <ChevronDown className={`w-3 h-3 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
               </button>
               {showSortMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/40 shadow-xl min-w-[180px]">
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/40 shadow-xl min-w-[200px]">
                     {SORT_OPTIONS.map(option => (
                       <button
                         key={option.key}
                         type="button"
                         onClick={() => { setSortBy(option.key); setListOffset(0); setShowSortMenu(false); }}
                         className={`w-full text-left px-4 py-2.5 text-[11px] md:text-xs transition-colors ${
-                          sortBy === option.key ? "bg-[#f5f5f3] text-foreground" : "text-muted-foreground hover:bg-[#f5f5f3] hover:text-foreground"
+                          sortBy === option.key ? "bg-[#f5f5f3] text-foreground font-medium" : "text-muted-foreground hover:bg-[#f5f5f3] hover:text-foreground"
                         }`}
                         data-testid={`sort-${option.key}`}
                       >
@@ -485,8 +508,26 @@ export default function ShopClient({
           <>
             <div className="fixed inset-0 z-[90] bg-black/40" onClick={() => setShowFilterSheet(false)} />
             <div className="fixed inset-x-0 bottom-0 z-[100] bg-background border-t border-border/40 rounded-t-2xl max-h-[85vh] overflow-y-auto p-6 pb-10 md:hidden">
-              <p className="text-lg font-serif mb-1">Filter By</p>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-6">Material</p>
+              <p className="text-lg font-serif mb-1">Filter & Sort</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-6">
+                {displayResultTotal.toLocaleString()} results
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Sort By</p>
+              <div className="flex flex-col border border-border/30 mb-8">
+                {SORT_OPTIONS.map(option => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => { setSortBy(option.key); setListOffset(0); }}
+                    className={`w-full text-left px-4 py-3 text-[11px] border-b border-border/20 last:border-0 ${
+                      sortBy === option.key ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
               <div className="flex flex-wrap gap-2 mb-8">
                 {FIBER_TABS.map(tab => (
                   <button
@@ -589,7 +630,7 @@ export default function ShopClient({
           </>
         )}
 
-        <div className="border-t border-border/20 pt-10 md:pt-14 mt-12 md:mt-16">
+        <div className="border-t border-border/20 pt-10 md:pt-14 mt-12 md:mt-16 lg:col-span-1">
           <h2 className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-6">Explore by Fabric</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
             {[
@@ -610,6 +651,8 @@ export default function ShopClient({
                 <ArrowRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             ))}
+          </div>
+        </div>
           </div>
         </div>
       </div>

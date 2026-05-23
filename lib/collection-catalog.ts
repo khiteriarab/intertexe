@@ -64,14 +64,21 @@ export const COLLECTION_CATALOG_QUERIES: Record<CollectionSlug, CollectionCatalo
 
 function isWhiteEditTonal(product: Product): boolean {
   const name = (product.name || "").toLowerCase();
+  const cat = (product.category || "").toLowerCase();
   const comp = (product.composition || "").toLowerCase();
-  const text = `${name} ${comp}`;
-  const hasWhiteCue = /\b(white|ivory|cream|off[- ]?white|chalk|pearl|snow)\b/.test(text);
-  if (!hasWhiteCue) return false;
+  const whiteColor =
+    /\b(white|ivory|ecru|cream|chalk|snow|off[- ]?white|optic white|optical white)\b/i;
+  if (!whiteColor.test(name) && !whiteColor.test(cat) && !whiteColor.test(comp)) {
+    return false;
+  }
+  const otherColors =
+    /\b(black|navy|red|blue|green|pink|burgundy|brown|grey|gray|yellow|orange|purple|floral|print|stripe|striped|dot|dotted|check|plaid|multicolor|multi-color)\b/i;
+  if (otherColors.test(name)) {
+    const startsWhite = /^(white|ivory|ecru|cream|off[- ]?white)\b/i.test(name.trim());
+    if (!startsWhite) return false;
+  }
   if (
-    /\b(tan|camel|khaki|yellow|mustard|gold|brown|beige|sand|taupe|nude|rust|terracotta|olive|orange|ecru dress)\b/.test(
-      name
-    )
+    /\b(tan|camel|khaki|mustard|gold|beige|sand|taupe|nude|rust|terracotta|olive)\b/.test(name)
   ) {
     return false;
   }

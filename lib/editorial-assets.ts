@@ -1,34 +1,40 @@
 /**
- * Editorial campaign imagery from carried designers (hosted on intertexe.com).
- * Use dedicated editorial art — not logos or unrelated brand stills.
+ * Editorial campaign imagery — prefer landscape campaign files for wide heroes/panels.
  */
 
 const BASE = "https://www.intertexe.com";
 
+/** Landscape editorial-silk (1408×768) — safe for homepage hero + evening panel. */
+const LANDSCAPE_SILK = `${BASE}/editorial-silk.png`;
+const LANDSCAPE_LINEN = `${BASE}/editorial-linen.png`;
+
 export const EDITORIAL_HERO = {
-  silk: `${BASE}/editorial-silk.png`,
-  linen: `${BASE}/editorial-linen.png`,
+  silk: LANDSCAPE_SILK,
+  linen: LANDSCAPE_LINEN,
   cashmere: `${BASE}/editorial-cashmere.jpg`,
   wool: `${BASE}/brands/theory.jpg`,
   cotton: `${BASE}/brands/l-agence.jpg`,
   "leather-suede": `${BASE}/brands/staud.jpg`,
+  /** Portrait — best on mobile; cover-crops on desktop. */
   vacation: `${BASE}/editorial-vacation.jpg`,
-  evening: `${BASE}/editorial-silk.png`,
+  /** Landscape silk campaign — fills wide “Evening” panel without pillarboxing. */
+  evening: LANDSCAPE_SILK,
   tailoring: `${BASE}/brands/theory.jpg`,
   "summer-in-the-city": `${BASE}/brands/isabel-marant.jpg`,
-  /** Linen / ivory resort — woman in white natural-fiber dress (not a logo). */
-  "white-edit": `${BASE}/editorial-linen.png`,
-  newIn: `${BASE}/hero-editorial-v8.png`,
+  "white-edit": LANDSCAPE_LINEN,
+  newIn: LANDSCAPE_SILK,
 } as const;
 
 export type EditorialHeroKey = keyof typeof EDITORIAL_HERO;
 
 export function editorialHeroForSlug(slug: string): string {
   const key = slug as EditorialHeroKey;
-  return EDITORIAL_HERO[key] ?? EDITORIAL_HERO.newIn;
+  return EDITORIAL_HERO[key] ?? LANDSCAPE_SILK;
 }
 
-/** Homepage “Brands we love” — official campaign photography from site /brand art. */
+/** Homepage hero — landscape campaign (not portrait hero-editorial-v8). */
+export const HOMEPAGE_HERO_IMAGE = LANDSCAPE_SILK;
+
 export const BRAND_WE_LOVE_IMAGES: Record<string, string> = {
   "re-done": "/brands/re-done.png",
   "isabel-marant": "/brands/isabel-marant.jpg",

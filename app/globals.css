@@ -128,6 +128,68 @@
   display: none;
 }
 
+/* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */
+.editorial-frame-hero {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #eae8e4;
+  height: clamp(520px, 88vh, 900px);
+}
+
+.editorial-frame-panel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #1c1c1c;
+  height: clamp(400px, min(56vw, 72vh), 680px);
+}
+
+.editorial-frame-collection-hero {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #eae8e4;
+  height: clamp(380px, min(50vw, 68vh), 620px);
+}
+
+.editorial-frame-brand {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background: #e8e6e2;
+}
+
+.editorial-cover-img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center 32%;
+  display: block;
+}
+
+.editorial-cover-img--top {
+  object-position: center 22% !important;
+}
+
+.editorial-cover-img--mid {
+  object-position: center 38% !important;
+}
+
+.editorial-cover-img--lower {
+  object-position: center 48% !important;
+}
+
+.group:hover .editorial-cover-img--zoom {
+  transform: scale(1.03);
+  transition: transform 1.1s ease-out;
+}
+
 /* Horizontal product rails: avoid first-tap being eaten by scroll pan */
 .product-rail-scroll {
   overflow-x: auto;

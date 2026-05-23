@@ -1,6 +1,5 @@
 /**
- * Section-aware editorial imagery — luxury layouts use cover + focal positioning,
- * not one universal contain rule.
+ * Section-aware editorial imagery — frames use globals.css cover-fill rules.
  */
 
 export type EditorialImageSection =
@@ -17,56 +16,36 @@ export type EditorialFocalHints = {
   name?: string;
 };
 
-/** Frame / aspect ratio per surface (NAP / Mytheresa–style). */
 export function editorialFrameClass(section: EditorialImageSection): string {
   switch (section) {
     case "hero-banner":
-      return [
-        "relative w-full overflow-hidden bg-[#eae8e4]",
-        "aspect-[5/6] min-h-[min(88vh,900px)]",
-        "md:aspect-[21/9] md:min-h-[min(72vh,780px)]",
-      ].join(" ");
+      return "editorial-frame-hero";
     case "editorial-panel":
-      return "relative w-full overflow-hidden bg-[#eae8e4] aspect-[4/5] max-h-[min(86vh,760px)]";
+      return "editorial-frame-panel";
     case "brand-tile":
-      return "relative w-full overflow-hidden bg-[#e8e6e2] aspect-[3/4]";
+      return "editorial-frame-brand";
     case "collection-hero":
-      return [
-        "relative w-full overflow-hidden bg-[#eae8e4]",
-        "aspect-[5/6] min-h-[min(70vh,680px)]",
-        "md:aspect-[2/1] md:min-h-[min(58vh,600px)]",
-      ].join(" ");
+      return "editorial-frame-collection-hero";
     case "collection-grid":
       return "relative w-full overflow-hidden bg-[#f5f4f2] aspect-[3/4]";
     default:
-      return "relative w-full overflow-hidden bg-[#eae8e4] aspect-[3/4]";
+      return "editorial-frame-panel";
   }
 }
 
-/** Smart vertical focal point from editorial slug / category copy. */
-export function editorialFocalClass(hints?: EditorialFocalHints): string {
+export function editorialFocalModifier(hints?: EditorialFocalHints): string {
   const text = `${hints?.slug || ""} ${hints?.title || ""} ${hints?.category || ""} ${hints?.name || ""}`.toLowerCase();
 
-  if (/\b(shoe|boot|sandal|sneaker|bag|handbag|tote)\b/.test(text)) {
-    return "object-[center_55%]";
-  }
-  if (/\b(pant|trouser|jean|denim|skirt|short)\b/.test(text)) {
-    return "object-[center_42%]";
-  }
   if (/\b(dress|gown|evening|silk|blouse|top|swim|bikini)\b/.test(text)) {
-    return "object-[center_24%]";
+    return "editorial-cover-img--top";
   }
-  if (/\b(vacation|resort|beach|linen|summer|coastal)\b/.test(text)) {
-    return "object-[center_36%]";
+  if (/\b(pant|trouser|jean|denim|skirt|short|shoe|bag)\b/.test(text)) {
+    return "editorial-cover-img--lower";
   }
-  if (/\b(tailor|blazer|coat|outer|wool|cashmere)\b/.test(text)) {
-    return "object-[center_38%]";
+  if (/\b(vacation|resort|beach|linen|summer|coastal|hero|banner)\b/.test(text)) {
+    return "editorial-cover-img--mid";
   }
-  if (/\b(hero|banner|campaign)\b/.test(text)) {
-    return "object-[center_32%] md:object-[center_38%]";
-  }
-
-  return "object-[center_30%]";
+  return "";
 }
 
 export function editorialImageClass(
@@ -74,21 +53,15 @@ export function editorialImageClass(
   hints?: EditorialFocalHints,
   opts?: { hoverZoom?: boolean }
 ): string {
-  const focal =
-    section === "hero-banner"
-      ? `${editorialFocalClass(hints)} md:object-[center_38%]`
-      : editorialFocalClass(hints);
-
   return [
-    "absolute inset-0 w-full h-full object-cover",
-    focal,
-    opts?.hoverZoom ? "group-hover:scale-[1.03] transition-transform duration-[1100ms] ease-out" : "",
+    "editorial-cover-img",
+    editorialFocalModifier(hints),
+    opts?.hoverZoom ? "editorial-cover-img--zoom" : "",
   ]
     .filter(Boolean)
     .join(" ");
 }
 
-/** Map legacy EditorialHeroImage variant names → section keys. */
 export function editorialSectionFromVariant(
   variant: "banner" | "panel" | "collection"
 ): EditorialImageSection {
