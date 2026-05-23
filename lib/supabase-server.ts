@@ -275,9 +275,11 @@ export async function fetchCatalogProductsByFiber(opts: {
     });
   }
 
-  return rows
-    .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row))
-    .map(mapProductRow);
+  return filterConsumerCatalogProducts(
+    rows
+      .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row))
+      .map(mapProductRow)
+  );
 }
 
 /** Paginated fallback when catalog_list RPC is missing — shared rules + dedupe. */
@@ -654,12 +656,32 @@ export async function fetchCollectionPageData(
 
   const ranked = await getCachedRankedCollectionPool(collectionSlug);
   const products = paginateCollectionCatalog(ranked, limit, offset);
-  const editCount = ranked.length;
+  const poolCount = ranked.length;
+  let catalogTotal = poolCount;
+  const supabase = getServerSupabase();
+  if (supabase) {
+    const { COLLECTION_CATALOG_QUERIES } = await import("./collection-catalog");
+    const primary = COLLECTION_CATALOG_QUERIES[collectionSlug]?.[0];
+    if (primary) {
+      const rpcTotal = await rpcCatalogListCount(supabase, {
+        preferred: "us",
+        fallback: "us",
+        fiber: primary.fiber ?? null,
+        category: primary.category ?? null,
+        brandSlug: null,
+        search: primary.search ?? null,
+        minNfp: 80,
+      });
+      if (rpcTotal != null && rpcTotal > 0) {
+        catalogTotal = Math.max(poolCount, rpcTotal);
+      }
+    }
+  }
 
   return {
     products,
-    editCount,
-    catalogTotal: editCount,
+    editCount: poolCount,
+    catalogTotal,
     heroImageUrl: config.editorialImage,
   };
 }
@@ -720,8 +742,8 @@ function mapProductRow(row: any): Product {
   };
 }
 
-const COLLECTION_POOL_LIMIT_PER_QUERY = 100;
-const COLLECTION_POOL_PAGES_PER_QUERY = 2;
+const COLLECTION_POOL_LIMIT_PER_QUERY = 120;
+const COLLECTION_POOL_PAGES_PER_QUERY = 5;
 
 async function fetchCollectionCatalogPoolUncached(
   slug: import("./collection-pages").CollectionSlug
@@ -935,19 +957,6 @@ export async function fetchProductsByFiberAndCategory(
   limit = 200,
   offset = 0
 ): Promise<Product[]> {
-  const { fetchMerchRailProducts, isMerchFeedEnabled, MATERIAL_SLUG_TO_RAIL } =
-    await import("./merch-feed");
-
-  const primaryFiber = fiber.split(",")[0]?.trim().toLowerCase();
-  const railKey = primaryFiber ? MATERIAL_SLUG_TO_RAIL[primaryFiber] : undefined;
-
-  if (isMerchFeedEnabled() && railKey && !category && offset === 0) {
-    const rows = await fetchMerchRailProducts(railKey, { limit: Math.min(limit, 64) });
-    if (rows.length > 0) {
-      return rows.filter((p) => isClothingProduct(p) && isNotMensProduct(p));
-    }
-  }
-
   const fiberTerms: Record<string, string[]> = {
     cotton: ["cotton"],
     linen: ["linen"],
@@ -1133,30 +1142,12 @@ export async function fetchProductCount(): Promise<number> {
   return 0;
 }
 
-/** Per-material hub count — catalog_material_hub_counts, then merch meta, then RPC. */
+/** Per-material hub count — catalog_list_count first (full catalog), then precomputed hub row. */
 export async function fetchMaterialHubDisplayCount(
   materialSlug: string,
   category?: string
 ): Promise<number> {
   const supabase = getServerSupabase();
-  if (supabase) {
-    const { data: hub } = await supabase
-      .from("catalog_material_hub_counts")
-      .select("card_count")
-      .eq("fiber", materialSlug)
-      .eq("category", category || "")
-      .maybeSingle();
-    if (hub?.card_count != null && Number(hub.card_count) > 0) {
-      return Number(hub.card_count);
-    }
-  }
-
-  const { fetchMerchRailDisplayCount, MATERIAL_SLUG_TO_RAIL } = await import("./merch-feed");
-  const railKey = MATERIAL_SLUG_TO_RAIL[materialSlug];
-  if (!railKey) return 0;
-  const n = await fetchMerchRailDisplayCount(railKey);
-  if (n > 0) return n;
-
   if (supabase) {
     const cnt = await rpcCatalogListCount(supabase, {
       preferred: "us",
@@ -1168,6 +1159,16 @@ export async function fetchMaterialHubDisplayCount(
       minNfp: 80,
     });
     if (cnt != null && cnt > 0) return cnt;
+
+    const { data: hub } = await supabase
+      .from("catalog_material_hub_counts")
+      .select("card_count")
+      .eq("fiber", materialSlug)
+      .eq("category", category || "")
+      .maybeSingle();
+    if (hub?.card_count != null && Number(hub.card_count) > 0) {
+      return Number(hub.card_count);
+    }
   }
   return 0;
 }

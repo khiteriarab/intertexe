@@ -11,7 +11,7 @@ import { MATERIALS } from "../../../lib/data";
 import FabricProductGrid from "./FabricProductGrid";
 import EmailCapture from "../../components/EmailCapture";
 
-export const revalidate = 0;
+export const revalidate = 300;
 
 const MAIN_FIBERS = ["silk", "cotton", "linen", "wool", "cashmere"];
 
@@ -710,21 +710,11 @@ async function MainFiberPage({ slug }: { slug: string }) {
   const categoryLinks = CATEGORY_LINKS[slug] || [];
 
   const [products, designers, productCount] = await Promise.all([
-    (async () => {
-      const allProducts: any[] = [];
-      for (const fiber of fiberQueries) {
-        const results = await fetchProductsByFiberAndCategory(fiber, undefined, CATALOG_INITIAL_PAGE, 0);
-        allProducts.push(...results);
-      }
-      const seen = new Set<string>();
-      return allProducts.filter((p) => {
-        const id = p.productId || p.id;
-        if (seen.has(id)) return false;
-        if (!p.imageUrl) return false;
-        seen.add(id);
-        return true;
-      });
-    })(),
+    fetchCatalogProductsByFiber({
+      fiber: slug,
+      limit: CATALOG_INITIAL_PAGE,
+      offset: 0,
+    }).then((rows) => rows.filter((p) => p.imageUrl)),
     fetchDesigners(undefined, 200),
     fetchMaterialHubDisplayCount(slug),
   ]);
@@ -1116,7 +1106,10 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
         <FabricProductGrid
           products={productsWithImages}
           fiberName={config.fiber}
-          totalCount={productsWithImages.length}
+          totalCount={Math.max(
+            productsWithImages.length,
+            await fetchMaterialHubDisplayCount(primaryFiber, config.category)
+          )}
           catalogFiber={primaryFiber}
           catalogCategory={config.category}
         />

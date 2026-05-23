@@ -6,6 +6,7 @@ import {
   fetchVacationPageData,
   fetchEditPageData,
   fetchCollectionPageData,
+  fetchMaterialHubDisplayCount,
 } from "../../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 
@@ -49,11 +50,12 @@ export async function GET(request: NextRequest) {
       }
       return NextResponse.json({
         products: data.products,
-        total: data.editCount,
+        total: data.catalogTotal,
+        poolCount: data.editCount,
         limit,
         offset,
         hasMore:
-          offset + data.products.length < data.editCount && data.products.length >= limit,
+          offset + data.products.length < data.catalogTotal && data.products.length >= limit,
       });
     }
 
@@ -90,18 +92,20 @@ export async function GET(request: NextRequest) {
     }
 
     if (mode === "materials" && fiber) {
+      const cat = category && category !== "all" ? category : undefined;
       const products = await fetchCatalogProductsByFiber({
         fiber,
-        category: category && category !== "all" ? category : undefined,
+        category: cat,
         limit,
         offset,
       });
+      const total = await fetchMaterialHubDisplayCount(fiber, cat);
       return NextResponse.json({
         products,
-        total: null,
+        total: total > 0 ? total : null,
         limit,
         offset,
-        hasMore: products.length >= limit,
+        hasMore: total > 0 ? offset + products.length < total : products.length >= limit,
       });
     }
 

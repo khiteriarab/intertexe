@@ -36,9 +36,10 @@ export default function CollectionClient({
   const [products, setProducts] = useState(initialProducts);
   const [offset, setOffset] = useState(initialProducts.length);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [totalCount, setTotalCount] = useState(editCount);
+  const displayTotal = Math.max(editCount, catalogTotal);
+  const [totalCount, setTotalCount] = useState(displayTotal);
   const [hasMore, setHasMore] = useState(
-    initialProducts.length < editCount && initialProducts.length > 0
+    initialProducts.length < displayTotal && initialProducts.length > 0
   );
 
   const loadMore = useCallback(async () => {

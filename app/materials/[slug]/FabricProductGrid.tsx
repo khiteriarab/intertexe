@@ -43,7 +43,7 @@ export default function FabricProductGrid({
   const [offset, setOffset] = useState(initialProducts.length);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(
-    catalogFiber ? initialProducts.length >= Math.min(32, CATALOG_PAGE_SIZE) : false
+    catalogFiber ? initialProducts.length < totalCount && initialProducts.length > 0 : false
   );
 
   const [sort, setSort] = useState<SortOption>("relevance");
@@ -68,8 +68,11 @@ export default function FabricProductGrid({
         const seen = new Set(prev.map((p) => p.productId || p.id));
         return [...prev, ...next.filter((p) => !seen.has(p.productId || p.id))];
       });
-      setOffset((o) => o + next.length);
-      setHasMore(Boolean(data.hasMore) && next.length > 0);
+      const nextOffset = offset + next.length;
+      setOffset(nextOffset);
+      const total =
+        typeof data.total === "number" && data.total > 0 ? data.total : totalCount;
+      setHasMore(next.length > 0 && nextOffset < total);
     } finally {
       setLoadingMore(false);
     }
