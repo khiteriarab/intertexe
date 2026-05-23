@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice } from "../../../lib/format-display-price";
 import {
@@ -12,7 +11,8 @@ import {
 } from "../../../lib/collection-pages";
 import { EditorialHeroImage } from "../../components/EditorialHeroImage";
 import { CatalogProductImage } from "../../components/CatalogProductImage";
-import { MOOD_CATALOG, moodSlugFromLabel } from "../../../lib/mood-commerce";
+import { WearToWhereRail } from "../../components/WearToWhereRail";
+import type { CollectionSlug } from "../../../lib/collection-pages";
 
 type Product = {
   id: string;
@@ -82,11 +82,6 @@ export default function CollectionClient({
     }
   }, [config.slug, offset, loadingMore, hasMore]);
 
-  const catalogLabel =
-    catalogTotal > 0
-      ? `${config.catalogLabel} (${catalogTotal.toLocaleString()}+ in catalog)`
-      : config.catalogLabel;
-
   return (
     <div className="flex flex-col" data-testid={`page-collection-${config.slug}`}>
       <section className="relative -mx-4 md:-mx-8 overflow-hidden">
@@ -106,30 +101,7 @@ export default function CollectionClient({
         </div>
       </section>
 
-      {config.themes.length > 0 && (
-        <section className="border-b border-border/30 px-4 md:px-8 py-6 md:py-8 bg-white">
-          <div className="max-w-6xl mx-auto">
-            <p className="text-[10px] uppercase tracking-[0.28em] text-neutral-400 mb-4">The edit</p>
-            <ul className="flex flex-wrap gap-2">
-              {config.themes.map((theme) => {
-                const moodSlug = moodSlugFromLabel(theme);
-                const mood = moodSlug ? MOOD_CATALOG.find((m) => m.slug === moodSlug) : undefined;
-                const href = mood ? `/moods/${mood.slug}` : `/collections/${config.slug}`;
-                return (
-                  <li key={theme}>
-                    <Link
-                      href={href}
-                      className="block px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] text-neutral-600 border border-neutral-200 bg-[#FAFAF8] hover:border-neutral-400 hover:text-neutral-900 transition-colors"
-                    >
-                      {theme}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
-      )}
+      <WearToWhereRail collectionSlug={config.slug as CollectionSlug} className="border-b border-border/30 bg-white" />
 
       <section className="border-b border-border/30 bg-[#FAFAF8]">
         <div className="max-w-6xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
@@ -154,17 +126,14 @@ export default function CollectionClient({
       </section>
 
       <section className="py-8 md:py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
-        <p className="text-[11px] text-neutral-500 mb-6" data-testid="text-collection-count">
-          <span className="font-medium text-neutral-800">{totalCount.toLocaleString()} pieces</span> in
-          this collection
-          {products.length < totalCount ? (
-            <> · scroll or load more to explore the full catalog</>
-          ) : null}
+        <p className="text-[11px] uppercase tracking-[0.14em] text-neutral-500 mb-6" data-testid="text-collection-count">
+          <span className="font-medium text-neutral-800">{totalCount.toLocaleString()} pieces</span> in this
+          collection
         </p>
 
         {products.length === 0 ? (
           <p className="text-sm text-neutral-500 max-w-md leading-relaxed">
-            This collection is being refreshed with new editorial picks. Browse the full catalog link below.
+            This collection is being refreshed. Check back shortly or explore another edit above.
           </p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -210,13 +179,6 @@ export default function CollectionClient({
             {loadingMore ? "Loading…" : "Load more"}
           </button>
         )}
-
-        <Link
-          href={config.catalogHref}
-          className="inline-flex items-center gap-2 mt-8 text-[10px] uppercase tracking-[0.18em] text-neutral-500 hover:text-neutral-900"
-        >
-          {catalogLabel} <ArrowRight className="w-3 h-3" />
-        </Link>
       </section>
     </div>
   );

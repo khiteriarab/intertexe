@@ -143,6 +143,7 @@ export function HorizontalProductScroll({
   linkText,
   catalogHref,
   catalogLinkText,
+  collectionCtaOnly,
   eager,
 }: {
   products: any[];
@@ -153,6 +154,8 @@ export function HorizontalProductScroll({
   /** Optional second link when this rail is a small curated edit, not the full catalog. */
   catalogHref?: string;
   catalogLinkText?: string;
+  /** Collection rails: one link to the full collection (edit = catalog). */
+  collectionCtaOnly?: boolean;
   eager?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -218,26 +221,33 @@ export function HorizontalProductScroll({
       </div>
 
       <div className="flex flex-col gap-2 items-start">
-        <Link
-          href={linkHref}
-          className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
-          data-testid={`link-shop-${title.toLowerCase().replace(/\s+/g, "-")}`}
-        >
-          {linkText} <ArrowRight className="w-3 h-3" />
-        </Link>
-        {catalogHref && catalogLinkText && (
+        {collectionCtaOnly ? (
           <Link
-            href={catalogHref}
+            href={linkHref}
             className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
-            data-testid={`link-catalog-${title.toLowerCase().replace(/\s+/g, "-")}`}
+            data-testid={`link-view-collection-${title.toLowerCase().replace(/\s+/g, "-")}`}
           >
-            {catalogLinkText} <ArrowRight className="w-3 h-3" />
+            View full collection <ArrowRight className="w-3 h-3" />
           </Link>
-        )}
-        {hasItems && (
-          <p className="text-[10px] text-neutral-400 max-w-md leading-relaxed">
-            {products.length} pieces in this edit — not the full catalog.
-          </p>
+        ) : (
+          <>
+            <Link
+              href={linkHref}
+              className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+              data-testid={`link-shop-${title.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              {linkText} <ArrowRight className="w-3 h-3" />
+            </Link>
+            {catalogHref && catalogLinkText && (
+              <Link
+                href={catalogHref}
+                className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
+                data-testid={`link-catalog-${title.toLowerCase().replace(/\s+/g, "-")}`}
+              >
+                {catalogLinkText} <ArrowRight className="w-3 h-3" />
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -568,9 +578,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
                 title={labels.title}
                 subtitle={labels.subtitle}
                 linkHref={collection.href}
-                linkText={`Shop ${collection.label}`}
-                catalogHref={collection.href}
-                catalogLinkText="View full collection"
+                linkText="View full collection"
+                collectionCtaOnly
               />
             </section>
           </div>

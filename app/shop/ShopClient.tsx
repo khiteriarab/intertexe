@@ -13,6 +13,7 @@ import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping
 import { CatalogProductImage } from "../components/CatalogProductImage";
 import { CountrySelector } from "../components/CountrySelector";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
+import { WearToWhereRail } from "../components/WearToWhereRail";
 import {
   getRegionForCountryCode,
   getRegionForMarket,
@@ -509,9 +510,10 @@ export default function ShopClient({
             <div className="fixed inset-0 z-[90] bg-black/40" onClick={() => setShowFilterSheet(false)} />
             <div className="fixed inset-x-0 bottom-0 z-[100] bg-background border-t border-border/40 rounded-t-2xl max-h-[85vh] overflow-y-auto p-6 pb-10 md:hidden">
               <p className="text-lg font-serif mb-1">Filter & Sort</p>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-6">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
                 {displayResultTotal.toLocaleString()} results
               </p>
+              <WearToWhereRail title="Wear to where?" className="!py-4 -mx-2 mb-6" />
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Sort By</p>
               <div className="flex flex-col border border-border/30 mb-8">
                 {SORT_OPTIONS.map(option => (

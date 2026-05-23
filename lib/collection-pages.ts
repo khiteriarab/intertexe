@@ -45,8 +45,8 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     atmosphere: "Fluid silhouettes · heels & clutches · cinematic luxury",
     themes: COLLECTION_EDITORIAL.evening.themes,
     railKey: MERCH_RAIL_KEYS.evening,
-    catalogHref: "/shop?fiber=silk&category=dresses",
-    catalogLabel: "Shop evening",
+    catalogHref: "/collections/evening",
+    catalogLabel: "Browse full evening collection",
     editorialImage: EDITORIAL_HERO.evening,
   },
   tailoring: {
