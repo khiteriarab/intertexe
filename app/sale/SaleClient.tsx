@@ -156,6 +156,8 @@ export default function SaleClient({
   const { market } = useShoppingMarket();
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
   const sortedProducts = sortSaleProducts(products, sortBy);
+  const canLoadMore =
+    hasMore || (total != null && total > products.length);
 
   const pageSize = 40;
 
@@ -228,7 +230,8 @@ export default function SaleClient({
           return [...prev, ...next.filter((p: any) => !seen.has(p.id))];
         });
         setOffset((o) => o + next.length);
-        if (d.total) setTotal(d.total);
+        if (d.total != null) setTotal(d.total);
+        if (d.hasMore != null) setHasMore(Boolean(d.hasMore));
       })
       .finally(() => setLoadingMore(false));
   };
