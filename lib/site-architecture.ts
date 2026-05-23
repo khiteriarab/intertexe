@@ -67,4 +67,6 @@ export const COLLECTION_SECTIONS = [
   },
 ] as const;
 
+export type CollectionSectionConfig = (typeof COLLECTION_SECTIONS)[number];
+
 export const HOMEPAGE_COLLECTION_SLUGS = COLLECTION_SECTIONS.map((c) => c.slug);

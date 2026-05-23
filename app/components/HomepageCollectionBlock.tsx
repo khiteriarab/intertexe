@@ -1,0 +1,162 @@
+"use client";
+
+import { useRef } from "react";
+import Link from "next/link";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { EditorialHeroImage } from "./EditorialHeroImage";
+import { editorialHeroForSlug } from "../../lib/editorial-assets";
+import type { CollectionSectionConfig } from "../../lib/site-architecture";
+
+function optimizeImageUrl(url: string, width: number): string {
+  if (!url) return url;
+  if (url.includes("cdn.shopify.com")) {
+    const separator = url.includes("?") ? "&" : "?";
+    return url + separator + "width=" + width + "&format=webp";
+  }
+  return url;
+}
+
+function CollectionProductCard({ product, eager }: { product: any; eager?: boolean }) {
+  const name = product.name || "";
+  const brandName = product.brandName || product.brand_name || "";
+  const imageUrl = product.imageUrl || product.image_url || "";
+  return (
+    <Link href={`/product/${product.id}`} className="group flex flex-col flex-shrink-0 w-[140px] xl:w-[155px]">
+      <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
+        {imageUrl ? (
+          <img
+            src={optimizeImageUrl(imageUrl, 400)}
+            alt={name}
+            className="absolute inset-0 w-full h-full object-cover object-[center_28%] group-hover:scale-[1.03] transition-transform duration-700"
+            loading={eager ? "eager" : "lazy"}
+            draggable={false}
+          />
+        ) : null}
+      </div>
+      <span className="text-[9px] uppercase tracking-[0.08em] text-neutral-400 mt-2 truncate">{brandName}</span>
+      <span className="text-[11px] text-neutral-600 truncate">{name}</span>
+    </Link>
+  );
+}
+
+/**
+ * Homepage collection edit — mobile: image then rail below.
+ * Desktop: image left, product rail right (avoids ultra-wide crop on landscape heroes).
+ */
+export function HomepageCollectionBlock({
+  collection,
+  products,
+  title,
+  subtitle,
+}: {
+  collection: CollectionSectionConfig;
+  products: any[];
+  title: string;
+  subtitle: string;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const imageUrl = editorialHeroForSlug(collection.slug);
+  const hasItems = products.length > 0;
+
+  const scroll = (dir: "left" | "right") => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollBy({ left: dir === "left" ? -320 : 320, behavior: "smooth" });
+  };
+
+  const editorial = (
+    <Link
+      href={collection.href}
+      className="group relative block w-full h-full min-h-[380px] lg:min-h-0 overflow-hidden touch-manipulation"
+      data-testid={`link-collection-${collection.slug}`}
+    >
+      {imageUrl && (
+        <EditorialHeroImage
+          src={imageUrl}
+          alt={collection.label}
+          variant="collection"
+          slug={collection.slug}
+          title={collection.label}
+          className="h-full min-h-[380px] lg:min-h-full lg:absolute lg:inset-0"
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 md:p-10 gap-2">
+        <span className="text-white/45 text-[9px] md:text-[10px] uppercase tracking-[0.35em] font-light">
+          {collection.kicker}
+        </span>
+        <h3 className="text-white text-[28px] md:text-[36px] lg:text-[40px] font-serif leading-[1.08] max-w-md">
+          {collection.label}
+        </h3>
+        <p className="text-white/55 text-[12px] md:text-[14px] font-light max-w-sm leading-relaxed mt-1">
+          {collection.subtitle}
+        </p>
+        <span className="text-white/70 text-[10px] uppercase tracking-[0.2em] mt-3 md:mt-4 flex items-center gap-2 group-hover:gap-3 group-hover:text-white transition-all duration-300">
+          Discover <ArrowRight className="w-3.5 h-3.5" />
+        </span>
+      </div>
+    </Link>
+  );
+
+  const shopRail = (
+    <div className="flex flex-col justify-center h-full py-10 lg:py-12 px-6 md:px-10 xl:px-12 bg-[#FAFAF8]">
+      <div className="flex items-end justify-between gap-4 mb-6">
+        <div className="flex flex-col gap-1 min-w-0">
+          <span className="text-[9px] uppercase tracking-[0.3em] text-neutral-400">{subtitle}</span>
+          <h2 className="text-[22px] xl:text-[26px] font-serif leading-tight">{title}</h2>
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            className="w-9 h-9 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            className="w-9 h-9 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={scrollRef}
+        className="product-rail-scroll flex gap-3 overflow-x-auto scrollbar-hide pb-2 min-h-[200px]"
+      >
+        {hasItems ? (
+          products.slice(0, 12).map((product: any, i: number) => (
+            <CollectionProductCard key={product.id} product={product} eager={i < 4} />
+          ))
+        ) : (
+          <p className="text-[11px] text-neutral-400 max-w-xs leading-relaxed">
+            This edit is refreshing — view the full collection for the latest pieces.
+          </p>
+        )}
+      </div>
+
+      <Link
+        href={collection.href}
+        className="mt-6 text-[10px] uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2 w-fit"
+      >
+        View full collection <ArrowRight className="w-3 h-3" />
+      </Link>
+    </div>
+  );
+
+  return (
+    <div className="border-t border-neutral-200/60" data-testid={`homepage-collection-${collection.slug}`}>
+      <section className="lg:hidden -mx-4 md:-mx-8">{editorial}</section>
+      <section className="lg:hidden py-10 md:py-14 px-4 md:px-0">{shopRail}</section>
+
+      <section className="hidden lg:grid lg:grid-cols-2 -mx-8 min-h-[min(68vh,620px)] max-h-[720px]">
+        <div className="relative overflow-hidden min-h-[520px]">{editorial}</div>
+        {shopRail}
+      </section>
+    </div>
+  );
+}

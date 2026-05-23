@@ -14,6 +14,7 @@ import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
+import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -489,7 +490,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <AppDownloadBanner />
 
-      <HomepageHeroSection displayCount={displayCount} products={data.newInProducts} />
+      <HomepageHeroSection displayCount={displayCount} />
 
       <section className="py-10 md:py-20 lg:pt-16">
         <HorizontalProductScroll
@@ -527,30 +528,13 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           { title: collection.label, subtitle: collection.subtitle };
 
         return (
-          <div key={collection.slug}>
-            <section className="-mx-4 md:-mx-8">
-              <EditorialPanel
-                href={collection.href}
-                imageUrl={editorialHeroForSlug(collection.slug)}
-                label={collection.kicker}
-                title={collection.label}
-                subtitle={collection.subtitle}
-                testId={`link-collection-${collection.slug}`}
-                slug={collection.slug}
-              />
-            </section>
-
-            <section className="py-10 md:py-20 border-t border-neutral-200/60">
-              <HorizontalProductScroll
-                products={products}
-                title={labels.title}
-                subtitle={labels.subtitle}
-                linkHref={collection.href}
-                linkText="View full collection"
-                collectionCtaOnly
-              />
-            </section>
-          </div>
+          <HomepageCollectionBlock
+            key={collection.slug}
+            collection={collection}
+            products={products}
+            title={labels.title}
+            subtitle={labels.subtitle}
+          />
         );
       })}
 

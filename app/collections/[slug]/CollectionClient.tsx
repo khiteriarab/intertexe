@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
 import Link from "next/link";
 import { ProductLink } from "../../components/ProductLink";
@@ -22,7 +22,42 @@ type Product = {
   brandName: string;
   imageUrl?: string;
   price?: string;
+  composition?: string;
+  naturalFiberPercent?: number;
 };
+
+type CollectionSort = "recommended" | "price_asc" | "price_desc" | "natural";
+
+const SORT_OPTIONS: { key: CollectionSort; label: string }[] = [
+  { key: "recommended", label: "Recommended" },
+  { key: "price_asc", label: "Price: Low to High" },
+  { key: "price_desc", label: "Price: High to Low" },
+  { key: "natural", label: "Highest natural fiber" },
+];
+
+const FIBER_OPTIONS = ["All", "Silk", "Cashmere", "Wool", "Linen", "Cotton"] as const;
+
+function parsePriceNum(price: string | undefined): number {
+  if (!price) return Number.POSITIVE_INFINITY;
+  const n = parseFloat(String(price).replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+}
+
+function sortCollectionProducts(items: Product[], sort: CollectionSort): Product[] {
+  const list = [...items];
+  if (sort === "price_asc") {
+    return list.sort((a, b) => parsePriceNum(a.price) - parsePriceNum(b.price));
+  }
+  if (sort === "price_desc") {
+    return list.sort((a, b) => parsePriceNum(b.price) - parsePriceNum(a.price));
+  }
+  if (sort === "natural") {
+    return list.sort(
+      (a, b) => (b.naturalFiberPercent ?? 0) - (a.naturalFiberPercent ?? 0)
+    );
+  }
+  return list;
+}
 
 export default function CollectionClient({
   config,
@@ -46,6 +81,10 @@ export default function CollectionClient({
   const [countLoading, setCountLoading] = useState(catalogTotal <= 0);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [showSortSheet, setShowSortSheet] = useState(false);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [sortBy, setSortBy] = useState<CollectionSort>("recommended");
+  const [fiberFilter, setFiberFilter] = useState<string>("All");
+  const [brandFilter, setBrandFilter] = useState<string>("All");
 
   useEffect(() => {
     if (catalogTotal > 0) return;
@@ -57,6 +96,43 @@ export default function CollectionClient({
       })
       .finally(() => setCountLoading(false));
   }, [config.slug, catalogTotal]);
+
+  const brands = useMemo(() => {
+    const names = Array.from(new Set(products.map((p) => p.brandName).filter(Boolean))).sort();
+    return ["All", ...names.slice(0, 24)];
+  }, [products]);
+
+  const availableFibers = useMemo(() => {
+    return FIBER_OPTIONS.filter((fiber) => {
+      if (fiber === "All") return true;
+      return products.some((p) =>
+        (p.composition || "").toLowerCase().includes(fiber.toLowerCase())
+      );
+    });
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    let list = products;
+    if (fiberFilter !== "All") {
+      const needle = fiberFilter.toLowerCase();
+      list = list.filter((p) => (p.composition || "").toLowerCase().includes(needle));
+    }
+    if (brandFilter !== "All") {
+      list = list.filter((p) => p.brandName === brandFilter);
+    }
+    return sortCollectionProducts(list, sortBy);
+  }, [products, fiberFilter, brandFilter, sortBy]);
+
+  const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
+
+  const activeFilters = [
+    ...(fiberFilter !== "All"
+      ? [{ id: "fiber", label: fiberFilter, onRemove: () => setFiberFilter("All") }]
+      : []),
+    ...(brandFilter !== "All"
+      ? [{ id: "brand", label: brandFilter, onRemove: () => setBrandFilter("All") }]
+      : []),
+  ];
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
@@ -90,7 +166,7 @@ export default function CollectionClient({
     } finally {
       setLoadingMore(false);
     }
-  }, [config.slug, offset, loadingMore, hasMore]);
+  }, [config.slug, offset, loadingMore, hasMore, totalCount]);
 
   return (
     <div className="flex flex-col" data-testid={`page-collection-${config.slug}`}>
@@ -138,30 +214,111 @@ export default function CollectionClient({
       <section className="py-8 md:py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
         <CatalogMobileToolbar
           className="mb-6"
-          resultCount={totalCount}
-          countLoading={countLoading}
-          sortLabel="Recommended"
-          onOpenFilter={() => setShowSortSheet(true)}
+          resultCount={fiberFilter !== "All" || brandFilter !== "All" ? filteredProducts.length : totalCount}
+          countLoading={countLoading && totalCount == null}
+          sortLabel={currentSort.label}
+          onOpenFilter={() => setShowFilterSheet(true)}
           onOpenSort={() => setShowSortSheet(true)}
-          showFilter={false}
+          activeFilters={activeFilters}
         />
+
+        <CatalogMobileSheet
+          open={showSortSheet}
+          onClose={() => setShowSortSheet(false)}
+          title="Sort by"
+        >
+          <div className="flex flex-col border border-border/30">
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => {
+                  setSortBy(option.key);
+                  setShowSortSheet(false);
+                }}
+                className={`w-full text-left px-4 py-3.5 text-[12px] border-b border-border/20 last:border-0 ${
+                  sortBy === option.key ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </CatalogMobileSheet>
+
+        <CatalogMobileSheet
+          open={showFilterSheet}
+          onClose={() => setShowFilterSheet(false)}
+          title="Filter"
+          subtitle={
+            totalCount != null ? `${filteredProducts.length.toLocaleString()} shown` : undefined
+          }
+          footer={
+            <button
+              type="button"
+              onClick={() => setShowFilterSheet(false)}
+              className="w-full bg-foreground text-background py-3.5 text-[10px] uppercase tracking-[0.2em]"
+            >
+              View results
+            </button>
+          }
+        >
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
+          <div className="flex flex-wrap gap-2 mb-8">
+            {availableFibers.map((fiber) => (
+              <button
+                key={fiber}
+                type="button"
+                onClick={() => setFiberFilter(fiber)}
+                className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                  fiberFilter === fiber
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/40"
+                }`}
+              >
+                {fiber}
+              </button>
+            ))}
+          </div>
+          {brands.length > 1 && (
+            <>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Designer</p>
+              <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
+                {brands.map((brand) => (
+                  <button
+                    key={brand}
+                    type="button"
+                    onClick={() => setBrandFilter(brand)}
+                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                      brandFilter === brand
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border/40"
+                    }`}
+                  >
+                    {brand}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </CatalogMobileSheet>
+
         <p className="hidden md:block text-[11px] uppercase tracking-[0.14em] text-neutral-500 mb-6" data-testid="text-collection-count">
           <span className="font-medium text-neutral-800">
             {countLoading || totalCount == null ? "—" : totalCount.toLocaleString()}
           </span>{" "}
           pieces in this collection
         </p>
-        <CatalogMobileSheet open={showSortSheet} onClose={() => setShowSortSheet(false)} title="Sort">
-          <p className="text-sm text-neutral-500">Pieces are ranked by material quality and editorial fit for this edit.</p>
-        </CatalogMobileSheet>
 
-        {products.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <p className="text-sm text-neutral-500 max-w-md leading-relaxed">
-            This collection is being refreshed. Check back shortly or explore another edit above.
+            {products.length === 0
+              ? "This collection is being refreshed. Check back shortly or explore another edit above."
+              : "No pieces match these filters. Clear filters to see the full collection."}
           </p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <ProductLink
                 key={product.id}
                 href={`/product/${product.id}`}
