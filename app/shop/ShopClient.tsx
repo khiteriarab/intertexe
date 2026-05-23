@@ -198,7 +198,8 @@ export default function ShopClient({
 
   const [products, setProducts] = useState(initialProducts || []);
   const [resultTotal, setResultTotal] = useState(initialTotal || 0);
-  const [isLoading, setIsLoading] = useState(!initialProducts?.length);
+  const [isLoading, setIsLoading] = useState(false);
+  const initialFetchDone = useRef(initialProducts?.length > 0);
 
   const scrollRestored = useRef(false);
 
@@ -231,15 +232,17 @@ export default function ShopClient({
   const [fiberCountsState, setFiberCountsState] = useState(fiberCounts);
 
   useEffect(() => {
-    if (!globalCount || !Object.keys(fiberCountsState).length) {
-      getShopMeta()
-        .then(d => {
-          if (d.totalProductCount) setGlobalCount(d.totalProductCount);
-          if (d.fiberCounts) setFiberCountsState(d.fiberCounts);
-        })
-        .catch(() => {});
+    if (Object.keys(fiberCounts).length > 0) {
+      setFiberCountsState(fiberCounts);
+      return;
     }
-  }, []);
+    getShopMeta()
+      .then((d) => {
+        if (d.totalProductCount) setGlobalCount(d.totalProductCount);
+        if (d.fiberCounts) setFiberCountsState(d.fiberCounts);
+      })
+      .catch(() => {});
+  }, [fiberCounts]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -258,7 +261,7 @@ export default function ShopClient({
       !debouncedSearch &&
       listOffset === 0;
 
-    if (isDefaultState && initialProducts?.length > 0) {
+    if (isDefaultState && initialFetchDone.current) {
       setProducts(initialProducts);
       setResultTotal(initialTotal);
       setIsLoading(false);
@@ -308,9 +311,19 @@ export default function ShopClient({
     };
 
     fetchProducts();
-  }, [fiberTab, categoryFilter, sortBy, marketFilter, listOffset, debouncedSearch, initialProducts, initialTotal]);
+  }, [fiberTab, categoryFilter, sortBy, marketFilter, listOffset, debouncedSearch]);
 
   const isSearchActive = debouncedSearch.length >= 2;
+
+  const displayResultTotal = (() => {
+    if (fiberTab !== "all" && fiberCountsState[fiberTab]) {
+      return Math.max(resultTotal, fiberCountsState[fiberTab]);
+    }
+    if (fiberTab === "all" && globalCount > 0) {
+      return Math.max(resultTotal, globalCount);
+    }
+    return resultTotal;
+  })();
 
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
 
@@ -400,7 +413,7 @@ export default function ShopClient({
             {isLoading ? (
               <span className="animate-pulse">Loading...</span>
             ) : (
-              <><span className="text-foreground">{resultTotal.toLocaleString()}</span> results</>
+              <><span className="text-foreground">{displayResultTotal.toLocaleString()}</span> results</>
             )}
           </p>
 

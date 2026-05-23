@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { headers } from "next/headers";
-import { fetchShopProducts, fetchProductCount } from "../../lib/supabase-server";
+import {
+  fetchShopProducts,
+  fetchProductCount,
+  fetchFiberCounts,
+  CATALOG_PAGE_SIZE,
+} from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
 import { formatListingPrice } from "../../lib/format-display-price";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Shop Natural Fabric Clothing — INTERTEXE",
@@ -46,19 +52,20 @@ export default async function ShopPage({
     params?.sort === "new" || params?.sort === "price-high" || params?.sort === "price-low"
       ? params.sort
       : "recommended";
-  const [shopData, totalProductCount] = await Promise.all([
+  const search = params?.q?.trim() || undefined;
+  const [shopData, totalProductCount, fiberCounts] = await Promise.all([
     fetchShopProducts({
       sort,
-      limit: 32,
+      limit: CATALOG_PAGE_SIZE,
       offset: 0,
       market,
       fiber,
       category,
-      search: params?.q?.trim() || undefined,
+      search,
     }),
     fetchProductCount(),
+    fetchFiberCounts(),
   ]);
-  const fiberCounts: Record<string, number> = {};
 
   const products = shopData.products || [];
 

@@ -365,6 +365,52 @@ async function catalogListCountLiveFallback(
   return rows.length;
 }
 
+/** Full-catalog count for shop filters — never fall back to page size. */
+export async function resolveShopCatalogTotal(
+  supabase: UntypedSupabase,
+  opts: {
+    preferred: string;
+    fallback: string;
+    fiber?: string | null;
+    category?: string | null;
+    search?: string | null;
+  }
+): Promise<number> {
+  const rpcTotal = await rpcCatalogListCount(supabase, {
+    preferred: opts.preferred,
+    fallback: opts.fallback,
+    fiber: opts.fiber,
+    category: opts.category,
+    brandSlug: null,
+    search: opts.search,
+    minNfp: 80,
+  });
+  if (rpcTotal != null && rpcTotal > 0) return rpcTotal;
+
+  if (opts.fiber) {
+    const hub = await fetchMaterialHubDisplayCount(opts.fiber, opts.category || undefined);
+    if (hub > 0) return hub;
+  }
+
+  if (!opts.fiber && !opts.category && !opts.search) {
+    const fibers = await fetchFiberCounts();
+    const sum = Object.values(fibers).reduce((a, b) => a + (b || 0), 0);
+    if (sum > 0) return sum;
+    const global = await fetchProductCount();
+    if (global > 0) return global;
+  }
+
+  const scanned = await catalogListCountLiveFallback(supabase, {
+    fiber: opts.fiber,
+    category: opts.category,
+    search: opts.search,
+    minNfp: 80,
+    preferred: opts.preferred,
+    fallback: opts.fallback,
+  });
+  return scanned > 0 ? scanned : 0;
+}
+
 export async function fetchSilkEditProducts(
   limit = 96,
   market?: string,
@@ -672,10 +718,18 @@ export async function fetchCollectionPageData(
   const ranked = await getCachedRankedCollectionPool(collectionSlug);
   const products = paginateCollectionCatalog(ranked, limit, offset);
 
+  let catalogTotal = ranked.length;
+  const supabase = getServerSupabase();
+  if (supabase) {
+    const { data: countRaw } = await supabase.rpc("collection_catalog_count", { p_slug: slug });
+    const n = Number(countRaw ?? 0);
+    if (n > 0) catalogTotal = n;
+  }
+
   return {
     products,
-    editCount: ranked.length,
-    catalogTotal: ranked.length,
+    editCount: catalogTotal,
+    catalogTotal,
     heroImageUrl: config.editorialImage,
   };
 }
@@ -1108,13 +1162,8 @@ export async function fetchFiberCounts(): Promise<Record<string, number>> {
   return counts;
 }
 
+/** Full-catalog total — always `catalog_list_count` (never homepage merch meta). */
 export async function fetchProductCount(): Promise<number> {
-  const { fetchMerchGlobalDisplayCount, isMerchFeedEnabled } = await import("./merch-feed");
-  if (isMerchFeedEnabled()) {
-    const n = await fetchMerchGlobalDisplayCount();
-    if (n > 0) return n;
-  }
-
   const supabase = getServerSupabase();
   if (!supabase) return 0;
   const fromRpc = await rpcCatalogListCount(supabase, {
@@ -1478,28 +1527,6 @@ export async function fetchShopProducts(options: {
       if (broad.length > 0) filtered = broad;
     }
 
-    let total =
-      (await rpcCatalogListCount(supabase, {
-        preferred,
-        fallback,
-        fiber: rpcFiber,
-        category: rpcCategory,
-        brandSlug: null,
-        search: searchRpc,
-        minNfp: 80,
-      })) ?? null;
-    if (total == null) {
-      total = await catalogListCountLiveFallback(supabase, {
-        fiber: rpcFiber,
-        category: rpcCategory,
-        search: searchRpc,
-        minNfp: 80,
-        preferred,
-        fallback,
-      });
-    }
-    if (!total || total < filtered.length) total = filtered.length;
-
     let mapped = filterConsumerCatalogProducts(
       filtered.filter(passesWomensCatalogRow).map(mapProductRow)
     );
@@ -1507,23 +1534,17 @@ export async function fetchShopProducts(options: {
       mapped = mapped.filter((p) => productBodyMatchesFiber(p.composition || "", rpcFiber));
     }
 
-    let resolvedTotal = total;
-    if (rpcFiber) {
-      const counted = await rpcCatalogListCount(supabase, {
-        preferred,
-        fallback,
-        fiber: rpcFiber,
-        category: rpcCategory,
-        brandSlug: null,
-        search: searchRpc,
-        minNfp: 80,
-      });
-      if (counted != null && counted > 0) resolvedTotal = counted;
-    }
+    const resolvedTotal = await resolveShopCatalogTotal(supabase, {
+      preferred,
+      fallback,
+      fiber: rpcFiber,
+      category: rpcCategory,
+      search: searchRpc,
+    });
 
     return {
       products: mapped,
-      total: resolvedTotal,
+      total: Math.max(resolvedTotal, mapped.length),
     };
   }
 

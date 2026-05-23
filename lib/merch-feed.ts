@@ -114,7 +114,7 @@ export async function fetchMerchFeedMeta(railKey?: string): Promise<MerchFeedMet
   return (data || []) as MerchFeedMetaRow[];
 }
 
-/** Precomputed count for UI — never calls catalog_list_count. */
+/** Homepage rail preview count only — do not use for shop/sale/collection full-page totals. */
 export async function fetchMerchRailDisplayCount(railKey: MerchRailKey): Promise<number> {
   const rows = await fetchMerchFeedMeta(railKey);
   const row = rows[0];
