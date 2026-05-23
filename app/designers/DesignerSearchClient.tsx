@@ -6,7 +6,11 @@ import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { getBrandProfile } from "../../lib/brand-profiles";
 
-export function DesignerSearchClient() {
+export function DesignerSearchClient({
+  searchPlaceholder = "Search brands...",
+}: {
+  searchPlaceholder?: string;
+}) {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,7 +45,7 @@ export function DesignerSearchClient() {
         <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" /></svg>
         <input
           type="text"
-          placeholder="Search 11,000+ brands..."
+          placeholder={searchPlaceholder}
           className="w-full bg-background border border-border/60 pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 uppercase tracking-widest"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

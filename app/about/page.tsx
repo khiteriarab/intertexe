@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
+import { formatBrandCountLabel, formatProductCountLabel } from "../../lib/catalog-stats-labels";
 
 export const metadata: Metadata = {
   title: "About INTERTEXE — The Natural Fabric Fashion Search Engine",
@@ -7,7 +9,17 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com/about" },
 };
 
-export default function AboutPage() {
+export const revalidate = 600;
+
+export default async function AboutPage() {
+  const [platformStats, brandStats] = await Promise.all([
+    getCachedPlatformStats(),
+    getCachedBrandStats(),
+  ]);
+  const shoppableBrands = brandStats.filter((b) => b.count >= 2).length;
+  const designerLabel = formatBrandCountLabel(shoppableBrands);
+  const productLabel = formatProductCountLabel(platformStats.productCount);
+
   return (
     <div className="py-8 md:py-16 max-w-3xl mx-auto w-full flex flex-col gap-10 md:gap-16">
       <header className="flex flex-col gap-4 md:gap-6">
@@ -27,47 +39,42 @@ export default function AboutPage() {
         </div>
 
         <p>
-          Our directory features over 11,000 designers and brands, each evaluated on the percentage of natural fibers used across their collections. From heritage houses like Loro Piana and Brunello Cucinelli to emerging ateliers pushing the boundaries of sustainable luxury, we give you a transparent view into what truly makes a garment exceptional.
+          Our directory features {designerLabel} brands with live inventory, each evaluated on the percentage of natural fibers used across their collections. From heritage houses like Loro Piana and Brunello Cucinelli to emerging ateliers pushing the boundaries of sustainable luxury, we give you a transparent view into what truly makes a garment exceptional.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 py-6 md:py-8 border-y border-border/40">
           <div className="flex flex-col gap-2" data-testid="stat-designers">
-            <span className="text-4xl md:text-5xl font-serif">11,900+</span>
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">Designers Indexed</span>
+            <span className="text-4xl md:text-5xl font-serif">{shoppableBrands > 0 ? designerLabel : "—"}</span>
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">Brands With Live Inventory</span>
+          </div>
+          <div className="flex flex-col gap-2" data-testid="stat-products">
+            <span className="text-4xl md:text-5xl font-serif">{platformStats.productCount > 0 ? productLabel : "—"}</span>
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">Verified Products</span>
           </div>
           <div className="flex flex-col gap-2" data-testid="stat-fibers">
             <span className="text-4xl md:text-5xl font-serif">100%</span>
             <span className="text-xs uppercase tracking-widest text-muted-foreground">Material Transparency</span>
-          </div>
-          <div className="flex flex-col gap-2" data-testid="stat-mission">
-            <span className="text-4xl md:text-5xl font-serif">1</span>
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">Mission: Quality First</span>
           </div>
         </div>
 
         <div className="flex flex-col gap-4">
           <h2 className="text-2xl md:text-3xl font-serif text-foreground">Our Mission</h2>
           <p>
-            We believe consumers deserve to know exactly what goes into the clothes they wear. By making material composition data accessible and easy to understand, we empower you to make informed choices that align with your values — whether that means prioritizing sustainability, comfort, durability, or all three.
+            We believe shopping for clothing should start with the fabric. Every product on INTERTEXE is verified to contain at least 80% natural fibers — so you can shop silk, linen, cotton, wool, and cashmere with confidence, not guesswork.
           </p>
         </div>
 
         <div className="flex flex-col gap-4">
-          <h2 className="text-2xl md:text-3xl font-serif text-foreground">How It Works</h2>
+          <h2 className="text-2xl md:text-3xl font-serif text-foreground">How We Rank Brands</h2>
           <p>
-            Every designer in our directory is scored based on the natural fiber percentage across their collections. This score reflects the proportion of materials like cotton, silk, wool, linen, and cashmere relative to synthetic alternatives. Our editorial team continuously reviews and updates these scores to ensure accuracy.
+            Each brand receives a quality score based on the average natural fiber percentage across their verified catalog. We surface brands that consistently prioritize natural materials — not marketing claims.
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <h2 className="text-2xl md:text-3xl font-serif text-foreground">Join Us</h2>
-          <p>
-            Whether you&apos;re a conscious consumer seeking better fabrics or a designer proud of your material choices, Intertexe is your home. Take our{" "}
-            <Link href="/quiz" className="border-b border-foreground hover:text-muted-foreground transition-colors">Style Quiz</Link>{" "}
-            to discover brands that match your preferences, or{" "}
-            <Link href="/contact" className="border-b border-foreground hover:text-muted-foreground transition-colors">get in touch</Link>{" "}
-            — we&apos;d love to hear from you.
-          </p>
+        <div className="pt-4">
+          <Link href="/designers" className="text-sm uppercase tracking-widest underline underline-offset-4 hover:text-muted-foreground transition-colors">
+            Explore the brand directory →
+          </Link>
         </div>
       </div>
     </div>

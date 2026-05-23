@@ -1,14 +1,21 @@
 import type { Metadata } from "next";
 import { fetchDesigners } from "../../../lib/supabase-server";
 import { getCuratedScore } from "../../../lib/curated-quality-scores";
+import { getCachedBrandStats } from "../../../lib/cached-catalog";
+import { formatBrandCountLabel } from "../../../lib/catalog-stats-labels";
 import { DesignersAllClient } from "./DesignersAllClient";
 
-export const revalidate = 0;
+export const revalidate = 600;
 
-export const metadata: Metadata = {
-  title: "All Brands A-Z — Complete Fashion Brand Directory",
-  description: "Browse our complete database of 11,000+ fashion brands alphabetically. Filter by quality tier and find brands committed to natural fibers.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const brandStats = await getCachedBrandStats();
+  const shoppable = brandStats.filter((b) => b.count >= 2).length;
+  const label = formatBrandCountLabel(shoppable);
+  return {
+    title: "All Brands A-Z — Complete Fashion Brand Directory",
+    description: `Browse ${label} fashion brands alphabetically. Filter by quality tier and find brands committed to natural fibers.`,
+  };
+}
 
 export default async function DesignersAllPage() {
   const allDesigners = await fetchDesigners("", 5000);

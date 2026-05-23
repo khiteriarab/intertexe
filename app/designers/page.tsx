@@ -4,17 +4,29 @@ import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getBrandProfile } from "../../lib/brand-profiles";
 import { DesignerSearchClient } from "./DesignerSearchClient";
 import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
+import {
+  directoryHeadline,
+  formatBrandCountLabel,
+  searchBrandsPlaceholder,
+} from "../../lib/catalog-stats-labels";
 
 export const revalidate = 600;
 
-export const metadata: Metadata = {
-  title: "Brand Directory — 11,000+ Brands Ranked by Natural Fiber Quality",
-  description: "Browse and search 11,000+ fashion brands ranked by natural fiber quality. Find brands committed to cotton, linen, silk, wool, and cashmere.",
-  openGraph: {
-    title: "Brand Directory — 11,000+ Brands Ranked by Natural Fiber Quality",
-    description: "Browse and search 11,000+ fashion brands ranked by natural fiber quality.",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const [platformStats, brandStats] = await Promise.all([
+    getCachedPlatformStats(),
+    getCachedBrandStats(),
+  ]);
+  const shoppableCount = brandStats.filter((b) => b.count >= 2).length;
+  const brandLabel = formatBrandCountLabel(shoppableCount);
+  const title = `Brand Directory — ${brandLabel} Brands Ranked by Natural Fiber Quality`;
+  const description = `Browse ${brandLabel} fashion brands ranked by natural fiber quality. ${directoryHeadline(platformStats.productCount, shoppableCount)}`;
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+  };
+}
 
 export default async function DesignersPage() {
   const [platformStats, brandStats] = await Promise.all([
@@ -22,29 +34,23 @@ export default async function DesignersPage() {
     getCachedBrandStats(),
   ]);
   const shoppableBrands = brandStats.filter((b) => b.count >= 2);
-  const productLabel =
-    platformStats.productCount >= 1000
-      ? `${platformStats.productCount.toLocaleString()}+`
-      : platformStats.productCount.toLocaleString();
-  const brandLabel =
-    platformStats.brandCount >= 20
-      ? `${platformStats.brandCount}+`
-      : platformStats.brandCount.toLocaleString();
+  const shoppableBrandCount = shoppableBrands.length;
+
   return (
     <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-12 max-w-6xl mx-auto px-4">
       <header className="flex flex-col items-center text-center gap-4 md:gap-6 max-w-2xl mx-auto">
         <h1 className="text-3xl md:text-5xl font-serif" style={{ fontFamily: "Playfair Display, serif" }} data-testid="text-directory-title">The Directory</h1>
         <p className="text-muted-foreground text-sm md:text-base" data-testid="text-directory-stats">
-          {productLabel} verified products across {brandLabel} brands in natural silk, linen, cotton, wool, and cashmere.
+          {directoryHeadline(platformStats.productCount, shoppableBrandCount)}
         </p>
-        {shoppableBrands.length > 0 && (
+        {shoppableBrandCount > 0 && (
           <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/80">
-            Featured below — {shoppableBrands.length.toLocaleString()} brands with live inventory
+            Featured below — {shoppableBrandCount.toLocaleString()} brands with live inventory
           </p>
         )}
       </header>
 
-      <DesignerSearchClient />
+      <DesignerSearchClient searchPlaceholder={searchBrandsPlaceholder(shoppableBrandCount)} />
 
       {shoppableBrands.length > 0 && (
       <section className="flex flex-col gap-6 md:gap-8" data-testid="section-brands-with-products">

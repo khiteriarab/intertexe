@@ -2,14 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { fetchProductCount, fetchProductsByFiber } from "../../lib/supabase-server";
+import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
+import { formatBrandCountLabel, formatProductCountLabel, GENERIC_SITE_DESCRIPTION } from "../../lib/catalog-stats-labels";
 
-export const revalidate = 0;
+export const revalidate = 600;
 
-export const metadata: Metadata = {
-  title: "Shop by Fabric — Find Silk, Linen, Cotton & Wool Clothing",
-  description: "The easiest way to shop luxury fashion made from natural fabrics. Find silk instead of polyester, linen instead of viscose, cotton instead of blends. 17,000+ verified products.",
-  alternates: { canonical: "https://www.intertexe.com/materials" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const stats = await getCachedPlatformStats();
+  const description =
+    stats.productCount > 0
+      ? `Shop luxury fashion by natural fabric. ${formatProductCountLabel(stats.productCount)} verified silk, linen, cotton, wool, and cashmere pieces.`
+      : GENERIC_SITE_DESCRIPTION;
+  return {
+    title: "Shop by Fabric — Find Silk, Linen, Cotton & Wool Clothing",
+    description,
+    alternates: { canonical: "https://www.intertexe.com/materials" },
+  };
+}
 
 const FABRICS = [
   {
@@ -58,7 +67,9 @@ const CURATED_IMAGES: Record<string, string> = {
 };
 
 export default async function MaterialsPage() {
-  const [productCount, ...fiberImages] = await Promise.all([
+  const [platformStats, brandStats, productCount, ...fiberImages] = await Promise.all([
+    getCachedPlatformStats(),
+    getCachedBrandStats(),
     fetchProductCount(),
     ...FABRICS.map(f => fetchProductsByFiber(f.slug).then(products => {
       const p = products.find(p => p.imageUrl);
@@ -69,7 +80,14 @@ export default async function MaterialsPage() {
   const images: Record<string, string | null> = {};
   FABRICS.forEach((f, i) => { images[f.slug] = fiberImages[i] as string | null; });
 
-  const displayCount = productCount > 0 ? new Intl.NumberFormat("en-US").format(productCount) : "17,553";
+  const totalProducts = platformStats.productCount > 0 ? platformStats.productCount : productCount;
+  const displayCount =
+    totalProducts > 0 ? new Intl.NumberFormat("en-US").format(totalProducts) : "—";
+  const shoppableBrandCount = brandStats.filter((b) => b.count >= 2).length;
+  const directoryBlurb =
+    shoppableBrandCount > 0
+      ? `Browse ${formatBrandCountLabel(shoppableBrandCount)} brands ranked by natural fiber quality. Find your next favourite.`
+      : "Browse brands ranked by natural fiber quality. Find your next favourite.";
 
   return (
     <div className="flex flex-col" data-testid="page-fabric-hub">
@@ -153,7 +171,7 @@ export default async function MaterialsPage() {
           <Link href="/designers" className="group flex flex-col gap-3 p-8 md:p-12 hover:bg-white/5 transition-colors" data-testid="link-hub-directory">
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">03</span>
             <span className="text-lg md:text-xl font-serif">Brand Directory</span>
-            <span className="text-[13px] text-white/50 leading-relaxed">Browse 11,000+ brands ranked by natural fiber quality. Find your next favourite.</span>
+            <span className="text-[13px] text-white/50 leading-relaxed">{directoryBlurb}</span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5 mt-2 group-hover:gap-2.5 transition-all">Explore Brands <ArrowRight className="w-3 h-3" /></span>
           </Link>
         </div>

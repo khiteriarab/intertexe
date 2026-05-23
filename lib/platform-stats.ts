@@ -8,8 +8,9 @@ export type PlatformStats = {
   brandCount: number;
 };
 
-const FALLBACK_PRODUCT_COUNT = 24_000;
-const FALLBACK_BRAND_COUNT = 99;
+/** Shown only when Supabase is unreachable — keep conservative to avoid overstating. */
+const FALLBACK_PRODUCT_COUNT = 0;
+const FALLBACK_BRAND_COUNT = 0;
 
 export async function fetchPlatformStats(): Promise<PlatformStats> {
   const supabase = getServerSupabase();
@@ -53,15 +54,24 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
   };
 }
 
-/** Avoid slow catalog_brand_directory + full-table scan during homepage SSR / Vercel build. */
+/** Vetted brands with live inventory (≥ minProducts offers). */
+export async function fetchVettedBrandCount(minProducts = 2): Promise<number> {
+  const { brandCount } = await fetchPlatformStats();
+  if (brandCount > 0) return brandCount;
+  const supabase = getServerSupabase();
+  if (!supabase) return 0;
+  return fetchBrandCountFast(supabase);
+}
+
+/** Brands with ≥2 shoppable products — same rule as directory grid + iOS fetchVettedBrandCount. */
 async function fetchBrandCountFast(
   supabase: NonNullable<ReturnType<typeof getServerSupabase>>
 ): Promise<number> {
   try {
     const { data, error } = await Promise.race([
-      supabase.rpc("catalog_brand_directory", { p_limit: 120 }),
+      supabase.rpc("catalog_brand_directory", { p_limit: 400 }),
       new Promise<{ data: null; error: { message: string } }>((resolve) =>
-        setTimeout(() => resolve({ data: null, error: { message: "timeout" } }), 6_000)
+        setTimeout(() => resolve({ data: null, error: { message: "timeout" } }), 10_000)
       ),
     ]);
     if (!error && data?.length) {

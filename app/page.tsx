@@ -1,18 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCachedHomePageData } from "../lib/homepage-data";
+import { getCachedBrandStats, getCachedPlatformStats } from "../lib/cached-catalog";
+import { formatBrandCountLabel, formatProductCountLabel, GENERIC_SITE_DESCRIPTION } from "../lib/catalog-stats-labels";
 import { HomePageContent } from "./components/HomeClient";
 
 /** Cached editorial homepage — rails precomputed in Supabase, stats cached server-side. */
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: "INTERTEXE | The Luxury Fashion Search Engine for Natural Fabrics",
-  description:
-    "INTERTEXE is the luxury fashion search engine for natural fabrics. Shop 15,000+ verified silk, cashmere, linen, wool, and cotton clothing across 11,000+ brands. The easiest way to find quality clothing by fabric.",
-  keywords: "INTERTEXE, intertexe, natural fiber fashion, shop by fabric, silk clothing, cashmere clothing, linen clothing, wool clothing, cotton clothing, luxury fashion, natural fabric clothing, sustainable fashion",
-  alternates: { canonical: "https://www.intertexe.com" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const [platformStats, brandStats] = await Promise.all([
+    getCachedPlatformStats(),
+    getCachedBrandStats(),
+  ]);
+  const shoppableBrands = brandStats.filter((b) => b.count >= 2).length;
+  const description =
+    platformStats.productCount > 0 && shoppableBrands > 0
+      ? `INTERTEXE is the luxury fashion search engine for natural fabrics. Shop ${formatProductCountLabel(platformStats.productCount)} verified silk, cashmere, linen, wool, and cotton clothing across ${formatBrandCountLabel(shoppableBrands)} brands.`
+      : GENERIC_SITE_DESCRIPTION;
+  return {
+    title: "INTERTEXE | The Luxury Fashion Search Engine for Natural Fabrics",
+    description,
+    keywords: "INTERTEXE, intertexe, natural fiber fashion, shop by fabric, silk clothing, cashmere clothing, linen clothing, wool clothing, cotton clothing, luxury fashion, natural fabric clothing, sustainable fashion",
+    alternates: { canonical: "https://www.intertexe.com" },
+  };
+}
 
 export default async function HomePage() {
   const data = await getCachedHomePageData();
