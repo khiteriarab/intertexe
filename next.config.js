@@ -30,7 +30,15 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/((?!api/sitemap|_next/static|_next/image|favicon).*)',
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+          { key: 'CDN-Cache-Control', value: 'no-store' },
+          { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
+        ],
+      },
+      {
+        source: '/((?!api/|_next/static|_next/image|favicon).*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
           { key: 'Pragma', value: 'no-cache' },
