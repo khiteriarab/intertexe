@@ -13,7 +13,7 @@ import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping
 import { CatalogProductImage } from "../components/CatalogProductImage";
 import { CountrySelector } from "../components/CountrySelector";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
-import { WearToWhereRail } from "../components/WearToWhereRail";
+import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
 import {
   getRegionForCountryCode,
   getRegionForMarket,
@@ -52,6 +52,7 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
 ];
 
 const SHOP_PAGE_SIZE = 40;
+const WEAR_TO_WHERE_OPTIONS = shopWearToWhereTextOptions();
 
 function optimizeImageUrl(url: string, width: number): string {
   if (!url) return url;
@@ -513,7 +514,19 @@ export default function ShopClient({
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
                 {displayResultTotal.toLocaleString()} results
               </p>
-              <WearToWhereRail title="Wear to where?" className="!py-4 -mx-2 mb-6" />
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Wear to where</p>
+              <div className="flex flex-wrap gap-2 mb-8 max-h-[140px] overflow-y-auto">
+                {WEAR_TO_WHERE_OPTIONS.map((opt) => (
+                  <Link
+                    key={opt.key}
+                    href={opt.href}
+                    onClick={() => setShowFilterSheet(false)}
+                    className="px-4 py-2 text-[10px] uppercase tracking-[0.12em] border border-border/40 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
+                  >
+                    {opt.label}
+                  </Link>
+                ))}
+              </div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Sort By</p>
               <div className="flex flex-col border border-border/30 mb-8">
                 {SORT_OPTIONS.map(option => (

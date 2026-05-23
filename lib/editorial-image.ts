@@ -33,6 +33,15 @@ export function editorialFrameClass(section: EditorialImageSection): string {
   }
 }
 
+/** Object-position classes for product/catalog grids (pairs with object-cover). */
+export function editorialFocalClass(hints?: EditorialFocalHints): string {
+  const mod = editorialFocalModifier(hints);
+  if (mod.includes("--top")) return "object-[center_22%]";
+  if (mod.includes("--lower")) return "object-[center_72%]";
+  if (mod.includes("--mid")) return "object-[center_35%]";
+  return "object-center";
+}
+
 export function editorialFocalModifier(hints?: EditorialFocalHints): string {
   const text = `${hints?.slug || ""} ${hints?.title || ""} ${hints?.category || ""} ${hints?.name || ""}`.toLowerCase();
 

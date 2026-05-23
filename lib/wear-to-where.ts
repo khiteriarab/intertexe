@@ -4,6 +4,7 @@
 import type { CollectionSlug } from "./collection-pages";
 import { editorialHeroForSlug, EDITORIAL_HERO } from "./editorial-assets";
 import { MOOD_CATALOG, type MoodConfig, type MoodSlug } from "./mood-commerce";
+import { COLLECTION_SECTIONS } from "./site-architecture";
 
 const MOOD_IMAGES: Partial<Record<MoodSlug, string>> = {
   "mediterranean-luxury": EDITORIAL_HERO.vacation,
@@ -44,4 +45,25 @@ export function wearToWhereCardsForCollection(slug: CollectionSlug): WearToWhere
     kicker: m.kicker,
     imageUrl: moodImageUrl(m),
   }));
+}
+
+/** Text options for shop filter sheet (no images — carousel lives in mobile menu). */
+export type WearToWhereTextOption = {
+  key: string;
+  label: string;
+  href: string;
+};
+
+export function shopWearToWhereTextOptions(): WearToWhereTextOption[] {
+  const collections: WearToWhereTextOption[] = COLLECTION_SECTIONS.map((c) => ({
+    key: `collection-${c.slug}`,
+    label: c.label,
+    href: c.href,
+  }));
+  const moods: WearToWhereTextOption[] = MOOD_CATALOG.map((m) => ({
+    key: `mood-${m.slug}`,
+    label: m.label,
+    href: `/moods/${m.slug}`,
+  }));
+  return [...collections, ...moods];
 }

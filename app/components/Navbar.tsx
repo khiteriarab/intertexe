@@ -9,6 +9,7 @@ import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { MERCH_NAV } from "../../lib/merch-nav";
 import { CountrySelector } from "./CountrySelector";
 import { MobileBottomDock } from "./MobileBottomDock";
+import { MobileNavMenu } from "./MobileNavMenu";
 
 async function searchDesigners(query: string) {
   const res = await fetch(`/api/designers?q=${encodeURIComponent(query)}`);
@@ -63,7 +64,9 @@ export function Navbar() {
             <CountrySelector />
           </div>
 
-          <Link href="/" className="flex items-center leading-none flex-shrink-0 z-10" data-testid="link-home-logo">
+          <MobileNavMenu />
+
+          <Link href="/" className="flex items-center leading-none flex-shrink-0 z-10 md:ml-0" data-testid="link-home-logo">
             <span className="font-serif text-xl md:text-2xl tracking-[0.25em] uppercase text-foreground">
               <span className="font-light">INTER</span><span className="font-bold">TEXE</span>
             </span>
