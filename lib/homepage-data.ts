@@ -190,7 +190,12 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
 
   const [curatedDesigners, platformStats, railsByKey] = await Promise.all([
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
-    fetchPlatformStats(),
+    withHomepageRailTimeout(
+      "platform-stats",
+      8_000,
+      () => fetchPlatformStats(),
+      { productCount: 24_000, brandCount: 99 }
+    ),
     withHomepageRailTimeout(
       "rail:batch",
       RAIL_TIMEOUT_MS,

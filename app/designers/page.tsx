@@ -5,6 +5,7 @@ import { getBrandProfile } from "../../lib/brand-profiles";
 import { DesignerSearchClient } from "./DesignerSearchClient";
 import { fetchBrandStats } from "../../lib/supabase-server";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 export const metadata: Metadata = {

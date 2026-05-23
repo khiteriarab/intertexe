@@ -1865,7 +1865,8 @@ function mapBrandDirectoryRows(
 /** Fallback when catalog_brand_directory RPC is not deployed yet. */
 async function fetchBrandStatsFromCatalogScan(
   supabase: ReturnType<typeof getServerSupabase>,
-  limit = 800
+  limit = 800,
+  maxPages = 3
 ): Promise<{ slug: string; name: string; count: number; avgNaturalFiber: number }[]> {
   if (!supabase) return [];
 
@@ -1873,7 +1874,7 @@ async function fetchBrandStatsFromCatalogScan(
   const pageSize = 1000;
   let offset = 0;
 
-  for (let page = 0; page < 40; page++) {
+  for (let page = 0; page < maxPages; page++) {
     const { data, error } = await supabase
       .from("live_products_apparel")
       .select("brand_slug, brand_name, natural_fiber_percent, image_url, price")
@@ -1921,17 +1922,31 @@ export async function fetchBrandStats(): Promise<{ slug: string; name: string; c
   if (!supabase) return [];
 
   const t0 = Date.now();
-  const { data: rpcRows, error } = await supabase.rpc("catalog_brand_directory", { p_limit: 800 });
-  logSupabaseTiming("rpc catalog_brand_directory", t0, error ? `error:${error.message}` : `rows:${(rpcRows || []).length}`);
-
-  if (!error && rpcRows?.length) {
-    return mapBrandDirectoryRows(
-      rpcRows as { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[]
+  try {
+    const rpcResult = await Promise.race([
+      supabase.rpc("catalog_brand_directory", { p_limit: 400 }),
+      new Promise<{ data: null; error: { message: string } }>((resolve) =>
+        setTimeout(() => resolve({ data: null, error: { message: "timeout" } }), 10_000)
+      ),
+    ]);
+    const { data: rpcRows, error } = rpcResult;
+    logSupabaseTiming(
+      "rpc catalog_brand_directory",
+      t0,
+      error ? `error:${error.message}` : `rows:${(rpcRows || []).length}`
     );
+
+    if (!error && rpcRows?.length) {
+      return mapBrandDirectoryRows(
+        rpcRows as { brand_slug: string; brand_name: string; product_count: number; avg_natural_fiber: number }[]
+      );
+    }
+  } catch (e: any) {
+    logSupabaseTiming("rpc catalog_brand_directory", t0, `error:${e?.message || "failed"}`);
   }
 
   const t1 = Date.now();
-  const scanned = await fetchBrandStatsFromCatalogScan(supabase, 800);
+  const scanned = await fetchBrandStatsFromCatalogScan(supabase, 400, 2);
   logSupabaseTiming("fetchBrandStats catalog scan fallback", t1, `rows:${scanned.length}`);
   return scanned;
 }

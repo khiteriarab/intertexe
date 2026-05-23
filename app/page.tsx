@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getHomePageData } from "../lib/homepage-data";
 import { HomePageContent } from "./components/HomeClient";
 
+/** Data-heavy Supabase fetch — do not block `next build` static generation (60s limit). */
+export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 export const metadata: Metadata = {

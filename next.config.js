@@ -23,6 +23,8 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    /** Safety net if a page is still statically generated with slow Supabase fetches */
+    staticPageGenerationTimeout: 120,
   },
   devIndicators: false,
   async headers() {
