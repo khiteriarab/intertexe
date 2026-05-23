@@ -16,7 +16,8 @@ export default async function SalePage() {
   return (
     <SaleClient
       initialProducts={saleData.products || []}
-      initialTotal={saleData.total || 0}
+      initialTotal={saleData.total}
+      initialHasMore={saleData.hasMore}
     />
   );
 }

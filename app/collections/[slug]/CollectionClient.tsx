@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
 import Link from "next/link";
 import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice } from "../../../lib/format-display-price";
@@ -28,22 +29,34 @@ export default function CollectionClient({
   products: initialProducts,
   editCount,
   catalogTotal,
+  initialHasMore = true,
   heroImageUrl,
 }: {
   config: CollectionPageConfig;
   products: Product[];
   editCount: number;
   catalogTotal: number;
+  initialHasMore?: boolean;
   heroImageUrl: string;
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [offset, setOffset] = useState(initialProducts.length);
   const [loadingMore, setLoadingMore] = useState(false);
-  const displayTotal = Math.max(editCount, catalogTotal);
-  const [totalCount, setTotalCount] = useState(displayTotal);
-  const [hasMore, setHasMore] = useState(
-    initialProducts.length < displayTotal && initialProducts.length > 0
-  );
+  const [totalCount, setTotalCount] = useState<number | null>(catalogTotal > 0 ? catalogTotal : null);
+  const [countLoading, setCountLoading] = useState(catalogTotal <= 0);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [showSortSheet, setShowSortSheet] = useState(false);
+
+  useEffect(() => {
+    if (catalogTotal > 0) return;
+    fetch(`/api/catalog?mode=collection&slug=${config.slug}&limit=1&offset=0`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d.total === "number" && d.total > 0) setTotalCount(d.total);
+        else if (typeof d.poolCount === "number") setTotalCount(d.poolCount);
+      })
+      .finally(() => setCountLoading(false));
+  }, [config.slug, catalogTotal]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
@@ -55,7 +68,8 @@ export default function CollectionClient({
       const data = await res.json();
       const next = data.products || [];
       const total = typeof data.total === "number" ? data.total : totalCount;
-      setTotalCount(total);
+      if (total != null) setTotalCount(total);
+      setHasMore(Boolean(data.hasMore));
       if (next.length === 0) {
         setHasMore(false);
       } else {
@@ -71,11 +85,7 @@ export default function CollectionClient({
           }
           return merged;
         });
-        setOffset((o) => {
-          const nextOffset = o + next.length;
-          setHasMore(nextOffset < total && next.length >= 32);
-          return nextOffset;
-        });
+        setOffset((o) => o + next.length);
       }
     } finally {
       setLoadingMore(false);
@@ -126,10 +136,24 @@ export default function CollectionClient({
       </section>
 
       <section className="py-8 md:py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
-        <p className="text-[11px] uppercase tracking-[0.14em] text-neutral-500 mb-6" data-testid="text-collection-count">
-          <span className="font-medium text-neutral-800">{totalCount.toLocaleString()} pieces</span> in this
-          collection
+        <CatalogMobileToolbar
+          className="mb-6"
+          resultCount={totalCount}
+          countLoading={countLoading}
+          sortLabel="Recommended"
+          onOpenFilter={() => setShowSortSheet(true)}
+          onOpenSort={() => setShowSortSheet(true)}
+          showFilter={false}
+        />
+        <p className="hidden md:block text-[11px] uppercase tracking-[0.14em] text-neutral-500 mb-6" data-testid="text-collection-count">
+          <span className="font-medium text-neutral-800">
+            {countLoading || totalCount == null ? "—" : totalCount.toLocaleString()}
+          </span>{" "}
+          pieces in this collection
         </p>
+        <CatalogMobileSheet open={showSortSheet} onClose={() => setShowSortSheet(false)} title="Sort">
+          <p className="text-sm text-neutral-500">Pieces are ranked by material quality and editorial fit for this edit.</p>
+        </CatalogMobileSheet>
 
         {products.length === 0 ? (
           <p className="text-sm text-neutral-500 max-w-md leading-relaxed">

@@ -24,7 +24,7 @@ export default async function CollectionPage({ params }: Props) {
   const config = getCollectionConfig(slug);
   if (!config) notFound();
 
-  const data = await fetchCollectionPageData(slug, { limit: 56 });
+  const data = await fetchCollectionPageData(slug, { limit: 36, skipTotal: true });
   if (!data) notFound();
 
   return (
@@ -32,7 +32,8 @@ export default async function CollectionPage({ params }: Props) {
       config={config}
       products={data.products}
       editCount={data.editCount}
-      catalogTotal={data.catalogTotal}
+      catalogTotal={data.catalogTotal ?? data.editCount}
+      initialHasMore={data.hasMore}
       heroImageUrl={data.heroImageUrl}
     />
   );

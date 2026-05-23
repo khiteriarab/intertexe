@@ -661,20 +661,22 @@ export async function fetchEditPageData(
 /** Editorial collection worlds (/collections/[slug]) — full paginated catalog, not homepage rail cache. */
 export async function fetchCollectionPageData(
   slug: string,
-  opts?: { limit?: number; offset?: number }
+  opts?: { limit?: number; offset?: number; skipTotal?: boolean }
 ): Promise<{
   products: Product[];
   editCount: number;
-  catalogTotal: number;
+  catalogTotal: number | null;
   heroImageUrl: string;
+  hasMore: boolean;
 } | null> {
   const { getCollectionConfig } = await import("./collection-pages");
   const config = getCollectionConfig(slug);
   if (!config) return null;
 
   const collectionSlug = slug as import("./collection-pages").CollectionSlug;
-  const limit = Math.min(Math.max(opts?.limit ?? 56, 1), 100);
+  const limit = Math.min(Math.max(opts?.limit ?? 36, 1), 100);
   const offset = Math.max(opts?.offset ?? 0, 0);
+  const skipTotal = opts?.skipTotal ?? false;
 
   const { fetchCollectionPageFromMemberships } = await import("./collection-memberships");
   const fromMemberships = await fetchCollectionPageFromMemberships(collectionSlug, {
@@ -682,18 +684,33 @@ export async function fetchCollectionPageData(
     offset,
   });
 
-  if (fromMemberships && fromMemberships.total > 0) {
+  if (fromMemberships && fromMemberships.products.length > 0) {
+    const total = skipTotal ? null : fromMemberships.total;
+    const catalogTotal = total ?? fromMemberships.total;
     return {
       products: fromMemberships.products,
-      editCount: fromMemberships.total,
-      catalogTotal: fromMemberships.total,
+      editCount: catalogTotal,
+      catalogTotal: total,
       heroImageUrl: config.editorialImage,
+      hasMore: skipTotal
+        ? fromMemberships.products.length >= limit
+        : offset + fromMemberships.products.length < fromMemberships.total,
     };
   }
 
   const { paginateCollectionCatalog } = await import("./collection-catalog");
   const ranked = await getCachedRankedCollectionPool(collectionSlug);
   const products = paginateCollectionCatalog(ranked, limit, offset);
+
+  if (skipTotal) {
+    return {
+      products,
+      editCount: ranked.length,
+      catalogTotal: null,
+      heroImageUrl: config.editorialImage,
+      hasMore: products.length >= limit,
+    };
+  }
 
   let catalogTotal = ranked.length;
   const supabase = getServerSupabase();
@@ -708,6 +725,7 @@ export async function fetchCollectionPageData(
     editCount: catalogTotal,
     catalogTotal,
     heroImageUrl: config.editorialImage,
+    hasMore: offset + products.length < catalogTotal,
   };
 }
 
@@ -1040,11 +1058,13 @@ function priceListedRow(row: any): boolean {
 
 export async function fetchProductsByBrand(
   brandSlug: string,
-  opts?: CatalogFetchOpts
-): Promise<Product[]> {
+  opts?: CatalogFetchOpts & { limit?: number; offset?: number; skipTotal?: boolean }
+): Promise<{ products: Product[]; total: number | null; hasMore: boolean }> {
   const supabase = getServerSupabase();
-  if (!supabase) return [];
-  const cap = Math.min(Math.max(1, opts?.liveRowCap ?? 500), 500);
+  if (!supabase) return { products: [], total: 0, hasMore: false };
+  const limit = Math.min(Math.max(1, opts?.limit ?? 36), 100);
+  const offset = Math.max(0, opts?.offset ?? 0);
+  const skipTotal = opts?.skipTotal ?? false;
 
   let rows: any[] = [];
   if (!opts?.preferLiveOnly) {
@@ -1057,8 +1077,8 @@ export async function fetchProductsByBrand(
         brandSlug,
         search: null,
         minNfp: 80,
-        limit: cap,
-        offset: 0,
+        limit,
+        offset,
       })) || [];
   }
   if (rows.length === 0) {
@@ -1069,12 +1089,32 @@ export async function fetchProductsByBrand(
       .eq("brand_slug", brandSlug)
       .gte("natural_fiber_percent", 80)
       .order("natural_fiber_percent", { ascending: false })
-      .limit(cap);
+      .range(offset, offset + limit - 1);
     logSupabaseTiming(`live live_products_apparel brand=${brandSlug}`, tLive, `rows:${(data || []).length}`);
     rows = dedupeLiveApparelRows(data || [], "us", "us");
   }
 
-  return rows.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
+  const products = rows.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
+
+  if (skipTotal) {
+    return { products, total: null, hasMore: products.length >= limit };
+  }
+
+  const rpcTotal = await rpcCatalogListCount(supabase, {
+    preferred: "us",
+    fallback: "us",
+    fiber: null,
+    category: null,
+    brandSlug,
+    search: null,
+    minNfp: 80,
+  });
+  const total = rpcTotal != null && rpcTotal > 0 ? rpcTotal : offset + products.length;
+  return {
+    products,
+    total,
+    hasMore: offset + products.length < total,
+  };
 }
 
 export async function fetchAllProducts(limit = 200, offset = 0, category?: string): Promise<Product[]> {
@@ -1303,8 +1343,8 @@ export async function fetchProductsByBrandWithImages(
   limit = 24,
   opts?: CatalogFetchOpts
 ): Promise<Product[]> {
-  const rows = await fetchProductsByBrand(brandSlug, opts);
-  return rows
+  const { products } = await fetchProductsByBrand(brandSlug, { ...opts, limit });
+  return products
     .filter((p) => !!p.imageUrl && !!p.price)
     .slice(0, limit);
 }
@@ -1442,6 +1482,32 @@ async function fetchShopLiveApparelAllRows(
   return allRows.slice(0, SHOP_PRICE_SORT_MAX_ROWS);
 }
 
+/** Shop filter total — call after first product page renders. */
+export async function fetchShopCatalogCount(options: {
+  fiber?: string;
+  category?: string;
+  market?: string;
+  search?: string;
+}): Promise<number> {
+  const supabase = getServerSupabase();
+  if (!supabase) return 0;
+  const { fiber, category, market, search } = options;
+  const { preferred, fallback } = catalogRegionsFromMarket(market);
+  const rpcFiber = fiber && fiber !== "all" ? fiber : null;
+  const rpcCategory = category && category !== "all" ? category : null;
+  let searchRpc: string | null = null;
+  if (search && search.trim().length >= 2) {
+    searchRpc = search.trim().toLowerCase();
+  }
+  return resolveShopCatalogTotal(supabase, {
+    preferred,
+    fallback,
+    fiber: rpcFiber,
+    category: rpcCategory,
+    search: searchRpc,
+  });
+}
+
 export async function fetchShopProducts(options: {
   fiber?: string;
   category?: string;
@@ -1450,10 +1516,21 @@ export async function fetchShopProducts(options: {
   limit?: number;
   offset?: number;
   search?: string;
-}): Promise<{ products: Product[]; total: number }> {
+  /** When true, skip count RPC — return hasMore heuristic for instant first paint. */
+  skipTotal?: boolean;
+}): Promise<{ products: Product[]; total: number | null; hasMore: boolean }> {
   const supabase = getServerSupabase();
-  if (!supabase) return { products: [], total: 0 };
-  const { fiber, category, market, sort = "recommended", limit = 60, offset = 0, search } = options;
+  if (!supabase) return { products: [], total: 0, hasMore: false };
+  const {
+    fiber,
+    category,
+    market,
+    sort = "recommended",
+    limit = 60,
+    offset = 0,
+    search,
+    skipTotal = false,
+  } = options;
   const isPriceSort = sort === "price-low" || sort === "price-high";
   const { preferred, fallback } = catalogRegionsFromMarket(market);
 
@@ -1522,6 +1599,14 @@ export async function fetchShopProducts(options: {
       });
     }
 
+    if (skipTotal) {
+      return {
+        products: mapped,
+        total: null,
+        hasMore: mapped.length >= limit,
+      };
+    }
+
     const resolvedTotal = await resolveShopCatalogTotal(supabase, {
       preferred,
       fallback,
@@ -1530,9 +1615,11 @@ export async function fetchShopProducts(options: {
       search: searchRpc,
     });
 
+    const total = Math.max(resolvedTotal, offset + mapped.length);
     return {
       products: mapped,
-      total: Math.max(resolvedTotal, mapped.length),
+      total,
+      hasMore: offset + mapped.length < total,
     };
   }
 
@@ -1570,9 +1657,12 @@ export async function fetchShopProducts(options: {
     return sort === "price-low" ? pa - pb : pb - pa;
   });
 
+  const page = deduped.slice(offset, offset + limit).map(mapProductRow);
+  const fullTotal = deduped.length;
   return {
-    products: deduped.slice(offset, offset + limit).map(mapProductRow),
-    total: deduped.length,
+    products: page,
+    total: skipTotal ? null : fullTotal,
+    hasMore: skipTotal ? page.length >= limit : offset + page.length < fullTotal,
   };
 }
 
@@ -1685,9 +1775,10 @@ export async function fetchSaleProducts(options: {
   maxSourceRows?: number;
   /** Homepage only: use capped merch rail. Sale page / API must set false for full markdown catalog. */
   useMerchFeedPreview?: boolean;
-}): Promise<{ products: Product[]; total: number }> {
+  skipTotal?: boolean;
+}): Promise<{ products: Product[]; total: number | null; hasMore: boolean }> {
   const supabase = getServerSupabase();
-  if (!supabase) return { products: [], total: 0 };
+  if (!supabase) return { products: [], total: 0, hasMore: false };
   const {
     fiber,
     maxPrice,
@@ -1696,6 +1787,7 @@ export async function fetchSaleProducts(options: {
     offset = 0,
     maxSourceRows,
     useMerchFeedPreview = maxSourceRows != null,
+    skipTotal = false,
   } = options;
   const { preferred: dedupePreferred, fallback: dedupeFallback } = catalogRegionsFromMarket(market);
 
@@ -1710,16 +1802,21 @@ export async function fetchSaleProducts(options: {
         p_offset: offset,
       });
       if (!error) {
-        const { data: countRaw } = await supabase.rpc("sale_catalog_count", {
-          p_fiber: fiber && fiber !== "all" ? fiber : null,
-          p_max_price: maxPrice ?? null,
-        });
-        const total = Number(countRaw ?? 0);
         const products = filterConsumerCatalogProducts((rows || []).map(mapProductRow));
-        if (products.length > 0 || total > 0) {
+        if (products.length > 0) {
+          if (skipTotal) {
+            return { products, total: null, hasMore: products.length >= limit };
+          }
+          const { data: countRaw } = await supabase.rpc("sale_catalog_count", {
+            p_fiber: fiber && fiber !== "all" ? fiber : null,
+            p_max_price: maxPrice ?? null,
+          });
+          const total = Number(countRaw ?? 0);
+          const resolved = total > 0 ? total : products.length;
           return {
             products,
-            total: total > 0 ? total : products.length,
+            total: resolved,
+            hasMore: offset + products.length < resolved,
           };
         }
       }
@@ -1746,9 +1843,12 @@ export async function fetchSaleProducts(options: {
         });
         products = applySaleProductFilters(products, { fiber, maxPrice });
         if (products.length > 0) {
+          const page = products.slice(offset, offset + limit);
+          const full = products.length;
           return {
-            products: products.slice(offset, offset + limit),
-            total: products.length,
+            products: page,
+            total: skipTotal ? null : full,
+            hasMore: skipTotal ? page.length >= limit : offset + page.length < full,
           };
         }
       }
@@ -1797,7 +1897,7 @@ export async function fetchSaleProducts(options: {
   }
 
   let data = dedupeLiveApparelRows(allRows, dedupePreferred, dedupeFallback);
-  if (data.length === 0) return { products: [], total: 0 };
+  if (data.length === 0) return { products: [], total: 0, hasMore: false };
 
   let filtered = data
     .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row) && rowIsOnSale(row));
@@ -1830,9 +1930,12 @@ export async function fetchSaleProducts(options: {
     round++;
   }
 
+  const page = interleaved.slice(offset, offset + limit).map(mapProductRow);
+  const fullTotal = interleaved.length;
   return {
-    products: interleaved.slice(offset, offset + limit).map(mapProductRow),
-    total: interleaved.length,
+    products: page,
+    total: skipTotal ? null : fullTotal,
+    hasMore: skipTotal ? page.length >= limit : offset + page.length < fullTotal,
   };
 }
 

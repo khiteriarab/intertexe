@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
+import { CatalogProductImage } from "../../components/CatalogProductImage";
 import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice, type DisplayPriceProduct } from "../../../lib/format-display-price";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
@@ -42,13 +44,30 @@ export default function FabricProductGrid({
   const [products, setProducts] = useState(initialProducts);
   const [offset, setOffset] = useState(initialProducts.length);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [displayTotal, setDisplayTotal] = useState<number | null>(totalCount > 0 ? totalCount : null);
+  const [countLoading, setCountLoading] = useState(totalCount <= 0);
   const [hasMore, setHasMore] = useState(
-    catalogFiber ? initialProducts.length < totalCount && initialProducts.length > 0 : false
+    catalogFiber ? initialProducts.length > 0 : false
   );
 
   const [sort, setSort] = useState<SortOption>("relevance");
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
+
+  useEffect(() => {
+    if (!catalogFiber || totalCount > 0) return;
+    setCountLoading(true);
+    const params = new URLSearchParams({ mode: "materials", fiber: catalogFiber, limit: "1", offset: "0" });
+    if (catalogCategory) params.set("category", catalogCategory);
+    fetch(`/api/catalog?${params}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d.total === "number" && d.total > 0) setDisplayTotal(d.total);
+      })
+      .finally(() => setCountLoading(false));
+  }, [catalogFiber, catalogCategory, totalCount]);
 
   const loadMore = useCallback(async () => {
     if (!catalogFiber || loadingMore || !hasMore) return;
@@ -100,11 +119,24 @@ export default function FabricProductGrid({
     return list;
   }, [products, search, sort]);
 
+  const sortLabel = sort === "relevance" ? "Curated" : sort === "price-asc" ? "Price: Low to High" : "Price: High to Low";
+
   return (
     <section className="w-full" data-testid="section-shop-fabric">
-      <div className="flex items-center justify-between pb-5 border-b border-foreground/[0.06] mb-8">
+      <CatalogMobileToolbar
+        className="mb-6"
+        resultCount={displayTotal}
+        countLoading={countLoading}
+        sortLabel={sortLabel}
+        onOpenFilter={() => setShowFilterSheet(true)}
+        onOpenSort={() => setShowSortSheet(true)}
+        activeFilters={search.trim() ? [{ id: "q", label: `"${search}"`, onRemove: () => setSearch("") }] : []}
+      />
+      <div className="hidden md:flex items-center justify-between pb-5 border-b border-foreground/[0.06] mb-8">
         <div className="flex items-center gap-5">
-          <span className="text-[11px] tracking-[0.15em] text-foreground/35 uppercase">{filtered.length} pieces</span>
+          <span className="text-[11px] tracking-[0.15em] text-foreground/35 uppercase">
+            {(displayTotal ?? filtered.length).toLocaleString()} pieces
+          </span>
           {searchOpen ? (
             <div className="relative">
               <input
@@ -172,20 +204,19 @@ export default function FabricProductGrid({
               className="group flex flex-col"
               data-testid={`card-fabric-product-${index}`}
             >
-              <div className="aspect-[3/4] bg-[#f3f3f1] relative overflow-hidden mb-3 md:mb-4">
+              <div className="mb-3 md:mb-4">
                 {product.imageUrl ? (
-                  <img
+                  <CatalogProductImage
                     src={product.imageUrl}
                     alt={`${product.name} by ${product.brandName}`}
-                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-[800ms] ease-out"
-                    loading={index < 8 ? "eager" : "lazy"}
+                    name={product.name}
+                    eager={index < 8}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="aspect-[3/4] bg-[#f3f3f1] flex items-center justify-center">
                     <span className="text-foreground/8 text-[10px] uppercase tracking-[0.3em]">No image</span>
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.02] transition-colors duration-500" />
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-foreground/35 font-light">
@@ -200,6 +231,28 @@ export default function FabricProductGrid({
           ))}
         </div>
       )}
+
+      <CatalogMobileSheet open={showSortSheet} onClose={() => setShowSortSheet(false)} title="Sort by">
+        {(["relevance", "price-asc", "price-desc"] as SortOption[]).map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => { setSort(opt); setShowSortSheet(false); }}
+            className={`w-full text-left px-4 py-3.5 text-[12px] border-b border-border/20 ${sort === opt ? "font-medium" : "text-muted-foreground"}`}
+          >
+            {opt === "relevance" ? "Curated" : opt === "price-asc" ? "Price: Low to High" : "Price: High to Low"}
+          </button>
+        ))}
+      </CatalogMobileSheet>
+      <CatalogMobileSheet open={showFilterSheet} onClose={() => setShowFilterSheet(false)} title="Search">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={`Search ${fiberName}…`}
+          className="w-full border border-border/30 px-4 py-3 text-sm"
+        />
+      </CatalogMobileSheet>
 
       {hasMore && catalogFiber && filtered.length > 0 && (
         <div className="flex justify-center pt-8">

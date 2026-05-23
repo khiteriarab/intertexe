@@ -7,6 +7,7 @@ import {
   fetchEditPageData,
   fetchCollectionPageData,
   fetchMaterialHubDisplayCount,
+  fetchProductsByBrand,
 } from "../../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 
@@ -24,8 +25,25 @@ export async function GET(request: NextRequest) {
   const sort = sp.get("sort") || "recommended";
   const search = sp.get("search") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
+  const skipCount = sp.get("skipCount") === "1" || offset === 0;
 
   try {
+    if (mode === "brand") {
+      const slug = sp.get("slug") || "";
+      const result = await fetchProductsByBrand(slug, {
+        limit,
+        offset,
+        skipTotal: skipCount,
+      });
+      return NextResponse.json({
+        products: result.products,
+        total: result.total,
+        limit,
+        offset,
+        hasMore: result.hasMore,
+      });
+    }
+
     if (mode === "sale") {
       const result = await fetchSaleProducts({
         fiber: fiber && fiber !== "all" ? fiber : undefined,
@@ -33,30 +51,38 @@ export async function GET(request: NextRequest) {
         limit,
         offset,
         useMerchFeedPreview: false,
+        skipTotal: skipCount,
       });
+      const total = result.total;
       return NextResponse.json({
         products: result.products,
-        total: result.total,
+        total,
         limit,
         offset,
-        hasMore: offset + result.products.length < result.total,
+        hasMore:
+          result.hasMore ??
+          (total != null ? offset + result.products.length < total : result.products.length >= limit),
       });
     }
 
     if (mode === "collection") {
       const slug = sp.get("slug") || "";
-      const data = await fetchCollectionPageData(slug, { limit, offset });
+      const data = await fetchCollectionPageData(slug, {
+        limit,
+        offset,
+        skipTotal: skipCount,
+      });
       if (!data) {
-        return NextResponse.json({ products: [], total: 0, limit, offset, hasMore: false });
+        return NextResponse.json({ products: [], total: null, limit, offset, hasMore: false });
       }
+      const total = data.catalogTotal;
       return NextResponse.json({
         products: data.products,
-        total: data.catalogTotal,
+        total,
         poolCount: data.editCount,
         limit,
         offset,
-        hasMore:
-          offset + data.products.length < data.catalogTotal && data.products.length >= limit,
+        hasMore: data.hasMore,
       });
     }
 
@@ -64,7 +90,7 @@ export async function GET(request: NextRequest) {
       const slug = sp.get("slug") || "";
       const data = await fetchEditPageData(slug, { limit, offset });
       if (!data) {
-        return NextResponse.json({ products: [], total: 0, limit, offset, hasMore: false });
+        return NextResponse.json({ products: [], total: null, limit, offset, hasMore: false });
       }
       return NextResponse.json({
         products: data.products,
@@ -100,13 +126,17 @@ export async function GET(request: NextRequest) {
         limit,
         offset,
       });
-      const total = await fetchMaterialHubDisplayCount(fiber, cat);
+      let total: number | null = null;
+      if (!skipCount) {
+        const n = await fetchMaterialHubDisplayCount(fiber, cat);
+        total = n > 0 ? n : null;
+      }
       return NextResponse.json({
         products,
-        total: total > 0 ? total : null,
+        total,
         limit,
         offset,
-        hasMore: total > 0 ? offset + products.length < total : products.length >= limit,
+        hasMore: total != null ? offset + products.length < total : products.length >= limit,
       });
     }
 
@@ -118,6 +148,7 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       search: search || undefined,
+      skipTotal: skipCount,
     });
 
     return NextResponse.json({
@@ -125,10 +156,10 @@ export async function GET(request: NextRequest) {
       total: result.total,
       limit,
       offset,
-      hasMore: offset + result.products.length < result.total,
+      hasMore: result.hasMore,
     });
   } catch (err) {
     console.error("[api/catalog]", err);
-    return NextResponse.json({ products: [], total: 0, error: "catalog_fetch_failed" }, { status: 500 });
+    return NextResponse.json({ products: [], total: null, error: "catalog_fetch_failed" }, { status: 500 });
   }
 }

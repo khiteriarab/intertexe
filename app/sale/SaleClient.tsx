@@ -7,6 +7,7 @@ import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
+import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type PriceFilter = "all" | "100" | "200" | "300";
@@ -133,14 +134,19 @@ function SaleProductCard({ product }: { product: any }) {
 export default function SaleClient({
   initialProducts,
   initialTotal,
+  initialHasMore = true,
 }: {
   initialProducts: any[];
-  initialTotal: number;
+  initialTotal: number | null;
+  initialHasMore?: boolean;
 }) {
   const [fiberTab, setFiberTab] = useState<FiberTab>("all");
   const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
   const [products, setProducts] = useState(initialProducts || []);
-  const [total, setTotal] = useState(initialTotal || 0);
+  const [total, setTotal] = useState<number | null>(initialTotal);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [countLoading, setCountLoading] = useState(initialTotal == null);
+  const [showSortSheet, setShowSortSheet] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(initialProducts?.length || 0);
@@ -179,20 +185,32 @@ export default function SaleClient({
     if (market !== "all") params.set("market", market);
     params.set("limit", String(pageSize));
     params.set("offset", "0");
+    params.set("skipCount", "1");
 
     fetch(`/api/sale?${params}`)
       .then((r) => r.json())
       .then((d) => {
         setProducts(d.products || []);
-        setTotal(d.total || 0);
+        if (d.total != null) setTotal(d.total);
+        setHasMore(Boolean(d.hasMore));
         setOffset((d.products || []).length);
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
+
+    const countParams = new URLSearchParams(params);
+    countParams.delete("skipCount");
+    setCountLoading(true);
+    fetch(`/api/sale?${countParams}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.total != null) setTotal(d.total);
+      })
+      .finally(() => setCountLoading(false));
   }, [fiberTab, priceFilter, market, initialProducts, initialTotal]);
 
   const loadMore = () => {
-    if (loadingMore || products.length >= total) return;
+    if (loadingMore || (!hasMore && total != null && products.length >= total)) return;
     setLoadingMore(true);
     const params = new URLSearchParams();
     if (fiberTab !== "all") params.set("fiber", fiberTab);
@@ -215,8 +233,6 @@ export default function SaleClient({
       .finally(() => setLoadingMore(false));
   };
 
-  const hasMore = products.length < total;
-
   return (
     <div className="min-h-screen pb-20">
       <div className="py-10 md:py-16 flex flex-col gap-8 md:gap-12">
@@ -224,13 +240,24 @@ export default function SaleClient({
           <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground">Verified Natural Fabrics</span>
           <h1 className="text-3xl md:text-5xl font-serif" data-testid="text-sale-title">The Edit — On Sale</h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            {total > 0 ? `${total} verified products on sale` : "Sale items will appear here as prices drop"}
+            {total != null && total > 0 ? `${total.toLocaleString()} verified products on sale` : "Sale items will appear here as prices drop"}
           </p>
         </div>
 
-        <div className="flex items-center justify-between border-y border-border/20 py-3 mb-2 gap-4">
+        <CatalogMobileToolbar
+          resultCount={total}
+          countLoading={countLoading}
+          sortLabel={currentSort.label}
+          onOpenFilter={() => setShowFilterSheet(true)}
+          onOpenSort={() => setShowSortSheet(true)}
+          activeFilters={[
+            ...(fiberTab !== "all" ? [{ id: "fiber", label: fiberTab, onRemove: () => setFiberTab("all") }] : []),
+            ...(priceFilter !== "all" ? [{ id: "price", label: PRICE_FILTERS.find((p) => p.key === priceFilter)?.label || priceFilter, onRemove: () => setPriceFilter("all") }] : []),
+          ]}
+        />
+        <div className="hidden md:flex items-center justify-between border-y border-border/20 py-3 mb-2 gap-4">
           <p className="text-[11px] text-muted-foreground flex-shrink-0">
-            <span className="text-foreground font-medium">{total.toLocaleString()}</span> on sale
+            <span className="text-foreground font-medium">{total != null ? total.toLocaleString() : "—"}</span> on sale
           </p>
           <div className="flex items-center gap-4 md:gap-6 ml-auto">
             <button
@@ -368,7 +395,7 @@ export default function SaleClient({
                 <SaleProductCard key={product.id} product={product} />
               ))}
             </div>
-            {hasMore && (
+            {canLoadMore && (
               <div className="flex justify-center pt-4">
                 <button
                   onClick={loadMore}

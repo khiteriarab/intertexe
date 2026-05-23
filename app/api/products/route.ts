@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(products);
     }
     if (brandSlug) {
-      const products = await fetchProductsByBrand(brandSlug);
+      const { products } = await fetchProductsByBrand(brandSlug, { limit: 100, offset: 0 });
       return NextResponse.json(products);
     }
     if (fiber) {

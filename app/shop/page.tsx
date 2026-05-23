@@ -2,12 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { headers } from "next/headers";
-import {
-  fetchShopProducts,
-  fetchProductCount,
-  fetchFiberCounts,
-  CATALOG_PAGE_SIZE,
-} from "../../lib/supabase-server";
+import { fetchShopProducts, CATALOG_INITIAL_PAGE } from "../../lib/supabase-server";
 import ShopClient from "./ShopClient";
 import { formatListingPrice } from "../../lib/format-display-price";
 
@@ -53,19 +48,18 @@ export default async function ShopPage({
       ? params.sort
       : "recommended";
   const search = params?.q?.trim() || undefined;
-  const [shopData, totalProductCount, fiberCounts] = await Promise.all([
-    fetchShopProducts({
-      sort,
-      limit: CATALOG_PAGE_SIZE,
-      offset: 0,
-      market,
-      fiber,
-      category,
-      search,
-    }),
-    fetchProductCount(),
-    fetchFiberCounts(),
-  ]);
+
+  /** First page only — counts and fiber tabs load client-side (non-blocking). */
+  const shopData = await fetchShopProducts({
+    sort,
+    limit: CATALOG_INITIAL_PAGE,
+    offset: 0,
+    market,
+    fiber,
+    category,
+    search,
+    skipTotal: true,
+  });
 
   const products = shopData.products || [];
 
@@ -74,9 +68,7 @@ export default async function ShopPage({
       <Suspense fallback={null}>
         <ShopClient
           initialProducts={products}
-          initialTotal={shopData.total || 0}
-          totalProductCount={totalProductCount}
-          fiberCounts={fiberCounts}
+          initialHasMore={shopData.hasMore}
           detectedCountry={detectedCountry}
         />
       </Suspense>
@@ -86,22 +78,19 @@ export default async function ShopPage({
           Shop Natural Fabric Clothing
         </h1>
         <p className="text-center text-muted-foreground text-sm max-w-2xl mx-auto mb-8 leading-relaxed">
-          Browse {(totalProductCount || 0).toLocaleString()}+ natural-fiber clothing items. 
-          Filter by fabric type — silk, cashmere, linen, wool, or cotton — and shop with confidence knowing 
-          every product contains 80% or more natural fibers.
+          Browse natural-fiber clothing in silk, cashmere, linen, wool, and cotton. Filter by fabric type and shop with confidence knowing every product is verified for material quality.
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
           {[
-            { name: "Silk", href: "/shop?fiber=silk", count: fiberCounts?.silk },
-            { name: "Cotton", href: "/shop?fiber=cotton", count: fiberCounts?.cotton },
-            { name: "Linen", href: "/shop?fiber=linen", count: fiberCounts?.linen },
-            { name: "Wool", href: "/shop?fiber=wool", count: fiberCounts?.wool },
-            { name: "Cashmere", href: "/shop?fiber=cashmere", count: fiberCounts?.cashmere },
+            { name: "Silk", href: "/shop?fiber=silk" },
+            { name: "Cotton", href: "/shop?fiber=cotton" },
+            { name: "Linen", href: "/shop?fiber=linen" },
+            { name: "Wool", href: "/shop?fiber=wool" },
+            { name: "Cashmere", href: "/shop?fiber=cashmere" },
           ].map((f) => (
             <Link key={f.name} href={f.href} className="text-center py-3 border border-border/30 hover:border-foreground/20 transition-colors">
               <span className="text-xs md:text-sm font-medium">{f.name}</span>
-              {f.count != null && <span className="block text-[10px] text-muted-foreground mt-0.5">{f.count.toLocaleString()} items</span>}
             </Link>
           ))}
         </div>

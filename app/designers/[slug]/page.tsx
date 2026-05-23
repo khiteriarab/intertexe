@@ -33,10 +33,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 /** Designer directory → shop grid (THE OUTNET-style). Quality review lives at /about. */
 export default async function DesignerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [dbDesigner, products] = await Promise.all([
+  const [dbDesigner, brandCatalog] = await Promise.all([
     fetchDesignerBySlug(slug),
-    fetchProductsByBrand(slug),
+    fetchProductsByBrand(slug, { limit: 36, offset: 0, skipTotal: true }),
   ]);
+  const products = brandCatalog.products;
   const profile = getBrandProfile(slug);
 
   if (!dbDesigner && !profile) {
@@ -125,6 +126,7 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
           designerWebsite={designer.website}
           hasProfile={!!profile}
           profileMaterialStrengths={profile?.materialStrengths || []}
+          initialHasMore={brandCatalog.hasMore}
           shopMode
         />
       </div>

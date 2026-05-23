@@ -4,6 +4,8 @@ import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { ProductLink } from "../../components/ProductLink";
 import { CatalogProductImage } from "../../components/CatalogProductImage";
+import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
+import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 import { Heart } from "lucide-react";
 import { useProductFavorites } from "../../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../../lib/format-display-price";
@@ -58,6 +60,7 @@ export function DesignerDetailProducts({
   hasProfile,
   profileMaterialStrengths,
   shopMode = false,
+  initialHasMore = false,
 }: {
   products: ProductItem[];
   designerName: string;
@@ -65,21 +68,26 @@ export function DesignerDetailProducts({
   designerWebsite: string | null;
   hasProfile: boolean;
   profileMaterialStrengths: string[];
-  /** Outnet-style: grid first, minimal editorial copy above products. */
+  initialHasMore?: boolean;
   shopMode?: boolean;
 }) {
+  const [catalogProducts, setCatalogProducts] = useState<ProductItem[]>(products);
   const [activeCategory, setActiveCategory] = useState("all");
   const [showSaleOnly, setShowSaleOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
   const [priceSort, setPriceSort] = useState<PriceSort>("default");
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
+  const [serverHasMore, setServerHasMore] = useState(initialHasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const { favorites, toggle: toggleProductFav } = useProductFavorites();
 
   const visibleProducts = useMemo(() => {
-    return products.filter((p) => p.imageUrl);
-  }, [products]);
+    return catalogProducts.filter((p) => p.imageUrl);
+  }, [catalogProducts]);
 
   const categories = useMemo(() => {
     const cats: Record<string, number> = {};
@@ -122,10 +130,31 @@ export function DesignerDetailProducts({
   }, [visibleProducts, activeCategory, showSaleOnly, searchQuery, priceSort]);
 
   const paginatedProducts = useMemo(() => {
+    if (shopMode) return filteredProducts;
     return filteredProducts.slice(0, visibleCount);
-  }, [filteredProducts, visibleCount]);
+  }, [filteredProducts, visibleCount, shopMode]);
 
-  const hasMore = filteredProducts.length > visibleCount;
+  const hasMoreClient = filteredProducts.length > visibleCount;
+  const hasMore = shopMode ? serverHasMore : hasMoreClient;
+
+  const loadMoreFromServer = useCallback(async () => {
+    if (!shopMode || loadingMore || !serverHasMore) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(
+        `/api/catalog?mode=brand&slug=${encodeURIComponent(designerSlug)}&limit=${CATALOG_PAGE_SIZE}&offset=${catalogProducts.length}`
+      );
+      const data = await res.json();
+      const next = (data.products || []) as ProductItem[];
+      setCatalogProducts((prev) => {
+        const seen = new Set(prev.map((p) => p.productId || p.id));
+        return [...prev, ...next.filter((p) => !seen.has(p.productId || p.id))];
+      });
+      setServerHasMore(Boolean(data.hasMore));
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [shopMode, loadingMore, serverHasMore, designerSlug, catalogProducts.length]);
 
   const handleCategoryChange = useCallback((cat: string) => {
     setActiveCategory(cat);
@@ -149,6 +178,23 @@ export function DesignerDetailProducts({
 
       {visibleProducts.length > 0 ? (
         <>
+          {shopMode && (
+            <CatalogMobileToolbar
+              className="mb-4"
+              resultCount={visibleProducts.length}
+              countLoading={false}
+              sortLabel={PRICE_SORT_OPTIONS.find((o) => o.key === priceSort)?.label || "Default"}
+              onOpenFilter={() => setShowFilterSheet(true)}
+              onOpenSort={() => setShowSortSheet(true)}
+              activeFilters={[
+                ...(activeCategory !== "all"
+                  ? [{ id: "cat", label: CATEGORY_LABELS[activeCategory] || activeCategory, onRemove: () => setActiveCategory("all") }]
+                  : []),
+                ...(showSaleOnly ? [{ id: "sale", label: "Sale", onRemove: () => setShowSaleOnly(false) }] : []),
+              ]}
+            />
+          )}
+
           {!shopMode && (
             <p className="text-sm text-foreground/70 leading-relaxed">
               Every item below has been verified by INTERTEXE for natural fiber content. Where a piece shows less than 100%, the remaining percentage is typically from functional components like linings, trims, or elastic.
@@ -321,11 +367,15 @@ export function DesignerDetailProducts({
               </div>
               {hasMore && (
                 <button
-                  onClick={() => setVisibleCount((prev) => prev + PRODUCTS_PER_PAGE)}
-                  className="w-full border border-foreground/20 hover:border-foreground/40 text-foreground py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    if (shopMode) loadMoreFromServer();
+                    else setVisibleCount((prev) => prev + PRODUCTS_PER_PAGE);
+                  }}
+                  disabled={loadingMore}
+                  className="w-full border border-foreground/20 hover:border-foreground/40 text-foreground py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98] disabled:opacity-50"
                   data-testid="button-load-more-products"
                 >
-                  Load More ({filteredProducts.length - visibleCount} remaining)
+                  {loadingMore ? "Loading…" : shopMode ? "Load more" : `Load More (${filteredProducts.length - visibleCount} remaining)`}
                 </button>
               )}
             </>

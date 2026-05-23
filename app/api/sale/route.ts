@@ -20,14 +20,18 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       useMerchFeedPreview: false,
+      skipTotal: offset === 0 && sp.get("skipCount") === "1",
     });
+    const total = result.total;
     return NextResponse.json(
       {
         products: result.products,
-        total: result.total,
+        total,
         limit,
         offset,
-        hasMore: offset + result.products.length < result.total,
+        hasMore:
+          result.hasMore ??
+          (total != null ? offset + result.products.length < total : result.products.length >= limit),
       },
       {
         headers: {

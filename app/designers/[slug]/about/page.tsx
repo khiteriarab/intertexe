@@ -23,10 +23,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function DesignerAboutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [dbDesigner, products] = await Promise.all([
+  const [dbDesigner, brandCatalog] = await Promise.all([
     fetchDesignerBySlug(slug),
-    fetchProductsByBrand(slug),
+    fetchProductsByBrand(slug, { limit: 200, offset: 0 }),
   ]);
+  const products = brandCatalog.products;
   const profile = getBrandProfile(slug);
 
   if (!dbDesigner && !profile) {

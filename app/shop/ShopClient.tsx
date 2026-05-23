@@ -6,7 +6,9 @@ import { ProductLink } from "../components/ProductLink";
 import { useSearchParams } from "next/navigation";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
-import { getShopProducts, getShopMeta } from "./actions";
+import { getShopProducts, getShopCatalogCount, getShopMeta } from "./actions";
+import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
+import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
@@ -51,7 +53,7 @@ const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "price-low", label: "Price: Low to High" },
 ];
 
-const SHOP_PAGE_SIZE = 40;
+const SHOP_PAGE_SIZE = CATALOG_PAGE_SIZE;
 const WEAR_TO_WHERE_OPTIONS = shopWearToWhereTextOptions();
 
 function optimizeImageUrl(url: string, width: number): string {
@@ -145,15 +147,11 @@ function LoadingSkeleton() {
 
 export default function ShopClient({
   initialProducts,
-  initialTotal,
-  totalProductCount,
-  fiberCounts = {},
+  initialHasMore = true,
   detectedCountry,
 }: {
   initialProducts: any[];
-  initialTotal: number;
-  totalProductCount: number;
-  fiberCounts?: Record<string, number>;
+  initialHasMore?: boolean;
   detectedCountry?: string;
 }) {
   const searchParams = useSearchParams();
@@ -172,6 +170,7 @@ export default function ShopClient({
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
   const [listOffset, setListOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
@@ -206,8 +205,10 @@ export default function ShopClient({
   }, [fiberTab, categoryFilter, sortBy, marketFilter, debouncedSearch, syncUrl]);
 
   const [products, setProducts] = useState(initialProducts || []);
-  const [resultTotal, setResultTotal] = useState(initialTotal || 0);
+  const [resultTotal, setResultTotal] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
+  const [countLoading, setCountLoading] = useState(true);
   const initialFetchDone = useRef(initialProducts?.length > 0);
 
   const scrollRestored = useRef(false);
@@ -237,21 +238,17 @@ export default function ShopClient({
       }, 100);
     }
   }, [products, isLoading]);
-  const [globalCount, setGlobalCount] = useState(totalProductCount);
-  const [fiberCountsState, setFiberCountsState] = useState(fiberCounts);
+  const [globalCount, setGlobalCount] = useState(0);
+  const [fiberCountsState, setFiberCountsState] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (Object.keys(fiberCounts).length > 0) {
-      setFiberCountsState(fiberCounts);
-      return;
-    }
     getShopMeta()
       .then((d) => {
         if (d.totalProductCount) setGlobalCount(d.totalProductCount);
         if (d.fiberCounts) setFiberCountsState(d.fiberCounts);
       })
       .catch(() => {});
-  }, [fiberCounts]);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -270,57 +267,71 @@ export default function ShopClient({
       !debouncedSearch &&
       listOffset === 0;
 
-    if (isDefaultState && initialFetchDone.current) {
+    if (isDefaultState && initialFetchDone.current && listOffset === 0) {
       setProducts(initialProducts);
-      setResultTotal(initialTotal);
+      setHasMore(initialHasMore);
       setIsLoading(false);
-      return;
+    } else {
+      const fetchProducts = async () => {
+        setIsLoading(true);
+        try {
+          const result = await getShopProducts({
+            fiber: fiberTab !== "all" ? fiberTab : undefined,
+            category: categoryFilter !== "all" ? categoryFilter : undefined,
+            sort: sortBy,
+            market: marketFilter !== "all" ? marketFilter : undefined,
+            limit: SHOP_PAGE_SIZE,
+            offset: listOffset,
+            search: debouncedSearch || undefined,
+            skipTotal: listOffset === 0,
+          });
+          if (listOffset === 0) {
+            setProducts(result.products || []);
+          } else {
+            setProducts((prev) => {
+              const seen = new Set(prev.map((p) => p.productId || p.id));
+              const next = [...prev];
+              for (const p of result.products || []) {
+                const id = p.productId || p.id;
+                if (!seen.has(id)) {
+                  seen.add(id);
+                  next.push(p);
+                }
+              }
+              return next;
+            });
+          }
+          setHasMore(result.hasMore);
+          if (result.total != null) setResultTotal(result.total);
+        } catch {
+          if (listOffset === 0) {
+            setProducts([]);
+            setResultTotal(0);
+            setHasMore(false);
+          }
+        }
+        setIsLoading(false);
+        setLoadingMore(false);
+      };
+      fetchProducts();
     }
 
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      if (listOffset === 0) {
-        setProducts([]);
-      }
-      try {
-        const result = await getShopProducts({
-          fiber: fiberTab !== "all" ? fiberTab : undefined,
-          category: categoryFilter !== "all" ? categoryFilter : undefined,
-          sort: sortBy,
-          market: marketFilter !== "all" ? marketFilter : undefined,
-          limit: SHOP_PAGE_SIZE,
-          offset: listOffset,
-          search: debouncedSearch || undefined,
-        });
-        if (listOffset === 0) {
-          setProducts(result.products || []);
-        } else {
-          setProducts((prev) => {
-            const seen = new Set(prev.map((p) => p.productId || p.id));
-            const next = [...prev];
-            for (const p of result.products || []) {
-              const id = p.productId || p.id;
-              if (!seen.has(id)) {
-                seen.add(id);
-                next.push(p);
-              }
-            }
-            return next;
-          });
-        }
-        setResultTotal(result.total || 0);
-      } catch {
-        if (listOffset === 0) {
-          setProducts([]);
-          setResultTotal(0);
-        }
-      }
-      setIsLoading(false);
-      setLoadingMore(false);
-    };
+  }, [fiberTab, categoryFilter, sortBy, marketFilter, listOffset, debouncedSearch, initialProducts, initialHasMore]);
 
-    fetchProducts();
-  }, [fiberTab, categoryFilter, sortBy, marketFilter, listOffset, debouncedSearch]);
+  useEffect(() => {
+    setCountLoading(true);
+    getShopCatalogCount({
+      fiber: fiberTab,
+      category: categoryFilter,
+      market: marketFilter,
+      search: debouncedSearch || undefined,
+    })
+      .then(({ total }) => {
+        setResultTotal(total);
+      })
+      .catch(() => {})
+      .finally(() => setCountLoading(false));
+  }, [fiberTab, categoryFilter, marketFilter, debouncedSearch]);
 
   useEffect(() => {
     const onMarket = () => {
@@ -341,15 +352,27 @@ export default function ShopClient({
     marketFilter === "all" &&
     !debouncedSearch;
 
-  const displayResultTotal = useGlobalCountHint
-    ? fiberTab !== "all" && fiberCountsState[fiberTab]
-      ? Math.max(resultTotal, fiberCountsState[fiberTab])
-      : globalCount > 0
-        ? Math.max(resultTotal, globalCount)
-        : resultTotal
-    : resultTotal;
+  const displayResultTotal =
+    resultTotal ??
+    (useGlobalCountHint && globalCount > 0
+      ? globalCount
+      : useGlobalCountHint && fiberTab !== "all" && fiberCountsState[fiberTab]
+        ? fiberCountsState[fiberTab]
+        : null);
 
-  const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)!;
+  const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy)!;
+
+  const activeFilterChips = [
+    ...(fiberTab !== "all"
+      ? [{ id: "fiber", label: FIBER_TABS.find((t) => t.key === fiberTab)?.label || fiberTab, onRemove: () => { setFiberTab("all"); setListOffset(0); } }]
+      : []),
+    ...(categoryFilter !== "all"
+      ? [{ id: "cat", label: CATEGORY_FILTERS.find((c) => c.key === categoryFilter)?.label || categoryFilter, onRemove: () => { setCategoryFilter("all"); setListOffset(0); } }]
+      : []),
+    ...(marketFilter !== "all"
+      ? [{ id: "market", label: activeRegion.country, onRemove: () => { selectLocation("all"); } }]
+      : []),
+  ];
 
   return (
     <div className="min-h-screen pb-[7.5rem] md:pb-16">
@@ -386,45 +409,19 @@ export default function ShopClient({
           </div>
         </header>
 
-        <div className="flex flex-col gap-4 mb-6 md:mb-8 lg:hidden">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
-            {FIBER_TABS.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setListOffset(0); }}
-                className={`px-4 md:px-5 py-2 text-[10px] md:text-[11px] uppercase tracking-[0.15em] whitespace-nowrap transition-all flex-shrink-0 ${
-                  fiberTab === tab.key ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
-                }`}
-                data-testid={`tab-fiber-${tab.key}`}
-              >
-                {tab.label}
-                {tab.key !== "all" && fiberCountsState[tab.key] ? (
-                  <span className="ml-1.5 opacity-50">({fiberCountsState[tab.key]})</span>
-                ) : null}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1">
-            {CATEGORY_FILTERS.map(cat => (
-              <button
-                key={cat.key}
-                onClick={() => { setCategoryFilter(cat.key); setListOffset(0); }}
-                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] whitespace-nowrap transition-all flex-shrink-0 ${
-                  categoryFilter === cat.key ? "border-b-2 border-foreground text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
-                }`}
-                data-testid={`tab-category-${cat.key}`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          <p className="md:hidden text-[10px] uppercase tracking-[0.14em] text-muted-foreground -mx-1 px-1 pt-1">
-            Delivering to {activeRegion.country}
-            {activeRegion.currency !== "ALL" ? ` · ${activeRegion.currency}` : ""}
-          </p>
-        </div>
+        <CatalogMobileToolbar
+          className="mb-4"
+          resultCount={displayResultTotal}
+          countLoading={countLoading && resultTotal == null}
+          sortLabel={currentSort.label}
+          onOpenFilter={() => { setShowFilterSheet(true); setShowSortSheet(false); }}
+          onOpenSort={() => { setShowSortSheet(true); setShowFilterSheet(false); }}
+          activeFilters={activeFilterChips}
+        />
+        <p className="lg:hidden text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-4">
+          Delivering to {activeRegion.country}
+          {activeRegion.currency !== "ALL" ? ` · ${activeRegion.currency}` : ""}
+        </p>
 
         <div className="lg:flex lg:gap-10 lg:items-start">
           <CatalogFilterSidebar
@@ -453,26 +450,15 @@ export default function ShopClient({
           <CountrySelector detectedCountryCode={detectedCountry} />
         </div>
 
-        <div className="flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8 gap-4 lg:border-0 lg:py-0 lg:mb-6">
-          <p className="text-[11px] md:text-xs text-muted-foreground flex-shrink-0 lg:hidden" data-testid="text-result-count">
-            {isLoading ? (
-              <span className="animate-pulse">Loading...</span>
+        <div className="hidden lg:flex items-center justify-between py-3 border-y border-border/20 mb-6 md:mb-8 gap-4">
+          <p className="text-[11px] md:text-xs text-muted-foreground" data-testid="text-result-count-desktop">
+            {countLoading && displayResultTotal == null ? (
+              <span className="animate-pulse">Loading…</span>
             ) : (
-              <><span className="text-foreground">{displayResultTotal.toLocaleString()}</span> results</>
+              <><span className="text-foreground">{(displayResultTotal ?? products.length).toLocaleString()}</span> results</>
             )}
           </p>
-
-          <div className="flex items-center gap-4 md:gap-6 ml-auto">
-            <button
-              type="button"
-              onClick={() => { setShowFilterSheet(true); setShowSortMenu(false); }}
-              className="flex items-center gap-1.5 text-[11px] md:text-xs uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors lg:hidden"
-              data-testid="btn-filter-sort"
-            >
-              Filter & Sort
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            <div className="relative hidden lg:block">
+          <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowSortMenu(!showSortMenu)}
@@ -506,14 +492,52 @@ export default function ShopClient({
           </div>
         </div>
 
-        {showFilterSheet && (
-          <>
-            <div className="fixed inset-0 z-[90] bg-black/40" onClick={() => setShowFilterSheet(false)} />
-            <div className="fixed inset-x-0 bottom-0 z-[100] bg-background border-t border-border/40 rounded-t-2xl max-h-[85vh] overflow-y-auto p-6 pb-10 md:hidden">
-              <p className="text-lg font-serif mb-1">Filter & Sort</p>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
-                {displayResultTotal.toLocaleString()} results
-              </p>
+        <CatalogMobileSheet
+          open={showSortSheet}
+          onClose={() => setShowSortSheet(false)}
+          title="Sort by"
+        >
+          <div className="flex flex-col border border-border/30">
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => {
+                  setSortBy(option.key);
+                  setListOffset(0);
+                  setShowSortSheet(false);
+                }}
+                className={`w-full text-left px-4 py-3.5 text-[12px] border-b border-border/20 last:border-0 ${
+                  sortBy === option.key ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </CatalogMobileSheet>
+
+        <CatalogMobileSheet
+          open={showFilterSheet}
+          onClose={() => setShowFilterSheet(false)}
+          title="Filter"
+          subtitle={
+            displayResultTotal != null
+              ? `${displayResultTotal.toLocaleString()} results`
+              : countLoading
+                ? "Loading…"
+                : undefined
+          }
+          footer={
+            <button
+              type="button"
+              onClick={() => setShowFilterSheet(false)}
+              className="w-full bg-foreground text-background py-3.5 text-[10px] uppercase tracking-[0.2em]"
+            >
+              Apply filters
+            </button>
+          }
+        >
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Wear to where</p>
               <div className="flex flex-wrap gap-2 mb-8 max-h-[140px] overflow-y-auto">
                 {WEAR_TO_WHERE_OPTIONS.map((opt) => (
@@ -525,21 +549,6 @@ export default function ShopClient({
                   >
                     {opt.label}
                   </Link>
-                ))}
-              </div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Sort By</p>
-              <div className="flex flex-col border border-border/30 mb-8">
-                {SORT_OPTIONS.map(option => (
-                  <button
-                    key={option.key}
-                    type="button"
-                    onClick={() => { setSortBy(option.key); setListOffset(0); }}
-                    className={`w-full text-left px-4 py-3 text-[11px] border-b border-border/20 last:border-0 ${
-                      sortBy === option.key ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
                 ))}
               </div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
@@ -572,16 +581,7 @@ export default function ShopClient({
                   </button>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => setShowFilterSheet(false)}
-                className="w-full bg-foreground text-background py-3.5 text-[10px] uppercase tracking-[0.2em]"
-              >
-                View {displayResultTotal.toLocaleString()} results
-              </button>
-            </div>
-          </>
-        )}
+        </CatalogMobileSheet>
 
         {fiberTab !== "all" && (
           <div className="flex items-center justify-end mb-4 -mt-2">
@@ -595,9 +595,9 @@ export default function ShopClient({
           </div>
         )}
 
-        {isLoading && !products.length ? (
+        {isLoading && products.length === 0 ? (
           <LoadingSkeleton />
-        ) : products.length === 0 ? (
+        ) : !isLoading && products.length === 0 ? (
           <div className="py-20 text-center flex flex-col items-center gap-4">
             <ShoppingBag className="w-12 h-12 text-muted-foreground/15" />
             <p className="text-muted-foreground text-sm">No products match this combination.</p>
@@ -618,13 +618,13 @@ export default function ShopClient({
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
+            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12 transition-opacity ${isLoading && products.length > 0 ? "opacity-60" : ""}`}>
               {products.map((product: any, i: number) => (
                 <ProductCard key={product.id} product={product} eager={i < 8} />
               ))}
             </div>
 
-            {resultTotal > products.length && (
+            {(hasMore || (resultTotal != null && resultTotal > products.length)) && (
               <div className="flex justify-center pt-10 md:pt-12">
                 <button
                   onClick={() => {
@@ -638,7 +638,9 @@ export default function ShopClient({
                 >
                   {loadingMore
                     ? "Loading…"
-                    : `Load More (${(resultTotal - products.length).toLocaleString()})`}
+                    : resultTotal != null && resultTotal > products.length
+                      ? `Load more (${(resultTotal - products.length).toLocaleString()} remaining)`
+                      : "Load more"}
                 </button>
               </div>
             )}
