@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../lib/auth-helpers";
 import { getServerSupabase } from "../../../lib/supabase-server";
-import { snakeToCamel } from "../../../lib/case-utils";
 
+/** @deprecated Use product_favorites for products; designer saves use user_saved_designers. */
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request.headers.get("authorization"));
   if (!user) return NextResponse.json([], { status: 401 });
@@ -11,8 +11,17 @@ export async function GET(request: NextRequest) {
   const supabase = getServerSupabase();
   if (!supabase) return NextResponse.json([], { status: 500 });
 
-  const { data } = await supabase.from("favorites").select("*").eq("user_id", user.id);
-  return NextResponse.json(snakeToCamel(data || []));
+  const { data } = await supabase
+    .from("user_saved_designers")
+    .select("designer_name, created_at")
+    .eq("user_id", String(user.id));
+
+  const mapped = (data || []).map((row) => ({
+    designerId: row.designer_name,
+    designerName: row.designer_name,
+    createdAt: row.created_at,
+  }));
+  return NextResponse.json(mapped);
 }
 
 export async function POST(request: NextRequest) {
@@ -25,21 +34,27 @@ export async function POST(request: NextRequest) {
   const supabase = getServerSupabase();
   if (!supabase) return NextResponse.json({ message: "Database not available" }, { status: 500 });
 
+  const designerName = String(designerId).trim();
   const { data: existing } = await supabase
-    .from("favorites")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("designer_id", designerId)
+    .from("user_saved_designers")
+    .select("designer_name")
+    .eq("user_id", String(user.id))
+    .eq("designer_name", designerName)
     .limit(1);
 
-  if (existing && existing.length > 0) return NextResponse.json(snakeToCamel(existing[0]));
+  if (existing?.length) {
+    return NextResponse.json({
+      designerId: designerName,
+      designerName,
+      createdAt: new Date().toISOString(),
+    });
+  }
 
-  const { data: fav, error } = await supabase
-    .from("favorites")
-    .insert({ user_id: user.id, designer_id: designerId })
-    .select()
-    .single();
+  const { error } = await supabase.from("user_saved_designers").insert({
+    user_id: String(user.id),
+    designer_name: designerName,
+  });
 
   if (error) return NextResponse.json({ message: error.message }, { status: 500 });
-  return NextResponse.json(snakeToCamel(fav), { status: 201 });
+  return NextResponse.json({ designerId: designerName, designerName }, { status: 201 });
 }

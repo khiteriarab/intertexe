@@ -2000,7 +2000,7 @@ export async function fetchSaleProducts(options: {
 export async function fetchBrandStats(): Promise<
   { slug: string; name: string; count: number; avgNaturalFiber: number }[]
 > {
-  const brands = await fetchShoppableBrands({ maxBrands: 1200 });
+  const brands = await fetchShoppableBrands({ maxBrands: 1200, rpcOnly: true });
   return brands.map((b) => ({
     slug: b.slug,
     name: b.name,

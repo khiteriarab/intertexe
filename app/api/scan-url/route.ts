@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
+import { scannerCatalogQuery } from "../../../lib/scanner-catalog";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -270,9 +271,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   };
   const searchTerms = categoryKeywords[category] || [];
 
-  let altQuery = supabase.from("products").select("*")
-    .gte("natural_fiber_percent", 80)
-    .not("image_url", "is", null)
+  let altQuery = scannerCatalogQuery(supabase)
     .order("natural_fiber_percent", { ascending: false });
 
   if (brandSlug && brandSlug !== "unknown") {
@@ -291,7 +290,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   let alternatives = sortAlternatives(altData || [], priceNum, fiberFilter);
 
   if (alternatives.length < 6 && fiberFilter && category) {
-    let categoryQuery = supabase.from("products").select("*")
+    let categoryQuery = scannerCatalogQuery(supabase)
       .eq("category", category)
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
@@ -305,9 +304,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   }
 
   if (alternatives.length < 4 && searchTerms.length > 0) {
-    let fallbackQuery = supabase.from("products").select("*")
-      .gte("natural_fiber_percent", 80)
-      .not("image_url", "is", null)
+    let fallbackQuery = scannerCatalogQuery(supabase)
       .or(searchTerms.map(t => `name.ilike.%${t}%`).join(","))
       .order("natural_fiber_percent", { ascending: false })
       .limit(40);
@@ -319,9 +316,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   }
 
   if (alternatives.length < 4) {
-    const { data: anyData } = await supabase.from("products").select("*")
-      .gte("natural_fiber_percent", 80)
-      .not("image_url", "is", null)
+    const { data: anyData } = await scannerCatalogQuery(supabase)
       .order("natural_fiber_percent", { ascending: false })
       .limit(30);
     if (anyData && anyData.length > alternatives.length) alternatives = sortAlternatives(anyData, priceNum, fiberFilter);
@@ -695,7 +690,7 @@ Use null for genuinely unknown.` },
       designerInfo = designerResult.data?.[0] || fuzzyDesignerResult.data?.[0] || null;
 
       if (brandSlug !== "unknown") {
-        const { data } = await supabase.from("products").select("*")
+        const { data } = await scannerCatalogQuery(supabase)
           .or(`brand_slug.eq.${brandSlug},brand_name.ilike.%${brandName}%`)
           .not("image_url", "is", null)
           .order("natural_fiber_percent", { ascending: false })

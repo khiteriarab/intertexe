@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
+import { scannerCatalogQuery } from "../../../lib/scanner-catalog";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -71,9 +72,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   };
   const searchTerms = categoryKeywords[category] || [];
 
-  let altQuery = supabase.from("products").select("*")
-    .gte("natural_fiber_percent", 80)
-    .not("image_url", "is", null)
+  let altQuery = scannerCatalogQuery(supabase)
     .order("natural_fiber_percent", { ascending: false });
 
   if (brandSlug && brandSlug !== "unknown-brand") {
@@ -97,9 +96,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   }
 
   if (alternatives.length < 4 && searchTerms.length > 0) {
-    let fallbackQuery = supabase.from("products").select("*")
-      .gte("natural_fiber_percent", 80)
-      .not("image_url", "is", null)
+    let fallbackQuery = scannerCatalogQuery(supabase)
       .or(searchTerms.map(t => `name.ilike.%${t}%`).join(","))
       .order("natural_fiber_percent", { ascending: false })
       .limit(20);
@@ -111,7 +108,7 @@ async function fetchAlternatives(supabase: any, category: string, brandSlug: str
   }
 
   if (alternatives.length < 4) {
-    const { data: anyData } = await supabase.from("products").select("*")
+    const { data: anyData } = await scannerCatalogQuery(supabase)
       .gte("natural_fiber_percent", 90)
       .not("image_url", "is", null)
       .order("natural_fiber_percent", { ascending: false })
@@ -275,7 +272,7 @@ IMPORTANT:
       designerInfo = designerResult.data?.[0] || fuzzyDesignerResult.data?.[0] || null;
 
       if (designerInfo || brandSlug !== "unknown-brand") {
-        const { data } = await supabase.from("products").select("*")
+        const { data } = await scannerCatalogQuery(supabase)
           .or(`brand_slug.eq.${brandSlug},brand_name.ilike.%${brandName}%`)
           .not("image_url", "is", null)
           .order("natural_fiber_percent", { ascending: false })

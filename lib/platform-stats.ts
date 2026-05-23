@@ -20,34 +20,46 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
   }
 
   let productCount = 0;
+  let brandCount = 0;
+
   try {
-    const { count, error } = await supabase
-      .from("live_products_apparel")
-      .select("id", { count: "exact", head: true })
-      .gte("natural_fiber_percent", 80);
-    if (!error && count != null) productCount = count;
+    const { data: cache } = await supabase
+      .from("platform_stats_cache")
+      .select("product_count, brand_count, updated_at")
+      .eq("id", "main")
+      .maybeSingle();
+    if (cache?.product_count != null && Number(cache.product_count) > 0) {
+      productCount = Number(cache.product_count);
+      brandCount = Number(cache.brand_count) || 0;
+      return { productCount, brandCount: brandCount > 0 ? brandCount : FALLBACK_BRAND_COUNT };
+    }
+  } catch {
+    /* table may not exist until migration 20240036 */
+  }
+
+  try {
+    const { data: summary } = await supabase
+      .from("catalog_classification_summary")
+      .select("visible_catalog_cards_approx")
+      .maybeSingle();
+    const cards = Number(summary?.visible_catalog_cards_approx);
+    if (cards > 0) productCount = cards;
   } catch {
     /* ignore */
   }
 
-  if (productCount < 1000) {
-    try {
-      const { data, error } = await supabase.rpc("catalog_list_count", {
-        p_preferred_region: "us",
-        p_fallback_region: "us",
-        p_fiber: null,
-        p_category: null,
-        p_brand_slug: null,
-        p_search: null,
-        p_min_nfp: 80,
-      });
-      if (!error && data != null) productCount = Number(data) || productCount;
-    } catch {
-      /* ignore */
-    }
+  try {
+    const { data: countRaw, error } = await supabase.rpc("catalog_shoppable_brand_count", {
+      p_min_products: 2,
+    });
+    if (!error && countRaw != null) brandCount = Number(countRaw) || 0;
+  } catch {
+    /* ignore */
   }
 
-  const brandCount = await fetchShoppableBrandCount();
+  if (brandCount <= 0) {
+    brandCount = await fetchShoppableBrandCount();
+  }
 
   return {
     productCount: productCount > 0 ? productCount : FALLBACK_PRODUCT_COUNT,

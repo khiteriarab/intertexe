@@ -157,6 +157,8 @@ async function fetchViaPaginatedScan(
 
 export async function fetchShoppableBrands(opts?: {
   maxBrands?: number;
+  /** When true, never paginate live_products_apparel (build/About safety). */
+  rpcOnly?: boolean;
 }): Promise<ShoppableBrand[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
@@ -165,6 +167,8 @@ export async function fetchShoppableBrands(opts?: {
 
   const rpcBrands = await fetchViaRpc(supabase);
   if (rpcBrands?.length) return rpcBrands.slice(0, maxBrands);
+
+  if (opts?.rpcOnly) return [];
 
   return fetchViaPaginatedScan(supabase, maxBrands);
 }

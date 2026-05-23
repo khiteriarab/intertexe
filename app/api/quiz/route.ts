@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../lib/auth-helpers";
 import { getServerSupabase } from "../../../lib/supabase-server";
 import { snakeToCamel } from "../../../lib/case-utils";
+import { upsertTastePreferences } from "../../../lib/taste-preferences";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,6 +28,14 @@ export async function POST(request: NextRequest) {
 
     if (user && profileType) {
       await supabase.from("users").update({ fabric_persona: profileType }).eq("id", user.id);
+      await upsertTastePreferences(supabase, String(user.id), {
+        preferredFibers: materials || [],
+        preferredDesigners: favoriteBrands || [],
+        syntheticTolerance:
+          syntheticTolerance === "low" ? 5 : syntheticTolerance === "high" ? 25 : 10,
+        profileType,
+        quizRecommendation: recommendation,
+      });
     }
 
     return NextResponse.json(snakeToCamel(result), { status: 201 });

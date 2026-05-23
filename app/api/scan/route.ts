@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
+import { scannerCatalogQuery } from "../../../lib/scanner-catalog";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -427,9 +428,7 @@ async function searchAlternatives(
   };
   const searchTerms = categoryKeywords[category] || [];
 
-  let altQuery = supabase.from("products").select("*")
-    .gte("natural_fiber_percent", 80)
-    .not("image_url", "is", null).neq("image_url", "")
+  let altQuery = scannerCatalogQuery(supabase)
     .order("natural_fiber_percent", { ascending: false });
 
   if (brandSlug && brandSlug !== "unknown") {
@@ -448,10 +447,8 @@ async function searchAlternatives(
   let alternatives = sortAlternativeRows(altData || [], priceNum, fiberFilter);
 
   if (alternatives.length < 6 && fiberFilter && category) {
-    let categoryQuery = supabase.from("products").select("*")
+    let categoryQuery = scannerCatalogQuery(supabase)
       .eq("category", category)
-      .gte("natural_fiber_percent", 80)
-      .not("image_url", "is", null).neq("image_url", "")
       .order("natural_fiber_percent", { ascending: false })
       .limit(60);
     if (brandSlug && brandSlug !== "unknown") {
@@ -612,10 +609,8 @@ export async function POST(request: NextRequest) {
       designerInfo = dr.data?.[0] || fdr.data?.[0] || null;
       if (brandSlug !== "unknown") {
         const normalizedBrandName = brandName.replace(/'/g, "''");
-        const { data } = await supabase.from("products").select("*")
+        const { data } = await scannerCatalogQuery(supabase)
           .or(`brand_slug.eq.${brandSlug},brand_name.ilike.%${normalizedBrandName}%`)
-          .not("image_url", "is", null).neq("image_url", "")
-          .gte("natural_fiber_percent", 80)
           .order("natural_fiber_percent", { ascending: false }).limit(12);
         brandProducts = data || [];
 
@@ -628,10 +623,8 @@ export async function POST(request: NextRequest) {
             .filter((term: string) => term.length >= 4)
             .slice(0, 4);
           if (terms.length > 0) {
-            const { data: productMatches } = await supabase.from("products").select("*")
+            const { data: productMatches } = await scannerCatalogQuery(supabase)
               .or(terms.map((term: string) => `name.ilike.%${term}%`).join(","))
-              .not("image_url", "is", null).neq("image_url", "")
-              .gte("natural_fiber_percent", 80)
               .order("natural_fiber_percent", { ascending: false }).limit(12);
             brandProducts = productMatches || [];
           }

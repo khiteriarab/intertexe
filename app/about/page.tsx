@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
+import { getCachedPlatformStats } from "../../lib/cached-catalog";
 import {
   formatBrandCountLabel,
   formatProductCountLabel,
-  resolveShoppableBrandCount,
 } from "../../lib/catalog-stats-labels";
 
 export const metadata: Metadata = {
@@ -16,14 +15,8 @@ export const metadata: Metadata = {
 export const revalidate = 600;
 
 export default async function AboutPage() {
-  const [platformStats, brandStats] = await Promise.all([
-    getCachedPlatformStats(),
-    getCachedBrandStats(),
-  ]);
-  const shoppableBrands = resolveShoppableBrandCount(
-    platformStats.brandCount,
-    brandStats.filter((b) => b.count >= 2).length
-  );
+  const platformStats = await getCachedPlatformStats();
+  const shoppableBrands = platformStats.brandCount;
   const designerLabel = formatBrandCountLabel(shoppableBrands);
   const productLabel = formatProductCountLabel(platformStats.productCount);
 
