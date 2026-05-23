@@ -6,7 +6,8 @@ import { ProductLink } from "../components/ProductLink";
 import { useSearchParams } from "next/navigation";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
-import { getShopProducts, getShopCatalogCount, getShopMeta } from "./actions";
+import { getShopProducts, getShopCatalogCount, getShopMeta, getShopBrands } from "./actions";
+import type { ShopPriceCap } from "../../lib/shop-client-filters";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
 import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
 import { formatDisplayPrice } from "../../lib/format-display-price";
@@ -23,19 +24,20 @@ import {
 } from "../../lib/shipping-regions";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
-type CategoryFilter = "all" | "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
-type SortOption = "recommended" | "new" | "price-high" | "price-low";
+type CategoryFilterKey = "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
+type SortOption = "new" | "price-high" | "price-low" | "natural-high";
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "cashmere", label: "Cashmere" },
   { key: "silk", label: "Silk" },
-  { key: "wool", label: "Wool" },
-  { key: "cotton", label: "Cotton" },
   { key: "linen", label: "Linen" },
+  { key: "cashmere", label: "Cashmere" },
+  { key: "cotton", label: "Cotton" },
+  { key: "wool", label: "Wool" },
 ];
 
-const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
-  { key: "all", label: "All" },
+const MATERIAL_FILTER_OPTIONS = FIBER_TABS.filter((t) => t.key !== "all");
+
+const CATEGORY_FILTERS: { key: CategoryFilterKey; label: string }[] = [
   { key: "knitwear", label: "Knitwear" },
   { key: "tops", label: "Tops" },
   { key: "dresses", label: "Dresses" },
@@ -46,12 +48,37 @@ const CATEGORY_FILTERS: { key: CategoryFilter; label: string }[] = [
   { key: "swimwear", label: "Swimwear" },
 ];
 
-const SORT_OPTIONS: { key: SortOption; label: string }[] = [
-  { key: "recommended", label: "Recommended" },
-  { key: "new", label: "New In" },
-  { key: "price-high", label: "Price: High to Low" },
-  { key: "price-low", label: "Price: Low to High" },
+type PriceFilterId = "any" | "100" | "300" | "600" | "600plus";
+const PRICE_FILTER_OPTIONS: { id: PriceFilterId; label: string }[] = [
+  { id: "any", label: "Any price" },
+  { id: "100", label: "Under £100" },
+  { id: "300", label: "£100–£300" },
+  { id: "600", label: "£300–£600" },
+  { id: "600plus", label: "£600+" },
 ];
+
+const SORT_OPTIONS: { key: SortOption; label: string }[] = [
+  { key: "new", label: "Newest" },
+  { key: "price-low", label: "Price low to high" },
+  { key: "price-high", label: "Price high to low" },
+  { key: "natural-high", label: "Highest natural fiber %" },
+];
+
+function parseCategoryParams(raw: string | null): Set<CategoryFilterKey> {
+  const keys = new Set<CategoryFilterKey>();
+  if (!raw) return keys;
+  for (const part of raw.split(",")) {
+    const k = part.trim().toLowerCase();
+    if (CATEGORY_FILTERS.some((c) => c.key === k)) keys.add(k as CategoryFilterKey);
+  }
+  return keys;
+}
+
+function priceCapFromParam(raw: string | null): ShopPriceCap {
+  if (raw === "100" || raw === "300" || raw === "600") return Number(raw) as ShopPriceCap;
+  if (raw === "600plus") return null;
+  return null;
+}
 
 const SHOP_PAGE_SIZE = CATALOG_PAGE_SIZE;
 const WEAR_TO_WHERE_OPTIONS = shopWearToWhereTextOptions();
@@ -159,14 +186,19 @@ export default function ShopClient({
   const fiberParam = searchParams.get("fiber");
   const initialFiber: FiberTab =
     fiberParam && FIBER_TABS.some((t) => t.key === fiberParam) ? (fiberParam as FiberTab) : "all";
-  const categoryParam = searchParams.get("category");
-  const initialCategory: CategoryFilter =
-    categoryParam && CATEGORY_FILTERS.some((c) => c.key === categoryParam)
-      ? (categoryParam as CategoryFilter)
-      : "all";
+  const initialCategories = parseCategoryParams(searchParams.get("category"));
   const sortParam = searchParams.get("sort");
   const initialSort: SortOption =
-    sortParam && SORT_OPTIONS.some((s) => s.key === sortParam) ? (sortParam as SortOption) : "recommended";
+    sortParam && SORT_OPTIONS.some((s) => s.key === sortParam)
+      ? (sortParam as SortOption)
+      : sortParam === "recommended"
+        ? "new"
+        : "new";
+  const initialPriceCap = priceCapFromParam(searchParams.get("price"));
+  const initialBrands = (searchParams.get("brands") || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
   const initialMarketFilter = (searchParams.get("market") as MarketFilter) || "all";
   const initialSearch = searchParams.get("q") || "";
   const { market: marketFilter, setMarket: setMarketFilter } = useShoppingMarket(
@@ -174,7 +206,12 @@ export default function ShopClient({
   );
 
   const [fiberTab, setFiberTab] = useState<FiberTab>(initialFiber);
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(initialCategory);
+  const [selectedCategories, setSelectedCategories] = useState<Set<CategoryFilterKey>>(initialCategories);
+  const [priceCap, setPriceCap] = useState<ShopPriceCap>(initialPriceCap);
+  const [priceCap600Plus, setPriceCap600Plus] = useState(searchParams.get("price") === "600plus");
+  const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>(initialBrands);
+  const [brandSearch, setBrandSearch] = useState("");
+  const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -196,21 +233,46 @@ export default function ShopClient({
     setListOffset(0);
   };
 
-  const syncUrl = useCallback((fiber: string, category: string, sort: string, market: string, search: string) => {
-    const params = new URLSearchParams();
-    if (fiber !== "all") params.set("fiber", fiber);
-    if (category !== "all") params.set("category", category);
-    if (sort !== "recommended") params.set("sort", sort);
-    if (market !== "all") params.set("market", market);
-    if (search) params.set("q", search);
-    const qs = params.toString();
-    const newUrl = qs ? `/shop?${qs}` : "/shop";
-    window.history.replaceState(null, "", newUrl);
-  }, []);
+  const categoryList = [...selectedCategories];
+
+  const syncUrl = useCallback(
+    (
+      fiber: string,
+      categories: string[],
+      sort: string,
+      market: string,
+      search: string,
+      price: ShopPriceCap,
+      price600Plus: boolean,
+      brands: string[]
+    ) => {
+      const params = new URLSearchParams();
+      if (fiber !== "all") params.set("fiber", fiber);
+      if (categories.length) params.set("category", categories.join(","));
+      if (sort !== "new") params.set("sort", sort);
+      if (market !== "all") params.set("market", market);
+      if (search) params.set("q", search);
+      if (price600Plus) params.set("price", "600plus");
+      else if (price != null) params.set("price", String(price));
+      if (brands.length) params.set("brands", brands.join(","));
+      const qs = params.toString();
+      const newUrl = qs ? `/shop?${qs}` : "/shop";
+      window.history.replaceState(null, "", newUrl);
+    },
+    []
+  );
 
   useEffect(() => {
-    syncUrl(fiberTab, categoryFilter, sortBy, marketFilter, debouncedSearch);
-  }, [fiberTab, categoryFilter, sortBy, marketFilter, debouncedSearch, syncUrl]);
+    syncUrl(fiberTab, categoryList, sortBy, marketFilter, debouncedSearch, priceCap, priceCap600Plus, selectedBrandSlugs);
+  }, [fiberTab, categoryList.join(","), sortBy, marketFilter, debouncedSearch, priceCap, priceCap600Plus, selectedBrandSlugs.join(","), syncUrl]);
+
+  useEffect(() => {
+    getShopBrands()
+      .then((brands) => setShopBrands(brands.map((b) => ({ slug: b.slug, name: b.name, count: b.count }))))
+      .catch(() => {});
+  }, []);
+
+  const effectiveMaxPrice = priceCap600Plus ? null : priceCap;
 
   const [products, setProducts] = useState(initialProducts || []);
   const [resultTotal, setResultTotal] = useState<number | null>(null);
@@ -269,10 +331,13 @@ export default function ShopClient({
   useEffect(() => {
     const isDefaultState =
       fiberTab === "all" &&
-      categoryFilter === "all" &&
-      sortBy === "recommended" &&
+      selectedCategories.size === 0 &&
+      sortBy === "new" &&
       marketFilter === "all" &&
       !debouncedSearch &&
+      priceCap == null &&
+      !priceCap600Plus &&
+      selectedBrandSlugs.length === 0 &&
       listOffset === 0;
 
     if (isDefaultState && initialFetchDone.current && listOffset === 0) {
@@ -285,7 +350,10 @@ export default function ShopClient({
         try {
           const result = await getShopProducts({
             fiber: fiberTab !== "all" ? fiberTab : undefined,
-            category: categoryFilter !== "all" ? categoryFilter : undefined,
+            categories: categoryList.length ? categoryList : undefined,
+            brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
+            maxPrice: effectiveMaxPrice,
+            price600Plus: priceCap600Plus,
             sort: sortBy,
             market: marketFilter !== "all" ? marketFilter : undefined,
             limit: SHOP_PAGE_SIZE,
@@ -324,13 +392,28 @@ export default function ShopClient({
       fetchProducts();
     }
 
-  }, [fiberTab, categoryFilter, sortBy, marketFilter, listOffset, debouncedSearch, initialProducts, initialHasMore]);
+  }, [
+    fiberTab,
+    categoryList.join(","),
+    sortBy,
+    marketFilter,
+    listOffset,
+    debouncedSearch,
+    effectiveMaxPrice,
+    priceCap600Plus,
+    selectedBrandSlugs.join(","),
+    initialProducts,
+    initialHasMore,
+  ]);
 
   useEffect(() => {
     setCountLoading(true);
     getShopCatalogCount({
       fiber: fiberTab,
-      category: categoryFilter,
+      categories: categoryList.length ? categoryList : undefined,
+      brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
+      maxPrice: effectiveMaxPrice,
+      price600Plus: priceCap600Plus,
       market: marketFilter,
       search: debouncedSearch || undefined,
     })
@@ -339,7 +422,15 @@ export default function ShopClient({
       })
       .catch(() => {})
       .finally(() => setCountLoading(false));
-  }, [fiberTab, categoryFilter, marketFilter, debouncedSearch]);
+  }, [
+    fiberTab,
+    categoryList.join(","),
+    marketFilter,
+    debouncedSearch,
+    effectiveMaxPrice,
+    priceCap600Plus,
+    selectedBrandSlugs.join(","),
+  ]);
 
   useEffect(() => {
     const onMarket = () => {
@@ -355,10 +446,13 @@ export default function ShopClient({
 
   const useGlobalCountHint =
     fiberTab === "all" &&
-    categoryFilter === "all" &&
-    sortBy === "recommended" &&
+    selectedCategories.size === 0 &&
+    sortBy === "new" &&
     marketFilter === "all" &&
-    !debouncedSearch;
+    !debouncedSearch &&
+    priceCap == null &&
+    !priceCap600Plus &&
+    selectedBrandSlugs.length === 0;
 
   const displayResultTotal =
     resultTotal ??
@@ -370,17 +464,55 @@ export default function ShopClient({
 
   const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy) ?? SORT_OPTIONS[0];
 
+  const toggleCategory = (key: CategoryFilterKey) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    setListOffset(0);
+  };
+
   const activeFilterChips = [
     ...(fiberTab !== "all"
       ? [{ id: "fiber", label: FIBER_TABS.find((t) => t.key === fiberTab)?.label || fiberTab, onRemove: () => { setFiberTab("all"); setListOffset(0); } }]
       : []),
-    ...(categoryFilter !== "all"
-      ? [{ id: "cat", label: CATEGORY_FILTERS.find((c) => c.key === categoryFilter)?.label || categoryFilter, onRemove: () => { setCategoryFilter("all"); setListOffset(0); } }]
+    ...categoryList.map((cat) => ({
+      id: `cat-${cat}`,
+      label: CATEGORY_FILTERS.find((c) => c.key === cat)?.label || cat,
+      onRemove: () => {
+        setSelectedCategories((prev) => {
+          const next = new Set(prev);
+          next.delete(cat as CategoryFilterKey);
+          return next;
+        });
+        setListOffset(0);
+      },
+    })),
+    ...(priceCap != null || priceCap600Plus
+      ? [{
+          id: "price",
+          label: priceCap600Plus ? "£600+" : PRICE_FILTER_OPTIONS.find((p) => p.id === String(priceCap))?.label || "Price",
+          onRemove: () => { setPriceCap(null); setPriceCap600Plus(false); setListOffset(0); },
+        }]
       : []),
+    ...selectedBrandSlugs.map((slug) => ({
+      id: `brand-${slug}`,
+      label: shopBrands.find((b) => b.slug === slug)?.name || slug,
+      onRemove: () => {
+        setSelectedBrandSlugs((prev) => prev.filter((s) => s !== slug));
+        setListOffset(0);
+      },
+    })),
     ...(marketFilter !== "all"
       ? [{ id: "market", label: activeRegion.country, onRemove: () => { selectLocation("all"); } }]
       : []),
   ];
+
+  const filteredBrands = shopBrands.filter((b) =>
+    !brandSearch.trim() || b.name.toLowerCase().includes(brandSearch.trim().toLowerCase())
+  );
 
   return (
     <div className="min-h-screen pb-[7.5rem] md:pb-16">
@@ -436,16 +568,17 @@ export default function ShopClient({
             resultCount={displayResultTotal}
             isLoading={isLoading}
             fiberTab={fiberTab}
-            categoryFilter={categoryFilter}
+            categoryFilter={categoryList[0] ?? "all"}
             fiberOptions={FIBER_TABS}
-            categoryOptions={CATEGORY_FILTERS}
+            categoryOptions={[{ key: "all" as const, label: "All" }, ...CATEGORY_FILTERS]}
             onFiberChange={(key) => {
               setFiberTab(key);
-              setCategoryFilter("all");
+              setSelectedCategories(new Set());
               setListOffset(0);
             }}
             onCategoryChange={(key) => {
-              setCategoryFilter(key);
+              if (key === "all") setSelectedCategories(new Set());
+              else setSelectedCategories(new Set([key as CategoryFilterKey]));
               setListOffset(0);
             }}
           />
@@ -560,11 +693,11 @@ export default function ShopClient({
               </div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
               <div className="flex flex-wrap gap-2 mb-8">
-                {FIBER_TABS.map(tab => (
+                {MATERIAL_FILTER_OPTIONS.map(tab => (
                   <button
                     key={tab.key}
                     type="button"
-                    onClick={() => { setFiberTab(tab.key); setCategoryFilter("all"); setListOffset(0); }}
+                    onClick={() => { setFiberTab(tab.key); setListOffset(0); }}
                     className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
                       fiberTab === tab.key ? "border-foreground bg-foreground text-background" : "border-border/40"
                     }`}
@@ -579,14 +712,82 @@ export default function ShopClient({
                   <button
                     key={cat.key}
                     type="button"
-                    onClick={() => { setCategoryFilter(cat.key); setListOffset(0); }}
+                    onClick={() => toggleCategory(cat.key)}
                     className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-                      categoryFilter === cat.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+                      selectedCategories.has(cat.key) ? "border-foreground bg-foreground text-background" : "border-border/40"
                     }`}
                   >
                     {cat.label}
                   </button>
                 ))}
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Price</p>
+              <div className="flex flex-col gap-2 mb-8 border border-border/30">
+                {PRICE_FILTER_OPTIONS.map((opt) => {
+                  const active =
+                    opt.id === "any"
+                      ? priceCap == null && !priceCap600Plus
+                      : opt.id === "600plus"
+                        ? priceCap600Plus
+                        : priceCap === Number(opt.id);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        if (opt.id === "any") {
+                          setPriceCap(null);
+                          setPriceCap600Plus(false);
+                        } else if (opt.id === "600plus") {
+                          setPriceCap(null);
+                          setPriceCap600Plus(true);
+                        } else {
+                          setPriceCap(Number(opt.id) as ShopPriceCap);
+                          setPriceCap600Plus(false);
+                        }
+                        setListOffset(0);
+                      }}
+                      className={`w-full text-left px-4 py-3 text-[12px] border-b border-border/20 last:border-0 ${
+                        active ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Brand</p>
+              <input
+                type="search"
+                value={brandSearch}
+                onChange={(e) => setBrandSearch(e.target.value)}
+                placeholder="Search brands"
+                className="w-full border border-border/40 px-3 py-2.5 text-sm mb-3"
+              />
+              <div className="flex flex-col gap-1 mb-8 max-h-[200px] overflow-y-auto border border-border/30">
+                {filteredBrands.slice(0, 80).map((brand) => {
+                  const checked = selectedBrandSlugs.includes(brand.slug);
+                  return (
+                    <button
+                      key={brand.slug}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBrandSlugs((prev) =>
+                          checked ? prev.filter((s) => s !== brand.slug) : [...prev, brand.slug]
+                        );
+                        setListOffset(0);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-[12px] flex justify-between gap-2 border-b border-border/10 last:border-0 ${
+                        checked ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+                      }`}
+                    >
+                      <span>{brand.name}</span>
+                      {brand.count > 0 && (
+                        <span className="text-[10px] text-muted-foreground/70">{brand.count}</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
         </CatalogMobileSheet>
 
@@ -611,8 +812,11 @@ export default function ShopClient({
             <button
               onClick={() => {
                 setFiberTab("all");
-                setCategoryFilter("all");
-                setSortBy("recommended");
+                setSelectedCategories(new Set());
+                setPriceCap(null);
+                setPriceCap600Plus(false);
+                setSelectedBrandSlugs([]);
+                setSortBy("new");
                 setSearchQuery("");
                 setDebouncedSearch("");
                 selectLocation("all");

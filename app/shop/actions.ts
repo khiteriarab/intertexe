@@ -10,7 +10,10 @@ import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
 
 export async function getShopProducts(options: {
   fiber?: string;
-  category?: string;
+  categories?: string[];
+  brandSlugs?: string[];
+  maxPrice?: number | null;
+  price600Plus?: boolean;
   market?: string;
   sort?: string;
   limit?: number;
@@ -20,9 +23,12 @@ export async function getShopProducts(options: {
 }) {
   return fetchShopProducts({
     fiber: options.fiber === "all" ? undefined : options.fiber,
-    category: options.category === "all" ? undefined : options.category,
+    categories: options.categories?.filter((c) => c && c !== "all"),
+    brandSlugs: options.brandSlugs?.filter(Boolean),
+    maxPrice: options.maxPrice ?? null,
+    price600Plus: options.price600Plus,
     market: options.market === "all" ? undefined : options.market,
-    sort: options.sort || "recommended",
+    sort: options.sort || "new",
     limit: options.limit || CATALOG_PAGE_SIZE,
     offset: options.offset || 0,
     search: options.search,
@@ -32,17 +38,28 @@ export async function getShopProducts(options: {
 
 export async function getShopCatalogCount(options: {
   fiber?: string;
-  category?: string;
+  categories?: string[];
+  brandSlugs?: string[];
+  maxPrice?: number | null;
+  price600Plus?: boolean;
   market?: string;
   search?: string;
 }) {
   const total = await fetchShopCatalogCount({
     fiber: options.fiber === "all" ? undefined : options.fiber,
-    category: options.category === "all" ? undefined : options.category,
+    categories: options.categories?.filter((c) => c && c !== "all"),
+    brandSlugs: options.brandSlugs?.filter(Boolean),
+    maxPrice: options.maxPrice ?? null,
+    price600Plus: options.price600Plus,
     market: options.market === "all" ? undefined : options.market,
     search: options.search,
   });
   return { total };
+}
+
+export async function getShopBrands() {
+  const { fetchShoppableBrands } = await import("../../lib/shoppable-brands");
+  return fetchShoppableBrands();
 }
 
 export async function getShopMeta() {

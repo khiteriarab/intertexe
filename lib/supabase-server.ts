@@ -17,6 +17,11 @@ import {
   rowMatchesGarmentFilter,
 } from "./catalog-shop-mappings";
 import {
+  productMatchesAnyShopCategory,
+  productMatchesShopPrice,
+  type ShopPriceCap,
+} from "./shop-client-filters";
+import {
   CATALOG_INITIAL_PAGE,
   CATALOG_PAGE_SIZE,
   classifyGarment,
@@ -354,6 +359,7 @@ export async function resolveShopCatalogTotal(
     fallback: string;
     fiber?: string | null;
     category?: string | null;
+    brandSlug?: string | null;
     search?: string | null;
   }
 ): Promise<number> {
@@ -362,7 +368,7 @@ export async function resolveShopCatalogTotal(
     fallback: opts.fallback,
     fiber: opts.fiber,
     category: opts.category,
-    brandSlug: null,
+    brandSlug: opts.brandSlug ?? null,
     search: opts.search,
     minNfp: 80,
   });
@@ -1491,19 +1497,89 @@ async function fetchShopLiveApparelAllRows(
   return allRows.slice(0, SHOP_PRICE_SORT_MAX_ROWS);
 }
 
+function shopCategoriesList(category?: string, categories?: string[]): string[] {
+  if (categories?.length) return categories.filter((c) => c && c !== "all");
+  if (category && category !== "all") return [category];
+  return [];
+}
+
+function shopRpcCategory(categories: string[]): string | null {
+  return categories.length === 1 ? categories[0] : null;
+}
+
+function shopRpcBrandSlug(brandSlugs?: string[]): string | null {
+  const slugs = (brandSlugs || []).map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return slugs.length === 1 ? slugs[0] : null;
+}
+
+function normalizeShopPriceCap(maxPrice?: number | null): ShopPriceCap {
+  if (maxPrice === 100 || maxPrice === 300 || maxPrice === 600) return maxPrice;
+  return null;
+}
+
+function applyShopPostFilters(
+  mapped: Product[],
+  opts: {
+    categories: string[];
+    brandSlugs?: string[];
+    maxPrice: ShopPriceCap;
+    price600Plus?: boolean;
+    sort?: string;
+  }
+): Product[] {
+  let out = mapped;
+  if (opts.categories.length > 1) {
+    out = out.filter((p) =>
+      productMatchesAnyShopCategory(
+        {
+          garment_type: (p as { garmentType?: string }).garmentType,
+          category: p.category,
+        },
+        opts.categories
+      )
+    );
+  }
+  const slugs = (opts.brandSlugs || []).map((s) => s.toLowerCase()).filter(Boolean);
+  if (slugs.length > 1) {
+    out = out.filter((p) => slugs.includes(String(p.brandSlug || "").toLowerCase()));
+  }
+  if (opts.maxPrice != null || opts.price600Plus) {
+    out = out.filter((p) =>
+      productMatchesShopPrice(p.price, opts.maxPrice, Boolean(opts.price600Plus))
+    );
+  }
+  if (opts.sort === "natural-high") {
+    out = [...out].sort(
+      (a, b) => (Number(b.naturalFiberPercent) || 0) - (Number(a.naturalFiberPercent) || 0)
+    );
+  }
+  return out;
+}
+
 /** Shop filter total — call after first product page renders. */
 export async function fetchShopCatalogCount(options: {
   fiber?: string;
   category?: string;
+  categories?: string[];
+  brandSlugs?: string[];
+  maxPrice?: number | null;
+  price600Plus?: boolean;
   market?: string;
   search?: string;
-}): Promise<number> {
+}): Promise<number | null> {
+  const categories = shopCategoriesList(options.category, options.categories);
+  const brandSlugs = options.brandSlugs?.filter(Boolean);
+  const maxPrice = normalizeShopPriceCap(options.maxPrice);
+  if (categories.length > 1 || (brandSlugs?.length ?? 0) > 1 || maxPrice != null || options.price600Plus) {
+    return null;
+  }
   const supabase = getServerSupabase();
   if (!supabase) return 0;
-  const { fiber, category, market, search } = options;
+  const { fiber, market, search } = options;
   const { preferred, fallback } = catalogRegionsFromMarket(market);
   const rpcFiber = fiber && fiber !== "all" ? fiber : null;
-  const rpcCategory = category && category !== "all" ? category : null;
+  const rpcCategory = shopRpcCategory(categories);
+  const rpcBrand = shopRpcBrandSlug(brandSlugs);
   let searchRpc: string | null = null;
   if (search && search.trim().length >= 2) {
     searchRpc = search.trim().toLowerCase();
@@ -1513,6 +1589,7 @@ export async function fetchShopCatalogCount(options: {
     fallback,
     fiber: rpcFiber,
     category: rpcCategory,
+    brandSlug: rpcBrand,
     search: searchRpc,
   });
 }
@@ -1520,6 +1597,10 @@ export async function fetchShopCatalogCount(options: {
 export async function fetchShopProducts(options: {
   fiber?: string;
   category?: string;
+  categories?: string[];
+  brandSlugs?: string[];
+  maxPrice?: number | null;
+  price600Plus?: boolean;
   market?: string;
   sort?: string;
   limit?: number;
@@ -1533,13 +1614,19 @@ export async function fetchShopProducts(options: {
   const {
     fiber,
     category,
+    categories: categoriesOpt,
+    brandSlugs,
+    maxPrice: maxPriceOpt,
+    price600Plus,
     market,
-    sort = "recommended",
+    sort = "new",
     limit = 60,
     offset = 0,
     search,
     skipTotal = false,
   } = options;
+  const categories = shopCategoriesList(category, categoriesOpt);
+  const maxPrice = normalizeShopPriceCap(maxPriceOpt);
   const isPriceSort = sort === "price-low" || sort === "price-high";
   const { preferred, fallback } = catalogRegionsFromMarket(market);
 
@@ -1558,7 +1645,10 @@ export async function fetchShopProducts(options: {
   const searchRpc = searchTerms.length > 0 ? searchTerms[0] : null;
 
   const rpcFiber = fiber && fiber !== "all" ? fiber : null;
-  const rpcCategory = category && category !== "all" ? category : null;
+  const rpcCategory = shopRpcCategory(categories);
+  const rpcBrand = shopRpcBrandSlug(brandSlugs);
+  const postFilter = (mapped: Product[]) =>
+    applyShopPostFilters(mapped, { categories, brandSlugs, maxPrice, price600Plus, sort });
 
   if (!isPriceSort) {
     let rows =
@@ -1567,7 +1657,7 @@ export async function fetchShopProducts(options: {
         fallback,
         fiber: rpcFiber,
         category: rpcCategory,
-        brandSlug: null,
+        brandSlug: rpcBrand,
         search: searchRpc,
         minNfp: 80,
         limit,
@@ -1608,6 +1698,8 @@ export async function fetchShopProducts(options: {
       });
     }
 
+    mapped = postFilter(mapped);
+
     if (skipTotal) {
       return {
         products: mapped,
@@ -1621,14 +1713,21 @@ export async function fetchShopProducts(options: {
       fallback,
       fiber: rpcFiber,
       category: rpcCategory,
+      brandSlug: rpcBrand,
       search: searchRpc,
     });
 
-    const total = Math.max(resolvedTotal, offset + mapped.length);
+    const total =
+      resolvedTotal != null
+        ? Math.max(resolvedTotal, offset + mapped.length)
+        : offset + mapped.length;
     return {
       products: mapped,
-      total,
-      hasMore: offset + mapped.length < total,
+      total:
+        categories.length > 1 || (brandSlugs?.length ?? 0) > 1 || maxPrice != null || price600Plus
+          ? null
+          : total,
+      hasMore: mapped.length >= limit,
     };
   }
 
@@ -1666,8 +1765,10 @@ export async function fetchShopProducts(options: {
     return sort === "price-low" ? pa - pb : pb - pa;
   });
 
-  const page = deduped.slice(offset, offset + limit).map(mapProductRow);
-  const fullTotal = deduped.length;
+  let mappedPage = deduped.map(mapProductRow);
+  mappedPage = postFilter(mappedPage);
+  const page = mappedPage.slice(offset, offset + limit);
+  const fullTotal = mappedPage.length;
   return {
     products: page,
     total: skipTotal ? null : fullTotal,
