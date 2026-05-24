@@ -300,7 +300,6 @@ export default function SaleClient({
                 </>
               )}
             </div>
-          </div>
         </div>
 
         <CatalogMobileSheet
