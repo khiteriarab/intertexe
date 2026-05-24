@@ -8,10 +8,7 @@ import { formatDisplayPrice } from "../../../lib/format-display-price";
 import { CatalogProductImage } from "../../components/CatalogProductImage";
 
 export const revalidate = 300;
-
-export function generateStaticParams() {
-  return MOOD_CATALOG.map((m) => ({ slug: m.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -32,7 +29,7 @@ export default async function MoodPage({ params }: { params: Promise<{ slug: str
   const mood = moodBySlug(slug);
   if (!mood) notFound();
 
-  const data = await fetchCollectionPageData(mood.collection, { limit: 48, offset: 0 });
+  const data = await fetchCollectionPageData(mood.collection, { limit: 48, offset: 0, skipTotal: true });
   const products = data?.products || [];
   const total = data?.catalogTotal || products.length;
 

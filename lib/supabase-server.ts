@@ -197,9 +197,8 @@ async function rpcCatalogList(
   );
   if (error) {
     if (isCatalogTimeoutError(error)) {
-      const err = new Error("catalog_list timeout") as Error & { code?: string };
-      err.code = "57014";
-      throw err;
+      console.warn("catalog_list RPC timed out, using live_products_apparel fallback");
+      return null;
     }
     console.warn("catalog_list RPC failed, using live_products_apparel fallback:", error.message);
     return null;
@@ -704,6 +703,7 @@ export async function fetchCollectionPageData(
   const fromMemberships = await fetchCollectionPageFromMemberships(collectionSlug, {
     limit,
     offset,
+    skipCount: skipTotal,
   });
 
   if (fromMemberships && fromMemberships.products.length > 0) {
@@ -720,19 +720,20 @@ export async function fetchCollectionPageData(
     };
   }
 
-  const { paginateCollectionCatalog } = await import("./collection-catalog");
-  const ranked = await getCachedRankedCollectionPool(collectionSlug);
-  const products = paginateCollectionCatalog(ranked, limit, offset);
-
   if (skipTotal) {
+    const products = await fetchCollectionCatalogSlice(collectionSlug, limit, offset);
     return {
       products,
-      editCount: ranked.length,
+      editCount: products.length,
       catalogTotal: null,
       heroImageUrl: config.editorialImage,
       hasMore: products.length >= limit,
     };
   }
+
+  const { paginateCollectionCatalog } = await import("./collection-catalog");
+  const ranked = await getCachedRankedCollectionPool(collectionSlug);
+  const products = paginateCollectionCatalog(ranked, limit, offset);
 
   let catalogTotal = ranked.length;
   const supabase = getServerSupabase();
@@ -815,6 +816,52 @@ export function mapProductRow(row: any): Product {
 
 const COLLECTION_POOL_LIMIT_PER_QUERY = 120;
 const COLLECTION_POOL_PAGES_PER_QUERY = 5;
+
+/** One bounded catalog_list branch — used for page load / build (no full-pool scan). */
+async function fetchCollectionCatalogSlice(
+  slug: import("./collection-pages").CollectionSlug,
+  limit: number,
+  offset: number
+): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  const { COLLECTION_CATALOG_QUERIES, buildRankedCollectionCatalog } = await import("./collection-catalog");
+  const q = COLLECTION_CATALOG_QUERIES[slug]?.[0] ?? {};
+  const lim = Math.min(Math.max(limit, 1), 100);
+  const off = Math.max(offset, 0);
+
+  let rows =
+    (await rpcCatalogList(supabase, {
+      preferred: "us",
+      fallback: "us",
+      fiber: q.fiber ?? null,
+      category: q.category ?? null,
+      brandSlug: null,
+      search: q.search ?? null,
+      minNfp: 80,
+      limit: lim + 16,
+      offset: off,
+    })) || [];
+
+  if (rows.length === 0) {
+    rows = await catalogListLiveFallback(supabase, {
+      fiber: q.fiber ?? null,
+      category: q.category ?? null,
+      search: q.search ?? null,
+      limit: lim + 16,
+      offset: off,
+      minNfp: 80,
+      preferred: "us",
+      fallback: "us",
+    });
+  }
+
+  const mapped = filterConsumerCatalogProducts(
+    rows.map((row) => mapProductRow(row)).filter(isEditorialWomensApparel)
+  );
+  return buildRankedCollectionCatalog(mapped, slug).slice(0, lim);
+}
 
 async function fetchCollectionCatalogPoolUncached(
   slug: import("./collection-pages").CollectionSlug

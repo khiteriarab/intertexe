@@ -17,28 +17,45 @@ const MEMBERSHIP_INSERT_BATCH = 400;
 /** Paginated read from precomputed memberships (full collection, not shallow pool). */
 export async function fetchCollectionPageFromMemberships(
   slug: CollectionSlug,
-  opts?: { limit?: number; offset?: number }
+  opts?: { limit?: number; offset?: number; skipCount?: boolean }
 ): Promise<{ products: Product[]; total: number } | null> {
   const supabase = getServerSupabase();
   if (!supabase) return null;
 
   const limit = Math.min(Math.max(opts?.limit ?? 48, 1), 100);
   const offset = Math.max(opts?.offset ?? 0, 0);
+  const skipCount = opts?.skipCount ?? false;
 
-  const [{ data: rows, error }, { data: countRaw, error: countErr }] = await Promise.all([
-    supabase.rpc("collection_catalog_list", {
-      p_slug: slug,
-      p_limit: limit,
-      p_offset: offset,
-    }),
-    supabase.rpc("collection_catalog_count", { p_slug: slug }),
-  ]);
+  const listPromise = supabase.rpc("collection_catalog_list", {
+    p_slug: slug,
+    p_limit: limit,
+    p_offset: offset,
+  });
+
+  let rows: Record<string, unknown>[] | null = null;
+  let error: { message?: string } | null = null;
+  let countRaw: unknown = 0;
+
+  if (skipCount) {
+    const listRes = await listPromise;
+    rows = listRes.data as Record<string, unknown>[] | null;
+    error = listRes.error;
+  } else {
+    const [listRes, countRes] = await Promise.all([
+      listPromise,
+      supabase.rpc("collection_catalog_count", { p_slug: slug }),
+    ]);
+    rows = listRes.data as Record<string, unknown>[] | null;
+    error = listRes.error;
+    if (countRes.error?.message?.includes("collection_catalog_count")) return null;
+    countRaw = countRes.data;
+  }
 
   if (error?.message?.includes("collection_catalog_list")) return null;
-  if (countErr?.message?.includes("collection_catalog_count")) return null;
 
-  const total = Number(countRaw ?? 0);
-  if (total === 0 && (!rows || rows.length === 0)) return null;
+  const total = skipCount ? rows?.length ?? 0 : Number(countRaw ?? 0);
+  if (!skipCount && total === 0 && (!rows || rows.length === 0)) return null;
+  if (skipCount && (!rows || rows.length === 0)) return null;
 
   const products = (rows || []).map((row: Record<string, unknown>) => mapProductRow(row));
   return { products, total };

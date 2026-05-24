@@ -24,7 +24,7 @@ export default async function CollectionPage({ params }: Props) {
   const config = getCollectionConfig(slug);
   if (!config) notFound();
 
-  const data = await fetchCollectionPageData(slug, { limit: 36, skipTotal: true });
+  const data = await fetchCollectionPageData(slug, { limit: 48, skipTotal: true });
   if (!data) notFound();
 
   return (
