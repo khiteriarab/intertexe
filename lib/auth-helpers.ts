@@ -184,10 +184,24 @@ export async function deleteUserAccount(userId: string): Promise<boolean> {
   if (!supabase) return false;
   await supabase.from("product_favorites").delete().eq("user_id", userId);
   await supabase.from("favorites").delete().eq("user_id", userId);
+  await supabase.from("user_preferences").delete().eq("user_id", userId);
   await supabase.from("quiz_results").delete().eq("user_id", userId);
+  await supabase.from("scan_history").delete().eq("user_id", userId);
   await supabase.from("price_watches").delete().eq("user_id", userId);
   const { error } = await supabase.from("users").delete().eq("id", userId);
-  return !error;
+  if (error) return false;
+
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  if (serviceKey && url) {
+    const { createClient } = await import("@supabase/supabase-js");
+    const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
+    await admin.auth.admin.deleteUser(userId);
+  }
+  return true;
 }
 
 export async function createUser(userData: { username: string; email: string; password: string; name: string | null }) {
