@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
+import { CatalogDesktopBar } from "../../components/CatalogDesktopBar";
+import { SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice } from "../../../lib/format-display-price";
@@ -24,6 +26,8 @@ type Product = {
   price?: string;
   composition?: string;
   naturalFiberPercent?: number;
+  category?: string;
+  isSale?: boolean;
 };
 
 type CollectionSort = "recommended" | "price_asc" | "price_desc" | "natural";
@@ -36,6 +40,15 @@ const SORT_OPTIONS: { key: CollectionSort; label: string }[] = [
 ];
 
 const FIBER_OPTIONS = ["All", "Silk", "Cashmere", "Wool", "Linen", "Cotton"] as const;
+
+const CATEGORY_OPTIONS = ["All", "Dresses", "Tops", "Knitwear", "Bottoms", "Outerwear", "Skirts"] as const;
+
+const PRICE_OPTIONS = [
+  { key: "all", label: "Any price" },
+  { key: "under300", label: "Under £300" },
+  { key: "300-600", label: "£300–£600" },
+  { key: "600plus", label: "£600+" },
+] as const;
 
 function parsePriceNum(price: string | undefined): number {
   if (!price) return Number.POSITIVE_INFINITY;
@@ -85,6 +98,10 @@ export default function CollectionClient({
   const [sortBy, setSortBy] = useState<CollectionSort>("recommended");
   const [fiberFilter, setFiberFilter] = useState<string>("All");
   const [brandFilter, setBrandFilter] = useState<string>("All");
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [priceFilter, setPriceFilter] = useState<string>("all");
+  const [showSaleOnly, setShowSaleOnly] = useState(false);
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   useEffect(() => {
     if (catalogTotal > 0) return;
@@ -120,10 +137,31 @@ export default function CollectionClient({
     if (brandFilter !== "All") {
       list = list.filter((p) => p.brandName === brandFilter);
     }
+    if (categoryFilter !== "All") {
+      const needle = categoryFilter.toLowerCase();
+      list = list.filter((p) => (p.category || p.name || "").toLowerCase().includes(needle.slice(0, -1)) || (p.name || "").toLowerCase().includes(needle));
+    }
+    if (showSaleOnly) {
+      list = list.filter((p) => Boolean(p.isSale));
+    }
+    if (priceFilter !== "all") {
+      list = list.filter((p) => {
+        const n = parsePriceNum(p.price);
+        if (priceFilter === "under300") return n < 300;
+        if (priceFilter === "300-600") return n >= 300 && n <= 600;
+        if (priceFilter === "600plus") return n > 600;
+        return true;
+      });
+    }
     return sortCollectionProducts(list, sortBy);
-  }, [products, fiberFilter, brandFilter, sortBy]);
+  }, [products, fiberFilter, brandFilter, categoryFilter, priceFilter, showSaleOnly, sortBy]);
 
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
+
+  const displayCount =
+    fiberFilter !== "All" || brandFilter !== "All" || categoryFilter !== "All" || priceFilter !== "all" || showSaleOnly
+      ? filteredProducts.length
+      : totalCount;
 
   const activeFilters = [
     ...(fiberFilter !== "All"
@@ -132,7 +170,92 @@ export default function CollectionClient({
     ...(brandFilter !== "All"
       ? [{ id: "brand", label: brandFilter, onRemove: () => setBrandFilter("All") }]
       : []),
+    ...(categoryFilter !== "All"
+      ? [{ id: "cat", label: categoryFilter, onRemove: () => setCategoryFilter("All") }]
+      : []),
+    ...(priceFilter !== "all"
+      ? [{ id: "price", label: PRICE_OPTIONS.find((p) => p.key === priceFilter)?.label || priceFilter, onRemove: () => setPriceFilter("all") }]
+      : []),
+    ...(showSaleOnly ? [{ id: "sale", label: "Sale", onRemove: () => setShowSaleOnly(false) }] : []),
   ];
+
+  const filterPanel = (
+    <>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
+      <div className="flex flex-wrap gap-2 mb-8">
+        {availableFibers.map((fiber) => (
+          <button
+            key={fiber}
+            type="button"
+            onClick={() => setFiberFilter(fiber)}
+            className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+              fiberFilter === fiber ? "border-foreground bg-foreground text-background" : "border-border/40"
+            }`}
+          >
+            {fiber}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
+      <div className="flex flex-wrap gap-2 mb-8">
+        {CATEGORY_OPTIONS.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setCategoryFilter(cat)}
+            className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+              categoryFilter === cat ? "border-foreground bg-foreground text-background" : "border-border/40"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Price</p>
+      <div className="flex flex-col gap-2 mb-8 border border-border/30">
+        {PRICE_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => setPriceFilter(opt.key)}
+            className={`w-full text-left px-4 py-2.5 text-[12px] border-b border-border/20 last:border-0 ${
+              priceFilter === opt.key ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      {brands.length > 1 && (
+        <>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Brand</p>
+          <div className="flex flex-wrap gap-2 mb-8 max-h-[160px] overflow-y-auto">
+            {brands.map((brand) => (
+              <button
+                key={brand}
+                type="button"
+                onClick={() => setBrandFilter(brand)}
+                className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                  brandFilter === brand ? "border-foreground bg-foreground text-background" : "border-border/40"
+                }`}
+              >
+                {brand}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      <label className="flex items-center gap-3 text-[12px] cursor-pointer mb-4">
+        <input
+          type="checkbox"
+          checked={showSaleOnly}
+          onChange={(e) => setShowSaleOnly(e.target.checked)}
+          className="accent-foreground"
+        />
+        Sale only
+      </label>
+    </>
+  );
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
@@ -211,16 +334,65 @@ export default function CollectionClient({
         </div>
       </section>
 
-      <section className="py-8 md:py-12 px-4 md:px-8 max-w-6xl mx-auto w-full">
+      <section className="py-8 md:py-12 px-4 md:px-8 max-w-7xl mx-auto w-full">
         <CatalogMobileToolbar
-          className="mb-6"
-          resultCount={fiberFilter !== "All" || brandFilter !== "All" ? filteredProducts.length : totalCount}
-          countLoading={countLoading && totalCount == null}
+          className="mb-6 lg:hidden"
+          resultCount={displayCount}
+          countLoading={countLoading && displayCount == null}
           sortLabel={currentSort.label}
           onOpenFilter={() => setShowFilterSheet(true)}
           onOpenSort={() => setShowSortSheet(true)}
           activeFilters={activeFilters}
         />
+
+        <div className="lg:flex lg:gap-10 lg:items-start">
+          <aside className="hidden lg:block w-[260px] shrink-0 pr-6">
+            <div className="flex items-center gap-2 mb-1 pt-1">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+              <span className="text-[11px] uppercase tracking-[0.2em] font-medium">Filter</span>
+            </div>
+            <p className="text-[12px] text-muted-foreground mb-6">
+              {countLoading || displayCount == null ? (
+                <span className="animate-pulse">Loading…</span>
+              ) : (
+                <>
+                  <span className="text-foreground font-medium">{(displayCount ?? filteredProducts.length).toLocaleString()}</span> Results
+                </>
+              )}
+            </p>
+            {filterPanel}
+          </aside>
+
+          <div className="flex-1 min-w-0">
+        <CatalogDesktopBar
+          className="hidden lg:flex"
+          resultCount={displayCount}
+          countLoading={countLoading && displayCount == null}
+          sortLabel={currentSort.label}
+          onOpenFilter={() => setShowFilterSheet(true)}
+          onOpenSort={() => setShowSortMenu(!showSortMenu)}
+          activeFilters={activeFilters}
+          showFilter={false}
+        />
+        {showSortMenu && (
+          <div className="hidden lg:block relative mb-6">
+            <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
+            <div className="absolute right-0 top-0 z-50 bg-background border border-border/40 shadow-xl min-w-[200px]">
+              {SORT_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => { setSortBy(option.key); setShowSortMenu(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-[11px] ${
+                    sortBy === option.key ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <CatalogMobileSheet
           open={showSortSheet}
@@ -263,52 +435,8 @@ export default function CollectionClient({
             </button>
           }
         >
-          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
-          <div className="flex flex-wrap gap-2 mb-8">
-            {availableFibers.map((fiber) => (
-              <button
-                key={fiber}
-                type="button"
-                onClick={() => setFiberFilter(fiber)}
-                className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-                  fiberFilter === fiber
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border/40"
-                }`}
-              >
-                {fiber}
-              </button>
-            ))}
-          </div>
-          {brands.length > 1 && (
-            <>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Designer</p>
-              <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
-                {brands.map((brand) => (
-                  <button
-                    key={brand}
-                    type="button"
-                    onClick={() => setBrandFilter(brand)}
-                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-                      brandFilter === brand
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border/40"
-                    }`}
-                  >
-                    {brand}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+          {filterPanel}
         </CatalogMobileSheet>
-
-        <p className="hidden md:block text-[11px] uppercase tracking-[0.14em] text-neutral-500 mb-6" data-testid="text-collection-count">
-          <span className="font-medium text-neutral-800">
-            {countLoading || totalCount == null ? "—" : totalCount.toLocaleString()}
-          </span>{" "}
-          pieces in this collection
-        </p>
 
         {filteredProducts.length === 0 ? (
           <p className="text-sm text-neutral-500 max-w-md leading-relaxed">
@@ -360,6 +488,8 @@ export default function CollectionClient({
             {loadingMore ? "Loading…" : "Load more"}
           </button>
         )}
+          </div>
+        </div>
       </section>
     </div>
   );

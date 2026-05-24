@@ -715,10 +715,9 @@ export async function POST(request: NextRequest) {
 
     const confirmPrompt = buildConfirmationPrompt(extracted);
 
-    if (userId) {
-      try {
+    try {
         await supabase.from("scan_history").insert({
-          user_id: userId,
+          user_id: userId || null,
           scanned_at: new Date().toISOString(),
           brand: brandName,
           product_name: productName,
@@ -735,7 +734,6 @@ export async function POST(request: NextRequest) {
       } catch (e: any) {
         console.error("scan_history insert:", e.message);
       }
-    }
 
     if (userId && primaryFiber) {
       const currentFibers = prefs?.preferredFibers || [];
