@@ -76,10 +76,14 @@ export default async function MaterialsPage() {
     getCachedPlatformStats(),
     getCachedBrandStats(),
     fetchProductCount(),
-    ...FABRICS.map(f => fetchProductsByFiber(f.slug).then(products => {
-      const p = products.find(p => p.imageUrl);
-      return p ? p.imageUrl : null;
-    }))
+    ...FABRICS.map((f) =>
+      fetchProductsByFiber(f.slug, 24)
+        .then((products) => {
+          const p = products.find((row) => row.imageUrl);
+          return p ? p.imageUrl : null;
+        })
+        .catch(() => null)
+    )
   ]);
 
   const images: Record<string, string | null> = {};

@@ -1327,18 +1327,24 @@ export async function fetchProductsByFiber(
 
   let rows: any[] = [];
   if (!opts?.preferLiveOnly) {
-    rows =
-      (await rpcCatalogList(supabase, {
-        preferred: "us",
-        fallback: "us",
-        fiber,
-        category: null,
-        brandSlug: null,
-        search: null,
-        minNfp: 80,
-        limit,
-        offset: 0,
-      })) || [];
+    try {
+      rows =
+        (await rpcCatalogList(supabase, {
+          preferred: "us",
+          fallback: "us",
+          fiber,
+          category: null,
+          brandSlug: null,
+          search: null,
+          minNfp: 80,
+          limit: Math.min(limit, 48),
+          offset: 0,
+        })) || [];
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      if (!isCatalogTimeoutError(e) && e?.code !== "57014") throw err;
+      rows = [];
+    }
   }
   if (rows.length === 0) {
     const tLive = Date.now();
