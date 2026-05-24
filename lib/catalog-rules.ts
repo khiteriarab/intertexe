@@ -13,8 +13,7 @@ export {
   rowMatchesGarmentFilter,
 };
 
-export const CATALOG_INITIAL_PAGE = 32;
-export const CATALOG_PAGE_SIZE = 40;
+export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE } from "./catalog-constants";
 
 export function classifyMaterial(composition = "", _materialMetadata?: unknown): string {
   const blob = String(composition || "").toLowerCase();

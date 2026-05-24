@@ -9,7 +9,7 @@ import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopCatalogCount, getShopMeta, getShopBrands } from "./actions";
 import type { ShopPriceCap } from "../../lib/shop-client-filters";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
-import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
+import { CATALOG_PAGE_SIZE } from "../../lib/catalog-constants";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";

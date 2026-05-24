@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ProductLink } from "../../components/ProductLink";
 import { CatalogProductImage } from "../../components/CatalogProductImage";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
-import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
+import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-constants";
 import { Heart } from "lucide-react";
 import { useProductFavorites } from "../../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../../lib/format-display-price";

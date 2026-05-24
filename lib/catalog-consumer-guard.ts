@@ -1,7 +1,7 @@
 /**
  * Consumer catalog guards — aligned with catalog-rules consumerExclusionReason.
  */
-import { consumerExclusionReason } from "./catalog-rules";
+import { consumerExclusionReason } from "./catalog-consumer-rules.js";
 import { isMensCatalogRow } from "./womens-catalog-guard";
 import type { Product } from "./supabase-server";
 

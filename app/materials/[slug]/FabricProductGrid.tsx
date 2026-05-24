@@ -5,7 +5,7 @@ import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/Catal
 import { CatalogProductImage } from "../../components/CatalogProductImage";
 import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice, type DisplayPriceProduct } from "../../../lib/format-display-price";
-import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
+import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-constants";
 
 interface Product extends DisplayPriceProduct {
   productId?: string;

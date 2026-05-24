@@ -8,6 +8,32 @@ export type CatalogActiveFilter = {
   onRemove: () => void;
 };
 
+/** Filled chips for applied filters only (not “All” / default). */
+export function CatalogActiveFilterChips({
+  filters,
+  className = "",
+}: {
+  filters: CatalogActiveFilter[];
+  className?: string;
+}) {
+  if (filters.length === 0) return null;
+  return (
+    <div className={`flex flex-wrap gap-2 ${className}`}>
+      {filters.map((f) => (
+        <button
+          key={f.id}
+          type="button"
+          onClick={f.onRemove}
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-[10px] uppercase tracking-[0.12em] border border-foreground bg-foreground text-background"
+        >
+          {f.label}
+          <X className="w-3 h-3 opacity-80" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** NET-A-PORTER-style mobile bar: Filter (left), Sort (right), active filter chips. */
 export function CatalogMobileToolbar({
   resultCount,
@@ -64,21 +90,7 @@ export function CatalogMobileToolbar({
         </button>
       </div>
 
-      {activeFilters.length > 0 && (
-        <div className="flex flex-wrap gap-2 -mt-1">
-          {activeFilters.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={f.onRemove}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] border border-foreground/25 bg-[#f5f5f3]"
-            >
-              {f.label}
-              <X className="w-3 h-3 opacity-60" />
-            </button>
-          ))}
-        </div>
-      )}
+      <CatalogActiveFilterChips filters={activeFilters} className="-mt-1" />
     </div>
   );
 }

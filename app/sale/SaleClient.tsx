@@ -7,7 +7,12 @@ import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
-import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
+import {
+  CatalogMobileToolbar,
+  CatalogMobileSheet,
+  CatalogActiveFilterChips,
+  type CatalogActiveFilter,
+} from "../components/CatalogMobileToolbar";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
 import { getShopBrands } from "../shop/actions";
@@ -163,6 +168,49 @@ export default function SaleClient({
   const { market } = useShoppingMarket();
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
 
+  const activeFilters: CatalogActiveFilter[] = useMemo(
+    () => [
+      ...(fiberTab !== "all"
+        ? [{
+            id: "fiber",
+            label: FIBER_TABS.find((t) => t.key === fiberTab)?.label || fiberTab,
+            onRemove: () => {
+              setFiberTab("all");
+              setSelectedFiberSubtypes([]);
+              setOffset(0);
+            },
+          }]
+        : []),
+      ...(priceFilter !== "all"
+        ? [{
+            id: "price",
+            label: PRICE_FILTERS.find((p) => p.key === priceFilter)?.label || priceFilter,
+            onRemove: () => {
+              setPriceFilter("all");
+              setOffset(0);
+            },
+          }]
+        : []),
+      ...selectedBrandSlugs.map((slug) => ({
+        id: `brand-${slug}`,
+        label: shopBrands.find((b) => b.slug === slug)?.name || slug,
+        onRemove: () => {
+          setSelectedBrandSlugs((prev) => prev.filter((s) => s !== slug));
+          setOffset(0);
+        },
+      })),
+      ...selectedFiberSubtypes.map((st) => ({
+        id: `subtype-${st}`,
+        label: st,
+        onRemove: () => {
+          setSelectedFiberSubtypes((prev) => prev.filter((s) => s !== st));
+          setOffset(0);
+        },
+      })),
+    ],
+    [fiberTab, priceFilter, selectedBrandSlugs, selectedFiberSubtypes, shopBrands]
+  );
+
   useEffect(() => {
     getShopBrands()
       .then((brands) =>
@@ -281,20 +329,7 @@ export default function SaleClient({
           sortLabel={currentSort.label}
           onOpenFilter={() => setShowFilterSheet(true)}
           onOpenSort={() => setShowSortSheet(true)}
-          activeFilters={[
-            ...(fiberTab !== "all" ? [{ id: "fiber", label: fiberTab, onRemove: () => { setFiberTab("all"); setSelectedFiberSubtypes([]); } }] : []),
-            ...(priceFilter !== "all" ? [{ id: "price", label: PRICE_FILTERS.find((p) => p.key === priceFilter)?.label || priceFilter, onRemove: () => setPriceFilter("all") }] : []),
-            ...selectedBrandSlugs.map((slug) => ({
-              id: `brand-${slug}`,
-              label: shopBrands.find((b) => b.slug === slug)?.name || slug,
-              onRemove: () => setSelectedBrandSlugs((prev) => prev.filter((s) => s !== slug)),
-            })),
-            ...selectedFiberSubtypes.map((st) => ({
-              id: `subtype-${st}`,
-              label: st,
-              onRemove: () => setSelectedFiberSubtypes((prev) => prev.filter((s) => s !== st)),
-            })),
-          ]}
+          activeFilters={activeFilters}
         />
         <div className="lg:flex lg:gap-10 lg:items-start">
           <CatalogFilterSidebar
@@ -362,6 +397,8 @@ export default function SaleClient({
               )}
             </div>
         </div>
+
+        <CatalogActiveFilterChips filters={activeFilters} className="hidden md:flex mb-4" />
 
         <CatalogMobileSheet
           open={showSortSheet}
@@ -432,34 +469,6 @@ export default function SaleClient({
             </div>
           </>
         )}
-
-        <div className="hidden md:flex flex-col gap-4">
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {FIBER_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setFiberTab(tab.key)}
-                className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${fiberTab === tab.key ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground hover:text-foreground"}`}
-                data-testid={`btn-fiber-${tab.key}`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {PRICE_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setPriceFilter(f.key)}
-                className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${priceFilter === f.key ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground hover:text-foreground"}`}
-                data-testid={`btn-price-${f.key}`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
