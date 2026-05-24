@@ -566,7 +566,7 @@ export default function ShopClient({
         <div className="lg:flex lg:gap-10 lg:items-start">
           <CatalogFilterSidebar
             resultCount={displayResultTotal}
-            isLoading={isLoading}
+            isLoading={countLoading || (isLoading && displayResultTotal == null)}
             fiberTab={fiberTab}
             categoryFilter={categoryList[0] ?? "all"}
             fiberOptions={FIBER_TABS}

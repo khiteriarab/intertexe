@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import { scannerCatalogQuery } from "../../../lib/scanner-catalog";
+import { fetchTastePreferences, upsertTastePreferences } from "../../../lib/taste-preferences";
+import { getSupabaseAuthUserId } from "../../../lib/supabase-auth-server";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -418,7 +420,12 @@ async function searchAlternatives(
   priceNum: number | null,
   color: string,
   fiberFilter = "",
+  preferredFiber?: string,
 ): Promise<any[]> {
+  const effectiveFiber =
+    preferredFiber?.toLowerCase().split(/\s+/)[0] ||
+    fiberFilter?.toLowerCase().split(/\s+/)[0] ||
+    "";
   const categoryKeywords: Record<string, string[]> = {
     dresses: ["dress", "gown"], tops: ["top", "blouse", "shirt", "tee", "camisole", "tank"],
     bottoms: ["pant", "trouser", "jean", "denim", "palazzo", "wide-leg"],
@@ -444,9 +451,9 @@ async function searchAlternatives(
   }
 
   const { data: altData } = await altQuery.limit(60);
-  let alternatives = sortAlternativeRows(altData || [], priceNum, fiberFilter);
+  let alternatives = sortAlternativeRows(altData || [], priceNum, effectiveFiber);
 
-  if (alternatives.length < 6 && fiberFilter && category) {
+  if (alternatives.length < 6 && effectiveFiber && category) {
     let categoryQuery = scannerCatalogQuery(supabase)
       .eq("category", category)
       .order("natural_fiber_percent", { ascending: false })
@@ -455,7 +462,7 @@ async function searchAlternatives(
       categoryQuery = categoryQuery.neq("brand_slug", brandSlug);
     }
     const { data: categoryData } = await categoryQuery;
-    if (categoryData?.length) alternatives = sortAlternativeRows([...alternatives, ...categoryData], priceNum, fiberFilter);
+    if (categoryData?.length) alternatives = sortAlternativeRows([...alternatives, ...categoryData], priceNum, effectiveFiber);
   }
 
   if (alternatives.length < 6) {
@@ -465,7 +472,7 @@ async function searchAlternatives(
       .not("price", "is", null).neq("price", "")
       .order("natural_fiber_percent", { ascending: false })
       .limit(30);
-    if (fallback && fallback.length > alternatives.length) alternatives = sortAlternativeRows(fallback, priceNum, fiberFilter);
+    if (fallback && fallback.length > alternatives.length) alternatives = sortAlternativeRows(fallback, priceNum, effectiveFiber);
   }
 
   const brandBuckets: Record<string, any[]> = {};
@@ -647,12 +654,36 @@ export async function POST(request: NextRequest) {
     const priceNum = parsePriceNumber(price);
     const detectedFiberForSearch = analysis.fibers.find(f => f.isNatural)?.fiber || "";
     const fiberFilter = detectedFiberForSearch.toLowerCase().split(" ")[0] || "";
+    const authHeader = request.headers.get("authorization");
+    const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    const userId = accessToken ? await getSupabaseAuthUserId(accessToken) : null;
+    const prefs = userId ? await fetchTastePreferences(supabase, userId) : null;
+    const preferredFiber = prefs?.preferredFibers?.[0]?.toLowerCase() || "";
+    const primaryNaturalFiber = analysis.fibers.find(f => f.isNatural)?.fiber?.toLowerCase() || "";
+    const alternativeFiber =
+      effectivePercent >= 80 && primaryNaturalFiber
+        ? primaryNaturalFiber.split(/\s+/)[0]
+        : preferredFiber || primaryNaturalFiber || "silk";
+
     let alternatives: any[] = [];
     try {
-      alternatives = await searchAlternatives(supabase, category, brandSlug, priceNum, color, fiberFilter);
+      alternatives = await searchAlternatives(
+        supabase,
+        category,
+        brandSlug,
+        priceNum,
+        color,
+        fiberFilter,
+        alternativeFiber
+      );
     } catch (e: any) {
       console.error("Alternatives search failed:", e.message);
     }
+
+    const primaryFiber =
+      analysis.fibers[0]?.fiber?.toLowerCase() ||
+      fiberFilter ||
+      alternativeFiber;
 
     let verdict = "";
     if (openai && analysis.fibers.length > 0) {
@@ -683,6 +714,41 @@ export async function POST(request: NextRequest) {
     const brandRating = avgFiber === null ? null : avgFiber >= 95 ? "Exceptional" : avgFiber >= 85 ? "Excellent" : avgFiber >= 70 ? "Good" : "Caution";
 
     const confirmPrompt = buildConfirmationPrompt(extracted);
+
+    if (userId) {
+      try {
+        await supabase.from("scan_history").insert({
+          user_id: userId,
+          scanned_at: new Date().toISOString(),
+          brand: brandName,
+          product_name: productName,
+          composition: analysis.compositionText || extracted.composition || "",
+          natural_percent: effectivePercent,
+          verdict,
+          scan_source: extracted.inputType || (image ? "image" : url ? "url" : barcode ? "barcode" : "manual"),
+          raw_analysis: {
+            detected_fiber: primaryFiber,
+            is_natural: effectivePercent >= 80,
+            alternatives_shown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
+          },
+        });
+      } catch (e: any) {
+        console.error("scan_history insert:", e.message);
+      }
+    }
+
+    if (userId && primaryFiber) {
+      const currentFibers = prefs?.preferredFibers || [];
+      const updatedFibers = [
+        primaryFiber,
+        ...currentFibers.filter((f) => f.toLowerCase() !== primaryFiber),
+      ].slice(0, 5);
+      try {
+        await upsertTastePreferences(supabase, userId, { preferredFibers: updatedFibers });
+      } catch (e: any) {
+        console.error("user_preferences update:", e.message);
+      }
+    }
 
     return NextResponse.json({
       tagInfo: {

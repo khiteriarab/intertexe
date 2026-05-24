@@ -259,19 +259,18 @@ export default function SaleClient({
           ]}
         />
         <div className="hidden md:flex items-center justify-between border-y border-border/20 py-3 mb-2 gap-4">
-          <p className="text-[11px] text-muted-foreground flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowFilterSheet(true)}
+            className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            data-testid="btn-sale-filter"
+          >
+            Filter
+          </button>
+          <p className="text-[11px] text-muted-foreground text-center flex-1 min-w-0">
             <span className="text-foreground font-medium">{total != null ? total.toLocaleString() : "—"}</span> on sale
           </p>
-          <div className="flex items-center gap-4 md:gap-6 ml-auto">
-            <button
-              type="button"
-              onClick={() => setShowFilterSheet(true)}
-              className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="btn-sale-filter"
-            >
-              Filter
-            </button>
-            <div className="relative">
+          <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setShowSortMenu(!showSortMenu)}

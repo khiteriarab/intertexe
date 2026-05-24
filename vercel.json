@@ -21,6 +21,10 @@
     {
       "path": "/api/cron/feed-sync-stale-alert",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync",
+      "schedule": "0 2 * * *"
     }
   ]
 }

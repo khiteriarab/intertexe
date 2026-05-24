@@ -66,7 +66,7 @@ function FilterSection<T extends string>({
 }
 
 type CatalogFilterSidebarProps<TFiber extends string, TCategory extends string> = {
-  resultCount: number;
+  resultCount: number | null;
   isLoading?: boolean;
   fiberTab: TFiber;
   categoryFilter: TCategory;
@@ -104,7 +104,7 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
         <span className="text-[11px] uppercase tracking-[0.2em] font-medium">Filter</span>
       </div>
       <p className="text-[12px] text-muted-foreground mb-6" data-testid="sidebar-result-count">
-        {isLoading ? (
+        {isLoading || resultCount == null ? (
           <span className="animate-pulse">Loading…</span>
         ) : (
           <>
