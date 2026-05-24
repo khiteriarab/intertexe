@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
 
-/** Portrait campaign hero — full-bleed on all breakpoints (shop grid lives in rails below, not beside hero). */
+/** Portrait campaign hero — full viewport width; product grid stays in rails below (not beside hero). */
 export function HomepageHeroSection({
   displayCount,
 }: {
@@ -13,12 +13,15 @@ export function HomepageHeroSection({
 }) {
   return (
     <>
-      <section className="lg:hidden relative overflow-hidden w-full -mx-4 md:-mx-8" data-testid="homepage-hero-mobile">
+      <section
+        className="layout-bleed-full lg:hidden relative overflow-hidden"
+        data-testid="homepage-hero-mobile"
+      >
         <div className="homepage-hero-frame-mobile relative w-full overflow-hidden bg-[#eae8e4]">
           <img
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE — Luxury natural-fiber fashion"
-            className="homepage-hero-img absolute inset-0 w-full h-full object-cover object-[center_42%]"
+            className="absolute inset-0 w-full h-full object-cover object-[center_38%]"
             fetchPriority="high"
             draggable={false}
           />
@@ -47,25 +50,31 @@ export function HomepageHeroSection({
       </section>
 
       <section
-        className="hidden lg:block relative overflow-hidden -mx-8"
+        className="layout-bleed-full hidden lg:block relative overflow-hidden border-b border-neutral-200/60"
         data-testid="homepage-hero-desktop"
       >
-        <div className="editorial-frame-hero relative w-full">
+        <div className="homepage-hero-desktop-frame">
           <img
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE editorial"
-            className="homepage-hero-img absolute inset-0 w-full h-full object-cover object-[center_38%]"
+            className="absolute inset-0 w-full h-full object-cover object-[center_22%]"
             fetchPriority="high"
             draggable={false}
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 z-10 flex flex-col justify-end px-14 xl:px-20 pb-16 xl:pb-20 max-w-2xl">
+        <div className="absolute inset-0 z-10 flex flex-col justify-end px-14 xl:px-20 pb-14 xl:pb-16 max-w-2xl">
           <p className="text-[10px] uppercase tracking-[0.32em] text-white/55 mb-3">The edit</p>
-          <h2 className="text-[52px] xl:text-[60px] font-serif leading-[1.05] text-white mb-5" data-testid="text-hero-headline-desktop">
+          <h2
+            className="text-[48px] xl:text-[56px] font-serif leading-[1.05] text-white mb-5"
+            data-testid="text-hero-headline-desktop"
+          >
             What to wear now
           </h2>
-          <p className="text-[15px] text-white/75 font-light leading-relaxed max-w-lg mb-10" data-testid="text-hero-subtext-desktop">
+          <p
+            className="text-[15px] text-white/75 font-light leading-relaxed max-w-lg mb-10"
+            data-testid="text-hero-subtext-desktop"
+          >
             {displayCount} pieces in silk, cashmere, linen &amp; wool — curated natural-fiber fashion.
           </p>
           <Link

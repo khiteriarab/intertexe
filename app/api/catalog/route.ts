@@ -10,19 +10,55 @@ import {
   fetchProductsByBrand,
 } from "../../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
+import {
+  DEFAULT_SHOP_FIBER,
+  safeCatalogLimit,
+  safeCatalogOffset,
+  catalogHasMore,
+} from "../../../lib/catalog-fetch-limits";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function catalogOk(
+  body: Record<string, unknown>,
+  init?: { status?: number }
+) {
+  return NextResponse.json(body, { status: init?.status ?? 200 });
+}
+
+function catalogTimeoutResponse(limit: number, offset: number) {
+  return catalogOk({
+    products: [],
+    total: null,
+    limit,
+    offset,
+    hasMore: false,
+    error: "timeout",
+    message: "Query took too long — try filtering by material or category",
+  });
+}
+
+function catalogFailedResponse(limit: number, offset: number) {
+  return catalogOk({
+    products: [],
+    total: null,
+    limit,
+    offset,
+    hasMore: false,
+    error: "failed",
+  });
+}
+
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const mode = sp.get("mode") || "shop";
-  const limit = Math.min(Math.max(Number(sp.get("limit") || CATALOG_PAGE_SIZE), 1), 100);
-  const offset = Math.max(Number(sp.get("offset") || 0), 0);
+  const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
+  const offset = safeCatalogOffset(sp.get("offset"));
   const fiber = sp.get("fiber") || undefined;
   const category = sp.get("category") || undefined;
   const market = sp.get("market") || undefined;
-  const sort = sp.get("sort") || "recommended";
+  const sort = sp.get("sort") || "new";
   const search = sp.get("search") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
   const skipCount = sp.get("skipCount") === "1" || offset === 0;
@@ -35,12 +71,13 @@ export async function GET(request: NextRequest) {
         offset,
         skipTotal: skipCount,
       });
-      return NextResponse.json({
+      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
+      return catalogOk({
         products: result.products,
         total: result.total,
         limit,
         offset,
-        hasMore: result.hasMore,
+        hasMore: catalogHasMore(result.products.length, limit, offset, result.total),
       });
     }
 
@@ -53,15 +90,14 @@ export async function GET(request: NextRequest) {
         useMerchFeedPreview: false,
         skipTotal: skipCount,
       });
+      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
       const total = result.total;
-      return NextResponse.json({
+      return catalogOk({
         products: result.products,
         total,
         limit,
         offset,
-        hasMore:
-          result.hasMore ??
-          (total != null ? offset + result.products.length < total : result.products.length >= limit),
+        hasMore: catalogHasMore(result.products.length, limit, offset, total),
       });
     }
 
@@ -73,16 +109,17 @@ export async function GET(request: NextRequest) {
         skipTotal: skipCount,
       });
       if (!data) {
-        return NextResponse.json({ products: [], total: null, limit, offset, hasMore: false });
+        return catalogOk({ products: [], total: null, limit, offset, hasMore: false });
       }
+      if (data.error === "timeout") return catalogTimeoutResponse(limit, offset);
       const total = data.catalogTotal;
-      return NextResponse.json({
+      return catalogOk({
         products: data.products,
         total,
         poolCount: data.editCount,
         limit,
         offset,
-        hasMore: data.hasMore,
+        hasMore: catalogHasMore(data.products.length, limit, offset, total),
       });
     }
 
@@ -90,15 +127,14 @@ export async function GET(request: NextRequest) {
       const slug = sp.get("slug") || "";
       const data = await fetchEditPageData(slug, { limit, offset });
       if (!data) {
-        return NextResponse.json({ products: [], total: null, limit, offset, hasMore: false });
+        return catalogOk({ products: [], total: null, limit, offset, hasMore: false });
       }
-      return NextResponse.json({
+      return catalogOk({
         products: data.products,
         total: data.editCount,
         limit,
         offset,
-        hasMore:
-          offset + data.products.length < data.editCount && data.products.length >= limit,
+        hasMore: catalogHasMore(data.products.length, limit, offset, data.editCount),
       });
     }
 
@@ -109,12 +145,12 @@ export async function GET(request: NextRequest) {
         offset,
         category: cat,
       });
-      return NextResponse.json({
+      return catalogOk({
         products: data.catalogProducts,
         total: data.catalogTotal,
         limit,
         offset,
-        hasMore: offset + data.catalogProducts.length < data.catalogTotal,
+        hasMore: catalogHasMore(data.catalogProducts.length, limit, offset, data.catalogTotal),
       });
     }
 
@@ -131,17 +167,20 @@ export async function GET(request: NextRequest) {
         const n = await fetchMaterialHubDisplayCount(fiber, cat);
         total = n > 0 ? n : null;
       }
-      return NextResponse.json({
+      return catalogOk({
         products,
         total,
         limit,
         offset,
-        hasMore: total != null ? offset + products.length < total : products.length >= limit,
+        hasMore: catalogHasMore(products.length, limit, offset, total),
       });
     }
 
+    const shopFiber =
+      fiber && fiber !== "all" ? fiber : DEFAULT_SHOP_FIBER;
+
     const result = await fetchShopProducts({
-      fiber: fiber && fiber !== "all" ? fiber : undefined,
+      fiber: shopFiber,
       category: category && category !== "all" ? category : undefined,
       market: market && market !== "all" ? market : undefined,
       sort,
@@ -151,15 +190,22 @@ export async function GET(request: NextRequest) {
       skipTotal: skipCount,
     });
 
-    return NextResponse.json({
+    if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
+
+    return catalogOk({
       products: result.products,
       total: result.total,
       limit,
       offset,
-      hasMore: result.hasMore,
+      hasMore: catalogHasMore(result.products.length, limit, offset, result.total),
+      defaultFiber: !fiber || fiber === "all" ? DEFAULT_SHOP_FIBER : undefined,
     });
-  } catch (err) {
+  } catch (err: unknown) {
+    const e = err as { code?: string; message?: string };
     console.error("[api/catalog]", err);
-    return NextResponse.json({ products: [], total: null, error: "catalog_fetch_failed" }, { status: 500 });
+    if (e?.code === "57014" || String(e?.message || "").includes("timeout")) {
+      return catalogTimeoutResponse(limit, offset);
+    }
+    return catalogFailedResponse(limit, offset);
   }
 }

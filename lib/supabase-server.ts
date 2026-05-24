@@ -22,6 +22,11 @@ import {
   type ShopPriceCap,
 } from "./shop-client-filters";
 import {
+  isCatalogTimeoutError,
+  CATALOG_MAX_OFFSET,
+  safeCatalogOffset,
+} from "./catalog-fetch-limits";
+import {
   CATALOG_INITIAL_PAGE,
   CATALOG_PAGE_SIZE,
   classifyGarment,
@@ -189,6 +194,11 @@ async function rpcCatalogList(
     error ? `error:${error.message}` : `rows:${(data || []).length}`
   );
   if (error) {
+    if (isCatalogTimeoutError(error)) {
+      const err = new Error("catalog_list timeout") as Error & { code?: string };
+      err.code = "57014";
+      throw err;
+    }
     console.warn("catalog_list RPC failed, using live_products_apparel fallback:", error.message);
     return null;
   }
@@ -1608,7 +1618,12 @@ export async function fetchShopProducts(options: {
   search?: string;
   /** When true, skip count RPC — return hasMore heuristic for instant first paint. */
   skipTotal?: boolean;
-}): Promise<{ products: Product[]; total: number | null; hasMore: boolean }> {
+}): Promise<{
+  products: Product[];
+  total: number | null;
+  hasMore: boolean;
+  error?: "timeout" | "failed";
+}> {
   const supabase = getServerSupabase();
   if (!supabase) return { products: [], total: 0, hasMore: false };
   const {
@@ -1625,6 +1640,11 @@ export async function fetchShopProducts(options: {
     search,
     skipTotal = false,
   } = options;
+  const cappedOffset = safeCatalogOffset(offset);
+  if (offset > CATALOG_MAX_OFFSET) {
+    return { products: [], total: null, hasMore: false, error: "timeout" };
+  }
+  try {
   const categories = shopCategoriesList(category, categoriesOpt);
   const maxPrice = normalizeShopPriceCap(maxPriceOpt);
   const isPriceSort = sort === "price-low" || sort === "price-high";
@@ -1661,7 +1681,7 @@ export async function fetchShopProducts(options: {
         search: searchRpc,
         minNfp: 80,
         limit,
-        offset,
+        offset: cappedOffset,
       })) || [];
 
     if (rows.length === 0) {
@@ -1670,7 +1690,7 @@ export async function fetchShopProducts(options: {
         category: rpcCategory,
         search: searchRpc,
         limit,
-        offset,
+        offset: cappedOffset,
         minNfp: 80,
         preferred,
         fallback,
@@ -1719,8 +1739,8 @@ export async function fetchShopProducts(options: {
 
     const total =
       resolvedTotal != null
-        ? Math.max(resolvedTotal, offset + mapped.length)
-        : offset + mapped.length;
+        ? Math.max(resolvedTotal, cappedOffset + mapped.length)
+        : cappedOffset + mapped.length;
     return {
       products: mapped,
       total:
@@ -1767,13 +1787,20 @@ export async function fetchShopProducts(options: {
 
   let mappedPage = deduped.map(mapProductRow);
   mappedPage = postFilter(mappedPage);
-  const page = mappedPage.slice(offset, offset + limit);
+  const page = mappedPage.slice(cappedOffset, cappedOffset + limit);
   const fullTotal = mappedPage.length;
   return {
     products: page,
     total: skipTotal ? null : fullTotal,
-    hasMore: skipTotal ? page.length >= limit : offset + page.length < fullTotal,
+    hasMore: skipTotal ? page.length >= limit : cappedOffset + page.length < fullTotal,
   };
+  } catch (err: unknown) {
+    const e = err as { code?: string; message?: string };
+    if (e?.code === "57014" || isCatalogTimeoutError(e)) {
+      return { products: [], total: null, hasMore: false, error: "timeout" };
+    }
+    throw err;
+  }
 }
 
 const PRODUCT_CARD_COLS = "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price";
