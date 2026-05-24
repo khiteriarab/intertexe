@@ -7,12 +7,8 @@ import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { wearToWhereCardsForCollection, type WearToWhereCard } from "../../lib/wear-to-where";
 
 function WearToWhereCardTile({ card }: { card: WearToWhereCard }) {
-  return (
-    <Link
-      href={card.href}
-      className="group flex-shrink-0 w-[140px] md:w-[168px] flex flex-col gap-2"
-      data-testid={`wear-to-where-${card.label.toLowerCase().replace(/\s+/g, "-")}`}
-    >
+  const inner = (
+    <>
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#eae8e4]">
         <img
           src={card.imageUrl}
@@ -30,6 +26,27 @@ function WearToWhereCardTile({ card }: { card: WearToWhereCard }) {
           {card.label}
         </span>
       </div>
+    </>
+  );
+
+  if (card.editorialOnly || card.href === "#") {
+    return (
+      <div
+        className="group flex-shrink-0 w-[140px] md:w-[168px] flex flex-col gap-2"
+        data-testid={`wear-to-where-${card.label.toLowerCase().replace(/\s+/g, "-")}`}
+      >
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={card.href}
+      className="group flex-shrink-0 w-[140px] md:w-[168px] flex flex-col gap-2"
+      data-testid={`wear-to-where-${card.label.toLowerCase().replace(/\s+/g, "-")}`}
+    >
+      {inner}
     </Link>
   );
 }

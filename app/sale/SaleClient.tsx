@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ProductLink } from "../components/ProductLink";
 import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
@@ -8,6 +8,10 @@ import { useProductFavorites } from "../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
+import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
+import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
+import { getShopBrands } from "../shop/actions";
+import { filterProductsByFiberSubtypes, fiberSubtypesFor } from "../../lib/fiber-subtypes";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type PriceFilter = "all" | "100" | "200" | "300";
@@ -153,9 +157,33 @@ export default function SaleClient({
   const [sortBy, setSortBy] = useState<SaleSort>("newest");
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>([]);
+  const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
+  const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
   const { market } = useShoppingMarket();
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
-  const sortedProducts = sortSaleProducts(products, sortBy);
+
+  useEffect(() => {
+    getShopBrands()
+      .then((brands) =>
+        setShopBrands(brands.map((b) => ({ slug: b.slug, name: b.name, count: b.count })))
+      )
+      .catch(() => {});
+  }, []);
+
+  const sortedProducts = useMemo(() => {
+    let list = sortSaleProducts(products, sortBy);
+    if (selectedBrandSlugs.length > 0) {
+      const slugSet = new Set(selectedBrandSlugs.map((s) => s.toLowerCase()));
+      list = list.filter((p: any) =>
+        slugSet.has(String(p.brandSlug || p.brand_slug || "").toLowerCase())
+      );
+    }
+    if (selectedFiberSubtypes.length > 0) {
+      list = filterProductsByFiberSubtypes(list, selectedFiberSubtypes);
+    }
+    return list;
+  }, [products, sortBy, selectedBrandSlugs, selectedFiberSubtypes]);
   const canLoadMore =
     hasMore || (total != null && total > products.length);
 
@@ -254,10 +282,43 @@ export default function SaleClient({
           onOpenFilter={() => setShowFilterSheet(true)}
           onOpenSort={() => setShowSortSheet(true)}
           activeFilters={[
-            ...(fiberTab !== "all" ? [{ id: "fiber", label: fiberTab, onRemove: () => setFiberTab("all") }] : []),
+            ...(fiberTab !== "all" ? [{ id: "fiber", label: fiberTab, onRemove: () => { setFiberTab("all"); setSelectedFiberSubtypes([]); } }] : []),
             ...(priceFilter !== "all" ? [{ id: "price", label: PRICE_FILTERS.find((p) => p.key === priceFilter)?.label || priceFilter, onRemove: () => setPriceFilter("all") }] : []),
+            ...selectedBrandSlugs.map((slug) => ({
+              id: `brand-${slug}`,
+              label: shopBrands.find((b) => b.slug === slug)?.name || slug,
+              onRemove: () => setSelectedBrandSlugs((prev) => prev.filter((s) => s !== slug)),
+            })),
+            ...selectedFiberSubtypes.map((st) => ({
+              id: `subtype-${st}`,
+              label: st,
+              onRemove: () => setSelectedFiberSubtypes((prev) => prev.filter((s) => s !== st)),
+            })),
           ]}
         />
+        <div className="lg:flex lg:gap-10 lg:items-start">
+          <CatalogFilterSidebar
+            resultCount={sortedProducts.length}
+            fiberTab={fiberTab}
+            categoryFilter={"all"}
+            fiberOptions={FIBER_TABS}
+            categoryOptions={[{ key: "all" as const, label: "All" }]}
+            onFiberChange={(key) => {
+              setFiberTab(key);
+              setSelectedFiberSubtypes([]);
+              setOffset(0);
+            }}
+            onCategoryChange={() => {}}
+            designers={shopBrands}
+            selectedDesigners={selectedBrandSlugs}
+            onDesignersChange={(slugs) => {
+              setSelectedBrandSlugs(slugs);
+              setOffset(0);
+            }}
+            selectedFiberSubtypes={selectedFiberSubtypes}
+            onFiberSubtypesChange={setSelectedFiberSubtypes}
+          />
+          <div className="flex-1 min-w-0">
         <div className="hidden md:flex items-center justify-between border-y border-border/20 py-3 mb-2 gap-4">
           <button
             type="button"
@@ -366,7 +427,7 @@ export default function SaleClient({
                 onClick={() => setShowFilterSheet(false)}
                 className="w-full bg-foreground text-background py-3.5 text-[10px] uppercase tracking-[0.2em]"
               >
-                View {total.toLocaleString()} on sale
+                View {(total ?? sortedProducts.length).toLocaleString()} on sale
               </button>
             </div>
           </>
@@ -440,6 +501,8 @@ export default function SaleClient({
             <p className="text-xs text-muted-foreground/70">Our price tracker monitors products daily — check back soon.</p>
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

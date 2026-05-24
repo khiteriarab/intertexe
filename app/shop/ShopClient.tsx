@@ -17,6 +17,7 @@ import { CatalogProductImage } from "../components/CatalogProductImage";
 import { CountrySelector } from "../components/CountrySelector";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
+import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
 import {
   getRegionForCountryCode,
   getRegionForMarket,
@@ -210,6 +211,7 @@ export default function ShopClient({
   const [priceCap, setPriceCap] = useState<ShopPriceCap>(initialPriceCap);
   const [priceCap600Plus, setPriceCap600Plus] = useState(searchParams.get("price") === "600plus");
   const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>(initialBrands);
+  const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
@@ -338,6 +340,7 @@ export default function ShopClient({
       priceCap == null &&
       !priceCap600Plus &&
       selectedBrandSlugs.length === 0 &&
+      selectedFiberSubtypes.length === 0 &&
       listOffset === 0;
 
     if (isDefaultState && initialFetchDone.current && listOffset === 0) {
@@ -352,6 +355,7 @@ export default function ShopClient({
             fiber: fiberTab !== "all" ? fiberTab : undefined,
             categories: categoryList.length ? categoryList : undefined,
             brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
+            fiberSubtypes: selectedFiberSubtypes.length ? selectedFiberSubtypes : undefined,
             maxPrice: effectiveMaxPrice,
             price600Plus: priceCap600Plus,
             sort: sortBy,
@@ -402,6 +406,7 @@ export default function ShopClient({
     effectiveMaxPrice,
     priceCap600Plus,
     selectedBrandSlugs.join(","),
+    selectedFiberSubtypes.join(","),
     initialProducts,
     initialHasMore,
   ]);
@@ -412,6 +417,7 @@ export default function ShopClient({
       fiber: fiberTab,
       categories: categoryList.length ? categoryList : undefined,
       brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
+      fiberSubtypes: selectedFiberSubtypes.length ? selectedFiberSubtypes : undefined,
       maxPrice: effectiveMaxPrice,
       price600Plus: priceCap600Plus,
       market: marketFilter,
@@ -430,6 +436,7 @@ export default function ShopClient({
     effectiveMaxPrice,
     priceCap600Plus,
     selectedBrandSlugs.join(","),
+    selectedFiberSubtypes.join(","),
   ]);
 
   useEffect(() => {
@@ -452,7 +459,8 @@ export default function ShopClient({
     !debouncedSearch &&
     priceCap == null &&
     !priceCap600Plus &&
-    selectedBrandSlugs.length === 0;
+    selectedBrandSlugs.length === 0 &&
+    selectedFiberSubtypes.length === 0;
 
   const displayResultTotal =
     resultTotal ??
@@ -502,6 +510,14 @@ export default function ShopClient({
       label: shopBrands.find((b) => b.slug === slug)?.name || slug,
       onRemove: () => {
         setSelectedBrandSlugs((prev) => prev.filter((s) => s !== slug));
+        setListOffset(0);
+      },
+    })),
+    ...selectedFiberSubtypes.map((st) => ({
+      id: `subtype-${st}`,
+      label: st,
+      onRemove: () => {
+        setSelectedFiberSubtypes((prev) => prev.filter((s) => s !== st));
         setListOffset(0);
       },
     })),
@@ -573,12 +589,24 @@ export default function ShopClient({
             categoryOptions={[{ key: "all" as const, label: "All" }, ...CATEGORY_FILTERS]}
             onFiberChange={(key) => {
               setFiberTab(key);
+              setSelectedFiberSubtypes([]);
               setSelectedCategories(new Set());
               setListOffset(0);
             }}
             onCategoryChange={(key) => {
               if (key === "all") setSelectedCategories(new Set());
               else setSelectedCategories(new Set([key as CategoryFilterKey]));
+              setListOffset(0);
+            }}
+            designers={shopBrands}
+            selectedDesigners={selectedBrandSlugs}
+            onDesignersChange={(slugs) => {
+              setSelectedBrandSlugs(slugs);
+              setListOffset(0);
+            }}
+            selectedFiberSubtypes={selectedFiberSubtypes}
+            onFiberSubtypesChange={(subtypes) => {
+              setSelectedFiberSubtypes(subtypes);
               setListOffset(0);
             }}
           />
@@ -692,12 +720,16 @@ export default function ShopClient({
                 ))}
               </div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
-              <div className="flex flex-wrap gap-2 mb-8">
+              <div className="flex flex-wrap gap-2 mb-4">
                 {MATERIAL_FILTER_OPTIONS.map(tab => (
                   <button
                     key={tab.key}
                     type="button"
-                    onClick={() => { setFiberTab(tab.key); setListOffset(0); }}
+                    onClick={() => {
+                      setFiberTab(tab.key);
+                      setSelectedFiberSubtypes([]);
+                      setListOffset(0);
+                    }}
                     className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
                       fiberTab === tab.key ? "border-foreground bg-foreground text-background" : "border-border/40"
                     }`}
@@ -706,6 +738,32 @@ export default function ShopClient({
                   </button>
                 ))}
               </div>
+              {fiberTab !== "all" && fiberSubtypesFor(fiberTab).length > 0 && (
+                <div className="mt-1 mb-8 pl-4 border-l border-gray-100">
+                  <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">Type</p>
+                  {fiberSubtypesFor(fiberTab).map((subtype) => (
+                    <button
+                      key={subtype}
+                      type="button"
+                      onClick={() => {
+                        setSelectedFiberSubtypes((prev) =>
+                          prev.includes(subtype)
+                            ? prev.filter((s) => s !== subtype)
+                            : [...prev, subtype]
+                        );
+                        setListOffset(0);
+                      }}
+                      className={`block w-full text-left text-sm py-1.5 ${
+                        selectedFiberSubtypes.includes(subtype)
+                          ? "font-medium text-black"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {subtype}
+                    </button>
+                  ))}
+                </div>
+              )}
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
               <div className="flex flex-wrap gap-2 mb-8">
                 {CATEGORY_FILTERS.map(cat => (

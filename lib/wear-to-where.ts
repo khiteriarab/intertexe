@@ -5,6 +5,11 @@ import type { CollectionSlug } from "./collection-pages";
 import { editorialHeroForSlug, EDITORIAL_HERO } from "./editorial-assets";
 import { MOOD_CATALOG, type MoodConfig, type MoodSlug } from "./mood-commerce";
 import { COLLECTION_SECTIONS } from "./site-architecture";
+import {
+  collectionMoodLabels,
+  getMoodHeroImage,
+} from "./collection-moods";
+import type { Product } from "./supabase-server";
 
 const MOOD_IMAGES: Partial<Record<MoodSlug, string>> = {
   "mediterranean-luxury": EDITORIAL_HERO.vacation,
@@ -36,6 +41,7 @@ export type WearToWhereCard = {
   label: string;
   kicker?: string;
   imageUrl: string;
+  editorialOnly?: boolean;
 };
 
 export function wearToWhereCardsForCollection(slug: CollectionSlug): WearToWhereCard[] {
@@ -45,6 +51,42 @@ export function wearToWhereCardsForCollection(slug: CollectionSlug): WearToWhere
     kicker: m.kicker,
     imageUrl: moodImageUrl(m),
   }));
+}
+
+/** Editorial rail cards with unique product-matched hero images (no duplicate URLs). */
+export function wearToWhereEditorialCards(
+  slug: CollectionSlug,
+  products: Product[]
+): WearToWhereCard[] {
+  const labels = collectionMoodLabels(slug);
+  const moods = moodsForCollection(slug);
+  if (!labels.length) {
+    return wearToWhereCardsForCollection(slug).map((c) => ({
+      ...c,
+      editorialOnly: true,
+      href: "#",
+    }));
+  }
+
+  const usedImages = new Set<string>();
+  return labels.map((label) => {
+    const mood =
+      moods.find(
+        (m) =>
+          m.kicker.toLowerCase() === label.toLowerCase() ||
+          m.label.toLowerCase() === label.toLowerCase()
+      ) ?? moods.find((m) => m.label.includes(label.split(" ")[0] ?? ""));
+    const fallback = mood ? moodImageUrl(mood) : editorialHeroForSlug(slug);
+    const imageUrl =
+      getMoodHeroImage(label, products, slug, usedImages, fallback) || fallback;
+    return {
+      href: "#",
+      label: mood?.label ?? label,
+      kicker: mood?.kicker ?? label,
+      imageUrl,
+      editorialOnly: true,
+    };
+  });
 }
 
 /** Text options for shop filter sheet (no images — carousel lives in mobile menu). */

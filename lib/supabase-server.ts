@@ -43,6 +43,7 @@ import {
 } from "./catalog-product-filters";
 import { fetchShoppableBrands } from "./shoppable-brands";
 import { isMensCatalogRow, isMensOnlyBrand } from "./womens-catalog-guard";
+import { filterProductsByFiberSubtypes } from "./fiber-subtypes";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
@@ -88,6 +89,7 @@ export interface Product {
   /** Used for formatting bare numeric DB prices ($ / € / £). */
   listingRegion?: string | null;
   collectionSlugs?: string[];
+  fiberSubtypeLabel?: string | null;
 }
 
 type MarketFilter = "us-ca" | "eu-uk-me";
@@ -802,6 +804,12 @@ export function mapProductRow(row: any): Product {
     collectionSlugs: Array.isArray(row.collection_slugs)
       ? row.collection_slugs.map((s: unknown) => String(s))
       : [],
+    fiberSubtypeLabel:
+      row.fiber_subtype_label != null && String(row.fiber_subtype_label).trim()
+        ? String(row.fiber_subtype_label).trim()
+        : row.fiber_subtype != null && String(row.fiber_subtype).trim()
+          ? String(row.fiber_subtype).trim()
+          : null,
   };
 }
 
@@ -1538,12 +1546,16 @@ function applyShopPostFilters(
   opts: {
     categories: string[];
     brandSlugs?: string[];
+    fiberSubtypes?: string[];
     maxPrice: ShopPriceCap;
     price600Plus?: boolean;
     sort?: string;
   }
 ): Product[] {
   let out = mapped;
+  if (opts.fiberSubtypes?.length) {
+    out = filterProductsByFiberSubtypes(out, opts.fiberSubtypes);
+  }
   if (opts.categories.length > 1) {
     out = out.filter((p) =>
       productMatchesAnyShopCategory(
@@ -1578,6 +1590,7 @@ export async function fetchShopCatalogCount(options: {
   category?: string;
   categories?: string[];
   brandSlugs?: string[];
+  fiberSubtypes?: string[];
   maxPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
@@ -1586,7 +1599,13 @@ export async function fetchShopCatalogCount(options: {
   const categories = shopCategoriesList(options.category, options.categories);
   const brandSlugs = options.brandSlugs?.filter(Boolean);
   const maxPrice = normalizeShopPriceCap(options.maxPrice);
-  if (categories.length > 1 || (brandSlugs?.length ?? 0) > 1 || maxPrice != null || options.price600Plus) {
+  if (
+    categories.length > 1 ||
+    (brandSlugs?.length ?? 0) > 1 ||
+    (options.fiberSubtypes?.length ?? 0) > 0 ||
+    maxPrice != null ||
+    options.price600Plus
+  ) {
     return null;
   }
   const supabase = getServerSupabase();
@@ -1615,6 +1634,7 @@ export async function fetchShopProducts(options: {
   category?: string;
   categories?: string[];
   brandSlugs?: string[];
+  fiberSubtypes?: string[];
   maxPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
@@ -1637,6 +1657,7 @@ export async function fetchShopProducts(options: {
     category,
     categories: categoriesOpt,
     brandSlugs,
+    fiberSubtypes,
     maxPrice: maxPriceOpt,
     price600Plus,
     market,
@@ -1646,6 +1667,7 @@ export async function fetchShopProducts(options: {
     search,
     skipTotal = false,
   } = options;
+  const subtypeList = (fiberSubtypes || []).map((s) => s.trim()).filter(Boolean);
   const cappedOffset = safeCatalogOffset(offset);
   if (offset > CATALOG_MAX_OFFSET) {
     return { products: [], total: null, hasMore: false, error: "timeout" };
@@ -1674,7 +1696,14 @@ export async function fetchShopProducts(options: {
   const rpcCategory = shopRpcCategory(categories);
   const rpcBrand = shopRpcBrandSlug(brandSlugs);
   const postFilter = (mapped: Product[]) =>
-    applyShopPostFilters(mapped, { categories, brandSlugs, maxPrice, price600Plus, sort });
+    applyShopPostFilters(mapped, {
+      categories,
+      brandSlugs,
+      fiberSubtypes: subtypeList,
+      maxPrice,
+      price600Plus,
+      sort,
+    });
 
   if (!isPriceSort) {
     let rows =
@@ -1750,7 +1779,11 @@ export async function fetchShopProducts(options: {
     return {
       products: mapped,
       total:
-        categories.length > 1 || (brandSlugs?.length ?? 0) > 1 || maxPrice != null || price600Plus
+        categories.length > 1 ||
+        (brandSlugs?.length ?? 0) > 1 ||
+        subtypeList.length > 0 ||
+        maxPrice != null ||
+        price600Plus
           ? null
           : total,
       hasMore: mapped.length >= limit,

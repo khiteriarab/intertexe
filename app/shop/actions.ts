@@ -12,6 +12,7 @@ export async function getShopProducts(options: {
   fiber?: string;
   categories?: string[];
   brandSlugs?: string[];
+  fiberSubtypes?: string[];
   maxPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
@@ -25,6 +26,7 @@ export async function getShopProducts(options: {
     fiber: options.fiber === "all" ? undefined : options.fiber,
     categories: options.categories?.filter((c) => c && c !== "all"),
     brandSlugs: options.brandSlugs?.filter(Boolean),
+    fiberSubtypes: options.fiberSubtypes?.filter(Boolean),
     maxPrice: options.maxPrice ?? null,
     price600Plus: options.price600Plus,
     market: options.market === "all" ? undefined : options.market,
@@ -40,6 +42,7 @@ export async function getShopCatalogCount(options: {
   fiber?: string;
   categories?: string[];
   brandSlugs?: string[];
+  fiberSubtypes?: string[];
   maxPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
@@ -49,6 +52,7 @@ export async function getShopCatalogCount(options: {
     fiber: options.fiber === "all" ? undefined : options.fiber,
     categories: options.categories?.filter((c) => c && c !== "all"),
     brandSlugs: options.brandSlugs?.filter(Boolean),
+    fiberSubtypes: options.fiberSubtypes?.filter(Boolean),
     maxPrice: options.maxPrice ?? null,
     price600Plus: options.price600Plus,
     market: options.market === "all" ? undefined : options.market,
