@@ -46,7 +46,7 @@ export function SignInBenefitsBanner() {
       >
         <div className="max-w-[1400px] mx-auto flex items-center gap-3 flex-wrap">
           <p className="text-[11px] text-[#1C1C1E] leading-snug flex-1 min-w-[200px]">
-            Sign in to save favourites and sync your preferences.
+            Sign in to save favorites and sync your preferences.
           </p>
           <div className="flex items-center gap-4 shrink-0">
             <Link

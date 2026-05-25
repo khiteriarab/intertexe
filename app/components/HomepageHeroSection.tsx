@@ -6,9 +6,11 @@ import { HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
 
 /** Portrait campaign hero — full viewport width; product grid stays in rails below (not beside hero). */
 export function HomepageHeroSection({
-  displayCount,
+  productCountLabel,
+  brandCountLabel,
 }: {
-  displayCount: string;
+  productCountLabel: string;
+  brandCountLabel: string;
   products?: unknown[];
 }) {
   return (
@@ -31,13 +33,12 @@ export function HomepageHeroSection({
           className="absolute inset-0 z-10 flex flex-col justify-end px-6 pb-16 max-w-xl"
           style={{ paddingBottom: "max(4rem, calc(env(safe-area-inset-bottom, 0px) + 3.5rem))" }}
         >
-          <p className="text-[10px] uppercase tracking-[0.32em] text-white/55 mb-2">The edit</p>
           <h2 className="text-[34px] leading-[1.06] font-serif text-white mb-4" data-testid="text-hero-headline">
-            What to<br />
-            wear now
+            No polyester.<br />
+            Ever.
           </h2>
           <p className="text-[12px] text-white/70 mb-8 font-light leading-relaxed max-w-sm" data-testid="text-hero-subtext">
-            {displayCount} pieces in silk, cashmere, linen &amp; wool — curated natural-fiber fashion.
+            {productCountLabel} verified natural fiber pieces across {brandCountLabel} brands. Every composition checked.
           </p>
           <Link
             href="/shop"
@@ -64,18 +65,17 @@ export function HomepageHeroSection({
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
         <div className="absolute inset-0 z-10 flex flex-col justify-end px-14 xl:px-20 pb-14 xl:pb-16 max-w-2xl">
-          <p className="text-[10px] uppercase tracking-[0.32em] text-white/55 mb-3">The edit</p>
           <h2
             className="text-[48px] xl:text-[56px] font-serif leading-[1.05] text-white mb-5"
             data-testid="text-hero-headline-desktop"
           >
-            What to wear now
+            No polyester. Ever.
           </h2>
           <p
             className="text-[15px] text-white/75 font-light leading-relaxed max-w-lg mb-10"
             data-testid="text-hero-subtext-desktop"
           >
-            {displayCount} pieces in silk, cashmere, linen &amp; wool — curated natural-fiber fashion.
+            {productCountLabel} verified natural fiber pieces across {brandCountLabel} brands. Every composition checked.
           </p>
           <Link
             href="/shop"

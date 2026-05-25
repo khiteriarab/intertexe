@@ -9,6 +9,7 @@ import { assignPersona } from "../../shared/personas";
 import { BRAND_PROFILES, getTierLabel, type BrandProfile } from "../../lib/brand-profiles";
 import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
+import { formatDisplayPrice } from "../../lib/format-display-price";
 
 const POPULAR_BRAND_NAMES = [
   "FRAME", "RE/DONE", "Reformation", "Ganni", "Isabel Marant",
@@ -553,7 +554,7 @@ function BrandImage({ name, className }: { name: string; className?: string }) {
         <img
           src={heroUrl}
           alt={`${name} editorial`}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover object-top"
           loading="lazy"
           onError={() => setFailed(true)}
         />
@@ -582,7 +583,7 @@ function QuizProductCard({ product }: { product: any }) {
         <img
           src={imageUrl}
           alt={product.name}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+          className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-[1.02] transition-transform duration-500"
           loading="lazy"
         />
         {fiberPercent != null && fiberPercent >= 90 && (
@@ -609,7 +610,16 @@ function QuizProductCard({ product }: { product: any }) {
           <p className="text-[10px] text-muted-foreground line-clamp-1 mt-auto">{product.composition}</p>
         )}
         <div className="flex items-center justify-between mt-1">
-          {product.price && <span className="text-xs font-medium">{product.price}</span>}
+          {product.price && (
+            <span className="text-xs font-medium">
+              {formatDisplayPrice({
+                price: product.price,
+                originalPrice: product.originalPrice,
+                listingRegion: product.listingRegion ?? product.listing_region,
+                productId: product.productId || product.product_id,
+              }) || product.price}
+            </span>
+          )}
           {fiberPercent != null && fiberPercent < 90 && (
             <span className="text-[9px] text-muted-foreground">{fiberPercent}% Natural</span>
           )}
@@ -728,7 +738,7 @@ function QuizResults({ selections, recommendation, designers, isAuthenticated }:
   const displaySelectedProducts = showAllSelected ? brandProductsWithImages : brandProductsWithImages.slice(0, 6);
   const [showAllRecommended, setShowAllRecommended] = useState(false);
   const displayRecommendedProducts = showAllRecommended ? diversifiedRecommended : diversifiedRecommended.slice(0, 6);
-  const isLoadingProducts = productsLoading || recommendedLoading;
+  const isLoadingSelectedProducts = productsLoading;
 
   return (
     <div className="py-6 md:py-16 max-w-4xl mx-auto w-full flex flex-col gap-10 md:gap-16 animate-in fade-in duration-700">
@@ -765,7 +775,7 @@ function QuizResults({ selections, recommendation, designers, isAuthenticated }:
               {brandProductsWithImages.length} verified pieces from your selected {selectedBrandNames.length === 1 ? 'brand' : 'brands'}. Every item meets our natural fiber threshold.
             </p>
           </div>
-          {isLoadingProducts ? (
+          {isLoadingSelectedProducts ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="animate-pulse flex flex-col">

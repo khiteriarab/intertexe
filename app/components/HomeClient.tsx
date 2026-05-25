@@ -9,7 +9,7 @@ import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
-import { BRAND_WE_LOVE_IMAGES, editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
+import { editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
@@ -298,11 +298,9 @@ function SaleHomeRail({ products }: { products?: any[] }) {
 
 function BrandCard({ designer, count }: { designer: any; count: number }) {
   const [failed, setFailed] = useState(false);
-  const heroUrl =
-    BRAND_WE_LOVE_IMAGES[designer.slug as keyof typeof BRAND_WE_LOVE_IMAGES] ||
-    getBrandHeroImage(designer.name);
-  const productImageUrl = designer.heroImageUrl || "";
-  const imageUrl = !failed ? (heroUrl || productImageUrl) : "";
+  const imageUrl = !failed
+    ? designer.heroImageUrl || getBrandHeroImage(designer.name) || ""
+    : "";
   const tier = getQualityTier(designer.naturalFiberPercent);
 
   return (
@@ -490,7 +488,10 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <AppDownloadBanner />
 
-      <HomepageHeroSection displayCount={displayCount} />
+      <HomepageHeroSection
+        productCountLabel={displayCount}
+        brandCountLabel={displayBrands.replace(/\+$/, "")}
+      />
 
       <section className="py-10 md:py-20 lg:pt-16">
         <HorizontalProductScroll
@@ -541,32 +542,15 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       <SaleHomeRail products={data.saleProducts} />
 
       <section className="-mx-4 md:-mx-8 bg-[#f8f7f5]">
-        <div className="max-w-5xl mx-auto py-14 md:py-24 px-6 md:px-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x md:divide-neutral-300/40">
-            <div className="flex flex-col items-center text-center gap-2 md:px-8">
-              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{displayBrands}</span>
-              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
-                Brands vetted
-              </span>
-            </div>
-            <div className="flex flex-col items-center text-center gap-2 md:px-8">
-              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">{displayCount}</span>
-              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
-                Verified pieces
-              </span>
-            </div>
-            <div className="flex flex-col items-center text-center gap-2 md:px-8">
-              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">95%+</span>
-              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
-                Natural fibers
-              </span>
-            </div>
-            <div className="flex flex-col items-center text-center gap-2 md:px-8">
-              <span className="text-[32px] md:text-[48px] font-serif leading-none tracking-tight">100%</span>
-              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-light">
-                Composition verified
-              </span>
-            </div>
+        <div className="max-w-5xl mx-auto py-10 md:py-14 px-6 md:px-12">
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs tracking-widest text-gray-500 uppercase">
+            <span>{displayBrands} brands</span>
+            <span aria-hidden>·</span>
+            <span>{displayCount} pieces</span>
+            <span aria-hidden>·</span>
+            <span>95%+ natural fiber</span>
+            <span aria-hidden>·</span>
+            <span>Every composition verified</span>
           </div>
         </div>
       </section>
@@ -577,7 +561,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         </p>
         <h2 className="text-[28px] md:text-[44px] font-serif leading-[1.1] mb-5 md:mb-7 max-w-lg">Find your fabric persona</h2>
         <p className="text-neutral-500 text-[13px] md:text-[16px] max-w-md leading-relaxed font-light mb-8 md:mb-12">
-          Take our 2-minute quiz. We&apos;ll match you with your fabric identity and recommend the designers you&apos;ll love.
+          Take our 1-minute quiz. We&apos;ll match you with your fabric identity and recommend the designers you&apos;ll love.
         </p>
         <Link
           href="/quiz"

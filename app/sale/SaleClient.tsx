@@ -18,7 +18,7 @@ import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
 import { getShopBrands } from "../shop/actions";
 import { filterProductsByFiberSubtypes, fiberSubtypesFor } from "../../lib/fiber-subtypes";
 
-type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
+type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
 type PriceFilter = "all" | "100" | "200" | "300";
 type SaleSort = "newest" | "discount" | "price_asc" | "price_desc";
 
@@ -60,6 +60,7 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "wool", label: "Wool" },
   { key: "cotton", label: "Cotton" },
   { key: "linen", label: "Linen" },
+  { key: "leather", label: "Leather" },
 ];
 
 const PRICE_FILTERS: { key: PriceFilter; label: string }[] = [

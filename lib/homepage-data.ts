@@ -20,6 +20,8 @@ import {
   isMerchFeedEnabled,
 } from "./merch-feed";
 import { getCachedPlatformStats } from "./cached-catalog";
+import { enrichDesignersWithHeroImages } from "./brand-hero-selection";
+import { getServerSupabase } from "./supabase-service-client";
 
 /** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
@@ -168,13 +170,23 @@ function postProcessHomepageMaterialRail(products: Product[]): Product[] {
 async function fetchCuratedDesignersFast(): Promise<any[]> {
   const list = await fetchDesignersBySlugs([...CURATED_BRAND_SLUGS]);
   const bySlug = new Map(list.map((d) => [d.slug, d]));
-  return CURATED_BRAND_SLUGS.map((slug) => {
+  const curated = CURATED_BRAND_SLUGS.map((slug) => {
     const d = bySlug.get(slug);
     if (!d) return null;
     if (d.naturalFiberPercent != null) return d;
     const score = getCuratedScore(d.name);
     return score != null ? { ...d, naturalFiberPercent: score } : d;
   }).filter(Boolean) as any[];
+
+  const supabase = getServerSupabase();
+  if (!supabase || curated.length === 0) return curated;
+  return enrichDesignersWithHeroImages(
+    supabase,
+    curated.map((d: any) => ({
+      ...d,
+      hero_image: d.heroImage ?? null,
+    }))
+  );
 }
 
 async function getHomePageDataFromFeedCache(): Promise<HomePageData> {

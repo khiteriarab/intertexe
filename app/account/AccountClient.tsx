@@ -37,7 +37,7 @@ export default function AccountClient() {
   const [authLoading, setAuthLoading] = useState(true);
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", name: "" });
+  const [form, setForm] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
@@ -111,7 +111,8 @@ export default function AccountClient() {
             username: form.email,
             email: form.email,
             password: form.password,
-            name: form.name || undefined,
+            firstName: form.firstName.trim(),
+            lastName: form.lastName.trim() || undefined,
           }),
         });
         if (!res.ok) {
@@ -219,12 +220,30 @@ export default function AccountClient() {
 
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
           {mode === "signup" && (
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Full Name</label>
-              <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
-                placeholder="Your name"
-                data-testid="input-name" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">First name</label>
+                <input
+                  type="text"
+                  value={form.firstName}
+                  onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                  className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                  placeholder="First name"
+                  required
+                  data-testid="input-first-name"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Last name</label>
+                <input
+                  type="text"
+                  value={form.lastName}
+                  onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+                  className="w-full border border-border/60 px-4 py-4 text-sm bg-background focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/40"
+                  placeholder="Last name"
+                  data-testid="input-last-name"
+                />
+              </div>
             </div>
           )}
 

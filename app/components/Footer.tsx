@@ -10,7 +10,7 @@ export function Footer() {
               <span className="font-light">INTER</span><span className="font-bold">TEXE</span>
             </Link>
             <p className="text-background/60 text-xs md:text-sm leading-relaxed max-w-xs">
-              The easiest way to shop luxury fashion made from natural fabrics.
+              The destination for natural fiber fashion. Every piece verified. Every brand vetted.
             </p>
           </div>
 
@@ -41,7 +41,7 @@ export function Footer() {
 
         <div className="border-t border-background/10 mt-10 md:mt-16 pt-6 md:pt-8 flex flex-col gap-6">
           <p className="text-[10px] md:text-xs text-background/30 leading-relaxed max-w-3xl" data-testid="text-footer-disclosure">
-            INTERTEXE is an independent fashion materials discovery platform. Product images, trademarks, and brand names belong to their respective owners and are used for identification and discovery purposes only. INTERTEXE does not claim ownership of any third-party content.
+            The destination for natural fiber fashion. Every piece verified. Every brand vetted. Product images and brand names belong to their respective owners.
           </p>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest">

@@ -26,7 +26,7 @@ function getDetectedCountry(headerList: Headers) {
   );
 }
 
-const SHOP_FIBERS = new Set(["cashmere", "silk", "wool", "cotton", "linen"]);
+const SHOP_FIBERS = new Set(["cashmere", "silk", "wool", "cotton", "linen", "leather"]);
 const SHOP_CATEGORIES = new Set([
   "knitwear", "tops", "dresses", "skirts", "bottoms", "outerwear", "lingerie", "swimwear",
 ]);
@@ -40,7 +40,12 @@ export default async function ShopPage({
   const detectedCountry = getDetectedCountry(await headers());
   const market =
     params?.market === "us-ca" || params?.market === "eu-uk-me" ? params.market : undefined;
-  const fiber = params?.fiber && SHOP_FIBERS.has(params.fiber) ? params.fiber : undefined;
+  const fiber =
+    params?.fiber && SHOP_FIBERS.has(params.fiber)
+      ? params.fiber
+      : !params?.fiber && !params?.category && !params?.q
+        ? "silk"
+        : undefined;
   const category =
     params?.category && SHOP_CATEGORIES.has(params.category) ? params.category : undefined;
   const sort =
@@ -73,50 +78,27 @@ export default async function ShopPage({
         />
       </Suspense>
 
-      <section className="max-w-6xl mx-auto px-4 py-12">
-        <h1 className="text-2xl md:text-3xl font-serif text-center mb-4">
-          Shop Natural Fabric Clothing
-        </h1>
-        <p className="text-center text-muted-foreground text-sm max-w-2xl mx-auto mb-8 leading-relaxed">
-          Browse natural-fiber clothing in silk, cashmere, linen, wool, and cotton. Filter by fabric type and shop with confidence knowing every product is verified for material quality.
-        </p>
-
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-          {[
-            { name: "Silk", href: "/shop?fiber=silk" },
-            { name: "Cotton", href: "/shop?fiber=cotton" },
-            { name: "Linen", href: "/shop?fiber=linen" },
-            { name: "Wool", href: "/shop?fiber=wool" },
-            { name: "Cashmere", href: "/shop?fiber=cashmere" },
-          ].map((f) => (
-            <Link key={f.name} href={f.href} className="text-center py-3 border border-border/30 hover:border-foreground/20 transition-colors">
-              <span className="text-xs md:text-sm font-medium">{f.name}</span>
-            </Link>
-          ))}
-        </div>
-
-        {products.length > 0 && (
-          <noscript>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {products.slice(0, 16).map((p: any) => (
-                <Link key={p.id} href={`/product/${p.id}`} className="flex flex-col">
-                  {p.imageUrl && <img src={p.imageUrl} alt={`${p.brandName} ${p.name}`} className="aspect-[3/4] object-cover" loading="lazy" />}
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground mt-2">{p.brandName}</span>
-                  <span className="text-xs">{p.name}</span>
-                  {p.price && (
-                    <span className="text-xs font-medium">
-                      {formatListingPrice(p.price, {
-                        listingRegion: p.listingRegion,
-                        productId: p.productId,
-                      })}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </noscript>
-        )}
-      </section>
+      {products.length > 0 && (
+        <noscript className="max-w-6xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {products.slice(0, 16).map((p: any) => (
+              <Link key={p.id} href={`/product/${p.id}`} className="flex flex-col">
+                {p.imageUrl && <img src={p.imageUrl} alt={`${p.brandName} ${p.name}`} className="aspect-[3/4] object-cover" loading="lazy" />}
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground mt-2">{p.brandName}</span>
+                <span className="text-xs">{p.name}</span>
+                {p.price && (
+                  <span className="text-xs font-medium">
+                    {formatListingPrice(p.price, {
+                      listingRegion: p.listingRegion,
+                      productId: p.productId,
+                    })}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        </noscript>
+      )}
     </>
   );
 }

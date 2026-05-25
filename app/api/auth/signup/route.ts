@@ -2,16 +2,23 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByEmail, getUserByUsername } from "../../../../lib/auth-helpers";
 import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server";
+import { createServiceClient } from "../../../../lib/supabase/server";
+import { linkScannerSessionToUser } from "../../../../lib/link-scanner-session";
 import { sendWelcomeEmail } from "../../../../server/resend";
 import { snakeToCamel } from "../../../../lib/case-utils";
 
 export async function POST(request: NextRequest) {
   try {
     const sessionId = request.headers.get("x-session-id") || "";
-    const { email, password, name, username: providedUsername } = await request.json();
+    const { email, password, name, firstName, lastName, username: providedUsername } =
+      await request.json();
     if (!email || !password) {
       return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
     }
+
+    const resolvedFirst = String(firstName || name || "").trim();
+    const resolvedLast = String(lastName || "").trim();
+    const fullName = `${resolvedFirst} ${resolvedLast}`.trim() || null;
 
     const username = providedUsername || email;
     const cleanEmail = String(email).trim();
@@ -34,7 +41,14 @@ export async function POST(request: NextRequest) {
     const { data, error } = await auth.auth.signUp({
       email: cleanEmail,
       password,
-      options: { data: { name: name || null } },
+      options: {
+        data: {
+          first_name: resolvedFirst || null,
+          last_name: resolvedLast || null,
+          full_name: fullName,
+          name: fullName,
+        },
+      },
     });
 
     if (error) {
@@ -44,10 +58,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: msg }, { status: 400 });
     }
 
-    sendWelcomeEmail(cleanEmail, name).catch(() => {});
+    const user = data.user;
+    if (user?.id) {
+      const service = createServiceClient();
+      if (service) {
+        await service.from("user_preferences").upsert(
+          {
+            user_id: user.id,
+            first_name: resolvedFirst || null,
+            last_name: resolvedLast || null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+      }
+    }
+
+    sendWelcomeEmail(cleanEmail, resolvedFirst || fullName || "").catch(console.error);
 
     const session = data.session;
-    const user = data.user;
     if (!session?.access_token || !user?.id) {
       return NextResponse.json(
         {
@@ -67,7 +96,7 @@ export async function POST(request: NextRequest) {
         ...snakeToCamel({
           id: user.id,
           email: user.email ?? cleanEmail,
-          name: name || null,
+          name: fullName,
           username: cleanEmail,
         }),
         token: session.access_token,

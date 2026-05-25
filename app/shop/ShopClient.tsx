@@ -24,7 +24,7 @@ import {
   type MarketFilter,
 } from "../../lib/shipping-regions";
 
-type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
+type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
 type CategoryFilterKey = "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
 type SortOption = "new" | "price-high" | "price-low" | "natural-high";
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
@@ -34,6 +34,7 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "cashmere", label: "Cashmere" },
   { key: "cotton", label: "Cotton" },
   { key: "wool", label: "Wool" },
+  { key: "leather", label: "Leather" },
 ];
 
 const MATERIAL_FILTER_OPTIONS = FIBER_TABS.filter((t) => t.key !== "all");
@@ -185,8 +186,16 @@ export default function ShopClient({
   const searchParams = useSearchParams();
 
   const fiberParam = searchParams.get("fiber");
+  const hasOtherFilters =
+    !!searchParams.get("category") ||
+    !!searchParams.get("q") ||
+    !!searchParams.get("brands");
   const initialFiber: FiberTab =
-    fiberParam && FIBER_TABS.some((t) => t.key === fiberParam) ? (fiberParam as FiberTab) : "all";
+    fiberParam && FIBER_TABS.some((t) => t.key === fiberParam)
+      ? (fiberParam as FiberTab)
+      : !fiberParam && !hasOtherFilters
+        ? "silk"
+        : "all";
   const initialCategories = parseCategoryParams(searchParams.get("category"));
   const sortParam = searchParams.get("sort");
   const initialSort: SortOption =

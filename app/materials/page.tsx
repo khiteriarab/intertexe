@@ -177,7 +177,7 @@ export default async function MaterialsPage() {
           <Link href="/quiz" className="group flex flex-col gap-3 p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/5 transition-colors" data-testid="link-hub-quiz">
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">02</span>
             <span className="text-lg md:text-xl font-serif">Find Your Fabric Persona</span>
-            <span className="text-[13px] text-white/50 leading-relaxed">Take our 2-minute quiz and discover which natural fibers match your lifestyle.</span>
+            <span className="text-[13px] text-white/50 leading-relaxed">Take our 1-minute quiz and discover which natural fibers match your lifestyle.</span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5 mt-2 group-hover:gap-2.5 transition-all">Take Quiz <ArrowRight className="w-3 h-3" /></span>
           </Link>
           <Link href="/designers" className="group flex flex-col gap-3 p-8 md:p-12 hover:bg-white/5 transition-colors" data-testid="link-hub-directory">

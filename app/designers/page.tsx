@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { DesignerSearchClient } from "./DesignerSearchClient";
+import { FeaturedDesignersGrid } from "./FeaturedDesignersGrid";
 import { ShoppableDesignersList } from "./ShoppableDesignersList";
 import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
+import { getFeaturedDesignersForDirectory } from "../../lib/featured-designers";
 import {
   directoryHeadline,
   formatBrandCountLabel,
@@ -39,10 +40,11 @@ export default async function DesignersPage() {
     platformStats.brandCount,
     shoppableBrands.length
   );
+  const featuredBrands = await getFeaturedDesignersForDirectory(shoppableBrands);
 
   return (
-    <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-10 max-w-3xl mx-auto px-4 w-full">
-      <header className="flex flex-col gap-3 md:gap-4">
+    <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-10 max-w-6xl mx-auto px-4 w-full">
+      <header className="flex flex-col gap-3 md:gap-4 max-w-3xl">
         <h1
           className="text-3xl md:text-4xl font-serif"
           style={{ fontFamily: "Playfair Display, serif" }}
@@ -57,8 +59,14 @@ export default async function DesignersPage() {
 
       <DesignerSearchClient searchPlaceholder={searchBrandsPlaceholder(shoppableBrandCount)} />
 
+      <FeaturedDesignersGrid brands={featuredBrands} />
+
       {shoppableBrands.length > 0 && (
-        <section className="flex flex-col border-t border-border/20 pt-4" data-testid="section-brands-with-products">
+        <section
+          id="directory-az-list"
+          className="flex flex-col border-t border-border/20 pt-4 scroll-mt-24"
+          data-testid="section-brands-with-products"
+        >
           <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground mb-6">
             {shoppableBrands.length.toLocaleString()} live brands · A–Z
           </p>

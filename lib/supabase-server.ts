@@ -69,6 +69,7 @@ export interface Designer {
   description: string | null;
   website: string | null;
   createdAt: string | null;
+  heroImage?: string | null;
 }
 
 export interface Product {
@@ -944,6 +945,7 @@ function mapDesignerRow(row: any): Designer {
     description: row.description || null,
     website: row.website || null,
     createdAt: row.created_at || null,
+    heroImage: row.hero_image || null,
   };
 }
 

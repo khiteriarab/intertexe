@@ -62,9 +62,11 @@ export function editorialImageClass(
   hints?: EditorialFocalHints,
   opts?: { hoverZoom?: boolean }
 ): string {
+  const focal =
+    section === "brand-tile" ? "editorial-cover-img--top" : editorialFocalModifier(hints);
   return [
     "editorial-cover-img",
-    editorialFocalModifier(hints),
+    focal,
     opts?.hoverZoom ? "editorial-cover-img--zoom" : "",
   ]
     .filter(Boolean)
