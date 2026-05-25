@@ -1,9 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { scannerCatalogQuery } from './scanner-catalog';
-import {
-  getBestNaturalFiberForPrice,
-  parsePriceNumber,
-} from './scanner-copy';
+import { parsePriceNumber } from './scanner-copy';
+
+export { getSmartAlternatives } from './scanner/get-smart-alternatives';
 
 export type BarcodeLookupResult = {
   brand: string | null;
@@ -168,94 +167,18 @@ export async function lookupBarcode(
     };
   }
 
-  try {
-    const external = await fetch(
-      `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`,
-      { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(3000) }
-    );
-    if (external.ok) {
-      const externalData = await external.json();
-      const item = externalData.items?.[0];
-      if (item?.brand) {
-        const brandSlug = await resolveDesignerSlug(supabase, item.brand);
-        const catalogProducts = await fetchCatalogByBrandAndPrice(
-          supabase,
-          brandSlug,
-          detectedPrice,
-          6
-        );
+  const [externalResult, prefixResult] = await Promise.allSettled([
+    fetchFromExternalDatabase(supabase, upc, detectedPrice, detectedCurrency, !known),
+    fetchBrandFromPrefix(supabase, upc, detectedPrice, detectedCurrency),
+  ]);
 
-        await supabase.from('barcode_compositions').upsert(
-          {
-            upc_code: upc,
-            brand: item.brand,
-            brand_slug: brandSlug,
-            product_name: item.title,
-            source: 'external_api',
-          },
-          { onConflict: 'upc_code' }
-        );
+  const external =
+    externalResult.status === 'fulfilled' ? externalResult.value : null;
+  const prefix = prefixResult.status === 'fulfilled' ? prefixResult.value : null;
 
-        return {
-          brand: item.brand,
-          brandSlug,
-          productName: item.title || null,
-          composition: null,
-          naturalFiberPercent: null,
-          fiberPrimary: null,
-          fiberBreakdown: null,
-          price: detectedPrice ?? null,
-          currency: detectedCurrency ?? null,
-          source: 'external_api',
-          catalogProducts,
-          needsCompositionLabel: true,
-          isNewToDatabase: !known,
-        };
-      }
-    }
-  } catch {
-    /* continue */
-  }
-
-  let brandMatch: { brand_name: string; brand_slug: string | null } | null = null;
-  for (const length of [9, 8, 7, 6]) {
-    if (upc.length < length) continue;
-    const prefix = upc.substring(0, length);
-    const { data: brand } = await supabase
-      .from('upc_brand_prefixes')
-      .select('brand_name, brand_slug')
-      .eq('prefix', prefix)
-      .maybeSingle();
-    if (brand) {
-      brandMatch = brand;
-      break;
-    }
-  }
-
-  if (brandMatch) {
-    const catalogProducts = await fetchCatalogByBrandAndPrice(
-      supabase,
-      brandMatch.brand_slug,
-      detectedPrice,
-      6
-    );
-
-    return {
-      brand: brandMatch.brand_name,
-      brandSlug: brandMatch.brand_slug,
-      productName: null,
-      composition: null,
-      naturalFiberPercent: null,
-      fiberPrimary: null,
-      fiberBreakdown: null,
-      price: detectedPrice ?? null,
-      currency: detectedCurrency ?? null,
-      source: 'upc_prefix',
-      catalogProducts,
-      needsCompositionLabel: true,
-      isNewToDatabase: false,
-    };
-  }
+  if (external?.composition) return external;
+  if (prefix) return prefix;
+  if (external) return external;
 
   return {
     brand: null,
@@ -274,6 +197,139 @@ export async function lookupBarcode(
   };
 }
 
+type PrefixBrandMatch = {
+  brand_name: string;
+  brand_slug: string | null;
+  confidence?: string | null;
+};
+
+export async function fetchBrandFromPrefix(
+  supabase: SupabaseClient,
+  upc: string,
+  detectedPrice?: number | null,
+  detectedCurrency?: string
+): Promise<BarcodeLookupResult | null> {
+  const normalized = normalizeUpc(upc);
+  if (!normalized) return null;
+
+  for (const length of [9, 8, 7, 6]) {
+    if (normalized.length < length) continue;
+    const prefix = normalized.substring(0, length);
+    const { data: brand } = await supabase
+      .from('upc_brand_prefixes')
+      .select('brand_name, brand_slug, confidence')
+      .eq('prefix', prefix)
+      .maybeSingle();
+
+    if (!brand) continue;
+
+    const verified = await isVerifiedPrefixBrand(supabase, brand);
+    if (!verified) continue;
+
+    const catalogProducts = await fetchCatalogByBrandAndPrice(
+      supabase,
+      brand.brand_slug,
+      detectedPrice,
+      6
+    );
+
+    return {
+      brand: brand.brand_name,
+      brandSlug: brand.brand_slug,
+      productName: null,
+      composition: null,
+      naturalFiberPercent: null,
+      fiberPrimary: null,
+      fiberBreakdown: null,
+      price: detectedPrice ?? null,
+      currency: detectedCurrency ?? null,
+      source: 'upc_prefix',
+      catalogProducts,
+      needsCompositionLabel: true,
+      isNewToDatabase: false,
+    };
+  }
+
+  return null;
+}
+
+async function isVerifiedPrefixBrand(
+  supabase: SupabaseClient,
+  brand: PrefixBrandMatch
+): Promise<boolean> {
+  if (!brand.brand_slug) return false;
+
+  const { data: designer } = await supabase
+    .from('designers')
+    .select('slug')
+    .eq('slug', brand.brand_slug)
+    .maybeSingle();
+
+  if (designer) return true;
+
+  return brand.confidence === 'high';
+}
+
+async function fetchFromExternalDatabase(
+  supabase: SupabaseClient,
+  upc: string,
+  detectedPrice?: number | null,
+  detectedCurrency?: string,
+  isNewToDatabase = true
+): Promise<BarcodeLookupResult | null> {
+  try {
+    const external = await fetch(
+      `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(upc)}`,
+      {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    if (!external.ok) return null;
+
+    const externalData = await external.json();
+    const item = externalData.items?.[0];
+    if (!item?.brand) return null;
+
+    const brandSlug = await resolveDesignerSlug(supabase, item.brand);
+    const catalogProducts = await fetchCatalogByBrandAndPrice(
+      supabase,
+      brandSlug,
+      detectedPrice,
+      6
+    );
+
+    await supabase.from('barcode_compositions').upsert(
+      {
+        upc_code: upc,
+        brand: item.brand,
+        brand_slug: brandSlug,
+        product_name: item.title,
+        source: 'external_api',
+      },
+      { onConflict: 'upc_code' }
+    );
+
+    return {
+      brand: item.brand,
+      brandSlug,
+      productName: item.title || null,
+      composition: null,
+      naturalFiberPercent: null,
+      fiberPrimary: null,
+      fiberBreakdown: null,
+      price: detectedPrice ?? null,
+      currency: detectedCurrency ?? null,
+      source: 'external_api',
+      catalogProducts,
+      needsCompositionLabel: true,
+      isNewToDatabase,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function resolveDesignerSlug(supabase: SupabaseClient, brandName: string): Promise<string> {
   const { data } = await supabase
     .from('designers')
@@ -287,100 +343,6 @@ async function resolveDesignerSlug(supabase: SupabaseClient, brandName: string):
     .replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
-}
-
-/** catalog_list: p_preferred_region, p_fallback_region, p_fiber, p_category, p_brand_slug, p_search, p_min_nfp, p_limit, p_offset */
-export async function getSmartAlternatives(
-  supabase: SupabaseClient,
-  params: {
-    detectedPrice?: number | null;
-    primaryFiber?: string | null;
-    naturalFiberPercent?: number | null;
-    brandSlug?: string | null;
-    userId?: string | null;
-    excludeBrandSlug?: string | null;
-  }
-): Promise<any[]> {
-  const { detectedPrice, primaryFiber, naturalFiberPercent, userId, excludeBrandSlug } = params;
-  const minPrice = detectedPrice ? detectedPrice * 0.7 : null;
-  const maxPrice = detectedPrice ? detectedPrice * 1.3 : null;
-
-  let preferredFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
-  if (userId) {
-    const { data: prefs } = await supabase
-      .from('user_preferences')
-      .select('preferred_fibers')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (prefs?.preferred_fibers?.[0]) {
-      preferredFiber = String(prefs.preferred_fibers[0]).toLowerCase();
-    }
-  }
-
-  const searchFiber =
-    (naturalFiberPercent || 0) >= 80 && preferredFiber
-      ? preferredFiber
-      : getBestNaturalFiberForPrice(detectedPrice);
-
-  const tiers: ({ fiber: string | null } | { catalog: true })[] = [
-    { fiber: searchFiber },
-    { fiber: null },
-    { fiber: searchFiber },
-    { fiber: null },
-  ];
-
-  const seen = new Set<string>();
-  const merged: any[] = [];
-
-  for (let i = 0; i < tiers.length; i++) {
-    const tier = tiers[i];
-    let rows: any[] = [];
-
-    if ('catalog' in tier) {
-      const { data } = await scannerCatalogQuery(supabase)
-        .order('natural_fiber_percent', { ascending: false })
-        .limit(40);
-      rows = data || [];
-    } else {
-      const { data, error } = await supabase.rpc('catalog_list', {
-        p_preferred_region: 'us',
-        p_fallback_region: 'us',
-        p_fiber: tier.fiber,
-        p_category: null,
-        p_brand_slug: null,
-        p_search: null,
-        p_min_nfp: 80,
-        p_limit: 40,
-        p_offset: 0,
-      });
-      if (error) {
-        const { data: fallback } = await scannerCatalogQuery(supabase)
-          .order('natural_fiber_percent', { ascending: false })
-          .limit(40);
-        rows = fallback || [];
-      } else {
-        rows = data || [];
-      }
-    }
-
-    if (excludeBrandSlug) {
-      rows = rows.filter((p) => p.brand_slug !== excludeBrandSlug);
-    }
-
-    const priceFiltered = filterProductsByPrice(rows, detectedPrice, 0.3);
-    const pool = priceFiltered.length >= 3 ? priceFiltered : rows;
-
-    for (const p of pool) {
-      const id = String(p.id);
-      if (seen.has(id)) continue;
-      seen.add(id);
-      merged.push(p);
-      if (merged.length >= 12) break;
-    }
-    if (merged.length >= 6) break;
-  }
-
-  return merged.slice(0, 12);
 }
 
 export async function upsertBarcodeFromComposition(

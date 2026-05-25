@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
+import { getSmartAlternatives } from "@/lib/scanner/get-smart-alternatives";
 
 export async function GET() {
   return NextResponse.json({
@@ -58,7 +59,6 @@ export async function POST(req: NextRequest) {
 
     naturalPercent = Math.min(Math.round(naturalPercent), 100);
 
-    const supabase = createClient();
     const fiberMap: Record<string, string> = {
       merino: "wool",
       lambswool: "wool",
@@ -70,22 +70,18 @@ export async function POST(req: NextRequest) {
       chambray: "cotton",
     };
 
-    const searchFiber = primaryFiber
-      ? fiberMap[primaryFiber] || primaryFiber
-      : "silk";
+    const mappedPrimary = primaryFiber
+      ? fiberMap[primaryFiber] || primaryFiber.split(/\s+/)[0]
+      : null;
 
-    const rpcParams: Record<string, unknown> = {
-      p_fiber: searchFiber,
-      p_limit: 6,
-      p_offset: 0,
-      p_preferred_region: "us",
-      p_fallback_region: "us",
-      p_min_nfp: 80,
-    };
-    if (price) rpcParams.p_max_price = price * 1.5;
+    const supabase = createServiceClient();
+    const alternatives = await getSmartAlternatives(supabase, {
+      detectedPrice: typeof price === "number" ? price : null,
+      primaryFiber: mappedPrimary,
+      naturalFiberPercent: naturalPercent,
+    });
 
-    const { data: alternatives } = await supabase.rpc("catalog_list", rpcParams);
-
+    const searchFiber = mappedPrimary || "silk";
     const isNatural = naturalPercent >= 80;
 
     return NextResponse.json({
@@ -97,7 +93,7 @@ export async function POST(req: NextRequest) {
       message: isNatural
         ? `This item is ${naturalPercent}% natural fiber.`
         : `Only ${naturalPercent}% natural fiber. Here are better alternatives from Intertexe.`,
-      alternatives: alternatives || [],
+      alternatives,
       intertexe_url: `https://www.intertexe.com/shop?fiber=${searchFiber}`,
       powered_by: "INTERTEXE · The Material Standard",
       currency: currency ?? null,

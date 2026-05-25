@@ -5,7 +5,8 @@ import OpenAI from "openai";
 import { scannerCatalogQuery } from "../../../lib/scanner-catalog";
 import { fetchTastePreferences, upsertTastePreferences } from "../../../lib/taste-preferences";
 import { getSupabaseAuthUserId } from "../../../lib/supabase-auth-server";
-import { lookupBarcode, upsertBarcodeFromComposition, getSmartAlternatives } from "../../../lib/scanner-barcode-lookup";
+import { lookupBarcode, upsertBarcodeFromComposition } from "../../../lib/scanner-barcode-lookup";
+import { getSmartAlternatives } from "../../../lib/scanner/get-smart-alternatives";
 import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext } from "../../../lib/scanner-response";
 import { getVerdictMessage } from "../../../lib/scanner-copy";
 
