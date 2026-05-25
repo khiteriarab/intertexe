@@ -7,6 +7,7 @@ import { snakeToCamel } from "../../../../lib/case-utils";
 
 export async function POST(request: NextRequest) {
   try {
+    const sessionId = request.headers.get("x-session-id") || "";
     const { email, password, name, username: providedUsername } = await request.json();
     if (!email || !password) {
       return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
@@ -55,6 +56,10 @@ export async function POST(request: NextRequest) {
         },
         { status: 201 }
       );
+    }
+
+    if (sessionId) {
+      await linkScannerSessionToUser(sessionId, user.id);
     }
 
     return NextResponse.json(

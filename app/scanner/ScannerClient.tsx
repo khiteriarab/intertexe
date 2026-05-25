@@ -5,6 +5,10 @@ import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X,
 import Link from "next/link";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { trackScanStart, trackScanComplete, trackScanError } from "../../lib/analytics";
+import { detectDevice } from "../../lib/device-detection";
+import { getOrCreateSessionId } from "../../lib/session";
+import { scoreColor, getVerdictMessage, getVerdictLabel, FIRST_SCAN_FOOTNOTE, parsePriceNumber } from "../../lib/scanner-copy";
+import { QRCodeSVG } from "qrcode.react";
 
 type FiberEntry = { fiber: string; percent: number; isNatural: boolean; classification?: string };
 
@@ -28,6 +32,12 @@ type ScanResult = {
   designerInfo: { name: string; slug: string; logo_url: string; website: string; description: string; rating: string; hasProducts: boolean } | null;
   betterAlternatives: any[];
   confirmationPrompt?: string | null;
+  verdictMessage?: string;
+  needsCompositionLabel?: boolean;
+  needsCompositionMessage?: string | null;
+  isNewToDatabase?: boolean;
+  alternativesLabel?: string;
+  success?: boolean;
 };
 
 type ScanMode = "idle" | "camera-photo" | "camera-barcode";
@@ -119,7 +129,19 @@ function FiberBreakdownBar({ fibers }: { fibers: FiberEntry[] }) {
   );
 }
 
-function ProductCard({ product }: { product: any }) {
+function ScannerProductCard({
+  product,
+  index,
+  currentScanPrice,
+  scannedUPC,
+  onShopClick,
+}: {
+  product: any;
+  index: number;
+  currentScanPrice: number | null;
+  scannedUPC: string;
+  onShopClick: (product: any, position: number) => void;
+}) {
   const { toggle, isFavorited } = useProductFavorites();
   const productId = String(product.id);
   const saved = isFavorited(productId);
@@ -127,96 +149,57 @@ function ProductCard({ product }: { product: any }) {
   const brandName = product.brand_name || product.brandName || "";
   const imageUrl = product.image_url || product.imageUrl;
   const price = product.price;
-  const naturalFiber = product.natural_fiber_percent;
+  const naturalFiber = product.natural_fiber_percent ?? product.naturalFiberPercent ?? 0;
+  const altPrice = parsePriceNumber(price);
 
   return (
-    <Link href={`/product/${product.id}`} className="group flex flex-col" data-testid={`product-scan-${product.id}`}>
-      <div className="aspect-[3/4] bg-[#f0f0ee] relative overflow-hidden">
-        {imageUrl ? (
-          <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center"><ShoppingBag className="w-6 h-6 text-neutral-300" /></div>
-        )}
-        {naturalFiber != null && (
-          <div className="absolute top-2 left-2 z-10">
-            <span className="flex items-center gap-1 bg-emerald-900/90 text-white px-1.5 py-0.5 text-[8px] font-medium backdrop-blur-sm">
-              <CheckCircle2 className="w-2.5 h-2.5" />
-              {naturalFiber}%
-            </span>
+    <div className="flex flex-col" data-testid={`product-scan-${product.id}`}>
+      <Link href={`/product/${product.id}`} className="group flex flex-col">
+        <div className="relative">
+          <div className="aspect-[3/4] bg-[#f0f0ee] relative overflow-hidden">
+            {imageUrl ? (
+              <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" style={{ borderRadius: 0 }} />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center"><ShoppingBag className="w-6 h-6 text-neutral-300" /></div>
+            )}
           </div>
-        )}
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
-          className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
-          data-testid={`btn-favorite-scan-${product.id}`}
-          aria-label={saved ? "Remove from favorites" : "Save to favorites"}
-        >
-          <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
-        </button>
-      </div>
-      <div className="flex flex-col gap-0.5 pt-2.5">
-        <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.08em]">{brandName}</span>
-        <h3 className="text-[11px] md:text-[12px] leading-snug truncate text-muted-foreground">{name}</h3>
-        {price && <span className="text-[11px] md:text-[12px] mt-0.5 font-medium">{price}</span>}
-      </div>
-    </Link>
-  );
-}
-
-function EmailGate({ onUnlock, onClose }: { onUnlock: () => void; onClose: () => void }) {
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [err, setErr] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) { setErr("Please enter a valid email"); return; }
-    setSubmitting(true);
-    setErr("");
-    try {
-      await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password: crypto.randomUUID().slice(0, 12) }),
-      });
-      localStorage.setItem("intertexe_scanner_email", email.trim());
-      onUnlock();
-    } catch {
-      localStorage.setItem("intertexe_scanner_email", email.trim());
-      onUnlock();
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" data-testid="email-gate-overlay">
-      <div className="bg-[#FAFAF8] w-full max-w-md p-8 md:p-10 flex flex-col items-center text-center relative">
-        <button onClick={onClose} className="absolute top-3 right-3 p-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="button-gate-close">
-          <X className="w-4 h-4" />
-        </button>
-        <Sparkles className="w-6 h-6 text-neutral-400 mb-4" />
-        <h2 className="text-xl md:text-2xl font-serif mb-2">Unlock Shopping Intelligence</h2>
-        <p className="text-[13px] text-muted-foreground mb-6 leading-relaxed max-w-xs">
-          Enter your email to scan products, check compositions, and get AI-powered material advice — free.
-        </p>
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3" noValidate>
-          <input
-            value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your email address"
-            className="w-full px-4 py-3 text-[14px] border border-neutral-200 bg-white focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
-            autoFocus data-testid="input-gate-email"
-            autoComplete="email"
-          />
-          {err && <p className="text-[12px] text-red-500">{err}</p>}
-          <button type="submit" disabled={submitting}
-            className="w-full py-3 bg-[#111] text-white text-[11px] uppercase tracking-[0.15em] font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50"
-            data-testid="button-gate-submit"
+          <div className="absolute top-2 right-2 bg-white px-2 py-1 z-10" style={{ border: "1px solid #F2F2F2", borderRadius: 0 }}>
+            <span className="text-xs font-medium" style={{ color: scoreColor(naturalFiber) }}>{naturalFiber}%</span>
+          </div>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, price); }}
+            className="absolute top-2 left-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+            style={{ borderRadius: 0 }}
+            data-testid={`btn-favorite-scan-${product.id}`}
+            aria-label={saved ? "Remove from favorites" : "Save to favorites"}
           >
-            {submitting ? "..." : "Get Free Access"}
+            <Heart className={`w-4 h-4 transition-colors ${saved ? "fill-red-500 text-red-500" : "text-foreground/60 hover:text-foreground"}`} />
           </button>
-        </form>
-        <p className="text-[10px] text-muted-foreground/50 mt-4">No spam. Unsubscribe anytime.</p>
+        </div>
+      </Link>
+      <div className="pt-3 pb-4">
+        <p className="text-xs tracking-widest uppercase text-gray-900 mb-1" style={{ letterSpacing: "0.12em" }}>{brandName}</p>
+        <p className="text-xs text-gray-500 mb-2 leading-relaxed line-clamp-2">{name}</p>
+        <div className="flex items-center gap-2 mb-3">
+          {price && (
+            <span className="text-sm" style={{ color: altPrice != null && currentScanPrice != null && altPrice < currentScanPrice ? "#0D9488" : "#1C2B2A" }}>
+              {price}
+            </span>
+          )}
+          {altPrice != null && currentScanPrice != null && altPrice < currentScanPrice && (
+            <span className="text-xs text-gray-400">↓</span>
+          )}
+        </div>
+        {product.url && (
+          <button
+            type="button"
+            onClick={() => onShopClick(product, index)}
+            className="w-full text-white text-xs tracking-widest uppercase py-2.5"
+            style={{ background: "#1C2B2A", letterSpacing: "0.15em", borderRadius: 0 }}
+          >
+            Shop Now
+          </button>
+        )}
       </div>
     </div>
   );
@@ -313,37 +296,61 @@ function ConfirmationOverlay({
 }
 
 export default function ScannerClient() {
+  const [device, setDevice] = useState<string>("desktop");
+  const [showInterstitial, setShowInterstitial] = useState(true);
   const [mode, setMode] = useState<ScanMode>("idle");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ScanResult | null>(null);
-  const [showEmailGate, setShowEmailGate] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [scannedUrl, setScannedUrl] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [barcodeDetected, setBarcodeDetected] = useState("");
   const [activeTab, setActiveTab] = useState<"photo" | "barcode" | "url">("photo");
+  const [scannedUPC, setScannedUPC] = useState("");
+  const [currentScanPrice, setCurrentScanPrice] = useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const barcodeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const hasAccess = () => {
-    try { return !!localStorage.getItem("intertexe_scanner_email"); } catch { return false; }
-  };
+  useEffect(() => {
+    setDevice(detectDevice());
+    const token = localStorage.getItem("intertexe_auth_token");
+    if (!token) return;
+    fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((user) => setIsLoggedIn(!!user))
+      .catch(() => setIsLoggedIn(false));
+  }, []);
 
-  const requireEmail = (action: () => void) => {
-    if (hasAccess()) { action(); return; }
-    setPendingAction(() => action);
-    setShowEmailGate(true);
-  };
-
-  const handleEmailUnlock = () => {
-    setShowEmailGate(false);
-    if (pendingAction) { pendingAction(); setPendingAction(null); }
-  };
+  const handleAffiliateClick = useCallback(async (product: any, position: number) => {
+    const affiliateUrl = product.url;
+    if (!affiliateUrl) return;
+    try {
+      const res = await fetch("/api/scanner/track-clickout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          productName: product.name,
+          brandSlug: product.brand_slug,
+          sessionId: getOrCreateSessionId(),
+          scannedUPC: scannedUPC || result?.tagInfo?.barcode || null,
+          scannedPrice: currentScanPrice,
+          alternativePrice: parsePriceNumber(product.price),
+          position: position + 1,
+          affiliateUrl,
+        }),
+      });
+      const data = await res.json();
+      window.open(data.redirect_url || affiliateUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      window.open(affiliateUrl, "_blank", "noopener,noreferrer");
+    }
+  }, [scannedUPC, result, currentScanPrice]);
 
   const stopCamera = useCallback(() => {
     if (barcodeIntervalRef.current) {
@@ -413,7 +420,11 @@ export default function ScannerClient() {
     const res = await fetch("/api/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        session_id: getOrCreateSessionId(),
+        device_type: device,
+      }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Scan failed");
@@ -466,7 +477,8 @@ export default function ScannerClient() {
       naturalPercent: 0,
       qualityScore: 0,
       isNatural: false,
-      verdict: "We couldn't read every detail from this scan, but we found verified natural-fiber alternatives below.",
+      verdict: "For the full fiber breakdown scan the care label inside the garment.",
+      verdictMessage: "For the full fiber breakdown scan the care label inside the garment.",
       category: "",
       products: [],
       matched: alternatives.length > 0,
@@ -485,6 +497,7 @@ export default function ScannerClient() {
     trackScanStart("upload");
     try {
       const data = await callScanApi({ image: base64 });
+      setCurrentScanPrice(parsePriceNumber(data.tagInfo?.price));
       setResult(data);
       if (data.confirmationPrompt && data.tagInfo?.confidence !== "high") {
         setShowConfirmation(true);
@@ -507,6 +520,8 @@ export default function ScannerClient() {
     trackScanStart("barcode");
     try {
       const data = await callScanApi({ barcode: code });
+      setScannedUPC(code);
+      setCurrentScanPrice(parsePriceNumber(data.tagInfo?.price));
       setResult(data);
       if (data.confirmationPrompt) setShowConfirmation(true);
       trackScanComplete(data.tagInfo?.brandName || "unknown", "barcode", data.matched);
@@ -547,6 +562,7 @@ export default function ScannerClient() {
     trackScanStart("url");
     try {
       const data = await callScanApi({ url: cleanUrl });
+      setCurrentScanPrice(parsePriceNumber(data.tagInfo?.price));
       setResult(data);
       if (data.confirmationPrompt && data.tagInfo?.confidence !== "high") {
         setShowConfirmation(true);
@@ -609,6 +625,62 @@ export default function ScannerClient() {
     return () => { stopCamera(); };
   }, [stopCamera]);
 
+  const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL || "#";
+
+  if (device === "iphone" && showInterstitial) {
+    return (
+      <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center px-8 text-center">
+        <p className="text-xs tracking-widest text-gray-400 mb-12" style={{ letterSpacing: "0.25em" }}>
+          INTERTEXE · THE MATERIAL STANDARD
+        </p>
+        <h1 className="text-4xl font-extralight text-gray-900 mb-6" style={{ lineHeight: 1.15 }}>
+          The scanner<br />lives in the app.
+        </h1>
+        <p className="text-sm text-gray-500 leading-relaxed mb-12 max-w-xs">
+          Point your camera at any price tag or fabric label. Get the fiber composition instantly. Find better natural fiber alternatives at a similar price.
+        </p>
+        <a
+          href={appStoreUrl}
+          className="w-full max-w-xs bg-black text-white text-xs tracking-widest uppercase py-4 text-center mb-4"
+          style={{ letterSpacing: "0.2em", borderRadius: 0 }}
+        >
+          Download on the App Store
+        </a>
+        <button type="button" onClick={() => setShowInterstitial(false)} className="text-xs text-gray-400">
+          Continue browsing instead
+        </button>
+      </div>
+    );
+  }
+
+  if ((device === "desktop" || device === "ipad") && !result && !loading) {
+    return (
+      <div className="max-w-lg mx-auto px-6 py-20 text-center">
+        <p className="text-xs tracking-widest text-gray-400 mb-8" style={{ letterSpacing: "0.25em" }}>SCANNER</p>
+        <h1 className="text-4xl font-extralight text-gray-900 mb-4" style={{ lineHeight: 1.2 }}>
+          Scan in store.<br />Shop with intention.
+        </h1>
+        <p className="text-sm text-gray-500 leading-relaxed mb-16 max-w-sm mx-auto">
+          Point your camera at any price tag or fabric label for an instant fiber analysis and curated natural fiber alternatives.
+        </p>
+        <div className="flex flex-col items-center gap-6">
+          <div className="border border-gray-100 p-4 inline-block" style={{ borderRadius: 0 }}>
+            <QRCodeSVG
+              value="https://www.intertexe.com/scanner?utm_source=desktop_qr&utm_medium=qr&utm_campaign=desktop_scanner"
+              size={180}
+              fgColor="#1C2B2A"
+              bgColor="#FFFFFF"
+            />
+          </div>
+          <p className="text-xs text-gray-400" style={{ letterSpacing: "0.05em" }}>
+            Scan with your phone to open the scanner
+          </p>
+        </div>
+        <p className="text-xs text-gray-300 mt-16">Already have the app? Open it and tap Scanner.</p>
+      </div>
+    );
+  }
+
   if (mode === "camera-photo" || mode === "camera-barcode") {
     const isBarcode = mode === "camera-barcode";
     return (
@@ -661,7 +733,6 @@ export default function ScannerClient() {
 
   return (
     <div className="w-full">
-      {showEmailGate && <EmailGate onUnlock={handleEmailUnlock} onClose={() => { setShowEmailGate(false); setPendingAction(null); }} />}
       {!result && !loading && (
         <>
           <div className="pt-8 md:pt-14 pb-6 md:pb-8">
@@ -692,7 +763,7 @@ export default function ScannerClient() {
           {activeTab === "photo" && (
             <div className="space-y-3 mb-6">
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => requireEmail(() => startCamera(false))}
+                <button onClick={() => startCamera(false)}
                   className="group flex flex-col items-center gap-3 p-6 md:p-8 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]"
                   data-testid="button-camera-scan"
                 >
@@ -702,7 +773,7 @@ export default function ScannerClient() {
                     <span className="text-[9px] text-white/40 mt-1 block">Tag or garment</span>
                   </div>
                 </button>
-                <button onClick={() => requireEmail(() => fileInputRef.current?.click())}
+                <button onClick={() => fileInputRef.current?.click()}
                   className="group flex flex-col items-center gap-3 p-6 md:p-8 bg-white border border-neutral-200 hover:border-neutral-400 transition-all active:scale-[0.98]"
                   data-testid="button-upload-photo"
                 >
@@ -722,7 +793,7 @@ export default function ScannerClient() {
 
           {activeTab === "barcode" && (
             <div className="space-y-3 mb-6">
-              <button onClick={() => requireEmail(() => startCamera(true))}
+              <button onClick={() => startCamera(true)}
                 className="w-full group flex flex-col items-center gap-3 p-8 md:p-10 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]"
                 data-testid="button-barcode-scan"
               >
@@ -747,11 +818,11 @@ export default function ScannerClient() {
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="Paste product URL..."
                     className="flex-1 min-w-0 px-3 py-2.5 text-[13px] border border-neutral-200 bg-[#FAFAF8] focus:outline-none focus:border-neutral-400 placeholder:text-neutral-300"
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); requireEmail(scanUrl); } }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); scanUrl(); } }}
                     autoComplete="off"
                     data-testid="input-product-url"
                   />
-                  <button type="button" onClick={() => requireEmail(scanUrl)} disabled={!url.trim()}
+                  <button type="button" onClick={scanUrl} disabled={!url.trim()}
                     className="px-4 py-2.5 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em] font-medium disabled:opacity-30 hover:bg-neutral-800 transition-colors flex-shrink-0"
                     data-testid="button-scan-url"
                   >
@@ -800,9 +871,28 @@ export default function ScannerClient() {
 
         return (
           <div className="pt-6 md:pt-10 pb-8">
-            <button onClick={reset} className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors mb-6" data-testid="button-scan-again">
-              <ChevronLeft className="w-3.5 h-3.5" /> New scan
+            <button onClick={reset} className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors mb-6" data-testid="button-scan-again" style={{ borderRadius: 0 }}>
+              <ChevronLeft className="w-3.5 h-3.5" /> SCAN ANOTHER ITEM
             </button>
+
+            {(pct > 0 || result.tagInfo.composition) && (
+              <div className="mb-8">
+                <div className="flex items-end gap-1 mb-2">
+                  <span className="font-extralight" style={{ fontSize: "88px", lineHeight: 1, color: scoreColor(pct) }}>{pct}</span>
+                  <span className="font-extralight mb-4" style={{ fontSize: "32px", color: scoreColor(pct) }}>%</span>
+                  <span className="text-xs tracking-widest text-gray-400 mb-6 ml-2" style={{ letterSpacing: "0.2em" }}>{getVerdictLabel(pct)}</span>
+                </div>
+                <p className="text-sm font-light text-gray-700 mb-6 leading-relaxed">
+                  {result.verdictMessage || getVerdictMessage(pct)}
+                </p>
+              </div>
+            )}
+
+            {result.needsCompositionMessage && (
+              <p className="text-sm font-light text-gray-600 mb-6 leading-relaxed border-l-2 border-gray-200 pl-4">
+                {result.needsCompositionMessage}
+              </p>
+            )}
 
             <div className={`mb-6 ${hasImage ? "flex gap-5" : ""}`}>
               {hasImage && (
@@ -982,7 +1072,16 @@ export default function ScannerClient() {
                   </p>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                  {result.betterAlternatives.map((p: any) => <ProductCard key={p.id} product={p} />)}
+                  {result.betterAlternatives.map((p: any, idx: number) => (
+                    <ScannerProductCard
+                      key={p.id}
+                      product={p}
+                      index={idx}
+                      currentScanPrice={currentScanPrice}
+                      scannedUPC={scannedUPC}
+                      onShopClick={handleAffiliateClick}
+                    />
+                  ))}
                 </div>
               </div>
             )}
@@ -998,12 +1097,52 @@ export default function ScannerClient() {
                   )}
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                  {result.products.slice(0, 8).map((p: any) => <ProductCard key={p.id} product={p} />)}
+                  {result.products.slice(0, 8).map((p: any, idx: number) => (
+                    <ScannerProductCard
+                      key={p.id}
+                      product={p}
+                      index={idx}
+                      currentScanPrice={currentScanPrice}
+                      scannedUPC={scannedUPC}
+                      onShopClick={handleAffiliateClick}
+                    />
+                  ))}
                 </div>
               </div>
             )}
 
-            <Link href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98] mb-8" data-testid="link-chat-from-results">
+            {result.isNewToDatabase && (
+              <p className="text-xs text-gray-300 text-center pb-4" style={{ letterSpacing: "0.05em" }}>
+                {FIRST_SCAN_FOOTNOTE}
+              </p>
+            )}
+
+            {!isLoggedIn && (
+              <div className="border-t border-gray-100 px-0 py-8">
+                <p className="text-xs tracking-widest text-gray-400 mb-3" style={{ letterSpacing: "0.2em" }}>SAVE THIS SCAN</p>
+                <p className="text-sm font-light text-gray-700 leading-relaxed mb-5">
+                  Create an account to save your scan history and receive personalised natural fiber recommendations.
+                </p>
+                <div className="flex gap-3">
+                  <Link
+                    href="/account"
+                    className="flex-1 text-white text-xs tracking-widest uppercase py-3.5 text-center"
+                    style={{ background: "#1C2B2A", letterSpacing: "0.15em", borderRadius: 0 }}
+                  >
+                    Create account
+                  </Link>
+                  <Link
+                    href="/account"
+                    className="flex-1 text-xs tracking-widest uppercase py-3.5 text-center"
+                    style={{ letterSpacing: "0.15em", border: "1px solid #1C2B2A", color: "#1C2B2A", borderRadius: 0 }}
+                  >
+                    Sign in
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            <Link href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98] mb-8" data-testid="link-chat-from-results" style={{ borderRadius: 0 }}>
               <MessageCircle className="w-4 h-4 flex-shrink-0" />
               <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Ask Our AI About This Material</span>
               <ArrowRight className="w-3.5 h-3.5 text-white/40 ml-auto flex-shrink-0" />

@@ -5,6 +5,9 @@ import OpenAI from "openai";
 import { scannerCatalogQuery } from "../../../lib/scanner-catalog";
 import { fetchTastePreferences, upsertTastePreferences } from "../../../lib/taste-preferences";
 import { getSupabaseAuthUserId } from "../../../lib/supabase-auth-server";
+import { lookupBarcode, upsertBarcodeFromComposition, getSmartAlternatives } from "../../../lib/scanner-barcode-lookup";
+import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext } from "../../../lib/scanner-response";
+import { getVerdictMessage } from "../../../lib/scanner-copy";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -547,7 +550,175 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { image, url, barcode, confirmation } = body;
+    const {
+      image,
+      url,
+      barcode,
+      confirmation,
+      composition_text: compositionText,
+      session_id: sessionId,
+      device_type: deviceType,
+      detected_price: detectedPriceRaw,
+      detected_currency: detectedCurrency,
+      device,
+      app_version: appVersion,
+    } = body;
+
+    const authHeader = request.headers.get("authorization");
+    const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    const userId = accessToken ? await getSupabaseAuthUserId(accessToken) : null;
+
+    const parsedPrice =
+      typeof detectedPriceRaw === "number"
+        ? detectedPriceRaw
+        : parsePriceNumber(String(detectedPriceRaw ?? ""));
+
+    async function recordScanHistory(payload: Record<string, unknown>) {
+      try {
+        await supabase.from("scan_history").insert(payload);
+      } catch (e: any) {
+        console.error("scan_history insert:", e.message);
+      }
+    }
+
+    if (compositionText && String(compositionText).trim()) {
+      const composition = String(compositionText).trim();
+      const extracted = {
+        composition,
+        inputType: "composition",
+        confidence: "high",
+        brandName: body.brand || "",
+        productName: body.product_name || "",
+        fibers: [],
+      };
+      const analysis = identifyProduct(extracted);
+      const upc = barcode ? String(barcode).replace(/\D/g, "") : "";
+      let isNewToDatabase = false;
+      if (upc) {
+        isNewToDatabase = await upsertBarcodeFromComposition(supabase, upc, {
+          brand: extracted.brandName || null,
+          brandSlug: slugifyBrand(extracted.brandName || ""),
+          productName: extracted.productName || null,
+          composition: analysis.compositionText || composition,
+          naturalFiberPercent: analysis.naturalPercent,
+          fiberPrimary: analysis.fibers[0]?.fiber?.toLowerCase() || null,
+          fiberBreakdown: analysis.fibers,
+          price: parsedPrice,
+          currency: detectedCurrency || null,
+        });
+      }
+
+      const brandName = extracted.brandName || "Unknown";
+      const brandSlug = slugifyBrand(brandName);
+      const alternatives = await getSmartAlternatives(supabase, {
+        detectedPrice: parsedPrice,
+        primaryFiber: analysis.fibers[0]?.fiber,
+        naturalFiberPercent: analysis.naturalPercent,
+        brandSlug,
+        userId,
+        excludeBrandSlug: brandSlug !== "unknown" ? brandSlug : undefined,
+      });
+
+      const { designerInfo, brandProducts, avgFiber, brandRating } = await enrichBrandContext(
+        supabase,
+        brandName,
+        brandSlug,
+        extracted.productName || "",
+        "",
+        ""
+      );
+
+      const brandStats =
+        brandProducts.length && avgFiber !== null
+          ? { avgFiber, rating: brandRating, productCount: brandProducts.length }
+          : null;
+
+      const response = buildUnifiedScanResponse({
+        supabase,
+        brandName,
+        brandSlug,
+        productName: extracted.productName || "",
+        price: parsedPrice != null ? `$${parsedPrice}` : "",
+        priceNum: parsedPrice,
+        compositionText: analysis.compositionText || composition,
+        fibers: analysis.fibers,
+        naturalPercent: analysis.naturalPercent,
+        qualityScore: analysis.qualityScore,
+        verdict: getVerdictMessage(analysis.naturalPercent),
+        alternatives,
+        brandProducts,
+        designerInfo,
+        brandStats,
+        confirmPrompt: null,
+        inputType: "composition",
+        barcode: upc,
+        lookupSource: upc ? "composition_label" : "composition",
+        needsCompositionLabel: false,
+        isNewToDatabase,
+        success: true,
+      });
+
+      await recordScanHistory({
+        user_id: userId || null,
+        session_id: sessionId || null,
+        scanned_at: new Date().toISOString(),
+        brand: brandName,
+        product_name: extracted.productName || "",
+        composition: analysis.compositionText || composition,
+        natural_percent: analysis.naturalPercent,
+        verdict: response.verdict,
+        scan_source: "manual",
+        upc_code: upc || null,
+        label_type: "composition",
+        raw_ocr_text: composition,
+        lookup_source: "composition_text",
+        device_type: deviceType || device || null,
+        app_version: appVersion || null,
+        helped_build_database: isNewToDatabase,
+        alternatives_shown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
+      });
+
+      return NextResponse.json(response);
+    }
+
+    if (barcode && !image && !url) {
+      const upc = String(barcode).replace(/\D/g, "");
+      const barcodeResult = await lookupBarcode(supabase, upc, parsedPrice, detectedCurrency);
+      const response = await buildBarcodeScanResponse(
+        supabase,
+        barcodeResult,
+        upc,
+        userId,
+        sessionId,
+        deviceType || device
+      );
+
+      await recordScanHistory({
+        user_id: userId || null,
+        session_id: sessionId || null,
+        scanned_at: new Date().toISOString(),
+        upc_code: upc,
+        detected_brand: barcodeResult.brand,
+        brand: barcodeResult.brand,
+        product_name: barcodeResult.productName,
+        composition: barcodeResult.composition,
+        natural_percent: barcodeResult.naturalFiberPercent,
+        fiber_primary: barcodeResult.fiberPrimary,
+        price_detected: barcodeResult.price,
+        currency_detected: barcodeResult.currency,
+        lookup_source: barcodeResult.source,
+        alternatives_shown: response.alternatives?.slice(0, 12).map((p: any) => p.id).filter(Boolean),
+        label_type: "barcode_only",
+        scan_source: "barcode",
+        device_type: deviceType || device || null,
+        app_version: appVersion || null,
+        verdict: response.verdict,
+        helped_build_database: barcodeResult.isNewToDatabase,
+      });
+
+      return NextResponse.json(response);
+    }
+
     let sourceHost = "";
 
     let extracted: any = {};
@@ -576,14 +747,6 @@ export async function POST(request: NextRequest) {
           fibers: [],
         };
       }
-    } else if (barcode) {
-      extracted = {
-        barcode,
-        inputType: "barcode",
-        confidence: "low",
-        productName: "",
-        brandName: "",
-      };
     } else {
       return NextResponse.json({ error: "Provide an image, URL, or barcode" }, { status: 400 });
     }
@@ -654,9 +817,6 @@ export async function POST(request: NextRequest) {
     const priceNum = parsePriceNumber(price);
     const detectedFiberForSearch = analysis.fibers.find(f => f.isNatural)?.fiber || "";
     const fiberFilter = detectedFiberForSearch.toLowerCase().split(" ")[0] || "";
-    const authHeader = request.headers.get("authorization");
-    const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-    const userId = accessToken ? await getSupabaseAuthUserId(accessToken) : null;
     const prefs = userId ? await fetchTastePreferences(supabase, userId) : null;
     const preferredFiber = prefs?.preferredFibers?.[0]?.toLowerCase() || "";
     const primaryNaturalFiber = analysis.fibers.find(f => f.isNatural)?.fiber?.toLowerCase() || "";
@@ -715,25 +875,24 @@ export async function POST(request: NextRequest) {
 
     const confirmPrompt = buildConfirmationPrompt(extracted);
 
-    try {
-        await supabase.from("scan_history").insert({
-          user_id: userId || null,
-          scanned_at: new Date().toISOString(),
-          brand: brandName,
-          product_name: productName,
-          composition: analysis.compositionText || extracted.composition || "",
-          natural_percent: effectivePercent,
-          verdict,
-          scan_source: extracted.inputType || (image ? "image" : url ? "url" : barcode ? "barcode" : "manual"),
-          raw_analysis: {
-            detected_fiber: primaryFiber,
-            is_natural: effectivePercent >= 80,
-            alternatives_shown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
-          },
-        });
-      } catch (e: any) {
-        console.error("scan_history insert:", e.message);
-      }
+    await recordScanHistory({
+      user_id: userId || null,
+      session_id: sessionId || null,
+      scanned_at: new Date().toISOString(),
+      brand: brandName,
+      product_name: productName,
+      composition: analysis.compositionText || extracted.composition || "",
+      natural_percent: effectivePercent,
+      verdict,
+      scan_source: extracted.inputType || (image ? "image" : url ? "url" : "manual"),
+      device_type: deviceType || device || null,
+      app_version: appVersion || null,
+      raw_analysis: {
+        detected_fiber: primaryFiber,
+        is_natural: effectivePercent >= 80,
+        alternatives_shown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
+      },
+    });
 
     if (userId && primaryFiber) {
       const currentFibers = prefs?.preferredFibers || [];
@@ -748,39 +907,36 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      tagInfo: {
-        brandName, productName, price,
-        composition: analysis.compositionText,
-        garmentType, size: extracted.size || "",
-        madeIn: extracted.madeIn || "",
-        careInstructions: extracted.careInstructions || "",
-        confidence: usedBrandAvg ? "brand-average" : extracted.confidence || "low",
-        rawText: image ? "From photo scan" : url ? `From ${sourceHost || "product URL"}` : "From barcode",
-        inputType: extracted.inputType || "unknown",
-        color,
-        silhouette: extracted.silhouette || "",
-        barcode: extracted.barcode || "",
-      },
+    const legacyResponse = buildUnifiedScanResponse({
+      supabase,
+      brandName,
+      brandSlug,
+      productName,
+      price,
+      priceNum,
       imageUrl,
-      fiberBreakdown: analysis.fibers,
+      category,
+      color,
+      garmentType,
+      compositionText: analysis.compositionText,
+      fibers: analysis.fibers,
       naturalPercent: effectivePercent,
       qualityScore: analysis.qualityScore,
-      isNatural: effectivePercent >= 80,
-      verdict,
-      category,
-      products: brandProducts.slice(0, 12),
-      matched: !!(designerInfo || brandProducts.length || alternatives.length),
+      verdict: usedBrandAvg
+        ? `${brandName}'s catalog averages ${effectivePercent}% natural fibers. For the full fiber breakdown scan the care label inside the garment.`
+        : verdict || getVerdictMessage(effectivePercent),
+      alternatives,
+      brandProducts,
+      designerInfo,
       brandStats: brandProducts.length && avgFiber !== null ? { avgFiber, rating: brandRating, productCount: brandProducts.length } : null,
-      designerInfo: designerInfo ? {
-        name: designerInfo.name, slug: designerInfo.slug,
-        logo_url: designerInfo.logo_url, website: designerInfo.website,
-        description: designerInfo.description, rating: designerInfo.rating,
-        hasProducts: brandProducts.length > 0,
-      } : null,
-      betterAlternatives: alternatives,
-      confirmationPrompt: confirmPrompt,
+      confirmPrompt,
+      inputType: extracted.inputType || (image ? "image" : url ? "url" : "manual"),
+      sourceHost,
+      barcode: extracted.barcode || "",
+      success: true,
     });
+
+    return NextResponse.json(legacyResponse);
   } catch (err: any) {
     console.error("Scan error:", err.message);
     try {
@@ -795,7 +951,8 @@ export async function POST(request: NextRequest) {
         imageUrl: "",
         fiberBreakdown: [], naturalPercent: 0, qualityScore: 0,
         isNatural: false,
-        verdict: "We couldn't analyze this item right now. Browse our curated natural-fiber products below.",
+        verdict: "For the full fiber breakdown scan the care label inside the garment.",
+        verdictMessage: "For the full fiber breakdown scan the care label inside the garment.",
         category: "", products: [], matched: false,
         brandStats: null, designerInfo: null,
         betterAlternatives: alternatives,
