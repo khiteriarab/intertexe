@@ -3,7 +3,6 @@
     "HOMEPAGE_USE_FEED_CACHE": "1"
   },
   "buildCommand": "rm -rf .next && npx next build",
-  "outputDirectory": ".next",
   "framework": "nextjs",
   "trailingSlash": false,
   "rewrites": [
