@@ -23,10 +23,25 @@ export const MERCH_NAV = [
 /** Legacy field labels — prefer collection rails on homepage. */
 export const HOMEPAGE_RAIL_LABELS: Record<string, { title: string; subtitle: string }> = {
   newInProducts: { title: "New In", subtitle: "Just landed" },
-  vacationProducts: { title: "Vacation", subtitle: "Resort dressing · linen movement · destination energy" },
-  eveningProducts: { title: "Evening", subtitle: "Silk draping · jewel tones · candlelit glamour" },
-  tailoringProducts: { title: "Tailoring", subtitle: "Quiet luxury suiting · structure · investment dressing" },
-  summerInCityProducts: { title: "Summer in the City", subtitle: "Downtown luxury · lightweight tailoring" },
-  whiteEditProducts: { title: "The White Edit", subtitle: "Whites, creams, ivory — expensive minimalism" },
+  vacationProducts: {
+    title: "Vacation",
+    subtitle: "Resort dressing for warm water and warm light. Linen that moves. Silk at sunset. Composition verified.",
+  },
+  eveningProducts: {
+    title: "Evening",
+    subtitle: "For the occasion that deserves the real thing. Silk. Wool crêpe. Verified.",
+  },
+  tailoringProducts: {
+    title: "Tailoring",
+    subtitle: "Investment dressing. The pieces that outlast every trend. Wool. Cashmere. Cotton. Verified.",
+  },
+  summerInCityProducts: {
+    title: "Summer in the City",
+    subtitle: "Downtown luxury. Lightweight. Breathable. The real thing.",
+  },
+  whiteEditProducts: {
+    title: "The White Edit",
+    subtitle: "White in every form. Ivory. Chalk. Cream. All natural.",
+  },
   saleProducts: { title: "Sale", subtitle: "Natural fibers, reduced" },
 };

@@ -7,6 +7,7 @@ import { Search, X, User, UserCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { MERCH_NAV } from "../../lib/merch-nav";
+import { BrandWordmark } from "./BrandWordmark";
 import { CountrySelector } from "./CountrySelector";
 import { MobileBottomDock } from "./MobileBottomDock";
 import { MobileNavMenu } from "./MobileNavMenu";
@@ -66,11 +67,7 @@ export function Navbar() {
 
           <MobileNavMenu />
 
-          <Link href="/" className="flex items-center leading-none flex-shrink-0 z-10 md:ml-0" data-testid="link-home-logo">
-            <span className="font-serif text-xl md:text-2xl tracking-[0.25em] uppercase text-foreground">
-              <span className="font-light">INTER</span><span className="font-bold">TEXE</span>
-            </span>
-          </Link>
+          <BrandWordmark asLink size="md" className="text-foreground flex-shrink-0 z-10 md:ml-0" />
 
           <nav className="hidden md:flex items-center justify-center gap-8 flex-1 mx-8">
             {navLinks.map((link) => (

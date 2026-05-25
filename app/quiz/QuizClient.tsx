@@ -274,6 +274,9 @@ export default function QuizClient() {
 
   return (
     <div className="py-6 md:py-16 max-w-3xl mx-auto w-full flex flex-col gap-8 md:gap-12 min-h-[calc(100vh-8rem)]">
+      <p className="text-center text-muted-foreground text-sm md:text-base leading-relaxed max-w-xl mx-auto" data-testid="text-quiz-intro">
+        Your fabric identity tells you more about your taste than any trend report. Take the 1-minute quiz and we will show you the brands whose materials align with how you actually want to feel in your clothes.
+      </p>
       <div className="flex items-center gap-2 md:gap-4 w-full">
         {STEPS.slice(0, 4).map((step, idx) => (
           <div key={step.id} className="flex-1 flex flex-col gap-1.5 md:gap-2">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandWordmark } from "./BrandWordmark";
 
 export function Footer() {
   return (
@@ -6,9 +7,7 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-8 py-10 md:py-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           <div className="col-span-2 md:col-span-1 flex flex-col gap-3 md:gap-6 mb-2 md:mb-0">
-            <Link href="/" className="font-serif text-xl md:text-2xl tracking-[0.25em] uppercase" data-testid="link-footer-logo">
-              <span className="font-light">INTER</span><span className="font-bold">TEXE</span>
-            </Link>
+            <BrandWordmark asLink size="md" className="text-background" testId="link-footer-logo" />
             <p className="text-background/60 text-xs md:text-sm leading-relaxed max-w-xs">
               The destination for natural fiber fashion. Every piece verified. Every brand vetted.
             </p>

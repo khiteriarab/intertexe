@@ -658,10 +658,10 @@ export default function ScannerClient() {
       <div className="max-w-lg mx-auto px-6 py-20 text-center">
         <p className="text-xs tracking-widest text-gray-400 mb-8" style={{ letterSpacing: "0.25em" }}>SCANNER</p>
         <h1 className="text-4xl font-extralight text-gray-900 mb-4" style={{ lineHeight: 1.2 }}>
-          Scan in store.<br />Shop with intention.
+          Know what you are wearing.
         </h1>
         <p className="text-sm text-gray-500 leading-relaxed mb-16 max-w-sm mx-auto">
-          Point your camera at any price tag or fabric label for an instant fiber analysis and curated natural fiber alternatives.
+          Point your camera at any care label or price tag. Intertexe reads the fiber composition instantly and shows you better natural alternatives at a similar price if needed.
         </p>
         <div className="flex flex-col items-center gap-6">
           <div className="border border-gray-100 p-4 inline-block" style={{ borderRadius: 0 }}>
@@ -673,10 +673,10 @@ export default function ScannerClient() {
             />
           </div>
           <p className="text-xs text-gray-400" style={{ letterSpacing: "0.05em" }}>
-            Scan with your phone to open the scanner
+            Scan with your phone to open the scanner.
           </p>
         </div>
-        <p className="text-xs text-gray-300 mt-16">Already have the app? Open it and tap Scanner.</p>
+        <p className="text-xs text-gray-400 mt-16">Already have the app? Open it and tap Scanner.</p>
       </div>
     );
   }

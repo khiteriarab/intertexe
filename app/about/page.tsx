@@ -29,7 +29,7 @@ export default async function AboutPage() {
 
       <div className="flex flex-col gap-8 md:gap-12 text-base md:text-lg text-foreground/80 leading-relaxed font-light">
         <p>
-          Intertexe was founded on a simple belief: what your clothes are made of matters more than any label, trend, or price tag. We created the first fashion discovery platform that ranks designers by the quality of their materials — specifically, their commitment to natural fibers.
+          Most fashion platforms show you what brands want you to see. Intertexe shows you what the label actually says. We verify the composition of every product on the platform. This is not a sustainability platform. It is a quality standard.
         </p>
 
         <div className="border-l-2 border-foreground pl-6 md:pl-8 py-2">

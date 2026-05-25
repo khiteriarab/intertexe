@@ -15,6 +15,7 @@ import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
 import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
+import Image from "next/image";
 
 const APP_STORE_URL =
   process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() || "/scanner";
@@ -47,13 +48,14 @@ function AppDownloadBanner() {
       >
         <X className="w-3.5 h-3.5" />
       </button>
-      <div className="w-9 h-9 bg-white flex items-center justify-center flex-shrink-0">
-        <span className="text-[#111] text-[5px] font-semibold tracking-[0.12em] uppercase leading-tight text-center">
-          INTER
-          <br />
-          TEXE
-        </span>
-      </div>
+      <Image
+        src="/app-icon.png"
+        alt="Intertexe app"
+        width={40}
+        height={40}
+        className="h-10 w-10 shrink-0 rounded-[9px] object-cover"
+        data-testid="img-app-banner-icon"
+      />
       <p className="flex-1 min-w-0 text-[11px] md:text-[12px] leading-snug font-medium">
         Download the Intertexe app
       </p>

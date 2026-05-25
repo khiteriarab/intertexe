@@ -34,8 +34,7 @@ export function HomepageHeroSection({
           style={{ paddingBottom: "max(4rem, calc(env(safe-area-inset-bottom, 0px) + 3.5rem))" }}
         >
           <h2 className="text-[34px] leading-[1.06] font-serif text-white mb-4" data-testid="text-hero-headline">
-            No polyester.<br />
-            Ever.
+            Know what you are wearing.
           </h2>
           <p className="text-[12px] text-white/70 mb-8 font-light leading-relaxed max-w-sm" data-testid="text-hero-subtext">
             {productCountLabel} verified natural fiber pieces across {brandCountLabel} brands. Every composition checked.
@@ -69,7 +68,7 @@ export function HomepageHeroSection({
             className="text-[48px] xl:text-[56px] font-serif leading-[1.05] text-white mb-5"
             data-testid="text-hero-headline-desktop"
           >
-            No polyester. Ever.
+            Know what you are wearing.
           </h2>
           <p
             className="text-[15px] text-white/75 font-light leading-relaxed max-w-lg mb-10"

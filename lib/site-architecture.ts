@@ -31,7 +31,7 @@ export const COLLECTION_SECTIONS = [
     href: "/collections/vacation",
     railKey: "collections:vacation",
     kicker: "Resort",
-    subtitle: "Resort dressing · linen movement · destination energy",
+    subtitle: "Resort dressing for warm water and warm light. Linen that moves. Silk at sunset. Composition verified.",
   },
   {
     slug: "evening",
@@ -39,7 +39,7 @@ export const COLLECTION_SECTIONS = [
     href: "/collections/evening",
     railKey: "collections:evening",
     kicker: "After dark",
-    subtitle: "Silk draping · jewel tones · candlelit glamour",
+    subtitle: "For the occasion that deserves the real thing. Silk. Wool crêpe. Verified.",
   },
   {
     slug: "tailoring",
@@ -47,7 +47,7 @@ export const COLLECTION_SECTIONS = [
     href: "/collections/tailoring",
     railKey: "collections:tailoring",
     kicker: "Structure",
-    subtitle: "Quiet luxury suiting · structure · investment dressing",
+    subtitle: "Investment dressing. The pieces that outlast every trend. Wool. Cashmere. Cotton. Verified.",
   },
   {
     slug: "summer-in-the-city",
@@ -55,7 +55,7 @@ export const COLLECTION_SECTIONS = [
     href: "/collections/summer-in-the-city",
     railKey: "collections:summer-in-the-city",
     kicker: "Urban",
-    subtitle: "Downtown luxury — lightweight tailoring, elevated basics.",
+    subtitle: "Downtown luxury. Lightweight. Breathable. The real thing.",
   },
   {
     slug: "white-edit",
@@ -63,7 +63,7 @@ export const COLLECTION_SECTIONS = [
     href: "/collections/white-edit",
     railKey: "collections:white-edit",
     kicker: "All white",
-    subtitle: "Whites, creams, ivory — expensive minimalism",
+    subtitle: "White in every form. Ivory. Chalk. Cream. All natural.",
   },
 ] as const;
 

@@ -28,7 +28,7 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     title: "Vacation",
     kicker: "Resort",
     description:
-      "Mediterranean luxury and resort dressing — linen movement, silk at sunset, woven textures, and warm neutrals for Ibiza, Amalfi, Hydra, and St. Barths.",
+      "Resort dressing for warm water and warm light. Linen that moves. Silk at sunset. Composition verified.",
     atmosphere: "Beach dinners · raffia · white cotton · destination energy",
     themes: COLLECTION_EDITORIAL.vacation.themes,
     railKey: MERCH_RAIL_KEYS.vacation,
@@ -41,7 +41,7 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     title: "Evening",
     kicker: "After dark",
     description:
-      "Elevated night dressing — silk draping, black tailoring, deep jewel tones, satin, structured elegance, and candlelit glamour.",
+      "For the occasion that deserves the real thing. Silk. Wool crêpe. Verified.",
     atmosphere: "Fluid silhouettes · heels & clutches · cinematic luxury",
     themes: COLLECTION_EDITORIAL.evening.themes,
     railKey: MERCH_RAIL_KEYS.evening,
@@ -54,7 +54,7 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     title: "Tailoring",
     kicker: "Structure",
     description:
-      "Sharp structure and quiet luxury — relaxed suiting, oversized blazers, wool trousers, monochrome styling, and investment dressing.",
+      "Investment dressing. The pieces that outlast every trend. Wool. Cashmere. Cotton. Verified.",
     atmosphere: "Masculine/feminine tension · refined minimalism",
     themes: COLLECTION_EDITORIAL.tailoring.themes,
     railKey: MERCH_RAIL_KEYS.tailoring,
@@ -67,7 +67,7 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     title: "Summer in the City",
     kicker: "Urban",
     description:
-      "Downtown luxury for urban summer — lightweight tailoring, cotton poplin, polished daytime looks, neutrals, and rooftop dinners.",
+      "Downtown luxury. Lightweight. Breathable. The real thing.",
     atmosphere: "Black · white · elevated basics · city movement",
     themes: COLLECTION_EDITORIAL["summer-in-the-city"].themes,
     railKey: MERCH_RAIL_KEYS.summerInCity,
@@ -80,7 +80,7 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     title: "The White Edit",
     kicker: "All white",
     description:
-      "Tonal dressing in whites, creams, ivory, and stone — purity, softness, airy fabrics, and expensive minimalism.",
+      "White in every form. Ivory. Chalk. Cream. All natural.",
     atmosphere: "Visual calm · editorial restraint · luxury simplicity",
     themes: COLLECTION_EDITORIAL["white-edit"].themes,
     railKey: MERCH_RAIL_KEYS.whiteEdit,
