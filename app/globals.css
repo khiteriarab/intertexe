@@ -137,23 +137,24 @@
   margin-right: calc(50% - 50vw);
 }
 
-/* Homepage portrait hero (768×1408) — full image, no cover crop */
+/* Homepage hero — full-bleed frame; image covers entire area (no side letterboxing) */
 .homepage-hero-desktop-frame {
   position: relative;
   width: 100%;
   overflow: hidden;
-  background: #eae8e4;
-  line-height: 0;
+  background: #1c1c1c;
+  height: clamp(560px, 85vh, 960px);
 }
 
 .homepage-hero-desktop-frame .homepage-hero-img,
 .homepage-hero-frame-mobile .homepage-hero-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
-  max-height: 95vh;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 65%;
   display: block;
-  object-fit: contain;
-  object-position: center center;
 }
 
 /* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */
@@ -165,17 +166,13 @@
   height: clamp(520px, 88vh, 900px);
 }
 
-/* Homepage portrait hero — mobile */
+/* Homepage hero — mobile */
 .homepage-hero-frame-mobile {
   position: relative;
   width: 100%;
   overflow: hidden;
-  background: #eae8e4;
-  line-height: 0;
-}
-
-.homepage-hero-frame-mobile .homepage-hero-img {
-  max-height: 92vh;
+  background: #1c1c1c;
+  height: clamp(520px, 88vh, 900px);
 }
 
 .editorial-frame-panel {
