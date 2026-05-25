@@ -128,15 +128,13 @@
   display: none;
 }
 
-/* Break out of max-width main column to true viewport edges */
+/* Full-bleed within padded main — calc centers on viewport, not a max-width parent */
 .layout-bleed-full {
   position: relative;
   width: 100vw;
   max-width: 100vw;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 }
 
 /* Homepage main hero — shorter than 88vh so portrait art is not over-cropped on desktop */

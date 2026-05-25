@@ -104,7 +104,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
       </head>
-      <body suppressHydrationWarning>
+      <body className="w-full min-h-screen overflow-x-hidden" suppressHydrationWarning>
         <ClientApp>
           {children}
         </ClientApp>

@@ -16,6 +16,9 @@ import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
 import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
 
+const APP_STORE_URL =
+  process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() || "/scanner";
+
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
 
@@ -32,7 +35,10 @@ function AppDownloadBanner() {
   };
 
   return (
-    <div className="bg-[#111] text-white flex items-center gap-3 px-4 py-2.5 -mx-4 md:-mx-8" data-testid="banner-app-download">
+    <div
+      className="w-full bg-[#111] text-white flex flex-wrap items-center gap-3 px-4 py-2.5 -mx-4 md:-mx-8"
+      data-testid="banner-app-download"
+    >
       <button
         onClick={handleDismiss}
         className="flex-shrink-0 p-0.5 text-white/50 hover:text-white transition-colors"
@@ -42,14 +48,19 @@ function AppDownloadBanner() {
         <X className="w-3.5 h-3.5" />
       </button>
       <div className="w-9 h-9 bg-white flex items-center justify-center flex-shrink-0">
-        <span className="text-[#111] text-[5px] font-semibold tracking-[0.12em] uppercase leading-tight text-center">INTER<br />TEXE</span>
+        <span className="text-[#111] text-[5px] font-semibold tracking-[0.12em] uppercase leading-tight text-center">
+          INTER
+          <br />
+          TEXE
+        </span>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] leading-tight"><span className="font-semibold">Enjoy 10% off</span></p>
-        <p className="text-[10px] text-white/60 leading-tight mt-0.5">Get 10% off your first app order on select items with code <span className="font-semibold">APP10</span>. <span className="underline">T&amp;Cs apply</span>.</p>
-      </div>
+      <p className="flex-1 min-w-0 text-[11px] md:text-[12px] leading-snug font-medium">
+        Download the Intertexe app
+      </p>
       <a
-        href="#"
+        href={APP_STORE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
         className="flex-shrink-0 border border-white text-white px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-colors"
         data-testid="link-app-download"
       >
@@ -484,7 +495,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
   ).filter(Boolean) as any[];
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col w-full max-w-full">
 
       <AppDownloadBanner />
 
