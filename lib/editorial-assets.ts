@@ -21,7 +21,9 @@ export const EDITORIAL_HERO = {
   evening: LANDSCAPE_SILK,
   tailoring: `${BASE}/brands/theory.jpg`,
   "summer-in-the-city": `${BASE}/brands/isabel-marant.jpg`,
-  "white-edit": LANDSCAPE_LINEN,
+  /** Woman in white resort dress — Zimmermann campaign (not catalog SKU). */
+  "white-edit":
+    "https://www.zimmermann.com/media/wysiwyg/ZIM-SPRING26_CAMPAIGN_16x9-9_4.jpg",
   newIn: LANDSCAPE_SILK,
 } as const;
 
@@ -32,8 +34,11 @@ export function editorialHeroForSlug(slug: string): string {
   return EDITORIAL_HERO[key] ?? LANDSCAPE_SILK;
 }
 
-/** Homepage hero — portrait editorial (mobile full-bleed; desktop split column). */
-export const HOMEPAGE_HERO_IMAGE = `${BASE}/hero-editorial-v8.png`;
+/**
+ * Homepage hero — fashion editorial (hero-editorial-v8.png was a wrong cave asset).
+ * Use landscape silk campaign until a new portrait asset is uploaded to /public.
+ */
+export const HOMEPAGE_HERO_IMAGE = LANDSCAPE_SILK;
 
 export const BRAND_WE_LOVE_IMAGES: Record<string, string> = {
   "re-done": "/brands/re-done.png",

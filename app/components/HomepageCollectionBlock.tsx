@@ -64,7 +64,9 @@ export function HomepageCollectionBlock({
   const imageUrl =
     collection.slug === "summer-in-the-city"
       ? pickSummerInCityHeroImage(products) || editorialHeroForSlug(collection.slug)
-      : editorialHeroForSlug(collection.slug);
+      : collection.slug === "white-edit"
+        ? editorialHeroForSlug("white-edit")
+        : editorialHeroForSlug(collection.slug);
   const hasItems = products.length > 0;
 
   const scroll = (dir: "left" | "right") => {

@@ -67,14 +67,29 @@ export const WHITE_EDIT_TERMS = [
 
 export function qualifiesForWhiteEditMembership(row: {
   name?: string | null;
+  color?: string | null;
   brand_slug?: string | null;
   brandSlug?: string | null;
 }): boolean {
-  const name = String(row.name || "").toLowerCase();
-  if (!WHITE_EDIT_TERMS.some((term) => name.includes(term))) return false;
   const brand = String(row.brand_slug || row.brandSlug || "").toLowerCase();
+  const colorField = String(row.color || "").toLowerCase();
+  let name = String(row.name || "").toLowerCase();
+  name = name.replace(/\bwhite\s+label\b/g, " ");
+  const text = `${name} ${colorField}`;
+
+  const hasWhite =
+    WHITE_EDIT_TERMS.some((term) => text.includes(term)) &&
+    !/\b(off[\s-]?white\s+brand|off-white\s+brand)\b/i.test(text);
+  if (!hasWhite) return false;
+
   if (brand === "burberry" && /trench|coat|mac/i.test(name)) return false;
-  if (/trench|mac coat|raincoat/i.test(name) && !name.includes("white")) return false;
+  if (brand === "off-white" || brand === "offwhite") {
+    if (!WHITE_EDIT_TERMS.some((t) => colorField.includes(t) || name.includes(t))) return false;
+  }
+  if (/trench|mac coat|raincoat|puffer|down coat|quilted/i.test(name) && !/\bwhite|ivory|cream|ecru|chalk\b/.test(text))
+    return false;
+  if (/\b(black|navy|charcoal|burgundy|red|green|blue|brown|grey|gray|pink|yellow|orange|purple)\b/.test(colorField))
+    return false;
   return true;
 }
 
