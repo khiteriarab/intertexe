@@ -292,6 +292,13 @@ async function fetchFromExternalDatabase(
     if (!item?.brand) return null;
 
     const brandSlug = await resolveDesignerSlug(supabase, item.brand);
+    const { data: designer } = await supabase
+      .from('designers')
+      .select('slug')
+      .eq('slug', brandSlug)
+      .maybeSingle();
+    if (!designer) return null;
+
     const catalogProducts = await fetchCatalogByBrandAndPrice(
       supabase,
       brandSlug,
