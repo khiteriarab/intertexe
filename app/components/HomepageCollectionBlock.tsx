@@ -7,6 +7,7 @@ import { EditorialHeroImage } from "./EditorialHeroImage";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import type { CollectionSectionConfig } from "../../lib/site-architecture";
+import { pickSummerInCityHeroImage } from "../../lib/collection-rail-filters";
 
 function optimizeImageUrl(url: string, width: number): string {
   if (!url) return url;
@@ -35,8 +36,7 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
           />
         ) : null}
       </div>
-      <span className="text-[9px] uppercase tracking-[0.08em] text-neutral-400 mt-2 truncate">{brandName}</span>
-      <span className="text-[11px] text-neutral-600 truncate">{name}</span>
+      <p className="text-xs tracking-widest uppercase text-neutral-500 mt-2 truncate">{brandName}</p>
     </Link>
   );
 }
@@ -61,7 +61,10 @@ export function HomepageCollectionBlock({
 }) {
   const shopOnLeft = SHOP_ON_LEFT_SLUGS.has(collection.slug);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const imageUrl = editorialHeroForSlug(collection.slug);
+  const imageUrl =
+    collection.slug === "summer-in-the-city"
+      ? pickSummerInCityHeroImage(products) || editorialHeroForSlug(collection.slug)
+      : editorialHeroForSlug(collection.slug);
   const hasItems = products.length > 0;
 
   const scroll = (dir: "left" | "right") => {
@@ -93,7 +96,7 @@ export function HomepageCollectionBlock({
         <h3 className="text-white text-[28px] md:text-[36px] lg:text-[40px] font-serif leading-[1.08] max-w-md">
           {collection.label}
         </h3>
-        <p className="text-white/55 text-[12px] md:text-[14px] font-light max-w-sm leading-relaxed mt-1">
+        <p className="text-white/55 text-[11px] md:text-[12px] font-light max-w-sm leading-relaxed mt-1 normal-case tracking-normal">
           {collection.subtitle}
         </p>
         <span className="text-white/70 text-[10px] uppercase tracking-[0.2em] mt-3 md:mt-4 flex items-center gap-2 group-hover:gap-3 group-hover:text-white transition-all duration-300">
@@ -104,10 +107,10 @@ export function HomepageCollectionBlock({
   );
 
   const shopRail = (
-    <div className="flex flex-col justify-center h-full py-10 lg:py-12 px-6 md:px-10 xl:px-12 bg-[#FAFAF8]">
+    <div className="flex flex-col justify-center h-full w-full py-10 lg:py-12 px-6 md:px-10 xl:px-12 bg-[#FAFAF8]">
       <div className="flex items-end justify-between gap-4 mb-6">
         <div className="flex flex-col gap-1 min-w-0">
-          <span className="text-[9px] uppercase tracking-[0.3em] text-neutral-400">{subtitle}</span>
+          <p className="text-xs text-gray-500 leading-relaxed font-light normal-case tracking-normal">{subtitle}</p>
           <h2 className="text-[22px] xl:text-[26px] font-serif leading-tight">{title}</h2>
         </div>
         <div className="flex gap-2 flex-shrink-0">
@@ -163,20 +166,23 @@ export function HomepageCollectionBlock({
   );
 
   return (
-    <div className="border-t border-neutral-200/60" data-testid={`homepage-collection-${collection.slug}`}>
-      <section className="lg:hidden -mx-4 md:-mx-8">{editorial}</section>
-      <section className="lg:hidden py-10 md:py-14 px-4 md:px-0">{shopRail}</section>
+    <div
+      className="w-full max-w-none border-t border-neutral-200/60"
+      data-testid={`homepage-collection-${collection.slug}`}
+    >
+      <section className="lg:hidden w-full layout-bleed-full">{editorial}</section>
+      <section className="lg:hidden w-full layout-bleed-full py-10 md:py-14 px-4 md:px-8">{shopRail}</section>
 
-      <section className="hidden lg:grid lg:grid-cols-2 -mx-8 min-h-[min(68vh,620px)] max-h-[720px]">
+      <section className="hidden lg:grid w-full grid-cols-2 gap-0 layout-bleed-full min-h-[min(68vh,620px)] max-h-[720px]">
         {shopOnLeft ? (
           <>
-            {shopRail}
-            <div className="relative overflow-hidden min-h-[520px]">{editorial}</div>
+            <div className="w-full min-w-0">{shopRail}</div>
+            <div className="w-full relative overflow-hidden min-h-[520px] min-w-0">{editorial}</div>
           </>
         ) : (
           <>
-            <div className="relative overflow-hidden min-h-[520px]">{editorial}</div>
-            {shopRail}
+            <div className="w-full relative overflow-hidden min-h-[520px] min-w-0">{editorial}</div>
+            <div className="w-full min-w-0">{shopRail}</div>
           </>
         )}
       </section>
