@@ -19,11 +19,11 @@ export function HomepageHeroSection({
         className="relative w-full lg:hidden overflow-hidden"
         data-testid="homepage-hero-mobile"
       >
-        <div className="homepage-hero-frame-mobile relative w-full overflow-hidden bg-[#eae8e4]">
+        <div className="homepage-hero-frame-mobile">
           <img
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE — Luxury natural-fiber fashion"
-            className="absolute inset-0 w-full h-full object-cover object-[center_65%]"
+            className="homepage-hero-img"
             fetchPriority="high"
             draggable={false}
           />
@@ -57,7 +57,7 @@ export function HomepageHeroSection({
           <img
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE editorial"
-            className="absolute inset-0 w-full h-full object-cover object-[center_65%]"
+            className="homepage-hero-img"
             fetchPriority="high"
             draggable={false}
           />

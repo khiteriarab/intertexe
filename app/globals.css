@@ -137,13 +137,23 @@
   margin-right: calc(50% - 50vw);
 }
 
-/* Homepage portrait hero — desktop; tall enough to show subject without over-cropping */
+/* Homepage portrait hero (768×1408) — full image, no cover crop */
 .homepage-hero-desktop-frame {
   position: relative;
   width: 100%;
   overflow: hidden;
   background: #eae8e4;
-  height: clamp(500px, min(72vh, 82vh), 820px);
+  line-height: 0;
+}
+
+.homepage-hero-desktop-frame .homepage-hero-img,
+.homepage-hero-frame-mobile .homepage-hero-img {
+  width: 100%;
+  height: auto;
+  max-height: 95vh;
+  display: block;
+  object-fit: contain;
+  object-position: center center;
 }
 
 /* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */
@@ -155,9 +165,17 @@
   height: clamp(520px, 88vh, 900px);
 }
 
-/* Homepage portrait hero — mobile full width */
+/* Homepage portrait hero — mobile */
 .homepage-hero-frame-mobile {
-  height: clamp(480px, 85vh, 820px);
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #eae8e4;
+  line-height: 0;
+}
+
+.homepage-hero-frame-mobile .homepage-hero-img {
+  max-height: 92vh;
 }
 
 .editorial-frame-panel {
