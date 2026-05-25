@@ -1,67 +1,102 @@
+"use client";
+
 import Link from "next/link";
-import { getBrandHeroImage } from "../../lib/brand-hero-images";
+import { useCallback } from "react";
 import type { FeaturedDesignerCard } from "../../lib/featured-designers";
 
-function FeaturedBrandCard({ brand }: { brand: FeaturedDesignerCard }) {
-  const src = brand.heroImageUrl || getBrandHeroImage(brand.name) || "";
+function BrandFeaturedCard({ brand }: { brand: FeaturedDesignerCard }) {
+  const src = brand.heroImageUrl || "";
 
   return (
     <Link
       href={`/designers/${brand.slug}`}
-      className="group relative block aspect-[3/4] overflow-hidden bg-[#f0ece6]"
+      className="relative overflow-hidden group cursor-pointer block"
       data-testid={`card-featured-designer-${brand.slug}`}
     >
-      {src ? (
-        <img
-          src={src}
-          alt={`${brand.name} editorial`}
-          className="absolute inset-0 h-full w-full object-cover object-top editorial-cover-img editorial-cover-img--top transition-transform duration-500 group-hover:scale-[1.02]"
-          loading="lazy"
-          draggable={false}
-        />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center px-4">
-          <span className="font-serif text-lg text-neutral-300 tracking-[0.15em] uppercase text-center">
-            {brand.name}
-          </span>
-        </div>
-      )}
+      <div className="aspect-[3/4] relative">
+        {src ? (
+          <img
+            src={src}
+            alt={brand.name}
+            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
+            loading="lazy"
+            draggable={false}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[#f0ece6] flex items-center justify-center px-4">
+            <span className="font-serif text-lg text-neutral-300 tracking-[0.15em] uppercase text-center">
+              {brand.name}
+            </span>
+          </div>
+        )}
+      </div>
+
       <div
-        className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/55 via-black/20 to-transparent pointer-events-none"
+        className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"
         aria-hidden
       />
-      <div className="absolute bottom-3 left-3 right-3 z-[1] flex flex-col gap-1">
-        <p className="text-[10px] uppercase tracking-[0.22em] text-white font-medium">{brand.name}</p>
-        {brand.productCount > 0 && (
-          <span className="text-[9px] uppercase tracking-[0.14em] text-white/75">
-            {brand.productCount.toLocaleString()} pcs
-          </span>
-        )}
+
+      <div className="absolute bottom-0 left-0 p-4 z-[1]">
+        <p className="text-white text-xs tracking-widest uppercase font-light">{brand.name}</p>
+        <p
+          className="text-white/60 text-xs tracking-widest uppercase mt-0.5"
+          style={{ fontSize: "9px", letterSpacing: "0.2em" }}
+        >
+          EXCEPTIONAL
+        </p>
       </div>
     </Link>
   );
 }
 
-export function FeaturedDesignersGrid({ brands }: { brands: FeaturedDesignerCard[] }) {
+export function FeaturedDesignersGrid({
+  brands,
+  vettedBrandCount,
+}: {
+  brands: FeaturedDesignerCard[];
+  vettedBrandCount: number;
+}) {
+  const scrollToDirectory = useCallback(() => {
+    document.getElementById("directory-az-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   if (brands.length === 0) return null;
 
+  const vettedLabel = vettedBrandCount > 0 ? vettedBrandCount.toLocaleString() : "253";
+
   return (
-    <section className="flex flex-col gap-5" data-testid="section-featured-designers">
-      <h2 className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+    <section className="flex flex-col" data-testid="section-featured-designers">
+      <h2
+        className="text-xs tracking-widest text-gray-400 uppercase mb-5"
+        style={{ letterSpacing: "0.2em" }}
+      >
         FEATURED DESIGNERS
       </h2>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {brands.map((brand) => (
-          <FeaturedBrandCard key={brand.slug} brand={brand} />
+          <BrandFeaturedCard key={brand.slug} brand={brand} />
         ))}
       </div>
-      <a
-        href="#directory-az-list"
-        className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground transition-colors w-fit"
-        data-testid="link-view-all-designers"
-      >
-        View all designers
-      </a>
+
+      <div className="flex items-center justify-between mt-8 mb-12">
+        <p
+          className="text-xs tracking-widest text-gray-400 uppercase"
+          style={{ letterSpacing: "0.2em" }}
+          data-testid="text-vetted-brand-count"
+        >
+          {vettedLabel} brands vetted
+        </p>
+        <button
+          type="button"
+          onClick={scrollToDirectory}
+          className="text-xs tracking-widest uppercase text-gray-900 underline underline-offset-4"
+          style={{ letterSpacing: "0.2em" }}
+          data-testid="link-view-all-designers"
+        >
+          View all designers →
+        </button>
+      </div>
     </section>
   );
 }

@@ -3,7 +3,7 @@ import { DesignerSearchClient } from "./DesignerSearchClient";
 import { FeaturedDesignersGrid } from "./FeaturedDesignersGrid";
 import { ShoppableDesignersList } from "./ShoppableDesignersList";
 import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
-import { getFeaturedDesignersForDirectory } from "../../lib/featured-designers";
+import { getCuratedFeaturedDesigners } from "../../lib/featured-designers";
 import {
   directoryHeadline,
   formatBrandCountLabel,
@@ -59,7 +59,7 @@ export default async function DesignersPage() {
 
       <DesignerSearchClient searchPlaceholder={searchBrandsPlaceholder(shoppableBrandCount)} />
 
-      <FeaturedDesignersGrid brands={featuredBrands} />
+      <FeaturedDesignersGrid brands={featuredBrands} vettedBrandCount={shoppableBrandCount} />
 
       {shoppableBrands.length > 0 && (
         <section
