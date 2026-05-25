@@ -23,7 +23,7 @@ export function HomepageHeroSection({
           <img
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE — Luxury natural-fiber fashion"
-            className="absolute inset-0 w-full h-full object-cover object-[center_38%]"
+            className="absolute inset-0 w-full h-full object-cover object-[center_65%]"
             fetchPriority="high"
             draggable={false}
           />
@@ -57,7 +57,7 @@ export function HomepageHeroSection({
           <img
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE editorial"
-            className="absolute inset-0 w-full h-full object-cover object-[center_22%]"
+            className="absolute inset-0 w-full h-full object-cover object-[center_65%]"
             fetchPriority="high"
             draggable={false}
           />
