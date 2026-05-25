@@ -7,7 +7,6 @@ import { EditorialHeroImage } from "./EditorialHeroImage";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import type { CollectionSectionConfig } from "../../lib/site-architecture";
-import { pickSummerInCityHeroImage } from "../../lib/collection-rail-filters";
 
 function optimizeImageUrl(url: string, width: number): string {
   if (!url) return url;
@@ -61,12 +60,7 @@ export function HomepageCollectionBlock({
 }) {
   const shopOnLeft = SHOP_ON_LEFT_SLUGS.has(collection.slug);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const imageUrl =
-    collection.slug === "summer-in-the-city"
-      ? pickSummerInCityHeroImage(products) || editorialHeroForSlug(collection.slug)
-      : collection.slug === "white-edit"
-        ? editorialHeroForSlug("white-edit")
-        : editorialHeroForSlug(collection.slug);
+  const imageUrl = editorialHeroForSlug(collection.slug);
   const hasItems = products.length > 0;
 
   const scroll = (dir: "left" | "right") => {

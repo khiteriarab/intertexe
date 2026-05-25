@@ -137,14 +137,13 @@
   margin-right: calc(50% - 50vw);
 }
 
-/* Homepage main hero — shorter than 88vh so portrait art is not over-cropped on desktop */
+/* Homepage portrait hero — desktop; tall enough to show subject without over-cropping */
 .homepage-hero-desktop-frame {
   position: relative;
   width: 100%;
   overflow: hidden;
   background: #eae8e4;
-  height: min(62vh, 720px);
-  min-height: 500px;
+  height: clamp(500px, min(72vh, 82vh), 820px);
 }
 
 /* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */

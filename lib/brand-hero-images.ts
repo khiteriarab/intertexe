@@ -23,7 +23,8 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "frame": "/brands/frame.jpg",
   "ganni": "/brands/ganni.jpg",
   "iro": "/brands/iro.jpg",
-  "isabel-marant": "/brands/isabel-marant.jpg",
+  "isabel-marant":
+    "https://intl.isabelmarant.com/cdn/shop/files/Isabel_Marant_FW25_look_01.jpg?v=1741306390&width=1920",
   "joseph": "/brands/joseph.jpg",
   "khaite": "/brands/khaite.jpg",
   "loewe": "/brands/loewe.jpg",
@@ -36,7 +37,8 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "nili-lotan": "/brands/nili-lotan.jpg",
   "proenza-schouler": "/brands/proenza-schouler.jpg",
   "rachel-comey": "/brands/rachel-comey.jpg",
-  "l-agence": "/brands/l-agence.jpg",
+  "l-agence":
+    "https://lagence.com/cdn/shop/files/Hero-Desktop_2_7ff67339-b858-4593-99ee-6be2b035a36b.jpg?v=1752629879&width=1920",
   "rag-bone": "/brands/rag-bone.jpg",
   "rag-and-bone": "/brands/rag-bone.jpg",
   "rails": "/brands/rails.jpg",
@@ -53,7 +55,8 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "stine-goya": "/brands/stine-goya.jpg",
   "ted-baker": "/brands/ted-baker.jpg",
   "theory": "/brands/theory.jpg",
-  "staud": "/brands/staud.jpg",
+  "staud":
+    "https://staud.clothing/cdn/shop/files/Nav_Summer_Tommys.jpg?v=1777958857&width=1920",
   "the-row": "/brands/the-row.jpg",
   "tibi": "/brands/tibi.jpg",
   "toteme": "/brands/toteme.jpg",

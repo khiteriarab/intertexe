@@ -16,7 +16,7 @@ export function HomepageHeroSection({
   return (
     <>
       <section
-        className="relative w-full layout-bleed-full lg:hidden overflow-hidden"
+        className="relative w-full lg:hidden overflow-hidden"
         data-testid="homepage-hero-mobile"
       >
         <div className="homepage-hero-frame-mobile relative w-full overflow-hidden bg-[#eae8e4]">
@@ -50,7 +50,7 @@ export function HomepageHeroSection({
       </section>
 
       <section
-        className="relative w-full layout-bleed-full hidden lg:block overflow-hidden border-b border-neutral-200/60"
+        className="relative w-full hidden lg:block overflow-hidden border-b border-neutral-200/60"
         data-testid="homepage-hero-desktop"
       >
         <div className="homepage-hero-desktop-frame">

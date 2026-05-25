@@ -37,7 +37,7 @@ function AppDownloadBanner() {
 
   return (
     <div
-      className="w-full bg-[#111] text-white flex flex-wrap items-center gap-3 px-4 py-2.5 -mx-4 md:-mx-8"
+      className="w-full shrink-0 bg-[#111] text-white flex flex-wrap items-center gap-3 px-4 md:px-6 py-2.5"
       data-testid="banner-app-download"
     >
       <button
@@ -499,12 +499,13 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
   return (
     <div className="flex flex-col w-full max-w-full">
 
-      <AppDownloadBanner />
-
-      <HomepageHeroSection
-        productCountLabel={displayCount}
-        brandCountLabel={displayBrands.replace(/\+$/, "")}
-      />
+      <div className="layout-bleed-full flex flex-col w-full overflow-hidden">
+        <AppDownloadBanner />
+        <HomepageHeroSection
+          productCountLabel={displayCount}
+          brandCountLabel={displayBrands.replace(/\+$/, "")}
+        />
+      </div>
 
       <section className="py-10 md:py-20 lg:pt-16">
         <HorizontalProductScroll
