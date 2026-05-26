@@ -50,7 +50,7 @@ export function HomepageHeroSection({
       </section>
 
       <section
-        className="relative w-full hidden lg:block overflow-hidden border-b border-neutral-200/60"
+        className="homepage-hero relative w-full hidden lg:block overflow-hidden border-b border-neutral-200/60"
         data-testid="homepage-hero-desktop"
       >
         <div className="homepage-hero-desktop-frame">
