@@ -11,15 +11,27 @@ import {
 } from "./collection-moods";
 import type { Product } from "./supabase-server";
 
+/** Verified editorial heroes for Vacation “Wear to where” tiles (object-position: top). */
+const VACATION_MOOD_HERO_BY_SLUG: Partial<Record<MoodSlug, string>> = {
+  "mediterranean-luxury":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/97/P00817845.jpg",
+  "resort-dressing":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/5a/P01196498.jpg",
+  "linen-movement":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/be/P01194268.jpg",
+  "woven-textures":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/4c/P01184379.jpg",
+  "raffia-accessories":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/8e/P01179122.jpg",
+  "beach-dinners":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/c0/P01181453.jpg",
+  "warm-neutrals":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/5a/P01196498.jpg",
+};
+
 const MOOD_IMAGES: Partial<Record<MoodSlug, string>> = {
-  "mediterranean-luxury": EDITORIAL_HERO.vacation,
-  "resort-dressing": EDITORIAL_HERO.linen,
-  "linen-movement": EDITORIAL_HERO.linen,
+  ...VACATION_MOOD_HERO_BY_SLUG,
   "silk-at-sunset": EDITORIAL_HERO.silk,
-  "woven-textures": EDITORIAL_HERO.vacation,
-  "raffia-accessories": EDITORIAL_HERO.vacation,
-  "beach-dinners": EDITORIAL_HERO.silk,
-  "warm-neutrals": EDITORIAL_HERO.linen,
   "white-cotton": EDITORIAL_HERO["white-edit"],
   "destination-energy": EDITORIAL_HERO.vacation,
   ibiza: EDITORIAL_HERO.vacation,
@@ -77,8 +89,14 @@ export function wearToWhereEditorialCards(
           m.label.toLowerCase() === label.toLowerCase()
       ) ?? moods.find((m) => m.label.includes(label.split(" ")[0] ?? ""));
     const fallback = mood ? moodImageUrl(mood) : editorialHeroForSlug(slug);
+    const fixedVacation =
+      slug === "vacation" && mood?.slug
+        ? VACATION_MOOD_HERO_BY_SLUG[mood.slug as MoodSlug]
+        : undefined;
     const imageUrl =
-      getMoodHeroImage(label, products, slug, usedImages, fallback) || fallback;
+      fixedVacation ||
+      getMoodHeroImage(label, products, slug, usedImages, fallback) ||
+      fallback;
     return {
       href: "#",
       label: mood?.label ?? label,

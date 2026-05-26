@@ -13,7 +13,7 @@ import EmailCapture from "../../components/EmailCapture";
 
 export const revalidate = 300;
 
-const MAIN_FIBERS = ["silk", "cotton", "linen", "wool", "cashmere"];
+const MAIN_FIBERS = ["silk", "cotton", "linen", "wool", "cashmere", "leather"];
 
 const FIBER_QUERIES: Record<string, string[]> = {
   cotton: ["cotton"],
@@ -21,6 +21,7 @@ const FIBER_QUERIES: Record<string, string[]> = {
   linen: ["linen", "flax"],
   wool: ["wool", "merino"],
   cashmere: ["cashmere"],
+  leather: ["leather", "suede"],
 };
 
 const SEO_CONTENT: Record<string, { title: string; h1: string; intro: string; metaDesc: string; tagline: string }> = {
@@ -58,6 +59,15 @@ const SEO_CONTENT: Record<string, { title: string; h1: string; intro: string; me
     intro: "Luxury cashmere from brands that use genuine cashmere — not 5% cashmere blends marketed as 'cashmere.' Every piece verified for actual cashmere content. Cashmere sweaters, cashmere scarves, and more.",
     metaDesc: "Shop the best cashmere sweaters, cashmere knits, and cashmere clothing in 2026. Verified for real cashmere content. Compare compositions across luxury and contemporary brands.",
     tagline: "The softest fiber in the world",
+  },
+  leather: {
+    title: "Best Leather Clothing 2026 — Verified Leather Jackets, Skirts & More",
+    h1: "Shop Leather Clothing",
+    intro:
+      "Full-grain. Suede. Lambskin. Natural leather that develops character with every wear. Every piece verified — the antithesis of plastic fashion.",
+    metaDesc:
+      "Shop verified leather jackets, leather trousers, suede skirts and more in 2026. Natural leather and suede from curated brands — every composition checked.",
+    tagline: "Natural. Enduring. Exceptional.",
   },
 };
 

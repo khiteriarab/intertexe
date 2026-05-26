@@ -61,14 +61,23 @@ const FABRICS = [
     subcategories: ["Sweaters", "Scarves", "Cardigans"],
     subcategorySlugs: ["cashmere-sweaters", "cashmere-scarves", "cashmere-cardigans"],
   },
+  {
+    fabric: "Leather", slug: "leather",
+    tagline: "Natural. Enduring. Exceptional.",
+    description:
+      "Full-grain. Suede. Lambskin. Natural leather that develops character with every wear. The antithesis of plastic fashion.",
+    subcategories: ["Jackets", "Trousers", "Skirts", "Suede"],
+    subcategorySlugs: ["leather-jackets", "leather-trousers", "leather-skirts", "suede"],
+  },
 ];
 
 const CURATED_IMAGES: Record<string, string> = {
-  cotton: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319334/PRESPA/1319334.1.PRESPA?_s=RAABAB0",
-  linen: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319452/DARK_OATMEAL/1319452.1.DARK_OATMEAL?_s=RAABAB0",
-  silk: "https://media.thereformation.com/image/upload/f_auto,q_auto,dpr_1.0/w_800,c_scale//PRD-SFCC/1319612/PLUTO_DOT/1319612.1.PLUTO_DOT?_s=RAABAB0",
-  wool: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_LOUIE_SWEATER_-_IVORY_A-09-11557-IVY1_042.jpg?v=1764179021&width=800",
-  cashmere: "https://cdn.shopify.com/s/files/1/0150/1528/files/AB_JACKSON_SWEATER_-_MEDIUM_HEATHER_GREY_A-09-10175-MHG1_0017.jpg?v=1752193948&width=800",
+  cotton: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/c0/P01181453.jpg",
+  linen: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/5a/P01196498.jpg",
+  silk: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/97/P00817845.jpg",
+  wool: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/be/P01194268.jpg",
+  cashmere: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/4b/P00919837.jpg",
+  leather: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/3b/P00920847.jpg",
 };
 
 export default async function MaterialsPage() {
@@ -98,8 +107,8 @@ export default async function MaterialsPage() {
   );
   const directoryBlurb =
     shoppableBrandCount > 0
-      ? `Browse ${formatBrandCountLabel(shoppableBrandCount)} brands ranked by natural fiber quality. Find your next favourite.`
-      : "Browse brands ranked by natural fiber quality. Find your next favourite.";
+      ? `Browse ${formatBrandCountLabel(shoppableBrandCount)} brands ranked by natural fiber quality. Find your next favorite.`
+      : "Browse brands ranked by natural fiber quality. Find your next favorite.";
 
   return (
     <div className="flex flex-col" data-testid="page-fabric-hub">
@@ -120,7 +129,7 @@ export default async function MaterialsPage() {
             </p>
           </div>
           <div className="relative flex justify-center gap-6 md:gap-12 pb-6 md:pb-8 px-6">
-            {["Cotton", "Linen", "Silk", "Wool", "Cashmere"].map((name) => (
+            {["Cotton", "Linen", "Silk", "Wool", "Cashmere", "Leather"].map((name) => (
               <Link key={name} href={`/materials/${name.toLowerCase()}`} className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-white/25 hover:text-white/70 transition-colors duration-500">
                 {name}
               </Link>
@@ -139,7 +148,7 @@ export default async function MaterialsPage() {
               <Link href={`/materials/${fabric.slug}`} className={`group relative overflow-hidden bg-[#EDECE8] block ${isReversed ? "md:order-2" : ""}`}>
                 <div className="aspect-[3/4] md:aspect-auto md:h-full md:min-h-[520px] relative">
                   {imgSrc ? (
-                    <img src={imgSrc} alt={`${fabric.fabric} clothing`} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-1000" loading={index < 2 ? "eager" : "lazy"} />
+                    <img src={imgSrc} alt={`${fabric.fabric} clothing`} className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-[1.02] transition-transform duration-1000" loading={index < 2 ? "eager" : "lazy"} />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-b from-[#E8E4DE] to-[#D5CFC4]" />
                   )}
@@ -171,7 +180,7 @@ export default async function MaterialsPage() {
           <Link href="/scanner" className="group flex flex-col gap-3 p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/5 transition-colors" data-testid="link-hub-scanner">
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">01</span>
             <span className="text-lg md:text-xl font-serif">Scan Any Product</span>
-            <span className="text-[13px] text-white/50 leading-relaxed">Paste any URL to instantly check fabric composition and natural fiber percentage.</span>
+            <span className="text-[13px] text-white/50 leading-relaxed">Point your camera at any label. Know exactly what it is made of.</span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/60 flex items-center gap-1.5 mt-2 group-hover:gap-2.5 transition-all">Try Scanner <ArrowRight className="w-3 h-3" /></span>
           </Link>
           <Link href="/quiz" className="group flex flex-col gap-3 p-8 md:p-12 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/5 transition-colors" data-testid="link-hub-quiz">

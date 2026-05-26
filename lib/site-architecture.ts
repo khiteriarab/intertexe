@@ -17,10 +17,10 @@ export const FABRIC_SECTIONS = [
   { slug: "wool", label: "Wool", href: "/materials/wool", railKey: "fabrics:wool" },
   { slug: "cotton", label: "Cotton", href: "/materials/cotton", railKey: "fabrics:cotton" },
   {
-    slug: "leather-suede",
-    label: "Leather & Suede",
-    href: "/shop?fiber=leather",
-    railKey: "fabrics:leather-suede",
+    slug: "leather",
+    label: "Leather",
+    href: "/materials/leather",
+    railKey: "fabrics:leather",
   },
 ] as const;
 

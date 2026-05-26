@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandWordmark } from "./BrandWordmark";
+import { SITE_FOOTER_DISCLOSURE, SITE_FOOTER_TAGLINE } from "../../lib/site-copy";
 
 export function Footer() {
   return (
@@ -9,7 +10,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1 flex flex-col gap-3 md:gap-6 mb-2 md:mb-0">
             <BrandWordmark asLink size="md" className="text-background" testId="link-footer-logo" />
             <p className="text-background/60 text-xs md:text-sm leading-relaxed max-w-xs">
-              The destination for natural fiber fashion. Every piece verified. Every brand vetted.
+              {SITE_FOOTER_TAGLINE}
             </p>
           </div>
 
@@ -40,7 +41,7 @@ export function Footer() {
 
         <div className="border-t border-background/10 mt-10 md:mt-16 pt-6 md:pt-8 flex flex-col gap-6">
           <p className="text-[10px] md:text-xs text-background/30 leading-relaxed max-w-3xl" data-testid="text-footer-disclosure">
-            The destination for natural fiber fashion. Every piece verified. Every brand vetted. Product images and brand names belong to their respective owners.
+            {SITE_FOOTER_DISCLOSURE}
           </p>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest">

@@ -62,20 +62,43 @@ export const COLLECTION_CATALOG_QUERIES: Record<CollectionSlug, CollectionCatalo
   ],
 };
 
+const WHITE_EDIT_DARK_TERMS = [
+  "black",
+  "noir",
+  "dark",
+  "navy",
+  "midnight",
+  "charcoal",
+  "forest",
+  "burgundy",
+  "grey",
+  "gray",
+  "brown",
+  "khaki",
+  "olive",
+  "red",
+  "blue",
+  "green",
+  "pink",
+  "yellow",
+  "orange",
+  "purple",
+  "multi",
+  "print",
+  "stripe",
+];
+
 function isWhiteEditTonal(product: Product): boolean {
   const name = (product.name || "").toLowerCase();
   const cat = (product.category || "").toLowerCase();
   const comp = (product.composition || "").toLowerCase();
+  if (WHITE_EDIT_DARK_TERMS.some((term) => name.includes(term))) {
+    return false;
+  }
   const whiteColor =
     /\b(white|ivory|ecru|cream|chalk|snow|off[- ]?white|optic white|optical white)\b/i;
   if (!whiteColor.test(name) && !whiteColor.test(cat) && !whiteColor.test(comp)) {
     return false;
-  }
-  const otherColors =
-    /\b(black|navy|red|blue|green|pink|burgundy|brown|grey|gray|yellow|orange|purple|floral|print|stripe|striped|dot|dotted|check|plaid|multicolor|multi-color)\b/i;
-  if (otherColors.test(name)) {
-    const startsWhite = /^(white|ivory|ecru|cream|off[- ]?white)\b/i.test(name.trim());
-    if (!startsWhite) return false;
   }
   if (
     /\b(tan|camel|khaki|mustard|gold|beige|sand|taupe|nude|rust|terracotta|olive)\b/.test(name)
@@ -95,6 +118,7 @@ export function isCollectionEligible(
   const canonical = COLLECTION_CANONICAL_SLUGS[slug] || [];
   if (canonical.some((c) => slugs.includes(c))) {
     if (slug === "white-edit") return isWhiteEditTonal(product);
+    if (slug === "evening") return collectionEditorialScore(product, slug) > 0;
     return true;
   }
 

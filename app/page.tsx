@@ -41,7 +41,16 @@ export default async function HomePage() {
     <>
       <HomePageContent initialData={data} />
 
-      <div className="sr-only" aria-hidden="false">
+      <div className="py-16 px-6 border-t border-gray-100" aria-hidden={false}>
+        <div
+          style={{
+            fontSize: "11px",
+            color: "#CCCCCC",
+            lineHeight: "1.8",
+            maxWidth: "800px",
+            margin: "0 auto",
+          }}
+        >
         <section>
           <h1>INTERTEXE — The Fashion Search Engine for Natural Fabrics</h1>
           <p>
@@ -83,6 +92,7 @@ export default async function HomePage() {
           <Link href="/materials">Explore Fabrics</Link>
           <Link href="/designers">Brand Directory</Link>
         </section>
+        </div>
       </div>
     </>
   );

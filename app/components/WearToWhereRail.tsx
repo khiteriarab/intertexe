@@ -13,7 +13,7 @@ function WearToWhereCardTile({ card }: { card: WearToWhereCard }) {
         <img
           src={card.imageUrl}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
+          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
           loading="lazy"
           draggable={false}
         />

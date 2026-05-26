@@ -22,6 +22,7 @@ import {
 import { getCachedPlatformStats } from "./cached-catalog";
 import { enrichDesignersWithHeroImages } from "./brand-hero-selection";
 import { getServerSupabase } from "./supabase-service-client";
+import { filterHomepageSaleProducts } from "./homepage-sale-filter";
 
 /** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
@@ -223,7 +224,10 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const tailoringProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.tailoring] || []);
   const summerInCityProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.summerInCity] || []);
   const whiteEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.whiteEdit] || []);
-  const saleProducts = (railsByKey[MERCH_RAIL_KEYS.sale] || []).slice(0, MERCH_HOME_FETCH_LIMIT);
+  const saleProducts = filterHomepageSaleProducts(
+    railsByKey[MERCH_RAIL_KEYS.sale] || [],
+    MERCH_HOME_FETCH_LIMIT
+  );
 
   console.log(
     "[merch-feed] homepage payload:",
@@ -290,7 +294,10 @@ export async function getHomePageData(): Promise<HomePageData> {
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
   ]);
 
-  const saleProducts = (saleResult.products || []).filter((p) => !isZeroPrice(p.price));
+  const saleProducts = filterHomepageSaleProducts(
+    (saleResult.products || []).filter((p) => !isZeroPrice(p.price)),
+    MERCH_HOME_FETCH_LIMIT
+  );
   const platformStats = await getCachedPlatformStats();
 
   const brandProductLists = await Promise.all(
