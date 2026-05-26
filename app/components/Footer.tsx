@@ -32,9 +32,9 @@ export function Footer() {
 
           <div className="flex flex-col gap-3 md:gap-4">
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Company</h3>
-            <Link href="/about" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-about">About Us</Link>
+            <Link href="/platform" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-platform">Platform</Link>
             <Link href="/press" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-press">Press</Link>
-            <Link href="/partners" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-partners">Partners</Link>
+            <Link href="/about" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-about">About Us</Link>
             <Link href="/contact" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-contact">Contact</Link>
             <Link href="/privacy" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-privacy">Privacy Policy</Link>
             <Link href="/terms" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-terms">Terms of Service</Link>
