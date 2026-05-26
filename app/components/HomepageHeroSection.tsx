@@ -24,6 +24,7 @@ export function HomepageHeroSection({
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE — Luxury natural-fiber fashion"
             className="homepage-hero-img"
+            style={{ objectPosition: "center center" }}
             fetchPriority="high"
             draggable={false}
           />
@@ -58,6 +59,7 @@ export function HomepageHeroSection({
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE editorial"
             className="homepage-hero-img"
+            style={{ objectPosition: "center center" }}
             fetchPriority="high"
             draggable={false}
           />
