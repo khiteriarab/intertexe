@@ -4,9 +4,9 @@
 import type { CollectionSlug } from "./collection-pages";
 import {
   collectionEditorialScore,
-  rankForCollection,
   COLLECTION_CANONICAL_SLUGS,
 } from "./collection-editorial";
+import { sortProductsForCollection } from "./collection-sort";
 import { isEditorialWomensApparel } from "./catalog-product-filters";
 import type { Product } from "./supabase-server";
 import { catalogDedupeKey } from "./catalog-rules";
@@ -93,7 +93,7 @@ export function buildRankedCollectionCatalog(
   slug: CollectionSlug
 ): Product[] {
   const eligible = products.filter((p) => isCollectionEligible(p, slug));
-  return rankForCollection(eligible, slug);
+  return sortProductsForCollection(eligible, slug);
 }
 
 export function paginateCollectionCatalog(
