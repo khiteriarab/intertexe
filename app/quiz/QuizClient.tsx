@@ -53,7 +53,25 @@ const STEPS = [
   { id: 'results', title: 'Results' }
 ];
 
+const QUIZ_INTRO_IMAGE = "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/5a/P01196498.jpg";
+const QUIZ_STEP_IMAGES = [
+  "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/c0/P01181453.jpg",
+  "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/4b/P00919837.jpg",
+  "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/be/P00985621.jpg",
+  "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/8e/P01179122.jpg",
+];
+
+const PERSONA_HERO: Record<string, string> = {
+  "The Purist": "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/5a/P01196498.jpg",
+  "The Refined Romantic": "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/97/P00817845.jpg",
+  "The Structured Minimalist": "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/4b/P00919837.jpg",
+  "The Conscious Curator": "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/c0/P01181453.jpg",
+  "The Performance Luxe": "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/be/P00985621.jpg",
+};
+
 export default function QuizClient() {
+  const [showIntro, setShowIntro] = useState(true);
+  const [loadingDot, setLoadingDot] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [recommendation, setRecommendation] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,11 +113,18 @@ export default function QuizClient() {
               recommendedMaterials: parsed.recommendedMaterials,
             });
             setCurrentStep(STEPS.length - 1);
+            setShowIntro(false);
           }
         } catch {}
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!isSubmitting) return;
+    const id = setInterval(() => setLoadingDot((d) => (d + 1) % 3), 350);
+    return () => clearInterval(id);
+  }, [isSubmitting]);
 
   useEffect(() => {
     const instant = POPULAR_BRAND_NAMES.map((name) => {
@@ -260,37 +285,58 @@ export default function QuizClient() {
     );
   }
 
+  if (showIntro) {
+    return (
+      <div className="min-h-screen relative">
+        <img src={QUIZ_INTRO_IMAGE} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/85" />
+        <div className="relative z-10 flex flex-col justify-end min-h-screen px-8 pb-16 max-w-lg mx-auto">
+          <p className="text-white/60 text-xs tracking-widest uppercase mb-4" style={{ letterSpacing: "0.25em" }}>Fabric Persona</p>
+          <h1 className="text-white text-3xl font-light leading-tight mb-4" style={{ fontFamily: "Georgia, serif" }}>
+            Your fabric identity tells you more about your taste than any trend report.
+          </h1>
+          <p className="text-white/70 text-sm font-light mb-10">1 minute · 4 questions · personalised brand edit</p>
+          <button type="button" onClick={() => setShowIntro(false)} className="w-full bg-white text-black text-xs tracking-widest uppercase py-4" style={{ letterSpacing: "0.2em" }} data-testid="button-quiz-begin">
+            Begin
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (isSubmitting) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 max-w-md mx-auto text-center px-4">
-        <Loader2 className="w-10 h-10 animate-spin text-foreground/40" />
-        <h2 className="text-2xl md:text-3xl font-serif">Curating Your Profile</h2>
-        <p className="text-muted-foreground text-sm md:text-base">
-          Our AI is analyzing your preferences to find designers that match your material standards...
-        </p>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-6 max-w-md mx-auto text-center px-4">
+        <p className="text-[9px] uppercase tracking-[0.3em] text-muted-foreground">Building your edit</p>
+        <h2 className="text-2xl md:text-3xl font-serif leading-snug">
+          Matching your material preferences<br />to the brands you will love.
+        </h2>
+        <div className="flex gap-2 mt-4">
+          {[0, 1, 2].map((i) => (
+            <span key={i} className={`w-1 h-1 rounded-full bg-foreground transition-opacity ${loadingDot === i ? "opacity-100" : "opacity-20"}`} />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="py-6 md:py-16 max-w-3xl mx-auto w-full flex flex-col gap-8 md:gap-12 min-h-[calc(100vh-8rem)]">
-      <p className="text-center text-muted-foreground text-sm md:text-base leading-relaxed max-w-xl mx-auto" data-testid="text-quiz-intro">
-        Your fabric identity tells you more about your taste than any trend report. Take the 1-minute quiz and we will show you the brands whose materials align with how you actually want to feel in your clothes.
-      </p>
-      <div className="flex items-center gap-2 md:gap-4 w-full">
-        {STEPS.slice(0, 4).map((step, idx) => (
-          <div key={step.id} className="flex-1 flex flex-col gap-1.5 md:gap-2">
-            <div className={`h-0.5 md:h-1 w-full transition-colors duration-500 ${idx <= currentStep ? 'bg-foreground' : 'bg-secondary'}`} />
-            <span className={`text-[9px] md:text-[10px] uppercase tracking-widest ${idx <= currentStep ? 'text-foreground' : 'text-muted-foreground'}`}>
-              {step.title}
-            </span>
-          </div>
-        ))}
+      <div className="w-full">
+        <div className="flex gap-1 w-full">
+          {[0, 1, 2, 3].map((idx) => (
+            <div key={idx} className={`h-0.5 flex-1 transition-colors duration-300 ${idx <= currentStep ? "bg-foreground" : "bg-neutral-200"}`} />
+          ))}
+        </div>
+        <p className="text-[10px] font-light text-muted-foreground text-right mt-2 mb-5">{currentStep + 1} of 4</p>
       </div>
 
       <div className="flex-1 flex flex-col justify-center gap-8 md:gap-12">
+        <div className="w-full h-[180px] overflow-hidden mb-2">
+          <img src={QUIZ_STEP_IMAGES[currentStep]} alt="" className="w-full h-full object-cover object-top" />
+        </div>
         {currentStep === 0 && (
-          <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="flex flex-col gap-2 text-center mb-2 md:mb-4">
               <h2 className="text-2xl md:text-4xl font-serif">What materials do you gravitate toward?</h2>
               <p className="text-muted-foreground text-sm">Select all that apply.</p>
@@ -310,7 +356,7 @@ export default function QuizClient() {
         )}
 
         {currentStep === 1 && (
-          <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="flex flex-col gap-2 text-center mb-2 md:mb-4">
               <h2 className="text-2xl md:text-4xl font-serif">Your typical spend per item</h2>
               <p className="text-muted-foreground text-sm">This helps us recommend brands in your range.</p>
@@ -333,7 +379,7 @@ export default function QuizClient() {
         )}
 
         {currentStep === 2 && (
-          <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="flex flex-col gap-2 text-center mb-2 md:mb-4">
               <h2 className="text-2xl md:text-4xl font-serif leading-tight">How much synthetic content are you comfortable with?</h2>
               <p className="text-muted-foreground text-sm">e.g. Elastane, Polyester, Nylon.</p>
@@ -743,11 +789,21 @@ function QuizResults({ selections, recommendation, designers, isAuthenticated }:
   const displayRecommendedProducts = showAllRecommended ? diversifiedRecommended : diversifiedRecommended.slice(0, 6);
   const isLoadingSelectedProducts = productsLoading;
 
+  const heroUrl = PERSONA_HERO[recommendation.profileType] || QUIZ_INTRO_IMAGE;
+
   return (
-    <div className="py-6 md:py-16 max-w-4xl mx-auto w-full flex flex-col gap-10 md:gap-16 animate-in fade-in duration-700">
-      <header className="text-center flex flex-col gap-4 md:gap-6 px-2">
+    <div className="py-0 md:py-8 max-w-4xl mx-auto w-full flex flex-col gap-10 md:gap-16 animate-in fade-in duration-700">
+      <div className="relative w-full h-[320px] md:h-[380px] overflow-hidden -mx-0 md:rounded-sm">
+        <img src={heroUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+          <span className="text-[9px] uppercase tracking-[0.25em] text-white/60">Your Fabric Persona</span>
+          <h1 className="text-3xl md:text-5xl font-serif text-white mt-2" data-testid="text-persona-name">{recommendation.profileType}</h1>
+        </div>
+      </div>
+      <header className="text-center flex flex-col gap-4 md:gap-6 px-2 md:hidden">
         <span className="text-xs uppercase tracking-widest text-muted-foreground">Your Fabric Persona</span>
-        <h1 className="text-3xl md:text-6xl font-serif" data-testid="text-persona-name">{recommendation.profileType}</h1>
+        <h1 className="text-3xl md:text-6xl font-serif" data-testid="text-persona-name-mobile">{recommendation.profileType}</h1>
         {recommendation.coreValue && (
           <p className="text-sm md:text-base uppercase tracking-[0.2em] text-muted-foreground italic font-serif">
             &ldquo;{recommendation.coreValue}&rdquo;
