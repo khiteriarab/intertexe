@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border/40 mt-auto bg-foreground text-background mb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] md:mb-0">
       <div className="container mx-auto px-4 md:px-8 py-10 md:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-8">
           <div className="col-span-2 md:col-span-1 flex flex-col gap-3 md:gap-6 mb-2 md:mb-0">
             <BrandWordmark asLink size="md" className="text-background" testId="link-footer-logo" />
             <p className="text-background/60 text-xs md:text-sm leading-relaxed max-w-xs">
@@ -34,6 +34,10 @@ export function Footer() {
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Company</h3>
             <Link href="/platform" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-platform">Platform</Link>
             <Link href="/press" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-press">Press</Link>
+          </div>
+
+          <div className="flex flex-col gap-3 md:gap-4">
+            <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Info</h3>
             <Link href="/about" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-about">About Us</Link>
             <Link href="/contact" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-contact">Contact</Link>
             <Link href="/privacy" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-privacy">Privacy Policy</Link>
