@@ -23,6 +23,16 @@ const SLUG_LOOKUP: Record<string, string[]> = {
   alemais: ["alemais", "alémais"],
 };
 
+function featuredBrandDisplayName(key: string): string {
+  return key
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
+    .replace("Alc", "ALC")
+    .replace("Alemais", "Alémais")
+    .replace("The Row", "The Row");
+}
+
 export type FeaturedDesignerCard = {
   slug: string;
   name: string;
@@ -33,7 +43,6 @@ type DesignerRow = {
   name: string;
   slug: string;
   hero_image: string | null;
-  image_url: string | null;
   natural_fiber_percent: number | null;
   status: string | null;
 };
@@ -52,7 +61,7 @@ export async function getCuratedFeaturedDesigners(): Promise<FeaturedDesignerCar
 
   const { data, error } = await supabase
     .from("designers")
-    .select("name, slug, hero_image, image_url, natural_fiber_percent, status")
+    .select("name, slug, hero_image, natural_fiber_percent, status")
     .in("slug", lookupSlugs);
 
   if (error || !data?.length) return [];
@@ -74,10 +83,7 @@ export async function getCuratedFeaturedDesigners(): Promise<FeaturedDesignerCar
   const ordered = FEATURED_BRAND_SLUGS.map((key) => {
     const row = resolveRow(key);
     if (!row) return null;
-    const manual =
-      (row.hero_image && String(row.hero_image).trim()) ||
-      (row.image_url && String(row.image_url).trim()) ||
-      null;
+    const manual = row.hero_image && String(row.hero_image).trim() ? String(row.hero_image).trim() : null;
     return {
       slug: row.slug,
       name: row.name,
@@ -96,12 +102,7 @@ export async function getCuratedFeaturedDesigners(): Promise<FeaturedDesignerCar
   if (ordered.length === 0) {
     return FEATURED_BRAND_SLUGS.map((key) => ({
       slug: key,
-      name: key
-        .split("-")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ")
-        .replace("Alc", "ALC")
-        .replace("Alemais", "Alémais"),
+      name: featuredBrandDisplayName(key),
       heroImageUrl: getBrandHeroImage(key) || null,
     }));
   }
@@ -110,7 +111,13 @@ export async function getCuratedFeaturedDesigners(): Promise<FeaturedDesignerCar
 
   return FEATURED_BRAND_SLUGS.map((key) => {
     const row = enriched.find((e) => e.key === key);
-    if (!row) return null;
+    if (!row) {
+      return {
+        slug: key,
+        name: featuredBrandDisplayName(key),
+        heroImageUrl: getBrandHeroImage(key) || null,
+      };
+    }
     const heroImageUrl =
       row.heroImageUrl ||
       row.hero_image ||
@@ -121,7 +128,7 @@ export async function getCuratedFeaturedDesigners(): Promise<FeaturedDesignerCar
       name: row.name,
       heroImageUrl: heroImageUrl || null,
     };
-  }).filter(Boolean) as FeaturedDesignerCard[];
+  }) as FeaturedDesignerCard[];
 }
 
 /** @deprecated Use getCuratedFeaturedDesigners — kept for any legacy imports. */
