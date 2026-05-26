@@ -3,7 +3,7 @@ import { DesignerSearchClient } from "./DesignerSearchClient";
 import { FeaturedDesignersGrid } from "./FeaturedDesignersGrid";
 import { ShoppableDesignersList } from "./ShoppableDesignersList";
 import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
-import { getCuratedFeaturedDesigners } from "../../lib/featured-designers";
+import { getFeaturedDesignersForDirectory } from "../../lib/featured-designers";
 import {
   directoryHeadline,
   formatBrandCountLabel,
@@ -40,7 +40,7 @@ export default async function DesignersPage() {
     platformStats.brandCount,
     shoppableBrands.length
   );
-  const featuredBrands = await getCuratedFeaturedDesigners();
+  const featuredBrands = await getFeaturedDesignersForDirectory();
 
   return (
     <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-10 max-w-6xl mx-auto px-4 w-full">
