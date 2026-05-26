@@ -153,8 +153,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Portrait 768×1408 — anchor face in upper portion on wide screens */
-  object-position: center 20%;
+  /* Portrait hero — model sits low in frame; wide desktop crops top, not the figure */
+  object-position: center bottom;
   display: block;
 }
 
