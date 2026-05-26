@@ -1,6 +1,7 @@
 {
   "include": [
     "app/**/*",
+    "emails/**/*",
     "lib/**/*",
     "client/src/**/*",
     "next-env.d.ts",
@@ -52,6 +53,9 @@
       ],
       "@app/*": [
         "./app/*"
+      ],
+      "@/emails/*": [
+        "./emails/*"
       ]
     },
     "target": "ES2017",

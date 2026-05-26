@@ -9,6 +9,7 @@ import { lookupBarcode, upsertBarcodeFromComposition } from "../../../lib/scanne
 import { getSmartAlternatives } from "../../../lib/scanner/get-smart-alternatives";
 import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext } from "../../../lib/scanner-response";
 import { getVerdictMessage } from "../../../lib/scanner-copy";
+import { queueScanFollowUp } from "../../../lib/scan-follow-up-queue";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -563,11 +564,20 @@ export async function POST(request: NextRequest) {
       detected_currency: detectedCurrency,
       device,
       app_version: appVersion,
+      user_email: userEmailBody,
+      email: emailBody,
     } = body;
 
     const authHeader = request.headers.get("authorization");
     const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
     const userId = accessToken ? await getSupabaseAuthUserId(accessToken) : null;
+
+    const guestEmail =
+      !userId && (userEmailBody || emailBody)
+        ? String(userEmailBody || emailBody)
+            .trim()
+            .toLowerCase()
+        : "";
 
     const parsedPrice =
       typeof detectedPriceRaw === "number"
@@ -678,6 +688,15 @@ export async function POST(request: NextRequest) {
         helped_build_database: isNewToDatabase,
         alternatives_shown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
       });
+
+      if (guestEmail) {
+        await queueScanFollowUp(supabase, {
+          email: guestEmail,
+          composition: analysis.compositionText || composition,
+          naturalFiberPercent: analysis.naturalPercent,
+          verdict: String(response.verdict || getVerdictMessage(analysis.naturalPercent)),
+        });
+      }
 
       return NextResponse.json(response);
     }
@@ -936,6 +955,15 @@ export async function POST(request: NextRequest) {
       barcode: extracted.barcode || "",
       success: true,
     });
+
+    if (guestEmail) {
+      await queueScanFollowUp(supabase, {
+        email: guestEmail,
+        composition: analysis.compositionText || extracted.composition || "",
+        naturalFiberPercent: effectivePercent,
+        verdict: String(verdict || getVerdictMessage(effectivePercent)),
+      });
+    }
 
     return NextResponse.json(legacyResponse);
   } catch (err: any) {

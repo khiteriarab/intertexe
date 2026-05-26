@@ -5,13 +5,21 @@ import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server"
 import { createServiceClient } from "../../../../lib/supabase/server";
 import { linkScannerSessionToUser } from "../../../../lib/link-scanner-session";
 import { sendWelcomeEmail } from "../../../../server/resend";
+import { syncContactToLoops } from "../../../../lib/loops";
 import { snakeToCamel } from "../../../../lib/case-utils";
 
 export async function POST(request: NextRequest) {
   try {
     const sessionId = request.headers.get("x-session-id") || "";
-    const { email, password, name, firstName, lastName, username: providedUsername } =
-      await request.json();
+    const {
+      email,
+      password,
+      name,
+      firstName,
+      lastName,
+      username: providedUsername,
+      invitationCode,
+    } = await request.json();
     if (!email || !password) {
       return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
     }
@@ -75,6 +83,13 @@ export async function POST(request: NextRequest) {
     }
 
     sendWelcomeEmail(cleanEmail, resolvedFirst || fullName || "").catch(console.error);
+    syncContactToLoops({
+      email: cleanEmail,
+      firstName: resolvedFirst || undefined,
+      lastName: resolvedLast || undefined,
+      source: "signup",
+      invitationCode: typeof invitationCode === "string" ? invitationCode : undefined,
+    }).catch(console.error);
 
     const session = data.session;
     if (!session?.access_token || !user?.id) {
