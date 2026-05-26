@@ -82,11 +82,31 @@ function isApprovedSaleBrand(product: Product): boolean {
   });
 }
 
-/** Homepage sale rail — $200+ approved brands, sorted by price descending. */
-export function filterHomepageSaleProducts(products: Product[], limit = 8): Product[] {
-  return products
+/** Homepage sale rail — $200+ approved brands first, then backfill for a full horizontal scroll. */
+export function filterHomepageSaleProducts(products: Product[], limit = 16): Product[] {
+  const priced = products
     .filter((p) => parsePrice(p.price) >= HOMEPAGE_SALE_MIN_PRICE)
-    .filter(isApprovedSaleBrand)
-    .sort((a, b) => parsePrice(b.price) - parsePrice(a.price))
-    .slice(0, limit);
+    .sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+
+  const curated = priced.filter(isApprovedSaleBrand);
+  const seen = new Set<string>();
+  const result: Product[] = [];
+
+  for (const p of curated) {
+    if (result.length >= limit) break;
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
+    result.push(p);
+  }
+
+  if (result.length < limit) {
+    for (const p of priced) {
+      if (result.length >= limit) break;
+      if (seen.has(p.id)) continue;
+      seen.add(p.id);
+      result.push(p);
+    }
+  }
+
+  return result;
 }

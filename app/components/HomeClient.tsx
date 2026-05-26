@@ -111,7 +111,11 @@ function ProductCard({
             src={optimizeImageUrl(imageUrl, 480)}
             alt={name}
             draggable={false}
-            className="absolute inset-0 w-full h-full object-cover object-[center_22%] md:object-[center_30%] group-hover:scale-[1.03] transition-transform duration-700 ease-out pointer-events-none select-none"
+            className={`absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out pointer-events-none select-none ${
+              variant === "sale"
+                ? "object-[center_15%] md:object-[center_20%]"
+                : "object-[center_22%] md:object-[center_30%]"
+            }`}
             loading={eager ? "eager" : "lazy"}
           />
         ) : (
@@ -160,6 +164,7 @@ export function HorizontalProductScroll({
   catalogLinkText,
   collectionCtaOnly,
   eager,
+  productCardVariant = "default",
 }: {
   products: any[];
   title: string;
@@ -172,6 +177,7 @@ export function HorizontalProductScroll({
   /** Collection rails: one link to the full collection (edit = catalog). */
   collectionCtaOnly?: boolean;
   eager?: boolean;
+  productCardVariant?: "default" | "sale";
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = (direction: "left" | "right") => {
@@ -226,7 +232,12 @@ export function HorizontalProductScroll({
       >
         {hasItems ? (
           products.map((product: any, i: number) => (
-            <ProductCard key={product.id} product={product} eager={eager && i < 4} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              eager={eager && i < 4}
+              variant={productCardVariant}
+            />
           ))
         ) : (
           <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
@@ -270,41 +281,17 @@ export function HorizontalProductScroll({
 }
 
 function SaleHomeRail({ products }: { products?: any[] }) {
+  const labels = HOMEPAGE_RAIL_LABELS.saleProducts;
   return (
     <section className="py-10 md:py-20 border-t border-neutral-200/60">
-      <div className="flex flex-col gap-5 md:gap-7">
-        <div className="flex items-end justify-between">
-          <Link href="/sale" className="flex items-center gap-3 group" data-testid="link-the-edit-on-sale">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-neutral-400">
-                The edit
-              </span>
-              <h2 className="text-[20px] md:text-[28px] font-serif group-hover:text-neutral-400 transition-colors duration-300 leading-tight">
-                {HOMEPAGE_RAIL_LABELS.saleProducts.title}
-              </h2>
-            </div>
-            <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </Link>
-        </div>
-        <div className="product-rail-scroll flex gap-2.5 md:gap-4 scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]">
-          {products?.length ? (
-            products.map((product: any) => (
-              <ProductCard key={product.id} product={product} variant="sale" />
-            ))
-          ) : (
-            <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
-              Sale spotlight is refreshing. Browse the sale page for the full markdown grid.
-            </p>
-          )}
-        </div>
-        <Link
-          href="/sale"
-          className="self-start text-[10px] md:text-xs uppercase tracking-[0.18em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
-          data-testid="link-shop-sale"
-        >
-          Shop all sale <ArrowRight className="w-3 h-3" />
-        </Link>
-      </div>
+      <HorizontalProductScroll
+        products={products || []}
+        title={labels.title}
+        subtitle="The edit"
+        linkHref="/sale"
+        linkText="Shop all sale"
+        productCardVariant="sale"
+      />
     </section>
   );
 }

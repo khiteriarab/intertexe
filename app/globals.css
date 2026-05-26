@@ -153,8 +153,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Portrait hero — model sits low in frame; wide desktop crops top, not the figure */
-  object-position: center bottom;
+  /* Portrait hero — keep face in frame on wide viewports */
+  object-position: center 18%;
   display: block;
 }
 
@@ -164,7 +164,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 36%;
+  object-position: center 22%;
   display: block;
 }
 
@@ -237,6 +237,19 @@
 .group:hover .editorial-cover-img--zoom {
   transform: scale(1.03);
   transition: transform 1.1s ease-out;
+}
+
+/* SEO footer copy — in DOM for crawlers, not visible on page */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 /* Horizontal product rails: avoid first-tap being eaten by scroll pan */
