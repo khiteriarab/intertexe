@@ -7,7 +7,7 @@ import {
 import { getCuratedScore } from "../../../lib/curated-quality-scores";
 import { getBrandProfile } from "../../../lib/brand-profiles";
 import { displayNaturalFiberPercent } from "../../../lib/display-natural-fiber";
-import { DesignerDetailProducts } from "./DesignerDetailProducts";
+import { DesignerShopSection } from "./DesignerShopSection";
 
 export const revalidate = 300;
 export const dynamicParams = true;
@@ -119,15 +119,16 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
       </div>
 
       <div className="max-w-7xl mx-auto w-full px-4 md:px-8 pt-6 md:pt-8">
-        <DesignerDetailProducts
+        <DesignerShopSection
           products={products}
           designerName={designer.name}
           designerSlug={designer.slug}
           designerWebsite={designer.website}
+          description={designer.description || null}
+          naturalFiberPercent={fiberPercent}
           hasProfile={!!profile}
           profileMaterialStrengths={profile?.materialStrengths || []}
           initialHasMore={brandCatalog.hasMore}
-          shopMode
         />
       </div>
     </div>

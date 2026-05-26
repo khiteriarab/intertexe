@@ -19,22 +19,42 @@ export async function POST(request: NextRequest) {
   const user = await getUserFromToken(request.headers.get("authorization"));
   if (!user) return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
 
-  const { productId } = await request.json();
+  const body = await request.json();
+  const productId = body.productId as string;
   if (!productId) return NextResponse.json({ message: "productId required" }, { status: 400 });
 
   const supabase = getServerSupabase();
   if (!supabase) return NextResponse.json({ message: "Database not available" }, { status: 500 });
 
   const userId = String(user.id);
-  const { data: existing } = await supabase
+
+  let savedPrice: number | null = body.savedPrice ?? null;
+  let savedCurrency: string | null = body.savedCurrency ?? null;
+  if (savedPrice == null) {
+    const { data: product } = await supabase
+      .from("products")
+      .select("price, currency")
+      .eq("id", productId)
+      .maybeSingle();
+    if (product?.price) {
+      const n = parseFloat(String(product.price).replace(/[^0-9.]/g, ""));
+      if (Number.isFinite(n)) savedPrice = n;
+      savedCurrency = product.currency || null;
+    }
+  }
+
+  const row: Record<string, unknown> = {
+    user_id: userId,
+    product_id: productId,
+    saved_price: savedPrice,
+    saved_currency: savedCurrency,
+    price_at_save: savedPrice,
+  };
+
+  const { error } = await supabase
     .from("product_favorites")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("product_id", productId)
-    .limit(1);
+    .upsert(row, { onConflict: "user_id,product_id" });
 
-  if (existing && existing.length > 0) return NextResponse.json({ success: true });
-
-  await supabase.from("product_favorites").insert({ user_id: userId, product_id: productId });
+  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
   return NextResponse.json({ success: true }, { status: 201 });
 }

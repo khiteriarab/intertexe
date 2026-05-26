@@ -53,9 +53,30 @@ export default function TermsPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">5. Content & Accuracy</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">5. Affiliate disclosure</h2>
           <p>
-            While we strive to provide accurate and up-to-date information about designers and their material compositions, we make no warranties about the completeness, accuracy, or reliability of this information. Natural fiber percentages and brand details are compiled by our editorial team and may be subject to change.
+            Intertexe earns a commission when you purchase through links on our platform. This supports our free catalog, scanner, and editorial work. Affiliate relationships do not change how we verify fiber composition data.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">6. Content &amp; accuracy</h2>
+          <p>
+            While we strive to provide accurate and up-to-date information about designers and their material compositions, we make no warranties about the completeness, accuracy, or reliability of this information. Natural fiber percentages and brand details are verified from product data and labels but are not guaranteed. Always check the care label before purchasing.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">6a. Scanner disclaimer</h2>
+          <p>
+            Scanner results are based on label reading, barcode lookup, and our composition database. Results may vary by garment, batch, or retailer listing. The scanner is for informational purposes and is not a certification of product authenticity or legal compliance.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">6b. User-contributed data</h2>
+          <p>
+            When you scan items or confirm compositions, you may contribute data that improves our database for other users. You grant Intertexe a license to use anonymized scan and composition contributions to operate and improve the service.
           </p>
         </section>
 

@@ -131,10 +131,14 @@ export function useProductFavorites() {
     const token = getToken();
     if (token) {
       if (adding) {
+        const priceNum = price ? parseFloat(String(price).replace(/[^0-9.]/g, "")) : null;
         fetch("/api/product-favorites", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ productId }),
+          body: JSON.stringify({
+            productId,
+            savedPrice: Number.isFinite(priceNum as number) ? priceNum : null,
+          }),
         }).catch(() => {});
       } else {
         fetch(`/api/product-favorites/${encodeURIComponent(productId)}`, {

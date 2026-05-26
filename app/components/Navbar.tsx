@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Search, X, User, UserCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
@@ -20,6 +20,7 @@ async function searchDesigners(query: string) {
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -108,13 +109,30 @@ export function Navbar() {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Search designers..."
+                  placeholder="Search brands, products, fibers..."
                   className="w-full bg-background border border-border/60 pl-12 pr-4 py-3.5 md:py-3 text-sm focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 uppercase tracking-widest"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && searchQuery.trim().length >= 2) {
+                      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                      setSearchOpen(false);
+                    }
+                  }}
                   data-testid="input-global-search"
                 />
               </div>
+              {searchQuery.trim().length >= 2 && (
+                <div className="max-w-xl mx-auto mt-2 text-center">
+                  <Link
+                    href={`/search?q=${encodeURIComponent(searchQuery.trim())}`}
+                    className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground underline"
+                    data-testid="link-search-all-results"
+                  >
+                    Search all products & brands
+                  </Link>
+                </div>
+              )}
               {searchQuery.length >= 2 && (
                 <div className="max-w-xl mx-auto mt-2 max-h-[50vh] md:max-h-[300px] overflow-y-auto">
                   {(results as any[]).length === 0 ? (

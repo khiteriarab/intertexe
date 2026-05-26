@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Camera, Upload, Loader2, ArrowRight, Leaf, ShoppingBag, ChevronLeft, X, Scan, Sparkles, MessageCircle, Heart, CheckCircle2, AlertTriangle, ShieldCheck, ExternalLink, Link2, ScanBarcode, ImageIcon, Globe, Zap } from "lucide-react";
 import Link from "next/link";
 import { useProductFavorites } from "../hooks/use-product-favorites";
-import { trackScanStart, trackScanComplete, trackScanError } from "../../lib/analytics";
+import { trackScanStart, trackScanComplete, trackScanError, trackAffiliateClick } from "../../lib/analytics";
 import { detectDevice } from "../../lib/device-detection";
 import { getOrCreateSessionId } from "../../lib/session";
 import { scoreColor, getVerdictMessage, getVerdictLabel, FIRST_SCAN_FOOTNOTE, parsePriceNumber } from "../../lib/scanner-copy";
@@ -331,6 +331,13 @@ export default function ScannerClient() {
   const handleAffiliateClick = useCallback(async (product: any, position: number) => {
     const affiliateUrl = product.url;
     if (!affiliateUrl) return;
+    trackAffiliateClick({
+      productId: String(product.id || product.product_id || ""),
+      brandName: product.brand_name || product.brandName || "unknown",
+      price: parsePriceNumber(product.price) || 0,
+      currency: product.currency || "USD",
+      source: "scanner",
+    });
     try {
       const res = await fetch("/api/scanner/track-clickout", {
         method: "POST",

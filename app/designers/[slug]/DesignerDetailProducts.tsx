@@ -61,6 +61,7 @@ export function DesignerDetailProducts({
   profileMaterialStrengths,
   shopMode = false,
   initialHasMore = false,
+  fiberFilter = null,
 }: {
   products: ProductItem[];
   designerName: string;
@@ -70,6 +71,7 @@ export function DesignerDetailProducts({
   profileMaterialStrengths: string[];
   initialHasMore?: boolean;
   shopMode?: boolean;
+  fiberFilter?: string | null;
 }) {
   const [catalogProducts, setCatalogProducts] = useState<ProductItem[]>(products);
   const [activeCategory, setActiveCategory] = useState("all");
@@ -119,6 +121,10 @@ export function DesignerDetailProducts({
         (p.composition || "").toLowerCase().includes(q)
       );
     }
+    if (fiberFilter) {
+      const f = fiberFilter.toLowerCase();
+      filtered = filtered.filter((p) => (p.composition || "").toLowerCase().includes(f));
+    }
     if (priceSort !== "default") {
       filtered = [...filtered].sort((a, b) => {
         const pa = parsePrice(a.price);
@@ -127,7 +133,7 @@ export function DesignerDetailProducts({
       });
     }
     return filtered;
-  }, [visibleProducts, activeCategory, showSaleOnly, searchQuery, priceSort]);
+  }, [visibleProducts, activeCategory, showSaleOnly, searchQuery, priceSort, fiberFilter]);
 
   const paginatedProducts = useMemo(() => {
     if (shopMode) return filteredProducts;

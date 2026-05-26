@@ -10,6 +10,7 @@ import { CATALOG_INITIAL_PAGE } from "../../../lib/catalog-rules";
 import { MATERIALS } from "../../../lib/data";
 import FabricProductGrid from "./FabricProductGrid";
 import EmailCapture from "../../components/EmailCapture";
+import { FiberEducationSection } from "../../components/FiberEducationSection";
 
 export const revalidate = 300;
 
@@ -1189,6 +1190,8 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
             </Link>
           </div>
         </section>
+
+        <FiberEducationSection slug={config.fiber} />
 
         <section className="py-8 border-t border-border/20">
           <EmailCapture fiberName={config.fiber} />

@@ -24,6 +24,14 @@
     {
       "path": "/api/cron/rakuten-feed-sync",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/notifications/price-drops",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/price-check",
+      "schedule": "0 6 * * *"
     }
   ]
 }

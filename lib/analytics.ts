@@ -1,111 +1,105 @@
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
-    dataLayer?: any[];
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
-function gtag(...args: any[]) {
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag(...args);
+/** Legacy scanner hooks (brand + mode + matched). */
+export function trackScanStart(mode: string) {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "scan_start", { scan_mode: mode });
+}
+
+export function trackScanComplete(
+  brandOrParams: string | {
+    naturalPercent: number;
+    verdict: string;
+    hasAlternatives: boolean;
+    source: "barcode" | "composition" | "url";
+  },
+  mode?: string,
+  matched?: boolean
+) {
+  if (typeof window === "undefined") return;
+  if (typeof brandOrParams === "object") {
+    window.gtag?.("event", "scan_complete", {
+      natural_fiber_percent: brandOrParams.naturalPercent,
+      verdict: brandOrParams.verdict,
+      has_alternatives: brandOrParams.hasAlternatives,
+      scan_source: brandOrParams.source,
+    });
+    return;
   }
-}
-
-export function trackEvent(eventName: string, params?: Record<string, any>) {
-  gtag("event", eventName, params);
-}
-
-export function trackPageView(path: string, title?: string) {
-  gtag("event", "page_view", {
-    page_path: path,
-    page_title: title,
+  window.gtag?.("event", "scan_complete", {
+    brand_name: brandOrParams,
+    scan_mode: mode,
+    matched: Boolean(matched),
   });
 }
 
-export function trackSignup(method: string = "email") {
-  trackEvent("sign_up", { method });
+export function trackScanError(mode: string, message: string) {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "scan_error", { scan_mode: mode, error_message: message });
 }
 
-export function trackLogin(method: string = "email") {
-  trackEvent("login", { method });
-}
-
-export function trackProductFavorite(productId: string, brandName: string, action: "add" | "remove") {
-  trackEvent(action === "add" ? "add_to_wishlist" : "remove_from_wishlist", {
-    item_id: productId,
-    item_brand: brandName,
+export function trackAffiliateClick(params: {
+  productId: string;
+  brandName: string;
+  price: number;
+  currency: string;
+  source: "scanner" | "shop" | "collection" | "sale";
+}) {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "affiliate_click", {
+    product_id: params.productId,
+    brand_name: params.brandName,
+    value: params.price,
+    currency: params.currency,
+    source: params.source,
   });
 }
 
-export function trackShopClick(productId: string, brandName: string, productName: string, url: string) {
-  trackEvent("select_item", {
-    item_id: productId,
-    item_brand: brandName,
-    item_name: productName,
-    outbound_url: url,
-  });
-}
-
-export function trackAffiliateRedirect(brandName: string, url: string) {
-  trackEvent("affiliate_redirect", {
-    brand: brandName,
-    outbound_url: url,
-  });
-}
-
-export function trackBrandView(brandSlug: string, brandName: string) {
-  trackEvent("view_brand", {
-    brand_slug: brandSlug,
-    brand_name: brandName,
-  });
-}
-
-export function trackMaterialFilter(fiber: string, category?: string) {
-  trackEvent("filter_products", {
-    fiber_type: fiber,
-    category: category || "all",
-  });
-}
-
-export function trackQuizComplete(persona: string) {
-  trackEvent("quiz_complete", {
-    fabric_persona: persona,
+/** Leaving-page redirect (brand + destination URL). */
+export function trackAffiliateRedirect(brand: string, url: string) {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "affiliate_redirect", {
+    brand_name: brand,
+    link_url: url,
   });
 }
 
 export function trackQuizStart() {
-  trackEvent("quiz_start");
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "quiz_start", {});
 }
 
-export function trackSearch(query: string, resultCount: number) {
-  trackEvent("search", {
-    search_term: query,
-    results_count: resultCount,
+export function trackQuizComplete(params: {
+  persona: string;
+  preferredFibers: string[];
+  spendRange: string;
+}) {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "quiz_complete", {
+    persona: params.persona,
+    preferred_fibers: params.preferredFibers.join(","),
+    spend_range: params.spendRange,
   });
 }
 
-export function trackChatMessage() {
-  trackEvent("chat_message");
-}
-
-export function trackEmailCapture(source: string) {
-  trackEvent("email_capture", {
-    source,
+export function trackAccountCreated(params: {
+  source: "scanner" | "quiz" | "wishlist" | "direct";
+}) {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "sign_up", {
+    method: "email",
+    source: params.source,
   });
 }
 
-export function trackScanStart(mode: string) {
-  trackEvent("scan_start", { scan_mode: mode });
-}
-
-export function trackScanComplete(brandName: string, mode: string, matched: boolean) {
-  trackEvent("scan_complete", {
-    brand_name: brandName,
-    scan_mode: mode,
-    matched_in_directory: matched,
+export function trackSearch(params: { searchTerm: string; resultCount: number }) {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "search", {
+    search_term: params.searchTerm,
+    result_count: params.resultCount,
   });
-}
-
-export function trackScanError(mode: string, error: string) {
-  trackEvent("scan_error", { scan_mode: mode, error_message: error });
 }

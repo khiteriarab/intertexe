@@ -120,7 +120,11 @@ export default function AccountClient() {
           throw new Error(body.message || "Signup failed");
         }
         const data = await res.json();
-        if (data.token) setTokenValue(data.token);
+        if (data.token) {
+          setTokenValue(data.token);
+          const { trackAccountCreated } = await import("../../lib/analytics");
+          trackAccountCreated({ source: "direct" });
+        }
       }
       await fetchMe();
     } catch (err: any) {

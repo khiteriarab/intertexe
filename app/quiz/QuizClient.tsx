@@ -172,7 +172,11 @@ export default function QuizClient() {
   const handleResults = (data: any) => {
     setRecommendation(data);
     setCurrentStep(STEPS.length - 1);
-    trackQuizComplete(data.profileType || "unknown");
+    trackQuizComplete({
+      persona: data.profileType || "unknown",
+      preferredFibers: selections.materials || [],
+      spendRange: selections.spend || "unknown",
+    });
 
     const quizData = {
       materials: selections.materials,

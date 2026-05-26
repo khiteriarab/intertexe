@@ -29,9 +29,18 @@ export default function PrivacyPage() {
           <ul className="flex flex-col gap-2 pl-6 list-disc marker:text-muted-foreground">
             <li><strong className="text-foreground">Account Information:</strong> Email address and password when you create an account.</li>
             <li><strong className="text-foreground">Quiz Responses:</strong> Your material preferences, spending range, and brand selections when you take our Style Quiz.</li>
-            <li><strong className="text-foreground">Favorites:</strong> Designers you save to your wishlist.</li>
-            <li><strong className="text-foreground">Usage Data:</strong> Pages visited, features used, and general browsing patterns.</li>
+            <li><strong className="text-foreground">Favorites:</strong> Products and designers you save to your wishlist, including price at save for drop alerts.</li>
+            <li><strong className="text-foreground">Scan history:</strong> Fiber composition results, barcodes scanned, and label data you submit through the scanner.</li>
+            <li><strong className="text-foreground">Usage Data:</strong> Pages visited, search queries, features used, and general browsing patterns.</li>
+            <li><strong className="text-foreground">Device tokens:</strong> If you enable push notifications on iOS, we store your device token to send price-drop and re-engagement alerts.</li>
           </ul>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">Affiliate &amp; commission tracking</h2>
+          <p>
+            Intertexe participates in affiliate programs. When you click through to a retailer from our links, we may earn a commission on qualifying purchases at no extra cost to you. We log click-out events to improve recommendations and measure platform performance. We do not receive your payment card details.
+          </p>
         </section>
 
         <section className="flex flex-col gap-3">
@@ -67,12 +76,22 @@ export default function PrivacyPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">7. Your Rights</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">7. Data retention</h2>
+          <p>
+            Account data is retained while your account is active. Scan history and favorites are deleted when you delete your account. Anonymized analytics may be retained longer for service improvement. Cookie consent preferences are stored locally in your browser until you clear them.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">8. Your rights (including GDPR)</h2>
+          <p>
+            If you are in the European Economic Area, United Kingdom, or other regions with data protection laws, you have the right to access, rectify, erase, restrict processing, object, and data portability where applicable. You may lodge a complaint with your local supervisory authority.
+          </p>
           <p>You have the right to:</p>
           <ul className="flex flex-col gap-2 pl-6 list-disc marker:text-muted-foreground">
             <li>Access the personal data we hold about you.</li>
             <li>Request correction of inaccurate data.</li>
-            <li>Request deletion of your account and associated data.</li>
+            <li>Request erasure of your account and associated data (&ldquo;right to be forgotten&rdquo;).</li>
             <li>Withdraw consent for data processing at any time.</li>
           </ul>
           <p>
