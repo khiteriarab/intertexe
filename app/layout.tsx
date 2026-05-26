@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClientApp } from "./components/ClientApp";
+import { CookieConsent } from "./components/CookieConsent";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GENERIC_SITE_DESCRIPTION } from "../lib/catalog-stats-labels";
@@ -108,6 +109,7 @@ export default function RootLayout({
         <ClientApp>
           {children}
         </ClientApp>
+        <CookieConsent />
         <Analytics />
         <SpeedInsights />
       </body>

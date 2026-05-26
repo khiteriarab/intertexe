@@ -33,6 +33,8 @@ export function Footer() {
           <div className="flex flex-col gap-3 md:gap-4">
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Company</h3>
             <Link href="/about" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-about">About Us</Link>
+            <Link href="/press" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-press">Press</Link>
+            <Link href="/partners" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-partners">Partners</Link>
             <Link href="/contact" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-contact">Contact</Link>
             <Link href="/privacy" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-privacy">Privacy Policy</Link>
             <Link href="/terms" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-terms">Terms of Service</Link>
@@ -42,6 +44,9 @@ export function Footer() {
         <div className="border-t border-background/10 mt-10 md:mt-16 pt-6 md:pt-8 flex flex-col gap-6">
           <p className="text-[10px] md:text-xs text-background/30 leading-relaxed max-w-3xl" data-testid="text-footer-disclosure">
             {SITE_FOOTER_DISCLOSURE}
+          </p>
+          <p className="text-[10px] md:text-xs text-background/40 leading-relaxed max-w-3xl" data-testid="text-footer-affiliate">
+            Intertexe participates in affiliate programs. We earn commission on qualifying purchases.
           </p>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest">

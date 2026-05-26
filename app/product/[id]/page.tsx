@@ -381,9 +381,15 @@ export default async function ProductPage({
             <ProductFavoriteButton productId={String(product.id)} />
 
             {product.url && (
-              <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-[0.2em] text-xs font-medium hover:opacity-90 transition-opacity active:scale-[0.98]" data-testid="link-shop-now">
-                Shop Now <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+              <>
+                <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-[0.2em] text-xs font-medium hover:opacity-90 transition-opacity active:scale-[0.98]" data-testid="link-shop-now">
+                  Shop Now <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                <p className="text-xs text-muted-foreground mt-3 leading-relaxed" data-testid="text-affiliate-disclosure">
+                  Intertexe earns a commission when you purchase through our links. This is how we keep the
+                  platform free.
+                </p>
+              </>
             )}
 
             <div className="flex flex-col gap-2">
