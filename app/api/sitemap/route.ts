@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+function getSupabase(): SupabaseClient | null {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 const BASE = "https://www.intertexe.com";
 const TODAY = new Date().toISOString().split("T")[0];
@@ -22,9 +28,20 @@ function urlEntry(path: string, opts: { priority: string; freq: string; lastmod?
 }
 
 export async function GET(request: Request) {
+  const supabase = getSupabase();
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
   const page = parseInt(searchParams.get("page") || "0", 10);
+
+  if (!supabase) {
+    let xml = xmlHeader();
+    xml += urlEntry("", { priority: "1.0", freq: "daily" });
+    xml += urlEntry("/shop", { priority: "0.9", freq: "daily" });
+    xml += "</urlset>";
+    return new NextResponse(xml, {
+      headers: { "Content-Type": "application/xml", "Cache-Control": "public, s-maxage=3600" },
+    });
+  }
 
   try {
     if (!type) {
