@@ -12,6 +12,20 @@ import {
 import type { Product } from "./supabase-server";
 
 /** Verified editorial heroes for Vacation “Wear to where” tiles (object-position: top). */
+/** Verified editorial heroes for Evening “Wear to where” tiles (object-position: top). */
+const EVENING_MOOD_HERO_BY_SLUG: Partial<Record<MoodSlug, string>> = {
+  "silk-at-sunset":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/97/P00817845.jpg",
+  "evening-candlelit":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/97/P00817845.jpg",
+  "evening-black-tie":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/3a/P00988721.jpg",
+  "evening-cocktail-hour":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/be/P01194268.jpg",
+  "evening-silk-maxi":
+    "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/5a/P01196498.jpg",
+};
+
 const VACATION_MOOD_HERO_BY_SLUG: Partial<Record<MoodSlug, string>> = {
   "mediterranean-luxury":
     "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/97/P00817845.jpg",
@@ -93,8 +107,13 @@ export function wearToWhereEditorialCards(
       slug === "vacation" && mood?.slug
         ? VACATION_MOOD_HERO_BY_SLUG[mood.slug as MoodSlug]
         : undefined;
+    const fixedEvening =
+      slug === "evening" && mood?.slug
+        ? EVENING_MOOD_HERO_BY_SLUG[mood.slug as MoodSlug]
+        : undefined;
     const imageUrl =
       fixedVacation ||
+      fixedEvening ||
       getMoodHeroImage(label, products, slug, usedImages, fallback) ||
       fallback;
     return {

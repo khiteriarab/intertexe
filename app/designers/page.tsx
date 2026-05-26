@@ -40,7 +40,7 @@ export default async function DesignersPage() {
     platformStats.brandCount,
     shoppableBrands.length
   );
-  const featuredBrands = await getFeaturedDesignersForDirectory(shoppableBrands);
+  const featuredBrands = await getCuratedFeaturedDesigners();
 
   return (
     <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-10 max-w-6xl mx-auto px-4 w-full">

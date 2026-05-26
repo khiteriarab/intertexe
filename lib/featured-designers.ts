@@ -93,7 +93,18 @@ export async function getCuratedFeaturedDesigners(): Promise<FeaturedDesignerCar
     key: string;
   }[];
 
-  if (ordered.length === 0) return [];
+  if (ordered.length === 0) {
+    return FEATURED_BRAND_SLUGS.map((key) => ({
+      slug: key,
+      name: key
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ")
+        .replace("Alc", "ALC")
+        .replace("Alemais", "Alémais"),
+      heroImageUrl: getBrandHeroImage(key) || null,
+    }));
+  }
 
   const enriched = await enrichDesignersWithHeroImages(supabase, ordered);
 

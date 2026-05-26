@@ -307,6 +307,7 @@ export default function ScannerClient() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [barcodeDetected, setBarcodeDetected] = useState("");
   const [activeTab, setActiveTab] = useState<"photo" | "barcode" | "url">("photo");
+  const [hasBarcodeDetector, setHasBarcodeDetector] = useState(true);
   const [scannedUPC, setScannedUPC] = useState("");
   const [currentScanPrice, setCurrentScanPrice] = useState<number | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -318,6 +319,7 @@ export default function ScannerClient() {
 
   useEffect(() => {
     setDevice(detectDevice());
+    setHasBarcodeDetector(typeof window !== "undefined" && "BarcodeDetector" in window);
     const token = localStorage.getItem("intertexe_auth_token");
     if (!token) return;
     fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
@@ -364,6 +366,11 @@ export default function ScannerClient() {
   }, []);
 
   const startCamera = useCallback(async (forBarcode = false) => {
+    if (forBarcode && !hasBarcodeDetector) {
+      setError("");
+      fileInputRef.current?.click();
+      return;
+    }
     setMode(forBarcode ? "camera-barcode" : "camera-photo");
     setError("");
     setBarcodeDetected("");
@@ -399,7 +406,7 @@ export default function ScannerClient() {
       setError("Camera access denied. Try uploading a photo instead.");
       setMode("idle");
     }
-  }, [stopCamera]);
+  }, [stopCamera, hasBarcodeDetector]);
 
   const capturePhoto = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -793,6 +800,25 @@ export default function ScannerClient() {
 
           {activeTab === "barcode" && (
             <div className="space-y-3 mb-6">
+              {!hasBarcodeDetector && (
+                <div className="text-center py-8 px-4 border border-neutral-200 bg-neutral-50">
+                  <p className="text-sm text-gray-500 mb-4">
+                    For the best scanning experience use Chrome on Android.
+                  </p>
+                  <p className="text-xs text-gray-400 mb-6">
+                    Or upload a photo of the label below.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-6 py-3 bg-[#111] text-white text-[10px] uppercase tracking-[0.15em]"
+                    data-testid="button-barcode-upload-fallback"
+                  >
+                    Upload label photo
+                  </button>
+                </div>
+              )}
+              {hasBarcodeDetector && (
               <button onClick={() => startCamera(true)}
                 className="w-full group flex flex-col items-center gap-3 p-8 md:p-10 bg-[#111] text-white hover:bg-neutral-900 transition-all active:scale-[0.98]"
                 data-testid="button-barcode-scan"
@@ -803,6 +829,16 @@ export default function ScannerClient() {
                   <span className="text-[9px] text-white/40 mt-1 block">Auto-detects EAN, UPC, QR codes</span>
                 </div>
               </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleFileUpload}
+                data-testid="input-barcode-file-upload"
+              />
               <p className="text-[11px] text-muted-foreground/50 text-center">
                 Point your camera at the barcode on the price tag. If barcode data is limited, we'll ask you to confirm the item details.
               </p>

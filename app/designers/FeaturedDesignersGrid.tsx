@@ -60,7 +60,23 @@ export function FeaturedDesignersGrid({
     document.getElementById("directory-az-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  if (brands.length === 0) return null;
+  if (brands.length === 0) {
+    return (
+      <section className="flex flex-col" data-testid="section-featured-designers-loading">
+        <h2
+          className="text-xs tracking-widest text-gray-400 uppercase mb-5"
+          style={{ letterSpacing: "0.2em" }}
+        >
+          FEATURED DESIGNERS
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="aspect-[3/4] bg-[#f0ece6] animate-pulse" />
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   const vettedLabel = vettedBrandCount > 0 ? vettedBrandCount.toLocaleString() : "253";
 

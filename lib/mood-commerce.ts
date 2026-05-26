@@ -8,6 +8,10 @@ export type MoodSlug =
   | "resort-dressing"
   | "linen-movement"
   | "silk-at-sunset"
+  | "evening-candlelit"
+  | "evening-black-tie"
+  | "evening-cocktail-hour"
+  | "evening-silk-maxi"
   | "woven-textures"
   | "raffia-accessories"
   | "beach-dinners"
@@ -61,6 +65,38 @@ export const MOOD_CATALOG: MoodConfig[] = [
     description: "Liquid silk for terraces, dinners, and late coastal evenings.",
     collection: "evening",
     searchTerms: ["silk", "evening", "sunset"],
+  },
+  {
+    slug: "evening-candlelit",
+    label: "Candlelit dinner",
+    kicker: "Silk at Sunset",
+    description: "Liquid silk for candlelit tables and late evenings.",
+    collection: "evening",
+    searchTerms: ["silk", "evening", "candlelit"],
+  },
+  {
+    slug: "evening-black-tie",
+    label: "The occasion",
+    kicker: "Black Tie",
+    description: "Structured elegance for the moments that matter.",
+    collection: "evening",
+    searchTerms: ["evening", "gown", "black tie"],
+  },
+  {
+    slug: "evening-cocktail-hour",
+    label: "After the show",
+    kicker: "Cocktail Hour",
+    description: "Cocktail dressing with verified silk and satin.",
+    collection: "evening",
+    searchTerms: ["cocktail", "evening", "dress"],
+  },
+  {
+    slug: "evening-silk-maxi",
+    label: "Fluid and rare",
+    kicker: "Silk Maxi",
+    description: "Floor-length silk with movement and drape.",
+    collection: "evening",
+    searchTerms: ["silk", "maxi", "evening"],
   },
   {
     slug: "woven-textures",

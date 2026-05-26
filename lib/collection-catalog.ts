@@ -10,6 +10,7 @@ import {
 import { isEditorialWomensApparel } from "./catalog-product-filters";
 import type { Product } from "./supabase-server";
 import { catalogDedupeKey } from "./catalog-rules";
+import { qualifiesForWhiteEditProduct } from "./white-edit-qualifies";
 
 export type CollectionCatalogQuery = {
   fiber?: string;
@@ -62,50 +63,8 @@ export const COLLECTION_CATALOG_QUERIES: Record<CollectionSlug, CollectionCatalo
   ],
 };
 
-const WHITE_EDIT_DARK_TERMS = [
-  "black",
-  "noir",
-  "dark",
-  "navy",
-  "midnight",
-  "charcoal",
-  "forest",
-  "burgundy",
-  "grey",
-  "gray",
-  "brown",
-  "khaki",
-  "olive",
-  "red",
-  "blue",
-  "green",
-  "pink",
-  "yellow",
-  "orange",
-  "purple",
-  "multi",
-  "print",
-  "stripe",
-];
-
 function isWhiteEditTonal(product: Product): boolean {
-  const name = (product.name || "").toLowerCase();
-  const cat = (product.category || "").toLowerCase();
-  const comp = (product.composition || "").toLowerCase();
-  if (WHITE_EDIT_DARK_TERMS.some((term) => name.includes(term))) {
-    return false;
-  }
-  const whiteColor =
-    /\b(white|ivory|ecru|cream|chalk|snow|off[- ]?white|optic white|optical white)\b/i;
-  if (!whiteColor.test(name) && !whiteColor.test(cat) && !whiteColor.test(comp)) {
-    return false;
-  }
-  if (
-    /\b(tan|camel|khaki|mustard|gold|beige|sand|taupe|nude|rust|terracotta|olive)\b/.test(name)
-  ) {
-    return false;
-  }
-  return true;
+  return qualifiesForWhiteEditProduct(product);
 }
 
 export function isCollectionEligible(

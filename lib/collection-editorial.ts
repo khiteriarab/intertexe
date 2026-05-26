@@ -65,7 +65,7 @@ export const COLLECTION_EDITORIAL: Record<CollectionSlug, CollectionEditorial> =
       /evening|cocktail|gown|satin|silk|dress|jewel|burgundy|plum|emerald|navy|black/i,
     ],
     exclude: [
-      /\b(shirt|tee|t-?shirt|polo|sweatshirt|hoodie|jogger|sweatpant|sweat pant|casual)\b/i,
+      /\b(shirt|tee|t-?shirt|polo|sweatshirt|hoodie|jogger|sweatpant|sweat pant|tank|vest|casual)\b/i,
       /jogger|sweat|tee|beach|resort|linen short|poplin shirt|cotton poplin/i,
     ],
   },

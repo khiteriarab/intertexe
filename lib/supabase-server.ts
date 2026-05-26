@@ -84,6 +84,7 @@ export interface Product {
   composition: string;
   naturalFiberPercent: number;
   category: string;
+  color?: string | null;
   matchingSetId?: string | null;
   isSale?: boolean;
   originalPrice?: string | null;
@@ -801,6 +802,7 @@ export function mapProductRow(row: any): Product {
     composition: row.composition || "",
     naturalFiberPercent: displayNaturalFiberPercent(row.natural_fiber_percent) ?? 0,
     category: row.category || "",
+    color: row.color != null && String(row.color).trim() ? String(row.color).trim() : null,
     matchingSetId: row.matching_set_id || null,
     isSale: rowIsOnSale(row),
     originalPrice: origStr,

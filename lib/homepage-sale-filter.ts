@@ -1,8 +1,10 @@
 import type { Product } from "./supabase-server";
 
-export const HOMEPAGE_SALE_MIN_PRICE = 150;
+/** Homepage sale rail — luxury floor; approved brands only; highest price first. */
+export const HOMEPAGE_SALE_MIN_PRICE = 200;
 
-const PRIORITY_BRAND_SLUGS = [
+/** Approved brands for homepage sale preview (full /sale page is unfiltered). */
+export const HOMEPAGE_SALE_APPROVED_BRAND_SLUGS = [
   "a-l-c",
   "alc",
   "isabel-marant",
@@ -16,7 +18,50 @@ const PRIORITY_BRAND_SLUGS = [
   "theory",
   "frame",
   "veronica-beard",
-];
+  "rixo",
+  "sea",
+  "sea-new-york",
+  "camilla",
+  "staud",
+  "posse",
+  "sir",
+  "alemais",
+  "nili-lotan",
+  "eres",
+  "loewe",
+  "gucci",
+  "valentino",
+  "prada",
+  "the-row",
+  "saint-laurent",
+  "miu-miu",
+  "rodarte",
+  "etro",
+  "pucci",
+  "rabanne",
+  "jw-anderson",
+  "acne-studios",
+  "toteme",
+  "ganni",
+] as const;
+
+const APPROVED_BRAND_NAMES: Record<string, string> = {
+  alc: "alc",
+  "a-l-c": "a.l.c",
+  alemais: "alémais",
+  "faithfull-the-brand": "faithfull the brand",
+  "re-done": "re/done",
+  "lafayette-148": "lafayette 148",
+  "sea-new-york": "sea new york",
+  "nili-lotan": "nili lotan",
+  "jw-anderson": "jw anderson",
+  "acne-studios": "acne studios",
+  "isabel-marant": "isabel marant",
+  "veronica-beard": "veronica beard",
+  "the-row": "the row",
+  "saint-laurent": "saint laurent",
+  "miu-miu": "miu miu",
+};
 
 function parsePrice(price: string | null | undefined): number {
   if (!price) return 0;
@@ -24,18 +69,24 @@ function parsePrice(price: string | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-function isPriorityBrand(product: Product): boolean {
+function isApprovedSaleBrand(product: Product): boolean {
   const slug = (product.brandSlug || "").toLowerCase();
   const name = (product.brandName || "").toLowerCase();
-  return PRIORITY_BRAND_SLUGS.some(
-    (b) => slug.includes(b) || name.includes(b.replace(/-/g, " "))
-  );
+
+  return HOMEPAGE_SALE_APPROVED_BRAND_SLUGS.some((approved) => {
+    if (slug === approved || slug.startsWith(`${approved}-`) || slug.includes(approved)) {
+      return true;
+    }
+    const label = APPROVED_BRAND_NAMES[approved] || approved.replace(/-/g, " ");
+    return name.includes(label) || name.replace(/\s+/g, "-").includes(approved);
+  });
 }
 
-/** Homepage sale rail — luxury floor price + preferred brand ordering. */
+/** Homepage sale rail — $200+ approved brands, sorted by price descending. */
 export function filterHomepageSaleProducts(products: Product[], limit = 8): Product[] {
-  const priced = products.filter((p) => parsePrice(p.price) >= HOMEPAGE_SALE_MIN_PRICE);
-  const priority = priced.filter(isPriorityBrand);
-  const rest = priced.filter((p) => !priority.includes(p));
-  return [...priority, ...rest].slice(0, limit);
+  return products
+    .filter((p) => parsePrice(p.price) >= HOMEPAGE_SALE_MIN_PRICE)
+    .filter(isApprovedSaleBrand)
+    .sort((a, b) => parsePrice(b.price) - parsePrice(a.price))
+    .slice(0, limit);
 }
