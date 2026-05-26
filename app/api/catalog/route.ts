@@ -50,14 +50,30 @@ function catalogFailedResponse(limit: number, offset: number) {
   });
 }
 
+function catalogMarketFromParams(sp: URLSearchParams): string | undefined {
+  const region = sp.get("region");
+  if (region) {
+    const r = region.toUpperCase();
+    if (r === "EU") return "eu";
+    if (r === "UK" || r === "GB") return "uk";
+    if (r === "US" || r === "CA") return "us-ca";
+  }
+  const market = sp.get("market");
+  return market && market !== "all" ? market : undefined;
+}
+
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
-  const mode = sp.get("mode") || "shop";
+  const collectionAlias = sp.get("collection");
+  const mode =
+    collectionAlias === "vacation"
+      ? "vacation"
+      : sp.get("mode") || "shop";
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
   const offset = safeCatalogOffset(sp.get("offset"));
   const fiber = sp.get("fiber") || undefined;
   const category = sp.get("category") || undefined;
-  const market = sp.get("market") || undefined;
+  const market = catalogMarketFromParams(sp);
   const sort = sp.get("sort") || "new";
   const search = sp.get("search") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;

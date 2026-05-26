@@ -136,7 +136,9 @@ function applyCatalogFilter(query: any, market?: string) {
 
 /** Region params for Postgres catalog_list / editorial RPCs (see docs/SHARED_CATALOG.md). */
 export function catalogRegionsFromMarket(market?: string): { preferred: string; fallback: string } {
-  if (market === "eu-uk-me") return { preferred: "uk", fallback: "us" };
+  const m = String(market || "").toLowerCase();
+  if (m === "eu" || m === "eu-uk-me") return { preferred: "eu", fallback: "us" };
+  if (m === "uk" || m === "gb") return { preferred: "uk", fallback: "us" };
   return { preferred: "us", fallback: "us" };
 }
 
