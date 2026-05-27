@@ -44,11 +44,11 @@ export function SignInBenefitsBanner() {
         data-testid="signin-benefits-banner"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="max-w-[1400px] mx-auto flex items-center gap-3 flex-wrap">
-          <p className="text-[11px] text-[#1C1C1E] leading-snug flex-1 min-w-[200px]">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
+          <p className="text-[11px] text-[#1C1C1E] leading-snug">
             Sign in to save favorites and sync your preferences.
           </p>
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-4">
             <Link
               href="/account"
               className="text-[10px] uppercase tracking-[0.14em] text-[#1C1C1E] hover:opacity-70"

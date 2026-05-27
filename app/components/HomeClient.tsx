@@ -165,6 +165,7 @@ export function HorizontalProductScroll({
   collectionCtaOnly,
   eager,
   productCardVariant = "default",
+  fullWidth = false,
 }: {
   products: any[];
   title: string;
@@ -178,6 +179,7 @@ export function HorizontalProductScroll({
   collectionCtaOnly?: boolean;
   eager?: boolean;
   productCardVariant?: "default" | "sale";
+  fullWidth?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = (direction: "left" | "right") => {
@@ -228,7 +230,11 @@ export function HorizontalProductScroll({
 
       <div
         ref={scrollRef}
-        className="product-rail-scroll flex gap-2.5 md:gap-4 scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]"
+        className={
+          fullWidth
+            ? "product-rail-scroll flex overflow-x-auto scrollbar-hide w-full gap-2.5 md:gap-4 px-6 md:px-8 pb-1 min-h-[200px]"
+            : "product-rail-scroll flex gap-2.5 md:gap-4 scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]"
+        }
       >
         {hasItems ? (
           products.map((product: any, i: number) => (
@@ -291,6 +297,7 @@ function SaleHomeRail({ products }: { products?: any[] }) {
         linkHref="/sale"
         linkText="Shop all sale"
         productCardVariant="sale"
+        fullWidth
       />
     </section>
   );
@@ -502,6 +509,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           linkHref="/shop?sort=new"
           linkText="Shop New In"
           eager
+          fullWidth
         />
       </section>
 

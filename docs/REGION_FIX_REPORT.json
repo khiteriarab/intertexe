@@ -1,0 +1,35 @@
+{
+  "mytheresaBefore": {
+    "eu": 601060,
+    "uk": 5365,
+    "us": 83395
+  },
+  "mytheresaNonEu": 88755,
+  "mytheresaUpdate": {
+    "label": "mytheresa",
+    "ok": true
+  },
+  "mytheresaAfter": {
+    "eu": 689820,
+    "uk": 0,
+    "us": 0
+  },
+  "euAfterMytheresa": 693767,
+  "isabelBefore": {
+    "eu": 9865,
+    "uk": 0,
+    "us": 0
+  },
+  "isabelNonEu": 0,
+  "isabelUpdate": {
+    "label": "isabel",
+    "ok": true
+  },
+  "isabelAfter": {
+    "eu": 9865,
+    "uk": 0,
+    "us": 0
+  },
+  "euBrandFixes": [],
+  "finalTotalEU": 693767
+}
