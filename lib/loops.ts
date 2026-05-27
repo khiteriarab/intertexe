@@ -44,3 +44,26 @@ export async function syncContactToLoops(input: LoopsContactInput): Promise<void
     console.error("Loops contact sync failed:", res.status, text);
   }
 }
+
+/** Mark a contact unsubscribed in Loops (no-op when LOOPS_API_KEY is unset). */
+export async function unsubscribeContactFromLoops(email: string): Promise<void> {
+  const apiKey = process.env.LOOPS_API_KEY;
+  if (!apiKey) return;
+
+  const res = await fetch("https://app.loops.so/api/v1/contacts/update", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      email,
+      unsubscribed: true,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Loops unsubscribe failed:", res.status, text);
+  }
+}

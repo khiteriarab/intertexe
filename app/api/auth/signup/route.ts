@@ -73,6 +73,8 @@ export async function POST(request: NextRequest) {
         await service.from("user_preferences").upsert(
           {
             user_id: user.id,
+            email: cleanEmail.toLowerCase(),
+            marketing_emails: true,
             first_name: resolvedFirst || null,
             last_name: resolvedLast || null,
             updated_at: new Date().toISOString(),
