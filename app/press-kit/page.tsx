@@ -11,6 +11,15 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+function PressKitWordmark({ className = "" }: { className?: string }) {
+  return (
+    <p className={`text-[11px] ${className}`} style={{ letterSpacing: "6px" }}>
+      <span className="font-light">INTER</span>
+      <span className="font-bold">TEXE</span>
+    </p>
+  );
+}
+
 export default function PressKitPage() {
   return (
     <article className="press-kit">
@@ -21,19 +30,12 @@ export default function PressKitPage() {
         className="page-break press-cover relative flex flex-col items-center justify-center text-center text-white"
         style={{
           backgroundImage: `url(${HOMEPAGE_HERO_IMAGE})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center 20%",
           minHeight: "100vh",
         }}
       >
         <div className="absolute inset-0 bg-black/45" aria-hidden />
         <div className="relative z-10 px-6">
-          <p
-            className="text-[11px] font-light mb-4"
-            style={{ letterSpacing: "6px" }}
-          >
-            INTERTEXE
-          </p>
+          <PressKitWordmark className="mb-4" />
           <h1
             className="press-serif text-[48px] font-light leading-[1.2] mb-5"
           >
@@ -283,9 +285,7 @@ export default function PressKitPage() {
         className="press-section flex flex-col items-center justify-center text-center text-white min-h-[70vh]"
         style={{ backgroundColor: "#1C2B2A" }}
       >
-        <p className="text-[11px] font-light mb-6" style={{ letterSpacing: "6px" }}>
-          INTERTEXE
-        </p>
+        <PressKitWordmark className="mb-6" />
         <p className="text-sm mb-4" style={{ letterSpacing: "0.1em" }}>
           intertexe.com
         </p>

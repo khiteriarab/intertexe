@@ -194,6 +194,12 @@
   color: white;
 }
 
+.press-kit .press-cover {
+  background-size: cover;
+  background-position: center 62%;
+  background-repeat: no-repeat;
+}
+
 @media print {
   * {
     -webkit-print-color-adjust: exact;
@@ -217,5 +223,7 @@
   .press-kit .press-cover {
     min-height: 100vh;
     height: 100vh;
+    background-size: cover;
+    background-position: center 62%;
   }
 }

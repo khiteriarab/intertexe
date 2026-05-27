@@ -39,6 +39,12 @@ export type ScanResponseInput = {
   needsCompositionLabel?: boolean;
   isNewToDatabase?: boolean;
   success?: boolean;
+  countryOfOrigin?: string | null;
+  careInstructions?: string | null;
+  hasRecycledContent?: boolean;
+  recycledContentPercent?: number | null;
+  labelLanguage?: string | null;
+  dppReady?: boolean;
 };
 
 function slugifyBrand(value: string): string {
@@ -143,6 +149,12 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     needsCompositionLabel = false,
     isNewToDatabase = false,
     success = true,
+    countryOfOrigin = null,
+    careInstructions = null,
+    hasRecycledContent = false,
+    recycledContentPercent = null,
+    labelLanguage = null,
+    dppReady = false,
   } = input;
 
   const needsMessage = needsCompositionLabel
@@ -179,6 +191,12 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     needsCompositionLabel,
     needsCompositionMessage: needsMessage,
     isNewToDatabase,
+    countryOfOrigin,
+    careInstructions,
+    hasRecycledContent,
+    recycledContentPercent,
+    labelLanguage,
+    dppReady,
     tagInfo: {
       brandName: brandName || 'Unknown',
       productName,
@@ -186,8 +204,8 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
       composition: compositionText,
       garmentType,
       size: '',
-      madeIn: '',
-      careInstructions: '',
+      madeIn: countryOfOrigin || '',
+      careInstructions: careInstructions || '',
       confidence: compositionText ? 'high' : needsCompositionLabel ? 'medium' : 'low',
       rawText:
         inputType === 'barcode'
@@ -297,5 +315,11 @@ export async function buildBarcodeScanResponse(
     needsCompositionLabel: barcodeResult.needsCompositionLabel,
     isNewToDatabase: barcodeResult.isNewToDatabase,
     success: true,
+    countryOfOrigin: barcodeResult.countryOfOrigin ?? null,
+    careInstructions: barcodeResult.careInstructions ?? null,
+    hasRecycledContent: barcodeResult.hasRecycledContent ?? false,
+    recycledContentPercent: barcodeResult.recycledContentPercent ?? null,
+    labelLanguage: barcodeResult.labelLanguage ?? null,
+    dppReady: barcodeResult.dppReady ?? false,
   });
 }

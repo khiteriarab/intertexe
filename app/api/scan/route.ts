@@ -6,6 +6,7 @@ import { scannerCatalogQuery } from "../../../lib/scanner-catalog";
 import { fetchTastePreferences, upsertTastePreferences } from "../../../lib/taste-preferences";
 import { getSupabaseAuthUserId } from "../../../lib/supabase-auth-server";
 import { lookupBarcode, upsertBarcodeFromComposition } from "../../../lib/scanner-barcode-lookup";
+import { buildDppUpsertFields, mapExtractedDppFields, computeDppReady } from "../../../lib/dpp-fields";
 import { getSmartAlternatives } from "../../../lib/scanner/get-smart-alternatives";
 import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext } from "../../../lib/scanner-response";
 import { getVerdictMessage } from "../../../lib/scanner-copy";
@@ -164,55 +165,77 @@ function parsePriceNumber(priceStr: string): number | null {
 }
 
 async function extractFromImage(openai: OpenAI, image: string): Promise<any> {
+  const dppExtractionPrompt = `Analyze this clothing label image and extract all visible information.
+
+Return ONLY a valid JSON object with these exact fields. Do not include any text outside the JSON:
+
+{
+  "inputType": "tag|price_tag|barcode|garment|mixed",
+  "brandName": "exact brand name if visible or null",
+  "productName": "product name or description or null",
+  "price": "price with currency if visible or null",
+  "composition": "exact composition text as written on label or null",
+  "fibers": [
+    {
+      "name": "fiber name e.g. Cotton, Silk, Wool, Polyester",
+      "percentage": 0,
+      "isRecycled": false
+    }
+  ],
+  "naturalFiberPercent": 0,
+  "hasRecycledContent": false,
+  "recycledContentPercent": null,
+  "countryOfOrigin": "country name or null if not visible",
+  "careInstructions": "full care instructions text or null if not visible",
+  "labelLanguage": "language the label is written in e.g. English, Spanish, French",
+  "barcode": "barcode/GTIN number if visible or null",
+  "additionalText": "any other text visible on the label or null",
+  "confidence": "high|medium|low"
+}
+
+Rules:
+- naturalFiberPercent must be a number between 0 and 100
+- For countryOfOrigin look for Made in, Fabricado en, Fabriqué en, Hergestellt in, or similar
+- For careInstructions capture all washing drying ironing and care text
+- For recycled content look for the word recycled or regenerated before any fiber name
+- If a field is not visible on the label return null for that field
+- Never guess or infer information not visible on the label
+- Translate foreign fiber names to English: ramio=ramie, algodón=cotton, seda=silk, lana=wool, lino=linen
+- Return only the JSON object with no markdown formatting`;
+
   const res = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [{
       role: "user",
       content: [
-        {
-          type: "text",
-          text: `You are an expert fashion analyst for INTERTEXE, a luxury natural-fiber fashion platform. Analyze this photo which could be:
-- A clothing COMPOSITION TAG (sewn-in label showing fiber content)
-- A PRICE TAG (hanging tag with brand, price, product name)
-- A BARCODE label
-- A photo of the GARMENT ITSELF (the actual clothing item)
-- Any combination of the above
-
-Extract ALL information you can see or infer. Return ONLY valid JSON:
-{
-  "inputType": "tag|price_tag|barcode|garment|mixed",
-  "brandName": "exact brand name if visible",
-  "productName": "product name or your best description e.g. 'Black Midi Dress', 'Navy Wool Blazer'",
-  "price": "price with currency if visible",
-  "composition": "EXACT fiber composition as written e.g. '70% Cotton, 30% Polyester'",
-  "fibers": [{"fiber":"cotton","percent":70},{"fiber":"polyester","percent":30}],
-  "category": "tops/bottoms/dresses/outerwear/knitwear/skirts/shorts/swimwear/loungewear/other",
-  "garmentType": "specific type: midi dress, blazer, slim jeans, knit sweater, etc.",
-  "color": "primary color(s) of the garment e.g. 'black', 'navy blue', 'cream', 'red floral'",
-  "silhouette": "fit description: slim, oversized, relaxed, fitted, a-line, straight, wide-leg, etc.",
-  "size": "size if visible",
-  "madeIn": "country if visible",
-  "careInstructions": "brief care notes if visible",
-  "barcode": "barcode/GTIN number if visible",
-  "confidence": "high/medium/low - how confident are you in the extracted data"
-}
-
-CRITICAL RULES:
-- Extract EXACT composition percentages from tags. If you see "100% Lana" return fibers as [{"fiber":"wool","percent":100}]
-- Translate foreign fiber names to English: ramio=ramie, algodón=cotton, seda=silk, lana=wool, lino=linen, cachemir=cashmere, soie=silk, coton=cotton, baumwolle=cotton, seide=silk, poliéster=polyester
-- If you can see the garment, describe its color and silhouette even if you can't read a tag
-- If you can see a barcode, extract the number
-- Semi-synthetics: viscose, modal, lyocell, tencel, cupro are NOT natural fibers
-- If composition isn't visible, set composition to null and fibers to []
-- Set confidence to "low" if you're guessing, "medium" if partially visible, "high" if clearly readable`
-        },
+        { type: "text", text: dppExtractionPrompt },
         { type: "image_url", image_url: { url: image.startsWith("data:") ? image : `data:image/jpeg;base64,${image}` } },
       ],
     }],
-    max_tokens: 700,
+    max_tokens: 900,
   });
   const raw = res.choices[0]?.message?.content?.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim() || "{}";
   return JSON.parse(raw);
+}
+
+function normalizeExtractedFibers(fibers: any[]): any[] {
+  if (!fibers?.length) return [];
+  return fibers
+    .map((f) => {
+      const name = String(f.fiber || f.name || "").trim();
+      const pct = parseFloat(String(f.percent ?? f.percentage ?? 0).replace(/%/g, "")) || 0;
+      if (!name || pct <= 0) return null;
+      const normalized = normalizeFiber(name);
+      const cls = classifyFiber(normalized);
+      return {
+        fiber: normalized.charAt(0).toUpperCase() + normalized.slice(1),
+        percent: pct,
+        isNatural: cls === "natural",
+        classification: cls,
+        isRecycled: f.isRecycled === true || /recycled|regenerated/i.test(name),
+      };
+    })
+    .filter(Boolean);
 }
 
 async function extractFromUrl(openai: OpenAI | null, url: string): Promise<any> {
@@ -368,16 +391,7 @@ function identifyProduct(extracted: any): {
   let compositionText = extracted.composition || "";
 
   if (extracted.fibers?.length) {
-    fibers = extracted.fibers.map((f: any) => {
-      const name = normalizeFiber(f.fiber || "");
-      const cls = classifyFiber(name);
-      return {
-        fiber: name.charAt(0).toUpperCase() + name.slice(1),
-        percent: parseFloat(String(f.percent || 0).replace(/%/g, "")) || 0,
-        isNatural: cls === "natural",
-        classification: cls,
-      };
-    }).filter((f: FiberEntry) => f.fiber && f.percent > 0);
+    fibers = normalizeExtractedFibers(extracted.fibers);
   }
 
   if (!fibers.length && compositionText) {
@@ -396,7 +410,10 @@ function identifyProduct(extracted: any): {
     }
   }
 
-  const naturalPercent = computeNaturalPercent(fibers);
+  const naturalPercent =
+    typeof extracted.naturalFiberPercent === 'number' && extracted.naturalFiberPercent > 0
+      ? Math.min(100, Math.round(extracted.naturalFiberPercent))
+      : computeNaturalPercent(fibers);
   const qualityScore = computeFiberQualityScore(fibers, naturalPercent);
 
   return { fibers, naturalPercent, qualityScore, compositionText };
@@ -603,6 +620,7 @@ export async function POST(request: NextRequest) {
         fibers: [],
       };
       const analysis = identifyProduct(extracted);
+      const dppFields = mapExtractedDppFields(extracted, analysis.fibers);
       const upc = barcode ? String(barcode).replace(/\D/g, "") : "";
       let isNewToDatabase = false;
       if (upc) {
@@ -616,6 +634,7 @@ export async function POST(request: NextRequest) {
           fiberBreakdown: analysis.fibers,
           price: parsedPrice,
           currency: detectedCurrency || null,
+          dpp: dppFields,
         });
       }
 
@@ -667,6 +686,16 @@ export async function POST(request: NextRequest) {
         needsCompositionLabel: false,
         isNewToDatabase,
         success: true,
+        countryOfOrigin: dppFields.countryOfOrigin ?? null,
+        careInstructions: dppFields.careInstructions ?? null,
+        hasRecycledContent: dppFields.hasRecycledContent ?? false,
+        recycledContentPercent: dppFields.recycledContentPercent ?? null,
+        labelLanguage: dppFields.labelLanguage ?? null,
+        dppReady: computeDppReady({
+          countryOfOrigin: dppFields.countryOfOrigin,
+          careInstructions: dppFields.careInstructions,
+          composition: analysis.compositionText || composition,
+        }),
       });
 
       await recordScanHistory({
@@ -894,6 +923,27 @@ export async function POST(request: NextRequest) {
     const brandRating = avgFiber === null ? null : avgFiber >= 95 ? "Exceptional" : avgFiber >= 85 ? "Excellent" : avgFiber >= 70 ? "Good" : "Caution";
 
     const confirmPrompt = buildConfirmationPrompt(extracted);
+    const dppFields = mapExtractedDppFields(extracted, analysis.fibers);
+    const scanUpc = extracted.barcode
+      ? String(extracted.barcode).replace(/\D/g, "")
+      : barcode
+        ? String(barcode).replace(/\D/g, "")
+        : "";
+    let isNewToDatabase = false;
+    if (scanUpc && (analysis.compositionText || extracted.composition)) {
+      isNewToDatabase = await upsertBarcodeFromComposition(supabase, scanUpc, {
+        brand: brandName !== "Unknown" ? brandName : null,
+        brandSlug: brandSlug !== "unknown" ? brandSlug : null,
+        productName: productName || null,
+        composition: analysis.compositionText || extracted.composition || "",
+        naturalFiberPercent: analysis.naturalPercent,
+        fiberPrimary: analysis.fibers[0]?.fiber?.toLowerCase() || null,
+        fiberBreakdown: analysis.fibers,
+        price: priceNum,
+        currency: detectedCurrency || null,
+        dpp: dppFields,
+      });
+    }
 
     await recordScanHistory({
       user_id: userId || null,
@@ -954,6 +1004,17 @@ export async function POST(request: NextRequest) {
       sourceHost,
       barcode: extracted.barcode || "",
       success: true,
+      isNewToDatabase,
+      countryOfOrigin: dppFields.countryOfOrigin ?? null,
+      careInstructions: dppFields.careInstructions ?? null,
+      hasRecycledContent: dppFields.hasRecycledContent ?? false,
+      recycledContentPercent: dppFields.recycledContentPercent ?? null,
+      labelLanguage: dppFields.labelLanguage ?? null,
+      dppReady: computeDppReady({
+        countryOfOrigin: dppFields.countryOfOrigin,
+        careInstructions: dppFields.careInstructions,
+        composition: analysis.compositionText || extracted.composition,
+      }),
     });
 
     if (guestEmail) {

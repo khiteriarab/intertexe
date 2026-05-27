@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { scannerCatalogQuery } from './scanner-catalog';
 import { parsePriceNumber } from './scanner-copy';
+import { buildDppUpsertFields, type DppScanFields } from './dpp-fields';
 
 export { getSmartAlternatives } from './scanner/get-smart-alternatives';
 
@@ -18,6 +19,14 @@ export type BarcodeLookupResult = {
   catalogProducts: any[];
   needsCompositionLabel: boolean;
   isNewToDatabase: boolean;
+  countryOfOrigin?: string | null;
+  careInstructions?: string | null;
+  hasRecycledContent?: boolean;
+  recycledContentPercent?: number | null;
+  labelLanguage?: string | null;
+  dppReady?: boolean;
+  verifiedBy?: string | null;
+  verificationDate?: string | null;
 };
 
 function normalizeUpc(raw: string): string {
@@ -76,6 +85,10 @@ export async function lookupBarcode(
       catalogProducts: [],
       needsCompositionLabel: true,
       isNewToDatabase: false,
+      countryOfOrigin: null,
+      careInstructions: null,
+      hasRecycledContent: false,
+      dppReady: false,
     };
   }
 
@@ -115,6 +128,14 @@ export async function lookupBarcode(
       catalogProducts,
       needsCompositionLabel: false,
       isNewToDatabase: false,
+      countryOfOrigin: known.country_of_origin ?? null,
+      careInstructions: known.care_instructions ?? null,
+      hasRecycledContent: known.has_recycled_content ?? false,
+      recycledContentPercent: known.recycled_content_percent ?? null,
+      labelLanguage: known.label_language ?? null,
+      dppReady: known.dpp_ready ?? false,
+      verifiedBy: known.verified_by ?? null,
+      verificationDate: known.verification_date ?? null,
     };
   }
 
@@ -164,6 +185,11 @@ export async function lookupBarcode(
       catalogProducts,
       needsCompositionLabel: !hadComposition,
       isNewToDatabase: !known,
+      countryOfOrigin: product.country_of_origin ?? null,
+      careInstructions: product.care_instructions ?? null,
+      hasRecycledContent: product.has_recycled_content ?? false,
+      recycledContentPercent: product.recycled_content_percent ?? null,
+      dppReady: product.dpp_ready ?? false,
     };
   }
 
@@ -194,6 +220,10 @@ export async function lookupBarcode(
     catalogProducts: [],
     needsCompositionLabel: true,
     isNewToDatabase: false,
+    countryOfOrigin: null,
+    careInstructions: null,
+    hasRecycledContent: false,
+    dppReady: false,
   };
 }
 
@@ -247,6 +277,10 @@ export async function fetchBrandFromPrefix(
       catalogProducts,
       needsCompositionLabel: true,
       isNewToDatabase: false,
+      countryOfOrigin: null,
+      careInstructions: null,
+      hasRecycledContent: false,
+      dppReady: false,
     };
   }
 
@@ -331,6 +365,10 @@ async function fetchFromExternalDatabase(
       catalogProducts,
       needsCompositionLabel: true,
       isNewToDatabase,
+      countryOfOrigin: null,
+      careInstructions: null,
+      hasRecycledContent: false,
+      dppReady: false,
     };
   } catch {
     return null;
@@ -365,6 +403,8 @@ export async function upsertBarcodeFromComposition(
     fiberBreakdown?: any[];
     price?: number | null;
     currency?: string | null;
+    dpp?: DppScanFields;
+    source?: string;
   }
 ): Promise<boolean> {
   const upcCode = normalizeUpc(upc);
@@ -377,6 +417,7 @@ export async function upsertBarcodeFromComposition(
     .maybeSingle();
 
   const isNew = !existing?.composition;
+  const dppUpsert = buildDppUpsertFields(payload.composition, payload.dpp ?? {});
 
   await supabase.from('barcode_compositions').upsert(
     {
@@ -390,9 +431,10 @@ export async function upsertBarcodeFromComposition(
       fiber_breakdown: payload.fiberBreakdown ?? null,
       price_usd: payload.price ?? null,
       currency_detected: payload.currency ?? null,
-      source: 'user_scan',
+      source: payload.source ?? 'scanner_label',
       last_scanned_at: new Date().toISOString(),
       scan_count: existing ? undefined : 1,
+      ...dppUpsert,
     },
     { onConflict: 'upc_code' }
   );
