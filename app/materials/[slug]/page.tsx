@@ -720,15 +720,15 @@ async function MainFiberPage({ slug }: { slug: string }) {
   const fiberQueries = FIBER_QUERIES[slug] || [slug];
   const categoryLinks = CATEGORY_LINKS[slug] || [];
 
-  const [products, designers] = await Promise.all([
+  const [products, designers, productCount] = await Promise.all([
     fetchCatalogProductsByFiber({
       fiber: slug,
       limit: CATALOG_INITIAL_PAGE,
       offset: 0,
     }).then((rows) => rows.filter((p) => p.imageUrl)),
     fetchDesigners(undefined, 200),
+    fetchMaterialHubDisplayCount(slug),
   ]);
-  const productCount = 0;
 
   const brandCount = new Set(products.map((p: any) => p.brandSlug)).size;
 
@@ -814,7 +814,7 @@ async function MainFiberPage({ slug }: { slug: string }) {
       <FabricProductGrid
         products={products}
         fiberName={fiberName}
-        totalCount={0}
+        totalCount={productCount}
         catalogFiber={slug}
       />
 

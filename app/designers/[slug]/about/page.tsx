@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  canonicalDesignerProductSlug,
   fetchDesignerBySlug,
   fetchProductsByBrand,
 } from "../../../../lib/supabase-server";
@@ -23,9 +24,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function DesignerAboutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const productSlug = canonicalDesignerProductSlug(slug);
   const [dbDesigner, brandCatalog] = await Promise.all([
     fetchDesignerBySlug(slug),
-    fetchProductsByBrand(slug, { limit: 200, offset: 0 }),
+    fetchProductsByBrand(productSlug, { limit: 200, offset: 0 }),
   ]);
   const products = brandCatalog.products;
   const profile = getBrandProfile(slug);
