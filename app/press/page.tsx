@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { PressDownloadLinks } from "./PressDownloadLinks";
 
 export const metadata: Metadata = {
   title: "Press",
@@ -88,13 +88,7 @@ export default function PressPage() {
 
         <div className="mt-8">
           <p className="text-[10px] text-muted-foreground tracking-[0.2em] uppercase mb-4">DOWNLOAD</p>
-          <Link
-            href="/intertexe-press-kit.pdf"
-            className="inline-block text-[10px] tracking-[0.15em] uppercase border border-foreground px-6 py-3 text-foreground hover:bg-foreground hover:text-background transition-colors"
-            data-testid="link-press-kit"
-          >
-            Press Kit
-          </Link>
+          <PressDownloadLinks />
         </div>
       </div>
     </div>

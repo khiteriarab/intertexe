@@ -14,14 +14,23 @@ import { SignInBenefitsBanner } from "./SignInBenefitsBanner";
 import { AuthLoginPromptProvider } from "../hooks/use-auth-login-prompt";
 
 const B2B_ROUTE_PREFIXES = ["/platform", "/partners"];
+const DOCUMENT_ROUTE_PREFIXES = ["/press-kit"];
 
 function isB2BRoute(pathname: string) {
   return B2B_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+function isDocumentRoute(pathname: string) {
+  return DOCUMENT_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
 export function ClientApp({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const b2b = isB2BRoute(pathname ?? "");
+  const document = isDocumentRoute(pathname ?? "");
+  const minimalChrome = b2b || document;
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -44,23 +53,23 @@ export function ClientApp({ children }: { children: ReactNode }) {
       </Suspense>
       <div
         className={`min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden ${
-          b2b ? "bg-white text-gray-900" : "bg-background text-foreground"
+          minimalChrome ? "bg-white text-gray-900" : "bg-background text-foreground"
         }`}
       >
-        {!b2b && <Navbar />}
-        {!b2b && <SignInBenefitsBanner />}
+        {!minimalChrome && <Navbar />}
+        {!minimalChrome && <SignInBenefitsBanner />}
         <main
           className={
-            b2b
+            minimalChrome
               ? "flex-1 flex flex-col w-full max-w-full"
               : "flex-1 flex flex-col w-full max-w-full mx-auto px-4 md:px-8 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] md:pb-0"
           }
         >
           {children}
         </main>
-        {!b2b && <Footer />}
-        {!b2b && <EmailBanner />}
-        {!b2b && <ScrollToTop />}
+        {!minimalChrome && <Footer />}
+        {!minimalChrome && <EmailBanner />}
+        {!minimalChrome && <ScrollToTop />}
       </div>
       <Toaster position="top-right" />
       </AuthLoginPromptProvider>

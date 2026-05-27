@@ -1,0 +1,221 @@
+.press-kit {
+  --press-ink: #1c2b2a;
+  --press-muted: #666666;
+  --press-paper: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--press-ink);
+  background: var(--press-paper);
+}
+
+.press-kit .press-serif {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.press-kit .press-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #999999;
+  margin-bottom: 1.25rem;
+}
+
+.press-kit .press-body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--press-muted);
+  font-weight: 300;
+}
+
+.press-kit .press-section {
+  padding: 5rem 1.5rem;
+}
+
+.press-kit .press-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.press-kit .press-inner-wide {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.press-kit .press-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3rem 2rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.press-kit .press-stat-number {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--press-ink);
+  margin-bottom: 0.5rem;
+}
+
+.press-kit .press-stat-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888888;
+  font-weight: 400;
+}
+
+.press-kit .press-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .press-kit .press-two-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.press-kit .press-scanner-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  max-width: 960px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .press-kit .press-scanner-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.press-kit .press-phone {
+  border: 1px solid #d4d4d4;
+  border-radius: 2rem;
+  aspect-ratio: 9 / 16;
+  max-width: 280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem 1.5rem;
+  background: #fafafa;
+  text-align: center;
+}
+
+.press-kit .press-tile-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .press-kit .press-tile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.press-kit .press-tile {
+  min-height: 220px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.press-kit .press-tile h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.75rem;
+  font-weight: 300;
+  margin-bottom: 0.75rem;
+}
+
+.press-kit .press-tile p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #666666;
+  font-weight: 300;
+}
+
+.press-kit .press-angle-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-width: 760px;
+}
+
+.press-kit .press-angle-list li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--press-muted);
+  font-weight: 300;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.press-kit .press-angle-list li:first-child {
+  border-top: 1px solid #eeeeee;
+}
+
+.press-kit .press-toolbar {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.press-kit .press-toolbar button,
+.press-kit .press-toolbar a {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--press-ink);
+  background: white;
+  color: var(--press-ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.press-kit .press-toolbar button:hover,
+.press-kit .press-toolbar a:hover {
+  background: var(--press-ink);
+  color: white;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .press-kit .press-toolbar {
+    display: none !important;
+  }
+
+  .page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .press-kit .press-cover {
+    min-height: 100vh;
+    height: 100vh;
+  }
+}
