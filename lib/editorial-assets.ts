@@ -49,8 +49,14 @@ export function editorialHeroForSlug(slug: string): string {
   return EDITORIAL_HERO[key] ?? LANDSCAPE_SILK;
 }
 
-/** Homepage hero — portrait editorial campaign. */
-export const HOMEPAGE_HERO_IMAGE = `${BASE}/hero-editorial-v8.png`;
+/**
+ * Homepage hero — separate assets for mobile vs desktop.
+ * Desktop needs ≥2400px width for full-bleed Retina (100vw @ 2x); v8 is 768×1408 portrait only.
+ */
+export const HOMEPAGE_HERO_IMAGE_MOBILE = `${BASE}/hero-editorial-v8.png`;
+export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial.jpg`;
+/** @deprecated Use HOMEPAGE_HERO_IMAGE_MOBILE or HOMEPAGE_HERO_IMAGE_DESKTOP */
+export const HOMEPAGE_HERO_IMAGE = HOMEPAGE_HERO_IMAGE_MOBILE;
 
 export const BRAND_WE_LOVE_IMAGES: Record<string, string> = {
   "re-done": "/brands/re-done.png",

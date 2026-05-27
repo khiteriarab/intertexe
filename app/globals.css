@@ -147,6 +147,15 @@
   min-height: calc(100vh - 64px);
 }
 
+/* next/image fill — avoid subpixel blur from transform stacking */
+.homepage-hero-desktop-frame > span,
+.homepage-hero-frame-mobile > span {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .homepage-hero-desktop-frame .homepage-hero-img {
   position: absolute;
   inset: 0;

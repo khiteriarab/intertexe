@@ -326,6 +326,8 @@ export async function fetchCatalogProductsByFiber(opts: {
   if (!supabase) return [];
   const normalizedFiber = materialPrimaryForShopFiber(fiber) || fiber.toLowerCase();
   const rangeEnd = offset + limit - 1;
+  const t0 = Date.now();
+
   let query = supabase
     .from("live_products_apparel")
     .select("*")
@@ -339,12 +341,17 @@ export async function fetchCatalogProductsByFiber(opts: {
   }
 
   const { data, error } = await query
-    .order("natural_fiber_percent", { ascending: false })
     .order("created_at", { ascending: false })
     .range(offset, rangeEnd);
+  logSupabaseTiming(
+    `fetchCatalogProductsByFiber live fiber=${normalizedFiber}`,
+    t0,
+    `rows:${(data || []).length} err:${error?.message || "none"}`
+  );
 
   let rows = data || [];
   if (error || rows.length === 0) {
+    const tFb = Date.now();
     rows = await catalogListLiveFallback(supabase, {
       fiber: normalizedFiber,
       category,
@@ -353,34 +360,19 @@ export async function fetchCatalogProductsByFiber(opts: {
       minNfp: 80,
       preferred: "us",
       fallback: "us",
+      requireOfferComplete: false,
     });
-  }
-
-  const mapped = filterConsumerCatalogProducts(
-    rows
-      .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row))
-      .map(mapProductRow)
-  );
-  if (mapped.length > 0) return mapped;
-
-  if (!error && rows.length > 0) {
-    const fallbackRows = await catalogListLiveFallback(supabase, {
-      fiber: normalizedFiber,
-      category,
-      limit,
-      offset,
-      minNfp: 80,
-      preferred: "us",
-      fallback: "us",
-    });
-    return filterConsumerCatalogProducts(
-      fallbackRows
-        .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row))
-        .map(mapProductRow)
+    logSupabaseTiming(
+      `fetchCatalogProductsByFiber fallback fiber=${normalizedFiber}`,
+      tFb,
+      `rows:${rows.length}`
     );
   }
 
-  return mapped;
+  return rows
+    .filter((row: any) => isNotMensProduct(row))
+    .map(mapProductRow)
+    .filter((p) => !consumerExclusionForProduct(p));
 }
 
 /** Paginated fallback when catalog_list RPC is missing — shared rules + dedupe. */
@@ -396,6 +388,8 @@ async function catalogListLiveFallback(
     minNfp?: number;
     preferred?: string;
     fallback?: string;
+    /** When false, include rows that fail offer completeness (material hubs need volume). */
+    requireOfferComplete?: boolean;
   }
 ): Promise<any[]> {
   const preferred = opts.preferred || "us";
@@ -426,7 +420,10 @@ async function catalogListLiveFallback(
     if (error || !data?.length) break;
     dbOffset += data.length;
 
-    const filtered = data.filter((row: any) => offerCompletenessStatus(row) === "complete");
+    const filtered =
+      opts.requireOfferComplete === false
+        ? data
+        : data.filter((row: any) => offerCompletenessStatus(row) === "complete");
     const fiberMatched = material
       ? filtered.filter((row: any) => rowMatchesCompositionFiber(material, row))
       : filtered.filter((row: any) => rowMatchesShopFiber(opts.fiber, row));
@@ -1245,7 +1242,12 @@ function priceListedRow(row: any): boolean {
 
 export async function fetchProductsByBrand(
   brandSlug: string,
-  opts?: CatalogFetchOpts & { limit?: number; offset?: number; skipTotal?: boolean }
+  opts?: CatalogFetchOpts & {
+    limit?: number;
+    offset?: number;
+    skipTotal?: boolean;
+    region?: string;
+  }
 ): Promise<{ products: Product[]; total: number | null; hasMore: boolean; error?: string }> {
   const supabase = getServerSupabase();
   if (!supabase) return { products: [], total: 0, hasMore: false };
@@ -1253,12 +1255,13 @@ export async function fetchProductsByBrand(
   const limit = Math.min(Math.max(1, opts?.limit ?? 48), 100);
   const offset = Math.max(0, opts?.offset ?? 0);
   const skipTotal = opts?.skipTotal ?? false;
+  const region = (opts?.region || "us").toLowerCase();
 
   const tLive = Date.now();
   const { data, error } = await supabase
     .from("live_products_apparel")
     .select("*")
-    .eq("region", "us")
+    .eq("region", region)
     .eq("brand_slug", canonicalSlug)
     .gte("natural_fiber_percent", 80)
     .order("natural_fiber_percent", { ascending: false })
@@ -1270,17 +1273,18 @@ export async function fetchProductsByBrand(
     return { products: [], total: 0, hasMore: false, error: "timeout" };
   }
 
-  const rows = dedupeLiveApparelRows(data || [], "us", "us");
-  const products = filterConsumerCatalogProducts(
-    rows.filter(isClothingProduct).map(mapProductRow)
-  );
+  const rows = dedupeLiveApparelRows(data || [], region, region);
+  const products = rows
+    .filter(isNotMensProduct)
+    .map(mapProductRow)
+    .filter((p) => !consumerExclusionForProduct(p));
 
   if (skipTotal) {
     return { products, total: null, hasMore: products.length >= limit };
   }
 
   const total = await countLiveProductsApparel(supabase, {
-    region: "us",
+    region,
     brandSlug: canonicalSlug,
   });
   const resolvedTotal = total > 0 ? total : offset + products.length;

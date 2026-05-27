@@ -96,10 +96,12 @@ function catalogMarketFromParams(sp: URLSearchParams): string | undefined {
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const collectionAlias = sp.get("collection");
+  const explicitMode = sp.get("mode");
   const mode =
     collectionAlias === "vacation"
       ? "vacation"
-      : sp.get("mode") || "shop";
+      : explicitMode ||
+        (fiber && fiber !== "all" && !sp.get("slug") ? "materials" : "shop");
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
   const offset = safeCatalogOffset(sp.get("offset"));
   const fiber = sp.get("fiber") || undefined;
@@ -118,14 +120,21 @@ export async function GET(request: NextRequest) {
         limit,
         offset,
         skipTotal: skipCount,
+        region: catalogRegion || "us",
       });
       if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
+      const brandTotal = catalogTotalValue(
+        result.total,
+        result.products.length,
+        offset,
+        skipCount
+      );
       return catalogOk({
         products: result.products,
-        total: result.total,
+        total: brandTotal,
         limit,
         offset,
-        hasMore: catalogHasMore(result.products.length, limit, offset, result.total),
+        hasMore: catalogHasMore(result.products.length, limit, offset, brandTotal),
       });
     }
 

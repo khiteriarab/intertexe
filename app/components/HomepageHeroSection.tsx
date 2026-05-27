@@ -1,8 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
+import {
+  HOMEPAGE_HERO_IMAGE_DESKTOP,
+  HOMEPAGE_HERO_IMAGE_MOBILE,
+} from "../../lib/editorial-assets";
 
 /** Portrait campaign hero — full viewport width; product grid stays in rails below (not beside hero). */
 export function HomepageHeroSection({
@@ -20,12 +24,15 @@ export function HomepageHeroSection({
         data-testid="homepage-hero-mobile"
       >
         <div className="homepage-hero-frame-mobile">
-          <img
-            src={HOMEPAGE_HERO_IMAGE}
+          <Image
+            src={HOMEPAGE_HERO_IMAGE_MOBILE}
             alt="INTERTEXE — Luxury natural-fiber fashion"
+            fill
+            priority
+            quality={100}
+            sizes="100vw"
             className="homepage-hero-img"
             style={{ objectPosition: "center 75%" }}
-            fetchPriority="high"
             draggable={false}
           />
         </div>
@@ -55,11 +62,15 @@ export function HomepageHeroSection({
         data-testid="homepage-hero-desktop"
       >
         <div className="homepage-hero-desktop-frame">
-          <img
-            src={HOMEPAGE_HERO_IMAGE}
+          <Image
+            src={HOMEPAGE_HERO_IMAGE_DESKTOP}
             alt="INTERTEXE editorial"
-            className="absolute inset-0 w-full h-full object-cover object-[center_58%]"
-            fetchPriority="high"
+            fill
+            priority
+            quality={100}
+            sizes="100vw"
+            className="homepage-hero-img"
+            style={{ objectPosition: "center 58%" }}
             draggable={false}
           />
         </div>
