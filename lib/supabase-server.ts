@@ -314,7 +314,29 @@ function rowMatchesCompositionFiber(material: string, row: { composition?: strin
   return comp.includes(material);
 }
 
-/** Fiber / category grids (materials hubs) — region winners US, no storefront market narrowing. */
+/** Map live apparel rows for material hubs — full catalog, no consumer/curated narrowing. */
+function mapFiberHubCatalogRows(
+  rows: any[],
+  normalizedFiber: string,
+  category?: string
+): Product[] {
+  const material = materialPrimaryForShopFiber(normalizedFiber) || normalizedFiber;
+  let filtered = rows.filter((row: any) => isNotMensProduct(row));
+  if (material) {
+    filtered = filtered.filter((row: any) => rowMatchesCompositionFiber(material, row));
+  }
+  if (category) {
+    filtered = filtered.filter((row: any) =>
+      rowMatchesGarmentFilter(
+        { garment_type: row.garment_type || classifyGarment(row.category, row.name) },
+        category
+      )
+    );
+  }
+  return dedupeLiveApparelRows(filtered, "us", "us").map(mapProductRow);
+}
+
+/** Fiber / category grids (materials hubs) — full live_products_apparel catalog, US region. */
 export async function fetchCatalogProductsByFiber(opts: {
   fiber: string;
   category?: string;
@@ -327,6 +349,28 @@ export async function fetchCatalogProductsByFiber(opts: {
   const normalizedFiber = materialPrimaryForShopFiber(fiber) || fiber.toLowerCase();
   const rangeEnd = offset + limit - 1;
   const t0 = Date.now();
+
+  let rows: any[] = [];
+
+  // Category hubs need garment matching across a wide scan — use fallback path first.
+  if (category) {
+    rows = await catalogListLiveFallback(supabase, {
+      fiber: normalizedFiber,
+      category,
+      limit,
+      offset,
+      minNfp: 80,
+      preferred: "us",
+      fallback: "us",
+      requireOfferComplete: false,
+    });
+    logSupabaseTiming(
+      `fetchCatalogProductsByFiber category=${category} fiber=${normalizedFiber}`,
+      t0,
+      `rows:${rows.length}`
+    );
+    return mapFiberHubCatalogRows(rows, normalizedFiber, category);
+  }
 
   let query = supabase
     .from("live_products_apparel")
@@ -349,7 +393,7 @@ export async function fetchCatalogProductsByFiber(opts: {
     `rows:${(data || []).length} err:${error?.message || "none"}`
   );
 
-  let rows = data || [];
+  rows = data || [];
   if (error || rows.length === 0) {
     const tFb = Date.now();
     rows = await catalogListLiveFallback(supabase, {
@@ -369,10 +413,7 @@ export async function fetchCatalogProductsByFiber(opts: {
     );
   }
 
-  return rows
-    .filter((row: any) => isNotMensProduct(row))
-    .map(mapProductRow)
-    .filter((p) => !consumerExclusionForProduct(p));
+  return mapFiberHubCatalogRows(rows, normalizedFiber, category);
 }
 
 /** Paginated fallback when catalog_list RPC is missing — shared rules + dedupe. */
@@ -1228,8 +1269,6 @@ export async function fetchProductsByFiberAndCategory(
       seen.add(id);
       return true;
     })
-    .filter(isClothingProduct)
-    .filter(isNotMensProduct)
     .slice(0, limit);
 }
 

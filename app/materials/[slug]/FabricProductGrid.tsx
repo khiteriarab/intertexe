@@ -26,7 +26,7 @@ function parsePrice(p: string | undefined): number {
   return match ? parseFloat(match[0]) : Infinity;
 }
 
-type SortOption = "relevance" | "price-asc" | "price-desc";
+type SortOption = "new_in" | "price-asc" | "price-desc";
 
 export default function FabricProductGrid({
   products: initialProducts,
@@ -53,7 +53,7 @@ export default function FabricProductGrid({
   });
   const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const [sort, setSort] = useState<SortOption>("relevance");
+  const [sort, setSort] = useState<SortOption>("new_in");
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -143,7 +143,8 @@ export default function FabricProductGrid({
     return list;
   }, [products, search, sort]);
 
-  const sortLabel = sort === "relevance" ? "Curated" : sort === "price-asc" ? "Price: Low to High" : "Price: High to Low";
+  const sortLabel =
+    sort === "new_in" ? "New In" : sort === "price-asc" ? "Price: Low to High" : "Price: High to Low";
 
   return (
     <section className="w-full" data-testid="section-shop-fabric">
@@ -194,7 +195,7 @@ export default function FabricProductGrid({
           )}
         </div>
         <div className="flex items-center gap-0.5">
-          {(["relevance", "price-asc", "price-desc"] as SortOption[]).map((opt) => (
+          {(["new_in", "price-asc", "price-desc"] as SortOption[]).map((opt) => (
             <button
               key={opt}
               onClick={() => setSort(opt)}
@@ -205,7 +206,7 @@ export default function FabricProductGrid({
               }`}
               data-testid={`sort-${opt}`}
             >
-              {opt === "relevance" ? "Curated" : opt === "price-asc" ? "Price ↑" : "Price ↓"}
+              {opt === "new_in" ? "New In" : opt === "price-asc" ? "Price ↑" : "Price ↓"}
             </button>
           ))}
         </div>
@@ -257,14 +258,14 @@ export default function FabricProductGrid({
       )}
 
       <CatalogMobileSheet open={showSortSheet} onClose={() => setShowSortSheet(false)} title="Sort by">
-        {(["relevance", "price-asc", "price-desc"] as SortOption[]).map((opt) => (
+        {(["new_in", "price-asc", "price-desc"] as SortOption[]).map((opt) => (
           <button
             key={opt}
             type="button"
             onClick={() => { setSort(opt); setShowSortSheet(false); }}
             className={`w-full text-left px-4 py-3.5 text-[12px] border-b border-border/20 ${sort === opt ? "font-medium" : "text-muted-foreground"}`}
           >
-            {opt === "relevance" ? "Curated" : opt === "price-asc" ? "Price: Low to High" : "Price: High to Low"}
+            {opt === "new_in" ? "New In" : opt === "price-asc" ? "Price: Low to High" : "Price: High to Low"}
           </button>
         ))}
       </CatalogMobileSheet>
