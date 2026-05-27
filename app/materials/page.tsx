@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { fetchProductCount, fetchProductsByFiber } from "../../lib/supabase-server";
+import { fetchProductCount } from "../../lib/supabase-server";
 import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
 import {
   formatBrandCountLabel,
@@ -9,6 +9,7 @@ import {
   GENERIC_SITE_DESCRIPTION,
   resolveShoppableBrandCount,
 } from "../../lib/catalog-stats-labels";
+import { fabricImages } from "../../lib/fabric-images";
 
 export const revalidate = 600;
 
@@ -71,32 +72,12 @@ const FABRICS = [
   },
 ];
 
-const CURATED_IMAGES: Record<string, string> = {
-  cotton: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/c0/P01181453.jpg",
-  linen: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/5a/P01196498.jpg",
-  silk: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/97/P00817845.jpg",
-  wool: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/be/P01194268.jpg",
-  cashmere: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/4b/P00919837.jpg",
-  leather: "https://img.mytheresa.com/1094/1094/95/jpeg/catalog/product/3b/P00920847.jpg",
-};
-
 export default async function MaterialsPage() {
-  const [platformStats, brandStats, productCount, ...fiberImages] = await Promise.all([
+  const [platformStats, brandStats, productCount] = await Promise.all([
     getCachedPlatformStats(),
     getCachedBrandStats(),
     fetchProductCount(),
-    ...FABRICS.map((f) =>
-      fetchProductsByFiber(f.slug, 24)
-        .then((products) => {
-          const p = products.find((row) => row.imageUrl);
-          return p ? p.imageUrl : null;
-        })
-        .catch(() => null)
-    )
   ]);
-
-  const images: Record<string, string | null> = {};
-  FABRICS.forEach((f, i) => { images[f.slug] = fiberImages[i] as string | null; });
 
   const totalProducts = platformStats.productCount > 0 ? platformStats.productCount : productCount;
   const displayCount =
@@ -141,7 +122,7 @@ export default async function MaterialsPage() {
       <section className="-mx-4 md:-mx-8">
         {FABRICS.map((fabric, index) => {
           const isReversed = index % 2 === 1;
-          const imgSrc = CURATED_IMAGES[fabric.slug] || images[fabric.slug];
+          const imgSrc = fabricImages[fabric.slug as keyof typeof fabricImages];
 
           return (
             <div key={fabric.slug} className="grid grid-cols-1 md:grid-cols-2 gap-0" data-testid={`hub-section-${fabric.slug}`}>
