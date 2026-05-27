@@ -17,14 +17,21 @@ import {
   catalogHasMore,
 } from "../../../lib/catalog-fetch-limits";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
+
+const PRODUCT_CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+  "CDN-Cache-Control": "public, max-age=300",
+};
 
 function catalogOk(
   body: Record<string, unknown>,
   init?: { status?: number }
 ) {
-  return NextResponse.json(body, { status: init?.status ?? 200 });
+  return NextResponse.json(body, {
+    status: init?.status ?? 200,
+    headers: PRODUCT_CACHE_HEADERS,
+  });
 }
 
 function catalogTimeoutResponse(limit: number, offset: number) {
@@ -50,13 +57,25 @@ function catalogFailedResponse(limit: number, offset: number) {
   });
 }
 
+function catalogPreferredRegionFromParams(sp: URLSearchParams): string | undefined {
+  const region = sp.get("region") || sp.get("catalogRegion");
+  const normalized = region?.trim().toLowerCase();
+  if (!normalized) return undefined;
+  if (normalized === "ca" || normalized === "canada") return "ca";
+  if (normalized === "eu") return "eu";
+  if (normalized === "uk" || normalized === "gb") return "uk";
+  if (normalized === "us" || normalized === "usa") return "us";
+  return undefined;
+}
+
 function catalogMarketFromParams(sp: URLSearchParams): string | undefined {
   const region = sp.get("region");
   if (region) {
-    const r = region.toUpperCase();
-    if (r === "EU") return "eu";
-    if (r === "UK" || r === "GB") return "uk";
-    if (r === "US" || r === "CA") return "us-ca";
+    const normalized = region.trim().toLowerCase();
+    const r = normalized.toUpperCase();
+    if (r === "EU") return "eu-uk-me";
+    if (r === "UK" || r === "GB") return "eu-uk-me";
+    if (r === "US" || r === "CA" || normalized === "canada") return "us-ca";
   }
   const market = sp.get("market");
   return market && market !== "all" ? market : undefined;
@@ -74,6 +93,7 @@ export async function GET(request: NextRequest) {
   const fiber = sp.get("fiber") || undefined;
   const category = sp.get("category") || undefined;
   const market = catalogMarketFromParams(sp);
+  const catalogRegion = catalogPreferredRegionFromParams(sp);
   const sort = sp.get("sort") || "new";
   const search = sp.get("search") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
@@ -199,6 +219,7 @@ export async function GET(request: NextRequest) {
       fiber: shopFiber,
       category: category && category !== "all" ? category : undefined,
       market: market && market !== "all" ? market : undefined,
+      catalogRegion,
       sort,
       limit,
       offset,

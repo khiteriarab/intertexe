@@ -44,6 +44,11 @@ import {
 import { fetchShoppableBrands } from "./shoppable-brands";
 import { isMensCatalogRow, isMensOnlyBrand } from "./womens-catalog-guard";
 import { filterProductsByFiberSubtypes } from "./fiber-subtypes";
+import {
+  CATALOG_CA_MIN_PRODUCTS,
+  mergeProductsWithRegionFallback,
+} from "./catalog-region-fallback";
+import { normalizeCatalogRegion } from "./shipping-regions";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
@@ -136,7 +141,12 @@ function applyCatalogFilter(query: any, market?: string) {
 }
 
 /** Region params for Postgres catalog_list / editorial RPCs (see docs/SHARED_CATALOG.md). */
-export function catalogRegionsFromMarket(market?: string): { preferred: string; fallback: string } {
+export function catalogRegionsFromMarket(
+  market?: string,
+  catalogRegion?: string
+): { preferred: string; fallback: string } {
+  const explicit = normalizeCatalogRegion(catalogRegion);
+  if (explicit === "ca") return { preferred: "ca", fallback: "us" };
   const m = String(market || "").toLowerCase();
   if (m === "eu" || m === "eu-uk-me") return { preferred: "eu", fallback: "us" };
   if (m === "uk" || m === "gb") return { preferred: "uk", fallback: "us" };
@@ -1691,6 +1701,8 @@ export async function fetchShopProducts(options: {
   maxPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
+  /** Catalog RPC region (`ca` supplements with US when sparse). */
+  catalogRegion?: string;
   sort?: string;
   limit?: number;
   offset?: number;
@@ -1714,6 +1726,7 @@ export async function fetchShopProducts(options: {
     maxPrice: maxPriceOpt,
     price600Plus,
     market,
+    catalogRegion,
     sort = "new",
     limit = 60,
     offset = 0,
@@ -1729,7 +1742,7 @@ export async function fetchShopProducts(options: {
   const categories = shopCategoriesList(category, categoriesOpt);
   const maxPrice = normalizeShopPriceCap(maxPriceOpt);
   const isPriceSort = sort === "price-low" || sort === "price-high";
-  const { preferred, fallback } = catalogRegionsFromMarket(market);
+  const { preferred, fallback } = catalogRegionsFromMarket(market, catalogRegion);
 
   const searchSynonyms: Record<string, string[]> = {
     jeans: ["jean", "denim"],
@@ -1758,6 +1771,22 @@ export async function fetchShopProducts(options: {
       sort,
     });
 
+  const mapCatalogRowsToProducts = (rows: any[]): Product[] => {
+    let filtered = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, market));
+    if (filtered.length === 0 && market && market !== "all" && rows.length > 0) {
+      const broad = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, undefined));
+      if (broad.length > 0) filtered = broad;
+    }
+
+    let mapped = filterConsumerCatalogProducts(
+      filtered.filter(passesWomensCatalogRow).map(mapProductRow)
+    );
+    if (rpcFiber) {
+      mapped = mapped.filter((p) => productBodyMatchesFiber(p.composition || "", rpcFiber));
+    }
+    return postFilter(mapped);
+  };
+
   if (!isPriceSort) {
     let rows =
       (await rpcCatalogList(supabase, {
@@ -1785,28 +1814,39 @@ export async function fetchShopProducts(options: {
       });
     }
 
-    let filtered = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, market));
-    if (filtered.length === 0 && market && market !== "all" && rows.length > 0) {
-      const broad = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, undefined));
-      if (broad.length > 0) filtered = broad;
-    }
-
-    let mapped = filterConsumerCatalogProducts(
-      filtered.filter(passesWomensCatalogRow).map(mapProductRow)
-    );
-    if (rpcFiber) {
-      mapped = mapped.filter((p) => productBodyMatchesFiber(p.composition || "", rpcFiber));
-    }
+    let mapped = mapCatalogRowsToProducts(rows);
 
     if (sort === "new") {
       mapped.sort((a, b) => {
-        const ta = Date.parse(String(a.createdAt || "")) || 0;
-        const tb = Date.parse(String(b.createdAt || "")) || 0;
+        const ta = Date.parse(String((a as Product & { createdAt?: string }).createdAt || "")) || 0;
+        const tb = Date.parse(String((b as Product & { createdAt?: string }).createdAt || "")) || 0;
         return tb - ta;
       });
     }
 
-    mapped = postFilter(mapped);
+    if (preferred === "ca" && mapped.length < CATALOG_CA_MIN_PRODUCTS) {
+      const usRows =
+        (await rpcCatalogList(supabase, {
+          preferred: "us",
+          fallback: "us",
+          fiber: rpcFiber,
+          category: rpcCategory,
+          brandSlug: rpcBrand,
+          search: searchRpc,
+          minNfp: 80,
+          limit: CATALOG_CA_MIN_PRODUCTS,
+          offset: 0,
+        })) || [];
+      if (usRows.length > 0) {
+        const usMapped = mapCatalogRowsToProducts(usRows);
+        mapped = mergeProductsWithRegionFallback(
+          mapped,
+          usMapped,
+          CATALOG_CA_MIN_PRODUCTS,
+          limit
+        );
+      }
+    }
 
     if (skipTotal) {
       return {

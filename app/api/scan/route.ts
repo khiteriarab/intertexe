@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
@@ -641,10 +642,14 @@ export async function POST(request: NextRequest) {
       const brandName = extracted.brandName || "Unknown";
       const brandSlug = slugifyBrand(brandName);
       const alternatives = await getSmartAlternatives(supabase, {
+        composition: analysis.compositionText || composition,
         detectedPrice: parsedPrice,
+        currency: detectedCurrency || null,
+        category: body.category || null,
         primaryFiber: analysis.fibers[0]?.fiber,
         naturalFiberPercent: analysis.naturalPercent,
         brandSlug,
+        region: "us",
         userId,
         excludeBrandSlug: brandSlug !== "unknown" ? brandSlug : undefined,
       });
@@ -876,15 +881,18 @@ export async function POST(request: NextRequest) {
 
     let alternatives: any[] = [];
     try {
-      alternatives = await searchAlternatives(
-        supabase,
-        category,
+      alternatives = await getSmartAlternatives(supabase, {
+        composition: analysis.compositionText || extracted.composition || "",
+        detectedPrice: priceNum,
+        currency: detectedCurrency || null,
+        category: category || null,
+        primaryFiber: alternativeFiber,
+        naturalFiberPercent: effectivePercent,
         brandSlug,
-        priceNum,
-        color,
-        fiberFilter,
-        alternativeFiber
-      );
+        region: "us",
+        userId,
+        excludeBrandSlug: brandSlug !== "unknown" ? brandSlug : undefined,
+      });
     } catch (e: any) {
       console.error("Alternatives search failed:", e.message);
     }

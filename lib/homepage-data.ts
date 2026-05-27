@@ -262,14 +262,13 @@ export async function getHomePageData(): Promise<HomePageData> {
     return getHomePageDataFromFeedCache();
   }
 
-  const designers = await withHomepageRailTimeout(
-    "rail:designers",
-    DESIGNERS_TIMEOUT_MS,
-    () => fetchDesigners(undefined, DESIGNERS_FETCH_LIMIT),
-    []
-  );
-
-  const [vacationProducts, saleResult, curatedDesigners] = await Promise.all([
+  const [designers, vacationProducts, saleResult, curatedDesigners, platformStats, brandProductLists] = await Promise.all([
+    withHomepageRailTimeout(
+      "rail:designers",
+      DESIGNERS_TIMEOUT_MS,
+      () => fetchDesigners(undefined, DESIGNERS_FETCH_LIMIT),
+      []
+    ),
     withHomepageRailTimeout(
       "rail:vacation",
       RAIL_TIMEOUT_MS,
@@ -292,22 +291,20 @@ export async function getHomePageData(): Promise<HomePageData> {
       { products: [], total: 0 }
     ),
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
+    getCachedPlatformStats(),
+    Promise.all(
+      [...NEW_IN_BRAND_SLUGS].map((slug) =>
+        withHomepageRailTimeout(`brandrail:new-in:${slug}`, BRAND_FETCH_TIMEOUT_MS, async () => {
+          return fetchProductsByBrandWithImages(slug, NEW_IN_FETCH_PER_BRAND, homeBrandOpts);
+        }, [])
+      )
+    ),
   ]);
 
   const saleProducts = filterHomepageSaleProducts(
     (saleResult.products || []).filter((p) => !isZeroPrice(p.price)),
     MERCH_HOME_FETCH_LIMIT
   );
-  const platformStats = await getCachedPlatformStats();
-
-  const brandProductLists = await Promise.all(
-    [...NEW_IN_BRAND_SLUGS].map((slug) =>
-      withHomepageRailTimeout(`brandrail:new-in:${slug}`, BRAND_FETCH_TIMEOUT_MS, async () => {
-        return fetchProductsByBrandWithImages(slug, NEW_IN_FETCH_PER_BRAND, homeBrandOpts);
-      }, [])
-    )
-  );
-
   const seenIds = new Set<string>();
   const seenBaseNames = new Set<string>();
   const newInProducts: any[] = [];

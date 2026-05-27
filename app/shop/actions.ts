@@ -16,6 +16,7 @@ export async function getShopProducts(options: {
   maxPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
+  catalogRegion?: string;
   sort?: string;
   limit?: number;
   offset?: number;
@@ -30,6 +31,7 @@ export async function getShopProducts(options: {
     maxPrice: options.maxPrice ?? null,
     price600Plus: options.price600Plus,
     market: options.market === "all" ? undefined : options.market,
+    catalogRegion: options.catalogRegion,
     sort: options.sort || "new",
     limit: options.limit || CATALOG_PAGE_SIZE,
     offset: options.offset || 0,

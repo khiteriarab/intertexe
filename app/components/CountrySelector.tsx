@@ -21,14 +21,21 @@ export function CountrySelector({
   compact?: boolean;
   className?: string;
 }) {
-  const { market, setMarket } = useShoppingMarket();
+  const { market, setMarket, catalogRegion } = useShoppingMarket();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
 
   const detected = getRegionForCountryCode(detectedCountryCode);
-  const active =
-    detected && market === detected.market ? detected : getRegionForMarket(market);
+  const active = (() => {
+    if (market === "us-ca" && catalogRegion === "ca") {
+      return SHIPPING_REGIONS.find((r) => r.code === "CA") ?? getRegionForMarket(market);
+    }
+    if (market === "us-ca") {
+      return SHIPPING_REGIONS.find((r) => r.code === "US") ?? getRegionForMarket(market);
+    }
+    return detected && market === detected.market ? detected : getRegionForMarket(market);
+  })();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -54,7 +61,7 @@ export function CountrySelector({
   }, [open]);
 
   const pick = (region: ShippingRegion) => {
-    setMarket(region.market);
+    setMarket(region.market, { countryCode: region.code });
     setOpen(false);
     setQuery("");
   };
@@ -114,7 +121,7 @@ export function CountrySelector({
                   type="button"
                   onClick={() => pick(region)}
                   className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left text-[12px] hover:bg-[#f5f5f3] transition-colors ${
-                    region.market === market && region.country === active.country
+                    region.country === active.country
                       ? "text-foreground font-medium"
                       : "text-foreground/75"
                   }`}

@@ -2,8 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  SHOP_CATALOG_REGION_EVENT,
   SHOP_MARKET_EVENT,
   SHOP_MARKET_STORAGE_KEY,
+  catalogRegionForCountryCode,
+  normalizeCatalogRegion,
+  readStoredCatalogRegion,
+  writeStoredCatalogRegion,
   type MarketFilter,
   marketFromSearchParam,
 } from "../../lib/shipping-regions";
@@ -22,8 +27,12 @@ export const SHOP_MARKET_INVALIDATE = "intertexe-shop-market-invalidate";
 
 export function useShoppingMarket(initial?: MarketFilter) {
   const [market, setMarketState] = useState<MarketFilter>(initial ?? "all");
+  const [catalogRegion, setCatalogRegionState] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    const storedRegion = readStoredCatalogRegion();
+    if (storedRegion) setCatalogRegionState(storedRegion);
+
     try {
       const stored = localStorage.getItem(SHOP_MARKET_STORAGE_KEY);
       if (stored === "us-ca" || stored === "eu-uk-me" || stored === "all") {
@@ -56,13 +65,30 @@ export function useShoppingMarket(initial?: MarketFilter) {
     return () => window.removeEventListener(SHOP_MARKET_EVENT, onExternal);
   }, []);
 
-  const setMarket = useCallback((next: MarketFilter) => {
+  useEffect(() => {
+    const onCatalogRegion = (e: Event) => {
+      setCatalogRegionState(normalizeCatalogRegion((e as CustomEvent<string>).detail));
+    };
+    window.addEventListener(SHOP_CATALOG_REGION_EVENT, onCatalogRegion);
+    return () => window.removeEventListener(SHOP_CATALOG_REGION_EVENT, onCatalogRegion);
+  }, []);
+
+  const setMarket = useCallback((next: MarketFilter, opts?: { countryCode?: string }) => {
     setMarketState(next);
     try {
       localStorage.setItem(SHOP_MARKET_STORAGE_KEY, next);
     } catch {}
     window.dispatchEvent(new CustomEvent(SHOP_MARKET_EVENT, { detail: next }));
     window.dispatchEvent(new CustomEvent(SHOP_MARKET_INVALIDATE, { detail: next }));
+
+    if (opts?.countryCode) {
+      const nextCatalog = catalogRegionForCountryCode(opts.countryCode);
+      writeStoredCatalogRegion(nextCatalog ?? null);
+      setCatalogRegionState(nextCatalog);
+    } else if (next === "all") {
+      writeStoredCatalogRegion(null);
+      setCatalogRegionState(undefined);
+    }
 
     const token = getToken();
     if (token) {
@@ -74,7 +100,7 @@ export function useShoppingMarket(initial?: MarketFilter) {
     }
   }, []);
 
-  return { market, setMarket };
+  return { market, setMarket, catalogRegion };
 }
 
 export function readMarketFromUrl(search: string | null): MarketFilter {

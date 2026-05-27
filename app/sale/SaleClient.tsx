@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ProductLink } from "../components/ProductLink";
 import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
@@ -13,6 +14,7 @@ import {
   CatalogActiveFilterChips,
   type CatalogActiveFilter,
 } from "../components/CatalogMobileToolbar";
+import { ProductGridSkeleton } from "../components/ProductGridSkeleton";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
 import { getShopBrands } from "../shop/actions";
@@ -69,6 +71,8 @@ const PRICE_FILTERS: { key: PriceFilter; label: string }[] = [
   { key: "200", label: "Under $200" },
   { key: "300", label: "Under $300" },
 ];
+const BLUR_DATA_URL =
+  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k=";
 
 function getDiscountPercent(originalPrice: string | null, currentPrice: string | null): number | null {
   if (!originalPrice || !currentPrice) return null;
@@ -102,7 +106,16 @@ function SaleProductCard({ product }: { product: any }) {
     <ProductLink href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
-          <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
+          <Image
+            src={imageUrl}
+            alt={name}
+            fill
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+          />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, priceShown || String(price)); }}
             className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
@@ -472,18 +485,7 @@ export default function SaleClient({
         )}
 
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="animate-pulse flex flex-col">
-                <div className="aspect-[3/4] bg-[#f0f0ee]" />
-                <div className="pt-3 flex flex-col gap-2">
-                  <div className="h-2.5 bg-[#f0f0ee] w-1/3" />
-                  <div className="h-3 bg-[#f0f0ee] w-3/4" />
-                  <div className="h-2.5 bg-[#f0f0ee] w-1/4" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <ProductGridSkeleton count={8} />
         ) : sortedProducts.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12" data-testid="sale-product-grid">

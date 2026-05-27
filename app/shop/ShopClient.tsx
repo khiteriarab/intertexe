@@ -14,6 +14,7 @@ import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
 import { CatalogProductImage } from "../components/CatalogProductImage";
+import { ProductGridSkeleton } from "../components/ProductGridSkeleton";
 import { CountrySelector } from "../components/CountrySelector";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
@@ -159,18 +160,7 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} className="animate-pulse flex flex-col">
-          <div className="aspect-[3/4] bg-[#f0f0ee]" />
-          <div className="pt-3 flex flex-col gap-2">
-            <div className="h-2.5 bg-[#f0f0ee] w-1/3" />
-            <div className="h-3 bg-[#f0f0ee] w-3/4" />
-            <div className="h-2.5 bg-[#f0f0ee] w-1/4" />
-          </div>
-        </div>
-      ))}
-    </div>
+    <ProductGridSkeleton count={12} />
   );
 }
 
@@ -211,7 +201,7 @@ export default function ShopClient({
     .filter(Boolean);
   const initialMarketFilter = (searchParams.get("market") as MarketFilter) || "all";
   const initialSearch = searchParams.get("q") || "";
-  const { market: marketFilter, setMarket: setMarketFilter } = useShoppingMarket(
+  const { market: marketFilter, setMarket: setMarketFilter, catalogRegion } = useShoppingMarket(
     initialMarketFilter === "us-ca" || initialMarketFilter === "eu-uk-me" ? initialMarketFilter : "all"
   );
 
@@ -235,9 +225,13 @@ export default function ShopClient({
 
   const detectedRegion = getRegionForCountryCode(detectedCountry);
   const activeRegion =
-    detectedRegion && marketFilter === detectedRegion.market
-      ? detectedRegion
-      : getRegionForMarket(marketFilter);
+    marketFilter === "us-ca" && catalogRegion === "ca"
+      ? SHIPPING_REGIONS.find((r) => r.code === "CA") ?? getRegionForMarket(marketFilter)
+      : marketFilter === "us-ca"
+        ? SHIPPING_REGIONS.find((r) => r.code === "US") ?? getRegionForMarket(marketFilter)
+        : detectedRegion && marketFilter === detectedRegion.market
+          ? detectedRegion
+          : getRegionForMarket(marketFilter);
 
   const selectLocation = (market: MarketFilter) => {
     setMarketFilter(market);

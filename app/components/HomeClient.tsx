@@ -19,6 +19,8 @@ import Image from "next/image";
 
 const APP_STORE_URL =
   process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() || "/scanner";
+const BLUR_DATA_URL =
+  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k=";
 
 function AppDownloadBanner() {
   const [dismissed, setDismissed] = useState(true);
@@ -107,9 +109,10 @@ function ProductCard({
     >
       <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
         {imageUrl ? (
-          <img
+          <Image
             src={optimizeImageUrl(imageUrl, 480)}
             alt={name}
+            fill
             draggable={false}
             className={`absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out pointer-events-none select-none ${
               variant === "sale"
@@ -117,6 +120,9 @@ function ProductCard({
                 : "object-[center_22%] md:object-[center_30%]"
             }`}
             loading={eager ? "eager" : "lazy"}
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+            sizes="(min-width: 768px) 220px, 155px"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">

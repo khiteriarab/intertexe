@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { scannerCatalogQuery } from '../scanner-catalog';
-import { getBestNaturalFiberForPrice, parsePriceNumber } from '../scanner-copy';
+import { parsePriceNumber } from '../scanner-copy';
 
 function filterProductsByPrice(
   rows: any[],
@@ -17,19 +17,31 @@ function filterProductsByPrice(
   return filtered.length >= 3 ? filtered : rows;
 }
 
-/** catalog_list: p_preferred_region, p_fallback_region, p_fiber, p_category, p_brand_slug, p_search, p_min_nfp, p_limit, p_offset */
 export async function getSmartAlternatives(
   supabase: SupabaseClient,
   params: {
+    composition?: string | null;
     detectedPrice?: number | null;
+    currency?: string | null;
+    category?: string | null;
     primaryFiber?: string | null;
     naturalFiberPercent?: number | null;
     brandSlug?: string | null;
+    region?: string | null;
     userId?: string | null;
     excludeBrandSlug?: string | null;
   }
 ): Promise<any[]> {
-  const { detectedPrice, primaryFiber, naturalFiberPercent, userId, excludeBrandSlug } = params;
+  const {
+    composition,
+    detectedPrice,
+    category,
+    primaryFiber,
+    naturalFiberPercent,
+    region,
+    userId,
+    excludeBrandSlug,
+  } = params;
 
   let preferredFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
   if (userId) {
@@ -43,60 +55,56 @@ export async function getSmartAlternatives(
     }
   }
 
-  const searchFiber =
-    (naturalFiberPercent || 0) >= 80 && preferredFiber
-      ? preferredFiber
-      : getBestNaturalFiberForPrice(detectedPrice);
+  const resolvedRegion = (region || 'us').toLowerCase();
+  const targetNfp = Math.max((naturalFiberPercent || 0) + 10, 80);
+  const categoryHint = category?.trim() || null;
+  const fiberHint = preferredFiber || extractPrimaryFiber(composition || '');
 
-  const tiers: { fiber: string | null }[] = [
-    { fiber: searchFiber },
-    { fiber: null },
-    { fiber: searchFiber },
-    { fiber: null },
-  ];
+  let query = scannerCatalogQuery(supabase)
+    .eq('region', resolvedRegion)
+    .gte('natural_fiber_percent', targetNfp)
+    .order('natural_fiber_percent', { ascending: false });
 
-  const seen = new Set<string>();
-  const merged: any[] = [];
-
-  for (const tier of tiers) {
-    const { data, error } = await supabase.rpc('catalog_list', {
-      p_preferred_region: 'us',
-      p_fallback_region: 'us',
-      p_fiber: tier.fiber,
-      p_category: null,
-      p_brand_slug: null,
-      p_search: null,
-      p_min_nfp: 80,
-      p_limit: 40,
-      p_offset: 0,
-    });
-
-    let rows: any[] = [];
-    if (error) {
-      const { data: fallback } = await scannerCatalogQuery(supabase)
-        .order('natural_fiber_percent', { ascending: false })
-        .limit(40);
-      rows = fallback || [];
-    } else {
-      rows = data || [];
-    }
-
-    if (excludeBrandSlug) {
-      rows = rows.filter((p) => p.brand_slug !== excludeBrandSlug);
-    }
-
-    const priceFiltered = filterProductsByPrice(rows, detectedPrice, 0.3);
-    const pool = priceFiltered.length >= 3 ? priceFiltered : rows;
-
-    for (const p of pool) {
-      const id = String(p.id);
-      if (seen.has(id)) continue;
-      seen.add(id);
-      merged.push(p);
-      if (merged.length >= 12) break;
-    }
-    if (merged.length >= 6) break;
+  if (excludeBrandSlug) query = query.neq('brand_slug', excludeBrandSlug);
+  if (categoryHint) query = query.ilike('category', `%${categoryHint}%`);
+  if ((naturalFiberPercent || 0) < 80 && fiberHint) {
+    query = query.ilike('composition', `%${fiberHint}%`);
+  }
+  if (detectedPrice && detectedPrice > 0) {
+    query = query.gte('price', detectedPrice * 0.7).lte('price', detectedPrice * 1.3);
   }
 
-  return merged.slice(0, 12);
+  const { data: primaryRows } = await query.limit(24);
+  let merged = primaryRows || [];
+
+  if (merged.length < 6) {
+    let broader = scannerCatalogQuery(supabase)
+      .eq('region', resolvedRegion)
+      .gte('natural_fiber_percent', 90)
+      .order('natural_fiber_percent', { ascending: false });
+    if (excludeBrandSlug) broader = broader.neq('brand_slug', excludeBrandSlug);
+    const { data: broaderRows } = await broader.limit(24);
+    merged = [...merged, ...(broaderRows || [])];
+  }
+
+  const deduped: any[] = [];
+  const seen = new Set<string>();
+  for (const row of filterProductsByPrice(merged, detectedPrice, 0.3)) {
+    const id = String(row.id);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    deduped.push(row);
+    if (deduped.length >= 12) break;
+  }
+
+  return deduped.slice(0, 6);
+}
+
+function extractPrimaryFiber(composition: string): string | null {
+  const fibers = ['silk', 'cashmere', 'linen', 'wool', 'cotton', 'leather', 'alpaca'];
+  const lower = composition.toLowerCase();
+  for (const fiber of fibers) {
+    if (lower.includes(fiber)) return fiber;
+  }
+  return null;
 }
