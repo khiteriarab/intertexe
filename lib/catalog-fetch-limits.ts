@@ -3,7 +3,7 @@ export const CATALOG_API_MAX_LIMIT = 48;
 export const CATALOG_MAX_OFFSET = 500;
 export const DEFAULT_SHOP_FIBER = "silk";
 
-export function safeCatalogLimit(limit: unknown, fallback = 24): number {
+export function safeCatalogLimit(limit: unknown, fallback = 48): number {
   const n = Number(limit);
   if (!Number.isFinite(n) || n < 1) return Math.min(fallback, CATALOG_API_MAX_LIMIT);
   return Math.min(Math.floor(n), CATALOG_API_MAX_LIMIT);
@@ -15,6 +15,7 @@ export function safeCatalogOffset(offset: unknown): number {
   return Math.min(Math.floor(n), CATALOG_MAX_OFFSET);
 }
 
+/** True when more catalog rows exist — always prefer exact total over page fill size. */
 export function catalogHasMore(
   pageLength: number,
   pageSize: number,
@@ -22,9 +23,9 @@ export function catalogHasMore(
   total: number | null | undefined
 ): boolean {
   if (offset >= CATALOG_MAX_OFFSET) return false;
-  if (pageLength < pageSize) return false;
-  if (total != null && offset + pageLength >= total) return false;
-  if (total != null && offset + pageSize >= total) return false;
+  if (total != null && total >= 0) {
+    return offset + pageLength < total;
+  }
   return pageLength >= pageSize;
 }
 

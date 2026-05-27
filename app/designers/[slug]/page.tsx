@@ -73,7 +73,10 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
     profile?.naturalFiberEstimate ??
     getCuratedScore(designer.name);
   const scoreLabel = displayNaturalFiberPercent(fiberPercent);
-  const visibleCount = products.filter((p) => p.imageUrl).length;
+  const visibleCount =
+    brandCatalog.total != null && brandCatalog.total > 0
+      ? brandCatalog.total
+      : products.filter((p) => p.imageUrl).length;
 
   return (
     <div className="pb-24 md:pb-16 flex flex-col w-full">

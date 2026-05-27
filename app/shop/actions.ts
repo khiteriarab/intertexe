@@ -36,7 +36,7 @@ export async function getShopProducts(options: {
     limit: options.limit || CATALOG_PAGE_SIZE,
     offset: options.offset || 0,
     search: options.search,
-    skipTotal: options.skipTotal ?? options.offset === 0,
+    skipTotal: options.skipTotal ?? false,
   });
 }
 

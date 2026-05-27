@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
 import { CatalogProductImage } from "../../components/CatalogProductImage";
 import { ProductLink } from "../../components/ProductLink";
@@ -46,9 +46,12 @@ export default function FabricProductGrid({
   const [loadingMore, setLoadingMore] = useState(false);
   const [displayTotal, setDisplayTotal] = useState<number | null>(totalCount > 0 ? totalCount : null);
   const [countLoading, setCountLoading] = useState(totalCount <= 0);
-  const [hasMore, setHasMore] = useState(
-    catalogFiber ? initialProducts.length > 0 : false
-  );
+  const [hasMore, setHasMore] = useState(() => {
+    if (!catalogFiber) return false;
+    if (totalCount > 0) return initialProducts.length < totalCount;
+    return initialProducts.length > 0;
+  });
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
   const [sort, setSort] = useState<SortOption>("relevance");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -90,12 +93,33 @@ export default function FabricProductGrid({
       const nextOffset = offset + next.length;
       setOffset(nextOffset);
       const total =
-        typeof data.total === "number" && data.total > 0 ? data.total : totalCount;
-      setHasMore(next.length > 0 && nextOffset < total);
+        typeof data.total === "number" && data.total > 0 ? data.total : displayTotal ?? totalCount;
+      if (total > 0) {
+        setDisplayTotal(total);
+        setHasMore(nextOffset < total);
+      } else {
+        setHasMore(Boolean(data.hasMore));
+      }
     } finally {
       setLoadingMore(false);
     }
-  }, [catalogFiber, catalogCategory, offset, loadingMore, hasMore]);
+  }, [catalogFiber, catalogCategory, offset, loadingMore, hasMore, totalCount, displayTotal]);
+
+  useEffect(() => {
+    if (!catalogFiber || !hasMore) return;
+    const node = loadMoreSentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          loadMore();
+        }
+      },
+      { rootMargin: "300px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [catalogFiber, hasMore, loadMore]);
 
   const filtered = useMemo(() => {
     let list = products;
@@ -255,16 +279,13 @@ export default function FabricProductGrid({
       </CatalogMobileSheet>
 
       {hasMore && catalogFiber && filtered.length > 0 && (
-        <div className="flex justify-center pt-8">
-          <button
-            type="button"
-            onClick={loadMore}
-            disabled={loadingMore}
-            className="border border-foreground/20 px-10 py-3 text-[10px] uppercase tracking-[0.2em] text-foreground/60 hover:text-foreground hover:border-foreground/40 transition-colors disabled:opacity-40"
-            data-testid="btn-load-more-materials"
-          >
-            {loadingMore ? "Loading…" : "Load More"}
-          </button>
+        <div className="pt-8">
+          <div ref={loadMoreSentinelRef} className="h-2 w-full" aria-hidden="true" />
+          {loadingMore && (
+            <p className="text-center text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              Loading…
+            </p>
+          )}
         </div>
       )}
     </section>

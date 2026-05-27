@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       useMerchFeedPreview: false,
-      skipTotal: offset === 0 && sp.get("skipCount") === "1",
+      skipTotal: sp.get("skipCount") === "1",
     });
     const total = result.total;
     return NextResponse.json(

@@ -730,7 +730,7 @@ export async function fetchCollectionPageData(
   if (!config) return null;
 
   const collectionSlug = slug as import("./collection-pages").CollectionSlug;
-  const limit = Math.min(Math.max(opts?.limit ?? 36, 1), 100);
+  const limit = Math.min(Math.max(opts?.limit ?? 48, 1), 100);
   const offset = Math.max(opts?.offset ?? 0, 0);
   const skipTotal = opts?.skipTotal ?? false;
 
@@ -1750,7 +1750,7 @@ export async function fetchShopProducts(options: {
     market,
     catalogRegion,
     sort = "new",
-    limit = 60,
+    limit = 48,
     offset = 0,
     search,
     skipTotal = false,
@@ -1901,7 +1901,7 @@ export async function fetchShopProducts(options: {
         price600Plus
           ? null
           : total,
-      hasMore: mapped.length >= limit,
+      hasMore: cappedOffset + mapped.length < total,
     };
   }
 

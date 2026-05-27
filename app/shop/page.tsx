@@ -63,7 +63,7 @@ export default async function ShopPage({
     fiber,
     category,
     search,
-    skipTotal: true,
+    skipTotal: false,
   });
 
   const products = shopData.products || [];

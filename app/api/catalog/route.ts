@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
   const sort = sp.get("sort") || "new";
   const search = sp.get("search") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
-  const skipCount = sp.get("skipCount") === "1" || offset === 0;
+  const skipCount = sp.get("skipCount") === "1";
 
   try {
     if (mode === "brand") {

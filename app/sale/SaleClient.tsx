@@ -277,7 +277,6 @@ export default function SaleClient({
     if (market !== "all") params.set("market", market);
     params.set("limit", String(pageSize));
     params.set("offset", "0");
-    params.set("skipCount", "1");
 
     fetch(`/api/sale?${params}`)
       .then((r) => r.json())

@@ -348,7 +348,7 @@ export default function CollectionClient({
     setLoadingMore(true);
     try {
       const res = await fetch(
-        `/api/catalog?mode=collection&slug=${config.slug}&limit=32&offset=${offset}`
+        `/api/catalog?mode=collection&slug=${config.slug}&limit=48&offset=${offset}`
       );
       const data = await res.json();
       const next = data.products || [];

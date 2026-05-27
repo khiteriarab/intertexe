@@ -155,9 +155,14 @@ export function DesignerDetailProducts({
       const next = (data.products || []) as ProductItem[];
       setCatalogProducts((prev) => {
         const seen = new Set(prev.map((p) => p.productId || p.id));
-        return [...prev, ...next.filter((p) => !seen.has(p.productId || p.id))];
+        const merged = [...prev, ...next.filter((p) => !seen.has(p.productId || p.id))];
+        if (typeof data.total === "number" && data.total > 0) {
+          setServerHasMore(merged.length < data.total);
+        } else {
+          setServerHasMore(Boolean(data.hasMore));
+        }
+        return merged;
       });
-      setServerHasMore(Boolean(data.hasMore));
     } finally {
       setLoadingMore(false);
     }

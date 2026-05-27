@@ -366,7 +366,7 @@ export default function ShopClient({
             limit: SHOP_PAGE_SIZE,
             offset: listOffset,
             search: debouncedSearch || undefined,
-            skipTotal: listOffset === 0,
+            skipTotal: false,
           });
           if (listOffset === 0) {
             setProducts(result.products || []);
