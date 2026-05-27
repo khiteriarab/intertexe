@@ -315,16 +315,8 @@ function rowMatchesCompositionFiber(material: string, row: { composition?: strin
 }
 
 /** Map live apparel rows for material hubs — full catalog, no consumer/curated narrowing. */
-function mapFiberHubCatalogRows(
-  rows: any[],
-  normalizedFiber: string,
-  category?: string
-): Product[] {
-  const material = materialPrimaryForShopFiber(normalizedFiber) || normalizedFiber;
-  let filtered = rows.filter((row: any) => isNotMensProduct(row));
-  if (material) {
-    filtered = filtered.filter((row: any) => rowMatchesCompositionFiber(material, row));
-  }
+function mapFiberHubCatalogRows(rows: any[], category?: string): Product[] {
+  let filtered = rows;
   if (category) {
     filtered = filtered.filter((row: any) =>
       rowMatchesGarmentFilter(
@@ -349,28 +341,7 @@ export async function fetchCatalogProductsByFiber(opts: {
   const normalizedFiber = materialPrimaryForShopFiber(fiber) || fiber.toLowerCase();
   const rangeEnd = offset + limit - 1;
   const t0 = Date.now();
-
   let rows: any[] = [];
-
-  // Category hubs need garment matching across a wide scan — use fallback path first.
-  if (category) {
-    rows = await catalogListLiveFallback(supabase, {
-      fiber: normalizedFiber,
-      category,
-      limit,
-      offset,
-      minNfp: 80,
-      preferred: "us",
-      fallback: "us",
-      requireOfferComplete: false,
-    });
-    logSupabaseTiming(
-      `fetchCatalogProductsByFiber category=${category} fiber=${normalizedFiber}`,
-      t0,
-      `rows:${rows.length}`
-    );
-    return mapFiberHubCatalogRows(rows, normalizedFiber, category);
-  }
 
   let query = supabase
     .from("live_products_apparel")
@@ -384,21 +355,21 @@ export async function fetchCatalogProductsByFiber(opts: {
     query = query.ilike("composition", `%${normalizedFiber}%`);
   }
 
+  const scanEnd = category ? Math.min(offset + limit * 30, 14999) : rangeEnd;
+  const scanStart = category ? 0 : offset;
   const { data, error } = await query
     .order("created_at", { ascending: false })
-    .range(offset, rangeEnd);
+    .range(scanStart, scanEnd);
   logSupabaseTiming(
-    `fetchCatalogProductsByFiber live fiber=${normalizedFiber}`,
+    `fetchCatalogProductsByFiber live fiber=${normalizedFiber}${category ? ` category=${category}` : ""}`,
     t0,
     `rows:${(data || []).length} err:${error?.message || "none"}`
   );
 
   rows = data || [];
-  if (error || rows.length === 0) {
-    const tFb = Date.now();
+  if (!category && (error || rows.length === 0)) {
     rows = await catalogListLiveFallback(supabase, {
       fiber: normalizedFiber,
-      category,
       limit,
       offset,
       minNfp: 80,
@@ -406,14 +377,10 @@ export async function fetchCatalogProductsByFiber(opts: {
       fallback: "us",
       requireOfferComplete: false,
     });
-    logSupabaseTiming(
-      `fetchCatalogProductsByFiber fallback fiber=${normalizedFiber}`,
-      tFb,
-      `rows:${rows.length}`
-    );
   }
 
-  return mapFiberHubCatalogRows(rows, normalizedFiber, category);
+  const mapped = mapFiberHubCatalogRows(rows, category);
+  return category ? mapped.slice(offset, offset + limit) : mapped;
 }
 
 /** Paginated fallback when catalog_list RPC is missing — shared rules + dedupe. */
