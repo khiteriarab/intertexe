@@ -33,6 +33,7 @@ const ALIASES = {
   "l-agence": "l-agence",
   "rag-bone": "rag-and-bone",
   ragbone: "rag-and-bone",
+  faithfull: "faithfull-the-brand",
 };
 
 let fixed = 0;

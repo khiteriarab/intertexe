@@ -104,6 +104,10 @@ const DESIGNER_PRODUCT_SLUG_ALIASES: Record<string, string> = {
   "isabelmarant": "isabel-marant",
   "isabel_marant": "isabel-marant",
   "-toile-isabel-marant": "isabel-marant",
+  "rag-bone": "rag-and-bone",
+  ragbone: "rag-and-bone",
+  lagence: "l-agence",
+  faithfull: "faithfull-the-brand",
 };
 
 export function canonicalDesignerProductSlug(slug: string): string {
