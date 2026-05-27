@@ -325,7 +325,15 @@ function mapFiberHubCatalogRows(rows: any[], category?: string): Product[] {
       )
     );
   }
-  return dedupeLiveApparelRows(filtered, "us", "us").map(mapProductRow);
+  const seen = new Set<string>();
+  const unique: any[] = [];
+  for (const row of filtered) {
+    const key = String(row.product_id || row.id || "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(row);
+  }
+  return unique.map(mapProductRow);
 }
 
 /** Fiber / category grids (materials hubs) — full live_products_apparel catalog, US region. */
