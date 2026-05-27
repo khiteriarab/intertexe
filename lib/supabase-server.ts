@@ -2041,7 +2041,7 @@ function applySaleProductFilters(
   return filtered;
 }
 
-const SALE_FULL_SCAN_MAX_ROWS = 8000;
+const SALE_FULL_SCAN_MAX_ROWS = 1500;
 
 export async function fetchSaleProducts(options: {
   fiber?: string;

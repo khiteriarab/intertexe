@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchSaleProducts } from "../../../lib/supabase-server";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
@@ -35,7 +34,7 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          "Cache-Control": "private, no-store, max-age=0",
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
         },
       }
     );
