@@ -307,11 +307,31 @@ export async function fetchCatalogProductsByFiber(opts: {
     });
   }
 
-  return filterConsumerCatalogProducts(
+  const mapped = filterConsumerCatalogProducts(
     rows
       .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row))
       .map(mapProductRow)
   );
+  if (mapped.length > 0) return mapped;
+
+  if (!error && rows.length > 0) {
+    const fallbackRows = await catalogListLiveFallback(supabase, {
+      fiber: normalizedFiber,
+      category,
+      limit,
+      offset,
+      minNfp: 80,
+      preferred: "us",
+      fallback: "us",
+    });
+    return filterConsumerCatalogProducts(
+      fallbackRows
+        .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row))
+        .map(mapProductRow)
+    );
+  }
+
+  return mapped;
 }
 
 /** Paginated fallback when catalog_list RPC is missing — shared rules + dedupe. */
@@ -342,6 +362,7 @@ async function catalogListLiveFallback(
       .from("live_products_apparel")
       .select("*")
       .gte("natural_fiber_percent", opts.minNfp ?? 80);
+    if (preferred) q = q.eq("region", preferred);
     const material = materialPrimaryForShopFiber(opts.fiber);
     if (material) q = q.ilike("composition", `%${material}%`);
     if (opts.brandSlug) q = q.eq("brand_slug", opts.brandSlug);

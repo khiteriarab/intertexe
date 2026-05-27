@@ -55,11 +55,9 @@ for (const brand of missingBrands) {
   const { error } = await supabase.from("designers").insert({
     slug: brand.slug,
     name: brand.name,
-    image_url: brand.image_url,
     hero_image: brand.image_url,
     natural_fiber_percent: avgNFP,
     status: "active",
-    is_featured: false,
     created_at: new Date().toISOString(),
   });
 
