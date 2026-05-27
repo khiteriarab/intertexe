@@ -57,6 +57,18 @@ function catalogFailedResponse(limit: number, offset: number) {
   });
 }
 
+/** API totals must be numeric for pagination — never omit when count is available. */
+function catalogTotalValue(
+  total: number | null | undefined,
+  productsLength: number,
+  offset: number,
+  skipCount: boolean
+): number | null {
+  if (skipCount) return null;
+  if (total != null && total >= 0) return total;
+  return offset + productsLength;
+}
+
 function catalogPreferredRegionFromParams(sp: URLSearchParams): string | undefined {
   const region = sp.get("region") || sp.get("catalogRegion");
   const normalized = region?.trim().toLowerCase();
@@ -127,7 +139,7 @@ export async function GET(request: NextRequest) {
         skipTotal: skipCount,
       });
       if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
-      const total = result.total;
+      const total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
       return catalogOk({
         products: result.products,
         total,
@@ -198,11 +210,8 @@ export async function GET(request: NextRequest) {
         limit,
         offset,
       });
-      let total: number | null = null;
-      if (!skipCount) {
-        const n = await fetchMaterialHubDisplayCount(fiber, cat);
-        total = n > 0 ? n : null;
-      }
+      const n = skipCount ? 0 : await fetchMaterialHubDisplayCount(fiber, cat);
+      const total = catalogTotalValue(n, products.length, offset, skipCount);
       return catalogOk({
         products,
         total,
@@ -229,12 +238,13 @@ export async function GET(request: NextRequest) {
 
     if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
 
+    const total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
     return catalogOk({
       products: result.products,
-      total: result.total,
+      total,
       limit,
       offset,
-      hasMore: catalogHasMore(result.products.length, limit, offset, result.total),
+      hasMore: catalogHasMore(result.products.length, limit, offset, total),
       defaultFiber: !fiber || fiber === "all" ? DEFAULT_SHOP_FIBER : undefined,
     });
   } catch (err: unknown) {

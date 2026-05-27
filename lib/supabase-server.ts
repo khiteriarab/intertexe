@@ -265,6 +265,51 @@ async function rpcCatalogListCount(
   return Number.isFinite(n) ? n : null;
 }
 
+/** Fast exact count on live_products_apparel — production-safe when catalog_list_count RPC is missing. */
+async function countLiveProductsApparel(
+  supabase: UntypedSupabase,
+  opts: {
+    region?: string;
+    brandSlug?: string | null;
+    fiber?: string | null;
+    minNfp?: number;
+  }
+): Promise<number> {
+  const region = opts.region || "us";
+  const minNfp = opts.minNfp ?? 80;
+  let q = supabase
+    .from("live_products_apparel")
+    .select("*", { count: "exact", head: true })
+    .eq("region", region)
+    .gte("natural_fiber_percent", minNfp);
+
+  if (opts.brandSlug) {
+    q = q.eq("brand_slug", opts.brandSlug);
+  }
+
+  const material = opts.fiber ? materialPrimaryForShopFiber(opts.fiber) || opts.fiber : null;
+  if (material === "leather_suede") {
+    q = q.or("composition.ilike.%leather%,composition.ilike.%suede%");
+  } else if (material) {
+    q = q.ilike("composition", `%${material}%`);
+  }
+
+  const { count, error } = await q;
+  if (error) {
+    console.warn("[countLiveProductsApparel]", error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+function rowMatchesCompositionFiber(material: string, row: { composition?: string | null }): boolean {
+  const comp = String(row.composition || "").toLowerCase();
+  if (material === "leather_suede") {
+    return comp.includes("leather") || comp.includes("suede");
+  }
+  return comp.includes(material);
+}
+
 /** Fiber / category grids (materials hubs) — region winners US, no storefront market narrowing. */
 export async function fetchCatalogProductsByFiber(opts: {
   fiber: string;
@@ -378,7 +423,9 @@ async function catalogListLiveFallback(
     dbOffset += data.length;
 
     const filtered = data.filter((row: any) => offerCompletenessStatus(row) === "complete");
-    const fiberMatched = filtered.filter((row: any) => rowMatchesShopFiber(opts.fiber, row));
+    const fiberMatched = material
+      ? filtered.filter((row: any) => rowMatchesCompositionFiber(material, row))
+      : filtered.filter((row: any) => rowMatchesShopFiber(opts.fiber, row));
     const garmentMatched = fiberMatched.filter((row: any) =>
       rowMatchesGarmentFilter(
         { garment_type: row.garment_type || classifyGarment(row.category, row.name) },
@@ -1195,7 +1242,7 @@ function priceListedRow(row: any): boolean {
 export async function fetchProductsByBrand(
   brandSlug: string,
   opts?: CatalogFetchOpts & { limit?: number; offset?: number; skipTotal?: boolean }
-): Promise<{ products: Product[]; total: number | null; hasMore: boolean }> {
+): Promise<{ products: Product[]; total: number | null; hasMore: boolean; error?: string }> {
   const supabase = getServerSupabase();
   if (!supabase) return { products: [], total: 0, hasMore: false };
   const canonicalSlug = canonicalDesignerProductSlug(brandSlug);
@@ -1203,34 +1250,23 @@ export async function fetchProductsByBrand(
   const offset = Math.max(0, opts?.offset ?? 0);
   const skipTotal = opts?.skipTotal ?? false;
 
-  let rows: any[] = [];
-  if (!opts?.preferLiveOnly) {
-    rows =
-      (await rpcCatalogList(supabase, {
-        preferred: "us",
-        fallback: "us",
-        fiber: null,
-        category: null,
-        brandSlug: canonicalSlug,
-        search: null,
-        minNfp: 80,
-        limit,
-        offset,
-      })) || [];
-  }
-  if (rows.length === 0) {
-    const tLive = Date.now();
-    const { data } = await supabase
-      .from("live_products_apparel")
-      .select("*")
-      .eq("brand_slug", canonicalSlug)
-      .gte("natural_fiber_percent", 80)
-      .order("natural_fiber_percent", { ascending: false })
-      .range(offset, offset + limit - 1);
-    logSupabaseTiming(`live live_products_apparel brand=${canonicalSlug}`, tLive, `rows:${(data || []).length}`);
-    rows = dedupeLiveApparelRows(data || [], "us", "us");
+  const tLive = Date.now();
+  const { data, error } = await supabase
+    .from("live_products_apparel")
+    .select("*")
+    .eq("region", "us")
+    .eq("brand_slug", canonicalSlug)
+    .gte("natural_fiber_percent", 80)
+    .order("natural_fiber_percent", { ascending: false })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+  logSupabaseTiming(`live live_products_apparel brand=${canonicalSlug}`, tLive, `rows:${(data || []).length}`);
+
+  if (error && isCatalogTimeoutError(error)) {
+    return { products: [], total: 0, hasMore: false, error: "timeout" };
   }
 
+  const rows = dedupeLiveApparelRows(data || [], "us", "us");
   const products = filterConsumerCatalogProducts(
     rows.filter(isClothingProduct).map(mapProductRow)
   );
@@ -1239,20 +1275,15 @@ export async function fetchProductsByBrand(
     return { products, total: null, hasMore: products.length >= limit };
   }
 
-  const rpcTotal = await rpcCatalogListCount(supabase, {
-    preferred: "us",
-    fallback: "us",
-    fiber: null,
-    category: null,
+  const total = await countLiveProductsApparel(supabase, {
+    region: "us",
     brandSlug: canonicalSlug,
-    search: null,
-    minNfp: 80,
   });
-  const total = rpcTotal != null && rpcTotal > 0 ? rpcTotal : offset + products.length;
+  const resolvedTotal = total > 0 ? total : offset + products.length;
   return {
     products,
-    total,
-    hasMore: offset + products.length < total,
+    total: resolvedTotal,
+    hasMore: offset + products.length < resolvedTotal,
   };
 }
 
@@ -1350,27 +1381,33 @@ export async function fetchMaterialHubDisplayCount(
   category?: string
 ): Promise<number> {
   const supabase = getServerSupabase();
-  if (supabase) {
-    const cnt = await rpcCatalogListCount(supabase, {
-      preferred: "us",
-      fallback: "us",
-      fiber: materialSlug,
-      category: category || null,
-      brandSlug: null,
-      search: null,
-      minNfp: 80,
-    });
-    if (cnt != null && cnt > 0) return cnt;
+  if (!supabase) return 0;
 
-    const { data: hub } = await supabase
-      .from("catalog_material_hub_counts")
-      .select("card_count")
-      .eq("fiber", materialSlug)
-      .eq("category", category || "")
-      .maybeSingle();
-    if (hub?.card_count != null && Number(hub.card_count) > 0) {
-      return Number(hub.card_count);
-    }
+  const liveTotal = await countLiveProductsApparel(supabase, {
+    region: "us",
+    fiber: materialSlug,
+  });
+  if (liveTotal > 0) return liveTotal;
+
+  const cnt = await rpcCatalogListCount(supabase, {
+    preferred: "us",
+    fallback: "us",
+    fiber: materialSlug,
+    category: category || null,
+    brandSlug: null,
+    search: null,
+    minNfp: 80,
+  });
+  if (cnt != null && cnt > 0) return cnt;
+
+  const { data: hub } = await supabase
+    .from("catalog_material_hub_counts")
+    .select("card_count")
+    .eq("fiber", materialSlug)
+    .eq("category", category || "")
+    .maybeSingle();
+  if (hub?.card_count != null && Number(hub.card_count) > 0) {
+    return Number(hub.card_count);
   }
   return 0;
 }
