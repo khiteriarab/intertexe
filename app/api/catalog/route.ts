@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const collectionAlias = sp.get("collection");
   const explicitMode = sp.get("mode");
+  const fiber = sp.get("fiber") || undefined;
   const mode =
     collectionAlias === "vacation"
       ? "vacation"
@@ -104,7 +105,6 @@ export async function GET(request: NextRequest) {
         (fiber && fiber !== "all" && !sp.get("slug") ? "materials" : "shop");
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
   const offset = safeCatalogOffset(sp.get("offset"));
-  const fiber = sp.get("fiber") || undefined;
   const category = sp.get("category") || undefined;
   const market = catalogMarketFromParams(sp);
   const catalogRegion = catalogPreferredRegionFromParams(sp);
