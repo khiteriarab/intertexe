@@ -127,9 +127,18 @@ export default async function MaterialsPage() {
           return (
             <div key={fabric.slug} className="grid grid-cols-1 md:grid-cols-2 gap-0" data-testid={`hub-section-${fabric.slug}`}>
               <Link href={`/materials/${fabric.slug}`} className={`group relative overflow-hidden bg-[#EDECE8] block ${isReversed ? "md:order-2" : ""}`}>
-                <div className="aspect-[3/4] md:aspect-auto md:h-full md:min-h-[520px] relative">
+                <div className="relative overflow-hidden w-full h-[280px] md:h-[420px]">
                   {imgSrc ? (
-                    <img src={imgSrc} alt={`${fabric.fabric} clothing`} className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-[1.02] transition-transform duration-1000" loading={index < 2 ? "eager" : "lazy"} />
+                    <img
+                      src={imgSrc}
+                      alt={`${fabric.fabric} clothing`}
+                      className="absolute inset-0 w-full h-full group-hover:scale-[1.02] transition-transform duration-1000"
+                      style={{
+                        objectFit: "cover",
+                        objectPosition: "center top",
+                      }}
+                      loading={index < 2 ? "eager" : "lazy"}
+                    />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-b from-[#E8E4DE] to-[#D5CFC4]" />
                   )}
