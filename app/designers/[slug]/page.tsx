@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  canonicalDesignerProductSlug,
   fetchDesignerBySlug,
   fetchProductsByBrand,
 } from "../../../lib/supabase-server";
@@ -33,9 +34,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 /** Designer directory → shop grid (THE OUTNET-style). Quality review lives at /about. */
 export default async function DesignerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const productSlug = canonicalDesignerProductSlug(slug);
   const [dbDesigner, brandCatalog] = await Promise.all([
     fetchDesignerBySlug(slug),
-    fetchProductsByBrand(slug, { limit: 36, offset: 0, skipTotal: true }),
+    fetchProductsByBrand(productSlug, { limit: 48, offset: 0, skipTotal: false }),
   ]);
   const products = brandCatalog.products;
   const profile = getBrandProfile(slug);
@@ -122,7 +124,7 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
         <DesignerShopSection
           products={products}
           designerName={designer.name}
-          designerSlug={designer.slug}
+          designerSlug={canonicalDesignerProductSlug(designer.slug || slug)}
           designerWebsite={designer.website}
           description={designer.description || null}
           naturalFiberPercent={fiberPercent}

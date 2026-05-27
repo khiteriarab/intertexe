@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ProductLink } from "../../components/ProductLink";
 import { CatalogProductImage } from "../../components/CatalogProductImage";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
-import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-constants";
 import { Heart } from "lucide-react";
 import { useProductFavorites } from "../../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../../lib/format-display-price";
@@ -24,6 +23,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const PRODUCTS_PER_PAGE = 24;
+const DESIGNER_PAGE_SIZE = 48;
 
 type PriceSort = "default" | "price-low" | "price-high";
 const PRICE_SORT_OPTIONS: { key: PriceSort; label: string }[] = [
@@ -84,6 +84,7 @@ export function DesignerDetailProducts({
   const [showSortSheet, setShowSortSheet] = useState(false);
   const [serverHasMore, setServerHasMore] = useState(initialHasMore);
   const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
   const { favorites, toggle: toggleProductFav } = useProductFavorites();
 
@@ -148,7 +149,7 @@ export function DesignerDetailProducts({
     setLoadingMore(true);
     try {
       const res = await fetch(
-        `/api/catalog?mode=brand&slug=${encodeURIComponent(designerSlug)}&limit=${CATALOG_PAGE_SIZE}&offset=${catalogProducts.length}`
+        `/api/catalog?mode=brand&slug=${encodeURIComponent(designerSlug)}&limit=${DESIGNER_PAGE_SIZE}&offset=${catalogProducts.length}`
       );
       const data = await res.json();
       const next = (data.products || []) as ProductItem[];
@@ -161,6 +162,22 @@ export function DesignerDetailProducts({
       setLoadingMore(false);
     }
   }, [shopMode, loadingMore, serverHasMore, designerSlug, catalogProducts.length]);
+
+  useEffect(() => {
+    if (!shopMode || !serverHasMore) return;
+    const node = loadMoreSentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          loadMoreFromServer();
+        }
+      },
+      { rootMargin: "300px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shopMode, serverHasMore, loadMoreFromServer]);
 
   const handleCategoryChange = useCallback((cat: string) => {
     setActiveCategory(cat);
@@ -371,6 +388,7 @@ export function DesignerDetailProducts({
                   </div>
                 ))}
               </div>
+              {shopMode && hasMore && <div ref={loadMoreSentinelRef} className="h-2 w-full" aria-hidden="true" />}
               {hasMore && (
                 <button
                   onClick={() => {
