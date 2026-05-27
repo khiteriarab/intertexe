@@ -58,8 +58,7 @@ export function HomepageHeroSection({
           <img
             src={HOMEPAGE_HERO_IMAGE}
             alt="INTERTEXE editorial"
-            className="homepage-hero-img"
-            style={{ objectPosition: "center 52%" }}
+            className="absolute inset-0 w-full h-full object-cover object-[center_58%]"
             fetchPriority="high"
             draggable={false}
           />
