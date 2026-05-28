@@ -8,6 +8,7 @@ import { usePriceAlerts } from "../hooks/use-price-alerts";
 import { FABRIC_PERSONAS } from "../../shared/personas";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getCuratedScore } from "../../lib/curated-quality-scores";
+import { RecentlyViewedRail } from "./RecentlyViewedRail";
 
 const TOKEN_KEY = "intertexe_auth_token";
 
@@ -617,6 +618,8 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
               <Sparkles className="w-5 h-5" />
               <span className="text-xs uppercase tracking-[0.15em]">{persona ? "Retake the Quiz" : "Take the Quiz"}</span>
             </Link>
+
+            <RecentlyViewedRail />
 
             <button onClick={onLogout}
               className="md:hidden flex items-center justify-center gap-2.5 py-3.5 text-muted-foreground border border-border/40 text-[10px] uppercase tracking-[0.15em] hover:border-foreground hover:text-foreground transition-colors active:scale-[0.98]"

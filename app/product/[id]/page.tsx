@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ExternalLink, ShoppingBag, Leaf, ArrowRight } from "lucide-react";
+import { ChevronLeft, ShoppingBag, Leaf, ArrowRight } from "lucide-react";
 import {
   fetchProductById,
   fetchMoreFromBrand,
@@ -10,6 +10,7 @@ import {
   fetchAllProductIds,
 } from "../../../lib/supabase-server";
 import { ProductFavoriteButton } from "./ProductFavoriteButton";
+import { ShopNowButton } from "./ShopNowButton";
 import { RelatedProductCard } from "./RelatedProductCard";
 import BackToShop from "./BackToShop";
 import {
@@ -380,17 +381,7 @@ export default async function ProductPage({
 
             <ProductFavoriteButton productId={String(product.id)} />
 
-            {product.url && (
-              <>
-                <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-[0.2em] text-xs font-medium hover:opacity-90 transition-opacity active:scale-[0.98]" data-testid="link-shop-now">
-                  Shop Now <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-                <p className="text-xs text-muted-foreground mt-3 leading-relaxed" data-testid="text-affiliate-disclosure">
-                  Intertexe earns a commission when you purchase through our links. This is how we keep the
-                  platform free.
-                </p>
-              </>
-            )}
+            <ShopNowButton product={product} />
 
             <div className="flex flex-col gap-2">
               <p className="text-[10px] text-muted-foreground text-center">
