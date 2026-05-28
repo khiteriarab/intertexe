@@ -25,17 +25,29 @@ const PRODUCT_CACHE_HEADERS = {
   "Vercel-CDN-Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
 };
 
+const CACHE_TTL_MS = 60_000;
+type CatalogCacheEntry = { data: Record<string, unknown>; timestamp: number };
+const catalogMemoryCache =
+  ((globalThis as typeof globalThis & { __catalogMemoryCache?: Map<string, CatalogCacheEntry> }).__catalogMemoryCache ??=
+    new Map<string, CatalogCacheEntry>());
+
 function catalogOk(
   body: Record<string, unknown>,
-  init?: { status?: number }
+  init?: { status?: number; cacheStatus?: "HIT" | "MISS"; cacheKey?: string }
 ) {
+  if (init?.cacheKey) {
+    catalogMemoryCache.set(init.cacheKey, { data: body, timestamp: Date.now() });
+  }
   return NextResponse.json(body, {
     status: init?.status ?? 200,
-    headers: PRODUCT_CACHE_HEADERS,
+    headers: {
+      ...PRODUCT_CACHE_HEADERS,
+      "x-cache": init?.cacheStatus ?? "MISS",
+    },
   });
 }
 
-function catalogTimeoutResponse(limit: number, offset: number) {
+function catalogTimeoutResponse(limit: number, offset: number, cacheKey?: string) {
   return catalogOk({
     products: [],
     total: null,
@@ -44,10 +56,10 @@ function catalogTimeoutResponse(limit: number, offset: number) {
     hasMore: false,
     error: "timeout",
     message: "Query took too long — try filtering by material or category",
-  });
+  }, { cacheKey });
 }
 
-function catalogFailedResponse(limit: number, offset: number) {
+function catalogFailedResponse(limit: number, offset: number, cacheKey?: string) {
   return catalogOk({
     products: [],
     total: null,
@@ -55,7 +67,7 @@ function catalogFailedResponse(limit: number, offset: number) {
     offset,
     hasMore: false,
     error: "failed",
-  });
+  }, { cacheKey });
 }
 
 /** API totals must be numeric for pagination — never omit when count is available. */
@@ -96,6 +108,15 @@ function catalogMarketFromParams(sp: URLSearchParams): string | undefined {
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
+  const cacheKey = request.url;
+  const cached = catalogMemoryCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return catalogOk(cached.data, { cacheStatus: "HIT" });
+  }
+
+  const respond = (body: Record<string, unknown>, init?: { status?: number }) =>
+    catalogOk(body, { ...init, cacheStatus: "MISS", cacheKey });
+
   const collectionAlias = sp.get("collection");
   const explicitMode = sp.get("mode");
   const fiber = sp.get("fiber") || undefined;
@@ -123,14 +144,14 @@ export async function GET(request: NextRequest) {
         skipTotal: skipCount,
         region: catalogRegion || "us",
       });
-      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
+      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
       const brandTotal = catalogTotalValue(
         result.total,
         result.products.length,
         offset,
         skipCount
       );
-      return catalogOk({
+      return respond({
         products: result.products,
         total: brandTotal,
         limit,
@@ -148,9 +169,9 @@ export async function GET(request: NextRequest) {
         useMerchFeedPreview: false,
         skipTotal: skipCount,
       });
-      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
+      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
       const total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
-      return catalogOk({
+      return respond({
         products: result.products,
         total,
         limit,
@@ -167,11 +188,11 @@ export async function GET(request: NextRequest) {
         skipTotal: skipCount,
       });
       if (!data) {
-        return catalogOk({ products: [], total: null, limit, offset, hasMore: false });
+        return respond({ products: [], total: null, limit, offset, hasMore: false });
       }
-      if (data.error === "timeout") return catalogTimeoutResponse(limit, offset);
+      if (data.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
       const total = data.catalogTotal;
-      return catalogOk({
+      return respond({
         products: data.products,
         total,
         poolCount: data.editCount,
@@ -185,9 +206,9 @@ export async function GET(request: NextRequest) {
       const slug = sp.get("slug") || "";
       const data = await fetchEditPageData(slug, { limit, offset });
       if (!data) {
-        return catalogOk({ products: [], total: null, limit, offset, hasMore: false });
+        return respond({ products: [], total: null, limit, offset, hasMore: false });
       }
-      return catalogOk({
+      return respond({
         products: data.products,
         total: data.editCount,
         limit,
@@ -203,7 +224,7 @@ export async function GET(request: NextRequest) {
         offset,
         category: cat,
       });
-      return catalogOk({
+      return respond({
         products: data.catalogProducts,
         total: data.catalogTotal,
         limit,
@@ -224,7 +245,7 @@ export async function GET(request: NextRequest) {
         skipCount ? Promise.resolve(0) : fetchMaterialHubDisplayCount(fiber, cat),
       ]);
       const total = catalogTotalValue(n, products.length, offset, skipCount);
-      return catalogOk({
+      return respond({
         products,
         total,
         limit,
@@ -248,10 +269,10 @@ export async function GET(request: NextRequest) {
       skipTotal: skipCount,
     });
 
-    if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
+    if (result.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
 
     const total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
-    return catalogOk({
+    return respond({
       products: result.products,
       total,
       limit,
@@ -263,8 +284,8 @@ export async function GET(request: NextRequest) {
     const e = err as { code?: string; message?: string };
     console.error("[api/catalog]", err);
     if (e?.code === "57014" || String(e?.message || "").includes("timeout")) {
-      return catalogTimeoutResponse(limit, offset);
+      return catalogTimeoutResponse(limit, offset, cacheKey);
     }
-    return catalogFailedResponse(limit, offset);
+    return catalogFailedResponse(limit, offset, cacheKey);
   }
 }
