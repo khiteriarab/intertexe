@@ -20,7 +20,9 @@ import {
 export const revalidate = 300;
 
 const PRODUCT_CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+  "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=120",
+  "CDN-Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+  "Vercel-CDN-Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
 };
 
 function catalogOk(
