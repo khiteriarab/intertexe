@@ -25,7 +25,7 @@ const PRODUCT_CACHE_HEADERS = {
   "Vercel-CDN-Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
 };
 
-const CACHE_TTL_MS = 60_000;
+const CACHE_TTL_MS = 300_000;
 type CatalogCacheEntry = { data: Record<string, unknown>; timestamp: number };
 const catalogMemoryCache =
   ((globalThis as typeof globalThis & { __catalogMemoryCache?: Map<string, CatalogCacheEntry> }).__catalogMemoryCache ??=
@@ -133,7 +133,10 @@ export async function GET(request: NextRequest) {
   const sort = sp.get("sort") || "new";
   const search = sp.get("search") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
-  const skipCount = sp.get("skipCount") === "1";
+  /** Small first-page catalog previews skip the expensive count RPC. */
+  const skipCount =
+    sp.get("skipCount") === "1" ||
+    (limit <= 24 && offset === 0 && !search?.trim());
 
   try {
     if (mode === "brand") {
