@@ -261,15 +261,30 @@
   border-width: 0;
 }
 
-/* Horizontal product rails: avoid first-tap being eaten by scroll pan */
+/* Horizontal product / collection rails — finger swipe on mobile */
+.horizontal-rail,
 .product-rail-scroll {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-.product-rail-scroll > a {
-  touch-action: manipulation;
+
+.horizontal-rail::-webkit-scrollbar,
+.product-rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-rail > a,
+.horizontal-rail > * > a,
+.product-rail-scroll > a,
+.product-rail-scroll [data-rail-card] {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  touch-action: pan-x pinch-zoom;
   -webkit-user-drag: none;
   user-select: none;
 }
@@ -285,7 +300,8 @@
     touch-action: manipulation;
   }
 
-  a, button {
+  a:not(:where(.horizontal-rail *)):not(:where(.product-rail-scroll *)),
+  button {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }

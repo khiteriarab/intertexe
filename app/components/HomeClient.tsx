@@ -11,6 +11,11 @@ import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
 import { editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
+import {
+  HORIZONTAL_RAIL_BLEED_CLASS,
+  HORIZONTAL_RAIL_INSET_CLASS,
+  HORIZONTAL_RAIL_PRODUCT_CARD_CLASS,
+} from "../../lib/horizontal-rail";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
@@ -236,11 +241,7 @@ export function HorizontalProductScroll({
 
       <div
         ref={scrollRef}
-        className={
-          fullWidth
-            ? "product-rail-scroll flex overflow-x-auto scrollbar-hide w-full gap-2.5 md:gap-4 px-6 md:px-8 pb-1 min-h-[200px]"
-            : "product-rail-scroll flex gap-2.5 md:gap-4 scrollbar-hide -mx-4 px-4 md:-mx-8 md:px-8 pb-1 min-h-[200px]"
-        }
+        className={`${fullWidth ? HORIZONTAL_RAIL_BLEED_CLASS : HORIZONTAL_RAIL_INSET_CLASS} gap-2.5 md:gap-4 min-h-[200px]`}
       >
         {hasItems ? (
           products.map((product: any, i: number) => (

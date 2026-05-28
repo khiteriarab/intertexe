@@ -7,6 +7,10 @@ import { EditorialHeroImage } from "./EditorialHeroImage";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import type { CollectionSectionConfig } from "../../lib/site-architecture";
+import {
+  HORIZONTAL_RAIL_INSET_CLASS,
+  HORIZONTAL_RAIL_PRODUCT_CARD_CLASS,
+} from "../../lib/horizontal-rail";
 
 function optimizeImageUrl(url: string, width: number): string {
   if (!url) return url;
@@ -23,7 +27,12 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
   const imageUrl = product.imageUrl || product.image_url || "";
   const productHref = `/product/${canonicalProductId(product)}`;
   return (
-    <Link href={productHref} className="group flex flex-col flex-shrink-0 w-[140px] xl:w-[155px]">
+    <Link
+      href={productHref}
+      className={`group flex flex-col ${HORIZONTAL_RAIL_PRODUCT_CARD_CLASS} w-[140px] xl:w-[155px]`}
+      data-rail-card
+      draggable={false}
+    >
       <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
         {imageUrl ? (
           <img
@@ -131,7 +140,7 @@ export function HomepageCollectionBlock({
 
       <div
         ref={scrollRef}
-        className="product-rail-scroll flex gap-3 overflow-x-auto scrollbar-hide pb-2 min-h-[200px]"
+        className={`${HORIZONTAL_RAIL_INSET_CLASS} gap-3 min-h-[200px]`}
       >
         {hasItems ? (
           products.slice(0, 12).map((product: any, i: number) => (

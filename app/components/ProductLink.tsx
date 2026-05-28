@@ -1,27 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import type { ComponentProps, MouseEvent, PointerEvent, TouchEvent } from "react";
+import type { ComponentProps } from "react";
 
 type ProductLinkProps = ComponentProps<typeof Link>;
 
-function stopBubble<T extends { stopPropagation: () => void }>(e: T, handler?: (e: T) => void) {
-  e.stopPropagation();
-  handler?.(e);
-}
-
 /**
- * Product navigation link that works inside horizontal scroll rails.
- * Stops the scroll container from capturing taps as pan gestures.
+ * Product link inside horizontal rails — does not block touch scrolling.
+ * (Avoid stopPropagation on touch/pointer; CSS touch-action: pan-x on rail cards handles swipe vs tap.)
  */
-export function ProductLink({ onPointerDown, onClick, onTouchStart, ...props }: ProductLinkProps) {
-  return (
-    <Link
-      {...props}
-      draggable={false}
-      onPointerDown={(e) => stopBubble(e, onPointerDown)}
-      onTouchStart={(e) => stopBubble(e, onTouchStart)}
-      onClick={(e) => stopBubble(e, onClick)}
-    />
-  );
+export function ProductLink({ ...props }: ProductLinkProps) {
+  return <Link {...props} draggable={false} data-rail-card />;
 }
