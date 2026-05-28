@@ -1890,6 +1890,17 @@ export async function fetchShopProducts(options: {
   };
 
   if (!isPriceSort) {
+    const totalPromise = skipTotal
+      ? null
+      : resolveShopCatalogTotal(supabase, {
+          preferred,
+          fallback,
+          fiber: rpcFiber,
+          category: rpcCategory,
+          brandSlug: rpcBrand,
+          search: searchRpc,
+        });
+
     let rows =
       (await rpcCatalogList(supabase, {
         preferred,
@@ -1958,14 +1969,7 @@ export async function fetchShopProducts(options: {
       };
     }
 
-    const resolvedTotal = await resolveShopCatalogTotal(supabase, {
-      preferred,
-      fallback,
-      fiber: rpcFiber,
-      category: rpcCategory,
-      brandSlug: rpcBrand,
-      search: searchRpc,
-    });
+    const resolvedTotal = totalPromise ? await totalPromise : null;
 
     const total =
       resolvedTotal != null

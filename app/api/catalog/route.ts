@@ -20,8 +20,7 @@ import {
 export const revalidate = 300;
 
 const PRODUCT_CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-  "CDN-Cache-Control": "public, max-age=300",
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
 };
 
 function catalogOk(
@@ -213,13 +212,15 @@ export async function GET(request: NextRequest) {
 
     if (mode === "materials" && fiber) {
       const cat = category && category !== "all" ? category : undefined;
-      const products = await fetchCatalogProductsByFiber({
-        fiber,
-        category: cat,
-        limit,
-        offset,
-      });
-      const n = skipCount ? 0 : await fetchMaterialHubDisplayCount(fiber, cat);
+      const [products, n] = await Promise.all([
+        fetchCatalogProductsByFiber({
+          fiber,
+          category: cat,
+          limit,
+          offset,
+        }),
+        skipCount ? Promise.resolve(0) : fetchMaterialHubDisplayCount(fiber, cat),
+      ]);
       const total = catalogTotalValue(n, products.length, offset, skipCount);
       return catalogOk({
         products,
