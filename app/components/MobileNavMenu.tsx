@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { X, Menu } from "lucide-react";
 import { MERCH_NAV } from "../../lib/merch-nav";
 import { WearToWhereRail } from "./WearToWhereRail";
+import { CountrySelector } from "./CountrySelector";
 
 /** Mobile hamburger menu — nav links + NAP-style “Wear to where?” image carousel. */
 export function MobileNavMenu() {
@@ -97,6 +98,8 @@ export function MobileNavMenu() {
                   Scanner
                   <span className="text-muted-foreground text-lg leading-none">›</span>
                 </Link>
+
+                <CountrySelector menuFooter className="px-0" />
               </nav>
 
               <WearToWhereRail title="Wear to where?" className="border-t border-border/30 bg-[#FAFAF8] pb-8" />

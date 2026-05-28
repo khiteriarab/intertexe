@@ -113,11 +113,9 @@ export function HomepageCollectionBlock({
 
   const shopRail = (
     <div className="flex flex-col justify-center h-full w-full py-10 lg:py-12 px-6 md:px-10 xl:px-12 bg-[#FAFAF8]">
-      <div className="flex items-end justify-between gap-4 mb-6">
-        <div className="flex flex-col gap-1 min-w-0">
-          <p className="text-xs text-gray-500 leading-relaxed font-light normal-case tracking-normal">{subtitle}</p>
-          <h2 className="text-[22px] xl:text-[26px] font-serif leading-tight">{title}</h2>
-        </div>
+      <h2 className="sr-only">{title}</h2>
+      <p className="sr-only">{subtitle}</p>
+      <div className="flex items-end justify-end gap-4 mb-6">
         <div className="flex gap-2 flex-shrink-0">
           <button
             type="button"

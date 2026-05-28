@@ -15,10 +15,13 @@ import { useShoppingMarket } from "../hooks/use-shopping-market";
 export function CountrySelector({
   detectedCountryCode,
   compact = true,
+  menuFooter = false,
   className = "",
 }: {
   detectedCountryCode?: string;
   compact?: boolean;
+  /** Bottom of mobile hamburger menu — subtle label, opens dropdown on tap */
+  menuFooter?: boolean;
   className?: string;
 }) {
   const { market, setMarket, catalogRegion } = useShoppingMarket();
@@ -66,6 +69,41 @@ export function CountrySelector({
     setQuery("");
   };
 
+  const menuFooterLabel =
+    active.code && active.country !== "All destinations"
+      ? `${active.code} · ${active.country}`
+      : active.country;
+
+  if (menuFooter) {
+    return (
+      <div
+        ref={rootRef}
+        className={`relative mt-8 pt-4 border-t border-gray-100 ${className}`}
+        data-testid="country-selector-menu-footer"
+      >
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="w-full text-left text-xs tracking-widest text-gray-400 uppercase hover:text-gray-600 transition-colors py-1"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          data-testid="button-country-selector"
+        >
+          {menuFooterLabel}
+        </button>
+        {open && (
+          <div
+            className="absolute left-0 right-0 bottom-full mb-2 z-[220] w-full bg-background border border-border/40 shadow-xl"
+            role="listbox"
+            data-testid="dropdown-country-selector"
+          >
+            {countryDropdownBody(filtered, active, query, setQuery, pick)}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div ref={rootRef} className={`relative ${className}`} data-testid="country-selector">
       <button
@@ -88,60 +126,72 @@ export function CountrySelector({
           role="listbox"
           data-testid="dropdown-country-selector"
         >
-          <div className="px-4 py-3 border-b border-border/30">
-            <p className="text-[9px] uppercase tracking-[0.28em] text-muted-foreground mb-2">
-              Shipping to
-            </p>
-            <div className="relative">
-              <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search"
-                className="w-full border-0 border-b border-border/40 bg-transparent py-2 pl-6 pr-6 text-[12px] focus:outline-none"
-                autoFocus
-                data-testid="input-country-search"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
-                  aria-label="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
-          <ul className="max-h-[50vh] overflow-y-auto py-1">
-            {filtered.map((region) => (
-              <li key={region.country}>
-                <button
-                  type="button"
-                  onClick={() => pick(region)}
-                  className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left text-[12px] hover:bg-[#f5f5f3] transition-colors ${
-                    region.country === active.country
-                      ? "text-foreground font-medium"
-                      : "text-foreground/75"
-                  }`}
-                  data-testid={`country-option-${region.country.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  <span className="truncate">{region.country}</span>
-                  <span className="text-[11px] text-muted-foreground flex-shrink-0 tabular-nums">
-                    {region.currency}
-                  </span>
-                </button>
-              </li>
-            ))}
-            {filtered.length === 0 && (
-              <li className="px-4 py-8 text-center text-[12px] text-muted-foreground">
-                No matches
-              </li>
-            )}
-          </ul>
+          {countryDropdownBody(filtered, active, query, setQuery, pick)}
         </div>
       )}
     </div>
+  );
+}
+
+function countryDropdownBody(
+  filtered: ShippingRegion[],
+  active: ShippingRegion,
+  query: string,
+  setQuery: (q: string) => void,
+  pick: (region: ShippingRegion) => void
+) {
+  return (
+    <>
+      <div className="px-4 py-3 border-b border-border/30">
+        <p className="text-[9px] uppercase tracking-[0.28em] text-muted-foreground mb-2">
+          Shipping to
+        </p>
+        <div className="relative">
+          <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search"
+            className="w-full border-0 border-b border-border/40 bg-transparent py-2 pl-6 pr-6 text-[12px] focus:outline-none"
+            autoFocus
+            data-testid="input-country-search"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+      <ul className="max-h-[50vh] overflow-y-auto py-1">
+        {filtered.map((region) => (
+          <li key={region.country}>
+            <button
+              type="button"
+              onClick={() => pick(region)}
+              className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left text-[12px] hover:bg-[#f5f5f3] transition-colors ${
+                region.country === active.country
+                  ? "text-foreground font-medium"
+                  : "text-foreground/75"
+              }`}
+              data-testid={`country-option-${region.country.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              <span className="truncate">{region.country}</span>
+              <span className="text-[11px] text-muted-foreground flex-shrink-0 tabular-nums">
+                {region.currency}
+              </span>
+            </button>
+          </li>
+        ))}
+        {filtered.length === 0 && (
+          <li className="px-4 py-8 text-center text-[12px] text-muted-foreground">No matches</li>
+        )}
+      </ul>
+    </>
   );
 }

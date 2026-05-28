@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import { Home, Layers, Scan, ShoppingBag, User } from "lucide-react";
-import { CountrySelector } from "./CountrySelector";
 
 const mobileNavLinks = [
   { name: "Home", href: "/", icon: Home },
@@ -17,7 +16,7 @@ const mobileNavLinks = [
 ];
 
 /** Fixed mobile chrome portaled to body so it never scrolls with page content (iOS-safe). */
-export function MobileBottomDock({ detectedCountryCode }: { detectedCountryCode?: string }) {
+export function MobileBottomDock() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -33,10 +32,6 @@ export function MobileBottomDock({ detectedCountryCode }: { detectedCountryCode?
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       data-testid="mobile-bottom-dock"
     >
-      <div className="border-b border-border/20 px-4 py-2 flex items-center justify-center gap-2 bg-background/98 backdrop-blur-sm">
-        <span className="text-[9px] uppercase tracking-[0.22em] text-muted-foreground">Shipping to</span>
-        <CountrySelector detectedCountryCode={detectedCountryCode} compact />
-      </div>
       <nav className="flex justify-around items-center h-[56px] px-1 bg-background/95 backdrop-blur-md">
         {mobileNavLinks.map((link) => {
           const Icon = link.icon;
