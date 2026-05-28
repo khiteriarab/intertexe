@@ -67,7 +67,7 @@ export default async function AboutPage() {
           </div>
           <div className="flex flex-col gap-1" data-testid="stat-products-verified">
             <span className="text-3xl md:text-4xl font-serif font-light text-foreground">
-              {platformStats.productCount > 0 ? productLabel : "33,430"}
+              {platformStats.productCount > 0 ? productLabel : "84,704+"}
             </span>
             <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
               verified pieces

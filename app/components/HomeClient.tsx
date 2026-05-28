@@ -13,9 +13,11 @@ import { editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-a
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import {
   HORIZONTAL_RAIL_BLEED_CLASS,
+  HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS,
   HORIZONTAL_RAIL_INSET_CLASS,
   HORIZONTAL_RAIL_PRODUCT_CARD_CLASS,
 } from "../../lib/horizontal-rail";
+import { formatProductCountLabel } from "../../lib/catalog-stats-labels";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
@@ -165,6 +167,21 @@ function ProductCard({
   );
 }
 
+const HOMEPAGE_RAIL_LIMIT_MOBILE = 8;
+const HOMEPAGE_RAIL_LIMIT_DESKTOP = 16;
+
+function useIsDesktopRail() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isDesktop;
+}
+
 export function HorizontalProductScroll({
   products,
   title,
@@ -177,6 +194,7 @@ export function HorizontalProductScroll({
   eager,
   productCardVariant = "default",
   fullWidth = false,
+  limit,
 }: {
   products: any[];
   title: string;
@@ -191,15 +209,21 @@ export function HorizontalProductScroll({
   eager?: boolean;
   productCardVariant?: "default" | "sale";
   fullWidth?: boolean;
+  /** Max products in rail; defaults to 8 mobile / 16 desktop (lg+). */
+  limit?: number;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isDesktop = useIsDesktopRail();
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
     const amount = direction === "left" ? -420 : 420;
     scrollRef.current.scrollBy({ left: amount, behavior: "smooth" });
   };
 
-  const hasItems = products && products.length > 0;
+  const railLimit =
+    limit ?? (isDesktop ? HOMEPAGE_RAIL_LIMIT_DESKTOP : HOMEPAGE_RAIL_LIMIT_MOBILE);
+  const railProducts = (products || []).slice(0, railLimit);
+  const hasItems = railProducts.length > 0;
 
   return (
     <div className="flex flex-col gap-5 md:gap-7">
@@ -239,25 +263,49 @@ export function HorizontalProductScroll({
         </div>
       </div>
 
-      <div
-        ref={scrollRef}
-        className={`${fullWidth ? HORIZONTAL_RAIL_BLEED_CLASS : HORIZONTAL_RAIL_INSET_CLASS} gap-2.5 md:gap-4 min-h-[200px]`}
-      >
-        {hasItems ? (
-          products.map((product: any, i: number) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              eager={eager && i < 4}
-              variant={productCardVariant}
-            />
-          ))
-        ) : (
-          <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
-            These pieces took longer than usual to load. Try again shortly or browse the shop page for the full grid.
-          </p>
-        )}
-      </div>
+      {fullWidth ? (
+        <div className={HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}>
+          <div
+            ref={scrollRef}
+            className={`${HORIZONTAL_RAIL_BLEED_CLASS} gap-2.5 md:gap-4 min-h-[200px]`}
+          >
+            {hasItems ? (
+              railProducts.map((product: any, i: number) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  eager={eager && i < 4}
+                  variant={productCardVariant}
+                />
+              ))
+            ) : (
+              <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
+                These pieces took longer than usual to load. Try again shortly or browse the shop page for the full grid.
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div
+          ref={scrollRef}
+          className={`${HORIZONTAL_RAIL_INSET_CLASS} gap-2.5 md:gap-4 min-h-[200px]`}
+        >
+          {hasItems ? (
+            railProducts.map((product: any, i: number) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                eager={eager && i < 4}
+                variant={productCardVariant}
+              />
+            ))
+          ) : (
+            <p className="text-[11px] md:text-[12px] text-neutral-400 max-w-md leading-relaxed">
+              These pieces took longer than usual to load. Try again shortly or browse the shop page for the full grid.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col gap-2 items-start">
         {collectionCtaOnly ? (
@@ -305,6 +353,7 @@ function SaleHomeRail({ products }: { products?: any[] }) {
         linkText="Shop all sale"
         productCardVariant="sale"
         fullWidth
+        limit={16}
       />
     </section>
   );
@@ -486,8 +535,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
   const displayCount =
     data.productCount > 0
-      ? new Intl.NumberFormat("en-US").format(data.productCount)
-      : "24,000";
+      ? formatProductCountLabel(data.productCount)
+      : "84,704+";
   const displayBrands =
     data.brandCount > 0
       ? `${new Intl.NumberFormat("en-US").format(data.brandCount)}+`
@@ -517,6 +566,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           linkText="Shop New In"
           eager
           fullWidth
+          limit={16}
         />
       </section>
 

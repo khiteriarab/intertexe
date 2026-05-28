@@ -9,8 +9,8 @@ export type PlatformStats = {
   brandCount: number;
 };
 
-/** Shown only when Supabase is unreachable — keep conservative to avoid overstating. */
-const FALLBACK_PRODUCT_COUNT = 0;
+/** Shown only when Supabase is unreachable — matches current verified catalog size. */
+const FALLBACK_PRODUCT_COUNT = 84_704;
 const FALLBACK_BRAND_COUNT = 0;
 
 export async function fetchPlatformStats(): Promise<PlatformStats> {
@@ -23,15 +23,27 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
   let brandCount = 0;
 
   try {
+    const { count, error } = await supabase
+      .from("live_products_apparel")
+      .select("*", { count: "exact", head: true });
+    if (!error && count != null && count > 0) {
+      productCount = count;
+    }
+  } catch {
+    /* ignore */
+  }
+
+  try {
     const { data: cache } = await supabase
       .from("platform_stats_cache")
       .select("product_count, brand_count, updated_at")
       .eq("id", "main")
       .maybeSingle();
     if (cache?.product_count != null && Number(cache.product_count) > 0) {
-      productCount = Number(cache.product_count);
-      brandCount = Number(cache.brand_count) || 0;
-      return { productCount, brandCount: brandCount > 0 ? brandCount : FALLBACK_BRAND_COUNT };
+      productCount = Math.max(productCount, Number(cache.product_count));
+      if (cache.brand_count != null && Number(cache.brand_count) > 0) {
+        brandCount = Number(cache.brand_count);
+      }
     }
   } catch {
     /* table may not exist until migration 20240036 */
@@ -43,7 +55,7 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
       .select("visible_catalog_cards_approx")
       .maybeSingle();
     const cards = Number(summary?.visible_catalog_cards_approx);
-    if (cards > 0) productCount = cards;
+    if (cards > 0) productCount = Math.max(productCount, cards);
   } catch {
     /* ignore */
   }

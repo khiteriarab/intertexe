@@ -31,7 +31,7 @@ const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS 
 const MATERIAL_RAIL_FETCH_LIMIT = 64;
 const MATERIAL_RAIL_DISPLAY_MAX = 50;
 /** Homepage rails are curated previews only — keep small for fast SSR. */
-const MERCH_HOME_FETCH_LIMIT = 24;
+const MERCH_HOME_FETCH_LIMIT = 16;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
 const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
@@ -208,7 +208,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       "platform-stats",
       8_000,
       () => getCachedPlatformStats(),
-      { productCount: 24_000, brandCount: 99 }
+      { productCount: 84_704, brandCount: 99 }
     ),
     withHomepageRailTimeout(
       "rail:batch",
@@ -393,6 +393,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v3"],
+  ["homepage-payload-v4"],
   { revalidate: 300, tags: ["homepage"] }
 );

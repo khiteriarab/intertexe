@@ -35,7 +35,7 @@ export default function WelcomeEmail({ firstName }: WelcomeEmailProps) {
               Welcome{firstName ? `, ${firstName}` : ""}.
             </Heading>
             <Text style={styles.body}>
-              You now have access to 33,430 verified natural fiber pieces across 253 brands. Every
+              You now have access to 84,704+ verified natural fiber pieces across 253 brands. Every
               composition checked. Every piece verified.
             </Text>
             <Text style={styles.body}>

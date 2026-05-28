@@ -82,7 +82,7 @@ export default function PressKitPage() {
       <section className="page-break press-section bg-white">
         <div className="press-stat-grid">
           <div>
-            <p className="press-stat-number">33,430+</p>
+            <p className="press-stat-number">84,704+</p>
             <p className="press-stat-label">Verified natural fiber pieces</p>
           </div>
           <div>
