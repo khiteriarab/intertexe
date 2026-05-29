@@ -97,7 +97,12 @@ export async function getSmartAlternatives(
     if (deduped.length >= 12) break;
   }
 
-  return deduped.slice(0, 6);
+  const uniqueAlternatives = deduped.filter(
+    (product, index, self) =>
+      index === self.findIndex((p) => String(p.id) === String(product.id))
+  );
+
+  return uniqueAlternatives.slice(0, 6);
 }
 
 function extractPrimaryFiber(composition: string): string | null {
