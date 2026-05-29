@@ -15,6 +15,16 @@ export type SmartAlternativesParams = {
   excludeBrandSlug?: string | null;
 };
 
+const FIBER_PRICE_DEFAULTS_USD: Record<string, number> = {
+  cashmere: 400,
+  silk: 300,
+  leather: 500,
+  wool: 250,
+  linen: 150,
+  cotton: 100,
+  default: 200,
+};
+
 function toPriceUSD(price: number, currency?: string | null): number {
   if (!currency) return price;
   switch (currency.toUpperCase()) {
@@ -48,6 +58,11 @@ function extractPrimaryFiber(composition: string): string | null {
   return null;
 }
 
+function defaultPriceForFiber(primaryFiber: string | null): number {
+  if (!primaryFiber) return FIBER_PRICE_DEFAULTS_USD.default;
+  return FIBER_PRICE_DEFAULTS_USD[primaryFiber] ?? FIBER_PRICE_DEFAULTS_USD.default;
+}
+
 export async function getSmartAlternatives(
   supabase: SupabaseClient,
   params: SmartAlternativesParams
@@ -66,8 +81,9 @@ export async function getSmartAlternatives(
   } = params;
 
   const rawPrice = detectedPrice ?? priceParam ?? null;
-  const priceUSD =
+  let priceUSD =
     rawPrice != null && rawPrice > 0 ? toPriceUSD(rawPrice, currency) : null;
+  const hadBarcodePrice = priceUSD != null && priceUSD > 0;
 
   let preferredFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
   if (userId) {
@@ -86,44 +102,60 @@ export async function getSmartAlternatives(
   const categoryHint = category?.trim() || null;
   const fiberHint = preferredFiber || extractPrimaryFiber(composition || '');
 
-  const runQuery = async (minPrice: number | null, maxPrice: number | null, minNfp: number) => {
+  if (!priceUSD) {
+    priceUSD = defaultPriceForFiber(fiberHint);
+    console.log(
+      `No price from barcode — using fiber default: $${priceUSD} for ${fiberHint || 'default'}`
+    );
+  }
+
+  const minMultiplier = hadBarcodePrice ? 0.5 : 0.4;
+  const maxMultiplier = hadBarcodePrice ? 2.0 : 2.5;
+  const minPrice = priceUSD * minMultiplier;
+  const maxPrice = priceUSD * maxMultiplier;
+
+  const runQuery = async (minNfp: number, min: number, max: number) => {
     let query = scannerCatalogQuery(supabase)
       .eq('region', resolvedRegion)
       .gte('natural_fiber_percent', minNfp)
+      .not('image_url', 'is', null)
+      .gte('price', min)
+      .lte('price', max)
       .order('natural_fiber_percent', { ascending: false });
 
     if (excludeBrandSlug) query = query.neq('brand_slug', excludeBrandSlug);
     if (categoryHint) query = query.ilike('category', `%${categoryHint}%`);
-    if (fiberHint && (naturalFiberPercent || 0) < 80) {
+    if (fiberHint) {
       query = query.ilike('composition', `%${fiberHint}%`);
-    }
-    if (minPrice != null && maxPrice != null && minPrice > 0) {
-      query = query.gte('price', minPrice).lte('price', maxPrice);
     }
 
     const { data } = await query.limit(24);
     return data || [];
   };
 
-  if (priceUSD && priceUSD > 0) {
-    const minPrice = priceUSD * 0.5;
-    const maxPrice = priceUSD * 2.0;
-    console.log(
-      `Price filter: $${minPrice.toFixed(0)} - $${maxPrice.toFixed(0)} (scanned: $${priceUSD.toFixed(0)})`
-    );
+  console.log(
+    `Price filter: $${minPrice.toFixed(0)} - $${maxPrice.toFixed(0)} (anchor: $${priceUSD.toFixed(0)})`
+  );
 
-    const primary = await runQuery(minPrice, maxPrice, targetNfp);
-    if (primary.length >= 3) {
-      return deduplicateById(primary).slice(0, 6);
-    }
+  const primary = await runQuery(targetNfp, minPrice, maxPrice);
+  if (primary.length >= 3) {
+    return deduplicateById(primary).slice(0, 6);
+  }
 
-    console.log('Price filter too strict — broadening range');
-    const broaderMin = priceUSD * 0.25;
-    const broaderMax = priceUSD * 4.0;
-    const broader = await runQuery(broaderMin, broaderMax, 80);
+  console.log('Price filter too strict — broadening range');
+  const broaderMin = priceUSD * 0.25;
+  const broaderMax = priceUSD * 4.0;
+  const broader = await runQuery(80, broaderMin, broaderMax);
+  if (broader.length >= 3) {
     return deduplicateById(broader).slice(0, 6);
   }
 
-  const fallback = await runQuery(null, null, targetNfp);
-  return deduplicateById(fallback).slice(0, 6);
+  const { data: fallback } = await scannerCatalogQuery(supabase)
+    .eq('region', resolvedRegion)
+    .gte('natural_fiber_percent', 80)
+    .not('image_url', 'is', null)
+    .order('natural_fiber_percent', { ascending: false })
+    .limit(6);
+
+  return deduplicateById(fallback || []);
 }
