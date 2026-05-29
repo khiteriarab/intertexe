@@ -26,6 +26,8 @@ const supabase = createClient(
 
 /** Designer slug → live_products_apparel brand_slug */
 const ALIASES = {
+  "a-l-c-": "a-l-c",
+  alc: "a-l-c",
   isabelmarant: "isabel-marant",
   isabel_marant: "isabel-marant",
   "isabel-marant-etoile": "isabel-marant",
