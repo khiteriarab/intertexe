@@ -1,40 +1,62 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { scannerCatalogQuery } from '../scanner-catalog';
-import { parsePriceNumber } from '../scanner-copy';
 
-function filterProductsByPrice(
-  rows: any[],
-  price: number | null | undefined,
-  tolerance = 0.3
-): any[] {
-  if (!price || !rows?.length) return rows || [];
-  const min = price * (1 - tolerance);
-  const max = price * (1 + tolerance);
-  const filtered = rows.filter((p) => {
-    const pn = parsePriceNumber(p.price);
-    return pn !== null && pn >= min && pn <= max;
+export type SmartAlternativesParams = {
+  composition?: string | null;
+  detectedPrice?: number | null;
+  price?: number | null;
+  currency?: string | null;
+  category?: string | null;
+  primaryFiber?: string | null;
+  naturalFiberPercent?: number | null;
+  brandSlug?: string | null;
+  region?: string | null;
+  userId?: string | null;
+  excludeBrandSlug?: string | null;
+};
+
+function toPriceUSD(price: number, currency?: string | null): number {
+  if (!currency) return price;
+  switch (currency.toUpperCase()) {
+    case 'EUR':
+      return price * 1.08;
+    case 'GBP':
+      return price * 1.27;
+    case 'CAD':
+      return price * 0.74;
+    default:
+      return price;
+  }
+}
+
+function deduplicateById(products: any[]): any[] {
+  const seen = new Set<string>();
+  return products.filter((p) => {
+    const id = String(p.id);
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
   });
-  return filtered.length >= 3 ? filtered : rows;
+}
+
+function extractPrimaryFiber(composition: string): string | null {
+  const fibers = ['silk', 'cashmere', 'wool', 'linen', 'cotton', 'leather', 'alpaca'];
+  const lower = composition.toLowerCase();
+  for (const fiber of fibers) {
+    if (lower.includes(fiber)) return fiber;
+  }
+  return null;
 }
 
 export async function getSmartAlternatives(
   supabase: SupabaseClient,
-  params: {
-    composition?: string | null;
-    detectedPrice?: number | null;
-    currency?: string | null;
-    category?: string | null;
-    primaryFiber?: string | null;
-    naturalFiberPercent?: number | null;
-    brandSlug?: string | null;
-    region?: string | null;
-    userId?: string | null;
-    excludeBrandSlug?: string | null;
-  }
+  params: SmartAlternativesParams
 ): Promise<any[]> {
   const {
     composition,
     detectedPrice,
+    price: priceParam,
+    currency,
     category,
     primaryFiber,
     naturalFiberPercent,
@@ -42,6 +64,10 @@ export async function getSmartAlternatives(
     userId,
     excludeBrandSlug,
   } = params;
+
+  const rawPrice = detectedPrice ?? priceParam ?? null;
+  const priceUSD =
+    rawPrice != null && rawPrice > 0 ? toPriceUSD(rawPrice, currency) : null;
 
   let preferredFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
   if (userId) {
@@ -60,56 +86,44 @@ export async function getSmartAlternatives(
   const categoryHint = category?.trim() || null;
   const fiberHint = preferredFiber || extractPrimaryFiber(composition || '');
 
-  let query = scannerCatalogQuery(supabase)
-    .eq('region', resolvedRegion)
-    .gte('natural_fiber_percent', targetNfp)
-    .order('natural_fiber_percent', { ascending: false });
-
-  if (excludeBrandSlug) query = query.neq('brand_slug', excludeBrandSlug);
-  if (categoryHint) query = query.ilike('category', `%${categoryHint}%`);
-  if ((naturalFiberPercent || 0) < 80 && fiberHint) {
-    query = query.ilike('composition', `%${fiberHint}%`);
-  }
-  if (detectedPrice && detectedPrice > 0) {
-    query = query.gte('price', detectedPrice * 0.7).lte('price', detectedPrice * 1.3);
-  }
-
-  const { data: primaryRows } = await query.limit(24);
-  let merged = primaryRows || [];
-
-  if (merged.length < 6) {
-    let broader = scannerCatalogQuery(supabase)
+  const runQuery = async (minPrice: number | null, maxPrice: number | null, minNfp: number) => {
+    let query = scannerCatalogQuery(supabase)
       .eq('region', resolvedRegion)
-      .gte('natural_fiber_percent', 90)
+      .gte('natural_fiber_percent', minNfp)
       .order('natural_fiber_percent', { ascending: false });
-    if (excludeBrandSlug) broader = broader.neq('brand_slug', excludeBrandSlug);
-    const { data: broaderRows } = await broader.limit(24);
-    merged = [...merged, ...(broaderRows || [])];
+
+    if (excludeBrandSlug) query = query.neq('brand_slug', excludeBrandSlug);
+    if (categoryHint) query = query.ilike('category', `%${categoryHint}%`);
+    if (fiberHint && (naturalFiberPercent || 0) < 80) {
+      query = query.ilike('composition', `%${fiberHint}%`);
+    }
+    if (minPrice != null && maxPrice != null && minPrice > 0) {
+      query = query.gte('price', minPrice).lte('price', maxPrice);
+    }
+
+    const { data } = await query.limit(24);
+    return data || [];
+  };
+
+  if (priceUSD && priceUSD > 0) {
+    const minPrice = priceUSD * 0.5;
+    const maxPrice = priceUSD * 2.0;
+    console.log(
+      `Price filter: $${minPrice.toFixed(0)} - $${maxPrice.toFixed(0)} (scanned: $${priceUSD.toFixed(0)})`
+    );
+
+    const primary = await runQuery(minPrice, maxPrice, targetNfp);
+    if (primary.length >= 3) {
+      return deduplicateById(primary).slice(0, 6);
+    }
+
+    console.log('Price filter too strict — broadening range');
+    const broaderMin = priceUSD * 0.25;
+    const broaderMax = priceUSD * 4.0;
+    const broader = await runQuery(broaderMin, broaderMax, 80);
+    return deduplicateById(broader).slice(0, 6);
   }
 
-  const deduped: any[] = [];
-  const seen = new Set<string>();
-  for (const row of filterProductsByPrice(merged, detectedPrice, 0.3)) {
-    const id = String(row.id);
-    if (seen.has(id)) continue;
-    seen.add(id);
-    deduped.push(row);
-    if (deduped.length >= 12) break;
-  }
-
-  const uniqueAlternatives = deduped.filter(
-    (product, index, self) =>
-      index === self.findIndex((p) => String(p.id) === String(product.id))
-  );
-
-  return uniqueAlternatives.slice(0, 6);
-}
-
-function extractPrimaryFiber(composition: string): string | null {
-  const fibers = ['silk', 'cashmere', 'linen', 'wool', 'cotton', 'leather', 'alpaca'];
-  const lower = composition.toLowerCase();
-  for (const fiber of fibers) {
-    if (lower.includes(fiber)) return fiber;
-  }
-  return null;
+  const fallback = await runQuery(null, null, targetNfp);
+  return deduplicateById(fallback).slice(0, 6);
 }

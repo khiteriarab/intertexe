@@ -252,10 +252,13 @@ export async function buildBarcodeScanResponse(
   deviceType?: string | null
 ) {
   const alternatives = await getSmartAlternatives(supabase, {
+    composition: barcodeResult.composition,
     detectedPrice: barcodeResult.price,
+    currency: barcodeResult.currency,
     primaryFiber: barcodeResult.fiberPrimary,
     naturalFiberPercent: barcodeResult.naturalFiberPercent,
     brandSlug: barcodeResult.brandSlug,
+    region: 'us',
     userId,
     excludeBrandSlug: barcodeResult.brandSlug || undefined,
   });
