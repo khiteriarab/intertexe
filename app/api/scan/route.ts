@@ -12,6 +12,7 @@ import { getSmartAlternatives } from "../../../lib/scanner/get-smart-alternative
 import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext } from "../../../lib/scanner-response";
 import { getVerdictMessage } from "../../../lib/scanner-copy";
 import { queueScanFollowUp } from "../../../lib/scan-follow-up-queue";
+import { buildScanHistoryRow } from "../../../lib/scan-history";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -703,25 +704,32 @@ export async function POST(request: NextRequest) {
         }),
       });
 
-      await recordScanHistory({
-        user_id: userId || null,
-        session_id: sessionId || null,
-        scanned_at: new Date().toISOString(),
-        brand: brandName,
-        product_name: extracted.productName || "",
-        composition: analysis.compositionText || composition,
-        natural_percent: analysis.naturalPercent,
-        verdict: response.verdict,
-        scan_source: "manual",
-        upc_code: upc || null,
-        label_type: "composition",
-        raw_ocr_text: composition,
-        lookup_source: "composition_text",
-        device_type: deviceType || device || null,
-        app_version: appVersion || null,
-        helped_build_database: isNewToDatabase,
-        alternatives_shown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
-      });
+      await recordScanHistory(
+        buildScanHistoryRow({
+          userId,
+          sessionId,
+          brand: brandName,
+          productName: extracted.productName || "",
+          composition: analysis.compositionText || composition,
+          naturalPercent: analysis.naturalPercent,
+          verdict: String(response.verdict || ""),
+          scanSource: upc ? "barcode" : "label",
+          imageUrl: body.image_url || body.imageUrl || null,
+          productUrl: body.product_url || body.url || null,
+          upcCode: upc || null,
+          countryOfOrigin: dppFields.countryOfOrigin ?? null,
+          careInstructions: dppFields.careInstructions ?? null,
+          hasRecycledContent: dppFields.hasRecycledContent ?? false,
+          deviceType: deviceType || device || null,
+          appVersion: appVersion || null,
+          labelType: "composition",
+          rawOcrText: composition,
+          lookupSource: "composition_text",
+          helpedBuildDatabase: isNewToDatabase,
+          fiberPrimary: analysis.fibers[0]?.fiber?.toLowerCase() || null,
+          alternativesShown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
+        })
+      );
 
       if (guestEmail) {
         await queueScanFollowUp(supabase, {
@@ -747,28 +755,33 @@ export async function POST(request: NextRequest) {
         deviceType || device
       );
 
-      await recordScanHistory({
-        user_id: userId || null,
-        session_id: sessionId || null,
-        scanned_at: new Date().toISOString(),
-        upc_code: upc,
-        detected_brand: barcodeResult.brand,
-        brand: barcodeResult.brand,
-        product_name: barcodeResult.productName,
-        composition: barcodeResult.composition,
-        natural_percent: barcodeResult.naturalFiberPercent,
-        fiber_primary: barcodeResult.fiberPrimary,
-        price_detected: barcodeResult.price,
-        currency_detected: barcodeResult.currency,
-        lookup_source: barcodeResult.source,
-        alternatives_shown: response.alternatives?.slice(0, 12).map((p: any) => p.id).filter(Boolean),
-        label_type: "barcode_only",
-        scan_source: "barcode",
-        device_type: deviceType || device || null,
-        app_version: appVersion || null,
-        verdict: response.verdict,
-        helped_build_database: barcodeResult.isNewToDatabase,
-      });
+      await recordScanHistory(
+        buildScanHistoryRow({
+          userId,
+          sessionId,
+          upcCode: upc,
+          detectedBrand: barcodeResult.brand,
+          brand: barcodeResult.brand,
+          productName: barcodeResult.productName,
+          composition: barcodeResult.composition,
+          naturalPercent: barcodeResult.naturalFiberPercent,
+          fiberPrimary: barcodeResult.fiberPrimary,
+          priceDetected: barcodeResult.price,
+          currencyDetected: barcodeResult.currency,
+          lookupSource: barcodeResult.source,
+          alternativesShown: response.alternatives?.slice(0, 12).map((p: any) => p.id).filter(Boolean),
+          labelType: "barcode_only",
+          scanSource: "barcode",
+          deviceType: deviceType || device || null,
+          appVersion: appVersion || null,
+          verdict: String(response.verdict || ""),
+          helpedBuildDatabase: barcodeResult.isNewToDatabase,
+          countryOfOrigin: barcodeResult.countryOfOrigin ?? null,
+          careInstructions: barcodeResult.careInstructions ?? null,
+          hasRecycledContent: barcodeResult.hasRecycledContent ?? false,
+          imageUrl: response.imageUrl || null,
+        })
+      );
 
       return NextResponse.json(response);
     }
@@ -953,24 +966,39 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    await recordScanHistory({
-      user_id: userId || null,
-      session_id: sessionId || null,
-      scanned_at: new Date().toISOString(),
-      brand: brandName,
-      product_name: productName,
-      composition: analysis.compositionText || extracted.composition || "",
-      natural_percent: effectivePercent,
-      verdict,
-      scan_source: extracted.inputType || (image ? "image" : url ? "url" : "manual"),
-      device_type: deviceType || device || null,
-      app_version: appVersion || null,
-      raw_analysis: {
-        detected_fiber: primaryFiber,
-        is_natural: effectivePercent >= 80,
-        alternatives_shown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
-      },
-    });
+    const productUrlForHistory = url ? normalizeProductUrl(String(url)) : "";
+
+    await recordScanHistory(
+      buildScanHistoryRow({
+        userId,
+        sessionId,
+        brand: brandName,
+        productName,
+        composition: analysis.compositionText || extracted.composition || "",
+        naturalPercent: effectivePercent,
+        verdict,
+        scanSource: extracted.inputType || (image ? "image" : url ? "url" : "manual"),
+        imageUrl: imageUrl || null,
+        productUrl: productUrlForHistory || null,
+        upcCode: scanUpc || null,
+        countryOfOrigin: dppFields.countryOfOrigin ?? null,
+        careInstructions: dppFields.careInstructions ?? null,
+        hasRecycledContent: dppFields.hasRecycledContent ?? false,
+        deviceType: deviceType || device || null,
+        appVersion: appVersion || null,
+        fiberPrimary: primaryFiber || null,
+        priceDetected: priceNum,
+        currencyDetected: detectedCurrency || null,
+        lookupSource: extracted.inputType || null,
+        helpedBuildDatabase: isNewToDatabase,
+        alternativesShown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
+        rawAnalysis: {
+          detected_fiber: primaryFiber,
+          is_natural: effectivePercent >= 80,
+          alternatives_shown: alternatives.slice(0, 12).map((p: any) => p.id).filter(Boolean),
+        },
+      })
+    );
 
     if (userId && primaryFiber) {
       const currentFibers = prefs?.preferredFibers || [];
