@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseAuthUserId } from '../../../../lib/supabase-auth-server';
 import { parsePriceNumber } from '../../../../lib/scanner-copy';
+import { recordFunnelEvent } from '../../../../lib/scanner-funnel';
 
 export async function POST(req: NextRequest) {
   const supabaseUrl =
@@ -36,6 +37,16 @@ export async function POST(req: NextRequest) {
   const scanPrice = parsePriceNumber(scannedPrice) ?? (typeof scannedPrice === 'number' ? scannedPrice : null);
 
   try {
+    if (sessionId) {
+      await recordFunnelEvent(supabase, {
+        session_id: String(sessionId),
+        event_type: 'alternative_clicked',
+        user_id: userId,
+        scan_source: 'alternative',
+        has_result: true,
+      });
+    }
+
     await supabase.from('scanner_clickouts').insert({
       product_id: productId ? String(productId) : null,
       product_name: productName || null,

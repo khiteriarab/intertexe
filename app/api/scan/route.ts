@@ -13,6 +13,7 @@ import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext 
 import { getVerdictMessage } from "../../../lib/scanner-copy";
 import { queueScanFollowUp } from "../../../lib/scan-follow-up-queue";
 import { buildScanHistoryRow } from "../../../lib/scan-history";
+import { recordFunnelEvent, resolveFunnelSessionId } from "../../../lib/scanner-funnel";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -569,6 +570,10 @@ export async function POST(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseKey);
   const openai = getOpenAIClient();
 
+  let funnelSessionId = "";
+  let userId: string | null = null;
+  let resolvedDevice: string | null = null;
+
   try {
     const body = await request.json();
     const {
@@ -585,11 +590,38 @@ export async function POST(request: NextRequest) {
       app_version: appVersion,
       user_email: userEmailBody,
       email: emailBody,
+      user_id: bodyUserId,
     } = body;
 
     const authHeader = request.headers.get("authorization");
     const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-    const userId = accessToken ? await getSupabaseAuthUserId(accessToken) : null;
+    if (accessToken) {
+      userId = await getSupabaseAuthUserId(accessToken);
+    }
+    if (!userId && bodyUserId) {
+      userId = String(bodyUserId);
+    }
+
+    funnelSessionId = resolveFunnelSessionId(sessionId);
+    resolvedDevice = deviceType || device || null;
+
+    const initialScanSource = compositionText && String(compositionText).trim()
+      ? "label"
+      : barcode
+        ? "barcode"
+        : image
+          ? "image"
+          : url
+            ? "url"
+            : "manual";
+
+    await recordFunnelEvent(supabase, {
+      session_id: funnelSessionId,
+      event_type: "scan_started",
+      user_id: userId,
+      device_type: resolvedDevice,
+      scan_source: initialScanSource,
+    });
 
     const guestEmail =
       !userId && (userEmailBody || emailBody)
@@ -704,10 +736,28 @@ export async function POST(request: NextRequest) {
         }),
       });
 
+      await recordFunnelEvent(supabase, {
+        session_id: funnelSessionId,
+        event_type: "composition_detected",
+        user_id: userId,
+        device_type: resolvedDevice,
+        scan_source: "label",
+        natural_fiber_percent: analysis.naturalPercent,
+      });
+      await recordFunnelEvent(supabase, {
+        session_id: funnelSessionId,
+        event_type: "result_shown",
+        user_id: userId,
+        device_type: resolvedDevice,
+        scan_source: "label",
+        natural_fiber_percent: analysis.naturalPercent,
+        has_result: true,
+      });
+
       await recordScanHistory(
         buildScanHistoryRow({
           userId,
-          sessionId,
+          sessionId: funnelSessionId,
           brand: brandName,
           productName: extracted.productName || "",
           composition: analysis.compositionText || composition,
@@ -755,10 +805,27 @@ export async function POST(request: NextRequest) {
         deviceType || device
       );
 
+      await recordFunnelEvent(supabase, {
+        session_id: funnelSessionId,
+        event_type: "barcode_detected",
+        user_id: userId,
+        device_type: resolvedDevice,
+        scan_source: "barcode",
+      });
+      await recordFunnelEvent(supabase, {
+        session_id: funnelSessionId,
+        event_type: "result_shown",
+        user_id: userId,
+        device_type: resolvedDevice,
+        scan_source: "barcode",
+        natural_fiber_percent: barcodeResult.naturalFiberPercent ?? null,
+        has_result: true,
+      });
+
       await recordScanHistory(
         buildScanHistoryRow({
           userId,
-          sessionId,
+          sessionId: funnelSessionId,
           upcCode: upc,
           detectedBrand: barcodeResult.brand,
           brand: barcodeResult.brand,
@@ -772,7 +839,7 @@ export async function POST(request: NextRequest) {
           alternativesShown: response.alternatives?.slice(0, 12).map((p: any) => p.id).filter(Boolean),
           labelType: "barcode_only",
           scanSource: "barcode",
-          deviceType: deviceType || device || null,
+          deviceType: resolvedDevice,
           appVersion: appVersion || null,
           verdict: String(response.verdict || ""),
           helpedBuildDatabase: barcodeResult.isNewToDatabase,
@@ -968,23 +1035,35 @@ export async function POST(request: NextRequest) {
 
     const productUrlForHistory = url ? normalizeProductUrl(String(url)) : "";
 
+    const finalScanSource = extracted.inputType || (image ? "image" : url ? "url" : "manual");
+
+    await recordFunnelEvent(supabase, {
+      session_id: funnelSessionId,
+      event_type: "result_shown",
+      user_id: userId,
+      device_type: resolvedDevice,
+      scan_source: finalScanSource,
+      natural_fiber_percent: effectivePercent,
+      has_result: true,
+    });
+
     await recordScanHistory(
       buildScanHistoryRow({
         userId,
-        sessionId,
+        sessionId: funnelSessionId,
         brand: brandName,
         productName,
         composition: analysis.compositionText || extracted.composition || "",
         naturalPercent: effectivePercent,
         verdict,
-        scanSource: extracted.inputType || (image ? "image" : url ? "url" : "manual"),
+        scanSource: finalScanSource,
         imageUrl: imageUrl || null,
         productUrl: productUrlForHistory || null,
         upcCode: scanUpc || null,
         countryOfOrigin: dppFields.countryOfOrigin ?? null,
         careInstructions: dppFields.careInstructions ?? null,
         hasRecycledContent: dppFields.hasRecycledContent ?? false,
-        deviceType: deviceType || device || null,
+        deviceType: resolvedDevice,
         appVersion: appVersion || null,
         fiberPrimary: primaryFiber || null,
         priceDetected: priceNum,
@@ -1065,6 +1144,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(legacyResponse);
   } catch (err: any) {
     console.error("Scan error:", err.message);
+    await recordFunnelEvent(supabase, {
+      session_id: funnelSessionId || resolveFunnelSessionId(null),
+      event_type: "scan_failed",
+      user_id: userId,
+      device_type: resolvedDevice,
+      error: err?.message || "Scan failed",
+      has_result: false,
+    });
     try {
       const alternatives = await searchAlternatives(supabase, "", "", null, "");
       return NextResponse.json({
