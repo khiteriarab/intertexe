@@ -1,6 +1,15 @@
+import { catalogDedupeKeyFromProduct } from "./catalog-rules";
+
 export const CATALOG_CA_MIN_PRODUCTS = 48;
 
-type CatalogProductKey = { productId: string; id?: string };
+type CatalogProductKey = {
+  productId: string;
+  id?: string;
+  brandName?: string;
+  name?: string;
+  imageUrl?: string;
+  composition?: string;
+};
 
 /** Merge primary region rows with US supplemental rows when CA inventory is sparse. */
 export function mergeProductsWithRegionFallback<T extends CatalogProductKey>(
@@ -13,11 +22,11 @@ export function mergeProductsWithRegionFallback<T extends CatalogProductKey>(
     return primary.slice(0, pageLimit);
   }
 
-  const seen = new Set(primary.map((p) => p.productId || p.id));
+  const seen = new Set(primary.map((p) => catalogDedupeKeyFromProduct(p)));
   const merged = [...primary];
 
   for (const product of supplemental) {
-    const key = product.productId || product.id;
+    const key = catalogDedupeKeyFromProduct(product);
     if (seen.has(key)) continue;
     seen.add(key);
     merged.push(product);

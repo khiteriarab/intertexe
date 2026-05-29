@@ -134,6 +134,11 @@ export function catalogNormalizeImageUrl(pImageUrl: string | null | undefined): 
 }
 
 export function catalogDedupeKey(row: Record<string, unknown>): string {
+  const canonical = String(row.canonical_id ?? row.canonicalId ?? "")
+    .trim()
+    .toLowerCase();
+  if (canonical) return `canonical:${canonical}`;
+
   const b = normTokenCatalog(String(row.brand_name ?? row.brandName ?? ""));
   const style = normTokenCatalog(
     catalogStyleBaseName(String(row.name ?? row.title ?? ""))
@@ -179,4 +184,46 @@ export function dedupeCatalogRows(rows: Record<string, unknown>[], preferred = "
     groups.get(key)!.push(row);
   }
   return Array.from(groups.values()).map((g) => pickDedupeWinner(g, preferred, fallback));
+}
+
+export function catalogDedupeKeyFromProduct(p: {
+  id: string;
+  productId?: string;
+  brandName?: string;
+  name?: string;
+  imageUrl?: string;
+  composition?: string;
+  canonicalId?: string | null;
+}): string {
+  return catalogDedupeKey({
+    canonical_id: p.canonicalId,
+    id: p.id,
+    product_id: p.productId,
+    brand_name: p.brandName,
+    name: p.name,
+    image_url: p.imageUrl,
+    composition: p.composition,
+  });
+}
+
+/** Safety net after RPC/map — one card per canonical/style/product. */
+export function dedupeCatalogProducts<
+  T extends {
+    id: string;
+    productId?: string;
+    brandName?: string;
+    name?: string;
+    imageUrl?: string;
+    composition?: string;
+  },
+>(products: T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const p of products) {
+    const key = catalogDedupeKeyFromProduct(p);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(p);
+  }
+  return out;
 }

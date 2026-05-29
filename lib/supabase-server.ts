@@ -31,6 +31,7 @@ import {
   CATALOG_PAGE_SIZE,
   classifyGarment,
   catalogDedupeKey,
+  dedupeCatalogProducts,
   dedupeCatalogRows,
   offerCompletenessStatus,
   rowMatchesShopFiber,
@@ -234,7 +235,16 @@ async function rpcCatalogList(
     console.warn("catalog_list RPC failed, using live_products_apparel fallback:", error.message);
     return null;
   }
-  return (data || []) as any[];
+  const rows = (data || []) as any[];
+  if (rows.length === 0) return rows;
+  const deduped = dedupeCatalogRows(rows, args.preferred, args.fallback);
+  const seen = new Set<string>();
+  return deduped.filter((row) => {
+    const key = catalogDedupeKey(row);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function rpcCatalogListCount(
@@ -325,15 +335,7 @@ function mapFiberHubCatalogRows(rows: any[], category?: string): Product[] {
       )
     );
   }
-  const seen = new Set<string>();
-  const unique: any[] = [];
-  for (const row of filtered) {
-    const key = String(row.product_id || row.id || "");
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    unique.push(row);
-  }
-  return unique.map(mapProductRow);
+  return dedupeCatalogRows(filtered, "us", "us").map(mapProductRow);
 }
 
 /** Fiber / category grids (materials hubs) — full live_products_apparel catalog, US region. */
@@ -367,6 +369,7 @@ export async function fetchCatalogProductsByFiber(opts: {
   const scanStart = category ? 0 : offset;
   const { data, error } = await query
     .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
     .range(scanStart, scanEnd);
   logSupabaseTiming(
     `fetchCatalogProductsByFiber live fiber=${normalizedFiber}${category ? ` category=${category}` : ""}`,
@@ -430,8 +433,8 @@ async function catalogListLiveFallback(
       q = q.or(`name.ilike.%${s}%,brand_name.ilike.%${s}%,composition.ilike.%${s}%`);
     }
     const { data, error } = await q
-      .order("natural_fiber_percent", { ascending: false })
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
       .range(dbOffset, dbOffset + chunkSize - 1);
     if (error || !data?.length) break;
     dbOffset += data.length;
@@ -1927,7 +1930,7 @@ export async function fetchShopProducts(options: {
       });
     }
 
-    let mapped = mapCatalogRowsToProducts(rows);
+    let mapped = dedupeCatalogProducts(mapCatalogRowsToProducts(rows));
 
     if (sort === "new") {
       mapped.sort((a, b) => {
@@ -1952,11 +1955,13 @@ export async function fetchShopProducts(options: {
         })) || [];
       if (usRows.length > 0) {
         const usMapped = mapCatalogRowsToProducts(usRows);
-        mapped = mergeProductsWithRegionFallback(
-          mapped,
-          usMapped,
-          CATALOG_CA_MIN_PRODUCTS,
-          limit
+        mapped = dedupeCatalogProducts(
+          mergeProductsWithRegionFallback(
+            mapped,
+            usMapped,
+            CATALOG_CA_MIN_PRODUCTS,
+            limit
+          )
         );
       }
     }
