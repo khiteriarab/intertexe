@@ -2236,11 +2236,22 @@ export async function fetchSaleProducts(options: {
           if (skipTotal) {
             return { products, total: null, hasMore: products.length >= limit };
           }
-          const { data: countRaw } = await supabase.rpc("sale_catalog_count", {
+          const { data: countRaw, error: countErr } = await supabase.rpc("sale_catalog_count", {
             p_fiber: fiber && fiber !== "all" ? fiber : null,
             p_max_price: maxPrice ?? null,
+            p_region: dedupePreferred,
           });
-          const total = Number(countRaw ?? 0);
+          let total = Number(countRaw ?? 0);
+          if (countErr || total <= 0) {
+            let liveCountQ = supabase
+              .from("live_products_apparel")
+              .select("id", { count: "exact", head: true })
+              .eq("is_sale", true)
+              .eq("region", dedupePreferred)
+              .gte("natural_fiber_percent", 80);
+            const { count: liveCount } = await liveCountQ;
+            if (liveCount != null && liveCount > 0) total = liveCount;
+          }
           const resolved = total > 0 ? total : products.length;
           return {
             products,
