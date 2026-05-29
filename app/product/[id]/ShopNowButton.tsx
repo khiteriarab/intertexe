@@ -28,7 +28,7 @@ async function recordClickOut(product: ShopNowProduct) {
     product.naturalFiberPercent ?? product.natural_fiber_percent ?? null;
 
   try {
-    await fetch("/api/account/product-clickout", {
+    const res = await fetch("/api/account/product-clickout", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -45,8 +45,14 @@ async function recordClickOut(product: ShopNowProduct) {
         naturalFiberPercent,
       }),
     });
-  } catch {
-    /* non-blocking */
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error("Click-out failed:", body.message ?? res.statusText);
+      return;
+    }
+    console.log("Click-out recorded");
+  } catch (err) {
+    console.error("Click-out failed:", err);
   }
 }
 
