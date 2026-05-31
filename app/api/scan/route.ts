@@ -656,7 +656,22 @@ export async function POST(request: NextRequest) {
     const parsedPrice =
       typeof detectedPriceRaw === "number"
         ? detectedPriceRaw
-        : parsePriceNumber(String(detectedPriceRaw ?? ""));
+        : typeof body.price === "number"
+          ? body.price
+          : parsePriceNumber(String(detectedPriceRaw ?? body.price ?? ""));
+
+    const resolvedCurrency =
+      (typeof detectedCurrency === "string" && detectedCurrency.trim()) ||
+      (typeof body.currency === "string" && body.currency.trim()) ||
+      null;
+
+    const resolvedRegion =
+      (typeof body.region === "string" && body.region.trim().toLowerCase()) || "us";
+
+    const resolvedNaturalPercent =
+      typeof body.naturalFiberPercent === "number"
+        ? Math.min(100, Math.max(0, Math.round(body.naturalFiberPercent)))
+        : null;
 
     async function recordScanHistory(payload: Record<string, unknown>) {
       try {
@@ -690,7 +705,7 @@ export async function POST(request: NextRequest) {
           fiberPrimary: analysis.fibers[0]?.fiber?.toLowerCase() || null,
           fiberBreakdown: analysis.fibers,
           price: parsedPrice,
-          currency: detectedCurrency || null,
+          currency: resolvedCurrency,
           dpp: dppFields,
         });
       }
@@ -706,13 +721,13 @@ export async function POST(request: NextRequest) {
       const alternatives = await getSmartAlternatives(supabase, {
         composition: analysis.compositionText || composition,
         detectedPrice: parsedPrice,
-        currency: detectedCurrency || null,
+        currency: resolvedCurrency,
         category: body.category || null,
         garmentType,
         primaryFiber: analysis.fibers[0]?.fiber,
-        naturalFiberPercent: analysis.naturalPercent,
+        naturalFiberPercent: resolvedNaturalPercent ?? analysis.naturalPercent,
         brandSlug,
-        region: "us",
+        region: resolvedRegion,
         userId,
         excludeBrandSlug: brandSlug !== "unknown" ? brandSlug : undefined,
       });

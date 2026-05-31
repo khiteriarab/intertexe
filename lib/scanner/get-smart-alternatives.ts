@@ -60,6 +60,44 @@ function toPriceUSD(price: number, currency?: string | null): number {
   }
 }
 
+function parseProductPrice(raw: unknown): number | null {
+  if (typeof raw === 'number' && raw > 0) return raw;
+  if (typeof raw === 'string') {
+    const cleaned = raw.replace(/[^0-9.]/g, '');
+    const num = parseFloat(cleaned);
+    return Number.isFinite(num) && num > 0 ? num : null;
+  }
+  return null;
+}
+
+function matchesGarmentType(product: any, garmentType: string): boolean {
+  const terms = GARMENT_TYPE_TERMS[garmentType.toLowerCase()] || [garmentType];
+  const haystack = `${product.name || ''} ${product.category || ''} ${product.garment_type || ''}`.toLowerCase();
+  return terms.some((term) => haystack.includes(term.toLowerCase()));
+}
+
+function postFilterAlternatives(
+  products: any[],
+  opts: {
+    garmentType?: string | null;
+    minPrice: number;
+    maxPrice: number;
+    fiberHint?: string | null;
+  }
+): any[] {
+  const { garmentType, minPrice, maxPrice, fiberHint } = opts;
+  return products.filter((p) => {
+    const price = parseProductPrice(p.price);
+    if (price != null && (price < minPrice || price > maxPrice)) return false;
+    if (garmentType && !matchesGarmentType(p, garmentType)) return false;
+    if (fiberHint) {
+      const comp = String(p.composition || '').toLowerCase();
+      if (!comp.includes(fiberHint.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+
 function deduplicateById(products: any[]): any[] {
   const seen = new Set<string>();
   return products.filter((p) => {
@@ -68,6 +106,25 @@ function deduplicateById(products: any[]): any[] {
     seen.add(id);
     return true;
   });
+}
+
+function finalizeAlternatives(
+  products: any[],
+  opts: {
+    garmentType?: string | null;
+    minPrice: number;
+    maxPrice: number;
+    fiberHint?: string | null;
+    requireGarmentType?: boolean;
+  }
+): any[] {
+  const filtered = postFilterAlternatives(products, {
+    garmentType: opts.requireGarmentType ? opts.garmentType : null,
+    minPrice: opts.minPrice,
+    maxPrice: opts.maxPrice,
+    fiberHint: opts.fiberHint,
+  });
+  return deduplicateById(filtered).slice(0, 6);
 }
 
 function extractPrimaryFiber(composition: string): string | null {
@@ -120,7 +177,10 @@ export async function getSmartAlternatives(
   }
 
   const resolvedRegion = (region || 'us').toLowerCase();
-  const targetNfp = Math.max((naturalFiberPercent || 0) + 10, 80);
+  const targetNfp = Math.min(
+    Math.max((naturalFiberPercent || 0) + 10, 80),
+    95
+  );
   const categoryHint = category?.trim() || null;
   const fiberHint = preferredFiber || extractPrimaryFiber(composition || '');
 
@@ -173,8 +233,15 @@ export async function getSmartAlternatives(
   );
 
   const primary = await runQuery(targetNfp, minPrice, maxPrice, true);
-  if (primary.length >= 3) {
-    return deduplicateById(primary).slice(0, 6);
+  const primaryFiltered = finalizeAlternatives(primary, {
+    garmentType,
+    minPrice,
+    maxPrice,
+    fiberHint,
+    requireGarmentType: !!garmentType,
+  });
+  if (primaryFiltered.length >= 3) {
+    return primaryFiltered;
   }
 
   if (garmentType) {
@@ -182,34 +249,63 @@ export async function getSmartAlternatives(
     const widerPriceSameGarment = await runQuery(
       80,
       priceUSD * 0.3,
-      priceUSD * 3.0,
+      priceUSD * 2.2,
       true
     );
-    if (widerPriceSameGarment.length >= 3) {
-      return deduplicateById(widerPriceSameGarment).slice(0, 6);
+    const widerFiltered = finalizeAlternatives(widerPriceSameGarment, {
+      garmentType,
+      minPrice: priceUSD * 0.3,
+      maxPrice: priceUSD * 2.2,
+      fiberHint,
+      requireGarmentType: true,
+    });
+    if (widerFiltered.length >= 1) {
+      return widerFiltered.length >= 3
+        ? widerFiltered
+        : [...widerFiltered, ...primaryFiltered].slice(0, 6);
     }
 
     console.log('Garment type filter too strict — broadening without garment type');
-    const broaderGarment = await runQuery(80, priceUSD * 0.3, priceUSD * 3.0, false);
-    if (broaderGarment.length >= 3) {
-      return deduplicateById(broaderGarment).slice(0, 6);
+    const broaderGarment = await runQuery(80, priceUSD * 0.4, priceUSD * 2.2, false);
+    const broaderFiltered = finalizeAlternatives(broaderGarment, {
+      garmentType: null,
+      minPrice: priceUSD * 0.4,
+      maxPrice: priceUSD * 2.2,
+      fiberHint,
+    });
+    if (broaderFiltered.length >= 1) {
+      return broaderFiltered;
     }
   }
 
   console.log('Price filter too strict — broadening range');
   const broaderMin = priceUSD * 0.25;
-  const broaderMax = priceUSD * 4.0;
+  const broaderMax = priceUSD * 2.5;
   const broader = await runQuery(80, broaderMin, broaderMax, false);
-  if (broader.length >= 3) {
-    return deduplicateById(broader).slice(0, 6);
+  const broaderFiltered = finalizeAlternatives(broader, {
+    garmentType: null,
+    minPrice: broaderMin,
+    maxPrice: broaderMax,
+    fiberHint,
+  });
+  if (broaderFiltered.length >= 1) {
+    return broaderFiltered;
   }
 
   const { data: fallback } = await scannerCatalogQuery(supabase)
     .eq('region', resolvedRegion)
     .gte('natural_fiber_percent', 80)
     .not('image_url', 'is', null)
+    .gte('price', minPrice)
+    .lte('price', maxPrice)
     .order('natural_fiber_percent', { ascending: false })
-    .limit(6);
+    .limit(24);
 
-  return deduplicateById(fallback || []);
+  return finalizeAlternatives(fallback || [], {
+    garmentType,
+    minPrice,
+    maxPrice,
+    fiberHint,
+    requireGarmentType: !!garmentType,
+  });
 }
