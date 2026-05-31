@@ -7,6 +7,7 @@ export type SmartAlternativesParams = {
   price?: number | null;
   currency?: string | null;
   category?: string | null;
+  garmentType?: string | null;
   primaryFiber?: string | null;
   naturalFiberPercent?: number | null;
   brandSlug?: string | null;
@@ -14,6 +15,26 @@ export type SmartAlternativesParams = {
   userId?: string | null;
   excludeBrandSlug?: string | null;
 };
+
+const GARMENT_TYPE_TERMS: Record<string, string[]> = {
+  dress: ['dress', 'dresses', 'gown', 'midi dress', 'maxi dress', 'mini dress'],
+  top: ['top', 'blouse', 'shirt', 'tee', 'tank', 'camisole'],
+  knitwear: ['knit', 'sweater', 'pullover', 'cardigan', 'jumper'],
+  trouser: ['trouser', 'pant', 'jean', 'legging', 'culotte'],
+  skirt: ['skirt', 'midi skirt', 'maxi skirt', 'mini skirt'],
+  outerwear: ['coat', 'jacket', 'blazer', 'vest', 'cape'],
+  jumpsuit: ['jumpsuit', 'playsuit', 'romper', 'overall'],
+};
+
+function garmentTypeOrFilter(garmentType: string): string {
+  const terms = GARMENT_TYPE_TERMS[garmentType.toLowerCase()] || [garmentType];
+  return terms
+    .map(
+      (term) =>
+        `name.ilike.%${term}%,category.ilike.%${term}%,garment_type.ilike.%${term}%`
+    )
+    .join(',');
+}
 
 const FIBER_PRICE_DEFAULTS_USD: Record<string, number> = {
   cashmere: 400,
@@ -73,6 +94,7 @@ export async function getSmartAlternatives(
     price: priceParam,
     currency,
     category,
+    garmentType,
     primaryFiber,
     naturalFiberPercent,
     region,
@@ -114,38 +136,59 @@ export async function getSmartAlternatives(
   const minPrice = priceUSD * minMultiplier;
   const maxPrice = priceUSD * maxMultiplier;
 
-  const runQuery = async (minNfp: number, min: number, max: number) => {
+  const runQuery = async (
+    minNfp: number,
+    min: number,
+    max: number,
+    withGarmentType: boolean
+  ) => {
     let query = scannerCatalogQuery(supabase)
       .eq('region', resolvedRegion)
       .gte('natural_fiber_percent', minNfp)
       .not('image_url', 'is', null)
       .gte('price', min)
-      .lte('price', max)
-      .order('natural_fiber_percent', { ascending: false });
+      .lte('price', max);
 
     if (excludeBrandSlug) query = query.neq('brand_slug', excludeBrandSlug);
-    if (categoryHint) query = query.ilike('category', `%${categoryHint}%`);
+    if (withGarmentType && garmentType) {
+      query = query.or(garmentTypeOrFilter(garmentType));
+    } else if (categoryHint) {
+      query = query.ilike('category', `%${categoryHint}%`);
+    }
     if (fiberHint) {
       query = query.ilike('composition', `%${fiberHint}%`);
     }
 
-    const { data } = await query.limit(24);
+    const { data } = await query
+      .order('natural_fiber_percent', { ascending: false })
+      .limit(24);
     return data || [];
   };
 
   console.log(
+    `Finding alternatives: fiber=${fiberHint}, price=$${priceUSD.toFixed(0)}, garmentType=${garmentType || 'any'}`
+  );
+  console.log(
     `Price filter: $${minPrice.toFixed(0)} - $${maxPrice.toFixed(0)} (anchor: $${priceUSD.toFixed(0)})`
   );
 
-  const primary = await runQuery(targetNfp, minPrice, maxPrice);
+  const primary = await runQuery(targetNfp, minPrice, maxPrice, true);
   if (primary.length >= 3) {
     return deduplicateById(primary).slice(0, 6);
+  }
+
+  if (garmentType) {
+    console.log('Garment type filter too strict — broadening without garment type');
+    const broaderGarment = await runQuery(80, priceUSD * 0.3, priceUSD * 3.0, false);
+    if (broaderGarment.length >= 3) {
+      return deduplicateById(broaderGarment).slice(0, 6);
+    }
   }
 
   console.log('Price filter too strict — broadening range');
   const broaderMin = priceUSD * 0.25;
   const broaderMax = priceUSD * 4.0;
-  const broader = await runQuery(80, broaderMin, broaderMax);
+  const broader = await runQuery(80, broaderMin, broaderMax, false);
   if (broader.length >= 3) {
     return deduplicateById(broader).slice(0, 6);
   }

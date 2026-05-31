@@ -10,6 +10,7 @@ import {
 } from './scanner-copy';
 import type { BarcodeLookupResult } from './scanner-barcode-lookup';
 import { getSmartAlternatives } from './scanner-barcode-lookup';
+import { detectGarmentType } from './scanner/detect-garment-type';
 
 export type ScanResponseInput = {
   supabase: SupabaseClient;
@@ -251,10 +252,20 @@ export async function buildBarcodeScanResponse(
   sessionId?: string | null,
   deviceType?: string | null
 ) {
+  const brandName = barcodeResult.brand || 'Unknown';
+  const brandSlug = barcodeResult.brandSlug || slugifyBrand(brandName);
+  const productName = barcodeResult.productName || '';
+  const garmentType = detectGarmentType(productName, '');
+  const compositionText = barcodeResult.composition || '';
+  const naturalPercent = barcodeResult.naturalFiberPercent ?? 0;
+  const fibers = barcodeResult.fiberBreakdown || [];
+  const priceStr = barcodeResult.price != null ? `$${barcodeResult.price}` : '';
+
   const alternatives = await getSmartAlternatives(supabase, {
     composition: barcodeResult.composition,
     detectedPrice: barcodeResult.price,
     currency: barcodeResult.currency,
+    garmentType,
     primaryFiber: barcodeResult.fiberPrimary,
     naturalFiberPercent: barcodeResult.naturalFiberPercent,
     brandSlug: barcodeResult.brandSlug,
@@ -262,14 +273,6 @@ export async function buildBarcodeScanResponse(
     userId,
     excludeBrandSlug: barcodeResult.brandSlug || undefined,
   });
-
-  const brandName = barcodeResult.brand || 'Unknown';
-  const brandSlug = barcodeResult.brandSlug || slugifyBrand(brandName);
-  const productName = barcodeResult.productName || '';
-  const compositionText = barcodeResult.composition || '';
-  const naturalPercent = barcodeResult.naturalFiberPercent ?? 0;
-  const fibers = barcodeResult.fiberBreakdown || [];
-  const priceStr = barcodeResult.price != null ? `$${barcodeResult.price}` : '';
 
   const { designerInfo, brandProducts, avgFiber, brandRating } = await enrichBrandContext(
     supabase,
@@ -301,7 +304,7 @@ export async function buildBarcodeScanResponse(
     priceNum: barcodeResult.price,
     category: '',
     color: '',
-    garmentType: '',
+    garmentType: garmentType || '',
     compositionText,
     fibers,
     naturalPercent,

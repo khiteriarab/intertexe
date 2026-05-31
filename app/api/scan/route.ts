@@ -9,6 +9,7 @@ import { getSupabaseAuthUserId } from "../../../lib/supabase-auth-server";
 import { lookupBarcode, upsertBarcodeFromComposition } from "../../../lib/scanner-barcode-lookup";
 import { buildDppUpsertFields, mapExtractedDppFields, computeDppReady } from "../../../lib/dpp-fields";
 import { getSmartAlternatives } from "../../../lib/scanner/get-smart-alternatives";
+import { detectGarmentType } from "../../../lib/scanner/detect-garment-type";
 import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext } from "../../../lib/scanner-response";
 import { getVerdictMessage } from "../../../lib/scanner-copy";
 import { queueScanFollowUp } from "../../../lib/scan-follow-up-queue";
@@ -591,7 +592,13 @@ export async function POST(request: NextRequest) {
       user_email: userEmailBody,
       email: emailBody,
       user_id: bodyUserId,
+      scan_source: scanSourceBody,
     } = body;
+
+    const resolvedScanSource =
+      typeof scanSourceBody === "string" && scanSourceBody.trim()
+        ? scanSourceBody.trim()
+        : null;
 
     const authHeader = request.headers.get("authorization");
     const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
@@ -605,15 +612,16 @@ export async function POST(request: NextRequest) {
     funnelSessionId = resolveFunnelSessionId(sessionId);
     resolvedDevice = deviceType || device || null;
 
-    const initialScanSource = compositionText && String(compositionText).trim()
-      ? "label"
-      : barcode
-        ? "barcode"
-        : image
-          ? "image"
-          : url
-            ? "url"
-            : "manual";
+    const initialScanSource = resolvedScanSource
+      ?? (compositionText && String(compositionText).trim()
+        ? "label"
+        : barcode
+          ? "barcode"
+          : image
+            ? "image"
+            : url
+              ? "url"
+              : "manual");
 
     await recordFunnelEvent(supabase, {
       session_id: funnelSessionId,
@@ -674,11 +682,16 @@ export async function POST(request: NextRequest) {
 
       const brandName = extracted.brandName || "Unknown";
       const brandSlug = slugifyBrand(brandName);
+      const garmentType = detectGarmentType(
+        extracted.productName || body.product_name,
+        body.category
+      );
       const alternatives = await getSmartAlternatives(supabase, {
         composition: analysis.compositionText || composition,
         detectedPrice: parsedPrice,
         currency: detectedCurrency || null,
         category: body.category || null,
+        garmentType,
         primaryFiber: analysis.fibers[0]?.fiber,
         naturalFiberPercent: analysis.naturalPercent,
         brandSlug,
@@ -763,7 +776,7 @@ export async function POST(request: NextRequest) {
           composition: analysis.compositionText || composition,
           naturalPercent: analysis.naturalPercent,
           verdict: String(response.verdict || ""),
-          scanSource: upc ? "barcode" : "label",
+          scanSource: resolvedScanSource ?? (upc ? "barcode" : "label"),
           imageUrl: body.image_url || body.imageUrl || null,
           productUrl: body.product_url || body.url || null,
           upcCode: upc || null,
@@ -899,7 +912,10 @@ export async function POST(request: NextRequest) {
     const imageUrl = extracted.imageUrl || "";
     let category = extracted.category || resolveCategory(`${productName} ${extracted.garmentType || ""}`);
     const color = extracted.color || "";
-    const garmentType = extracted.garmentType || "";
+    const garmentType =
+      extracted.garmentType ||
+      detectGarmentType(productName, category) ||
+      "";
 
     const analysis = identifyProduct(extracted);
 
@@ -966,6 +982,7 @@ export async function POST(request: NextRequest) {
         detectedPrice: priceNum,
         currency: detectedCurrency || null,
         category: category || null,
+        garmentType: garmentType || detectGarmentType(productName, category),
         primaryFiber: alternativeFiber,
         naturalFiberPercent: effectivePercent,
         brandSlug,
@@ -1035,7 +1052,7 @@ export async function POST(request: NextRequest) {
 
     const productUrlForHistory = url ? normalizeProductUrl(String(url)) : "";
 
-    const finalScanSource = extracted.inputType || (image ? "image" : url ? "url" : "manual");
+    const finalScanSource = resolvedScanSource ?? extracted.inputType ?? (image ? "image" : url ? "url" : "manual");
 
     await recordFunnelEvent(supabase, {
       session_id: funnelSessionId,
