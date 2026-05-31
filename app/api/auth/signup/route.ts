@@ -11,6 +11,16 @@ import { snakeToCamel } from "../../../../lib/case-utils";
 export async function POST(request: NextRequest) {
   try {
     const sessionId = request.headers.get("x-session-id") || "";
+    const country =
+      request.headers.get("cf-ipcountry") ||
+      request.headers.get("x-vercel-ip-country") ||
+      "";
+    const EU_COUNTRIES = new Set([
+      "ES", "FR", "IT", "DE", "NL", "PT", "IE", "BE", "AT", "SE", "DK", "FI",
+      "PL", "CZ", "HU", "RO", "BG", "HR", "SK", "SI", "EE", "LV", "LT", "LU",
+      "MT", "CY", "GR",
+    ]);
+    const isEU = EU_COUNTRIES.has(String(country).toUpperCase());
     const {
       email,
       password,
@@ -19,6 +29,7 @@ export async function POST(request: NextRequest) {
       lastName,
       username: providedUsername,
       invitationCode,
+      gdprConsent,
     } = await request.json();
     if (!email || !password) {
       return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
@@ -77,6 +88,9 @@ export async function POST(request: NextRequest) {
             marketing_emails: true,
             first_name: resolvedFirst || null,
             last_name: resolvedLast || null,
+            gdpr_consent: isEU ? gdprConsent === true : gdprConsent !== false,
+            gdpr_consent_date: new Date().toISOString(),
+            gdpr_consent_version: "1.0",
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" }
