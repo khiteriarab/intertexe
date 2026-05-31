@@ -593,7 +593,22 @@ export async function POST(request: NextRequest) {
       email: emailBody,
       user_id: bodyUserId,
       scan_source: scanSourceBody,
+      garment_type: garmentTypeBody,
+      garmentType: garmentTypeCamel,
+      product_name: productNameBody,
     } = body;
+
+    const compositionTextRaw =
+      compositionText ??
+      (typeof body.composition === 'string' ? body.composition : null);
+
+    const resolvedGarmentType =
+      (typeof garmentTypeBody === 'string' && garmentTypeBody.trim()) ||
+      (typeof garmentTypeCamel === 'string' && garmentTypeCamel.trim()) ||
+      null;
+
+    const resolvedProductName =
+      typeof productNameBody === 'string' ? productNameBody.trim() : '';
 
     const resolvedScanSource =
       typeof scanSourceBody === "string" && scanSourceBody.trim()
@@ -613,7 +628,7 @@ export async function POST(request: NextRequest) {
     resolvedDevice = deviceType || device || null;
 
     const initialScanSource = resolvedScanSource
-      ?? (compositionText && String(compositionText).trim()
+      ?? (compositionTextRaw && String(compositionTextRaw).trim()
         ? "label"
         : barcode
           ? "barcode"
@@ -651,14 +666,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (compositionText && String(compositionText).trim()) {
-      const composition = String(compositionText).trim();
+    if (compositionTextRaw && String(compositionTextRaw).trim()) {
+      const composition = String(compositionTextRaw).trim();
       const extracted = {
         composition,
         inputType: "composition",
         confidence: "high",
         brandName: body.brand || "",
-        productName: body.product_name || "",
+        productName: resolvedProductName || body.product_name || "",
         fibers: [],
       };
       const analysis = identifyProduct(extracted);
@@ -682,10 +697,12 @@ export async function POST(request: NextRequest) {
 
       const brandName = extracted.brandName || "Unknown";
       const brandSlug = slugifyBrand(brandName);
-      const garmentType = detectGarmentType(
-        extracted.productName || body.product_name,
-        body.category
-      );
+      const garmentType =
+        resolvedGarmentType ||
+        detectGarmentType(
+          extracted.productName || resolvedProductName,
+          body.category
+        );
       const alternatives = await getSmartAlternatives(supabase, {
         composition: analysis.compositionText || composition,
         detectedPrice: parsedPrice,

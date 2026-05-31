@@ -178,6 +178,17 @@ export async function getSmartAlternatives(
   }
 
   if (garmentType) {
+    console.log('Garment type filter strict — widening price range but keeping garment type');
+    const widerPriceSameGarment = await runQuery(
+      80,
+      priceUSD * 0.3,
+      priceUSD * 3.0,
+      true
+    );
+    if (widerPriceSameGarment.length >= 3) {
+      return deduplicateById(widerPriceSameGarment).slice(0, 6);
+    }
+
     console.log('Garment type filter too strict — broadening without garment type');
     const broaderGarment = await runQuery(80, priceUSD * 0.3, priceUSD * 3.0, false);
     if (broaderGarment.length >= 3) {
