@@ -18,7 +18,7 @@ export type SmartAlternativesParams = {
 
 const GARMENT_TYPE_TERMS: Record<string, string[]> = {
   dress: ['dress', 'dresses', 'gown', 'midi dress', 'maxi dress', 'mini dress'],
-  top: ['top', 'blouse', 'shirt', 'tee', 'tank', 'camisole'],
+  top: ['top', 'blouse', 'shirt', 'tee', 'tank', 'camisole', 'henley'],
   knitwear: ['knit', 'sweater', 'pullover', 'cardigan', 'jumper'],
   trouser: ['trouser', 'pant', 'jean', 'legging', 'culotte'],
   skirt: ['skirt', 'midi skirt', 'maxi skirt', 'mini skirt'],
@@ -70,9 +70,16 @@ function parseProductPrice(raw: unknown): number | null {
   return null;
 }
 
+const GARMENT_TYPE_EXCLUSIONS: Record<string, string[]> = {
+  dress: [' pant', ' pants', ' trouser', ' skirt', ' short', ' shorts', ' jacket', ' coat'],
+  top: [' dress', ' pants', ' pant', ' skirt', ' jumpsuit'],
+};
+
 function matchesGarmentType(product: any, garmentType: string): boolean {
   const terms = GARMENT_TYPE_TERMS[garmentType.toLowerCase()] || [garmentType];
   const haystack = `${product.name || ''} ${product.category || ''} ${product.garment_type || ''}`.toLowerCase();
+  const exclusions = GARMENT_TYPE_EXCLUSIONS[garmentType.toLowerCase()] || [];
+  if (exclusions.some((term) => haystack.includes(term))) return false;
   return terms.some((term) => haystack.includes(term.toLowerCase()));
 }
 
@@ -271,17 +278,20 @@ export async function getSmartAlternatives(
         : deduplicateById([...widerFiltered, ...primaryFiltered]).slice(0, 6);
     }
 
-    console.log('Garment type filter too strict — broadening without garment type');
-    const broaderGarment = await runQuery(80, false, 180);
-    const broaderFiltered = finalizeAlternatives(broaderGarment, {
-      garmentType: null,
-      minPrice: priceUSD * 0.4,
-      maxPrice: priceUSD * 2.2,
+    console.log('Garment type filter still strict — widening price further with garment type');
+    const widestMin = priceUSD * 0.2;
+    const widestMax = priceUSD * 2.5;
+    const widestGarment = await runQuery(80, true, 240);
+    const widestFiltered = finalizeAlternatives(widestGarment, {
+      garmentType,
+      minPrice: widestMin,
+      maxPrice: widestMax,
       fiberHint,
+      requireGarmentType: true,
       anchorPrice: priceUSD,
     });
-    if (broaderFiltered.length >= 1) {
-      return broaderFiltered;
+    if (widestFiltered.length >= 1) {
+      return widestFiltered;
     }
   }
 
