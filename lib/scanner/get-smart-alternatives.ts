@@ -295,25 +295,34 @@ export async function getSmartAlternatives(
     }
   }
 
-  console.log('Price filter too strict — broadening range');
-  const broaderMin = priceUSD * 0.25;
-  const broaderMax = priceUSD * 2.5;
-  const broader = await runQuery(80, false, 200);
-  const broaderFiltered = finalizeAlternatives(broader, {
-    garmentType: null,
-    minPrice: broaderMin,
-    maxPrice: broaderMax,
-    fiberHint,
-    anchorPrice: priceUSD,
-  });
-  if (broaderFiltered.length >= 1) {
-    return broaderFiltered;
+  if (!garmentType) {
+    console.log('Price filter too strict — broadening range');
+    const broaderMin = priceUSD * 0.25;
+    const broaderMax = priceUSD * 2.5;
+    const broader = await runQuery(80, false, 200);
+    const broaderFiltered = finalizeAlternatives(broader, {
+      garmentType: null,
+      minPrice: broaderMin,
+      maxPrice: broaderMax,
+      fiberHint,
+      anchorPrice: priceUSD,
+    });
+    if (broaderFiltered.length >= 1) {
+      return broaderFiltered;
+    }
   }
 
-  const { data: fallback } = await scannerCatalogQuery(supabase)
+  let fallbackQuery = scannerCatalogQuery(supabase)
     .eq('region', resolvedRegion)
     .gte('natural_fiber_percent', 80)
-    .not('image_url', 'is', null)
+    .not('image_url', 'is', null);
+  if (garmentType) {
+    fallbackQuery = fallbackQuery.or(garmentTypeOrFilter(garmentType));
+  }
+  if (fiberHint) {
+    fallbackQuery = fallbackQuery.ilike('composition', `%${fiberHint}%`);
+  }
+  const { data: fallback } = await fallbackQuery
     .order('natural_fiber_percent', { ascending: false })
     .limit(200);
 
