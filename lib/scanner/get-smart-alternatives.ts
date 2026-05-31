@@ -29,10 +29,7 @@ const GARMENT_TYPE_TERMS: Record<string, string[]> = {
 function garmentTypeOrFilter(garmentType: string): string {
   const terms = GARMENT_TYPE_TERMS[garmentType.toLowerCase()] || [garmentType];
   return terms
-    .map(
-      (term) =>
-        `name.ilike.%${term}%,category.ilike.%${term}%,garment_type.ilike.%${term}%`
-    )
+    .map((term) => `name.ilike.%${term}%,category.ilike.%${term}%`)
     .join(',');
 }
 
@@ -77,7 +74,7 @@ const GARMENT_TYPE_EXCLUSIONS: Record<string, string[]> = {
 
 function matchesGarmentType(product: any, garmentType: string): boolean {
   const terms = GARMENT_TYPE_TERMS[garmentType.toLowerCase()] || [garmentType];
-  const haystack = `${product.name || ''} ${product.category || ''} ${product.garment_type || ''}`.toLowerCase();
+  const haystack = `${product.name || ''} ${product.category || ''}`.toLowerCase();
   const exclusions = GARMENT_TYPE_EXCLUSIONS[garmentType.toLowerCase()] || [];
   if (exclusions.some((term) => haystack.includes(term))) return false;
   return terms.some((term) => haystack.includes(term.toLowerCase()));
