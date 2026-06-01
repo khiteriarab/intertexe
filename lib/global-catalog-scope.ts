@@ -1,6 +1,8 @@
 /**
  * Global women's apparel scope — applied to every live_products_apparel PostgREST query.
- * Mirrors supabase view guards + iOS ConsumerCatalogFilters.
+ * Mirrors supabase view guards + iOS WomensCatalogGuard.
+ *
+ * Filters must run after `.select()` (PostgREST builder from `.from()` alone has no `.not()`).
  */
 
 export const EXCLUDED_GENDER_SCOPES = ["men", "male", "mens", "boys"] as const;
@@ -40,7 +42,12 @@ export function applyGlobalCatalogScope<T extends { not: (...args: any[]) => T }
   return q;
 }
 
-/** Start a scoped `live_products_apparel` query (use instead of `.from("live_products_apparel")`). */
-export function liveProductsApparelFrom(supabase: { from: (table: string) => any }) {
-  return applyGlobalCatalogScope(supabase.from("live_products_apparel"));
+/** Start a scoped `live_products_apparel` query — call `.select(...)` then chain filters. */
+export function liveProductsApparelFrom(supabase: { from: (table: string) => { select: (...args: any[]) => any } }) {
+  const table = supabase.from("live_products_apparel");
+  return {
+    select(columns?: string, options?: Record<string, unknown>) {
+      return applyGlobalCatalogScope(table.select(columns ?? "*", options));
+    },
+  };
 }
