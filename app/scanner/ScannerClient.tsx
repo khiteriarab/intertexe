@@ -7,7 +7,8 @@ import { useProductFavorites } from "../hooks/use-product-favorites";
 import { trackScanStart, trackScanComplete, trackScanError, trackAffiliateClick } from "../../lib/analytics";
 import { detectDevice } from "../../lib/device-detection";
 import { getOrCreateSessionId } from "../../lib/session";
-import { scoreColor, getVerdictMessage, getVerdictLabel, FIRST_SCAN_FOOTNOTE, parsePriceNumber } from "../../lib/scanner-copy";
+import { scoreColor, FIRST_SCAN_FOOTNOTE, parsePriceNumber } from "../../lib/scanner-copy";
+import { ScanResultEditorial } from "./ScanResultEditorial";
 import { QRCodeSVG } from "qrcode.react";
 
 type FiberEntry = { fiber: string; percent: number; isNatural: boolean; classification?: string };
@@ -908,252 +909,81 @@ export default function ScannerClient() {
 
       {result && (() => {
         const pct = result.naturalPercent;
-        const isGreat = pct >= 70;
-        const hasImage = !!result.imageUrl;
-        const hasQualityScore = typeof result.qualityScore === "number" && result.qualityScore > 0;
+        const editorialFibers = result.fiberBreakdown.map((f) => ({
+          fiber: f.fiber,
+          percent: f.percent,
+          isNatural: f.isNatural ?? f.classification === "natural",
+        }));
+        const priceContext =
+          result.tagInfo.price && pct < 80
+            ? `Around ${result.tagInfo.price} · verified natural fiber`
+            : undefined;
 
         return (
-          <div className="pt-6 md:pt-10 pb-8">
-            <button onClick={reset} className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors mb-6" data-testid="button-scan-again" style={{ borderRadius: 0 }}>
-              <ChevronLeft className="w-3.5 h-3.5" /> SCAN ANOTHER ITEM
-            </button>
-
-            {(pct > 0 || result.tagInfo.composition) && (
-              <div className="mb-8">
-                <div className="flex items-end gap-1 mb-2">
-                  <span className="font-extralight" style={{ fontSize: "88px", lineHeight: 1, color: scoreColor(pct) }}>{pct}</span>
-                  <span className="font-extralight mb-4" style={{ fontSize: "32px", color: scoreColor(pct) }}>%</span>
-                  <span className="text-xs tracking-widest text-gray-400 mb-6 ml-2" style={{ letterSpacing: "0.2em" }}>{getVerdictLabel(pct)}</span>
-                </div>
-                <p className="text-sm font-light text-gray-700 mb-6 leading-relaxed">
-                  {result.verdictMessage || getVerdictMessage(pct)}
-                </p>
-              </div>
-            )}
-
-            {result.needsCompositionMessage && (
-              <p className="text-sm font-light text-gray-600 mb-6 leading-relaxed border-l-2 border-gray-200 pl-4">
-                {result.needsCompositionMessage}
-              </p>
-            )}
-
-            <div className={`mb-6 ${hasImage ? "flex gap-5" : ""}`}>
-              {hasImage && (
-                <div className="w-28 md:w-40 flex-shrink-0">
-                  <div className="aspect-[3/4] bg-[#f0f0ee] relative overflow-hidden">
-                    <img
-                      src={result.imageUrl}
-                      alt={result.tagInfo.productName || result.tagInfo.brandName}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      data-testid="img-scanned-product"
-                    />
-                    <div className="absolute top-2 left-2">
-                      <span className={`flex items-center gap-1 px-1.5 py-0.5 text-[8px] font-bold backdrop-blur-sm text-white ${pct >= 95 ? "bg-emerald-900/90" : pct >= 70 ? "bg-amber-700/90" : "bg-red-700/90"}`}>
-                        {pct}%
-                      </span>
-                    </div>
-                  </div>
-                  {scannedUrl && (
-                    <a href={scannedUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors" data-testid="link-original-product">
-                      <ExternalLink className="w-3 h-3" />
-                      <span>View original</span>
-                    </a>
-                  )}
-                </div>
-              )}
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-xl md:text-3xl font-serif mb-0.5" data-testid="text-result-brand">{result.tagInfo.brandName}</h2>
-                    {result.tagInfo.productName && <p className="text-[13px] text-muted-foreground" data-testid="text-result-product">{result.tagInfo.productName}</p>}
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {result.tagInfo.price && <span className="text-sm font-medium" data-testid="text-result-price">{result.tagInfo.price}</span>}
-                      {result.tagInfo.garmentType && (
-                        <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 uppercase tracking-[0.08em]">{result.tagInfo.garmentType}</span>
-                      )}
-                      {result.tagInfo.color && (
-                        <span className="text-[10px] px-2 py-0.5 bg-neutral-100 border border-neutral-200 capitalize">{result.tagInfo.color}</span>
-                      )}
-                      {result.tagInfo.confidence && (
-                        <span className={`text-[8px] px-1.5 py-0.5 uppercase tracking-[0.1em] font-medium ${
-                          result.tagInfo.confidence === "high" || result.tagInfo.confidence === "confirmed" ? "bg-emerald-50 text-emerald-700" :
-                          result.tagInfo.confidence === "medium" ? "bg-amber-50 text-amber-700" :
-                          "bg-neutral-100 text-muted-foreground"
-                        }`} data-testid="text-confidence">
-                          {result.tagInfo.confidence === "brand-average" ? "estimated" : result.tagInfo.confidence}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {!hasImage && <NaturalScoreRing percent={pct} />}
-                </div>
-              </div>
+          <div className="pt-6 md:pt-10 pb-8 -mx-4 md:-mx-6">
+            <div className="px-4 md:px-6">
+              <button onClick={reset} className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors mb-6" data-testid="button-scan-again" style={{ borderRadius: 0 }}>
+                <ChevronLeft className="w-3.5 h-3.5" /> SCAN ANOTHER ITEM
+              </button>
             </div>
 
             {showConfirmation && result.confirmationPrompt && (
-              <ConfirmationOverlay
-                prompt={result.confirmationPrompt}
-                category={result.category}
-                color={result.tagInfo.color || ""}
-                garmentType={result.tagInfo.garmentType || ""}
-                onConfirm={handleConfirm}
-                onCorrect={handleCorrections}
-              />
-            )}
-
-            <div className={`p-4 md:p-5 mb-6 ${isGreat ? "bg-emerald-50 border border-emerald-200" : pct > 0 ? "bg-red-50 border border-red-200" : "bg-neutral-50 border border-neutral-200"}`}>
-              <div className="flex items-start gap-3">
-                {isGreat ? (
-                  <ShieldCheck className="w-5 h-5 text-emerald-700 flex-shrink-0 mt-0.5" />
-                ) : pct > 0 ? (
-                  <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <Sparkles className="w-5 h-5 text-neutral-500 flex-shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <p className={`text-sm font-medium mb-1 ${isGreat ? "text-emerald-900" : pct > 0 ? "text-red-900" : "text-neutral-800"}`}>
-                    {isGreat
-                      ? (result.tagInfo.confidence === "brand-average" ? "Brand Catalog Estimate"
-                        : result.tagInfo.confidence === "inferred" ? "Natural Material Detected"
-                        : "Natural Fiber Verified")
-                      : pct > 0 ? "Synthetic Material Detected" : "Explore Natural Alternatives"}
-                  </p>
-                  <p className={`text-[12px] leading-relaxed ${isGreat ? "text-emerald-700" : pct > 0 ? "text-red-700" : "text-muted-foreground"}`} data-testid="text-verdict">
-                    {result.verdict}
-                  </p>
-                </div>
-                {hasImage && <NaturalScoreRing percent={pct} size={64} />}
-              </div>
-            </div>
-
-            {result.tagInfo.composition && (
-              <div className="mb-6">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">Fiber Analysis</p>
-                <p className="text-[13px] mb-4 font-medium" data-testid="text-result-composition">{result.tagInfo.composition}</p>
-                {result.fiberBreakdown.length > 0 && (
-                  <FiberBreakdownBar fibers={result.fiberBreakdown} />
-                )}
-                {hasQualityScore && (
-                  <div className="mt-4">
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5">Quality Score</p>
-                    <QualityScoreBar score={result.qualityScore!} />
-                  </div>
-                )}
+              <div className="px-4 md:px-6 mb-6">
+                <ConfirmationOverlay
+                  prompt={result.confirmationPrompt}
+                  category={result.category}
+                  color={result.tagInfo.color || ""}
+                  garmentType={result.tagInfo.garmentType || ""}
+                  onConfirm={handleConfirm}
+                  onCorrect={handleCorrections}
+                />
               </div>
             )}
 
-            {(result.tagInfo.madeIn || result.tagInfo.careInstructions || result.tagInfo.silhouette) && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-                {result.tagInfo.madeIn && (
-                  <div className="p-3 bg-neutral-50 border border-neutral-200">
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Made In</p>
-                    <p className="text-[13px]">{result.tagInfo.madeIn}</p>
-                  </div>
-                )}
-                {result.tagInfo.silhouette && (
-                  <div className="p-3 bg-neutral-50 border border-neutral-200">
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Silhouette</p>
-                    <p className="text-[13px] capitalize">{result.tagInfo.silhouette}</p>
-                  </div>
-                )}
-                {result.tagInfo.careInstructions && (
-                  <div className="p-3 bg-neutral-50 border border-neutral-200">
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Care</p>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">{result.tagInfo.careInstructions}</p>
-                  </div>
-                )}
+            <ScanResultEditorial
+              naturalPercent={pct}
+              imageUrl={result.imageUrl}
+              brandName={result.tagInfo.brandName}
+              productName={result.tagInfo.productName}
+              countryOfOrigin={result.tagInfo.madeIn}
+              care={result.tagInfo.careInstructions}
+              composition={result.tagInfo.composition}
+              fiberBreakdown={editorialFibers}
+              alternatives={result.betterAlternatives}
+              priceContext={priceContext}
+            />
+
+            {scannedUrl && result.imageUrl && (
+              <div className="px-6 py-3 border-b border-gray-100">
+                <a href={scannedUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors" data-testid="link-original-product">
+                  <ExternalLink className="w-3 h-3" />
+                  <span>View original listing</span>
+                </a>
               </div>
             )}
 
             {result.designerInfo && (
-              <Link href={`/designers/${result.designerInfo.slug}`} className="flex items-center justify-between p-3 bg-white border border-neutral-200 mb-6 hover:border-neutral-400 transition-colors" data-testid="link-brand-page">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 bg-neutral-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] font-serif font-bold">{result.designerInfo.name.charAt(0)}</span>
+              <div className="px-6 py-6 border-b border-gray-100">
+                <Link href={`/designers/${result.designerInfo.slug}`} className="flex items-center justify-between hover:opacity-80 transition-opacity" data-testid="link-brand-page">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] font-serif font-bold">{result.designerInfo.name.charAt(0)}</span>
+                    </div>
+                    <span className="text-[12px] font-medium truncate">{result.designerInfo.name}</span>
+                    {result.brandStats && (
+                      <span className={`px-1.5 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium ${ratingColor(result.brandStats.rating)}`} data-testid="text-brand-rating">
+                        {result.brandStats.rating}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-[12px] font-medium truncate">{result.designerInfo.name}</span>
-                  {result.brandStats && (
-                    <span className={`px-1.5 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium ${ratingColor(result.brandStats.rating)}`} data-testid="text-brand-rating">
-                      {result.brandStats.rating}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1 flex-shrink-0">
-                  View brand <ArrowRight className="w-3 h-3" />
-                </span>
-              </Link>
-            )}
-
-            {result.brandStats && (
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="p-3 bg-neutral-50 border border-neutral-200">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Avg Fiber</p>
-                  <p className="text-lg font-medium" data-testid="text-brand-avg-fiber">{result.brandStats.avgFiber}%</p>
-                </div>
-                <div className="p-3 bg-neutral-50 border border-neutral-200">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Rating</p>
-                  <p className="text-sm font-medium" data-testid="text-brand-rating-detail">{result.brandStats.rating}</p>
-                </div>
-                <div className="p-3 bg-neutral-50 border border-neutral-200">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">Products</p>
-                  <p className="text-lg font-medium" data-testid="text-brand-product-count">{result.brandStats.productCount}</p>
-                </div>
+                  <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1 flex-shrink-0">
+                    View brand <ArrowRight className="w-3 h-3" />
+                  </span>
+                </Link>
               </div>
             )}
 
-            {result.betterAlternatives.length > 0 && (
-              <div className="mb-8">
-                <div className="mb-4">
-                  <p className="text-sm font-medium">
-                    {isGreat ? "Similar Natural Fiber Pieces" : "Natural Fiber Alternatives"}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {isGreat
-                      ? "Similar pieces from verified brands — all 80%+ natural fiber"
-                      : `${result.betterAlternatives.length} alternatives from ${new Set(result.betterAlternatives.map((p: any) => p.brand_name || p.brandName)).size} different brands — all verified natural fiber`}
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                  {result.betterAlternatives.map((p: any, idx: number) => (
-                    <ScannerProductCard
-                      key={p.id}
-                      product={p}
-                      index={idx}
-                      currentScanPrice={currentScanPrice}
-                      scannedUPC={scannedUPC}
-                      onShopClick={handleAffiliateClick}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {result.products.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-medium">More from {result.tagInfo.brandName}</p>
-                  {result.designerInfo?.slug && (
-                    <Link href={`/designers/${result.designerInfo.slug}`} className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                      View all <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                  {result.products.slice(0, 8).map((p: any, idx: number) => (
-                    <ScannerProductCard
-                      key={p.id}
-                      product={p}
-                      index={idx}
-                      currentScanPrice={currentScanPrice}
-                      scannedUPC={scannedUPC}
-                      onShopClick={handleAffiliateClick}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
+            <div className="px-4 md:px-6">
             {result.isNewToDatabase && (
               <p className="text-xs text-gray-300 text-center pb-4" style={{ letterSpacing: "0.05em" }}>
                 {FIRST_SCAN_FOOTNOTE}
@@ -1185,11 +1015,12 @@ export default function ScannerClient() {
               </div>
             )}
 
-            <Link href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98] mb-8" data-testid="link-chat-from-results" style={{ borderRadius: 0 }}>
+            <Link href="/chat" className="flex items-center gap-3 p-4 bg-[#111] text-white hover:bg-neutral-900 transition-colors active:scale-[0.98] mb-8 mt-6" data-testid="link-chat-from-results" style={{ borderRadius: 0 }}>
               <MessageCircle className="w-4 h-4 flex-shrink-0" />
               <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.12em]">Ask Our AI About This Material</span>
               <ArrowRight className="w-3.5 h-3.5 text-white/40 ml-auto flex-shrink-0" />
             </Link>
+            </div>
           </div>
         );
       })()}
