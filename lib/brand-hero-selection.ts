@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { getBrandHeroImage } from "./brand-hero-images";
 import { pickBestEditorialImage } from "./editorial-image-score";
 
@@ -17,8 +18,8 @@ export async function fetchBrandTopProducts(
   brandSlug: string,
   limit = 10
 ): Promise<{ imageUrl: string; name: string }[]> {
-  const { data } = await supabase
-    .from("live_products_apparel")
+  const { data } = await liveProductsApparelFrom(supabase)
+    
     .select(PRODUCT_CARD_COLS)
     .eq("brand_slug", brandSlug)
     .not("image_url", "is", null)

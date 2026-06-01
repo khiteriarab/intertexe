@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { liveProductsApparelFrom } from "@/lib/global-catalog-scope";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
@@ -6,8 +7,8 @@ export async function POST(req: NextRequest) {
     const { brand_name, product_url } = await req.json();
     const supabase = createClient();
 
-    let query = supabase
-      .from("live_products_apparel")
+    let query = liveProductsApparelFrom(supabase)
+      
       .select(
         "id, name, brand_name, price, currency, url, image_url, natural_fiber_percent, composition"
       )

@@ -6,6 +6,7 @@
 export const MENS_ONLY_BRAND_SLUGS = new Set([
   "orlebar-brown",
   "orlebarbrown",
+  "brunello-cucinelli",
   "brunello-cucinelli-men",
   "canali",
   "ermenegildo-zegna-mens",
@@ -58,6 +59,7 @@ export function isMensCatalogRow(row: {
   if (MENS_TEXT.test(text)) return true;
   if (MENS_GARMENT.test(text)) return true;
   if (UNISEX_POLO.test(text) && !WOMENS_OVERRIDE.test(text)) return true;
+  if (slug === "the-attico" && name.includes("polo") && !name.includes("women")) return true;
 
   // Dual-gender brands (The Attico, etc.) — men's shirts often titled generically
   if (/\b(cotton\s+)?poplin\s+shirt\b/i.test(name) && !WOMENS_OVERRIDE.test(text)) {

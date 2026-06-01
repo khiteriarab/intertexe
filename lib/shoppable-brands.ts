@@ -3,6 +3,7 @@
  * Uses catalog_brand_directory RPC when fast; full paginated scan when RPC times out.
  */
 import { sanitizeBrandName } from "./brand-display";
+import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { getServerSupabase } from "./supabase-service-client";
 import { logSupabaseTiming } from "./supabase-timing";
 
@@ -107,8 +108,8 @@ async function fetchViaPaginatedScan(
   let offset = 0;
 
   for (let page = 0; page < MAX_SCAN_PAGES; page++) {
-    const { data, error } = await supabase
-      .from("live_products_apparel")
+    const { data, error } = await liveProductsApparelFrom(supabase)
+      
       .select("brand_slug, brand_name, natural_fiber_percent, image_url, price")
       .gte("natural_fiber_percent", 80)
       .not("brand_slug", "is", null)

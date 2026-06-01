@@ -2,6 +2,7 @@
  * Shared catalog stats for web + iOS parity (live_products_apparel gate).
  */
 import { fetchShoppableBrandCount } from "./shoppable-brands";
+import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { getServerSupabase } from "./supabase-service-client";
 
 export type PlatformStats = {
@@ -23,8 +24,8 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
   let brandCount = 0;
 
   try {
-    const { count, error } = await supabase
-      .from("live_products_apparel")
+    const { count, error } = await liveProductsApparelFrom(supabase)
+      
       .select("*", { count: "exact", head: true });
     if (!error && count != null && count > 0) {
       productCount = count;

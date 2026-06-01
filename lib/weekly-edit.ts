@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { getCollectionForWeek } from "./collection-rotation";
 import { getFiberFactForWeek } from "./fiber-facts";
 
@@ -24,8 +25,8 @@ export async function selectWeeklyEditProducts(
   supabase: SupabaseClient,
   weekNumber: number
 ): Promise<WeeklyEditProduct[]> {
-  const { data: products, error } = await supabase
-    .from("live_products_apparel")
+  const { data: products, error } = await liveProductsApparelFrom(supabase)
+    
     .select(
       "id, name, brand_name, price, currency, image_url, url, natural_fiber_percent, composition"
     )

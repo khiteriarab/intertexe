@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { liveProductsApparelFrom } from "@/lib/global-catalog-scope";
 import Link from "next/link";
 import { getServerSupabase } from "../../lib/supabase-service-client";
 import { SearchInput } from "./SearchInput";
@@ -28,8 +29,8 @@ export default async function SearchPage({
 
   if (supabase && query.length >= 2) {
     const safe = query.replace(/[%_]/g, "");
-    const { data: productResults } = await supabase
-      .from("live_products_apparel")
+    const { data: productResults } = await liveProductsApparelFrom(supabase)
+      
       .select("id, name, brand_name, brand_slug, price, image_url, composition, natural_fiber_percent")
       .or(`name.ilike.%${safe}%,brand_name.ilike.%${safe}%,composition.ilike.%${safe}%`)
       .limit(48);

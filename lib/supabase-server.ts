@@ -50,6 +50,7 @@ import {
   mergeProductsWithRegionFallback,
 } from "./catalog-region-fallback";
 import { normalizeCatalogRegion } from "./shipping-regions";
+import { liveProductsApparelFrom } from "./global-catalog-scope";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
@@ -291,8 +292,8 @@ async function countLiveProductsApparel(
 ): Promise<number> {
   const region = opts.region || "us";
   const minNfp = opts.minNfp ?? 80;
-  let q = supabase
-    .from("live_products_apparel")
+  let q = liveProductsApparelFrom(supabase)
+    
     .select("*", { count: "exact", head: true })
     .eq("region", region)
     .gte("natural_fiber_percent", minNfp);
@@ -353,8 +354,8 @@ export async function fetchCatalogProductsByFiber(opts: {
   const t0 = Date.now();
   let rows: any[] = [];
 
-  let query = supabase
-    .from("live_products_apparel")
+  let query = liveProductsApparelFrom(supabase)
+    
     .select("*")
     .eq("region", "us")
     .gte("natural_fiber_percent", 80);
@@ -420,8 +421,8 @@ async function catalogListLiveFallback(
   let dbOffset = 0;
 
   while (winners.length < need && dbOffset < 50000) {
-    let q = supabase
-      .from("live_products_apparel")
+    let q = liveProductsApparelFrom(supabase)
+      
       .select("*")
       .gte("natural_fiber_percent", opts.minNfp ?? 80);
     if (preferred) q = q.eq("region", preferred);
@@ -552,8 +553,8 @@ export async function fetchSilkEditProducts(
     rows = (data || []) as any[];
     if (error || rows.length === 0) {
       const tLive = Date.now();
-      const { data: fb } = await supabase
-        .from("live_products_apparel")
+      const { data: fb } = await liveProductsApparelFrom(supabase)
+        
         .select("*")
         .ilike("composition", "%silk%")
         .gte("natural_fiber_percent", 80)
@@ -564,8 +565,8 @@ export async function fetchSilkEditProducts(
     }
   } else {
     const tLive = Date.now();
-    const { data: fb } = await supabase
-      .from("live_products_apparel")
+    const { data: fb } = await liveProductsApparelFrom(supabase)
+      
       .select("*")
       .ilike("composition", "%silk%")
       .gte("natural_fiber_percent", 80)
@@ -609,8 +610,8 @@ export async function fetchVacationShopProducts(
     rows = (data || []) as any[];
     if (error || rows.length === 0) {
       const tLive = Date.now();
-      const { data: fb } = await supabase
-        .from("live_products_apparel")
+      const { data: fb } = await liveProductsApparelFrom(supabase)
+        
         .select("*")
         .or("composition.ilike.%linen%,composition.ilike.%cotton%,composition.ilike.%silk%")
         .gte("natural_fiber_percent", 80)
@@ -621,8 +622,8 @@ export async function fetchVacationShopProducts(
     }
   } else {
     const tLive = Date.now();
-    const { data: fb } = await supabase
-      .from("live_products_apparel")
+    const { data: fb } = await liveProductsApparelFrom(supabase)
+      
       .select("*")
       .or("composition.ilike.%linen%,composition.ilike.%cotton%,composition.ilike.%silk%")
       .gte("natural_fiber_percent", 80)
@@ -1171,11 +1172,11 @@ export async function fetchProductById(id: string): Promise<Product | null> {
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   if (isNumeric) {
-    query = supabase.from("live_products_apparel").select("*").eq("product_id", id);
+    query = liveProductsApparelFrom(supabase).select("*").eq("product_id", id);
   } else if (isUUID) {
-    query = supabase.from("live_products_apparel").select("*").eq("id", id);
+    query = liveProductsApparelFrom(supabase).select("*").eq("id", id);
   } else {
-    query = supabase.from("live_products_apparel").select("*").eq("id", id);
+    query = liveProductsApparelFrom(supabase).select("*").eq("id", id);
   }
 
   let { data, error } = await query;
@@ -1275,8 +1276,8 @@ export async function fetchProductsByBrand(
   const region = (opts?.region || "us").toLowerCase();
 
   const tLive = Date.now();
-  const { data, error } = await supabase
-    .from("live_products_apparel")
+  const { data, error } = await liveProductsApparelFrom(supabase)
+    
     .select("*")
     .eq("region", region)
     .eq("brand_slug", canonicalSlug)
@@ -1329,7 +1330,7 @@ export async function fetchAllProducts(limit = 200, offset = 0, category?: strin
     })) || [];
 
   if (rows.length === 0) {
-    let fb = supabase.from("live_products_apparel").select("*").gte("natural_fiber_percent", 80);
+    let fb = liveProductsApparelFrom(supabase).select("*").gte("natural_fiber_percent", 80);
     if (category) fb = fb.eq("category", category);
     const { data } = await fb
       .order("natural_fiber_percent", { ascending: false })
@@ -1343,8 +1344,8 @@ export async function fetchAllProducts(limit = 200, offset = 0, category?: strin
 export async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase || ids.length === 0) return [];
-  const { data, error } = await supabase
-    .from("live_products_apparel")
+  const { data, error } = await liveProductsApparelFrom(supabase)
+    
     .select("*")
     .in("id", ids);
   if (error || !data || data.length === 0) {
@@ -1392,8 +1393,8 @@ export async function fetchProductCount(): Promise<number> {
   });
   if (fromRpc != null) return fromRpc;
 
-  const { count, error } = await supabase
-    .from("live_products_apparel")
+  const { count, error } = await liveProductsApparelFrom(supabase)
+    
     .select("id", { count: "exact", head: true })
     .gte("natural_fiber_percent", 80);
   if (!error && count != null) return count;
@@ -1445,8 +1446,8 @@ export async function fetchAllProductIds(): Promise<string[]> {
   const pageSize = 1000;
 
   while (true) {
-    const { data, error } = await supabase
-      .from("live_products_apparel")
+    const { data, error } = await liveProductsApparelFrom(supabase)
+      
       .select("id")
       .range(offset, offset + pageSize - 1);
 
@@ -1476,8 +1477,8 @@ export async function fetchRelatedProducts(
 ): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("live_products_apparel")
+  const { data, error } = await liveProductsApparelFrom(supabase)
+    
     .select("*")
     .eq("brand_slug", product.brandSlug)
     .neq("id", product.id)
@@ -1524,8 +1525,8 @@ export async function fetchProductsByFiber(
   }
   if (rows.length === 0) {
     const tLive = Date.now();
-    const { data } = await supabase
-      .from("live_products_apparel")
+    const { data } = await liveProductsApparelFrom(supabase)
+      
       .select("*")
       .ilike("composition", `%${fiber}%`)
       .gte("natural_fiber_percent", 80)
@@ -1585,8 +1586,8 @@ export async function fetchRecommendedProducts(
   const supabase = getServerSupabase();
   if (!supabase) return [];
 
-  let query = supabase
-    .from("live_products_apparel")
+  let query = liveProductsApparelFrom(supabase)
+    
     .select("id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category")
     .not("image_url", "is", null)
     .gte("natural_fiber_percent", 80)
@@ -1658,8 +1659,8 @@ async function fetchShopLiveApparelAllRows(
   let fetchOffset = 0;
   while (allRows.length < SHOP_PRICE_SORT_MAX_ROWS) {
     let q2 = applyCatalogFilter(
-      supabase
-        .from("live_products_apparel")
+      liveProductsApparelFrom(supabase)
+        
         .select(
           "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, region, created_at"
         )
@@ -2076,8 +2077,8 @@ export async function fetchMoreFromBrand(
     })) || [];
 
   if (rows.length === 0) {
-    const { data, error } = await supabase
-      .from("live_products_apparel")
+    const { data, error } = await liveProductsApparelFrom(supabase)
+      
       .select("*")
       .eq("brand_slug", slug)
       .gte("natural_fiber_percent", 80)
@@ -2129,8 +2130,8 @@ export async function fetchMoreInFiber(
   const lower = composition.toLowerCase();
   const primaryFiber = fibers.find((f) => lower.includes(f));
   if (!primaryFiber) return [];
-  const { data, error } = await supabase
-    .from("live_products_apparel")
+  const { data, error } = await liveProductsApparelFrom(supabase)
+    
     .select(PRODUCT_CARD_COLS)
     .neq("id", productId)
     .ilike("composition", `%${primaryFiber}%`)
@@ -2154,8 +2155,8 @@ export async function fetchMoreAtPrice(
   if (!numPrice || numPrice <= 0) return [];
   const low = numPrice * 0.8;
   const high = numPrice * 1.2;
-  const { data, error } = await supabase
-    .from("live_products_apparel")
+  const { data, error } = await liveProductsApparelFrom(supabase)
+    
     .select(PRODUCT_CARD_COLS)
     .neq("id", productId)
     .gte("natural_fiber_percent", 80)
@@ -2243,8 +2244,8 @@ export async function fetchSaleProducts(options: {
           });
           let total = Number(countRaw ?? 0);
           if (countErr || total <= 0) {
-            let liveCountQ = supabase
-              .from("live_products_apparel")
+            let liveCountQ = liveProductsApparelFrom(supabase)
+              
               .select("id", { count: "exact", head: true })
               .eq("is_sale", true)
               .eq("region", dedupePreferred)
@@ -2272,8 +2273,8 @@ export async function fetchSaleProducts(options: {
       const feedProducts = await fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: feedCap });
       if (feedProducts.length > 0) {
         const ids = feedProducts.map((p) => p.id).filter(Boolean);
-        const { data: liveRows } = await supabase
-          .from("live_products_apparel")
+        const { data: liveRows } = await liveProductsApparelFrom(supabase)
+          
           .select(PRODUCT_CARD_COLS)
           .in("id", ids);
         const liveById = new Map((liveRows || []).map((r: any) => [String(r.id), r]));
@@ -2303,8 +2304,8 @@ export async function fetchSaleProducts(options: {
   let qOffset = 0;
   while (true) {
     if (allRows.length >= scanCap) break;
-    let q = supabase
-      .from("live_products_apparel")
+    let q = liveProductsApparelFrom(supabase)
+      
       .select("*")
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
@@ -2325,8 +2326,8 @@ export async function fetchSaleProducts(options: {
   }
 
   if (useMerchFeedPreview && allRows.length < scanCap) {
-    const { data: flagged } = await supabase
-      .from("live_products_apparel")
+    const { data: flagged } = await liveProductsApparelFrom(supabase)
+      
       .select("*")
       .eq("is_sale", true)
       .gte("natural_fiber_percent", 80)

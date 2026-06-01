@@ -3,6 +3,7 @@
  * Source: homepage_merch_rails registry + homepage_feed_items cache + homepage_feed_meta counts.
  */
 import { getServerSupabase, catalogRegionsFromMarket, type Product } from "./supabase-server";
+import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { sanitizeBrandName } from "./brand-display";
 import { catalogDedupeKey } from "./catalog-rules";
 import { displayNaturalFiberPercent } from "./display-natural-fiber";
@@ -292,8 +293,8 @@ async function fetchMerchRailLiveFallback(
         ? ["%cotton%", "%organic cotton%"]
         : [`%${fiber}%`];
 
-  let q = supabase
-    .from("live_products_apparel")
+  let q = liveProductsApparelFrom(supabase)
+    
     .select(
       "id, product_id, brand_slug, brand_name, name, url, image_url, price, composition, natural_fiber_percent, category, is_sale, region, material_metadata"
     )
