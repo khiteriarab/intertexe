@@ -1712,6 +1712,45 @@ async function fetchShopLiveApparelAllRows(
   return allRows.slice(0, SHOP_PRICE_SORT_MAX_ROWS);
 }
 
+async function shopLivePageFallback(
+  supabase: UntypedSupabase,
+  opts: {
+    market?: string;
+    rpcFiber: string | null;
+    rpcCategory: string | null;
+    rpcBrand: string | null;
+    searchTerms: string[];
+    limit: number;
+    offset: number;
+  }
+): Promise<any[]> {
+  let q = applyCatalogFilter(
+    liveProductsApparelFrom(supabase)
+      .select("*")
+      .gte("natural_fiber_percent", 80),
+    opts.market
+  );
+  q = q.not("image_url", "is", null).not("price", "is", null);
+  q = q.neq("price", "").neq("price", "$0.00").neq("price", "0");
+  if (opts.searchTerms.length > 0) {
+    const orClauses = opts.searchTerms.flatMap((t) => [
+      `name.ilike.%${t}%`,
+      `brand_name.ilike.%${t}%`,
+      `composition.ilike.%${t}%`,
+    ]);
+    q = q.or(orClauses.join(","));
+  }
+  if (opts.rpcFiber) q = q.ilike("composition", `%${opts.rpcFiber}%`);
+  if (opts.rpcCategory) q = q.eq("category", opts.rpcCategory);
+  if (opts.rpcBrand) q = q.eq("brand_slug", opts.rpcBrand);
+  const { data, error } = await q
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
+    .range(opts.offset, opts.offset + opts.limit - 1);
+  if (error || !data) return [];
+  return data;
+}
+
 function shopCategoriesList(category?: string, categories?: string[]): string[] {
   if (categories?.length) return categories.filter((c) => c && c !== "all");
   if (category && category !== "all") return [category];
@@ -1941,16 +1980,27 @@ export async function fetchShopProducts(options: {
       })) || [];
 
     if (rows.length === 0) {
-      rows = await catalogListLiveFallback(supabase, {
-        fiber: rpcFiber,
-        category: rpcCategory,
-        search: searchRpc,
+      rows = await shopLivePageFallback(supabase, {
+        market,
+        rpcFiber,
+        rpcCategory,
+        rpcBrand,
+        searchTerms,
         limit,
         offset: cappedOffset,
-        minNfp: 80,
-        preferred,
-        fallback,
       });
+      if (rows.length === 0) {
+        rows = await catalogListLiveFallback(supabase, {
+          fiber: rpcFiber,
+          category: rpcCategory,
+          search: searchRpc,
+          limit,
+          offset: cappedOffset,
+          minNfp: 80,
+          preferred,
+          fallback,
+        });
+      }
     }
 
     let mapped = dedupeCatalogProducts(mapCatalogRowsToProducts(rows));

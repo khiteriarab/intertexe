@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
       market: market && market !== "all" ? market : undefined,
       limit,
       offset,
-      useMerchFeedPreview: false,
+      useMerchFeedPreview: offset === 0,
+      maxSourceRows: offset === 0 ? 120 : undefined,
       skipTotal: skipCount,
     });
     const total = result.total;

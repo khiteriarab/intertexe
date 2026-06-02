@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
   /** Small first-page catalog previews skip the expensive count RPC. */
   const skipCount =
     sp.get("skipCount") === "1" ||
-    (limit <= 24 && offset === 0 && !search?.trim());
+    (limit <= 48 && offset === 0);
 
   try {
     if (mode === "brand") {
