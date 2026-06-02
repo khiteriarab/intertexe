@@ -212,40 +212,51 @@ async function rpcCatalogList(
   }
 ): Promise<any[] | null> {
   const tRpc = Date.now();
-  const { data, error } = await supabase.rpc("catalog_list", {
-    p_preferred_region: args.preferred,
-    p_fallback_region: args.fallback,
-    p_fiber: args.fiber && String(args.fiber).trim() ? args.fiber : null,
-    p_category: args.category && String(args.category).trim() ? args.category : null,
-    p_brand_slug: args.brandSlug && String(args.brandSlug).trim() ? args.brandSlug : null,
-    p_search: args.search && String(args.search).trim() ? args.search : null,
-    p_min_nfp: args.minNfp ?? 80,
-    p_limit: args.limit,
-    p_offset: args.offset,
-  });
-  logSupabaseTiming(
-    `rpc catalog_list fiber=${args.fiber ?? "-"} cat=${args.category ?? "-"} brand=${args.brandSlug ?? "-"}`,
-    tRpc,
-    error ? `error:${error.message}` : `rows:${(data || []).length}`
-  );
-  if (error) {
-    if (isCatalogTimeoutError(error)) {
-      console.warn("catalog_list RPC timed out, using live_products_apparel fallback");
+  try {
+    const { data, error } = await supabase.rpc("catalog_list", {
+      p_preferred_region: args.preferred,
+      p_fallback_region: args.fallback,
+      p_fiber: args.fiber && String(args.fiber).trim() ? args.fiber : null,
+      p_category: args.category && String(args.category).trim() ? args.category : null,
+      p_brand_slug: args.brandSlug && String(args.brandSlug).trim() ? args.brandSlug : null,
+      p_search: args.search && String(args.search).trim() ? args.search : null,
+      p_min_nfp: args.minNfp ?? 80,
+      p_limit: args.limit,
+      p_offset: args.offset,
+    });
+    logSupabaseTiming(
+      `rpc catalog_list fiber=${args.fiber ?? "-"} cat=${args.category ?? "-"} brand=${args.brandSlug ?? "-"}`,
+      tRpc,
+      error ? `error:${error.message}` : `rows:${(data || []).length}`
+    );
+    if (error) {
+      if (isCatalogTimeoutError(error)) {
+        console.warn("catalog_list RPC timed out, using live_products_apparel fallback");
+        return null;
+      }
+      console.warn("catalog_list RPC failed, using live_products_apparel fallback:", error.message);
       return null;
     }
-    console.warn("catalog_list RPC failed, using live_products_apparel fallback:", error.message);
+    const rows = (data || []) as any[];
+    if (rows.length === 0) return rows;
+    const deduped = dedupeCatalogRows(rows, args.preferred, args.fallback);
+    const seen = new Set<string>();
+    return deduped.filter((row) => {
+      const key = catalogDedupeKey(row);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logSupabaseTiming(
+      `rpc catalog_list fiber=${args.fiber ?? "-"} cat=${args.category ?? "-"} brand=${args.brandSlug ?? "-"}`,
+      tRpc,
+      `threw:${message}`
+    );
+    console.warn("catalog_list RPC threw, using live_products_apparel fallback:", message);
     return null;
   }
-  const rows = (data || []) as any[];
-  if (rows.length === 0) return rows;
-  const deduped = dedupeCatalogRows(rows, args.preferred, args.fallback);
-  const seen = new Set<string>();
-  return deduped.filter((row) => {
-    const key = catalogDedupeKey(row);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 }
 
 async function rpcCatalogListCount(
@@ -261,23 +272,34 @@ async function rpcCatalogListCount(
   }
 ): Promise<number | null> {
   const tRpc = Date.now();
-  const { data, error } = await supabase.rpc("catalog_list_count", {
-    p_preferred_region: args.preferred,
-    p_fallback_region: args.fallback,
-    p_fiber: args.fiber && String(args.fiber).trim() ? args.fiber : null,
-    p_category: args.category && String(args.category).trim() ? args.category : null,
-    p_brand_slug: args.brandSlug && String(args.brandSlug).trim() ? args.brandSlug : null,
-    p_search: args.search && String(args.search).trim() ? args.search : null,
-    p_min_nfp: args.minNfp ?? 80,
-  });
-  logSupabaseTiming(
-    `rpc catalog_list_count fiber=${args.fiber ?? "-"} brand=${args.brandSlug ?? "-"}`,
-    tRpc,
-    error ? `error:${error.message}` : `count:${data}`
-  );
-  if (error) return null;
-  const n = typeof data === "number" ? data : Number(data);
-  return Number.isFinite(n) ? n : null;
+  try {
+    const { data, error } = await supabase.rpc("catalog_list_count", {
+      p_preferred_region: args.preferred,
+      p_fallback_region: args.fallback,
+      p_fiber: args.fiber && String(args.fiber).trim() ? args.fiber : null,
+      p_category: args.category && String(args.category).trim() ? args.category : null,
+      p_brand_slug: args.brandSlug && String(args.brandSlug).trim() ? args.brandSlug : null,
+      p_search: args.search && String(args.search).trim() ? args.search : null,
+      p_min_nfp: args.minNfp ?? 80,
+    });
+    logSupabaseTiming(
+      `rpc catalog_list_count fiber=${args.fiber ?? "-"} brand=${args.brandSlug ?? "-"}`,
+      tRpc,
+      error ? `error:${error.message}` : `count:${data}`
+    );
+    if (error) return null;
+    const n = typeof data === "number" ? data : Number(data);
+    return Number.isFinite(n) ? n : null;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logSupabaseTiming(
+      `rpc catalog_list_count fiber=${args.fiber ?? "-"} brand=${args.brandSlug ?? "-"}`,
+      tRpc,
+      `threw:${message}`
+    );
+    console.warn("catalog_list_count RPC threw, using fallback:", message);
+    return null;
+  }
 }
 
 /** Fast exact count on live_products_apparel — production-safe when catalog_list_count RPC is missing. */

@@ -18,6 +18,7 @@ import {
 } from "../../../lib/catalog-fetch-limits";
 
 export const revalidate = 300;
+const COLLECTION_FALLBACK_MIN_PRODUCTS = 3;
 
 const PRODUCT_CACHE_HEADERS = {
   "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=120",
@@ -106,6 +107,60 @@ function catalogMarketFromParams(sp: URLSearchParams): string | undefined {
   return market && market !== "all" ? market : undefined;
 }
 
+async function fetchCollectionWithFallback(slug: string, limit: number, offset: number, skipTotal: boolean) {
+  const data = await fetchCollectionPageData(slug, {
+    limit,
+    offset,
+    skipTotal,
+  });
+  if (!data) return null;
+  if (data.products.length >= COLLECTION_FALLBACK_MIN_PRODUCTS) return data;
+
+  let fallbackProducts: Awaited<ReturnType<typeof fetchCatalogProductsByFiber>> = [];
+  if (slug === "tailoring") {
+    const fallback = await fetchShopProducts({
+      category: "jackets",
+      catalogRegion: "us",
+      sort: "new",
+      limit,
+      offset: 0,
+      skipTotal: true,
+    });
+    fallbackProducts = fallback.products;
+  } else if (slug === "summer-in-the-city") {
+    fallbackProducts = await fetchCatalogProductsByFiber({
+      fiber: "linen",
+      limit,
+      offset: 0,
+    });
+  } else if (slug === "white-edit") {
+    const fallback = await fetchShopProducts({
+      search: "white",
+      catalogRegion: "us",
+      sort: "new",
+      limit,
+      offset: 0,
+      skipTotal: true,
+    });
+    fallbackProducts = fallback.products;
+  }
+
+  if (fallbackProducts.length === 0) return data;
+  const merged = [...data.products];
+  const seen = new Set(merged.map((p) => p.productId || p.id));
+  for (const p of fallbackProducts) {
+    const key = p.productId || p.id;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(p);
+    if (merged.length >= limit) break;
+  }
+  return {
+    ...data,
+    products: merged.slice(0, limit),
+  };
+}
+
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const cacheKey = request.url;
@@ -118,13 +173,13 @@ export async function GET(request: NextRequest) {
     catalogOk(body, { ...init, cacheStatus: "MISS", cacheKey });
 
   const collectionAlias = sp.get("collection");
+  const slugParam = sp.get("slug");
   const explicitMode = sp.get("mode");
   const fiber = sp.get("fiber") || undefined;
-  const mode =
-    collectionAlias === "vacation"
-      ? "vacation"
-      : explicitMode ||
-        (fiber && fiber !== "all" && !sp.get("slug") ? "materials" : "shop");
+  const mode = explicitMode
+    || (collectionAlias ? "collection" : undefined)
+    || (fiber && fiber !== "all" && !slugParam ? "materials" : "shop");
+  const collectionSlug = slugParam || collectionAlias || "";
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
   const offset = safeCatalogOffset(sp.get("offset"));
   const category = sp.get("category") || undefined;
@@ -184,12 +239,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (mode === "collection") {
-      const slug = sp.get("slug") || "";
-      const data = await fetchCollectionPageData(slug, {
-        limit,
-        offset,
-        skipTotal: skipCount,
-      });
+      const slug = collectionSlug;
+      const data = await fetchCollectionWithFallback(slug, limit, offset, skipCount);
       if (!data) {
         return respond({ products: [], total: null, limit, offset, hasMore: false });
       }
