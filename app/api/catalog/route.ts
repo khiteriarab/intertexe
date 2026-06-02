@@ -8,6 +8,7 @@ import {
   fetchCollectionPageData,
   fetchMaterialHubDisplayCount,
   fetchProductsByBrand,
+  getServerSupabase,
 } from "../../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 import {
@@ -18,7 +19,8 @@ import {
 } from "../../../lib/catalog-fetch-limits";
 import { fetchMerchRailProducts, MERCH_RAIL_KEYS, MATERIAL_SLUG_TO_RAIL } from "../../../lib/merch-feed";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 60;
 const COLLECTION_FALLBACK_MIN_PRODUCTS = 3;
 const FIBER_CACHE_TTL_MS = 300_000;
 
@@ -179,6 +181,33 @@ async function getCachedMerchProducts(region: string, limit: number, offset: num
   return fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit, offset });
 }
 
+function mapFastProductRow(row: Record<string, unknown>) {
+  const toStringOrNull = (value: unknown) =>
+    value == null ? null : String(value);
+  const naturalFiber = Number(row.natural_fiber_percent ?? 0);
+  const isSale =
+    row.is_sale === true
+    || (Number(row.original_price ?? 0) > Number(row.price ?? 0));
+  return {
+    id: String(row.id ?? ""),
+    brandSlug: String(row.brand_slug ?? ""),
+    brandName: String(row.brand_name ?? ""),
+    name: String(row.name ?? ""),
+    productId: String(row.product_id ?? row.id ?? ""),
+    url: String(row.url ?? ""),
+    imageUrl: String(row.image_url ?? ""),
+    price: String(row.price ?? ""),
+    composition: String(row.composition ?? ""),
+    naturalFiberPercent: Number.isFinite(naturalFiber) ? Math.max(0, Math.min(100, Math.round(naturalFiber))) : 0,
+    category: String(row.category ?? ""),
+    color: toStringOrNull(row.color),
+    matchingSetId: toStringOrNull(row.matching_set_id),
+    isSale,
+    originalPrice: toStringOrNull(row.original_price),
+    listingRegion: toStringOrNull(row.region),
+  };
+}
+
 async function getCachedFiberProducts(fiber: string, region: string, limit: number, offset: number) {
   if (offset !== 0 || region !== "us") {
     return fetchMerchRailProducts(
@@ -252,6 +281,36 @@ export async function GET(request: NextRequest) {
       && !search
       && !maxPrice;
     if (isBaseCatalogFirstPage) {
+      const supabase = getServerSupabase();
+      if (supabase) {
+        try {
+          const started = Date.now();
+          const { data: fastProducts } = await supabase
+            .from("products")
+            .select("id, name, brand_name, brand_slug, product_id, price, original_price, image_url, url, composition, natural_fiber_percent, is_sale, color, matching_set_id, category, region")
+            .eq("region", region)
+            .eq("is_displayable", true)
+            .order("created_at", { ascending: false })
+            .limit(Math.min(limit, 48));
+          console.log("[catalog fast-path] ms=", Date.now() - started, "rows=", fastProducts?.length ?? 0);
+          if (fastProducts && fastProducts.length >= 12) {
+            return respond(
+              {
+                products: fastProducts.map((row) => mapFastProductRow(row as Record<string, unknown>)),
+                total: 149474,
+                limit,
+                offset,
+                hasMore: true,
+                source: "fast-path",
+              },
+              { source: "fast-path" }
+            );
+          }
+        } catch (err) {
+          console.error("[catalog fast-path] error:", err);
+        }
+      }
+
       try {
         const cachedProducts = await getCachedMerchProducts(region, limit, offset);
         if (cachedProducts.length >= 12) {
