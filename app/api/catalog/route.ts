@@ -173,20 +173,24 @@ export async function GET(request: NextRequest) {
     catalogOk(body, { ...init, cacheStatus: "MISS", cacheKey });
 
   const collectionAlias = sp.get("collection");
+  const brandAlias = sp.get("brand");
   const slugParam = sp.get("slug");
   const explicitMode = sp.get("mode");
   const fiber = sp.get("fiber") || undefined;
+  const searchAlias = sp.get("q") || undefined;
   const mode = explicitMode
     || (collectionAlias ? "collection" : undefined)
+    || (brandAlias ? "brand" : undefined)
     || (fiber && fiber !== "all" && !slugParam ? "materials" : "shop");
   const collectionSlug = slugParam || collectionAlias || "";
+  const brandSlug = slugParam || brandAlias || "";
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
   const offset = safeCatalogOffset(sp.get("offset"));
   const category = sp.get("category") || undefined;
   const market = catalogMarketFromParams(sp);
   const catalogRegion = catalogPreferredRegionFromParams(sp);
   const sort = sp.get("sort") || "new";
-  const search = sp.get("search") || undefined;
+  const search = sp.get("search") || searchAlias;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
   /** Small first-page catalog previews skip the expensive count RPC. */
   const skipCount =
@@ -195,8 +199,7 @@ export async function GET(request: NextRequest) {
 
   try {
     if (mode === "brand") {
-      const slug = sp.get("slug") || "";
-      const result = await fetchProductsByBrand(slug, {
+      const result = await fetchProductsByBrand(brandSlug, {
         limit,
         offset,
         skipTotal: skipCount,
@@ -289,15 +292,19 @@ export async function GET(request: NextRequest) {
 
     if (mode === "materials" && fiber) {
       const cat = category && category !== "all" ? category : undefined;
-      const [products, n] = await Promise.all([
-        fetchCatalogProductsByFiber({
+      const [result, n] = await Promise.all([
+        fetchShopProducts({
           fiber,
-          category: cat,
+          category: cat && cat !== "all" ? cat : undefined,
+          catalogRegion,
+          sort: "new",
           limit,
           offset,
+          skipTotal: true,
         }),
         skipCount ? Promise.resolve(0) : fetchMaterialHubDisplayCount(fiber, cat),
       ]);
+      const products = result.products;
       const total = catalogTotalValue(n, products.length, offset, skipCount);
       return respond({
         products,
@@ -324,6 +331,23 @@ export async function GET(request: NextRequest) {
     });
 
     if (result.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
+    if (result.error === "failed") {
+      const fallback = await fetchCatalogProductsByFiber({
+        fiber: shopFiber,
+        category: category && category !== "all" ? category : undefined,
+        limit,
+        offset,
+      });
+      const total = catalogTotalValue(null, fallback.length, offset, true);
+      return respond({
+        products: fallback,
+        total,
+        limit,
+        offset,
+        hasMore: catalogHasMore(fallback.length, limit, offset, total),
+        defaultFiber: !fiber || fiber === "all" ? DEFAULT_SHOP_FIBER : undefined,
+      });
+    }
 
     const total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
     return respond({

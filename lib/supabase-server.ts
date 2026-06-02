@@ -2065,7 +2065,8 @@ export async function fetchShopProducts(options: {
     if (e?.code === "57014" || isCatalogTimeoutError(e)) {
       return { products: [], total: null, hasMore: false, error: "timeout" };
     }
-    throw err;
+    console.warn("[fetchShopProducts] failed, returning fallback error:", e?.message || err);
+    return { products: [], total: null, hasMore: false, error: "failed" };
   }
 }
 

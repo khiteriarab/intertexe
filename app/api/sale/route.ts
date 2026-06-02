@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
   const market = sp.get("market") || undefined;
 
+  const skipCount = sp.get("skipCount") === "1" || (offset === 0 && limit <= 48);
+
   try {
     const result = await fetchSaleProducts({
       fiber: fiber && fiber !== "all" ? fiber : undefined,
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       useMerchFeedPreview: false,
-      skipTotal: sp.get("skipCount") === "1",
+      skipTotal: skipCount,
     });
     const total = result.total;
     return NextResponse.json(
