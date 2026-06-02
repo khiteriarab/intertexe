@@ -1966,18 +1966,30 @@ export async function fetchShopProducts(options: {
           search: searchRpc,
         });
 
-    let rows =
-      (await rpcCatalogList(supabase, {
-        preferred,
-        fallback,
-        fiber: rpcFiber,
-        category: rpcCategory,
-        brandSlug: rpcBrand,
-        search: searchRpc,
-        minNfp: 80,
-        limit,
-        offset: cappedOffset,
-      })) || [];
+    const shouldPreferLivePage =
+      Boolean(searchRpc) || Boolean(rpcFiber);
+
+    let rows = shouldPreferLivePage
+      ? await shopLivePageFallback(supabase, {
+          market,
+          rpcFiber,
+          rpcCategory,
+          rpcBrand,
+          searchTerms,
+          limit,
+          offset: cappedOffset,
+        })
+      : ((await rpcCatalogList(supabase, {
+          preferred,
+          fallback,
+          fiber: rpcFiber,
+          category: rpcCategory,
+          brandSlug: rpcBrand,
+          search: searchRpc,
+          minNfp: 80,
+          limit,
+          offset: cappedOffset,
+        })) || []);
 
     if (rows.length === 0) {
       rows = await shopLivePageFallback(supabase, {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   fetchShopProducts,
   fetchCatalogProductsByFiber,
+  fetchProductsByFiber,
   fetchSaleProducts,
   fetchVacationPageData,
   fetchEditPageData,
@@ -292,19 +293,17 @@ export async function GET(request: NextRequest) {
 
     if (mode === "materials" && fiber) {
       const cat = category && category !== "all" ? category : undefined;
-      const [result, n] = await Promise.all([
-        fetchShopProducts({
-          fiber,
-          category: cat && cat !== "all" ? cat : undefined,
-          catalogRegion,
-          sort: "new",
-          limit,
-          offset,
-          skipTotal: true,
-        }),
+      const [products, n] = await Promise.all([
+        cat
+          ? fetchCatalogProductsByFiber({
+              fiber,
+              category: cat,
+              limit,
+              offset,
+            })
+          : fetchProductsByFiber(fiber, limit, { preferLiveOnly: true }),
         skipCount ? Promise.resolve(0) : fetchMaterialHubDisplayCount(fiber, cat),
       ]);
-      const products = result.products;
       const total = catalogTotalValue(n, products.length, offset, skipCount);
       return respond({
         products,
@@ -317,6 +316,28 @@ export async function GET(request: NextRequest) {
 
     const shopFiber =
       fiber && fiber !== "all" ? fiber : DEFAULT_SHOP_FIBER;
+
+    const isBaseCatalogFirstPage =
+      offset === 0
+      && !category
+      && !market
+      && !search
+      && !maxPrice
+      && !brandAlias
+      && !collectionAlias
+      && (!fiber || fiber === "all");
+    if (isBaseCatalogFirstPage) {
+      const products = await fetchProductsByFiber(shopFiber, limit, { preferLiveOnly: true });
+      const total = catalogTotalValue(null, products.length, offset, true);
+      return respond({
+        products,
+        total,
+        limit,
+        offset,
+        hasMore: catalogHasMore(products.length, limit, offset, total),
+        defaultFiber: DEFAULT_SHOP_FIBER,
+      });
+    }
 
     const result = await fetchShopProducts({
       fiber: shopFiber,
