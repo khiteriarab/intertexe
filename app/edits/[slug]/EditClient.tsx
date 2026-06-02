@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ProductLink } from "../../components/ProductLink";
 import { formatDisplayPrice } from "../../../lib/format-display-price";
+import { cfProductCard } from "../../../lib/cloudflare-images";
 import type { EditPageConfig } from "../../../lib/edit-pages";
 import { EDIT_SLUGS, EDIT_PAGES, FABRIC_EDIT_SLUGS } from "../../../lib/edit-pages";
 import { EditorialHeroImage } from "../../components/EditorialHeroImage";
@@ -162,7 +163,7 @@ export default function EditClient({
                   <div className="aspect-[3/4] bg-[#f3f3f1] overflow-hidden mb-3">
                     {product.imageUrl ? (
                       <img
-                        src={product.imageUrl}
+                        src={cfProductCard(product.imageUrl)}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
                         loading={index < 8 ? "eager" : "lazy"}

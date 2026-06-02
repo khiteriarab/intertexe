@@ -24,6 +24,7 @@ import {
   getRegionForMarket,
   type MarketFilter,
 } from "../../lib/shipping-regions";
+import { cfProductCard } from "../../lib/cloudflare-images";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
 type CategoryFilterKey = "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
@@ -87,12 +88,7 @@ const SHOP_PAGE_SIZE = CATALOG_PAGE_SIZE;
 const WEAR_TO_WHERE_OPTIONS = shopWearToWhereTextOptions();
 
 function optimizeImageUrl(url: string, width: number): string {
-  if (!url) return url;
-  if (url.includes("cdn.shopify.com")) {
-    const separator = url.includes("?") ? "&" : "?";
-    return url + separator + "width=" + width + "&format=webp";
-  }
-  return url;
+  return cfProductCard(url);
 }
 
 function ProductCard({ product, eager }: { product: any; eager?: boolean }) {

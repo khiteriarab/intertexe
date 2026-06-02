@@ -6,6 +6,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { canonicalProductId } from "../../lib/canonical-product-id";
+import { cfHomepageRail } from "../../lib/cloudflare-images";
 import type { CollectionSectionConfig } from "../../lib/site-architecture";
 import {
   HORIZONTAL_RAIL_INSET_CLASS,
@@ -13,12 +14,7 @@ import {
 } from "../../lib/horizontal-rail";
 
 function optimizeImageUrl(url: string, width: number): string {
-  if (!url) return url;
-  if (url.includes("cdn.shopify.com")) {
-    const separator = url.includes("?") ? "&" : "?";
-    return url + separator + "width=" + width + "&format=webp";
-  }
-  return url;
+  return cfHomepageRail(url);
 }
 
 function CollectionProductCard({ product, eager }: { product: any; eager?: boolean }) {

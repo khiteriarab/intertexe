@@ -19,6 +19,7 @@ import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
 import { getShopBrands } from "../shop/actions";
 import { filterProductsByFiberSubtypes, fiberSubtypesFor } from "../../lib/fiber-subtypes";
+import { cfProductCard } from "../../lib/cloudflare-images";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
 type PriceFilter = "all" | "100" | "200" | "300";
@@ -107,7 +108,7 @@ function SaleProductCard({ product }: { product: any }) {
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
           <Image
-            src={imageUrl}
+            src={cfProductCard(imageUrl)}
             alt={name}
             fill
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"

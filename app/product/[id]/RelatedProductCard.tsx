@@ -3,6 +3,7 @@
 import { ProductLink } from "../../components/ProductLink";
 import { ProductCardHeart } from "./ProductFavoriteButton";
 import { formatDisplayPrice } from "../../../lib/format-display-price";
+import { cfProductCard } from "../../../lib/cloudflare-images";
 
 type RelatedProduct = {
   id: string;
@@ -16,11 +17,7 @@ type RelatedProduct = {
 };
 
 export function RelatedProductCard({ product }: { product: RelatedProduct }) {
-  const imageSrc =
-    product.imageUrl +
-    (product.imageUrl?.includes("cdn.shopify.com")
-      ? (product.imageUrl.includes("?") ? "&" : "?") + "width=400"
-      : "");
+  const imageSrc = cfProductCard(product.imageUrl) || product.imageUrl;
 
   return (
     <ProductLink

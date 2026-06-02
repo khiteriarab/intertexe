@@ -23,6 +23,7 @@ import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
 import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
 import Image from "next/image";
+import { cfHomepageRail } from "../../lib/cloudflare-images";
 
 const APP_STORE_URL =
   process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() || "/scanner";
@@ -82,12 +83,7 @@ function AppDownloadBanner() {
 }
 
 function optimizeImageUrl(url: string, width: number): string {
-  if (!url) return url;
-  if (url.includes("cdn.shopify.com")) {
-    const separator = url.includes("?") ? "&" : "?";
-    return url + separator + "width=" + width;
-  }
-  return url;
+  return cfHomepageRail(url);
 }
 
 function ProductCard({

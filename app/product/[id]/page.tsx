@@ -17,6 +17,7 @@ import {
   formatDisplayOriginalPrice,
   formatDisplayPrice,
 } from "../../../lib/format-display-price";
+import { cfProductDetail } from "../../../lib/cloudflare-images";
 
 export const revalidate = 0;
 
@@ -236,7 +237,7 @@ export default async function ProductPage({
     category: product.category || "Clothing",
     url: `https://www.intertexe.com/product/${product.id}`,
   };
-  if (product.imageUrl) productJsonLd.image = product.imageUrl;
+  if (product.imageUrl) productJsonLd.image = cfProductDetail(product.imageUrl) || product.imageUrl;
   if (product.composition) productJsonLd.material = product.composition;
   if (product.price) {
     const numericPrice = String(product.price).replace(/[^0-9.]/g, "");
@@ -277,7 +278,7 @@ export default async function ProductPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
           <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden" data-testid="product-image-container">
             {product.imageUrl ? (
-              <img src={product.imageUrl + (product.imageUrl.includes("cdn.shopify.com") ? (product.imageUrl.includes("?") ? "&" : "?") + "width=800" : "")} alt={`${product.brandName} ${product.name}`} className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" data-testid="img-product" />
+              <img src={cfProductDetail(product.imageUrl) || product.imageUrl} alt={`${product.brandName} ${product.name}`} className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" data-testid="img-product" />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <ShoppingBag className="w-16 h-16 text-muted-foreground/20" />

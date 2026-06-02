@@ -6,6 +6,7 @@ import { SearchInput } from "./SearchInput";
 import { ProductLink } from "../components/ProductLink";
 import { CatalogProductImage } from "../components/CatalogProductImage";
 import { formatDisplayPrice } from "../../lib/format-display-price";
+import { cfProductCard } from "../../lib/cloudflare-images";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -94,7 +95,7 @@ export default async function SearchPage({
               >
                 <div className="aspect-[3/4] bg-secondary/30 relative overflow-hidden">
                   <CatalogProductImage
-                    src={p.image_url}
+                    src={cfProductCard(p.image_url)}
                     alt={p.name}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
