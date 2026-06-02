@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   fetchShopProducts,
   fetchCatalogProductsByFiber,
-  fetchProductsByFiber,
   fetchSaleProducts,
   fetchVacationPageData,
   fetchEditPageData,
@@ -17,6 +16,7 @@ import {
   safeCatalogOffset,
   catalogHasMore,
 } from "../../../lib/catalog-fetch-limits";
+import { fetchMerchRailProducts, MERCH_RAIL_KEYS, MATERIAL_SLUG_TO_RAIL } from "../../../lib/merch-feed";
 
 export const revalidate = 300;
 const COLLECTION_FALLBACK_MIN_PRODUCTS = 3;
@@ -193,6 +193,11 @@ export async function GET(request: NextRequest) {
   const sort = sp.get("sort") || "new";
   const search = sp.get("search") || searchAlias;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
+  const searchTerms = (search || "")
+    .toLowerCase()
+    .split(/\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
   /** Small first-page catalog previews skip the expensive count RPC. */
   const skipCount =
     sp.get("skipCount") === "1" ||
@@ -301,7 +306,10 @@ export async function GET(request: NextRequest) {
               limit,
               offset,
             })
-          : fetchProductsByFiber(fiber, limit, { preferLiveOnly: true }),
+          : fetchMerchRailProducts(
+              (MATERIAL_SLUG_TO_RAIL[fiber] || MATERIAL_SLUG_TO_RAIL[fiber.toLowerCase()]) || MERCH_RAIL_KEYS.silk,
+              { limit, offset }
+            ),
         skipCount ? Promise.resolve(0) : fetchMaterialHubDisplayCount(fiber, cat),
       ]);
       const total = catalogTotalValue(n, products.length, offset, skipCount);
@@ -327,7 +335,7 @@ export async function GET(request: NextRequest) {
       && !collectionAlias
       && (!fiber || fiber === "all");
     if (isBaseCatalogFirstPage) {
-      const products = await fetchProductsByFiber(shopFiber, limit, { preferLiveOnly: true });
+      const products = await fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit, offset });
       const total = catalogTotalValue(null, products.length, offset, true);
       return respond({
         products,
@@ -336,6 +344,27 @@ export async function GET(request: NextRequest) {
         offset,
         hasMore: catalogHasMore(products.length, limit, offset, total),
         defaultFiber: DEFAULT_SHOP_FIBER,
+      });
+    }
+
+    const searchMaterial = searchTerms.find((t) =>
+      ["silk", "linen", "cashmere", "wool", "cotton", "leather"].includes(t)
+    );
+    if (searchMaterial && offset === 0) {
+      const railKey = MATERIAL_SLUG_TO_RAIL[searchMaterial] || MERCH_RAIL_KEYS.silk;
+      const railProducts = await fetchMerchRailProducts(railKey, { limit: Math.max(limit, 48), offset: 0 });
+      const filtered = railProducts.filter((p) => {
+        const haystack = `${p.name || ""} ${p.brandName || ""} ${p.composition || ""}`.toLowerCase();
+        return searchTerms.every((t) => haystack.includes(t));
+      }).slice(0, limit);
+      const total = catalogTotalValue(null, filtered.length, offset, true);
+      return respond({
+        products: filtered,
+        total,
+        limit,
+        offset,
+        hasMore: catalogHasMore(filtered.length, limit, offset, total),
+        defaultFiber: !fiber || fiber === "all" ? DEFAULT_SHOP_FIBER : undefined,
       });
     }
 
