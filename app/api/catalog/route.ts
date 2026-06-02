@@ -176,6 +176,29 @@ async function fetchCollectionWithFallback(slug: string, limit: number, offset: 
   };
 }
 
+async function fetchCollectionTotalFromDB(collection: string, region: string) {
+  const supabase = getServerSupabase();
+  if (!supabase) return null;
+
+  // New schema: array-backed collection memberships.
+  const primary = await supabase
+    .from("live_products_apparel")
+    .select("id", { count: "exact", head: true })
+    .eq("region", region)
+    .contains("collection_slugs", [collection]);
+
+  if (primary.count != null) return primary.count;
+
+  // Legacy schema fallback: single collection slug field.
+  const legacy = await supabase
+    .from("live_products_apparel")
+    .select("id", { count: "exact", head: true })
+    .eq("region", region)
+    .eq("collection_slug", collection);
+
+  return legacy.count ?? null;
+}
+
 async function getCachedMerchProducts(region: string, limit: number, offset: number) {
   if (region !== "us") return [];
   return fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit, offset });
@@ -380,7 +403,14 @@ export async function GET(request: NextRequest) {
         return respond({ products: [], total: null, limit, offset, hasMore: false });
       }
       if (data.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
-      const total = data.catalogTotal;
+      let total = data.catalogTotal;
+      if (total == null && !skipCount) {
+        const counted = await fetchCollectionTotalFromDB(slug, region);
+        if (counted != null) total = counted;
+      }
+      if (total == null) {
+        total = offset + data.products.length + (data.products.length === limit ? 1 : 0);
+      }
       return respond({
         products: data.products,
         total,
