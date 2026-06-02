@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/warm",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/2 * * * *"
     },
     {
       "path": "/api/cron/daily-catalog-refresh",

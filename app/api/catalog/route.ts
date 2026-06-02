@@ -20,11 +20,13 @@ import { fetchMerchRailProducts, MERCH_RAIL_KEYS, MATERIAL_SLUG_TO_RAIL } from "
 
 export const revalidate = 300;
 const COLLECTION_FALLBACK_MIN_PRODUCTS = 3;
+const FIBER_CACHE_TTL_MS = 300_000;
 
 const PRODUCT_CACHE_HEADERS = {
-  "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=120",
-  "CDN-Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-  "Vercel-CDN-Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+  "CDN-Cache-Control": "public, s-maxage=60",
+  "Vercel-CDN-Cache-Control": "public, s-maxage=60",
+  Vary: "Accept-Encoding",
 };
 
 const CACHE_TTL_MS = 300_000;
@@ -32,10 +34,19 @@ type CatalogCacheEntry = { data: Record<string, unknown>; timestamp: number };
 const catalogMemoryCache =
   ((globalThis as typeof globalThis & { __catalogMemoryCache?: Map<string, CatalogCacheEntry> }).__catalogMemoryCache ??=
     new Map<string, CatalogCacheEntry>());
+type FiberCacheEntry = { products: unknown[]; timestamp: number };
+const fiberCache =
+  ((globalThis as typeof globalThis & { __fiberCache?: Map<string, FiberCacheEntry> }).__fiberCache ??=
+    new Map<string, FiberCacheEntry>());
 
 function catalogOk(
   body: Record<string, unknown>,
-  init?: { status?: number; cacheStatus?: "HIT" | "MISS"; cacheKey?: string }
+  init?: {
+    status?: number;
+    cacheStatus?: "HIT" | "MISS";
+    cacheKey?: string;
+    source?: string;
+  }
 ) {
   if (init?.cacheKey) {
     catalogMemoryCache.set(init.cacheKey, { data: body, timestamp: Date.now() });
@@ -45,6 +56,7 @@ function catalogOk(
     headers: {
       ...PRODUCT_CACHE_HEADERS,
       "x-cache": init?.cacheStatus ?? "MISS",
+      "X-Cache-Source": init?.source ?? "live",
     },
   });
 }
@@ -162,6 +174,31 @@ async function fetchCollectionWithFallback(slug: string, limit: number, offset: 
   };
 }
 
+async function getCachedMerchProducts(region: string, limit: number, offset: number) {
+  if (region !== "us") return [];
+  return fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit, offset });
+}
+
+async function getCachedFiberProducts(fiber: string, region: string, limit: number, offset: number) {
+  if (offset !== 0 || region !== "us") {
+    return fetchMerchRailProducts(
+      (MATERIAL_SLUG_TO_RAIL[fiber] || MATERIAL_SLUG_TO_RAIL[fiber.toLowerCase()]) || MERCH_RAIL_KEYS.silk,
+      { limit, offset }
+    );
+  }
+  const cacheKey = `fiber:${fiber.toLowerCase()}:${region}:page1`;
+  const cached = fiberCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < FIBER_CACHE_TTL_MS) {
+    return cached.products as Awaited<ReturnType<typeof fetchMerchRailProducts>>;
+  }
+  const products = await fetchMerchRailProducts(
+    (MATERIAL_SLUG_TO_RAIL[fiber] || MATERIAL_SLUG_TO_RAIL[fiber.toLowerCase()]) || MERCH_RAIL_KEYS.silk,
+    { limit, offset }
+  );
+  fiberCache.set(cacheKey, { products, timestamp: Date.now() });
+  return products;
+}
+
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const cacheKey = request.url;
@@ -170,8 +207,10 @@ export async function GET(request: NextRequest) {
     return catalogOk(cached.data, { cacheStatus: "HIT" });
   }
 
-  const respond = (body: Record<string, unknown>, init?: { status?: number }) =>
-    catalogOk(body, { ...init, cacheStatus: "MISS", cacheKey });
+  const respond = (
+    body: Record<string, unknown>,
+    init?: { status?: number; source?: string }
+  ) => catalogOk(body, { ...init, cacheStatus: "MISS", cacheKey, source: init?.source });
 
   const collectionAlias = sp.get("collection");
   const brandAlias = sp.get("brand");
@@ -204,6 +243,34 @@ export async function GET(request: NextRequest) {
     (limit <= 48 && offset === 0);
 
   try {
+    const region = catalogRegion || "us";
+    const isBaseCatalogFirstPage =
+      offset === 0
+      && !collectionAlias
+      && !fiber
+      && !brandAlias
+      && !search
+      && !maxPrice;
+    if (isBaseCatalogFirstPage) {
+      try {
+        const cachedProducts = await getCachedMerchProducts(region, limit, offset);
+        if (cachedProducts.length >= 12) {
+          return respond(
+            {
+              products: cachedProducts,
+              total: cachedProducts.length,
+              limit,
+              offset,
+              hasMore: true,
+            },
+            { source: "merch-cache" }
+          );
+        }
+      } catch {
+        // Fall through to live path.
+      }
+    }
+
     if (mode === "brand") {
       const result = await fetchProductsByBrand(brandSlug, {
         limit,
@@ -306,10 +373,7 @@ export async function GET(request: NextRequest) {
               limit,
               offset,
             })
-          : fetchMerchRailProducts(
-              (MATERIAL_SLUG_TO_RAIL[fiber] || MATERIAL_SLUG_TO_RAIL[fiber.toLowerCase()]) || MERCH_RAIL_KEYS.silk,
-              { limit, offset }
-            ),
+          : getCachedFiberProducts(fiber, region, limit, offset),
         skipCount ? Promise.resolve(0) : fetchMaterialHubDisplayCount(fiber, cat),
       ]);
       const total = catalogTotalValue(n, products.length, offset, skipCount);
@@ -324,28 +388,6 @@ export async function GET(request: NextRequest) {
 
     const shopFiber =
       fiber && fiber !== "all" ? fiber : DEFAULT_SHOP_FIBER;
-
-    const isBaseCatalogFirstPage =
-      offset === 0
-      && !category
-      && !market
-      && !search
-      && !maxPrice
-      && !brandAlias
-      && !collectionAlias
-      && (!fiber || fiber === "all");
-    if (isBaseCatalogFirstPage) {
-      const products = await fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit, offset });
-      const total = catalogTotalValue(null, products.length, offset, true);
-      return respond({
-        products,
-        total,
-        limit,
-        offset,
-        hasMore: catalogHasMore(products.length, limit, offset, total),
-        defaultFiber: DEFAULT_SHOP_FIBER,
-      });
-    }
 
     const searchMaterial = searchTerms.find((t) =>
       ["silk", "linen", "cashmere", "wool", "cotton", "leather"].includes(t)

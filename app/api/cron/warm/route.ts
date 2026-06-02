@@ -9,9 +9,17 @@ export async function GET(req: NextRequest) {
   }
 
   const routes = [
-    "/api/catalog?region=us&limit=1",
+    "/api/catalog?region=us&limit=48",
+    "/api/catalog?region=eu&limit=48",
+    "/api/catalog?sort=new&region=us&limit=48",
+    "/api/sale?region=us&limit=48",
+    "/api/catalog?fiber=cotton&region=us&limit=48",
+    "/api/catalog?fiber=silk&region=us&limit=48",
+    "/api/catalog?fiber=linen&region=us&limit=48",
+    "/api/catalog?collection=vacation&region=us&limit=6",
+    "/api/catalog?collection=evening&region=us&limit=6",
+    "/api/catalog?collection=tailoring&region=us&limit=6",
     "/api/scan",
-    "/api/sale?region=us&limit=1",
   ];
 
   const baseUrl =
