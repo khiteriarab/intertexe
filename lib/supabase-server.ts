@@ -2260,14 +2260,25 @@ export async function fetchMoreAtPrice(
   return filtered.slice(0, limit).map(mapProductRow);
 }
 
+function productMatchesSaleCategory(product: Product, category: string): boolean {
+  const needle = category.toLowerCase();
+  const garment = String((product as any).garmentType || (product as any).garment_type || "").toLowerCase();
+  const cat = String(product.category || "").toLowerCase();
+  const name = String(product.name || "").toLowerCase();
+  return garment.includes(needle) || cat.includes(needle) || name.includes(needle);
+}
+
 function applySaleProductFilters(
   products: Product[],
-  opts: { fiber?: string; maxPrice?: number }
+  opts: { fiber?: string; maxPrice?: number; category?: string }
 ): Product[] {
   let filtered = products.filter((p) => p.imageUrl && p.price);
   if (opts.fiber && opts.fiber !== "all") {
     const needle = opts.fiber.toLowerCase();
     filtered = filtered.filter((p) => (p.composition || "").toLowerCase().includes(needle));
+  }
+  if (opts.category && opts.category !== "all") {
+    filtered = filtered.filter((p) => productMatchesSaleCategory(p, opts.category!));
   }
   if (opts.maxPrice) {
     filtered = filtered.filter((p) => {
@@ -2283,6 +2294,7 @@ const SALE_FULL_SCAN_MAX_ROWS = 1500;
 export async function fetchSaleProducts(options: {
   fiber?: string;
   maxPrice?: number;
+  category?: string;
   market?: string;
   limit?: number;
   offset?: number;
@@ -2297,6 +2309,7 @@ export async function fetchSaleProducts(options: {
   const {
     fiber,
     maxPrice,
+    category,
     market,
     limit = 60,
     offset = 0,
@@ -2367,7 +2380,7 @@ export async function fetchSaleProducts(options: {
           const live = liveById.get(fp.id);
           return live ? mapProductRow(live) : { ...fp, isSale: true };
         });
-        products = applySaleProductFilters(products, { fiber, maxPrice });
+        products = applySaleProductFilters(products, { fiber, maxPrice, category });
         if (products.length > 0) {
           const page = products.slice(offset, offset + limit);
           const full = products.length;
@@ -2432,6 +2445,16 @@ export async function fetchSaleProducts(options: {
     filtered = filtered.filter((row: any) => {
       const p = parseFloat((row.price || "0").replace(/[^0-9.]/g, ""));
       return p > 0 && p <= maxPrice;
+    });
+  }
+
+  if (category && category !== "all") {
+    const needle = category.toLowerCase();
+    filtered = filtered.filter((row: any) => {
+      const garment = String(row.garment_type || "").toLowerCase();
+      const cat = String(row.category || "").toLowerCase();
+      const name = String(row.name || "").toLowerCase();
+      return garment.includes(needle) || cat.includes(needle) || name.includes(needle);
     });
   }
 

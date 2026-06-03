@@ -66,6 +66,17 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "leather", label: "Leather" },
 ];
 
+const CATEGORIES: { label: string; value: string | null }[] = [
+  { label: "All", value: null },
+  { label: "Dresses", value: "dresses" },
+  { label: "Tops", value: "tops" },
+  { label: "Knitwear", value: "knitwear" },
+  { label: "Trousers", value: "trousers" },
+  { label: "Skirts", value: "skirts" },
+  { label: "Outerwear", value: "outerwear" },
+  { label: "Jumpsuits", value: "jumpsuits" },
+];
+
 const PRICE_FILTERS: { key: PriceFilter; label: string }[] = [
   { key: "all", label: "All Prices" },
   { key: "100", label: "Under $100" },
@@ -166,6 +177,7 @@ export default function SaleClient({
 }) {
   const [fiberTab, setFiberTab] = useState<FiberTab>("all");
   const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [products, setProducts] = useState(initialProducts || []);
   const [total, setTotal] = useState<number | null>(initialTotal);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -192,6 +204,16 @@ export default function SaleClient({
             onRemove: () => {
               setFiberTab("all");
               setSelectedFiberSubtypes([]);
+              setOffset(0);
+            },
+          }]
+        : []),
+      ...(selectedCategory
+        ? [{
+            id: "category",
+            label: CATEGORIES.find((c) => c.value === selectedCategory)?.label || selectedCategory,
+            onRemove: () => {
+              setSelectedCategory(null);
               setOffset(0);
             },
           }]
@@ -223,7 +245,7 @@ export default function SaleClient({
         },
       })),
     ],
-    [fiberTab, priceFilter, selectedBrandSlugs, selectedFiberSubtypes, shopBrands]
+    [fiberTab, priceFilter, selectedCategory, selectedBrandSlugs, selectedFiberSubtypes, shopBrands]
   );
 
   useEffect(() => {
@@ -263,7 +285,7 @@ export default function SaleClient({
   }, []);
 
   useEffect(() => {
-    const isDefault = fiberTab === "all" && priceFilter === "all";
+    const isDefault = fiberTab === "all" && priceFilter === "all" && selectedCategory === null;
     if (isDefault && initialProducts?.length) {
       setProducts(initialProducts);
       setTotal(initialTotal);
@@ -275,6 +297,7 @@ export default function SaleClient({
     const params = new URLSearchParams();
     if (fiberTab !== "all") params.set("fiber", fiberTab);
     if (priceFilter !== "all") params.set("maxPrice", priceFilter);
+    if (selectedCategory) params.set("category", selectedCategory);
     if (market !== "all") params.set("market", market);
     params.set("limit", String(pageSize));
     params.set("offset", "0");
@@ -282,8 +305,9 @@ export default function SaleClient({
     fetch(`/api/sale?${params}`)
       .then((r) => r.json())
       .then((d) => {
-        setProducts(d.products || []);
-        if (d.total != null) setTotal(d.total);
+        const nextProducts = d.products || [];
+        setProducts(nextProducts);
+        setTotal(d.total ?? nextProducts.length ?? 0);
         setHasMore(Boolean(d.hasMore));
         setOffset((d.products || []).length);
       })
@@ -296,10 +320,10 @@ export default function SaleClient({
     fetch(`/api/sale?${countParams}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.total != null) setTotal(d.total);
+        setTotal(d.total ?? (d.products || []).length ?? 0);
       })
       .finally(() => setCountLoading(false));
-  }, [fiberTab, priceFilter, market, initialProducts, initialTotal]);
+  }, [fiberTab, priceFilter, selectedCategory, market, initialProducts, initialTotal]);
 
   const loadMore = () => {
     if (loadingMore || (!hasMore && total != null && products.length >= total)) return;
@@ -307,6 +331,7 @@ export default function SaleClient({
     const params = new URLSearchParams();
     if (fiberTab !== "all") params.set("fiber", fiberTab);
     if (priceFilter !== "all") params.set("maxPrice", priceFilter);
+    if (selectedCategory) params.set("category", selectedCategory);
     if (market !== "all") params.set("market", market);
     params.set("limit", String(pageSize));
     params.set("offset", String(offset));
@@ -320,7 +345,7 @@ export default function SaleClient({
           return [...prev, ...next.filter((p: any) => !seen.has(p.id))];
         });
         setOffset((o) => o + next.length);
-        if (d.total != null) setTotal(d.total);
+        setTotal(d.total ?? (d.products || []).length ?? 0);
         if (d.hasMore != null) setHasMore(Boolean(d.hasMore));
       })
       .finally(() => setLoadingMore(false));
@@ -333,8 +358,33 @@ export default function SaleClient({
           <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground">Verified Natural Fabrics</span>
           <h1 className="text-3xl md:text-5xl font-serif" data-testid="text-sale-title">The Edit — On Sale</h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            {total != null && total > 0 ? `${total.toLocaleString()} verified products on sale` : "Sale items will appear here as prices drop"}
+            {total != null && total > 0
+              ? `${total.toLocaleString()} verified products on sale`
+              : products.length > 0
+                ? `${products.length} verified products on sale`
+                : "Sale items will appear here as prices drop"}
           </p>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3 border-b border-gray-100">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.label}
+              type="button"
+              onClick={() => {
+                setSelectedCategory(cat.value);
+                setOffset(0);
+              }}
+              className={`flex-shrink-0 px-4 py-2 text-[9px] tracking-[0.2em] uppercase font-normal border ${
+                selectedCategory === cat.value
+                  ? "bg-[#1C2B2A] text-white border-[#1C2B2A]"
+                  : "bg-white text-black border-gray-200"
+              }`}
+              data-testid={`btn-category-${cat.value ?? "all"}`}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
 
         <CatalogMobileToolbar
@@ -349,15 +399,24 @@ export default function SaleClient({
           <CatalogFilterSidebar
             resultCount={sortedProducts.length}
             fiberTab={fiberTab}
-            categoryFilter={"all"}
+            categoryFilter={selectedCategory ?? "all"}
             fiberOptions={FIBER_TABS}
-            categoryOptions={[{ key: "all" as const, label: "All" }]}
+            categoryOptions={[
+              { key: "all" as const, label: "All" },
+              ...CATEGORIES.filter((c) => c.value).map((c) => ({
+                key: c.value as string,
+                label: c.label,
+              })),
+            ]}
             onFiberChange={(key) => {
               setFiberTab(key);
               setSelectedFiberSubtypes([]);
               setOffset(0);
             }}
-            onCategoryChange={() => {}}
+            onCategoryChange={(key) => {
+              setSelectedCategory(key === "all" ? null : key);
+              setOffset(0);
+            }}
             designers={shopBrands}
             selectedDesigners={selectedBrandSlugs}
             onDesignersChange={(slugs) => {
@@ -443,6 +502,21 @@ export default function SaleClient({
             <div className="fixed inset-0 z-[90] bg-black/40" onClick={() => setShowFilterSheet(false)} />
             <div className="fixed inset-x-0 bottom-0 z-[100] bg-background border-t border-border/40 rounded-t-2xl max-h-[85vh] overflow-y-auto p-6 pb-10 md:hidden">
               <p className="text-lg font-serif mb-1">Filter</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.label}
+                    type="button"
+                    onClick={() => { setSelectedCategory(cat.value); setOffset(0); }}
+                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                      selectedCategory === cat.value ? "border-foreground bg-foreground text-background" : "border-border/40"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-6">Material</p>
               <div className="flex flex-wrap gap-2 mb-8">
                 {FIBER_TABS.map((tab) => (

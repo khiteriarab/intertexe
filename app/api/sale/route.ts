@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Math.max(Number(sp.get("limit") || 40), 1), 80);
   const offset = Math.max(Number(sp.get("offset") || 0), 0);
   const fiber = sp.get("fiber") || undefined;
+  const category = sp.get("category") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
   const market = sp.get("market") || undefined;
 
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
     const result = await fetchSaleProducts({
       fiber: fiber && fiber !== "all" ? fiber : undefined,
       maxPrice,
+      category: category && category !== "all" ? category : undefined,
       market: market && market !== "all" ? market : undefined,
       limit,
       offset,
@@ -24,10 +26,11 @@ export async function GET(request: NextRequest) {
       maxSourceRows: offset === 0 ? 120 : undefined,
       skipTotal: skipCount,
     });
-    const total = result.total;
+    const products = result.products ?? [];
+    const total = result.total ?? products.length;
     return NextResponse.json(
       {
-        products: result.products,
+        products,
         total,
         limit,
         offset,

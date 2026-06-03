@@ -12,11 +12,12 @@ export const metadata: Metadata = {
 
 export default async function SalePage() {
   const saleData = await getCachedSalePageData();
+  const initialTotal = saleData.total ?? saleData.products?.length ?? 0;
 
   return (
     <SaleClient
       initialProducts={saleData.products || []}
-      initialTotal={saleData.total}
+      initialTotal={initialTotal}
       initialHasMore={saleData.hasMore}
     />
   );
