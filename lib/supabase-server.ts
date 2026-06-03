@@ -2289,6 +2289,44 @@ function applySaleProductFilters(
   return filtered;
 }
 
+
+/** Accurate on-sale count from sale_catalog_count RPC (falls back to live row count). */
+export async function getSaleTotalCount(opts: {
+  region?: string;
+  fiber?: string;
+  maxPrice?: number;
+  category?: string;
+}): Promise<number> {
+  const supabase = getServerSupabase();
+  if (!supabase) return 0;
+  const { preferred } = catalogRegionsFromMarket(opts.region);
+  const fiber = opts.fiber && opts.fiber !== "all" ? opts.fiber : null;
+  const maxPrice = opts.maxPrice ?? null;
+  try {
+    const { data: countRaw, error } = await supabase.rpc("sale_catalog_count", {
+      p_fiber: fiber,
+      p_max_price: maxPrice,
+      p_region: preferred,
+    });
+    const rpcTotal = Number(countRaw ?? 0);
+    if (!error && rpcTotal > 0) return rpcTotal;
+  } catch (err) {
+    console.warn("[getSaleTotalCount] RPC failed:", err);
+  }
+  try {
+    let q = liveProductsApparelFrom(supabase)
+      .select("id", { count: "exact", head: true })
+      .eq("is_sale", true)
+      .eq("region", preferred)
+      .gte("natural_fiber_percent", 80);
+    if (fiber) q = q.ilike("composition", `%${fiber}%`);
+    const { count } = await q;
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 const SALE_FULL_SCAN_MAX_ROWS = 1500;
 
 export async function fetchSaleProducts(options: {
@@ -2405,10 +2443,11 @@ export async function fetchSaleProducts(options: {
     let q = liveProductsApparelFrom(supabase)
       
       .select("*")
+      .eq("is_sale", true)
+      .eq("region", dedupePreferred)
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
-      .not("price", "is", null)
-      .not("original_price", "is", null);
+      .not("price", "is", null);
     if (fiber && fiber !== "all") {
       q = q.ilike("composition", `%${fiber}%`);
     }

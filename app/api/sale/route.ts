@@ -1,42 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchSaleProducts } from "../../../lib/supabase-server";
+import { fetchSaleProducts, getSaleTotalCount } from "../../../lib/supabase-server";
 
 export const revalidate = 300;
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
-  const limit = Math.min(Math.max(Number(sp.get("limit") || 40), 1), 80);
+  const limit = Math.min(Math.max(Number(sp.get("limit") || 40), 1), 200);
   const offset = Math.max(Number(sp.get("offset") || 0), 0);
   const fiber = sp.get("fiber") || undefined;
   const category = sp.get("category") || undefined;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
-  const market = sp.get("market") || undefined;
-
-  const skipCount = sp.get("skipCount") === "1" || (offset === 0 && limit <= 48);
+  const region = sp.get("region") || sp.get("market") || undefined;
 
   try {
     const result = await fetchSaleProducts({
       fiber: fiber && fiber !== "all" ? fiber : undefined,
       maxPrice,
       category: category && category !== "all" ? category : undefined,
-      market: market && market !== "all" ? market : undefined,
+      market: region && region !== "all" ? region : undefined,
       limit,
       offset,
-      useMerchFeedPreview: offset === 0,
-      maxSourceRows: offset === 0 ? 120 : undefined,
-      skipTotal: skipCount,
+      useMerchFeedPreview: false,
+      skipTotal: false,
     });
+
     const products = result.products ?? [];
-    const total = result.total ?? products.length;
+    let total = result.total ?? 0;
+
+    const dbTotal = await getSaleTotalCount({
+      region: region && region !== "all" ? region : "us",
+      fiber: fiber && fiber !== "all" ? fiber : undefined,
+      maxPrice,
+    });
+    if ((!category || category === "all") && dbTotal > total) total = dbTotal;
+
+    const hasMore = offset + products.length < total;
+
     return NextResponse.json(
       {
         products,
         total,
         limit,
         offset,
-        hasMore:
-          result.hasMore ??
-          (total != null ? offset + result.products.length < total : result.products.length >= limit),
+        hasMore,
       },
       {
         headers: {
@@ -47,6 +53,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (err) {
     console.error("[api/sale]", err);
-    return NextResponse.json({ products: [], total: 0, error: "sale_fetch_failed" }, { status: 500 });
+    return NextResponse.json({ products: [], total: 0, hasMore: false, error: "sale_fetch_failed" }, { status: 500 });
   }
 }
