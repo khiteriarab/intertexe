@@ -695,7 +695,7 @@ export async function POST(request: NextRequest) {
       const dppFields = mapExtractedDppFields(extracted, analysis.fibers);
       const upc = barcode ? String(barcode).replace(/\D/g, "") : "";
       let isNewToDatabase = false;
-      if (upc) {
+      if (upc && analysis.naturalPercent > 0) {
         isNewToDatabase = await upsertBarcodeFromComposition(supabase, upc, {
           brand: extracted.brandName || null,
           brandSlug: slugifyBrand(extracted.brandName || ""),
@@ -1067,7 +1067,7 @@ export async function POST(request: NextRequest) {
         ? String(barcode).replace(/\D/g, "")
         : "";
     let isNewToDatabase = false;
-    if (scanUpc && (analysis.compositionText || extracted.composition)) {
+    if (scanUpc && analysis.naturalPercent > 0 && (analysis.compositionText || extracted.composition)) {
       isNewToDatabase = await upsertBarcodeFromComposition(supabase, scanUpc, {
         brand: brandName !== "Unknown" ? brandName : null,
         brandSlug: brandSlug !== "unknown" ? brandSlug : null,

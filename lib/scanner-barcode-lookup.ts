@@ -98,7 +98,7 @@ export async function lookupBarcode(
     .eq('upc_code', upc)
     .maybeSingle();
 
-  if (known?.composition) {
+  if (known?.composition && Number(known.natural_fiber_percent) > 0) {
     await supabase
       .from('barcode_compositions')
       .update({
@@ -432,6 +432,8 @@ export async function upsertBarcodeFromComposition(
       price_usd: payload.price ?? null,
       currency_detected: payload.currency ?? null,
       source: payload.source ?? 'scanner_label',
+      verified_by: 'user_scan',
+      verification_date: new Date().toISOString(),
       last_scanned_at: new Date().toISOString(),
       scan_count: existing ? undefined : 1,
       ...dppUpsert,
