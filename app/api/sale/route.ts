@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchSaleProducts, getSaleTotalCount } from "../../../lib/supabase-server";
+import { fetchSaleProducts } from "../../../lib/supabase-server";
 
 export const revalidate = 300;
 
@@ -25,16 +25,9 @@ export async function GET(request: NextRequest) {
     });
 
     const products = result.products ?? [];
-    let total = result.total ?? 0;
-
-    const dbTotal = await getSaleTotalCount({
-      region: region && region !== "all" ? region : "us",
-      fiber: fiber && fiber !== "all" ? fiber : undefined,
-      maxPrice,
-    });
-    if ((!category || category === "all") && dbTotal > total) total = dbTotal;
-
-    const hasMore = offset + products.length < total;
+    const total = result.total ?? 0;
+    const hasMore =
+      products.length > 0 && offset + products.length < total;
 
     return NextResponse.json(
       {

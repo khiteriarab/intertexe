@@ -2290,7 +2290,40 @@ function applySaleProductFilters(
 }
 
 
-/** Accurate on-sale count from sale_catalog_count RPC (falls back to live row count). */
+/** Shared base filters for sale catalog — direct table query (no RPC). */
+function buildSaleDirectQuery(
+  supabase: NonNullable<ReturnType<typeof getServerSupabase>>,
+  region: string,
+  opts: { fiber?: string; category?: string }
+) {
+  let q = liveProductsApparelFrom(supabase)
+    .select("*")
+    .eq("is_sale", true)
+    .eq("region", region)
+    .gte("natural_fiber_percent", 80)
+    .not("image_url", "is", null)
+    .not("price", "is", null);
+  if (opts.fiber && opts.fiber !== "all") {
+    q = q.ilike("composition", `%${opts.fiber}%`);
+  }
+  if (opts.category && opts.category !== "all") {
+    const needle = opts.category.toLowerCase();
+    q = q.or(
+      `garment_type.ilike.%${needle}%,name.ilike.%${needle}%,category.ilike.%${needle}%`
+    );
+  }
+  return q;
+}
+
+function saleHasMore(
+  productsLength: number,
+  offset: number,
+  total: number
+): boolean {
+  return productsLength > 0 && offset + productsLength < total;
+}
+
+/** On-sale count from live_products_apparel (same filters as fetchSaleProductsDirect). */
 export async function getSaleTotalCount(opts: {
   region?: string;
   fiber?: string;
@@ -2300,34 +2333,70 @@ export async function getSaleTotalCount(opts: {
   const supabase = getServerSupabase();
   if (!supabase) return 0;
   const { preferred } = catalogRegionsFromMarket(opts.region);
-  const fiber = opts.fiber && opts.fiber !== "all" ? opts.fiber : null;
-  const maxPrice = opts.maxPrice ?? null;
+  const fiber = opts.fiber && opts.fiber !== "all" ? opts.fiber : undefined;
+  const category = opts.category && opts.category !== "all" ? opts.category : undefined;
   try {
-    const { data: countRaw, error } = await supabase.rpc("sale_catalog_count", {
-      p_fiber: fiber,
-      p_max_price: maxPrice,
-      p_region: preferred,
-    });
-    const rpcTotal = Number(countRaw ?? 0);
-    if (!error && rpcTotal > 0) return rpcTotal;
-  } catch (err) {
-    console.warn("[getSaleTotalCount] RPC failed:", err);
-  }
-  try {
-    let q = liveProductsApparelFrom(supabase)
-      .select("id", { count: "exact", head: true })
-      .eq("is_sale", true)
-      .eq("region", preferred)
-      .gte("natural_fiber_percent", 80);
-    if (fiber) q = q.ilike("composition", `%${fiber}%`);
-    const { count } = await q;
+    const { count, error } = await buildSaleDirectQuery(supabase, preferred, { fiber, category })
+      .select("id", { count: "exact", head: true });
+    if (error) throw error;
     return count ?? 0;
-  } catch {
+  } catch (err) {
+    console.warn("[getSaleTotalCount] direct count failed:", err);
     return 0;
   }
 }
 
-const SALE_FULL_SCAN_MAX_ROWS = 1500;
+/** Paginated sale catalog — direct live_products_apparel query (bypasses sale_catalog_list RPC). */
+async function fetchSaleProductsDirect(options: {
+  fiber?: string;
+  maxPrice?: number;
+  category?: string;
+  market?: string;
+  limit?: number;
+  offset?: number;
+  skipTotal?: boolean;
+}): Promise<{ products: Product[]; total: number | null; hasMore: boolean }> {
+  const supabase = getServerSupabase();
+  if (!supabase) return { products: [], total: 0, hasMore: false };
+  const {
+    fiber,
+    maxPrice,
+    category,
+    market,
+    limit = 60,
+    offset = 0,
+    skipTotal = false,
+  } = options;
+  const { preferred } = catalogRegionsFromMarket(market);
+  const filterOpts = { fiber, category };
+
+  const { data, error } = await buildSaleDirectQuery(supabase, preferred, filterOpts)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+
+  let products = filterConsumerCatalogProducts((data || []).map(mapProductRow));
+  products = applySaleProductFilters(products, { fiber, maxPrice, category });
+
+  if (skipTotal) {
+    return {
+      products,
+      total: null,
+      hasMore: products.length >= limit,
+    };
+  }
+
+  const { count, error: countErr } = await buildSaleDirectQuery(supabase, preferred, filterOpts)
+    .select("id", { count: "exact", head: true });
+  if (countErr) throw countErr;
+  const total = count ?? products.length;
+
+  return {
+    products,
+    total,
+    hasMore: saleHasMore(products.length, offset, total),
+  };
+}
 
 export async function fetchSaleProducts(options: {
   fiber?: string;
@@ -2336,7 +2405,7 @@ export async function fetchSaleProducts(options: {
   market?: string;
   limit?: number;
   offset?: number;
-  /** Stop scanning after this many raw rows (homepage perf; sale page omits for full grid). */
+  /** Stop scanning after this many raw rows (homepage merch preview only). */
   maxSourceRows?: number;
   /** Homepage only: use capped merch rail. Sale page / API must set false for full markdown catalog. */
   useMerchFeedPreview?: boolean;
@@ -2355,50 +2424,21 @@ export async function fetchSaleProducts(options: {
     useMerchFeedPreview = maxSourceRows != null,
     skipTotal = false,
   } = options;
-  const { preferred: dedupePreferred, fallback: dedupeFallback } = catalogRegionsFromMarket(market);
 
   if (!useMerchFeedPreview) {
     try {
-      const { data: rows, error } = await supabase.rpc("sale_catalog_list", {
-        p_preferred_region: dedupePreferred,
-        p_fallback_region: dedupeFallback,
-        p_fiber: fiber && fiber !== "all" ? fiber : null,
-        p_max_price: maxPrice ?? null,
-        p_limit: limit,
-        p_offset: offset,
+      return await fetchSaleProductsDirect({
+        fiber,
+        maxPrice,
+        category,
+        market,
+        limit,
+        offset,
+        skipTotal,
       });
-      if (!error) {
-        const products = filterConsumerCatalogProducts((rows || []).map(mapProductRow));
-        if (products.length > 0) {
-          if (skipTotal) {
-            return { products, total: null, hasMore: products.length >= limit };
-          }
-          const { data: countRaw, error: countErr } = await supabase.rpc("sale_catalog_count", {
-            p_fiber: fiber && fiber !== "all" ? fiber : null,
-            p_max_price: maxPrice ?? null,
-            p_region: dedupePreferred,
-          });
-          let total = Number(countRaw ?? 0);
-          if (countErr || total <= 0) {
-            let liveCountQ = liveProductsApparelFrom(supabase)
-              
-              .select("id", { count: "exact", head: true })
-              .eq("is_sale", true)
-              .eq("region", dedupePreferred)
-              .gte("natural_fiber_percent", 80);
-            const { count: liveCount } = await liveCountQ;
-            if (liveCount != null && liveCount > 0) total = liveCount;
-          }
-          const resolved = total > 0 ? total : products.length;
-          return {
-            products,
-            total: resolved,
-            hasMore: offset + products.length < resolved,
-          };
-        }
-      }
     } catch (err) {
-      console.warn("[fetchSaleProducts] sale_catalog_list RPC failed:", err);
+      console.warn("[fetchSaleProducts] direct sale query failed:", err);
+      return { products: [], total: 0, hasMore: false };
     }
   }
 
@@ -2410,7 +2450,6 @@ export async function fetchSaleProducts(options: {
       if (feedProducts.length > 0) {
         const ids = feedProducts.map((p) => p.id).filter(Boolean);
         const { data: liveRows } = await liveProductsApparelFrom(supabase)
-          
           .select(PRODUCT_CARD_COLS)
           .in("id", ids);
         const liveById = new Map((liveRows || []).map((r: any) => [String(r.id), r]));
@@ -2425,7 +2464,9 @@ export async function fetchSaleProducts(options: {
           return {
             products: page,
             total: skipTotal ? null : full,
-            hasMore: skipTotal ? page.length >= limit : offset + page.length < full,
+            hasMore: skipTotal
+              ? page.length >= limit
+              : saleHasMore(page.length, offset, full),
           };
         }
       }
@@ -2434,97 +2475,7 @@ export async function fetchSaleProducts(options: {
     }
   }
 
-  const scanCap = maxSourceRows ?? SALE_FULL_SCAN_MAX_ROWS;
-  const pageSize = 1000;
-  let allRows: any[] = [];
-  let qOffset = 0;
-  while (true) {
-    if (allRows.length >= scanCap) break;
-    let q = liveProductsApparelFrom(supabase)
-      
-      .select("*")
-      .eq("is_sale", true)
-      .eq("region", dedupePreferred)
-      .gte("natural_fiber_percent", 80)
-      .not("image_url", "is", null)
-      .not("price", "is", null);
-    if (fiber && fiber !== "all") {
-      q = q.ilike("composition", `%${fiber}%`);
-    }
-    const rangeEnd = qOffset + Math.min(pageSize, Math.max(0, scanCap - allRows.length)) - 1;
-    if (rangeEnd < qOffset) break;
-    q = q.order("natural_fiber_percent", { ascending: false }).range(qOffset, rangeEnd);
-    const { data: chunk, error } = await q;
-    if (error || !chunk || chunk.length === 0) break;
-    allRows.push(...chunk.filter(rowIsOnSale));
-    if (chunk.length < rangeEnd - qOffset + 1) break;
-    if (allRows.length >= scanCap) break;
-    qOffset += chunk.length;
-  }
-
-  if (useMerchFeedPreview && allRows.length < scanCap) {
-    const { data: flagged } = await liveProductsApparelFrom(supabase)
-      
-      .select("*")
-      .eq("is_sale", true)
-      .gte("natural_fiber_percent", 80)
-      .not("image_url", "is", null)
-      .not("price", "is", null)
-      .limit(Math.max(0, scanCap - allRows.length));
-    if (flagged?.length) allRows.push(...flagged);
-  }
-
-  let data = dedupeLiveApparelRows(allRows, dedupePreferred, dedupeFallback);
-  if (data.length === 0) return { products: [], total: 0, hasMore: false };
-
-  let filtered = data
-    .filter((row: any) => isClothingProduct(row) && isNotMensProduct(row) && rowIsOnSale(row));
-
-  if (maxPrice) {
-    filtered = filtered.filter((row: any) => {
-      const p = parseFloat((row.price || "0").replace(/[^0-9.]/g, ""));
-      return p > 0 && p <= maxPrice;
-    });
-  }
-
-  if (category && category !== "all") {
-    const needle = category.toLowerCase();
-    filtered = filtered.filter((row: any) => {
-      const garment = String(row.garment_type || "").toLowerCase();
-      const cat = String(row.category || "").toLowerCase();
-      const name = String(row.name || "").toLowerCase();
-      return garment.includes(needle) || cat.includes(needle) || name.includes(needle);
-    });
-  }
-
-  const brandGroups: Record<string, any[]> = {};
-  for (const row of filtered) {
-    const b = row.brand_slug || "other";
-    if (!brandGroups[b]) brandGroups[b] = [];
-    brandGroups[b].push(row);
-  }
-  const queues = Object.values(brandGroups);
-  const interleaved: any[] = [];
-  let round = 0;
-  while (interleaved.length < filtered.length) {
-    let added = false;
-    for (const q of queues) {
-      if (round < q.length) {
-        interleaved.push(q[round]);
-        added = true;
-      }
-    }
-    if (!added) break;
-    round++;
-  }
-
-  const page = interleaved.slice(offset, offset + limit).map(mapProductRow);
-  const fullTotal = interleaved.length;
-  return {
-    products: page,
-    total: skipTotal ? null : fullTotal,
-    hasMore: skipTotal ? page.length >= limit : offset + page.length < fullTotal,
-  };
+  return { products: [], total: 0, hasMore: false };
 }
 
 export async function fetchBrandStats(): Promise<

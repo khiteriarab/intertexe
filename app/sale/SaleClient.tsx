@@ -1,60 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ProductLink } from "../components/ProductLink";
-import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
+import { ShoppingBag, Heart, Tag } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
-import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
-import {
-  CatalogMobileToolbar,
-  CatalogMobileSheet,
-  CatalogActiveFilterChips,
-  type CatalogActiveFilter,
-} from "../components/CatalogMobileToolbar";
-import { ProductGridSkeleton } from "../components/ProductGridSkeleton";
-import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
-import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
-import { getShopBrands } from "../shop/actions";
-import { filterProductsByFiberSubtypes, fiberSubtypesFor } from "../../lib/fiber-subtypes";
-import { cfProductCard } from "../../lib/cloudflare-images";
 
-type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
+type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
 type PriceFilter = "all" | "100" | "200" | "300";
-type SaleSort = "newest" | "discount" | "price_asc" | "price_desc";
 
-const SORT_OPTIONS: { key: SaleSort; label: string }[] = [
-  { key: "newest", label: "Newest" },
-  { key: "discount", label: "Biggest discount" },
-  { key: "price_asc", label: "Price: Low to High" },
-  { key: "price_desc", label: "Price: High to Low" },
-];
-
-function parsePriceNum(price: string | null | undefined): number {
-  if (!price) return Number.POSITIVE_INFINITY;
-  const n = parseFloat(String(price).replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
-}
-
-function sortSaleProducts(items: any[], sort: SaleSort): any[] {
-  const list = [...items];
-  if (sort === "newest") {
-    return list.sort((a, b) => String(b.createdAt || b.created_at || "").localeCompare(String(a.createdAt || a.created_at || "")));
-  }
-  if (sort === "discount") {
-    return list.sort((a, b) => {
-      const da = getDiscountPercent(a.originalPrice || a.original_price, a.price) ?? 0;
-      const db = getDiscountPercent(b.originalPrice || b.original_price, b.price) ?? 0;
-      return db - da;
-    });
-  }
-  if (sort === "price_asc") {
-    return list.sort((a, b) => parsePriceNum(a.price) - parsePriceNum(b.price));
-  }
-  return list.sort((a, b) => parsePriceNum(b.price) - parsePriceNum(a.price));
-}
+const PAGE_SIZE = 48;
 
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "all", label: "All" },
@@ -63,7 +18,13 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "wool", label: "Wool" },
   { key: "cotton", label: "Cotton" },
   { key: "linen", label: "Linen" },
-  { key: "leather", label: "Leather" },
+];
+
+const PRICE_FILTERS: { key: PriceFilter; label: string }[] = [
+  { key: "all", label: "All Prices" },
+  { key: "100", label: "Under $100" },
+  { key: "200", label: "Under $200" },
+  { key: "300", label: "Under $300" },
 ];
 
 const CATEGORIES: { label: string; value: string | null }[] = [
@@ -76,15 +37,6 @@ const CATEGORIES: { label: string; value: string | null }[] = [
   { label: "Outerwear", value: "outerwear" },
   { label: "Jumpsuits", value: "jumpsuits" },
 ];
-
-const PRICE_FILTERS: { key: PriceFilter; label: string }[] = [
-  { key: "all", label: "All Prices" },
-  { key: "100", label: "Under $100" },
-  { key: "200", label: "Under $200" },
-  { key: "300", label: "Under $300" },
-];
-const BLUR_DATA_URL =
-  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k=";
 
 function getDiscountPercent(originalPrice: string | null, currentPrice: string | null): number | null {
   if (!originalPrice || !currentPrice) return null;
@@ -115,19 +67,10 @@ function SaleProductCard({ product }: { product: any }) {
   const originalShown = formatDisplayOriginalPrice(priceHints);
 
   return (
-    <ProductLink href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
+    <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
       {imageUrl ? (
         <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
-          <Image
-            src={cfProductCard(imageUrl)}
-            alt={name}
-            fill
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-            loading="lazy"
-            placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
-            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-          />
+          <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, priceShown || String(price)); }}
             className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}
@@ -162,8 +105,25 @@ function SaleProductCard({ product }: { product: any }) {
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 mt-0.5 line-clamp-1">{composition}</span>
         )}
       </div>
-    </ProductLink>
+    </Link>
   );
+}
+
+function buildSaleParams(
+  fiberTab: FiberTab,
+  priceFilter: PriceFilter,
+  selectedCategory: string | null,
+  limit: number,
+  offset: number
+) {
+  const params = new URLSearchParams();
+  params.set("region", "us");
+  params.set("limit", String(limit));
+  params.set("offset", String(offset));
+  if (fiberTab !== "all") params.set("fiber", fiberTab);
+  if (priceFilter !== "all") params.set("maxPrice", priceFilter);
+  if (selectedCategory) params.set("category", selectedCategory);
+  return params;
 }
 
 export default function SaleClient({
@@ -172,183 +132,66 @@ export default function SaleClient({
   initialHasMore = true,
 }: {
   initialProducts: any[];
-  initialTotal: number | null;
+  initialTotal: number;
   initialHasMore?: boolean;
 }) {
   const [fiberTab, setFiberTab] = useState<FiberTab>("all");
   const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [products, setProducts] = useState(initialProducts || []);
-  const [total, setTotal] = useState<number | null>(initialTotal);
-  const [hasMore, setHasMore] = useState(initialHasMore);
-  const [countLoading, setCountLoading] = useState(initialTotal == null);
-  const [showSortSheet, setShowSortSheet] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [total, setTotal] = useState(initialTotal || 0);
   const [offset, setOffset] = useState(initialProducts?.length || 0);
-  const [sortBy, setSortBy] = useState<SaleSort>("newest");
-  const [showFilterSheet, setShowFilterSheet] = useState(false);
-  const [showSortMenu, setShowSortMenu] = useState(false);
-  const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>([]);
-  const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
-  const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
-  const { market } = useShoppingMarket();
-  const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const activeFilters: CatalogActiveFilter[] = useMemo(
-    () => [
-      ...(fiberTab !== "all"
-        ? [{
-            id: "fiber",
-            label: FIBER_TABS.find((t) => t.key === fiberTab)?.label || fiberTab,
-            onRemove: () => {
-              setFiberTab("all");
-              setSelectedFiberSubtypes([]);
-              setOffset(0);
-            },
-          }]
-        : []),
-      ...(selectedCategory
-        ? [{
-            id: "category",
-            label: CATEGORIES.find((c) => c.value === selectedCategory)?.label || selectedCategory,
-            onRemove: () => {
-              setSelectedCategory(null);
-              setOffset(0);
-            },
-          }]
-        : []),
-      ...(priceFilter !== "all"
-        ? [{
-            id: "price",
-            label: PRICE_FILTERS.find((p) => p.key === priceFilter)?.label || priceFilter,
-            onRemove: () => {
-              setPriceFilter("all");
-              setOffset(0);
-            },
-          }]
-        : []),
-      ...selectedBrandSlugs.map((slug) => ({
-        id: `brand-${slug}`,
-        label: shopBrands.find((b) => b.slug === slug)?.name || slug,
-        onRemove: () => {
-          setSelectedBrandSlugs((prev) => prev.filter((s) => s !== slug));
-          setOffset(0);
-        },
-      })),
-      ...selectedFiberSubtypes.map((st) => ({
-        id: `subtype-${st}`,
-        label: st,
-        onRemove: () => {
-          setSelectedFiberSubtypes((prev) => prev.filter((s) => s !== st));
-          setOffset(0);
-        },
-      })),
-    ],
-    [fiberTab, priceFilter, selectedCategory, selectedBrandSlugs, selectedFiberSubtypes, shopBrands]
+  const fetchPage = useCallback(
+    async (nextOffset: number, append: boolean) => {
+      const params = buildSaleParams(fiberTab, priceFilter, selectedCategory, PAGE_SIZE, nextOffset);
+      const res = await fetch(`/api/sale?${params}`);
+      const data = await res.json();
+      const nextProducts = data.products || [];
+      const nextTotal = data.total ?? nextProducts.length ?? 0;
+      setProducts((prev) => (append ? [...prev, ...nextProducts] : nextProducts));
+      setTotal(nextTotal);
+      setOffset(nextOffset + nextProducts.length);
+      setHasMore(Boolean(data.hasMore) && nextProducts.length > 0);
+    },
+    [fiberTab, priceFilter, selectedCategory]
   );
 
   useEffect(() => {
-    getShopBrands()
-      .then((brands) =>
-        setShopBrands(brands.map((b) => ({ slug: b.slug, name: b.name, count: b.count })))
-      )
-      .catch(() => {});
-  }, []);
-
-  const sortedProducts = useMemo(() => {
-    let list = sortSaleProducts(products, sortBy);
-    if (selectedBrandSlugs.length > 0) {
-      const slugSet = new Set(selectedBrandSlugs.map((s) => s.toLowerCase()));
-      list = list.filter((p: any) =>
-        slugSet.has(String(p.brandSlug || p.brand_slug || "").toLowerCase())
-      );
-    }
-    if (selectedFiberSubtypes.length > 0) {
-      list = filterProductsByFiberSubtypes(list, selectedFiberSubtypes);
-    }
-    return list;
-  }, [products, sortBy, selectedBrandSlugs, selectedFiberSubtypes]);
-  const canLoadMore =
-    hasMore || (total != null && total > products.length);
-
-  const pageSize = 40;
-
-  useEffect(() => {
-    const onMarket = () => {
-      setOffset(0);
-      setProducts([]);
-      setIsLoading(true);
-    };
-    window.addEventListener(SHOP_MARKET_INVALIDATE, onMarket);
-    return () => window.removeEventListener(SHOP_MARKET_INVALIDATE, onMarket);
-  }, []);
-
-  useEffect(() => {
-    const isDefault = fiberTab === "all" && priceFilter === "all" && selectedCategory === null;
+    const isDefault =
+      fiberTab === "all" && priceFilter === "all" && selectedCategory === null;
     if (isDefault && initialProducts?.length) {
       setProducts(initialProducts);
       setTotal(initialTotal);
       setOffset(initialProducts.length);
+      setHasMore(initialHasMore);
       return;
     }
 
     setIsLoading(true);
-    const params = new URLSearchParams();
-    if (fiberTab !== "all") params.set("fiber", fiberTab);
-    if (priceFilter !== "all") params.set("maxPrice", priceFilter);
-    if (selectedCategory) params.set("category", selectedCategory);
-    if (market !== "all") params.set("market", market);
-    params.set("limit", String(pageSize));
-    params.set("offset", "0");
-
-    fetch(`/api/sale?${params}`)
-      .then((r) => r.json())
-      .then((d) => {
-        const nextProducts = d.products || [];
-        setProducts(nextProducts);
-        setTotal(d.total ?? nextProducts.length ?? 0);
-        setHasMore(Boolean(d.hasMore));
-        setOffset((d.products || []).length);
+    fetchPage(0, false)
+      .catch(() => {
+        setProducts([]);
+        setTotal(0);
+        setOffset(0);
+        setHasMore(false);
       })
-      .catch(() => {})
       .finally(() => setIsLoading(false));
+  }, [fiberTab, priceFilter, selectedCategory, initialProducts, initialTotal, initialHasMore, fetchPage]);
 
-    const countParams = new URLSearchParams(params);
-    countParams.delete("skipCount");
-    setCountLoading(true);
-    fetch(`/api/sale?${countParams}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setTotal(d.total ?? (d.products || []).length ?? 0);
-      })
-      .finally(() => setCountLoading(false));
-  }, [fiberTab, priceFilter, selectedCategory, market, initialProducts, initialTotal]);
-
-  const loadMore = () => {
-    if (loadingMore || (!hasMore && total != null && products.length >= total)) return;
-    setLoadingMore(true);
-    const params = new URLSearchParams();
-    if (fiberTab !== "all") params.set("fiber", fiberTab);
-    if (priceFilter !== "all") params.set("maxPrice", priceFilter);
-    if (selectedCategory) params.set("category", selectedCategory);
-    if (market !== "all") params.set("market", market);
-    params.set("limit", String(pageSize));
-    params.set("offset", String(offset));
-
-    fetch(`/api/sale?${params}`)
-      .then((r) => r.json())
-      .then((d) => {
-        const next = d.products || [];
-        setProducts((prev) => {
-          const seen = new Set(prev.map((p: any) => p.id));
-          return [...prev, ...next.filter((p: any) => !seen.has(p.id))];
-        });
-        setOffset((o) => o + next.length);
-        setTotal(d.total ?? (d.products || []).length ?? 0);
-        if (d.hasMore != null) setHasMore(Boolean(d.hasMore));
-      })
-      .finally(() => setLoadingMore(false));
+  const loadMore = async () => {
+    if (!hasMore || isLoadingMore || isLoading) return;
+    setIsLoadingMore(true);
+    try {
+      await fetchPage(offset, true);
+    } catch {
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   return (
@@ -358,224 +201,88 @@ export default function SaleClient({
           <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground">Verified Natural Fabrics</span>
           <h1 className="text-3xl md:text-5xl font-serif" data-testid="text-sale-title">The Edit — On Sale</h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            {total != null && total > 0
+            {total > 0
               ? `${total.toLocaleString()} verified products on sale`
               : products.length > 0
-                ? `${products.length} verified products on sale`
+                ? `${products.length.toLocaleString()} verified products on sale`
                 : "Sale items will appear here as prices drop"}
           </p>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3 border-b border-gray-100">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.label}
-              type="button"
-              onClick={() => {
-                setSelectedCategory(cat.value);
-                setOffset(0);
-              }}
-              className={`flex-shrink-0 px-4 py-2 text-[9px] tracking-[0.2em] uppercase font-normal border ${
-                selectedCategory === cat.value
-                  ? "bg-[#1C2B2A] text-white border-[#1C2B2A]"
-                  : "bg-white text-black border-gray-200"
-              }`}
-              data-testid={`btn-category-${cat.value ?? "all"}`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        <CatalogMobileToolbar
-          resultCount={total}
-          countLoading={countLoading}
-          sortLabel={currentSort.label}
-          onOpenFilter={() => setShowFilterSheet(true)}
-          onOpenSort={() => setShowSortSheet(true)}
-          activeFilters={activeFilters}
-        />
-        <div className="lg:flex lg:gap-10 lg:items-start">
-          <CatalogFilterSidebar
-            resultCount={sortedProducts.length}
-            fiberTab={fiberTab}
-            categoryFilter={selectedCategory ?? "all"}
-            fiberOptions={FIBER_TABS}
-            categoryOptions={[
-              { key: "all" as const, label: "All" },
-              ...CATEGORIES.filter((c) => c.value).map((c) => ({
-                key: c.value as string,
-                label: c.label,
-              })),
-            ]}
-            onFiberChange={(key) => {
-              setFiberTab(key);
-              setSelectedFiberSubtypes([]);
-              setOffset(0);
-            }}
-            onCategoryChange={(key) => {
-              setSelectedCategory(key === "all" ? null : key);
-              setOffset(0);
-            }}
-            designers={shopBrands}
-            selectedDesigners={selectedBrandSlugs}
-            onDesignersChange={(slugs) => {
-              setSelectedBrandSlugs(slugs);
-              setOffset(0);
-            }}
-            selectedFiberSubtypes={selectedFiberSubtypes}
-            onFiberSubtypesChange={setSelectedFiberSubtypes}
-          />
-          <div className="flex-1 min-w-0">
-        <div className="hidden md:flex items-center justify-between border-y border-border/20 py-3 mb-2 gap-4">
-          <button
-            type="button"
-            onClick={() => setShowFilterSheet(true)}
-            className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors shrink-0"
-            data-testid="btn-sale-filter"
-          >
-            Filter
-          </button>
-          <p className="text-[11px] text-muted-foreground text-center flex-1 min-w-0">
-            <span className="text-foreground font-medium">{total != null ? total.toLocaleString() : "—"}</span> on sale
-          </p>
-          <div className="relative shrink-0">
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3 border-b border-gray-100">
+            {CATEGORIES.map((cat) => (
               <button
-                type="button"
-                onClick={() => setShowSortMenu(!showSortMenu)}
-                className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="btn-sale-sort"
-              >
-                Sort: {currentSort.label}
-                <ChevronDown className={`w-3 h-3 transition-transform ${showSortMenu ? "rotate-180" : ""}`} />
-              </button>
-              {showSortMenu && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/40 shadow-xl min-w-[180px]">
-                    {SORT_OPTIONS.map((option) => (
-                      <button
-                        key={option.key}
-                        type="button"
-                        onClick={() => { setSortBy(option.key); setShowSortMenu(false); }}
-                        className={`w-full text-left px-4 py-2.5 text-[11px] transition-colors ${
-                          sortBy === option.key ? "bg-[#f5f5f3] text-foreground" : "text-muted-foreground hover:bg-[#f5f5f3] hover:text-foreground"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-        </div>
-
-        <CatalogActiveFilterChips filters={activeFilters} className="hidden md:flex mb-4" />
-
-        <CatalogMobileSheet
-          open={showSortSheet}
-          onClose={() => setShowSortSheet(false)}
-          title="Sort by"
-        >
-          <div className="flex flex-col border border-border/30">
-            {SORT_OPTIONS.map((option) => (
-              <button
-                key={option.key}
-                type="button"
-                onClick={() => {
-                  setSortBy(option.key);
-                  setShowSortSheet(false);
-                }}
-                className={`w-full text-left px-4 py-3.5 text-[12px] border-b border-border/20 last:border-0 ${
-                  sortBy === option.key ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+                key={cat.label}
+                onClick={() => setSelectedCategory(cat.value)}
+                className={`flex-shrink-0 px-4 py-2 text-[9px] tracking-[0.2em] uppercase font-normal border ${
+                  selectedCategory === cat.value
+                    ? "bg-[#1C2B2A] text-white border-[#1C2B2A]"
+                    : "bg-white text-black border-gray-200"
                 }`}
+                data-testid={`btn-category-${cat.value ?? "all"}`}
               >
-                {option.label}
+                {cat.label}
               </button>
             ))}
           </div>
-        </CatalogMobileSheet>
 
-        {showFilterSheet && (
-          <>
-            <div className="fixed inset-0 z-[90] bg-black/40" onClick={() => setShowFilterSheet(false)} />
-            <div className="fixed inset-x-0 bottom-0 z-[100] bg-background border-t border-border/40 rounded-t-2xl max-h-[85vh] overflow-y-auto p-6 pb-10 md:hidden">
-              <p className="text-lg font-serif mb-1">Filter</p>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
-              <div className="flex flex-wrap gap-2 mb-8">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.label}
-                    type="button"
-                    onClick={() => { setSelectedCategory(cat.value); setOffset(0); }}
-                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-                      selectedCategory === cat.value ? "border-foreground bg-foreground text-background" : "border-border/40"
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-6">Material</p>
-              <div className="flex flex-wrap gap-2 mb-8">
-                {FIBER_TABS.map((tab) => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => { setFiberTab(tab.key); setOffset(0); }}
-                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-                      fiberTab === tab.key ? "border-foreground bg-foreground text-background" : "border-border/40"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Price</p>
-              <div className="flex flex-wrap gap-2 mb-8">
-                {PRICE_FILTERS.map((f) => (
-                  <button
-                    key={f.key}
-                    type="button"
-                    onClick={() => { setPriceFilter(f.key); setOffset(0); }}
-                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-                      priceFilter === f.key ? "border-foreground bg-foreground text-background" : "border-border/40"
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {FIBER_TABS.map((tab) => (
               <button
-                type="button"
-                onClick={() => setShowFilterSheet(false)}
-                className="w-full bg-foreground text-background py-3.5 text-[10px] uppercase tracking-[0.2em]"
+                key={tab.key}
+                onClick={() => setFiberTab(tab.key)}
+                className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${fiberTab === tab.key ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground hover:text-foreground"}`}
+                data-testid={`btn-fiber-${tab.key}`}
               >
-                View {(total ?? sortedProducts.length).toLocaleString()} on sale
+                {tab.label}
               </button>
-            </div>
-          </>
-        )}
+            ))}
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {PRICE_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setPriceFilter(f.key)}
+                className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${priceFilter === f.key ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground hover:text-foreground"}`}
+                data-testid={`btn-price-${f.key}`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {isLoading ? (
-          <ProductGridSkeleton count={8} />
-        ) : sortedProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse flex flex-col">
+                <div className="aspect-[3/4] bg-[#f0f0ee]" />
+                <div className="pt-3 flex flex-col gap-2">
+                  <div className="h-2.5 bg-[#f0f0ee] w-1/3" />
+                  <div className="h-3 bg-[#f0f0ee] w-3/4" />
+                  <div className="h-2.5 bg-[#f0f0ee] w-1/4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : products.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12" data-testid="sale-product-grid">
-              {sortedProducts.map((product: any) => (
+              {products.map((product: any) => (
                 <SaleProductCard key={product.id} product={product} />
               ))}
             </div>
-            {canLoadMore && (
+            {hasMore && (
               <div className="flex justify-center pt-4">
                 <button
                   onClick={loadMore}
-                  disabled={loadingMore}
+                  disabled={isLoadingMore}
                   className="border border-foreground px-10 py-3 uppercase tracking-[0.2em] text-[10px] md:text-xs hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
                   data-testid="btn-load-more-sale"
                 >
-                  {loadingMore ? "Loading…" : "Load More"}
+                  {isLoadingMore ? "Loading…" : "Load More"}
                 </button>
               </div>
             )}
@@ -587,8 +294,6 @@ export default function SaleClient({
             <p className="text-xs text-muted-foreground/70">Our price tracker monitors products daily — check back soon.</p>
           </div>
         )}
-          </div>
-        </div>
       </div>
     </div>
   );

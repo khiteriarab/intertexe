@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { getCachedSalePageData } from "../../lib/cached-catalog";
+import { fetchSaleProducts } from "../../lib/supabase-server";
 import SaleClient from "./SaleClient";
 
-export const revalidate = 600;
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "The Edit — On Sale | INTERTEXE",
@@ -11,14 +11,15 @@ export const metadata: Metadata = {
 };
 
 export default async function SalePage() {
-  const saleData = await getCachedSalePageData();
+  const saleData = await fetchSaleProducts({ limit: 48, offset: 0, useMerchFeedPreview: false });
   const initialTotal = saleData.total ?? saleData.products?.length ?? 0;
+  const initialHasMore = saleData.hasMore ?? false;
 
   return (
     <SaleClient
       initialProducts={saleData.products || []}
       initialTotal={initialTotal}
-      initialHasMore={saleData.hasMore}
+      initialHasMore={initialHasMore}
     />
   );
 }
