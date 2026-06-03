@@ -2294,10 +2294,12 @@ function applySaleProductFilters(
 function buildSaleDirectQuery(
   supabase: NonNullable<ReturnType<typeof getServerSupabase>>,
   region: string,
-  opts: { fiber?: string; category?: string }
+  opts: { fiber?: string; category?: string },
+  columns = "*",
+  selectOptions?: { count: "exact"; head: true }
 ) {
   let q = liveProductsApparelFrom(supabase)
-    .select("*")
+    .select(columns, selectOptions)
     .eq("is_sale", true)
     .eq("region", region)
     .gte("natural_fiber_percent", 80)
@@ -2336,8 +2338,13 @@ export async function getSaleTotalCount(opts: {
   const fiber = opts.fiber && opts.fiber !== "all" ? opts.fiber : undefined;
   const category = opts.category && opts.category !== "all" ? opts.category : undefined;
   try {
-    const { count, error } = await buildSaleDirectQuery(supabase, preferred, { fiber, category })
-      .select("id", { count: "exact", head: true });
+    const { count, error } = await buildSaleDirectQuery(
+      supabase,
+      preferred,
+      { fiber, category },
+      "id",
+      { count: "exact", head: true }
+    );
     if (error) throw error;
     return count ?? 0;
   } catch (err) {
@@ -2386,8 +2393,13 @@ async function fetchSaleProductsDirect(options: {
     };
   }
 
-  const { count, error: countErr } = await buildSaleDirectQuery(supabase, preferred, filterOpts)
-    .select("id", { count: "exact", head: true });
+  const { count, error: countErr } = await buildSaleDirectQuery(
+    supabase,
+    preferred,
+    filterOpts,
+    "id",
+    { count: "exact", head: true }
+  );
   if (countErr) throw countErr;
   const total = count ?? products.length;
 
