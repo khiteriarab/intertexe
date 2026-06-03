@@ -32,11 +32,11 @@ export const getCachedBrandStats = unstable_cache(
 export const getCachedSalePageData = unstable_cache(
   async () =>
     fetchSaleProducts({
-      limit: 36,
+      limit: 48,
       offset: 0,
       useMerchFeedPreview: false,
-      skipTotal: true,
+      skipTotal: false,
     }),
-  ["sale-page-first-v2"],
+  ["sale-page-first-v3"],
   { revalidate: SALE_PAGE_REVALIDATE, tags: ["sale-catalog"] }
 );
