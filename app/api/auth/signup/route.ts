@@ -7,6 +7,10 @@ import { linkScannerSessionToUser } from "../../../../lib/link-scanner-session";
 import { sendWelcomeEmail } from "../../../../server/resend";
 import { syncContactToLoops } from "../../../../lib/loops";
 import { snakeToCamel } from "../../../../lib/case-utils";
+import {
+  generateReferralCodes,
+  redeemInvitationCode,
+} from "../../../../lib/invitation-codes";
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,6 +99,14 @@ export async function POST(request: NextRequest) {
           },
           { onConflict: "user_id" }
         );
+      }
+
+      const referralCodes = await generateReferralCodes(user.id);
+      if (referralCodes.length) {
+        console.log("Generated referral codes for", user.id, referralCodes);
+      }
+      if (typeof invitationCode === "string" && invitationCode.trim()) {
+        await redeemInvitationCode(invitationCode, user.id);
       }
     }
 

@@ -312,6 +312,113 @@ export default function AccountClient() {
   );
 }
 
+type ReferralCodeItem = {
+  code: string;
+  usedByUserId?: string | null;
+  usedAt?: string | null;
+  createdAt?: string | null;
+};
+
+function formatRelativeDate(iso: string): string {
+  const date = new Date(iso);
+  const diffMs = Date.now() - date.getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days} days ago`;
+  return date.toLocaleDateString();
+}
+
+function ReferralCodesPanel() {
+  const [codes, setCodes] = useState<ReferralCodeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    fetch("/api/auth/referral-codes", { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (res) => {
+        if (res.status === 401) return [];
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      })
+      .then(async (existing) => {
+        if (existing.length >= 3) {
+          setCodes(existing);
+          return;
+        }
+        const setup = await fetch("/api/auth/referral-codes", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (setup.ok) {
+          const body = await setup.json();
+          if (Array.isArray(body)) {
+            setCodes(body);
+            return;
+          }
+        }
+        setCodes(existing);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const copyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch {}
+  };
+
+  return (
+    <div className="border-t border-border/40 pt-8 mt-2">
+      <p className="text-[9px] tracking-[0.3em] text-muted-foreground uppercase mb-2">
+        Invite a Friend
+      </p>
+      <p className="text-[12px] font-light text-muted-foreground mb-4">
+        Share your codes. Each gives someone early access.
+      </p>
+
+      {loading ? (
+        <div className="flex flex-col gap-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-11 bg-secondary/40 animate-pulse" />
+          ))}
+        </div>
+      ) : codes.length === 0 ? (
+        <p className="text-[12px] text-muted-foreground font-light">Your invite codes will appear here.</p>
+      ) : (
+        codes.map((code) => (
+          <div key={code.code} className="flex items-center justify-between py-3 border-b border-border/20">
+            <div>
+              <p className="text-[13px] tracking-wider font-mono">{code.code}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {code.usedAt ? `Used ${formatRelativeDate(code.usedAt)}` : "Available"}
+              </p>
+            </div>
+            {!code.usedAt && (
+              <button
+                type="button"
+                onClick={() => copyCode(code.code)}
+                className="text-[9px] tracking-[0.2em] uppercase px-3 py-2 bg-foreground text-background"
+              >
+                {copiedCode === code.code ? "Copied" : "Copy"}
+              </button>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
 function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onLogout: () => void }) {
   const [user, setUser] = useState<UserData>(initialUser);
   const [activeTab, setActiveTab] = useState<"account" | "wishlist" | "quiz" | "settings">("account");
@@ -596,6 +703,8 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
                 <span className="text-sm">{quizResults.length}</span>
               </div>
             </div>
+
+            <ReferralCodesPanel />
 
             <div className="grid grid-cols-2 gap-3 md:gap-4 mt-2">
               <button onClick={() => handleTabChange("wishlist")}
