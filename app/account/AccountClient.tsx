@@ -9,6 +9,7 @@ import { FABRIC_PERSONAS } from "../../shared/personas";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { RecentlyViewedRail } from "./RecentlyViewedRail";
+import { shareMessage } from "../../lib/referral-share-message";
 
 const TOKEN_KEY = "intertexe_auth_token";
 
@@ -312,27 +313,15 @@ export default function AccountClient() {
   );
 }
 
-type ReferralCodeItem = {
-  code: string;
-  usedByUserId?: string | null;
-  usedAt?: string | null;
-  createdAt?: string | null;
+type ReferralProfile = {
+  referralCode?: string | null;
+  referralCount?: number;
 };
 
-function formatRelativeDate(iso: string): string {
-  const date = new Date(iso);
-  const diffMs = Date.now() - date.getTime();
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (days <= 0) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 30) return `${days} days ago`;
-  return date.toLocaleDateString();
-}
-
 function ReferralCodesPanel() {
-  const [codes, setCodes] = useState<ReferralCodeItem[]>([]);
+  const [profile, setProfile] = useState<ReferralProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -342,79 +331,77 @@ function ReferralCodesPanel() {
     }
     fetch("/api/auth/referral-codes", { headers: { Authorization: `Bearer ${token}` } })
       .then(async (res) => {
-        if (res.status === 401) return [];
-        if (!res.ok) return [];
-        const data = await res.json();
-        return Array.isArray(data) ? data : [];
+        if (!res.ok) return null;
+        return res.json();
       })
-      .then(async (existing) => {
-        if (existing.length >= 3) {
-          setCodes(existing);
+      .then((data) => {
+        if (data?.referralCode) {
+          setProfile(data);
           return;
         }
-        const setup = await fetch("/api/auth/referral-codes", {
+        return fetch("/api/auth/referral-codes", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
-        });
-        if (setup.ok) {
-          const body = await setup.json();
-          if (Array.isArray(body)) {
-            setCodes(body);
-            return;
-          }
-        }
-        setCodes(existing);
+        }).then((r) => (r.ok ? r.json() : null));
+      })
+      .then((data) => {
+        if (data) setProfile(data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const copyCode = async (code: string) => {
+  const referralCode = profile?.referralCode ?? "";
+  const referralCount = profile?.referralCount ?? 0;
+
+  const copyMessage = async () => {
+    if (!referralCode) return;
     try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCode(code);
-      setTimeout(() => setCopiedCode(null), 2000);
+      await navigator.clipboard.writeText(shareMessage(referralCode));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {}
   };
 
-  return (
-    <div className="border-t border-border/40 pt-8 mt-2">
-      <p className="text-[9px] tracking-[0.3em] text-muted-foreground uppercase mb-2">
-        Invite a Friend
-      </p>
-      <p className="text-[12px] font-light text-muted-foreground mb-4">
-        Share your codes. Each gives someone early access.
-      </p>
+  if (loading) {
+    return (
+      <div className="border-t border-border/40 pt-8 mt-2">
+        <div className="h-14 bg-secondary/40 animate-pulse" />
+      </div>
+    );
+  }
 
-      {loading ? (
-        <div className="flex flex-col gap-2">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-11 bg-secondary/40 animate-pulse" />
-          ))}
-        </div>
-      ) : codes.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground font-light">Your invite codes will appear here.</p>
-      ) : (
-        codes.map((code) => (
-          <div key={code.code} className="flex items-center justify-between py-3 border-b border-border/20">
-            <div>
-              <p className="text-[13px] tracking-wider font-mono">{code.code}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {code.usedAt ? `Used ${formatRelativeDate(code.usedAt)}` : "Available"}
-              </p>
-            </div>
-            {!code.usedAt && (
-              <button
-                type="button"
-                onClick={() => copyCode(code.code)}
-                className="text-[9px] tracking-[0.2em] uppercase px-3 py-2 bg-foreground text-background"
-              >
-                {copiedCode === code.code ? "Copied" : "Copy"}
-              </button>
-            )}
-          </div>
-        ))
-      )}
+  if (!referralCode) return null;
+
+  return (
+    <div className="border-t border-border/40 pt-8 mt-2 space-y-4">
+      <div>
+        <p className="text-[9px] tracking-[0.3em] text-muted-foreground uppercase mb-1">
+          Your Code
+        </p>
+        {referralCount > 0 ? (
+          <p className="text-[11px] font-light text-[#420217]">
+            {referralCount} {referralCount === 1 ? "person" : "people"} joined with your code
+          </p>
+        ) : (
+          <p className="text-[11px] font-light text-muted-foreground">
+            Share with anyone who cares about what their clothes are made of.
+          </p>
+        )}
+      </div>
+
+      <div className="flex items-stretch">
+        <p className="text-[16px] font-light tracking-[0.3em] text-foreground px-4 py-4 bg-secondary/30 flex-1 font-mono">
+          {referralCode}
+        </p>
+        <button
+          type="button"
+          onClick={copyMessage}
+          className="px-4 bg-foreground text-background text-[9px] tracking-[0.2em] uppercase hover:bg-foreground/90 transition-colors"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
     </div>
   );
 }

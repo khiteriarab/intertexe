@@ -6,16 +6,9 @@ const MASTER_CODES = new Set([
   "NATURAL2025",
   "EDITORIALVIP",
   "FOUNDING2025",
-  "KHITERI001",
 ]);
 
-const ADJECTIVES = ["SILK", "LINEN", "WOOL", "COTTON", "CASHMERE", "FIBER", "NATURAL"];
-
-function generateCode(prefix = ""): string {
-  const numbers = Math.floor(1000 + Math.random() * 9000);
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  return prefix ? `${prefix}-${adj}${numbers}` : `${adj}${numbers}`;
-}
+const FIBERS = ["SILK", "LINEN", "WOOL", "COTTON", "CASHMERE", "ALPACA", "MERINO"];
 
 function masterCodesFromEnv(): Set<string> {
   const fromEnv = (process.env.INVITE_CODES || "")
@@ -27,38 +20,63 @@ function masterCodesFromEnv(): Set<string> {
   return codes;
 }
 
+export type ReferralProfile = {
+  referral_code: string | null;
+  referral_count: number;
+};
+
+export async function generatePermanentReferralCode(userId: string): Promise<string> {
+  if (!userId) return "";
+
+  const supabase = createServiceClient();
+
+  const { data: existing } = await supabase
+    .from("user_preferences")
+    .select("referral_code")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing?.referral_code) {
+    return existing.referral_code;
+  }
+
+  let code = "";
+  let attempts = 0;
+
+  while (attempts < 10) {
+    const fiber = FIBERS[Math.floor(Math.random() * FIBERS.length)];
+    const number = Math.floor(1000 + Math.random() * 9000);
+    code = `${fiber}${number}`;
+
+    const { data: taken } = await supabase
+      .from("user_preferences")
+      .select("user_id")
+      .eq("referral_code", code)
+      .maybeSingle();
+
+    if (!taken) break;
+    attempts++;
+  }
+
+  if (!code) {
+    code = `FIBER${Math.floor(10000 + Math.random() * 89999)}`;
+  }
+
+  await supabase.from("user_preferences").upsert(
+    {
+      user_id: userId,
+      referral_code: code,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  return code;
+}
+
 export async function validateInvitationCode(code: string): Promise<boolean> {
   const normalized = code.toUpperCase().trim();
   if (!normalized) return false;
-
-  try {
-    const supabase = createServiceClient();
-    const { data } = await supabase
-      .from("invitation_codes")
-      .select("id, used_by_user_id, expires_at, code_type, is_active")
-      .eq("code", normalized)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (data) {
-      if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        return false;
-      }
-      if (data.code_type === "master") {
-        return true;
-      }
-      return !data.used_by_user_id;
-    }
-  } catch (err) {
-    console.error("validateInvitationCode DB error:", err);
-  }
-
-  return masterCodesFromEnv().has(normalized);
-}
-
-export async function redeemInvitationCode(code: string, userId: string): Promise<boolean> {
-  const normalized = code.toUpperCase().trim();
-  if (!normalized || !userId) return false;
 
   if (masterCodesFromEnv().has(normalized)) {
     return true;
@@ -66,121 +84,77 @@ export async function redeemInvitationCode(code: string, userId: string): Promis
 
   try {
     const supabase = createServiceClient();
-    const { data: existing } = await supabase
-      .from("invitation_codes")
-      .select("id, code_type, used_by_user_id")
-      .eq("code", normalized)
-      .eq("is_active", true)
+    const { data } = await supabase
+      .from("user_preferences")
+      .select("user_id")
+      .eq("referral_code", normalized)
       .maybeSingle();
 
-    if (!existing) return false;
-    if (existing.code_type === "master") return true;
-    if (existing.used_by_user_id) return existing.used_by_user_id === userId;
-
-    const { error } = await supabase
-      .from("invitation_codes")
-      .update({
-        used_by_user_id: userId,
-        used_at: new Date().toISOString(),
-      })
-      .eq("code", normalized)
-      .is("used_by_user_id", null);
-
-    return !error;
+    return !!data;
   } catch (err) {
-    console.error("redeemInvitationCode error:", err);
-    return false;
+    console.error("validateInvitationCode error:", err);
+    return masterCodesFromEnv().has(normalized);
   }
 }
 
-export async function generateReferralCodes(userId: string): Promise<string[]> {
-  if (!userId) return [];
+export async function recordReferral(
+  referralCode: string,
+  referredUserId: string
+): Promise<void> {
+  const normalized = referralCode.toUpperCase().trim();
+  if (!normalized || !referredUserId) return;
+
+  if (masterCodesFromEnv().has(normalized)) {
+    return;
+  }
 
   try {
     const supabase = createServiceClient();
 
-    const { data: existing } = await supabase
-      .from("invitation_codes")
-      .select("code")
-      .eq("created_by_user_id", userId)
-      .eq("code_type", "referral")
-      .order("created_at", { ascending: true });
+    const { data: referrer } = await supabase
+      .from("user_preferences")
+      .select("user_id, referral_count")
+      .eq("referral_code", normalized)
+      .maybeSingle();
 
-    if (existing && existing.length >= 3) {
-      return existing.map((row) => row.code);
+    if (!referrer?.user_id || referrer.user_id === referredUserId) {
+      return;
     }
 
-    const needed = 3 - (existing?.length ?? 0);
-    const codes: string[] = [];
+    await supabase.from("referrals").insert({
+      referral_code: normalized,
+      referrer_user_id: referrer.user_id,
+      referred_user_id: referredUserId,
+    });
 
-    for (let i = 0; i < needed; i++) {
-      let code = generateCode();
-      let attempts = 0;
-      while (attempts < 8) {
-        const { data: clash } = await supabase
-          .from("invitation_codes")
-          .select("id")
-          .eq("code", code)
-          .maybeSingle();
-        if (!clash && !codes.includes(code)) break;
-        code = generateCode();
-        attempts++;
-      }
-      codes.push(code);
-    }
-
-    if (codes.length === 0) return existing?.map((row) => row.code) ?? [];
-
-    const { error } = await supabase.from("invitation_codes").insert(
-      codes.map((code) => ({
-        code,
-        created_by_user_id: userId,
-        code_type: "referral",
-        is_active: true,
-      }))
-    );
-
-    if (error) {
-      console.error("Failed to generate referral codes:", error);
-      return existing?.map((row) => row.code) ?? [];
-    }
-
-    const { data: all } = await supabase
-      .from("invitation_codes")
-      .select("code")
-      .eq("created_by_user_id", userId)
-      .eq("code_type", "referral")
-      .order("created_at", { ascending: true });
-
-    return all?.map((row) => row.code) ?? codes;
+    await supabase
+      .from("user_preferences")
+      .update({ referral_count: (referrer.referral_count || 0) + 1 })
+      .eq("user_id", referrer.user_id);
   } catch (err) {
-    console.error("generateReferralCodes error:", err);
-    return [];
+    console.error("recordReferral error:", err);
   }
 }
 
-export type ReferralCodeRow = {
-  code: string;
-  used_by_user_id: string | null;
-  used_at: string | null;
-  created_at: string | null;
-};
-
-export async function getUserReferralCodes(userId: string): Promise<ReferralCodeRow[]> {
-  if (!userId) return [];
+export async function getReferralProfile(userId: string): Promise<ReferralProfile> {
+  if (!userId) {
+    return { referral_code: null, referral_count: 0 };
+  }
 
   try {
     const supabase = createServiceClient();
     const { data } = await supabase
-      .from("invitation_codes")
-      .select("code, used_by_user_id, used_at, created_at")
-      .eq("created_by_user_id", userId)
-      .eq("code_type", "referral")
-      .order("created_at", { ascending: true });
+      .from("user_preferences")
+      .select("referral_code, referral_count")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    return data ?? [];
+    return {
+      referral_code: data?.referral_code ?? null,
+      referral_count: data?.referral_count ?? 0,
+    };
   } catch (err) {
-    console.error("getUserReferralCodes error:", err);
-    return [];
+    console.error("getReferralProfile error:", err);
+    return { referral_code: null, referral_count: 0 };
   }
 }

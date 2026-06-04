@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../../lib/auth-helpers";
 import {
-  generateReferralCodes,
-  getUserReferralCodes,
-  redeemInvitationCode,
+  generatePermanentReferralCode,
+  getReferralProfile,
+  recordReferral,
 } from "../../../../lib/invitation-codes";
 import { snakeToCamel } from "../../../../lib/case-utils";
 
@@ -15,8 +15,9 @@ export async function GET(request: NextRequest) {
   }
 
   const userId = String(user.supabase_user_id || user.id);
-  const codes = await getUserReferralCodes(userId);
-  return NextResponse.json(snakeToCamel(codes));
+  await generatePermanentReferralCode(userId);
+  const profile = await getReferralProfile(userId);
+  return NextResponse.json(snakeToCamel(profile));
 }
 
 export async function POST(request: NextRequest) {
@@ -36,12 +37,17 @@ export async function POST(request: NextRequest) {
     invitationCode = undefined;
   }
 
-  const codes = await generateReferralCodes(userId);
+  const referralCode = await generatePermanentReferralCode(userId);
 
-  if (invitationCode) {
-    await redeemInvitationCode(invitationCode, userId);
+  if (invitationCode?.trim()) {
+    await recordReferral(invitationCode, userId);
   }
 
-  const rows = await getUserReferralCodes(userId);
-  return NextResponse.json(snakeToCamel(rows));
+  const profile = await getReferralProfile(userId);
+  return NextResponse.json(
+    snakeToCamel({
+      referral_code: profile.referral_code ?? referralCode,
+      referral_count: profile.referral_count,
+    })
+  );
 }

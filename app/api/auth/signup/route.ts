@@ -8,8 +8,8 @@ import { sendWelcomeEmail } from "../../../../server/resend";
 import { syncContactToLoops } from "../../../../lib/loops";
 import { snakeToCamel } from "../../../../lib/case-utils";
 import {
-  generateReferralCodes,
-  redeemInvitationCode,
+  generatePermanentReferralCode,
+  recordReferral,
 } from "../../../../lib/invitation-codes";
 
 export async function POST(request: NextRequest) {
@@ -101,12 +101,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const referralCodes = await generateReferralCodes(user.id);
-      if (referralCodes.length) {
-        console.log("Generated referral codes for", user.id, referralCodes);
-      }
+      await generatePermanentReferralCode(user.id);
       if (typeof invitationCode === "string" && invitationCode.trim()) {
-        await redeemInvitationCode(invitationCode, user.id);
+        await recordReferral(invitationCode, user.id);
       }
     }
 
