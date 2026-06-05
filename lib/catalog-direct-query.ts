@@ -95,7 +95,7 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
     opts.maxPrice ||
     opts.minPrice
   );
-  const useExactCount = !opts.skipCount && hasNarrowingFilter;
+  const useExactCount = false;
 
   try {
     // Unfiltered browse: `products` table is fast; filtered queries use live view + garment_type.
@@ -186,17 +186,8 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
     }
 
     const products = rows.map((row: any) => mapDirectRow(row as Record<string, unknown>));
-    const total = useExactCount
-      ? count ?? products.length
-      : opts.skipCount
-        ? null
-        : hasNarrowingFilter
-          ? count ?? products.length
-          : offset + products.length + (products.length >= limit ? 1 : 0);
-    const hasMore =
-      total != null && useExactCount
-        ? offset + products.length < total
-        : products.length >= limit;
+    const total = opts.skipCount ? null : offset + products.length + (products.length >= limit ? 1 : 0);
+    const hasMore = products.length >= limit;
 
     return { products, total, hasMore };
   } catch (err) {

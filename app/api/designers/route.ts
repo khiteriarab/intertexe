@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  fetchDesignersByNames,
-  fetchDesignersByIds,
-} from "../../../lib/supabase-server";
-import { fetchCatalogDesigners } from "../../../lib/catalog-designers";
+import { fetchDesignersByNames, fetchDesignersByIds, getServerSupabase } from "../../../lib/supabase-server";
 
 export const revalidate = 300;
 
@@ -11,6 +7,45 @@ const PRODUCT_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
   "CDN-Cache-Control": "public, max-age=300",
 };
+
+type DesignerListItem = { slug: string; name: string; count: number };
+
+type CacheEntry = { at: number; data: DesignerListItem[] };
+const cache = ((globalThis as any).__designersCache ??= new Map<string, CacheEntry>());
+
+async function fetchDesignersFast(region: string): Promise<DesignerListItem[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  // Fast path: aggregate directly from products (is_displayable only), avoids heavy live view scans.
+  const { data, error } = await supabase
+    .from("products")
+    .select("brand_slug, brand_name")
+    .eq("region", region)
+    .eq("is_displayable", true)
+    .not("brand_slug", "is", null)
+    .not("brand_name", "is", null)
+    .limit(20000);
+
+  if (error || !data) {
+    console.warn("[api/designers] products aggregate failed", error?.message);
+    return [];
+  }
+
+  const map = new Map<string, { slug: string; name: string; count: number }>();
+  for (const row of data as any[]) {
+    const slug = String(row.brand_slug || "").trim().toLowerCase();
+    const name = String(row.brand_name || slug).trim();
+    if (!slug || !name) continue;
+    const item = map.get(slug);
+    if (item) item.count += 1;
+    else map.set(slug, { slug, name, count: 1 });
+  }
+
+  return [...map.values()]
+    .filter((b) => b.count >= 2)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -31,19 +66,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(designers, { headers: PRODUCT_CACHE_HEADERS });
     }
 
-    let brands = await fetchCatalogDesigners(region);
+    const key = `${region}:all`;
+    const hit = cache.get(key);
+    const fresh = hit && Date.now() - hit.at < 300_000;
+    let brands = fresh ? hit.data : await fetchDesignersFast(region);
+    if (!fresh) cache.set(key, { at: Date.now(), data: brands });
 
     if (query) {
       const needle = query.toLowerCase();
-      brands = brands.filter(
-        (b) => b.name.toLowerCase().includes(needle) || b.slug.includes(needle)
-      );
+      brands = brands.filter((b) => b.name.toLowerCase().includes(needle) || b.slug.includes(needle));
     }
 
-    return NextResponse.json(
-      { designers: brands, total: brands.length },
-      { headers: PRODUCT_CACHE_HEADERS }
-    );
+    return NextResponse.json({ designers: brands, total: brands.length }, { headers: PRODUCT_CACHE_HEADERS });
   } catch (error) {
     console.error("[api/designers]", error);
     return NextResponse.json({ designers: [], total: 0 }, { status: 500 });
