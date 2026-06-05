@@ -13,6 +13,39 @@ type DesignerListItem = { slug: string; name: string; count: number };
 type CacheEntry = { at: number; data: DesignerListItem[] };
 const cache = ((globalThis as any).__designersCache ??= new Map<string, CacheEntry>());
 
+async function ensureKeyBrands(region: string, brands: DesignerListItem[]): Promise<DesignerListItem[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return brands;
+  const keys = ["zimmermann", "toteme"];
+  const have = new Set(brands.map((b) => b.slug));
+  const missing = keys.filter((k) => !have.has(k));
+  if (!missing.length) return brands;
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("brand_slug, brand_name")
+    .eq("region", region)
+    .eq("is_displayable", true)
+    .in("brand_slug", missing);
+
+  if (error || !data?.length) return brands;
+  const counts = new Map<string, { name: string; count: number }>();
+  for (const row of data as any[]) {
+    const slug = String(row.brand_slug || "").toLowerCase();
+    if (!slug) continue;
+    const name = String(row.brand_name || slug);
+    const cur = counts.get(slug);
+    if (cur) cur.count += 1;
+    else counts.set(slug, { name, count: 1 });
+  }
+  for (const [slug, val] of counts.entries()) {
+    if (val.count >= 2) {
+      brands.push({ slug, name: val.name, count: val.count });
+    }
+  }
+  return brands.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 async function fetchDesignersFast(region: string): Promise<DesignerListItem[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
@@ -70,6 +103,7 @@ export async function GET(request: NextRequest) {
     const hit = cache.get(key);
     const fresh = hit && Date.now() - hit.at < 300_000;
     let brands = fresh ? hit.data : await fetchDesignersFast(region);
+    brands = await ensureKeyBrands(region, brands);
     if (!fresh) cache.set(key, { at: Date.now(), data: brands });
 
     if (query) {

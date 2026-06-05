@@ -2,7 +2,6 @@
  * Direct live_products_apparel queries — no catalog_list RPC, no fetchShopProducts scan.
  */
 import { getServerSupabase } from "./supabase-service-client";
-import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { applyCategoryFilter, CATEGORY_TO_GARMENT_TYPE } from "./catalog-shop-mappings";
 
 export { CATEGORY_TO_GARMENT_TYPE, applyCategoryFilter };
@@ -120,9 +119,11 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
       };
     }
 
-    let query = liveProductsApparelFrom(supabase)
+    let query = supabase
+      .from("products")
       .select("*", useExactCount ? { count: "exact" } : undefined)
       .eq("region", region)
+      .eq("is_displayable", true)
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
       .not("price", "is", null);
