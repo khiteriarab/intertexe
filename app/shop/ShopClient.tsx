@@ -7,7 +7,14 @@ import { useSearchParams } from "next/navigation";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopCatalogCount, getShopMeta, getShopBrands } from "./actions";
-import type { ShopPriceCap } from "../../lib/shop-client-filters";
+import {
+  SHOP_COLOR_OPTIONS,
+  SHOP_CATEGORY_OPTIONS,
+  SHOP_PRICE_TIERS,
+  priceBoundsFromTier,
+  type ShopCategoryKey,
+  type ShopPriceTierId,
+} from "../../lib/catalog-filter-options";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
 import { CATALOG_PAGE_SIZE, US_CATALOG_KNOWN_TOTAL } from "../../lib/catalog-constants";
 import { formatDisplayPrice } from "../../lib/format-display-price";
@@ -28,7 +35,7 @@ import {
 import { cfProductCard } from "../../lib/cloudflare-images";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
-type CategoryFilterKey = "knitwear" | "tops" | "dresses" | "skirts" | "bottoms" | "outerwear" | "lingerie" | "swimwear";
+type CategoryFilterKey = ShopCategoryKey | "bottoms";
 type SortOption = "new" | "price-high" | "price-low" | "natural-high";
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "all", label: "All" },
@@ -42,25 +49,12 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
 
 const MATERIAL_FILTER_OPTIONS = FIBER_TABS.filter((t) => t.key !== "all");
 
-const CATEGORY_FILTERS: { key: CategoryFilterKey; label: string }[] = [
-  { key: "knitwear", label: "Knitwear" },
-  { key: "tops", label: "Tops" },
-  { key: "dresses", label: "Dresses" },
-  { key: "skirts", label: "Skirts" },
-  { key: "bottoms", label: "Bottoms" },
-  { key: "outerwear", label: "Outerwear" },
-  { key: "lingerie", label: "Lingerie" },
-  { key: "swimwear", label: "Swimwear" },
-];
+const CATEGORY_FILTERS = SHOP_CATEGORY_OPTIONS;
 
-type PriceFilterId = "any" | "100" | "300" | "600" | "600plus";
-const PRICE_FILTER_OPTIONS: { id: PriceFilterId; label: string }[] = [
-  { id: "any", label: "Any price" },
-  { id: "100", label: "Under £100" },
-  { id: "300", label: "£100–£300" },
-  { id: "600", label: "£300–£600" },
-  { id: "600plus", label: "£600+" },
-];
+const PRICE_FILTER_OPTIONS = SHOP_PRICE_TIERS.map((tier) => ({
+  id: tier.id as ShopPriceTierId,
+  label: tier.label,
+}));
 
 const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "new", label: "Newest" },
@@ -73,16 +67,27 @@ function parseCategoryParams(raw: string | null): Set<CategoryFilterKey> {
   const keys = new Set<CategoryFilterKey>();
   if (!raw) return keys;
   for (const part of raw.split(",")) {
-    const k = part.trim().toLowerCase();
+    let k = part.trim().toLowerCase();
+    if (k === "bottoms") k = "trousers";
     if (CATEGORY_FILTERS.some((c) => c.key === k)) keys.add(k as CategoryFilterKey);
   }
   return keys;
 }
 
-function priceCapFromParam(raw: string | null): ShopPriceCap {
-  if (raw === "100" || raw === "300" || raw === "600") return Number(raw) as ShopPriceCap;
-  if (raw === "600plus") return null;
-  return null;
+function priceTierFromParam(raw: string | null): ShopPriceTierId {
+  if (!raw || raw === "any") return "any";
+  if (raw === "2500plus" || raw === "600plus") return "2500plus";
+  if (raw === "100") return "200";
+  if (raw === "300") return "500";
+  if (raw === "600") return "1000";
+  if (PRICE_FILTER_OPTIONS.some((p) => p.id === raw)) return raw as ShopPriceTierId;
+  return "any";
+}
+
+function parseColorParam(raw: string | null): string | null {
+  if (!raw) return null;
+  const normalized = raw.trim().toLowerCase();
+  return SHOP_COLOR_OPTIONS.some((c) => c.value === normalized) ? normalized : null;
 }
 
 const SHOP_PAGE_SIZE = CATALOG_PAGE_SIZE;
@@ -200,7 +205,8 @@ export default function ShopClient({
       : sortParam === "recommended"
         ? "new"
         : "new";
-  const initialPriceCap = priceCapFromParam(searchParams.get("price"));
+  const initialPriceTier = priceTierFromParam(searchParams.get("price"));
+  const initialColor = parseColorParam(searchParams.get("color"));
   const initialBrands = (searchParams.get("brands") || "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
@@ -213,8 +219,8 @@ export default function ShopClient({
 
   const [fiberTab, setFiberTab] = useState<FiberTab>(initialFiber);
   const [selectedCategories, setSelectedCategories] = useState<Set<CategoryFilterKey>>(initialCategories);
-  const [priceCap, setPriceCap] = useState<ShopPriceCap>(initialPriceCap);
-  const [priceCap600Plus, setPriceCap600Plus] = useState(searchParams.get("price") === "600plus");
+  const [priceTier, setPriceTier] = useState<ShopPriceTierId>(initialPriceTier);
+  const [selectedColor, setSelectedColor] = useState<string | null>(initialColor);
   const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>(initialBrands);
   const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
@@ -287,8 +293,6 @@ export default function ShopClient({
       .catch(() => {});
   }, [prefetchedBrands]);
 
-  const effectiveMaxPrice = priceCap600Plus ? null : priceCap;
-
   const [products, setProducts] = useState(initialProducts || []);
   const [resultTotal, setResultTotal] = useState<number | null>(initialTotal > 0 ? initialTotal : null);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -351,8 +355,8 @@ export default function ShopClient({
       sortBy === "new" &&
       marketFilter === "all" &&
       !debouncedSearch &&
-      priceCap == null &&
-      !priceCap600Plus &&
+      priceTier === "any" &&
+      !selectedColor &&
       selectedBrandSlugs.length === 0 &&
       selectedFiberSubtypes.length === 0 &&
       listOffset === 0;
@@ -370,10 +374,13 @@ export default function ShopClient({
             categories: categoryList.length ? categoryList : undefined,
             brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
             fiberSubtypes: selectedFiberSubtypes.length ? selectedFiberSubtypes : undefined,
-            maxPrice: effectiveMaxPrice,
-            price600Plus: priceCap600Plus,
+            color: selectedColor || undefined,
+            maxPrice: priceBounds.maxPrice ?? null,
+            minPrice: priceBounds.minPrice ?? null,
+            price600Plus: priceTier === "2500plus",
             sort: sortBy,
             market: marketFilter !== "all" ? marketFilter : undefined,
+            catalogRegion,
             limit: SHOP_PAGE_SIZE,
             offset: listOffset,
             search: debouncedSearch || undefined,
@@ -421,8 +428,9 @@ export default function ShopClient({
     marketFilter,
     listOffset,
     debouncedSearch,
-    effectiveMaxPrice,
-    priceCap600Plus,
+    priceTier,
+    selectedColor,
+    catalogRegion,
     selectedBrandSlugs.join(","),
     selectedFiberSubtypes.join(","),
     initialProducts,
@@ -436,9 +444,12 @@ export default function ShopClient({
       categories: categoryList.length ? categoryList : undefined,
       brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
       fiberSubtypes: selectedFiberSubtypes.length ? selectedFiberSubtypes : undefined,
-      maxPrice: effectiveMaxPrice,
-      price600Plus: priceCap600Plus,
+      color: selectedColor || undefined,
+      maxPrice: priceBounds.maxPrice ?? null,
+      minPrice: priceBounds.minPrice ?? null,
+      price600Plus: priceTier === "2500plus",
       market: marketFilter,
+      catalogRegion,
       search: debouncedSearch || undefined,
     })
       .then(({ total }) => {
@@ -451,8 +462,9 @@ export default function ShopClient({
     categoryList.join(","),
     marketFilter,
     debouncedSearch,
-    effectiveMaxPrice,
-    priceCap600Plus,
+    priceTier,
+    selectedColor,
+    catalogRegion,
     selectedBrandSlugs.join(","),
     selectedFiberSubtypes.join(","),
   ]);
@@ -475,8 +487,8 @@ export default function ShopClient({
     sortBy === "new" &&
     marketFilter === "all" &&
     !debouncedSearch &&
-    priceCap == null &&
-    !priceCap600Plus &&
+    priceTier === "any" &&
+    !selectedColor &&
     selectedBrandSlugs.length === 0 &&
     selectedFiberSubtypes.length === 0;
 
@@ -523,11 +535,18 @@ export default function ShopClient({
         setListOffset(0);
       },
     })),
-    ...(priceCap != null || priceCap600Plus
+    ...(priceTier !== "any"
       ? [{
           id: "price",
-          label: priceCap600Plus ? "£600+" : PRICE_FILTER_OPTIONS.find((p) => p.id === String(priceCap))?.label || "Price",
-          onRemove: () => { setPriceCap(null); setPriceCap600Plus(false); setListOffset(0); },
+          label: PRICE_FILTER_OPTIONS.find((p) => p.id === priceTier)?.label || "Price",
+          onRemove: () => { setPriceTier("any"); setListOffset(0); },
+        }]
+      : []),
+    ...(selectedColor
+      ? [{
+          id: "color",
+          label: SHOP_COLOR_OPTIONS.find((c) => c.value === selectedColor)?.label || selectedColor,
+          onRemove: () => { setSelectedColor(null); setListOffset(0); },
         }]
       : []),
     ...selectedBrandSlugs.map((slug) => ({
@@ -632,6 +651,18 @@ export default function ShopClient({
             selectedFiberSubtypes={selectedFiberSubtypes}
             onFiberSubtypesChange={(subtypes) => {
               setSelectedFiberSubtypes(subtypes);
+              setListOffset(0);
+            }}
+            colorOptions={[...SHOP_COLOR_OPTIONS]}
+            selectedColor={selectedColor}
+            onColorChange={(color) => {
+              setSelectedColor(color);
+              setListOffset(0);
+            }}
+            priceTierOptions={PRICE_FILTER_OPTIONS}
+            selectedPriceTier={priceTier}
+            onPriceTierChange={(tier) => {
+              setPriceTier(tier as ShopPriceTierId);
               setListOffset(0);
             }}
           />
@@ -804,30 +835,36 @@ export default function ShopClient({
                   </button>
                 ))}
               </div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Color</p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {SHOP_COLOR_OPTIONS.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    onClick={() => {
+                      setSelectedColor(selectedColor === color.value ? null : color.value);
+                      setListOffset(0);
+                    }}
+                    className={`px-3 py-1.5 text-[10px] tracking-[0.1em] uppercase border transition-colors ${
+                      selectedColor === color.value
+                        ? "bg-[#1C2B2A] text-white border-[#1C2B2A]"
+                        : "bg-white text-black border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    {color.label}
+                  </button>
+                ))}
+              </div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Price</p>
               <div className="flex flex-col gap-2 mb-8 border border-border/30">
                 {PRICE_FILTER_OPTIONS.map((opt) => {
-                  const active =
-                    opt.id === "any"
-                      ? priceCap == null && !priceCap600Plus
-                      : opt.id === "600plus"
-                        ? priceCap600Plus
-                        : priceCap === Number(opt.id);
+                  const active = priceTier === opt.id;
                   return (
                     <button
                       key={opt.id}
                       type="button"
                       onClick={() => {
-                        if (opt.id === "any") {
-                          setPriceCap(null);
-                          setPriceCap600Plus(false);
-                        } else if (opt.id === "600plus") {
-                          setPriceCap(null);
-                          setPriceCap600Plus(true);
-                        } else {
-                          setPriceCap(Number(opt.id) as ShopPriceCap);
-                          setPriceCap600Plus(false);
-                        }
+                        setPriceTier(opt.id);
                         setListOffset(0);
                       }}
                       className={`w-full text-left px-4 py-3 text-[12px] border-b border-border/20 last:border-0 ${
@@ -896,9 +933,10 @@ export default function ShopClient({
               onClick={() => {
                 setFiberTab("all");
                 setSelectedCategories(new Set());
-                setPriceCap(null);
-                setPriceCap600Plus(false);
+                setPriceTier("any");
+                setSelectedColor(null);
                 setSelectedBrandSlugs([]);
+                setSelectedFiberSubtypes([]);
                 setSortBy("new");
                 setSearchQuery("");
                 setDebouncedSearch("");

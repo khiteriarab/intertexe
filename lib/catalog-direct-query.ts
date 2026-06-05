@@ -60,6 +60,7 @@ export type CatalogDirectQueryOpts = {
   maxPrice?: number;
   minPrice?: number;
   color?: string;
+  fiberSubtype?: string;
   isSale?: boolean;
   skipCount?: boolean;
 };
@@ -105,6 +106,7 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
 
   const hasNarrowingFilter = Boolean(
     opts.fiber ||
+    opts.fiberSubtype ||
     categories.length ||
     opts.collection ||
     opts.brand ||
@@ -224,8 +226,12 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
       );
     }
 
+    if (opts.fiberSubtype) {
+      query = query.ilike("composition", `%${opts.fiberSubtype}%`);
+    }
+
     if (opts.color) {
-      query = query.ilike("color", `%${opts.color}%`);
+      query = query.eq("color", opts.color);
     }
 
     query = applySort(query, opts.sort);

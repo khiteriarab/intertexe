@@ -3,7 +3,7 @@ export const SHOP_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
   dresses: ["dresses"],
   tops: ["tops_blouses"],
   knitwear: ["knitwear", "sweaters_cardigans"],
-  trousers: ["pants_trousers", "shorts"],
+  trousers: ["pants_trousers"],
   bottoms: ["pants_trousers", "skirts", "shorts"],
   outerwear: ["jackets_blazers", "coats"],
   skirts: ["skirts"],

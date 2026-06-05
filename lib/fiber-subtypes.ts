@@ -1,11 +1,11 @@
 /** Primary fiber → editorial subtype labels (shop / sale / collection filters). */
 export const FIBER_SUBTYPES: Record<string, string[]> = {
-  wool: ["Merino", "Cashmere blend", "Lambswool", "Shetland", "Alpaca", "Mohair"],
-  cotton: ["Denim", "Poplin", "Jersey", "Oxford", "Chambray"],
-  silk: ["Charmeuse", "Chiffon", "Crepe", "Georgette", "Organza", "Satin"],
-  linen: ["Belgian linen", "Irish linen", "Stonewashed"],
-  cashmere: ["Pure cashmere", "Cashmere blend"],
-  leather: ["Full-grain", "Suede", "Lambskin", "Nubuck"],
+  silk: ["Charmeuse", "Chiffon", "Crepe", "Dupioni", "Habotai", "Organza", "Satin", "Taffeta", "Twill", "Velvet"],
+  cashmere: ["Fine Knit", "Chunky Knit", "Woven"],
+  wool: ["Merino", "Lambswool", "Shetland", "Bouclé", "Tweed", "Flannel", "Crepe", "Jersey"],
+  linen: ["Belgian Linen", "Irish Linen", "Stonewashed", "Washed"],
+  cotton: ["Poplin", "Oxford", "Twill", "Jersey", "Voile", "Broderie Anglaise", "Denim", "Canvas"],
+  leather: ["Nappa", "Suede", "Patent", "Nubuck"],
 };
 
 export function fiberSubtypesFor(fiber: string | null | undefined): string[] {

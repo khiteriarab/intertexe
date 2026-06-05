@@ -233,6 +233,7 @@ export async function GET(request: NextRequest) {
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
   const minPrice = sp.get("minPrice") ? Number(sp.get("minPrice")) : undefined;
   const color = sp.get("color") || undefined;
+  const fiberSubtype = sp.get("fiberSubtype") || undefined;
   const searchTerms = (search || "")
     .toLowerCase()
     .split(/\s+/)
@@ -355,6 +356,7 @@ export async function GET(request: NextRequest) {
       maxPrice,
       minPrice,
       color,
+      fiberSubtype,
       limit,
       offset,
       skipCount,
@@ -373,6 +375,7 @@ export async function GET(request: NextRequest) {
       !brandAlias &&
       !search &&
       !color &&
+      !fiberSubtype &&
       maxPrice == null &&
       minPrice == null &&
       offset === 0;

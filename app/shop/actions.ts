@@ -10,7 +10,10 @@ export async function getShopProducts(options: {
   categories?: string[];
   brandSlugs?: string[];
   fiberSubtypes?: string[];
+  fiberSubtype?: string;
+  color?: string;
   maxPrice?: number | null;
+  minPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
   catalogRegion?: string;
@@ -30,7 +33,12 @@ export async function getShopProducts(options: {
   if (options.categories?.length) params.set("category", options.categories[0]);
   if (options.sort && options.sort !== "recommended") params.set("sort", options.sort);
   if (options.search) params.set("q", options.search);
+  if (options.color) params.set("color", options.color);
+  const subtype = options.fiberSubtype || options.fiberSubtypes?.[0];
+  if (subtype) params.set("fiberSubtype", subtype);
+  if (options.minPrice != null && options.minPrice > 0) params.set("minPrice", String(options.minPrice));
   if (options.maxPrice && !options.price600Plus) params.set("maxPrice", String(options.maxPrice));
+  if (options.price600Plus && options.minPrice) params.set("minPrice", String(options.minPrice));
   if (options.brandSlugs?.length) params.set("brand", options.brandSlugs[0]);
 
   const res = await fetch(`${SITE_URL}/api/catalog?${params}`, { cache: "no-store" });
@@ -45,7 +53,10 @@ export async function getShopCatalogCount(options: {
   categories?: string[];
   brandSlugs?: string[];
   fiberSubtypes?: string[];
+  fiberSubtype?: string;
+  color?: string;
   maxPrice?: number | null;
+  minPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
   search?: string;

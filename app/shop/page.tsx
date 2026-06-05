@@ -29,7 +29,7 @@ function getDetectedCountry(headerList: Headers) {
 
 const SHOP_FIBERS = new Set(["cashmere", "silk", "wool", "cotton", "linen", "leather"]);
 const SHOP_CATEGORIES = new Set([
-  "knitwear", "tops", "dresses", "skirts", "bottoms", "outerwear", "lingerie", "swimwear",
+  "knitwear", "tops", "dresses", "skirts", "trousers", "outerwear", "jumpsuits", "lingerie", "swimwear",
 ]);
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com";
@@ -56,7 +56,17 @@ async function fetchShopCatalog(catalogParams: URLSearchParams) {
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ market?: string; fiber?: string; category?: string; sort?: string; q?: string }>;
+  searchParams?: Promise<{
+    market?: string;
+    fiber?: string;
+    category?: string;
+    sort?: string;
+    q?: string;
+    color?: string;
+    fiberSubtype?: string;
+    price?: string;
+    brands?: string;
+  }>;
 }) {
   try {
     const params = searchParams ? await searchParams : {};
@@ -72,6 +82,10 @@ export default async function ShopPage({
         ? params.sort
         : "recommended";
     const search = params?.q?.trim() || undefined;
+    const color = params?.color?.trim() || undefined;
+    const fiberSubtype = params?.fiberSubtype?.trim() || undefined;
+    const price = params?.price?.trim() || undefined;
+    const brand = params?.brands?.split(",")[0]?.trim() || undefined;
 
     const catalogParams = new URLSearchParams({
       region: "us",
@@ -82,6 +96,23 @@ export default async function ShopPage({
     if (category) catalogParams.set("category", category);
     if (sort && sort !== "recommended") catalogParams.set("sort", sort);
     if (search) catalogParams.set("q", search);
+    if (color) catalogParams.set("color", color);
+    if (fiberSubtype) catalogParams.set("fiberSubtype", fiberSubtype);
+    if (brand) catalogParams.set("brand", brand);
+    if (price && price !== "any") {
+      if (price === "2500plus" || price === "600plus") catalogParams.set("minPrice", "2500");
+      else if (price === "200") catalogParams.set("maxPrice", "200");
+      else if (price === "500") {
+        catalogParams.set("minPrice", "200");
+        catalogParams.set("maxPrice", "500");
+      } else if (price === "1000") {
+        catalogParams.set("minPrice", "500");
+        catalogParams.set("maxPrice", "1000");
+      } else if (price === "2500") {
+        catalogParams.set("minPrice", "1000");
+        catalogParams.set("maxPrice", "2500");
+      }
+    }
 
     const [shopData, meta, brands] = await Promise.all([
       fetchShopCatalog(catalogParams),

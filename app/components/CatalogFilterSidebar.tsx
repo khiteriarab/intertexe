@@ -108,6 +108,8 @@ function CollapsiblePanel({
   );
 }
 
+type PriceTierOption = { id: string; label: string };
+
 type CatalogFilterSidebarProps<TFiber extends string, TCategory extends string> = {
   resultCount: number | null;
   isLoading?: boolean;
@@ -123,6 +125,12 @@ type CatalogFilterSidebarProps<TFiber extends string, TCategory extends string> 
   onDesignersChange?: (slugs: string[]) => void;
   selectedFiberSubtypes?: string[];
   onFiberSubtypesChange?: (subtypes: string[]) => void;
+  colorOptions?: { label: string; value: string }[];
+  selectedColor?: string | null;
+  onColorChange?: (color: string | null) => void;
+  priceTierOptions?: PriceTierOption[];
+  selectedPriceTier?: string;
+  onPriceTierChange?: (tierId: string) => void;
   moodOptions?: string[];
   selectedMood?: string | null;
   onMoodChange?: (mood: string | null) => void;
@@ -143,15 +151,21 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
   onDesignersChange,
   selectedFiberSubtypes = [],
   onFiberSubtypesChange,
+  colorOptions = [],
+  selectedColor = null,
+  onColorChange,
+  priceTierOptions = [],
+  selectedPriceTier = "any",
+  onPriceTierChange,
   moodOptions = [],
   selectedMood = null,
   onMoodChange,
 }: CatalogFilterSidebarProps<TFiber, TCategory>) {
   const [openSection, setOpenSection] = useState<
-    "category" | "material" | "designer" | "mood" | null
+    "category" | "material" | "color" | "price" | "designer" | "mood" | null
   >("category");
 
-  const toggle = (section: "category" | "material" | "designer" | "mood") => {
+  const toggle = (section: "category" | "material" | "color" | "price" | "designer" | "mood") => {
     setOpenSection((prev) => (prev === section ? null : section));
   };
 
@@ -237,6 +251,61 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
           </div>
         )}
       </FilterSection>
+
+      {onColorChange && colorOptions.length > 0 && (
+        <CollapsiblePanel
+          title="Color"
+          summary={colorOptions.find((c) => c.value === selectedColor)?.label}
+          open={openSection === "color"}
+          onToggle={() => toggle("color")}
+        >
+          <div className="flex flex-wrap gap-2">
+            {colorOptions.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                onClick={() =>
+                  onColorChange(selectedColor === color.value ? null : color.value)
+                }
+                className={`px-3 py-1.5 text-[10px] tracking-[0.1em] uppercase border transition-colors ${
+                  selectedColor === color.value
+                    ? "bg-[#1C2B2A] text-white border-[#1C2B2A]"
+                    : "bg-white text-black border-gray-200 hover:border-gray-400"
+                }`}
+              >
+                {color.label}
+              </button>
+            ))}
+          </div>
+        </CollapsiblePanel>
+      )}
+
+      {onPriceTierChange && priceTierOptions.length > 0 && (
+        <CollapsiblePanel
+          title="Price"
+          summary={priceTierOptions.find((p) => p.id === selectedPriceTier)?.label}
+          open={openSection === "price"}
+          onToggle={() => toggle("price")}
+        >
+          <ul className="space-y-0.5">
+            {priceTierOptions.map((tier) => (
+              <li key={tier.id}>
+                <button
+                  type="button"
+                  onClick={() => onPriceTierChange(tier.id)}
+                  className={`w-full text-left py-2 text-[12px] transition-colors ${
+                    selectedPriceTier === tier.id
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tier.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </CollapsiblePanel>
+      )}
 
       {onDesignersChange && designers.length > 0 && (
         <CollapsiblePanel
