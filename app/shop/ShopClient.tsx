@@ -395,8 +395,12 @@ export default function ShopClient({
               return next;
             });
           }
+          if (result.total != null) {
+            setResultTotal((prev) =>
+              prev != null && result.total != null && result.total < prev ? prev : result.total
+            );
+          }
           setHasMore(result.hasMore);
-          if (result.total != null) setResultTotal(result.total);
         } catch {
           if (listOffset === 0) {
             setProducts([]);
@@ -488,6 +492,8 @@ export default function ShopClient({
           : null);
 
   const displayTotal = displayResultTotal ?? (useGlobalCountHint ? US_CATALOG_KNOWN_TOTAL : products.length);
+  const pagingTotal = displayTotal > 0 ? displayTotal : US_CATALOG_KNOWN_TOTAL;
+  const canLoadMore = products.length > 0 && products.length < pagingTotal;
 
   const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy) ?? SORT_OPTIONS[0];
 
@@ -912,7 +918,7 @@ export default function ShopClient({
               ))}
             </div>
 
-            {(hasMore || (displayTotal > products.length)) && (
+            {(canLoadMore || hasMore) && (
               <div className="flex justify-center pt-10 md:pt-12">
                 <button
                   onClick={() => {
@@ -926,9 +932,7 @@ export default function ShopClient({
                 >
                   {loadingMore
                     ? "Loading…"
-                    : displayTotal > products.length
-                      ? `Load more (${(displayTotal - products.length).toLocaleString()} remaining)`
-                      : "Load more"}
+                    : `Load More · ${products.length.toLocaleString()} of ${pagingTotal.toLocaleString()}`}
                 </button>
               </div>
             )}
