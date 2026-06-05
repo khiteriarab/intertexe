@@ -8,9 +8,9 @@ const TESTS = [
   { name: "catalog", url: "/api/catalog?region=us&limit=1" },
   { name: "catalog_dresses", url: "/api/catalog?region=us&limit=1&category=dresses" },
   { name: "catalog_silk", url: "/api/catalog?region=us&limit=1&fiber=silk" },
-  { name: "sale", url: "/api/sale?region=us&limit=1" },
+  { name: "sale", url: "/api/sale?region=us&limit=1&skipCount=1" },
   { name: "sale_skirts", url: "/api/sale?region=us&limit=1&category=skirts" },
-  { name: "designers", url: "/api/designers?region=us&limit=1" },
+  { name: "designers", url: "/api/designers?region=us&limit=50" },
 ];
 
 export async function GET() {
