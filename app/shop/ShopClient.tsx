@@ -9,7 +9,7 @@ import { useProductFavorites } from "../hooks/use-product-favorites";
 import { getShopProducts, getShopCatalogCount, getShopMeta, getShopBrands } from "./actions";
 import type { ShopPriceCap } from "../../lib/shop-client-filters";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
-import { CATALOG_PAGE_SIZE } from "../../lib/catalog-constants";
+import { CATALOG_PAGE_SIZE, US_CATALOG_KNOWN_TOTAL } from "../../lib/catalog-constants";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
@@ -478,11 +478,16 @@ export default function ShopClient({
 
   const displayResultTotal =
     resultTotal ??
+    (initialTotal > 0 ? initialTotal : null) ??
     (useGlobalCountHint && globalCount > 0
       ? globalCount
       : useGlobalCountHint && fiberTab !== "all" && fiberCountsState[fiberTab]
         ? fiberCountsState[fiberTab]
-        : null);
+        : useGlobalCountHint
+          ? US_CATALOG_KNOWN_TOTAL
+          : null);
+
+  const displayTotal = displayResultTotal ?? (useGlobalCountHint ? US_CATALOG_KNOWN_TOTAL : products.length);
 
   const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy) ?? SORT_OPTIONS[0];
 
@@ -581,7 +586,7 @@ export default function ShopClient({
 
         <CatalogMobileToolbar
           className="mb-4"
-          resultCount={displayResultTotal}
+          resultCount={displayTotal}
           countLoading={countLoading && resultTotal == null}
           sortLabel={currentSort.label}
           onOpenFilter={() => { setShowFilterSheet(true); setShowSortSheet(false); }}
@@ -595,8 +600,8 @@ export default function ShopClient({
 
         <div className="lg:flex lg:gap-10 lg:items-start">
           <CatalogFilterSidebar
-            resultCount={displayResultTotal}
-            isLoading={countLoading || (isLoading && displayResultTotal == null)}
+            resultCount={displayTotal}
+            isLoading={countLoading && displayResultTotal == null}
             fiberTab={fiberTab}
             categoryFilter={categoryList[0] ?? "all"}
             fiberOptions={FIBER_TABS}
@@ -637,9 +642,9 @@ export default function ShopClient({
           <p className="text-[11px] md:text-xs text-muted-foreground" data-testid="text-result-count-desktop">
             {countLoading && displayResultTotal == null ? (
               <span className="animate-pulse">Loading…</span>
-            ) : (
-              <><span className="text-foreground">{(displayResultTotal ?? products.length).toLocaleString()}</span> results</>
-            )}
+            ) : displayTotal > 0 ? (
+              <><span className="text-foreground">{displayTotal.toLocaleString()}</span> verified pieces</>
+            ) : null}
           </p>
           <div className="relative">
               <button
@@ -704,9 +709,9 @@ export default function ShopClient({
           onClose={() => setShowFilterSheet(false)}
           title="Filter"
           subtitle={
-            displayResultTotal != null
-              ? `${displayResultTotal.toLocaleString()} results`
-              : countLoading
+            displayTotal > 0
+              ? `${displayTotal.toLocaleString()} verified pieces`
+              : countLoading && displayResultTotal == null
                 ? "Loading…"
                 : undefined
           }
@@ -907,7 +912,7 @@ export default function ShopClient({
               ))}
             </div>
 
-            {(hasMore || (resultTotal != null && resultTotal > products.length)) && (
+            {(hasMore || (displayTotal > products.length)) && (
               <div className="flex justify-center pt-10 md:pt-12">
                 <button
                   onClick={() => {
@@ -921,8 +926,8 @@ export default function ShopClient({
                 >
                   {loadingMore
                     ? "Loading…"
-                    : resultTotal != null && resultTotal > products.length
-                      ? `Load more (${(resultTotal - products.length).toLocaleString()} remaining)`
+                    : displayTotal > products.length
+                      ? `Load more (${(displayTotal - products.length).toLocaleString()} remaining)`
                       : "Load more"}
                 </button>
               </div>

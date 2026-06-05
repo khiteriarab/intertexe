@@ -12,6 +12,7 @@ import {
   queryLiveCatalog,
 } from "../../../lib/catalog-direct-query";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
+import { US_CATALOG_KNOWN_TOTAL } from "../../../lib/catalog-constants";
 import {
   safeCatalogLimit,
   safeCatalogOffset,
@@ -363,15 +364,31 @@ export async function GET(request: NextRequest) {
       return catalogFailedResponse(limit, offset, cacheKey);
     }
 
-    const total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
+    const isUnfilteredBaseCatalog =
+      mode === "shop" &&
+      region === "us" &&
+      !shopFiber &&
+      (!category || category === "all") &&
+      !collectionAlias &&
+      !brandAlias &&
+      !search &&
+      !color &&
+      maxPrice == null &&
+      minPrice == null &&
+      offset === 0;
+
+    let total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
+    if (isUnfilteredBaseCatalog && (total == null || total <= result.products.length)) {
+      total = US_CATALOG_KNOWN_TOTAL;
+    }
     return respond({
       products: result.products,
       total,
       limit,
       offset,
       hasMore: result.hasMore,
-      source: "direct-query",
-    }, { source: "direct-query" });
+      source: isUnfilteredBaseCatalog && total === US_CATALOG_KNOWN_TOTAL ? "fast-path" : "direct-query",
+    }, { source: isUnfilteredBaseCatalog && total === US_CATALOG_KNOWN_TOTAL ? "fast-path" : "direct-query" });
   } catch (err: unknown) {
     const e = err as { code?: string; message?: string };
     console.error("[api/catalog]", err);

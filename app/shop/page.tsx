@@ -96,7 +96,7 @@ export default async function ShopPage({
         <Suspense fallback={null}>
           <ShopClient
             initialProducts={products}
-            initialTotal={shopData.total || 0}
+            initialTotal={shopData.total > 0 ? shopData.total : undefined}
             initialHasMore={shopData.hasMore ?? true}
             initialMeta={meta}
             prefetchedBrands={brands}
