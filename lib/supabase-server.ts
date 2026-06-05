@@ -93,6 +93,7 @@ export interface Product {
   category: string;
   color?: string | null;
   matchingSetId?: string | null;
+  stockStatus?: string | null;
   isSale?: boolean;
   originalPrice?: string | null;
   /** Used for formatting bare numeric DB prices ($ / € / £). */
@@ -958,6 +959,10 @@ export function mapProductRow(row: any): Product {
         : row.fiber_subtype != null && String(row.fiber_subtype).trim()
           ? String(row.fiber_subtype).trim()
           : null,
+    stockStatus:
+      row.stock_status != null && String(row.stock_status).trim()
+        ? String(row.stock_status).trim()
+        : null,
   };
 }
 
@@ -2132,7 +2137,7 @@ export async function fetchShopProducts(options: {
   }
 }
 
-const PRODUCT_CARD_COLS = "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price";
+const PRODUCT_CARD_COLS = "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price, stock_status";
 
 /** PDP rail — same deduped women's catalog as designer shop, not raw live rows. */
 export async function fetchMoreFromBrand(

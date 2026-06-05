@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { comparePasswords, storeToken, getUserByUsername, getUserByEmail } from "../../../../lib/auth-helpers";
 import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server";
 import { snakeToCamel } from "../../../../lib/case-utils";
+import { generatePermanentReferralCode } from "../../../../lib/invitation-codes";
 
 async function signInWithSupabase(email: string, password: string) {
   const auth = getSupabaseAnonAuthClient();
@@ -38,6 +39,10 @@ export async function POST(request: NextRequest) {
 
     const supabaseSession = await signInWithSupabase(email, password);
     if (supabaseSession) {
+      const userId = supabaseSession.user.id;
+      if (userId) {
+        generatePermanentReferralCode(userId).catch(console.error);
+      }
       return NextResponse.json({ ...snakeToCamel(supabaseSession.user), token: supabaseSession.token });
     }
 
@@ -49,6 +54,10 @@ export async function POST(request: NextRequest) {
 
     const migrated = await ensureSupabaseAccount(email, password);
     if (migrated) {
+      const userId = migrated.user.id;
+      if (userId) {
+        generatePermanentReferralCode(userId).catch(console.error);
+      }
       return NextResponse.json({ ...snakeToCamel(migrated.user), token: migrated.token });
     }
 

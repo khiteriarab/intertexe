@@ -114,6 +114,11 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
 
   return (
     <div className="group relative flex flex-col" data-testid={`product-card-${product.id}`}>
+      {product.stock_status === "low_stock" || product.stockStatus === "low_stock" ? (
+        <span className="absolute top-3 left-3 z-20 text-[7px] tracking-[0.2em] uppercase font-medium text-white bg-[#420217] px-2 py-1">
+          Low Stock
+        </span>
+      ) : null}
       {imageUrl && (
         <button
           type="button"

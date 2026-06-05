@@ -9,6 +9,10 @@
       "schedule": "0 4 * * *"
     },
     {
+      "path": "/api/cron/rakuten-feed-sync",
+      "schedule": "0 3 * * *"
+    },
+    {
       "path": "/api/cron/feed-sync-stale-alert",
       "schedule": "0 12 * * *"
     },
