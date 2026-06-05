@@ -125,10 +125,8 @@ async function fetchCollectionWithFallback(slug: string, limit: number, offset: 
   });
   if (!direct.error && direct.products.length > 0) {
     let total = direct.total;
-    if (!skipTotal) {
-      const counted = await fetchCollectionTotalFromDB(slug, "us");
-      if (counted != null) total = counted;
-    }
+    const counted = await fetchCollectionTotalFromDB(slug, "us");
+    if (counted != null) total = counted;
     const pageConfig = await import("../../../lib/collection-pages").then((m) => m.getCollectionConfig(slug));
     return {
       products: direct.products,
@@ -239,10 +237,10 @@ export async function GET(request: NextRequest) {
     .split(/\s+/)
     .map((s) => s.trim())
     .filter(Boolean);
-  /** Small first-page catalog previews skip the expensive count RPC. */
+  /** Small first-page catalog previews skip the expensive count RPC (not collection mode). */
   const skipCount =
     sp.get("skipCount") === "1" ||
-    (limit <= 48 && offset === 0);
+    (mode !== "collection" && limit <= 48 && offset === 0);
 
   try {
     const region = catalogRegion || "us";
@@ -296,7 +294,7 @@ export async function GET(request: NextRequest) {
         return respond({ products: [], total: null, limit, offset, hasMore: false });
       }
       let total = data.catalogTotal;
-      if (total == null && !skipCount) {
+      if (!skipCount) {
         const counted = await fetchCollectionTotalFromDB(slug, region);
         if (counted != null) total = counted;
       }
