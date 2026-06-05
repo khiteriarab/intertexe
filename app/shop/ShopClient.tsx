@@ -20,6 +20,7 @@ import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
 import {
+  SHIPPING_REGIONS,
   getRegionForCountryCode,
   getRegionForMarket,
   type MarketFilter,
