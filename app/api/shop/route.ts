@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { fetchShopProducts, fetchProductCount, fetchFiberCounts } from "../../../lib/supabase-server";
+import { queryLiveCatalog } from "../../../lib/catalog-direct-query";
+import { fetchProductCount, fetchFiberCounts } from "../../../lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -19,24 +20,25 @@ export async function GET(request: NextRequest) {
 
   const fiber = searchParams.get("fiber") || undefined;
   const category = searchParams.get("category") || undefined;
-  const sort = searchParams.get("sort") || "recommended";
+  const sort = searchParams.get("sort") || "new";
   const limit = parseInt(searchParams.get("limit") || "60", 10);
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const search = searchParams.get("search") || undefined;
-  const market = searchParams.get("market") || undefined;
+  const region = searchParams.get("region") || "us";
 
   try {
-    const result = await fetchShopProducts({
+    const result = await queryLiveCatalog({
+      region,
       fiber: fiber === "all" ? undefined : fiber,
       category: category === "all" ? undefined : category,
-      market: market === "all" ? undefined : market,
-      sort,
+      sort: sort === "recommended" ? "new" : sort,
       limit,
       offset,
       search,
+      skipCount: false,
     });
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ products: [], total: 0 }, { status: 500 });
+    return NextResponse.json({ products: [], total: 0, error: "failed" }, { status: 500 });
   }
 }

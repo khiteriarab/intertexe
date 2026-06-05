@@ -1,14 +1,29 @@
 /** Shop/materials URL slugs → DB garment_type enums (see catalog_shop_category_garment_types). */
 export const SHOP_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
   dresses: ["dresses"],
-  tops: ["tops_blouses", "shirts"],
+  tops: ["tops_blouses"],
   knitwear: ["knitwear", "sweaters_cardigans"],
-  bottoms: ["pants_trousers", "shorts"],
-  outerwear: ["coats", "jackets_blazers"],
+  trousers: ["pants_trousers", "shorts"],
+  bottoms: ["pants_trousers", "skirts", "shorts"],
+  outerwear: ["jackets_blazers", "coats"],
   skirts: ["skirts"],
+  jumpsuits: ["jumpsuits"],
   swimwear: ["swim_resortwear"],
-  lingerie: ["other_apparel"],
+  lingerie: ["lingerie"],
+  shorts: ["shorts"],
 };
+
+/** Alias for direct-query layer. */
+export const CATEGORY_TO_GARMENT_TYPE = SHOP_CATEGORY_GARMENT_TYPES;
+
+export function applyCategoryFilter(query: any, category: string): any {
+  const garmentTypes = SHOP_CATEGORY_GARMENT_TYPES[category.toLowerCase()];
+  if (garmentTypes?.length) {
+    return query.in("garment_type", garmentTypes);
+  }
+  const needle = category.toLowerCase();
+  return query.or(`name.ilike.%${needle}%,category.ilike.%${needle}%`);
+}
 
 export const SHOP_FIBER_TO_MATERIAL: Record<string, string> = {
   silk: "silk",

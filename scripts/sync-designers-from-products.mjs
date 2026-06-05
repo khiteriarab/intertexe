@@ -13,67 +13,55 @@ if (!supabaseUrl || !serviceRoleKey) {
 
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-const { data: brands, error: brandsError } = await supabase
-  .from("products")
-  .select("brand_slug, brand_name, image_url, natural_fiber_percent")
-  .eq("approved", "yes")
-  .eq("is_active", true)
-  .not("brand_slug", "is", null)
-  .order("brand_slug");
+const PAGE_SIZE = 1000;
+const MAX_PAGES = 60;
+const uniqueBrands = new Map();
 
-if (brandsError) throw new Error(`Failed to load products: ${brandsError.message}`);
+for (let page = 0; page < MAX_PAGES; page++) {
+  const offset = page * PAGE_SIZE;
+  const { data, error } = await supabase
+    .from("live_products_apparel")
+    .select("brand_slug, brand_name")
+    .eq("region", "us")
+    .not("brand_slug", "is", null)
+    .range(offset, offset + PAGE_SIZE - 1);
 
-const brandMap = {};
-for (const product of brands || []) {
-  if (!brandMap[product.brand_slug]) {
-    brandMap[product.brand_slug] = {
-      slug: product.brand_slug,
-      name: product.brand_name,
-      image_url: product.image_url,
-      nfp_sum: 0,
-      count: 0,
-    };
+  if (error) throw new Error(`Failed to load catalog brands: ${error.message}`);
+
+  const rows = data || [];
+  for (const product of rows) {
+    const slug = String(product.brand_slug || "").trim().toLowerCase();
+    const name = String(product.brand_name || slug).trim();
+    if (!slug) continue;
+    if (!uniqueBrands.has(slug)) uniqueBrands.set(slug, name);
   }
-  brandMap[product.brand_slug].nfp_sum += product.natural_fiber_percent || 0;
-  brandMap[product.brand_slug].count++;
+  if (rows.length < PAGE_SIZE) break;
 }
 
-const { data: existingDesigners, error: designersError } = await supabase
-  .from("designers")
-  .select("slug");
+console.log(`Found ${uniqueBrands.size} unique brands in live US catalog`);
 
-if (designersError) throw new Error(`Failed to load designers: ${designersError.message}`);
-
-const existingSlugs = new Set(existingDesigners?.map((d) => d.slug) || []);
-const missingBrands = Object.values(brandMap).filter((b) => !existingSlugs.has(b.slug));
-
-console.log(`Found ${missingBrands.length} brands missing from designers table`);
-
-let created = 0;
-for (const brand of missingBrands) {
-  const avgNFP = Math.round(brand.nfp_sum / Math.max(brand.count, 1));
-  const { error } = await supabase.from("designers").insert({
-    slug: brand.slug,
-    name: brand.name,
-    hero_image: brand.image_url,
-    natural_fiber_percent: avgNFP,
-    status: "active",
-    created_at: new Date().toISOString(),
-  });
-
+let upserted = 0;
+for (const [slug, name] of uniqueBrands) {
+  const { error } = await supabase.from("designers").upsert(
+    {
+      slug,
+      name,
+      status: "active",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "slug" }
+  );
   if (error) {
-    console.error(`Failed to create designer for ${brand.name}:`, error.message);
+    console.error(`Failed to upsert ${slug}:`, error.message);
   } else {
-    created++;
-    console.log(`Created designer: ${brand.name} (${brand.slug}) - NFP: ${avgNFP}%`);
+    upserted++;
   }
 }
 
-console.log(`Designer sync complete. Created ${created} new designer records.`);
+console.log(`Designer sync complete. Upserted ${upserted} brands.`);
 
-const { count: totalDesigners, error: totalError } = await supabase
+const { count } = await supabase
   .from("designers")
   .select("*", { count: "exact", head: true });
 
-if (totalError) throw new Error(`Failed to count designers: ${totalError.message}`);
-console.log(`Total designers now: ${totalDesigners ?? 0}`);
+console.log(`Total designers now: ${count ?? 0}`);

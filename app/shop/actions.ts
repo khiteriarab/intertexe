@@ -1,11 +1,7 @@
 "use server";
 
-import {
-  fetchShopProducts,
-  fetchShopCatalogCount,
-  fetchProductCount,
-  fetchFiberCounts,
-} from "../../lib/supabase-server";
+import { queryLiveCatalog } from "../../lib/catalog-direct-query";
+import { fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
 
 export async function getShopProducts(options: {
@@ -23,20 +19,22 @@ export async function getShopProducts(options: {
   search?: string;
   skipTotal?: boolean;
 }) {
-  return fetchShopProducts({
+  const region = options.catalogRegion || "us";
+  const categories = options.categories?.filter((c) => c && c !== "all");
+  const brand = options.brandSlugs?.length === 1 ? options.brandSlugs[0] : undefined;
+
+  return queryLiveCatalog({
+    region,
     fiber: options.fiber === "all" ? undefined : options.fiber,
-    categories: options.categories?.filter((c) => c && c !== "all"),
-    brandSlugs: options.brandSlugs?.filter(Boolean),
-    fiberSubtypes: options.fiberSubtypes?.filter(Boolean),
-    maxPrice: options.maxPrice ?? null,
-    price600Plus: options.price600Plus,
-    market: options.market === "all" ? undefined : options.market,
-    catalogRegion: options.catalogRegion,
-    sort: options.sort || "new",
+    categories,
+    category: categories?.length === 1 ? categories[0] : undefined,
+    brand,
+    search: options.search,
+    sort: options.sort === "recommended" ? "new" : options.sort || "new",
+    maxPrice: options.price600Plus ? undefined : options.maxPrice ?? undefined,
     limit: options.limit || CATALOG_PAGE_SIZE,
     offset: options.offset || 0,
-    search: options.search,
-    skipTotal: options.skipTotal ?? false,
+    skipCount: options.skipTotal ?? false,
   });
 }
 
@@ -49,23 +47,29 @@ export async function getShopCatalogCount(options: {
   price600Plus?: boolean;
   market?: string;
   search?: string;
+  catalogRegion?: string;
 }) {
-  const total = await fetchShopCatalogCount({
+  const region = options.catalogRegion || "us";
+  const categories = options.categories?.filter((c) => c && c !== "all");
+  const brand = options.brandSlugs?.length === 1 ? options.brandSlugs[0] : undefined;
+  const result = await queryLiveCatalog({
+    region,
     fiber: options.fiber === "all" ? undefined : options.fiber,
-    categories: options.categories?.filter((c) => c && c !== "all"),
-    brandSlugs: options.brandSlugs?.filter(Boolean),
-    fiberSubtypes: options.fiberSubtypes?.filter(Boolean),
-    maxPrice: options.maxPrice ?? null,
-    price600Plus: options.price600Plus,
-    market: options.market === "all" ? undefined : options.market,
+    categories,
+    category: categories?.length === 1 ? categories[0] : undefined,
+    brand,
     search: options.search,
+    maxPrice: options.price600Plus ? undefined : options.maxPrice ?? undefined,
+    limit: 1,
+    offset: 0,
+    skipCount: false,
   });
-  return { total };
+  return { total: result.total };
 }
 
 export async function getShopBrands() {
-  const { fetchShoppableBrands } = await import("../../lib/shoppable-brands");
-  return fetchShoppableBrands();
+  const { fetchCatalogDesigners } = await import("../../lib/catalog-designers");
+  return fetchCatalogDesigners("us");
 }
 
 export async function getShopMeta() {

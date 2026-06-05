@@ -1,29 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  fetchShopProducts,
-  fetchCatalogProductsByFiber,
   fetchSaleProducts,
   fetchVacationPageData,
   fetchEditPageData,
   fetchCollectionPageData,
-  fetchMaterialHubDisplayCount,
   fetchProductsByBrand,
   getServerSupabase,
 } from "../../../lib/supabase-server";
+import { queryLiveCatalog } from "../../../lib/catalog-direct-query";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 import {
-  DEFAULT_SHOP_FIBER,
   safeCatalogLimit,
   safeCatalogOffset,
   catalogHasMore,
 } from "../../../lib/catalog-fetch-limits";
-import { fetchMerchRailProducts, MERCH_RAIL_KEYS, MATERIAL_SLUG_TO_RAIL } from "../../../lib/merch-feed";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 60;
 const COLLECTION_FALLBACK_MIN_PRODUCTS = 3;
-const FIBER_CACHE_TTL_MS = 300_000;
-
 const PRODUCT_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
   "CDN-Cache-Control": "public, s-maxage=60",
@@ -36,11 +30,6 @@ type CatalogCacheEntry = { data: Record<string, unknown>; timestamp: number };
 const catalogMemoryCache =
   ((globalThis as typeof globalThis & { __catalogMemoryCache?: Map<string, CatalogCacheEntry> }).__catalogMemoryCache ??=
     new Map<string, CatalogCacheEntry>());
-type FiberCacheEntry = { products: unknown[]; timestamp: number };
-const fiberCache =
-  ((globalThis as typeof globalThis & { __fiberCache?: Map<string, FiberCacheEntry> }).__fiberCache ??=
-    new Map<string, FiberCacheEntry>());
-
 function catalogOk(
   body: Record<string, unknown>,
   init?: {
@@ -131,34 +120,18 @@ async function fetchCollectionWithFallback(slug: string, limit: number, offset: 
   if (!data) return null;
   if (data.products.length >= COLLECTION_FALLBACK_MIN_PRODUCTS) return data;
 
-  let fallbackProducts: Awaited<ReturnType<typeof fetchCatalogProductsByFiber>> = [];
+  let fallbackOpts: Parameters<typeof queryLiveCatalog>[0] | null = null;
   if (slug === "tailoring") {
-    const fallback = await fetchShopProducts({
-      category: "jackets",
-      catalogRegion: "us",
-      sort: "new",
-      limit,
-      offset: 0,
-      skipTotal: true,
-    });
-    fallbackProducts = fallback.products;
+    fallbackOpts = { region: "us", category: "outerwear", sort: "new", limit, offset: 0, skipCount: true };
   } else if (slug === "summer-in-the-city") {
-    fallbackProducts = await fetchCatalogProductsByFiber({
-      fiber: "linen",
-      limit,
-      offset: 0,
-    });
+    fallbackOpts = { region: "us", fiber: "linen", limit, offset: 0, skipCount: true };
   } else if (slug === "white-edit") {
-    const fallback = await fetchShopProducts({
-      search: "white",
-      catalogRegion: "us",
-      sort: "new",
-      limit,
-      offset: 0,
-      skipTotal: true,
-    });
-    fallbackProducts = fallback.products;
+    fallbackOpts = { region: "us", search: "white", sort: "new", limit, offset: 0, skipCount: true };
   }
+
+  const fallbackProducts = fallbackOpts
+    ? (await queryLiveCatalog(fallbackOpts)).products
+    : [];
 
   if (fallbackProducts.length === 0) return data;
   const merged = [...data.products];
@@ -199,57 +172,6 @@ async function fetchCollectionTotalFromDB(collection: string, region: string) {
   return legacy.count ?? null;
 }
 
-async function getCachedMerchProducts(region: string, limit: number, offset: number) {
-  if (region !== "us") return [];
-  return fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit, offset });
-}
-
-function mapFastProductRow(row: Record<string, unknown>) {
-  const toStringOrNull = (value: unknown) =>
-    value == null ? null : String(value);
-  const naturalFiber = Number(row.natural_fiber_percent ?? 0);
-  const isSale =
-    row.is_sale === true
-    || (Number(row.original_price ?? 0) > Number(row.price ?? 0));
-  return {
-    id: String(row.id ?? ""),
-    brandSlug: String(row.brand_slug ?? ""),
-    brandName: String(row.brand_name ?? ""),
-    name: String(row.name ?? ""),
-    productId: String(row.product_id ?? row.id ?? ""),
-    url: String(row.url ?? ""),
-    imageUrl: String(row.image_url ?? ""),
-    price: String(row.price ?? ""),
-    composition: String(row.composition ?? ""),
-    naturalFiberPercent: Number.isFinite(naturalFiber) ? Math.max(0, Math.min(100, Math.round(naturalFiber))) : 0,
-    category: String(row.category ?? ""),
-    color: toStringOrNull(row.color),
-    matchingSetId: toStringOrNull(row.matching_set_id),
-    isSale,
-    originalPrice: toStringOrNull(row.original_price),
-    listingRegion: toStringOrNull(row.region),
-  };
-}
-
-async function getCachedFiberProducts(fiber: string, region: string, limit: number, offset: number) {
-  if (offset !== 0 || region !== "us") {
-    return fetchMerchRailProducts(
-      (MATERIAL_SLUG_TO_RAIL[fiber] || MATERIAL_SLUG_TO_RAIL[fiber.toLowerCase()]) || MERCH_RAIL_KEYS.silk,
-      { limit, offset }
-    );
-  }
-  const cacheKey = `fiber:${fiber.toLowerCase()}:${region}:page1`;
-  const cached = fiberCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < FIBER_CACHE_TTL_MS) {
-    return cached.products as Awaited<ReturnType<typeof fetchMerchRailProducts>>;
-  }
-  const products = await fetchMerchRailProducts(
-    (MATERIAL_SLUG_TO_RAIL[fiber] || MATERIAL_SLUG_TO_RAIL[fiber.toLowerCase()]) || MERCH_RAIL_KEYS.silk,
-    { limit, offset }
-  );
-  fiberCache.set(cacheKey, { products, timestamp: Date.now() });
-  return products;
-}
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
@@ -273,7 +195,7 @@ export async function GET(request: NextRequest) {
   const mode = explicitMode
     || (collectionAlias ? "collection" : undefined)
     || (brandAlias ? "brand" : undefined)
-    || (fiber && fiber !== "all" && !slugParam ? "materials" : "shop");
+    || "shop";
   const collectionSlug = slugParam || collectionAlias || "";
   const brandSlug = slugParam || brandAlias || "";
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
@@ -284,6 +206,8 @@ export async function GET(request: NextRequest) {
   const sort = sp.get("sort") || "new";
   const search = sp.get("search") || searchAlias;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
+  const minPrice = sp.get("minPrice") ? Number(sp.get("minPrice")) : undefined;
+  const color = sp.get("color") || undefined;
   const searchTerms = (search || "")
     .toLowerCase()
     .split(/\s+/)
@@ -296,62 +220,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const region = catalogRegion || "us";
-    const isBaseCatalogFirstPage =
-      offset === 0
-      && !collectionAlias
-      && !fiber
-      && !brandAlias
-      && !search
-      && !maxPrice;
-    if (isBaseCatalogFirstPage) {
-      const supabase = getServerSupabase();
-      if (supabase) {
-        try {
-          const started = Date.now();
-          const { data: fastProducts } = await supabase
-            .from("products")
-            .select("id, name, brand_name, brand_slug, product_id, price, original_price, image_url, url, composition, natural_fiber_percent, is_sale, color, matching_set_id, category, region")
-            .eq("region", region)
-            .eq("is_displayable", true)
-            .order("created_at", { ascending: false })
-            .limit(Math.min(limit, 48));
-          console.log("[catalog fast-path] ms=", Date.now() - started, "rows=", fastProducts?.length ?? 0);
-          if (fastProducts && fastProducts.length >= 12) {
-            return respond(
-              {
-                products: fastProducts.map((row) => mapFastProductRow(row as Record<string, unknown>)),
-                total: 149474,
-                limit,
-                offset,
-                hasMore: true,
-                source: "fast-path",
-              },
-              { source: "fast-path" }
-            );
-          }
-        } catch (err) {
-          console.error("[catalog fast-path] error:", err);
-        }
-      }
-
-      try {
-        const cachedProducts = await getCachedMerchProducts(region, limit, offset);
-        if (cachedProducts.length >= 12) {
-          return respond(
-            {
-              products: cachedProducts,
-              total: cachedProducts.length,
-              limit,
-              offset,
-              hasMore: true,
-            },
-            { source: "merch-cache" }
-          );
-        }
-      } catch {
-        // Fall through to live path.
-      }
-    }
 
     if (mode === "brand") {
       const result = await fetchProductsByBrand(brandSlug, {
@@ -385,7 +253,6 @@ export async function GET(request: NextRequest) {
         useMerchFeedPreview: false,
         skipTotal: skipCount,
       });
-      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
       const total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
       return respond({
         products: result.products,
@@ -402,7 +269,6 @@ export async function GET(request: NextRequest) {
       if (!data) {
         return respond({ products: [], total: null, limit, offset, hasMore: false });
       }
-      if (data.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
       let total = data.catalogTotal;
       if (total == null && !skipCount) {
         const counted = await fetchCollectionTotalFromDB(slug, region);
@@ -452,82 +318,25 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    if (mode === "materials" && fiber) {
-      const cat = category && category !== "all" ? category : undefined;
-      const [products, n] = await Promise.all([
-        cat
-          ? fetchCatalogProductsByFiber({
-              fiber,
-              category: cat,
-              limit,
-              offset,
-            })
-          : getCachedFiberProducts(fiber, region, limit, offset),
-        skipCount ? Promise.resolve(0) : fetchMaterialHubDisplayCount(fiber, cat),
-      ]);
-      const total = catalogTotalValue(n, products.length, offset, skipCount);
-      return respond({
-        products,
-        total,
-        limit,
-        offset,
-        hasMore: catalogHasMore(products.length, limit, offset, total),
-      });
-    }
-
-    const shopFiber =
-      fiber && fiber !== "all" ? fiber : DEFAULT_SHOP_FIBER;
-
-    const searchMaterial = searchTerms.find((t) =>
-      ["silk", "linen", "cashmere", "wool", "cotton", "leather"].includes(t)
-    );
-    if (searchMaterial && offset === 0) {
-      const railKey = MATERIAL_SLUG_TO_RAIL[searchMaterial] || MERCH_RAIL_KEYS.silk;
-      const railProducts = await fetchMerchRailProducts(railKey, { limit: Math.max(limit, 48), offset: 0 });
-      const filtered = railProducts.filter((p) => {
-        const haystack = `${p.name || ""} ${p.brandName || ""} ${p.composition || ""}`.toLowerCase();
-        return searchTerms.every((t) => haystack.includes(t));
-      }).slice(0, limit);
-      const total = catalogTotalValue(null, filtered.length, offset, true);
-      return respond({
-        products: filtered,
-        total,
-        limit,
-        offset,
-        hasMore: catalogHasMore(filtered.length, limit, offset, total),
-        defaultFiber: !fiber || fiber === "all" ? DEFAULT_SHOP_FIBER : undefined,
-      });
-    }
-
-    const result = await fetchShopProducts({
+    const shopFiber = fiber && fiber !== "all" ? fiber : undefined;
+    const result = await queryLiveCatalog({
+      region,
       fiber: shopFiber,
       category: category && category !== "all" ? category : undefined,
-      market: market && market !== "all" ? market : undefined,
-      catalogRegion,
-      sort,
+      collection: collectionAlias || undefined,
+      brand: brandAlias || undefined,
+      search: search || undefined,
+      sort: sort === "recommended" ? "new" : sort,
+      maxPrice,
+      minPrice,
+      color,
       limit,
       offset,
-      search: search || undefined,
-      skipTotal: skipCount,
+      skipCount,
     });
 
-    if (result.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
     if (result.error === "failed") {
-      const fallback = await fetchCatalogProductsByFiber({
-        fiber: shopFiber,
-        category: category && category !== "all" ? category : undefined,
-        limit,
-        offset,
-      });
-      const total = catalogTotalValue(null, fallback.length, offset, true);
-      return respond({
-        products: fallback,
-        total,
-        limit,
-        offset,
-        hasMore: catalogHasMore(fallback.length, limit, offset, total),
-        defaultFiber: !fiber || fiber === "all" ? DEFAULT_SHOP_FIBER : undefined,
-      });
+      return catalogFailedResponse(limit, offset, cacheKey);
     }
 
     const total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
@@ -536,9 +345,9 @@ export async function GET(request: NextRequest) {
       total,
       limit,
       offset,
-      hasMore: catalogHasMore(result.products.length, limit, offset, total),
-      defaultFiber: !fiber || fiber === "all" ? DEFAULT_SHOP_FIBER : undefined,
-    });
+      hasMore: result.hasMore,
+      source: "direct-query",
+    }, { source: "direct-query" });
   } catch (err: unknown) {
     const e = err as { code?: string; message?: string };
     console.error("[api/catalog]", err);

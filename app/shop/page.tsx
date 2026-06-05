@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { headers } from "next/headers";
-import { fetchShopProducts, CATALOG_INITIAL_PAGE } from "../../lib/supabase-server";
+import { CATALOG_INITIAL_PAGE } from "../../lib/catalog-rules";
+import { queryLiveCatalog } from "../../lib/catalog-direct-query";
 import ShopClient from "./ShopClient";
 import { formatListingPrice } from "../../lib/format-display-price";
 
@@ -55,15 +56,15 @@ export default async function ShopPage({
   const search = params?.q?.trim() || undefined;
 
   /** First page only — counts and fiber tabs load client-side (non-blocking). */
-  const shopData = await fetchShopProducts({
-    sort,
+  const shopData = await queryLiveCatalog({
+    region: "us",
+    sort: sort === "recommended" ? "new" : sort,
     limit: CATALOG_INITIAL_PAGE,
     offset: 0,
-    market,
     fiber,
     category,
     search,
-    skipTotal: false,
+    skipCount: false,
   });
 
   const products = shopData.products || [];

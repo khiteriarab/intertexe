@@ -15,6 +15,7 @@ import {
   garmentTypesForShopCategory,
   materialPrimaryForShopFiber,
   rowMatchesGarmentFilter,
+  applyCategoryFilter,
 } from "./catalog-shop-mappings";
 import {
   productMatchesAnyShopCategory,
@@ -54,8 +55,6 @@ import { liveProductsApparelFrom } from "./global-catalog-scope";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
-/** Service client without generated `Database` types — catalog RPCs are not declared on the default client. */
-type UntypedSupabase = SupabaseClient<any, "public", any>;
 
 /** When `preferLiveOnly`, skip catalog RPCs and query `live_products_apparel` (faster homepage / emergency path).
  *  `liveRowCap` limits rows loaded on the live-only / fallback path (homepage). */
@@ -725,7 +724,7 @@ export async function fetchVacationPageData(opts?: {
       catalogProducts.push(p);
     }
     catalogProducts = catalogProducts.slice(0, catalogLimit);
-    catalogTotal = Math.max(linenResult.total, 0) + Math.max(cottonResult.total, 0);
+    catalogTotal = Math.max(linenResult.total ?? 0, 0) + Math.max(cottonResult.total ?? 0, 0);
   }
 
   return {
@@ -767,7 +766,7 @@ export async function fetchEditPageData(
     return {
       products: collection.products,
       editCount: collection.editCount,
-      catalogTotal: collection.catalogTotal,
+      catalogTotal: collection.catalogTotal ?? 0,
       heroImageUrl: config.editorialImage,
     };
   }
@@ -802,7 +801,7 @@ export async function fetchEditPageData(
   ).slice(0, limit);
 
   const supabase = getServerSupabase();
-  let editCount = total;
+  let editCount = total ?? 0;
   if (supabase) {
     const counted = await rpcCatalogListCount(supabase, {
       preferred: "us",
@@ -1655,12 +1654,12 @@ export async function fetchRecommendedProducts(
     return { row, relevance };
   });
 
-  scored.sort((a, b) => {
+  scored.sort((a: { row: any; relevance: number }, b: { row: any; relevance: number }) => {
     if (b.relevance !== a.relevance) return b.relevance - a.relevance;
     return (b.row.natural_fiber_percent || 0) - (a.row.natural_fiber_percent || 0);
   });
 
-  return scored.slice(0, limit).map(({ row }) => mapProductRow(row));
+  return scored.slice(0, limit).map(({ row }: { row: any }) => mapProductRow(row));
 }
 
 function parsePrice(price: string | null | undefined): number {
@@ -1873,13 +1872,11 @@ export async function fetchShopProducts(options: {
   maxPrice?: number | null;
   price600Plus?: boolean;
   market?: string;
-  /** Catalog RPC region (`ca` supplements with US when sparse). */
   catalogRegion?: string;
   sort?: string;
   limit?: number;
   offset?: number;
   search?: string;
-  /** When true, skip count RPC — return hasMore heuristic for instant first paint. */
   skipTotal?: boolean;
 }): Promise<{
   products: Product[];
@@ -1887,255 +1884,35 @@ export async function fetchShopProducts(options: {
   hasMore: boolean;
   error?: "timeout" | "failed";
 }> {
-  const supabase = getServerSupabase();
-  if (!supabase) return { products: [], total: 0, hasMore: false };
-  const {
-    fiber,
-    category,
-    categories: categoriesOpt,
-    brandSlugs,
-    fiberSubtypes,
-    maxPrice: maxPriceOpt,
-    price600Plus,
-    market,
-    catalogRegion,
-    sort = "new",
-    limit = 48,
-    offset = 0,
-    search,
-    skipTotal = false,
-  } = options;
-  const subtypeList = (fiberSubtypes || []).map((s) => s.trim()).filter(Boolean);
-  const cappedOffset = safeCatalogOffset(offset);
-  if (offset > CATALOG_MAX_OFFSET) {
-    return { products: [], total: null, hasMore: false, error: "timeout" };
-  }
-  try {
-  const categories = shopCategoriesList(category, categoriesOpt);
-  const maxPrice = normalizeShopPriceCap(maxPriceOpt);
-  const isPriceSort = sort === "price-low" || sort === "price-high";
-  const { preferred, fallback } = catalogRegionsFromMarket(market, catalogRegion);
-
-  const searchSynonyms: Record<string, string[]> = {
-    jeans: ["jean", "denim"],
-    jean: ["jeans", "denim"],
-    denim: ["jean", "jeans"],
-  };
-
-  let searchTerms: string[] = [];
-  if (search && search.trim().length >= 2) {
-    const s = search.trim().toLowerCase();
-    searchTerms = [s, ...(searchSynonyms[s] || [])];
-  }
-
-  const searchRpc = searchTerms.length > 0 ? searchTerms[0] : null;
-
-  const rpcFiber = fiber && fiber !== "all" ? fiber : null;
-  const rpcCategory = shopRpcCategory(categories);
-  const rpcBrand = shopRpcBrandSlug(brandSlugs);
-  const postFilter = (mapped: Product[]) =>
-    applyShopPostFilters(mapped, {
-      categories,
-      brandSlugs,
-      fiberSubtypes: subtypeList,
-      maxPrice,
-      price600Plus,
-      sort,
-    });
-
-  const mapCatalogRowsToProducts = (rows: any[]): Product[] => {
-    let filtered = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, market));
-    if (filtered.length === 0 && market && market !== "all" && rows.length > 0) {
-      const broad = rows.filter(priceListedRow).filter((row: any) => passesMarketRawRow(row, undefined));
-      if (broad.length > 0) filtered = broad;
-    }
-
-    let mapped = filterConsumerCatalogProducts(
-      filtered.filter(passesWomensCatalogRow).map(mapProductRow)
-    );
-    if (rpcFiber) {
-      mapped = mapped.filter((p) => productBodyMatchesFiber(p.composition || "", rpcFiber));
-    }
-    return postFilter(mapped);
-  };
-
-  if (!isPriceSort) {
-    const totalPromise = skipTotal
-      ? null
-      : resolveShopCatalogTotal(supabase, {
-          preferred,
-          fallback,
-          fiber: rpcFiber,
-          category: rpcCategory,
-          brandSlug: rpcBrand,
-          search: searchRpc,
-        });
-
-    const shouldPreferLivePage =
-      Boolean(searchRpc) || Boolean(rpcFiber);
-
-    let rows = shouldPreferLivePage
-      ? await shopLivePageFallback(supabase, {
-          market,
-          rpcFiber,
-          rpcCategory,
-          rpcBrand,
-          searchTerms,
-          limit,
-          offset: cappedOffset,
-        })
-      : ((await rpcCatalogList(supabase, {
-          preferred,
-          fallback,
-          fiber: rpcFiber,
-          category: rpcCategory,
-          brandSlug: rpcBrand,
-          search: searchRpc,
-          minNfp: 80,
-          limit,
-          offset: cappedOffset,
-        })) || []);
-
-    if (rows.length === 0) {
-      rows = await shopLivePageFallback(supabase, {
-        market,
-        rpcFiber,
-        rpcCategory,
-        rpcBrand,
-        searchTerms,
-        limit,
-        offset: cappedOffset,
-      });
-      if (rows.length === 0) {
-        rows = await catalogListLiveFallback(supabase, {
-          fiber: rpcFiber,
-          category: rpcCategory,
-          search: searchRpc,
-          limit,
-          offset: cappedOffset,
-          minNfp: 80,
-          preferred,
-          fallback,
-        });
-      }
-    }
-
-    let mapped = dedupeCatalogProducts(mapCatalogRowsToProducts(rows));
-
-    if (sort === "new") {
-      mapped.sort((a, b) => {
-        const ta = Date.parse(String((a as Product & { createdAt?: string }).createdAt || "")) || 0;
-        const tb = Date.parse(String((b as Product & { createdAt?: string }).createdAt || "")) || 0;
-        return tb - ta;
-      });
-    }
-
-    if (preferred === "ca" && mapped.length < CATALOG_CA_MIN_PRODUCTS) {
-      const usRows =
-        (await rpcCatalogList(supabase, {
-          preferred: "us",
-          fallback: "us",
-          fiber: rpcFiber,
-          category: rpcCategory,
-          brandSlug: rpcBrand,
-          search: searchRpc,
-          minNfp: 80,
-          limit: CATALOG_CA_MIN_PRODUCTS,
-          offset: 0,
-        })) || [];
-      if (usRows.length > 0) {
-        const usMapped = mapCatalogRowsToProducts(usRows);
-        mapped = dedupeCatalogProducts(
-          mergeProductsWithRegionFallback(
-            mapped,
-            usMapped,
-            CATALOG_CA_MIN_PRODUCTS,
-            limit
-          )
-        );
-      }
-    }
-
-    if (skipTotal) {
-      return {
-        products: mapped,
-        total: null,
-        hasMore: mapped.length >= limit,
-      };
-    }
-
-    const resolvedTotal = totalPromise ? await totalPromise : null;
-
-    const total =
-      resolvedTotal != null
-        ? Math.max(resolvedTotal, cappedOffset + mapped.length)
-        : cappedOffset + mapped.length;
-    return {
-      products: mapped,
-      total:
-        categories.length > 1 ||
-        (brandSlugs?.length ?? 0) > 1 ||
-        subtypeList.length > 0 ||
-        maxPrice != null ||
-        price600Plus
-          ? null
-          : total,
-      hasMore: cappedOffset + mapped.length < total,
-    };
-  }
-
-  let allRows = await fetchShopLiveApparelAllRows(supabase, {
-    market,
-    rpcFiber,
-    rpcCategory,
-    searchTerms,
+  const { queryLiveCatalog } = await import("./catalog-direct-query");
+  const categories = options.categories?.length
+    ? options.categories
+    : options.category && options.category !== "all"
+      ? [options.category]
+      : undefined;
+  const brand =
+    options.brandSlugs?.length === 1 ? options.brandSlugs[0] : undefined;
+  const result = await queryLiveCatalog({
+    region: options.catalogRegion || "us",
+    fiber: options.fiber && options.fiber !== "all" ? options.fiber : undefined,
+    categories,
+    category: categories?.length === 1 ? categories[0] : options.category,
+    brand,
+    search: options.search,
+    sort: options.sort === "recommended" ? "new" : options.sort || "new",
+    maxPrice: options.price600Plus ? undefined : options.maxPrice ?? undefined,
+    limit: options.limit ?? 48,
+    offset: options.offset ?? 0,
+    skipCount: options.skipTotal ?? false,
   });
-
-  let deduped = dedupeLiveApparelRows(allRows, preferred, fallback)
-    .filter(priceListedRow)
-    .filter((row: any) => passesMarketRawRow(row, market))
-    .filter(isClothingProduct)
-    .filter(isNotMensProduct);
-
-  if (deduped.length === 0 && market) {
-    const { preferred: p0, fallback: f0 } = catalogRegionsFromMarket(undefined);
-    allRows = await fetchShopLiveApparelAllRows(supabase, {
-      market: undefined,
-      rpcFiber,
-      rpcCategory,
-      searchTerms,
-    });
-    deduped = dedupeLiveApparelRows(allRows, p0, f0)
-      .filter(priceListedRow)
-      .filter((row: any) => passesMarketRawRow(row, undefined))
-      .filter(isClothingProduct)
-      .filter(isNotMensProduct);
-  }
-
-  deduped.sort((a: any, b: any) => {
-    const pa = parsePrice(a.price);
-    const pb = parsePrice(b.price);
-    return sort === "price-low" ? pa - pb : pb - pa;
-  });
-
-  let mappedPage = deduped.map(mapProductRow);
-  mappedPage = postFilter(mappedPage);
-  const page = mappedPage.slice(cappedOffset, cappedOffset + limit);
-  const fullTotal = mappedPage.length;
   return {
-    products: page,
-    total: skipTotal ? null : fullTotal,
-    hasMore: skipTotal ? page.length >= limit : cappedOffset + page.length < fullTotal,
+    products: result.products as Product[],
+    total: result.total,
+    hasMore: result.hasMore,
+    error: result.error,
   };
-  } catch (err: unknown) {
-    const e = err as { code?: string; message?: string };
-    if (e?.code === "57014" || isCatalogTimeoutError(e)) {
-      return { products: [], total: null, hasMore: false, error: "timeout" };
-    }
-    console.warn("[fetchShopProducts] failed, returning fallback error:", e?.message || err);
-    return { products: [], total: null, hasMore: false, error: "failed" };
-  }
 }
+
 
 const PRODUCT_CARD_COLS = "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price, stock_status";
 
@@ -2314,10 +2091,7 @@ function buildSaleDirectQuery(
     q = q.ilike("composition", `%${opts.fiber}%`);
   }
   if (opts.category && opts.category !== "all") {
-    const needle = opts.category.toLowerCase();
-    q = q.or(
-      `garment_type.ilike.%${needle}%,name.ilike.%${needle}%,category.ilike.%${needle}%`
-    );
+    q = applyCategoryFilter(q, opts.category);
   }
   return q;
 }
