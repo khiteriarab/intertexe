@@ -44,9 +44,7 @@ export default async function ShopPage({
   const fiber =
     params?.fiber && SHOP_FIBERS.has(params.fiber)
       ? params.fiber
-      : !params?.fiber && !params?.category && !params?.q
-        ? "silk"
-        : undefined;
+      : undefined;
   const category =
     params?.category && SHOP_CATEGORIES.has(params.category) ? params.category : undefined;
   const sort =

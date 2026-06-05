@@ -184,9 +184,7 @@ export default function ShopClient({
   const initialFiber: FiberTab =
     fiberParam && FIBER_TABS.some((t) => t.key === fiberParam)
       ? (fiberParam as FiberTab)
-      : !fiberParam && !hasOtherFilters
-        ? "silk"
-        : "all";
+      : "all";
   const initialCategories = parseCategoryParams(searchParams.get("category"));
   const sortParam = searchParams.get("sort");
   const initialSort: SortOption =
