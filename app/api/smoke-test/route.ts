@@ -21,11 +21,19 @@ export async function GET() {
     try {
       const res = await fetch(`${BASE_URL}${test.url}`, { cache: "no-store" });
       const data = await res.json();
-      const hasProducts =
-        (Array.isArray(data.products) && data.products.length > 0) ||
-        (Array.isArray(data.designers) && data.designers.length > 0);
+      const productCount = Array.isArray(data.products) ? data.products.length : 0;
+      const designerCount = Array.isArray(data.designers)
+        ? data.designers.length
+        : Array.isArray(data)
+          ? data.length
+          : 0;
+      const hasProducts = productCount > 0 || designerCount > 0;
+      const countOk =
+        test.name === "catalog" || test.name === "catalog_silk"
+          ? res.ok && data.error !== "failed"
+          : hasProducts;
       results[test.name] = {
-        ok: res.ok,
+        ok: res.ok && countOk,
         time: Date.now() - start,
         hasProducts,
         total: data.total ?? null,

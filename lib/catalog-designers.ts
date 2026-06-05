@@ -28,9 +28,14 @@ export async function fetchCatalogDesigners(
       .eq("region", region)
       .not("brand_slug", "is", null)
       .not("brand_name", "is", null)
+      .order("brand_slug", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
 
-    if (error || !data?.length) break;
+    if (error) {
+      console.warn("[fetchCatalogDesigners] page error:", error.message);
+      break;
+    }
+    if (!data?.length) break;
 
     for (const row of data) {
       const slug = String(row.brand_slug || "").trim().toLowerCase();

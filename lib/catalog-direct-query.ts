@@ -61,7 +61,7 @@ function applySort(query: any, sort?: string) {
     case "recommended":
     case "new":
     default:
-      return query.order("created_at", { ascending: false });
+      return query.order("id", { ascending: false });
   }
 }
 
@@ -84,10 +84,44 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
       ? [opts.category]
       : [];
 
+  const hasNarrowingFilter = Boolean(
+    opts.fiber ||
+    categories.length ||
+    opts.collection ||
+    opts.brand ||
+    searchText.length >= 2 ||
+    opts.color ||
+    opts.isSale ||
+    opts.maxPrice ||
+    opts.minPrice
+  );
+  const useExactCount = !opts.skipCount && hasNarrowingFilter;
+
   try {
-    const countMode = opts.skipCount ? undefined : ("exact" as const);
+    // Unfiltered browse: `products` table is fast; filtered queries use live view + garment_type.
+    if (!hasNarrowingFilter && !opts.isSale) {
+      let pq = supabase
+        .from("products")
+        .select("*")
+        .eq("region", region)
+        .eq("is_displayable", true)
+        .not("image_url", "is", null)
+        .not("price", "is", null);
+      pq = applySort(pq, opts.sort);
+      const { data, error } = await pq.range(offset, offset + limit - 1);
+      if (error) throw error;
+      const products = (data || []).map((row: any) =>
+        mapDirectRow(row as Record<string, unknown>)
+      );
+      return {
+        products,
+        total: offset + products.length + (products.length >= limit ? 1 : 0),
+        hasMore: products.length >= limit,
+      };
+    }
+
     let query = liveProductsApparelFrom(supabase)
-      .select("*", countMode ? { count: countMode } : undefined)
+      .select("*", useExactCount ? { count: "exact" } : undefined)
       .eq("region", region)
       .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
@@ -152,9 +186,17 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
     }
 
     const products = rows.map((row: any) => mapDirectRow(row as Record<string, unknown>));
-    const total = opts.skipCount ? null : count ?? products.length;
+    const total = useExactCount
+      ? count ?? products.length
+      : opts.skipCount
+        ? null
+        : hasNarrowingFilter
+          ? count ?? products.length
+          : offset + products.length + (products.length >= limit ? 1 : 0);
     const hasMore =
-      total != null ? offset + products.length < total : products.length >= limit;
+      total != null && useExactCount
+        ? offset + products.length < total
+        : products.length >= limit;
 
     return { products, total, hasMore };
   } catch (err) {
