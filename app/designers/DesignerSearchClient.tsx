@@ -25,7 +25,8 @@ export function DesignerSearchClient({
     fetch(`/api/designers?q=${encodeURIComponent(search)}&limit=50`, { signal: controller.signal })
       .then(r => r.json())
       .then(data => {
-        const enriched = (data || []).map((d: any) => {
+        const list = Array.isArray(data) ? data : (data?.designers || []);
+        const enriched = list.map((d: any) => {
           if (d.naturalFiberPercent != null) return d;
           const score = getCuratedScore(d.name);
           return score != null ? { ...d, naturalFiberPercent: score } : d;
