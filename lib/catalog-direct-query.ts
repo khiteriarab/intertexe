@@ -119,6 +119,48 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
       };
     }
 
+
+    // Fiber fast path: avoid expensive DB ilike scans on huge composition column.
+    if (opts.fiber && opts.fiber !== "all" && !opts.isSale) {
+      const needle = opts.fiber.toLowerCase();
+      const batch = 1200;
+      const target = offset + limit;
+      const collected: any[] = [];
+      let page = 0;
+      while (collected.length < target && page < 20) {
+        const from = page * batch;
+        const to = from + batch - 1;
+        let fq = supabase
+          .from("products")
+          .select("*")
+          .eq("region", region)
+          .eq("is_displayable", true)
+          .not("image_url", "is", null)
+          .not("price", "is", null)
+          .range(from, to)
+          .order("id", { ascending: false });
+        const { data, error } = await fq;
+        if (error || !data?.length) break;
+        for (const row of data as any[]) {
+          const text = String(row.composition || "").toLowerCase();
+          const match = needle === "leather" || needle === "leather_suede"
+            ? text.includes("leather") || text.includes("suede")
+            : text.includes(needle);
+          if (!match) continue;
+          collected.push(row);
+          if (collected.length >= target) break;
+        }
+        if (data.length < batch) break;
+        page += 1;
+      }
+      const sliced = collected.slice(offset, offset + limit).map((r) => mapDirectRow(r));
+      return {
+        products: sliced,
+        total: opts.skipCount ? null : offset + sliced.length + (sliced.length >= limit ? 1 : 0),
+        hasMore: sliced.length >= limit,
+      };
+    }
+
     let query = supabase
       .from("products")
       .select("*", useExactCount ? { count: "exact" } : undefined)
