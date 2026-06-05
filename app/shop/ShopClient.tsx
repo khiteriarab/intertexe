@@ -167,11 +167,17 @@ function LoadingSkeleton() {
 
 export default function ShopClient({
   initialProducts,
+  initialTotal = 0,
   initialHasMore = true,
+  initialMeta,
+  prefetchedBrands,
   detectedCountry,
 }: {
   initialProducts: any[];
+  initialTotal?: number;
   initialHasMore?: boolean;
+  initialMeta?: { totalProductCount: number; fiberCounts: Record<string, number> };
+  prefetchedBrands?: { slug: string; name: string; count: number }[];
   detectedCountry?: string;
 }) {
   const searchParams = useSearchParams();
@@ -211,7 +217,6 @@ export default function ShopClient({
   const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>(initialBrands);
   const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
-  const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -270,19 +275,24 @@ export default function ShopClient({
     syncUrl(fiberTab, categoryList, sortBy, marketFilter, debouncedSearch, priceCap, priceCap600Plus, selectedBrandSlugs);
   }, [fiberTab, categoryList.join(","), sortBy, marketFilter, debouncedSearch, priceCap, priceCap600Plus, selectedBrandSlugs.join(","), syncUrl]);
 
+  const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>(
+    prefetchedBrands?.map((b) => ({ slug: b.slug, name: b.name, count: b.count })) ?? []
+  );
+
   useEffect(() => {
+    if (prefetchedBrands?.length) return;
     getShopBrands()
       .then((brands) => setShopBrands(brands.map((b) => ({ slug: b.slug, name: b.name, count: b.count }))))
       .catch(() => {});
-  }, []);
+  }, [prefetchedBrands]);
 
   const effectiveMaxPrice = priceCap600Plus ? null : priceCap;
 
   const [products, setProducts] = useState(initialProducts || []);
-  const [resultTotal, setResultTotal] = useState<number | null>(null);
+  const [resultTotal, setResultTotal] = useState<number | null>(initialTotal > 0 ? initialTotal : null);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
-  const [countLoading, setCountLoading] = useState(true);
+  const [countLoading, setCountLoading] = useState(!initialMeta);
   const initialFetchDone = useRef(initialProducts?.length > 0);
 
   const scrollRestored = useRef(false);
@@ -312,17 +322,18 @@ export default function ShopClient({
       }, 100);
     }
   }, [products, isLoading]);
-  const [globalCount, setGlobalCount] = useState(0);
-  const [fiberCountsState, setFiberCountsState] = useState<Record<string, number>>({});
+  const [globalCount, setGlobalCount] = useState(initialMeta?.totalProductCount ?? 0);
+  const [fiberCountsState, setFiberCountsState] = useState<Record<string, number>>(initialMeta?.fiberCounts ?? {});
 
   useEffect(() => {
+    if (initialMeta) return;
     getShopMeta()
       .then((d) => {
         if (d.totalProductCount) setGlobalCount(d.totalProductCount);
         if (d.fiberCounts) setFiberCountsState(d.fiberCounts);
       })
       .catch(() => {});
-  }, []);
+  }, [initialMeta]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

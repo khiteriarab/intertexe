@@ -5,7 +5,6 @@ import Link from "next/link";
 
 export default function ShopError({
   error,
-  reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
@@ -23,7 +22,9 @@ export default function ShopError({
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           type="button"
-          onClick={() => reset()}
+          onClick={() => {
+            window.location.assign("/shop");
+          }}
           className="px-8 py-3 bg-foreground text-background text-[11px] uppercase tracking-[0.2em]"
         >
           Try again
