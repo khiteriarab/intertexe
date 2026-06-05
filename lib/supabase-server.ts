@@ -710,9 +710,10 @@ export async function fetchVacationPageData(opts?: {
   let catalogProducts: Product[] = [];
   let catalogTotal = 0;
   if (category) {
+    const { queryLiveCatalog } = await import("./catalog-direct-query");
     const [linenResult, cottonResult] = await Promise.all([
-      fetchShopProducts({ fiber: "linen", category, limit: catalogLimit * 2, offset }),
-      fetchShopProducts({ fiber: "cotton", category, limit: catalogLimit * 2, offset: 0 }),
+      queryLiveCatalog({ region: "us", fiber: "linen", category, limit: catalogLimit * 2, offset }),
+      queryLiveCatalog({ region: "us", fiber: "cotton", category, limit: catalogLimit * 2, offset: 0 }),
     ]);
     const seen = new Set<string>();
     catalogProducts = [];
@@ -787,7 +788,9 @@ export async function fetchEditPageData(
   const fiber = config.fiber;
   const shopFiber = config.shopFiber ?? config.fiber;
 
-  const { products: raw, total } = await fetchShopProducts({
+  const { queryLiveCatalog } = await import("./catalog-direct-query");
+  const { products: raw, total } = await queryLiveCatalog({
+    region: "us",
     fiber: shopFiber,
     limit: limit + 16,
     offset,
@@ -1357,7 +1360,7 @@ export async function fetchAllProducts(limit = 200, offset = 0, category?: strin
 
   if (rows.length === 0) {
     let fb = liveProductsApparelFrom(supabase).select("*").gte("natural_fiber_percent", 80);
-    if (category) fb = fb.eq("category", category);
+    if (category) fb = applyCategoryFilter(fb, category);
     const { data } = await fb
       .order("natural_fiber_percent", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -1745,7 +1748,7 @@ async function shopLivePageFallback(
     q = q.or(orClauses.join(","));
   }
   if (opts.rpcFiber) q = q.ilike("composition", `%${opts.rpcFiber}%`);
-  if (opts.rpcCategory) q = q.eq("category", opts.rpcCategory);
+  if (opts.rpcCategory) q = applyCategoryFilter(q, opts.rpcCategory);
   if (opts.rpcBrand) q = q.eq("brand_slug", opts.rpcBrand);
   const { data, error } = await q
     .order("created_at", { ascending: false })
@@ -1863,55 +1866,11 @@ export async function fetchShopCatalogCount(options: {
   });
 }
 
-export async function fetchShopProducts(options: {
-  fiber?: string;
-  category?: string;
-  categories?: string[];
-  brandSlugs?: string[];
-  fiberSubtypes?: string[];
-  maxPrice?: number | null;
-  price600Plus?: boolean;
-  market?: string;
-  catalogRegion?: string;
-  sort?: string;
-  limit?: number;
-  offset?: number;
-  search?: string;
-  skipTotal?: boolean;
-}): Promise<{
-  products: Product[];
-  total: number | null;
-  hasMore: boolean;
-  error?: "timeout" | "failed";
-}> {
-  const { queryLiveCatalog } = await import("./catalog-direct-query");
-  const categories = options.categories?.length
-    ? options.categories
-    : options.category && options.category !== "all"
-      ? [options.category]
-      : undefined;
-  const brand =
-    options.brandSlugs?.length === 1 ? options.brandSlugs[0] : undefined;
-  const result = await queryLiveCatalog({
-    region: options.catalogRegion || "us",
-    fiber: options.fiber && options.fiber !== "all" ? options.fiber : undefined,
-    categories,
-    category: categories?.length === 1 ? categories[0] : options.category,
-    brand,
-    search: options.search,
-    sort: options.sort === "recommended" ? "new" : options.sort || "new",
-    maxPrice: options.price600Plus ? undefined : options.maxPrice ?? undefined,
-    limit: options.limit ?? 48,
-    offset: options.offset ?? 0,
-    skipCount: options.skipTotal ?? false,
-  });
-  return {
-    products: result.products as Product[],
-    total: result.total,
-    hasMore: result.hasMore,
-    error: result.error,
-  };
-}
+/**
+ * @deprecated Disabled — use queryLiveCatalog or /api/catalog instead.
+ * Left commented so it cannot be called accidentally.
+ */
+// export async function fetchShopProducts(...) { ... }
 
 
 const PRODUCT_CARD_COLS = "id, brand_slug, brand_name, name, product_id, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price, stock_status";

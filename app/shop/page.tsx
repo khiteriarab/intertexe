@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { CATALOG_INITIAL_PAGE } from "../../lib/catalog-rules";
-import { queryLiveCatalog } from "../../lib/catalog-direct-query";
 import ShopClient from "./ShopClient";
 import { formatListingPrice } from "../../lib/format-display-price";
 
@@ -32,6 +31,8 @@ const SHOP_CATEGORIES = new Set([
   "knitwear", "tops", "dresses", "skirts", "bottoms", "outerwear", "lingerie", "swimwear",
 ]);
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com";
+
 export default async function ShopPage({
   searchParams,
 }: {
@@ -39,8 +40,6 @@ export default async function ShopPage({
 }) {
   const params = searchParams ? await searchParams : {};
   const detectedCountry = getDetectedCountry(await headers());
-  const market =
-    params?.market === "us-ca" || params?.market === "eu-uk-me" ? params.market : undefined;
   const fiber =
     params?.fiber && SHOP_FIBERS.has(params.fiber)
       ? params.fiber
@@ -53,17 +52,23 @@ export default async function ShopPage({
       : "recommended";
   const search = params?.q?.trim() || undefined;
 
-  /** First page only — counts and fiber tabs load client-side (non-blocking). */
-  const shopData = await queryLiveCatalog({
+  const catalogParams = new URLSearchParams({
     region: "us",
-    sort: sort === "recommended" ? "new" : sort,
-    limit: CATALOG_INITIAL_PAGE,
-    offset: 0,
-    fiber,
-    category,
-    search,
-    skipCount: false,
+    limit: String(CATALOG_INITIAL_PAGE),
+    offset: "0",
   });
+  if (fiber) catalogParams.set("fiber", fiber);
+  if (category) catalogParams.set("category", category);
+  if (sort && sort !== "recommended") catalogParams.set("sort", sort);
+  if (search) catalogParams.set("q", search);
+
+  const res = await fetch(`${SITE_URL}/api/catalog?${catalogParams}`, {
+    next: { revalidate: 60 },
+  }).catch(() => null);
+
+  const shopData = res?.ok
+    ? await res.json()
+    : { products: [], total: 0, hasMore: false };
 
   const products = shopData.products || [];
 

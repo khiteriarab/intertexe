@@ -7,7 +7,10 @@ import {
   fetchProductsByBrand,
   getServerSupabase,
 } from "../../../lib/supabase-server";
-import { queryLiveCatalog } from "../../../lib/catalog-direct-query";
+import {
+  COLLECTION_CANONICAL_SLUGS,
+  queryLiveCatalog,
+} from "../../../lib/catalog-direct-query";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 import {
   safeCatalogLimit,
@@ -112,6 +115,30 @@ function catalogMarketFromParams(sp: URLSearchParams): string | undefined {
 }
 
 async function fetchCollectionWithFallback(slug: string, limit: number, offset: number, skipTotal: boolean) {
+  const direct = await queryLiveCatalog({
+    region: "us",
+    collection: slug,
+    limit,
+    offset,
+    skipCount: skipTotal,
+    sort: "new",
+  });
+  if (!direct.error && direct.products.length > 0) {
+    let total = direct.total;
+    if (!skipTotal) {
+      const counted = await fetchCollectionTotalFromDB(slug, "us");
+      if (counted != null) total = counted;
+    }
+    const pageConfig = await import("../../../lib/collection-pages").then((m) => m.getCollectionConfig(slug));
+    return {
+      products: direct.products,
+      editCount: total ?? direct.products.length,
+      catalogTotal: skipTotal ? null : total,
+      heroImageUrl: pageConfig?.editorialImage ?? "",
+      hasMore: direct.hasMore,
+    };
+  }
+
   const data = await fetchCollectionPageData(slug, {
     limit,
     offset,
@@ -153,23 +180,22 @@ async function fetchCollectionTotalFromDB(collection: string, region: string) {
   const supabase = getServerSupabase();
   if (!supabase) return null;
 
-  // New schema: array-backed collection memberships.
-  const primary = await supabase
+  const slugs = COLLECTION_CANONICAL_SLUGS[collection] || [collection];
+  let countQuery = supabase
     .from("live_products_apparel")
     .select("id", { count: "exact", head: true })
-    .eq("region", region)
-    .contains("collection_slugs", [collection]);
+    .eq("region", region);
 
-  if (primary.count != null) return primary.count;
+  if (collection === "white-edit") {
+    const slugConditions = slugs.map((slug) => `collection_slugs.cs.{${slug}}`);
+    slugConditions.push("color.in.(white,ivory,cream,ecru,off-white)");
+    countQuery = countQuery.or(slugConditions.join(","));
+  } else {
+    countQuery = countQuery.overlaps("collection_slugs", slugs);
+  }
 
-  // Legacy schema fallback: single collection slug field.
-  const legacy = await supabase
-    .from("live_products_apparel")
-    .select("id", { count: "exact", head: true })
-    .eq("region", region)
-    .eq("collection_slug", collection);
-
-  return legacy.count ?? null;
+  const primary = await countQuery;
+  return primary.count ?? null;
 }
 
 

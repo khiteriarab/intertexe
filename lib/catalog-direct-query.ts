@@ -6,6 +6,26 @@ import { applyCategoryFilter, CATEGORY_TO_GARMENT_TYPE } from "./catalog-shop-ma
 
 export { CATEGORY_TO_GARMENT_TYPE, applyCategoryFilter };
 
+/** Editorial slug → all DB slugs that qualify for that collection. */
+export const COLLECTION_CANONICAL_SLUGS: Record<string, string[]> = {
+  vacation: ["vacation", "vacation-shop", "vacation-edit"],
+  evening: ["evening", "occasion-edit", "silk-occasion", "evening-edit"],
+  tailoring: ["tailoring", "tailoring-edit"],
+  "summer-in-the-city": ["summer-in-the-city", "city-wardrobe"],
+  "white-edit": ["white-edit", "the-white-edit"],
+};
+
+const WHITE_EDIT_COLORS = ["white", "ivory", "cream", "ecru", "off-white"];
+
+export function applyCollectionFilter(query: any, collection: string): any {
+  const slugs = COLLECTION_CANONICAL_SLUGS[collection] || [collection];
+  const slugConditions = slugs.map((slug) => `collection_slugs.cs.{${slug}}`);
+  if (collection === "white-edit") {
+    slugConditions.push(`color.in.(${WHITE_EDIT_COLORS.join(",")})`);
+  }
+  return query.or(slugConditions.join(","));
+}
+
 export type DirectCatalogProduct = {
   id: string;
   brandSlug: string;
@@ -191,9 +211,7 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
     }
 
     if (opts.collection) {
-      query = query.or(
-        `collection_slug.eq.${opts.collection},collection_slugs.cs.{${opts.collection}}`
-      );
+      query = applyCollectionFilter(query, opts.collection);
     }
 
     if (opts.brand) {
