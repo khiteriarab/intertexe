@@ -5,38 +5,31 @@ import Link from "next/link";
 import { ShoppingBag, Heart, Tag } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
+import {
+  SHOP_CATEGORY_OPTIONS,
+  SHOP_COLOR_OPTIONS,
+  SHOP_PRICE_TIERS,
+  type ShopPriceTierId,
+} from "../../lib/catalog-filter-options";
+import { getShopBrands } from "../shop/actions";
+import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
+import { CatalogMobileSheet } from "../components/CatalogMobileToolbar";
 
-type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen";
-type PriceFilter = "all" | "100" | "200" | "300";
+type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
 
 const PAGE_SIZE = 48;
 
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "cashmere", label: "Cashmere" },
   { key: "silk", label: "Silk" },
-  { key: "wool", label: "Wool" },
-  { key: "cotton", label: "Cotton" },
   { key: "linen", label: "Linen" },
+  { key: "cashmere", label: "Cashmere" },
+  { key: "cotton", label: "Cotton" },
+  { key: "wool", label: "Wool" },
+  { key: "leather", label: "Leather" },
 ];
 
-const PRICE_FILTERS: { key: PriceFilter; label: string }[] = [
-  { key: "all", label: "All Prices" },
-  { key: "100", label: "Under $100" },
-  { key: "200", label: "Under $200" },
-  { key: "300", label: "Under $300" },
-];
-
-const CATEGORIES: { label: string; value: string | null }[] = [
-  { label: "All", value: null },
-  { label: "Dresses", value: "dresses" },
-  { label: "Tops", value: "tops" },
-  { label: "Knitwear", value: "knitwear" },
-  { label: "Trousers", value: "trousers" },
-  { label: "Skirts", value: "skirts" },
-  { label: "Outerwear", value: "outerwear" },
-  { label: "Jumpsuits", value: "jumpsuits" },
-];
+const SALE_CATEGORIES = [{ key: "all" as const, label: "All" }, ...SHOP_CATEGORY_OPTIONS];
 
 function getDiscountPercent(originalPrice: string | null, currentPrice: string | null): number | null {
   if (!originalPrice || !currentPrice) return null;
@@ -116,8 +109,10 @@ function SaleProductCard({ product }: { product: any }) {
 
 function buildSaleParams(
   fiberTab: FiberTab,
-  priceFilter: PriceFilter,
+  priceTier: ShopPriceTierId,
   selectedCategory: string | null,
+  selectedColor: string | null,
+  selectedBrands: string[],
   limit: number,
   offset: number
 ) {
@@ -126,8 +121,10 @@ function buildSaleParams(
   params.set("limit", String(limit));
   params.set("offset", String(offset));
   if (fiberTab !== "all") params.set("fiber", fiberTab);
-  if (priceFilter !== "all") params.set("maxPrice", priceFilter);
+  if (priceTier !== "any") params.set("price", priceTier);
   if (selectedCategory) params.set("category", selectedCategory);
+  if (selectedColor) params.set("color", selectedColor);
+  if (selectedBrands.length) params.set("brand", selectedBrands[0]);
   return params;
 }
 
@@ -141,8 +138,12 @@ export default function SaleClient({
   initialHasMore?: boolean;
 }) {
   const [fiberTab, setFiberTab] = useState<FiberTab>("all");
-  const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
+  const [priceTier, setPriceTier] = useState<ShopPriceTierId>("any");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [products, setProducts] = useState(initialProducts || []);
   const [total, setTotal] = useState(initialTotal || 0);
   const [offset, setOffset] = useState(initialProducts?.length || 0);
@@ -150,9 +151,23 @@ export default function SaleClient({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  useEffect(() => {
+    getShopBrands()
+      .then((brands) => setShopBrands(brands.map((b) => ({ slug: b.slug, name: b.name, count: b.count }))))
+      .catch(() => {});
+  }, []);
+
   const fetchPage = useCallback(
     async (nextOffset: number, append: boolean) => {
-      const params = buildSaleParams(fiberTab, priceFilter, selectedCategory, PAGE_SIZE, nextOffset);
+      const params = buildSaleParams(
+        fiberTab,
+        priceTier,
+        selectedCategory,
+        selectedColor,
+        selectedBrands,
+        PAGE_SIZE,
+        nextOffset
+      );
       const res = await fetch(`/api/sale?${params}`);
       const data = await res.json();
       const nextProducts = data.products || [];
@@ -162,12 +177,16 @@ export default function SaleClient({
       setOffset(nextOffset + nextProducts.length);
       setHasMore(Boolean(data.hasMore) && nextProducts.length > 0);
     },
-    [fiberTab, priceFilter, selectedCategory]
+    [fiberTab, priceTier, selectedCategory, selectedColor, selectedBrands]
   );
 
   useEffect(() => {
     const isDefault =
-      fiberTab === "all" && priceFilter === "all" && selectedCategory === null;
+      fiberTab === "all" &&
+      priceTier === "any" &&
+      selectedCategory === null &&
+      !selectedColor &&
+      selectedBrands.length === 0;
     if (isDefault && initialProducts?.length) {
       setProducts(initialProducts);
       setTotal(initialTotal);
@@ -185,7 +204,7 @@ export default function SaleClient({
         setHasMore(false);
       })
       .finally(() => setIsLoading(false));
-  }, [fiberTab, priceFilter, selectedCategory, initialProducts, initialTotal, initialHasMore, fetchPage]);
+  }, [fiberTab, priceTier, selectedCategory, selectedColor, selectedBrands.join(","), initialProducts, initialTotal, initialHasMore, fetchPage]);
 
   const loadMore = async () => {
     if (!hasMore || isLoadingMore || isLoading) return;
@@ -198,6 +217,85 @@ export default function SaleClient({
       setIsLoadingMore(false);
     }
   };
+
+  const filterPanel = (
+    <>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
+      <div className="flex flex-wrap gap-2 mb-8">
+        {SALE_CATEGORIES.map((cat) => (
+          <button
+            key={cat.key}
+            type="button"
+            onClick={() => setSelectedCategory(cat.key === "all" ? null : cat.key)}
+            className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+              (cat.key === "all" ? !selectedCategory : selectedCategory === cat.key)
+                ? "border-foreground bg-foreground text-background"
+                : "border-border/40"
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
+      <div className="flex flex-wrap gap-2 mb-8">
+        {FIBER_TABS.filter((t) => t.key !== "all").map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setFiberTab(tab.key)}
+            className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+              fiberTab === tab.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Color</p>
+      <div className="flex flex-wrap gap-2 mb-8">
+        {SHOP_COLOR_OPTIONS.map((color) => (
+          <button
+            key={color.value}
+            type="button"
+            onClick={() => setSelectedColor(selectedColor === color.value ? null : color.value)}
+            className={`px-3 py-1.5 text-[10px] tracking-[0.1em] uppercase border transition-colors ${
+              selectedColor === color.value
+                ? "bg-[#1C2B2A] text-white border-[#1C2B2A]"
+                : "bg-white text-black border-gray-200 hover:border-gray-400"
+            }`}
+          >
+            {color.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Price</p>
+      <div className="flex flex-col gap-2 mb-8 border border-border/30">
+        {SHOP_PRICE_TIERS.map((tier) => (
+          <button
+            key={tier.id}
+            type="button"
+            onClick={() => setPriceTier(tier.id)}
+            className={`w-full text-left px-4 py-3 text-[12px] border-b border-border/20 last:border-0 ${
+              priceTier === tier.id ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+            }`}
+          >
+            {tier.label}
+          </button>
+        ))}
+      </div>
+      {shopBrands.length > 0 && (
+        <>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Designers</p>
+          <DesignerSearchFilter
+            designers={shopBrands}
+            selected={selectedBrands}
+            onChange={setSelectedBrands}
+          />
+        </>
+      )}
+    </>
+  );
 
   return (
     <div className="min-h-screen pb-20">
@@ -214,67 +312,55 @@ export default function SaleClient({
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3 border-b border-gray-100">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.label}
-                onClick={() => setSelectedCategory(cat.value)}
-                className={`flex-shrink-0 px-4 py-2 text-[9px] tracking-[0.2em] uppercase font-normal border ${
-                  selectedCategory === cat.value
-                    ? "bg-[#1C2B2A] text-white border-[#1C2B2A]"
-                    : "bg-white text-black border-gray-200"
-                }`}
-                data-testid={`btn-category-${cat.value ?? "all"}`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {FIBER_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setFiberTab(tab.key)}
-                className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${fiberTab === tab.key ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground hover:text-foreground"}`}
-                data-testid={`btn-fiber-${tab.key}`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {PRICE_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setPriceFilter(f.key)}
-                className={`px-4 py-2 text-[10px] uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${priceFilter === f.key ? "bg-foreground text-background" : "border border-border/60 text-muted-foreground hover:text-foreground"}`}
-                data-testid={`btn-price-${f.key}`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center justify-between border-y border-border/25 py-3 px-4 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setShowFilterSheet(true)}
+            className="text-[11px] uppercase tracking-[0.14em]"
+          >
+            Filter
+          </button>
+          <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+            {total > 0 ? `${total.toLocaleString()} results` : "—"}
+          </span>
         </div>
 
+        <div className="hidden lg:block px-4 max-w-7xl mx-auto w-full">
+          {filterPanel}
+        </div>
+
+        <CatalogMobileSheet
+          open={showFilterSheet}
+          onClose={() => setShowFilterSheet(false)}
+          title="Filter"
+          footer={
+            <button
+              type="button"
+              onClick={() => setShowFilterSheet(false)}
+              className="w-full bg-foreground text-background py-3.5 text-[10px] uppercase tracking-[0.2em]"
+            >
+              View results
+            </button>
+          }
+        >
+          {filterPanel}
+        </CatalogMobileSheet>
+
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12 px-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="animate-pulse flex flex-col">
                 <div className="aspect-[3/4] bg-[#f0f0ee]" />
                 <div className="pt-3 flex flex-col gap-2">
                   <div className="h-2.5 bg-[#f0f0ee] w-1/3" />
                   <div className="h-3 bg-[#f0f0ee] w-3/4" />
-                  <div className="h-2.5 bg-[#f0f0ee] w-1/4" />
                 </div>
               </div>
             ))}
           </div>
         ) : products.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12" data-testid="sale-product-grid">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12 px-4" data-testid="sale-product-grid">
               {products.map((product: any) => (
                 <SaleProductCard key={product.id} product={product} />
               ))}
@@ -296,7 +382,6 @@ export default function SaleClient({
           <div className="text-center py-16 flex flex-col gap-4 items-center">
             <Tag className="w-12 h-12 text-muted-foreground/30" />
             <p className="text-sm text-muted-foreground">No sale items match your filters yet.</p>
-            <p className="text-xs text-muted-foreground/70">Our price tracker monitors products daily — check back soon.</p>
           </div>
         )}
       </div>

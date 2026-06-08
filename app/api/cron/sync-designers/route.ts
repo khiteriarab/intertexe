@@ -1,71 +1,83 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeCron } from "@/lib/cron-auth";
 import { createServiceClient } from "@/lib/supabase/server";
+import { liveProductsApparelFrom } from "@/lib/global-catalog-scope";
 
 export const dynamic = "force-dynamic";
+
+const MIN_LIVE_PRODUCTS = 2;
+const PAGE_SIZE = 1000;
+const MAX_PAGES = 200;
 
 export async function GET(req: NextRequest) {
   const denied = authorizeCron(req);
   if (denied) return denied;
 
   const supabase = createServiceClient();
+  const brandCounts = new Map<string, number>();
 
-  const { data: brands, error: brandsError } = await supabase
-    .from("products")
-    .select("brand_slug, brand_name, image_url, natural_fiber_percent")
-    .eq("approved", "yes")
-    .eq("is_active", true)
-    .not("brand_slug", "is", null);
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const offset = page * PAGE_SIZE;
+    const { data, error } = await liveProductsApparelFrom(supabase)
+      .select("brand_slug")
+      .eq("region", "us")
+      .not("brand_slug", "is", null)
+      .range(offset, offset + PAGE_SIZE - 1);
 
-  if (brandsError) {
-    return NextResponse.json({ error: brandsError.message }, { status: 500 });
-  }
-
-  const brandMap: Record<string, { slug: string; name: string; image_url: string | null; nfp_sum: number; count: number }> = {};
-
-  for (const product of brands || []) {
-    const slug = String(product.brand_slug || "").trim();
-    if (!slug) continue;
-    if (!brandMap[slug]) {
-      brandMap[slug] = {
-        slug,
-        name: product.brand_name || slug,
-        image_url: product.image_url || null,
-        nfp_sum: 0,
-        count: 0,
-      };
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    brandMap[slug].nfp_sum += Number(product.natural_fiber_percent || 0);
-    brandMap[slug].count++;
+    if (!data?.length) break;
+
+    for (const row of data) {
+      const slug = String(row.brand_slug || "").trim().toLowerCase();
+      if (!slug) continue;
+      brandCounts.set(slug, (brandCounts.get(slug) || 0) + 1);
+    }
+
+    if (data.length < PAGE_SIZE) break;
   }
 
-  const { data: existing, error: existingError } = await supabase.from("designers").select("slug");
-  if (existingError) {
-    return NextResponse.json({ error: existingError.message }, { status: 500 });
+  const { data: designers, error: designersError } = await supabase
+    .from("designers")
+    .select("slug");
+
+  if (designersError) {
+    return NextResponse.json({ error: designersError.message }, { status: 500 });
   }
 
-  const existingSlugs = new Set((existing || []).map((d: { slug: string }) => d.slug));
-  const missing = Object.values(brandMap).filter((b) => !existingSlugs.has(b.slug));
+  const syncedAt = new Date().toISOString();
+  let updated = 0;
+  let live = 0;
 
-  let created = 0;
-  for (const brand of missing) {
-    const avgNFP = Math.round(brand.nfp_sum / Math.max(brand.count, 1));
-    const { error } = await supabase.from("designers").insert({
-      slug: brand.slug,
-      name: brand.name,
-      image_url: brand.image_url,
-      hero_image: brand.image_url,
-      natural_fiber_percent: avgNFP,
-      status: "active",
-      is_featured: false,
-      created_at: new Date().toISOString(),
-    });
-    if (!error) created++;
+  for (const row of designers || []) {
+    const slug = String(row.slug || "").trim().toLowerCase();
+    if (!slug) continue;
+    const count = brandCounts.get(slug) || 0;
+    const isLive = count >= MIN_LIVE_PRODUCTS;
+    if (isLive) live++;
+
+    const { error } = await supabase
+      .from("designers")
+      .update({
+        is_live: isLive,
+        product_count: count,
+        last_synced_at: syncedAt,
+      })
+      .eq("slug", slug);
+
+    if (!error) updated++;
   }
+
+  const { count: masterTotal } = await supabase
+    .from("designers")
+    .select("*", { count: "exact", head: true });
 
   return NextResponse.json({
-    brandsChecked: Object.keys(brandMap).length,
-    newDesignersCreated: created,
-    totalMissing: missing.length,
+    synced: updated,
+    live,
+    master_total: masterTotal ?? designers?.length ?? 0,
+    catalog_brands: brandCounts.size,
+    at: syncedAt,
   });
 }

@@ -2011,7 +2011,7 @@ function productMatchesSaleCategory(product: Product, category: string): boolean
 
 function applySaleProductFilters(
   products: Product[],
-  opts: { fiber?: string; maxPrice?: number; category?: string }
+  opts: { fiber?: string; maxPrice?: number; minPrice?: number; category?: string; color?: string; brand?: string }
 ): Product[] {
   let filtered = products.filter((p) => p.imageUrl && p.price);
   if (opts.fiber && opts.fiber !== "all") {
@@ -2020,6 +2020,17 @@ function applySaleProductFilters(
   }
   if (opts.category && opts.category !== "all") {
     filtered = filtered.filter((p) => productMatchesSaleCategory(p, opts.category!));
+  }
+  if (opts.color) {
+    const c = opts.color.toLowerCase();
+    filtered = filtered.filter((p) => String((p as any).color || "").toLowerCase() === c);
+  }
+  if (opts.brand) {
+    const slug = opts.brand.toLowerCase();
+    filtered = filtered.filter((p) => (p.brandSlug || "").toLowerCase() === slug);
+  }
+  if (opts.minPrice) {
+    filtered = filtered.filter((p) => parseMoneyValue(p.price) >= opts.minPrice!);
   }
   if (opts.maxPrice) {
     filtered = filtered.filter((p) => {
@@ -2035,7 +2046,7 @@ function applySaleProductFilters(
 function buildSaleDirectQuery(
   supabase: NonNullable<ReturnType<typeof getServerSupabase>>,
   region: string,
-  opts: { fiber?: string; category?: string },
+  opts: { fiber?: string; category?: string; color?: string; brand?: string },
   columns = "*",
   selectOptions?: { count: "exact"; head: true }
 ) {
@@ -2051,6 +2062,12 @@ function buildSaleDirectQuery(
   }
   if (opts.category && opts.category !== "all") {
     q = applyCategoryFilter(q, opts.category);
+  }
+  if (opts.color) {
+    q = q.eq("color", opts.color);
+  }
+  if (opts.brand) {
+    q = q.eq("brand_slug", opts.brand.toLowerCase());
   }
   return q;
 }
@@ -2068,18 +2085,23 @@ export async function getSaleTotalCount(opts: {
   region?: string;
   fiber?: string;
   maxPrice?: number;
+  minPrice?: number;
   category?: string;
+  color?: string;
+  brand?: string;
 }): Promise<number> {
   const supabase = getServerSupabase();
   if (!supabase) return 0;
   const { preferred } = catalogRegionsFromMarket(opts.region);
   const fiber = opts.fiber && opts.fiber !== "all" ? opts.fiber : undefined;
   const category = opts.category && opts.category !== "all" ? opts.category : undefined;
+  const color = opts.color || undefined;
+  const brand = opts.brand || undefined;
   try {
     const { count, error } = await buildSaleDirectQuery(
       supabase,
       preferred,
-      { fiber, category },
+      { fiber, category, color, brand },
       "id",
       { count: "exact", head: true }
     );
@@ -2095,7 +2117,10 @@ export async function getSaleTotalCount(opts: {
 async function fetchSaleProductsDirect(options: {
   fiber?: string;
   maxPrice?: number;
+  minPrice?: number;
   category?: string;
+  color?: string;
+  brand?: string;
   market?: string;
   limit?: number;
   offset?: number;
@@ -2106,14 +2131,17 @@ async function fetchSaleProductsDirect(options: {
   const {
     fiber,
     maxPrice,
+    minPrice,
     category,
+    color,
+    brand,
     market,
     limit = 60,
     offset = 0,
     skipTotal = false,
   } = options;
   const { preferred } = catalogRegionsFromMarket(market);
-  const filterOpts = { fiber, category };
+  const filterOpts = { fiber, category, color, brand };
 
   const { data, error } = await buildSaleDirectQuery(supabase, preferred, filterOpts)
     .order("created_at", { ascending: false })
@@ -2121,7 +2149,7 @@ async function fetchSaleProductsDirect(options: {
   if (error) throw error;
 
   let products = filterConsumerCatalogProducts((data || []).map(mapProductRow));
-  products = applySaleProductFilters(products, { fiber, maxPrice, category });
+  products = applySaleProductFilters(products, { fiber, maxPrice, minPrice, category, color, brand });
 
   if (skipTotal) {
     return {
@@ -2151,7 +2179,10 @@ async function fetchSaleProductsDirect(options: {
 export async function fetchSaleProducts(options: {
   fiber?: string;
   maxPrice?: number;
+  minPrice?: number;
   category?: string;
+  color?: string;
+  brand?: string;
   market?: string;
   limit?: number;
   offset?: number;
@@ -2166,7 +2197,10 @@ export async function fetchSaleProducts(options: {
   const {
     fiber,
     maxPrice,
+    minPrice,
     category,
+    color,
+    brand,
     market,
     limit = 60,
     offset = 0,
@@ -2180,7 +2214,10 @@ export async function fetchSaleProducts(options: {
       return await fetchSaleProductsDirect({
         fiber,
         maxPrice,
+        minPrice,
         category,
+        color,
+        brand,
         market,
         limit,
         offset,

@@ -12,9 +12,9 @@ const MIN_PRODUCTS = 2;
 const PAGE_SIZE = 1000;
 const MAX_PAGES = 50;
 
-export async function fetchCatalogDesigners(
-  region = "us",
-  minProducts = MIN_PRODUCTS
+async function fetchLiveDesignersFromCatalog(
+  region: string,
+  minProducts: number
 ): Promise<CatalogDesignerBrand[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
@@ -55,4 +55,35 @@ export async function fetchCatalogDesigners(
   return [...brandMap.values()]
     .filter((b) => b.count >= minProducts)
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function fetchCatalogDesigners(
+  region = "us",
+  minProducts = MIN_PRODUCTS
+): Promise<CatalogDesignerBrand[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("designers")
+    .select("slug, name, product_count")
+    .eq("is_live", true)
+    .order("name", { ascending: true });
+
+  if (!error && data?.length) {
+    return data
+      .map((row) => ({
+        slug: String(row.slug || "").trim().toLowerCase(),
+        name: sanitizeBrandName(String(row.name || row.slug || "")),
+        count: Number(row.product_count) || minProducts,
+      }))
+      .filter((b) => b.slug)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  if (error) {
+    console.warn("[fetchCatalogDesigners] is_live query failed, using live catalog scan:", error.message);
+  }
+
+  return fetchLiveDesignersFromCatalog(region, minProducts);
 }

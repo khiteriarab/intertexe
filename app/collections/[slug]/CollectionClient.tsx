@@ -10,21 +10,20 @@ import {
   COLLECTION_PAGES,
   COLLECTION_SLUGS,
   type CollectionPageConfig,
-  type CollectionSlug,
 } from "../../../lib/collection-pages";
 import { EditorialHeroImage } from "../../components/EditorialHeroImage";
 import { CatalogProductImage } from "../../components/CatalogProductImage";
-import { WearToWhereRail } from "../../components/WearToWhereRail";
 import { CatalogFilterSidebar } from "../../components/CatalogFilterSidebar";
 import { DesignerSearchFilter } from "../../components/DesignerSearchFilter";
 import { getShopBrands } from "../../shop/actions";
-import {
-  collectionMoodLabels,
-  filterProductsByCollectionMood,
-} from "../../../lib/collection-moods";
 import { filterProductsByFiberSubtypes, fiberSubtypesFor } from "../../../lib/fiber-subtypes";
-import { wearToWhereEditorialCards } from "../../../lib/wear-to-where";
-import type { Product as CatalogProduct } from "../../../lib/supabase-server";
+import {
+  SHOP_CATEGORY_OPTIONS,
+  SHOP_COLOR_OPTIONS,
+  SHOP_PRICE_TIERS,
+  priceBoundsFromTier,
+  type ShopPriceTierId,
+} from "../../../lib/catalog-filter-options";
 
 type Product = {
   id: string;
@@ -37,6 +36,7 @@ type Product = {
   composition?: string;
   naturalFiberPercent?: number;
   category?: string;
+  color?: string | null;
   fiberSubtypeLabel?: string | null;
 };
 
@@ -61,18 +61,23 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
 
 const CATEGORY_OPTIONS = [
   { key: "all", label: "All" },
-  { key: "dresses", label: "Dresses" },
-  { key: "tops", label: "Tops" },
-  { key: "knitwear", label: "Knitwear" },
-  { key: "bottoms", label: "Bottoms" },
-  { key: "outerwear", label: "Outerwear" },
-  { key: "skirts", label: "Skirts" },
+  ...SHOP_CATEGORY_OPTIONS.map((c) => ({ key: c.key, label: c.label })),
 ] as const;
 
 function parsePriceNum(price: string | undefined): number {
   if (!price) return Number.POSITIVE_INFINITY;
   const n = parseFloat(String(price).replace(/[^0-9.]/g, ""));
   return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+}
+
+function productMatchesPriceTier(price: string | undefined, tier: ShopPriceTierId): boolean {
+  if (tier === "any") return true;
+  const amount = parsePriceNum(price);
+  if (!Number.isFinite(amount)) return false;
+  const bounds = priceBoundsFromTier(tier);
+  if (bounds.minPrice != null && amount < bounds.minPrice) return false;
+  if (bounds.maxPrice != null && amount > bounds.maxPrice) return false;
+  return true;
 }
 
 function sortCollectionProducts(items: Product[], sort: CollectionSort): Product[] {
@@ -91,23 +96,6 @@ function sortCollectionProducts(items: Product[], sort: CollectionSort): Product
   return list;
 }
 
-function toCatalogProduct(p: Product): CatalogProduct {
-  return {
-    id: p.id,
-    brandSlug: p.brandSlug || "",
-    brandName: p.brandName,
-    name: p.name,
-    productId: p.productId || p.id,
-    url: "",
-    imageUrl: p.imageUrl || "",
-    price: p.price || "",
-    composition: p.composition || "",
-    naturalFiberPercent: p.naturalFiberPercent ?? 0,
-    category: p.category || "",
-    fiberSubtypeLabel: p.fiberSubtypeLabel,
-  };
-}
-
 export default function CollectionClient({
   config,
   products: initialProducts,
@@ -123,9 +111,6 @@ export default function CollectionClient({
   initialHasMore?: boolean;
   heroImageUrl: string;
 }) {
-  const collectionSlug = config.slug as CollectionSlug;
-  const moodLabels = collectionMoodLabels(collectionSlug);
-
   const [products, setProducts] = useState(initialProducts);
   const [offset, setOffset] = useState(initialProducts.length);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -139,7 +124,8 @@ export default function CollectionClient({
   const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
   const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [priceTier, setPriceTier] = useState<ShopPriceTierId>("any");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
 
@@ -162,11 +148,6 @@ export default function CollectionClient({
       .finally(() => setCountLoading(false));
   }, [config.slug, catalogTotal]);
 
-  const wearCards = useMemo(
-    () => wearToWhereEditorialCards(collectionSlug, products.map(toCatalogProduct)),
-    [collectionSlug, products]
-  );
-
   const filteredProducts = useMemo(() => {
     let list = products;
     if (fiberTab !== "all") {
@@ -182,6 +163,17 @@ export default function CollectionClient({
           (p.name || "").toLowerCase().includes(needle)
       );
     }
+    if (selectedColor) {
+      const colorNeedle = selectedColor.toLowerCase();
+      list = list.filter((p) => {
+        const dbColor = (p.color || "").toLowerCase();
+        if (dbColor === colorNeedle) return true;
+        return (p.name || "").toLowerCase().includes(colorNeedle);
+      });
+    }
+    if (priceTier !== "any") {
+      list = list.filter((p) => productMatchesPriceTier(p.price, priceTier));
+    }
     if (selectedBrandSlugs.length > 0) {
       const slugSet = new Set(selectedBrandSlugs.map((s) => s.toLowerCase()));
       const nameBySlug = new Map(shopBrands.map((b) => [b.slug, b.name.toLowerCase()]));
@@ -192,20 +184,15 @@ export default function CollectionClient({
         return [...slugSet].some((s) => bn === (nameBySlug.get(s) || s));
       });
     }
-    list = filterProductsByCollectionMood(
-      list.map(toCatalogProduct),
-      selectedMood,
-      collectionSlug
-    ) as Product[];
     return sortCollectionProducts(list, sortBy);
   }, [
     products,
     fiberTab,
     selectedFiberSubtypes,
     categoryFilter,
+    selectedColor,
+    priceTier,
     selectedBrandSlugs,
-    selectedMood,
-    collectionSlug,
     sortBy,
     shopBrands,
   ]);
@@ -217,7 +204,8 @@ export default function CollectionClient({
     selectedFiberSubtypes.length > 0 ||
     categoryFilter !== "all" ||
     selectedBrandSlugs.length > 0 ||
-    selectedMood != null;
+    selectedColor != null ||
+    priceTier !== "any";
 
   const displayCount = hasActiveFilters ? filteredProducts.length : totalCount;
 
@@ -233,18 +221,36 @@ export default function CollectionClient({
     ...(categoryFilter !== "all"
       ? [{ id: "cat", label: CATEGORY_OPTIONS.find((c) => c.key === categoryFilter)?.label || categoryFilter, onRemove: () => setCategoryFilter("all") }]
       : []),
+    ...(selectedColor
+      ? [{ id: "color", label: SHOP_COLOR_OPTIONS.find((c) => c.value === selectedColor)?.label || selectedColor, onRemove: () => setSelectedColor(null) }]
+      : []),
+    ...(priceTier !== "any"
+      ? [{ id: "price", label: SHOP_PRICE_TIERS.find((t) => t.id === priceTier)?.label || priceTier, onRemove: () => setPriceTier("any") }]
+      : []),
     ...selectedBrandSlugs.map((slug) => ({
       id: `brand-${slug}`,
       label: shopBrands.find((b) => b.slug === slug)?.name || slug,
       onRemove: () => setSelectedBrandSlugs((prev) => prev.filter((s) => s !== slug)),
     })),
-    ...(selectedMood
-      ? [{ id: "mood", label: selectedMood, onRemove: () => setSelectedMood(null) }]
-      : []),
   ];
 
   const mobileFilterPanel = (
     <>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
+      <div className="flex flex-wrap gap-2 mb-8">
+        {CATEGORY_OPTIONS.map((cat) => (
+          <button
+            key={cat.key}
+            type="button"
+            onClick={() => setCategoryFilter(cat.key)}
+            className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+              categoryFilter === cat.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
       <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
       <div className="flex flex-wrap gap-2 mb-4">
         {FIBER_TABS.filter((t) => t.key !== "all").map((tab) => (
@@ -284,18 +290,35 @@ export default function CollectionClient({
           ))}
         </div>
       )}
-      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Color</p>
       <div className="flex flex-wrap gap-2 mb-8">
-        {CATEGORY_OPTIONS.map((cat) => (
+        {SHOP_COLOR_OPTIONS.map((color) => (
           <button
-            key={cat.key}
+            key={color.value}
             type="button"
-            onClick={() => setCategoryFilter(cat.key)}
-            className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-              categoryFilter === cat.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+            onClick={() => setSelectedColor(selectedColor === color.value ? null : color.value)}
+            className={`px-3 py-1.5 text-[10px] tracking-[0.1em] uppercase border transition-colors ${
+              selectedColor === color.value
+                ? "bg-[#1C2B2A] text-white border-[#1C2B2A]"
+                : "bg-white text-black border-gray-200 hover:border-gray-400"
             }`}
           >
-            {cat.label}
+            {color.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Price</p>
+      <div className="flex flex-col gap-2 mb-8 border border-border/30">
+        {SHOP_PRICE_TIERS.map((tier) => (
+          <button
+            key={tier.id}
+            type="button"
+            onClick={() => setPriceTier(tier.id)}
+            className={`w-full text-left px-4 py-3 text-[12px] border-b border-border/20 last:border-0 ${
+              priceTier === tier.id ? "bg-[#f5f5f3] font-medium" : "text-muted-foreground"
+            }`}
+          >
+            {tier.label}
           </button>
         ))}
       </div>
@@ -307,37 +330,6 @@ export default function CollectionClient({
             selected={selectedBrandSlugs}
             onChange={setSelectedBrandSlugs}
           />
-        </>
-      )}
-      {moodLabels.length > 0 && (
-        <>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4 mt-8">Mood</p>
-          <ul className="space-y-2">
-            <li>
-              <label className="flex items-center gap-2 text-[12px] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!selectedMood}
-                  onChange={() => setSelectedMood(null)}
-                  className="accent-foreground"
-                />
-                All moods
-              </label>
-            </li>
-            {moodLabels.map((mood) => (
-              <li key={mood}>
-                <label className="flex items-center gap-2 text-[12px] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedMood === mood}
-                    onChange={() => setSelectedMood(selectedMood === mood ? null : mood)}
-                    className="accent-foreground"
-                  />
-                  {mood}
-                </label>
-              </li>
-            ))}
-          </ul>
         </>
       )}
     </>
@@ -396,11 +388,6 @@ export default function CollectionClient({
         </div>
       </section>
 
-      <WearToWhereRail
-        cards={wearCards}
-        className="border-b border-border/30 bg-white"
-      />
-
       <section className="border-b border-border/30 bg-[#FAFAF8]">
         <div className="max-w-6xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
           {COLLECTION_SLUGS.map((slug) => {
@@ -452,9 +439,12 @@ export default function CollectionClient({
             onDesignersChange={setSelectedBrandSlugs}
             selectedFiberSubtypes={selectedFiberSubtypes}
             onFiberSubtypesChange={setSelectedFiberSubtypes}
-            moodOptions={moodLabels}
-            selectedMood={selectedMood}
-            onMoodChange={setSelectedMood}
+            colorOptions={[...SHOP_COLOR_OPTIONS]}
+            selectedColor={selectedColor}
+            onColorChange={setSelectedColor}
+            priceTierOptions={SHOP_PRICE_TIERS.map((t) => ({ id: t.id, label: t.label }))}
+            selectedPriceTier={priceTier}
+            onPriceTierChange={(id) => setPriceTier(id as ShopPriceTierId)}
           />
 
           <div className="flex-1 min-w-0">
