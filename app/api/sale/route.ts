@@ -16,9 +16,11 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Math.max(Number(sp.get("limit") || 40), 1), 200);
   const offset = Math.max(Number(sp.get("offset") || 0), 0);
   const fiber = sp.get("fiber") || undefined;
+  const fiberSubtype = sp.get("fiberSubtype") || undefined;
   const category = sp.get("category") || undefined;
   const color = sp.get("color") || undefined;
   const brand = sp.get("brand") || undefined;
+  const sort = sp.get("sort") || "discount";
   const region = sp.get("region") || sp.get("market") || undefined;
   const priceTier = parsePriceTier(sp.get("price"));
   const priceBounds = priceBoundsFromTier(priceTier);
@@ -30,11 +32,13 @@ export async function GET(request: NextRequest) {
   try {
     const result = await fetchSaleProducts({
       fiber: fiber && fiber !== "all" ? fiber : undefined,
+      fiberSubtype: fiberSubtype || undefined,
       maxPrice,
       minPrice,
       category: category && category !== "all" ? category : undefined,
       color: color || undefined,
       brand: brand || undefined,
+      sort: sort || undefined,
       market: region && region !== "all" ? region : undefined,
       limit,
       offset,

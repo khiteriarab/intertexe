@@ -2009,13 +2009,49 @@ function productMatchesSaleCategory(product: Product, category: string): boolean
   return garment.includes(needle) || cat.includes(needle) || name.includes(needle);
 }
 
+function saleDiscountPercent(product: Product): number {
+  const orig = parseMoneyValue(product.originalPrice);
+  const curr = parseMoneyValue(product.price);
+  if (!orig || !curr || orig <= curr) return 0;
+  return Math.round(((orig - curr) / orig) * 100);
+}
+
+function sortSaleProducts(products: Product[], sort?: string): Product[] {
+  const list = [...products];
+  switch (sort) {
+    case "price-low":
+      return list.sort((a, b) => parseMoneyValue(a.price) - parseMoneyValue(b.price));
+    case "price-high":
+      return list.sort((a, b) => parseMoneyValue(b.price) - parseMoneyValue(a.price));
+    case "natural":
+    case "natural-high":
+      return list.sort((a, b) => (b.naturalFiberPercent ?? 0) - (a.naturalFiberPercent ?? 0));
+    case "discount":
+      return list.sort((a, b) => saleDiscountPercent(b) - saleDiscountPercent(a));
+    default:
+      return list;
+  }
+}
+
 function applySaleProductFilters(
   products: Product[],
-  opts: { fiber?: string; maxPrice?: number; minPrice?: number; category?: string; color?: string; brand?: string }
+  opts: {
+    fiber?: string;
+    fiberSubtype?: string;
+    maxPrice?: number;
+    minPrice?: number;
+    category?: string;
+    color?: string;
+    brand?: string;
+  }
 ): Product[] {
   let filtered = products.filter((p) => p.imageUrl && p.price);
   if (opts.fiber && opts.fiber !== "all") {
     const needle = opts.fiber.toLowerCase();
+    filtered = filtered.filter((p) => (p.composition || "").toLowerCase().includes(needle));
+  }
+  if (opts.fiberSubtype) {
+    const needle = opts.fiberSubtype.toLowerCase();
     filtered = filtered.filter((p) => (p.composition || "").toLowerCase().includes(needle));
   }
   if (opts.category && opts.category !== "all") {
@@ -2043,10 +2079,27 @@ function applySaleProductFilters(
 
 
 /** Shared base filters for sale catalog — direct table query (no RPC). */
+function applySaleQuerySort(query: any, sort?: string) {
+  switch (sort) {
+    case "price-low":
+      return query.order("price", { ascending: true });
+    case "price-high":
+      return query.order("price", { ascending: false });
+    case "natural":
+    case "natural-high":
+      return query.order("natural_fiber_percent", { ascending: false });
+    case "new":
+      return query.order("created_at", { ascending: false });
+    case "discount":
+    default:
+      return query.order("created_at", { ascending: false });
+  }
+}
+
 function buildSaleDirectQuery(
   supabase: NonNullable<ReturnType<typeof getServerSupabase>>,
   region: string,
-  opts: { fiber?: string; category?: string; color?: string; brand?: string },
+  opts: { fiber?: string; fiberSubtype?: string; category?: string; color?: string; brand?: string },
   columns = "*",
   selectOptions?: { count: "exact"; head: true }
 ) {
@@ -2059,6 +2112,9 @@ function buildSaleDirectQuery(
     .not("price", "is", null);
   if (opts.fiber && opts.fiber !== "all") {
     q = q.ilike("composition", `%${opts.fiber}%`);
+  }
+  if (opts.fiberSubtype) {
+    q = q.ilike("composition", `%${opts.fiberSubtype}%`);
   }
   if (opts.category && opts.category !== "all") {
     q = applyCategoryFilter(q, opts.category);
@@ -2116,12 +2172,14 @@ export async function getSaleTotalCount(opts: {
 /** Paginated sale catalog — direct live_products_apparel query (bypasses sale_catalog_list RPC). */
 async function fetchSaleProductsDirect(options: {
   fiber?: string;
+  fiberSubtype?: string;
   maxPrice?: number;
   minPrice?: number;
   category?: string;
   color?: string;
   brand?: string;
   market?: string;
+  sort?: string;
   limit?: number;
   offset?: number;
   skipTotal?: boolean;
@@ -2130,26 +2188,40 @@ async function fetchSaleProductsDirect(options: {
   if (!supabase) return { products: [], total: 0, hasMore: false };
   const {
     fiber,
+    fiberSubtype,
     maxPrice,
     minPrice,
     category,
     color,
     brand,
     market,
+    sort,
     limit = 60,
     offset = 0,
     skipTotal = false,
   } = options;
   const { preferred } = catalogRegionsFromMarket(market);
-  const filterOpts = { fiber, category, color, brand };
+  const filterOpts = { fiber, fiberSubtype, category, color, brand };
 
-  const { data, error } = await buildSaleDirectQuery(supabase, preferred, filterOpts)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+  const { data, error } = await applySaleQuerySort(
+    buildSaleDirectQuery(supabase, preferred, filterOpts),
+    sort
+  ).range(offset, offset + limit - 1);
   if (error) throw error;
 
   let products = filterConsumerCatalogProducts((data || []).map(mapProductRow));
-  products = applySaleProductFilters(products, { fiber, maxPrice, minPrice, category, color, brand });
+  products = applySaleProductFilters(products, {
+    fiber,
+    fiberSubtype,
+    maxPrice,
+    minPrice,
+    category,
+    color,
+    brand,
+  });
+  if (sort === "discount") {
+    products = sortSaleProducts(products, sort);
+  }
 
   if (skipTotal) {
     return {
@@ -2178,12 +2250,14 @@ async function fetchSaleProductsDirect(options: {
 
 export async function fetchSaleProducts(options: {
   fiber?: string;
+  fiberSubtype?: string;
   maxPrice?: number;
   minPrice?: number;
   category?: string;
   color?: string;
   brand?: string;
   market?: string;
+  sort?: string;
   limit?: number;
   offset?: number;
   /** Stop scanning after this many raw rows (homepage merch preview only). */
@@ -2196,12 +2270,14 @@ export async function fetchSaleProducts(options: {
   if (!supabase) return { products: [], total: 0, hasMore: false };
   const {
     fiber,
+    fiberSubtype,
     maxPrice,
     minPrice,
     category,
     color,
     brand,
     market,
+    sort,
     limit = 60,
     offset = 0,
     maxSourceRows,
@@ -2213,12 +2289,14 @@ export async function fetchSaleProducts(options: {
     try {
       return await fetchSaleProductsDirect({
         fiber,
+        fiberSubtype,
         maxPrice,
         minPrice,
         category,
         color,
         brand,
         market,
+        sort,
         limit,
         offset,
         skipTotal,
