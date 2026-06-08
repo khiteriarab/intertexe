@@ -24,8 +24,15 @@ export async function GET(request: Request) {
     const result = await syncRakutenFeeds();
     return NextResponse.json({ ok: true, result });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[rakuten-feed-sync]", message);
+    const message =
+      err instanceof Error
+        ? err.message
+        : typeof err === "object" && err !== null
+          ? JSON.stringify(err)
+          : String(err);
+
+    console.error("[rakuten-feed-sync]", message, err);
+
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
