@@ -653,12 +653,19 @@ export async function POST(request: NextRequest) {
             .toLowerCase()
         : "";
 
-    const parsedPrice =
-      typeof detectedPriceRaw === "number"
-        ? detectedPriceRaw
-        : typeof body.price === "number"
-          ? body.price
-          : parsePriceNumber(String(detectedPriceRaw ?? body.price ?? ""));
+    const parsedPrice = (() => {
+      if (typeof detectedPriceRaw === "number" && detectedPriceRaw > 0) {
+        return detectedPriceRaw;
+      }
+      if (typeof body.price === "number" && body.price > 0) {
+        return body.price;
+      }
+      const raw = String(detectedPriceRaw ?? body.price ?? "").trim();
+      if (!raw) return null;
+      const parsed = parseFloat(raw.replace(/[^0-9.]/g, ""));
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+      return parsePriceNumber(raw);
+    })();
 
     const resolvedCurrency =
       (typeof detectedCurrency === "string" && detectedCurrency.trim()) ||
