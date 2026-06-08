@@ -18,10 +18,20 @@ export async function GET(request: Request) {
   if (denied) return denied;
 
   try {
+    const { searchParams } = new URL(request.url);
+    const fileLimit = parseInt(searchParams.get("fileLimit") || "20", 10);
+    const fileOffset = parseInt(searchParams.get("fileOffset") || "0", 10);
+    const markInactive = searchParams.get("markInactive") === "true";
+
     const { syncRakutenFeeds } = await import(
       "../../../../lib/feed-sync/rakuten-sync.js"
     );
-    const result = await syncRakutenFeeds();
+    const result = await syncRakutenFeeds({
+      fileLimit,
+      fileOffset,
+      markInactive,
+      batchSize: parseInt(process.env.FEED_SYNC_BATCH_SIZE || "100", 10),
+    });
     return NextResponse.json({ ok: true, result });
   } catch (err: unknown) {
     const message =

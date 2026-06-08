@@ -9,8 +9,32 @@
       "schedule": "0 4 * * *"
     },
     {
-      "path": "/api/cron/rakuten-feed-sync",
-      "schedule": "0 3 * * *"
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=0&fileLimit=20",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=20&fileLimit=20",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=40&fileLimit=20",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=60&fileLimit=20",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=80&fileLimit=20",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=100&fileLimit=20",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=120&fileLimit=20&markInactive=true",
+      "schedule": "0 14 * * *"
     },
     {
       "path": "/api/cron/feed-sync-stale-alert",
