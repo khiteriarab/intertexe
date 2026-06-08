@@ -38,6 +38,7 @@ export type ScanResponseInput = {
   barcode?: string;
   lookupSource?: string;
   needsCompositionLabel?: boolean;
+  usedBrandAvg?: boolean;
   isNewToDatabase?: boolean;
   success?: boolean;
   countryOfOrigin?: string | null;
@@ -157,6 +158,7 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     barcode = '',
     lookupSource,
     needsCompositionLabel = false,
+    usedBrandAvg = false,
     isNewToDatabase = false,
     success = true,
     countryOfOrigin = null,
@@ -167,39 +169,47 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     dppReady = false,
   } = input;
 
+  const displayBrand =
+    brandName && brandName.trim() && brandName.toLowerCase() !== 'unknown'
+      ? brandName.trim()
+      : '';
+
   const needsMessage = needsCompositionLabel
-    ? brandName && brandName !== 'Unknown'
+    ? displayBrand
       ? NEEDS_COMPOSITION_BRAND_KNOWN
       : NEEDS_COMPOSITION_GENERIC
     : null;
 
+  const showNfp = !usedBrandAvg && naturalPercent > 0;
   const verdictMessage =
-    naturalPercent > 0 || compositionText
+    showNfp || compositionText
       ? getVerdictMessage(naturalPercent)
       : needsMessage || getVerdictMessage(0);
 
-  const displayVerdict = compositionText || naturalPercent > 0 ? verdictMessage : needsMessage || verdictMessage;
+  const displayVerdict =
+    compositionText || showNfp ? verdictMessage : needsMessage || verdictMessage;
 
   return {
     success,
     inputType,
     lookupSource: lookupSource || inputType,
-    brand: brandName !== 'Unknown' ? brandName : null,
+    brand: displayBrand || null,
     productName: productName || null,
     composition: compositionText || null,
-    naturalPercent,
+    naturalPercent: showNfp ? naturalPercent : null,
     fibers: fibers,
     fiberBreakdown: fibers,
     verdict: displayVerdict,
     verdictMessage,
-    verdictLabel: getVerdictLabel(naturalPercent),
+    verdictLabel: showNfp ? getVerdictLabel(naturalPercent) : null,
     alternatives,
     betterAlternatives: alternatives,
-    alternativesLabel: getAlternativesLabel(naturalPercent, priceNum, alternatives),
+    alternativesLabel: getAlternativesLabel(showNfp ? naturalPercent : 0, priceNum, alternatives),
     catalogProducts: brandProducts.slice(0, 12),
     products: brandProducts.slice(0, 12),
     needsCompositionLabel,
     needsCompositionMessage: needsMessage,
+    usedBrandAvg,
     isNewToDatabase,
     countryOfOrigin,
     careInstructions,
@@ -208,7 +218,7 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     labelLanguage,
     dppReady,
     tagInfo: {
-      brandName: brandName || 'Unknown',
+      brandName: displayBrand || null,
       productName,
       price,
       composition: compositionText,
@@ -235,7 +245,7 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     },
     imageUrl,
     qualityScore,
-    isNatural: naturalPercent >= 80,
+    isNatural: showNfp && naturalPercent >= 80,
     category,
     matched: !!(designerInfo || brandProducts.length || alternatives.length),
     brandStats,
@@ -260,9 +270,13 @@ export async function buildBarcodeScanResponse(
   upc: string,
   userId: string | null,
   sessionId?: string | null,
-  deviceType?: string | null
+  deviceType?: string | null,
+  region?: string | null
 ) {
-  const brandName = barcodeResult.brand || 'Unknown';
+  const brandName =
+    barcodeResult.brand && barcodeResult.brand.toLowerCase() !== 'unknown'
+      ? barcodeResult.brand
+      : '';
   const brandSlug = barcodeResult.brandSlug || slugifyBrand(brandName);
   const productName = barcodeResult.productName || '';
   const garmentType = detectGarmentType(productName, '');
@@ -279,7 +293,7 @@ export async function buildBarcodeScanResponse(
     primaryFiber: barcodeResult.fiberPrimary,
     naturalFiberPercent: barcodeResult.naturalFiberPercent,
     brandSlug: barcodeResult.brandSlug,
-    region: 'us',
+    region: region || 'us',
     userId,
     excludeBrandSlug: barcodeResult.brandSlug || undefined,
   });

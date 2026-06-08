@@ -9,7 +9,14 @@ import { getSupabaseAuthUserId } from "../../../lib/supabase-auth-server";
 import { lookupBarcode, upsertBarcodeFromComposition } from "../../../lib/scanner-barcode-lookup";
 import { buildDppUpsertFields, mapExtractedDppFields, computeDppReady } from "../../../lib/dpp-fields";
 import { getSmartAlternatives } from "../../../lib/scanner/get-smart-alternatives";
-import { detectGarmentType } from "../../../lib/scanner/detect-garment-type";
+import { detectGarmentType, detectGarmentTypeFromComposition } from "../../../lib/scanner/detect-garment-type";
+import {
+  cleanOldSessions,
+  getOrCreateScanSession,
+  mergeScanContext,
+  resolveDisplayBrand,
+  updateScanSession,
+} from "../../../lib/scanner/scan-session-store";
 import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext, pickCatalogImageUrl } from "../../../lib/scanner-response";
 import { getVerdictMessage } from "../../../lib/scanner-copy";
 import { queueScanFollowUp } from "../../../lib/scan-follow-up-queue";
@@ -385,6 +392,18 @@ Translate fibers: ramio=ramie, algodón=cotton, seda=silk, lana=wool, lino=linen
   };
 }
 
+function validateAINaturalPercent(
+  aiPercent: number,
+  parsedFibers: FiberEntry[]
+): number {
+  if (!parsedFibers?.length) return Math.min(aiPercent, 100);
+  const parsedNaturalPercent = parsedFibers
+    .filter((f) => f.isNatural)
+    .reduce((sum, f) => sum + f.percent, 0);
+  if (parsedNaturalPercent > 0) return Math.min(parsedNaturalPercent, 100);
+  return Math.min(aiPercent, 100);
+}
+
 function identifyProduct(extracted: any): {
   fibers: FiberEntry[];
   naturalPercent: number;
@@ -414,10 +433,11 @@ function identifyProduct(extracted: any): {
     }
   }
 
-  const naturalPercent =
+  const aiOrParsed =
     typeof extracted.naturalFiberPercent === 'number' && extracted.naturalFiberPercent > 0
       ? Math.min(100, Math.round(extracted.naturalFiberPercent))
       : computeNaturalPercent(fibers);
+  const naturalPercent = validateAINaturalPercent(aiOrParsed, fibers);
   const qualityScore = computeFiberQualityScore(fibers, naturalPercent);
 
   return { fibers, naturalPercent, qualityScore, compositionText };
@@ -624,7 +644,11 @@ export async function POST(request: NextRequest) {
       userId = String(bodyUserId);
     }
 
-    funnelSessionId = resolveFunnelSessionId(sessionId);
+    const scanSessionId =
+      (typeof sessionId === "string" && sessionId.trim()) ||
+      crypto.randomUUID();
+
+    funnelSessionId = resolveFunnelSessionId(scanSessionId);
     resolvedDevice = deviceType || device || null;
 
     const initialScanSource = resolvedScanSource
@@ -672,8 +696,26 @@ export async function POST(request: NextRequest) {
       (typeof body.currency === "string" && body.currency.trim()) ||
       null;
 
-    const resolvedRegion =
-      (typeof body.region === "string" && body.region.trim().toLowerCase()) || "us";
+    void cleanOldSessions(supabase);
+    const existingSession = await getOrCreateScanSession(supabase, scanSessionId);
+    const mergedContext = mergeScanContext(existingSession, body, parsedPrice);
+
+    const effectivePrice = mergedContext.detectedPrice ?? parsedPrice;
+    const effectiveCurrency = mergedContext.detectedCurrency || resolvedCurrency;
+    const resolvedRegion = mergedContext.region;
+
+    await updateScanSession(supabase, scanSessionId, {
+      barcode: mergedContext.barcode,
+      brandName: mergedContext.brandName,
+      brandSlug: mergedContext.brandSlug,
+      productName: mergedContext.productName,
+      garmentType: mergedContext.garmentType,
+      detectedPrice: effectivePrice,
+      detectedCurrency: effectiveCurrency,
+      composition: mergedContext.composition,
+      imageUrl: mergedContext.imageUrl,
+      region: resolvedRegion,
+    });
 
     const resolvedNaturalPercent =
       typeof body.naturalFiberPercent === "number"
@@ -694,13 +736,20 @@ export async function POST(request: NextRequest) {
         composition,
         inputType: "composition",
         confidence: "high",
-        brandName: body.brand || "",
-        productName: resolvedProductName || body.product_name || "",
+        brandName: mergedContext.brandName || body.brand || "",
+        productName:
+          resolvedProductName ||
+          mergedContext.productName ||
+          body.product_name ||
+          "",
         fibers: [],
       };
       const analysis = identifyProduct(extracted);
       const dppFields = mapExtractedDppFields(extracted, analysis.fibers);
-      const upc = barcode ? String(barcode).replace(/\D/g, "") : "";
+      const upc =
+        (barcode ? String(barcode).replace(/\D/g, "") : "") ||
+        mergedContext.barcode ||
+        "";
       let isNewToDatabase = false;
       if (upc && analysis.naturalPercent > 0) {
         isNewToDatabase = await upsertBarcodeFromComposition(supabase, upc, {
@@ -711,24 +760,30 @@ export async function POST(request: NextRequest) {
           naturalFiberPercent: analysis.naturalPercent,
           fiberPrimary: analysis.fibers[0]?.fiber?.toLowerCase() || null,
           fiberBreakdown: analysis.fibers,
-          price: parsedPrice,
-          currency: resolvedCurrency,
+          price: effectivePrice,
+          currency: effectiveCurrency,
           dpp: dppFields,
         });
       }
 
-      const brandName = extracted.brandName || "Unknown";
-      const brandSlug = slugifyBrand(brandName);
+      const brandName = resolveDisplayBrand(extracted.brandName);
+      const brandSlug = brandName ? slugifyBrand(brandName) : mergedContext.brandSlug || "";
       const garmentType =
+        detectGarmentTypeFromComposition(
+          composition,
+          extracted.productName || resolvedProductName || "",
+          body.category || ""
+        ) ||
         resolvedGarmentType ||
+        mergedContext.garmentType ||
         detectGarmentType(
           extracted.productName || resolvedProductName,
           body.category
         );
       const alternatives = await getSmartAlternatives(supabase, {
         composition: analysis.compositionText || composition,
-        detectedPrice: parsedPrice,
-        currency: resolvedCurrency,
+        detectedPrice: effectivePrice,
+        currency: effectiveCurrency,
         category: body.category || null,
         garmentType,
         primaryFiber: analysis.fibers[0]?.fiber,
@@ -736,12 +791,25 @@ export async function POST(request: NextRequest) {
         brandSlug,
         region: resolvedRegion,
         userId,
-        excludeBrandSlug: brandSlug !== "unknown" ? brandSlug : undefined,
+        excludeBrandSlug: brandSlug || undefined,
+      });
+
+      await updateScanSession(supabase, scanSessionId, {
+        barcode: upc || undefined,
+        brandName: brandName || undefined,
+        brandSlug: brandSlug || undefined,
+        productName: extracted.productName || undefined,
+        garmentType: garmentType || undefined,
+        composition: analysis.compositionText || composition,
+        naturalPercent: analysis.naturalPercent,
+        detectedPrice: effectivePrice,
+        detectedCurrency: effectiveCurrency,
+        region: resolvedRegion,
       });
 
       const { designerInfo, brandProducts, avgFiber, brandRating } = await enrichBrandContext(
         supabase,
-        brandName,
+        brandName || mergedContext.brandName || "",
         brandSlug,
         extracted.productName || "",
         "",
@@ -754,6 +822,7 @@ export async function POST(request: NextRequest) {
           : null;
 
       const compositionImageUrl =
+        mergedContext.imageUrl ||
         String(body.image_url || body.imageUrl || "").trim() ||
         pickCatalogImageUrl(brandProducts) ||
         pickCatalogImageUrl(alternatives);
@@ -763,8 +832,8 @@ export async function POST(request: NextRequest) {
         brandName,
         brandSlug,
         productName: extracted.productName || "",
-        price: parsedPrice != null ? `$${parsedPrice}` : "",
-        priceNum: parsedPrice,
+        price: effectivePrice != null ? `$${effectivePrice}` : "",
+        priceNum: effectivePrice,
         imageUrl: compositionImageUrl,
         compositionText: analysis.compositionText || composition,
         fibers: analysis.fibers,
@@ -852,15 +921,37 @@ export async function POST(request: NextRequest) {
     }
 
     if (barcode && !image && !url) {
-      const upc = String(barcode).replace(/\D/g, "");
-      const barcodeResult = await lookupBarcode(supabase, upc, parsedPrice, detectedCurrency);
+      const upc = String(barcode).replace(/\D/g, "") || mergedContext.barcode || "";
+      const barcodeResult = await lookupBarcode(
+        supabase,
+        upc,
+        effectivePrice,
+        effectiveCurrency || detectedCurrency
+      );
+
+      await updateScanSession(supabase, scanSessionId, {
+        barcode: upc,
+        brandName: barcodeResult.brand || mergedContext.brandName,
+        brandSlug: barcodeResult.brandSlug || mergedContext.brandSlug,
+        productName: barcodeResult.productName || mergedContext.productName,
+        garmentType:
+          detectGarmentType(barcodeResult.productName, "") ||
+          mergedContext.garmentType,
+        detectedPrice: barcodeResult.price ?? effectivePrice,
+        detectedCurrency: barcodeResult.currency || effectiveCurrency,
+        composition: barcodeResult.composition || mergedContext.composition,
+        naturalPercent: barcodeResult.naturalFiberPercent,
+        region: resolvedRegion,
+      });
+
       const response = await buildBarcodeScanResponse(
         supabase,
         barcodeResult,
         upc,
         userId,
-        sessionId,
-        deviceType || device
+        scanSessionId,
+        deviceType || device,
+        resolvedRegion
       );
 
       await recordFunnelEvent(supabase, {
@@ -950,19 +1041,28 @@ export async function POST(request: NextRequest) {
       extracted.confidence = "confirmed";
     }
 
-    const brandName = extracted.brandName || "Unknown";
-    const brandSlug = slugifyBrand(brandName);
-    const productName = extracted.productName || "";
+    const brandName = resolveDisplayBrand(
+      mergedContext.brandName || extracted.brandName || ""
+    );
+    const brandSlug = brandName ? slugifyBrand(brandName) : mergedContext.brandSlug || "";
+    const productName = extracted.productName || mergedContext.productName || "";
     const price = extracted.price || "";
     const imageUrl = extracted.imageUrl || "";
     let category = extracted.category || resolveCategory(`${productName} ${extracted.garmentType || ""}`);
     const color = extracted.color || "";
-    const garmentType =
-      extracted.garmentType ||
-      detectGarmentType(productName, category) ||
-      "";
 
     const analysis = identifyProduct(extracted);
+
+    const garmentType =
+      detectGarmentTypeFromComposition(
+        analysis.compositionText || extracted.composition || "",
+        productName,
+        category
+      ) ||
+      extracted.garmentType ||
+      mergedContext.garmentType ||
+      detectGarmentType(productName, category) ||
+      "";
 
     let designerInfo = null;
     let brandProducts: any[] = [];
@@ -972,7 +1072,7 @@ export async function POST(request: NextRequest) {
         supabase.from("designers").select("*").ilike("name", `%${brandName}%`).limit(1),
       ]);
       designerInfo = dr.data?.[0] || fdr.data?.[0] || null;
-      if (brandSlug !== "unknown") {
+      if (brandSlug) {
         const normalizedBrandName = brandName.replace(/'/g, "''");
         const { data } = await scannerCatalogQuery(supabase)
           .or(`brand_slug.eq.${brandSlug},brand_name.ilike.%${normalizedBrandName}%`)
@@ -1009,31 +1109,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const priceNum = parsePriceNumber(price);
-    const detectedFiberForSearch = analysis.fibers.find(f => f.isNatural)?.fiber || "";
-    const fiberFilter = detectedFiberForSearch.toLowerCase().split(" ")[0] || "";
-    const prefs = userId ? await fetchTastePreferences(supabase, userId) : null;
-    const preferredFiber = prefs?.preferredFibers?.[0]?.toLowerCase() || "";
+    const priceNum = parsePriceNumber(price) ?? effectivePrice;
     const primaryNaturalFiber = analysis.fibers.find(f => f.isNatural)?.fiber?.toLowerCase() || "";
     const alternativeFiber =
-      effectivePercent >= 80 && primaryNaturalFiber
-        ? primaryNaturalFiber.split(/\s+/)[0]
-        : preferredFiber || primaryNaturalFiber || "silk";
+      primaryNaturalFiber.split(/\s+/)[0] ||
+      analysis.fibers[0]?.fiber?.toLowerCase().split(/\s+/)[0] ||
+      "";
 
     let alternatives: any[] = [];
     try {
       alternatives = await getSmartAlternatives(supabase, {
         composition: analysis.compositionText || extracted.composition || "",
         detectedPrice: priceNum,
-        currency: detectedCurrency || null,
+        currency: effectiveCurrency || detectedCurrency || null,
         category: category || null,
         garmentType: garmentType || detectGarmentType(productName, category),
         primaryFiber: alternativeFiber,
-        naturalFiberPercent: effectivePercent,
+        naturalFiberPercent: usedBrandAvg ? 0 : effectivePercent,
         brandSlug,
-        region: "us",
+        region: resolvedRegion,
         userId,
-        excludeBrandSlug: brandSlug !== "unknown" ? brandSlug : undefined,
+        excludeBrandSlug: brandSlug || undefined,
       });
     } catch (e: any) {
       console.error("Alternatives search failed:", e.message);
@@ -1041,7 +1137,6 @@ export async function POST(request: NextRequest) {
 
     const primaryFiber =
       analysis.fibers[0]?.fiber?.toLowerCase() ||
-      fiberFilter ||
       alternativeFiber;
 
     let verdict = "";
@@ -1082,8 +1177,8 @@ export async function POST(request: NextRequest) {
     let isNewToDatabase = false;
     if (scanUpc && analysis.naturalPercent > 0 && (analysis.compositionText || extracted.composition)) {
       isNewToDatabase = await upsertBarcodeFromComposition(supabase, scanUpc, {
-        brand: brandName !== "Unknown" ? brandName : null,
-        brandSlug: brandSlug !== "unknown" ? brandSlug : null,
+        brand: brandName || null,
+        brandSlug: brandSlug || null,
         productName: productName || null,
         composition: analysis.compositionText || extracted.composition || "",
         naturalFiberPercent: analysis.naturalPercent,
@@ -1141,6 +1236,7 @@ export async function POST(request: NextRequest) {
       })
     );
 
+    const prefs = userId ? await fetchTastePreferences(supabase, userId) : null;
     if (userId && primaryFiber) {
       const currentFibers = prefs?.preferredFibers || [];
       const updatedFibers = [
@@ -1154,6 +1250,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    await updateScanSession(supabase, scanSessionId, {
+      barcode: scanUpc || mergedContext.barcode,
+      brandName: brandName || undefined,
+      brandSlug: brandSlug || undefined,
+      productName: productName || undefined,
+      garmentType: garmentType || undefined,
+      composition: analysis.compositionText || extracted.composition,
+      naturalPercent: usedBrandAvg ? null : effectivePercent,
+      detectedPrice: priceNum,
+      detectedCurrency: effectiveCurrency,
+      imageUrl: imageUrl || mergedContext.imageUrl,
+      region: resolvedRegion,
+    });
+
     const legacyResponse = buildUnifiedScanResponse({
       supabase,
       brandName,
@@ -1161,16 +1271,16 @@ export async function POST(request: NextRequest) {
       productName,
       price,
       priceNum,
-      imageUrl,
+      imageUrl: imageUrl || mergedContext.imageUrl || "",
       category,
       color,
       garmentType,
       compositionText: analysis.compositionText,
       fibers: analysis.fibers,
-      naturalPercent: effectivePercent,
+      naturalPercent: usedBrandAvg ? 0 : effectivePercent,
       qualityScore: analysis.qualityScore,
       verdict: usedBrandAvg
-        ? `${brandName}'s catalog averages ${effectivePercent}% natural fibers. For the full fiber breakdown scan the care label inside the garment.`
+        ? "Scan the care label for exact fiber content"
         : verdict || getVerdictMessage(effectivePercent),
       alternatives,
       brandProducts,
@@ -1179,9 +1289,11 @@ export async function POST(request: NextRequest) {
       confirmPrompt,
       inputType: extracted.inputType || (image ? "image" : url ? "url" : "manual"),
       sourceHost,
-      barcode: extracted.barcode || "",
+      barcode: extracted.barcode || mergedContext.barcode || "",
       success: true,
       isNewToDatabase,
+      needsCompositionLabel: usedBrandAvg,
+      usedBrandAvg,
       countryOfOrigin: dppFields.countryOfOrigin ?? null,
       careInstructions: dppFields.careInstructions ?? null,
       hasRecycledContent: dppFields.hasRecycledContent ?? false,

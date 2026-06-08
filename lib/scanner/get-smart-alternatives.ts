@@ -115,6 +115,37 @@ function deduplicateById(products: any[]): any[] {
   });
 }
 
+function scoreAlternative(
+  product: any,
+  context: {
+    targetPrice: number;
+    primaryFiber: string;
+    garmentType: string;
+    scannedNfp: number;
+  }
+): number {
+  let score = 0;
+  const price = parseProductPrice(product.price) || 0;
+  const priceDiff =
+    context.targetPrice > 0
+      ? Math.abs(price - context.targetPrice) / context.targetPrice
+      : 1;
+  score += Math.max(0, 40 - priceDiff * 40);
+  score += ((product.natural_fiber_percent || 0) / 100) * 30;
+  if (
+    context.primaryFiber &&
+    String(product.composition || '')
+      .toLowerCase()
+      .includes(context.primaryFiber.toLowerCase())
+  ) {
+    score += 20;
+  }
+  if (context.garmentType && matchesGarmentType(product, context.garmentType)) {
+    score += 10;
+  }
+  return score;
+}
+
 function finalizeAlternatives(
   products: any[],
   opts: {
@@ -124,6 +155,7 @@ function finalizeAlternatives(
     fiberHint?: string | null;
     requireGarmentType?: boolean;
     anchorPrice?: number;
+    scannedNfp?: number;
   }
 ): any[] {
   const filtered = postFilterAlternatives(products, {
@@ -133,11 +165,15 @@ function finalizeAlternatives(
     fiberHint: opts.fiberHint,
   });
   const anchor = opts.anchorPrice ?? (opts.minPrice + opts.maxPrice) / 2;
-  const sorted = [...filtered].sort((a, b) => {
-    const pa = parseProductPrice(a.price) ?? anchor;
-    const pb = parseProductPrice(b.price) ?? anchor;
-    return Math.abs(pa - anchor) - Math.abs(pb - anchor);
-  });
+  const scoreContext = {
+    targetPrice: anchor,
+    primaryFiber: opts.fiberHint || '',
+    garmentType: opts.garmentType || '',
+    scannedNfp: opts.scannedNfp ?? 0,
+  };
+  const sorted = [...filtered].sort(
+    (a, b) => scoreAlternative(b, scoreContext) - scoreAlternative(a, scoreContext)
+  );
   return deduplicateById(sorted).slice(0, 6);
 }
 
@@ -178,17 +214,8 @@ export async function getSmartAlternatives(
     rawPrice != null && rawPrice > 0 ? toPriceUSD(rawPrice, currency) : null;
   const hadBarcodePrice = priceUSD != null && priceUSD > 0;
 
-  let preferredFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
-  if (userId) {
-    const { data: prefs } = await supabase
-      .from('user_preferences')
-      .select('preferred_fibers')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (prefs?.preferred_fibers?.[0]) {
-      preferredFiber = String(prefs.preferred_fibers[0]).toLowerCase();
-    }
-  }
+  const scannedFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
+  const preferredFiber = scannedFiber || extractPrimaryFiber(composition || '');
 
   const resolvedRegion = (region || 'us').toLowerCase();
   const targetNfp = Math.min(
@@ -251,6 +278,7 @@ export async function getSmartAlternatives(
     fiberHint,
     requireGarmentType: !!garmentType,
     anchorPrice: priceUSD,
+    scannedNfp: naturalFiberPercent ?? 0,
   });
   if (primaryFiltered.length >= 3) {
     return primaryFiltered;
@@ -268,6 +296,7 @@ export async function getSmartAlternatives(
       fiberHint,
       requireGarmentType: true,
       anchorPrice: priceUSD,
+      scannedNfp: naturalFiberPercent ?? 0,
     });
     if (widerFiltered.length >= 1) {
       return widerFiltered.length >= 3
@@ -286,6 +315,7 @@ export async function getSmartAlternatives(
       fiberHint,
       requireGarmentType: true,
       anchorPrice: priceUSD,
+      scannedNfp: naturalFiberPercent ?? 0,
     });
     if (widestFiltered.length >= 1) {
       return widestFiltered;
@@ -303,6 +333,7 @@ export async function getSmartAlternatives(
       maxPrice: broaderMax,
       fiberHint,
       anchorPrice: priceUSD,
+      scannedNfp: naturalFiberPercent ?? 0,
     });
     if (broaderFiltered.length >= 1) {
       return broaderFiltered;
@@ -330,5 +361,6 @@ export async function getSmartAlternatives(
     fiberHint,
     requireGarmentType: !!garmentType,
     anchorPrice: priceUSD,
+    scannedNfp: naturalFiberPercent ?? 0,
   });
 }
