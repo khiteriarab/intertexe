@@ -56,6 +56,15 @@ function slugifyBrand(value: string): string {
     .replace(/^-|-$/g, '');
 }
 
+/** First non-empty catalog image from matched products or alternatives. */
+export function pickCatalogImageUrl(products: any[]): string {
+  for (const p of products || []) {
+    const url = String(p?.image_url || p?.imageUrl || '').trim();
+    if (url) return url;
+  }
+  return '';
+}
+
 export async function enrichBrandContext(
   supabase: SupabaseClient,
   brandName: string,
@@ -222,6 +231,7 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
       color,
       silhouette: '',
       barcode: barcode || '',
+      productImageUrl: imageUrl || undefined,
     },
     imageUrl,
     qualityScore,
@@ -295,6 +305,12 @@ export async function buildBarcodeScanResponse(
       ? { avgFiber, rating: brandRating, productCount: mergedBrandProducts.length }
       : null;
 
+  const imageUrl = pickCatalogImageUrl([
+    ...barcodeResult.catalogProducts,
+    ...mergedBrandProducts,
+    ...alternatives,
+  ]);
+
   return buildUnifiedScanResponse({
     supabase,
     brandName,
@@ -302,6 +318,7 @@ export async function buildBarcodeScanResponse(
     productName,
     price: priceStr,
     priceNum: barcodeResult.price,
+    imageUrl,
     category: '',
     color: '',
     garmentType: garmentType || '',

@@ -10,7 +10,7 @@ import { lookupBarcode, upsertBarcodeFromComposition } from "../../../lib/scanne
 import { buildDppUpsertFields, mapExtractedDppFields, computeDppReady } from "../../../lib/dpp-fields";
 import { getSmartAlternatives } from "../../../lib/scanner/get-smart-alternatives";
 import { detectGarmentType } from "../../../lib/scanner/detect-garment-type";
-import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext } from "../../../lib/scanner-response";
+import { buildBarcodeScanResponse, buildUnifiedScanResponse, enrichBrandContext, pickCatalogImageUrl } from "../../../lib/scanner-response";
 import { getVerdictMessage } from "../../../lib/scanner-copy";
 import { queueScanFollowUp } from "../../../lib/scan-follow-up-queue";
 import { buildScanHistoryRow } from "../../../lib/scan-history";
@@ -746,6 +746,11 @@ export async function POST(request: NextRequest) {
           ? { avgFiber, rating: brandRating, productCount: brandProducts.length }
           : null;
 
+      const compositionImageUrl =
+        String(body.image_url || body.imageUrl || "").trim() ||
+        pickCatalogImageUrl(brandProducts) ||
+        pickCatalogImageUrl(alternatives);
+
       const response = buildUnifiedScanResponse({
         supabase,
         brandName,
@@ -753,6 +758,7 @@ export async function POST(request: NextRequest) {
         productName: extracted.productName || "",
         price: parsedPrice != null ? `$${parsedPrice}` : "",
         priceNum: parsedPrice,
+        imageUrl: compositionImageUrl,
         compositionText: analysis.compositionText || composition,
         fibers: analysis.fibers,
         naturalPercent: analysis.naturalPercent,
