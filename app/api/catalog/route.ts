@@ -115,18 +115,73 @@ function catalogMarketFromParams(sp: URLSearchParams): string | undefined {
   return market && market !== "all" ? market : undefined;
 }
 
-async function fetchCollectionWithFallback(slug: string, limit: number, offset: number, skipTotal: boolean) {
+type CollectionQueryFilters = {
+  fiber?: string;
+  category?: string;
+  color?: string;
+  brand?: string;
+  fiberSubtype?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: string;
+};
+
+function collectionHasActiveFilters(filters: CollectionQueryFilters): boolean {
+  return Boolean(
+    filters.fiber ||
+    filters.category ||
+    filters.color ||
+    filters.brand ||
+    filters.fiberSubtype ||
+    filters.minPrice ||
+    filters.maxPrice ||
+    (filters.sort && filters.sort !== "new" && filters.sort !== "recommended")
+  );
+}
+
+async function fetchCollectionWithFallback(
+  slug: string,
+  limit: number,
+  offset: number,
+  skipTotal: boolean,
+  filters: CollectionQueryFilters = {},
+  region = "us"
+) {
+  const hasFilters = collectionHasActiveFilters(filters);
+  const apiSort =
+    filters.sort === "recommended" || !filters.sort ? "new" : filters.sort;
+
   const direct = await queryLiveCatalog({
-    region: "us",
+    region,
     collection: slug,
     limit,
     offset,
     skipCount: skipTotal,
-    sort: "new",
+    sort: apiSort,
+    fiber: filters.fiber,
+    category: filters.category,
+    color: filters.color,
+    brand: filters.brand,
+    fiberSubtype: filters.fiberSubtype,
+    minPrice: filters.minPrice,
+    maxPrice: filters.maxPrice,
   });
+
+  if (hasFilters) {
+    if (direct.error) return null;
+    const pageConfig = await import("../../../lib/collection-pages").then((m) => m.getCollectionConfig(slug));
+    return {
+      products: direct.products,
+      editCount: direct.total ?? direct.products.length,
+      catalogTotal: skipTotal ? null : direct.total,
+      heroImageUrl: pageConfig?.editorialImage ?? "",
+      hasMore: direct.hasMore,
+    };
+  }
+
   if (!direct.error && direct.products.length > 0) {
     let total = direct.total;
-    const counted = await fetchCollectionTotalFromDB(slug, "us");
+    const counted = await fetchCollectionTotalFromDB(slug, region);
     if (counted != null) total = counted;
     const pageConfig = await import("../../../lib/collection-pages").then((m) => m.getCollectionConfig(slug));
     return {
@@ -291,7 +346,32 @@ export async function GET(request: NextRequest) {
 
     if (mode === "collection") {
       const slug = collectionSlug;
-      const data = await fetchCollectionWithFallback(slug, limit, offset, skipCount);
+      const brandFilter = sp.get("brand") || brandAlias || undefined;
+      const collectionSort =
+        sort === "price_asc"
+          ? "price-low"
+          : sort === "price_desc"
+            ? "price-high"
+            : sort === "natural"
+              ? "natural-high"
+              : sort;
+      const data = await fetchCollectionWithFallback(
+        slug,
+        limit,
+        offset,
+        skipCount,
+        {
+          fiber: fiber && fiber !== "all" ? fiber : undefined,
+          category: category && category !== "all" ? category : undefined,
+          color,
+          brand: brandFilter,
+          fiberSubtype,
+          minPrice,
+          maxPrice,
+          sort: collectionSort,
+        },
+        region
+      );
       if (!data) {
         return respond({ products: [], total: null, limit, offset, hasMore: false });
       }

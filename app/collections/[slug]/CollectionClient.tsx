@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
@@ -16,7 +16,7 @@ import { CatalogProductImage } from "../../components/CatalogProductImage";
 import { CatalogFilterSidebar } from "../../components/CatalogFilterSidebar";
 import { DesignerSearchFilter } from "../../components/DesignerSearchFilter";
 import { getShopBrands } from "../../shop/actions";
-import { filterProductsByFiberSubtypes, fiberSubtypesFor } from "../../../lib/fiber-subtypes";
+import { fiberSubtypesFor } from "../../../lib/fiber-subtypes";
 import {
   SHOP_CATEGORY_OPTIONS,
   SHOP_COLOR_OPTIONS,
@@ -43,6 +43,8 @@ type Product = {
 type CollectionSort = "recommended" | "price_asc" | "price_desc" | "natural";
 type FiberTab = "all" | "silk" | "linen" | "cashmere" | "cotton" | "wool";
 
+const PAGE_SIZE = 48;
+
 const SORT_OPTIONS: { key: CollectionSort; label: string }[] = [
   { key: "recommended", label: "Recommended" },
   { key: "price_asc", label: "Price: Low to High" },
@@ -64,36 +66,43 @@ const CATEGORY_OPTIONS = [
   ...SHOP_CATEGORY_OPTIONS.map((c) => ({ key: c.key, label: c.label })),
 ] as const;
 
-function parsePriceNum(price: string | undefined): number {
-  if (!price) return Number.POSITIVE_INFINITY;
-  const n = parseFloat(String(price).replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
-}
+function buildCollectionCatalogParams(
+  slug: string,
+  offset: number,
+  opts: {
+    fiberTab: FiberTab;
+    categoryFilter: string;
+    selectedColor: string | null;
+    selectedBrandSlugs: string[];
+    selectedFiberSubtypes: string[];
+    priceTier: ShopPriceTierId;
+    sortBy: CollectionSort;
+  }
+) {
+  const params = new URLSearchParams({
+    collection: slug,
+    region: "us",
+    limit: String(PAGE_SIZE),
+    offset: String(offset),
+  });
 
-function productMatchesPriceTier(price: string | undefined, tier: ShopPriceTierId): boolean {
-  if (tier === "any") return true;
-  const amount = parsePriceNum(price);
-  if (!Number.isFinite(amount)) return false;
-  const bounds = priceBoundsFromTier(tier);
-  if (bounds.minPrice != null && amount < bounds.minPrice) return false;
-  if (bounds.maxPrice != null && amount > bounds.maxPrice) return false;
-  return true;
-}
+  if (opts.fiberTab !== "all") params.set("fiber", opts.fiberTab);
+  if (opts.categoryFilter !== "all") params.set("category", opts.categoryFilter);
+  if (opts.selectedColor) params.set("color", opts.selectedColor);
+  if (opts.selectedBrandSlugs.length) params.set("brand", opts.selectedBrandSlugs[0]);
+  if (opts.selectedFiberSubtypes.length) params.set("fiberSubtype", opts.selectedFiberSubtypes[0]);
 
-function sortCollectionProducts(items: Product[], sort: CollectionSort): Product[] {
-  const list = [...items];
-  if (sort === "price_asc") {
-    return list.sort((a, b) => parsePriceNum(a.price) - parsePriceNum(b.price));
+  const bounds = priceBoundsFromTier(opts.priceTier);
+  if (opts.priceTier === "2500plus") {
+    params.set("minPrice", "2500");
+  } else {
+    if (bounds.minPrice != null) params.set("minPrice", String(bounds.minPrice));
+    if (bounds.maxPrice != null) params.set("maxPrice", String(bounds.maxPrice));
   }
-  if (sort === "price_desc") {
-    return list.sort((a, b) => parsePriceNum(b.price) - parsePriceNum(a.price));
-  }
-  if (sort === "natural") {
-    return list.sort(
-      (a, b) => (b.naturalFiberPercent ?? 0) - (a.naturalFiberPercent ?? 0)
-    );
-  }
-  return list;
+
+  if (opts.sortBy !== "recommended") params.set("sort", opts.sortBy);
+
+  return params;
 }
 
 export default function CollectionClient({
@@ -111,12 +120,13 @@ export default function CollectionClient({
   initialHasMore?: boolean;
   heroImageUrl: string;
 }) {
-  const [products, setProducts] = useState(initialProducts);
-  const [offset, setOffset] = useState(initialProducts.length);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [totalCount, setTotalCount] = useState<number | null>(catalogTotal > 0 ? catalogTotal : null);
+  const [displayProducts, setDisplayProducts] = useState<Product[]>(initialProducts);
+  const [filterOffset, setFilterOffset] = useState(initialProducts.length);
+  const [filterTotal, setFilterTotal] = useState<number | null>(catalogTotal > 0 ? catalogTotal : null);
   const [countLoading, setCountLoading] = useState(catalogTotal <= 0);
   const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [showSortSheet, setShowSortSheet] = useState(false);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [sortBy, setSortBy] = useState<CollectionSort>("recommended");
@@ -128,6 +138,15 @@ export default function CollectionClient({
   const [priceTier, setPriceTier] = useState<ShopPriceTierId>("any");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
+
+  const hasActiveFilters =
+    fiberTab !== "all" ||
+    selectedFiberSubtypes.length > 0 ||
+    categoryFilter !== "all" ||
+    selectedBrandSlugs.length > 0 ||
+    selectedColor != null ||
+    priceTier !== "any" ||
+    sortBy !== "recommended";
 
   useEffect(() => {
     getShopBrands()
@@ -142,72 +161,69 @@ export default function CollectionClient({
     fetch(`/api/catalog?mode=collection&slug=${config.slug}&limit=1&offset=0`)
       .then((r) => r.json())
       .then((d) => {
-        if (typeof d.total === "number" && d.total > 0) setTotalCount(d.total);
-        else if (typeof d.poolCount === "number") setTotalCount(d.poolCount);
+        if (typeof d.total === "number" && d.total > 0) setFilterTotal(d.total);
+        else if (typeof d.poolCount === "number") setFilterTotal(d.poolCount);
       })
       .finally(() => setCountLoading(false));
   }, [config.slug, catalogTotal]);
 
-  const filteredProducts = useMemo(() => {
-    let list = products;
-    if (fiberTab !== "all") {
-      const needle = fiberTab.toLowerCase();
-      list = list.filter((p) => (p.composition || "").toLowerCase().includes(needle));
+  useEffect(() => {
+    if (!hasActiveFilters) {
+      setDisplayProducts(initialProducts);
+      if (catalogTotal > 0) setFilterTotal(catalogTotal);
+      setFilterOffset(initialProducts.length);
+      setHasMore(initialHasMore);
+      return;
     }
-    list = filterProductsByFiberSubtypes(list, selectedFiberSubtypes);
-    if (categoryFilter !== "all") {
-      const needle = categoryFilter.toLowerCase();
-      list = list.filter(
-        (p) =>
-          (p.category || "").toLowerCase().includes(needle) ||
-          (p.name || "").toLowerCase().includes(needle)
-      );
+
+    const controller = new AbortController();
+
+    async function fetchFiltered() {
+      setIsFiltering(true);
+      try {
+        const params = buildCollectionCatalogParams(config.slug, 0, {
+          fiberTab,
+          categoryFilter,
+          selectedColor,
+          selectedBrandSlugs,
+          selectedFiberSubtypes,
+          priceTier,
+          sortBy,
+        });
+        const res = await fetch(`/api/catalog?${params}`, { signal: controller.signal });
+        const data = await res.json();
+        setDisplayProducts(data.products || []);
+        setFilterTotal(typeof data.total === "number" ? data.total : (data.products || []).length);
+        setFilterOffset((data.products || []).length);
+        setHasMore(Boolean(data.hasMore));
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          console.error("Collection filter fetch failed:", err);
+        }
+      } finally {
+        setIsFiltering(false);
+      }
     }
-    if (selectedColor) {
-      const colorNeedle = selectedColor.toLowerCase();
-      list = list.filter((p) => {
-        const dbColor = (p.color || "").toLowerCase();
-        if (dbColor === colorNeedle) return true;
-        return (p.name || "").toLowerCase().includes(colorNeedle);
-      });
-    }
-    if (priceTier !== "any") {
-      list = list.filter((p) => productMatchesPriceTier(p.price, priceTier));
-    }
-    if (selectedBrandSlugs.length > 0) {
-      const slugSet = new Set(selectedBrandSlugs.map((s) => s.toLowerCase()));
-      const nameBySlug = new Map(shopBrands.map((b) => [b.slug, b.name.toLowerCase()]));
-      list = list.filter((p) => {
-        const slug = (p.brandSlug || "").toLowerCase();
-        if (slug && slugSet.has(slug)) return true;
-        const bn = (p.brandName || "").toLowerCase();
-        return [...slugSet].some((s) => bn === (nameBySlug.get(s) || s));
-      });
-    }
-    return sortCollectionProducts(list, sortBy);
+
+    fetchFiltered();
+    return () => controller.abort();
   }, [
-    products,
+    config.slug,
     fiberTab,
-    selectedFiberSubtypes,
     categoryFilter,
     selectedColor,
+    selectedBrandSlugs.join(","),
+    selectedFiberSubtypes.join(","),
     priceTier,
-    selectedBrandSlugs,
     sortBy,
-    shopBrands,
+    hasActiveFilters,
+    initialProducts,
+    initialHasMore,
+    catalogTotal,
   ]);
 
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
-
-  const hasActiveFilters =
-    fiberTab !== "all" ||
-    selectedFiberSubtypes.length > 0 ||
-    categoryFilter !== "all" ||
-    selectedBrandSlugs.length > 0 ||
-    selectedColor != null ||
-    priceTier !== "any";
-
-  const displayCount = hasActiveFilters ? filteredProducts.length : totalCount;
+  const displayCount = filterTotal;
 
   const activeFilters = [
     ...(fiberTab !== "all"
@@ -339,18 +355,33 @@ export default function CollectionClient({
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      const res = await fetch(
-        `/api/catalog?mode=collection&slug=${config.slug}&limit=48&offset=${offset}`
-      );
+      const params = hasActiveFilters
+        ? buildCollectionCatalogParams(config.slug, filterOffset, {
+            fiberTab,
+            categoryFilter,
+            selectedColor,
+            selectedBrandSlugs,
+            selectedFiberSubtypes,
+            priceTier,
+            sortBy,
+          })
+        : new URLSearchParams({
+            mode: "collection",
+            slug: config.slug,
+            limit: String(PAGE_SIZE),
+            offset: String(filterOffset),
+          });
+
+      const res = await fetch(`/api/catalog?${params}`);
       const data = await res.json();
       const next = data.products || [];
-      const total = typeof data.total === "number" ? data.total : totalCount;
-      if (total != null) setTotalCount(total);
+      const total = typeof data.total === "number" ? data.total : filterTotal;
+      if (total != null) setFilterTotal(total);
       setHasMore(Boolean(data.hasMore));
       if (next.length === 0) {
         setHasMore(false);
       } else {
-        setProducts((prev) => {
+        setDisplayProducts((prev) => {
           const seen = new Set(prev.map((p) => p.productId || p.id));
           const merged = [...prev];
           for (const p of next) {
@@ -362,12 +393,26 @@ export default function CollectionClient({
           }
           return merged;
         });
-        setOffset((o) => o + next.length);
+        setFilterOffset((o) => o + next.length);
       }
     } finally {
       setLoadingMore(false);
     }
-  }, [config.slug, offset, loadingMore, hasMore, totalCount]);
+  }, [
+    config.slug,
+    filterOffset,
+    loadingMore,
+    hasMore,
+    filterTotal,
+    hasActiveFilters,
+    fiberTab,
+    categoryFilter,
+    selectedColor,
+    selectedBrandSlugs,
+    selectedFiberSubtypes,
+    priceTier,
+    sortBy,
+  ]);
 
   return (
     <div className="flex flex-col" data-testid={`page-collection-${config.slug}`}>
@@ -414,7 +459,7 @@ export default function CollectionClient({
         <CatalogMobileToolbar
           className="mb-6 lg:hidden"
           resultCount={displayCount}
-          countLoading={countLoading && displayCount == null}
+          countLoading={(countLoading || isFiltering) && displayCount == null}
           sortLabel={currentSort.label}
           onOpenFilter={() => setShowFilterSheet(true)}
           onOpenSort={() => setShowSortSheet(true)}
@@ -424,11 +469,11 @@ export default function CollectionClient({
         <div className="lg:flex lg:gap-10 lg:items-start">
           <CatalogFilterSidebar
             resultCount={displayCount}
-            isLoading={countLoading && displayCount == null}
+            isLoading={(countLoading || isFiltering) && displayCount == null}
             fiberTab={fiberTab}
             categoryFilter={categoryFilter}
             fiberOptions={FIBER_TABS}
-            categoryOptions={CATEGORY_OPTIONS}
+            categoryOptions={[...CATEGORY_OPTIONS]}
             onFiberChange={(key) => {
               setFiberTab(key);
               setSelectedFiberSubtypes([]);
@@ -453,12 +498,12 @@ export default function CollectionClient({
                 Filter
               </span>
               <p className="text-[11px] text-muted-foreground text-center flex-1 min-w-0">
-                {countLoading && displayCount == null ? (
+                {countLoading || isFiltering ? (
                   <span className="animate-pulse">Loading…</span>
                 ) : (
                   <>
                     <span className="text-foreground font-medium">
-                      {(displayCount ?? filteredProducts.length).toLocaleString()}
+                      {(displayCount ?? displayProducts.length).toLocaleString()}
                     </span>{" "}
                     results
                   </>
@@ -526,7 +571,7 @@ export default function CollectionClient({
               open={showFilterSheet}
               onClose={() => setShowFilterSheet(false)}
               title="Filter"
-              subtitle={`${filteredProducts.length.toLocaleString()} shown`}
+              subtitle={`${displayProducts.length.toLocaleString()} shown`}
               footer={
                 <button
                   type="button"
@@ -540,15 +585,19 @@ export default function CollectionClient({
               {mobileFilterPanel}
             </CatalogMobileSheet>
 
-            {filteredProducts.length === 0 ? (
+            {isFiltering ? (
+              <div className="col-span-full flex justify-center py-12">
+                <p className="text-xs tracking-[0.3em] text-gray-400 uppercase">Loading...</p>
+              </div>
+            ) : displayProducts.length === 0 ? (
               <p className="text-sm text-neutral-500 max-w-md leading-relaxed">
-                {products.length === 0
+                {initialProducts.length === 0
                   ? "This collection is being refreshed. Check back shortly or explore another edit above."
                   : "No pieces match these filters. Clear filters to see the full collection."}
               </p>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {filteredProducts.map((product) => (
+                {displayProducts.map((product) => (
                   <ProductLink
                     key={product.id}
                     href={`/product/${product.id}`}
@@ -580,11 +629,11 @@ export default function CollectionClient({
               </div>
             )}
 
-            {hasMore && products.length > 0 && !hasActiveFilters && (
+            {hasMore && displayProducts.length > 0 && (
               <button
                 type="button"
                 onClick={loadMore}
-                disabled={loadingMore}
+                disabled={loadingMore || isFiltering}
                 className="mt-10 border border-neutral-800 px-8 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-50"
               >
                 {loadingMore ? "Loading…" : "Load more"}

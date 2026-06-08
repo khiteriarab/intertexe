@@ -250,6 +250,7 @@ export default function ShopClient({
   };
 
   const categoryList = [...selectedCategories];
+  const priceBounds = priceBoundsFromTier(priceTier);
 
   const syncUrl = useCallback(
     (
@@ -258,8 +259,7 @@ export default function ShopClient({
       sort: string,
       market: string,
       search: string,
-      price: ShopPriceCap,
-      price600Plus: boolean,
+      tier: ShopPriceTierId,
       brands: string[]
     ) => {
       const params = new URLSearchParams();
@@ -268,8 +268,7 @@ export default function ShopClient({
       if (sort !== "new") params.set("sort", sort);
       if (market !== "all") params.set("market", market);
       if (search) params.set("q", search);
-      if (price600Plus) params.set("price", "600plus");
-      else if (price != null) params.set("price", String(price));
+      if (tier !== "any") params.set("price", tier === "2500plus" ? "2500plus" : tier);
       if (brands.length) params.set("brands", brands.join(","));
       const qs = params.toString();
       const newUrl = qs ? `/shop?${qs}` : "/shop";
@@ -279,8 +278,8 @@ export default function ShopClient({
   );
 
   useEffect(() => {
-    syncUrl(fiberTab, categoryList, sortBy, marketFilter, debouncedSearch, priceCap, priceCap600Plus, selectedBrandSlugs);
-  }, [fiberTab, categoryList.join(","), sortBy, marketFilter, debouncedSearch, priceCap, priceCap600Plus, selectedBrandSlugs.join(","), syncUrl]);
+    syncUrl(fiberTab, categoryList, sortBy, marketFilter, debouncedSearch, priceTier, selectedBrandSlugs);
+  }, [fiberTab, categoryList.join(","), sortBy, marketFilter, debouncedSearch, priceTier, selectedBrandSlugs.join(","), syncUrl]);
 
   const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>(
     prefetchedBrands?.map((b) => ({ slug: b.slug, name: b.name, count: b.count })) ?? []

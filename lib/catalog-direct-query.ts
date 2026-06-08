@@ -143,7 +143,8 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
 
 
     // Fiber fast path: avoid expensive DB ilike scans on huge composition column.
-    if (opts.fiber && opts.fiber !== "all" && !opts.isSale) {
+    // Skip when collection (or other narrowing filters) must be applied server-side.
+    if (opts.fiber && opts.fiber !== "all" && !opts.isSale && !opts.collection) {
       const needle = opts.fiber.toLowerCase();
       const batch = 1200;
       const target = offset + limit;
