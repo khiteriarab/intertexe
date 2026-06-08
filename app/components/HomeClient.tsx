@@ -22,6 +22,7 @@ import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
 import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
+import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
 
@@ -110,25 +111,18 @@ function ProductCard({
       className="group flex-shrink-0 w-[155px] md:w-[220px] flex flex-col cursor-pointer"
       data-testid={`product-home-${product.id}`}
     >
-      <div className="aspect-[3/4] bg-[#f5f4f2] relative overflow-hidden">
+      <div className="relative">
         {imageUrl ? (
-          <Image
+          <CatalogProductImage
             src={optimizeImageUrl(imageUrl, 480)}
             alt={name}
-            fill
-            draggable={false}
-            className={`absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out pointer-events-none select-none ${
-              variant === "sale"
-                ? "object-[center_15%] md:object-[center_20%]"
-                : "object-[center_22%] md:object-[center_30%]"
-            }`}
-            loading={eager ? "eager" : "lazy"}
-            placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
+            category={product.category}
+            name={name}
+            eager={eager}
             sizes="(min-width: 768px) 220px, 155px"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="aspect-[3/4] bg-[#1C2B2A] flex items-center justify-center">
             <ShoppingBag className="w-5 h-5 text-neutral-300" />
           </div>
         )}

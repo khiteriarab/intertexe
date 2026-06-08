@@ -14,6 +14,7 @@ import {
 import { getShopBrands } from "../shop/actions";
 import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
 import { CatalogMobileSheet } from "../components/CatalogMobileToolbar";
+import { CatalogProductImage } from "../components/CatalogProductImage";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
 
@@ -62,8 +63,13 @@ function SaleProductCard({ product }: { product: any }) {
   return (
     <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
       {imageUrl ? (
-        <div className="aspect-[3/4] bg-[#f5f5f3] relative overflow-hidden">
-          <img src={imageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy" />
+        <div className="relative">
+          <CatalogProductImage
+            src={imageUrl}
+            alt={name}
+            category={product.category}
+            name={name}
+          />
           {(product.stock_status === "low_stock" || product.stockStatus === "low_stock") && (
             <span className="absolute top-3 left-3 z-20 text-[7px] tracking-[0.2em] uppercase font-medium text-white bg-[#420217] px-2 py-1">
               Low Stock
