@@ -114,16 +114,21 @@ export function CatalogMobileSheet({
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-[90] bg-black/40" onClick={onClose} aria-hidden />
-      <div className="fixed inset-x-0 bottom-0 z-[100] bg-background border-t border-border/40 rounded-t-2xl max-h-[88vh] flex flex-col md:hidden">
+      {/* Above MobileBottomDock (z-[100]) so Apply/View results is never hidden behind nav */}
+      <div className="fixed inset-0 z-[200] bg-black/40" onClick={onClose} aria-hidden />
+      <div className="fixed inset-x-0 bottom-0 z-[210] bg-background border-t border-border/40 rounded-t-2xl max-h-[88vh] flex flex-col md:hidden">
         <div className="px-6 pt-5 pb-3 border-b border-border/20 shrink-0">
           <p className="text-lg font-serif">{title}</p>
           {subtitle && (
             <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{subtitle}</p>
           )}
         </div>
-        <div className="overflow-y-auto px-6 py-5 flex-1">{children}</div>
-        {footer && <div className="px-6 pb-8 pt-2 border-t border-border/20 shrink-0">{footer}</div>}
+        <div className="overflow-y-auto px-6 py-5 flex-1 min-h-0">{children}</div>
+        {footer && (
+          <div className="px-6 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] border-t border-border/20 shrink-0 bg-background">
+            {footer}
+          </div>
+        )}
       </div>
     </>
   );
