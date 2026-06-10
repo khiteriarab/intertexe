@@ -654,10 +654,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (isMainFiber) {
     const seo = SEO_CONTENT[slug];
+    const fiberLabel = slug.charAt(0).toUpperCase() + slug.slice(1);
+    const canonical = `https://www.intertexe.com/materials/${slug}`;
     return {
-      title: seo?.title || `${slug.charAt(0).toUpperCase() + slug.slice(1)} Clothing`,
-      description: seo?.metaDesc || `Shop verified ${slug} clothing. Every product checked for real ${slug} content.`,
-      alternates: { canonical: `https://www.intertexe.com/materials/${slug}` },
+      title: `Shop ${fiberLabel} Clothing | Verified Natural Fiber`,
+      description:
+        seo?.metaDesc ||
+        `Shop verified ${slug} clothing from luxury brands. Every piece confirmed to contain natural ${slug} fiber. Browse dresses, tops, knitwear and more.`,
+      alternates: {
+        canonical,
+        languages: {
+          en: canonical,
+          "en-US": canonical,
+          "en-GB": canonical,
+          "en-AU": canonical,
+          es: canonical,
+          "es-ES": canonical,
+          fr: canonical,
+          de: canonical,
+          it: canonical,
+          "x-default": canonical,
+        },
+      },
     };
   }
 

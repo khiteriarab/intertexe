@@ -5,9 +5,24 @@ import SaleClient from "./SaleClient";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "The Edit — On Sale | INTERTEXE",
-  description: "Verified natural-fiber fashion on sale. Shop discounted silk, linen, cotton, wool, and cashmere from curated luxury brands.",
-  alternates: { canonical: "https://www.intertexe.com/sale" },
+  title: "Natural Fiber Sale | Silk, Cashmere, Linen On Sale",
+  description:
+    "Shop sale pieces verified to contain natural fibers. Silk, cashmere, linen, wool and cotton from luxury brands at reduced prices.",
+  alternates: {
+    canonical: "https://www.intertexe.com/sale",
+    languages: {
+      en: "https://www.intertexe.com/sale",
+      "en-US": "https://www.intertexe.com/sale",
+      "en-GB": "https://www.intertexe.com/sale",
+      "en-AU": "https://www.intertexe.com/sale",
+      es: "https://www.intertexe.com/sale",
+      "es-ES": "https://www.intertexe.com/sale",
+      fr: "https://www.intertexe.com/sale",
+      de: "https://www.intertexe.com/sale",
+      it: "https://www.intertexe.com/sale",
+      "x-default": "https://www.intertexe.com/sale",
+    },
+  },
 };
 
 export default async function SalePage() {

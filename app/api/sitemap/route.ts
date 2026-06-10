@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { COLLECTION_SLUGS } from "../../../lib/collection-pages";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 86400;
@@ -73,6 +74,10 @@ export async function GET(request: Request) {
       xml += urlEntry("", { priority: "1.0", freq: "daily" });
       xml += urlEntry("/shop", { priority: "0.9", freq: "daily" });
       xml += urlEntry("/sale", { priority: "0.8", freq: "daily" });
+      for (const slug of COLLECTION_SLUGS) {
+        xml += urlEntry(`/collections/${slug}`, { priority: "0.8", freq: "weekly" });
+      }
+      xml += urlEntry("/platform", { priority: "0.5", freq: "monthly" });
       xml += urlEntry("/materials", { priority: "0.9", freq: "weekly" });
       xml += urlEntry("/designers", { priority: "0.9", freq: "weekly" });
       xml += urlEntry("/designers/all", { priority: "0.8", freq: "weekly" });

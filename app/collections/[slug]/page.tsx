@@ -12,10 +12,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const config = getCollectionConfig(slug);
   if (!config) return { title: "Collection | INTERTEXE" };
+  const canonical = `https://www.intertexe.com/collections/${slug}`;
   return {
-    title: `${config.title} | INTERTEXE Collections`,
-    description: config.description,
-    alternates: { canonical: `https://www.intertexe.com/collections/${slug}` },
+    title: `${config.title} Natural Fiber Edit`,
+    description: `Shop the ${config.title} edit. ${config.description} Verified natural fiber pieces from luxury brands.`,
+    alternates: {
+      canonical,
+      languages: {
+        en: canonical,
+        "en-US": canonical,
+        "en-GB": canonical,
+        "en-AU": canonical,
+        es: canonical,
+        "es-ES": canonical,
+        fr: canonical,
+        de: canonical,
+        it: canonical,
+        "x-default": canonical,
+      },
+    },
   };
 }
 

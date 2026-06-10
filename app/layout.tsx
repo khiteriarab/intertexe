@@ -5,30 +5,59 @@ import { CookieConsent } from "./components/CookieConsent";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GENERIC_SITE_DESCRIPTION } from "../lib/catalog-stats-labels";
+import {
+  GLOBAL_ROBOTS,
+  OG_IMAGE,
+  OPEN_GRAPH_LOCALES,
+  SITE_URL,
+  pageAlternates,
+} from "../lib/seo-international";
+
+const HOME_DESCRIPTION =
+  "Discover 149,000+ verified natural fiber pieces across 373 brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to verify what your clothes are actually made of.";
+
+const OG_DESCRIPTION =
+  "Shop 149,000+ verified natural fiber pieces. Silk, cashmere, linen, wool and cotton from Zimmermann, Isabel Marant, Toteme and 370+ brands.";
 
 export const metadata: Metadata = {
   title: {
-    default: "INTERTEXE | Shop Luxury Fashion by Fabric — Natural Fiber Clothing",
+    default: "INTERTEXE | Natural Fiber Fashion Discovery",
     template: "%s | INTERTEXE",
   },
-  description: GENERIC_SITE_DESCRIPTION,
-  keywords: ["INTERTEXE", "intertexe", "natural fiber fashion", "shop by fabric", "silk clothing", "cashmere clothing", "linen clothing", "wool clothing", "cotton clothing", "luxury fashion", "natural fabric clothing"],
-  metadataBase: new URL("https://www.intertexe.com"),
-  alternates: { canonical: "https://www.intertexe.com" },
+  description: HOME_DESCRIPTION,
+  keywords: [
+    "INTERTEXE",
+    "intertexe",
+    "natural fiber fashion",
+    "shop by fabric",
+    "silk clothing",
+    "cashmere clothing",
+    "linen clothing",
+    "wool clothing",
+    "cotton clothing",
+    "luxury fashion",
+    "natural fabric clothing",
+  ],
+  metadataBase: new URL(SITE_URL),
+  alternates: pageAlternates(),
+  robots: GLOBAL_ROBOTS,
   openGraph: {
-    title: "INTERTEXE | Shop Luxury Fashion by Fabric",
-    description: GENERIC_SITE_DESCRIPTION,
-    url: "https://www.intertexe.com",
+    title: "INTERTEXE | Natural Fiber Fashion Discovery",
+    description: OG_DESCRIPTION,
+    url: SITE_URL,
     siteName: "INTERTEXE",
+    locale: "en_US",
+    alternateLocale: [...OPEN_GRAPH_LOCALES],
     type: "website",
-    images: ["/opengraph.jpg"],
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     site: "@shopintertexe",
-    title: "INTERTEXE | Shop Luxury Fashion by Fabric",
-    description: GENERIC_SITE_DESCRIPTION,
-    images: ["/opengraph.jpg"],
+    title: "INTERTEXE | Natural Fiber Fashion Discovery",
+    description:
+      "Shop 149,000+ verified natural fiber pieces. Scan any label to find better natural fiber alternatives at your price point.",
+    images: [OG_IMAGE.url],
   },
   icons: {
     icon: [
@@ -48,28 +77,60 @@ const orgSchema = {
   "@type": "Organization",
   name: "INTERTEXE",
   alternateName: ["intertexe", "Intertexe", "INTERTEXE.COM"],
-  url: "https://www.intertexe.com",
-  logo: "https://www.intertexe.com/favicon.svg",
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.svg`,
   description: GENERIC_SITE_DESCRIPTION,
-  sameAs: ["https://twitter.com/shopintertexe"],
   foundingDate: "2025",
-  knowsAbout: ["natural fiber fashion", "silk clothing", "cashmere clothing", "linen clothing", "wool clothing", "cotton clothing", "luxury fashion", "sustainable fashion"],
+  foundingLocation: {
+    "@type": "Place",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "New York",
+      addressCountry: "US",
+    },
+  },
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "info@intertexe.com",
+    contactType: "customer service",
+  },
+  sameAs: [
+    "https://twitter.com/shopintertexe",
+    "https://www.instagram.com/intertexe",
+    "https://www.linkedin.com/company/intertexe",
+  ],
+  knowsAbout: [
+    "natural fiber fashion",
+    "silk clothing",
+    "cashmere clothing",
+    "linen clothing",
+    "wool clothing",
+    "cotton clothing",
+    "luxury fashion",
+    "sustainable fashion",
+  ],
 };
 
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "INTERTEXE",
-  url: "https://www.intertexe.com",
+  alternateName: "Intertexe",
+  url: SITE_URL,
+  description:
+    "Fashion discovery platform for natural fiber clothing. Shop verified silk, cashmere, linen, wool and cotton pieces.",
   potentialAction: {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate:
-        "https://www.intertexe.com/shop?q={search_term_string}",
+      urlTemplate: `${SITE_URL}/shop?q={search_term_string}`,
     },
     "query-input": "required name=search_term_string",
   },
+  sameAs: [
+    "https://www.instagram.com/intertexe",
+    "https://www.linkedin.com/company/intertexe",
+  ],
 };
 
 export default function RootLayout({

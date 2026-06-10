@@ -11,10 +11,26 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Shop Natural Fabric Clothing — INTERTEXE",
-  description: "Shop natural fabric clothing in silk, linen, cotton, wool, and cashmere across curated luxury brands.",
-  keywords: "shop natural fabric clothing, silk clothing, linen clothing, cotton clothing, wool clothing, cashmere clothing, verified natural fibers, INTERTEXE shop",
-  alternates: { canonical: "https://www.intertexe.com/shop" },
+  title: "Shop Natural Fiber Clothing | Silk, Cashmere, Linen, Wool",
+  description:
+    "Shop 149,000+ verified natural fiber pieces. Silk dresses, cashmere knitwear, linen tops, wool trousers and cotton basics from Zimmermann, Isabel Marant, Toteme and 370+ luxury brands.",
+  keywords:
+    "shop natural fabric clothing, silk clothing, linen clothing, cotton clothing, wool clothing, cashmere clothing, verified natural fibers, INTERTEXE shop",
+  alternates: {
+    canonical: "https://www.intertexe.com/shop",
+    languages: {
+      en: "https://www.intertexe.com/shop",
+      "en-US": "https://www.intertexe.com/shop",
+      "en-GB": "https://www.intertexe.com/shop",
+      "en-AU": "https://www.intertexe.com/shop",
+      es: "https://www.intertexe.com/shop",
+      "es-ES": "https://www.intertexe.com/shop",
+      fr: "https://www.intertexe.com/shop",
+      de: "https://www.intertexe.com/shop",
+      it: "https://www.intertexe.com/shop",
+      "x-default": "https://www.intertexe.com/shop",
+    },
+  },
 };
 
 function getDetectedCountry(headerList: Headers) {
