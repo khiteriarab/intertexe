@@ -96,6 +96,7 @@ export async function lookupBarcode(
     .from('barcode_compositions')
     .select('*')
     .eq('upc_code', upc)
+    .eq('is_disputed', false)
     .maybeSingle();
 
   if (known?.composition && Number(known.natural_fiber_percent) > 0) {
