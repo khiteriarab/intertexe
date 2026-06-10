@@ -10,6 +10,7 @@ import { lookupBarcode, upsertBarcodeFromComposition } from "../../../lib/scanne
 import { buildDppUpsertFields, mapExtractedDppFields, computeDppReady } from "../../../lib/dpp-fields";
 import { getSmartAlternatives } from "../../../lib/scanner/get-smart-alternatives";
 import { detectGarmentType, detectGarmentTypeFromComposition } from "../../../lib/scanner/detect-garment-type";
+import { resolveGarmentType, resolveScanBrand } from "../../../lib/scanner/resolve-scan-metadata";
 import {
   cleanOldSessions,
   getOrCreateScanSession,
@@ -725,8 +726,16 @@ export async function POST(request: NextRequest) {
     const mergedContext = mergeScanContext(existingSession, body, parsedPrice);
 
     const effectivePrice = mergedContext.detectedPrice ?? parsedPrice;
-    const effectiveCurrency = mergedContext.detectedCurrency || resolvedCurrency;
+    const effectiveCurrency = mergedContext.detectedCurrency || resolvedCurrency || "USD";
     const resolvedRegion = mergedContext.region;
+
+    console.log(
+      "Scanner price received:",
+      effectivePrice,
+      effectiveCurrency,
+      "raw=",
+      detectedPriceRaw ?? body.price ?? null
+    );
 
     await updateScanSession(supabase, scanSessionId, {
       barcode: mergedContext.barcode,
@@ -968,6 +977,14 @@ export async function POST(request: NextRequest) {
         region: resolvedRegion,
       });
 
+      const resolvedBrand = resolveScanBrand({
+        sessionBrand: mergedContext.brandName,
+        barcodeBrand: barcodeResult.brand,
+        barcodeBrandSlug: barcodeResult.brandSlug,
+        extractedBrand: String(body.brand_name || body.brand || "").trim(),
+        productName: barcodeResult.productName || mergedContext.productName,
+      });
+
       const response = await buildBarcodeScanResponse(
         supabase,
         barcodeResult,
@@ -975,7 +992,8 @@ export async function POST(request: NextRequest) {
         userId,
         scanSessionId,
         deviceType || device,
-        resolvedRegion
+        resolvedRegion,
+        resolvedBrand
       );
 
       await recordFunnelEvent(supabase, {

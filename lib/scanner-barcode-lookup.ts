@@ -18,6 +18,9 @@ export type BarcodeLookupResult = {
   source: string;
   catalogProducts: any[];
   needsCompositionLabel: boolean;
+  needsCompositionMessage?: string | null;
+  confidence?: string | null;
+  isDisputed?: boolean;
   isNewToDatabase: boolean;
   countryOfOrigin?: string | null;
   careInstructions?: string | null;
@@ -84,6 +87,8 @@ export async function lookupBarcode(
       source: 'not_found',
       catalogProducts: [],
       needsCompositionLabel: true,
+      needsCompositionMessage: 'Scan the care label for fiber content',
+      confidence: 'low',
       isNewToDatabase: false,
       countryOfOrigin: null,
       careInstructions: null,
@@ -96,18 +101,9 @@ export async function lookupBarcode(
     .from('barcode_compositions')
     .select('*')
     .eq('upc_code', upc)
-    .eq('is_disputed', false)
     .maybeSingle();
 
-  if (known?.composition && Number(known.natural_fiber_percent) > 0) {
-    await supabase
-      .from('barcode_compositions')
-      .update({
-        scan_count: (known.scan_count || 1) + 1,
-        last_scanned_at: new Date().toISOString(),
-      })
-      .eq('upc_code', upc);
-
+  if (known) {
     const catalogProducts = await fetchCatalogByBrandAndPrice(
       supabase,
       known.brand_slug,
@@ -115,7 +111,7 @@ export async function lookupBarcode(
       6
     );
 
-    return {
+    const baseResult: BarcodeLookupResult = {
       brand: known.brand,
       brandSlug: known.brand_slug,
       productName: known.product_name,
@@ -127,7 +123,7 @@ export async function lookupBarcode(
       currency: detectedCurrency ?? known.currency_detected ?? 'USD',
       source: 'barcode_database',
       catalogProducts,
-      needsCompositionLabel: false,
+      needsCompositionLabel: true,
       isNewToDatabase: false,
       countryOfOrigin: known.country_of_origin ?? null,
       careInstructions: known.care_instructions ?? null,
@@ -137,6 +133,42 @@ export async function lookupBarcode(
       dppReady: known.dpp_ready ?? false,
       verifiedBy: known.verified_by ?? null,
       verificationDate: known.verification_date ?? null,
+    };
+
+    if (known.is_disputed) {
+      return {
+        ...baseResult,
+        needsCompositionLabel: true,
+        needsCompositionMessage:
+          'This item was flagged — please scan the care label to verify',
+        confidence: 'disputed',
+        isDisputed: true,
+      };
+    }
+
+    if (known.composition && Number(known.natural_fiber_percent) > 0) {
+      await supabase
+        .from('barcode_compositions')
+        .update({
+          scan_count: (known.scan_count || 1) + 1,
+          last_scanned_at: new Date().toISOString(),
+        })
+        .eq('upc_code', upc);
+
+      return {
+        ...baseResult,
+        needsCompositionLabel: false,
+        confidence: 'database',
+        isDisputed: false,
+      };
+    }
+
+    return {
+      ...baseResult,
+      needsCompositionLabel: true,
+      needsCompositionMessage: 'Scan the care label for fiber content',
+      confidence: 'low',
+      isDisputed: false,
     };
   }
 
@@ -185,6 +217,8 @@ export async function lookupBarcode(
       source: 'products_catalog',
       catalogProducts,
       needsCompositionLabel: !hadComposition,
+      needsCompositionMessage: hadComposition ? null : 'Scan the care label for fiber content',
+      confidence: hadComposition ? 'database' : 'low',
       isNewToDatabase: !known,
       countryOfOrigin: product.country_of_origin ?? null,
       careInstructions: product.care_instructions ?? null,
@@ -277,6 +311,8 @@ export async function fetchBrandFromPrefix(
       source: 'upc_prefix',
       catalogProducts,
       needsCompositionLabel: true,
+      needsCompositionMessage: 'Scan the care label for fiber content',
+      confidence: 'low',
       isNewToDatabase: false,
       countryOfOrigin: null,
       careInstructions: null,

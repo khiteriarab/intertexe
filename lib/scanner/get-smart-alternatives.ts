@@ -210,9 +210,8 @@ export async function getSmartAlternatives(
   } = params;
 
   const rawPrice = detectedPrice ?? priceParam ?? null;
-  let priceUSD =
-    rawPrice != null && rawPrice > 0 ? toPriceUSD(rawPrice, currency) : null;
-  const hadBarcodePrice = priceUSD != null && priceUSD > 0;
+  const hadRealPrice = rawPrice != null && rawPrice > 0;
+  let priceUSD = hadRealPrice ? toPriceUSD(rawPrice, currency) : null;
 
   const scannedFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
   const preferredFiber = scannedFiber || extractPrimaryFiber(composition || '');
@@ -228,14 +227,18 @@ export async function getSmartAlternatives(
   if (!priceUSD) {
     priceUSD = defaultPriceForFiber(fiberHint);
     console.log(
-      `No price from barcode — using fiber default: $${priceUSD} for ${fiberHint || 'default'}`
+      `No price scanned — using fiber default: $${priceUSD} for ${fiberHint || 'default'}`
     );
   }
 
-  const minMultiplier = hadBarcodePrice ? 0.5 : 0.4;
-  const maxMultiplier = hadBarcodePrice ? 2.0 : 2.5;
+  const minMultiplier = hadRealPrice ? 0.7 : 0.4;
+  const maxMultiplier = hadRealPrice ? 1.5 : 2.5;
   const minPrice = priceUSD * minMultiplier;
   const maxPrice = priceUSD * maxMultiplier;
+
+  console.log(
+    `Price range for alternatives: $${minPrice.toFixed(0)} - $${maxPrice.toFixed(0)} (anchor $${priceUSD.toFixed(0)}, scanned=${hadRealPrice})`
+  );
 
   const runQuery = async (
     minNfp: number,

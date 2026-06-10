@@ -10,7 +10,7 @@ import {
 } from './scanner-copy';
 import type { BarcodeLookupResult } from './scanner-barcode-lookup';
 import { getSmartAlternatives } from './scanner-barcode-lookup';
-import { detectGarmentType } from './scanner/detect-garment-type';
+import { detectGarmentType, detectGarmentTypeFromComposition } from './scanner/detect-garment-type';
 
 export type ScanResponseInput = {
   supabase: SupabaseClient;
@@ -38,6 +38,7 @@ export type ScanResponseInput = {
   barcode?: string;
   lookupSource?: string;
   needsCompositionLabel?: boolean;
+  needsCompositionMessage?: string | null;
   usedBrandAvg?: boolean;
   isNewToDatabase?: boolean;
   success?: boolean;
@@ -158,6 +159,7 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     barcode = '',
     lookupSource,
     needsCompositionLabel = false,
+    needsCompositionMessage = null,
     usedBrandAvg = false,
     isNewToDatabase = false,
     success = true,
@@ -175,9 +177,8 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
       : '';
 
   const needsMessage = needsCompositionLabel
-    ? displayBrand
-      ? NEEDS_COMPOSITION_BRAND_KNOWN
-      : NEEDS_COMPOSITION_GENERIC
+    ? needsCompositionMessage?.trim() ||
+      (displayBrand ? NEEDS_COMPOSITION_BRAND_KNOWN : NEEDS_COMPOSITION_GENERIC)
     : null;
 
   const showNfp = !usedBrandAvg && naturalPercent > 0;
@@ -271,16 +272,20 @@ export async function buildBarcodeScanResponse(
   userId: string | null,
   sessionId?: string | null,
   deviceType?: string | null,
-  region?: string | null
+  region?: string | null,
+  brandOverride?: { brandName: string; brandSlug: string }
 ) {
-  const brandName =
-    barcodeResult.brand && barcodeResult.brand.toLowerCase() !== 'unknown'
+  const brandName = brandOverride?.brandName
+    ?? (barcodeResult.brand && barcodeResult.brand.toLowerCase() !== 'unknown'
       ? barcodeResult.brand
-      : '';
-  const brandSlug = barcodeResult.brandSlug || slugifyBrand(brandName);
+      : '');
+  const brandSlug = brandOverride?.brandSlug || barcodeResult.brandSlug || slugifyBrand(brandName);
   const productName = barcodeResult.productName || '';
-  const garmentType = detectGarmentType(productName, '');
   const compositionText = barcodeResult.composition || '';
+  const garmentType =
+    detectGarmentTypeFromComposition(compositionText, productName, '') ||
+    detectGarmentType(productName, '') ||
+    '';
   const naturalPercent = barcodeResult.naturalFiberPercent ?? 0;
   const fibers = barcodeResult.fiberBreakdown || [];
   const priceStr = barcodeResult.price != null ? `$${barcodeResult.price}` : '';
@@ -350,6 +355,7 @@ export async function buildBarcodeScanResponse(
     barcode: upc,
     lookupSource: barcodeResult.source,
     needsCompositionLabel: barcodeResult.needsCompositionLabel,
+    needsCompositionMessage: barcodeResult.needsCompositionMessage ?? null,
     isNewToDatabase: barcodeResult.isNewToDatabase,
     success: true,
     countryOfOrigin: barcodeResult.countryOfOrigin ?? null,
