@@ -22,6 +22,17 @@ import { getVerdictMessage } from "../../../lib/scanner-copy";
 import { queueScanFollowUp } from "../../../lib/scan-follow-up-queue";
 import { buildScanHistoryRow } from "../../../lib/scan-history";
 import { recordFunnelEvent, resolveFunnelSessionId } from "../../../lib/scanner-funnel";
+import {
+  extractWithSelectors,
+  fetchPageHTML,
+  getRetailerPattern,
+} from "../../../lib/scanner/retailer-extraction";
+import {
+  cacheURLComposition,
+  lookupURLComposition,
+  normalizeScanURL,
+  urlCompositionToExtracted,
+} from "../../../lib/url-composition-cache";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -280,18 +291,31 @@ async function extractFromUrl(openai: OpenAI | null, url: string): Promise<any> 
     }
   } catch {}
 
+  let html = "";
   try {
-    const pageRes = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9,es;q=0.8,fr;q=0.7",
-      },
-      signal: AbortSignal.timeout(12000),
-      redirect: "follow",
-    });
-    if (pageRes.ok) {
-      const html = await pageRes.text();
+    html = await fetchPageHTML(url);
+    if (html) {
+      const retailerPattern = getRetailerPattern(url);
+      if (retailerPattern) {
+        const targeted = extractWithSelectors(html, retailerPattern);
+        if (targeted?.composition) {
+          if (!imageUrl) {
+            const ogImg = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+            if (ogImg) imageUrl = ogImg[1];
+          }
+          const parsed = new URL(url);
+          const hostname = parsed.hostname.replace("www.", "");
+          const hostParts = hostname.split(".");
+          const baseDomain = hostParts.length > 2 ? hostParts.slice(-2).join(".") : hostname;
+          return {
+            ...targeted,
+            brandName: targeted.brandName || hostname.split(".")[0].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+            imageUrl,
+            inputType: "url",
+          };
+        }
+      }
+
       if (!imageUrl) {
         const ogImg = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
         if (ogImg) imageUrl = ogImg[1];
@@ -1010,16 +1034,18 @@ export async function POST(request: NextRequest) {
       if (!openai) return NextResponse.json({ error: "AI service not available" }, { status: 500 });
       extracted = await extractFromImage(openai, image);
     } else if (url) {
-      const cleanedUrl = normalizeProductUrl(url);
+      const cleanedUrl = normalizeScanURL(normalizeProductUrl(url));
       let parsedUrl: URL;
       try { parsedUrl = new URL(cleanedUrl); } catch { return NextResponse.json({ error: "Please paste a full product URL." }, { status: 400 }); }
-      for (const p of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gad_source", "gad_campaignid", "gbraid", "gclid", "fbclid", "mc_cid", "mc_eid"]) {
-        parsedUrl.searchParams.delete(p);
-      }
-      const cleanUrl = parsedUrl.toString();
+      const cleanUrl = cleanedUrl;
       sourceHost = parsedUrl.hostname;
       try {
-        extracted = await extractFromUrl(openai, cleanUrl);
+        const cachedUrl = await lookupURLComposition(supabase, cleanUrl);
+        if (cachedUrl) {
+          extracted = urlCompositionToExtracted(cachedUrl);
+        } else {
+          extracted = await extractFromUrl(openai, cleanUrl);
+        }
       } catch (e: any) {
         console.error("URL extraction failed:", e.message);
         extracted = {
@@ -1052,6 +1078,25 @@ export async function POST(request: NextRequest) {
     const color = extracted.color || "";
 
     const analysis = identifyProduct(extracted);
+
+    if (url && extracted.confidence !== "database") {
+      const cacheUrl = normalizeScanURL(normalizeProductUrl(String(url)));
+      const cacheComposition = analysis.compositionText || extracted.composition || "";
+      if (cacheUrl && cacheComposition) {
+        void cacheURLComposition(supabase, cacheUrl, {
+          brandName: brandName || extracted.brandName || null,
+          brandSlug: brandSlug || null,
+          productName: productName || extracted.productName || null,
+          composition: cacheComposition,
+          naturalPercent: analysis.naturalPercent,
+          priceUsd: parsePriceNumber(price) ?? effectivePrice,
+          garmentType: extracted.garmentType || null,
+          imageUrl: imageUrl || extracted.imageUrl || null,
+          fiberBreakdown: analysis.fibers,
+          region: resolvedRegion,
+        });
+      }
+    }
 
     const garmentType =
       detectGarmentTypeFromComposition(
