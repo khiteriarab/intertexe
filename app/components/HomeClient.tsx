@@ -26,8 +26,7 @@ import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
 
-const APP_STORE_URL =
-  process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() || "/scanner";
+const SIGNUP_URL = "/signup";
 const BLUR_DATA_URL =
   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k=";
 
@@ -68,17 +67,15 @@ function AppDownloadBanner() {
         data-testid="img-app-banner-icon"
       />
       <p className="flex-1 min-w-0 text-[11px] md:text-[12px] leading-snug font-medium">
-        Download the Intertexe app
+        Get early access to the Intertexe app
       </p>
-      <a
-        href={APP_STORE_URL}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={SIGNUP_URL}
         className="flex-shrink-0 border border-white text-white px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-colors"
         data-testid="link-app-download"
       >
-        Download
-      </a>
+        Get Early Access
+      </Link>
     </div>
   );
 }

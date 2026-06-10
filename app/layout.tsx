@@ -14,7 +14,7 @@ import {
 } from "../lib/seo-international";
 
 const HOME_DESCRIPTION =
-  "Discover 149,000+ verified natural fiber pieces across 373 brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to verify what your clothes are actually made of.";
+  "Discover 149,474 verified natural fiber pieces across 373 brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to find better natural fiber alternatives at your price point.";
 
 const OG_DESCRIPTION =
   "Shop 149,000+ verified natural fiber pieces. Silk, cashmere, linen, wool and cotton from Zimmermann, Isabel Marant, Toteme and 370+ brands.";

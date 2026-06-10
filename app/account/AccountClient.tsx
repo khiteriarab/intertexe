@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2, TrendingDown, Settings, Pencil, KeyRound, Trash2, ArrowLeft, Check } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
@@ -34,10 +35,15 @@ interface UserData {
   fabricPersona?: string;
 }
 
-export default function AccountClient() {
+export default function AccountClient({
+  initialMode = "login",
+}: {
+  initialMode?: "login" | "signup" | "forgot";
+}) {
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<UserData | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +78,13 @@ export default function AccountClient() {
   useEffect(() => {
     fetchMe();
   }, [fetchMe]);
+
+  useEffect(() => {
+    const urlMode = searchParams.get("mode");
+    if (urlMode === "signup" || urlMode === "login" || urlMode === "forgot") {
+      setMode(urlMode);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,6 +236,17 @@ export default function AccountClient() {
             }
           </p>
         </div>
+
+        {mode === "signup" && (
+          <div className="text-center mb-6">
+            <p className="text-[10px] tracking-[0.3em] text-[#AAAAAA] uppercase mb-1">
+              Launching August 8, 2026
+            </p>
+            <p className="text-sm font-light text-[#1C2B2A]">
+              Create an account for early access to the app.
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
           {mode === "signup" && (
