@@ -690,11 +690,13 @@ export async function POST(request: NextRequest) {
       detectCurrencyFromText(String(detectedPriceRaw ?? body.price ?? "")) ||
       null;
 
+    const scanRegion = String(body.region || "us").trim().toLowerCase() || "us";
+
     const parsedPrice = (() => {
       const priceInput = detectedPriceRaw ?? body.price ?? null;
       if (priceInput == null || priceInput === "") return null;
       const currency = resolvedCurrency || detectCurrencyFromText(String(priceInput));
-      const realWorld = parseRealWorldPrice(priceInput, currency);
+      const realWorld = parseRealWorldPrice(priceInput, currency, scanRegion);
       if (realWorld?.originalPrice != null && realWorld.originalPrice > 0) {
         return realWorld.originalPrice;
       }
