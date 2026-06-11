@@ -36,11 +36,18 @@ import {
 } from "../../../lib/url-composition-cache";
 import { FIBER_SYNONYMS, normalizeFiberToken } from "../../../lib/scanner/fiber-synonyms";
 import { parseMultilingualComposition } from "../../../lib/scanner/parse-multilingual-composition";
-import { detectCurrencyFromText, parseEuropeanPrice } from "../../../lib/scanner/european-price";
+import {
+  detectCurrencyFromText,
+  parseEuropeanPrice,
+  parseRealWorldPrice,
+  toPriceUSD,
+} from "../../../lib/scanner/european-price";
+import { preprocessLabel } from "../../../lib/scanner/label-preprocessing";
+import { isNonApparelProduct, NON_APPAREL_MESSAGE } from "../../../lib/scanner/non-apparel";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
-  "jute", "ramie", "bamboo", "merino", "angora", "camel", "vicuna", "yak",
+  "jute", "ramie", "bamboo", "merino", "merino wool", "angora", "camel", "vicuna", "yak",
   "flax", "kapok", "coir",
 ]);
 
@@ -702,7 +709,11 @@ export async function POST(request: NextRequest) {
     const parsedPrice = (() => {
       const priceInput = detectedPriceRaw ?? body.price ?? null;
       if (priceInput == null || priceInput === "") return null;
-      const currency = resolvedCurrency || "USD";
+      const currency = resolvedCurrency || detectCurrencyFromText(String(priceInput));
+      const realWorld = parseRealWorldPrice(priceInput, currency);
+      if (realWorld?.originalPrice != null && realWorld.originalPrice > 0) {
+        return realWorld.originalPrice;
+      }
       const european = parseEuropeanPrice(priceInput, currency);
       if (european != null && european > 0) return european;
       const raw = String(priceInput).trim();
@@ -753,7 +764,44 @@ export async function POST(request: NextRequest) {
     }
 
     if (compositionTextRaw && String(compositionTextRaw).trim()) {
-      const composition = String(compositionTextRaw).trim();
+      const rawComposition = String(compositionTextRaw).trim();
+      const labelPrep = preprocessLabel(rawComposition);
+
+      if (labelPrep.isLiningOnly) {
+        const liningResponse = buildUnifiedScanResponse({
+          supabase,
+          brandName: mergedContext.brandName || "",
+          brandSlug: mergedContext.brandSlug || "",
+          productName: mergedContext.productName || resolvedProductName || "",
+          price: effectivePrice != null ? `$${effectivePrice}` : "",
+          priceNum: effectivePrice,
+          category: body.category || "",
+          color: "",
+          garmentType: resolvedGarmentType || mergedContext.garmentType || "",
+          compositionText: "",
+          fibers: [],
+          naturalPercent: 0,
+          qualityScore: 0,
+          verdict: "You scanned the lining. Scan the outer fabric label for the main composition.",
+          alternatives: [],
+          brandProducts: [],
+          designerInfo: null,
+          brandStats: null,
+          confirmPrompt: null,
+          inputType: "composition",
+          barcode: mergedContext.barcode || "",
+          lookupSource: "lining_label",
+          needsCompositionLabel: true,
+          needsCompositionMessage:
+            "You scanned the lining. Scan the outer fabric label for the main composition.",
+          isLiningOnly: true,
+          preprocessingWarnings: labelPrep.warnings,
+          success: true,
+        });
+        return NextResponse.json(liningResponse);
+      }
+
+      const composition = labelPrep.processedText.trim() || rawComposition;
       const extracted = {
         composition,
         inputType: "composition",
@@ -849,20 +897,26 @@ export async function POST(request: NextRequest) {
         pickCatalogImageUrl(brandProducts) ||
         pickCatalogImageUrl(alternatives);
 
+      const productNameForResponse = extracted.productName || resolvedProductName || "";
+      const nonApparel = isNonApparelProduct(productNameForResponse);
+
       const response = buildUnifiedScanResponse({
         supabase,
         brandName,
         brandSlug,
-        productName: extracted.productName || "",
+        productName: productNameForResponse,
         price: effectivePrice != null ? `$${effectivePrice}` : "",
         priceNum: effectivePrice,
+        category: body.category || "",
+        color: "",
+        garmentType: garmentType || "",
         imageUrl: compositionImageUrl,
         compositionText: analysis.compositionText || composition,
         fibers: analysis.fibers,
         naturalPercent: analysis.naturalPercent,
         qualityScore: analysis.qualityScore,
         verdict: getVerdictMessage(analysis.naturalPercent),
-        alternatives,
+        alternatives: nonApparel ? [] : alternatives,
         brandProducts,
         designerInfo,
         brandStats,
@@ -872,6 +926,9 @@ export async function POST(request: NextRequest) {
         lookupSource: upc ? "composition_label" : "composition",
         needsCompositionLabel: false,
         isNewToDatabase,
+        isNonApparel: nonApparel,
+        nonApparelMessage: nonApparel ? NON_APPAREL_MESSAGE : null,
+        preprocessingWarnings: labelPrep.warnings,
         success: true,
         countryOfOrigin: dppFields.countryOfOrigin ?? null,
         careInstructions: dppFields.careInstructions ?? null,

@@ -1,15 +1,14 @@
-const EUR_TO_USD = 1.08;
-const GBP_TO_USD = 1.27;
-const CAD_TO_USD = 0.73;
+import {
+  detectCurrencyFromPriceText,
+  parseRealWorldPrice,
+  toPriceUSD as convertToPriceUSD,
+} from './real-world-price';
 
 export function detectCurrencyFromText(text: string): string {
-  const upper = text.toUpperCase();
-  if (text.includes('€') || upper.includes('EUR')) return 'EUR';
-  if (text.includes('£') || upper.includes('GBP')) return 'GBP';
-  if (text.includes('CA$') || upper.includes('CAD')) return 'CAD';
-  if (text.includes('$') || upper.includes('USD')) return 'USD';
-  return 'USD';
+  return detectCurrencyFromPriceText(text);
 }
+
+export { parseRealWorldPrice };
 
 /** Parse European tag prices like €3995 → 39.95 when decimal is omitted. */
 export function parseEuropeanPrice(
@@ -47,14 +46,5 @@ function normalizeEuropeanAmount(num: number, currency: string): number {
 }
 
 export function toPriceUSD(price: number, currency?: string | null): number {
-  switch ((currency || 'USD').toUpperCase()) {
-    case 'EUR':
-      return price * EUR_TO_USD;
-    case 'GBP':
-      return price * GBP_TO_USD;
-    case 'CAD':
-      return price * CAD_TO_USD;
-    default:
-      return price;
-  }
+  return convertToPriceUSD(price, currency);
 }

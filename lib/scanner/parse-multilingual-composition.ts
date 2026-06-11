@@ -1,4 +1,5 @@
 import { mapFiberSynonym, normalizeFiberToken } from './fiber-synonyms';
+import { preprocessLabel } from './label-preprocessing';
 
 export type ParsedFiberBlock = { fiber: string; percent: number };
 
@@ -6,21 +7,24 @@ export type ParsedFiberBlock = { fiber: string; percent: number };
 export function parseMultilingualComposition(text: string): ParsedFiberBlock[] {
   if (!text?.trim()) return [];
 
-  const normalized = text
+  const { processedText, isLiningOnly } = preprocessLabel(text);
+  if (isLiningOnly || !processedText.trim()) return [];
+
+  const normalized = processedText
     .replace(/\r/g, '\n')
     .replace(/\n+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
-  const blocks = normalized.match(/\d+\s*%[^0-9]*/g) || [];
+  const blocks = normalized.match(/\d+\.?\d*\s*%[^0-9]*/g) || [];
   const results: ParsedFiberBlock[] = [];
   const seen = new Set<string>();
 
   for (const block of blocks) {
-    const percentMatch = block.match(/(\d+)\s*%/);
+    const percentMatch = block.match(/(\d+\.?\d*)\s*%/);
     if (!percentMatch) continue;
 
-    const percent = parseInt(percentMatch[1], 10);
+    const percent = parseFloat(percentMatch[1]);
     if (!Number.isFinite(percent) || percent <= 0 || percent > 100) continue;
 
     const fiberText = block.slice(percentMatch[0].length);

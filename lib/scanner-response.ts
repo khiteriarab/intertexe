@@ -48,6 +48,10 @@ export type ScanResponseInput = {
   recycledContentPercent?: number | null;
   labelLanguage?: string | null;
   dppReady?: boolean;
+  isLiningOnly?: boolean;
+  isNonApparel?: boolean;
+  nonApparelMessage?: string | null;
+  preprocessingWarnings?: string[];
 };
 
 function slugifyBrand(value: string): string {
@@ -169,6 +173,10 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     recycledContentPercent = null,
     labelLanguage = null,
     dppReady = false,
+    isLiningOnly = false,
+    isNonApparel = false,
+    nonApparelMessage = null,
+    preprocessingWarnings = [],
   } = input;
 
   const displayBrand =
@@ -181,14 +189,23 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
       (displayBrand ? NEEDS_COMPOSITION_BRAND_KNOWN : NEEDS_COMPOSITION_GENERIC)
     : null;
 
-  const showNfp = !usedBrandAvg && naturalPercent > 0;
-  const verdictMessage =
-    showNfp || compositionText
+  const hasKnownComposition =
+    !!compositionText?.trim() && !needsCompositionLabel && !isLiningOnly;
+  const showNfp =
+    !usedBrandAvg && !isLiningOnly && (naturalPercent > 0 || hasKnownComposition);
+  const verdictMessage = isNonApparel
+    ? nonApparelMessage || 'We focus on clothing. Scan a garment care label for best results.'
+    : showNfp || compositionText
       ? getVerdictMessage(naturalPercent)
       : needsMessage || getVerdictMessage(0);
 
-  const displayVerdict =
-    compositionText || showNfp ? verdictMessage : needsMessage || verdictMessage;
+  const displayVerdict = isNonApparel
+    ? verdictMessage
+    : compositionText || showNfp
+      ? verdictMessage
+      : needsMessage || verdictMessage;
+
+  const resolvedAlternatives = isNonApparel ? [] : alternatives;
 
   return {
     success,
@@ -196,16 +213,20 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     lookupSource: lookupSource || inputType,
     brand: displayBrand || null,
     productName: productName || null,
-    composition: compositionText || null,
-    naturalPercent: showNfp ? naturalPercent : null,
+    composition: isLiningOnly ? null : compositionText || null,
+    naturalPercent: showNfp ? naturalPercent : isLiningOnly ? null : null,
     fibers: fibers,
     fiberBreakdown: fibers,
     verdict: displayVerdict,
     verdictMessage,
     verdictLabel: showNfp ? getVerdictLabel(naturalPercent) : null,
-    alternatives,
-    betterAlternatives: alternatives,
-    alternativesLabel: getAlternativesLabel(showNfp ? naturalPercent : 0, priceNum, alternatives),
+    alternatives: resolvedAlternatives,
+    betterAlternatives: resolvedAlternatives,
+    alternativesLabel: getAlternativesLabel(
+      showNfp ? naturalPercent : 0,
+      priceNum,
+      resolvedAlternatives
+    ),
     catalogProducts: brandProducts.slice(0, 12),
     products: brandProducts.slice(0, 12),
     needsCompositionLabel,
@@ -218,6 +239,10 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     recycledContentPercent,
     labelLanguage,
     dppReady,
+    isLiningOnly,
+    isNonApparel,
+    nonApparelMessage: isNonApparel ? nonApparelMessage : null,
+    preprocessingWarnings,
     tagInfo: {
       brandName: displayBrand || null,
       productName,

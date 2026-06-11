@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { scannerCatalogQuery } from '../scanner-catalog';
+import { toPriceUSD } from './real-world-price';
 
 export type SmartAlternativesParams = {
   composition?: string | null;
@@ -42,20 +43,6 @@ const FIBER_PRICE_DEFAULTS_USD: Record<string, number> = {
   cotton: 100,
   default: 200,
 };
-
-function toPriceUSD(price: number, currency?: string | null): number {
-  if (!currency) return price;
-  switch (currency.toUpperCase()) {
-    case 'EUR':
-      return price * 1.08;
-    case 'GBP':
-      return price * 1.27;
-    case 'CAD':
-      return price * 0.74;
-    default:
-      return price;
-  }
-}
 
 function parseProductPrice(raw: unknown): number | null {
   if (typeof raw === 'number' && raw > 0) return raw;
