@@ -34,6 +34,9 @@ import {
   normalizeScanURL,
   urlCompositionToExtracted,
 } from "../../../lib/url-composition-cache";
+import { FIBER_SYNONYMS, normalizeFiberToken } from "../../../lib/scanner/fiber-synonyms";
+import { parseMultilingualComposition } from "../../../lib/scanner/parse-multilingual-composition";
+import { detectCurrencyFromText, parseEuropeanPrice } from "../../../lib/scanner/european-price";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -50,32 +53,8 @@ const SYNTHETIC_FIBERS = new Set([
   "polypropylene", "polyurethane", "pvc", "vinyl", "modacrylic", "olefin",
 ]);
 
-const FIBER_TRANSLATIONS: Record<string, string> = {
-  algodon: "cotton", algodón: "cotton", coton: "cotton", cotone: "cotton", baumwolle: "cotton",
-  seda: "silk", soie: "silk", seta: "silk", seide: "silk",
-  lana: "wool", laine: "wool", wolle: "wool",
-  lino: "linen", lin: "linen", leinen: "linen",
-  cachemir: "cashmere", cachemire: "cashmere", cachemira: "cashmere", kaschmir: "cashmere",
-  ramio: "ramie",
-  cáñamo: "hemp", chanvre: "hemp", canapa: "hemp",
-  poliéster: "polyester", poliestere: "polyester",
-  elastano: "elastane", élasthanne: "elastane",
-  poliamida: "polyamide",
-};
-
 function normalizeFiber(raw: string): string {
-  const lower = raw.trim().toLowerCase()
-    .replace(/\b(organic|european|egyptian|pima|supima|mongolian|scottish|virgin|baby|suri|mulberry|recycled|certified|bci|gots)\s+/gi, "")
-    .replace(/[®™©]/g, "").trim();
-  if (FIBER_TRANSLATIONS[lower]) return FIBER_TRANSLATIONS[lower];
-  if (/flax/.test(lower)) return "linen";
-  if (/merino/.test(lower)) return "merino";
-  if (/lambswool|shetland/.test(lower)) return "wool";
-  if (/denim/.test(lower)) return "cotton";
-  if (/econyl/.test(lower)) return "nylon";
-  if (/spandex/.test(lower)) return "elastane";
-  if (/rayon/.test(lower)) return "viscose";
-  return lower.split(/\s+/).pop() || lower;
+  return normalizeFiberToken(raw);
 }
 
 function classifyFiber(name: string): "natural" | "semi-synthetic" | "synthetic" {
@@ -88,6 +67,18 @@ type FiberEntry = { fiber: string; percent: number; isNatural: boolean; classifi
 
 function parseComposition(raw: string): FiberEntry[] {
   if (!raw) return [];
+  const multilingual = parseMultilingualComposition(raw);
+  if (multilingual.length) {
+    return multilingual.map(({ fiber, percent }) => {
+      const cls = classifyFiber(fiber);
+      return {
+        fiber: fiber.charAt(0).toUpperCase() + fiber.slice(1),
+        percent,
+        isNatural: cls === "natural",
+        classification: cls,
+      };
+    });
+  }
   const fibers: FiberEntry[] = [];
   const regex = /(\d+(?:\.\d+)?)\s*%\s*([a-zA-ZÀ-ÿ\s/]+?)(?=[,;/&]|\d+\s*%|$)/g;
   let m: RegExpExecArray | null;
@@ -368,7 +359,7 @@ async function extractFromUrl(openai: OpenAI | null, url: string): Promise<any> 
 
   const pathLower = parsed.pathname.toLowerCase();
   const fiberHints: string[] = [];
-  for (const [foreign, english] of Object.entries(FIBER_TRANSLATIONS)) {
+  for (const [foreign, english] of Object.entries(FIBER_SYNONYMS)) {
     if (pathLower.includes(foreign)) fiberHints.push(english);
   }
   for (const f of ["cotton", "silk", "wool", "linen", "cashmere", "ramie", "hemp"]) {
@@ -702,24 +693,22 @@ export async function POST(request: NextRequest) {
             .toLowerCase()
         : "";
 
-    const parsedPrice = (() => {
-      if (typeof detectedPriceRaw === "number" && detectedPriceRaw > 0) {
-        return detectedPriceRaw;
-      }
-      if (typeof body.price === "number" && body.price > 0) {
-        return body.price;
-      }
-      const raw = String(detectedPriceRaw ?? body.price ?? "").trim();
-      if (!raw) return null;
-      const parsed = parseFloat(raw.replace(/[^0-9.]/g, ""));
-      if (Number.isFinite(parsed) && parsed > 0) return parsed;
-      return parsePriceNumber(raw);
-    })();
-
     const resolvedCurrency =
       (typeof detectedCurrency === "string" && detectedCurrency.trim()) ||
       (typeof body.currency === "string" && body.currency.trim()) ||
+      detectCurrencyFromText(String(detectedPriceRaw ?? body.price ?? "")) ||
       null;
+
+    const parsedPrice = (() => {
+      const priceInput = detectedPriceRaw ?? body.price ?? null;
+      if (priceInput == null || priceInput === "") return null;
+      const currency = resolvedCurrency || "USD";
+      const european = parseEuropeanPrice(priceInput, currency);
+      if (european != null && european > 0) return european;
+      const raw = String(priceInput).trim();
+      if (!raw) return null;
+      return parsePriceNumber(raw);
+    })();
 
     void cleanOldSessions(supabase);
     const existingSession = await getOrCreateScanSession(supabase, scanSessionId);
