@@ -67,19 +67,25 @@ function matchesGarmentType(product: any, garmentType: string): boolean {
   return terms.some((term) => haystack.includes(term.toLowerCase()));
 }
 
+function tagPriceMatchNote(products: any[], note: string | null): any[] {
+  return products.map((p) => ({ ...p, priceMatchNote: note }));
+}
+
 function postFilterAlternatives(
   products: any[],
   opts: {
     garmentType?: string | null;
-    minPrice: number;
-    maxPrice: number;
+    minPrice?: number | null;
+    maxPrice?: number | null;
     fiberHint?: string | null;
   }
 ): any[] {
   const { garmentType, minPrice, maxPrice, fiberHint } = opts;
   return products.filter((p) => {
-    const price = parseProductPrice(p.price);
-    if (price != null && (price < minPrice || price > maxPrice)) return false;
+    if (minPrice != null && maxPrice != null) {
+      const price = parseProductPrice(p.price);
+      if (price != null && (price < minPrice || price > maxPrice)) return false;
+    }
     if (garmentType && !matchesGarmentType(p, garmentType)) return false;
     if (fiberHint) {
       const comp = String(p.composition || '').toLowerCase();
@@ -137,8 +143,8 @@ function finalizeAlternatives(
   products: any[],
   opts: {
     garmentType?: string | null;
-    minPrice: number;
-    maxPrice: number;
+    minPrice?: number | null;
+    maxPrice?: number | null;
     fiberHint?: string | null;
     requireGarmentType?: boolean;
     anchorPrice?: number;
@@ -151,7 +157,11 @@ function finalizeAlternatives(
     maxPrice: opts.maxPrice,
     fiberHint: opts.fiberHint,
   });
-  const anchor = opts.anchorPrice ?? (opts.minPrice + opts.maxPrice) / 2;
+  const anchor =
+    opts.anchorPrice ??
+    (opts.minPrice != null && opts.maxPrice != null
+      ? (opts.minPrice + opts.maxPrice) / 2
+      : FIBER_PRICE_DEFAULTS_USD.default);
   const scoreContext = {
     targetPrice: anchor,
     primaryFiber: opts.fiberHint || '',
@@ -198,7 +208,6 @@ export async function getSmartAlternatives(
 
   const rawPrice = detectedPrice ?? priceParam ?? null;
   const hadRealPrice = rawPrice != null && rawPrice > 0;
-  let priceUSD = hadRealPrice ? toPriceUSD(rawPrice, currency) : null;
 
   const scannedFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
   const preferredFiber = scannedFiber || extractPrimaryFiber(composition || '');
@@ -211,6 +220,8 @@ export async function getSmartAlternatives(
   const categoryHint = category?.trim() || null;
   const fiberHint = preferredFiber || extractPrimaryFiber(composition || '');
 
+  // FIX 14 — anchor on displayed price (no VAT / tax stripping)
+  let priceUSD = hadRealPrice ? toPriceUSD(rawPrice!, currency) : null;
   if (!priceUSD) {
     priceUSD = defaultPriceForFiber(fiberHint);
     console.log(
@@ -218,139 +229,109 @@ export async function getSmartAlternatives(
     );
   }
 
-  const minMultiplier = hadRealPrice ? 0.7 : 0.4;
-  const maxMultiplier = hadRealPrice ? 1.5 : 2.5;
-  const minPrice = priceUSD * minMultiplier;
-  const maxPrice = priceUSD * maxMultiplier;
-
   console.log(
-    `Price range for alternatives: $${minPrice.toFixed(0)} - $${maxPrice.toFixed(0)} (anchor $${priceUSD.toFixed(0)}, scanned=${hadRealPrice})`
+    `Finding alternatives: fiber=${fiberHint}, anchor=$${priceUSD.toFixed(0)} USD (displayed price, no tax adjustment), garmentType=${garmentType || 'any'}, region=${resolvedRegion}`
   );
 
-  const runQuery = async (
-    minNfp: number,
-    withGarmentType: boolean,
-    fetchLimit = 120
-  ) => {
+  const runQuery = async (opts: {
+    minNfp: number;
+    withGarmentType: boolean;
+    withFiberHint: boolean;
+    fetchLimit?: number;
+  }) => {
     let query = scannerCatalogQuery(supabase)
       .eq('region', resolvedRegion)
-      .gte('natural_fiber_percent', minNfp)
+      .gte('natural_fiber_percent', opts.minNfp)
       .not('image_url', 'is', null);
 
     if (excludeBrandSlug) query = query.neq('brand_slug', excludeBrandSlug);
-    if (withGarmentType && garmentType) {
+    if (opts.withGarmentType && garmentType) {
       query = query.or(garmentTypeOrFilter(garmentType));
     } else if (categoryHint) {
       query = query.ilike('category', `%${categoryHint}%`);
     }
-    if (fiberHint) {
+    if (opts.withFiberHint && fiberHint) {
       query = query.ilike('composition', `%${fiberHint}%`);
     }
 
     const { data } = await query
       .order('natural_fiber_percent', { ascending: false })
-      .limit(fetchLimit);
+      .limit(opts.fetchLimit ?? 120);
     return data || [];
   };
 
-  console.log(
-    `Finding alternatives: fiber=${fiberHint}, price=$${priceUSD.toFixed(0)}, garmentType=${garmentType || 'any'}`
-  );
-  console.log(
-    `Price filter: $${minPrice.toFixed(0)} - $${maxPrice.toFixed(0)} (anchor: $${priceUSD.toFixed(0)})`
-  );
+  const queryAndFinalize = async (opts: {
+    minPrice: number | null;
+    maxPrice: number | null;
+    priceMatchNote: string | null;
+    minNfp?: number;
+    withGarmentType?: boolean;
+    withFiberHint?: boolean;
+    requireGarmentType?: boolean;
+    fetchLimit?: number;
+  }) => {
+    const rows = await runQuery({
+      minNfp: opts.minNfp ?? targetNfp,
+      withGarmentType: opts.withGarmentType ?? !!garmentType,
+      withFiberHint: opts.withFiberHint ?? !!fiberHint,
+      fetchLimit: opts.fetchLimit,
+    });
+    const finalized = finalizeAlternatives(rows, {
+      garmentType,
+      minPrice: opts.minPrice,
+      maxPrice: opts.maxPrice,
+      fiberHint: opts.withFiberHint === false ? null : fiberHint,
+      requireGarmentType: opts.requireGarmentType ?? !!garmentType,
+      anchorPrice: priceUSD!,
+      scannedNfp: naturalFiberPercent ?? 0,
+    });
+    return tagPriceMatchNote(finalized, opts.priceMatchNote);
+  };
 
-  const primary = await runQuery(targetNfp, true);
-  const primaryFiltered = finalizeAlternatives(primary, {
-    garmentType,
-    minPrice,
-    maxPrice,
-    fiberHint,
-    requireGarmentType: !!garmentType,
-    anchorPrice: priceUSD,
-    scannedNfp: naturalFiberPercent ?? 0,
+  // FIX 15 — fallback ladder: always return something when catalog has products
+  const attempt1 = await queryAndFinalize({
+    minPrice: priceUSD! * 0.7,
+    maxPrice: priceUSD! * 1.5,
+    priceMatchNote: null,
   });
-  if (primaryFiltered.length >= 3) {
-    return primaryFiltered;
-  }
+  if (attempt1.length >= 3) return attempt1;
 
-  if (garmentType) {
-    console.log('Garment type filter strict — widening price range but keeping garment type');
-    const widerMin = priceUSD * 0.3;
-    const widerMax = priceUSD * 2.2;
-    const widerPriceSameGarment = await runQuery(80, true, 180);
-    const widerFiltered = finalizeAlternatives(widerPriceSameGarment, {
-      garmentType,
-      minPrice: widerMin,
-      maxPrice: widerMax,
-      fiberHint,
-      requireGarmentType: true,
-      anchorPrice: priceUSD,
-      scannedNfp: naturalFiberPercent ?? 0,
-    });
-    if (widerFiltered.length >= 1) {
-      return widerFiltered.length >= 3
-        ? widerFiltered
-        : deduplicateById([...widerFiltered, ...primaryFiltered]).slice(0, 6);
-    }
+  const attempt2 = await queryAndFinalize({
+    minPrice: priceUSD! * 0.4,
+    maxPrice: priceUSD! * 2.5,
+    priceMatchNote: 'Similar price range',
+    fetchLimit: 180,
+  });
+  if (attempt2.length >= 3) return attempt2;
 
-    console.log('Garment type filter still strict — widening price further with garment type');
-    const widestMin = priceUSD * 0.2;
-    const widestMax = priceUSD * 2.5;
-    const widestGarment = await runQuery(80, true, 240);
-    const widestFiltered = finalizeAlternatives(widestGarment, {
-      garmentType,
-      minPrice: widestMin,
-      maxPrice: widestMax,
-      fiberHint,
-      requireGarmentType: true,
-      anchorPrice: priceUSD,
-      scannedNfp: naturalFiberPercent ?? 0,
-    });
-    if (widestFiltered.length >= 1) {
-      return widestFiltered;
-    }
-  }
+  const attempt3 = await queryAndFinalize({
+    minPrice: null,
+    maxPrice: null,
+    priceMatchNote: 'Best natural fiber match',
+    withGarmentType: !!garmentType,
+    withFiberHint: true,
+    fetchLimit: 200,
+  });
+  if (attempt3.length >= 3) return attempt3;
 
-  if (!garmentType) {
-    console.log('Price filter too strict — broadening range');
-    const broaderMin = priceUSD * 0.25;
-    const broaderMax = priceUSD * 2.5;
-    const broader = await runQuery(80, false, 200);
-    const broaderFiltered = finalizeAlternatives(broader, {
-      garmentType: null,
-      minPrice: broaderMin,
-      maxPrice: broaderMax,
-      fiberHint,
-      anchorPrice: priceUSD,
-      scannedNfp: naturalFiberPercent ?? 0,
-    });
-    if (broaderFiltered.length >= 1) {
-      return broaderFiltered;
-    }
-  }
+  const attempt4 = await queryAndFinalize({
+    minPrice: null,
+    maxPrice: null,
+    priceMatchNote: 'Natural fiber alternatives',
+    minNfp: 80,
+    withGarmentType: !!garmentType,
+    withFiberHint: false,
+    requireGarmentType: !!garmentType,
+    fetchLimit: 240,
+  });
+  if (attempt4.length > 0) return attempt4;
 
-  let fallbackQuery = scannerCatalogQuery(supabase)
+  const { data: lastResort } = await scannerCatalogQuery(supabase)
     .eq('region', resolvedRegion)
     .gte('natural_fiber_percent', 80)
-    .not('image_url', 'is', null);
-  if (garmentType) {
-    fallbackQuery = fallbackQuery.or(garmentTypeOrFilter(garmentType));
-  }
-  if (fiberHint) {
-    fallbackQuery = fallbackQuery.ilike('composition', `%${fiberHint}%`);
-  }
-  const { data: fallback } = await fallbackQuery
+    .not('image_url', 'is', null)
     .order('natural_fiber_percent', { ascending: false })
-    .limit(200);
+    .limit(12);
 
-  return finalizeAlternatives(fallback || [], {
-    garmentType,
-    minPrice,
-    maxPrice,
-    fiberHint,
-    requireGarmentType: !!garmentType,
-    anchorPrice: priceUSD,
-    scannedNfp: naturalFiberPercent ?? 0,
-  });
+  return tagPriceMatchNote(deduplicateById(lastResort || []).slice(0, 6), 'Natural fiber alternatives');
 }

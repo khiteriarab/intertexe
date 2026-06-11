@@ -44,6 +44,7 @@ import {
 } from "../../../lib/scanner/european-price";
 import { preprocessLabel } from "../../../lib/scanner/label-preprocessing";
 import { isNonApparelProduct, NON_APPAREL_MESSAGE } from "../../../lib/scanner/non-apparel";
+import { extractBrandFromURL } from "../../../lib/scanner/retailer-brand-map";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -338,26 +339,9 @@ async function extractFromUrl(openai: OpenAI | null, url: string): Promise<any> 
 
   const parsed = new URL(url);
   const hostname = parsed.hostname.replace("www.", "");
-  const brandMap: Record<string, string> = {
-    "nordstrom.com": "Nordstrom", "net-a-porter.com": "Net-a-Porter", "ssense.com": "SSENSE",
-    "farfetch.com": "Farfetch", "mytheresa.com": "Mytheresa", "shopbop.com": "Shopbop",
-    "saksfifthavenue.com": "Saks Fifth Avenue", "revolve.com": "Revolve", "asos.com": "ASOS",
-    "zara.com": "Zara", "hm.com": "H&M", "everlane.com": "Everlane", "thereformation.com": "Reformation",
-    "cos.com": "COS", "arket.com": "Arket", "khaite.com": "Khaite",
-    "aninebing.com": "Anine Bing", "toteme.com": "Totême", "vince.com": "Vince",
-    "sandro-paris.com": "Sandro", "maje.com": "Maje", "ba-sh.com": "ba&sh",
-    "sezane.com": "Sézane", "reiss.com": "Reiss", "theory.com": "Theory",
-    "eileenfisher.com": "Eileen Fisher", "nanushka.com": "Nanushka",
-    "acnestudios.com": "Acne Studios", "therow.com": "The Row",
-    "agolde.com": "AGOLDE", "ganni.com": "Ganni", "isabelmarant.com": "Isabel Marant",
-    "allsaints.com": "AllSaints", "diesel.com": "Diesel",
-    "massimodutti.com": "Massimo Dutti", "maxmara.com": "Max Mara",
-    "adolfodominguez.com": "Adolfo Dominguez", "mango.com": "Mango",
-    "brunellocucinelli.com": "Brunello Cucinelli", "loropiana.com": "Loro Piana",
-  };
-  const hostParts = hostname.split(".");
-  const baseDomain = hostParts.length > 2 ? hostParts.slice(-2).join(".") : hostname;
-  const brandFromUrl = brandMap[hostname] || brandMap[baseDomain] || hostname.split(".")[0].replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  const brandFromUrl =
+    extractBrandFromURL(url) ||
+    hostname.split(".")[0].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   const skipSlugs = new Set(["products", "s", "p", "shop", "collections", "en", "us", "en-us", "es-es", "fr-fr", "de-de", "it-it", "womens", "women", "clothing", "mujer", "femme", "donna", "ropa"]);
   const pathParts = parsed.pathname.split("/").filter(Boolean);

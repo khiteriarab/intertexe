@@ -1,4 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+  extractBrandFromPriceTagText,
+  extractBrandFromURL,
+} from './retailer-brand-map';
 
 export type ScanSession = {
   sessionId: string;
@@ -156,8 +160,14 @@ export function mergeScanContext(
       : undefined;
 
   const brandFromBody = String(body.brand || body.brand_name || '').trim();
+  const urlRaw = String(body.url || '').trim();
+  const brandFromURL = urlRaw ? extractBrandFromURL(urlRaw) : null;
+  const priceTagText = String(body.price_tag_text || body.priceTagText || '').trim();
+  const brandFromPriceTag = priceTagText ? extractBrandFromPriceTagText(priceTagText) : null;
   const brandName =
     brandFromBody ||
+    brandFromURL ||
+    brandFromPriceTag ||
     (session?.brandName && session.brandName !== 'Unknown' ? session.brandName : '') ||
     undefined;
 
