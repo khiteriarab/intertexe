@@ -44,6 +44,23 @@ const FIBER_PRICE_DEFAULTS_USD: Record<string, number> = {
   default: 200,
 };
 
+function getAlternativeFibers(scannedFiber: string): string[] {
+  const upgrades: Record<string, string[]> = {
+    viscose: ['silk', 'linen', 'cotton', 'modal', 'lyocell'],
+    polyester: ['silk', 'linen', 'cotton', 'wool', 'cashmere'],
+    polyamide: ['silk', 'cotton', 'linen'],
+    nylon: ['silk', 'cotton', 'linen'],
+    acrylic: ['wool', 'cashmere', 'merino'],
+    elastane: ['silk', 'cotton', 'linen'],
+    cotton: ['linen', 'silk', 'cotton'],
+    linen: ['linen', 'cotton', 'silk'],
+    silk: ['silk', 'cashmere', 'linen'],
+    wool: ['wool', 'cashmere', 'merino'],
+    cashmere: ['cashmere', 'wool', 'merino'],
+  };
+  return upgrades[scannedFiber.toLowerCase()] || ['silk', 'linen', 'cotton', 'wool', 'cashmere'];
+}
+
 function parseProductPrice(raw: unknown): number | null {
   if (typeof raw === 'number' && raw > 0) return raw;
   if (typeof raw === 'string') {
@@ -77,19 +94,19 @@ function postFilterAlternatives(
     garmentType?: string | null;
     minPrice?: number | null;
     maxPrice?: number | null;
-    fiberHint?: string | null;
+    fiberHints?: string[];
   }
 ): any[] {
-  const { garmentType, minPrice, maxPrice, fiberHint } = opts;
+  const { garmentType, minPrice, maxPrice, fiberHints } = opts;
   return products.filter((p) => {
     if (minPrice != null && maxPrice != null) {
       const price = parseProductPrice(p.price);
       if (price != null && (price < minPrice || price > maxPrice)) return false;
     }
     if (garmentType && !matchesGarmentType(p, garmentType)) return false;
-    if (fiberHint) {
+    if (fiberHints && fiberHints.length > 0) {
       const comp = String(p.composition || '').toLowerCase();
-      if (!comp.includes(fiberHint.toLowerCase())) return false;
+      if (!fiberHints.some((fiber) => comp.includes(fiber.toLowerCase()))) return false;
     }
     return true;
   });
@@ -112,7 +129,7 @@ function scoreAlternative(
   product: any,
   context: {
     targetPrice: number;
-    primaryFiber: string;
+    targetFibers: string[];
     garmentType: string;
     scannedNfp: number;
   }
@@ -125,12 +142,8 @@ function scoreAlternative(
       : 1;
   score += Math.max(0, 40 - priceDiff * 40);
   score += ((product.natural_fiber_percent || 0) / 100) * 30;
-  if (
-    context.primaryFiber &&
-    String(product.composition || '')
-      .toLowerCase()
-      .includes(context.primaryFiber.toLowerCase())
-  ) {
+  const comp = String(product.composition || '').toLowerCase();
+  if (context.targetFibers.some((fiber) => comp.includes(fiber.toLowerCase()))) {
     score += 20;
   }
   if (context.garmentType && matchesGarmentType(product, context.garmentType)) {
@@ -145,7 +158,7 @@ function finalizeAlternatives(
     garmentType?: string | null;
     minPrice?: number | null;
     maxPrice?: number | null;
-    fiberHint?: string | null;
+    fiberHints?: string[];
     requireGarmentType?: boolean;
     anchorPrice?: number;
     scannedNfp?: number;
@@ -155,7 +168,7 @@ function finalizeAlternatives(
     garmentType: opts.requireGarmentType ? opts.garmentType : null,
     minPrice: opts.minPrice,
     maxPrice: opts.maxPrice,
-    fiberHint: opts.fiberHint,
+    fiberHints: opts.fiberHints,
   });
   const anchor =
     opts.anchorPrice ??
@@ -164,7 +177,7 @@ function finalizeAlternatives(
       : FIBER_PRICE_DEFAULTS_USD.default);
   const scoreContext = {
     targetPrice: anchor,
-    primaryFiber: opts.fiberHint || '',
+    targetFibers: opts.fiberHints || [],
     garmentType: opts.garmentType || '',
     scannedNfp: opts.scannedNfp ?? 0,
   };
@@ -175,7 +188,21 @@ function finalizeAlternatives(
 }
 
 function extractPrimaryFiber(composition: string): string | null {
-  const fibers = ['silk', 'cashmere', 'wool', 'linen', 'cotton', 'leather', 'alpaca'];
+  const fibers = [
+    'viscose',
+    'polyester',
+    'polyamide',
+    'nylon',
+    'acrylic',
+    'elastane',
+    'silk',
+    'cashmere',
+    'wool',
+    'linen',
+    'cotton',
+    'leather',
+    'alpaca',
+  ];
   const lower = composition.toLowerCase();
   for (const fiber of fibers) {
     if (lower.includes(fiber)) return fiber;
@@ -202,7 +229,6 @@ export async function getSmartAlternatives(
     primaryFiber,
     naturalFiberPercent,
     region,
-    userId,
     excludeBrandSlug,
   } = params;
 
@@ -211,37 +237,30 @@ export async function getSmartAlternatives(
 
   const scannedFiber = primaryFiber?.toLowerCase().split(/\s+/)[0] || null;
   const preferredFiber = scannedFiber || extractPrimaryFiber(composition || '');
+  const targetFibers = getAlternativeFibers(preferredFiber || 'cotton');
 
   const resolvedRegion = (region || 'us').toLowerCase();
-  const targetNfp = Math.min(
-    Math.max((naturalFiberPercent || 0) + 10, 80),
-    95
-  );
   const categoryHint = category?.trim() || null;
-  const fiberHint = preferredFiber || extractPrimaryFiber(composition || '');
 
-  // FIX 14 — anchor on displayed price (no VAT / tax stripping)
   let priceUSD = hadRealPrice ? toPriceUSD(rawPrice!, currency) : null;
   if (!priceUSD) {
-    priceUSD = defaultPriceForFiber(fiberHint);
+    priceUSD = defaultPriceForFiber(preferredFiber);
     console.log(
-      `No price scanned — using fiber default: $${priceUSD} for ${fiberHint || 'default'}`
+      `No price scanned — using fiber default: $${priceUSD} for ${preferredFiber || 'default'}`
     );
   }
 
   console.log(
-    `Finding alternatives: fiber=${fiberHint}, anchor=$${priceUSD.toFixed(0)} USD (displayed price, no tax adjustment), garmentType=${garmentType || 'any'}, region=${resolvedRegion}`
+    `Finding alternatives: scanned=${preferredFiber}, targets=${targetFibers.join('/')}, anchor=$${priceUSD.toFixed(0)} USD, garmentType=${garmentType || 'any'}, region=${resolvedRegion}`
   );
 
   const runQuery = async (opts: {
-    minNfp: number;
     withGarmentType: boolean;
-    withFiberHint: boolean;
+    targetFibers: string[];
     fetchLimit?: number;
   }) => {
     let query = scannerCatalogQuery(supabase)
       .eq('region', resolvedRegion)
-      .gte('natural_fiber_percent', opts.minNfp)
       .not('image_url', 'is', null);
 
     if (excludeBrandSlug) query = query.neq('brand_slug', excludeBrandSlug);
@@ -250,8 +269,11 @@ export async function getSmartAlternatives(
     } else if (categoryHint) {
       query = query.ilike('category', `%${categoryHint}%`);
     }
-    if (opts.withFiberHint && fiberHint) {
-      query = query.ilike('composition', `%${fiberHint}%`);
+    if (opts.targetFibers.length > 0) {
+      const fiberConditions = opts.targetFibers
+        .map((fiber) => `composition.ilike.%${fiber}%`)
+        .join(',');
+      query = query.or(fiberConditions);
     }
 
     const { data } = await query
@@ -264,23 +286,21 @@ export async function getSmartAlternatives(
     minPrice: number | null;
     maxPrice: number | null;
     priceMatchNote: string | null;
-    minNfp?: number;
     withGarmentType?: boolean;
-    withFiberHint?: boolean;
+    targetFibers?: string[];
     requireGarmentType?: boolean;
     fetchLimit?: number;
   }) => {
     const rows = await runQuery({
-      minNfp: opts.minNfp ?? targetNfp,
       withGarmentType: opts.withGarmentType ?? !!garmentType,
-      withFiberHint: opts.withFiberHint ?? !!fiberHint,
+      targetFibers: opts.targetFibers ?? targetFibers,
       fetchLimit: opts.fetchLimit,
     });
     const finalized = finalizeAlternatives(rows, {
       garmentType,
       minPrice: opts.minPrice,
       maxPrice: opts.maxPrice,
-      fiberHint: opts.withFiberHint === false ? null : fiberHint,
+      fiberHints: opts.targetFibers ?? targetFibers,
       requireGarmentType: opts.requireGarmentType ?? !!garmentType,
       anchorPrice: priceUSD!,
       scannedNfp: naturalFiberPercent ?? 0,
@@ -288,7 +308,6 @@ export async function getSmartAlternatives(
     return tagPriceMatchNote(finalized, opts.priceMatchNote);
   };
 
-  // FIX 15 — fallback ladder: always return something when catalog has products
   const attempt1 = await queryAndFinalize({
     minPrice: priceUSD! * 0.7,
     maxPrice: priceUSD! * 1.5,
@@ -309,7 +328,7 @@ export async function getSmartAlternatives(
     maxPrice: null,
     priceMatchNote: 'Best natural fiber match',
     withGarmentType: !!garmentType,
-    withFiberHint: true,
+    targetFibers,
     fetchLimit: 200,
   });
   if (attempt3.length >= 3) return attempt3;
@@ -318,18 +337,22 @@ export async function getSmartAlternatives(
     minPrice: null,
     maxPrice: null,
     priceMatchNote: 'Natural fiber alternatives',
-    minNfp: 80,
     withGarmentType: !!garmentType,
-    withFiberHint: false,
+    targetFibers: ['silk', 'linen', 'cotton', 'wool', 'cashmere'],
     requireGarmentType: !!garmentType,
     fetchLimit: 240,
   });
   if (attempt4.length > 0) return attempt4;
 
+  const fallbackFibers = ['silk', 'linen', 'cotton', 'wool', 'cashmere'];
+  const fiberConditions = fallbackFibers
+    .map((fiber) => `composition.ilike.%${fiber}%`)
+    .join(',');
+
   const { data: lastResort } = await scannerCatalogQuery(supabase)
     .eq('region', resolvedRegion)
-    .gte('natural_fiber_percent', 80)
     .not('image_url', 'is', null)
+    .or(fiberConditions)
     .order('natural_fiber_percent', { ascending: false })
     .limit(12);
 
