@@ -34,6 +34,16 @@ const REGION_CURRENCY_TOKENS: Record<string, string[]> = {
   all: ['USD', 'EUR', 'GBP'],
 };
 
+const SYMBOL_PRICE_PATTERNS: Array<[RegExp, string]> = [
+  [/\$\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/, 'USD'],
+  [/€\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/, 'EUR'],
+  [/£\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/, 'GBP'],
+  [/¥\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/, 'JPY'],
+  [/USD\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/i, 'USD'],
+  [/EUR\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/i, 'EUR'],
+  [/GBP\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/i, 'GBP'],
+];
+
 export type ParsedRealWorldPrice = {
   priceUSD: number;
   originalPrice: number;
@@ -85,6 +95,8 @@ export function mergeSuperscriptPrices(text: string): string {
   const patterns: Array<[RegExp, string]> = [
     [/([€£$¥])\s*(\d{1,4})\s+(\d{2})\b/g, '$1$2.$3'],
     [/(\d{1,4})\s+(\d{2})\s*€/g, '$1.$2€'],
+    [/([€£$])\s*(\d{1,4})\^(\d{2})\b/gi, '$1$2.$3'],
+    [/(\d{1,4})\^(\d{2})\s*€/g, '$1.$2€'],
     [/EUR\s+(\d{1,4})\s+(\d{2})/gi, 'EUR $1.$2'],
     [/GBP\s+(\d{1,4})\s+(\d{2})/gi, 'GBP $1.$2'],
     [/USD\s+(\d{1,4})\s+(\d{2})/gi, 'USD $1.$2'],
@@ -93,6 +105,35 @@ export function mergeSuperscriptPrices(text: string): string {
     result = result.replace(pattern, replacement);
   }
   return result;
+}
+
+/** Remove fiber percentages before bare-number parsing — 97% must never become $97. */
+export function stripFiberPercentages(text: string): string {
+  return text.replace(/\d+\.?\d*\s*%/g, ' ');
+}
+
+/** Currency-symbol prices always win over bare numbers. */
+export function extractCurrencyPrice(
+  rawText: string
+): { price: number; currency: string } | null {
+  const text = mergeSuperscriptPrices(rawText);
+  for (const [pattern, currency] of SYMBOL_PRICE_PATTERNS) {
+    const match = text.match(pattern);
+    if (!match?.[1]) continue;
+    const price = parseFloat(match[1].replace(',', '.'));
+    if (Number.isFinite(price) && price > 0) {
+      return { price, currency };
+    }
+  }
+  const priceLabel = text.match(/price[:\s]*([0-9]{1,6}(?:[.,][0-9]{2})?)/i);
+  if (priceLabel?.[1]) {
+    const price = parseFloat(priceLabel[1].replace(',', '.'));
+    const currency = detectCurrencyFromPriceText(text);
+    if (Number.isFinite(price) && price > 0) {
+      return { price, currency };
+    }
+  }
+  return null;
 }
 
 export function selectBestPriceFromNumbers(numbers: number[], currency: string): number | null {
@@ -177,7 +218,18 @@ export function parseRealWorldPrice(
   const raw = mergeSuperscriptPrices(String(rawText));
   const resolvedRegion = (region || 'us').toLowerCase();
 
+  // Step 1 — currency symbol prices always win
   if (typeof rawText === 'string') {
+    const currencyPrice = extractCurrencyPrice(raw);
+    if (currencyPrice) {
+      const cur = currencyPrice.currency.toUpperCase();
+      return {
+        originalPrice: currencyPrice.price,
+        priceUSD: currencyPrice.price * (RATES[cur] || 1),
+        currency: cur,
+      };
+    }
+
     const regionPrice = selectRegionPrice(raw, resolvedRegion);
     if (regionPrice) {
       const cur = regionPrice.currency.toUpperCase();
@@ -189,11 +241,13 @@ export function parseRealWorldPrice(
     }
   }
 
-  let detectedCurrency = (currency || detectCurrencyFromPriceText(raw)).toUpperCase();
+  const detectedCurrency = (currency || detectCurrencyFromPriceText(raw)).toUpperCase();
 
+  // Step 2 — strip percentages before bare number parsing
   let working = raw
     .replace(/-\d+\s*%/gi, ' ')
     .replace(/\b\d{1,3}\s*%\s*(off)?/gi, ' ');
+  working = stripFiberPercentages(working);
 
   const allNumbers = working.match(/[\d]+[,.]?[\d]*/g) || [];
   const validPrices = allNumbers
