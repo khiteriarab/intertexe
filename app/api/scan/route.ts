@@ -26,6 +26,7 @@ import { recordFunnelEvent, resolveFunnelSessionId } from "../../../lib/scanner-
 import {
   extractWithSelectors,
   fetchPageHTML,
+  fetchProductImageFromURL,
   getRetailerPattern,
 } from "../../../lib/scanner/retailer-extraction";
 import {
@@ -300,8 +301,7 @@ async function extractFromUrl(openai: OpenAI | null, url: string): Promise<any> 
         const targeted = extractWithSelectors(html, retailerPattern);
         if (targeted?.composition) {
           if (!imageUrl) {
-            const ogImg = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
-            if (ogImg) imageUrl = ogImg[1];
+            imageUrl = (await fetchProductImageFromURL(url)) || "";
           }
           const parsed = new URL(url);
           const hostname = parsed.hostname.replace("www.", "");
@@ -317,8 +317,7 @@ async function extractFromUrl(openai: OpenAI | null, url: string): Promise<any> 
       }
 
       if (!imageUrl) {
-        const ogImg = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
-        if (ogImg) imageUrl = ogImg[1];
+        imageUrl = (await fetchProductImageFromURL(url)) || "";
       }
       const jsonLd = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
       const structuredData = jsonLd ? jsonLd.map(m => m.replace(/<\/?script[^>]*>/gi, "").trim()).join("\n").slice(0, 3000) : "";
@@ -788,6 +787,19 @@ export async function POST(request: NextRequest) {
       }
 
       const composition = labelPrep.processedText.trim() || rawComposition;
+
+      const supplementaryURL = normalizeProductUrl(String(body.url || "").trim());
+      const shouldFetchImage =
+        body.fetch_image === true || body.fetch_image === "true";
+      let supplementaryImageUrl =
+        mergedContext.imageUrl ||
+        String(body.image_url || body.imageUrl || "").trim() ||
+        "";
+      if (shouldFetchImage && supplementaryURL && !supplementaryImageUrl) {
+        supplementaryImageUrl =
+          (await fetchProductImageFromURL(supplementaryURL)) || "";
+      }
+
       const extracted = {
         composition,
         inputType: "composition",
@@ -878,8 +890,7 @@ export async function POST(request: NextRequest) {
           : null;
 
       const compositionImageUrl =
-        mergedContext.imageUrl ||
-        String(body.image_url || body.imageUrl || "").trim() ||
+        supplementaryImageUrl ||
         pickCatalogImageUrl(brandProducts) ||
         pickCatalogImageUrl(alternatives);
 
@@ -956,7 +967,7 @@ export async function POST(request: NextRequest) {
           naturalPercent: analysis.naturalPercent,
           verdict: String(response.verdict || ""),
           scanSource: resolvedScanSource ?? (upc ? "barcode" : "label"),
-          imageUrl: body.image_url || body.imageUrl || null,
+          imageUrl: supplementaryImageUrl || body.image_url || body.imageUrl || null,
           productUrl: body.product_url || body.url || null,
           upcCode: upc || null,
           countryOfOrigin: dppFields.countryOfOrigin ?? null,

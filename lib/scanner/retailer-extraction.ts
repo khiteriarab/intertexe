@@ -2,7 +2,15 @@ export type RetailerPattern = {
   compositionSelectors: string[];
   priceSelectors: string[];
   nameSelectors: string[];
+  imageSelectors: string[];
 };
+
+export const UNIVERSAL_IMAGE_SELECTORS = [
+  'meta[property="og:image"]',
+  'meta[name="twitter:image"]',
+  'link[rel="image_src"]',
+  '[itemprop="image"]',
+];
 
 export const RETAILER_PATTERNS: Record<string, RetailerPattern> = {
   "zara.com": {
@@ -15,6 +23,7 @@ export const RETAILER_PATTERNS: Record<string, RetailerPattern> = {
     ],
     priceSelectors: [".price", '[data-testid="product-price"]', '[class*="price"]'],
     nameSelectors: ["h1", ".product-name", '[data-qa-id="product-name"]'],
+    imageSelectors: [...UNIVERSAL_IMAGE_SELECTORS],
   },
   "hm.com": {
     compositionSelectors: [
@@ -26,6 +35,7 @@ export const RETAILER_PATTERNS: Record<string, RetailerPattern> = {
     ],
     priceSelectors: [".price", ".product-price", '[class*="price"]'],
     nameSelectors: ["h1", ".product-name", '[class*="product-title"]'],
+    imageSelectors: [...UNIVERSAL_IMAGE_SELECTORS],
   },
   "mango.com": {
     compositionSelectors: [
@@ -36,6 +46,7 @@ export const RETAILER_PATTERNS: Record<string, RetailerPattern> = {
     ],
     priceSelectors: [".price", '[class*="price"]'],
     nameSelectors: ["h1", '[class*="product-name"]'],
+    imageSelectors: [...UNIVERSAL_IMAGE_SELECTORS],
   },
 };
 
@@ -106,6 +117,37 @@ function extractCompositionFromText(text: string): string {
   return match?.[1]?.trim() || "";
 }
 
+/** Universal image extraction — works for any retailer product page HTML. */
+export async function fetchProductImageFromURL(url: string): Promise<string | null> {
+  try {
+    const html = await fetchPageHTML(url);
+    if (!html) return null;
+    return extractProductImageFromHTML(html);
+  } catch {
+    return null;
+  }
+}
+
+export function extractProductImageFromHTML(html: string): string | null {
+  const patterns = [
+    /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+    /<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i,
+    /<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i,
+    /<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i,
+    /<link[^>]*rel=["']image_src["'][^>]*href=["']([^"']+)["']/i,
+    /"image"\s*:\s*"(https:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i,
+    /"image"\s*:\s*\[\s*"(https:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match?.[1]?.startsWith("http")) {
+      return match[1];
+    }
+  }
+  return null;
+}
+
 export function extractWithSelectors(
   html: string,
   pattern: RetailerPattern
@@ -114,6 +156,7 @@ export function extractWithSelectors(
   productName?: string;
   price?: string;
   composition?: string;
+  imageUrl?: string;
   confidence?: string;
   inputType?: string;
 } | null {
@@ -123,13 +166,15 @@ export function extractWithSelectors(
   const composition =
     extractCompositionFromText(compositionBlock) ||
     extractCompositionFromText(html.slice(0, 12000));
+  const imageUrl = extractProductImageFromHTML(html) || undefined;
 
-  if (!composition && !name && !price) return null;
+  if (!composition && !name && !price && !imageUrl) return null;
 
   return {
     productName: name || undefined,
     price: price || undefined,
     composition: composition || undefined,
+    imageUrl,
     confidence: composition ? "high" : "medium",
     inputType: "url",
   };
