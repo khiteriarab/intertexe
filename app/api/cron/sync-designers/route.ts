@@ -5,7 +5,7 @@ import { liveProductsApparelFrom } from "@/lib/global-catalog-scope";
 
 export const dynamic = "force-dynamic";
 
-const MIN_LIVE_PRODUCTS = 2;
+const MIN_LIVE_PRODUCTS = 5;
 const PAGE_SIZE = 1000;
 const MAX_PAGES = 200;
 
@@ -20,7 +20,6 @@ export async function GET(req: NextRequest) {
     const offset = page * PAGE_SIZE;
     const { data, error } = await liveProductsApparelFrom(supabase)
       .select("brand_slug")
-      .eq("region", "us")
       .not("brand_slug", "is", null)
       .range(offset, offset + PAGE_SIZE - 1);
 

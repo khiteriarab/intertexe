@@ -6,7 +6,11 @@
     },
     {
       "path": "/api/cron/daily-catalog-refresh",
-      "schedule": "0 4 * * *"
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?ftpDirFilter=35663,43172,43654&fileLimit=40",
+      "schedule": "30 2 * * *"
     },
     {
       "path": "/api/cron/rakuten-feed-sync?fileOffset=0&fileLimit=20",
@@ -35,6 +39,14 @@
     {
       "path": "/api/cron/rakuten-feed-sync?fileOffset=120&fileLimit=20&markInactive=true",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=140&fileLimit=20",
+      "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-feed-sync?fileOffset=160&fileLimit=20",
+      "schedule": "0 18 * * *"
     },
     {
       "path": "/api/cron/feed-sync-stale-alert",

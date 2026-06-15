@@ -22,6 +22,7 @@ export async function GET(request: Request) {
     const fileLimit = parseInt(searchParams.get("fileLimit") || "20", 10);
     const fileOffset = parseInt(searchParams.get("fileOffset") || "0", 10);
     const markInactive = searchParams.get("markInactive") === "true";
+    const ftpDirFilter = searchParams.get("ftpDirFilter");
 
     const { syncRakutenFeeds } = await import(
       "../../../../lib/feed-sync/rakuten-sync.js"
@@ -30,6 +31,7 @@ export async function GET(request: Request) {
       fileLimit,
       fileOffset,
       markInactive,
+      ftpDirFilter: ftpDirFilter || undefined,
       batchSize: parseInt(process.env.FEED_SYNC_BATCH_SIZE || "100", 10),
     });
     return NextResponse.json({ ok: true, result });
