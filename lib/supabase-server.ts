@@ -32,6 +32,7 @@ import {
   CATALOG_PAGE_SIZE,
   classifyGarment,
   catalogDedupeKey,
+  catalogDedupeKeyFromProduct,
   dedupeCatalogProducts,
   dedupeCatalogRows,
   offerCompletenessStatus,
@@ -1287,6 +1288,67 @@ function priceListedRow(row: any): boolean {
   return true;
 }
 
+function mapBrandCatalogRow(row: Record<string, unknown>): Product | null {
+  if (!isNotMensProduct(row)) return null;
+  const product = mapProductRow(row);
+  if (consumerExclusionForProduct(product)) return null;
+  return product;
+}
+
+/** Scan live brand rows until consumer filters yield enough cards (PostgREST range runs before JS guards). */
+async function collectBrandCatalogPage(
+  supabase: UntypedSupabase,
+  canonicalSlug: string,
+  region: string,
+  limit: number,
+  offset: number
+): Promise<{ products: Product[]; filteredTotal: number; timedOut: boolean }> {
+  const batchSize = Math.max(limit * 4, 96);
+  const maxRawScan = 6000;
+  let rawCursor = 0;
+  let skipped = 0;
+  const seen = new Set<string>();
+  const page: Product[] = [];
+  const allFiltered: Product[] = [];
+
+  while (rawCursor < maxRawScan) {
+    const { data, error } = await liveProductsApparelFrom(supabase)
+      .select("*")
+      .eq("region", region)
+      .eq("brand_slug", canonicalSlug)
+      .gte("natural_fiber_percent", 80)
+      .order("natural_fiber_percent", { ascending: false })
+      .order("created_at", { ascending: false })
+      .range(rawCursor, rawCursor + batchSize - 1);
+
+    if (error && isCatalogTimeoutError(error)) {
+      return { products: page, filteredTotal: allFiltered.length, timedOut: true };
+    }
+
+    const rows = data || [];
+    if (rows.length === 0) break;
+    rawCursor += rows.length;
+
+    for (const row of dedupeLiveApparelRows(rows, region, region)) {
+      const product = mapBrandCatalogRow(row);
+      if (!product) continue;
+      const key = catalogDedupeKeyFromProduct(product);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      allFiltered.push(product);
+      if (skipped < offset) {
+        skipped += 1;
+        continue;
+      }
+      if (page.length < limit) page.push(product);
+    }
+
+    if (rows.length < batchSize) break;
+  }
+
+  return { products: page, filteredTotal: allFiltered.length, timedOut: false };
+}
+
 export async function fetchProductsByBrand(
   brandSlug: string,
   opts?: CatalogFetchOpts & {
@@ -1305,36 +1367,32 @@ export async function fetchProductsByBrand(
   const region = (opts?.region || "us").toLowerCase();
 
   const tLive = Date.now();
-  const { data, error } = await liveProductsApparelFrom(supabase)
-    
-    .select("*")
-    .eq("region", region)
-    .eq("brand_slug", canonicalSlug)
-    .gte("natural_fiber_percent", 80)
-    .order("natural_fiber_percent", { ascending: false })
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-  logSupabaseTiming(`live live_products_apparel brand=${canonicalSlug}`, tLive, `rows:${(data || []).length}`);
+  const { products, filteredTotal, timedOut } = await collectBrandCatalogPage(
+    supabase,
+    canonicalSlug,
+    region,
+    limit,
+    offset
+  );
+  logSupabaseTiming(
+    `live live_products_apparel brand=${canonicalSlug}`,
+    tLive,
+    `rows:${products.length} filteredTotal:${filteredTotal}`
+  );
 
-  if (error && isCatalogTimeoutError(error)) {
+  if (timedOut) {
     return { products: [], total: 0, hasMore: false, error: "timeout" };
   }
 
-  const rows = dedupeLiveApparelRows(data || [], region, region);
-  const products = rows
-    .filter(isNotMensProduct)
-    .map(mapProductRow)
-    .filter((p) => !consumerExclusionForProduct(p));
-
   if (skipTotal) {
-    return { products, total: null, hasMore: products.length >= limit };
+    return {
+      products,
+      total: null,
+      hasMore: offset + products.length < filteredTotal,
+    };
   }
 
-  const total = await countLiveProductsApparel(supabase, {
-    region,
-    brandSlug: canonicalSlug,
-  });
-  const resolvedTotal = total > 0 ? total : offset + products.length;
+  const resolvedTotal = filteredTotal > 0 ? filteredTotal : offset + products.length;
   return {
     products,
     total: resolvedTotal,
