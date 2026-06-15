@@ -49,6 +49,7 @@ export type ScanResponseInput = {
   labelLanguage?: string | null;
   dppReady?: boolean;
   isLiningOnly?: boolean;
+  liningComposition?: string | null;
   isNonApparel?: boolean;
   nonApparelMessage?: string | null;
   preprocessingWarnings?: string[];
@@ -174,6 +175,7 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     labelLanguage = null,
     dppReady = false,
     isLiningOnly = false,
+    liningComposition = null,
     isNonApparel = false,
     nonApparelMessage = null,
     preprocessingWarnings = [],
@@ -240,6 +242,7 @@ export function buildUnifiedScanResponse(input: ScanResponseInput) {
     labelLanguage,
     dppReady,
     isLiningOnly,
+    liningComposition: liningComposition || null,
     isNonApparel,
     nonApparelMessage: isNonApparel ? nonApparelMessage : null,
     preprocessingWarnings,

@@ -43,33 +43,43 @@ export type LabelPreprocessResult = {
   warnings: string[];
 };
 
+export type ShellLiningSplit = {
+  shell: string;
+  lining: string | null;
+};
+
+export function splitShellAndLining(text: string): ShellLiningSplit {
+  const lines = text.split('\n');
+  const liningIndex = lines.findIndex((line) =>
+    LINING_INDICATORS.some((header) => line.toLowerCase().includes(header))
+  );
+
+  if (liningIndex > 0) {
+    return {
+      shell: lines.slice(0, liningIndex).join('\n'),
+      lining: lines.slice(liningIndex).join('\n'),
+    };
+  }
+
+  if (liningIndex === 0) {
+    return { shell: '', lining: text };
+  }
+
+  return { shell: text, lining: null };
+}
+
 export function extractShellComposition(labelText: string): {
   shellText: string;
   isLiningOnly: boolean;
 } {
-  const lines = labelText.split(/\n/);
-  let liningStartIndex = -1;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].toLowerCase();
-    if (LINING_INDICATORS.some((ind) => line.includes(ind))) {
-      liningStartIndex = i;
-      break;
-    }
-  }
-
-  if (liningStartIndex > 0) {
-    return {
-      shellText: lines.slice(0, liningStartIndex).join('\n'),
-      isLiningOnly: false,
-    };
-  }
-
-  const firstThreeLines = lines.slice(0, 3).join(' ').toLowerCase();
-  if (LINING_INDICATORS.some((ind) => firstThreeLines.includes(ind))) {
+  const { shell, lining } = splitShellAndLining(labelText);
+  const shellText = shell.trim();
+  if (!shellText && lining) {
     return { shellText: '', isLiningOnly: true };
   }
-
+  if (shellText) {
+    return { shellText, isLiningOnly: false };
+  }
   return { shellText: labelText, isLiningOnly: false };
 }
 

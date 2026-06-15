@@ -43,7 +43,7 @@ import {
   parseRealWorldPrice,
   toPriceUSD,
 } from "../../../lib/scanner/european-price";
-import { preprocessLabel } from "../../../lib/scanner/label-preprocessing";
+import { preprocessLabel, splitShellAndLining } from "../../../lib/scanner/label-preprocessing";
 import { isNonApparelProduct, NON_APPAREL_MESSAGE } from "../../../lib/scanner/non-apparel";
 import { extractBrandFromURL } from "../../../lib/scanner/retailer-brand-map";
 
@@ -750,7 +750,43 @@ export async function POST(request: NextRequest) {
 
     if (compositionTextRaw && String(compositionTextRaw).trim()) {
       const rawComposition = String(compositionTextRaw).trim();
-      const labelPrep = preprocessLabel(rawComposition);
+      const { shell, lining } = splitShellAndLining(rawComposition);
+
+      if (!shell.trim() && lining) {
+        const liningResponse = buildUnifiedScanResponse({
+          supabase,
+          brandName: mergedContext.brandName || "",
+          brandSlug: mergedContext.brandSlug || "",
+          productName: mergedContext.productName || resolvedProductName || "",
+          price: effectivePrice != null ? `$${effectivePrice}` : "",
+          priceNum: effectivePrice,
+          category: body.category || "",
+          color: "",
+          garmentType: resolvedGarmentType || mergedContext.garmentType || "",
+          compositionText: "",
+          fibers: [],
+          naturalPercent: 0,
+          qualityScore: 0,
+          verdict: "Scan the outer fabric label for the main composition.",
+          alternatives: [],
+          brandProducts: [],
+          designerInfo: null,
+          brandStats: null,
+          confirmPrompt: null,
+          inputType: "composition",
+          barcode: mergedContext.barcode || "",
+          lookupSource: "lining_label",
+          needsCompositionLabel: true,
+          needsCompositionMessage:
+            "Scan the outer fabric label for the main composition.",
+          isLiningOnly: true,
+          preprocessingWarnings: ["lining_label"],
+          success: true,
+        });
+        return NextResponse.json(liningResponse);
+      }
+
+      const labelPrep = preprocessLabel(shell.trim() || rawComposition);
 
       if (labelPrep.isLiningOnly) {
         const liningResponse = buildUnifiedScanResponse({
@@ -767,7 +803,7 @@ export async function POST(request: NextRequest) {
           fibers: [],
           naturalPercent: 0,
           qualityScore: 0,
-          verdict: "You scanned the lining. Scan the outer fabric label for the main composition.",
+          verdict: "Scan the outer fabric label for the main composition.",
           alternatives: [],
           brandProducts: [],
           designerInfo: null,
@@ -778,7 +814,7 @@ export async function POST(request: NextRequest) {
           lookupSource: "lining_label",
           needsCompositionLabel: true,
           needsCompositionMessage:
-            "You scanned the lining. Scan the outer fabric label for the main composition.",
+            "Scan the outer fabric label for the main composition.",
           isLiningOnly: true,
           preprocessingWarnings: labelPrep.warnings,
           success: true,
@@ -786,7 +822,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(liningResponse);
       }
 
-      const composition = labelPrep.processedText.trim() || rawComposition;
+      const composition = labelPrep.processedText.trim() || shell.trim() || rawComposition;
+      const liningPrep = lining ? preprocessLabel(lining) : null;
+      const liningCompositionText = liningPrep?.processedText?.trim()
+        ? (() => {
+            const liningFibers = parseComposition(liningPrep.processedText.trim());
+            return liningFibers.length
+              ? liningFibers.map((f) => `${f.percent}% ${f.fiber}`).join(", ")
+              : null;
+          })()
+        : null;
 
       const supplementaryURL = normalizeProductUrl(String(body.url || "").trim());
       const shouldFetchImage =
@@ -926,6 +971,7 @@ export async function POST(request: NextRequest) {
         isNonApparel: nonApparel,
         nonApparelMessage: nonApparel ? NON_APPAREL_MESSAGE : null,
         preprocessingWarnings: labelPrep.warnings,
+        liningComposition: liningCompositionText,
         success: true,
         countryOfOrigin: dppFields.countryOfOrigin ?? null,
         careInstructions: dppFields.careInstructions ?? null,
