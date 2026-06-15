@@ -140,6 +140,10 @@ export function extractCurrencyPrice(
   rawText: string
 ): { price: number; currency: string } | null {
   const text = preparePriceText(rawText);
+
+  const euro = extractEuroStickerPrice(text);
+  if (euro) return euro;
+
   for (const [pattern, currency] of SYMBOL_PRICE_PATTERNS) {
     const match = text.match(pattern);
     if (!match?.[1]) continue;
@@ -150,7 +154,6 @@ export function extractCurrencyPrice(
   }
 
   const compactPatterns: Array<[RegExp, string]> = [
-    [/€\s*(\d{1,4})(\d{2})\b/, 'EUR'],
     [/\$\s*(\d{1,4})(\d{2})\b/, 'USD'],
     [/£\s*(\d{1,4})(\d{2})\b/, 'GBP'],
     [/¥\s*(\d{1,4})(\d{2})\b/, 'JPY'],
@@ -173,6 +176,39 @@ export function extractCurrencyPrice(
     }
   }
   return null;
+}
+
+/** Zara €39⁹⁵ sticker — compact cents split; correct common € misread as leading 8 (8995 → 3995). */
+function extractEuroStickerPrice(text: string): { price: number; currency: string } | null {
+  const match = text.match(/€\s*(\d{3,5})\b/);
+  if (!match?.[1] || match[1].length < 3) return null;
+
+  const digits = match[1];
+  const candidates: number[] = [];
+
+  const pushCandidate = (major: string, minor: string) => {
+    const majorValue = parseInt(major, 10);
+    const minorValue = parseInt(minor, 10);
+    if (!Number.isFinite(majorValue) || majorValue <= 0 || !Number.isFinite(minorValue) || minorValue >= 100) {
+      return;
+    }
+    const price = majorValue + minorValue / 100;
+    if (price >= 5 && price <= 300) candidates.push(price);
+  };
+
+  pushCandidate(digits.slice(0, -2), digits.slice(-2));
+
+  if (digits.startsWith('8') && digits.length >= 4) {
+    const corrected = `3${digits.slice(1)}`;
+    pushCandidate(corrected.slice(0, -2), corrected.slice(-2));
+  }
+
+  if (candidates.length === 0) return null;
+  const sorted = [...candidates].sort((a, b) => a - b);
+  if (sorted.length > 1 && sorted[sorted.length - 1] > sorted[0] * 1.8) {
+    return { price: sorted[0], currency: 'EUR' };
+  }
+  return { price: sorted[0], currency: 'EUR' };
 }
 
 export function selectBestPriceFromNumbers(numbers: number[], currency: string): number | null {
