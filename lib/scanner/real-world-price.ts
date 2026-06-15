@@ -196,11 +196,15 @@ function extractEuroStickerPrice(text: string): { price: number; currency: strin
     if (price >= 5 && price <= 300) candidates.push(price);
   };
 
-  pushCandidate(digits.slice(0, -2), digits.slice(-2));
-
-  if (digits.startsWith('8') && digits.length >= 4) {
+  if (digits.startsWith('8') && digits.length === 4) {
+    const corrected = `3${digits.slice(1)}`;
+    candidates.length = 0;
+    pushCandidate(corrected.slice(0, -2), corrected.slice(-2));
+  } else if (digits.startsWith('8') && digits.length >= 4) {
     const corrected = `3${digits.slice(1)}`;
     pushCandidate(corrected.slice(0, -2), corrected.slice(-2));
+  } else {
+    pushCandidate(digits.slice(0, -2), digits.slice(-2));
   }
 
   if (candidates.length === 0) return null;
