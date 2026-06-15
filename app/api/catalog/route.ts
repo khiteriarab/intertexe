@@ -306,7 +306,7 @@ export async function GET(request: NextRequest) {
       const result = await fetchProductsByBrand(brandSlug, {
         limit,
         offset,
-        skipTotal: skipCount,
+        skipTotal: false,
         region: catalogRegion || "us",
       });
       if (result.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
@@ -314,14 +314,17 @@ export async function GET(request: NextRequest) {
         result.total,
         result.products.length,
         offset,
-        skipCount
+        false
       );
+      const hasMore =
+        result.hasMore ??
+        catalogHasMore(result.products.length, limit, offset, brandTotal);
       return respond({
         products: result.products,
         total: brandTotal,
         limit,
         offset,
-        hasMore: catalogHasMore(result.products.length, limit, offset, brandTotal),
+        hasMore,
       });
     }
 

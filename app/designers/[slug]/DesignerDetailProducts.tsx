@@ -61,6 +61,7 @@ export function DesignerDetailProducts({
   profileMaterialStrengths,
   shopMode = false,
   initialHasMore = false,
+  initialTotal = null,
   fiberFilter = null,
 }: {
   products: ProductItem[];
@@ -70,10 +71,15 @@ export function DesignerDetailProducts({
   hasProfile: boolean;
   profileMaterialStrengths: string[];
   initialHasMore?: boolean;
+  initialTotal?: number | null;
   shopMode?: boolean;
   fiberFilter?: string | null;
 }) {
   const [catalogProducts, setCatalogProducts] = useState<ProductItem[]>(products);
+  const [catalogTotal, setCatalogTotal] = useState<number | null>(
+    initialTotal != null && initialTotal > 0 ? initialTotal : null
+  );
+  const [serverOffset, setServerOffset] = useState(products.length);
   const [activeCategory, setActiveCategory] = useState("all");
   const [showSaleOnly, setShowSaleOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -144,29 +150,46 @@ export function DesignerDetailProducts({
   const hasMoreClient = filteredProducts.length > visibleCount;
   const hasMore = shopMode ? serverHasMore : hasMoreClient;
 
+  const hasClientFilters =
+    activeCategory !== "all" ||
+    showSaleOnly ||
+    Boolean(searchQuery.trim()) ||
+    Boolean(fiberFilter);
+
+  const displayTotal = useMemo(() => {
+    if (hasClientFilters) return filteredProducts.length;
+    if (catalogTotal != null && catalogTotal > 0) return catalogTotal;
+    return visibleProducts.length;
+  }, [hasClientFilters, filteredProducts.length, catalogTotal, visibleProducts.length]);
+
   const loadMoreFromServer = useCallback(async () => {
     if (!shopMode || loadingMore || !serverHasMore) return;
     setLoadingMore(true);
     try {
       const res = await fetch(
-        `/api/catalog?mode=brand&slug=${encodeURIComponent(designerSlug)}&limit=${DESIGNER_PAGE_SIZE}&offset=${catalogProducts.length}`
+        `/api/catalog?mode=brand&slug=${encodeURIComponent(designerSlug)}&limit=${DESIGNER_PAGE_SIZE}&offset=${serverOffset}`
       );
       const data = await res.json();
       const next = (data.products || []) as ProductItem[];
+      const nextOffset = serverOffset + next.length;
+      if (typeof data.total === "number" && data.total > 0) {
+        setCatalogTotal(data.total);
+        setServerHasMore(nextOffset < data.total);
+      } else {
+        setServerHasMore(Boolean(data.hasMore) && next.length > 0);
+      }
+      if (next.length === 0) {
+        setServerHasMore(false);
+      }
+      setServerOffset(nextOffset);
       setCatalogProducts((prev) => {
         const seen = new Set(prev.map((p) => p.productId || p.id));
-        const merged = [...prev, ...next.filter((p) => !seen.has(p.productId || p.id))];
-        if (typeof data.total === "number" && data.total > 0) {
-          setServerHasMore(merged.length < data.total);
-        } else {
-          setServerHasMore(Boolean(data.hasMore));
-        }
-        return merged;
+        return [...prev, ...next.filter((p) => !seen.has(p.productId || p.id))];
       });
     } finally {
       setLoadingMore(false);
     }
-  }, [shopMode, loadingMore, serverHasMore, designerSlug, catalogProducts.length]);
+  }, [shopMode, loadingMore, serverHasMore, designerSlug, serverOffset]);
 
   useEffect(() => {
     if (!shopMode || !serverHasMore) return;
@@ -209,7 +232,7 @@ export function DesignerDetailProducts({
           {shopMode && (
             <CatalogMobileToolbar
               className="mb-4"
-              resultCount={visibleProducts.length}
+              resultCount={displayTotal}
               countLoading={false}
               sortLabel={PRICE_SORT_OPTIONS.find((o) => o.key === priceSort)?.label || "Default"}
               onOpenFilter={() => setShowFilterSheet(true)}
@@ -254,7 +277,7 @@ export function DesignerDetailProducts({
                     }`}
                     data-testid="filter-category-all"
                   >
-                    All ({visibleProducts.length})
+                    All ({hasClientFilters ? visibleProducts.length : displayTotal})
                   </button>
                   {saleCount > 0 && (
                     <button
@@ -290,7 +313,7 @@ export function DesignerDetailProducts({
 
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{filteredProducts.length}</span> items
+              <span className="font-medium text-foreground">{displayTotal.toLocaleString()}</span> items
             </p>
             <div className="relative">
               <button
@@ -404,7 +427,7 @@ export function DesignerDetailProducts({
                   className="w-full border border-foreground/20 hover:border-foreground/40 text-foreground py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98] disabled:opacity-50"
                   data-testid="button-load-more-products"
                 >
-                  {loadingMore ? "Loading…" : shopMode ? "Load more" : `Load More (${filteredProducts.length - visibleCount} remaining)`}
+                  {loadingMore ? "Loading…" : shopMode ? "Load more" : `Load More (${Math.max(0, displayTotal - visibleCount).toLocaleString()} remaining)`}
                 </button>
               )}
             </>

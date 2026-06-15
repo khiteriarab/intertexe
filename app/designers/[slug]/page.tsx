@@ -134,6 +134,7 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
           hasProfile={!!profile}
           profileMaterialStrengths={profile?.materialStrengths || []}
           initialHasMore={brandCatalog.hasMore}
+          initialTotal={brandCatalog.total}
         />
       </div>
     </div>

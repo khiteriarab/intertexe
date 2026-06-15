@@ -1301,8 +1301,9 @@ async function collectBrandCatalogPage(
   canonicalSlug: string,
   region: string,
   limit: number,
-  offset: number
-): Promise<{ products: Product[]; filteredTotal: number; timedOut: boolean }> {
+  offset: number,
+  resolveFullTotal = true
+): Promise<{ products: Product[]; filteredTotal: number; timedOut: boolean; hasMoreHint: boolean }> {
   const batchSize = Math.max(limit * 4, 96);
   const maxRawScan = 6000;
   let rawCursor = 0;
@@ -1310,6 +1311,7 @@ async function collectBrandCatalogPage(
   const seen = new Set<string>();
   const page: Product[] = [];
   const allFiltered: Product[] = [];
+  let exhausted = false;
 
   while (rawCursor < maxRawScan) {
     const { data, error } = await liveProductsApparelFrom(supabase)
@@ -1322,11 +1324,14 @@ async function collectBrandCatalogPage(
       .range(rawCursor, rawCursor + batchSize - 1);
 
     if (error && isCatalogTimeoutError(error)) {
-      return { products: page, filteredTotal: allFiltered.length, timedOut: true };
+      return { products: page, filteredTotal: allFiltered.length, timedOut: true, hasMoreHint: false };
     }
 
     const rows = data || [];
-    if (rows.length === 0) break;
+    if (rows.length === 0) {
+      exhausted = true;
+      break;
+    }
     rawCursor += rows.length;
 
     for (const row of dedupeLiveApparelRows(rows, region, region)) {
@@ -1343,10 +1348,19 @@ async function collectBrandCatalogPage(
       if (page.length < limit) page.push(product);
     }
 
-    if (rows.length < batchSize) break;
+    if (rows.length < batchSize) {
+      exhausted = true;
+      break;
+    }
+
+    // Pagination requests only need the next page — avoid rescanning the full brand (timeouts).
+    if (!resolveFullTotal && page.length >= limit) {
+      break;
+    }
   }
 
-  return { products: page, filteredTotal: allFiltered.length, timedOut: false };
+  const hasMoreHint = !exhausted && page.length >= limit;
+  return { products: page, filteredTotal: allFiltered.length, timedOut: false, hasMoreHint };
 }
 
 export async function fetchProductsByBrand(
@@ -1366,18 +1380,20 @@ export async function fetchProductsByBrand(
   const skipTotal = opts?.skipTotal ?? false;
   const region = (opts?.region || "us").toLowerCase();
 
+  const resolveFullTotal = !skipTotal && offset === 0;
   const tLive = Date.now();
-  const { products, filteredTotal, timedOut } = await collectBrandCatalogPage(
+  const { products, filteredTotal, timedOut, hasMoreHint } = await collectBrandCatalogPage(
     supabase,
     canonicalSlug,
     region,
     limit,
-    offset
+    offset,
+    resolveFullTotal
   );
   logSupabaseTiming(
     `live live_products_apparel brand=${canonicalSlug}`,
     tLive,
-    `rows:${products.length} filteredTotal:${filteredTotal}`
+    `rows:${products.length} filteredTotal:${filteredTotal} offset:${offset}`
   );
 
   if (timedOut) {
@@ -1388,7 +1404,15 @@ export async function fetchProductsByBrand(
     return {
       products,
       total: null,
-      hasMore: offset + products.length < filteredTotal,
+      hasMore: hasMoreHint || offset + products.length < filteredTotal,
+    };
+  }
+
+  if (offset > 0) {
+    return {
+      products,
+      total: null,
+      hasMore: hasMoreHint || products.length >= limit,
     };
   }
 

@@ -27,6 +27,7 @@ export function DesignerShopSection({
   hasProfile,
   profileMaterialStrengths,
   initialHasMore,
+  initialTotal,
 }: {
   products: ProductItem[];
   designerName: string;
@@ -37,6 +38,7 @@ export function DesignerShopSection({
   hasProfile: boolean;
   profileMaterialStrengths: string[];
   initialHasMore: boolean;
+  initialTotal?: number | null;
 }) {
   const [fiberFilter, setFiberFilter] = useState<string | null>(null);
 
@@ -56,6 +58,7 @@ export function DesignerShopSection({
         hasProfile={hasProfile}
         profileMaterialStrengths={profileMaterialStrengths}
         initialHasMore={initialHasMore}
+        initialTotal={initialTotal}
         shopMode
         fiberFilter={fiberFilter}
       />
