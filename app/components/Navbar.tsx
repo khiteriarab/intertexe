@@ -12,10 +12,18 @@ import { CountrySelector } from "./CountrySelector";
 import { MobileBottomDock } from "./MobileBottomDock";
 import { MobileNavMenu } from "./MobileNavMenu";
 
-async function searchDesigners(query: string) {
+type DesignerSearchHit = {
+  id?: string;
+  slug: string;
+  name: string;
+  naturalFiberPercent?: number | null;
+};
+
+async function searchDesigners(query: string): Promise<DesignerSearchHit[]> {
   const res = await fetch(`/api/designers?q=${encodeURIComponent(query)}`);
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data?.designers ?? []);
 }
 
 export function Navbar() {
@@ -36,7 +44,7 @@ export function Navbar() {
       .catch(() => setIsAuthenticated(false));
   }, []);
 
-  const { data: results = [] } = useQuery({
+  const { data: results = [] } = useQuery<DesignerSearchHit[]>({
     queryKey: ["designerSearch", searchQuery],
     queryFn: () => searchDesigners(searchQuery),
     enabled: searchQuery.length >= 2,
@@ -135,13 +143,13 @@ export function Navbar() {
               )}
               {searchQuery.length >= 2 && (
                 <div className="max-w-xl mx-auto mt-2 max-h-[50vh] md:max-h-[300px] overflow-y-auto">
-                  {(results as any[]).length === 0 ? (
+                  {results.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-6 text-center">No designers found.</p>
                   ) : (
                     <div className="flex flex-col">
-                      {(results as any[]).slice(0, 8).map((designer: any) => (
+                      {results.slice(0, 8).map((designer) => (
                         <Link
-                          key={designer.id}
+                          key={designer.slug}
                           href={`/designers/${designer.slug}`}
                           className="flex items-center justify-between py-3.5 md:py-3 px-4 hover:bg-secondary/50 active:bg-secondary/70 transition-colors border-b border-border/20 last:border-0"
                           data-testid={`search-result-${designer.slug}`}

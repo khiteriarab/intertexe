@@ -94,11 +94,15 @@ export default async function SearchPage({
                 className="group flex flex-col gap-2"
               >
                 <div className="aspect-[3/4] bg-secondary/30 relative overflow-hidden">
-                  <CatalogProductImage
-                    src={cfProductCard(p.image_url)}
-                    alt={p.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                  {p.image_url ? (
+                    <CatalogProductImage
+                      src={cfProductCard(p.image_url)}
+                      alt={p.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-[#f5f5f3]" />
+                  )}
                 </div>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{p.brand_name}</p>
                 <p className="text-sm font-serif line-clamp-2">{p.name}</p>

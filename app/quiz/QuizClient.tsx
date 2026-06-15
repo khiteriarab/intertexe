@@ -443,7 +443,10 @@ function BrandsStep({ designers, designersLoading, selectedBrands, onToggle }: {
     const timeout = setTimeout(() => {
       fetch(`/api/designers?q=${encodeURIComponent(brandSearch)}&limit=20`)
         .then(r => r.ok ? r.json() : [])
-        .then(setSearchedDesigners)
+        .then((data) => {
+          const list = Array.isArray(data) ? data : (data?.designers ?? []);
+          setSearchedDesigners(list);
+        })
         .catch(() => setSearchedDesigners([]));
     }, 300);
     return () => clearTimeout(timeout);
