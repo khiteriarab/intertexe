@@ -6,10 +6,11 @@
 import { createClient } from '@supabase/supabase-js';
 
 const MIN_LIVE_PRODUCTS = 5;
-const SCAN_PAGE_SIZE = 500;
+const SCAN_PAGE_SIZE = 200;
 const UPDATE_BATCH_SIZE = 50;
 const BATCH_DELAY_MS = 300;
 const MAX_SCAN_PAGES = 400;
+const MAX_OFFSET_RETRIES = 3;
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,24 +29,40 @@ async function scanLiveBrandCounts(supabase) {
 
   for (let page = 0; page < MAX_SCAN_PAGES; page++) {
     const offset = page * SCAN_PAGE_SIZE;
-    const { data, error } = await supabase
-      .from('live_products_apparel')
-      .select('brand_slug')
-      .not('brand_slug', 'is', null)
-      .range(offset, offset + SCAN_PAGE_SIZE - 1);
+    let offsetRetries = 0;
+    let data = null;
+    let error = null;
 
-    if (error) {
+    while (offsetRetries <= MAX_OFFSET_RETRIES) {
+      ({ data, error } = await supabase
+        .from('live_products_apparel')
+        .select('brand_slug')
+        .not('brand_slug', 'is', null)
+        .range(offset, offset + SCAN_PAGE_SIZE - 1));
+
+      if (!error) break;
+
       if (error.code === '57014' || String(error.message || '').includes('timeout')) {
         timeouts += 1;
-        console.warn(`[designer-sync] scan timeout at offset ${offset}, retrying…`);
-        await sleep(BATCH_DELAY_MS * 2);
-        page -= 1;
+        offsetRetries += 1;
+        console.warn(
+          `[designer-sync] scan timeout at offset ${offset} (${offsetRetries}/${MAX_OFFSET_RETRIES})…`
+        );
+        if (offsetRetries > MAX_OFFSET_RETRIES) {
+          console.warn(`[designer-sync] skipping offset ${offset} after repeated timeouts`);
+          data = [];
+          break;
+        }
+        await sleep(BATCH_DELAY_MS * (offsetRetries + 1));
         continue;
       }
       throw error;
     }
 
-    if (!data?.length) break;
+    if (!data?.length) {
+      if (offsetRetries > MAX_OFFSET_RETRIES) continue;
+      break;
+    }
 
     for (const row of data) {
       const slug = String(row.brand_slug || '').trim().toLowerCase();
@@ -53,7 +70,7 @@ async function scanLiveBrandCounts(supabase) {
       brandCounts.set(slug, (brandCounts.get(slug) || 0) + 1);
     }
 
-    if (page % 10 === 0) {
+    if (page % 20 === 0) {
       console.log(`[designer-sync] scanned offset ${offset}, brands so far ${brandCounts.size}`);
     }
 

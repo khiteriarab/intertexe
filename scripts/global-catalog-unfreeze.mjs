@@ -10,9 +10,10 @@ import {
   classifyGenderScope,
 } from '../lib/feed-sync/rakuten-sync.js';
 
-const BATCH_SIZE = 500;
+const BATCH_SIZE = 200;
 const UPDATE_CHUNK = 50;
 const BATCH_DELAY_MS = 500;
+const MAX_RETRIES = 5;
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,6 +32,45 @@ function isAvailable(product) {
   const status = String(product.stock_status || '').toLowerCase();
   if (!status) return product.is_active !== false;
   return !/(out_of_stock|sold_out|unavailable)/.test(status);
+}
+
+function isTransient(err) {
+  const msg = String(err?.message || err || '');
+  return (
+    err?.code === '57014'
+    || msg.includes('timeout')
+    || msg.includes('fetch failed')
+    || msg.includes('ECONNRESET')
+    || msg.includes('socket')
+  );
+}
+
+async function fetchPendingBatch(sb, afterId) {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    let query = sb
+      .from('products')
+      .select(
+        'id, product_id, name, category, composition, url, gender_scope, is_active, natural_fiber_percent, stock_status, brand_name, brand_slug, image_url, price'
+      )
+      .gte('natural_fiber_percent', 80)
+      .not('composition', 'is', null)
+      .neq('composition', '')
+      .neq('approved', 'yes')
+      .order('id', { ascending: true })
+      .limit(BATCH_SIZE);
+
+    if (afterId) query = query.gt('id', afterId);
+
+    const { data, error } = await query;
+    if (!error) return { data: data || [], error: null };
+    if (isTransient(error) && attempt < MAX_RETRIES) {
+      console.warn(`[unfreeze] select retry ${attempt + 1}/${MAX_RETRIES}:`, error.message);
+      await sleep(BATCH_DELAY_MS * (attempt + 2));
+      continue;
+    }
+    return { data: [], error };
+  }
+  return { data: [], error: new Error('max retries') };
 }
 
 function sleep(ms) {
@@ -99,27 +139,13 @@ async function runBatchedUnfreeze() {
     batches += 1;
     console.log(`[unfreeze] batch ${batches} — fetching next ${BATCH_SIZE} pending…`);
 
-    let query = sb
-      .from('products')
-      .select(
-        'id, product_id, name, category, composition, url, gender_scope, is_active, natural_fiber_percent, stock_status, brand_name, brand_slug, image_url, price'
-      )
-      .gte('natural_fiber_percent', 80)
-      .not('composition', 'is', null)
-      .neq('composition', '')
-      .neq('approved', 'yes')
-      .order('id', { ascending: true })
-      .limit(BATCH_SIZE);
-
-    if (afterId) query = query.gt('id', afterId);
-
-    const { data, error } = await query;
+    const { data, error } = await fetchPendingBatch(sb, afterId);
 
     if (error) {
-      if (error.code === '57014' || String(error.message || '').includes('timeout')) {
+      if (isTransient(error)) {
         timeouts += 1;
-        console.error('[unfreeze] select timeout — retrying after delay…', error.message);
-        await sleep(BATCH_DELAY_MS * 2);
+        console.error('[unfreeze] select failed after retries — pausing…', error.message);
+        await sleep(BATCH_DELAY_MS * 4);
         continue;
       }
       throw error;
