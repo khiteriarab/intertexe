@@ -34,9 +34,6 @@ export function Footer() {
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Company</h3>
             <Link href="/platform" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-platform">Platform</Link>
             <Link href="/press" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-press">Press</Link>
-            <p className="text-sm text-background/70 leading-relaxed" data-testid="text-footer-stellar">
-              Intertexe is a product of Stellar Communications LLC
-            </p>
           </div>
 
           <div className="flex flex-col gap-3 md:gap-4">
@@ -54,6 +51,9 @@ export function Footer() {
           </p>
           <p className="text-[10px] md:text-xs text-background/40 leading-relaxed max-w-3xl" data-testid="text-footer-affiliate">
             Intertexe participates in affiliate programs. We earn commission on qualifying purchases.
+          </p>
+          <p className="text-[10px] md:text-xs text-background/40 leading-relaxed max-w-3xl" data-testid="text-footer-stellar">
+            Intertexe is a product of Stellar Communications LLC
           </p>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest">
