@@ -30,6 +30,12 @@ export function CatalogProductImage({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+    setError(false);
+  }, [src]);
+
   const { aspect } = catalogImageSizes(variant);
   const objectClass = catalogImageObjectClass(variant, { category, name });
 
