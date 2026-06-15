@@ -24,7 +24,7 @@ export const getCachedPlatformStats = unstable_cache(
 
 export const getCachedBrandStats = unstable_cache(
   async (): Promise<BrandStat[]> => fetchBrandStats(),
-  ["brand-directory-v3"],
+  ["brand-directory-v4"],
   { revalidate: BRAND_DIR_REVALIDATE, tags: ["brand-directory"] }
 );
 

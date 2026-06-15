@@ -44,7 +44,7 @@ import {
   isZegnaWomensPiece,
   productBodyMatchesFiber,
 } from "./catalog-product-filters";
-import { fetchShoppableBrands } from "./shoppable-brands";
+import { fetchShoppableBrands, SHOPPABLE_MIN_PRODUCTS } from "./shoppable-brands";
 import { isMensCatalogRow, isMensOnlyBrand } from "./womens-catalog-guard";
 import { filterProductsByFiberSubtypes } from "./fiber-subtypes";
 import {
@@ -2404,11 +2404,39 @@ export async function fetchSaleProducts(options: {
 export async function fetchBrandStats(): Promise<
   { slug: string; name: string; count: number; avgNaturalFiber: number }[]
 > {
-  const brands = await fetchShoppableBrands({ maxBrands: 1200, rpcOnly: true });
-  return brands.map((b) => ({
-    slug: b.slug,
-    name: b.name,
-    count: b.count,
-    avgNaturalFiber: b.avgNaturalFiber,
+  const brands = await fetchShoppableBrands({ maxBrands: 1200 });
+  if (brands.length >= 50) {
+    return brands.map((b) => ({
+      slug: b.slug,
+      name: b.name,
+      count: b.count,
+      avgNaturalFiber: b.avgNaturalFiber,
+    }));
+  }
+
+  const supabase = getServerSupabase();
+  if (!supabase) return brands.map((b) => ({ slug: b.slug, name: b.name, count: b.count, avgNaturalFiber: b.avgNaturalFiber }));
+
+  const { data, error } = await supabase
+    .from("designers")
+    .select("slug, name, product_count, natural_fiber_percent")
+    .eq("is_live", true)
+    .gte("product_count", SHOPPABLE_MIN_PRODUCTS)
+    .order("name");
+
+  if (error || !data?.length) {
+    return brands.map((b) => ({
+      slug: b.slug,
+      name: b.name,
+      count: b.count,
+      avgNaturalFiber: b.avgNaturalFiber,
+    }));
+  }
+
+  return data.map((row: any) => ({
+    slug: String(row.slug || "").toLowerCase(),
+    name: sanitizeBrandName(String(row.name || row.slug || "")),
+    count: Number(row.product_count) || 0,
+    avgNaturalFiber: Number(row.natural_fiber_percent) || 0,
   }));
 }
