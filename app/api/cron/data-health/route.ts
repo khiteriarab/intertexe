@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase-service-client";
 import { COLLECTION_CANONICAL_SLUGS } from "@/lib/catalog-direct-query";
+import { fetchCatalogHealthSnapshot } from "@/lib/catalog-daily-report";
 
 const COLLECTION_SLUGS = [
   "vacation",
@@ -79,6 +80,15 @@ export async function GET(request: Request) {
   const garmentPct = Math.round(((garmentCount || 0) * 100) / (totalUS || 1));
   if (garmentPct < 95) issues.push(`Garment type coverage low: ${garmentPct}%`);
 
+  const snapshot = await fetchCatalogHealthSnapshot(supabase);
+
+  if (snapshot.shouldBeLiveCount > 0) {
+    issues.push(`${snapshot.shouldBeLiveCount} products should be live but are not approved`);
+  }
+  if (snapshot.brandsAffected > 0) {
+    issues.push(`${snapshot.brandsAffected} brands have pending high-NFP products`);
+  }
+
   if (issues.length > 0) {
     console.error("DATA HEALTH ISSUES:", issues);
   }
@@ -87,6 +97,11 @@ export async function GET(request: Request) {
     healthy: issues.length === 0,
     issues,
     checked_at: new Date().toISOString(),
+    email_sent: false,
+    brand_health: {
+      should_be_live: snapshot.shouldBeLiveCount,
+      brands_affected: snapshot.brandsAffected,
+    },
     metrics: {
       total_us: totalUS,
       color_pct: colorPct,

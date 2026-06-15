@@ -2,9 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase-service-client";
-
-const STALE_MS = 48 * 60 * 60 * 1000;
-const ALERT_EMAIL = "info@intertexe.com";
+import { EMAIL_FROM } from "@/lib/email-constants";
+import { CATALOG_ALERT_EMAIL } from "@/lib/catalog-daily-report";
 
 function authorize(request: Request): NextResponse | null {
   const cronSecret = process.env.CRON_SECRET || process.env.FEED_SYNC_SECRET;
@@ -47,8 +46,8 @@ export async function GET(request: Request) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM || "INTERTEXE <info@intertexe.com>",
-          to: [ALERT_EMAIL],
+          from: process.env.RESEND_FROM || EMAIL_FROM,
+          to: [CATALOG_ALERT_EMAIL],
           subject: `INTERTEXE feed sync stale (${hoursSinceSync != null ? Math.round(hoursSinceSync) : "unknown"}h)`,
           html: `<p>Rakuten feed sync has not run in ${hoursSinceSync != null ? Math.round(hoursSinceSync) : "unknown"} hours. Last sync: ${lastSync?.toISOString() ?? "never"}.</p>`,
         }),

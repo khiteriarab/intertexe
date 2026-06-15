@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 import { NextResponse } from "next/server";
+import { getServerSupabase } from "@/lib/supabase-service-client";
+import { sendCatalogDailyEmail } from "@/lib/catalog-daily-report";
 
 function authorize(request: Request): Response | null {
   const cronSecret = process.env.CRON_SECRET || process.env.FEED_SYNC_SECRET;
@@ -13,7 +15,7 @@ function authorize(request: Request): Response | null {
   return null;
 }
 
-/** Priority Mytheresa + NFP refresh — runs before general catalog batches. */
+/** Priority Mytheresa sync + daily catalog health email to info@intertexe.com. */
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
@@ -30,9 +32,22 @@ export async function GET(request: Request) {
       batchSize: parseInt(process.env.FEED_SYNC_BATCH_SIZE || "100", 10),
     });
 
+    const supabase = getServerSupabase();
+    let emailResult: { sent: boolean; snapshot?: Awaited<ReturnType<typeof sendCatalogDailyEmail>>["snapshot"] } = {
+      sent: false,
+    };
+
+    if (supabase) {
+      const syncSummary = mytheresa.ok
+        ? `Mytheresa OK — upserted ${mytheresa.upserted ?? 0}, normalized ${mytheresa.normalized ?? 0}`
+        : `Mytheresa partial — errors ${mytheresa.errors?.length ?? 0}`;
+      emailResult = await sendCatalogDailyEmail(supabase, { syncSummary });
+    }
+
     return NextResponse.json({
       ok: mytheresa.ok,
       mytheresa,
+      email: emailResult,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
