@@ -92,13 +92,14 @@ async function runBatchedUnfreeze() {
   let approved = 0;
   let batches = 0;
   let timeouts = 0;
+  let afterId = null;
   const brandsTouched = new Set();
 
   while (true) {
     batches += 1;
     console.log(`[unfreeze] batch ${batches} — fetching next ${BATCH_SIZE} pending…`);
 
-    const { data, error } = await sb
+    let query = sb
       .from('products')
       .select(
         'id, product_id, name, category, composition, url, gender_scope, is_active, natural_fiber_percent, stock_status, brand_name, brand_slug, image_url, price'
@@ -107,7 +108,12 @@ async function runBatchedUnfreeze() {
       .not('composition', 'is', null)
       .neq('composition', '')
       .neq('approved', 'yes')
-      .range(0, BATCH_SIZE - 1);
+      .order('id', { ascending: true })
+      .limit(BATCH_SIZE);
+
+    if (afterId) query = query.gt('id', afterId);
+
+    const { data, error } = await query;
 
     if (error) {
       if (error.code === '57014' || String(error.message || '').includes('timeout')) {
@@ -154,6 +160,7 @@ async function runBatchedUnfreeze() {
       `[unfreeze] batch ${batches} fetched ${data.length}, approved ${allIds.length} this batch, total ${approved}`
     );
 
+    afterId = data[data.length - 1]?.id ?? afterId;
     if (data.length < BATCH_SIZE) break;
     await sleep(BATCH_DELAY_MS);
   }
