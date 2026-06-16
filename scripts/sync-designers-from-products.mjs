@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 /**
- * Sync designers.is_live + product_count from live_products_apparel (all regions).
- * Batched scans + batched updates to avoid statement timeouts.
+ * Sync designers.is_live + product_count from live catalog.
+ * Counts per designer slug (fast head queries) instead of scanning the full view.
  */
 import { createClient } from '@supabase/supabase-js';
 
 const MIN_LIVE_PRODUCTS = 5;
-const SCAN_PAGE_SIZE = 200;
 const UPDATE_BATCH_SIZE = 50;
-const BATCH_DELAY_MS = 300;
-const MAX_SCAN_PAGES = 400;
-const MAX_OFFSET_RETRIES = 3;
+const COUNT_BATCH_SIZE = 20;
+const BATCH_DELAY_MS = 200;
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -23,82 +21,104 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function scanLiveBrandCounts(supabase) {
-  const brandCounts = new Map();
-  let timeouts = 0;
-
-  for (let page = 0; page < MAX_SCAN_PAGES; page++) {
-    const offset = page * SCAN_PAGE_SIZE;
-    let offsetRetries = 0;
-    let data = null;
-    let error = null;
-
-    while (offsetRetries <= MAX_OFFSET_RETRIES) {
-      ({ data, error } = await supabase
-        .from('live_products_apparel')
-        .select('brand_slug')
-        .not('brand_slug', 'is', null)
-        .range(offset, offset + SCAN_PAGE_SIZE - 1));
-
-      if (!error) break;
-
-      if (error.code === '57014' || String(error.message || '').includes('timeout')) {
-        timeouts += 1;
-        offsetRetries += 1;
-        console.warn(
-          `[designer-sync] scan timeout at offset ${offset} (${offsetRetries}/${MAX_OFFSET_RETRIES})…`
-        );
-        if (offsetRetries > MAX_OFFSET_RETRIES) {
-          console.warn(`[designer-sync] skipping offset ${offset} after repeated timeouts`);
-          data = [];
-          break;
-        }
-        await sleep(BATCH_DELAY_MS * (offsetRetries + 1));
-        continue;
-      }
-      throw error;
-    }
-
-    if (!data?.length) {
-      if (offsetRetries > MAX_OFFSET_RETRIES) continue;
-      break;
-    }
-
-    for (const row of data) {
-      const slug = String(row.brand_slug || '').trim().toLowerCase();
-      if (!slug) continue;
-      brandCounts.set(slug, (brandCounts.get(slug) || 0) + 1);
-    }
-
-    if (page % 20 === 0) {
-      console.log(`[designer-sync] scanned offset ${offset}, brands so far ${brandCounts.size}`);
-    }
-
-    if (data.length < SCAN_PAGE_SIZE) break;
-    await sleep(BATCH_DELAY_MS);
-  }
-
-  return { brandCounts, timeouts };
+function isTransient(err) {
+  const msg = String(err?.message || err || '');
+  return (
+    err?.code === '57014'
+    || msg.includes('timeout')
+    || msg.includes('fetch failed')
+    || msg.includes('socket')
+  );
 }
 
-async function fetchDesignerSlugsBatched(supabase) {
+async function fetchAllDesignerSlugs(supabase) {
   const slugs = [];
-  for (let offset = 0; offset < 50000; offset += SCAN_PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from('designers')
-      .select('slug')
-      .range(offset, offset + SCAN_PAGE_SIZE - 1);
-
+  for (let offset = 0; offset < 50000; offset += 500) {
+    const { data, error } = await supabase.from('designers').select('slug').range(offset, offset + 499);
     if (error) throw error;
     if (!data?.length) break;
     for (const row of data) {
       const slug = String(row.slug || '').trim().toLowerCase();
       if (slug) slugs.push(slug);
     }
-    if (data.length < SCAN_PAGE_SIZE) break;
-    await sleep(100);
+    if (data.length < 500) break;
   }
   return slugs;
+}
+
+async function fetchCandidateBrandSlugs(supabase) {
+  const slugs = new Set();
+  for (let offset = 0; offset < 200000; offset += 500) {
+    const { data, error } = await supabase
+      .from('products')
+      .select('brand_slug')
+      .eq('approved', 'yes')
+      .gte('natural_fiber_percent', 80)
+      .not('brand_slug', 'is', null)
+      .range(offset, offset + 499);
+    if (error) {
+      if (isTransient(error)) {
+        await sleep(BATCH_DELAY_MS * 2);
+        continue;
+      }
+      throw error;
+    }
+    if (!data?.length) break;
+    for (const row of data) {
+      const slug = String(row.brand_slug || '').trim().toLowerCase();
+      if (slug) slugs.add(slug);
+    }
+    if (data.length < 500) break;
+    if (offset % 5000 === 0) console.log(`[designer-sync] distinct brand slugs so far: ${slugs.size}`);
+    await sleep(100);
+  }
+  return [...slugs];
+}
+
+async function countLiveProductsForBrand(supabase, slug) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { count, error } = await supabase
+      .from('live_products_apparel')
+      .select('id', { count: 'exact', head: true })
+      .eq('brand_slug', slug);
+
+    if (!error) return count ?? 0;
+    if (isTransient(error) && attempt < 2) {
+      await sleep(BATCH_DELAY_MS * (attempt + 2));
+      continue;
+    }
+    return 0;
+  }
+  return 0;
+}
+
+async function buildBrandCounts(supabase, slugs) {
+  const brandCounts = new Map();
+  let timeouts = 0;
+
+  for (let i = 0; i < slugs.length; i += COUNT_BATCH_SIZE) {
+    const batch = slugs.slice(i, i + COUNT_BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map(async (slug) => {
+        try {
+          const count = await countLiveProductsForBrand(supabase, slug);
+          return { slug, count };
+        } catch {
+          timeouts += 1;
+          return { slug, count: 0 };
+        }
+      })
+    );
+    for (const { slug, count } of results) {
+      if (count > 0) brandCounts.set(slug, count);
+    }
+    if (i % 100 === 0) {
+      console.log(`[designer-sync] counted ${Math.min(i + COUNT_BATCH_SIZE, slugs.length)}/${slugs.length} designers…`);
+    }
+    await sleep(BATCH_DELAY_MS);
+  }
+
+  return { brandCounts, timeouts };
 }
 
 async function updateDesignerBatch(supabase, batch, brandCounts, syncedAt) {
@@ -132,31 +152,23 @@ async function runBatchedDesignerSync() {
   let totalLive = 0;
   let timeouts = 0;
 
-  console.log('[designer-sync] scanning live_products_apparel…');
-  const { brandCounts, timeouts: scanTimeouts } = await scanLiveBrandCounts(supabase);
-  timeouts += scanTimeouts;
-  console.log(`[designer-sync] catalog brands: ${brandCounts.size}`);
+  const candidateSlugs = await fetchCandidateBrandSlugs(supabase);
+  const designerSlugs = await fetchAllDesignerSlugs(supabase);
+  console.log(
+    `[designer-sync] counting live products for ${candidateSlugs.length} approved brands (${designerSlugs.length} designer rows)…`
+  );
 
-  const designerSlugs = await fetchDesignerSlugsBatched(supabase);
-  console.log(`[designer-sync] updating ${designerSlugs.length} designers in batches of ${UPDATE_BATCH_SIZE}…`);
+  const { brandCounts, timeouts: countTimeouts } = await buildBrandCounts(supabase, candidateSlugs);
+  timeouts += countTimeouts;
+  console.log(`[designer-sync] ${brandCounts.size} brands with live products`);
 
+  console.log(`[designer-sync] updating designers in batches of ${UPDATE_BATCH_SIZE}…`);
   for (let i = 0; i < designerSlugs.length; i += UPDATE_BATCH_SIZE) {
     const batch = designerSlugs.slice(i, i + UPDATE_BATCH_SIZE);
-    try {
-      const { updated, live } = await updateDesignerBatch(supabase, batch, brandCounts, syncedAt);
-      totalUpdated += updated;
-      totalLive += live;
-      console.log(`[designer-sync] updated ${totalUpdated}/${designerSlugs.length}, live ${totalLive}`);
-    } catch (err) {
-      if (err?.code === '57014') {
-        timeouts += 1;
-        console.warn('[designer-sync] update batch timeout, retrying…');
-        i -= UPDATE_BATCH_SIZE;
-        await sleep(BATCH_DELAY_MS * 2);
-        continue;
-      }
-      throw err;
-    }
+    const { updated, live } = await updateDesignerBatch(supabase, batch, brandCounts, syncedAt);
+    totalUpdated += updated;
+    totalLive += live;
+    console.log(`[designer-sync] updated ${totalUpdated}/${designerSlugs.length}, live ${totalLive}`);
     await sleep(BATCH_DELAY_MS);
   }
 
@@ -165,6 +177,7 @@ async function runBatchedDesignerSync() {
     live: totalLive,
     catalog_brands: brandCounts.size,
     min_live_products: MIN_LIVE_PRODUCTS,
+    source: 'per-slug-count',
     timeouts,
     at: syncedAt,
   };
