@@ -16,32 +16,12 @@ export function EmailBanner() {
     const dismissed = localStorage.getItem("email_banner_dismissed");
     if (dismissed) return;
 
-    let shown = false;
-    const show = () => {
-      if (shown) return;
+    const timer = setTimeout(() => {
       const tokenNow = localStorage.getItem("auth_token");
-      if (!tokenNow) {
-        shown = true;
-        setVisible(true);
-      }
-    };
+      if (!tokenNow) setVisible(true);
+    }, 45000);
 
-    const timer = setTimeout(show, 90000);
-
-    const onScroll = () => {
-      const docHeight = document.documentElement.scrollHeight;
-      if (docHeight <= 0) return;
-      const scrollDepth = (window.scrollY + window.innerHeight) / docHeight;
-      if (scrollDepth >= 0.7) show();
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("scroll", onScroll);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   const handleDismiss = () => {

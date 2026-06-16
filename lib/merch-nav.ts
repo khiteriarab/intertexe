@@ -5,9 +5,10 @@ import { COLLECTION_SECTIONS, FABRIC_SECTIONS } from "./site-architecture";
 
 export const MERCH_NAV = [
   { name: "New In", href: "/shop?sort=new" },
+  { name: "Shop", href: "/shop" },
   {
-    name: "Shop",
-    href: "/shop",
+    name: "Fabrics",
+    href: "/materials",
     children: FABRIC_SECTIONS.map((f) => ({ name: f.label, href: f.href })),
   },
   {
