@@ -73,8 +73,44 @@ async function fetchPendingBatch(sb, afterId) {
   return { data: [], error: new Error('max retries') };
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function resolveGenderScope(product) {
+  const genderScope = classifyGenderScope({
+    category: product.category || '',
+    name: product.name || '',
+    url: product.url || '',
+    gender: product.gender_scope || '',
+  });
+  if (genderScope !== 'unknown') return genderScope;
+
+  const cat = String(product.category || '').toLowerCase();
+  const nam = String(product.name || '').toLowerCase();
+  const u = String(product.url || '').toLowerCase();
+  const blob = `${cat} ${nam} ${u}`;
+  if (/(\bmen\b|\bmens\b|menswear|\/men\/|\/mens\/|\bboys\b|for him\b)/i.test(blob)) return 'men';
+
+  // Generic Rakuten categories (e.g. "Apparel & Accessories") — default women's unless men's signals above.
+  if (
+    cat.includes('apparel')
+    || cat.includes('trouser')
+    || cat.includes('knitwear')
+    || cat.includes('dress')
+    || cat.includes('skirt')
+    || cat.includes('blouse')
+    || cat.includes('top')
+    || cat.includes('jacket')
+    || cat.includes('coat')
+  ) {
+    return 'women';
+  }
+  return 'unknown';
+}
+
+function resolveNfp(product, composition) {
+  const parsed = naturalFiberPercent(composition);
+  const stored = product.natural_fiber_percent;
+  if (parsed != null && parsed > 0) return parsed;
+  if (stored != null && Number(stored) >= 80) return Number(stored);
+  return parsed ?? stored;
 }
 
 function candidatesForApproval(rows) {
@@ -86,15 +122,10 @@ function candidatesForApproval(rows) {
     if (!product.image_url?.trim() || !hasPositivePrice(product.price)) continue;
 
     const composition = String(product.composition || '').trim();
-    const nfp = naturalFiberPercent(composition) ?? product.natural_fiber_percent;
+    const nfp = resolveNfp(product, composition);
     if (nfp == null || nfp < 80) continue;
 
-    const genderScope = classifyGenderScope({
-      category: product.category || '',
-      name: product.name || '',
-      url: product.url || '',
-      gender: product.gender_scope || '',
-    });
+    const genderScope = resolveGenderScope(product);
     const approvedStatus = approvalStatus(
       nfp,
       composition,
