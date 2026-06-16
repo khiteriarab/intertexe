@@ -3,10 +3,11 @@ import { unstable_cache } from "next/cache";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
 import { LIVE_CATALOG_TABLE } from "../../../lib/global-catalog-scope";
 import {
+  HOMEPAGE_BRANDS_REVALIDATE_SEC,
   STATS_CACHE_HEADERS,
 } from "../../../lib/homepage-cache-config";
 
-export const revalidate = 21600; // HOMEPAGE_BRANDS_REVALIDATE_SEC — must be literal for Next.js route config
+export const revalidate = HOMEPAGE_BRANDS_REVALIDATE_SEC;
 
 type FeaturedBrandPayload = {
   slug: string;

@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { getCachedHomePageData } from "../../../lib/homepage-data";
 import {
   HOMEPAGE_CACHE_HEADERS,
+  HOMEPAGE_REVALIDATE_SEC,
 } from "../../../lib/homepage-cache-config";
 
-export const revalidate = 3600; // HOMEPAGE_REVALIDATE_SEC — must be literal for Next.js route config
+export const revalidate = HOMEPAGE_REVALIDATE_SEC;
 
 export async function GET() {
   try {
