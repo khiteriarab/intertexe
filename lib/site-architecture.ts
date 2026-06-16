@@ -69,4 +69,8 @@ export const COLLECTION_SECTIONS = [
 
 export type CollectionSectionConfig = (typeof COLLECTION_SECTIONS)[number];
 
-export const HOMEPAGE_COLLECTION_SLUGS = COLLECTION_SECTIONS.map((c) => c.slug);
+export const HOMEPAGE_COLLECTION_SECTIONS = COLLECTION_SECTIONS.filter((c) =>
+  (["vacation", "evening", "tailoring"] as const).includes(c.slug as "vacation" | "evening" | "tailoring")
+);
+
+export const HOMEPAGE_COLLECTION_SLUGS = HOMEPAGE_COLLECTION_SECTIONS.map((c) => c.slug);
