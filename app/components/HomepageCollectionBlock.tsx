@@ -1,8 +1,7 @@
 "use client";
 
-import { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { canonicalProductId } from "../../lib/canonical-product-id";
@@ -25,7 +24,7 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
   return (
     <Link
       href={productHref}
-      className={`group flex flex-col ${HORIZONTAL_RAIL_PRODUCT_CARD_CLASS} w-[140px] xl:w-[155px]`}
+      className={`group flex flex-col ${HORIZONTAL_RAIL_PRODUCT_CARD_CLASS} w-[132px] sm:w-[148px] xl:w-[155px]`}
       data-rail-card
       draggable={false}
     >
@@ -64,14 +63,8 @@ export function HomepageCollectionBlock({
   subtitle: string;
 }) {
   const shopOnLeft = SHOP_ON_LEFT_SLUGS.has(collection.slug);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const imageUrl = editorialHeroForSlug(collection.slug);
   const hasItems = products.length > 0;
-
-  const scroll = (dir: "left" | "right") => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({ left: dir === "left" ? -320 : 320, behavior: "smooth" });
-  };
 
   const editorial = (
     <Link
@@ -108,36 +101,15 @@ export function HomepageCollectionBlock({
   );
 
   const shopRail = (
-    <div className="flex flex-col justify-center h-full w-full py-10 lg:py-12 px-6 md:px-10 xl:px-12 bg-[#FAFAF8]">
+    <div className="flex flex-col justify-center h-full w-full py-6 lg:py-8 px-4 md:px-6 xl:px-8 bg-[#FAFAF8]">
       <h2 className="sr-only">{title}</h2>
       <p className="sr-only">{subtitle}</p>
-      <div className="flex items-end justify-end gap-4 mb-6">
-        <div className="flex gap-2 flex-shrink-0">
-          <button
-            type="button"
-            onClick={() => scroll("left")}
-            className="w-9 h-9 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => scroll("right")}
-            className="w-9 h-9 border border-neutral-200 flex items-center justify-center hover:border-neutral-400 transition-colors"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
 
       <div
-        ref={scrollRef}
-        className={`${HORIZONTAL_RAIL_INSET_CLASS} gap-3 min-h-[200px]`}
+        className={`${HORIZONTAL_RAIL_INSET_CLASS} gap-2.5 md:gap-3 min-h-[180px] -mx-1`}
       >
         {hasItems ? (
-          products.slice(0, 12).map((product: any, i: number) => (
+          products.slice(0, 16).map((product: any, i: number) => (
             <CollectionProductCard key={product.id} product={product} eager={i < 4} />
           ))
         ) : (
@@ -147,20 +119,12 @@ export function HomepageCollectionBlock({
         )}
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-        <Link
-          href={collection.href}
-          className="text-[10px] uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2 w-fit"
-        >
-          View full collection <ArrowRight className="w-3 h-3" />
-        </Link>
-        <Link
-          href="/shop"
-          className="text-[10px] uppercase tracking-[0.15em] text-neutral-800 hover:text-neutral-500 transition-colors flex items-center gap-2 w-fit font-medium"
-        >
-          Shop all <ArrowRight className="w-3 h-3" />
-        </Link>
-      </div>
+      <Link
+        href={collection.href}
+        className="mt-4 text-[10px] uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2 w-fit"
+      >
+        View full collection <ArrowRight className="w-3 h-3" />
+      </Link>
     </div>
   );
 
@@ -170,7 +134,7 @@ export function HomepageCollectionBlock({
       data-testid={`homepage-collection-${collection.slug}`}
     >
       <section className="lg:hidden w-full layout-bleed-full">{editorial}</section>
-      <section className="lg:hidden w-full layout-bleed-full py-10 md:py-14 px-4 md:px-8">{shopRail}</section>
+      <section className="lg:hidden w-full layout-bleed-full py-6 md:py-8 px-3 md:px-6">{shopRail}</section>
 
       <section className="hidden lg:grid w-full grid-cols-2 gap-0 layout-bleed-full min-h-[min(68vh,620px)] max-h-[720px]">
         {shopOnLeft ? (
