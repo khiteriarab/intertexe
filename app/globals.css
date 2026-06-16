@@ -143,8 +143,8 @@
   width: 100%;
   overflow: hidden;
   background: #1c1c1c;
-  min-height: 100svh;
-  height: 100svh;
+  height: calc(100vh - 64px);
+  min-height: calc(100vh - 64px);
 }
 
 /* next/image fill — avoid subpixel blur from transform stacking */
@@ -186,14 +186,13 @@
   height: clamp(520px, 88vh, 900px);
 }
 
-/* Homepage hero — mobile: full viewport below sticky nav */
+/* Homepage hero — mobile */
 .homepage-hero-frame-mobile {
   position: relative;
   width: 100%;
   overflow: hidden;
   background: #1c1c1c;
-  min-height: 100svh;
-  height: 100svh;
+  height: clamp(520px, 88vh, 900px);
 }
 
 .editorial-frame-panel {
