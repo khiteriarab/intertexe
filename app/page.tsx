@@ -10,8 +10,10 @@ import {
 } from "../lib/catalog-stats-labels";
 import { HomePageContent } from "./components/HomeClient";
 
+import { HOMEPAGE_REVALIDATE_SEC } from "../lib/homepage-cache-config";
+
 /** Cached editorial homepage — rails precomputed in Supabase, stats cached server-side. */
-export const revalidate = 300;
+export const revalidate = HOMEPAGE_REVALIDATE_SEC;
 
 export async function generateMetadata(): Promise<Metadata> {
   const [platformStats, brandStats] = await Promise.all([

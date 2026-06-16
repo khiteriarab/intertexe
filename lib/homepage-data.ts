@@ -23,6 +23,7 @@ import { getCachedPlatformStats } from "./cached-catalog";
 import { enrichDesignersWithHeroImages } from "./brand-hero-selection";
 import { getServerSupabase } from "./supabase-service-client";
 import { filterHomepageSaleProducts } from "./homepage-sale-filter";
+import { HOMEPAGE_REVALIDATE_SEC } from "./homepage-cache-config";
 
 /** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
@@ -393,6 +394,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v4"],
-  { revalidate: 300, tags: ["homepage"] }
+  ["homepage-payload-v5"],
+  { revalidate: HOMEPAGE_REVALIDATE_SEC, tags: ["homepage"] }
 );

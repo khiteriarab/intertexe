@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
-import { getHomePageData } from "../../../lib/homepage-data";
-export const revalidate = 300;
+import { getCachedHomePageData } from "../../../lib/homepage-data";
+import {
+  HOMEPAGE_CACHE_HEADERS,
+  HOMEPAGE_REVALIDATE_SEC,
+} from "../../../lib/homepage-cache-config";
 
-const PRODUCT_CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-  "CDN-Cache-Control": "public, max-age=300",
-};
+export const revalidate = HOMEPAGE_REVALIDATE_SEC;
 
 export async function GET() {
   try {
-    const data = await getHomePageData();
+    const data = await getCachedHomePageData();
     return NextResponse.json(data, {
-      headers: PRODUCT_CACHE_HEADERS,
+      headers: HOMEPAGE_CACHE_HEADERS,
     });
   } catch (error) {
+    console.error("[api/homepage]", error);
     return NextResponse.json({ error: "Failed to fetch homepage data" }, { status: 500 });
   }
 }

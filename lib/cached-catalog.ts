@@ -5,8 +5,10 @@ import { unstable_cache } from "next/cache";
 import { fetchBrandStats, fetchSaleProducts } from "./supabase-server";
 import { fetchPlatformStats, type PlatformStats } from "./platform-stats";
 
-const STATS_REVALIDATE = 600;
-const BRAND_DIR_REVALIDATE = 900;
+import { HOMEPAGE_STATS_REVALIDATE_SEC } from "./homepage-cache-config";
+
+const STATS_REVALIDATE = HOMEPAGE_STATS_REVALIDATE_SEC;
+const BRAND_DIR_REVALIDATE = HOMEPAGE_STATS_REVALIDATE_SEC;
 const SALE_PAGE_REVALIDATE = 600;
 
 export type BrandStat = {
