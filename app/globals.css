@@ -167,14 +167,14 @@
   margin-right: calc(50% - 50vw);
 }
 
-/* Homepage hero — desktop */
+/* Homepage hero — desktop (lg+ only in HomepageHeroSection); full viewport below sticky nav */
 .homepage-hero-desktop-frame {
   position: relative;
   width: 100%;
   overflow: hidden;
   background: #1c1c1c;
-  height: clamp(480px, 72vh, 720px);
-  min-height: clamp(480px, 72vh, 720px);
+  min-height: 100svh;
+  height: 100svh;
 }
 
 /* next/image fill — avoid subpixel blur from transform stacking */
@@ -216,14 +216,14 @@
   height: clamp(520px, 88vh, 900px);
 }
 
-/* Homepage hero — mobile */
+/* Homepage hero — mobile: full viewport below sticky nav */
 .homepage-hero-frame-mobile {
   position: relative;
   width: 100%;
   overflow: hidden;
   background: #1c1c1c;
-  height: clamp(440px, 68vh, 640px);
-  min-height: clamp(440px, 68vh, 640px);
+  min-height: 100svh;
+  height: 100svh;
 }
 
 .editorial-frame-panel {
