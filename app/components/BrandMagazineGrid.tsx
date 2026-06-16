@@ -40,7 +40,7 @@ function MagazineBrandTile({
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 z-10 p-5 md:p-7">
-        <h3 className="text-[18px] leading-[1.2] text-white font-semibold uppercase tracking-[0.08em] group-hover:text-white/80 transition-colors">
+        <h3 className="text-title text-white font-semibold uppercase tracking-[0.08em] group-hover:text-white/80 transition-colors">
           {designer.name}
         </h3>
       </div>

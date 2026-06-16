@@ -562,16 +562,12 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         <section data-testid="homepage-brands-section">
           <div className="flex justify-between items-end px-6 md:px-14 py-8 md:py-10">
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] leading-[1.3] tracking-[0.14em] uppercase text-neutral-400">
-                Curated
-              </span>
-              <h2 className="text-[28px] leading-[1.1] font-serif font-light">
-                Brands we love
-              </h2>
+              <span className="text-label uppercase text-neutral-400">Curated</span>
+              <h2 className="text-headline">Brands we love</h2>
             </div>
             <Link
               href="/designers"
-              className="text-[11px] leading-[1.3] tracking-[0.14em] uppercase text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2"
+              className="text-label uppercase text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2"
               data-testid="link-brands-view-all"
             >
               View all <ArrowRight className="w-3 h-3" />
@@ -612,17 +608,14 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         minHeightClass="min-h-[85svh]"
       />
 
-      <section className="py-16 md:py-28 flex flex-col items-center text-center">
-        <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-neutral-400 mb-5 md:mb-7">
+      <section className="layout-bleed-full w-full py-20 flex flex-col items-center text-center bg-[#F5F3EF]">
+        <p className="text-label uppercase text-neutral-400 mb-5 md:mb-7">
           Personalized for you
         </p>
-        <h2 className="text-[28px] md:text-[44px] font-serif leading-[1.1] mb-5 md:mb-7 max-w-lg">Find your fabric persona</h2>
-        <p className="text-neutral-500 text-[13px] md:text-[16px] max-w-md leading-relaxed font-light mb-8 md:mb-12">
-          Take our 1-minute quiz. We&apos;ll match you with your fabric identity and recommend the designers you&apos;ll love.
-        </p>
+        <h2 className="text-headline md:text-display mb-8 md:mb-10 max-w-lg">Find your fabric persona</h2>
         <Link
           href="/quiz"
-          className="border border-neutral-800 text-neutral-800 px-10 py-4 uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-light hover:bg-neutral-800 hover:text-white transition-all duration-500 active:scale-[0.97]"
+          className="border border-neutral-800 text-neutral-800 px-10 py-4 text-label uppercase font-light hover:bg-neutral-800 hover:text-white transition-all duration-500 active:scale-[0.97]"
           data-testid="button-cta-quiz"
         >
           Take the quiz
