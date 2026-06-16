@@ -113,6 +113,10 @@ function resolveNfp(product, composition) {
   return parsed ?? stored;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function candidatesForApproval(rows) {
   const activeIds = [];
   const inactiveIds = [];
