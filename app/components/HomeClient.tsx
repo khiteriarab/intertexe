@@ -9,8 +9,8 @@ import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
-import { editorialHeroForSlug } from "../../lib/editorial-assets";
-import { HOMEPAGE_COLLECTION_SECTIONS } from "../../lib/site-architecture";
+import { editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
+import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import {
   HORIZONTAL_RAIL_BLEED_CLASS,
   HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS,
@@ -22,8 +22,6 @@ import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
 import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
-import { HomepageEditorialCover } from "./HomepageEditorialCover";
-import { BrandMagazineGrid } from "./BrandMagazineGrid";
 import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
@@ -547,41 +545,37 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         <AppDownloadBanner />
       </div>
 
-      <HomepageEditorialCover
-        href="/shop?sort=new"
-        imageUrl={editorialHeroForSlug("newIn")}
-        kicker="Just landed"
-        title="New In"
-        cta="Shop new arrivals"
-        testId="homepage-new-in-cover"
-        slug="newIn"
-        minHeightClass="min-h-[85svh]"
-      />
+      <section className="py-10 md:py-20 lg:pt-16">
+        <HorizontalProductScroll
+          products={data.newInProducts}
+          title={HOMEPAGE_RAIL_LABELS.newInProducts.title}
+          subtitle={HOMEPAGE_RAIL_LABELS.newInProducts.subtitle}
+          linkHref="/shop?sort=new"
+          linkText="Shop New In"
+          eager
+          fullWidth
+          limit={16}
+        />
+      </section>
 
       {curatedOrdered.length > 0 && (
-        <section data-testid="homepage-brands-section">
-          <div className="flex justify-between items-end px-6 md:px-14 py-8 md:py-10">
-            <div className="flex flex-col gap-1">
-              <span className="text-[11px] leading-[1.3] tracking-[0.14em] uppercase text-neutral-400">
-                Curated
-              </span>
-              <h2 className="text-[28px] leading-[1.1] font-serif font-light">
-                Brands we love
-              </h2>
-            </div>
+        <section className="py-10 md:py-20 border-t border-neutral-200/60">
+          <div className="flex justify-between items-end mb-6 md:mb-8">
+            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
+              Brands we love
+            </p>
             <Link
               href="/designers"
-              className="text-[11px] leading-[1.3] tracking-[0.14em] uppercase text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2"
-              data-testid="link-brands-view-all"
+              className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
             >
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <BrandMagazineGrid designers={curatedOrdered} />
+          <BrandGrid designers={curatedOrdered} productCounts={data.productCountByBrand} />
         </section>
       )}
 
-      {HOMEPAGE_COLLECTION_SECTIONS.map((collection) => {
+      {COLLECTION_SECTIONS.map((collection) => {
         const productsKey = COLLECTION_PRODUCTS_KEY[collection.slug];
         const products = (data[productsKey] as any[]) || [];
         const labels =
@@ -595,22 +589,11 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
             products={products}
             title={labels.title}
             subtitle={labels.subtitle}
-            coverOnly
           />
         );
       })}
 
-      <HomepageEditorialCover
-        href="/sale"
-        imageUrl={editorialHeroForSlug("cashmere")}
-        kicker="Reduced"
-        title="The Edit"
-        body="Natural fibers, now less."
-        cta="Shop sale"
-        testId="homepage-sale-cover"
-        slug="cashmere"
-        minHeightClass="min-h-[85svh]"
-      />
+      <SaleHomeRail products={data.saleProducts} />
 
       <section className="py-16 md:py-28 flex flex-col items-center text-center">
         <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-neutral-400 mb-5 md:mb-7">
