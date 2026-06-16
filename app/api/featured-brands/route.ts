@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { unstable_cache } from "next/cache";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
-import {
-  HOMEPAGE_BRANDS_REVALIDATE_SEC,
-  STATS_CACHE_HEADERS,
-} from "../../../lib/homepage-cache-config";
 
-export const revalidate = HOMEPAGE_BRANDS_REVALIDATE_SEC;
+export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 type FeaturedBrandPayload = {
   slug: string;
@@ -17,10 +13,14 @@ type FeaturedBrandPayload = {
   new_count: number;
 };
 
-async function fetchFeaturedBrands(limit: number): Promise<FeaturedBrandPayload[]> {
+export async function GET(request: NextRequest) {
   const supabase = getServerSupabase();
-  if (!supabase) return [];
+  if (!supabase) {
+    return NextResponse.json({ brands: [] }, { status: 200 });
+  }
 
+  const limitParam = Number(request.nextUrl.searchParams.get("limit") || "5");
+  const limit = Math.min(Math.max(Number.isFinite(limitParam) ? Math.floor(limitParam) : 5, 1), 10);
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: recentRows, error: recentError } = await supabase
@@ -30,7 +30,9 @@ async function fetchFeaturedBrands(limit: number): Promise<FeaturedBrandPayload[
     .order("created_at", { ascending: false })
     .limit(12000);
 
-  if (recentError || !recentRows?.length) return [];
+  if (recentError || !recentRows?.length) {
+    return NextResponse.json({ brands: [] }, { status: 200 });
+  }
 
   const counts = new Map<string, { name: string; count: number }>();
   for (const row of recentRows) {
@@ -92,25 +94,5 @@ async function fetchFeaturedBrands(limit: number): Promise<FeaturedBrandPayload[
     });
   }
 
-  return brands;
-}
-
-const getCachedFeaturedBrands = (limit: number) =>
-  unstable_cache(
-    async () => fetchFeaturedBrands(limit),
-    ["featured-brands-v2", String(limit)],
-    { revalidate: HOMEPAGE_BRANDS_REVALIDATE_SEC, tags: ["featured-brands"] }
-  )();
-
-export async function GET(request: NextRequest) {
-  const limitParam = Number(request.nextUrl.searchParams.get("limit") || "5");
-  const limit = Math.min(Math.max(Number.isFinite(limitParam) ? Math.floor(limitParam) : 5, 1), 10);
-
-  try {
-    const brands = await getCachedFeaturedBrands(limit);
-    return NextResponse.json({ brands }, { headers: STATS_CACHE_HEADERS });
-  } catch (error) {
-    console.error("[api/featured-brands]", error);
-    return NextResponse.json({ brands: [] }, { status: 200 });
-  }
+  return NextResponse.json({ brands }, { status: 200 });
 }
