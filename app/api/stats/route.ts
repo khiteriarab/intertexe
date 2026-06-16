@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getCachedPlatformStats } from "../../../lib/cached-catalog";
-import { getCachedRegionalCatalogStats } from "../../../lib/regional-catalog-stats";
 import {
   HOMEPAGE_STATS_REVALIDATE_SEC,
   STATS_CACHE_HEADERS,
@@ -10,16 +9,11 @@ export const revalidate = HOMEPAGE_STATS_REVALIDATE_SEC;
 
 export async function GET() {
   try {
-    const [stats, regions] = await Promise.all([
-      getCachedPlatformStats(),
-      getCachedRegionalCatalogStats(),
-    ]);
-
+    const stats = await getCachedPlatformStats();
     return NextResponse.json(
       {
         productCount: stats.productCount,
         brandCount: stats.brandCount,
-        regions,
         lastUpdated: new Date().toISOString(),
       },
       { headers: STATS_CACHE_HEADERS }
