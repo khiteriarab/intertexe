@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HOMEPAGE_HERO_IMAGE } from "@/lib/editorial-assets";
+import { CATALOG_STATS } from "@/lib/catalog-stats";
 import { PressKitToolbar } from "./PressKitToolbar";
 import "./press-kit.css";
 
@@ -82,11 +83,11 @@ export default function PressKitPage() {
       <section className="page-break press-section bg-white">
         <div className="press-stat-grid">
           <div>
-            <p className="press-stat-number">84,704+</p>
+            <p className="press-stat-number">{CATALOG_STATS.productCountFormatted}</p>
             <p className="press-stat-label">Verified natural fiber pieces</p>
           </div>
           <div>
-            <p className="press-stat-number">253+</p>
+            <p className="press-stat-number">{CATALOG_STATS.brandCountFormatted}</p>
             <p className="press-stat-label">Brands vetted and listed</p>
           </div>
           <div>

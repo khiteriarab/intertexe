@@ -25,6 +25,7 @@ import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
 import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
+import { CATALOG_STATS } from "../../lib/catalog-stats";
 
 const SIGNUP_URL = "/signup";
 const BLUR_DATA_URL =
@@ -523,11 +524,11 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
   const displayCount =
     data.productCount > 0
       ? formatProductCountLabel(data.productCount)
-      : "84,704+";
+      : CATALOG_STATS.productCountFormatted;
   const displayBrands =
     data.brandCount > 0
       ? `${new Intl.NumberFormat("en-US").format(data.brandCount)}+`
-      : "99+";
+      : CATALOG_STATS.brandCountFormatted;
 
   const curatedOrdered = CURATED_BRAND_SLUGS.map((slug) =>
     data.curatedDesigners.find((d: { slug?: string }) => d.slug === slug)

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { CATALOG_INITIAL_PAGE } from "../../lib/catalog-rules";
+import { CATALOG_STATS } from "../../lib/catalog-stats";
 import ShopClient from "./ShopClient";
 import { formatListingPrice } from "../../lib/format-display-price";
 import { getShopBrands, getShopMeta } from "./actions";
@@ -13,7 +14,7 @@ export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Shop Natural Fiber Clothing | Silk, Cashmere, Linen, Wool",
   description:
-    "Shop 149,000+ verified natural fiber pieces. Silk dresses, cashmere knitwear, linen tops, wool trousers and cotton basics from Zimmermann, Isabel Marant, Toteme and 370+ luxury brands.",
+    `Shop ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces. Silk dresses, cashmere knitwear, linen tops, wool trousers and cotton basics from Zimmermann, Isabel Marant, Toteme and ${CATALOG_STATS.brandCountFormatted} luxury brands.`,
   keywords:
     "shop natural fabric clothing, silk clothing, linen clothing, cotton clothing, wool clothing, cashmere clothing, verified natural fibers, INTERTEXE shop",
   alternates: {

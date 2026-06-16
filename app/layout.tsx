@@ -5,6 +5,7 @@ import { CookieConsent } from "./components/CookieConsent";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GENERIC_SITE_DESCRIPTION } from "../lib/catalog-stats-labels";
+import { CATALOG_STATS } from "../lib/catalog-stats";
 import {
   GLOBAL_ROBOTS,
   OG_IMAGE,
@@ -14,10 +15,10 @@ import {
 } from "../lib/seo-international";
 
 const HOME_DESCRIPTION =
-  "Discover 149,474 verified natural fiber pieces across 373 brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to find better natural fiber alternatives at your price point.";
+  `Discover ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces across ${CATALOG_STATS.brandCountFormatted} brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to find better natural fiber alternatives at your price point.`;
 
 const OG_DESCRIPTION =
-  "Shop 149,000+ verified natural fiber pieces. Silk, cashmere, linen, wool and cotton from Zimmermann, Isabel Marant, Toteme and 370+ brands.";
+  `Shop ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces. Silk, cashmere, linen, wool and cotton from Zimmermann, Isabel Marant, Toteme and ${CATALOG_STATS.brandCountFormatted} brands.`;
 
 export const metadata: Metadata = {
   title: {
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
     site: "@shopintertexe",
     title: "INTERTEXE | Natural Fiber Fashion Discovery",
     description:
-      "Shop 149,000+ verified natural fiber pieces. Scan any label to find better natural fiber alternatives at your price point.",
+      `Shop ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces. Scan any label to find better natural fiber alternatives at your price point.`,
     images: [OG_IMAGE.url],
   },
   icons: {

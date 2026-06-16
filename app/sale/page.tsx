@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { fetchSaleProducts } from "../../lib/supabase-server";
+import { CATALOG_STATS } from "../../lib/catalog-stats";
 import SaleClient from "./SaleClient";
 
 export const revalidate = 0;
@@ -7,7 +8,7 @@ export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Natural Fiber Sale | Silk, Cashmere, Linen On Sale",
   description:
-    "Shop sale pieces verified to contain natural fibers. Silk, cashmere, linen, wool and cotton from luxury brands at reduced prices.",
+    `Shop sale pieces from ${CATALOG_STATS.brandCountFormatted} luxury brands verified to contain natural fibers. Silk, cashmere, linen, wool and cotton at reduced prices.`,
   alternates: {
     canonical: "https://www.intertexe.com/sale",
     languages: {

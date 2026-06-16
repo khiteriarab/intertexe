@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CATALOG_STATS } from "../../lib/catalog-stats";
 
 export const metadata: Metadata = {
   title: "INTERTEXE Platform — Digital Product Passport Infrastructure",
@@ -93,7 +94,7 @@ export default function PlatformPage() {
             <span>·</span>
             <span>28,509 brand prefixes indexed</span>
             <span>·</span>
-            <span>253+ brands verified</span>
+            <span>{CATALOG_STATS.brandCountFormatted} brands verified</span>
             <span>·</span>
             <span>Growing with every scan</span>
           </div>

@@ -5,6 +5,7 @@ import {
   formatBrandCountLabel,
   formatProductCountLabel,
 } from "../../lib/catalog-stats-labels";
+import { CATALOG_STATS } from "../../lib/catalog-stats";
 
 export const metadata: Metadata = {
   title: "About INTERTEXE — The Natural Fabric Fashion Search Engine",
@@ -59,7 +60,7 @@ export default async function AboutPage() {
         >
           <div className="flex flex-col gap-1" data-testid="stat-brands-vetted">
             <span className="text-3xl md:text-4xl font-serif font-light text-foreground">
-              {platformStats.brandCount > 0 ? brandLabel : "253+"}
+              {platformStats.brandCount > 0 ? brandLabel : CATALOG_STATS.brandCountFormatted}
             </span>
             <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
               brands vetted
@@ -67,7 +68,7 @@ export default async function AboutPage() {
           </div>
           <div className="flex flex-col gap-1" data-testid="stat-products-verified">
             <span className="text-3xl md:text-4xl font-serif font-light text-foreground">
-              {platformStats.productCount > 0 ? productLabel : "84,704+"}
+              {platformStats.productCount > 0 ? productLabel : CATALOG_STATS.productCountFormatted}
             </span>
             <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
               verified pieces

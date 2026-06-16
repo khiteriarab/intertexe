@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PressDownloadLinks } from "./PressDownloadLinks";
+import { CATALOG_STATS } from "../../lib/catalog-stats";
 
 export const metadata: Metadata = {
   title: "Press",
@@ -33,11 +34,11 @@ export default function PressPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-16 border-t border-b border-border/30 py-12">
         <div>
-          <p className="text-3xl font-light font-serif text-foreground">84,704+</p>
+          <p className="text-3xl font-light font-serif text-foreground">{CATALOG_STATS.productCountFormatted}</p>
           <p className="text-[10px] text-muted-foreground tracking-widest mt-1 uppercase">Verified pieces</p>
         </div>
         <div>
-          <p className="text-3xl font-light font-serif text-foreground">253+</p>
+          <p className="text-3xl font-light font-serif text-foreground">{CATALOG_STATS.brandCountFormatted}</p>
           <p className="text-[10px] text-muted-foreground tracking-widest mt-1 uppercase">Brands vetted</p>
         </div>
         <div>

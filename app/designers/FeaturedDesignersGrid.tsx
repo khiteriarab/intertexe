@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback } from "react";
 import type { FeaturedDesignerCard } from "../../lib/featured-designers";
+import { CATALOG_STATS } from "../../lib/catalog-stats";
 
 function BrandFeaturedCard({ brand }: { brand: FeaturedDesignerCard }) {
   const src = brand.heroImageUrl || "";
@@ -78,7 +79,7 @@ export function FeaturedDesignersGrid({
     );
   }
 
-  const vettedLabel = vettedBrandCount > 0 ? vettedBrandCount.toLocaleString() : "253";
+  const vettedLabel = vettedBrandCount > 0 ? vettedBrandCount.toLocaleString() : CATALOG_STATS.brandCount.toLocaleString();
 
   return (
     <section className="flex flex-col" data-testid="section-featured-designers">
