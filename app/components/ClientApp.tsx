@@ -57,7 +57,7 @@ export function ClientApp({ children }: { children: ReactNode }) {
         }`}
       >
         {!minimalChrome && <Navbar />}
-        {!minimalChrome && <SignInBenefitsBanner />}
+        {!minimalChrome && pathname !== "/" && <SignInBenefitsBanner />}
         <main
           className={
             minimalChrome

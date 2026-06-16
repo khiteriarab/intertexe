@@ -45,10 +45,6 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
   );
 }
 
-/**
- * Homepage collection edit — mobile: image then rail below.
- * Desktop: image left, product rail right (avoids ultra-wide crop on landscape heroes).
- */
 /** When true, desktop layout is products left / editorial image right (Evening, Summer in the City). */
 const SHOP_ON_LEFT_SLUGS = new Set(["evening", "summer-in-the-city"]);
 
@@ -57,11 +53,14 @@ export function HomepageCollectionBlock({
   products,
   title,
   subtitle,
+  coverOnly = false,
 }: {
   collection: CollectionSectionConfig;
   products: any[];
   title: string;
   subtitle: string;
+  /** Full-bleed cover only — no product rail. */
+  coverOnly?: boolean;
 }) {
   const shopOnLeft = SHOP_ON_LEFT_SLUGS.has(collection.slug);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -76,7 +75,9 @@ export function HomepageCollectionBlock({
   const editorial = (
     <Link
       href={collection.href}
-      className="group relative block w-full h-full min-h-[380px] lg:min-h-0 overflow-hidden touch-manipulation"
+      className={`group relative block w-full overflow-hidden touch-manipulation ${
+        coverOnly ? "min-h-[85svh] h-[85svh]" : "h-full min-h-[380px] lg:min-h-0"
+      }`}
       data-testid={`link-collection-${collection.slug}`}
     >
       {imageUrl && (
@@ -86,26 +87,41 @@ export function HomepageCollectionBlock({
           variant="collection"
           slug={collection.slug}
           title={collection.label}
-          className="h-full min-h-[380px] lg:min-h-full lg:absolute lg:inset-0"
+          className={
+            coverOnly
+              ? "absolute inset-0 h-full min-h-full"
+              : "h-full min-h-[380px] lg:min-h-full lg:absolute lg:inset-0"
+          }
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 md:p-10 gap-2">
-        <span className="text-white/45 text-[9px] md:text-[10px] uppercase tracking-[0.35em] font-light">
-          {collection.kicker}
-        </span>
-        <h3 className="text-white text-[28px] md:text-[36px] lg:text-[40px] font-serif leading-[1.08] max-w-md">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 md:p-10 lg:px-14 lg:pb-20 gap-2">
+        <span className="text-label text-white/50 uppercase">{collection.kicker}</span>
+        <h3 className={`text-white ${coverOnly ? "text-display" : "text-[28px] md:text-[36px] lg:text-[40px] font-serif leading-[1.08]"}`}>
           {collection.label}
         </h3>
-        <p className="text-white/55 text-[11px] md:text-[12px] font-light max-w-sm leading-relaxed mt-1 normal-case tracking-normal">
-          {collection.subtitle}
-        </p>
-        <span className="text-white/70 text-[10px] uppercase tracking-[0.2em] mt-3 md:mt-4 flex items-center gap-2 group-hover:gap-3 group-hover:text-white transition-all duration-300">
+        {!coverOnly && (
+          <p className="text-white/55 text-[11px] md:text-[12px] font-light max-w-sm leading-relaxed mt-1 normal-case tracking-normal">
+            {collection.subtitle}
+          </p>
+        )}
+        <span className="text-label text-white/75 uppercase mt-3 md:mt-4 flex items-center gap-2 group-hover:gap-3 group-hover:text-white transition-all duration-300">
           Discover <ArrowRight className="w-3.5 h-3.5" />
         </span>
       </div>
     </Link>
   );
+
+  if (coverOnly) {
+    return (
+      <div
+        className="w-full max-w-none"
+        data-testid={`homepage-collection-${collection.slug}`}
+      >
+        <section className="w-full layout-bleed-full">{editorial}</section>
+      </div>
+    );
+  }
 
   const shopRail = (
     <div className="flex flex-col justify-center h-full w-full py-10 lg:py-12 px-6 md:px-10 xl:px-12 bg-[#FAFAF8]">

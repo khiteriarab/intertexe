@@ -48,7 +48,7 @@ function AppDownloadBanner() {
 
   return (
     <div
-      className="w-full shrink-0 bg-[#111] text-white flex flex-wrap items-center gap-3 px-4 md:px-6 py-2.5"
+      className="w-full shrink-0 bg-[#1a2e1a] text-white flex flex-wrap items-center gap-3 px-4 md:px-6 py-2.5"
       data-testid="banner-app-download"
     >
       <button
@@ -538,11 +538,11 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     <div className="flex flex-col w-full max-w-full">
 
       <div className="layout-bleed-full flex flex-col w-full overflow-hidden">
-        <AppDownloadBanner />
         <HomepageHeroSection
           productCountLabel={displayCount}
           brandCountLabel={displayBrands.replace(/\+$/, "")}
         />
+        <AppDownloadBanner />
       </div>
 
       <section className="py-10 md:py-20 lg:pt-16">
@@ -594,20 +594,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       })}
 
       <SaleHomeRail products={data.saleProducts} />
-
-      <section className="-mx-4 md:-mx-8 bg-[#f8f7f5]">
-        <div className="max-w-5xl mx-auto py-10 md:py-14 px-6 md:px-12">
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs tracking-widest text-gray-500 uppercase">
-            <span>{displayBrands} brands</span>
-            <span aria-hidden>·</span>
-            <span>{displayCount} pieces</span>
-            <span aria-hidden>·</span>
-            <span>95%+ natural fiber</span>
-            <span aria-hidden>·</span>
-            <span>Every composition verified</span>
-          </div>
-        </div>
-      </section>
 
       <section className="py-16 md:py-28 flex flex-col items-center text-center">
         <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-neutral-400 mb-5 md:mb-7">
