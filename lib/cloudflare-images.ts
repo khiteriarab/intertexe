@@ -1,3 +1,22 @@
+const CF_IMAGE_PROXY_BASE = "https://intertexe.com";
+
+function shouldBypassCloudflareImageProxy(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl);
+    const host = parsed.hostname.toLowerCase();
+    // Shopify CDN assets can reject Cloudflare image re-fetching (403 cf-resized err=9408).
+    return (
+      host === "cdn.shopify.com" ||
+      host.endsWith(".cdn.shopify.com") ||
+      host.endsWith(".myshopify.com") ||
+      host.endsWith(".shopifycdn.net") ||
+      host.endsWith(".shopifyusercontent.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function cfImage(
   url: string | null | undefined,
   options: {
@@ -12,6 +31,7 @@ export function cfImage(
 
   if (url.includes("cdn-cgi/image")) return url;
   if (url.startsWith("/") || url.startsWith("data:")) return url;
+  if (shouldBypassCloudflareImageProxy(url)) return url;
 
   const {
     width = 800,
@@ -31,7 +51,9 @@ export function cfImage(
     .filter(Boolean)
     .join(",");
 
-  return `https://intertexe.com/cdn-cgi/image/${params}/${url}`;
+  // Encode the source URL segment so query strings (e.g. `...?v=...&width=...`)
+  // don't get interpreted as this proxy's query string and break resizing.
+  return `${CF_IMAGE_PROXY_BASE}/cdn-cgi/image/${params}/${encodeURIComponent(url)}`;
 }
 
 export const cfProductCard = (url: string | null | undefined) =>

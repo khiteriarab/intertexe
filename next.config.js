@@ -10,8 +10,15 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.shopify.com' },
+      { protocol: 'https', hostname: 'intertexe.com' },
+      { protocol: 'https', hostname: 'www.intertexe.com' },
       { protocol: 'https', hostname: 'media.thereformation.com' },
       { protocol: 'https', hostname: 'us.sandro-paris.com' },
+      { protocol: 'https', hostname: 'intl.isabelmarant.com' },
+      { protocol: 'https', hostname: 'staud.clothing' },
+      { protocol: 'https', hostname: 'lagence.com' },
+      { protocol: 'https', hostname: 'faithfullthebrand.com' },
+      { protocol: 'https', hostname: 'www.zimmermann.com' },
       { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: 'thum.io' },
     ],

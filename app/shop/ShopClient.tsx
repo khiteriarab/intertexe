@@ -574,7 +574,7 @@ export default function ShopClient({
   );
 
   return (
-    <div className="min-h-screen pb-[7.5rem] md:pb-16">
+    <div className="min-h-screen pb-[7.5rem] md:pb-16 px-4 md:px-8 overflow-x-hidden">
       <div className="py-8 md:py-12 flex flex-col gap-0">
         <header className="mb-8 md:mb-10">
           <div className="flex flex-col gap-6 md:gap-8">
