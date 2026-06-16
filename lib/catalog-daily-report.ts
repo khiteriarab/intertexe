@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { LIVE_CATALOG_TABLE } from "./global-catalog-scope";
 import { EMAIL_FROM } from "./email-constants";
 
 export const CATALOG_ALERT_EMAIL = "info@intertexe.com";
@@ -71,7 +72,7 @@ export async function fetchCatalogHealthSnapshot(
   }
 
   const { count: liveApparelTotal } = await supabase
-    .from("live_products_apparel")
+    .from(LIVE_CATALOG_TABLE)
     .select("*", { count: "exact", head: true });
 
   return {

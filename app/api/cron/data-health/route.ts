@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase-service-client";
+import { LIVE_CATALOG_TABLE } from "@/lib/global-catalog-scope";
 import { COLLECTION_CANONICAL_SLUGS } from "@/lib/catalog-direct-query";
 import { fetchCatalogHealthSnapshot } from "@/lib/catalog-daily-report";
 
@@ -35,12 +36,12 @@ export async function GET(request: Request) {
   const issues: string[] = [];
 
   const { count: totalUS } = await supabase
-    .from("live_products_apparel")
+    .from(LIVE_CATALOG_TABLE)
     .select("*", { count: "exact", head: true })
     .eq("region", "us");
 
   const { count: colorCount } = await supabase
-    .from("live_products_apparel")
+    .from(LIVE_CATALOG_TABLE)
     .select("*", { count: "exact", head: true })
     .eq("region", "us")
     .not("color", "is", null);
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
   for (const slug of COLLECTION_SLUGS) {
     const canonical = COLLECTION_CANONICAL_SLUGS[slug] || [slug];
     let countQuery = supabase
-      .from("live_products_apparel")
+      .from(LIVE_CATALOG_TABLE)
       .select("*", { count: "exact", head: true })
       .eq("region", "us");
 
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
   }
 
   const { count: garmentCount } = await supabase
-    .from("live_products_apparel")
+    .from(LIVE_CATALOG_TABLE)
     .select("*", { count: "exact", head: true })
     .eq("region", "us")
     .not("garment_type", "is", null);

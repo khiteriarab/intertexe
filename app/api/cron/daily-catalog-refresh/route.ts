@@ -42,6 +42,11 @@ export async function GET(request: Request) {
         ? `Mytheresa OK — upserted ${mytheresa.upserted ?? 0}, normalized ${mytheresa.normalized ?? 0}`
         : `Mytheresa partial — errors ${mytheresa.errors?.length ?? 0}`;
       emailResult = await sendCatalogDailyEmail(supabase, { syncSummary });
+
+      const { error: refreshError } = await supabase.rpc("refresh_live_products_mat");
+      if (refreshError) {
+        console.error("[daily-catalog-refresh] refresh_live_products_mat:", refreshError.message);
+      }
     }
 
     return NextResponse.json({

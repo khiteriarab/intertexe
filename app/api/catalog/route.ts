@@ -11,6 +11,7 @@ import {
   COLLECTION_CANONICAL_SLUGS,
   queryLiveCatalog,
 } from "../../../lib/catalog-direct-query";
+import { LIVE_CATALOG_TABLE } from "../../../lib/global-catalog-scope";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 import { US_CATALOG_KNOWN_TOTAL } from "../../../lib/catalog-constants";
 import {
@@ -236,7 +237,7 @@ async function fetchCollectionTotalFromDB(collection: string, region: string) {
 
   const slugs = COLLECTION_CANONICAL_SLUGS[collection] || [collection];
   let countQuery = supabase
-    .from("live_products_apparel")
+    .from(LIVE_CATALOG_TABLE)
     .select("id", { count: "exact", head: true })
     .eq("region", region);
 

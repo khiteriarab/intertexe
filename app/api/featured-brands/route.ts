@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
+import { LIVE_CATALOG_TABLE } from "../../../lib/global-catalog-scope";
 import {
   HOMEPAGE_BRANDS_REVALIDATE_SEC,
   STATS_CACHE_HEADERS,
@@ -24,7 +25,7 @@ async function fetchFeaturedBrands(limit: number): Promise<FeaturedBrandPayload[
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: recentRows, error: recentError } = await supabase
-    .from("live_products_apparel")
+    .from(LIVE_CATALOG_TABLE)
     .select("brand_slug, brand_name")
     .gte("created_at", since)
     .order("created_at", { ascending: false })
@@ -72,7 +73,7 @@ async function fetchFeaturedBrands(limit: number): Promise<FeaturedBrandPayload[
     const heroImage = (designer?.["hero_image_url"] as string | null) ?? null;
     if (!editorialImage && !heroImage) {
       const { data: fallback } = await supabase
-        .from("live_products_apparel")
+        .from(LIVE_CATALOG_TABLE)
         .select("image_url")
         .eq("brand_slug", slug)
         .not("image_url", "is", null)
