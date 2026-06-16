@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import { getCachedPlatformStats } from "../../../lib/cached-catalog";
 import { getCachedRegionalCatalogStats } from "../../../lib/regional-catalog-stats";
 import {
-  HOMEPAGE_STATS_REVALIDATE_SEC,
   STATS_CACHE_HEADERS,
 } from "../../../lib/homepage-cache-config";
 
-export const revalidate = HOMEPAGE_STATS_REVALIDATE_SEC;
+export const revalidate = 21600; // HOMEPAGE_STATS_REVALIDATE_SEC — must be literal for Next.js route config
 
 export async function GET() {
   try {
