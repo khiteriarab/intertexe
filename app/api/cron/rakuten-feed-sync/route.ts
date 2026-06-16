@@ -34,16 +34,6 @@ export async function GET(request: Request) {
       ftpDirFilter: ftpDirFilter || undefined,
       batchSize: parseInt(process.env.FEED_SYNC_BATCH_SIZE || "100", 10),
     });
-
-    const { getServerSupabase } = await import("@/lib/supabase-service-client");
-    const supabase = getServerSupabase();
-    if (supabase) {
-      const { error: refreshError } = await supabase.rpc("refresh_live_products_mat");
-      if (refreshError) {
-        console.error("[rakuten-feed-sync] refresh_live_products_mat:", refreshError.message);
-      }
-    }
-
     return NextResponse.json({ ok: true, result });
   } catch (err: unknown) {
     const message =

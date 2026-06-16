@@ -5,7 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { liveProductsApparelFrom } from "./global-catalog-scope";
 
-export const SCANNER_CATALOG_TABLE = "live_products_apparel_mat" as const;
+export const SCANNER_CATALOG_TABLE = "live_products_apparel" as const;
 
 const MIN_NFP = 80;
 
