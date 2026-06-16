@@ -21,9 +21,12 @@ import { formatProductCountLabel } from "../../lib/catalog-stats-labels";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
-import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
-import { HomepageEditorialCover } from "./HomepageEditorialCover";
-import { BrandMagazineGrid } from "./BrandMagazineGrid";
+import {
+  HomepageNewInSection,
+  HomepageBrandsSection,
+  HomepageCollectionPanel,
+  HomepageSaleSection,
+} from "./HomepageLuxurySection";
 import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
@@ -547,79 +550,43 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         <AppDownloadBanner />
       </div>
 
-      <HomepageEditorialCover
-        href="/shop?sort=new"
-        imageUrl={editorialHeroForSlug("newIn")}
-        kicker="Just landed"
-        title="New In"
-        cta="Shop new arrivals"
-        testId="homepage-new-in-cover"
-        slug="newIn"
-        minHeightClass="min-h-[85svh]"
-      />
+      <HomepageNewInSection products={data.newInProducts} />
 
       {curatedOrdered.length > 0 && (
-        <section data-testid="homepage-brands-section">
-          <div className="flex justify-between items-end px-6 md:px-14 py-8 md:py-10">
-            <div className="flex flex-col gap-1">
-              <span className="text-label uppercase text-neutral-400">Curated</span>
-              <h2 className="text-headline">Brands we love</h2>
-            </div>
-            <Link
-              href="/designers"
-              className="text-label uppercase text-neutral-500 hover:text-neutral-800 transition-colors flex items-center gap-2"
-              data-testid="link-brands-view-all"
-            >
-              View all <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <BrandMagazineGrid designers={curatedOrdered} />
-        </section>
+        <HomepageBrandsSection designers={curatedOrdered} />
       )}
 
-      {HOMEPAGE_COLLECTION_SECTIONS.map((collection) => {
-        const productsKey = COLLECTION_PRODUCTS_KEY[collection.slug];
-        const products = (data[productsKey] as any[]) || [];
-        const labels =
-          HOMEPAGE_RAIL_LABELS[`${productsKey}` as keyof typeof HOMEPAGE_RAIL_LABELS] ??
-          { title: collection.label, subtitle: collection.subtitle };
+      {HOMEPAGE_COLLECTION_SECTIONS.map((collection) => (
+        <HomepageCollectionPanel
+          key={collection.slug}
+          href={collection.href}
+          kicker={collection.kicker}
+          title={collection.label}
+          cta="Discover"
+          imageUrl={editorialHeroForSlug(collection.slug)}
+          slug={collection.slug}
+          testId={`homepage-collection-${collection.slug}`}
+        />
+      ))}
 
-        return (
-          <HomepageCollectionBlock
-            key={collection.slug}
-            collection={collection}
-            products={products}
-            title={labels.title}
-            subtitle={labels.subtitle}
-            coverOnly
-          />
-        );
-      })}
+      <HomepageSaleSection />
 
-      <HomepageEditorialCover
-        href="/sale"
-        imageUrl={editorialHeroForSlug("cashmere")}
-        kicker="Reduced"
-        title="The Edit"
-        body="Natural fibers, now less."
-        cta="Shop sale"
-        testId="homepage-sale-cover"
-        slug="cashmere"
-        minHeightClass="min-h-[85svh]"
-      />
-
-      <section className="layout-bleed-full w-full py-20 flex flex-col items-center text-center bg-[#F5F3EF]">
-        <p className="text-label uppercase text-neutral-400 mb-5 md:mb-7">
-          Personalized for you
-        </p>
-        <h2 className="text-headline md:text-display mb-8 md:mb-10 max-w-lg">Find your fabric persona</h2>
-        <Link
-          href="/quiz"
-          className="border border-neutral-800 text-neutral-800 px-10 py-4 text-label uppercase font-light hover:bg-neutral-800 hover:text-white transition-all duration-500 active:scale-[0.97]"
-          data-testid="button-cta-quiz"
-        >
-          Take the quiz
-        </Link>
+      <section className="border-t border-neutral-200/80 bg-[#faf9f7] py-16 md:py-20">
+        <div className="mx-auto w-full max-w-2xl px-6 text-center">
+          <p className="text-[11px] font-normal uppercase tracking-[0.2em] text-neutral-400 mb-4">
+            Personalized for you
+          </p>
+          <h2 className="font-serif text-[28px] md:text-[32px] font-light text-neutral-900 mb-8">
+            Find your fabric persona
+          </h2>
+          <Link
+            href="/quiz"
+            className="inline-flex items-center justify-center border border-neutral-900 px-10 py-3.5 text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
+            data-testid="button-cta-quiz"
+          >
+            Take the quiz
+          </Link>
+        </div>
       </section>
 
     </div>
