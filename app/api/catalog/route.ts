@@ -279,11 +279,17 @@ export async function GET(request: NextRequest) {
   const collectionSlug = slugParam || collectionAlias || "";
   const brandSlug = slugParam || brandAlias || "";
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
-  const offset = safeCatalogOffset(sp.get("offset"));
+  const pageParam = Number(sp.get("page") || "0");
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 0;
+  const explicitOffset = sp.get("offset");
+  const offset = explicitOffset != null
+    ? safeCatalogOffset(explicitOffset)
+    : Math.max(0, page * limit);
   const category = sp.get("category") || undefined;
   const market = catalogMarketFromParams(sp);
   const catalogRegion = catalogPreferredRegionFromParams(sp);
   const sort = sp.get("sort") || "new";
+  const isJustInRequest = sp.get("justIn") === "1";
   const search = sp.get("search") || searchAlias;
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
   const minPrice = sp.get("minPrice") ? Number(sp.get("minPrice")) : undefined;
@@ -435,7 +441,7 @@ export async function GET(request: NextRequest) {
       collection: collectionAlias || undefined,
       brand: brandAlias || undefined,
       search: search || undefined,
-      sort: sort === "recommended" ? "new" : sort,
+      sort: isJustInRequest ? "new" : (sort === "recommended" ? "new" : sort),
       maxPrice,
       minPrice,
       color,
@@ -464,6 +470,21 @@ export async function GET(request: NextRequest) {
       offset === 0;
 
     let total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
+
+    if (isJustInRequest) {
+      const JUST_IN_CAP = 300;
+      const maxVisible = Math.max(0, JUST_IN_CAP - offset);
+      const cappedProducts = result.products.slice(0, maxVisible);
+      const cappedTotal = Math.min(JUST_IN_CAP, Math.max(offset + cappedProducts.length, total ?? 0, JUST_IN_CAP));
+      return respond({
+        products: cappedProducts,
+        total: cappedTotal,
+        limit,
+        offset,
+        hasMore: offset + cappedProducts.length < JUST_IN_CAP,
+        source: "just-in-cap",
+      }, { source: "just-in-cap" });
+    }
     if (isUnfilteredBaseCatalog && (total == null || total <= result.products.length)) {
       total = US_CATALOG_KNOWN_TOTAL;
     }
