@@ -37,8 +37,8 @@ const MERCH_HOME_FETCH_LIMIT = 24;
 /** Sale rail needs a deeper pool — homepage filter is strict ($200+ approved brands). */
 const MERCH_HOME_SALE_FETCH_LIMIT = 96;
 const MERCH_HOME_SALE_DISPLAY_LIMIT = 28;
-const MERCH_HOME_NEW_IN_FETCH_LIMIT = 40;
-const MERCH_HOME_NEW_IN_DISPLAY_LIMIT = 24;
+const MERCH_HOME_NEW_IN_FETCH_LIMIT = 56;
+const MERCH_HOME_NEW_IN_DISPLAY_LIMIT = 28;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
 const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
@@ -46,7 +46,7 @@ const NEW_IN_BRAND_SLUGS = [
   "frame", "vince", "theory", "toteme", "ganni", "staud", "khaite", "isabel-marant",
 ] as const;
 const NEW_IN_FETCH_PER_BRAND = 14;
-const NEW_IN_TARGET_ITEMS = 24;
+const NEW_IN_TARGET_ITEMS = 28;
 const HOMEPAGE_SALE_FETCH_LIMIT = 64;
 const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 180;
 const DESIGNERS_FETCH_LIMIT = 48;
@@ -430,6 +430,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v9"],
+  ["homepage-payload-v10"],
   { revalidate: 300, tags: ["homepage"] }
 );
