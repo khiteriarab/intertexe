@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cfProductCard } from "../../lib/cloudflare-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
-import { HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS, HORIZONTAL_RAIL_BLEED_CLASS } from "../../lib/horizontal-rail";
+import { HORIZONTAL_RAIL_CLASS } from "../../lib/horizontal-rail";
 
 function railImageSrc(url: string): string {
   const trimmed = url.trim();
@@ -34,7 +34,7 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
   return (
     <Link
       href={productHref}
-      className="group flex flex-shrink-0 w-[128px] sm:w-[148px] md:w-[168px] lg:w-[188px] xl:w-[204px] flex-col snap-start"
+      className="group flex flex-shrink-0 w-[132px] sm:w-[156px] md:w-[172px] lg:w-[196px] xl:w-[212px] flex-col snap-start"
       data-rail-card
       data-testid={`product-sale-${product.id}`}
       draggable={false}
@@ -61,8 +61,8 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
           </span>
         )}
       </div>
-      <div className="mt-2 flex flex-col gap-0.5 min-w-0">
-        <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-900 truncate">
+      <div className="mt-2.5 flex flex-col gap-0.5 min-w-0">
+        <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-900 truncate">
           {brandName}
         </p>
         <p className="text-[10px] sm:text-[11px] text-neutral-500 truncate leading-snug">{name}</p>
@@ -78,35 +78,37 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
 }
 
 export function SaleHomeRail({ products }: { products?: any[] }) {
-  const railProducts = (products || []).slice(0, 20);
+  const railProducts = (products || []).slice(0, 28);
   const hasItems = railProducts.length > 0;
 
   return (
-    <section className="py-8 md:py-12 border-t border-neutral-200/60" data-testid="section-sale">
-      <div className="px-4 md:px-8 mb-5 md:mb-6">
+    <section className="border-t border-neutral-200/70 py-10 md:py-14 lg:py-16" data-testid="section-sale">
+      <div className="px-4 md:px-8 mb-6 md:mb-8">
         <Link href="/sale" className="group inline-flex items-center gap-2" data-testid="link-sale">
-          <h2 className="text-[24px] md:text-[32px] font-serif leading-tight group-hover:text-neutral-500 transition-colors">
+          <h2 className="text-[34px] sm:text-[40px] md:text-[44px] lg:text-[48px] font-serif leading-[1.02] group-hover:text-neutral-500 transition-colors">
             Sale
           </h2>
           <ArrowRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
       </div>
 
-      <div className={HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}>
-        <div className={`${HORIZONTAL_RAIL_BLEED_CLASS} gap-2.5 md:gap-3 lg:gap-4 min-h-[240px] md:min-h-[280px] lg:min-h-[300px]`}>
+      <div className="layout-bleed-full px-4 md:px-8">
+        <div
+          className={`${HORIZONTAL_RAIL_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 min-h-[220px] sm:min-h-[260px] md:min-h-[300px] lg:min-h-[340px]`}
+        >
           {hasItems ? (
             railProducts.map((product: any, i: number) => (
-              <SaleProductCard key={product.id} product={product} eager={i < 6} />
+              <SaleProductCard key={product.id} product={product} eager={i < 8} />
             ))
           ) : (
-            <p className="text-[12px] text-neutral-400 max-w-sm leading-relaxed py-4">
+            <p className="text-[12px] text-neutral-400 max-w-sm leading-relaxed py-6">
               Sale pieces are refreshing — browse the full sale edit for reduced natural-fiber pieces.
             </p>
           )}
         </div>
       </div>
 
-      <div className="px-4 md:px-8 mt-4">
+      <div className="px-4 md:px-8 mt-5 md:mt-6">
         <Link
           href="/sale"
           className="text-[10px] uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors inline-flex items-center gap-2"

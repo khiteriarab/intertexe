@@ -35,8 +35,8 @@ const MATERIAL_RAIL_DISPLAY_MAX = 50;
 /** Homepage rails are curated previews only — keep small for fast SSR. */
 const MERCH_HOME_FETCH_LIMIT = 24;
 /** Sale rail needs a deeper pool — homepage filter is strict ($200+ approved brands). */
-const MERCH_HOME_SALE_FETCH_LIMIT = 64;
-const MERCH_HOME_SALE_DISPLAY_LIMIT = 20;
+const MERCH_HOME_SALE_FETCH_LIMIT = 96;
+const MERCH_HOME_SALE_DISPLAY_LIMIT = 28;
 const MERCH_HOME_NEW_IN_FETCH_LIMIT = 40;
 const MERCH_HOME_NEW_IN_DISPLAY_LIMIT = 24;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
@@ -430,6 +430,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v8"],
+  ["homepage-payload-v9"],
   { revalidate: 300, tags: ["homepage"] }
 );
