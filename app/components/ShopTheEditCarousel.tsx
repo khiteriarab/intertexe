@@ -55,6 +55,23 @@ const DEFAULT_SLIDES: EditCarouselSlide[] = [
   imageUrl: editorialHeroForSlug(slide.slug),
 }));
 
+/** Short overlay copy for the carousel — matches NAP one-line subtext. */
+export const EDIT_CAROUSEL_SHORT_SUBTITLES: Record<string, string> = Object.fromEntries(
+  DEFAULT_SLIDES.map((slide) => [slide.slug, slide.subtitle])
+);
+
+function useIsLargeScreen() {
+  const [isLg, setIsLg] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsLg(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isLg;
+}
+
 function SlideImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
   return (
     <img
@@ -67,31 +84,27 @@ function SlideImage({ src, alt, className }: { src: string; alt: string; classNa
   );
 }
 
-function EditOverlay({
-  slide,
-  className = "",
-}: {
-  slide: EditCarouselSlide;
-  className?: string;
-}) {
+function EditOverlay({ slide }: { slide: EditCarouselSlide }) {
   return (
-    <div
-      className={`absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end px-5 pb-20 lg:pb-10 md:px-10 pointer-events-none ${className}`}
-    >
+    <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end px-6 pb-24 lg:px-10 lg:pb-12 pointer-events-none">
       <div className="pointer-events-auto max-w-md">
-        <h2 className="text-[28px] md:text-[40px] lg:text-[44px] font-serif text-white leading-[1.08] mb-2 md:mb-3">
+        <h2 className="text-[30px] lg:text-[42px] xl:text-[46px] font-serif text-white leading-[1.08] mb-2 lg:mb-3">
           {slide.title}
         </h2>
-        <p className="text-[13px] md:text-[15px] text-white/85 leading-relaxed font-light mb-5 md:mb-6 max-w-sm">
+        <p className="text-[13px] lg:text-[15px] text-white/85 leading-relaxed font-light mb-5 lg:mb-6 max-w-sm line-clamp-3">
           {slide.subtitle}
         </p>
-        <span className="inline-flex w-full md:w-auto items-center justify-center bg-white text-neutral-900 px-8 py-3.5 md:py-4 text-[11px] md:text-[12px] uppercase tracking-[0.12em] font-medium hover:bg-white/95 transition-colors">
+        <span className="inline-flex w-full lg:w-auto items-center justify-center bg-white text-neutral-900 px-8 py-3.5 lg:py-4 text-[11px] lg:text-[12px] uppercase tracking-[0.12em] font-medium hover:bg-white/95 transition-colors">
           Shop the edit
         </span>
       </div>
     </div>
   );
 }
+
+/** NAP-style center-peak carousel — tall square-ish panels with side peek. */
+const MOBILE_SLIDE_VW = 90;
+const DESKTOP_SLIDE_VW = 54;
 
 export function ShopTheEditCarousel({
   slides = DEFAULT_SLIDES,
@@ -103,6 +116,7 @@ export function ShopTheEditCarousel({
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const isLg = useIsLargeScreen();
   const count = slides.length;
 
   const goTo = useCallback(
@@ -124,10 +138,12 @@ export function ShopTheEditCarousel({
     return () => window.clearInterval(timer);
   }, [paused, count, autoPlayMs]);
 
-  const active = slides[index];
-  const next = slides[(index + 1) % count];
+  if (count === 0) return null;
 
-  if (!active || count === 0) return null;
+  const slideVw = isLg ? DESKTOP_SLIDE_VW : MOBILE_SLIDE_VW;
+  const trackTransform = isLg
+    ? `translateX(calc(50vw - ${index * slideVw + slideVw / 2}vw))`
+    : `translateX(calc(-${index * slideVw}vw + ${(100 - slideVw) / 2}vw))`;
 
   return (
     <div
@@ -138,9 +154,8 @@ export function ShopTheEditCarousel({
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      {/* Mobile — peek of next slide, bottom overlay, pill nav */}
       <div
-        className="lg:hidden relative overflow-hidden bg-[#1c1c1c]"
+        className="relative overflow-hidden bg-[#1c1c1c] h-[min(90svh,100vw)] lg:h-[min(92svh,78vw)]"
         onTouchStart={(e) => {
           touchStartX.current = e.changedTouches[0]?.clientX ?? null;
           setPaused(true);
@@ -160,30 +175,37 @@ export function ShopTheEditCarousel({
         }}
       >
         <div
-          className="flex transition-transform duration-700 ease-in-out"
-          style={{ transform: `translateX(calc(-${index} * 88vw))` }}
+          className="flex h-full transition-transform duration-700 ease-in-out"
+          style={{ transform: trackTransform }}
         >
           {slides.map((slide, i) => {
             const imageUrl = slide.imageUrl || editorialHeroForSlug(slide.slug);
+            const active = i === index;
             return (
               <div
                 key={slide.slug}
-                className="relative flex-shrink-0 w-[88vw] h-[min(72svh,560px)]"
-                aria-hidden={i !== index}
+                className="relative flex-shrink-0 h-full w-[90vw] lg:w-[54vw]"
+                aria-hidden={!active}
               >
                 <Link
                   href={slide.href}
                   className="block absolute inset-0"
-                  tabIndex={i === index ? 0 : -1}
+                  tabIndex={active ? 0 : -1}
                   data-testid={`edit-slide-${slide.slug}`}
+                  onClick={(e) => {
+                    if (!active && isLg) {
+                      e.preventDefault();
+                      goTo(i);
+                    }
+                  }}
                 >
                   <SlideImage
                     src={imageUrl}
                     alt={slide.title}
                     className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent pointer-events-none" />
-                  {i === index && <EditOverlay slide={slide} />}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+                  {active && <EditOverlay slide={slide} />}
                 </Link>
               </div>
             );
@@ -191,7 +213,7 @@ export function ShopTheEditCarousel({
         </div>
 
         {count > 1 && (
-          <div className="absolute bottom-6 left-5 z-30 flex items-center gap-0 rounded-full border border-white/25 bg-black/30 backdrop-blur-sm overflow-hidden">
+          <div className="absolute bottom-6 left-5 lg:bottom-8 lg:left-8 z-30 flex items-center gap-0 rounded-full border border-white/25 bg-black/30 backdrop-blur-sm overflow-hidden">
             <button
               type="button"
               onClick={goPrev}
@@ -210,41 +232,6 @@ export function ShopTheEditCarousel({
             </button>
           </div>
         )}
-      </div>
-
-      {/* Desktop — split panel: active edit left, next peek right */}
-      <div className="hidden lg:grid lg:grid-cols-2 min-h-[min(72vh,680px)] max-h-[760px]">
-        <div className="relative overflow-hidden bg-[#1c1c1c]">
-          <Link
-            href={active.href}
-            className="block absolute inset-0 transition-opacity duration-700"
-            data-testid={`edit-slide-${active.slug}`}
-          >
-            <SlideImage
-              src={active.imageUrl || editorialHeroForSlug(active.slug)}
-              alt={active.title}
-              className="absolute inset-0 w-full h-full object-cover object-[center_32%] transition-opacity duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/5 pointer-events-none" />
-            <EditOverlay slide={active} />
-          </Link>
-        </div>
-
-        <div className="relative overflow-hidden bg-[#1c1c1c]">
-          {next && (
-            <Link
-              href={next.href}
-              className="block absolute inset-0"
-              aria-label={`Next: ${next.title}`}
-            >
-              <SlideImage
-                src={next.imageUrl || editorialHeroForSlug(next.slug)}
-                alt={next.title}
-                className="absolute inset-0 w-full h-full object-cover object-[center_32%] transition-opacity duration-700"
-              />
-            </Link>
-          )}
-        </div>
       </div>
     </div>
   );

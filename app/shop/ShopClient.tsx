@@ -24,7 +24,7 @@ import { CatalogProductImage } from "../components/CatalogProductImage";
 import { ProductGridSkeleton } from "../components/ProductGridSkeleton";
 import { CountrySelector } from "../components/CountrySelector";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
-import { ShopTheEditCarousel } from "../components/ShopTheEditCarousel";
+import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "../components/ShopTheEditCarousel";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";

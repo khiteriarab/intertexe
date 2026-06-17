@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
-import { ShopTheEditCarousel } from "../components/ShopTheEditCarousel";
+import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "../components/ShopTheEditCarousel";
 
 const slides = COLLECTION_SECTIONS.map((collection) => ({
   slug: collection.slug,
   title: collection.label,
   kicker: collection.kicker,
-  subtitle: collection.subtitle,
+  subtitle: EDIT_CAROUSEL_SHORT_SUBTITLES[collection.slug] ?? collection.subtitle,
   href: collection.href,
   imageUrl: editorialHeroForSlug(collection.slug),
 }));

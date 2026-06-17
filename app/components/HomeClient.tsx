@@ -20,7 +20,7 @@ import { HomepageHeroSection } from "./HomepageHeroSection";
 import { BrandsWeLoveSection } from "./BrandsWeLoveSection";
 import { NewInHomeRail } from "./NewInHomeRail";
 import { SaleHomeRail } from "./SaleHomeRail";
-import { ShopTheEditCarousel } from "./ShopTheEditCarousel";
+import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "./ShopTheEditCarousel";
 import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
@@ -387,7 +387,7 @@ const EDIT_CAROUSEL_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
   slug: collection.slug,
   title: collection.label,
   kicker: collection.kicker,
-  subtitle: collection.subtitle,
+  subtitle: EDIT_CAROUSEL_SHORT_SUBTITLES[collection.slug] ?? collection.subtitle,
   href: collection.href,
   imageUrl: editorialHeroForSlug(collection.slug),
 }));
