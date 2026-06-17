@@ -23,6 +23,7 @@ import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
 import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
 import { NewInHomeRail } from "./NewInHomeRail";
+import { SaleHomeRail } from "./SaleHomeRail";
 import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
@@ -327,24 +328,6 @@ export function HorizontalProductScroll({
         )}
       </div>
     </div>
-  );
-}
-
-function SaleHomeRail({ products }: { products?: any[] }) {
-  const labels = HOMEPAGE_RAIL_LABELS.saleProducts;
-  return (
-    <section className="py-10 md:py-20 border-t border-neutral-200/60">
-      <HorizontalProductScroll
-        products={products || []}
-        title={labels.title}
-        subtitle="The edit"
-        linkHref="/sale"
-        linkText="Shop all sale"
-        productCardVariant="sale"
-        fullWidth
-        limit={16}
-      />
-    </section>
   );
 }
 

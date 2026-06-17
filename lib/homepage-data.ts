@@ -18,6 +18,7 @@ import {
   MERCH_RAIL_KEYS,
   fetchMerchRailsBatch,
   fetchMerchRailDisplayCount,
+  fetchMerchRailProducts,
   isMerchFeedEnabled,
 } from "./merch-feed";
 import { getCachedPlatformStats } from "./cached-catalog";
@@ -33,6 +34,9 @@ const MATERIAL_RAIL_FETCH_LIMIT = 64;
 const MATERIAL_RAIL_DISPLAY_MAX = 50;
 /** Homepage rails are curated previews only — keep small for fast SSR. */
 const MERCH_HOME_FETCH_LIMIT = 16;
+/** Sale rail needs a deeper pool — homepage filter is strict ($200+ approved brands). */
+const MERCH_HOME_SALE_FETCH_LIMIT = 64;
+const MERCH_HOME_SALE_DISPLAY_LIMIT = 20;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
 const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
@@ -41,7 +45,7 @@ const NEW_IN_BRAND_SLUGS = [
 ] as const;
 const NEW_IN_FETCH_PER_BRAND = 14;
 const NEW_IN_TARGET_ITEMS = 24;
-const HOMEPAGE_SALE_FETCH_LIMIT = 48;
+const HOMEPAGE_SALE_FETCH_LIMIT = 64;
 const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 180;
 const DESIGNERS_FETCH_LIMIT = 48;
 
@@ -204,7 +208,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     MERCH_RAIL_KEYS.sale,
   ] as const;
 
-  const [curatedDesigners, platformStats, railsByKey, newInCount] = await Promise.all([
+  const [curatedDesigners, platformStats, railsByKey, newInCount, saleRailPool] = await Promise.all([
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
     withHomepageRailTimeout(
       "platform-stats",
@@ -224,6 +228,12 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       () => fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.newIn),
       0
     ),
+    withHomepageRailTimeout(
+      "rail:sale-pool",
+      RAIL_TIMEOUT_MS,
+      () => fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: MERCH_HOME_SALE_FETCH_LIMIT }),
+      [] as Product[]
+    ),
   ]);
 
   const newInProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.newIn] || []);
@@ -232,10 +242,11 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const tailoringProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.tailoring] || []);
   const summerInCityProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.summerInCity] || []);
   const whiteEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.whiteEdit] || []);
-  const saleProducts = filterHomepageSaleProducts(
-    railsByKey[MERCH_RAIL_KEYS.sale] || [],
-    MERCH_HOME_FETCH_LIMIT
-  );
+  const saleSource =
+    saleRailPool.length > (railsByKey[MERCH_RAIL_KEYS.sale]?.length ?? 0)
+      ? saleRailPool
+      : railsByKey[MERCH_RAIL_KEYS.sale] || [];
+  const saleProducts = filterHomepageSaleProducts(saleSource, MERCH_HOME_SALE_DISPLAY_LIMIT);
 
   console.log(
     "[merch-feed] homepage payload:",
@@ -312,7 +323,7 @@ export async function getHomePageData(): Promise<HomePageData> {
 
   const saleProducts = filterHomepageSaleProducts(
     (saleResult.products || []).filter((p) => !isZeroPrice(p.price)),
-    MERCH_HOME_FETCH_LIMIT
+    MERCH_HOME_SALE_DISPLAY_LIMIT
   );
   const seenIds = new Set<string>();
   const seenBaseNames = new Set<string>();
@@ -403,6 +414,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v5"],
+  ["homepage-payload-v6"],
   { revalidate: 300, tags: ["homepage"] }
 );
