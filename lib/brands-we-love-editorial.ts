@@ -1,24 +1,9 @@
-/** Homepage “Brands we love” — NAP-style editorial cards (web only). */
-export const BRANDS_WE_LOVE_EDITORIAL = [
-  {
-    slug: "re-done",
-    headline: "Essential: heritage denim",
-    description:
-      "Vintage-inspired washes and relaxed silhouettes — cotton-forward pieces verified for natural fiber content.",
-    cta: "Shop the collection",
-  },
-  {
-    slug: "diesel",
-    headline: "The update",
-    description:
-      "Contemporary Italian denim and washed cotton staples from our verified natural-fiber edit.",
-    cta: "Shop the collection",
-  },
-  {
-    slug: "isabel-marant",
-    headline: "Exclusive: Parisian ease",
-    description:
-      "Effortless separates in linen, cotton, and silk — bohemian luxury with every composition checked.",
-    cta: "Shop the collection",
-  },
-] as const;
+/** Why each house is in homepage “Brands we love” (web only). */
+export const BRANDS_WE_LOVE_HIGHLIGHTS: Record<string, string> = {
+  "re-done":
+    "They pioneered vintage-repurposed denim — cotton-forward pieces we verify piece by piece for natural fiber content.",
+  diesel:
+    "Italian denim with consistently strong natural-fiber scores across women's jeans, skirts, and cotton ready-to-wear.",
+  "isabel-marant":
+    "Parisian ease built on cotton, wool, silk, and linen — bohemian luxury with every composition checked.",
+};

@@ -4,24 +4,25 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
-import {
-  BRANDS_WE_LOVE_EDITORIAL,
-} from "../../lib/brands-we-love-editorial";
+import { BRANDS_WE_LOVE_HIGHLIGHTS } from "../../lib/brands-we-love-editorial";
+import { getQualityTier } from "../../lib/quality-tiers";
+import { displayNaturalFiberPercent } from "../../lib/display-natural-fiber";
+import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
 
-function BrandLoveCard({
-  designer,
-  headline,
-  description,
-  cta,
-}: {
-  designer: { slug: string; name: string; heroImageUrl?: string | null };
-  headline: string;
-  description: string;
-  cta: string;
-}) {
+type BrandDesigner = {
+  slug: string;
+  name: string;
+  heroImageUrl?: string | null;
+  naturalFiberPercent?: number | null;
+};
+
+function BrandLoveCard({ designer }: { designer: BrandDesigner }) {
   const [failed, setFailed] = useState(false);
   const imageUrl =
     !failed && (designer.heroImageUrl || getBrandHeroImage(designer.name) || "");
+  const highlight = BRANDS_WE_LOVE_HIGHLIGHTS[designer.slug] || "";
+  const score = displayNaturalFiberPercent(designer.naturalFiberPercent);
+  const tier = getQualityTier(designer.naturalFiberPercent);
 
   return (
     <Link
@@ -48,36 +49,36 @@ function BrandLoveCard({
         )}
       </div>
 
-      <div className="flex flex-col gap-2 md:gap-3 pr-1 md:pr-2">
+      <div className="flex flex-col gap-2 md:gap-2.5 pr-1 md:pr-2">
         <h3 className="font-serif text-[22px] md:text-[26px] lg:text-[28px] leading-[1.12] text-neutral-900">
-          {headline}
+          {designer.name}
         </h3>
-        <p className="text-[13px] md:text-[14px] text-neutral-600 leading-relaxed font-light max-w-sm">
-          {description}
-        </p>
+        {score != null && (
+          <p className="text-[11px] md:text-[12px] uppercase tracking-[0.14em] text-neutral-500">
+            <span className="text-neutral-800 font-medium tabular-nums">{score}%</span> natural fibers
+            <span className="text-neutral-300 mx-2">·</span>
+            <span className="text-neutral-600">{tier.label}</span>
+          </p>
+        )}
+        {highlight ? (
+          <p className="text-[13px] md:text-[14px] text-neutral-600 leading-relaxed font-light max-w-sm">
+            {highlight}
+          </p>
+        ) : null}
         <span className="mt-1 text-[12px] md:text-[13px] text-neutral-900 underline underline-offset-[5px] decoration-neutral-300 group-hover:decoration-neutral-900 transition-colors w-fit">
-          {cta}
+          Shop the collection
         </span>
       </div>
     </Link>
   );
 }
 
-export function BrandsWeLoveSection({
-  designers,
-}: {
-  designers: { slug: string; name: string; heroImageUrl?: string | null }[];
-}) {
-  const cards = BRANDS_WE_LOVE_EDITORIAL.map((editorial) => {
-    const designer = designers.find((d) => d.slug === editorial.slug);
-    if (!designer) return null;
-    return { editorial, designer };
-  }).filter(Boolean) as {
-    editorial: (typeof BRANDS_WE_LOVE_EDITORIAL)[number];
-    designer: { slug: string; name: string; heroImageUrl?: string | null };
-  }[];
+export function BrandsWeLoveSection({ designers }: { designers: BrandDesigner[] }) {
+  const ordered = CURATED_BRAND_SLUGS.map((slug) => designers.find((d) => d.slug === slug)).filter(
+    Boolean
+  ) as BrandDesigner[];
 
-  if (cards.length === 0) {
+  if (ordered.length === 0) {
     return (
       <section className="py-10 md:py-16 border-t border-neutral-200/60" data-testid="homepage-brands-we-love">
         <div className="rounded-sm border border-neutral-200/80 bg-neutral-50/50 px-4 py-8 text-center">
@@ -108,14 +109,8 @@ export function BrandsWeLoveSection({
       </div>
 
       <div className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 lg:gap-10 xl:gap-12 overflow-x-auto md:overflow-visible snap-x snap-mandatory scrollbar-hide -mx-1 px-1 md:mx-0 md:px-0 pb-1">
-        {cards.map(({ editorial, designer }) => (
-          <BrandLoveCard
-            key={editorial.slug}
-            designer={designer}
-            headline={editorial.headline}
-            description={editorial.description}
-            cta={editorial.cta}
-          />
+        {ordered.map((designer) => (
+          <BrandLoveCard key={designer.slug} designer={designer} />
         ))}
       </div>
     </section>
