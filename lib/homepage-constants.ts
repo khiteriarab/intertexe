@@ -1,9 +1,6 @@
-/** Homepage “Brands we love” — six houses only. */
+/** Homepage “Brands we love” — three editorial houses (web). */
 export const CURATED_BRAND_SLUGS = [
   "re-done",
-  "isabel-marant",
-  "l-agence",
-  "theory",
-  "staud",
   "diesel",
+  "isabel-marant",
 ] as const;

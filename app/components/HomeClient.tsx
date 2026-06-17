@@ -4,7 +4,6 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { ProductLink } from "./ProductLink";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, X } from "lucide-react";
-import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
 import { editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
@@ -17,8 +16,8 @@ import {
 } from "../../lib/horizontal-rail";
 import { formatProductCountLabel } from "../../lib/catalog-stats-labels";
 import { EditorialHeroImage } from "./EditorialHeroImage";
-import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
+import { BrandsWeLoveSection } from "./BrandsWeLoveSection";
 import { NewInHomeRail } from "./NewInHomeRail";
 import { SaleHomeRail } from "./SaleHomeRail";
 import { ShopTheEditCarousel } from "./ShopTheEditCarousel";
@@ -329,72 +328,6 @@ export function HorizontalProductScroll({
   );
 }
 
-function BrandCard({ designer }: { designer: any }) {
-  const [failed, setFailed] = useState(false);
-  const imageUrl = !failed
-    ? designer.heroImageUrl || getBrandHeroImage(designer.name) || ""
-    : "";
-
-  return (
-    <Link
-      href={`/designers/${designer.slug}`}
-      className="group flex flex-col gap-3 active:scale-[0.98] transition-transform touch-manipulation flex-shrink-0 w-[42vw] sm:w-[30vw] md:w-auto snap-start"
-      data-testid={`card-designer-${designer.id}`}
-    >
-      <div className={`w-full relative ${imageUrl && !failed ? "" : "aspect-[3/4] bg-[#f0ece6]"}`}>
-        {imageUrl && !failed ? (
-          <BrandEditorialImage
-            src={imageUrl}
-            alt={`${designer.name} editorial`}
-            slug={designer.slug}
-            onFailed={() => setFailed(true)}
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center px-4">
-            <span className="font-serif text-lg md:text-xl text-neutral-300 tracking-[0.15em] uppercase text-center leading-relaxed">
-              {designer.name}
-            </span>
-          </div>
-        )}
-      </div>
-      <h3 className="text-[11px] md:text-[12px] font-medium uppercase tracking-[0.14em] text-neutral-800 group-hover:text-neutral-500 transition-colors duration-300">
-        {designer.name}
-      </h3>
-    </Link>
-  );
-}
-
-export function BrandGrid({ designers }: { designers: any[] }) {
-  if (!designers || designers.length === 0) {
-    return (
-      <div className="rounded-sm border border-neutral-200/80 bg-neutral-50/50 px-4 py-8 text-center">
-        <p className="text-[12px] text-neutral-500 max-w-md mx-auto leading-relaxed">
-          Designer highlights are refreshing. Explore the{" "}
-          <Link href="/designers" className="underline text-neutral-800">
-            brand directory
-          </Link>{" "}
-          for every label we track.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-1 px-1 pb-1">
-        {designers.map((designer: any) => (
-          <BrandCard key={designer.id} designer={designer} />
-        ))}
-      </div>
-      <div className="hidden md:grid md:grid-cols-3 gap-5 lg:gap-7">
-        {designers.map((designer: any) => (
-          <BrandCard key={designer.id} designer={designer} />
-        ))}
-      </div>
-    </>
-  );
-}
-
 function EditorialPanel({
   href,
   imageUrl,
@@ -522,22 +455,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         <ShopTheEditCarousel slides={EDIT_CAROUSEL_SLIDES} />
       </section>
 
-      {curatedOrdered.length > 0 && (
-        <section className="py-10 md:py-16 border-t border-neutral-200/60">
-          <div className="flex justify-between items-end mb-6 md:mb-8">
-            <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
-              Brands we love
-            </p>
-            <Link
-              href="/designers"
-              className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2"
-            >
-              View all <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <BrandGrid designers={curatedOrdered} />
-        </section>
-      )}
+      <BrandsWeLoveSection designers={curatedOrdered} />
 
       <SaleHomeRail products={data.saleProducts} />
 
