@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { cfProductCard } from "../../lib/cloudflare-images";
-import { canonicalProductId } from "../../lib/canonical-product-id";
 import { HORIZONTAL_RAIL_CLASS } from "../../lib/horizontal-rail";
 
 function railImageSrc(url: string): string {
@@ -17,7 +16,7 @@ function NewInProductCard({ product, eager }: { product: any; eager?: boolean })
   const name = product.name || "";
   const brandName = product.brandName || product.brand_name || "";
   const rawUrl = (product.imageUrl || product.image_url || "").trim();
-  const productHref = `/product/${canonicalProductId(product)}`;
+  const productHref = `/product/${product.id}`;
   const [src, setSrc] = useState(() => railImageSrc(rawUrl));
 
   useEffect(() => {

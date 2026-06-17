@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cfProductCard } from "../../lib/cloudflare-images";
-import { canonicalProductId } from "../../lib/canonical-product-id";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS, HORIZONTAL_RAIL_BLEED_CLASS } from "../../lib/horizontal-rail";
 
@@ -18,7 +17,7 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
   const name = product.name || "";
   const brandName = product.brandName || product.brand_name || "";
   const rawUrl = (product.imageUrl || product.image_url || "").trim();
-  const productHref = `/product/${canonicalProductId(product)}`;
+  const productHref = `/product/${product.id}`;
   const priceShown = formatDisplayPrice(product);
   const originalShown = formatDisplayOriginalPrice(product);
   const originalNum = product.originalPrice

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
-import { canonicalProductId } from "../../lib/canonical-product-id";
 import { cfProductCard } from "../../lib/cloudflare-images";
 import type { CollectionSectionConfig } from "../../lib/site-architecture";
 import { HORIZONTAL_RAIL_CLASS } from "../../lib/horizontal-rail";
@@ -20,7 +19,7 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
   const name = product.name || "";
   const brandName = product.brandName || product.brand_name || "";
   const rawUrl = (product.imageUrl || product.image_url || "").trim();
-  const productHref = `/product/${canonicalProductId(product)}`;
+  const productHref = `/product/${product.id}`;
   const [src, setSrc] = useState(() => railImageSrc(rawUrl));
 
   useEffect(() => {
