@@ -31,8 +31,8 @@ export const EDITORIAL_HERO = {
   wool: `${BASE}/brands/theory.jpg`,
   cotton: `${BASE}/brands/l-agence.jpg`,
   "leather-suede": `${BASE}/brands/staud.jpg`,
-  /** Portrait — best on mobile; cover-crops on desktop. */
-  vacation: `${BASE}/editorial-vacation.jpg`,
+  /** Tailoring campaign art — also used for Vacation edit cover. */
+  vacation: `${BASE}/brands/theory.jpg`,
   /** Landscape silk campaign — fills wide “Evening” panel without pillarboxing. */
   evening: LANDSCAPE_SILK,
   tailoring: `${BASE}/brands/theory.jpg`,
