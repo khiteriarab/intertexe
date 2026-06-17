@@ -13,7 +13,7 @@ export const MERCH_NAV = [
   },
   {
     name: "Collections",
-    href: "/collections/vacation",
+    href: "/collections",
     children: COLLECTION_SECTIONS.map((c) => ({ name: c.label, href: c.href })),
   },
   { name: "Designers", href: "/designers" },

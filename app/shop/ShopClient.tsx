@@ -24,6 +24,9 @@ import { CatalogProductImage } from "../components/CatalogProductImage";
 import { ProductGridSkeleton } from "../components/ProductGridSkeleton";
 import { CountrySelector } from "../components/CountrySelector";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
+import { ShopTheEditCarousel } from "../components/ShopTheEditCarousel";
+import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
+import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
 import {
@@ -92,6 +95,15 @@ function parseColorParam(raw: string | null): string | null {
 
 const SHOP_PAGE_SIZE = CATALOG_PAGE_SIZE;
 const WEAR_TO_WHERE_OPTIONS = shopWearToWhereTextOptions();
+
+const SHOP_EDIT_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
+  slug: collection.slug,
+  title: collection.label,
+  kicker: collection.kicker,
+  subtitle: collection.subtitle,
+  href: collection.href,
+  imageUrl: editorialHeroForSlug(collection.slug),
+}));
 
 function optimizeImageUrl(url: string, width: number): string {
   return cfProductCard(url);
@@ -573,9 +585,29 @@ export default function ShopClient({
     !brandSearch.trim() || b.name.toLowerCase().includes(brandSearch.trim().toLowerCase())
   );
 
+  const showShopEditCarousel =
+    !isSearchActive &&
+    fiberTab === "all" &&
+    selectedCategories.size === 0 &&
+    priceTier === "any" &&
+    !selectedColor &&
+    selectedBrandSlugs.length === 0 &&
+    selectedFiberSubtypes.length === 0 &&
+    marketFilter === "all";
+
   return (
     <div className="min-h-screen pb-[7.5rem] md:pb-16 px-4 md:px-8 overflow-x-hidden">
       <div className="py-8 md:py-12 flex flex-col gap-0">
+        {showShopEditCarousel && (
+          <section className="-mx-4 md:-mx-8 mb-8 md:mb-10 border-b border-neutral-200/70 pb-6 md:pb-8">
+            <div className="px-4 md:px-8 mb-5 md:mb-6 max-w-2xl">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-neutral-500 mb-2">Collections</p>
+              <h2 className="text-[28px] md:text-[36px] font-serif leading-[1.05]">Shop the edit</h2>
+            </div>
+            <ShopTheEditCarousel slides={SHOP_EDIT_SLIDES} variant="compact" />
+          </section>
+        )}
+
         <header className="mb-8 md:mb-10">
           <div className="flex flex-col gap-6 md:gap-8">
             <div>
