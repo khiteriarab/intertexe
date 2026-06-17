@@ -37,6 +37,8 @@ const MERCH_HOME_FETCH_LIMIT = 16;
 /** Sale rail needs a deeper pool — homepage filter is strict ($200+ approved brands). */
 const MERCH_HOME_SALE_FETCH_LIMIT = 64;
 const MERCH_HOME_SALE_DISPLAY_LIMIT = 20;
+const MERCH_HOME_NEW_IN_FETCH_LIMIT = 40;
+const MERCH_HOME_NEW_IN_DISPLAY_LIMIT = 24;
 const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
 const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
@@ -208,7 +210,8 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     MERCH_RAIL_KEYS.sale,
   ] as const;
 
-  const [curatedDesigners, platformStats, railsByKey, newInCount, saleRailPool] = await Promise.all([
+  const [curatedDesigners, platformStats, railsByKey, newInCount, saleRailPool, newInRailPool] =
+    await Promise.all([
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
     withHomepageRailTimeout(
       "platform-stats",
@@ -234,9 +237,22 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       () => fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: MERCH_HOME_SALE_FETCH_LIMIT }),
       [] as Product[]
     ),
+    withHomepageRailTimeout(
+      "rail:new-in-pool",
+      RAIL_TIMEOUT_MS,
+      () => fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit: MERCH_HOME_NEW_IN_FETCH_LIMIT }),
+      [] as Product[]
+    ),
   ]);
 
-  const newInProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.newIn] || []);
+  const newInSource =
+    newInRailPool.length > (railsByKey[MERCH_RAIL_KEYS.newIn]?.length ?? 0)
+      ? newInRailPool
+      : railsByKey[MERCH_RAIL_KEYS.newIn] || [];
+  const newInProducts = postProcessHomepageMaterialRail(newInSource).slice(
+    0,
+    MERCH_HOME_NEW_IN_DISPLAY_LIMIT
+  );
   const vacationProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.vacation] || []);
   const eveningProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.evening] || []);
   const tailoringProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.tailoring] || []);
@@ -414,6 +430,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v6"],
+  ["homepage-payload-v7"],
   { revalidate: 300, tags: ["homepage"] }
 );
