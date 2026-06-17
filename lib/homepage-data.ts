@@ -33,7 +33,7 @@ const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS 
 const MATERIAL_RAIL_FETCH_LIMIT = 64;
 const MATERIAL_RAIL_DISPLAY_MAX = 50;
 /** Homepage rails are curated previews only — keep small for fast SSR. */
-const MERCH_HOME_FETCH_LIMIT = 16;
+const MERCH_HOME_FETCH_LIMIT = 24;
 /** Sale rail needs a deeper pool — homepage filter is strict ($200+ approved brands). */
 const MERCH_HOME_SALE_FETCH_LIMIT = 64;
 const MERCH_HOME_SALE_DISPLAY_LIMIT = 20;
@@ -430,6 +430,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v7"],
+  ["homepage-payload-v8"],
   { revalidate: 300, tags: ["homepage"] }
 );

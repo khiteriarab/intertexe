@@ -35,7 +35,7 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
   return (
     <Link
       href={productHref}
-      className="group flex flex-shrink-0 w-[112px] sm:w-[128px] md:w-[148px] lg:w-[160px] flex-col snap-start"
+      className="group flex flex-shrink-0 w-[128px] sm:w-[148px] md:w-[168px] lg:w-[188px] xl:w-[204px] flex-col snap-start"
       data-rail-card
       data-testid={`product-sale-${product.id}`}
       draggable={false}
@@ -94,7 +94,7 @@ export function SaleHomeRail({ products }: { products?: any[] }) {
       </div>
 
       <div className={HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}>
-        <div className={`${HORIZONTAL_RAIL_BLEED_CLASS} gap-2 md:gap-2.5 min-h-[200px]`}>
+        <div className={`${HORIZONTAL_RAIL_BLEED_CLASS} gap-2.5 md:gap-3 lg:gap-4 min-h-[240px] md:min-h-[280px] lg:min-h-[300px]`}>
           {hasItems ? (
             railProducts.map((product: any, i: number) => (
               <SaleProductCard key={product.id} product={product} eager={i < 6} />
