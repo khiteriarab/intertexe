@@ -4,10 +4,8 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { ProductLink } from "./ProductLink";
 import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, X } from "lucide-react";
-import { getQualityTier } from "../../lib/quality-tiers";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
-import { HOMEPAGE_RAIL_LABELS } from "../../lib/merch-nav";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
 import { editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
@@ -21,9 +19,9 @@ import { formatProductCountLabel } from "../../lib/catalog-stats-labels";
 import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
-import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
 import { NewInHomeRail } from "./NewInHomeRail";
 import { SaleHomeRail } from "./SaleHomeRail";
+import { ShopTheEditCarousel } from "./ShopTheEditCarousel";
 import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
@@ -331,17 +329,16 @@ export function HorizontalProductScroll({
   );
 }
 
-function BrandCard({ designer, count }: { designer: any; count: number }) {
+function BrandCard({ designer }: { designer: any }) {
   const [failed, setFailed] = useState(false);
   const imageUrl = !failed
     ? designer.heroImageUrl || getBrandHeroImage(designer.name) || ""
     : "";
-  const tier = getQualityTier(designer.naturalFiberPercent);
 
   return (
     <Link
       href={`/designers/${designer.slug}`}
-      className="group flex flex-col gap-3 active:scale-[0.98] transition-transform touch-manipulation"
+      className="group flex flex-col gap-3 active:scale-[0.98] transition-transform touch-manipulation flex-shrink-0 w-[42vw] sm:w-[30vw] md:w-auto snap-start"
       data-testid={`card-designer-${designer.id}`}
     >
       <div className={`w-full relative ${imageUrl && !failed ? "" : "aspect-[3/4] bg-[#f0ece6]"}`}>
@@ -359,34 +356,15 @@ function BrandCard({ designer, count }: { designer: any; count: number }) {
             </span>
           </div>
         )}
-        {count > 0 && (
-          <div className="absolute bottom-3 right-3">
-            <span className="flex items-center gap-1 bg-white/90 text-neutral-800 px-2.5 py-1 text-[8px] uppercase tracking-[0.12em] font-medium backdrop-blur-sm">
-              <ShoppingBag className="w-2.5 h-2.5" />
-              {count}
-            </span>
-          </div>
-        )}
       </div>
-      <div className="flex flex-col gap-0.5">
-        <h3 className="text-[11px] md:text-[13px] font-semibold uppercase tracking-[0.08em] group-hover:text-neutral-400 transition-colors duration-300">
-          {designer.name}
-        </h3>
-        <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-neutral-400">
-          {tier.label}
-        </p>
-      </div>
+      <h3 className="text-[11px] md:text-[12px] font-medium uppercase tracking-[0.14em] text-neutral-800 group-hover:text-neutral-500 transition-colors duration-300">
+        {designer.name}
+      </h3>
     </Link>
   );
 }
 
-export function BrandGrid({
-  designers,
-  productCounts,
-}: {
-  designers: any[];
-  productCounts: Record<string, number>;
-}) {
+export function BrandGrid({ designers }: { designers: any[] }) {
   if (!designers || designers.length === 0) {
     return (
       <div className="rounded-sm border border-neutral-200/80 bg-neutral-50/50 px-4 py-8 text-center">
@@ -402,12 +380,18 @@ export function BrandGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-      {designers.map((designer: any) => {
-        const count = productCounts[designer.slug] || 0;
-        return <BrandCard key={designer.id} designer={designer} count={count} />;
-      })}
-    </div>
+    <>
+      <div className="md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-1 px-1 pb-1">
+        {designers.map((designer: any) => (
+          <BrandCard key={designer.id} designer={designer} />
+        ))}
+      </div>
+      <div className="hidden md:grid md:grid-cols-3 gap-5 lg:gap-7">
+        {designers.map((designer: any) => (
+          <BrandCard key={designer.id} designer={designer} />
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -466,13 +450,14 @@ interface HomePageData {
   saleProducts: any[];
 }
 
-const COLLECTION_PRODUCTS_KEY: Record<string, keyof HomePageData> = {
-  vacation: "vacationProducts",
-  evening: "eveningProducts",
-  tailoring: "tailoringProducts",
-  "summer-in-the-city": "summerInCityProducts",
-  "white-edit": "whiteEditProducts",
-};
+const EDIT_CAROUSEL_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
+  slug: collection.slug,
+  title: collection.label,
+  kicker: collection.kicker,
+  subtitle: collection.subtitle,
+  href: collection.href,
+  imageUrl: editorialHeroForSlug(collection.slug),
+}));
 
 export function HomePageContent({ initialData }: { initialData?: HomePageData }) {
   const [data, setData] = useState<HomePageData>(initialData || {
@@ -533,8 +518,12 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <NewInHomeRail products={data.newInProducts} newInCount={data.newInCount} />
 
+      <section className="border-t border-neutral-200/60 layout-bleed-full" data-testid="homepage-shop-the-edit">
+        <ShopTheEditCarousel slides={EDIT_CAROUSEL_SLIDES} />
+      </section>
+
       {curatedOrdered.length > 0 && (
-        <section className="py-10 md:py-20 border-t border-neutral-200/60">
+        <section className="py-10 md:py-16 border-t border-neutral-200/60">
           <div className="flex justify-between items-end mb-6 md:mb-8">
             <p className="text-[9px] md:text-[10px] uppercase tracking-[0.35em] text-neutral-400">
               Brands we love
@@ -546,27 +535,9 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <BrandGrid designers={curatedOrdered} productCounts={data.productCountByBrand} />
+          <BrandGrid designers={curatedOrdered} />
         </section>
       )}
-
-      {COLLECTION_SECTIONS.map((collection) => {
-        const productsKey = COLLECTION_PRODUCTS_KEY[collection.slug];
-        const products = (data[productsKey] as any[]) || [];
-        const labels =
-          HOMEPAGE_RAIL_LABELS[`${productsKey}` as keyof typeof HOMEPAGE_RAIL_LABELS] ??
-          { title: collection.label, subtitle: collection.subtitle };
-
-        return (
-          <HomepageCollectionBlock
-            key={collection.slug}
-            collection={collection}
-            products={products}
-            title={labels.title}
-            subtitle={labels.subtitle}
-          />
-        );
-      })}
 
       <SaleHomeRail products={data.saleProducts} />
 

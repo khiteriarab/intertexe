@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 
 export type EditCarouselSlide = {
@@ -55,18 +55,50 @@ const DEFAULT_SLIDES: EditCarouselSlide[] = [
   imageUrl: editorialHeroForSlug(slide.slug),
 }));
 
-function slideImageSrc(url: string): string {
-  return url.trim();
+function SlideImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      loading="eager"
+      draggable={false}
+    />
+  );
+}
+
+function EditOverlay({
+  slide,
+  className = "",
+}: {
+  slide: EditCarouselSlide;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end px-5 pb-20 lg:pb-10 md:px-10 pointer-events-none ${className}`}
+    >
+      <div className="pointer-events-auto max-w-md">
+        <h2 className="text-[28px] md:text-[40px] lg:text-[44px] font-serif text-white leading-[1.08] mb-2 md:mb-3">
+          {slide.title}
+        </h2>
+        <p className="text-[13px] md:text-[15px] text-white/85 leading-relaxed font-light mb-5 md:mb-6 max-w-sm">
+          {slide.subtitle}
+        </p>
+        <span className="inline-flex w-full md:w-auto items-center justify-center bg-white text-neutral-900 px-8 py-3.5 md:py-4 text-[11px] md:text-[12px] uppercase tracking-[0.12em] font-medium hover:bg-white/95 transition-colors">
+          Shop the edit
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export function ShopTheEditCarousel({
   slides = DEFAULT_SLIDES,
   autoPlayMs = 5000,
-  variant = "full",
 }: {
   slides?: EditCarouselSlide[];
   autoPlayMs?: number;
-  variant?: "full" | "compact";
 }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -92,10 +124,10 @@ export function ShopTheEditCarousel({
     return () => window.clearInterval(timer);
   }, [paused, count, autoPlayMs]);
 
-  const heightClass =
-    variant === "compact"
-      ? "min-h-[52svh] md:min-h-[58vh]"
-      : "min-h-[72svh] md:min-h-[min(78vh,720px)]";
+  const active = slides[index];
+  const next = slides[(index + 1) % count];
+
+  if (!active || count === 0) return null;
 
   return (
     <div
@@ -106,99 +138,114 @@ export function ShopTheEditCarousel({
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
+      {/* Mobile — peek of next slide, bottom overlay, pill nav */}
       <div
-        className={`relative overflow-hidden bg-[#1c1c1c] ${heightClass}`}
+        className="lg:hidden relative overflow-hidden bg-[#1c1c1c]"
         onTouchStart={(e) => {
           touchStartX.current = e.changedTouches[0]?.clientX ?? null;
+          setPaused(true);
         }}
         onTouchEnd={(e) => {
           const start = touchStartX.current;
           touchStartX.current = null;
           if (start == null) return;
           const delta = (e.changedTouches[0]?.clientX ?? start) - start;
-          if (Math.abs(delta) < 40) return;
+          if (Math.abs(delta) < 40) {
+            window.setTimeout(() => setPaused(false), 2000);
+            return;
+          }
           if (delta < 0) goNext();
           else goPrev();
+          window.setTimeout(() => setPaused(false), 3000);
         }}
       >
-        {slides.map((slide, i) => {
-          const imageUrl = slide.imageUrl || editorialHeroForSlug(slide.slug);
-          const active = i === index;
-          return (
-            <Link
-              key={slide.slug}
-              href={slide.href}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-              }`}
-              aria-hidden={!active}
-              tabIndex={active ? 0 : -1}
-              data-testid={`edit-slide-${slide.slug}`}
-            >
-              <img
-                src={slideImageSrc(imageUrl)}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover object-[center_28%] md:object-[center_32%]"
-                loading={i === 0 ? "eager" : "lazy"}
-                draggable={false}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10 pointer-events-none" />
-              <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end px-6 md:px-14 pb-10 md:pb-14 max-w-2xl">
-                <p className="text-[10px] md:text-[11px] uppercase tracking-[0.28em] text-white/60 mb-2">
-                  {slide.kicker}
-                </p>
-                <h2 className="text-[32px] md:text-[48px] font-serif text-white leading-[1.05] mb-2 md:mb-3">
-                  {slide.title}
-                </h2>
-                <p className="text-[13px] md:text-[15px] text-white/78 leading-relaxed max-w-md font-light mb-4 md:mb-5">
-                  {slide.subtitle}
-                </p>
-                <span className="inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-white/85">
-                  Shop the edit <ArrowRight className="w-3.5 h-3.5" />
-                </span>
+        <div
+          className="flex transition-transform duration-700 ease-in-out"
+          style={{ transform: `translateX(calc(-${index} * 88vw))` }}
+        >
+          {slides.map((slide, i) => {
+            const imageUrl = slide.imageUrl || editorialHeroForSlug(slide.slug);
+            return (
+              <div
+                key={slide.slug}
+                className="relative flex-shrink-0 w-[88vw] h-[min(72svh,560px)]"
+                aria-hidden={i !== index}
+              >
+                <Link
+                  href={slide.href}
+                  className="block absolute inset-0"
+                  tabIndex={i === index ? 0 : -1}
+                  data-testid={`edit-slide-${slide.slug}`}
+                >
+                  <SlideImage
+                    src={imageUrl}
+                    alt={slide.title}
+                    className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent pointer-events-none" />
+                  {i === index && <EditOverlay slide={slide} />}
+                </Link>
               </div>
-            </Link>
-          );
-        })}
+            );
+          })}
+        </div>
 
         {count > 1 && (
-          <>
+          <div className="absolute bottom-6 left-5 z-30 flex items-center gap-0 rounded-full border border-white/25 bg-black/30 backdrop-blur-sm overflow-hidden">
             <button
               type="button"
               onClick={goPrev}
-              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white hover:bg-black/40 transition-colors"
+              className="w-11 h-11 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
               aria-label="Previous edit"
             >
-              ‹
+              <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={goNext}
-              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white hover:bg-black/40 transition-colors"
+              className="w-11 h-11 flex items-center justify-center text-white hover:bg-white/10 transition-colors border-l border-white/20"
               aria-label="Next edit"
             >
-              ›
+              <ChevronRight className="w-4 h-4" />
             </button>
-          </>
+          </div>
         )}
       </div>
 
-      {count > 1 && (
-        <div className="flex items-center justify-center gap-2 py-4 md:py-5">
-          {slides.map((slide, i) => (
-            <button
-              key={slide.slug}
-              type="button"
-              onClick={() => goTo(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === index ? "w-6 bg-neutral-900" : "w-1.5 bg-neutral-300 hover:bg-neutral-500"
-              }`}
-              aria-label={`View ${slide.title}`}
-              aria-current={i === index ? "true" : undefined}
+      {/* Desktop — split panel: active edit left, next peek right */}
+      <div className="hidden lg:grid lg:grid-cols-2 min-h-[min(72vh,680px)] max-h-[760px]">
+        <div className="relative overflow-hidden bg-[#1c1c1c]">
+          <Link
+            href={active.href}
+            className="block absolute inset-0 transition-opacity duration-700"
+            data-testid={`edit-slide-${active.slug}`}
+          >
+            <SlideImage
+              src={active.imageUrl || editorialHeroForSlug(active.slug)}
+              alt={active.title}
+              className="absolute inset-0 w-full h-full object-cover object-[center_32%] transition-opacity duration-700"
             />
-          ))}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/5 pointer-events-none" />
+            <EditOverlay slide={active} />
+          </Link>
         </div>
-      )}
+
+        <div className="relative overflow-hidden bg-[#1c1c1c]">
+          {next && (
+            <Link
+              href={next.href}
+              className="block absolute inset-0"
+              aria-label={`Next: ${next.title}`}
+            >
+              <SlideImage
+                src={next.imageUrl || editorialHeroForSlug(next.slug)}
+                alt={next.title}
+                className="absolute inset-0 w-full h-full object-cover object-[center_32%] transition-opacity duration-700"
+              />
+            </Link>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

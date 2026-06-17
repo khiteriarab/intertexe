@@ -17,18 +17,6 @@ const slides = COLLECTION_SECTIONS.map((collection) => ({
 export function CollectionsEditClient() {
   return (
     <div className="flex flex-col w-full" data-testid="page-collections-edit">
-      <header className="px-4 md:px-8 pt-8 md:pt-10 pb-6 md:pb-8 max-w-3xl">
-        <p className="text-[10px] md:text-[11px] uppercase tracking-[0.28em] text-neutral-500 mb-2">
-          Collections
-        </p>
-        <h1 className="text-[34px] md:text-[44px] font-serif leading-[1.05] text-neutral-900">
-          Shop the edit
-        </h1>
-        <p className="mt-3 text-[14px] md:text-[15px] text-neutral-600 leading-relaxed font-light max-w-xl">
-          Curated worlds of natural-fiber dressing — one cover at a time.
-        </p>
-      </header>
-
       <div className="layout-bleed-full">
         <ShopTheEditCarousel slides={slides} />
       </div>
