@@ -22,6 +22,7 @@ import { EditorialHeroImage } from "./EditorialHeroImage";
 import { BrandEditorialImage } from "./BrandEditorialImage";
 import { HomepageHeroSection } from "./HomepageHeroSection";
 import { HomepageCollectionBlock } from "./HomepageCollectionBlock";
+import { NewInHomeRail } from "./NewInHomeRail";
 import { CatalogProductImage } from "./CatalogProductImage";
 import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
@@ -473,6 +474,7 @@ interface HomePageData {
   productCountByBrand: Record<string, number>;
   curatedDesigners: any[];
   newInProducts: any[];
+  newInCount?: number;
   vacationProducts: any[];
   eveningProducts: any[];
   tailoringProducts: any[];
@@ -497,6 +499,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     productCountByBrand: {},
     curatedDesigners: [],
     newInProducts: [],
+    newInCount: 0,
     vacationProducts: [],
     eveningProducts: [],
     tailoringProducts: [],
@@ -545,18 +548,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         />
       </div>
 
-      <section className="py-10 md:py-20 lg:pt-16">
-        <HorizontalProductScroll
-          products={data.newInProducts}
-          title={HOMEPAGE_RAIL_LABELS.newInProducts.title}
-          subtitle={HOMEPAGE_RAIL_LABELS.newInProducts.subtitle}
-          linkHref="/shop?sort=new"
-          linkText="Shop New In"
-          eager
-          fullWidth
-          limit={16}
-        />
-      </section>
+      <NewInHomeRail products={data.newInProducts} newInCount={data.newInCount} />
 
       {curatedOrdered.length > 0 && (
         <section className="py-10 md:py-20 border-t border-neutral-200/60">

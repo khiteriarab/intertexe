@@ -17,6 +17,7 @@ import { unstable_cache } from "next/cache";
 import {
   MERCH_RAIL_KEYS,
   fetchMerchRailsBatch,
+  fetchMerchRailDisplayCount,
   isMerchFeedEnabled,
 } from "./merch-feed";
 import { getCachedPlatformStats } from "./cached-catalog";
@@ -152,6 +153,7 @@ export interface HomePageData {
   productCountByBrand: Record<string, number>;
   curatedDesigners: any[];
   newInProducts: any[];
+  newInCount: number;
   vacationProducts: any[];
   eveningProducts: any[];
   tailoringProducts: any[];
@@ -202,7 +204,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     MERCH_RAIL_KEYS.sale,
   ] as const;
 
-  const [curatedDesigners, platformStats, railsByKey] = await Promise.all([
+  const [curatedDesigners, platformStats, railsByKey, newInCount] = await Promise.all([
     withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
     withHomepageRailTimeout(
       "platform-stats",
@@ -215,6 +217,12 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       RAIL_TIMEOUT_MS,
       () => fetchMerchRailsBatch([...railKeys], MERCH_HOME_FETCH_LIMIT),
       {} as Record<string, Product[]>
+    ),
+    withHomepageRailTimeout(
+      "rail:new-in-count",
+      2_500,
+      () => fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.newIn),
+      0
     ),
   ]);
 
@@ -248,6 +256,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     productCountByBrand: {},
     curatedDesigners,
     newInProducts,
+    newInCount,
     vacationProducts,
     eveningProducts,
     tailoringProducts,
@@ -381,6 +390,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     productCountByBrand: {},
     curatedDesigners,
     newInProducts,
+    newInCount: newInProducts.length,
     vacationProducts,
     eveningProducts: [] as Product[],
     tailoringProducts: [] as Product[],
@@ -393,6 +403,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v4"],
+  ["homepage-payload-v5"],
   { revalidate: 300, tags: ["homepage"] }
 );
