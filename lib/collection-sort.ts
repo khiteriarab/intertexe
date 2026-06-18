@@ -78,14 +78,50 @@ export function eveningCollectionRankScore(product: Product): number {
   return prestigeTier * 10_000_000 + price * 100 + collectionEditorialScore(product, "evening");
 }
 
+/** Round-robin across brands so one label cannot monopolize the first page. */
+function interleaveWhiteEditProducts<T extends Product>(products: T[]): T[] {
+  const scored = [...products].sort(
+    (a, b) => whiteEditBrandPriorityScore(b) - whiteEditBrandPriorityScore(a)
+  );
+
+  const byBrand = new Map<string, T[]>();
+  for (const product of scored) {
+    const brand = (product.brandSlug || product.brandName || "unknown").toLowerCase();
+    const queue = byBrand.get(brand);
+    if (queue) queue.push(product);
+    else byBrand.set(brand, [product]);
+  }
+
+  const brandOrder = [...byBrand.entries()]
+    .sort(
+      (a, b) =>
+        whiteEditBrandPriorityScore(b[1][0]!) - whiteEditBrandPriorityScore(a[1][0]!)
+    )
+    .map(([brand]) => brand);
+
+  const result: T[] = [];
+  let round = 0;
+  while (result.length < scored.length) {
+    let added = false;
+    for (const brand of brandOrder) {
+      const queue = byBrand.get(brand)!;
+      if (round < queue.length) {
+        result.push(queue[round]!);
+        added = true;
+      }
+    }
+    if (!added) break;
+    round++;
+  }
+  return result;
+}
+
 export function sortProductsForCollection<T extends Product>(
   products: T[],
   slug: CollectionSlug
 ): T[] {
   if (slug === "white-edit") {
-    return [...products].sort(
-      (a, b) => whiteEditBrandPriorityScore(b) - whiteEditBrandPriorityScore(a)
-    );
+    return interleaveWhiteEditProducts(products);
   }
   if (slug === "evening") {
     return [...products].sort(

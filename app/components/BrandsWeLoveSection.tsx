@@ -8,6 +8,7 @@ import { BRANDS_WE_LOVE_HIGHLIGHTS } from "../../lib/brands-we-love-editorial";
 import { getQualityTier } from "../../lib/quality-tiers";
 import { displayNaturalFiberPercent } from "../../lib/display-natural-fiber";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
+import { HORIZONTAL_RAIL_INSET_CLASS } from "../../lib/horizontal-rail";
 
 type BrandDesigner = {
   slug: string;
@@ -28,7 +29,9 @@ function BrandLoveCard({ designer }: { designer: BrandDesigner }) {
     <Link
       href={`/designers/${designer.slug}`}
       className="group flex flex-shrink-0 w-[78vw] sm:w-[52vw] md:w-auto snap-start flex-col gap-4 md:gap-5"
+      data-rail-card
       data-testid={`card-designer-${designer.slug}`}
+      draggable={false}
     >
       <div className="aspect-[4/5] bg-[#f3f2f0] overflow-hidden">
         {imageUrl ? (
@@ -108,7 +111,9 @@ export function BrandsWeLoveSection({ designers }: { designers: BrandDesigner[] 
         </Link>
       </div>
 
-      <div className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 lg:gap-10 xl:gap-12 overflow-x-auto md:overflow-visible snap-x snap-mandatory scrollbar-hide -mx-1 px-1 md:mx-0 md:px-0 pb-1">
+      <div
+        className={`${HORIZONTAL_RAIL_INSET_CLASS} flex md:grid md:grid-cols-3 md:overflow-visible md:snap-none gap-6 md:gap-8 lg:gap-10 xl:gap-12 md:mx-0 md:px-0`}
+      >
         {ordered.map((designer) => (
           <BrandLoveCard key={designer.slug} designer={designer} />
         ))}

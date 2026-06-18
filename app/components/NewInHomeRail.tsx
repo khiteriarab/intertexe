@@ -78,12 +78,9 @@ export function NewInHomeRail({
   };
 
   return (
-    <section
-      className="border-t border-neutral-200/70 py-12 md:py-16 lg:py-20 xl:py-24"
-      data-testid="section-new-in"
-    >
+    <section className="pt-4 pb-10 md:py-14 lg:py-16" data-testid="section-new-in">
       <div className="lg:grid lg:grid-cols-[minmax(280px,360px)_1fr] lg:gap-12 xl:gap-16 lg:items-stretch px-4 md:px-8">
-        <div className="flex flex-col justify-center gap-4 md:gap-5 mb-10 lg:mb-0 lg:py-6 xl:py-8 min-w-0">
+        <div className="flex flex-col justify-center gap-3 md:gap-4 mb-6 lg:mb-0 lg:py-6 xl:py-8 min-w-0">
           <p className="text-[10px] md:text-[11px] uppercase tracking-[0.22em] text-neutral-500">
             {countLabel}
           </p>
@@ -93,13 +90,6 @@ export function NewInHomeRail({
           <p className="text-[14px] md:text-[16px] lg:text-[17px] leading-relaxed text-neutral-600 max-w-sm font-light">
             New arrivals across the brands we track — verified natural fibers, refreshed throughout the week.
           </p>
-          <Link
-            href="/shop?sort=new"
-            className="mt-2 inline-flex w-fit items-center justify-center bg-neutral-900 text-white px-8 py-4 text-[10px] md:text-[11px] uppercase tracking-[0.16em] hover:bg-neutral-700 transition-colors"
-            data-testid="link-shop-new-in"
-          >
-            Shop New In
-          </Link>
         </div>
 
         <div className="relative min-w-0 lg:layout-bleed-full lg:pr-0">

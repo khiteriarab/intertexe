@@ -5,7 +5,10 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cfProductCard } from "../../lib/cloudflare-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
-import { HORIZONTAL_RAIL_CLASS } from "../../lib/horizontal-rail";
+import {
+  HORIZONTAL_RAIL_BLEED_CLASS,
+  HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS,
+} from "../../lib/horizontal-rail";
 
 function railImageSrc(url: string): string {
   const trimmed = url.trim();
@@ -34,7 +37,7 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
   return (
     <Link
       href={productHref}
-      className="group flex flex-shrink-0 w-[132px] sm:w-[156px] md:w-[172px] lg:w-[196px] xl:w-[212px] flex-col snap-start"
+      className="group flex flex-shrink-0 w-[148px] sm:w-[172px] md:w-[196px] lg:w-[228px] xl:w-[252px] 2xl:w-[272px] flex-col snap-start"
       data-rail-card
       data-testid={`product-sale-${product.id}`}
       draggable={false}
@@ -82,7 +85,7 @@ export function SaleHomeRail({ products }: { products?: any[] }) {
   const hasItems = railProducts.length > 0;
 
   return (
-    <section className="border-t border-neutral-200/70 py-10 md:py-14 lg:py-16" data-testid="section-sale">
+    <section className="border-t border-neutral-200/70 py-10 md:py-14 lg:py-16 layout-bleed-full" data-testid="section-sale">
       <div className="px-4 md:px-8 mb-6 md:mb-8">
         <Link href="/sale" className="group inline-flex items-center gap-2" data-testid="link-sale">
           <h2 className="text-[34px] sm:text-[40px] md:text-[44px] lg:text-[48px] font-serif leading-[1.02] group-hover:text-neutral-500 transition-colors">
@@ -92,9 +95,9 @@ export function SaleHomeRail({ products }: { products?: any[] }) {
         </Link>
       </div>
 
-      <div className="layout-bleed-full px-4 md:px-8">
+      <div className={`relative min-w-0 ${HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}`}>
         <div
-          className={`${HORIZONTAL_RAIL_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 min-h-[220px] sm:min-h-[260px] md:min-h-[300px] lg:min-h-[340px]`}
+          className={`${HORIZONTAL_RAIL_BLEED_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 min-h-[220px] sm:min-h-[260px] md:min-h-[300px] lg:min-h-[340px]`}
         >
           {hasItems ? (
             railProducts.map((product: any, i: number) => (

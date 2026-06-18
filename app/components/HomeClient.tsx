@@ -447,9 +447,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           productCountLabel={displayCount}
           brandCountLabel={displayBrands.replace(/\+$/, "")}
         />
+        <NewInHomeRail products={data.newInProducts} newInCount={data.newInCount} />
       </div>
-
-      <NewInHomeRail products={data.newInProducts} newInCount={data.newInCount} />
 
       <section
         className="border-t border-neutral-200/60 layout-bleed-full mt-[0.25in]"

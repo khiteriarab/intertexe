@@ -100,7 +100,7 @@ const SHOP_EDIT_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
   slug: collection.slug,
   title: collection.label,
   kicker: collection.kicker,
-  subtitle: collection.subtitle,
+  subtitle: EDIT_CAROUSEL_SHORT_SUBTITLES[collection.slug] ?? collection.subtitle,
   href: collection.href,
   imageUrl: editorialHeroForSlug(collection.slug),
 }));

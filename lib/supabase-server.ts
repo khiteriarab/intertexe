@@ -2027,10 +2027,60 @@ export async function fetchMoreFromBrand(
   return unique;
 }
 
+function diversifyProductsByBrand(products: Product[], limit: number, maxPerBrand = 2): Product[] {
+  const result: Product[] = [];
+  const brandCount: Record<string, number> = {};
+  for (const product of products) {
+    if (result.length >= limit) break;
+    const brand = (product.brandSlug || product.brandName || "").toLowerCase();
+    if ((brandCount[brand] || 0) >= maxPerBrand) continue;
+    brandCount[brand] = (brandCount[brand] || 0) + 1;
+    result.push(product);
+  }
+  return result;
+}
+
+/** PDP rail — other sale pieces, mixed across brands (not same-brand repeats). */
+export async function fetchMoreOnSale(productId: string, limit = 12): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  const excludeIds = new Set(
+    [productId, String(productId)].map((s) => s.trim()).filter(Boolean)
+  );
+  const target = Math.min(Math.max(limit, 8), 16);
+  const fetchLimit = Math.min(target * 6, 72);
+  const { preferred } = catalogRegionsFromMarket(undefined);
+
+  const { data, error } = await applySaleQuerySort(
+    buildSaleDirectQuery(supabase, preferred, {}),
+    "discount"
+  ).limit(fetchLimit);
+
+  if (error || !data?.length) return [];
+
+  const mapped = filterConsumerCatalogProducts(
+    data
+      .filter((row: any) => priceListedRow(row) && isClothingProduct(row) && rowIsOnSale(row))
+      .map(mapProductRow)
+      .filter((p) => {
+        const id = String(p.id || "");
+        const pid = String(p.productId || "");
+        return !excludeIds.has(id) && !excludeIds.has(pid);
+      })
+  );
+
+  const byDiscount = [...mapped].sort(
+    (a, b) => saleDiscountPercent(b) - saleDiscountPercent(a)
+  );
+  return diversifyProductsByBrand(byDiscount, target, 2);
+}
+
 export async function fetchMoreInFiber(
   productId: string,
   composition: string | null,
-  limit = 4
+  limit = 4,
+  opts?: { saleOnly?: boolean }
 ): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase || !composition) return [];
@@ -2038,24 +2088,32 @@ export async function fetchMoreInFiber(
   const lower = composition.toLowerCase();
   const primaryFiber = fibers.find((f) => lower.includes(f));
   if (!primaryFiber) return [];
-  const { data, error } = await liveProductsApparelFrom(supabase)
-    
+  let query = liveProductsApparelFrom(supabase)
     .select(PRODUCT_CARD_COLS)
     .neq("id", productId)
     .ilike("composition", `%${primaryFiber}%`)
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
-    .not("price", "is", null)
+    .not("price", "is", null);
+  if (opts?.saleOnly) {
+    query = query.eq("is_sale", true);
+  }
+  const { data, error } = await query
     .order("natural_fiber_percent", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
-  return data.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
+  return data
+    .filter(isClothingProduct)
+    .filter(isNotMensProduct)
+    .filter((row: any) => !opts?.saleOnly || rowIsOnSale(row))
+    .map(mapProductRow);
 }
 
 export async function fetchMoreAtPrice(
   productId: string,
   price: string | null,
-  limit = 4
+  limit = 4,
+  opts?: { saleOnly?: boolean }
 ): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase || !price) return [];
@@ -2063,19 +2121,23 @@ export async function fetchMoreAtPrice(
   if (!numPrice || numPrice <= 0) return [];
   const low = numPrice * 0.8;
   const high = numPrice * 1.2;
-  const { data, error } = await liveProductsApparelFrom(supabase)
-    
+  let query = liveProductsApparelFrom(supabase)
     .select(PRODUCT_CARD_COLS)
     .neq("id", productId)
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
-    .not("price", "is", null)
+    .not("price", "is", null);
+  if (opts?.saleOnly) {
+    query = query.eq("is_sale", true);
+  }
+  const { data, error } = await query
     .order("natural_fiber_percent", { ascending: false })
     .limit(60);
   if (error || !data) return [];
   const filtered = data
     .filter(isClothingProduct)
     .filter(isNotMensProduct)
+    .filter((row: any) => !opts?.saleOnly || rowIsOnSale(row))
     .filter((row: any) => {
       const p = parseFloat((row.price || "0").replace(/[^0-9.]/g, ""));
       return p >= low && p <= high;

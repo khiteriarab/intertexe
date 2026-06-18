@@ -5,6 +5,7 @@ import { ChevronLeft, ShoppingBag, Leaf, ArrowRight } from "lucide-react";
 import {
   fetchProductById,
   fetchMoreFromBrand,
+  fetchMoreOnSale,
   fetchMoreInFiber,
   fetchMoreAtPrice,
   fetchAllProductIds,
@@ -209,12 +210,15 @@ export default async function ProductPage({
   const priceShown = formatDisplayPrice(product);
   const originalShown = formatDisplayOriginalPrice(product);
 
-  const [moreFromBrand, moreInFiber, moreAtPrice] = await Promise.all([
-    product.brandSlug
+  const isSaleItem = Boolean(product.isSale);
+
+  const [moreFromBrand, moreOnSale, moreInFiber, moreAtPrice] = await Promise.all([
+    !isSaleItem && product.brandSlug
       ? fetchMoreFromBrand(String(product.id), product.brandSlug, 12)
       : Promise.resolve([]),
-    fetchMoreInFiber(String(product.id), product.composition, 4),
-    fetchMoreAtPrice(String(product.id), product.price, 4),
+    isSaleItem ? fetchMoreOnSale(String(product.id), 12) : Promise.resolve([]),
+    fetchMoreInFiber(String(product.id), product.composition, 4, { saleOnly: isSaleItem }),
+    fetchMoreAtPrice(String(product.id), product.price, 4, { saleOnly: isSaleItem }),
   ]);
 
   const breadcrumbItems: any[] = [
@@ -397,11 +401,30 @@ export default async function ProductPage({
           </div>
         </div>
 
-        {[
-          { items: moreFromBrand, title: `More from ${product.brandName}`, testId: "section-more-from-brand" },
-          { items: moreInFiber, title: primaryFiber ? `More in ${primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}` : "Similar Materials", testId: "section-more-in-fiber" },
-          { items: moreAtPrice, title: "More at This Price", testId: "section-more-at-price" },
-        ].filter((s) => s.items.length > 0).map((section) => (
+        {(isSaleItem
+          ? [
+              { items: moreOnSale, title: "More on sale", testId: "section-more-on-sale" },
+              {
+                items: moreInFiber,
+                title: primaryFiber
+                  ? `More sale in ${primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}`
+                  : "More sale picks",
+                testId: "section-more-in-fiber",
+              },
+              { items: moreAtPrice, title: "More sale at this price", testId: "section-more-at-price" },
+            ]
+          : [
+              { items: moreFromBrand, title: `More from ${product.brandName}`, testId: "section-more-from-brand" },
+              {
+                items: moreInFiber,
+                title: primaryFiber
+                  ? `More in ${primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}`
+                  : "Similar Materials",
+                testId: "section-more-in-fiber",
+              },
+              { items: moreAtPrice, title: "More at This Price", testId: "section-more-at-price" },
+            ]
+        ).filter((s) => s.items.length > 0).map((section) => (
           <section key={section.testId} className="flex flex-col gap-5 border-t border-border/30 pt-8" data-testid={section.testId}>
             <h2 className="text-xs uppercase tracking-[0.2em] font-medium text-muted-foreground">
               {section.title}

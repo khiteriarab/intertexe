@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -8,7 +9,9 @@ import {
   HOMEPAGE_HERO_IMAGE_MOBILE,
 } from "../../lib/editorial-assets";
 
-/** Portrait campaign hero — full viewport width; product grid stays in rails below (not beside hero). */
+const HERO_SWAP_MS = 1000;
+
+/** Portrait campaign hero — alternates mobile + desktop art every second. */
 export function HomepageHeroSection({
   productCountLabel,
   brandCountLabel,
@@ -17,6 +20,15 @@ export function HomepageHeroSection({
   brandCountLabel: string;
   products?: unknown[];
 }) {
+  const [showDesktopHero, setShowDesktopHero] = useState(false);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setShowDesktopHero((current) => !current);
+    }, HERO_SWAP_MS);
+    return () => window.clearInterval(id);
+  }, []);
+
   return (
     <>
       <section
@@ -26,13 +38,30 @@ export function HomepageHeroSection({
         <div className="homepage-hero-frame-mobile">
           <Image
             src={HOMEPAGE_HERO_IMAGE_MOBILE}
-            alt="INTERTEXE — Luxury natural-fiber fashion"
+            alt=""
             fill
             priority
             quality={100}
             sizes="100vw"
-            className="homepage-hero-img"
+            aria-hidden
+            className={`homepage-hero-img transition-opacity duration-500 ${
+              showDesktopHero ? "opacity-0" : "opacity-100"
+            }`}
             style={{ objectPosition: "center 75%" }}
+            draggable={false}
+          />
+          <Image
+            src={HOMEPAGE_HERO_IMAGE_DESKTOP}
+            alt=""
+            fill
+            priority
+            quality={100}
+            sizes="100vw"
+            aria-hidden
+            className={`homepage-hero-img transition-opacity duration-500 ${
+              showDesktopHero ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ objectPosition: "center 58%" }}
             draggable={false}
           />
         </div>
@@ -58,10 +87,24 @@ export function HomepageHeroSection({
       </section>
 
       <section
-        className="homepage-hero relative w-full hidden lg:block overflow-hidden border-b border-neutral-200/60"
+        className="homepage-hero relative w-full hidden lg:block overflow-hidden"
         data-testid="homepage-hero-desktop"
       >
         <div className="homepage-hero-desktop-frame">
+          <Image
+            src={HOMEPAGE_HERO_IMAGE_MOBILE}
+            alt=""
+            fill
+            priority
+            quality={100}
+            sizes="100vw"
+            aria-hidden
+            className={`homepage-hero-img transition-opacity duration-500 ${
+              showDesktopHero ? "opacity-0" : "opacity-100"
+            }`}
+            style={{ objectPosition: "center 75%" }}
+            draggable={false}
+          />
           <Image
             src={HOMEPAGE_HERO_IMAGE_DESKTOP}
             alt="INTERTEXE editorial"
@@ -69,7 +112,9 @@ export function HomepageHeroSection({
             priority
             quality={100}
             sizes="100vw"
-            className="homepage-hero-img"
+            className={`homepage-hero-img transition-opacity duration-500 ${
+              showDesktopHero ? "opacity-100" : "opacity-0"
+            }`}
             style={{ objectPosition: "center 58%" }}
             draggable={false}
           />

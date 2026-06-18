@@ -281,6 +281,7 @@
 
 .horizontal-rail > a,
 .horizontal-rail > * > a,
+.horizontal-rail [data-rail-card],
 .product-rail-scroll > a,
 .product-rail-scroll [data-rail-card] {
   scroll-snap-align: start;
@@ -288,6 +289,13 @@
   touch-action: pan-x pinch-zoom;
   -webkit-user-drag: none;
   user-select: none;
+}
+
+.horizontal-rail a[href],
+.product-rail-scroll a[href],
+.horizontal-rail [data-rail-card],
+.product-rail-scroll [data-rail-card] {
+  touch-action: pan-x pinch-zoom;
 }
 
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
