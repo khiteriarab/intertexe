@@ -16,6 +16,10 @@ export const ZIMMERMANN_SUMMER_CAMPAIGN =
 export const FAITHFULL_WHITE_EDIT_CAMPAIGN =
   "https://faithfullthebrand.com/cdn/shop/files/S40-FFC20-WHT-24635-FaithfullTheBrand-2090.webp";
 
+/** Valentino Fireflies SS26 — tailoring edit cover. */
+export const VALENTINO_TAILORING_CAMPAIGN =
+  "https://valentino-cdn.thron.com/delivery/public/image/valentino/16b2eb87-ffdb-45bc-bd25-a6c05dbf98d7/RVyRTgf/std/1920x0/16b2eb87-ffdb-45bc-bd25-a6c05dbf98d7.jpg";
+
 /** Brand “we love” tiles — campaign art, not SKU or logo files. */
 export const BRAND_CAMPAIGN_HEROES = {
   "isabel-marant":
@@ -35,7 +39,7 @@ export const EDITORIAL_HERO = {
   vacation: `${BASE}/brands/theory.jpg`,
   /** Landscape silk campaign — fills wide “Evening” panel without pillarboxing. */
   evening: LANDSCAPE_SILK,
-  tailoring: `${BASE}/brands/theory.jpg`,
+  tailoring: VALENTINO_TAILORING_CAMPAIGN,
   "summer-in-the-city": ZIMMERMANN_SUMMER_CAMPAIGN,
   /** Woman in white — Faithfull campaign (not catalog SKU). */
   "white-edit": FAITHFULL_WHITE_EDIT_CAMPAIGN,

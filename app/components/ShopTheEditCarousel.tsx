@@ -114,8 +114,11 @@ export function ShopTheEditCarousel({
                   <p className="text-[10px] uppercase tracking-[0.2em] text-white/65 mb-1">
                     {slide.kicker}
                   </p>
-                  <p className="font-serif text-[22px] lg:text-[28px] text-white leading-tight">
+                  <p className="font-serif text-[22px] lg:text-[28px] text-white leading-tight break-words">
                     {slide.title}
+                  </p>
+                  <p className="text-[11px] font-light text-white/75 leading-snug mt-1 line-clamp-2">
+                    {slide.subtitle}
                   </p>
                 </div>
               </Link>
