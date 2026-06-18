@@ -45,7 +45,7 @@ import {
 } from "../../../lib/scanner/european-price";
 import { preprocessLabel, splitShellAndLining } from "../../../lib/scanner/label-preprocessing";
 import { isNonApparelProduct, NON_APPAREL_MESSAGE } from "../../../lib/scanner/non-apparel";
-import { extractBrandFromURL } from "../../../lib/scanner/retailer-brand-map";
+import { incrementScanCount } from "../../../lib/rewards";
 
 const NATURAL_FIBERS = new Set([
   "cotton", "linen", "silk", "wool", "cashmere", "mohair", "alpaca", "hemp",
@@ -783,6 +783,7 @@ export async function POST(request: NextRequest) {
           preprocessingWarnings: ["lining_label"],
           success: true,
         });
+        await incrementScanCount(supabase, userId);
         return NextResponse.json(liningResponse);
       }
 
@@ -819,6 +820,7 @@ export async function POST(request: NextRequest) {
           preprocessingWarnings: labelPrep.warnings,
           success: true,
         });
+        await incrementScanCount(supabase, userId);
         return NextResponse.json(liningResponse);
       }
 
@@ -1039,6 +1041,7 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      await incrementScanCount(supabase, userId);
       return NextResponse.json(response);
     }
 
@@ -1130,6 +1133,7 @@ export async function POST(request: NextRequest) {
         })
       );
 
+      await incrementScanCount(supabase, userId);
       return NextResponse.json(response);
     }
 
@@ -1467,6 +1471,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    await incrementScanCount(supabase, userId);
     return NextResponse.json(legacyResponse);
   } catch (err: any) {
     console.error("Scan error:", err.message);

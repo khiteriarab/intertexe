@@ -91,6 +91,14 @@ export function MobileNavMenu() {
                   </div>
                 ))}
                 <Link
+                  href="/rewards"
+                  className="flex items-center justify-between py-4 text-sm uppercase tracking-[0.12em] border-b border-border/20"
+                  onClick={() => setOpen(false)}
+                >
+                  Rewards
+                  <span className="text-muted-foreground text-lg leading-none">›</span>
+                </Link>
+                <Link
                   href="/scanner"
                   className="flex items-center justify-between py-4 text-sm uppercase tracking-[0.12em] border-b border-border/20"
                   onClick={() => setOpen(false)}

@@ -26,6 +26,7 @@ export function Footer() {
           <div className="flex flex-col gap-3 md:gap-4">
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Account</h3>
             <Link href="/account" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-account">My Account</Link>
+            <Link href="/rewards" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-rewards">Rewards</Link>
             <Link href="/account" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-wishlist">Wishlist</Link>
             <Link href="/quiz" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-quiz-history">Quiz History</Link>
           </div>

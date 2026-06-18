@@ -63,6 +63,7 @@ export function Navbar() {
 
   const navLinks = [
     ...MERCH_NAV.map((item) => ({ name: item.name, href: item.href })),
+    { name: "Rewards", href: "/rewards" },
     { name: "Scanner", href: "/scanner" },
   ];
 
