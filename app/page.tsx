@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCachedHomePageData } from "../lib/homepage-data";
-import { HOMEPAGE_REVALIDATE_SEC } from "../lib/homepage-cache-config";
 import { getCachedBrandStats, getCachedPlatformStats } from "../lib/cached-catalog";
 import {
   formatBrandCountLabel,
@@ -12,7 +11,7 @@ import {
 import { HomePageContent } from "./components/HomeClient";
 
 /** Cached editorial homepage — rails precomputed in Supabase, stats cached server-side. */
-export const revalidate = HOMEPAGE_REVALIDATE_SEC;
+export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
   const [platformStats, brandStats] = await Promise.all([
