@@ -19,17 +19,15 @@ import {
   catalogHasMore,
 } from "../../../lib/catalog-fetch-limits";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 60;
+export const revalidate = 300;
 const COLLECTION_FALLBACK_MIN_PRODUCTS = 3;
+const CACHE_TTL_MS = 300_000;
 const PRODUCT_CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-  "CDN-Cache-Control": "public, s-maxage=60",
-  "Vercel-CDN-Cache-Control": "public, s-maxage=60",
+  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+  "CDN-Cache-Control": "public, s-maxage=300",
+  "Vercel-CDN-Cache-Control": "public, s-maxage=300",
   Vary: "Accept-Encoding",
 };
-
-const CACHE_TTL_MS = 300_000;
 type CatalogCacheEntry = { data: Record<string, unknown>; timestamp: number };
 const catalogMemoryCache =
   ((globalThis as typeof globalThis & { __catalogMemoryCache?: Map<string, CatalogCacheEntry> }).__catalogMemoryCache ??=

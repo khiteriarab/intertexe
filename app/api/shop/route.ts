@@ -1,7 +1,13 @@
-export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { queryLiveCatalog } from "../../../lib/catalog-direct-query";
 import { fetchProductCount, fetchFiberCounts } from "../../../lib/supabase-server";
+
+export const revalidate = 300;
+
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+  "CDN-Cache-Control": "public, max-age=300",
+};
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -12,7 +18,10 @@ export async function GET(request: NextRequest) {
         fetchProductCount(),
         fetchFiberCounts(),
       ]);
-      return NextResponse.json({ totalProductCount, fiberCounts });
+      return NextResponse.json(
+        { totalProductCount, fiberCounts },
+        { headers: CACHE_HEADERS }
+      );
     } catch {
       return NextResponse.json({ totalProductCount: 0, fiberCounts: {} }, { status: 500 });
     }
@@ -37,8 +46,8 @@ export async function GET(request: NextRequest) {
       search,
       skipCount: false,
     });
-    return NextResponse.json(result);
-  } catch (error) {
+    return NextResponse.json(result, { headers: CACHE_HEADERS });
+  } catch {
     return NextResponse.json({ products: [], total: 0, error: "failed" }, { status: 500 });
   }
 }

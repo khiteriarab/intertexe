@@ -14,6 +14,7 @@ import { CURATED_BRAND_SLUGS } from "./homepage-constants";
 import { isEditorialWomensApparel } from "./catalog-product-filters";
 import { EDITORIAL_HERO } from "./editorial-assets";
 import { unstable_cache } from "next/cache";
+import { HOMEPAGE_REVALIDATE_SEC } from "./homepage-cache-config";
 import {
   MERCH_RAIL_KEYS,
   fetchMerchRailsBatch,
@@ -430,6 +431,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v10"],
-  { revalidate: 300, tags: ["homepage"] }
+  ["homepage-payload-v11"],
+  { revalidate: HOMEPAGE_REVALIDATE_SEC, tags: ["homepage"] }
 );

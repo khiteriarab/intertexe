@@ -1,35 +1,8 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import type { RewardsGridProduct } from "../../lib/rewards";
 
-type CatalogProduct = {
-  id: string;
-  name?: string;
-  imageUrl?: string;
-  slug?: string;
-};
-
-export function RewardsNewInGrid() {
-  const [products, setProducts] = useState<CatalogProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/catalog?justIn=1&limit=9&sort=new&region=us")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const list = Array.isArray(data?.products)
-          ? data.products
-          : Array.isArray(data)
-            ? data
-            : [];
-        setProducts(list.slice(0, 9));
-      })
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false));
-  }, []);
-
+export function RewardsNewInGrid({ products }: { products: RewardsGridProduct[] }) {
   return (
     <section className="py-12 px-6 md:px-16 bg-white">
       <div className="max-w-lg mx-auto text-center mb-8">
@@ -42,11 +15,11 @@ export function RewardsNewInGrid() {
       </div>
 
       <div className="max-w-lg mx-auto grid grid-cols-3 gap-1">
-        {loading
+        {products.length === 0
           ? Array.from({ length: 9 }).map((_, i) => (
               <div
                 key={i}
-                className="aspect-[3/4] bg-[#F4F4ED] animate-pulse"
+                className="aspect-[3/4] bg-[#F4F4ED]"
               />
             ))
           : products.map((product) => {

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RewardsNewInGrid } from "./RewardsNewInGrid";
+import { getCachedRewardsNewInProducts } from "../../lib/rewards";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Intertexe Rewards | Know More, Earn More",
@@ -79,7 +82,9 @@ function BenefitList({
   );
 }
 
-export default function RewardsPage() {
+export default async function RewardsPage() {
+  const newInProducts = await getCachedRewardsNewInProducts();
+
   return (
     <main className="min-h-screen bg-white">
       <section
@@ -119,7 +124,7 @@ export default function RewardsPage() {
         </p>
       </section>
 
-      <RewardsNewInGrid />
+      <RewardsNewInGrid products={newInProducts} />
 
       <section className="pb-20 px-6 md:px-16">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-1">
