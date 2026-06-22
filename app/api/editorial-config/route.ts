@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildCollectionsManifest } from "../../../lib/collections-manifest";
 import {
   BRAND_WE_LOVE_IMAGES,
   EDITORIAL_HERO,
@@ -20,6 +21,7 @@ export async function GET() {
       brands: BRAND_WE_LOVE_IMAGES,
       homepageHeroMobile: HOMEPAGE_HERO_IMAGE_MOBILE,
       homepageHeroDesktop: HOMEPAGE_HERO_IMAGE_DESKTOP,
+      collections: buildCollectionsManifest(),
     },
     {
       headers: {

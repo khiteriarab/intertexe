@@ -1,19 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import {
+  COLLECTIONS_MENU,
+  getCollectionManifestItem,
+} from "../../lib/collections-manifest";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 
-const HERO_SLUG = "summer-in-the-city";
-
-const GRID_SLUGS = ["vacation", "evening", "tailoring", "white-edit"] as const;
-
-const GRID_SUBLINES: Record<string, string> = {
-  vacation: "Linen & silk.",
-  evening: "After dark.",
-  tailoring: "Outlast every trend.",
-  "white-edit": "Ivory. Chalk. Cream.",
-};
+const HERO_SLUG = COLLECTIONS_MENU.heroSlug;
+const GRID_SLUGS = COLLECTIONS_MENU.gridSlugs;
 
 function collectionForSlug(slug: string) {
   return COLLECTION_SECTIONS.find((c) => c.slug === slug);
@@ -32,9 +28,10 @@ function CollectionCoverLink({
   if (!collection) return null;
 
   const imageUrl = editorialHeroForSlug(slug);
+  const manifestItem = getCollectionManifestItem(slug);
   const subtitle = compact
-    ? GRID_SUBLINES[slug] ?? collection.subtitle
-    : collection.subtitle;
+    ? manifestItem?.gridSubline ?? collection.subtitle
+    : manifestItem?.subline ?? collection.subtitle;
 
   return (
     <Link
