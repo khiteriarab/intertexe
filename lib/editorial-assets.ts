@@ -4,9 +4,18 @@
 
 const BASE = "https://www.intertexe.com";
 
-/** Landscape editorial-silk (1408×768) — safe for homepage hero + evening panel. */
-const LANDSCAPE_SILK = `${BASE}/editorial-silk.png`;
-const LANDSCAPE_LINEN = `${BASE}/editorial-linen.png`;
+/** Fabric hub covers — served from /public/fabrics. */
+const FABRIC_HERO = {
+  silk: "/fabrics/fabric-silk.jpg",
+  linen: "/fabrics/fabric-linen.jpg",
+  cashmere: "/fabrics/fabric-cashmere.jpg",
+  wool: "/fabrics/fabric-wool.jpg",
+  cotton: "/fabrics/fabric-cotton.jpg",
+  leather: "/fabrics/fabric-leather.jpg",
+} as const;
+
+/** Rag & Bone Ann embroidered slip — hosted on intertexe.com. */
+const SILK_EDITORIAL_HERO = FABRIC_HERO.silk;
 
 /** Zimmermann resort campaign — Summer in the City collection panel. */
 export const ZIMMERMANN_SUMMER_CAMPAIGN =
@@ -16,9 +25,11 @@ export const ZIMMERMANN_SUMMER_CAMPAIGN =
 export const FAITHFULL_WHITE_EDIT_CAMPAIGN =
   "https://faithfullthebrand.com/cdn/shop/files/S40-FFC20-WHT-24635-FaithfullTheBrand-2090.webp";
 
-/** Valentino Fireflies SS26 — tailoring edit cover. */
-export const VALENTINO_TAILORING_CAMPAIGN =
-  "https://valentino-cdn.thron.com/delivery/public/image/valentino/16b2eb87-ffdb-45bc-bd25-a6c05dbf98d7/RVyRTgf/std/1920x0/16b2eb87-ffdb-45bc-bd25-a6c05dbf98d7.jpg";
+/** Hosted tailoring hero — bundled in /public for reliable delivery. */
+export const TAILORING_EDITORIAL_HERO = "/editorial-tailoring.png";
+
+/** Evening collection — bundled in /public for reliable delivery. */
+export const EVENING_EDITORIAL_HERO = "/editorial-evening.png";
 
 /** Brand “we love” tiles — campaign art, not SKU or logo files. */
 export const BRAND_CAMPAIGN_HEROES = {
@@ -29,28 +40,27 @@ export const BRAND_CAMPAIGN_HEROES = {
 } as const;
 
 export const EDITORIAL_HERO = {
-  silk: LANDSCAPE_SILK,
-  linen: LANDSCAPE_LINEN,
-  cashmere: `${BASE}/editorial-cashmere.jpg`,
-  wool: `${BASE}/brands/theory.jpg`,
-  cotton: `${BASE}/brands/l-agence.jpg`,
-  "leather-suede": `${BASE}/brands/staud.jpg`,
+  silk: SILK_EDITORIAL_HERO,
+  linen: FABRIC_HERO.linen,
+  cashmere: FABRIC_HERO.cashmere,
+  wool: FABRIC_HERO.wool,
+  cotton: FABRIC_HERO.cotton,
+  "leather-suede": FABRIC_HERO.leather,
   /** Tailoring campaign art — also used for Vacation edit cover. */
-  vacation: `${BASE}/brands/theory.jpg`,
-  /** Landscape silk campaign — fills wide “Evening” panel without pillarboxing. */
-  evening: LANDSCAPE_SILK,
-  tailoring: VALENTINO_TAILORING_CAMPAIGN,
+  vacation: "/editorial-vacation.jpg",
+  evening: EVENING_EDITORIAL_HERO,
+  tailoring: TAILORING_EDITORIAL_HERO,
   "summer-in-the-city": ZIMMERMANN_SUMMER_CAMPAIGN,
   /** Woman in white — Faithfull campaign (not catalog SKU). */
   "white-edit": FAITHFULL_WHITE_EDIT_CAMPAIGN,
-  newIn: LANDSCAPE_SILK,
+  newIn: SILK_EDITORIAL_HERO,
 } as const;
 
 export type EditorialHeroKey = keyof typeof EDITORIAL_HERO;
 
 export function editorialHeroForSlug(slug: string): string {
   const key = slug as EditorialHeroKey;
-  return EDITORIAL_HERO[key] ?? LANDSCAPE_SILK;
+  return EDITORIAL_HERO[key] ?? SILK_EDITORIAL_HERO;
 }
 
 /**

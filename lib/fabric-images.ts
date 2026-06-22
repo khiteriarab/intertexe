@@ -6,6 +6,7 @@ export const fabricImages = {
   wool: "/fabrics/fabric-wool.jpg",
   cotton: "/fabrics/fabric-cotton.jpg",
   leather: "/fabrics/fabric-leather.jpg",
+  shoes: "/fabrics/fabric-shoes.jpg",
 } as const;
 
 export type FabricImageSlug = keyof typeof fabricImages;
