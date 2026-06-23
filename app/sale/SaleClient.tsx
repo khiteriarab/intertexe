@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
@@ -24,7 +24,7 @@ import { CatalogProductImage } from "../components/CatalogProductImage";
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
 type SaleSort = "discount" | "new" | "price-low" | "price-high" | "natural-high";
 
-const PAGE_SIZE = 48;
+const PAGE_SIZE = 24;
 
 const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "all", label: "All" },
@@ -179,6 +179,7 @@ export default function SaleClient({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     getShopBrands()
@@ -253,7 +254,7 @@ export default function SaleClient({
     fetchPage,
   ]);
 
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (!hasMore || isLoadingMore || isLoading) return;
     setIsLoadingMore(true);
     try {
@@ -263,7 +264,23 @@ export default function SaleClient({
     } finally {
       setIsLoadingMore(false);
     }
-  };
+  }, [hasMore, isLoadingMore, isLoading, fetchPage, offset]);
+
+  useEffect(() => {
+    if (!hasMore || isLoadingMore || isLoading) return;
+    const node = loadMoreSentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          loadMore();
+        }
+      },
+      { rootMargin: "400px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, isLoading, loadMore, products.length]);
 
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
 
@@ -555,15 +572,12 @@ export default function SaleClient({
                     ))}
                   </div>
                   {hasMore && (
-                    <div className="flex justify-center pt-4">
-                      <button
-                        onClick={loadMore}
-                        disabled={isLoadingMore}
-                        className="border border-foreground px-10 py-3 uppercase tracking-[0.2em] text-[10px] md:text-xs hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
-                        data-testid="btn-load-more-sale"
-                      >
-                        {isLoadingMore ? "Loading…" : "Load More"}
-                      </button>
+                    <div ref={loadMoreSentinelRef} className="flex justify-center pt-8 pb-4 min-h-[48px]">
+                      {isLoadingMore && (
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+                          Loading more…
+                        </span>
+                      )}
                     </div>
                   )}
                 </>
