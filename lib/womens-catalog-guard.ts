@@ -69,6 +69,15 @@ export function isMensCatalogRow(row: {
 
   if (/^(men|mens|men'?s|male|homme|uomo)\b/i.test(cat.trim())) return true;
 
+  // Rakuten / affiliate menswear feeds: ALL CAPS style | COLOR without gender copy.
+  const rawName = String(row.name || row.title || "").trim();
+  if (/^[A-Z][A-Z0-9 '\-|&.]+$/.test(rawName) && rawName.includes("|")) {
+    const mensCategoryHints = ["shirt", "tee", "t-shirt", "top", "polo", "knit", "sweater", "trouser", "pant", "jean"];
+    if (mensCategoryHints.some((hint) => cat.includes(hint))) return true;
+    if (/\/(men|mens|menswear|man|homme|uomo)(\/|$|\?)/i.test(url)) return true;
+    return true;
+  }
+
   return false;
 }
 
