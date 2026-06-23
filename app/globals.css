@@ -167,8 +167,8 @@
   display: block;
 }
 
-.homepage-hero-desktop-frame .homepage-hero-img {
-  object-position: center 78%;
+.homepage-hero-desktop-frame .homepage-hero-img--editorial-jpg {
+  object-position: center top;
 }
 
 .homepage-hero-frame-mobile .homepage-hero-img {
