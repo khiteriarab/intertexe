@@ -157,24 +157,23 @@
   height: 100% !important;
 }
 
-.homepage-hero-desktop-frame .homepage-hero-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-}
-
+.homepage-hero-desktop-frame .homepage-hero-img,
 .homepage-hero-frame-mobile .homepage-hero-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
   display: block;
+}
+
+/* Homepage hero only — collections/editorial keep center top elsewhere */
+.homepage-hero-img--desktop {
+  object-position: center 58%;
+}
+
+.homepage-hero-img--mobile {
+  object-position: center 75%;
 }
 
 /* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */

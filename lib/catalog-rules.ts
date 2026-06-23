@@ -18,6 +18,9 @@ export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE } from "./catalog-constants";
 export function classifyMaterial(composition = "", _materialMetadata?: unknown): string {
   const blob = String(composition || "").toLowerCase();
   if (!blob.trim()) return "unknown_material";
+  if (/(vegan\s+leather|faux[\s-]?leather|pu\s+leather|polyurethane\s+leather|pleather|synthetic\s+leather|leatherette|imitation\s+leather|bonded\s+leather|eco[\s-]?leather|vegan\s+suede|faux\s+suede|artificial\s+leather)/.test(blob)) {
+    return "synthetic_blend";
+  }
   if (/(silk|mulberry)/.test(blob)) return "silk";
   if (/cashmere/.test(blob)) return "cashmere";
   if (/(wool|merino|lambswool|alpaca)/.test(blob)) return "wool";

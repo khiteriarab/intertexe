@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -9,9 +8,7 @@ import {
   HOMEPAGE_HERO_IMAGE_MOBILE,
 } from "../../lib/editorial-assets";
 
-const HERO_SWAP_MS = 1000;
-
-/** Portrait campaign hero — alternates mobile + desktop art every second. */
+/** Portrait on mobile; landscape campaign on desktop — face anchored below top crop. */
 export function HomepageHeroSection({
   productCountLabel,
   brandCountLabel,
@@ -20,15 +17,6 @@ export function HomepageHeroSection({
   brandCountLabel: string;
   products?: unknown[];
 }) {
-  const [showDesktopHero, setShowDesktopHero] = useState(false);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setShowDesktopHero((current) => !current);
-    }, HERO_SWAP_MS);
-    return () => window.clearInterval(id);
-  }, []);
-
   return (
     <>
       <section
@@ -44,24 +32,7 @@ export function HomepageHeroSection({
             quality={100}
             sizes="100vw"
             aria-hidden
-            className={`homepage-hero-img transition-opacity duration-500 ${
-              showDesktopHero ? "opacity-0" : "opacity-100"
-            }`}
-            style={{ objectPosition: "center top" }}
-            draggable={false}
-          />
-          <Image
-            src={HOMEPAGE_HERO_IMAGE_DESKTOP}
-            alt=""
-            fill
-            priority
-            quality={100}
-            sizes="100vw"
-            aria-hidden
-            className={`homepage-hero-img transition-opacity duration-500 ${
-              showDesktopHero ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ objectPosition: "center top" }}
+            className="homepage-hero-img homepage-hero-img--mobile"
             draggable={false}
           />
         </div>
@@ -92,30 +63,13 @@ export function HomepageHeroSection({
       >
         <div className="homepage-hero-desktop-frame">
           <Image
-            src={HOMEPAGE_HERO_IMAGE_MOBILE}
-            alt=""
-            fill
-            priority
-            quality={100}
-            sizes="100vw"
-            aria-hidden
-            className={`homepage-hero-img transition-opacity duration-500 ${
-              showDesktopHero ? "opacity-0" : "opacity-100"
-            }`}
-            style={{ objectPosition: "center top" }}
-            draggable={false}
-          />
-          <Image
             src={HOMEPAGE_HERO_IMAGE_DESKTOP}
             alt="INTERTEXE editorial"
             fill
             priority
             quality={100}
             sizes="100vw"
-            className={`homepage-hero-img transition-opacity duration-500 ${
-              showDesktopHero ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ objectPosition: "center top" }}
+            className="homepage-hero-img homepage-hero-img--desktop"
             draggable={false}
           />
         </div>

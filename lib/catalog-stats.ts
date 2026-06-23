@@ -10,10 +10,11 @@ export type CatalogStats = {
  * Single source of truth for marketing-facing catalog stats.
  * Update this file when live counts materially change.
  */
+/** Static SEO fallback — live UI uses platform_stats_cache (weekly cron). */
 export const CATALOG_STATS: CatalogStats = {
-  productCount: 321859,
+  productCount: 321_859,
   productCountFormatted: "322,000+",
   brandCount: 562,
   brandCountFormatted: "560+",
-  lastUpdated: new Date().toISOString(),
+  lastUpdated: "2026-06-01T00:00:00.000Z",
 };

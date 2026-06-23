@@ -18,7 +18,7 @@ export type BrandStat = {
 
 export const getCachedPlatformStats = unstable_cache(
   async (): Promise<PlatformStats> => fetchPlatformStats(),
-  ["platform-stats-v5"],
+  ["platform-stats-v7"],
   { revalidate: STATS_REVALIDATE, tags: ["platform-stats"] }
 );
 

@@ -16,7 +16,7 @@ import {
   type ShopPriceTierId,
 } from "../../lib/catalog-filter-options";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
-import { CATALOG_PAGE_SIZE, US_CATALOG_KNOWN_TOTAL } from "../../lib/catalog-constants";
+import { CATALOG_PAGE_SIZE, US_CATALOG_KNOWN_TOTAL_FALLBACK } from "../../lib/catalog-constants";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
@@ -190,6 +190,7 @@ export default function ShopClient({
   initialMeta,
   prefetchedBrands,
   detectedCountry,
+  catalogKnownTotal = US_CATALOG_KNOWN_TOTAL_FALLBACK,
 }: {
   initialProducts: any[];
   initialTotal?: number;
@@ -197,6 +198,7 @@ export default function ShopClient({
   initialMeta?: { totalProductCount: number; fiberCounts: Record<string, number> };
   prefetchedBrands?: { slug: string; name: string; count: number }[];
   detectedCountry?: string;
+  catalogKnownTotal?: number;
 }) {
   const searchParams = useSearchParams();
 
@@ -511,11 +513,11 @@ export default function ShopClient({
       : useGlobalCountHint && fiberTab !== "all" && fiberCountsState[fiberTab]
         ? fiberCountsState[fiberTab]
         : useGlobalCountHint
-          ? US_CATALOG_KNOWN_TOTAL
+          ? catalogKnownTotal
           : null);
 
-  const displayTotal = displayResultTotal ?? (useGlobalCountHint ? US_CATALOG_KNOWN_TOTAL : products.length);
-  const pagingTotal = displayTotal > 0 ? displayTotal : US_CATALOG_KNOWN_TOTAL;
+  const displayTotal = displayResultTotal ?? (useGlobalCountHint ? catalogKnownTotal : products.length);
+  const pagingTotal = displayTotal > 0 ? displayTotal : catalogKnownTotal;
   const canLoadMore = products.length > 0 && products.length < pagingTotal;
 
   const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy) ?? SORT_OPTIONS[0];

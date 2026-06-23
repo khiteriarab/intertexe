@@ -1489,10 +1489,16 @@ export async function fetchFiberCounts(): Promise<Record<string, number>> {
   return counts;
 }
 
-/** Full-catalog total — always `catalog_list_count` (never homepage merch meta). */
+/** Full verified catalog total — live_products_apparel (300k+), not deduped shop-card count. */
 export async function fetchProductCount(): Promise<number> {
   const supabase = getServerSupabase();
   if (!supabase) return 0;
+
+  const { count, error } = await liveProductsApparelFrom(supabase)
+    .select("id", { count: "exact", head: true })
+    .gte("natural_fiber_percent", 80);
+  if (!error && count != null && count > 0) return count;
+
   const fromRpc = await rpcCatalogListCount(supabase, {
     preferred: "us",
     fallback: "us",
@@ -1504,11 +1510,6 @@ export async function fetchProductCount(): Promise<number> {
   });
   if (fromRpc != null) return fromRpc;
 
-  const { count, error } = await liveProductsApparelFrom(supabase)
-    
-    .select("id", { count: "exact", head: true })
-    .gte("natural_fiber_percent", 80);
-  if (!error && count != null) return count;
   return 0;
 }
 

@@ -1,7 +1,8 @@
 "use server";
 
-import { fetchProductCount, fetchFiberCounts } from "../../lib/supabase-server";
+import { fetchFiberCounts } from "../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
+import { getCachedCatalogStatsMemo } from "../../lib/cached-catalog-stats";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com";
 
@@ -77,9 +78,12 @@ export async function getShopBrands() {
 }
 
 export async function getShopMeta() {
-  const [totalProductCount, fiberCounts] = await Promise.all([
-    fetchProductCount(),
+  const [catalogStats, fiberCounts] = await Promise.all([
+    getCachedCatalogStatsMemo(),
     fetchFiberCounts(),
   ]);
-  return { totalProductCount, fiberCounts };
+  return {
+    totalProductCount: catalogStats.catalogProductCount,
+    fiberCounts,
+  };
 }

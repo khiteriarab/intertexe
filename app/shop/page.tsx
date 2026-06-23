@@ -7,6 +7,7 @@ import { CATALOG_STATS } from "../../lib/catalog-stats";
 import ShopClient from "./ShopClient";
 import { formatListingPrice } from "../../lib/format-display-price";
 import { getShopBrands, getShopMeta } from "./actions";
+import { getCachedCatalogStatsMemo } from "../../lib/cached-catalog-stats";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -131,10 +132,16 @@ export default async function ShopPage({
       }
     }
 
-    const [shopData, meta, brands] = await Promise.all([
+    const [shopData, meta, brands, catalogStats] = await Promise.all([
       fetchShopCatalog(catalogParams),
       getShopMeta().catch(() => ({ totalProductCount: 0, fiberCounts: {} as Record<string, number> })),
       getShopBrands().catch(() => [] as { slug: string; name: string; count: number }[]),
+      getCachedCatalogStatsMemo().catch(() => ({
+        catalogProductCount: 0,
+        brandCount: 0,
+        updatedAt: null,
+        source: "fallback" as const,
+      })),
     ]);
 
     const products = shopData.products || [];
@@ -149,6 +156,7 @@ export default async function ShopPage({
             initialMeta={meta}
             prefetchedBrands={brands}
             detectedCountry={detectedCountry}
+            catalogKnownTotal={catalogStats.catalogProductCount > 0 ? catalogStats.catalogProductCount : undefined}
           />
         </Suspense>
 

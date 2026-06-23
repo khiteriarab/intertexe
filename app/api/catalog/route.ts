@@ -12,7 +12,7 @@ import {
   queryLiveCatalog,
 } from "../../../lib/catalog-direct-query";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
-import { US_CATALOG_KNOWN_TOTAL } from "../../../lib/catalog-constants";
+import { getShopCatalogKnownTotal } from "../../../lib/cached-catalog-stats";
 import {
   safeCatalogLimit,
   safeCatalogOffset,
@@ -483,8 +483,10 @@ export async function GET(request: NextRequest) {
         source: "just-in-cap",
       }, { source: "just-in-cap" });
     }
+    let fastPathUsed = false;
     if (isUnfilteredBaseCatalog && (total == null || total <= result.products.length)) {
-      total = US_CATALOG_KNOWN_TOTAL;
+      total = await getShopCatalogKnownTotal();
+      fastPathUsed = true;
     }
     return respond({
       products: result.products,
@@ -492,8 +494,8 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       hasMore: result.hasMore,
-      source: isUnfilteredBaseCatalog && total === US_CATALOG_KNOWN_TOTAL ? "fast-path" : "direct-query",
-    }, { source: isUnfilteredBaseCatalog && total === US_CATALOG_KNOWN_TOTAL ? "fast-path" : "direct-query" });
+      source: fastPathUsed ? "fast-path" : "direct-query",
+    }, { source: fastPathUsed ? "fast-path" : "direct-query" });
   } catch (err: unknown) {
     const e = err as { code?: string; message?: string };
     console.error("[api/catalog]", err);
