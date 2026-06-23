@@ -13,7 +13,7 @@ import { EmailBanner } from "./EmailBanner";
 import { SignInBenefitsBanner } from "./SignInBenefitsBanner";
 import { AuthLoginPromptProvider } from "../hooks/use-auth-login-prompt";
 
-const B2B_ROUTE_PREFIXES = ["/platform", "/partners"];
+const B2B_ROUTE_PREFIXES = ["/platform", "/partners", "/khiteri"];
 const DOCUMENT_ROUTE_PREFIXES = ["/press-kit"];
 
 function isB2BRoute(pathname: string) {

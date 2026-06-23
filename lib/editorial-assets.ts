@@ -66,7 +66,7 @@ export function editorialHeroForSlug(slug: string): string {
  * Wide hero-editorial.jpg is a separate studio crop; do not use for full-bleed hero.
  */
 export const HOMEPAGE_HERO_IMAGE_MOBILE = `${BASE}/hero-editorial-v8.png`;
-export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial-v8.png`;
+export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial.jpg`;
 /** @deprecated Use HOMEPAGE_HERO_IMAGE_MOBILE or HOMEPAGE_HERO_IMAGE_DESKTOP */
 export const HOMEPAGE_HERO_IMAGE = HOMEPAGE_HERO_IMAGE_MOBILE;
 

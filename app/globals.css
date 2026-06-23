@@ -167,12 +167,12 @@
   display: block;
 }
 
-.homepage-hero-img--desktop {
-  object-position: center center;
+.homepage-hero-desktop-frame .homepage-hero-img {
+  object-position: center 78%;
 }
 
-.homepage-hero-img--mobile {
-  object-position: center 32%;
+.homepage-hero-frame-mobile .homepage-hero-img {
+  object-position: center 75%;
 }
 
 /* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */
@@ -338,3 +338,365 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Khiteri's Edit — mobile-first editorial landing (/khiteri) ── */
+.khiteris-edit {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.khiteris-edit__masthead {
+  padding: max(1.25rem, env(safe-area-inset-top, 0px) + 0.75rem) 1.5rem 0.5rem;
+  text-align: center;
+}
+
+.khiteris-edit__masthead-link {
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  opacity: 0.45;
+  text-decoration: none;
+}
+
+.khiteris-edit__masthead-link:hover {
+  opacity: 0.7;
+}
+
+.khiteris-edit__cover {
+  padding: 0 0 3rem;
+}
+
+.khiteris-edit__cover-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: min(92vh, 780px);
+  overflow: hidden;
+  background: #e8e4dc;
+}
+
+.khiteris-edit__cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
+.khiteris-edit__cover-text {
+  padding: 2rem 1.5rem 0;
+  text-align: center;
+}
+
+.khiteris-edit__eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #8a8580;
+  margin-bottom: 1rem;
+}
+
+.khiteris-edit__title {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 9vw, 2.75rem);
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+  margin: 0 0 0.75rem;
+}
+
+.khiteris-edit__month {
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+  font-weight: 300;
+  font-style: italic;
+  color: #5c5854;
+  margin: 0 0 1.25rem;
+}
+
+.khiteris-edit__subtitle {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: #5c5854;
+  max-width: 20rem;
+  margin: 0 auto;
+}
+
+.khiteris-edit__mood {
+  padding: 1rem 1rem 3.5rem;
+}
+
+.khiteris-edit__mood-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-rows: 1fr 1fr auto;
+  gap: 0.5rem;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.khiteris-edit__mood-cell {
+  position: relative;
+  overflow: hidden;
+  background: #e8e4dc;
+  min-height: 6rem;
+}
+
+.khiteris-edit__mood-cell img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.92) contrast(1.02);
+}
+
+.khiteris-edit__mood-cell--0 {
+  grid-row: 1 / 3;
+  aspect-ratio: 3 / 4;
+}
+
+.khiteris-edit__mood-cell--1 {
+  aspect-ratio: 1;
+}
+
+.khiteris-edit__mood-cell--2 {
+  aspect-ratio: 4 / 5;
+}
+
+.khiteris-edit__mood-cell--3 {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 9;
+}
+
+.khiteris-edit__mood-caption {
+  margin: 1.5rem auto 0;
+  max-width: 18rem;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.55;
+  color: #5c5854;
+}
+
+.khiteris-edit__products {
+  padding: 0 1.25rem 4rem;
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+.khiteris-edit__section-intro {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.khiteris-edit__section-title {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  font-weight: 300;
+  margin: 0;
+}
+
+.khiteris-edit__product-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+
+.khiteris-edit__product {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.khiteris-edit__product-index {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: #b0aba4;
+}
+
+.khiteris-edit__product-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #ebe7df;
+}
+
+.khiteris-edit__product-image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
+.khiteris-edit__product-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0 0.25rem;
+}
+
+.khiteris-edit__product-brand {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8a8580;
+  margin: 0;
+}
+
+.khiteris-edit__product-name {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.khiteris-edit__product-composition {
+  font-size: 13px;
+  font-weight: 300;
+  color: #5c5854;
+  margin: 0;
+}
+
+.khiteris-edit__product-price {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  margin: 0.25rem 0 0;
+}
+
+.khiteris-edit__note {
+  padding: 0 1.5rem 3.5rem;
+  text-align: center;
+  max-width: 22rem;
+  margin: 0 auto;
+}
+
+.khiteris-edit__divider {
+  width: 2.5rem;
+  height: 1px;
+  background: #c9c4bc;
+  margin: 0 auto 2rem;
+}
+
+.khiteris-edit__note-lead {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 300;
+  line-height: 1.35;
+  margin: 0 0 0.75rem;
+}
+
+.khiteris-edit__note-body {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: #5c5854;
+  margin: 0;
+}
+
+.khiteris-edit__beta {
+  padding: 3rem 1.5rem 4rem;
+  text-align: center;
+  border-top: 1px solid #e0dbd3;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+.khiteris-edit__beta-headline {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin: 0 0 1rem;
+}
+
+.khiteris-edit__beta-body {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: #5c5854;
+  margin: 0 0 2rem;
+}
+
+.khiteris-edit__beta-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.khiteris-edit__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 13rem;
+  padding: 0.9rem 1.5rem;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.khiteris-edit__cta--primary {
+  background: #1a1a1a;
+  color: #f7f5f0;
+}
+
+.khiteris-edit__cta--primary:hover {
+  opacity: 0.88;
+}
+
+.khiteris-edit__cta--secondary {
+  background: transparent;
+  color: #1a1a1a;
+  border: 1px solid #c9c4bc;
+}
+
+.khiteris-edit__cta--secondary:hover {
+  border-color: #1a1a1a;
+}
+
+.khiteris-edit__footer {
+  padding: 0 1.5rem max(2rem, env(safe-area-inset-bottom, 0px) + 1.5rem);
+  text-align: center;
+}
+
+.khiteris-edit__footer-text {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #b0aba4;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .khiteris-edit__cover-image {
+    max-width: 32rem;
+    margin: 0 auto;
+  }
+
+  .khiteris-edit__mood-grid {
+    max-width: 36rem;
+    gap: 0.65rem;
+  }
+
+  .khiteris-edit__products {
+    max-width: 28rem;
+  }
+}
+
