@@ -11,6 +11,7 @@ import { BrandWordmark } from "./BrandWordmark";
 import { CountrySelector } from "./CountrySelector";
 import { MobileBottomDock } from "./MobileBottomDock";
 import { MobileNavMenu } from "./MobileNavMenu";
+import { DesignersMenuPanel } from "./DesignersMenuPanel";
 
 type DesignerSearchHit = {
   id?: string;
@@ -34,6 +35,8 @@ export function Navbar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [designersOpen, setDesignersOpen] = useState(false);
+  const designersTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     setHasMounted(true);
     const token = typeof window !== "undefined" ? localStorage.getItem("intertexe_auth_token") : null;
@@ -62,10 +65,19 @@ export function Navbar() {
   }, [pathname]);
 
   const navLinks = [
-    ...MERCH_NAV.map((item) => ({ name: item.name, href: item.href })),
-    { name: "Rewards", href: "/rewards" },
-    { name: "Scanner", href: "/scanner" },
+    ...MERCH_NAV.map((item) => ({ name: item.name, href: item.href, isDesigners: item.name === "Designers" })),
+    { name: "Rewards", href: "/rewards", isDesigners: false },
+    { name: "Scanner", href: "/scanner", isDesigners: false },
   ];
+
+  const openDesignersMenu = () => {
+    if (designersTimer.current) clearTimeout(designersTimer.current);
+    setDesignersOpen(true);
+  };
+
+  const closeDesignersMenu = () => {
+    designersTimer.current = setTimeout(() => setDesignersOpen(false), 120);
+  };
 
   return (
     <>
@@ -80,7 +92,34 @@ export function Navbar() {
           <BrandWordmark asLink size="md" className="text-foreground flex-shrink-0 z-10 md:ml-0" />
 
           <nav className="hidden md:flex items-center justify-center gap-8 flex-1 mx-8">
-            {navLinks.map((link) => (
+            {navLinks.map((link) =>
+              link.isDesigners ? (
+                <div
+                  key={link.name}
+                  className="relative"
+                  onMouseEnter={openDesignersMenu}
+                  onMouseLeave={closeDesignersMenu}
+                >
+                  <Link
+                    href={link.href}
+                    className={`text-sm tracking-wide uppercase transition-colors hover:text-foreground/70 whitespace-nowrap ${
+                      pathname === link.href || pathname.startsWith("/designers")
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground"
+                    }`}
+                    data-testid="link-nav-designers"
+                  >
+                    {link.name}
+                  </Link>
+                  {designersOpen && (
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 z-[60]">
+                      <div className="bg-background border border-border/40 shadow-xl px-6 py-6 max-h-[min(80vh,640px)] overflow-y-auto w-[min(92vw,380px)]">
+                        <DesignersMenuPanel onNavigate={() => setDesignersOpen(false)} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
               <Link key={link.name} href={link.href}
                 className={`text-sm tracking-wide uppercase transition-colors hover:text-foreground/70 whitespace-nowrap ${
                   pathname === link.href ? "text-foreground font-medium" : "text-muted-foreground"
@@ -89,7 +128,8 @@ export function Navbar() {
               >
                 {link.name}
               </Link>
-            ))}
+              )
+            )}
           </nav>
 
           <div className="flex items-center space-x-4 ml-auto flex-shrink-0">

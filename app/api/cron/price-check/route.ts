@@ -4,15 +4,21 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import PriceDropEmail from "@/emails/PriceDropEmail";
 
-export const dynamic = "force-dynamic";
+import { EMAIL_FROM } from "@/lib/email-constants";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
+  }
+  const resend = new Resend(apiKey);
 
   const supabase = createServiceClient();
 
@@ -67,7 +73,7 @@ export async function GET(req: NextRequest) {
         );
 
         await resend.emails.send({
-          from: "Intertexe <info@mail.intertexe.com>",
+          from: EMAIL_FROM,
           to: userData.user.email,
           subject: `Price drop on your saved item — ${dropPercent}% off`,
           html: emailHtml,

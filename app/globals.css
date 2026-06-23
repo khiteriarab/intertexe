@@ -163,8 +163,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Portrait hero — subject sits low in frame; anchor on face not cave ceiling */
-  object-position: center 78%;
+  object-position: center top;
   display: block;
 }
 
@@ -174,7 +173,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 75%;
+  object-position: center top;
   display: block;
 }
 
@@ -228,20 +227,20 @@
   max-width: none !important;
   max-height: none !important;
   object-fit: cover !important;
-  object-position: center 32%;
+  object-position: center top;
   display: block;
 }
 
 .editorial-cover-img--top {
-  object-position: center 22% !important;
+  object-position: center top !important;
 }
 
 .editorial-cover-img--mid {
-  object-position: center 38% !important;
+  object-position: center 35% !important;
 }
 
 .editorial-cover-img--lower {
-  object-position: center 48% !important;
+  object-position: center 72% !important;
 }
 
 .group:hover .editorial-cover-img--zoom {

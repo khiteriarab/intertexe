@@ -8,16 +8,19 @@ import { X, Menu } from "lucide-react";
 import { MERCH_NAV } from "../../lib/merch-nav";
 import { WearToWhereRail } from "./WearToWhereRail";
 import { CountrySelector } from "./CountrySelector";
+import { DesignersMenuPanel } from "./DesignersMenuPanel";
 
 /** Mobile hamburger menu — nav links + NAP-style “Wear to where?” image carousel. */
 export function MobileNavMenu() {
   const [open, setOpen] = useState(false);
+  const [designersOpen, setDesignersOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     setOpen(false);
+    setDesignersOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -62,9 +65,32 @@ export function MobileNavMenu() {
             </div>
 
             <div className="flex-1 overflow-y-auto">
+              {designersOpen ? (
+                <div className="px-4 py-4">
+                  <button
+                    type="button"
+                    onClick={() => setDesignersOpen(false)}
+                    className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6"
+                  >
+                    ← Menu
+                  </button>
+                  <DesignersMenuPanel onNavigate={() => setOpen(false)} compact />
+                </div>
+              ) : (
               <nav className="px-4 py-6 flex flex-col">
                 {MERCH_NAV.map((item) => (
                   <div key={item.name} className="border-b border-border/20 last:border-0">
+                    {item.name === "Designers" ? (
+                      <button
+                        type="button"
+                        onClick={() => setDesignersOpen(true)}
+                        className="flex w-full items-center justify-between py-4 text-sm uppercase tracking-[0.12em] text-foreground"
+                        data-testid="button-mobile-designers-menu"
+                      >
+                        {item.name}
+                        <span className="text-muted-foreground text-lg leading-none">›</span>
+                      </button>
+                    ) : (
                     <Link
                       href={item.href}
                       className="flex items-center justify-between py-4 text-sm uppercase tracking-[0.12em] text-foreground"
@@ -73,6 +99,7 @@ export function MobileNavMenu() {
                       {item.name}
                       <span className="text-muted-foreground text-lg leading-none">›</span>
                     </Link>
+                    )}
                     {"children" in item && item.children && (
                       <ul className="pb-3 pl-1 flex flex-col gap-1">
                         {item.children.map((child) => (
@@ -109,8 +136,11 @@ export function MobileNavMenu() {
 
                 <CountrySelector menuFooter className="px-0" />
               </nav>
+              )}
 
+              {!designersOpen && (
               <WearToWhereRail title="Wear to where?" className="border-t border-border/30 bg-[#FAFAF8] pb-8" />
+              )}
             </div>
           </div>,
           document.body

@@ -105,7 +105,7 @@ export function ShopTheEditCarousel({
                 <img
                   src={imageUrl}
                   alt={slide.title}
-                  className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
+                  className="absolute inset-0 w-full h-full object-cover object-top"
                   loading={i < slides.length ? "eager" : "lazy"}
                   draggable={false}
                 />

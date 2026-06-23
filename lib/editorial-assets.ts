@@ -21,9 +21,8 @@ const SILK_EDITORIAL_HERO = FABRIC_HERO.silk;
 export const ZIMMERMANN_SUMMER_CAMPAIGN =
   "https://www.zimmermann.com/media/wysiwyg/ZIM-SPRING26_CAMPAIGN_16x9-9_4.jpg";
 
-/** Faithfull white dress editorial — The White Edit collection panel. */
-export const FAITHFULL_WHITE_EDIT_CAMPAIGN =
-  "https://faithfullthebrand.com/cdn/shop/files/S40-FFC20-WHT-24635-FaithfullTheBrand-2090.webp";
+/** Hosted White Edit hero — bundled in /public for reliable delivery. */
+export const WHITE_EDIT_EDITORIAL_HERO = "/editorial-white-edit.png";
 
 /** Hosted tailoring hero — bundled in /public for reliable delivery. */
 export const TAILORING_EDITORIAL_HERO = "/editorial-tailoring.png";
@@ -51,8 +50,7 @@ export const EDITORIAL_HERO = {
   evening: EVENING_EDITORIAL_HERO,
   tailoring: TAILORING_EDITORIAL_HERO,
   "summer-in-the-city": ZIMMERMANN_SUMMER_CAMPAIGN,
-  /** Woman in white — Faithfull campaign (not catalog SKU). */
-  "white-edit": FAITHFULL_WHITE_EDIT_CAMPAIGN,
+  "white-edit": WHITE_EDIT_EDITORIAL_HERO,
   newIn: SILK_EDITORIAL_HERO,
 } as const;
 

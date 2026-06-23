@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import { DesignerSearchClient } from "./DesignerSearchClient";
-import { FeaturedDesignersGrid } from "./FeaturedDesignersGrid";
-import { ShoppableDesignersList } from "./ShoppableDesignersList";
-import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
-import { getFeaturedDesignersForDirectory } from "../../lib/featured-designers";
+import { DesignersDirectoryClient } from "./DesignersDirectoryClient";
+import { getCachedBrandStats } from "../../lib/cached-catalog";
 import {
-  directoryHeadline,
   formatBrandCountLabel,
   resolveShoppableBrandCount,
   searchBrandsPlaceholder,
@@ -14,15 +10,12 @@ import {
 export const revalidate = 600;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [platformStats, brandStats] = await Promise.all([
-    getCachedPlatformStats(),
-    getCachedBrandStats(),
-  ]);
+  const brandStats = await getCachedBrandStats();
   const listed = brandStats.filter((b) => b.count >= 2).length;
-  const shoppableCount = resolveShoppableBrandCount(platformStats.brandCount, listed);
+  const shoppableCount = listed;
   const brandLabel = formatBrandCountLabel(shoppableCount);
-  const title = `Brand Directory — ${brandLabel} Brands`;
-  const description = `Browse ${brandLabel} fashion brands with live natural-fiber inventory. ${directoryHeadline(platformStats.productCount, shoppableCount)}`;
+  const title = `Designers — ${brandLabel} Natural Fiber Brands`;
+  const description = `Browse ${brandLabel} fashion brands with verified natural-fiber inventory — silk, linen, cotton, wool, and cashmere.`;
   return {
     title,
     description,
@@ -31,47 +24,34 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DesignersPage() {
-  const [platformStats, brandStats] = await Promise.all([
-    getCachedPlatformStats(),
-    getCachedBrandStats(),
-  ]);
+  const brandStats = await getCachedBrandStats();
   const shoppableBrands = brandStats.filter((b) => b.count >= 2);
-  const shoppableBrandCount = resolveShoppableBrandCount(
-    platformStats.brandCount,
-    shoppableBrands.length
-  );
-  const featuredBrands = await getFeaturedDesignersForDirectory();
+  const shoppableBrandCount = resolveShoppableBrandCount(0, shoppableBrands.length);
 
   return (
-    <div className="py-6 md:py-12 flex flex-col gap-8 md:gap-10 max-w-6xl mx-auto px-4 w-full">
-      <header className="flex flex-col gap-3 md:gap-4 max-w-3xl">
+    <div className="py-8 md:py-14 flex flex-col max-w-6xl mx-auto px-4 md:px-8 w-full" data-testid="page-designers">
+      <header className="flex flex-col gap-2 md:gap-3 mb-8 md:mb-10 max-w-3xl">
         <h1
-          className="text-3xl md:text-4xl font-serif"
+          className="text-[36px] md:text-[48px] font-serif leading-[1.05]"
           style={{ fontFamily: "Playfair Display, serif" }}
           data-testid="text-directory-title"
         >
-          The Directory
+          Designers
         </h1>
-        <p className="text-muted-foreground text-sm md:text-base" data-testid="text-directory-stats">
-          {directoryHeadline(platformStats.productCount, shoppableBrandCount)}
+        <p className="text-muted-foreground text-sm md:text-[15px]" data-testid="text-directory-stats">
+          {shoppableBrandCount > 0
+            ? `${shoppableBrandCount.toLocaleString()} brands with live natural-fiber inventory.`
+            : "Natural fiber brands with live inventory."}
         </p>
       </header>
 
-      <DesignerSearchClient searchPlaceholder={searchBrandsPlaceholder(shoppableBrandCount)} />
-
-      <FeaturedDesignersGrid brands={featuredBrands} vettedBrandCount={shoppableBrandCount} />
-
-      {shoppableBrands.length > 0 && (
-        <section
-          id="directory-az-list"
-          className="flex flex-col border-t border-border/20 pt-4 scroll-mt-24"
-          data-testid="section-brands-with-products"
-        >
-          <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground mb-6">
-            {shoppableBrands.length.toLocaleString()} live brands · A–Z
-          </p>
-          <ShoppableDesignersList brands={shoppableBrands} />
-        </section>
+      {shoppableBrands.length > 0 ? (
+        <DesignersDirectoryClient
+          brands={shoppableBrands}
+          searchPlaceholder={searchBrandsPlaceholder(shoppableBrandCount)}
+        />
+      ) : (
+        <p className="text-muted-foreground text-sm py-12">Directory is updating — check back shortly.</p>
       )}
     </div>
   );

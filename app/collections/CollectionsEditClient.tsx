@@ -42,7 +42,7 @@ function CollectionCoverLink({
       <img
         src={imageUrl}
         alt={collection.label}
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        className="absolute inset-0 h-full w-full object-cover object-top"
         loading={slug === HERO_SLUG ? "eager" : "lazy"}
         draggable={false}
       />

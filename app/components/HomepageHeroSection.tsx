@@ -47,7 +47,7 @@ export function HomepageHeroSection({
             className={`homepage-hero-img transition-opacity duration-500 ${
               showDesktopHero ? "opacity-0" : "opacity-100"
             }`}
-            style={{ objectPosition: "center 75%" }}
+            style={{ objectPosition: "center top" }}
             draggable={false}
           />
           <Image
@@ -61,7 +61,7 @@ export function HomepageHeroSection({
             className={`homepage-hero-img transition-opacity duration-500 ${
               showDesktopHero ? "opacity-100" : "opacity-0"
             }`}
-            style={{ objectPosition: "center 58%" }}
+            style={{ objectPosition: "center top" }}
             draggable={false}
           />
         </div>
@@ -102,7 +102,7 @@ export function HomepageHeroSection({
             className={`homepage-hero-img transition-opacity duration-500 ${
               showDesktopHero ? "opacity-0" : "opacity-100"
             }`}
-            style={{ objectPosition: "center 75%" }}
+            style={{ objectPosition: "center top" }}
             draggable={false}
           />
           <Image
@@ -115,7 +115,7 @@ export function HomepageHeroSection({
             className={`homepage-hero-img transition-opacity duration-500 ${
               showDesktopHero ? "opacity-100" : "opacity-0"
             }`}
-            style={{ objectPosition: "center 58%" }}
+            style={{ objectPosition: "center top" }}
             draggable={false}
           />
         </div>

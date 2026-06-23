@@ -40,8 +40,8 @@ const IMAGE_CROP: Record<CollectionSlug, "top" | "center"> = {
   vacation: "top",
   tailoring: "top",
   "white-edit": "top",
-  evening: "center",
-  "summer-in-the-city": "center",
+  evening: "top",
+  "summer-in-the-city": "top",
 };
 
 const CAPTION_PLACEMENT: Record<CollectionSlug, "below" | "overlay"> = {

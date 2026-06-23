@@ -65,6 +65,18 @@
       "schedule": "0 6 * * *"
     },
     {
+      "path": "/api/cron/weekly-edit-preview",
+      "schedule": "0 18 * * 4"
+    },
+    {
+      "path": "/api/cron/weekly-edit-send",
+      "schedule": "0 14 * * 5"
+    },
+    {
+      "path": "/api/cron/scan-followup",
+      "schedule": "0 11 * * *"
+    },
+    {
       "path": "/api/cron/sync-designers",
       "schedule": "0 4 * * *"
     }

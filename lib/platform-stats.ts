@@ -24,9 +24,10 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
   let brandCount = 0;
 
   try {
-    const { count, error } = await liveProductsApparelFrom(supabase)
-      
-      .select("*", { count: "exact", head: true });
+    const { count, error } = await liveProductsApparelFrom(supabase).select("*", {
+      count: "exact",
+      head: true,
+    });
     if (!error && count != null && count > 0) {
       productCount = count;
     }
@@ -34,31 +35,19 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
     /* ignore */
   }
 
-  try {
-    const { data: cache } = await supabase
-      .from("platform_stats_cache")
-      .select("product_count, brand_count, updated_at")
-      .eq("id", "main")
-      .maybeSingle();
-    if (cache?.product_count != null && Number(cache.product_count) > 0) {
-      productCount = Math.max(productCount, Number(cache.product_count));
-      if (cache.brand_count != null && Number(cache.brand_count) > 0) {
-        brandCount = Number(cache.brand_count);
+  if (productCount <= 0) {
+    try {
+      const { data: cache } = await supabase
+        .from("platform_stats_cache")
+        .select("product_count, brand_count, updated_at")
+        .eq("id", "main")
+        .maybeSingle();
+      if (cache?.product_count != null && Number(cache.product_count) > 0) {
+        productCount = Number(cache.product_count);
       }
+    } catch {
+      /* table may not exist until migration 20240036 */
     }
-  } catch {
-    /* table may not exist until migration 20240036 */
-  }
-
-  try {
-    const { data: summary } = await supabase
-      .from("catalog_classification_summary")
-      .select("visible_catalog_cards_approx")
-      .maybeSingle();
-    const cards = Number(summary?.visible_catalog_cards_approx);
-    if (cards > 0) productCount = Math.max(productCount, cards);
-  } catch {
-    /* ignore */
   }
 
   try {
