@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ShoppingBag, Leaf, ArrowRight } from "lucide-react";
+import { ShoppingBag, Leaf, ArrowRight } from "lucide-react";
 import {
   fetchProductById,
   fetchMoreFromBrand,
@@ -19,6 +19,11 @@ import {
   formatDisplayPrice,
 } from "../../../lib/format-display-price";
 import { cfProductDetail } from "../../../lib/cloudflare-images";
+import {
+  parseCompositionForDisplay,
+  type CompositionPart,
+} from "../../../lib/catalog-product-filters";
+import { isProductUnavailable } from "../../../lib/catalog-consumer-guard";
 
 export const revalidate = 0;
 
@@ -100,43 +105,13 @@ function normalizeFiberDisplay(raw: string): string {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
 }
 
-function parseComposition(composition: string | null | undefined, naturalFiberPercent?: number | null): { fiber: string; percent: number }[] {
-  if (!composition) return [];
-  const parts: { fiber: string; percent: number }[] = [];
-  const matches = Array.from(composition.matchAll(/(\d+)\s*%\s*([a-zA-ZÀ-ÿ\s()\-/®™]+?)(?=[,;]|\d+\s*%|$)/g));
-  for (const m of matches) {
-    const percent = parseInt(m[1], 10);
-    const rawFiber = m[2].trim().replace(/[,;/\s]+$/, "").trim();
-    if (rawFiber && percent > 0) {
-      parts.push({ fiber: normalizeFiberDisplay(rawFiber), percent });
-    }
-  }
-  if (parts.length === 0) {
-    const reverse = Array.from(composition.matchAll(/([a-zA-ZÀ-ÿ\s()\-/®™]+?)\s*(\d+)\s*%/g));
-    for (const m of reverse) {
-      const rawFiber = m[1].trim().replace(/[,;/\s]+$/, "").trim();
-      const percent = parseInt(m[2], 10);
-      if (rawFiber && percent > 0) {
-        parts.push({ fiber: normalizeFiberDisplay(rawFiber), percent });
-      }
-    }
-  }
-  if (parts.length === 0 && naturalFiberPercent != null && naturalFiberPercent > 0) {
-    const KNOWN_FIBERS = ["silk", "cotton", "linen", "wool", "cashmere", "merino", "mohair", "alpaca", "hemp", "flax", "ramie"];
-    const lower = composition.toLowerCase();
-    const matched = KNOWN_FIBERS.find((f) => lower.includes(f));
-    if (matched) {
-      parts.push({ fiber: matched.charAt(0).toUpperCase() + matched.slice(1), percent: naturalFiberPercent });
-      if (naturalFiberPercent < 100) {
-        parts.push({ fiber: "Other", percent: 100 - naturalFiberPercent });
-      }
-    }
-  }
-  return parts.sort((a, b) => b.percent - a.percent);
+function normalizeCompositionParts(parts: CompositionPart[]): CompositionPart[] {
+  return parts
+    .map((p) => ({ fiber: normalizeFiberDisplay(p.fiber), percent: p.percent }))
+    .sort((a, b) => b.percent - a.percent);
 }
 
-function getPrimaryFiber(composition: string | null | undefined): string | null {
-  const parts = parseComposition(composition);
+function getPrimaryFiber(parts: CompositionPart[]): string | null {
   if (parts.length === 0) return null;
   const fiber = parts[0].fiber.toLowerCase();
   const NATURAL_FIBERS = ["silk", "linen", "cotton", "wool", "cashmere", "merino", "mohair", "alpaca", "hemp", "flax", "ramie", "lambswool"];
@@ -152,7 +127,7 @@ function isNaturalFiber(fiberName: string): boolean {
   return natural.some((n) => lower.includes(n));
 }
 
-function CompositionBar({ parts }: { parts: { fiber: string; percent: number }[] }) {
+function CompositionBar({ parts }: { parts: CompositionPart[] }) {
   const colors: Record<string, string> = {
     silk: "bg-amber-400", linen: "bg-lime-500", cotton: "bg-sky-400", wool: "bg-orange-400",
     cashmere: "bg-purple-400", merino: "bg-orange-300", mohair: "bg-rose-300", alpaca: "bg-amber-300",
@@ -204,8 +179,11 @@ export default async function ProductPage({
     notFound();
   }
 
-  const compositionParts = parseComposition(product.composition, product.naturalFiberPercent);
-  const primaryFiber = getPrimaryFiber(product.composition);
+  const compositionDisplay = parseCompositionForDisplay(product.composition);
+  const shellParts = normalizeCompositionParts(compositionDisplay.shellParts);
+  const liningParts = normalizeCompositionParts(compositionDisplay.liningParts);
+  const primaryFiber = getPrimaryFiber(shellParts);
+  const unavailable = isProductUnavailable(product.stockStatus);
 
   const priceShown = formatDisplayPrice(product);
   const originalShown = formatDisplayOriginalPrice(product);
@@ -253,7 +231,9 @@ export default async function ProductPage({
         "@type": "Offer",
         price: numericPrice,
         priceCurrency,
-        availability: "https://schema.org/InStock",
+        availability: unavailable
+          ? "https://schema.org/OutOfStock"
+          : "https://schema.org/InStock",
         url: product.url,
       };
     }
@@ -358,12 +338,15 @@ export default async function ProductPage({
                 </div>
               )}
 
-              {compositionParts.length > 0 && (
+              {shellParts.length > 0 && (
                 <div className="px-5 py-4 border-b border-border/20">
                   <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-3">Composition</p>
-                  <CompositionBar parts={compositionParts} />
-                  {product.composition && (
-                    <p className="text-[11px] text-muted-foreground mt-3" data-testid="text-composition-raw">{product.composition}</p>
+                  <CompositionBar parts={shellParts} />
+                  {liningParts.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border/15">
+                      <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground mb-3">Lining</p>
+                      <CompositionBar parts={liningParts} />
+                    </div>
                   )}
                 </div>
               )}
@@ -386,7 +369,7 @@ export default async function ProductPage({
 
             <ProductFavoriteButton productId={String(product.id)} />
 
-            <ShopNowButton product={product} />
+            <ShopNowButton product={product} unavailable={unavailable} />
 
             <div className="flex flex-col gap-2">
               <p className="text-[10px] text-muted-foreground text-center">

@@ -56,9 +56,34 @@ async function recordClickOut(product: ShopNowProduct) {
   }
 }
 
-export function ShopNowButton({ product }: { product: ShopNowProduct }) {
+export function ShopNowButton({
+  product,
+  unavailable = false,
+}: {
+  product: ShopNowProduct;
+  unavailable?: boolean;
+}) {
   const shopUrl = product.url;
   if (!shopUrl) return null;
+
+  if (unavailable) {
+    return (
+      <>
+        <div
+          className="flex items-center justify-center gap-3 w-full bg-secondary text-muted-foreground px-8 py-4 uppercase tracking-[0.2em] text-xs font-medium cursor-not-allowed"
+          data-testid="text-sold-out"
+        >
+          Sold Out
+        </div>
+        <p
+          className="text-xs text-muted-foreground mt-3 leading-relaxed"
+          data-testid="text-affiliate-disclosure"
+        >
+          This piece is no longer available at the retailer. Browse similar items below.
+        </p>
+      </>
+    );
+  }
 
   return (
     <>

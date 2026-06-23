@@ -2,7 +2,10 @@
  * Direct live_products_apparel queries — no catalog_list RPC, no fetchShopProducts scan.
  */
 import { getServerSupabase } from "./supabase-service-client";
+import { filterConsumerCatalogProducts } from "./catalog-consumer-guard";
 import { applyCategoryFilter, CATEGORY_TO_GARMENT_TYPE } from "./catalog-shop-mappings";
+
+const CATALOG_TABLE = "live_products_apparel";
 
 export { CATEGORY_TO_GARMENT_TYPE, applyCategoryFilter };
 
@@ -119,20 +122,19 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
   const useExactCount = false;
 
   try {
-    // Unfiltered browse: `products` table is fast; filtered queries use live view + garment_type.
+    // Consumer catalog only — scoped view (composition, womenswear, active, NFP ≥ 80).
     if (!hasNarrowingFilter && !opts.isSale) {
       let pq = supabase
-        .from("products")
+        .from(CATALOG_TABLE)
         .select("*")
         .eq("region", region)
-        .eq("is_displayable", true)
         .not("image_url", "is", null)
         .not("price", "is", null);
       pq = applySort(pq, opts.sort);
       const { data, error } = await pq.range(offset, offset + limit - 1);
       if (error) throw error;
-      const products = (data || []).map((row: any) =>
-        mapDirectRow(row as Record<string, unknown>)
+      const products = filterConsumerCatalogProducts(
+        (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
       );
       return {
         products,
@@ -142,54 +144,37 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
     }
 
 
-    // Fiber fast path: avoid expensive DB ilike scans on huge composition column.
-    // Skip when collection (or other narrowing filters) must be applied server-side.
+    // Fiber pages — query scoped live view (not raw products).
     if (opts.fiber && opts.fiber !== "all" && !opts.isSale && !opts.collection) {
-      const needle = opts.fiber.toLowerCase();
-      const batch = 1200;
-      const target = offset + limit;
-      const collected: any[] = [];
-      let page = 0;
-      while (collected.length < target && page < 20) {
-        const from = page * batch;
-        const to = from + batch - 1;
-        let fq = supabase
-          .from("products")
-          .select("*")
-          .eq("region", region)
-          .eq("is_displayable", true)
-          .not("image_url", "is", null)
-          .not("price", "is", null)
-          .range(from, to)
-          .order("id", { ascending: false });
-        const { data, error } = await fq;
-        if (error || !data?.length) break;
-        for (const row of data as any[]) {
-          const text = String(row.composition || "").toLowerCase();
-          const match = needle === "leather" || needle === "leather_suede"
-            ? text.includes("leather") || text.includes("suede")
-            : text.includes(needle);
-          if (!match) continue;
-          collected.push(row);
-          if (collected.length >= target) break;
-        }
-        if (data.length < batch) break;
-        page += 1;
+      const f = opts.fiber.toLowerCase();
+      let fq = supabase
+        .from(CATALOG_TABLE)
+        .select("*")
+        .eq("region", region)
+        .not("image_url", "is", null)
+        .not("price", "is", null);
+      if (f === "leather" || f === "leather_suede") {
+        fq = fq.or("composition.ilike.%leather%,composition.ilike.%suede%");
+      } else {
+        fq = fq.ilike("composition", `%${f}%`);
       }
-      const sliced = collected.slice(offset, offset + limit).map((r) => mapDirectRow(r));
+      fq = applySort(fq, opts.sort);
+      const { data, error } = await fq.range(offset, offset + limit - 1);
+      if (error) throw error;
+      const products = filterConsumerCatalogProducts(
+        (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
+      );
       return {
-        products: sliced,
-        total: opts.skipCount ? null : offset + sliced.length + (sliced.length >= limit ? 1 : 0),
-        hasMore: sliced.length >= limit,
+        products,
+        total: opts.skipCount ? null : offset + products.length + (products.length >= limit ? 1 : 0),
+        hasMore: products.length >= limit,
       };
     }
 
     let query = supabase
-      .from("products")
+      .from(CATALOG_TABLE)
       .select("*", useExactCount ? { count: "exact" } : undefined)
       .eq("region", region)
-      .eq("is_displayable", true)
-      .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
       .not("price", "is", null);
 
@@ -253,7 +238,9 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
       rows = rows.filter((row: any) => parseMoney(row.price) >= opts.minPrice!);
     }
 
-    const products = rows.map((row: any) => mapDirectRow(row as Record<string, unknown>));
+    const products = filterConsumerCatalogProducts(
+      rows.map((row: any) => mapDirectRow(row as Record<string, unknown>))
+    );
     const total = opts.skipCount ? null : offset + products.length + (products.length >= limit ? 1 : 0);
     const hasMore = products.length >= limit;
 

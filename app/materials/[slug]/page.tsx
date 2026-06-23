@@ -787,15 +787,34 @@ async function MainFiberPage({ slug }: { slug: string }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
 
-      <section className="pt-8 md:pt-14 pb-6 md:pb-8 max-w-5xl mx-auto w-full px-4">
-        <Link href="/materials" className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors self-start py-1 mb-6" data-testid="link-back-materials">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-          All Materials
-        </Link>
+      <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-md border-b border-border/30">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-3 min-w-0">
+          <Link
+            href="/materials"
+            className="shrink-0 text-muted-foreground hover:text-foreground p-1"
+            aria-label="Back to materials"
+            data-testid="link-back-materials"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-xl font-serif truncate" data-testid="text-material-name">
+              {fiberName}
+            </h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+              {(productCount || products.length).toLocaleString()} verified pieces
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <section className="pt-6 md:pt-8 pb-6 md:pb-8 max-w-5xl mx-auto w-full px-4">
         <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-3">{seo?.tagline || ""}</p>
-        <h1 className="text-3xl md:text-5xl font-serif leading-tight mb-3" data-testid="text-material-name">
+        <p className="text-2xl md:text-4xl font-serif leading-tight mb-3">
           {seo?.h1 || `Shop ${fiberName}`}
-        </h1>
+        </p>
         <p className="text-[13px] md:text-base text-muted-foreground leading-relaxed max-w-2xl">
           {seo?.intro || material?.description || ""}
         </p>
@@ -1214,19 +1233,6 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
         <section className="py-8 border-t border-border/20">
           <EmailCapture fiberName={config.fiber} />
         </section>
-
-        {parentFiber && (
-          <section className="py-8 border-t border-border/20">
-            <Link
-              href={`/materials/${parentFiber}`}
-              className="flex items-center gap-2 text-[11px] uppercase tracking-[0.15em] font-medium hover:gap-3 transition-all"
-              data-testid="link-back-parent-bottom"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-              All {parentName} Clothing
-            </Link>
-          </section>
-        )}
 
         <section className="py-8 border-t border-border/20">
           <h2 className="text-xs uppercase tracking-[0.2em] font-medium mb-4">More Curated Collections</h2>

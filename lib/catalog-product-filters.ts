@@ -1,7 +1,107 @@
 /** Shared product guards for rails, edits, and catalog views. */
 
+export type CompositionPart = { fiber: string; percent: number };
+
+const LINING_INDICATORS = [
+  "inner lining",
+  "body lining",
+  "pocket lining",
+  "shell lining",
+  "lining",
+];
+
 export function compositionBody(composition: string): string {
-  return (composition || "").split(/\b(trim|embroidery\s+fabric|embroidery|lining|contrast|pocket|rib)\s*:/i)[0] ?? "";
+  return splitCompositionSections(composition).shell;
+}
+
+/** Split retailer copy into outer fabric vs lining (shell is used for NFP display). */
+export function splitCompositionSections(composition: string): { shell: string; lining: string | null } {
+  const raw = (composition || "").trim();
+  if (!raw) return { shell: "", lining: null };
+
+  const explicit = raw.split(/\b(?:inner\s+)?lining\s*:/i);
+  if (explicit.length > 1) {
+    const shell = explicit[0].trim().replace(/[.,]\s*$/, "");
+    const lining = explicit.slice(1).join(":").trim();
+    return { shell, lining: lining || null };
+  }
+
+  const lower = raw.toLowerCase();
+  for (const indicator of [...LINING_INDICATORS].sort((a, b) => b.length - a.length)) {
+    const idx = lower.indexOf(indicator);
+    if (idx <= 0) continue;
+    const before = raw.slice(0, idx).trim().replace(/[.,]\s*$/, "");
+    if (before.includes("%")) {
+      return { shell: before, lining: raw.slice(idx).trim() };
+    }
+  }
+
+  const legacyBody = (raw.split(/\b(trim|embroidery\s+fabric|embroidery|lining|contrast|pocket|rib)\s*:/i)[0] ?? "").trim();
+  return { shell: legacyBody, lining: null };
+}
+
+export function parseCompositionParts(composition: string): CompositionPart[] {
+  if (!composition) return [];
+  const parts: CompositionPart[] = [];
+  const matches = Array.from(
+    composition.matchAll(/(\d+)\s*%\s*([a-zA-ZÀ-ÿ\s()\-/®™]+?)(?=[,;]|\d+\s*%|$)/g)
+  );
+  for (const m of matches) {
+    const percent = parseInt(m[1], 10);
+    const rawFiber = m[2].trim().replace(/[,;/\s]+$/, "").trim();
+    if (rawFiber && percent > 0) parts.push({ fiber: rawFiber, percent });
+  }
+  if (parts.length === 0) {
+    const reverse = Array.from(composition.matchAll(/([a-zA-ZÀ-ÿ\s()\-/®™]+?)\s*(\d+)\s*%/g));
+    for (const m of reverse) {
+      const rawFiber = m[1].trim().replace(/[,;/\s]+$/, "").trim();
+      const percent = parseInt(m[2], 10);
+      if (rawFiber && percent > 0) parts.push({ fiber: rawFiber, percent });
+    }
+  }
+  return parts;
+}
+
+function splitPartsShellAndLining(parts: CompositionPart[]): { shell: CompositionPart[]; lining: CompositionPart[] } {
+  const total = parts.reduce((sum, p) => sum + p.percent, 0);
+  if (total <= 100 || parts.length <= 1) return { shell: parts, lining: [] };
+
+  let shellSum = 0;
+  const shell: CompositionPart[] = [];
+  const lining: CompositionPart[] = [];
+  for (const part of parts) {
+    if (shellSum + part.percent <= 100) {
+      shell.push(part);
+      shellSum += part.percent;
+    } else {
+      lining.push(part);
+    }
+  }
+  if (shell.length === 0) return { shell: parts, lining: [] };
+  return { shell, lining };
+}
+
+/** Body + lining parts for product detail (avoids merging shell and lining percentages). */
+export function parseCompositionForDisplay(composition: string | null | undefined): {
+  shellParts: CompositionPart[];
+  liningParts: CompositionPart[];
+} {
+  const { shell, lining } = splitCompositionSections(composition || "");
+  let shellParts = parseCompositionParts(shell);
+  let liningParts = lining ? parseCompositionParts(lining) : [];
+
+  if (liningParts.length === 0) {
+    const merged = parseCompositionParts(composition || "");
+    const split = splitPartsShellAndLining(merged);
+    if (split.lining.length > 0) {
+      shellParts = split.shell;
+      liningParts = split.lining;
+    } else if (shellParts.length === 0) {
+      shellParts = merged;
+    }
+  }
+
+  return { shellParts, liningParts };
 }
 
 export function productBodyMatchesFiber(composition: string, fiber: string): boolean {
