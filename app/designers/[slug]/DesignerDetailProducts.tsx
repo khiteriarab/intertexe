@@ -417,17 +417,14 @@ export function DesignerDetailProducts({
                 ))}
               </div>
               {shopMode && hasMore && <div ref={loadMoreSentinelRef} className="h-2 w-full" aria-hidden="true" />}
-              {hasMore && (
+              {hasMore && !shopMode && (
                 <button
-                  onClick={() => {
-                    if (shopMode) loadMoreFromServer();
-                    else setVisibleCount((prev) => prev + PRODUCTS_PER_PAGE);
-                  }}
+                  onClick={() => setVisibleCount((prev) => prev + PRODUCTS_PER_PAGE)}
                   disabled={loadingMore}
                   className="w-full border border-foreground/20 hover:border-foreground/40 text-foreground py-3.5 uppercase tracking-widest text-[10px] md:text-xs transition-colors active:scale-[0.98] disabled:opacity-50"
                   data-testid="button-load-more-products"
                 >
-                  {loadingMore ? "Loading…" : shopMode ? "Load more" : `Load More (${Math.max(0, displayTotal - visibleCount).toLocaleString()} remaining)`}
+                  {loadingMore ? "Loading…" : `Load More (${Math.max(0, displayTotal - visibleCount).toLocaleString()} remaining)`}
                 </button>
               )}
             </>

@@ -16,11 +16,11 @@ import {
   type ShopPriceTierId,
 } from "../../lib/catalog-filter-options";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
-import { CATALOG_PAGE_SIZE, US_CATALOG_KNOWN_TOTAL_FALLBACK } from "../../lib/catalog-constants";
+import { US_CATALOG_KNOWN_TOTAL_FALLBACK } from "../../lib/catalog-constants";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
-import { CatalogProductImage } from "../components/CatalogProductImage";
+import { useInfiniteScroll } from "../hooks/use-infinite-scroll";
 import { ProductGridSkeleton } from "../components/ProductGridSkeleton";
 import { CountrySelector } from "../components/CountrySelector";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
@@ -91,7 +91,7 @@ function parseColorParam(raw: string | null): string | null {
   return SHOP_COLOR_OPTIONS.some((c) => c.value === normalized) ? normalized : null;
 }
 
-const SHOP_PAGE_SIZE = CATALOG_PAGE_SIZE;
+const SHOP_PAGE_SIZE = 24;
 const WEAR_TO_WHERE_OPTIONS = shopWearToWhereTextOptions();
 
 const SHOP_EDIT_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
@@ -517,6 +517,18 @@ export default function ShopClient({
   const displayTotal = displayResultTotal ?? (useGlobalCountHint ? catalogKnownTotal : products.length);
   const pagingTotal = displayTotal > 0 ? displayTotal : catalogKnownTotal;
   const canLoadMore = products.length > 0 && products.length < pagingTotal;
+
+  const loadMoreProducts = useCallback(() => {
+    if (loadingMore || isLoading || !(canLoadMore || hasMore)) return;
+    setLoadingMore(true);
+    setListOffset(products.length);
+  }, [loadingMore, isLoading, canLoadMore, hasMore, products.length]);
+
+  const loadMoreSentinelRef = useInfiniteScroll(
+    (canLoadMore || hasMore) && products.length > 0 && !loadingMore && !isLoading,
+    loadMoreProducts,
+    [products.length, canLoadMore, hasMore, loadingMore, isLoading, loadMoreProducts]
+  );
 
   const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy) ?? SORT_OPTIONS[0];
 
@@ -984,21 +996,12 @@ export default function ShopClient({
             </div>
 
             {(canLoadMore || hasMore) && (
-              <div className="flex justify-center pt-10 md:pt-12">
-                <button
-                  onClick={() => {
-                    if (loadingMore || isLoading) return;
-                    setLoadingMore(true);
-                    setListOffset(products.length);
-                  }}
-                  disabled={loadingMore || isLoading}
-                  className="px-10 py-3.5 bg-foreground text-background text-[11px] uppercase tracking-[0.2em] hover:bg-foreground/90 transition-colors disabled:opacity-50"
-                  data-testid="btn-load-more"
-                >
-                  {loadingMore
-                    ? "Loading…"
-                    : `Load More · ${products.length.toLocaleString()} of ${pagingTotal.toLocaleString()}`}
-                </button>
+              <div ref={loadMoreSentinelRef} className="flex justify-center pt-8 pb-4 min-h-[48px]">
+                {loadingMore && (
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+                    Loading more…
+                  </span>
+                )}
               </div>
             )}
           </>

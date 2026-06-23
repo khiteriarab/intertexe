@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useInfiniteScroll } from "../../hooks/use-infinite-scroll";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/CatalogMobileToolbar";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
@@ -414,6 +415,14 @@ export default function CollectionClient({
     sortBy,
   ]);
 
+  const loadMoreSentinelRef = useInfiniteScroll(
+    hasMore && displayProducts.length > 0 && !loadingMore && !isFiltering,
+    () => {
+      void loadMore();
+    },
+    [hasMore, displayProducts.length, loadingMore, isFiltering, loadMore]
+  );
+
   return (
     <div className="flex flex-col" data-testid={`page-collection-${config.slug}`}>
       <section className="relative -mx-4 md:-mx-8 overflow-hidden">
@@ -630,14 +639,13 @@ export default function CollectionClient({
             )}
 
             {hasMore && displayProducts.length > 0 && (
-              <button
-                type="button"
-                onClick={loadMore}
-                disabled={loadingMore || isFiltering}
-                className="mt-10 border border-neutral-800 px-8 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-50"
-              >
-                {loadingMore ? "Loading…" : "Load more"}
-              </button>
+              <div ref={loadMoreSentinelRef} className="mt-10 flex justify-center min-h-[40px]">
+                {loadingMore && (
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+                    Loading more…
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </div>

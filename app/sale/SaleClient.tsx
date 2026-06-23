@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useInfiniteScroll } from "../hooks/use-infinite-scroll";
 import Link from "next/link";
 import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
@@ -179,7 +180,6 @@ export default function SaleClient({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     getShopBrands()
@@ -266,21 +266,13 @@ export default function SaleClient({
     }
   }, [hasMore, isLoadingMore, isLoading, fetchPage, offset]);
 
-  useEffect(() => {
-    if (!hasMore || isLoadingMore || isLoading) return;
-    const node = loadMoreSentinelRef.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          loadMore();
-        }
-      },
-      { rootMargin: "400px 0px" }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, isLoading, loadMore, products.length]);
+  const loadMoreSentinelRef = useInfiniteScroll(
+    hasMore && products.length > 0 && !isLoadingMore && !isLoading,
+    () => {
+      void loadMore();
+    },
+    [hasMore, products.length, isLoadingMore, isLoading, loadMore]
+  );
 
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
 

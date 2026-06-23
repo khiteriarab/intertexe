@@ -66,7 +66,7 @@ async function loadShopCatalog(opts: {
   try {
     const result = await queryLiveCatalog({
       region: "us",
-      limit: CATALOG_INITIAL_PAGE,
+      limit: 24,
       offset: 0,
       fiber: opts.fiber,
       category: opts.category,
