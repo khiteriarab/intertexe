@@ -138,14 +138,14 @@
   margin-right: calc(50% - 50vw);
 }
 
-/* Homepage hero — desktop (lg+ only in HomepageHeroSection); full viewport below sticky nav */
+/* Homepage hero — desktop (lg+ only in HomepageHeroSection); portrait needs headroom */
 .homepage-hero-desktop-frame {
   position: relative;
   width: 100%;
   overflow: hidden;
   background: #1c1c1c;
-  height: calc(100vh - 64px);
-  min-height: calc(100vh - 64px);
+  height: clamp(680px, 78vh, 920px);
+  min-height: clamp(680px, 78vh, 920px);
 }
 
 /* next/image fill — avoid subpixel blur from transform stacking */
@@ -167,13 +167,13 @@
   display: block;
 }
 
-/* Homepage hero only — portrait grotto; anchor on model, not cave ceiling */
+/* Homepage hero only — portrait grotto; anchor on model face + full figure */
 .homepage-hero-img--desktop {
-  object-position: center 78%;
+  object-position: center 28%;
 }
 
 .homepage-hero-img--mobile {
-  object-position: center 78%;
+  object-position: center 32%;
 }
 
 /* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */

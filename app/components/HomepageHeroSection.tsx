@@ -8,7 +8,7 @@ import {
   HOMEPAGE_HERO_IMAGE_MOBILE,
 } from "../../lib/editorial-assets";
 
-/** Portrait grotto campaign — v8 on mobile and desktop; object-position in globals.css. */
+/** Portrait grotto campaign — v8; desktop object-position in globals.css (face + full figure). */
 export function HomepageHeroSection({
   productCountLabel,
   brandCountLabel,
