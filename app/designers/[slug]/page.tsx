@@ -37,7 +37,7 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
   const productSlug = canonicalDesignerProductSlug(slug);
   const [dbDesigner, brandCatalog] = await Promise.all([
     fetchDesignerBySlug(slug),
-    fetchProductsByBrand(productSlug, { limit: 48, offset: 0, skipTotal: true }),
+    fetchProductsByBrand(productSlug, { limit: 48, offset: 0 }),
   ]);
   const products = brandCatalog.products;
   const profile = getBrandProfile(slug);

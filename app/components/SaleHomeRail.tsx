@@ -84,6 +84,8 @@ export function SaleHomeRail({ products }: { products?: any[] }) {
   const railProducts = (products || []).slice(0, 28);
   const hasItems = railProducts.length > 0;
 
+  if (!hasItems) return null;
+
   return (
     <section className="border-t border-neutral-200/70 py-10 md:py-14 lg:py-16 layout-bleed-full" data-testid="section-sale">
       <div className="px-4 md:px-8 mb-6 md:mb-8">
@@ -97,17 +99,11 @@ export function SaleHomeRail({ products }: { products?: any[] }) {
 
       <div className={`relative min-w-0 ${HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}`}>
         <div
-          className={`${HORIZONTAL_RAIL_BLEED_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 min-h-[220px] sm:min-h-[260px] md:min-h-[300px] lg:min-h-[340px]`}
+          className={`${HORIZONTAL_RAIL_BLEED_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4`}
         >
-          {hasItems ? (
-            railProducts.map((product: any, i: number) => (
-              <SaleProductCard key={product.id} product={product} eager={i < 8} />
-            ))
-          ) : (
-            <p className="text-[12px] text-neutral-400 max-w-sm leading-relaxed py-6">
-              Sale pieces are refreshing — browse the full sale edit for reduced natural-fiber pieces.
-            </p>
-          )}
+          {railProducts.map((product: any, i: number) => (
+            <SaleProductCard key={product.id} product={product} eager={i < 8} />
+          ))}
         </div>
       </div>
 

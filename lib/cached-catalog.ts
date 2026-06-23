@@ -28,15 +28,15 @@ export const getCachedBrandStats = unstable_cache(
   { revalidate: BRAND_DIR_REVALIDATE, tags: ["brand-directory"] }
 );
 
-/** First sale grid + true total — full catalog scan, cached (not homepage merch preview). */
+/** First sale grid — cached; skip exact count on cold path for faster TTFB. */
 export const getCachedSalePageData = unstable_cache(
   async () =>
     fetchSaleProducts({
       limit: 48,
       offset: 0,
       useMerchFeedPreview: false,
-      skipTotal: false,
+      skipTotal: true,
     }),
-  ["sale-page-first-v3"],
+  ["sale-page-first-v4"],
   { revalidate: SALE_PAGE_REVALIDATE, tags: ["sale-catalog"] }
 );

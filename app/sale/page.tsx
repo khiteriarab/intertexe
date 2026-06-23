@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { fetchSaleProducts } from "../../lib/supabase-server";
+import { getCachedSalePageData } from "../../lib/cached-catalog";
 import { CATALOG_STATS } from "../../lib/catalog-stats";
 import SaleClient from "./SaleClient";
 
-export const revalidate = 0;
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Natural Fiber Sale | Silk, Cashmere, Linen On Sale",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SalePage() {
-  const saleData = await fetchSaleProducts({ limit: 48, offset: 0, useMerchFeedPreview: false });
+  const saleData = await getCachedSalePageData();
   const initialTotal = saleData.total ?? saleData.products?.length ?? 0;
   const initialHasMore = saleData.hasMore ?? false;
 

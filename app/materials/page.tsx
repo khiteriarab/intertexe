@@ -126,18 +126,15 @@ export default async function MaterialsPage() {
 
           return (
             <div key={fabric.slug} className="grid grid-cols-1 md:grid-cols-2 gap-0" data-testid={`hub-section-${fabric.slug}`}>
-              <Link href={`/materials/${fabric.slug}`} className={`group relative overflow-hidden bg-[#EDECE8] block ${isReversed ? "md:order-2" : ""}`}>
-                <div className="relative overflow-hidden w-full h-[280px] md:h-[420px]">
+              <Link href={`/materials/${fabric.slug}`} className={`group relative overflow-hidden bg-white block ${isReversed ? "md:order-2" : ""}`}>
+                <div className="relative w-full h-[280px] md:h-[420px] overflow-hidden">
                   {imgSrc ? (
                     <img
                       src={imgSrc}
                       alt={`${fabric.fabric} clothing`}
-                      className="absolute inset-0 w-full h-full group-hover:scale-[1.02] transition-transform duration-1000"
-                      style={{
-                        objectFit: "cover",
-                        objectPosition: "center top",
-                      }}
+                      className="absolute inset-0 w-full h-full object-cover object-[center_12%] scale-[1.08] group-hover:scale-[1.1] transition-transform duration-1000"
                       loading={index < 2 ? "eager" : "lazy"}
+                      decoding="async"
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-b from-[#E8E4DE] to-[#D5CFC4]" />
@@ -145,7 +142,7 @@ export default async function MaterialsPage() {
                 </div>
               </Link>
 
-              <div className={`flex flex-col justify-center px-6 py-10 md:px-14 md:py-16 lg:px-20 ${isReversed ? "md:order-1" : ""}`}>
+              <div className={`flex flex-col justify-center px-6 py-10 md:px-14 md:py-16 lg:px-20 bg-[#F7F6F3] ${isReversed ? "md:order-1" : ""}`}>
                 <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-3 md:mb-4">{fabric.tagline}</p>
                 <h2 className="text-3xl md:text-5xl font-serif mb-4 md:mb-6 leading-[1.1]">{fabric.fabric}</h2>
                 <p className="text-sm md:text-[15px] text-muted-foreground leading-relaxed mb-8 md:mb-10 max-w-md">{fabric.description}</p>

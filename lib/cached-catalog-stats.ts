@@ -15,6 +15,8 @@ export type CachedCatalogStats = {
 };
 
 const CACHE_MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
+/** Counts below this are treated as stale (e.g. deduped shop-card totals written to cache). */
+const MIN_TRUSTED_PRODUCT_COUNT = 150_000;
 
 async function readPlatformStatsCache(): Promise<CachedCatalogStats | null> {
   const supabase = getServerSupabase();
@@ -31,7 +33,7 @@ async function readPlatformStatsCache(): Promise<CachedCatalogStats | null> {
     const productCount = Number(data.product_count) || 0;
     const brandCount = Number(data.brand_count) || 0;
     const updatedAt = data.updated_at ? String(data.updated_at) : null;
-    if (productCount <= 0) return null;
+    if (productCount <= 0 || productCount < MIN_TRUSTED_PRODUCT_COUNT) return null;
 
     if (updatedAt) {
       const age = Date.now() - new Date(updatedAt).getTime();

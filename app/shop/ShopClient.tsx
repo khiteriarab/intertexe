@@ -35,8 +35,6 @@ import {
   getRegionForMarket,
   type MarketFilter,
 } from "../../lib/shipping-regions";
-import { cfProductCard } from "../../lib/cloudflare-images";
-
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
 type CategoryFilterKey = ShopCategoryKey | "bottoms";
 type SortOption = "new" | "price-high" | "price-low" | "natural-high";
@@ -105,8 +103,8 @@ const SHOP_EDIT_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
   imageUrl: editorialHeroForSlug(collection.slug),
 }));
 
-function optimizeImageUrl(url: string, width: number): string {
-  return cfProductCard(url);
+function optimizeImageUrl(url: string, _width: number): string {
+  return url.trim();
 }
 
 function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
@@ -981,7 +979,7 @@ export default function ShopClient({
           <>
             <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12 transition-opacity ${isLoading && products.length > 0 ? "opacity-60" : ""}`}>
               {products.map((product: any, i: number) => (
-                <ProductCard key={product.id} product={product} eager={i < 8} />
+                <ProductCard key={product.id} product={product} eager={i < 12} />
               ))}
             </div>
 

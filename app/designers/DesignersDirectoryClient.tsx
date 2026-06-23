@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bookmark } from "lucide-react";
 import type { BrandStat } from "../../lib/cached-catalog";
+import { useDesignerFavorites } from "../hooks/use-designer-favorites";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -29,6 +30,7 @@ export function DesignersDirectoryClient({
 }) {
   const [search, setSearch] = useState("");
   const [activeLetter, setActiveLetter] = useState("A");
+  const { toggle: toggleDesignerSave, isSaved: isDesignerSaved } = useDesignerFavorites();
 
   const filtered = useMemo(() => {
     if (search.trim().length < 2) return brands;
@@ -171,19 +173,27 @@ export function DesignersDirectoryClient({
               <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-0">
                 {grouped[letter].map((brand) => (
                   <li key={brand.slug}>
-                    <Link
-                      href={`/designers/${brand.slug}`}
-                      className="flex items-center gap-2.5 py-3 md:py-3.5 group border-b border-transparent hover:border-border/20"
-                      data-testid={`card-shoppable-${brand.slug}`}
-                    >
-                      <Bookmark
-                        className="w-3.5 h-3.5 text-muted-foreground/45 flex-shrink-0 group-hover:text-foreground/60 transition-colors"
-                        strokeWidth={1.25}
-                      />
-                      <span className="text-[14px] md:text-[15px] text-foreground group-hover:text-foreground/75 transition-colors truncate">
+                    <div className="flex items-center gap-2.5 py-3 md:py-3.5 border-b border-transparent hover:border-border/20 group">
+                      <button
+                        type="button"
+                        onClick={() => toggleDesignerSave(brand.name)}
+                        className="flex-shrink-0 p-0.5 text-muted-foreground/45 hover:text-foreground transition-colors"
+                        aria-label={isDesignerSaved(brand.name) ? `Remove ${brand.name} from saved designers` : `Save ${brand.name}`}
+                        data-testid={`btn-save-designer-${brand.slug}`}
+                      >
+                        <Bookmark
+                          className={`w-3.5 h-3.5 ${isDesignerSaved(brand.name) ? "fill-foreground text-foreground" : ""}`}
+                          strokeWidth={1.25}
+                        />
+                      </button>
+                      <Link
+                        href={`/designers/${brand.slug}`}
+                        className="flex-1 min-w-0 text-[14px] md:text-[15px] text-foreground group-hover:text-foreground/75 transition-colors truncate"
+                        data-testid={`card-shoppable-${brand.slug}`}
+                      >
                         {brand.name}
-                      </span>
-                    </Link>
+                      </Link>
+                    </div>
                   </li>
                 ))}
               </ul>

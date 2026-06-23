@@ -7,10 +7,10 @@ import { CATALOG_STATS } from "../../lib/catalog-stats";
 import ShopClient from "./ShopClient";
 import { formatListingPrice } from "../../lib/format-display-price";
 import { getShopBrands, getShopMeta } from "./actions";
-import { getCachedCatalogStatsMemo } from "../../lib/cached-catalog-stats";
+import { getCachedCatalogStatsMemo, getShopCatalogKnownTotal } from "../../lib/cached-catalog-stats";
+import { queryLiveCatalog } from "../../lib/catalog-direct-query";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Shop Natural Fiber Clothing | Silk, Cashmere, Linen, Wool",
@@ -50,21 +50,54 @@ const SHOP_CATEGORIES = new Set([
   "knitwear", "tops", "dresses", "skirts", "trousers", "outerwear", "jumpsuits", "lingerie", "swimwear",
 ]);
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com";
-
 const EMPTY_CATALOG = { products: [] as any[], total: 0, hasMore: false };
 
-async function fetchShopCatalog(catalogParams: URLSearchParams) {
+async function loadShopCatalog(opts: {
+  fiber?: string;
+  category?: string;
+  sort: string;
+  search?: string;
+  color?: string;
+  fiberSubtype?: string;
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+}) {
   try {
-    const res = await fetch(`${SITE_URL}/api/catalog?${catalogParams}`, {
-      next: { revalidate: 60 },
+    const result = await queryLiveCatalog({
+      region: "us",
+      limit: CATALOG_INITIAL_PAGE,
+      offset: 0,
+      fiber: opts.fiber,
+      category: opts.category,
+      search: opts.search,
+      sort: opts.sort === "recommended" ? "new" : opts.sort,
+      color: opts.color,
+      fiberSubtype: opts.fiberSubtype,
+      brand: opts.brand,
+      minPrice: opts.minPrice,
+      maxPrice: opts.maxPrice,
     });
-    if (!res.ok) return EMPTY_CATALOG;
-    const data = await res.json();
+
+    const isUnfiltered =
+      !opts.fiber &&
+      !opts.category &&
+      !opts.search &&
+      !opts.color &&
+      !opts.fiberSubtype &&
+      !opts.brand &&
+      opts.minPrice == null &&
+      opts.maxPrice == null;
+
+    let total = result.total ?? 0;
+    if (isUnfiltered) {
+      total = await getShopCatalogKnownTotal();
+    }
+
     return {
-      products: data.products || [],
-      total: data.total ?? 0,
-      hasMore: data.hasMore ?? false,
+      products: result.products || [],
+      total,
+      hasMore: result.hasMore ?? false,
     };
   } catch {
     return EMPTY_CATALOG;
@@ -105,35 +138,35 @@ export default async function ShopPage({
     const price = params?.price?.trim() || undefined;
     const brand = params?.brands?.split(",")[0]?.trim() || undefined;
 
-    const catalogParams = new URLSearchParams({
-      region: "us",
-      limit: String(CATALOG_INITIAL_PAGE),
-      offset: "0",
-    });
-    if (fiber) catalogParams.set("fiber", fiber);
-    if (category) catalogParams.set("category", category);
-    if (sort && sort !== "recommended") catalogParams.set("sort", sort);
-    if (search) catalogParams.set("q", search);
-    if (color) catalogParams.set("color", color);
-    if (fiberSubtype) catalogParams.set("fiberSubtype", fiberSubtype);
-    if (brand) catalogParams.set("brand", brand);
+    let minPrice: number | undefined;
+    let maxPrice: number | undefined;
     if (price && price !== "any") {
-      if (price === "2500plus" || price === "600plus") catalogParams.set("minPrice", "2500");
-      else if (price === "200") catalogParams.set("maxPrice", "200");
+      if (price === "2500plus" || price === "600plus") minPrice = 2500;
+      else if (price === "200") maxPrice = 200;
       else if (price === "500") {
-        catalogParams.set("minPrice", "200");
-        catalogParams.set("maxPrice", "500");
+        minPrice = 200;
+        maxPrice = 500;
       } else if (price === "1000") {
-        catalogParams.set("minPrice", "500");
-        catalogParams.set("maxPrice", "1000");
+        minPrice = 500;
+        maxPrice = 1000;
       } else if (price === "2500") {
-        catalogParams.set("minPrice", "1000");
-        catalogParams.set("maxPrice", "2500");
+        minPrice = 1000;
+        maxPrice = 2500;
       }
     }
 
     const [shopData, meta, brands, catalogStats] = await Promise.all([
-      fetchShopCatalog(catalogParams),
+      loadShopCatalog({
+        fiber,
+        category,
+        sort,
+        search,
+        color,
+        fiberSubtype,
+        brand,
+        minPrice,
+        maxPrice,
+      }),
       getShopMeta().catch(() => ({ totalProductCount: 0, fiberCounts: {} as Record<string, number> })),
       getShopBrands().catch(() => [] as { slug: string; name: string; count: number }[]),
       getCachedCatalogStatsMemo().catch(() => ({

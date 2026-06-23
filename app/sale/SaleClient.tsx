@@ -54,7 +54,7 @@ function getDiscountPercent(originalPrice: string | null, currentPrice: string |
   return Math.round(((orig - curr) / orig) * 100);
 }
 
-function SaleProductCard({ product }: { product: any }) {
+function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) {
   const { toggle, isFavorited } = useProductFavorites();
   const productId = String(product.id);
   const saved = isFavorited(productId);
@@ -83,6 +83,7 @@ function SaleProductCard({ product }: { product: any }) {
             alt={name}
             category={product.category}
             name={name}
+            eager={eager}
           />
           {(product.stock_status === "low_stock" || product.stockStatus === "low_stock") && (
             <span className="absolute top-3 left-3 z-20 text-[7px] tracking-[0.2em] uppercase font-medium text-white bg-[#420217] px-2 py-1">
@@ -534,7 +535,7 @@ export default function SaleClient({
                 {mobileFilterPanel}
               </CatalogMobileSheet>
 
-              {isLoading ? (
+              {isLoading && products.length === 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="animate-pulse flex flex-col">
@@ -549,8 +550,8 @@ export default function SaleClient({
               ) : products.length > 0 ? (
                 <>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12" data-testid="sale-product-grid">
-                    {products.map((product: any) => (
-                      <SaleProductCard key={product.id} product={product} />
+                    {products.map((product: any, i: number) => (
+                      <SaleProductCard key={product.id} product={product} eager={i < 12} />
                     ))}
                   </div>
                   {hasMore && (

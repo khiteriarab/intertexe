@@ -181,12 +181,11 @@ export default async function RewardsPage() {
             Founding Members
           </p>
           <h2 className="text-3xl font-serif font-light text-[#1C2B2A] mb-4">
-            Join before August 8
+            Join as a founding member
           </h2>
           <p className="text-[13px] font-light text-[#1C2B2A] leading-relaxed mb-8">
-            Pre-register before our official launch and receive Fiber status
-            automatically — no scans or spend required. Founding members keep
-            their status forever.
+            Pre-register and receive Fiber status automatically — no scans or
+            spend required. Founding members keep their status forever.
           </p>
           <Link
             href="/signup"

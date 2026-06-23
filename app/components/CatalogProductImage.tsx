@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import ProductImageSkeleton from "./ProductImageSkeleton";
 import {
   catalogImageObjectClass,
@@ -17,7 +16,7 @@ export function CatalogProductImage({
   name,
   eager,
   className = "",
-  sizes = "(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw",
+  sizes: _sizes = "(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw",
 }: {
   src: string;
   alt: string;
@@ -29,33 +28,42 @@ export function CatalogProductImage({
   sizes?: string;
 }) {
   const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [activeSrc, setActiveSrc] = useState(src);
 
   useEffect(() => {
     setLoaded(false);
-    setError(false);
+    setFailed(false);
+    setActiveSrc(src);
   }, [src]);
 
   const { aspect } = catalogImageSizes(variant);
   const objectClass = catalogImageObjectClass(variant, { category, name });
 
   return (
-    <div className={`relative overflow-hidden bg-[#1C2B2A] ${aspect} ${className}`}>
-      {!loaded && !error && <ProductImageSkeleton />}
-      {error && <ProductImageSkeleton />}
+    <div className={`relative overflow-hidden bg-[#f5f5f3] ${aspect} ${className}`}>
+      {!loaded && !failed && <ProductImageSkeleton />}
+      {failed && <ProductImageSkeleton />}
 
-      {!error && (
-        <Image
-          src={src}
+      {!failed && activeSrc && (
+        // Native img — faster first paint than Next/Image for external CDN URLs.
+        <img
+          src={activeSrc}
           alt={alt}
-          fill
           onLoad={() => setLoaded(true)}
-          onError={() => setError(true)}
-          className={`absolute inset-0 w-full h-full ${objectClass} object-cover transition-opacity duration-300 ease-out group-hover:scale-[1.03] transition-transform duration-700 ${
+          onError={() => {
+            if (activeSrc !== src && src) {
+              setActiveSrc(src);
+              return;
+            }
+            setFailed(true);
+          }}
+          className={`absolute inset-0 w-full h-full ${objectClass} transition-opacity duration-300 ease-out group-hover:scale-[1.03] transition-transform duration-700 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
           loading={eager ? "eager" : "lazy"}
-          sizes={sizes}
+          decoding="async"
+          fetchPriority={eager ? "high" : "auto"}
           draggable={false}
         />
       )}
