@@ -167,13 +167,13 @@
   display: block;
 }
 
-/* Homepage hero only — collections/editorial keep center top elsewhere */
+/* Homepage hero only — portrait grotto; anchor on model, not cave ceiling */
 .homepage-hero-img--desktop {
-  object-position: center 58%;
+  object-position: center 78%;
 }
 
 .homepage-hero-img--mobile {
-  object-position: center 75%;
+  object-position: center 78%;
 }
 
 /* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */

@@ -62,11 +62,11 @@ export function editorialHeroForSlug(slug: string): string {
 }
 
 /**
- * Homepage hero — separate assets for mobile vs desktop.
- * Desktop needs ≥2400px width for full-bleed Retina (100vw @ 2x); v8 is 768×1408 portrait only.
+ * Homepage hero — v8 portrait (woman in grotto) on all breakpoints.
+ * Wide hero-editorial.jpg is a separate studio crop; do not use for full-bleed hero.
  */
 export const HOMEPAGE_HERO_IMAGE_MOBILE = `${BASE}/hero-editorial-v8.png`;
-export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial.jpg`;
+export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial-v8.png`;
 /** @deprecated Use HOMEPAGE_HERO_IMAGE_MOBILE or HOMEPAGE_HERO_IMAGE_DESKTOP */
 export const HOMEPAGE_HERO_IMAGE = HOMEPAGE_HERO_IMAGE_MOBILE;
 
