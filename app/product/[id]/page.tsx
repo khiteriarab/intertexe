@@ -12,6 +12,7 @@ import {
 } from "../../../lib/supabase-server";
 import { ProductFavoriteButton } from "./ProductFavoriteButton";
 import { ShopNowButton } from "./ShopNowButton";
+import { ProductViewBeacon } from "./ProductViewBeacon";
 import { RelatedProductCard } from "./RelatedProductCard";
 import BackToShop from "./BackToShop";
 import {
@@ -241,6 +242,7 @@ export default async function ProductPage({
 
   return (
     <div className="min-h-screen pb-16">
+      <ProductViewBeacon productId={String(product.id)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: breadcrumbItems }) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
 

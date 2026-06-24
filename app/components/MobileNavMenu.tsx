@@ -14,6 +14,7 @@ import { DesignersMenuPanel } from "./DesignersMenuPanel";
 export function MobileNavMenu() {
   const [open, setOpen] = useState(false);
   const [designersOpen, setDesignersOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
@@ -21,6 +22,7 @@ export function MobileNavMenu() {
   useEffect(() => {
     setOpen(false);
     setDesignersOpen(false);
+    setExpanded({});
   }, [pathname]);
 
   useEffect(() => {
@@ -34,6 +36,10 @@ export function MobileNavMenu() {
     };
   }, [open]);
 
+  const toggleSection = (name: string) => {
+    setExpanded((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
+
   if (!mounted) return null;
 
   return (
@@ -41,7 +47,7 @@ export function MobileNavMenu() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="md:hidden p-2 -ml-2 text-foreground"
+        className="md:hidden p-2 -ml-2 text-foreground touch-manipulation"
         aria-label="Open menu"
         data-testid="button-mobile-menu"
       >
@@ -56,7 +62,7 @@ export function MobileNavMenu() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="p-2"
+                className="p-2 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Close menu"
                 data-testid="button-close-mobile-menu"
               >
@@ -64,13 +70,13 @@ export function MobileNavMenu() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto overscroll-contain">
               {designersOpen ? (
                 <div className="px-4 py-4">
                   <button
                     type="button"
                     onClick={() => setDesignersOpen(false)}
-                    className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6"
+                    className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6 touch-manipulation min-h-[44px]"
                   >
                     ← Menu
                   </button>
@@ -78,60 +84,91 @@ export function MobileNavMenu() {
                 </div>
               ) : (
               <nav className="px-4 py-6 flex flex-col">
-                {MERCH_NAV.map((item) => (
-                  <div key={item.name} className="border-b border-border/20 last:border-0">
+                {MERCH_NAV.map((item) => {
+                  const hasChildren = "children" in item && item.children && item.children.length > 0;
+                  const isExpanded = Boolean(expanded[item.name]);
+
+                  return (
+                  <div key={item.name} className="border-b border-border/20 last:border-0 relative isolate">
                     {item.name === "Designers" ? (
                       <button
                         type="button"
                         onClick={() => setDesignersOpen(true)}
-                        className="flex w-full items-center justify-between py-4 text-sm uppercase tracking-[0.12em] text-foreground"
+                        className="flex w-full items-center justify-between py-4 min-h-[48px] text-sm uppercase tracking-[0.12em] text-foreground touch-manipulation"
                         data-testid="button-mobile-designers-menu"
                       >
-                        {item.name}
-                        <span className="text-muted-foreground text-lg leading-none">›</span>
+                        <span>{item.name}</span>
+                        <span className="text-muted-foreground text-lg leading-none pointer-events-none" aria-hidden>›</span>
                       </button>
+                    ) : hasChildren ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => toggleSection(item.name)}
+                          className="flex w-full items-center justify-between py-4 min-h-[48px] text-sm uppercase tracking-[0.12em] text-foreground touch-manipulation"
+                          aria-expanded={isExpanded}
+                        >
+                          <span>{item.name}</span>
+                          <span
+                            className={`text-muted-foreground text-lg leading-none pointer-events-none transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                            aria-hidden
+                          >
+                            ›
+                          </span>
+                        </button>
+                        {isExpanded && (
+                          <ul className="pb-3 pl-1 flex flex-col gap-0">
+                            <li>
+                              <Link
+                                href={item.href}
+                                className="block py-3 min-h-[44px] text-[11px] uppercase tracking-[0.1em] text-foreground hover:text-foreground touch-manipulation"
+                                onClick={() => setOpen(false)}
+                              >
+                                Shop all {item.name.toLowerCase()}
+                              </Link>
+                            </li>
+                            {item.children!.map((child) => (
+                              <li key={child.href}>
+                                <Link
+                                  href={child.href}
+                                  className="block py-3 min-h-[44px] text-[11px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground touch-manipulation"
+                                  onClick={() => setOpen(false)}
+                                >
+                                  {child.name}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
                     ) : (
                     <Link
                       href={item.href}
-                      className="flex items-center justify-between py-4 text-sm uppercase tracking-[0.12em] text-foreground"
+                      className="flex items-center justify-between py-4 min-h-[48px] text-sm uppercase tracking-[0.12em] text-foreground touch-manipulation"
                       onClick={() => setOpen(false)}
                     >
-                      {item.name}
-                      <span className="text-muted-foreground text-lg leading-none">›</span>
+                      <span>{item.name}</span>
+                      <span className="text-muted-foreground text-lg leading-none pointer-events-none" aria-hidden>›</span>
                     </Link>
                     )}
-                    {"children" in item && item.children && (
-                      <ul className="pb-3 pl-1 flex flex-col gap-1">
-                        {item.children.map((child) => (
-                          <li key={child.href}>
-                            <Link
-                              href={child.href}
-                              className="block py-2 text-[11px] uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground"
-                              onClick={() => setOpen(false)}
-                            >
-                              {child.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
-                ))}
+                  );
+                })}
                 <Link
                   href="/rewards"
-                  className="flex items-center justify-between py-4 text-sm uppercase tracking-[0.12em] border-b border-border/20"
+                  className="flex items-center justify-between py-4 min-h-[48px] text-sm uppercase tracking-[0.12em] border-b border-border/20 touch-manipulation"
                   onClick={() => setOpen(false)}
                 >
-                  Rewards
-                  <span className="text-muted-foreground text-lg leading-none">›</span>
+                  <span>Rewards</span>
+                  <span className="text-muted-foreground text-lg leading-none pointer-events-none" aria-hidden>›</span>
                 </Link>
                 <Link
                   href="/scanner"
-                  className="flex items-center justify-between py-4 text-sm uppercase tracking-[0.12em] border-b border-border/20"
+                  className="flex items-center justify-between py-4 min-h-[48px] text-sm uppercase tracking-[0.12em] border-b border-border/20 touch-manipulation"
                   onClick={() => setOpen(false)}
                 >
-                  Scanner
-                  <span className="text-muted-foreground text-lg leading-none">›</span>
+                  <span>Scanner</span>
+                  <span className="text-muted-foreground text-lg leading-none pointer-events-none" aria-hidden>›</span>
                 </Link>
 
                 <CountrySelector menuFooter className="px-0" />

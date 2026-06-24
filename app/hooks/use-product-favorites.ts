@@ -63,28 +63,49 @@ export function useProductFavorites() {
         if (!hasSynced.current) {
           hasSynced.current = true;
           const local = loadLocal();
-          if (local.size > 0) {
-            fetch("/api/product-favorites/sync", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-              body: JSON.stringify({ productIds: [...local] }),
+          const localViews = (() => {
+            try {
+              const raw = localStorage.getItem("intertexe_recently_viewed");
+              const parsed = raw ? JSON.parse(raw) : [];
+              return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
+            } catch {
+              return [];
+            }
+          })();
+
+          const favoritesPromise =
+            local.size > 0
+              ? fetch("/api/product-favorites/sync", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ productIds: [...local] }),
+                }).then((r) => (r.ok ? r.json() : null))
+              : Promise.resolve(null);
+
+          const activityPromise =
+            localViews.length > 0
+              ? fetch("/api/user/activity/sync", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ productViews: localViews }),
+                }).then((r) => (r.ok ? r.json() : null))
+              : Promise.resolve(null);
+
+          Promise.all([favoritesPromise, activityPromise])
+            .then(([merged]) => {
+              if (merged) {
+                const mergedIds: string[] = Array.isArray(merged) ? merged : (merged.productIds || []);
+                saveLocal(new Set(mergedIds));
+                setLocalFavorites(new Set(mergedIds));
+                setServerFavorites(mergedIds);
+                notify();
+              } else if (ids.length > 0) {
+                saveLocal(new Set(ids));
+                setLocalFavorites(new Set(ids));
+                notify();
+              }
             })
-              .then((r) => r.ok ? r.json() : null)
-              .then((merged) => {
-                if (merged) {
-                  const ids: string[] = Array.isArray(merged) ? merged : (merged.productIds || []);
-                  saveLocal(new Set(ids));
-                  setLocalFavorites(new Set(ids));
-                  setServerFavorites(ids);
-                  notify();
-                }
-              })
-              .catch(() => {});
-          } else if (ids.length > 0) {
-            saveLocal(new Set(ids));
-            setLocalFavorites(new Set(ids));
-            notify();
-          }
+            .catch(() => {});
         }
       })
       .catch(() => {});
