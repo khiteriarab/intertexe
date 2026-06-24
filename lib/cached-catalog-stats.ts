@@ -15,8 +15,8 @@ export type CachedCatalogStats = {
 };
 
 const CACHE_MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
-/** Counts below this are treated as stale (e.g. deduped shop-card totals written to cache). */
-const MIN_TRUSTED_PRODUCT_COUNT = 150_000;
+/** Reject only obvious bad writes (e.g. single-digit placeholders). */
+const MIN_TRUSTED_PRODUCT_COUNT = 1_000;
 
 async function readPlatformStatsCache(): Promise<CachedCatalogStats | null> {
   const supabase = getServerSupabase();

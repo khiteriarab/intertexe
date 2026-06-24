@@ -33,7 +33,7 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
   let brandCount = cached.brandCount;
 
   if (productCount <= 0) {
-    productCount = await fetchLiveProductCount();
+    productCount = (await fetchLiveProductCount()) ?? 0;
   }
   if (brandCount <= 0) {
     brandCount = await fetchShoppableBrandCount();

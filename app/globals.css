@@ -168,7 +168,7 @@
 }
 
 .homepage-hero-desktop-frame .homepage-hero-img--editorial-jpg {
-  object-position: center top;
+  object-position: center top !important;
 }
 
 .homepage-hero-frame-mobile .homepage-hero-img {

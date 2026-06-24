@@ -23,6 +23,7 @@ import {
   isMerchFeedEnabled,
 } from "./merch-feed";
 import { getCachedPlatformStats } from "./cached-catalog";
+import { CATALOG_STATS } from "./catalog-stats";
 import { enrichDesignersWithHeroImages } from "./brand-hero-selection";
 import { getServerSupabase } from "./supabase-service-client";
 import { filterHomepageSaleProducts } from "./homepage-sale-filter";
@@ -218,7 +219,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       "platform-stats",
       8_000,
       () => getCachedPlatformStats(),
-      { productCount: 84_704, brandCount: 99 }
+      { productCount: CATALOG_STATS.productCount, brandCount: CATALOG_STATS.brandCount }
     ),
     withHomepageRailTimeout(
       "rail:batch",

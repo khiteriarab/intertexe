@@ -115,6 +115,7 @@ export function HomepageHeroSection({
             className={`homepage-hero-img homepage-hero-img--editorial-jpg transition-opacity duration-500 ${
               showDesktopHero ? "opacity-100" : "opacity-0"
             }`}
+            style={{ objectPosition: "center top" }}
             draggable={false}
           />
         </div>
