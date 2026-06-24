@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromToken } from "../../../lib/auth-helpers";
-import { getServerSupabase } from "../../../lib/supabase-server";
+import { getUserFromToken } from "../../../../../lib/auth-helpers";
+import { getServerSupabase } from "../../../../../lib/supabase-server";
 
 /** Merge local activity into Supabase (views + clickouts) — mirrors iOS account sync. */
 export async function POST(request: NextRequest) {
@@ -12,6 +12,17 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const productViews: string[] = Array.isArray(body.productViews) ? body.productViews : [];
   const clickouts: string[] = Array.isArray(body.clickouts) ? body.clickouts : [];
+  const scans: {
+    scannedAt?: string;
+    productId?: string | null;
+    imageUrl?: string | null;
+    brand?: string | null;
+    productName?: string | null;
+    composition?: string | null;
+    naturalPercent?: number | null;
+    verdict?: string | null;
+    scanSource?: string | null;
+  }[] = Array.isArray(body.scans) ? body.scans : [];
 
   const supabase = getServerSupabase();
   if (!supabase) return NextResponse.json({ message: "Database not available" }, { status: 500 });
@@ -34,6 +45,21 @@ export async function POST(request: NextRequest) {
       user_id: userId,
       product_id: productId,
       clicked_at: now,
+    });
+  }
+
+  for (const scan of scans.slice(0, 48)) {
+    await supabase.from("scan_history").insert({
+      user_id: userId,
+      scanned_at: scan.scannedAt || now,
+      product_id: scan.productId || null,
+      image_url: scan.imageUrl || null,
+      brand: scan.brand || null,
+      product_name: scan.productName || null,
+      composition: scan.composition || null,
+      natural_percent: scan.naturalPercent ?? null,
+      verdict: scan.verdict || null,
+      scan_source: scan.scanSource || "manual",
     });
   }
 

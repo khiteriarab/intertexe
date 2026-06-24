@@ -53,6 +53,7 @@ import {
 } from "./catalog-region-fallback";
 import { normalizeCatalogRegion } from "./shipping-regions";
 import { liveProductsApparelFrom } from "./global-catalog-scope";
+import { rowMatchesTaxonomy } from "./unified-catalog-taxonomy";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
@@ -100,6 +101,10 @@ export interface Product {
   listingRegion?: string | null;
   collectionSlugs?: string[];
   fiberSubtypeLabel?: string | null;
+  /** Canonical style id — one card per style across regional SKUs. */
+  canonicalId?: string | null;
+  /** Dedupe key exposed for clients (canonical or style hash). */
+  offerKey?: string | null;
 }
 
 const DESIGNER_PRODUCT_SLUG_ALIASES: Record<string, string> = {
@@ -966,6 +971,11 @@ export function mapProductRow(row: any): Product {
       row.stock_status != null && String(row.stock_status).trim()
         ? String(row.stock_status).trim()
         : null,
+    canonicalId:
+      row.canonical_id != null && String(row.canonical_id).trim()
+        ? String(row.canonical_id).trim()
+        : null,
+    offerKey: catalogDedupeKey(row),
   };
 }
 
@@ -2147,11 +2157,14 @@ export async function fetchMoreAtPrice(
 }
 
 function productMatchesSaleCategory(product: Product, category: string): boolean {
-  const needle = category.toLowerCase();
-  const garment = String((product as any).garmentType || (product as any).garment_type || "").toLowerCase();
-  const cat = String(product.category || "").toLowerCase();
-  const name = String(product.name || "").toLowerCase();
-  return garment.includes(needle) || cat.includes(needle) || name.includes(needle);
+  return rowMatchesTaxonomy(
+    {
+      garment_type: (product as { garmentType?: string }).garmentType,
+      category: product.category,
+      name: product.name,
+    },
+    { shopCategory: category }
+  );
 }
 
 function saleDiscountPercent(product: Product): number {
@@ -2355,6 +2368,7 @@ async function fetchSaleProductsDirect(options: {
   if (error) throw error;
 
   let products = filterConsumerCatalogProducts((data || []).map(mapProductRow));
+  products = dedupeCatalogProducts(products);
   products = applySaleProductFilters(products, {
     fiber,
     fiberSubtype,

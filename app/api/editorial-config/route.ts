@@ -7,6 +7,7 @@ import {
   HOMEPAGE_HERO_IMAGE_MOBILE,
 } from "../../../lib/editorial-assets";
 import { fabricImages } from "../../../lib/fabric-images";
+import { PROMO_MESSAGES } from "../../../lib/promo-messages";
 
 export const revalidate = 300;
 
@@ -22,6 +23,7 @@ export async function GET() {
       homepageHeroMobile: HOMEPAGE_HERO_IMAGE_MOBILE,
       homepageHeroDesktop: HOMEPAGE_HERO_IMAGE_DESKTOP,
       collections: buildCollectionsManifest(),
+      promoMessages: [...PROMO_MESSAGES],
     },
     {
       headers: {
