@@ -11,6 +11,10 @@ import {
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
 import { CURATED_BRAND_SLUGS } from "./homepage-constants";
+import {
+  HOMEPAGE_LIMITS,
+  NEW_IN_BRAND_SLUGS,
+} from "./homepage-merchandising-manifest";
 import { isEditorialWomensApparel } from "./catalog-product-filters";
 import { EDITORIAL_HERO } from "./editorial-assets";
 import { unstable_cache } from "next/cache";
@@ -32,23 +36,20 @@ import { filterHomepageSaleProducts } from "./homepage-sale-filter";
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
 
 /** Small fetches only — homepage must not scan large slices of catalog. */
-const MATERIAL_RAIL_FETCH_LIMIT = 64;
-const MATERIAL_RAIL_DISPLAY_MAX = 50;
+const MATERIAL_RAIL_FETCH_LIMIT = HOMEPAGE_LIMITS.materialRailFetchLimit;
+const MATERIAL_RAIL_DISPLAY_MAX = HOMEPAGE_LIMITS.materialRailDisplayMax;
 /** Homepage rails are curated previews only — keep small for fast SSR. */
 const MERCH_HOME_FETCH_LIMIT = 24;
 /** Sale rail needs a deeper pool — homepage filter is strict ($200+ approved brands). */
-const MERCH_HOME_SALE_FETCH_LIMIT = 96;
-const MERCH_HOME_SALE_DISPLAY_LIMIT = 28;
-const MERCH_HOME_NEW_IN_FETCH_LIMIT = 56;
-const MERCH_HOME_NEW_IN_DISPLAY_LIMIT = 28;
-const MATERIAL_DIVERSITY_MAX_PER_BRAND = 2;
-const HOMEPAGE_BRAND_LIVE_ROW_CAP = 24;
+const MERCH_HOME_SALE_FETCH_LIMIT = HOMEPAGE_LIMITS.saleFetchLimit;
+const MERCH_HOME_SALE_DISPLAY_LIMIT = HOMEPAGE_LIMITS.saleDisplayLimit;
+const MERCH_HOME_NEW_IN_FETCH_LIMIT = HOMEPAGE_LIMITS.newInFetchLimit;
+const MERCH_HOME_NEW_IN_DISPLAY_LIMIT = HOMEPAGE_LIMITS.newInDisplayLimit;
+const MATERIAL_DIVERSITY_MAX_PER_BRAND = HOMEPAGE_LIMITS.materialDiversityMaxPerBrand;
+const HOMEPAGE_BRAND_LIVE_ROW_CAP = HOMEPAGE_LIMITS.brandLiveRowCap;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
-const NEW_IN_BRAND_SLUGS = [
-  "frame", "vince", "theory", "toteme", "ganni", "staud", "khaite", "isabel-marant",
-] as const;
-const NEW_IN_FETCH_PER_BRAND = 14;
-const NEW_IN_TARGET_ITEMS = 28;
+const NEW_IN_FETCH_PER_BRAND = HOMEPAGE_LIMITS.newInFetchPerBrand;
+const NEW_IN_TARGET_ITEMS = HOMEPAGE_LIMITS.newInTargetItems;
 const HOMEPAGE_SALE_FETCH_LIMIT = 64;
 const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 180;
 const DESIGNERS_FETCH_LIMIT = 48;

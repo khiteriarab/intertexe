@@ -8,6 +8,7 @@ import {
 } from "../../../lib/editorial-assets";
 import { fabricImages } from "../../../lib/fabric-images";
 import { PROMO_MESSAGES } from "../../../lib/promo-messages";
+import { buildHomepageMerchandisingManifest } from "../../../lib/homepage-merchandising-manifest";
 
 export const revalidate = 300;
 
@@ -24,6 +25,7 @@ export async function GET() {
       homepageHeroDesktop: HOMEPAGE_HERO_IMAGE_DESKTOP,
       collections: buildCollectionsManifest(),
       promoMessages: [...PROMO_MESSAGES],
+      homepageMerchandising: buildHomepageMerchandisingManifest(),
     },
     {
       headers: {

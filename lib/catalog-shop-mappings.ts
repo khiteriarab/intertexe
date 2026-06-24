@@ -16,8 +16,18 @@ export const SHOP_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
 /** Alias for direct-query layer. */
 export const CATEGORY_TO_GARMENT_TYPE = SHOP_CATEGORY_GARMENT_TYPES;
 
+/** Collection slugs used as shop-style category filters in sale/shop APIs. */
+const COLLECTION_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
+  "linen-clothing": ["dresses", "tops_blouses", "pants_trousers", "skirts", "jackets_blazers"],
+  "silk-clothing": ["dresses", "tops_blouses", "skirts", "jackets_blazers"],
+  "cashmere-clothing": ["knitwear", "sweaters_cardigans", "jackets_blazers", "coats"],
+  "cotton-clothing": ["dresses", "tops_blouses", "pants_trousers"],
+};
+
 export function applyCategoryFilter(query: any, category: string): any {
-  const garmentTypes = SHOP_CATEGORY_GARMENT_TYPES[category.toLowerCase()];
+  const key = category.toLowerCase();
+  const garmentTypes =
+    SHOP_CATEGORY_GARMENT_TYPES[key] ?? COLLECTION_CATEGORY_GARMENT_TYPES[key];
   if (garmentTypes?.length) {
     return query.in("garment_type", garmentTypes);
   }
