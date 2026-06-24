@@ -61,7 +61,7 @@ export function HomepageHeroSection({
             className={`homepage-hero-img transition-opacity duration-500 ${
               showDesktopHero ? "opacity-100" : "opacity-0"
             }`}
-            style={{ objectPosition: "center 58%" }}
+            style={{ objectPosition: "center 25%" }}
             draggable={false}
           />
         </div>
@@ -115,7 +115,7 @@ export function HomepageHeroSection({
             className={`homepage-hero-img homepage-hero-img--editorial-jpg transition-opacity duration-500 ${
               showDesktopHero ? "opacity-100" : "opacity-0"
             }`}
-            style={{ objectPosition: "center top" }}
+            style={{ objectPosition: "center 25%" }}
             draggable={false}
           />
         </div>
