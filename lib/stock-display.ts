@@ -14,7 +14,7 @@ export function normalizeStockStatus(raw?: string | null): string {
 
 export function stockDisplayKind(raw?: string | null): StockDisplayKind {
   const status = normalizeStockStatus(raw);
-  if (!status) return "unknown";
+  if (!status) return "in_stock";
   if (
     status.includes("sold") ||
     status === "out_of_stock" ||
@@ -26,7 +26,7 @@ export function stockDisplayKind(raw?: string | null): StockDisplayKind {
   if (status === "low_stock") return "low_stock";
   if (status === "in_stock") return "in_stock";
   if (status === "unknown") return "unknown";
-  return "unknown";
+  return "in_stock";
 }
 
 export function stockCardBadgeLabel(raw?: string | null): string | null {

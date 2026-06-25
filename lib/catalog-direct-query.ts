@@ -81,7 +81,7 @@ function applySort(query: any, sort?: string) {
     case "price-high":
       return query.order("price", { ascending: false });
     case "natural-high":
-      return query.order("natural_fiber_percent", { ascending: false });
+      return query.order("id", { ascending: false });
     case "recommended":
     case "new":
     default:
