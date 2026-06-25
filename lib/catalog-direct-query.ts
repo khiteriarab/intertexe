@@ -103,8 +103,8 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
   const offset = Math.max(opts.offset ?? 0, 0);
   const searchText = (opts.q || opts.search || "").trim();
   const categories = opts.categories?.length
-    ? opts.categories.filter((c) => c && c !== "all")
-    : opts.category && opts.category !== "all"
+    ? opts.categories.filter((c) => c && c !== "all" && c !== "apparel" && c !== "clothing")
+    : opts.category && opts.category !== "all" && opts.category !== "apparel" && opts.category !== "clothing"
       ? [opts.category]
       : [];
 

@@ -30,16 +30,7 @@ export function stockDisplayKind(raw?: string | null): StockDisplayKind {
 }
 
 export function stockCardBadgeLabel(raw?: string | null): string | null {
-  switch (stockDisplayKind(raw)) {
-    case "low_stock":
-      return "Low stock";
-    case "in_stock":
-      return "In stock";
-    case "unknown":
-      return "Check availability";
-    default:
-      return null;
-  }
+  return null;
 }
 
 export function stockDetailLine(raw?: string | null): string | null {
