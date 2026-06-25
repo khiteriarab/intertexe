@@ -24,8 +24,7 @@ export function stockDisplayKind(raw?: string | null): StockDisplayKind {
     return "unavailable";
   }
   if (status === "low_stock") return "low_stock";
-  if (status === "in_stock") return "in_stock";
-  if (status === "unknown") return "unknown";
+  if (status === "unknown") return "in_stock";
   return "in_stock";
 }
 
@@ -39,10 +38,6 @@ export function stockDetailLine(raw?: string | null): string | null {
       return "This item appears to be sold out at the retailer.";
     case "low_stock":
       return "Low stock — may sell out soon. Confirm on the retailer site.";
-    case "in_stock":
-      return "In stock according to the latest retailer feed.";
-    case "unknown":
-      return "Availability not confirmed in our feed — please check on the retailer site before ordering.";
     default:
       return null;
   }
