@@ -5,6 +5,8 @@ import {
   EDITORIAL_HERO,
   HOMEPAGE_HERO_IMAGE_DESKTOP,
   HOMEPAGE_HERO_IMAGE_MOBILE,
+  HOMEPAGE_HERO_SLIDES,
+  HOMEPAGE_HERO_SWAP_MS,
 } from "../../../lib/editorial-assets";
 import { fabricImages } from "../../../lib/fabric-images";
 import { PROMO_MESSAGES } from "../../../lib/promo-messages";
@@ -23,6 +25,8 @@ export async function GET() {
       brands: BRAND_WE_LOVE_IMAGES,
       homepageHeroMobile: HOMEPAGE_HERO_IMAGE_MOBILE,
       homepageHeroDesktop: HOMEPAGE_HERO_IMAGE_DESKTOP,
+      homepageHeroSlides: HOMEPAGE_HERO_SLIDES,
+      homepageHeroSwapMs: HOMEPAGE_HERO_SWAP_MS,
       collections: buildCollectionsManifest(),
       promoMessages: [...PROMO_MESSAGES],
       homepageMerchandising: buildHomepageMerchandisingManifest(),

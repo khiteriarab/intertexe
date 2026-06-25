@@ -13,6 +13,7 @@ import {
   type ShopPriceTierId,
 } from "../../lib/catalog-filter-options";
 import { getShopBrands } from "../shop/actions";
+import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
 import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
 import {
@@ -74,6 +75,7 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
   };
   const priceShown = formatDisplayPrice(priceHints);
   const originalShown = formatDisplayOriginalPrice(priceHints);
+  const stockBadge = stockCardBadgeLabel(product.stock_status ?? product.stockStatus);
 
   return (
     <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
@@ -86,11 +88,11 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
             name={name}
             eager={eager}
           />
-          {(product.stock_status === "low_stock" || product.stockStatus === "low_stock") && (
+          {stockBadge ? (
             <span className="absolute top-3 left-3 z-20 text-[7px] tracking-[0.2em] uppercase font-medium text-white bg-[#420217] px-2 py-1">
-              Low Stock
+              {stockBadge}
             </span>
-          )}
+          ) : null}
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(productId, brandName, priceShown || String(price)); }}
             className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center transition-opacity duration-200 ${saved ? "opacity-100" : "md:opacity-0 md:group-hover:opacity-100"}`}

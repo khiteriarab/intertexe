@@ -5,29 +5,56 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import {
-  HOMEPAGE_HERO_IMAGE_DESKTOP,
-  HOMEPAGE_HERO_IMAGE_MOBILE,
+  HOMEPAGE_HERO_SLIDES,
+  HOMEPAGE_HERO_SWAP_MS,
+  type HomepageHeroSlide,
 } from "../../lib/editorial-assets";
 
-const HERO_SWAP_MS = 1000;
-
-/** Portrait campaign hero — alternates mobile + desktop art every second. */
+/** Portrait campaign hero — alternates slides from editorial-config (default 5s). */
 export function HomepageHeroSection({
   productCountLabel,
   brandCountLabel,
+  slides = HOMEPAGE_HERO_SLIDES,
+  swapMs = HOMEPAGE_HERO_SWAP_MS,
 }: {
   productCountLabel: string;
   brandCountLabel: string;
   products?: unknown[];
+  slides?: HomepageHeroSlide[];
+  swapMs?: number;
 }) {
-  const [showDesktopHero, setShowDesktopHero] = useState(false);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const heroSlides = slides.length > 0 ? slides : HOMEPAGE_HERO_SLIDES;
 
   useEffect(() => {
+    if (heroSlides.length <= 1) return;
     const id = window.setInterval(() => {
-      setShowDesktopHero((current) => !current);
-    }, HERO_SWAP_MS);
+      setHeroIndex((current) => (current + 1) % heroSlides.length);
+    }, swapMs);
     return () => window.clearInterval(id);
-  }, []);
+  }, [heroSlides.length, swapMs]);
+
+  const renderHeroImages = (extraClass = "") =>
+    heroSlides.map((slide, index) => {
+      const isJpg = slide.url.includes("hero-editorial.jpg");
+      return (
+      <Image
+        key={slide.url}
+        src={slide.url}
+        alt={index === 0 ? "INTERTEXE editorial" : ""}
+        fill
+        priority={index === 0}
+        quality={100}
+        sizes="100vw"
+        aria-hidden={index !== 0}
+        className={`homepage-hero-img transition-opacity duration-500 ${
+          heroIndex === index ? "opacity-100" : "opacity-0"
+        } ${isJpg ? "homepage-hero-img--editorial-jpg" : ""} ${extraClass}`}
+        style={{ objectPosition: slide.objectPosition }}
+        draggable={false}
+      />
+    );
+    });
 
   return (
     <>
@@ -35,35 +62,8 @@ export function HomepageHeroSection({
         className="relative w-full lg:hidden overflow-hidden"
         data-testid="homepage-hero-mobile"
       >
-        <div className="homepage-hero-frame-mobile">
-          <Image
-            src={HOMEPAGE_HERO_IMAGE_MOBILE}
-            alt=""
-            fill
-            priority
-            quality={100}
-            sizes="100vw"
-            aria-hidden
-            className={`homepage-hero-img transition-opacity duration-500 ${
-              showDesktopHero ? "opacity-0" : "opacity-100"
-            }`}
-            style={{ objectPosition: "center 75%" }}
-            draggable={false}
-          />
-          <Image
-            src={HOMEPAGE_HERO_IMAGE_DESKTOP}
-            alt=""
-            fill
-            priority
-            quality={100}
-            sizes="100vw"
-            aria-hidden
-            className={`homepage-hero-img transition-opacity duration-500 ${
-              showDesktopHero ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ objectPosition: "center 25%" }}
-            draggable={false}
-          />
+        <div className="homepage-hero-frame-mobile relative">
+          {renderHeroImages("")}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent pointer-events-none" />
         <div
@@ -90,34 +90,8 @@ export function HomepageHeroSection({
         className="homepage-hero relative w-full hidden lg:block overflow-hidden"
         data-testid="homepage-hero-desktop"
       >
-        <div className="homepage-hero-desktop-frame">
-          <Image
-            src={HOMEPAGE_HERO_IMAGE_MOBILE}
-            alt=""
-            fill
-            priority
-            quality={100}
-            sizes="100vw"
-            aria-hidden
-            className={`homepage-hero-img transition-opacity duration-500 ${
-              showDesktopHero ? "opacity-0" : "opacity-100"
-            }`}
-            style={{ objectPosition: "center 75%" }}
-            draggable={false}
-          />
-          <Image
-            src={HOMEPAGE_HERO_IMAGE_DESKTOP}
-            alt="INTERTEXE editorial"
-            fill
-            priority
-            quality={100}
-            sizes="100vw"
-            className={`homepage-hero-img homepage-hero-img--editorial-jpg transition-opacity duration-500 ${
-              showDesktopHero ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ objectPosition: "center 25%" }}
-            draggable={false}
-          />
+        <div className="homepage-hero-desktop-frame relative">
+          {renderHeroImages()}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
         <div className="absolute inset-0 z-10 flex flex-col justify-end px-14 xl:px-20 pb-14 xl:pb-16 max-w-2xl">

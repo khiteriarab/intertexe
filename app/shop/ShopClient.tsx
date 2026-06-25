@@ -27,6 +27,7 @@ import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "../components/ShopTheEditCarousel";
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
+import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
 import {
@@ -128,11 +129,13 @@ function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
     sessionStorage.setItem("shop_visible_count", String(document.querySelectorAll('[data-testid^="product-card-"]').length));
   };
 
+  const stockBadge = stockCardBadgeLabel(product.stock_status ?? product.stockStatus);
+
   return (
     <div className="group relative flex flex-col" data-testid={`product-card-${product.id}`}>
-      {product.stock_status === "low_stock" || product.stockStatus === "low_stock" ? (
+      {stockBadge ? (
         <span className="absolute top-3 left-3 z-20 text-[7px] tracking-[0.2em] uppercase font-medium text-white bg-[#420217] px-2 py-1">
-          Low Stock
+          {stockBadge}
         </span>
       ) : null}
       {imageUrl && (

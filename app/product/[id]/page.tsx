@@ -25,6 +25,7 @@ import {
   type CompositionPart,
 } from "../../../lib/catalog-product-filters";
 import { isProductUnavailable } from "../../../lib/catalog-consumer-guard";
+import { schemaOrgAvailability, stockDetailLine } from "../../../lib/stock-display";
 
 export const revalidate = 0;
 
@@ -232,9 +233,7 @@ export default async function ProductPage({
         "@type": "Offer",
         price: numericPrice,
         priceCurrency,
-        availability: unavailable
-          ? "https://schema.org/OutOfStock"
-          : "https://schema.org/InStock",
+        availability: schemaOrgAvailability(product.stockStatus),
         url: product.url,
       };
     }
@@ -304,9 +303,12 @@ export default async function ProductPage({
                   )}
                 </div>
               )}
+              {stockDetailLine(product.stockStatus) && (
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-2" data-testid="text-stock-status">
+                  {stockDetailLine(product.stockStatus)}
+                </p>
+              )}
             </div>
-
-            {product.category && (
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 text-[9px] uppercase tracking-[0.12em] border border-border/40 text-muted-foreground" data-testid="badge-category">
                   {product.category}

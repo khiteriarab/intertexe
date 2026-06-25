@@ -62,12 +62,27 @@ export function editorialHeroForSlug(slug: string): string {
 }
 
 /**
- * Homepage hero — v8 portrait (woman in grotto) on all breakpoints.
- * Wide hero-editorial.jpg is a separate studio crop; do not use for full-bleed hero.
+ * Homepage hero — v8 portrait (woman in grotto) + studio JPG.
+ * Edit HOMEPAGE_HERO_SLIDES below; iOS/web pull from /api/editorial-config.
  */
 export const HOMEPAGE_HERO_IMAGE_MOBILE = `${BASE}/hero-editorial-v8.png`;
 export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial.jpg`;
-/** @deprecated Use HOMEPAGE_HERO_IMAGE_MOBILE or HOMEPAGE_HERO_IMAGE_DESKTOP */
+
+export type HomepageHeroSlide = {
+  url: string;
+  /** CSS object-position, e.g. "center 75%" */
+  objectPosition: string;
+};
+
+/** Rotating homepage hero — change URLs here, redeploy website only. */
+export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
+  { url: HOMEPAGE_HERO_IMAGE_MOBILE, objectPosition: "center 75%" },
+  { url: HOMEPAGE_HERO_IMAGE_DESKTOP, objectPosition: "center 25%" },
+];
+
+export const HOMEPAGE_HERO_SWAP_MS = 5000;
+
+/** @deprecated Use HOMEPAGE_HERO_SLIDES */
 export const HOMEPAGE_HERO_IMAGE = HOMEPAGE_HERO_IMAGE_MOBILE;
 
 export const BRAND_WE_LOVE_IMAGES: Record<string, string> = {
