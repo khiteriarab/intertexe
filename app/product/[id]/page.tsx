@@ -309,6 +309,7 @@ export default async function ProductPage({
                 </p>
               )}
             </div>
+            {product.category && (
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 text-[9px] uppercase tracking-[0.12em] border border-border/40 text-muted-foreground" data-testid="badge-category">
                   {product.category}
