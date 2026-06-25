@@ -129,6 +129,27 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
     !opts.fiberSubtype;
 
   try {
+    // Fast path — is_displayable + id sort (~500ms). Legacy RPC/NFP sort hits statement_timeout.
+    if (!hasNarrowingFilter && !opts.isSale) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_displayable", true)
+        .eq("region", region)
+        .order("id", { ascending: false })
+        .range(offset, offset + limit - 1);
+      if (!error && data?.length) {
+        const products = filterConsumerCatalogProducts(
+          data.map((row) => mapDirectRow(row as Record<string, unknown>))
+        );
+        return {
+          products,
+          total: offset + products.length + (products.length >= limit ? 1 : 0),
+          hasMore: products.length >= limit,
+        };
+      }
+    }
+
     // Consumer catalog — use indexed catalog_list RPC (same as iOS; direct view scan times out).
     if (canUseCatalogListRPC && (!hasNarrowingFilter || opts.fiber || categories.length === 1 || opts.brand || searchText.length >= 2)) {
       const rpc = await queryCatalogListRPC(opts);
