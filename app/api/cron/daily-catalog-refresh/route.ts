@@ -15,43 +15,125 @@ function authorize(request: Request): Response | null {
   return null;
 }
 
-/** Priority Mytheresa sync + daily catalog health email to info@intertexe.com. */
+/** Classification + stats refresh. Rakuten feed runs via chunked cron every 30m. */
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
 
+  const supabase = getServerSupabase();
+  if (!supabase) {
+    return NextResponse.json({ ok: false, error: "Missing Supabase env" }, { status: 500 });
+  }
+
+  const log: {
+    startedAt: string;
+    steps: Record<string, unknown>;
+    errors: { step: string; message: string }[];
+    counts?: { active: number | null; displayable: number | null };
+    finishedAt?: string;
+  } = {
+    startedAt: new Date().toISOString(),
+    steps: {},
+    errors: [],
+  };
+
   try {
-    const { syncRakutenFeeds } = await import(
-      "../../../../lib/feed-sync/rakuten-sync.js"
-    );
+    const classifyBatch = Number(process.env.SWOOP_CLASSIFY_BATCH || 50);
+    const maxRounds = Number(process.env.SWOOP_CLASSIFY_MAX_ROUNDS || 400);
+    let classified = 0;
+    for (let i = 0; i < maxRounds; i += 1) {
+      const { data, error } = await supabase.rpc("swoop_classify_core_batch", {
+        p_limit: classifyBatch,
+      });
+      if (error) {
+        if (!error.message?.includes("Could not find the function")) throw error;
+        break;
+      }
+      const n = Number(data ?? 0);
+      classified += n;
+      if (n === 0) break;
+    }
+    log.steps.classified = classified;
 
-    const mytheresa = await syncRakutenFeeds({
-      ftpDirFilter: ["35663", "43172", "43654"],
-      fileLimit: 40,
-      fileOffset: 0,
-      batchSize: parseInt(process.env.FEED_SYNC_BATCH_SIZE || "100", 10),
-    });
-
-    const supabase = getServerSupabase();
-    let emailResult: { sent: boolean; snapshot?: Awaited<ReturnType<typeof sendCatalogDailyEmail>>["snapshot"] } = {
-      sent: false,
-    };
-
-    if (supabase) {
-      const syncSummary = mytheresa.ok
-        ? `Mytheresa OK — upserted ${mytheresa.upserted ?? 0}, normalized ${mytheresa.normalized ?? 0}`
-        : `Mytheresa partial — errors ${mytheresa.errors?.length ?? 0}`;
-      emailResult = await sendCatalogDailyEmail(supabase, { syncSummary });
+    try {
+      const { error: hubErr } = await supabase.rpc("catalog_refresh_material_hub_counts");
+      if (hubErr && !hubErr.message?.includes("Could not find the function")) {
+        log.errors.push({ step: "hubCounts", message: hubErr.message });
+      } else {
+        log.steps.hubCounts = true;
+      }
+    } catch (err: unknown) {
+      log.errors.push({
+        step: "hubCounts",
+        message: err instanceof Error ? err.message : String(err),
+      });
     }
 
-    return NextResponse.json({
-      ok: mytheresa.ok,
-      mytheresa,
-      email: emailResult,
-    });
+    const { error: railErr } = await supabase.rpc("refresh_homepage_feeds");
+    if (railErr && !railErr.message?.includes("Could not find the function")) {
+      log.errors.push({ step: "homepage", message: railErr.message });
+    }
+
+    const [{ count: active }, { count: displayable }] = await Promise.all([
+      supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
+      supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("is_displayable", true),
+    ]);
+    log.counts = { active, displayable };
+
+    try {
+      const { data: summary } = await supabase
+        .from("catalog_classification_summary")
+        .select("visible_catalog_cards_approx")
+        .maybeSingle();
+      const { data: brandRaw } = await supabase.rpc("catalog_shoppable_brand_count", {
+        p_min_products: 2,
+      });
+      await supabase.from("platform_stats_cache").upsert({
+        id: "main",
+        product_count: Number(summary?.visible_catalog_cards_approx ?? displayable ?? 0),
+        brand_count: Number(brandRaw ?? 0),
+        updated_at: new Date().toISOString(),
+      });
+      log.steps.platformStatsCache = { ok: true };
+    } catch (cacheErr: unknown) {
+      log.errors.push({
+        step: "platformStatsCache",
+        message: cacheErr instanceof Error ? cacheErr.message : String(cacheErr),
+      });
+    }
+
+    log.steps.rakuten = {
+      skipped: true,
+      reason: "Use /api/cron/rakuten-feed-sync every 30m for stock + feed updates",
+    };
+
+    let emailResult: {
+      sent: boolean;
+      snapshot?: Awaited<ReturnType<typeof sendCatalogDailyEmail>>["snapshot"];
+    } = { sent: false };
+    try {
+      emailResult = await sendCatalogDailyEmail(supabase, {
+        syncSummary: "Rakuten feed via 30m chunked cron; classification ran in this job.",
+      });
+      log.steps.email = emailResult;
+    } catch (emailErr: unknown) {
+      log.errors.push({
+        step: "email",
+        message: emailErr instanceof Error ? emailErr.message : String(emailErr),
+      });
+    }
+
+    log.finishedAt = new Date().toISOString();
+    return NextResponse.json(
+      { ok: log.errors.length === 0, log, email: emailResult },
+      { status: log.errors.length ? 207 : 200 }
+    );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[daily-catalog-refresh]", message);
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    log.errors.push({ step: "fatal", message });
+    return NextResponse.json({ ok: false, log, error: message }, { status: 500 });
   }
 }

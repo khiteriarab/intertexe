@@ -14,7 +14,6 @@ function authorize(request: Request): NextResponse | null {
   return null;
 }
 
-/** Production cron path — stateful chunked Rakuten sync (5 FTP files per run). */
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
