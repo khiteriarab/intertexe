@@ -4,6 +4,7 @@
 import { getServerSupabase } from "./supabase-service-client";
 import { filterConsumerCatalogProducts } from "./catalog-consumer-guard";
 import { applyCategoryFilter, CATEGORY_TO_GARMENT_TYPE } from "./catalog-shop-mappings";
+import { queryCatalogListRPC } from "./catalog-list-rpc";
 
 const CATALOG_TABLE = "live_products_apparel";
 
@@ -121,7 +122,20 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
   );
   const useExactCount = false;
 
+  const canUseCatalogListRPC =
+    !opts.isSale &&
+    !opts.collection &&
+    !opts.color &&
+    !opts.fiberSubtype;
+
   try {
+    // Consumer catalog — use indexed catalog_list RPC (same as iOS; direct view scan times out).
+    if (canUseCatalogListRPC && (!hasNarrowingFilter || opts.fiber || categories.length === 1 || opts.brand || searchText.length >= 2)) {
+      const rpc = await queryCatalogListRPC(opts);
+      if (!rpc.error && rpc.products.length > 0) return rpc;
+      if (!hasNarrowingFilter && !rpc.error) return rpc;
+    }
+
     // Consumer catalog only — scoped view (composition, womenswear, active, NFP ≥ 80).
     if (!hasNarrowingFilter && !opts.isSale) {
       let pq = supabase

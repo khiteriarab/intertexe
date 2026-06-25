@@ -11,6 +11,7 @@ import {
   COLLECTION_CANONICAL_SLUGS,
   queryLiveCatalog,
 } from "../../../lib/catalog-direct-query";
+import { queryCatalogListRPC } from "../../../lib/catalog-list-rpc";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 import { getShopCatalogKnownTotal } from "../../../lib/cached-catalog-stats";
 import {
@@ -54,7 +55,7 @@ function catalogOk(
   });
 }
 
-function catalogTimeoutResponse(limit: number, offset: number, cacheKey?: string) {
+function catalogTimeoutResponse(limit: number, offset: number) {
   return catalogOk({
     products: [],
     total: null,
@@ -63,10 +64,10 @@ function catalogTimeoutResponse(limit: number, offset: number, cacheKey?: string
     hasMore: false,
     error: "timeout",
     message: "Query took too long — try filtering by material or category",
-  }, { cacheKey });
+  });
 }
 
-function catalogFailedResponse(limit: number, offset: number, cacheKey?: string) {
+function catalogFailedResponse(limit: number, offset: number) {
   return catalogOk({
     products: [],
     total: null,
@@ -74,7 +75,7 @@ function catalogFailedResponse(limit: number, offset: number, cacheKey?: string)
     offset,
     hasMore: false,
     error: "failed",
-  }, { cacheKey });
+  });
 }
 
 /** API totals must be numeric for pagination — never omit when count is available. */
@@ -313,7 +314,7 @@ export async function GET(request: NextRequest) {
         skipTotal: false,
         region: catalogRegion || "us",
       });
-      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset, cacheKey);
+      if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
       const brandTotal = catalogTotalValue(
         result.total,
         result.products.length,
@@ -450,7 +451,28 @@ export async function GET(request: NextRequest) {
     });
 
     if (result.error === "failed") {
-      return catalogFailedResponse(limit, offset, cacheKey);
+      const rpcFallback = await queryCatalogListRPC({
+        region,
+        fiber: shopFiber,
+        category: category && category !== "all" ? category : undefined,
+        brand: brandAlias || undefined,
+        search: search || undefined,
+        limit,
+        offset,
+        skipCount,
+      });
+      if (!rpcFallback.error && rpcFallback.products.length > 0) {
+        let total = catalogTotalValue(rpcFallback.total, rpcFallback.products.length, offset, skipCount);
+        return respond({
+          products: rpcFallback.products,
+          total,
+          limit,
+          offset,
+          hasMore: rpcFallback.hasMore,
+          source: "catalog-list-rpc",
+        }, { source: "catalog-list-rpc" });
+      }
+      return catalogFailedResponse(limit, offset);
     }
 
     const isUnfilteredBaseCatalog =
@@ -500,8 +522,8 @@ export async function GET(request: NextRequest) {
     const e = err as { code?: string; message?: string };
     console.error("[api/catalog]", err);
     if (e?.code === "57014" || String(e?.message || "").includes("timeout")) {
-      return catalogTimeoutResponse(limit, offset, cacheKey);
+      return catalogTimeoutResponse(limit, offset);
     }
-    return catalogFailedResponse(limit, offset, cacheKey);
+    return catalogFailedResponse(limit, offset);
   }
 }
