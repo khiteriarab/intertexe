@@ -81,7 +81,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       id: "01",
       name: "Tailored Linen Trouser",
       composition: "100% Linen",
-      price: "$370",
+      price: "$298",
       brand: "Citizens of Humanity",
       catalogSku: "P01184019",
       href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138678912206130907219885&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcitizens-of-humanity-brynn-drawstring-linen-trousers%3FID%3D5885503%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
