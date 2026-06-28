@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { KhiterisEditConfig } from "../../lib/khiteris-edit";
+import { KhiteriPageViewTracker } from "./KhiteriPageViewTracker";
 import { KhiteriProductAffiliateLink } from "./KhiteriProductAffiliateLink";
 
 const FINAL_NOTE = {
@@ -22,6 +23,7 @@ type Props = {
 export function KhiterisEditView({ edit, appStoreUrl }: Props) {
   return (
     <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]">
+      <KhiteriPageViewTracker editSlug={edit.slug} editMonth={edit.monthLabel} />
       <header className="khiteris-edit__masthead">
         <Link href="/" className="khiteris-edit__masthead-link" aria-label="INTERTEXE home">
           INTER<span className="font-medium">TEXE</span>

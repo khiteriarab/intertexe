@@ -65,6 +65,16 @@ export function trackAffiliateClick(params: {
   });
 }
 
+/** Editorial landing pages (e.g. /khiteri) — page visits. */
+export function trackEditorialPageView(params: { editSlug: string; editMonth: string }) {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "editorial_page_view", {
+    edit_slug: params.editSlug,
+    edit_month: params.editMonth,
+    page_path: `/${params.editSlug}`,
+  });
+}
+
 /** Leaving-page redirect (brand + destination URL). */
 export function trackAffiliateRedirect(brand: string, url: string) {
   if (typeof window === "undefined") return;
