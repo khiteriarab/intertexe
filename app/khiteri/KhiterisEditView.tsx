@@ -18,11 +18,13 @@ const BETA_COPY = {
 type Props = {
   edit: KhiterisEditConfig;
   appStoreUrl: string;
+  /** Catalog region inferred from visitor IP (Vercel geo headers). */
+  catalogRegion?: string;
 };
 
-export function KhiterisEditView({ edit, appStoreUrl }: Props) {
+export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
   return (
-    <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]">
+    <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]" data-catalog-region={catalogRegion}>
       <KhiteriPageViewTracker editSlug={edit.slug} editMonth={edit.monthLabel} />
       <header className="khiteris-edit__masthead">
         <Link href="/" className="khiteris-edit__masthead-link" aria-label="INTERTEXE home">
