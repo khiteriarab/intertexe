@@ -11,8 +11,6 @@
  * Everything else (copy, layout, CTAs) stays the same.
  */
 
-const BASE = "https://www.intertexe.com";
-
 export type KhiterisEditImage = {
   src: string;
   alt: string;
@@ -41,117 +39,147 @@ export type KhiterisEditConfig = {
   products: KhiterisEditProduct[];
 };
 
-/** July 2026 — placeholder products; swap images and copy when curating each month. */
+/** July 2026 — live catalog picks (full-body on-model images where available). */
 export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
   slug: "khiteri",
   monthLabel: "July 2026",
   title: "KHITERI'S EDIT",
   subtitle: "10 natural-fiber pieces I'm loving this month.",
   coverImage: {
-    src: `${BASE}/editorial-vacation.jpg`,
-    alt: "Mediterranean summer editorial",
+    src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S57-FF2904-BLK-23935-FaithfullTheBrand-D2-1184.webp?v=1712029525",
+    alt: "Faithfull the Brand Maceio Maxi Dress Black",
   },
   moodBoard: {
     caption: "Salt air, linen, and nowhere to be.",
     images: [
       {
-        src: `${BASE}/editorial-vacation.jpg`,
-        alt: "Coastal light on stone",
+        src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S118-FF3981-WHT-24956-FaithfullTheBrand-D1-1728.webp?v=1745222160",
+        alt: "Faithfull the Brand Denise Mini Dress White",
       },
       {
-        src: "/fabrics/fabric-linen.jpg",
-        alt: "Natural linen texture",
+        src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S129-FF3997-CRI-24956-FaithfullTheBrand-D1-1172.webp?v=1746674010",
+        alt: "Faithfull the Brand Orion Mini Dress Cerise",
       },
       {
-        src: "/fabrics/fabric-silk.jpg",
-        alt: "Silk in soft daylight",
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/22/P01184019.jpg",
+        alt: "Citizens of Humanity Tailored Linen Trouser",
       },
       {
-        src: "/fabrics/fabric-cotton.jpg",
-        alt: "Cotton weave close-up",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/WES04866WE.100_10.jpg?v=1768885979",
+        alt: "Dissh Dina Off White Cotton Asym Knit Top",
       },
     ],
   },
   products: [
     {
       id: "01",
-      name: "Oversized Linen Shirt",
+      name: "Tailored Linen Trouser",
       composition: "100% Linen",
-      price: "$285",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-linen.jpg", alt: "Linen shirt placeholder" },
+      price: "$370",
+      brand: "Citizens of Humanity",
+      image: {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/22/P01184019.jpg",
+        alt: "Citizens of Humanity Tailored Linen Trouser on model",
+      },
     },
     {
       id: "02",
-      name: "Silk Slip Dress",
-      composition: "100% Silk",
-      price: "$420",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-silk.jpg", alt: "Silk dress placeholder" },
+      name: "Maceio Maxi Dress Black",
+      composition: "100% Cotton",
+      price: "$64",
+      brand: "Faithfull the Brand",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S57-FF2904-BLK-23935-FaithfullTheBrand-D2-1184.webp?v=1712029525",
+        alt: "Faithfull the Brand Maceio Maxi Dress Black on model",
+      },
     },
     {
       id: "03",
-      name: "Wide-Leg Cotton Trouser",
-      composition: "100% Organic Cotton",
-      price: "$195",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-cotton.jpg", alt: "Cotton trouser placeholder" },
+      name: "Denise Mini Dress Black",
+      composition: "100% Cotton",
+      price: "$90",
+      brand: "Faithfull the Brand",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S125-FF3981-BLK-24956-FaithfullTheBrand-D3-1647.webp?v=1748932134",
+        alt: "Faithfull the Brand Denise Mini Dress Black on model",
+      },
     },
     {
       id: "04",
-      name: "Cashmere Tank",
-      composition: "100% Cashmere",
-      price: "$310",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-cashmere.jpg", alt: "Cashmere tank placeholder" },
+      name: "Orion Mini Dress Cerise",
+      composition: "100% Cotton",
+      price: "$119",
+      brand: "Faithfull the Brand",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S129-FF3997-CRI-24956-FaithfullTheBrand-D1-1172.webp?v=1746674010",
+        alt: "Faithfull the Brand Orion Mini Dress Cerise on model",
+      },
     },
     {
       id: "05",
-      name: "Linen Midi Skirt",
-      composition: "100% Linen",
-      price: "$245",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-linen.jpg", alt: "Linen skirt placeholder" },
+      name: "Aqua Sleeveless Knit Dress Exclusive",
+      composition: "100% Cotton",
+      price: "$128",
+      brand: "Aqua",
+      image: {
+        src: "https://images.bloomingdalesassets.com/is/image/BLM/products/6/optimized/15705546_fpx.tif?wid=1200&qlt=100,0&layer=comp&op_sharpen=0&resMode=bilin&op_usm=0.7,1.0,0.5,0&fmt=jpeg",
+        alt: "Aqua Sleeveless Knit Dress Exclusive on model",
+      },
     },
     {
       id: "06",
-      name: "Silk Camisole",
-      composition: "100% Silk",
-      price: "$168",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-silk.jpg", alt: "Silk camisole placeholder" },
+      name: "Florence Strappy Back Dress In Driftwood",
+      composition: "97% Cotton",
+      price: "$145",
+      brand: "Pistola",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/4f046fdaf9d340f1945bfff8c55686cf.jpg?v=1761690001",
+        alt: "Pistola Florence Strappy Back Dress In Driftwood on model",
+      },
     },
     {
       id: "07",
-      name: "Merino Wool Cardigan",
-      composition: "100% Merino Wool",
-      price: "$395",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-wool.jpg", alt: "Wool cardigan placeholder" },
+      name: "Zeke Wide Leg Jeans | Aged Mid",
+      composition: "100% Cotton",
+      price: "$49",
+      brand: "DL1961",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/2397/3099/files/24055_ZEKE_AGED_MID.jpg?v=1752511980",
+        alt: "DL1961 Zeke Wide Leg Jeans Aged Mid on model",
+      },
     },
     {
       id: "08",
-      name: "Cotton Poplin Dress",
+      name: "Denise Mini Dress White",
       composition: "100% Cotton",
-      price: "$275",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-cotton.jpg", alt: "Cotton dress placeholder" },
+      price: "$126",
+      brand: "Faithfull the Brand",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S118-FF3981-WHT-24956-FaithfullTheBrand-D1-1728.webp?v=1745222160",
+        alt: "Faithfull the Brand Denise Mini Dress White on model",
+      },
     },
     {
       id: "09",
-      name: "Linen Blazer",
-      composition: "100% Linen",
-      price: "$520",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-linen.jpg", alt: "Linen blazer placeholder" },
+      name: "Chana Skirt In White",
+      composition: "98% Natural Fiber",
+      price: "$85",
+      brand: "ASTR",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/d6f9648ed8bf494897d3640d0582eb71.jpg?v=1758750010",
+        alt: "ASTR Chana Skirt In White on model",
+      },
     },
     {
       id: "10",
-      name: "Silk Scarf",
-      composition: "100% Silk",
-      price: "$145",
-      brand: "Brand Placeholder",
-      image: { src: "/fabrics/fabric-silk.jpg", alt: "Silk scarf placeholder" },
+      name: "Dina Off White Cotton Asym Knit Top",
+      composition: "100% Cotton",
+      price: "$130",
+      brand: "Dissh",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/WES04866WE.100_10.jpg?v=1768885979",
+        alt: "Dissh Dina Off White Cotton Asym Knit Top on model with wide-leg trousers",
+      },
     },
   ],
 };
