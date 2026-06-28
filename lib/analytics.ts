@@ -47,7 +47,10 @@ export function trackAffiliateClick(params: {
   brandName: string;
   price: number;
   currency: string;
-  source: "scanner" | "shop" | "collection" | "sale";
+  source: "scanner" | "shop" | "collection" | "sale" | "khiteri_edit";
+  clickTarget?: "image" | "title";
+  editSlug?: string;
+  editMonth?: string;
 }) {
   if (typeof window === "undefined") return;
   window.gtag?.("event", "affiliate_click", {
@@ -56,6 +59,9 @@ export function trackAffiliateClick(params: {
     value: params.price,
     currency: params.currency,
     source: params.source,
+    click_target: params.clickTarget,
+    edit_slug: params.editSlug,
+    edit_month: params.editMonth,
   });
 }
 

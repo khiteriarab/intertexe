@@ -1,6 +1,6 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import type { KhiterisEditConfig } from "../../lib/khiteris-edit";
+import { KhiteriProductAffiliateLink } from "./KhiteriProductAffiliateLink";
 
 const FINAL_NOTE = {
   lead: "Love finding better materials?",
@@ -18,30 +18,6 @@ type Props = {
   edit: KhiterisEditConfig;
   appStoreUrl: string;
 };
-
-function ProductAffiliateLink({
-  href,
-  className,
-  children,
-  ariaLabel,
-}: {
-  href: string;
-  className?: string;
-  children: ReactNode;
-  ariaLabel?: string;
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer sponsored"
-      className={className}
-      aria-label={ariaLabel}
-    >
-      {children}
-    </a>
-  );
-}
 
 export function KhiterisEditView({ edit, appStoreUrl }: Props) {
   return (
@@ -104,8 +80,11 @@ export function KhiterisEditView({ edit, appStoreUrl }: Props) {
               <span className="khiteris-edit__product-index" aria-hidden>
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <ProductAffiliateLink
-                href={product.href}
+              <KhiteriProductAffiliateLink
+                product={product}
+                editSlug={edit.slug}
+                editMonth={edit.monthLabel}
+                clickTarget="image"
                 className="khiteris-edit__product-image khiteris-edit__product-link"
                 ariaLabel={`Shop ${product.name} at ${product.brand}`}
               >
@@ -115,16 +94,19 @@ export function KhiterisEditView({ edit, appStoreUrl }: Props) {
                   loading="lazy"
                   draggable={false}
                 />
-              </ProductAffiliateLink>
+              </KhiteriProductAffiliateLink>
               <div className="khiteris-edit__product-meta">
                 <p className="khiteris-edit__product-brand">{product.brand}</p>
                 <h3 className="khiteris-edit__product-name">
-                  <ProductAffiliateLink
-                    href={product.href}
+                  <KhiteriProductAffiliateLink
+                    product={product}
+                    editSlug={edit.slug}
+                    editMonth={edit.monthLabel}
+                    clickTarget="title"
                     className="khiteris-edit__product-link khiteris-edit__product-name-link"
                   >
                     {product.name}
-                  </ProductAffiliateLink>
+                  </KhiteriProductAffiliateLink>
                 </h3>
                 <p className="khiteris-edit__product-composition">{product.composition}</p>
                 <p className="khiteris-edit__product-price">{product.price}</p>
