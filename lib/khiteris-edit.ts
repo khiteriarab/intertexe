@@ -22,6 +22,8 @@ export type KhiterisEditProduct = {
   composition: string;
   price: string;
   brand: string;
+  /** Rakuten / retailer affiliate click-out URL from catalog. */
+  href: string;
   image: KhiterisEditImage;
 };
 
@@ -77,6 +79,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Linen",
       price: "$370",
       brand: "Citizens of Humanity",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2034086.356633487502903102917121&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fgb%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing",
       image: {
         src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/22/P01184019.jpg",
         alt: "Citizens of Humanity Tailored Linen Trouser on model",
@@ -88,6 +91,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Cotton",
       price: "$64",
       brand: "Faithfull the Brand",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=46961&murl=https%3A%2F%2Fwww.faithfullthebrand.com%2Fproducts%2Fmaceio-maxi-dress-black",
       image: {
         src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S57-FF2904-BLK-23935-FaithfullTheBrand-D2-1184.webp?v=1712029525",
         alt: "Faithfull the Brand Maceio Maxi Dress Black on model",
@@ -99,6 +103,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Cotton",
       price: "$90",
       brand: "Faithfull the Brand",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=46961&murl=https%3A%2F%2Fwww.faithfullthebrand.com%2Fproducts%2Fdenise-mini-dress-black",
       image: {
         src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S125-FF3981-BLK-24956-FaithfullTheBrand-D3-1647.webp?v=1748932134",
         alt: "Faithfull the Brand Denise Mini Dress Black on model",
@@ -110,6 +115,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Cotton",
       price: "$119",
       brand: "Faithfull the Brand",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=46961&murl=https%3A%2F%2Fwww.faithfullthebrand.com%2Fproducts%2Forion-mini-dress-cerise",
       image: {
         src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S129-FF3997-CRI-24956-FaithfullTheBrand-D1-1172.webp?v=1746674010",
         alt: "Faithfull the Brand Orion Mini Dress Cerise on model",
@@ -121,6 +127,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Cotton",
       price: "$128",
       brand: "Aqua",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138675803605066612308468&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Faqua-sleeveless-knit-dress-exclusive%3FID%3D5885115%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
       image: {
         src: "https://images.bloomingdalesassets.com/is/image/BLM/products/6/optimized/15705546_fpx.tif?wid=1200&qlt=100,0&layer=comp&op_sharpen=0&resMode=bilin&op_usm=0.7,1.0,0.5,0&fmt=jpeg",
         alt: "Aqua Sleeveless Knit Dress Exclusive on model",
@@ -132,6 +139,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "97% Cotton",
       price: "$145",
       brand: "Pistola",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=50745&murl=https%3A%2F%2Fshop.simon.com%2Fproducts%2Fflorence-strappy-back-dress-in-driftwood%3Fvariant%3D43619877584956",
       image: {
         src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/4f046fdaf9d340f1945bfff8c55686cf.jpg?v=1761690001",
         alt: "Pistola Florence Strappy Back Dress In Driftwood on model",
@@ -143,6 +151,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Cotton",
       price: "$49",
       brand: "DL1961",
+      href: "https://www.dl1961.com/products/zeke-wide-leg-jeans-aged-mid",
       image: {
         src: "https://cdn.shopify.com/s/files/1/2397/3099/files/24055_ZEKE_AGED_MID.jpg?v=1752511980",
         alt: "DL1961 Zeke Wide Leg Jeans Aged Mid on model",
@@ -154,6 +163,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Cotton",
       price: "$126",
       brand: "Faithfull the Brand",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=46961&murl=https%3A%2F%2Fwww.faithfullthebrand.com%2Fproducts%2Fdenise-mini-dress-white",
       image: {
         src: "https://cdn.shopify.com/s/files/1/1130/9504/files/S118-FF3981-WHT-24956-FaithfullTheBrand-D1-1728.webp?v=1745222160",
         alt: "Faithfull the Brand Denise Mini Dress White on model",
@@ -165,6 +175,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "98% Natural Fiber",
       price: "$85",
       brand: "ASTR",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=50745&murl=https%3A%2F%2Fshop.simon.com%2Fproducts%2Fchana-skirt-in-white%3Fvariant%3D43529938796604",
       image: {
         src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/d6f9648ed8bf494897d3640d0582eb71.jpg?v=1758750010",
         alt: "ASTR Chana Skirt In White on model",
@@ -176,6 +187,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Cotton",
       price: "$130",
       brand: "Dissh",
+      href: "https://www.dissh.com.au/products/dina-white-cotton-asym-knit-top",
       image: {
         src: "https://cdn.shopify.com/s/files/1/2243/5959/files/WES04866WE.100_10.jpg?v=1768885979",
         alt: "Dissh Dina Off White Cotton Asym Knit Top on model with wide-leg trousers",
