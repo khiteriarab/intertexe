@@ -22,8 +22,12 @@ export type KhiterisEditProduct = {
   composition: string;
   price: string;
   brand: string;
-  /** Rakuten / retailer affiliate click-out URL from catalog. */
+  /** Default affiliate click-out URL (fallback). */
   href: string;
+  /** Curated regional URLs when catalog lookup is ambiguous or unavailable. */
+  hrefByRegion?: Partial<Record<"us" | "uk" | "eu" | "ca", string>>;
+  /** Optional catalog SKU (e.g. Mytheresa P01184019) to match the correct affiliate row. */
+  catalogSku?: string;
   image: KhiterisEditImage;
 };
 
@@ -79,7 +83,13 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Linen",
       price: "$370",
       brand: "Citizens of Humanity",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431723693981077774915132&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing",
+      catalogSku: "P01184019",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138678912206130907219885&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcitizens-of-humanity-brynn-drawstring-linen-trousers%3FID%3D5885503%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      hrefByRegion: {
+        us: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138678912206130907219885&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcitizens-of-humanity-brynn-drawstring-linen-trousers%3FID%3D5885503%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+        uk: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2034086.356631096927065432749883&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fgb%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing",
+        eu: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2034086.356631096927065432749883&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fgb%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing",
+      },
       image: {
         src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/22/P01184019.jpg",
         alt: "Citizens of Humanity Tailored Linen Trouser on model",
