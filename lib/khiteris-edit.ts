@@ -79,7 +79,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
       composition: "100% Linen",
       price: "$370",
       brand: "Citizens of Humanity",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2034086.356633487502903102917121&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fgb%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431723693981077774915132&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing",
       image: {
         src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/22/P01184019.jpg",
         alt: "Citizens of Humanity Tailored Linen Trouser on model",
