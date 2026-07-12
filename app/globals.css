@@ -167,9 +167,13 @@
   display: block;
 }
 
-/* Desktop — anchor from top so the model's head stays in frame (cover, no stretch) */
-.homepage-hero-desktop-frame .homepage-hero-img {
+/* Desktop golden-dress slide only — anchor from top so the head stays in frame */
+.homepage-hero-desktop-frame .homepage-hero-img--editorial-v8 {
   object-position: center top !important;
+}
+
+.homepage-hero-desktop-frame .homepage-hero-img--editorial-jpg {
+  object-position: center 25% !important;
 }
 
 .homepage-hero-frame-mobile .homepage-hero-img {

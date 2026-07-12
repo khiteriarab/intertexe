@@ -39,7 +39,7 @@ export function HomepageHeroSection({
       const isJpg = slide.url.includes("hero-editorial.jpg");
       const objectPosition =
         variant === "desktop"
-          ? slide.objectPositionDesktop ?? "center top"
+          ? slide.objectPositionDesktop ?? slide.objectPosition
           : slide.objectPosition;
       return (
       <Image
