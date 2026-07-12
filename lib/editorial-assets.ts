@@ -72,7 +72,7 @@ export type HomepageHeroSlide = {
   url: string;
   /** CSS object-position on mobile, e.g. "center 75%" */
   objectPosition: string;
-  /** CSS object-position on desktop (lg+); defaults to center top */
+  /** CSS object-position on desktop (lg+) only */
   objectPositionDesktop?: string;
 };
 

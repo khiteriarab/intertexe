@@ -37,27 +37,44 @@ export function HomepageHeroSection({
   const renderHeroImages = (variant: "mobile" | "desktop") =>
     heroSlides.map((slide, index) => {
       const isJpg = slide.url.includes("hero-editorial.jpg");
-      const objectPosition =
-        variant === "desktop"
-          ? slide.objectPositionDesktop ?? slide.objectPosition
-          : slide.objectPosition;
+      if (variant === "mobile") {
+        return (
+          <Image
+            key={slide.url}
+            src={slide.url}
+            alt={index === 0 ? "INTERTEXE editorial" : ""}
+            fill
+            priority={index === 0}
+            quality={100}
+            sizes="100vw"
+            aria-hidden={index !== 0}
+            className={`homepage-hero-img transition-opacity duration-500 ${
+              heroIndex === index ? "opacity-100" : "opacity-0"
+            } ${isJpg ? "homepage-hero-img--editorial-jpg" : ""}`}
+            style={{ objectPosition: slide.objectPosition }}
+            draggable={false}
+          />
+        );
+      }
+
+      const objectPosition = slide.objectPositionDesktop ?? slide.objectPosition;
       return (
-      <Image
-        key={`${variant}-${slide.url}`}
-        src={slide.url}
-        alt={index === 0 ? "INTERTEXE editorial" : ""}
-        fill
-        priority={index === 0}
-        quality={100}
-        sizes="100vw"
-        aria-hidden={index !== 0}
-        className={`homepage-hero-img transition-opacity duration-500 ${
-          heroIndex === index ? "opacity-100" : "opacity-0"
-        } ${isJpg ? "homepage-hero-img--editorial-jpg" : "homepage-hero-img--editorial-v8"} ${variant === "desktop" ? "homepage-hero-img--desktop" : ""}`}
-        style={{ objectPosition }}
-        draggable={false}
-      />
-    );
+        <Image
+          key={`desktop-${slide.url}`}
+          src={slide.url}
+          alt={index === 0 ? "INTERTEXE editorial" : ""}
+          fill
+          priority={index === 0}
+          quality={100}
+          sizes="100vw"
+          aria-hidden={index !== 0}
+          className={`homepage-hero-img transition-opacity duration-500 ${
+            heroIndex === index ? "opacity-100" : "opacity-0"
+          } ${isJpg ? "homepage-hero-img--editorial-jpg" : "homepage-hero-img--editorial-v8"}`}
+          style={{ objectPosition }}
+          draggable={false}
+        />
+      );
     });
 
   return (
