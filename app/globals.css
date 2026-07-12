@@ -167,9 +167,9 @@
   display: block;
 }
 
-.homepage-hero-desktop-frame .homepage-hero-img--editorial-jpg {
-  /* Anchor on face — keep head in frame with object-fit: cover */
-  object-position: center 20% !important;
+/* Desktop — anchor from top so the model's head stays in frame (cover, no stretch) */
+.homepage-hero-desktop-frame .homepage-hero-img {
+  object-position: center top !important;
 }
 
 .homepage-hero-frame-mobile .homepage-hero-img {

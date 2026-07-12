@@ -70,14 +70,16 @@ export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial.jpg`;
 
 export type HomepageHeroSlide = {
   url: string;
-  /** CSS object-position, e.g. "center 75%" */
+  /** CSS object-position on mobile, e.g. "center 75%" */
   objectPosition: string;
+  /** CSS object-position on desktop (lg+); defaults to center top */
+  objectPositionDesktop?: string;
 };
 
 /** Rotating homepage hero — change URLs here, redeploy website only. */
 export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
-  { url: HOMEPAGE_HERO_IMAGE_MOBILE, objectPosition: "center 75%" },
-  { url: HOMEPAGE_HERO_IMAGE_DESKTOP, objectPosition: "center 20%" },
+  { url: HOMEPAGE_HERO_IMAGE_MOBILE, objectPosition: "center 75%", objectPositionDesktop: "center top" },
+  { url: HOMEPAGE_HERO_IMAGE_DESKTOP, objectPosition: "center 20%", objectPositionDesktop: "center top" },
 ];
 
 export const HOMEPAGE_HERO_SWAP_MS = 5000;

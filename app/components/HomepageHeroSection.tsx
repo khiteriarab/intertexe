@@ -34,12 +34,16 @@ export function HomepageHeroSection({
     return () => window.clearInterval(id);
   }, [heroSlides.length, swapMs]);
 
-  const renderHeroImages = (extraClass = "") =>
+  const renderHeroImages = (variant: "mobile" | "desktop") =>
     heroSlides.map((slide, index) => {
       const isJpg = slide.url.includes("hero-editorial.jpg");
+      const objectPosition =
+        variant === "desktop"
+          ? slide.objectPositionDesktop ?? "center top"
+          : slide.objectPosition;
       return (
       <Image
-        key={slide.url}
+        key={`${variant}-${slide.url}`}
         src={slide.url}
         alt={index === 0 ? "INTERTEXE editorial" : ""}
         fill
@@ -49,8 +53,8 @@ export function HomepageHeroSection({
         aria-hidden={index !== 0}
         className={`homepage-hero-img transition-opacity duration-500 ${
           heroIndex === index ? "opacity-100" : "opacity-0"
-        } ${isJpg ? "homepage-hero-img--editorial-jpg" : ""} ${extraClass}`}
-        style={{ objectPosition: slide.objectPosition }}
+        } ${isJpg ? "homepage-hero-img--editorial-jpg" : "homepage-hero-img--editorial-v8"} ${variant === "desktop" ? "homepage-hero-img--desktop" : ""}`}
+        style={{ objectPosition }}
         draggable={false}
       />
     );
@@ -63,7 +67,7 @@ export function HomepageHeroSection({
         data-testid="homepage-hero-mobile"
       >
         <div className="homepage-hero-frame-mobile relative">
-          {renderHeroImages("")}
+          {renderHeroImages("mobile")}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent pointer-events-none" />
         <div
@@ -91,7 +95,7 @@ export function HomepageHeroSection({
         data-testid="homepage-hero-desktop"
       >
         <div className="homepage-hero-desktop-frame relative">
-          {renderHeroImages()}
+          {renderHeroImages("desktop")}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
         <div className="absolute inset-0 z-10 flex flex-col justify-end px-14 xl:px-20 pb-14 xl:pb-16 max-w-2xl">
