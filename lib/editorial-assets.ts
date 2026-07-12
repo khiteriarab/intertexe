@@ -78,7 +78,7 @@ export type HomepageHeroSlide = {
 
 /** Rotating homepage hero — change URLs here, redeploy website only. */
 export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
-  { url: HOMEPAGE_HERO_IMAGE_MOBILE, objectPosition: "center 75%", objectPositionDesktop: "center 35%" },
+  { url: HOMEPAGE_HERO_IMAGE_MOBILE, objectPosition: "center 75%", objectPositionDesktop: "center 42%" },
   { url: HOMEPAGE_HERO_IMAGE_DESKTOP, objectPosition: "center 25%" },
 ];
 
