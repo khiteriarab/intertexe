@@ -168,7 +168,8 @@
 }
 
 .homepage-hero-desktop-frame .homepage-hero-img--editorial-jpg {
-  object-position: center 25% !important;
+  /* Anchor on face — keep head in frame with object-fit: cover */
+  object-position: center 20% !important;
 }
 
 .homepage-hero-frame-mobile .homepage-hero-img {
