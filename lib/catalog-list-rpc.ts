@@ -36,6 +36,8 @@ export type CatalogListRPCProduct = {
   originalPrice: string | null;
   listingRegion: string | null;
   stockStatus: string | null;
+  isEditorPick?: boolean;
+  editorPickedAt?: string | null;
 };
 
 function parseMoney(price: unknown): number {
@@ -65,6 +67,8 @@ function mapRpcRow(row: Record<string, unknown>): CatalogListRPCProduct {
       row.stock_status != null && String(row.stock_status).trim()
         ? String(row.stock_status).trim()
         : null,
+    isEditorPick: row.is_editor_pick === true,
+    editorPickedAt: row.editor_picked_at != null ? String(row.editor_picked_at) : null,
   };
 }
 

@@ -47,6 +47,8 @@ export type DirectCatalogProduct = {
   originalPrice: string | null;
   listingRegion: string | null;
   stockStatus: string | null;
+  isEditorPick?: boolean;
+  editorPickedAt?: string | null;
 };
 
 export type CatalogDirectQueryOpts = {
@@ -75,6 +77,8 @@ function parseMoney(price: unknown): number {
 }
 
 function applySort(query: any, sort?: string) {
+  // Curator "editor picks" lead every list; the chosen sort orders the rest.
+  query = query.order("is_editor_pick", { ascending: false });
   switch (sort) {
     case "price-low":
       return query.order("price", { ascending: true });
@@ -136,6 +140,7 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
         .select("*")
         .eq("is_displayable", true)
         .eq("region", region)
+        .order("is_editor_pick", { ascending: false })
         .order("id", { ascending: false })
         .range(offset, offset + limit - 1);
       if (!error && data?.length) {
@@ -308,5 +313,7 @@ function mapDirectRow(row: Record<string, unknown>): DirectCatalogProduct {
       row.stock_status != null && String(row.stock_status).trim()
         ? String(row.stock_status).trim()
         : null,
+    isEditorPick: row.is_editor_pick === true,
+    editorPickedAt: row.editor_picked_at != null ? String(row.editor_picked_at) : null,
   };
 }
