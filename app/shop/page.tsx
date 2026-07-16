@@ -59,11 +59,14 @@ async function loadShopCatalog(opts: {
   search?: string;
   color?: string;
   fiberSubtype?: string;
+  materialSubtype?: string;
+  fabricConstruction?: string;
   brand?: string;
   minPrice?: number;
   maxPrice?: number;
 }) {
   try {
+    const materialSubtype = opts.materialSubtype || opts.fiberSubtype;
     const result = await queryLiveCatalog({
       region: "us",
       limit: 24,
@@ -73,7 +76,8 @@ async function loadShopCatalog(opts: {
       search: opts.search,
       sort: opts.sort === "recommended" ? "new" : opts.sort,
       color: opts.color,
-      fiberSubtype: opts.fiberSubtype,
+      materialSubtype,
+      fabricConstruction: opts.fabricConstruction,
       brand: opts.brand,
       minPrice: opts.minPrice,
       maxPrice: opts.maxPrice,
@@ -84,7 +88,8 @@ async function loadShopCatalog(opts: {
       !opts.category &&
       !opts.search &&
       !opts.color &&
-      !opts.fiberSubtype &&
+      !materialSubtype &&
+      !opts.fabricConstruction &&
       !opts.brand &&
       opts.minPrice == null &&
       opts.maxPrice == null;
@@ -115,6 +120,8 @@ export default async function ShopPage({
     q?: string;
     color?: string;
     fiberSubtype?: string;
+    materialSubtype?: string;
+    fabricConstruction?: string;
     price?: string;
     brands?: string;
   }>;
@@ -134,7 +141,9 @@ export default async function ShopPage({
         : "recommended";
     const search = params?.q?.trim() || undefined;
     const color = params?.color?.trim() || undefined;
-    const fiberSubtype = params?.fiberSubtype?.trim() || undefined;
+    const materialSubtype =
+      params?.materialSubtype?.trim() || params?.fiberSubtype?.trim() || undefined;
+    const fabricConstruction = params?.fabricConstruction?.trim() || undefined;
     const price = params?.price?.trim() || undefined;
     const brand = params?.brands?.split(",")[0]?.trim() || undefined;
 
@@ -162,7 +171,8 @@ export default async function ShopPage({
         sort,
         search,
         color,
-        fiberSubtype,
+        materialSubtype,
+        fabricConstruction,
         brand,
         minPrice,
         maxPrice,

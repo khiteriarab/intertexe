@@ -31,6 +31,12 @@ import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
 import {
+  constructionOptionsForFamily,
+  materialTypeSectionTitle,
+  FALLBACK_MATERIAL_TAXONOMY,
+  findTaxonomyByShopSelection,
+} from "../../lib/catalog-material-taxonomy";
+import {
   SHIPPING_REGIONS,
   getRegionForCountryCode,
   getRegionForMarket,
@@ -238,6 +244,7 @@ export default function ShopClient({
   const [selectedColor, setSelectedColor] = useState<string | null>(initialColor);
   const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>(initialBrands);
   const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
+  const [selectedFabricConstructions, setSelectedFabricConstructions] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -373,6 +380,7 @@ export default function ShopClient({
       !selectedColor &&
       selectedBrandSlugs.length === 0 &&
       selectedFiberSubtypes.length === 0 &&
+      selectedFabricConstructions.length === 0 &&
       listOffset === 0;
 
     if (isDefaultState && initialFetchDone.current && listOffset === 0) {
@@ -388,6 +396,9 @@ export default function ShopClient({
             categories: categoryList.length ? categoryList : undefined,
             brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
             fiberSubtypes: selectedFiberSubtypes.length ? selectedFiberSubtypes : undefined,
+            fabricConstructions: selectedFabricConstructions.length
+              ? selectedFabricConstructions
+              : undefined,
             color: selectedColor || undefined,
             maxPrice: priceBounds.maxPrice ?? null,
             minPrice: priceBounds.minPrice ?? null,
@@ -447,6 +458,7 @@ export default function ShopClient({
     catalogRegion,
     selectedBrandSlugs.join(","),
     selectedFiberSubtypes.join(","),
+    selectedFabricConstructions.join(","),
     initialProducts,
     initialHasMore,
   ]);
@@ -458,6 +470,9 @@ export default function ShopClient({
       categories: categoryList.length ? categoryList : undefined,
       brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
       fiberSubtypes: selectedFiberSubtypes.length ? selectedFiberSubtypes : undefined,
+      fabricConstructions: selectedFabricConstructions.length
+        ? selectedFabricConstructions
+        : undefined,
       color: selectedColor || undefined,
       maxPrice: priceBounds.maxPrice ?? null,
       minPrice: priceBounds.minPrice ?? null,
@@ -481,6 +496,7 @@ export default function ShopClient({
     catalogRegion,
     selectedBrandSlugs.join(","),
     selectedFiberSubtypes.join(","),
+    selectedFabricConstructions.join(","),
   ]);
 
   useEffect(() => {
@@ -504,7 +520,8 @@ export default function ShopClient({
     priceTier === "any" &&
     !selectedColor &&
     selectedBrandSlugs.length === 0 &&
-    selectedFiberSubtypes.length === 0;
+    selectedFiberSubtypes.length === 0 &&
+    selectedFabricConstructions.length === 0;
 
   const displayResultTotal =
     resultTotal ??
@@ -591,6 +608,14 @@ export default function ShopClient({
         setListOffset(0);
       },
     })),
+    ...selectedFabricConstructions.map((c) => ({
+      id: `construction-${c}`,
+      label: c,
+      onRemove: () => {
+        setSelectedFabricConstructions((prev) => prev.filter((s) => s !== c));
+        setListOffset(0);
+      },
+    })),
     ...(marketFilter !== "all"
       ? [{ id: "market", label: activeRegion.country, onRemove: () => { selectLocation("all"); } }]
       : []),
@@ -608,6 +633,7 @@ export default function ShopClient({
     !selectedColor &&
     selectedBrandSlugs.length === 0 &&
     selectedFiberSubtypes.length === 0 &&
+    selectedFabricConstructions.length === 0 &&
     marketFilter === "all";
 
   return (
@@ -676,6 +702,7 @@ export default function ShopClient({
             onFiberChange={(key) => {
               setFiberTab(key);
               setSelectedFiberSubtypes([]);
+              setSelectedFabricConstructions([]);
               setSelectedCategories(new Set());
               setListOffset(0);
             }}
@@ -695,6 +722,11 @@ export default function ShopClient({
               setSelectedFiberSubtypes(subtypes);
               setListOffset(0);
             }}
+            selectedFabricConstructions={selectedFabricConstructions}
+            onFabricConstructionsChange={(constructions) => {
+              setSelectedFabricConstructions(constructions);
+              setListOffset(0);
+            }}
             colorOptions={[...SHOP_COLOR_OPTIONS]}
             selectedColor={selectedColor}
             onColorChange={(color) => {
@@ -710,6 +742,33 @@ export default function ShopClient({
           />
 
           <div className="flex-1 min-w-0">
+        {(() => {
+          const edu = findTaxonomyByShopSelection(FALLBACK_MATERIAL_TAXONOMY, {
+            family: fiberTab !== "all" ? fiberTab : null,
+            materialSubtype: selectedFiberSubtypes[0] || null,
+            fabricConstruction: selectedFabricConstructions[0] || null,
+          });
+          if (!edu?.educationEnabled || (!selectedFiberSubtypes.length && !selectedFabricConstructions.length)) {
+            return null;
+          }
+          const eduSlug = edu.educationSlug || edu.slug.replace(/_/g, "-");
+          return (
+            <div className="mb-6 border-b border-border/20 pb-5" data-testid="shop-education-bridge">
+              <p className="font-serif text-lg text-foreground mb-1">{edu.label}</p>
+              {edu.shortDescription ? (
+                <p className="text-sm text-muted-foreground mb-2 max-w-xl">{edu.shortDescription}</p>
+              ) : null}
+              <Link
+                href={`/materials/${edu.family}`}
+                className="text-[11px] uppercase tracking-[0.12em] text-foreground underline underline-offset-4"
+              >
+                Learn about {edu.label}
+              </Link>
+              {/* Prefer materials family page until dedicated subtype routes exist */}
+              <span className="sr-only">{eduSlug}</span>
+            </div>
+          );
+        })()}
         <div className="hidden md:flex items-center justify-end gap-3 mb-6">
           <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
             Delivering to
@@ -826,6 +885,7 @@ export default function ShopClient({
                     onClick={() => {
                       setFiberTab(tab.key);
                       setSelectedFiberSubtypes([]);
+                      setSelectedFabricConstructions([]);
                       setListOffset(0);
                     }}
                     className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
@@ -837,8 +897,10 @@ export default function ShopClient({
                 ))}
               </div>
               {fiberTab !== "all" && fiberSubtypesFor(fiberTab).length > 0 && (
-                <div className="mt-1 mb-8 pl-4 border-l border-gray-100">
-                  <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">Type</p>
+                <div className="mt-1 mb-6 pl-4 border-l border-gray-100">
+                  <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">
+                    {materialTypeSectionTitle(fiberTab)}
+                  </p>
                   {fiberSubtypesFor(fiberTab).map((subtype) => (
                     <button
                       key={subtype}
@@ -858,6 +920,36 @@ export default function ShopClient({
                       }`}
                     >
                       {subtype}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {fiberTab !== "all" &&
+                constructionOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, fiberTab).length > 0 && (
+                <div className="mt-1 mb-8 pl-4 border-l border-gray-100">
+                  <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">
+                    Construction
+                  </p>
+                  {constructionOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, fiberTab).map((entry) => (
+                    <button
+                      key={entry.slug}
+                      type="button"
+                      onClick={() => {
+                        const label = entry.label;
+                        setSelectedFabricConstructions((prev) =>
+                          prev.includes(label)
+                            ? prev.filter((s) => s !== label)
+                            : [...prev, label]
+                        );
+                        setListOffset(0);
+                      }}
+                      className={`block w-full text-left text-sm py-1.5 ${
+                        selectedFabricConstructions.includes(entry.label)
+                          ? "font-medium text-black"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {entry.label}
                     </button>
                   ))}
                 </div>
@@ -979,6 +1071,7 @@ export default function ShopClient({
                 setSelectedColor(null);
                 setSelectedBrandSlugs([]);
                 setSelectedFiberSubtypes([]);
+                setSelectedFabricConstructions([]);
                 setSortBy("new");
                 setSearchQuery("");
                 setDebouncedSearch("");

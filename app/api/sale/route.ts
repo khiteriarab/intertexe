@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Math.max(Number(sp.get("limit") || 40), 1), 200);
   const offset = Math.max(Number(sp.get("offset") || 0), 0);
   const fiber = sp.get("fiber") || undefined;
-  const fiberSubtype = sp.get("fiberSubtype") || undefined;
+  const fiberSubtype =
+    sp.get("materialSubtype") || sp.get("fiberSubtype") || undefined;
+  const fabricConstruction = sp.get("fabricConstruction") || undefined;
   const category = sp.get("category") || undefined;
   const color = sp.get("color") || undefined;
   const brand = sp.get("brand") || undefined;

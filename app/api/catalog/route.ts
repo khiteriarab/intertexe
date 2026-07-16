@@ -120,6 +120,8 @@ type CollectionQueryFilters = {
   color?: string;
   brand?: string;
   fiberSubtype?: string;
+  materialSubtype?: string;
+  fabricConstruction?: string;
   minPrice?: number;
   maxPrice?: number;
   sort?: string;
@@ -132,6 +134,8 @@ function collectionHasActiveFilters(filters: CollectionQueryFilters): boolean {
     filters.color ||
     filters.brand ||
     filters.fiberSubtype ||
+    filters.materialSubtype ||
+    filters.fabricConstruction ||
     filters.minPrice ||
     filters.maxPrice ||
     (filters.sort && filters.sort !== "new" && filters.sort !== "recommended")
@@ -161,7 +165,8 @@ async function fetchCollectionWithFallback(
     category: filters.category,
     color: filters.color,
     brand: filters.brand,
-    fiberSubtype: filters.fiberSubtype,
+    materialSubtype: filters.materialSubtype || filters.fiberSubtype,
+    fabricConstruction: filters.fabricConstruction,
     minPrice: filters.minPrice,
     maxPrice: filters.maxPrice,
   });
@@ -293,7 +298,9 @@ export async function GET(request: NextRequest) {
   const maxPrice = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
   const minPrice = sp.get("minPrice") ? Number(sp.get("minPrice")) : undefined;
   const color = sp.get("color") || undefined;
-  const fiberSubtype = sp.get("fiberSubtype") || undefined;
+  const materialSubtype =
+    sp.get("materialSubtype") || sp.get("fiberSubtype") || undefined;
+  const fabricConstruction = sp.get("fabricConstruction") || undefined;
   const searchTerms = (search || "")
     .toLowerCase()
     .split(/\s+/)
@@ -373,7 +380,9 @@ export async function GET(request: NextRequest) {
           category: category && category !== "all" ? category : undefined,
           color,
           brand: brandFilter,
-          fiberSubtype,
+          fiberSubtype: materialSubtype,
+          materialSubtype,
+          fabricConstruction,
           minPrice,
           maxPrice,
           sort: collectionSort,
@@ -444,7 +453,8 @@ export async function GET(request: NextRequest) {
       maxPrice,
       minPrice,
       color,
-      fiberSubtype,
+      materialSubtype,
+      fabricConstruction,
       limit,
       offset,
       skipCount,
@@ -484,7 +494,8 @@ export async function GET(request: NextRequest) {
       !brandAlias &&
       !search &&
       !color &&
-      !fiberSubtype &&
+      !materialSubtype &&
+      !fabricConstruction &&
       maxPrice == null &&
       minPrice == null &&
       offset === 0;

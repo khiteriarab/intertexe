@@ -11,17 +11,24 @@ function isUnfilteredShopQuery(options: {
   brandSlugs?: string[];
   fiberSubtypes?: string[];
   fiberSubtype?: string;
+  materialSubtype?: string;
+  fabricConstruction?: string;
+  fabricConstructions?: string[];
   color?: string;
   maxPrice?: number | null;
   minPrice?: number | null;
   search?: string;
 }) {
-  const subtype = options.fiberSubtype || options.fiberSubtypes?.[0];
+  const subtype =
+    options.materialSubtype || options.fiberSubtype || options.fiberSubtypes?.[0];
+  const construction =
+    options.fabricConstruction || options.fabricConstructions?.[0];
   return (
     (!options.fiber || options.fiber === "all") &&
     !options.categories?.length &&
     !options.brandSlugs?.length &&
     !subtype &&
+    !construction &&
     !options.color &&
     options.maxPrice == null &&
     options.minPrice == null &&
@@ -35,6 +42,9 @@ export async function getShopProducts(options: {
   brandSlugs?: string[];
   fiberSubtypes?: string[];
   fiberSubtype?: string;
+  materialSubtype?: string;
+  fabricConstruction?: string;
+  fabricConstructions?: string[];
   color?: string;
   maxPrice?: number | null;
   minPrice?: number | null;
@@ -49,7 +59,10 @@ export async function getShopProducts(options: {
 }) {
   const offset = options.offset || 0;
   const limit = options.limit || CATALOG_PAGE_SIZE;
-  const subtype = options.fiberSubtype || options.fiberSubtypes?.[0];
+  const subtype =
+    options.materialSubtype || options.fiberSubtype || options.fiberSubtypes?.[0];
+  const construction =
+    options.fabricConstruction || options.fabricConstructions?.[0];
 
   try {
     const result = await queryLiveCatalog({
@@ -61,7 +74,8 @@ export async function getShopProducts(options: {
       sort: options.sort === "recommended" ? "new" : options.sort,
       search: options.search,
       color: options.color,
-      fiberSubtype: subtype,
+      materialSubtype: subtype,
+      fabricConstruction: construction,
       brand: options.brandSlugs?.[0],
       minPrice: options.minPrice != null && options.minPrice > 0 ? options.minPrice : undefined,
       maxPrice: options.maxPrice ?? undefined,
@@ -90,6 +104,9 @@ export async function getShopCatalogCount(options: {
   brandSlugs?: string[];
   fiberSubtypes?: string[];
   fiberSubtype?: string;
+  materialSubtype?: string;
+  fabricConstruction?: string;
+  fabricConstructions?: string[];
   color?: string;
   maxPrice?: number | null;
   minPrice?: number | null;

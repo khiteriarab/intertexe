@@ -49,6 +49,9 @@ export type DirectCatalogProduct = {
   stockStatus: string | null;
   isEditorPick?: boolean;
   editorPickedAt?: string | null;
+  materialSubtype?: string | null;
+  fabricConstruction?: string | null;
+  shopMaterialFamily?: string | null;
 };
 
 export type CatalogDirectQueryOpts = {
@@ -67,6 +70,10 @@ export type CatalogDirectQueryOpts = {
   minPrice?: number;
   color?: string;
   fiberSubtype?: string;
+  /** Canonical material subtype slug or label (Phase 1). */
+  materialSubtype?: string;
+  /** Fabric construction slug or label (Phase 1). */
+  fabricConstruction?: string;
   isSale?: boolean;
   skipCount?: boolean;
 };
@@ -252,8 +259,28 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
       );
     }
 
-    if (opts.fiberSubtype) {
-      query = query.ilike("composition", `%${opts.fiberSubtype}%`);
+    const materialSubtype = opts.materialSubtype || opts.fiberSubtype;
+    if (materialSubtype) {
+      // Normalized column first; composition ILIKE fallback (slug + spaced form).
+      const spaced = materialSubtype.replace(/_/g, " ");
+      const parts = [
+        `material_subtype.eq.${materialSubtype}`,
+        `material_subtype_label.ilike.%${materialSubtype}%`,
+        `composition.ilike.%${materialSubtype}%`,
+      ];
+      if (spaced !== materialSubtype) {
+        parts.push(`material_subtype_label.ilike.%${spaced}%`);
+        parts.push(`composition.ilike.%${spaced}%`);
+      }
+      query = query.or(parts.join(","));
+    }
+
+    if (opts.fabricConstruction) {
+      const c = opts.fabricConstruction;
+      const spaced = c.replace(/_/g, " ");
+      const parts = [`fabric_construction.eq.${c}`, `composition.ilike.%${c}%`];
+      if (spaced !== c) parts.push(`composition.ilike.%${spaced}%`);
+      query = query.or(parts.join(","));
     }
 
     if (opts.color) {
@@ -315,5 +342,8 @@ function mapDirectRow(row: Record<string, unknown>): DirectCatalogProduct {
         : null,
     isEditorPick: row.is_editor_pick === true,
     editorPickedAt: row.editor_picked_at != null ? String(row.editor_picked_at) : null,
+    materialSubtype: row.material_subtype != null ? String(row.material_subtype) : null,
+    fabricConstruction: row.fabric_construction != null ? String(row.fabric_construction) : null,
+    shopMaterialFamily: row.shop_material_family != null ? String(row.shop_material_family) : null,
   };
 }

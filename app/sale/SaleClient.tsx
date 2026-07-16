@@ -15,6 +15,7 @@ import {
 import { getShopBrands } from "../shop/actions";
 import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
+import { materialTypeSectionTitle } from "../../lib/catalog-material-taxonomy";
 import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
 import {
   CatalogMobileToolbar,
@@ -151,7 +152,7 @@ function buildSaleParams(
   if (categoryFilter !== "all") params.set("category", categoryFilter);
   if (selectedColor) params.set("color", selectedColor);
   if (selectedBrands.length) params.set("brand", selectedBrands[0]);
-  if (selectedFiberSubtypes.length) params.set("fiberSubtype", selectedFiberSubtypes[0]);
+  if (selectedFiberSubtypes.length) params.set("materialSubtype", selectedFiberSubtypes[0]);
   if (sortBy) params.set("sort", sortBy);
   return params;
 }
@@ -340,7 +341,9 @@ export default function SaleClient({
       </div>
       {fiberTab !== "all" && fiberSubtypesFor(fiberTab).length > 0 && (
         <div className="mt-1 mb-8 pl-4 border-l border-gray-100">
-          <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">Type</p>
+          <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">
+            {materialTypeSectionTitle(fiberTab)}
+          </p>
           {fiberSubtypesFor(fiberTab).map((subtype) => (
             <button
               key={subtype}

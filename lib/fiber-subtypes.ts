@@ -1,37 +1,60 @@
-/** Primary fiber → editorial subtype labels (shop / sale / collection filters). */
-export const FIBER_SUBTYPES: Record<string, string[]> = {
-  silk: ["Charmeuse", "Chiffon", "Crepe", "Dupioni", "Habotai", "Organza", "Satin", "Taffeta", "Twill", "Velvet"],
-  cashmere: ["Fine Knit", "Chunky Knit", "Woven"],
-  wool: ["Merino", "Lambswool", "Shetland", "Bouclé", "Tweed", "Flannel", "Crepe", "Jersey"],
-  linen: ["Belgian Linen", "Irish Linen", "Stonewashed", "Washed"],
-  cotton: ["Poplin", "Oxford", "Twill", "Jersey", "Voile", "Broderie Anglaise", "Denim", "Canvas"],
-  leather: ["Nappa", "Suede", "Patent", "Nubuck"],
+/**
+ * @deprecated Prefer catalog-material-taxonomy.ts
+ * Thin adapters so existing ShopClient / sidebar imports keep working during Phase 1.
+ */
+import {
+  typeOptionsForFamily,
+  productMatchesMaterialSubtype,
+  FALLBACK_MATERIAL_TAXONOMY,
+  constructionOptionsForFamily,
+  materialTypeSectionTitle,
+  loadMaterialTaxonomy,
+  fiberSubtypesFor,
+} from "./catalog-material-taxonomy";
+
+export {
+  fiberSubtypesFor,
+  typeOptionsForFamily,
+  constructionOptionsForFamily,
+  materialTypeSectionTitle,
+  FALLBACK_MATERIAL_TAXONOMY,
+  loadMaterialTaxonomy,
 };
 
-export function fiberSubtypesFor(fiber: string | null | undefined): string[] {
-  if (!fiber || fiber === "all") return [];
-  return FIBER_SUBTYPES[fiber.toLowerCase()] ?? [];
-}
+export const productMatchesFiberSubtype = productMatchesMaterialSubtype;
 
-/** Match subtype via DB label, composition, or product name. */
-export function productMatchesFiberSubtype(
-  product: { name?: string; composition?: string; fiberSubtypeLabel?: string | null },
-  subtype: string
-): boolean {
-  const needle = subtype.trim().toLowerCase();
-  if (!needle) return true;
-  const label = (product.fiberSubtypeLabel || "").toLowerCase();
-  if (label && (label === needle || label.includes(needle))) return true;
-  const text = `${product.name || ""} ${product.composition || ""}`.toLowerCase();
-  return text.includes(needle);
-}
-
-export function filterProductsByFiberSubtypes<T extends { name?: string; composition?: string; fiberSubtypeLabel?: string | null }>(
-  products: T[],
-  subtypes: string[]
-): T[] {
+export function filterProductsByFiberSubtypes<
+  T extends {
+    name?: string;
+    composition?: string;
+    fiberSubtypeLabel?: string | null;
+    materialSubtype?: string | null;
+    materialSubtypeLabel?: string | null;
+  }
+>(products: T[], subtypes: string[]): T[] {
   if (!subtypes.length) return products;
   return products.filter((p) =>
-    subtypes.some((st) => productMatchesFiberSubtype(p, st))
+    subtypes.some((st) =>
+      productMatchesMaterialSubtype(
+        {
+          name: p.name,
+          composition: p.composition,
+          materialSubtype: p.materialSubtype,
+          materialSubtypeLabel: p.materialSubtypeLabel ?? p.fiberSubtypeLabel,
+        },
+        st,
+        FALLBACK_MATERIAL_TAXONOMY
+      )
+    )
   );
 }
+
+/** Legacy map — prefer taxonomy table. */
+export const FIBER_SUBTYPES: Record<string, string[]> = {
+  silk: typeOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, "silk").map((e) => e.label),
+  cashmere: typeOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, "cashmere").map((e) => e.label),
+  wool: typeOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, "wool").map((e) => e.label),
+  linen: typeOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, "linen").map((e) => e.label),
+  cotton: typeOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, "cotton").map((e) => e.label),
+  leather: typeOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, "leather").map((e) => e.label),
+};

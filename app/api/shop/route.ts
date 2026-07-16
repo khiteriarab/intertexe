@@ -34,6 +34,15 @@ export async function GET(request: NextRequest) {
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const search = searchParams.get("search") || undefined;
   const region = searchParams.get("region") || "us";
+  const brand = searchParams.get("brand") || undefined;
+  const color = searchParams.get("color") || undefined;
+  const materialSubtype =
+    searchParams.get("materialSubtype") || searchParams.get("fiberSubtype") || undefined;
+  const fabricConstruction = searchParams.get("fabricConstruction") || undefined;
+  const maxPriceRaw = searchParams.get("maxPrice");
+  const minPriceRaw = searchParams.get("minPrice");
+  const maxPrice = maxPriceRaw ? Number(maxPriceRaw) : undefined;
+  const minPrice = minPriceRaw ? Number(minPriceRaw) : undefined;
 
   try {
     const result = await queryLiveCatalog({
@@ -44,6 +53,12 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       search,
+      brand,
+      color,
+      materialSubtype,
+      fabricConstruction,
+      maxPrice: Number.isFinite(maxPrice) ? maxPrice : undefined,
+      minPrice: Number.isFinite(minPrice) ? minPrice : undefined,
       skipCount: false,
     });
     return NextResponse.json(result, { headers: CACHE_HEADERS });

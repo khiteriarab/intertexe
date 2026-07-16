@@ -18,6 +18,7 @@ import { CatalogFilterSidebar } from "../../components/CatalogFilterSidebar";
 import { DesignerSearchFilter } from "../../components/DesignerSearchFilter";
 import { getShopBrands } from "../../shop/actions";
 import { fiberSubtypesFor } from "../../../lib/fiber-subtypes";
+import { materialTypeSectionTitle } from "../../../lib/catalog-material-taxonomy";
 import {
   SHOP_CATEGORY_OPTIONS,
   SHOP_COLOR_OPTIONS,
@@ -91,7 +92,7 @@ function buildCollectionCatalogParams(
   if (opts.categoryFilter !== "all") params.set("category", opts.categoryFilter);
   if (opts.selectedColor) params.set("color", opts.selectedColor);
   if (opts.selectedBrandSlugs.length) params.set("brand", opts.selectedBrandSlugs[0]);
-  if (opts.selectedFiberSubtypes.length) params.set("fiberSubtype", opts.selectedFiberSubtypes[0]);
+  if (opts.selectedFiberSubtypes.length) params.set("materialSubtype", opts.selectedFiberSubtypes[0]);
 
   const bounds = priceBoundsFromTier(opts.priceTier);
   if (opts.priceTier === "2500plus") {
@@ -288,7 +289,9 @@ export default function CollectionClient({
       </div>
       {fiberTab !== "all" && fiberSubtypesFor(fiberTab).length > 0 && (
         <div className="mt-1 mb-8 pl-4 border-l border-gray-100">
-          <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">Type</p>
+          <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">
+            {materialTypeSectionTitle(fiberTab)}
+          </p>
           {fiberSubtypesFor(fiberTab).map((subtype) => (
             <button
               key={subtype}

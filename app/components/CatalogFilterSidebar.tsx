@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
-import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
+import {
+  constructionOptionsForFamily,
+  materialTypeSectionTitle,
+  typeOptionsForFamily,
+  FALLBACK_MATERIAL_TAXONOMY,
+} from "../../lib/catalog-material-taxonomy";
 import { DesignerSearchFilter, type DesignerOption } from "./DesignerSearchFilter";
 
 export type FilterOption<T extends string> = { key: T; label: string };
@@ -125,6 +130,8 @@ type CatalogFilterSidebarProps<TFiber extends string, TCategory extends string> 
   onDesignersChange?: (slugs: string[]) => void;
   selectedFiberSubtypes?: string[];
   onFiberSubtypesChange?: (subtypes: string[]) => void;
+  selectedFabricConstructions?: string[];
+  onFabricConstructionsChange?: (constructions: string[]) => void;
   colorOptions?: { label: string; value: string }[];
   selectedColor?: string | null;
   onColorChange?: (color: string | null) => void;
@@ -151,6 +158,8 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
   onDesignersChange,
   selectedFiberSubtypes = [],
   onFiberSubtypesChange,
+  selectedFabricConstructions = [],
+  onFabricConstructionsChange,
   colorOptions = [],
   selectedColor = null,
   onColorChange,
@@ -162,16 +171,25 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
   onMoodChange,
 }: CatalogFilterSidebarProps<TFiber, TCategory>) {
   const [openSection, setOpenSection] = useState<
-    "category" | "material" | "color" | "price" | "designer" | "mood" | null
+    "category" | "material" | "construction" | "color" | "price" | "designer" | "mood" | null
   >("category");
 
-  const toggle = (section: "category" | "material" | "color" | "price" | "designer" | "mood") => {
+  const toggle = (
+    section: "category" | "material" | "construction" | "color" | "price" | "designer" | "mood"
+  ) => {
     setOpenSection((prev) => (prev === section ? null : section));
   };
 
   const primaryFiber =
     fiberTab !== "all" ? String(fiberTab) : null;
-  const subtypes = fiberSubtypesFor(primaryFiber);
+  const typeEntries = typeOptionsForFamily(FALLBACK_MATERIAL_TAXONOMY, primaryFiber);
+  const constructionEntries = constructionOptionsForFamily(
+    FALLBACK_MATERIAL_TAXONOMY,
+    primaryFiber
+  );
+  // Labels for toggle state (legacy selectedFiberSubtypes stores labels)
+  const subtypes = typeEntries.map((e) => e.label);
+  const constructions = constructionEntries.map((e) => e.label);
 
   const toggleSubtype = (subtype: string) => {
     if (!onFiberSubtypesChange) return;
@@ -180,6 +198,16 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
       on
         ? selectedFiberSubtypes.filter((s) => s !== subtype)
         : [...selectedFiberSubtypes, subtype]
+    );
+  };
+
+  const toggleConstruction = (c: string) => {
+    if (!onFabricConstructionsChange) return;
+    const on = selectedFabricConstructions.includes(c);
+    onFabricConstructionsChange(
+      on
+        ? selectedFabricConstructions.filter((s) => s !== c)
+        : [...selectedFabricConstructions, c]
     );
   };
 
@@ -227,13 +255,16 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
         onChange={(key) => {
           onFiberChange(key);
           onFiberSubtypesChange?.([]);
+          onFabricConstructionsChange?.([]);
         }}
         open={openSection === "material"}
         onToggle={() => toggle("material")}
       >
         {primaryFiber && subtypes.length > 0 && onFiberSubtypesChange && (
           <div className="mt-1 mb-3 pl-4 border-l border-gray-100">
-            <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">Type</p>
+            <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">
+              {materialTypeSectionTitle(primaryFiber)}
+            </p>
             {subtypes.map((subtype) => (
               <button
                 key={subtype}
@@ -251,6 +282,39 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
           </div>
         )}
       </FilterSection>
+
+      {primaryFiber && constructions.length > 0 && onFabricConstructionsChange && (
+        <CollapsiblePanel
+          title="Construction"
+          summary={
+            selectedFabricConstructions.length === 0
+              ? undefined
+              : selectedFabricConstructions.length === 1
+                ? selectedFabricConstructions[0]
+                : `${selectedFabricConstructions.length} selected`
+          }
+          open={openSection === "construction"}
+          onToggle={() => toggle("construction")}
+        >
+          <ul className="space-y-0.5">
+            {constructions.map((c) => (
+              <li key={c}>
+                <button
+                  type="button"
+                  onClick={() => toggleConstruction(c)}
+                  className={`block w-full text-left text-sm py-1.5 ${
+                    selectedFabricConstructions.includes(c)
+                      ? "font-medium text-black"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {c}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </CollapsiblePanel>
+      )}
 
       {onColorChange && colorOptions.length > 0 && (
         <CollapsiblePanel
