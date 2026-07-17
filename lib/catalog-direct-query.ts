@@ -1,14 +1,23 @@
 /**
- * Direct live_products_apparel queries — no catalog_list RPC, no fetchShopProducts scan.
+ * Shop catalog browse.
+ * Authoritative path: catalog_browse_page_v2 (same RPC + param mapping as iOS).
+ * Legacy paths: collection / sale only (not covered by v2).
  */
 import { getServerSupabase } from "./supabase-service-client";
 import { filterConsumerCatalogProducts } from "./catalog-consumer-guard";
 import { applyCategoryFilter, CATEGORY_TO_GARMENT_TYPE } from "./catalog-shop-mappings";
 import { queryCatalogListRPC } from "./catalog-list-rpc";
+import {
+  queryCatalogBrowsePageV2,
+  shouldUseAuthoritativeBrowse,
+  type CatalogBrowseV2Result,
+  type CatalogFilterCoverage,
+} from "./catalog-browse-v2";
 
 const CATALOG_TABLE = "live_products_apparel";
 
 export { CATEGORY_TO_GARMENT_TYPE, applyCategoryFilter };
+export type { CatalogFilterCoverage };
 
 /** Editorial slug → all DB slugs that qualify for that collection. */
 export const COLLECTION_CANONICAL_SLUGS: Record<string, string[]> = {
@@ -100,12 +109,20 @@ function applySort(query: any, sort?: string) {
   }
 }
 
-export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
+export type CatalogLiveQueryResult = {
   products: DirectCatalogProduct[];
   total: number | null;
   hasMore: boolean;
   error?: "failed";
-}> {
+  /** Present when authoritative v2 path was used — for parity / debugging. */
+  productIds?: string[];
+  rpcVersion?: string;
+  totalStatus?: string;
+  filterCoverage?: CatalogFilterCoverage | null;
+  rpcParams?: Record<string, unknown>;
+};
+
+export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<CatalogLiveQueryResult> {
   const supabase = getServerSupabase();
   if (!supabase) return { products: [], total: 0, hasMore: false, error: "failed" };
 
@@ -119,9 +136,59 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
       ? [opts.category]
       : [];
 
+  // Same RPC as iOS for all shop browse except collection/sale specialty paths.
+  if (shouldUseAuthoritativeBrowse(opts)) {
+    const v2 = await queryCatalogBrowsePageV2({
+      region,
+      limit: Math.min(limit, 100),
+      offset,
+      fiber: opts.fiber,
+      category: categories[0] || (opts.category === "clothing" ? "clothing" : undefined),
+      brand: opts.brand,
+      search: searchText || undefined,
+      sort: opts.sort,
+      minPrice: opts.minPrice,
+      maxPrice: opts.maxPrice,
+      color: opts.color,
+      materialSubtype: opts.materialSubtype || opts.fiberSubtype,
+      fabricConstruction: opts.fabricConstruction,
+      apparelOnly: true,
+    });
+    if (!v2.error) {
+      return mapV2Result(v2);
+    }
+    // Filtered browse must not fall back to legacy (would diverge from iOS IDs).
+    const hasFilters = Boolean(
+      opts.fiber ||
+        opts.fiberSubtype ||
+        opts.materialSubtype ||
+        opts.fabricConstruction ||
+        categories.length ||
+        opts.brand ||
+        searchText.length >= 2 ||
+        opts.color ||
+        opts.maxPrice ||
+        opts.minPrice
+    );
+    if (hasFilters) {
+      console.error("[queryLiveCatalog] authoritative v2 failed; refusing legacy fallback for filtered browse");
+      return {
+        products: [],
+        total: null,
+        hasMore: false,
+        error: "failed",
+        rpcVersion: "catalog_browse_page_v2",
+        rpcParams: v2.rpcParams,
+      };
+    }
+    console.warn("[queryLiveCatalog] v2 failed on unfiltered browse; using legacy fast path");
+  }
+
   const hasNarrowingFilter = Boolean(
     opts.fiber ||
     opts.fiberSubtype ||
+    opts.materialSubtype ||
+    opts.fabricConstruction ||
     categories.length ||
     opts.collection ||
     opts.brand ||
@@ -137,7 +204,11 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<{
     !opts.isSale &&
     !opts.collection &&
     !opts.color &&
-    !opts.fiberSubtype;
+    !opts.fiberSubtype &&
+    !opts.materialSubtype &&
+    !opts.fabricConstruction &&
+    opts.maxPrice == null &&
+    opts.minPrice == null;
 
   try {
     // Fast path — is_displayable + id sort (~500ms). Legacy RPC/NFP sort hits statement_timeout.
@@ -345,5 +416,18 @@ function mapDirectRow(row: Record<string, unknown>): DirectCatalogProduct {
     materialSubtype: row.material_subtype != null ? String(row.material_subtype) : null,
     fabricConstruction: row.fabric_construction != null ? String(row.fabric_construction) : null,
     shopMaterialFamily: row.shop_material_family != null ? String(row.shop_material_family) : null,
+  };
+}
+
+function mapV2Result(v2: CatalogBrowseV2Result): CatalogLiveQueryResult {
+  return {
+    products: v2.products as DirectCatalogProduct[],
+    total: v2.total,
+    hasMore: v2.hasMore,
+    productIds: v2.productIds,
+    rpcVersion: v2.rpcVersion,
+    totalStatus: v2.totalStatus,
+    filterCoverage: v2.filterCoverage,
+    rpcParams: v2.rpcParams,
   };
 }

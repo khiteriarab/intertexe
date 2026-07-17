@@ -92,6 +92,10 @@ export async function getShopProducts(options: {
       total,
       hasMore: result.hasMore ?? false,
       error: result.error,
+      productIds: result.productIds ?? (result.products || []).map((p) => p.id),
+      rpcVersion: result.rpcVersion ?? null,
+      totalStatus: result.totalStatus ?? null,
+      filterCoverage: result.filterCoverage ?? null,
     };
   } catch {
     return { products: [], total: 0, hasMore: false, error: "failed" as const };

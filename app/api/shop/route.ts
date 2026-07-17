@@ -61,7 +61,19 @@ export async function GET(request: NextRequest) {
       minPrice: Number.isFinite(minPrice) ? minPrice : undefined,
       skipCount: false,
     });
-    return NextResponse.json(result, { headers: CACHE_HEADERS });
+    return NextResponse.json(
+      {
+        products: result.products,
+        total: result.total,
+        hasMore: result.hasMore,
+        productIds: result.productIds ?? result.products.map((p) => p.id),
+        rpcVersion: result.rpcVersion ?? null,
+        totalStatus: result.totalStatus ?? null,
+        filterCoverage: result.filterCoverage ?? null,
+        error: result.error,
+      },
+      { headers: CACHE_HEADERS }
+    );
   } catch {
     return NextResponse.json({ products: [], total: 0, error: "failed" }, { status: 500 });
   }
