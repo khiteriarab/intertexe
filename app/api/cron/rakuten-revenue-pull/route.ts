@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 /**
- * Auto-pull Rakuten revenue reports from FTP when present.
+ * Auto-pull Rakuten revenue via Reporting API (preferred) or FTP report CSVs.
  * Auth: Authorization: Bearer $CRON_SECRET
- * Optional: ?dryRun=1 to list candidates only.
+ * Optional: ?dryRun=1
  */
 export async function GET(request: NextRequest) {
   const auth = request.headers.get("authorization") || "";

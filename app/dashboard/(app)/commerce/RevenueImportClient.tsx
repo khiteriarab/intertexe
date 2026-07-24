@@ -114,8 +114,9 @@ export function RevenueImportClient({
 
       <HqCard title="Import Rakuten report">
         <p className="text-sm text-black/55 leading-relaxed mb-4">
-          Upload a Rakuten transaction CSV/TSV, or pull report-named files from the Affiliate FTP when present.
-          Catalog FTP often has no revenue files — manual upload still works.
+          Upload a transaction CSV, or pull verified rows from the Rakuten Reporting API (when{" "}
+          <code className="text-[11px]">RAKUTEN_REPORTS_URL</code> is set) — FTP is catalog-only for most
+          accounts.
         </p>
         <form onSubmit={onUpload} className="space-y-3">
           <input
@@ -139,7 +140,7 @@ export function RevenueImportClient({
               disabled={busy}
               className="text-xs tracking-widest uppercase border border-black/15 px-4 py-2.5 rounded-lg disabled:opacity-60"
             >
-              Pull from FTP
+              Pull from Rakuten
             </button>
           </div>
         </form>
