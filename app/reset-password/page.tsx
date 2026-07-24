@@ -51,7 +51,11 @@ export default function ResetPasswordPage() {
     }
 
     setSuccess(true);
-    setTimeout(() => router.push('/shop'), 2000);
+    const next =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("next") || "/shop"
+        : "/shop";
+    setTimeout(() => router.push(next), 2000);
   };
 
   if (success) {

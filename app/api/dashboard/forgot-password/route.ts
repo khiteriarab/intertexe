@@ -18,7 +18,8 @@ export async function POST(request: NextRequest) {
     }
 
     const origin = request.nextUrl.origin;
-    const redirectTo = `${origin}/dashboard/login?reset=1`;
+    // Must land on a page that handles PASSWORD_RECOVERY and calls updateUser({ password }).
+    const redirectTo = `${origin}/reset-password?next=/dashboard`;
     const { error } = await auth.auth.resetPasswordForEmail(email, { redirectTo });
     await writeAuthAudit({
       email,
