@@ -460,7 +460,27 @@ export async function GET(request: NextRequest) {
       skipCount,
     });
 
+    if (result.error === "timeout") {
+      return catalogTimeoutResponse(limit, offset);
+    }
+
     if (result.error === "failed") {
+      // Filtered browse must not fall back to a divergent legacy path.
+      const hasFilters = Boolean(
+        shopFiber ||
+          (category && category !== "all") ||
+          collectionAlias ||
+          brandAlias ||
+          search ||
+          color ||
+          materialSubtype ||
+          fabricConstruction ||
+          maxPrice != null ||
+          minPrice != null
+      );
+      if (hasFilters) {
+        return catalogFailedResponse(limit, offset);
+      }
       const rpcFallback = await queryCatalogListRPC({
         region,
         fiber: shopFiber,

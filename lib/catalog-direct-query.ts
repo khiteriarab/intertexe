@@ -113,7 +113,8 @@ export type CatalogLiveQueryResult = {
   products: DirectCatalogProduct[];
   total: number | null;
   hasMore: boolean;
-  error?: "failed";
+  error?: "failed" | "timeout";
+  emptyReason?: string | null;
   /** Present when authoritative v2 path was used — for parity / debugging. */
   productIds?: string[];
   rpcVersion?: string;
@@ -158,6 +159,7 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       return mapV2Result(v2);
     }
     // Filtered browse must not fall back to legacy (would diverge from iOS IDs).
+    // Timeouts / RPC failures must surface as errors — never as empty catalogs.
     const hasFilters = Boolean(
       opts.fiber ||
         opts.fiberSubtype ||
@@ -171,12 +173,17 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
         opts.minPrice
     );
     if (hasFilters) {
-      console.error("[queryLiveCatalog] authoritative v2 failed; refusing legacy fallback for filtered browse");
+      console.error(
+        "[queryLiveCatalog] authoritative v2 failed; refusing legacy fallback for filtered browse",
+        v2.error,
+        v2.emptyReason
+      );
       return {
         products: [],
         total: null,
         hasMore: false,
-        error: "failed",
+        error: v2.error === "timeout" ? "timeout" : "failed",
+        emptyReason: v2.emptyReason,
         rpcVersion: "catalog_browse_page_v2",
         rpcParams: v2.rpcParams,
       };
@@ -429,5 +436,7 @@ function mapV2Result(v2: CatalogBrowseV2Result): CatalogLiveQueryResult {
     totalStatus: v2.totalStatus,
     filterCoverage: v2.filterCoverage,
     rpcParams: v2.rpcParams,
+    emptyReason: v2.emptyReason,
+    error: v2.error,
   };
 }

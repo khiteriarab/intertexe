@@ -75,7 +75,8 @@ export type CatalogBrowseV2Result = {
   rpcVersion: string;
   /** Exact params sent to the RPC (for parity / debugging). */
   rpcParams: Record<string, unknown>;
-  error?: "failed";
+  /** Present when the RPC failed or timed out — never treat as an empty catalog. */
+  error?: "failed" | "timeout";
 };
 
 /** Mirror of iOS CatalogBrowseRequest → RPC Params. Single source for web↔iOS parity. */
@@ -244,26 +245,47 @@ export async function queryCatalogBrowsePageV2(
     const total = totalStatus === "exact" ? totalRaw ?? verifiedTotal : null;
     const debug = (payload.debug ?? {}) as Record<string, unknown>;
 
+    const emptyReason =
+      payload.empty_reason != null ? String(payload.empty_reason) : null;
+    const matchQuality = String(payload.match_quality ?? "verified");
+    const rpcError = payload.error as { code?: string; message?: string } | null;
+    const isTimeout =
+      emptyReason === "request_timeout" ||
+      matchQuality === "error" ||
+      rpcError?.code === "timeout";
+
     return {
-      products,
-      productIds,
-      total,
-      hasMore: Boolean(payload.has_more),
-      totalStatus,
-      verifiedTotal,
+      products: isTimeout ? [] : products,
+      productIds: isTimeout ? [] : productIds,
+      total: isTimeout ? null : total,
+      hasMore: isTimeout ? false : Boolean(payload.has_more),
+      totalStatus: isTimeout ? "unavailable" : totalStatus,
+      verifiedTotal: isTimeout ? null : verifiedTotal,
       unverifiedTotal: Number(payload.unverified_total ?? 0),
-      matchQuality: String(payload.match_quality ?? "verified"),
+      matchQuality: isTimeout ? "error" : matchQuality,
       filterCoverage: mapCoverage(payload.filter_coverage),
       sparseFilters: Array.isArray(payload.sparse_filters)
         ? payload.sparse_filters.map(String)
         : [],
-      emptyReason: payload.empty_reason != null ? String(payload.empty_reason) : null,
+      emptyReason: isTimeout ? "request_timeout" : emptyReason,
       rpcVersion: String(debug.rpc_version ?? "catalog_browse_page_v2"),
       rpcParams,
+      error: isTimeout ? "timeout" : undefined,
     };
   } catch (err) {
     console.error("[queryCatalogBrowsePageV2]", err);
-    return failed();
+    const message = String((err as { message?: string })?.message ?? err ?? "");
+    const isTimeout =
+      message.includes("statement timeout") ||
+      message.includes("canceling statement") ||
+      message.includes("57014") ||
+      message.toLowerCase().includes("timeout");
+    return {
+      ...failed(),
+      emptyReason: isTimeout ? "request_timeout" : "rpc_failed",
+      matchQuality: "error",
+      error: isTimeout ? "timeout" : "failed",
+    };
   }
 }
 
