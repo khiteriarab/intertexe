@@ -14,7 +14,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com/about" },
 };
 
-export const revalidate = 600;
+/** Avoid SSG hangs when Supabase is slow during Vercel builds. */
+export const dynamic = "force-dynamic";
 
 export default async function AboutPage() {
   const platformStats = await getCachedPlatformStats();

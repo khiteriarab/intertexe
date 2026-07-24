@@ -7,7 +7,7 @@ import {
   searchBrandsPlaceholder,
 } from "../../lib/catalog-stats-labels";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brandStats = await getCachedBrandStats();

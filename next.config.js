@@ -32,8 +32,8 @@ const nextConfig = {
   },
   allowedDevOrigins: ['*.kirk.replit.dev', '*.replit.dev', '*.repl.co', 'localhost', '127.0.0.1', '0.0.0.0'],
   serverExternalPackages: ['@supabase/supabase-js'],
-  /** Seconds before static generation times out (default 60). Top-level in Next 15+. */
-  staticPageGenerationTimeout: 120,
+  /** Seconds before static generation times out (default 60). Keep bounded so a slow DB cannot burn the whole deploy. */
+  staticPageGenerationTimeout: 60,
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

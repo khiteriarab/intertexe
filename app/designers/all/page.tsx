@@ -5,7 +5,7 @@ import { getCachedBrandStats, getCachedPlatformStats } from "../../../lib/cached
 import { formatBrandCountLabel, resolveShoppableBrandCount } from "../../../lib/catalog-stats-labels";
 import { DesignersAllClient } from "./DesignersAllClient";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [platformStats, brandStats] = await Promise.all([
@@ -24,7 +24,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DesignersAllPage() {
-  const allDesigners = await fetchDesigners("", 5000);
+  // Cap list size; full A–Z is still large but must not hang the deploy.
+  const allDesigners = await Promise.race([
+    fetchDesigners("", 2000),
+    new Promise<Awaited<ReturnType<typeof fetchDesigners>>>((resolve) =>
+      setTimeout(() => resolve([]), 8000)
+    ),
+  ]);
 
   const enriched = allDesigners.map((d) => {
     if (d.naturalFiberPercent != null) return d;
