@@ -35,7 +35,7 @@ export default function PlatformPage() {
             Log in
           </Link>
           <a
-            href="mailto:platform@intertexe.com"
+            href="mailto:info@intertexe.com"
             className="text-xs tracking-widest uppercase bg-black text-white px-6 py-3 hover:bg-gray-800 transition-colors"
             style={{ letterSpacing: "0.15em" }}
           >
@@ -68,14 +68,14 @@ export default function PlatformPage() {
 
         <div className="flex items-center gap-6">
           <a
-            href="mailto:platform@intertexe.com"
+            href="mailto:info@intertexe.com"
             className="text-xs tracking-widest uppercase bg-black text-white px-10 py-4 hover:bg-gray-800 transition-colors"
             style={{ letterSpacing: "0.2em" }}
           >
-            Request API access
+            Contact us
           </a>
           <a
-            href="mailto:platform@intertexe.com"
+            href="mailto:info@intertexe.com"
             className="text-xs tracking-widest uppercase text-gray-900 underline underline-offset-4"
             style={{ letterSpacing: "0.15em" }}
           >
@@ -231,6 +231,79 @@ export default function PlatformPage() {
         </div>
 
         <div className="border-t border-gray-100 py-16">
+          <p className="text-xs tracking-widest text-gray-400 uppercase mb-12" style={{ letterSpacing: "0.2em" }}>
+            THREE LAYERS
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div>
+              <p className="text-xs tracking-widest text-gray-400 uppercase mb-3">01 · Consumer</p>
+              <h3 className="text-xl font-light text-gray-900 mb-3" style={{ fontFamily: "Georgia, serif" }}>
+                Fabric composition first
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                The INTERTEXE app and shop make verified fiber content the decision layer for shoppers — scan a label,
+                see natural fiber percentage, discover better alternatives.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs tracking-widest text-gray-400 uppercase mb-3">02 · Data</p>
+              <h3 className="text-xl font-light text-gray-900 mb-3" style={{ fontFamily: "Georgia, serif" }}>
+                Composition intelligence
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Every scan compounds a proprietary fiber database. Brands and retailers can license verified
+                composition, barcode matches, and catalog enrichment — especially US companies selling into the EU.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs tracking-widest text-gray-400 uppercase mb-3">03 · Compliance</p>
+              <h3 className="text-xl font-light text-gray-900 mb-3" style={{ fontFamily: "Georgia, serif" }}>
+                Digital Product Passport
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                EU DPP for textiles requires structured material records. INTERTEXE helps companies generate
+                DPP-ready composition fields from real labels — not guessed marketing copy.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-100 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+            <div>
+              <p className="text-xs tracking-widest text-gray-400 uppercase mb-4" style={{ letterSpacing: "0.2em" }}>
+                FOUNDER
+              </p>
+              <h2 className="text-3xl font-light text-gray-900" style={{ fontFamily: "Georgia, serif", lineHeight: 1.3 }}>
+                Khiteriara Brown
+              </h2>
+              <p className="text-sm text-gray-600 leading-relaxed mt-4">
+                Founder of INTERTEXE. Building the consumer scanner, the material data layer, and the private
+                operating system used to run growth, partnerships, and (next) multi-client SaaS workspaces.
+              </p>
+            </div>
+            <div className="text-sm text-gray-600 leading-relaxed space-y-3">
+              <p>
+                Platform / API:{" "}
+                <a href="mailto:info@intertexe.com" className="underline underline-offset-4 text-gray-900">
+                  info@intertexe.com
+                </a>
+              </p>
+              <p>
+                General:{" "}
+                <a href="mailto:hello@intertexe.com" className="underline underline-offset-4 text-gray-900">
+                  hello@intertexe.com
+                </a>
+              </p>
+              <p className="text-xs text-gray-400 pt-2">
+                Contact us for API access, DPP readiness, or catalog enrichment. Internal HQ is private and not
+                linked from the consumer app.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-100 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <div>
               <h2
@@ -246,13 +319,13 @@ export default function PlatformPage() {
                 coverage, dedicated support, and input into the product roadmap.
               </p>
               <a
-                href="mailto:platform@intertexe.com"
+                href="mailto:info@intertexe.com"
                 className="inline-block text-xs tracking-widest uppercase bg-black text-white px-10 py-4 hover:bg-gray-800 transition-colors mb-4 w-full text-center"
                 style={{ letterSpacing: "0.2em" }}
               >
-                Request API access
+                Contact us
               </a>
-              <p className="text-xs text-gray-400 text-center">platform@intertexe.com</p>
+              <p className="text-xs text-gray-400 text-center">info@intertexe.com</p>
             </div>
           </div>
         </div>
@@ -274,8 +347,8 @@ export default function PlatformPage() {
             <Link href="/privacy" className="text-xs text-gray-400 hover:text-black transition-colors">
               Privacy
             </Link>
-            <a href="mailto:platform@intertexe.com" className="text-xs text-gray-400 hover:text-black transition-colors">
-              platform@intertexe.com
+            <a href="mailto:info@intertexe.com" className="text-xs text-gray-400 hover:text-black transition-colors">
+              info@intertexe.com
             </a>
           </div>
         </div>

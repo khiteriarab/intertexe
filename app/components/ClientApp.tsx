@@ -12,8 +12,9 @@ import { Footer } from "./Footer";
 import { EmailBanner } from "./EmailBanner";
 import { SignInBenefitsBanner } from "./SignInBenefitsBanner";
 import { AuthLoginPromptProvider } from "../hooks/use-auth-login-prompt";
+import { UtmCapture } from "./UtmCapture";
 
-const B2B_ROUTE_PREFIXES = ["/platform", "/partners", "/khiteri"];
+const B2B_ROUTE_PREFIXES = ["/platform", "/partners", "/khiteri", "/dashboard"];
 const DOCUMENT_ROUTE_PREFIXES = ["/press-kit"];
 
 function isB2BRoute(pathname: string) {
@@ -47,6 +48,7 @@ export function ClientApp({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthLoginPromptProvider>
+      <UtmCapture />
       <Analytics />
       <Suspense fallback={null}>
         <RouteProgress />

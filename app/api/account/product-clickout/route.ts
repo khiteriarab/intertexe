@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getUserFromToken } from "../../../../lib/auth-helpers";
 import { getSupabaseAuthUserId } from "../../../../lib/supabase-auth-server";
 import { parsePriceNumber } from "../../../../lib/scanner-copy";
+import { emitAttributedEvent, extractUtmFromRequest } from "../../../../lib/dashboard/attribution";
 
 function getServiceSupabase() {
   const supabaseUrl =
@@ -63,6 +64,21 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
+
+  const utm = extractUtmFromRequest(request, body);
+  emitAttributedEvent({
+    eventName: "affiliate_click",
+    eventCategory: "commerce",
+    customerId: userId,
+    source: "shop",
+    productId: String(productId),
+    utm,
+    metadata: {
+      brand_name: row.brand_name,
+      product_name: row.product_name,
+      natural_fiber_percent: row.natural_fiber_percent,
+    },
+  }).catch(() => null);
 
   return NextResponse.json({ ok: true });
 }

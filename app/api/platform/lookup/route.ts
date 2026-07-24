@@ -32,13 +32,34 @@ export async function GET(req: NextRequest) {
 
   const { data: client } = await supabase
     .from("platform_clients")
-    .select("id, name, plan")
+    .select("id, name, plan, calls_this_month, monthly_limit, is_active")
     .eq("api_key", apiKey)
     .eq("is_active", true)
     .maybeSingle();
 
   if (!client) {
     return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+  }
+
+  const used = client.calls_this_month || 0;
+  const limit = client.monthly_limit ?? 1000;
+  if (used >= limit) {
+    return NextResponse.json(
+      {
+        error: "Monthly plan limit reached",
+        plan: client.plan,
+        monthlyLimit: limit,
+        callsThisMonth: used,
+        upgrade: "Contact info@intertexe.com for Growth or Enterprise",
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": String(limit),
+          "X-RateLimit-Remaining": "0",
+        },
+      }
+    );
   }
 
   const upc = barcode.replace(/\D/g, "");
@@ -51,7 +72,10 @@ export async function GET(req: NextRequest) {
 
   await supabase
     .from("platform_clients")
-    .update({ last_active_at: new Date().toISOString() })
+    .update({
+      last_active_at: new Date().toISOString(),
+      calls_this_month: used + 1,
+    })
     .eq("id", client.id);
 
   if (!composition) {

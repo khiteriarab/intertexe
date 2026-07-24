@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getSupabaseAuthUserId } from '../../../../lib/supabase-auth-server';
 import { parsePriceNumber } from '../../../../lib/scanner-copy';
 import { recordFunnelEvent } from '../../../../lib/scanner-funnel';
+import { emitAttributedEvent, extractUtmFromRequest } from '../../../../lib/dashboard/attribution';
 
 export async function POST(req: NextRequest) {
   const supabaseUrl =
@@ -61,6 +62,22 @@ export async function POST(req: NextRequest) {
       affiliate_url: affiliateUrl || null,
       clicked_at: new Date().toISOString(),
     });
+
+    const utm = extractUtmFromRequest(req, body);
+    emitAttributedEvent({
+      eventName: 'scanner_clickout',
+      eventCategory: 'commerce',
+      customerId: userId,
+      source: 'scanner',
+      sessionId: sessionId || undefined,
+      productId: productId ? String(productId) : undefined,
+      utm,
+      metadata: {
+        brand_slug: brandSlug || null,
+        product_name: productName || null,
+        scanned_upc: scannedUPC || null,
+      },
+    }).catch(() => null);
   } catch {
     /* table may not exist yet */
   }

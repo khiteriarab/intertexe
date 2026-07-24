@@ -11,6 +11,7 @@ import {
   generatePermanentReferralCode,
   recordReferral,
 } from "../../../../lib/invitation-codes";
+import { emitAttributedEvent, extractUtmFromRequest } from "../../../../lib/dashboard/attribution";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
       "MT", "CY", "GR",
     ]);
     const isEU = EU_COUNTRIES.has(String(country).toUpperCase());
+    const body = await request.json();
     const {
       email,
       password,
@@ -34,7 +36,8 @@ export async function POST(request: NextRequest) {
       username: providedUsername,
       invitationCode,
       gdprConsent,
-    } = await request.json();
+    } = body;
+    const utm = extractUtmFromRequest(request, body);
     if (!email || !password) {
       return NextResponse.json({ message: "Email and password are required" }, { status: 400 });
     }
@@ -105,6 +108,16 @@ export async function POST(request: NextRequest) {
       if (typeof invitationCode === "string" && invitationCode.trim()) {
         await recordReferral(invitationCode, user.id);
       }
+
+      emitAttributedEvent({
+        eventName: "signup",
+        eventCategory: "acquisition",
+        customerId: user.id,
+        source: "website",
+        sessionId: sessionId || undefined,
+        utm,
+        metadata: { invitationCode: invitationCode || null },
+      }).catch(() => null);
     }
 
     sendWelcomeEmail(cleanEmail, resolvedFirst || fullName || "").catch(console.error);

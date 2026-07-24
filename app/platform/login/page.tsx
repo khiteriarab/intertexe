@@ -13,25 +13,33 @@ export default function PlatformLoginPage() {
         </Link>
 
         <p className="text-xs tracking-widest text-gray-400 mb-6" style={{ letterSpacing: "0.25em" }}>
-          PLATFORM LOGIN
+          PLATFORM ACCESS
         </p>
 
         <h1 className="text-2xl font-light text-gray-900 mb-4" style={{ fontFamily: "Georgia, serif" }}>
-          Partner access
+          Partner & operator access
         </h1>
 
         <p className="text-sm text-gray-500 leading-relaxed mb-10">
-          Platform login is coming soon. Contact us to request early API access and we will set up your account
-          directly.
+          API partners and brands: contact us for access. INTERTEXE operators sign in to the private dashboard.
+          sign-in.
         </p>
 
         <a
-          href="mailto:platform@intertexe.com"
-          className="block text-xs tracking-widest uppercase bg-black text-white px-10 py-4 w-full text-center hover:bg-gray-800 transition-colors mb-6"
+          href="mailto:info@intertexe.com"
+          className="block text-xs tracking-widest uppercase bg-black text-white px-10 py-4 w-full text-center hover:bg-gray-800 transition-colors mb-4"
           style={{ letterSpacing: "0.2em" }}
         >
-          Request access
+          Contact us
         </a>
+
+        <Link
+          href="/dashboard/login"
+          className="block text-xs tracking-widest uppercase border border-gray-200 text-gray-900 px-10 py-4 w-full text-center hover:bg-gray-50 transition-colors mb-6"
+          style={{ letterSpacing: "0.2em" }}
+        >
+          Dashboard sign-in
+        </Link>
 
         <Link href="/platform" className="text-xs text-gray-400 underline underline-offset-4">
           Back to platform overview

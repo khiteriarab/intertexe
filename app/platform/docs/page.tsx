@@ -25,7 +25,7 @@ export default function PlatformDocsPage() {
         </p>
 
         <a
-          href="mailto:platform@intertexe.com"
+          href="mailto:info@intertexe.com"
           className="block text-xs tracking-widest uppercase bg-black text-white px-10 py-4 w-full text-center hover:bg-gray-800 transition-colors mb-6"
           style={{ letterSpacing: "0.2em" }}
         >
