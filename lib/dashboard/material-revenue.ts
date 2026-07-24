@@ -34,9 +34,10 @@ export async function fetchMaterialRevenue(
   const since = new Date(Date.now() - days * 86400000).toISOString();
   const { data: txs, error } = await supabase
     .from("hq_affiliate_transactions")
-    .select("product_id, sku, product_name, sales_amount, commission_amount")
+    .select("product_id, sku, product_name, sales_amount, commission_amount, status, raw, external_transaction_id")
     .eq("workspace_id", workspaceId)
     .gte("transaction_date", since)
+    .neq("status", "demo")
     .limit(2000);
 
   if (error) {
@@ -51,7 +52,8 @@ export async function fetchMaterialRevenue(
     const { count } = await supabase
       .from("hq_affiliate_transactions")
       .select("id", { count: "exact", head: true })
-      .eq("workspace_id", workspaceId);
+      .eq("workspace_id", workspaceId)
+      .neq("status", "demo");
     return {
       rows: [],
       unmatchedCommission: 0,
@@ -60,11 +62,26 @@ export async function fetchMaterialRevenue(
     };
   }
 
-  const productIds = [...new Set(txs.map((t) => t.product_id).filter(Boolean).map(String))].slice(
+  const verifiedTxs = txs.filter(
+    (t: any) =>
+      t.status !== "demo" &&
+      !t.raw?.is_demo &&
+      !String(t.external_transaction_id || "").startsWith("TX-")
+  );
+  if (!verifiedTxs.length) {
+    return {
+      rows: [],
+      unmatchedCommission: 0,
+      matchedCommission: 0,
+      revenueConnected: false,
+    };
+  }
+
+  const productIds = [...new Set(verifiedTxs.map((t) => t.product_id).filter(Boolean).map(String))].slice(
     0,
     200
   );
-  const skus = [...new Set(txs.map((t) => t.sku).filter(Boolean).map(String))].slice(0, 200);
+  const skus = [...new Set(verifiedTxs.map((t) => t.sku).filter(Boolean).map(String))].slice(0, 200);
 
   const materialByKey = new Map<string, string>();
 
@@ -100,7 +117,7 @@ export async function fetchMaterialRevenue(
   let unmatchedCommission = 0;
   let matchedCommission = 0;
 
-  for (const t of txs) {
+  for (const t of verifiedTxs) {
     const key =
       (t.product_id && materialByKey.get(String(t.product_id))) ||
       (t.sku && materialByKey.get(String(t.sku))) ||

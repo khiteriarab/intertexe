@@ -3,7 +3,7 @@ import {
   buildExecutiveBriefing,
   fetchInsightsBundle,
 } from "../../../lib/dashboard/insights";
-import { formatCount, formatDelta } from "../../../lib/dashboard/metrics";
+import { fetchHqCommercePage, formatCount, formatDelta } from "../../../lib/dashboard/metrics";
 import { HqCard, HqPageHeader } from "../components/HqUi";
 
 export const metadata = { title: "Overview" };
@@ -15,10 +15,10 @@ function greetingName(fullName: string | null, email: string) {
   return "there";
 }
 
-function line(label: string, value: number | null, hint?: string | null) {
+function todayLine(label: string, value: number | null, hint?: string | null) {
   return (
     <li className="flex items-baseline justify-between gap-3">
-      <span>{label}</span>
+      <span className="text-black/65">{label}</span>
       <span className="tabular-nums font-medium text-black/85">
         {formatCount(value)}
         {hint ? <span className="ml-2 text-xs font-normal text-black/40">{hint}</span> : null}
@@ -29,9 +29,16 @@ function line(label: string, value: number | null, hint?: string | null) {
 
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
-  const { metrics: m, live } = await fetchInsightsBundle(session.workspaceId);
+  const [{ metrics: m, live }, commerce] = await Promise.all([
+    fetchInsightsBundle(session.workspaceId),
+    fetchHqCommercePage(session.workspaceId),
+  ]);
   const name = greetingName(session.fullName, session.email);
-  const briefing = buildExecutiveBriefing(name, m, live);
+  const briefing = buildExecutiveBriefing(name, m, live, {
+    revenueConnected: commerce.revenueConnected,
+    revenueIsDemo: commerce.revenueIsDemo,
+    commission7d: commerce.commission7d,
+  });
 
   const scanWow = formatDelta(m.scansLast7d.value, m.scansPrev7d.value);
   const totalClicks7d =
@@ -39,14 +46,58 @@ export default async function HqOverviewPage() {
     (m.scannerClickoutsLast7d.value || 0) +
     (m.editorialClickoutsLast7d.value || 0);
 
-  const leadingMaterial = m.topMaterialsLast30d[0];
-  const actions = live.slice(0, 4).map((i) => i.recommendedAction);
+  const changes = live.filter((i) => i.severity !== "info").slice(0, 4);
+  const changeList = changes.length ? changes : live.slice(0, 4);
+
+  const founderActions = [
+    ...live.slice(0, 4).map((i) => ({
+      key: i.key,
+      text: i.recommendedAction,
+      href:
+        i.key.includes("revenue") || i.key.includes("clicks_without")
+          ? "/dashboard/commerce"
+          : i.key.includes("material")
+            ? "/dashboard/materials"
+            : i.key.includes("scan") || i.key.includes("regs")
+              ? "/dashboard/scanner"
+              : i.key.includes("dpp")
+                ? "/dashboard/dpp"
+                : i.key.includes("campaign")
+                  ? "/dashboard/campaigns"
+                  : "/dashboard/insights",
+    })),
+  ];
+  if (commerce.revenueIsDemo) {
+    founderActions.unshift({
+      key: "replace_demo_revenue",
+      text: "Replace demo revenue with a verified Rakuten transaction report",
+      href: "/dashboard/commerce",
+    });
+  } else if ((commerce.unmatchedTx30d || 0) > 0) {
+    founderActions.unshift({
+      key: "unmatched_tx",
+      text: `Investigate ${commerce.unmatchedTx30d} unmatched affiliate transactions (no SKU/product)`,
+      href: "/dashboard/commerce",
+    });
+  }
+
+  const verifiedRevenueLabel = commerce.revenueIsDemo
+    ? "Demo only"
+    : commerce.revenueConnected
+      ? commerce.commission7d != null
+        ? commerce.commission7d.toLocaleString(undefined, {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 0,
+          })
+        : "Connected"
+      : "Not connected";
 
   return (
     <div>
       <HqPageHeader
-        title="Command center"
-        description="Live signals from scans, consumers, and affiliate clickouts. Revenue stays blank until Rakuten reports are connected."
+        title="Today"
+        description="What changed, why it matters, and what needs attention. Internal alpha — treat revenue as verified only when labeled."
         action={
           <a
             href="/api/dashboard/export?kind=overview"
@@ -57,59 +108,83 @@ export default async function HqOverviewPage() {
         }
       />
 
+      {commerce.revenueIsDemo ? (
+        <div className="mb-6 border border-amber-700/30 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p className="text-[10px] tracking-[0.18em] uppercase text-amber-800/80 mb-1">Demo data</p>
+          <p className="font-medium">Sample Rakuten rows are present and are not verified affiliate reporting.</p>
+          <p className="text-amber-900/70 mt-1">
+            Verified revenue totals stay blank until a real report is imported.{" "}
+            <a href="/dashboard/commerce" className="underline underline-offset-2">
+              Replace with verified affiliate reporting →
+            </a>
+          </p>
+        </div>
+      ) : null}
+
       <HqCard className="mb-6">
-        <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-3">Daily briefing</p>
-        <h2 className="text-2xl md:text-3xl font-medium tracking-tight">
-          {briefing[0]}
-        </h2>
+        <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-3">Founder briefing</p>
+        <h2 className="text-2xl md:text-3xl font-medium tracking-tight">{briefing[0]}</h2>
         <p className="text-sm text-black/55 mt-3 max-w-2xl leading-relaxed">
           {briefing.slice(1).join(" ")}
         </p>
-
-        <div className="mt-8 grid md:grid-cols-3 gap-6 border-t border-black/10 pt-6">
-          <div>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Activity</p>
-            <ul className="mt-3 space-y-2 text-sm text-black/70">
-              {line("Scans today", m.scansToday.value)}
-              {line("Scans yesterday", m.scansYesterday.value)}
-              {line("Scans (7d)", m.scansLast7d.value, scanWow)}
-              {line("Known consumers", m.usersTotal.value)}
-              {line("New accounts today", m.usersToday.value)}
-            </ul>
-          </div>
-          <div>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Signals</p>
-            <ul className="mt-3 space-y-2 text-sm text-black/70">
-              {line("Shop clickouts (7d)", m.clickoutsLast7d.value)}
-              {line("Scanner clickouts (7d)", m.scannerClickoutsLast7d.value)}
-              {line("Editorial clickouts (7d)", m.editorialClickoutsLast7d.value)}
-              {line("Favorites", m.favoritesTotal.value)}
-              {line("Collections / boards", (m.collectionsTotal.value || 0) + (m.boardsTotal.value || 0))}
-              <li className="flex items-baseline justify-between gap-3">
-                <span>Affiliate revenue</span>
-                <span className="text-xs text-black/40">Not connected</span>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Recommended actions</p>
-            <ul className="mt-3 space-y-2 text-sm text-black/70 list-disc pl-4">
-              {actions.map((a) => (
-                <li key={a}>{a}</li>
-              ))}
-            </ul>
-            <p className="text-[11px] text-black/35 mt-4">
-              Updated {new Date(m.fetchedAt).toLocaleString()} · {formatCount(totalClicks7d)} affiliate clicks (7d)
-            </p>
-          </div>
-        </div>
       </HqCard>
 
-      <div className="grid md:grid-cols-2 gap-4 mb-6">
-        <HqCard title="Material momentum (30d sample)">
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <HqCard title="Today">
+          <ul className="space-y-2.5 text-sm">
+            {todayLine("Registrations", m.usersToday.value)}
+            {todayLine("Known consumers", m.usersTotal.value)}
+            {todayLine("Scans", m.scansToday.value, scanWow)}
+            {todayLine("Affiliate clicks (7d)", totalClicks7d)}
+            <li className="flex items-baseline justify-between gap-3">
+              <span className="text-black/65">Verified revenue (7d)</span>
+              <span
+                className={`tabular-nums font-medium ${
+                  commerce.revenueIsDemo ? "text-amber-800" : "text-black/85"
+                }`}
+              >
+                {verifiedRevenueLabel}
+              </span>
+            </li>
+          </ul>
+        </HqCard>
+
+        <HqCard title="Important changes">
+          {changeList.length ? (
+            <ul className="space-y-3 text-sm">
+              {changeList.map((i) => (
+                <li key={i.key}>
+                  <p className="font-medium text-black/85">{i.title}</p>
+                  <p className="text-black/50 mt-0.5 leading-relaxed">{i.explanation}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-black/50">No material changes yet this period.</p>
+          )}
+        </HqCard>
+
+        <HqCard title="Founder actions">
+          <ul className="space-y-2.5 text-sm list-disc pl-4 text-black/70">
+            {founderActions.slice(0, 5).map((a) => (
+              <li key={a.key}>
+                <a href={a.href} className="hover:text-black underline-offset-2 hover:underline">
+                  {a.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="text-[11px] text-black/35 mt-4">
+            Updated {new Date(m.fetchedAt).toLocaleString()}
+          </p>
+        </HqCard>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <HqCard title="Material signal (30d sample)">
           {m.topMaterialsLast30d.length ? (
             <ul className="space-y-2 text-sm">
-              {m.topMaterialsLast30d.map((row) => (
+              {m.topMaterialsLast30d.slice(0, 5).map((row) => (
                 <li key={row.material} className="flex justify-between gap-3">
                   <span>{row.material}</span>
                   <span className="tabular-nums text-black/60">{row.scans}</span>
@@ -119,31 +194,14 @@ export default async function HqOverviewPage() {
           ) : (
             <p className="text-sm text-black/50">No fiber_primary sample yet.</p>
           )}
-          <a href="/dashboard/materials" className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4">
+          <a
+            href="/dashboard/materials"
+            className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
+          >
             Material Intelligence →
           </a>
         </HqCard>
-        <HqCard title="Brand momentum (30d sample)">
-          {m.topBrandsLast30d.length ? (
-            <ul className="space-y-2 text-sm">
-              {m.topBrandsLast30d.map((row) => (
-                <li key={row.brand} className="flex justify-between gap-3">
-                  <span>{row.brand}</span>
-                  <span className="tabular-nums text-black/60">{row.scans}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-black/50">No brand sample yet.</p>
-          )}
-          <a href="/dashboard/brands" className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4">
-            Brand Intelligence →
-          </a>
-        </HqCard>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-4">
-        <HqCard title="Recent scans">
+        <HqCard title="Attention: recent scans">
           {m.recentScans.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -151,19 +209,17 @@ export default async function HqOverviewPage() {
                   <tr>
                     <th className="py-2 pr-3 font-medium">When</th>
                     <th className="py-2 pr-3 font-medium">Brand</th>
-                    <th className="py-2 pr-3 font-medium">Material</th>
-                    <th className="py-2 font-medium">NFP</th>
+                    <th className="py-2 font-medium">Material</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {m.recentScans.map((s) => (
+                  {m.recentScans.slice(0, 6).map((s) => (
                     <tr key={s.id} className="border-t border-black/5">
                       <td className="py-2 pr-3 text-black/50 whitespace-nowrap">
                         {s.scanned_at ? new Date(s.scanned_at).toLocaleString() : "—"}
                       </td>
                       <td className="py-2 pr-3">{s.brand || "—"}</td>
-                      <td className="py-2 pr-3">{s.fiber_primary || "—"}</td>
-                      <td className="py-2 tabular-nums">{s.natural_percent ?? "—"}</td>
+                      <td className="py-2">{s.fiber_primary || "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -171,36 +227,6 @@ export default async function HqOverviewPage() {
             </div>
           ) : (
             <p className="text-sm text-black/50">No recent scans returned.</p>
-          )}
-        </HqCard>
-        <HqCard title="Recent affiliate clicks">
-          {m.recentClickouts.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-[10px] uppercase tracking-wider text-black/40">
-                  <tr>
-                    <th className="py-2 pr-3 font-medium">When</th>
-                    <th className="py-2 pr-3 font-medium">Source</th>
-                    <th className="py-2 font-medium">Brand / product</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {m.recentClickouts.map((c) => (
-                    <tr key={`${c.source}-${c.id}`} className="border-t border-black/5">
-                      <td className="py-2 pr-3 text-black/50 whitespace-nowrap">
-                        {c.clicked_at ? new Date(c.clicked_at).toLocaleString() : "—"}
-                      </td>
-                      <td className="py-2 pr-3 capitalize">{c.source}</td>
-                      <td className="py-2">
-                        {c.brand || c.product_name || c.product_id || "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-sm text-black/50">No recent clickouts returned.</p>
           )}
         </HqCard>
       </div>

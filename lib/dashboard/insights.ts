@@ -168,14 +168,36 @@ export async function fetchInsightsBundle(workspaceId: string) {
 
   const supabase = getServerSupabase();
   let revenueConnected = false;
+  let revenueIsDemo = false;
   if (supabase && workspaceId) {
-    const { count } = await supabase
+    const { count: verifiedCount } = await supabase
       .from("hq_affiliate_transactions")
       .select("id", { count: "exact", head: true })
-      .eq("workspace_id", workspaceId);
-    revenueConnected = (count || 0) > 0;
+      .eq("workspace_id", workspaceId)
+      .neq("status", "demo");
+    revenueConnected = (verifiedCount || 0) > 0;
+
+    if (!revenueConnected) {
+      const { count: demoCount } = await supabase
+        .from("hq_affiliate_transactions")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .eq("status", "demo");
+      revenueIsDemo = (demoCount || 0) > 0;
+    }
   }
-  if (revenueConnected) {
+  if (revenueIsDemo) {
+    live = live.filter((i) => i.key !== "clicks_without_revenue");
+    live.unshift({
+      key: "revenue_demo_only",
+      title: "Revenue is demo data only",
+      explanation:
+        "Sample Rakuten rows are loaded for UI wiring. They must not drive commercial conclusions.",
+      severity: "critical",
+      recommendedAction: "Import a verified Rakuten transaction report under Commerce.",
+      supportingMetric: {},
+    });
+  } else if (revenueConnected) {
     live = live.filter((i) => i.key !== "clicks_without_revenue");
     live.unshift({
       key: "revenue_connected",
@@ -200,16 +222,30 @@ export async function fetchInsightsBundle(workspaceId: string) {
     stored = data || [];
   }
 
-  return { metrics, live, stored, revenueConnected };
+  return { metrics, live, stored, revenueConnected, revenueIsDemo };
 }
 
 export function buildExecutiveBriefing(
   name: string,
   metrics: HqOverviewMetrics,
-  insights: HqInsight[]
+  insights: HqInsight[],
+  revenue?: { revenueConnected?: boolean; revenueIsDemo?: boolean; commission7d?: number | null }
 ): string[] {
   const hour = new Date().getHours();
   const hello = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const revenueLine = revenue?.revenueIsDemo
+    ? "Revenue: demo data only — replace with verified affiliate reporting."
+    : revenue?.revenueConnected
+      ? `Verified commission (7d): ${
+          revenue.commission7d != null
+            ? revenue.commission7d.toLocaleString(undefined, {
+                style: "currency",
+                currency: "USD",
+                maximumFractionDigits: 0,
+              })
+            : "connected"
+        }.`
+      : "Verified revenue: not connected.";
   const lines = [
     `${hello}, ${name}.`,
     `Scans today: ${metrics.scansToday.value ?? "—"}. Yesterday: ${metrics.scansYesterday.value ?? "—"}.`,
@@ -217,7 +253,7 @@ export function buildExecutiveBriefing(
       (metrics.clickoutsLast7d.value || 0) +
       (metrics.scannerClickoutsLast7d.value || 0) +
       (metrics.editorialClickoutsLast7d.value || 0)
-    }. Revenue: not connected.`,
+    }. ${revenueLine}`,
   ];
   if (metrics.topMaterialsLast30d[0]) {
     lines.push(

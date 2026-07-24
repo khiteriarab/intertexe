@@ -5,6 +5,7 @@ import { HqCard } from "../../components/HqUi";
 
 export function RevenueImportClient({
   revenueConnected,
+  revenueIsDemo = false,
   commission7d,
   sales7d,
   transactions7d,
@@ -12,6 +13,7 @@ export function RevenueImportClient({
   sales30d,
 }: {
   revenueConnected: boolean;
+  revenueIsDemo?: boolean;
   commission7d: number | null;
   sales7d: number | null;
   transactions7d: number | null;
@@ -70,33 +72,44 @@ export function RevenueImportClient({
 
   return (
     <div className="grid md:grid-cols-2 gap-4 mb-6">
-      <HqCard title="Revenue">
+      <HqCard title="Verified revenue">
         <ul className="space-y-2 text-sm text-black/70">
           <li className="flex justify-between gap-3">
             <span>Status</span>
-            <span>{revenueConnected ? "Connected" : "Not connected — import a report"}</span>
+            <span>
+              {revenueIsDemo
+                ? "Demo data only"
+                : revenueConnected
+                  ? "Connected"
+                  : "Not connected — import a report"}
+            </span>
           </li>
           <li className="flex justify-between gap-3">
             <span>Commission (7d)</span>
-            <span className="tabular-nums">{money(commission7d)}</span>
+            <span className="tabular-nums">{revenueIsDemo ? "—" : money(commission7d)}</span>
           </li>
           <li className="flex justify-between gap-3">
             <span>Sales (7d)</span>
-            <span className="tabular-nums">{money(sales7d)}</span>
+            <span className="tabular-nums">{revenueIsDemo ? "—" : money(sales7d)}</span>
           </li>
           <li className="flex justify-between gap-3">
             <span>Transactions (7d)</span>
-            <span className="tabular-nums">{transactions7d ?? "—"}</span>
+            <span className="tabular-nums">{revenueIsDemo ? "—" : transactions7d ?? "—"}</span>
           </li>
           <li className="flex justify-between gap-3">
             <span>Commission (30d)</span>
-            <span className="tabular-nums">{money(commission30d)}</span>
+            <span className="tabular-nums">{revenueIsDemo ? "—" : money(commission30d)}</span>
           </li>
           <li className="flex justify-between gap-3">
             <span>Sales (30d)</span>
-            <span className="tabular-nums">{money(sales30d)}</span>
+            <span className="tabular-nums">{revenueIsDemo ? "—" : money(sales30d)}</span>
           </li>
         </ul>
+        {revenueIsDemo ? (
+          <p className="mt-4 text-xs text-amber-900/80 leading-relaxed">
+            Demo data is excluded from these totals. Replace with verified affiliate reporting.
+          </p>
+        ) : null}
       </HqCard>
 
       <HqCard title="Import Rakuten report">
