@@ -9,7 +9,7 @@ import { getQualityTier, getTierColor, getTierAccent } from "../../../../lib/qua
 import { getCuratedScore } from "../../../../lib/curated-quality-scores";
 import { getBrandProfile, getTierLabel } from "../../../../lib/brand-profiles";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

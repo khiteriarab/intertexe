@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CollectionsEditClient } from "./CollectionsEditClient";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Shop The Edit | INTERTEXE Collections",

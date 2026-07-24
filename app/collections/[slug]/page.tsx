@@ -4,7 +4,7 @@ import { getCollectionConfig } from "../../../lib/collection-pages";
 import { fetchCollectionPageData } from "../../../lib/supabase-server";
 import CollectionClient from "./CollectionClient";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
 

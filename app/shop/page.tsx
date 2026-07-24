@@ -10,7 +10,7 @@ import { getShopBrands, getShopMeta } from "./actions";
 import { getCachedCatalogStatsMemo, getShopCatalogKnownTotal } from "../../lib/cached-catalog-stats";
 import { queryLiveCatalog } from "../../lib/catalog-direct-query";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Shop Natural Fiber Clothing | Silk, Cashmere, Linen, Wool",

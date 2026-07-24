@@ -12,7 +12,7 @@ import FabricProductGrid from "./FabricProductGrid";
 import EmailCapture from "../../components/EmailCapture";
 import { FiberEducationSection } from "../../components/FiberEducationSection";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const MAIN_FIBERS = ["silk", "cotton", "linen", "wool", "cashmere", "leather"];
 
@@ -642,6 +642,7 @@ function getParentFiber(slug: string): string | null {
   return config.fiber.toLowerCase();
 }
 
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

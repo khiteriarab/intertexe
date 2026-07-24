@@ -10,7 +10,7 @@ import { getBrandProfile } from "../../../lib/brand-profiles";
 import { displayNaturalFiberPercent } from "../../../lib/display-natural-fiber";
 import { DesignerShopSection } from "./DesignerShopSection";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { RewardsNewInGrid } from "./RewardsNewInGrid";
 import { getCachedRewardsNewInProducts } from "../../lib/rewards";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Intertexe Rewards | Know More, Earn More",

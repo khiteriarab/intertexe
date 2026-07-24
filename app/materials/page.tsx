@@ -11,7 +11,7 @@ import {
 } from "../../lib/catalog-stats-labels";
 import { fabricImages } from "../../lib/fabric-images";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const stats = await getCachedPlatformStats();

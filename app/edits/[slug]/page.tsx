@@ -4,7 +4,7 @@ import { getEditConfig } from "../../../lib/edit-pages";
 import { fetchEditPageData } from "../../../lib/supabase-server";
 import EditClient from "./EditClient";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
 

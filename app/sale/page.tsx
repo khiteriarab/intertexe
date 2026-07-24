@@ -3,7 +3,7 @@ import { getCachedSalePageData } from "../../lib/cached-catalog";
 import { CATALOG_STATS } from "../../lib/catalog-stats";
 import SaleClient from "./SaleClient";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Natural Fiber Sale | Silk, Cashmere, Linen On Sale",

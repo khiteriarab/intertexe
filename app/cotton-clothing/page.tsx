@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, XCircle, AlertTriangle, ShoppingBag, External
 import { fetchProductsByFiberAndCategory, fetchProductCount } from "../../lib/supabase-server";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 
-export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Cotton Clothing for Women",

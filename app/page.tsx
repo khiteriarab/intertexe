@@ -10,8 +10,8 @@ import {
 } from "../lib/catalog-stats-labels";
 import { HomePageContent } from "./components/HomeClient";
 
-/** Cached editorial homepage — rails precomputed in Supabase, stats cached server-side. */
-export const revalidate = 3600;
+/** Request-time homepage — avoid Vercel SSG hangs when Supabase Disk IO is elevated. */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [platformStats, brandStats] = await Promise.all([
