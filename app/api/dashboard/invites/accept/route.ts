@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getHqSession } from "../../../../lib/dashboard/auth";
-import { getServerSupabase } from "../../../../lib/supabase-service-client";
+import { getHqSession } from "../../../../../lib/dashboard/auth";
+import { getServerSupabase } from "../../../../../lib/supabase-service-client";
 
 export const dynamic = "force-dynamic";
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getHqSession } from "../../../../lib/dashboard/auth";
-import { parseAffiliateReport } from "../../../../lib/dashboard/revenue";
-import { getServerSupabase } from "../../../../lib/supabase-service-client";
+import { getHqSession } from "../../../../../lib/dashboard/auth";
+import { parseAffiliateReport } from "../../../../../lib/dashboard/revenue";
+import { getServerSupabase } from "../../../../../lib/supabase-service-client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

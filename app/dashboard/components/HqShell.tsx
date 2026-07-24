@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { HQ_NAV } from "../../../lib/dashboard/auth";
+import { HQ_NAV } from "../../../lib/dashboard/constants";
 
 type Props = {
   children: React.ReactNode;

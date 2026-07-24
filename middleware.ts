@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { HQ_SESSION_COOKIE, isHqHost } from "./lib/dashboard/auth";
+import { HQ_SESSION_COOKIE, isHqHost } from "./lib/dashboard/constants";
 
 const API_CACHE_HEADERS: Record<string, string> = {
   "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
