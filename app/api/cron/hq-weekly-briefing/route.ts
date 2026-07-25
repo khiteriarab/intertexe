@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
   const [metrics, commerce, acquisition, syncOps] = await Promise.all([
     fetchHqOverviewMetrics(),
     fetchHqCommercePage(workspace.id),
-    fetchHqAcquisitionReport(),
+    loadAcquisitionSafe(),
     loadNightlySyncOps(supabase),
   ]);
 
