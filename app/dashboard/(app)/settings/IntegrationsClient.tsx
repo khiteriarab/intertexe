@@ -10,6 +10,8 @@ type ConnectionInfo = {
   expiresAt: string | null;
   lastSyncAt: string | null;
   lastSyncLabel: string;
+  lastSuccessfulSyncAt?: string | null;
+  lastSuccessfulSyncLabel?: string | null;
   lastSyncStatus: string | null;
   lastSyncError: string | null;
 };
@@ -275,20 +277,42 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                   <p>
                     <span className="text-black/40">Last sync:</span>{" "}
                     {card.connection?.lastSyncLabel || "Never"}
+                    {card.connection?.lastSyncStatus ? (
+                      <span className="text-black/35">
+                        {" "}
+                        ({card.connection.lastSyncStatus === "success"
+                          ? "ok"
+                          : card.connection.lastSyncStatus === "warning"
+                            ? "warning"
+                            : card.connection.lastSyncStatus === "error"
+                              ? "failed"
+                              : card.connection.lastSyncStatus}
+                        )
+                      </span>
+                    ) : null}
                   </p>
+                  {card.connection?.lastSuccessfulSyncLabel &&
+                  card.connection.lastSuccessfulSyncLabel !== "Never" ? (
+                    <p>
+                      <span className="text-black/40">Last successful sync:</span>{" "}
+                      {card.connection.lastSuccessfulSyncLabel}
+                    </p>
+                  ) : linked ? (
+                    <p className="text-black/40">Last successful sync: not yet recorded</p>
+                  ) : null}
                   {card.connection?.accountLabel ? (
                     <p>
                       <span className="text-black/40">Account:</span> {card.connection.accountLabel}
                     </p>
                   ) : null}
-                  {card.connection?.lastSyncError ? (
-                    <p
-                      className={`leading-relaxed ${
-                        card.connection.lastSyncStatus === "warning" ? "text-amber-900" : "text-red-700"
-                      }`}
-                    >
-                      {card.connection.lastSyncStatus === "warning" ? "Setup / sync note: " : "Sync error: "}
-                      {card.connection.lastSyncError}
+                  {card.connection?.lastSyncStatus === "error" && card.connection.lastSyncError ? (
+                    <p className="text-red-700 leading-relaxed">
+                      Sync failed: {card.connection.lastSyncError}
+                    </p>
+                  ) : null}
+                  {card.connection?.lastSyncStatus === "warning" && card.connection.lastSyncError ? (
+                    <p className="text-amber-900 leading-relaxed">
+                      Sync warning: {card.connection.lastSyncError}
                     </p>
                   ) : null}
                   {(card.setupHints || []).map((hint) => (

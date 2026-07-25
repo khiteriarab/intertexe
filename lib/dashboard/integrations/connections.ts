@@ -259,15 +259,27 @@ export async function syncProvider(
       ? (result.metrics.setupWarnings as string[])
       : [];
     const hasHardError = Boolean(result.metrics?.ga4Error || result.metrics?.gscError);
+    const fullySuccessful = !hasHardError && setupWarnings.length === 0;
+    const nowIso = new Date().toISOString();
+    const nextMeta = {
+      ...(connection.metadata || {}),
+      ...(fullySuccessful ? { lastSuccessfulSyncAt: nowIso } : {}),
+      lastSyncMetricsSummary: {
+        ga4Sessions7d: result.metrics?.ga4Sessions7d ?? null,
+        gscClicks7d: result.metrics?.gscClicks7d ?? null,
+        gscImpressions7d: result.metrics?.gscImpressions7d ?? null,
+      },
+    };
     const warningText = setupWarnings.length ? setupWarnings.join(" · ").slice(0, 500) : null;
     await supabase
       .from("hq_oauth_connections")
       .update({
-        last_sync_at: new Date().toISOString(),
-        last_sync_status: hasHardError ? "warning" : setupWarnings.length ? "warning" : "success",
-        last_sync_error: warningText,
+        last_sync_at: nowIso,
+        last_sync_status: hasHardError || setupWarnings.length ? "warning" : "success",
+        last_sync_error: fullySuccessful ? null : warningText,
         status: "connected",
-        updated_at: new Date().toISOString(),
+        metadata: nextMeta,
+        updated_at: nowIso,
       })
       .eq("id", connection.id);
     await markDataSources(supabase, workspaceId, provider, "connected");
@@ -278,7 +290,7 @@ export async function syncProvider(
     const authFail =
       /invalid_grant|access_denied|invalid_token|token.?revoked|token.?expired|unauthorized_client/i.test(
         message
-      ) || /\b(401|403)\b/.test(message);
+      );
     await supabase
       .from("hq_oauth_connections")
       .update({

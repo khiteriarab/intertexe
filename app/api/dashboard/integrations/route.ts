@@ -36,19 +36,20 @@ export async function GET() {
     const setupHints: string[] = [];
     if (def.id === "google") {
       if (!ga4Configured) {
-        setupHints.push(
-          "Add GA4_PROPERTY_ID in Vercel Production to pull Google Analytics (e.g. properties/123456789)."
-        );
+        setupHints.push("Add GA4_PROPERTY_ID in Vercel Production (numeric property ID).");
       }
       if (!gscConfigured) {
         setupHints.push(
-          "SEARCH_CONSOLE_SITE_URL unset — sync will default to https://www.intertexe.com/. Set it if your Search Console property URL differs."
+          "SEARCH_CONSOLE_SITE_URL unset — sync defaults to sc-domain:intertexe.com."
         );
       }
     }
     if (!encryptionConfigured) {
       setupHints.push("Add HQ_TOKEN_ENCRYPTION_KEY in Vercel Production before connecting.");
     }
+    const meta = (conn?.metadata || {}) as Record<string, unknown>;
+    const lastSuccessfulSyncAt =
+      typeof meta.lastSuccessfulSyncAt === "string" ? meta.lastSuccessfulSyncAt : null;
     return {
       id: def.id,
       label: def.label,
@@ -65,6 +66,8 @@ export async function GET() {
             expiresAt: conn.expires_at,
             lastSyncAt: conn.last_sync_at,
             lastSyncLabel: formatLastSyncUtc(conn.last_sync_at),
+            lastSuccessfulSyncAt,
+            lastSuccessfulSyncLabel: formatLastSyncUtc(lastSuccessfulSyncAt),
             lastSyncStatus: conn.last_sync_status,
             lastSyncError: conn.last_sync_error,
           }
@@ -112,12 +115,6 @@ export async function GET() {
       SEARCH_CONSOLE_SITE_URL: gscConfigured,
       GOOGLE_OAUTH_CLIENT_ID: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID?.trim()),
       GOOGLE_OAUTH_CLIENT_SECRET: Boolean(process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()),
-    },
-    // Non-secret config so founders can confirm property targeting without opening Vercel.
-    config: {
-      GA4_PROPERTY_ID: process.env.GA4_PROPERTY_ID?.trim() || null,
-      SEARCH_CONSOLE_SITE_URL:
-        process.env.SEARCH_CONSOLE_SITE_URL?.trim() || "https://www.intertexe.com/ (default)",
     },
   });
 }
