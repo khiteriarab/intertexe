@@ -37,6 +37,67 @@ function normalizeGa4PropertyId(raw: string): string {
   return v.startsWith("properties/") ? v.slice("properties/".length) : v;
 }
 
+function fmtDate(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function daysAgo(n: number) {
+  return new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+}
+
+type GaRow = {
+  dimensionValues?: Array<{ value?: string }>;
+  metricValues?: Array<{ value?: string }>;
+};
+
+async function ga4Report(
+  accessToken: string,
+  propertyId: string,
+  body: Record<string, unknown>,
+  label: string
+) {
+  const res = await fetch(
+    `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      redirect: "manual",
+    }
+  );
+  const json = await readGoogleJson(res, label);
+  return { ok: res.ok, json };
+}
+
+async function gscQuery(
+  accessToken: string,
+  siteUrl: string,
+  body: Record<string, unknown>,
+  label: string
+) {
+  const res = await fetch(
+    `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      redirect: "manual",
+    }
+  );
+  const json = await readGoogleJson(res, label);
+  return { ok: res.ok, json };
+}
+
+function metricAt(row: GaRow | undefined, idx: number) {
+  return Number(row?.metricValues?.[idx]?.value || 0);
+}
+
 export const googleAdapter: ProviderAdapter = {
   id: "google",
 
@@ -132,51 +193,256 @@ export const googleAdapter: ProviderAdapter = {
     ).trim();
 
     const setupWarnings: string[] = [];
+    const periods = {
+      today: { startDate: fmtDate(daysAgo(0)), endDate: fmtDate(daysAgo(0)) },
+      trailing7d: { startDate: fmtDate(daysAgo(6)), endDate: fmtDate(daysAgo(0)) },
+      prior7d: { startDate: fmtDate(daysAgo(13)), endDate: fmtDate(daysAgo(7)) },
+      trailing30d: { startDate: fmtDate(daysAgo(29)), endDate: fmtDate(daysAgo(0)) },
+    };
+
     const metrics: Record<string, unknown> = {
       syncedAt: new Date().toISOString(),
       ga4PropertyIdUsed: propertyId || null,
       searchConsoleSiteUrlUsed: siteUrl,
+      periods,
+      comparisonNote:
+        "trailing7d vs prior7d are matching 7-day windows. Percent changes omitted when prior=0 or data incomplete.",
     };
     const raw: Record<string, unknown> = {};
 
     if (propertyId) {
-      const end = new Date();
-      const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const fmt = (d: Date) => d.toISOString().slice(0, 10);
-      const gaRes = await fetch(
-        `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
+      const totals = await ga4Report(
+        accessToken,
+        propertyId,
         {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            dateRanges: [{ startDate: fmt(start), endDate: fmt(end) }],
-            metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "screenPageViews" }],
-          }),
-          redirect: "manual",
-        }
+          dateRanges: [
+            { startDate: periods.trailing7d.startDate, endDate: periods.trailing7d.endDate },
+            { startDate: periods.prior7d.startDate, endDate: periods.prior7d.endDate },
+            { startDate: periods.today.startDate, endDate: periods.today.endDate },
+            { startDate: periods.trailing30d.startDate, endDate: periods.trailing30d.endDate },
+          ],
+          metrics: [
+            { name: "sessions" },
+            { name: "activeUsers" },
+            { name: "screenPageViews" },
+            { name: "engagementRate" },
+            { name: "conversions" },
+          ],
+        },
+        `GA4 totals (properties/${propertyId})`
       );
-      const gaJson = await readGoogleJson(gaRes, `GA4 runReport (properties/${propertyId})`);
-      raw.ga4 = gaJson;
-      if (gaRes.ok) {
-        const values =
-          (gaJson as { rows?: Array<{ metricValues?: Array<{ value?: string }> }> })?.rows?.[0]
-            ?.metricValues || [];
-        metrics.ga4Sessions7d = Number(values[0]?.value || 0);
-        metrics.ga4Users7d = Number(values[1]?.value || 0);
-        metrics.ga4PageViews7d = Number(values[2]?.value || 0);
+      raw.ga4Totals = totals.json;
+
+      if (totals.ok) {
+        const rows = (totals.json.rows || []) as GaRow[];
+        // With multiple dateRanges and no dimensions, GA4 returns one row with metricValues
+        // duplicated per range OR separate rows — handle both via totals.json.rows + metricHeaders.
+        const rangeCount = 4;
+        const metricCount = 5;
+        if (rows.length === 1 && (rows[0].metricValues || []).length >= rangeCount * metricCount) {
+          const mv = rows[0].metricValues || [];
+          const pick = (rangeIdx: number, metricIdx: number) =>
+            Number(mv[rangeIdx * metricCount + metricIdx]?.value || 0);
+          metrics.ga4Sessions7d = pick(0, 0);
+          metrics.ga4Users7d = pick(0, 1);
+          metrics.ga4PageViews7d = pick(0, 2);
+          metrics.ga4EngagementRate7d = pick(0, 3);
+          metrics.ga4Conversions7d = pick(0, 4);
+          metrics.ga4SessionsPrev7d = pick(1, 0);
+          metrics.ga4UsersPrev7d = pick(1, 1);
+          metrics.ga4PageViewsPrev7d = pick(1, 2);
+          metrics.ga4EngagementRatePrev7d = pick(1, 3);
+          metrics.ga4ConversionsPrev7d = pick(1, 4);
+          metrics.ga4SessionsToday = pick(2, 0);
+          metrics.ga4UsersToday = pick(2, 1);
+          metrics.ga4PageViewsToday = pick(2, 2);
+          metrics.ga4Sessions30d = pick(3, 0);
+          metrics.ga4Users30d = pick(3, 1);
+          metrics.ga4PageViews30d = pick(3, 2);
+        } else {
+          // Fallback: one request per range if multi-range shape unexpected
+          const windows: Array<{ key: string; range: { startDate: string; endDate: string } }> = [
+            { key: "7d", range: periods.trailing7d },
+            { key: "prev7d", range: periods.prior7d },
+            { key: "today", range: periods.today },
+            { key: "30d", range: periods.trailing30d },
+          ];
+          for (const w of windows) {
+            const one = await ga4Report(
+              accessToken,
+              propertyId,
+              {
+                dateRanges: [w.range],
+                metrics: [
+                  { name: "sessions" },
+                  { name: "activeUsers" },
+                  { name: "screenPageViews" },
+                  { name: "engagementRate" },
+                  { name: "conversions" },
+                ],
+              },
+              `GA4 ${w.key}`
+            );
+            raw[`ga4_${w.key}`] = one.json;
+            if (!one.ok) {
+              const errObj = one.json.error as { message?: string } | undefined;
+              const msg = errObj?.message || `GA4 ${w.key} failed`;
+              metrics.ga4Error = msg;
+              setupWarnings.push(msg);
+              continue;
+            }
+            const row = ((one.json.rows || []) as GaRow[])[0];
+            const sessions = metricAt(row, 0);
+            const users = metricAt(row, 1);
+            const pageviews = metricAt(row, 2);
+            const eng = metricAt(row, 3);
+            const conv = metricAt(row, 4);
+            if (w.key === "7d") {
+              metrics.ga4Sessions7d = sessions;
+              metrics.ga4Users7d = users;
+              metrics.ga4PageViews7d = pageviews;
+              metrics.ga4EngagementRate7d = eng;
+              metrics.ga4Conversions7d = conv;
+            } else if (w.key === "prev7d") {
+              metrics.ga4SessionsPrev7d = sessions;
+              metrics.ga4UsersPrev7d = users;
+              metrics.ga4PageViewsPrev7d = pageviews;
+              metrics.ga4EngagementRatePrev7d = eng;
+              metrics.ga4ConversionsPrev7d = conv;
+            } else if (w.key === "today") {
+              metrics.ga4SessionsToday = sessions;
+              metrics.ga4UsersToday = users;
+              metrics.ga4PageViewsToday = pageviews;
+            } else {
+              metrics.ga4Sessions30d = sessions;
+              metrics.ga4Users30d = users;
+              metrics.ga4PageViews30d = pageviews;
+            }
+          }
+        }
       } else {
-        const errObj = gaJson.error as { message?: string } | undefined;
-        const msg =
-          errObj?.message ||
-          `GA4 report failed for properties/${propertyId} — confirm GA4_PROPERTY_ID and account access`;
-        metrics.ga4Error = msg;
-        setupWarnings.push(msg);
+        // Retry without engagementRate/conversions — some properties lack those metrics.
+        const basic = await ga4Report(
+          accessToken,
+          propertyId,
+          {
+            dateRanges: [
+              { startDate: periods.trailing7d.startDate, endDate: periods.trailing7d.endDate },
+              { startDate: periods.prior7d.startDate, endDate: periods.prior7d.endDate },
+            ],
+            metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "screenPageViews" }],
+          },
+          `GA4 basic totals (properties/${propertyId})`
+        );
+        raw.ga4Basic = basic.json;
+        if (basic.ok) {
+          setupWarnings.push(
+            "GA4 engagementRate/conversions unavailable for this property — using sessions/users/pageviews only."
+          );
+          const windows = [
+            { key: "7d" as const, range: periods.trailing7d },
+            { key: "prev7d" as const, range: periods.prior7d },
+          ];
+          for (const w of windows) {
+            const one = await ga4Report(
+              accessToken,
+              propertyId,
+              {
+                dateRanges: [w.range],
+                metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "screenPageViews" }],
+              },
+              `GA4 basic ${w.key}`
+            );
+            const row = ((one.json.rows || []) as GaRow[])[0];
+            if (w.key === "7d") {
+              metrics.ga4Sessions7d = metricAt(row, 0);
+              metrics.ga4Users7d = metricAt(row, 1);
+              metrics.ga4PageViews7d = metricAt(row, 2);
+            } else {
+              metrics.ga4SessionsPrev7d = metricAt(row, 0);
+              metrics.ga4UsersPrev7d = metricAt(row, 1);
+              metrics.ga4PageViewsPrev7d = metricAt(row, 2);
+            }
+          }
+        } else {
+          const errObj = (totals.json.error || basic.json.error) as { message?: string } | undefined;
+          const msg =
+            errObj?.message ||
+            `GA4 report failed for properties/${propertyId} — confirm GA4_PROPERTY_ID and account access`;
+          metrics.ga4Error = msg;
+          setupWarnings.push(msg);
+        }
+      }
+
+      // Landing pages (trailing 7d)
+      const landings = await ga4Report(
+        accessToken,
+        propertyId,
+        {
+          dateRanges: [periods.trailing7d],
+          dimensions: [{ name: "landingPagePlusQueryString" }],
+          metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "engagementRate" }],
+          orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+          limit: 8,
+        },
+        `GA4 landings (properties/${propertyId})`
+      );
+      raw.ga4Landings = landings.json;
+      if (landings.ok) {
+        metrics.ga4TopLandingPages = ((landings.json.rows || []) as GaRow[]).map((r) => ({
+          page: r.dimensionValues?.[0]?.value || "(not set)",
+          sessions: metricAt(r, 0),
+          users: metricAt(r, 1),
+          engagementRate: metricAt(r, 2),
+        }));
+      } else {
+        // Retry without engagementRate
+        const landingsBasic = await ga4Report(
+          accessToken,
+          propertyId,
+          {
+            dateRanges: [periods.trailing7d],
+            dimensions: [{ name: "landingPagePlusQueryString" }],
+            metrics: [{ name: "sessions" }, { name: "activeUsers" }],
+            orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+            limit: 8,
+          },
+          `GA4 landings basic`
+        );
+        raw.ga4LandingsBasic = landingsBasic.json;
+        if (landingsBasic.ok) {
+          metrics.ga4TopLandingPages = ((landingsBasic.json.rows || []) as GaRow[]).map((r) => ({
+            page: r.dimensionValues?.[0]?.value || "(not set)",
+            sessions: metricAt(r, 0),
+            users: metricAt(r, 1),
+          }));
+        }
+      }
+
+      // Source / medium
+      const sources = await ga4Report(
+        accessToken,
+        propertyId,
+        {
+          dateRanges: [periods.trailing7d],
+          dimensions: [{ name: "sessionSourceMedium" }],
+          metrics: [{ name: "sessions" }, { name: "activeUsers" }],
+          orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+          limit: 8,
+        },
+        `GA4 sources (properties/${propertyId})`
+      );
+      raw.ga4Sources = sources.json;
+      if (sources.ok) {
+        metrics.ga4TopSources = ((sources.json.rows || []) as GaRow[]).map((r) => ({
+          sourceMedium: r.dimensionValues?.[0]?.value || "(not set)",
+          sessions: metricAt(r, 0),
+          users: metricAt(r, 1),
+        }));
       }
     } else {
-      const msg = "Setup required: set GA4_PROPERTY_ID in Vercel Production (numeric ID, e.g. 525510203)";
+      const msg =
+        "Setup required: set GA4_PROPERTY_ID in Vercel Production (numeric ID, e.g. 525510203)";
       metrics.ga4Note = msg;
       setupWarnings.push(msg);
     }
@@ -187,45 +453,129 @@ export const googleAdapter: ProviderAdapter = {
       );
     }
 
-    const scEnd = new Date();
-    const scStart = new Date(scEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const scRes = await fetch(
-      `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          startDate: scStart.toISOString().slice(0, 10),
-          endDate: scEnd.toISOString().slice(0, 10),
-          dimensions: ["query"],
+    // Search Console: queries + pages for trailing and prior 7d
+    async function scWindow(
+      label: string,
+      range: { startDate: string; endDate: string },
+      dimension: "query" | "page"
+    ) {
+      return gscQuery(
+        accessToken,
+        siteUrl,
+        {
+          startDate: range.startDate,
+          endDate: range.endDate,
+          dimensions: [dimension],
           rowLimit: 10,
-        }),
-        redirect: "manual",
-      }
-    );
-    const scJson = await readGoogleJson(scRes, `Search Console query (${siteUrl})`);
-    raw.searchConsole = scJson;
-    if (scRes.ok) {
-      const rows = Array.isArray(scJson.rows) ? scJson.rows : [];
-      metrics.gscClicks7d = rows.reduce((s: number, r: { clicks?: number }) => s + Number(r.clicks || 0), 0);
-      metrics.gscImpressions7d = rows.reduce(
-        (s: number, r: { impressions?: number }) => s + Number(r.impressions || 0),
-        0
+        },
+        `Search Console ${dimension} ${label}`
       );
-      metrics.gscTopQueries = rows.slice(0, 5).map((r: { keys?: string[]; clicks?: number }) => ({
-        query: r.keys?.[0],
-        clicks: r.clicks,
-      }));
+    }
+
+    const [scQueries7d, scQueriesPrev, scPages7d, scPagesPrev] = await Promise.all([
+      scWindow("7d", periods.trailing7d, "query"),
+      scWindow("prev7d", periods.prior7d, "query"),
+      scWindow("7d", periods.trailing7d, "page"),
+      scWindow("prev7d", periods.prior7d, "page"),
+    ]);
+    raw.searchConsoleQueries7d = scQueries7d.json;
+    raw.searchConsoleQueriesPrev7d = scQueriesPrev.json;
+    raw.searchConsolePages7d = scPages7d.json;
+    raw.searchConsolePagesPrev7d = scPagesPrev.json;
+
+    function mapGscRows(json: Record<string, unknown>, keyName: "query" | "page") {
+      const rows = Array.isArray(json.rows) ? json.rows : [];
+      return rows.map(
+        (r: {
+          keys?: string[];
+          clicks?: number;
+          impressions?: number;
+          ctr?: number;
+          position?: number;
+        }) => ({
+          [keyName]: r.keys?.[0] || "",
+          clicks: Number(r.clicks || 0),
+          impressions: Number(r.impressions || 0),
+          ctr: Number(r.ctr || 0),
+          position: Number(r.position || 0),
+        })
+      );
+    }
+
+    function sumGsc(json: Record<string, unknown>) {
+      const rows = Array.isArray(json.rows) ? json.rows : [];
+      return {
+        clicks: rows.reduce((s: number, r: { clicks?: number }) => s + Number(r.clicks || 0), 0),
+        impressions: rows.reduce(
+          (s: number, r: { impressions?: number }) => s + Number(r.impressions || 0),
+          0
+        ),
+      };
+    }
+
+    if (scQueries7d.ok) {
+      const mapped = mapGscRows(scQueries7d.json, "query");
+      const totals = sumGsc(scQueries7d.json);
+      metrics.gscClicks7d = totals.clicks;
+      metrics.gscImpressions7d = totals.impressions;
+      metrics.gscTopQueries = mapped.slice(0, 8);
+      const ctrDenom = totals.impressions;
+      metrics.gscCtr7d = ctrDenom > 0 ? totals.clicks / ctrDenom : null;
+      const posRows = mapped.filter((r) => Number(r.position) > 0);
+      metrics.gscAvgPosition7d = posRows.length
+        ? posRows.reduce((s, r) => s + Number(r.position), 0) / posRows.length
+        : null;
     } else {
-      const errObj = scJson.error as { message?: string } | undefined;
+      const errObj = scQueries7d.json.error as { message?: string } | undefined;
       const msg =
         errObj?.message ||
         `Search Console query failed for ${siteUrl} — confirm SEARCH_CONSOLE_SITE_URL and site ownership`;
       metrics.gscError = msg;
       setupWarnings.push(msg);
+    }
+
+    if (scQueriesPrev.ok) {
+      const totals = sumGsc(scQueriesPrev.json);
+      metrics.gscClicksPrev7d = totals.clicks;
+      metrics.gscImpressionsPrev7d = totals.impressions;
+      metrics.gscTopQueriesPrev7d = mapGscRows(scQueriesPrev.json, "query").slice(0, 8);
+    }
+
+    if (scPages7d.ok) {
+      metrics.gscTopPages = mapGscRows(scPages7d.json, "page").slice(0, 8);
+    }
+    if (scPagesPrev.ok) {
+      metrics.gscTopPagesPrev7d = mapGscRows(scPagesPrev.json, "page").slice(0, 8);
+    }
+
+    // Meaningful query changes (appear in both or surge)
+    if (Array.isArray(metrics.gscTopQueries) && Array.isArray(metrics.gscTopQueriesPrev7d)) {
+      const prevMap = new Map(
+        (metrics.gscTopQueriesPrev7d as Array<{ query: string; clicks: number }>).map((r) => [
+          r.query,
+          r,
+        ])
+      );
+      metrics.gscQueryChanges = (
+        metrics.gscTopQueries as Array<{
+          query: string;
+          clicks: number;
+          impressions: number;
+          ctr: number;
+          position: number;
+        }>
+      )
+        .map((q) => {
+          const prev = prevMap.get(q.query);
+          return {
+            query: q.query,
+            clicks7d: q.clicks,
+            clicksPrev7d: prev?.clicks ?? null,
+            deltaClicks: prev ? q.clicks - prev.clicks : null,
+          };
+        })
+        .filter((q) => q.deltaClicks != null && q.deltaClicks !== 0)
+        .slice(0, 5);
     }
 
     if (setupWarnings.length) {

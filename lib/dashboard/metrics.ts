@@ -1,4 +1,5 @@
 import { getServerSupabase } from "../supabase-service-client";
+import { formatPeriodDelta } from "./period-delta";
 
 export type HqCountResult = {
   value: number | null;
@@ -66,11 +67,7 @@ export function formatCount(n: number | null | undefined): string {
 }
 
 export function formatDelta(current: number | null, previous: number | null): string | null {
-  if (current == null || previous == null) return null;
-  const delta = current - previous;
-  if (delta === 0) return "flat vs prior period";
-  const sign = delta > 0 ? "+" : "";
-  return `${sign}${delta.toLocaleString("en-US")} vs prior period`;
+  return formatPeriodDelta(current, previous, { periodLabel: "vs prior period" });
 }
 
 export type HqOverviewMetrics = {
@@ -88,8 +85,11 @@ export type HqOverviewMetrics = {
   clickoutsYesterday: HqCountResult;
   clickoutsToday: HqCountResult;
   clickoutsLast7d: HqCountResult;
+  clickoutsPrev7d: HqCountResult;
   scannerClickoutsLast7d: HqCountResult;
+  scannerClickoutsPrev7d: HqCountResult;
   editorialClickoutsLast7d: HqCountResult;
+  editorialClickoutsPrev7d: HqCountResult;
   catalogProducts: HqCountResult;
   dppReady: HqCountResult;
   topMaterialsLast30d: Array<{ material: string; scans: number }>;
@@ -165,8 +165,11 @@ export async function fetchHqOverviewMetrics(): Promise<HqOverviewMetrics> {
     clickoutsYesterday: { value: null },
     clickoutsToday: { value: null },
     clickoutsLast7d: { value: null },
+    clickoutsPrev7d: { value: null },
     scannerClickoutsLast7d: { value: null },
+    scannerClickoutsPrev7d: { value: null },
     editorialClickoutsLast7d: { value: null },
+    editorialClickoutsPrev7d: { value: null },
     catalogProducts: { value: null },
     dppReady: { value: null },
     topMaterialsLast30d: [],
@@ -191,8 +194,11 @@ export async function fetchHqOverviewMetrics(): Promise<HqOverviewMetrics> {
     clickoutsToday,
     clickoutsYesterday,
     clickoutsLast7d,
+    clickoutsPrev7d,
     scannerClickoutsLast7d,
+    scannerClickoutsPrev7d,
     editorialClickoutsLast7d,
+    editorialClickoutsPrev7d,
     catalogProducts,
     dppReady,
     recentScansRes,
@@ -216,8 +222,11 @@ export async function fetchHqOverviewMetrics(): Promise<HqOverviewMetrics> {
     exactCount("user_product_clickouts", (q) => q.gte("clicked_at", iso(today))),
     exactCount("user_product_clickouts", (q) => q.gte("clicked_at", iso(yesterday)).lt("clicked_at", iso(today))),
     exactCount("user_product_clickouts", (q) => q.gte("clicked_at", iso(d7))),
+    exactCount("user_product_clickouts", (q) => q.gte("clicked_at", iso(d14)).lt("clicked_at", iso(d7))),
     exactCount("scanner_clickouts", (q) => q.gte("clicked_at", iso(d7))),
+    exactCount("scanner_clickouts", (q) => q.gte("clicked_at", iso(d14)).lt("clicked_at", iso(d7))),
     exactCount("editorial_clickouts", (q) => q.gte("clicked_at", iso(d7))),
+    exactCount("editorial_clickouts", (q) => q.gte("clicked_at", iso(d14)).lt("clicked_at", iso(d7))),
     exactCount("products", (q) => q.eq("approved", "yes").eq("is_active", true)),
     exactCount("products", (q) => q.eq("dpp_ready", true)),
     supabase
@@ -311,8 +320,11 @@ export async function fetchHqOverviewMetrics(): Promise<HqOverviewMetrics> {
     clickoutsYesterday,
     clickoutsToday,
     clickoutsLast7d,
+    clickoutsPrev7d,
     scannerClickoutsLast7d,
+    scannerClickoutsPrev7d,
     editorialClickoutsLast7d,
+    editorialClickoutsPrev7d,
     catalogProducts,
     dppReady,
     topMaterialsLast30d: topMaterials,

@@ -3,17 +3,20 @@ import { requireHqSession } from "../../../lib/dashboard/auth";
 import { fetchInsightsBundle } from "../../../lib/dashboard/insights";
 import { fetchGoogleDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
 import {
-  buildGreeting,
-  buildMorningHighlights,
-  buildMorningPulse,
-} from "../../../lib/dashboard/morning-briefing";
+  buildDeterministicInsights,
+  listFounderActions,
+  upsertFounderActionsFromInsights,
+} from "../../../lib/dashboard/action-center";
+import { buildGreeting, buildMorningPulse, insightToHighlight } from "../../../lib/dashboard/morning-briefing";
 import {
   fetchNightlySyncOps,
   formatDuration,
   statusBadgeClass,
 } from "../../../lib/dashboard/catalog-sync-ops";
 import { fetchHqCommercePage, formatCount } from "../../../lib/dashboard/metrics";
+import { getServerSupabase } from "../../../lib/supabase-service-client";
 import { HqCard, HqPageHeader } from "../components/HqUi";
+import { ActionCenterClient } from "./ActionCenterClient";
 
 export const metadata = { title: "Morning Briefing" };
 export const dynamic = "force-dynamic";
@@ -53,6 +56,7 @@ const MISSION_LANES = [
 
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
+  const supabase = getServerSupabase();
   const [{ metrics: m, live }, commerce, syncOps, google] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
@@ -65,6 +69,10 @@ export default async function HqOverviewPage() {
     (m.clickoutsLast7d.value || 0) +
     (m.scannerClickoutsLast7d.value || 0) +
     (m.editorialClickoutsLast7d.value || 0);
+  const totalClicksPrev7d =
+    (m.clickoutsPrev7d.value || 0) +
+    (m.scannerClickoutsPrev7d.value || 0) +
+    (m.editorialClickoutsPrev7d.value || 0);
 
   const pulse = buildMorningPulse({
     metrics: m,
@@ -72,25 +80,35 @@ export default async function HqOverviewPage() {
     commerce,
     syncLatest: syncOps.latest,
     totalClicks7d,
+    totalClicksPrev7d,
   });
-  const highlights = buildMorningHighlights({
+
+  const deterministic = buildDeterministicInsights({
     metrics: m,
     google,
     insights: live,
     commerce,
     syncLatest: syncOps.latest,
     totalClicks7d,
+    totalClicksPrev7d,
   });
 
+  let actions: Awaited<ReturnType<typeof listFounderActions>> = [];
+  if (supabase) {
+    await upsertFounderActionsFromInsights(supabase, session.workspaceId, deterministic);
+    actions = await listFounderActions(supabase, session.workspaceId);
+  }
+
+  const highlights = deterministic.slice(0, 7).map(insightToHighlight);
   const latest = syncOps.latest;
-  const opsNeedsAttention =
-    latest?.status === "failure" || latest?.status === "warning";
+  const opsNeedsAttention = latest?.status === "failure" || latest?.status === "warning";
+  const canAdmin = session.roles.some((r) => r === "founder" || r === "admin");
 
   return (
     <div>
       <HqPageHeader
         title="Today"
-        description="How is INTERTEXE performing — growth, engagement, commerce, and product health. Integrations stay in Settings; this page answers the mission."
+        description="Founder operating system for INTERTEXE — what changed, why it matters, what needs attention, and what to do next. Not a client SaaS dashboard."
         action={
           <a
             href="/api/dashboard/export?kind=overview"
@@ -117,27 +135,40 @@ export default async function HqOverviewPage() {
         <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-2">Morning briefing</p>
         <h2 className="text-2xl md:text-3xl font-medium tracking-tight">{buildGreeting(name)}</h2>
         <p className="text-sm text-black/55 mt-2 max-w-2xl leading-relaxed">
-          Read the pulse, then the highlights. Drill into Acquisition, Engagement, Commerce, or Product when a
-          number needs a decision.
+          Pulse uses explicit windows (Today / Trailing 7d). Week-over-week deltas omit % when the prior
+          period is zero or incomplete.
         </p>
       </HqCard>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         {pulse.map((item) => (
           <Link
-            key={item.label}
+            key={`${item.label}-${item.period}`}
             href={item.href || "/dashboard"}
             className="block bg-white border border-black/10 rounded-xl p-4 hover:border-black/25 transition-colors"
           >
-            <p className="text-[10px] tracking-[0.14em] uppercase text-black/45">{item.label}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] tracking-[0.14em] uppercase text-black/45">{item.label}</p>
+              {item.period ? (
+                <p className="text-[10px] tracking-[0.12em] uppercase text-black/35">{item.period}</p>
+              ) : null}
+            </div>
             <p className="text-2xl font-medium mt-2 tabular-nums">{item.value}</p>
-            {item.hint ? <p className="text-xs text-black/45 mt-1">{item.hint}</p> : null}
+            {item.hint ? <p className="text-xs text-black/45 mt-1 leading-snug">{item.hint}</p> : null}
           </Link>
         ))}
       </div>
 
+      <HqCard className="mb-6" title="Action center">
+        <p className="text-sm text-black/55 mb-4 leading-relaxed">
+          Prioritized queue for running INTERTEXE — Critical, Growth, Operational, Monitor. Metrics tell
+          you what happened; this is where you act.
+        </p>
+        <ActionCenterClient initialActions={actions} canAdmin={canAdmin} />
+      </HqCard>
+
       <HqCard className="mb-6" title="Highlights">
-        <ul className="space-y-3">
+        <ul className="space-y-4">
           {highlights.map((h) => (
             <li key={h.key} className="flex gap-3 text-sm leading-relaxed">
               <span
@@ -150,16 +181,31 @@ export default async function HqOverviewPage() {
                 }`}
                 aria-hidden
               />
-              <div>
-                <p className="text-black/80">{h.text}</p>
-                {h.href ? (
-                  <Link
-                    href={h.href}
-                    className="inline-block mt-1 text-[11px] tracking-widest uppercase text-black/45 hover:text-black underline-offset-2 hover:underline"
-                  >
-                    Open →
-                  </Link>
-                ) : null}
+              <div className="min-w-0">
+                <p className="font-medium text-black/85">{h.detail.title}</p>
+                <p className="text-black/60 mt-1">
+                  <span className="text-black/40">What changed:</span> {h.detail.whatChanged}
+                </p>
+                <p className="text-black/60 mt-1">
+                  <span className="text-black/40">Why:</span> {h.detail.whyItChanged}
+                </p>
+                <p className="text-black/60 mt-1">
+                  <span className="text-black/40">Attention:</span> {h.detail.attention}
+                </p>
+                <p className="text-black/70 mt-1">
+                  <span className="text-black/40">Next:</span> {h.detail.recommendedAction}
+                </p>
+                <p className="text-[11px] text-black/40 mt-2">
+                  Confidence {h.detail.confidence} · {h.detail.comparisonPeriod.replace(/_/g, " ")}
+                  {h.href ? (
+                    <>
+                      {" · "}
+                      <Link href={h.href} className="underline underline-offset-2 hover:text-black">
+                        Open section
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
               </div>
             </li>
           ))}
@@ -184,61 +230,9 @@ export default async function HqOverviewPage() {
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4 mb-6">
-        <HqCard title="Engagement signal (30d materials)">
-          {m.topMaterialsLast30d.length ? (
-            <ul className="space-y-2 text-sm">
-              {m.topMaterialsLast30d.slice(0, 5).map((row) => (
-                <li key={row.material} className="flex justify-between gap-3">
-                  <span>{row.material}</span>
-                  <span className="tabular-nums text-black/60">{row.scans}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-black/50">No fiber_primary sample yet.</p>
-          )}
-          <Link
-            href="/dashboard/scanner"
-            className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
-          >
-            Engagement / Scanner →
-          </Link>
-        </HqCard>
-
-        <HqCard title="Recent scans">
-          {m.recentScans.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-[10px] uppercase tracking-wider text-black/40">
-                  <tr>
-                    <th className="py-2 pr-3 font-medium">When</th>
-                    <th className="py-2 pr-3 font-medium">Brand</th>
-                    <th className="py-2 font-medium">Material</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {m.recentScans.slice(0, 6).map((s) => (
-                    <tr key={s.id} className="border-t border-black/5">
-                      <td className="py-2 pr-3 text-black/50 whitespace-nowrap">
-                        {s.scanned_at ? new Date(s.scanned_at).toLocaleString() : "—"}
-                      </td>
-                      <td className="py-2 pr-3">{s.brand || "—"}</td>
-                      <td className="py-2">{s.fiber_primary || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-sm text-black/50">No recent scans returned.</p>
-          )}
-        </HqCard>
-      </div>
-
       <HqCard
         title="Product health"
-        className={opsNeedsAttention ? "border-amber-300" : undefined}
+        className={opsNeedsAttention ? "border-amber-300 mb-6" : "mb-6"}
       >
         {latest ? (
           <div className="space-y-3">
@@ -264,16 +258,11 @@ export default async function HqOverviewPage() {
               href="/dashboard/operations"
               className="inline-block text-xs tracking-widest uppercase underline underline-offset-4"
             >
-              Full sync history & founder reports →
+              Full sync history →
             </Link>
           </div>
         ) : (
-          <p className="text-sm text-black/50">
-            Awaiting first monitored nightly run.{" "}
-            <Link href="/dashboard/operations" className="underline underline-offset-2">
-              Operations →
-            </Link>
-          </p>
+          <p className="text-sm text-black/50">Awaiting first monitored nightly run.</p>
         )}
       </HqCard>
     </div>

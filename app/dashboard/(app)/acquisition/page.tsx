@@ -110,34 +110,112 @@ export default async function HqAcquisitionPage() {
       <HqCard className="mb-6" title="Web discovery (Google)">
         {google.connected ? (
           <>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
+              Trailing 7d vs prior 7d · Today / 30d where available
+            </p>
             <HqMetricGrid
               items={[
                 {
                   label: "Sessions (7d)",
                   value: formatCount(google.ga4Sessions7d),
-                  hint: "GA4",
+                  hint: google.deltas.sessions7d.label || "GA4",
                 },
                 {
                   label: "Users (7d)",
                   value: formatCount(google.ga4Users7d),
-                  hint: "GA4",
+                  hint: google.deltas.users7d.label || "GA4",
                 },
                 {
                   label: "Organic clicks (7d)",
                   value: formatCount(google.gscClicks7d),
-                  hint: "Search Console",
+                  hint: google.deltas.gscClicks7d.label || "Search Console",
                 },
                 {
                   label: "Organic impressions (7d)",
                   value: formatCount(google.gscImpressions7d),
-                  hint: "Search Console",
+                  hint: google.deltas.gscImpressions7d.label || "Search Console",
                 },
               ]}
             />
+            <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Sessions today</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(google.ga4SessionsToday)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Users (30d)</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(google.ga4Users30d)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Engagement rate (7d)</p>
+                <p className="tabular-nums font-medium mt-1">
+                  {google.ga4EngagementRate7d == null
+                    ? "—"
+                    : `${(google.ga4EngagementRate7d * 100).toFixed(1)}%`}
+                </p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Conversions (7d)</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(google.ga4Conversions7d)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Avg CTR (7d)</p>
+                <p className="tabular-nums font-medium mt-1">
+                  {google.gscCtr7d == null ? "—" : `${(google.gscCtr7d * 100).toFixed(1)}%`}
+                </p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Avg position (7d)</p>
+                <p className="tabular-nums font-medium mt-1">
+                  {google.gscAvgPosition7d == null ? "—" : google.gscAvgPosition7d.toFixed(1)}
+                </p>
+              </div>
+            </div>
+
             <div className="mt-5 grid md:grid-cols-2 gap-4">
               <div>
                 <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
-                  Top search queries
+                  Top landing pages (7d)
+                </p>
+                {google.ga4TopLandingPages.length ? (
+                  <ul className="space-y-2 text-sm">
+                    {google.ga4TopLandingPages.map((p, i) => (
+                      <li key={`${p.page}-${i}`} className="flex justify-between gap-3">
+                        <span className="truncate" title={p.page}>
+                          {p.page}
+                        </span>
+                        <span className="tabular-nums text-black/50 shrink-0">
+                          {formatCount(p.sessions)} sess
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-black/50">No landing pages in latest sync yet.</p>
+                )}
+              </div>
+              <div>
+                <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                  Top sources / medium (7d)
+                </p>
+                {google.ga4TopSources.length ? (
+                  <ul className="space-y-2 text-sm">
+                    {google.ga4TopSources.map((s, i) => (
+                      <li key={`${s.sourceMedium}-${i}`} className="flex justify-between gap-3">
+                        <span className="truncate">{s.sourceMedium}</span>
+                        <span className="tabular-nums text-black/50 shrink-0">
+                          {formatCount(s.sessions)} sess
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-black/50">No sources in latest sync yet.</p>
+                )}
+              </div>
+              <div>
+                <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                  Top search queries (7d)
                 </p>
                 {google.gscTopQueries.length ? (
                   <ul className="space-y-2 text-sm">
@@ -145,7 +223,8 @@ export default async function HqAcquisitionPage() {
                       <li key={`${q.query || "q"}-${i}`} className="flex justify-between gap-3">
                         <span className="truncate">{q.query || "—"}</span>
                         <span className="tabular-nums text-black/50 shrink-0">
-                          {formatCount(q.clicks ?? null)} clicks
+                          {formatCount(q.clicks ?? null)} / {formatCount(q.impressions ?? null)}
+                          {q.position ? ` · pos ${Number(q.position).toFixed(1)}` : ""}
                         </span>
                       </li>
                     ))}
@@ -156,29 +235,62 @@ export default async function HqAcquisitionPage() {
               </div>
               <div>
                 <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
-                  Why this matters
+                  Top search pages (7d)
                 </p>
-                <p className="text-sm text-black/60 leading-relaxed">
-                  Sessions and organic search are top-of-funnel for the public site. Compare them to
-                  registrations and first scans on Today — rising web demand with flat scans means
-                  discovery is not converting into product behavior.
-                </p>
-                <p className="text-[11px] text-black/40 mt-3">
-                  Synced {google.syncedAt ? new Date(google.syncedAt).toLocaleString() : "—"}
-                  {google.lastSyncStatus ? ` · ${google.lastSyncStatus}` : ""}
-                  {" · "}
-                  <Link href="/dashboard/settings" className="underline underline-offset-2">
-                    Manage connection
-                  </Link>
-                </p>
+                {google.gscTopPages.length ? (
+                  <ul className="space-y-2 text-sm">
+                    {google.gscTopPages.map((p, i) => (
+                      <li key={`${p.page || "p"}-${i}`} className="flex justify-between gap-3">
+                        <span className="truncate" title={p.page}>
+                          {p.page || "—"}
+                        </span>
+                        <span className="tabular-nums text-black/50 shrink-0">
+                          {formatCount(p.clicks ?? null)} clk
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-black/50">No page rows in the latest sync yet.</p>
+                )}
               </div>
             </div>
+
+            {google.gscQueryChanges.length ? (
+              <div className="mt-5">
+                <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                  Meaningful query changes (7d vs prior 7d)
+                </p>
+                <ul className="space-y-2 text-sm">
+                  {google.gscQueryChanges.map((c) => (
+                    <li key={c.query} className="flex justify-between gap-3">
+                      <span className="truncate">{c.query}</span>
+                      <span className="tabular-nums text-black/50 shrink-0">
+                        {c.deltaClicks == null
+                          ? "—"
+                          : `${c.deltaClicks > 0 ? "+" : ""}${c.deltaClicks} clicks`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            <p className="text-[11px] text-black/40 mt-4">
+              Synced {google.syncedAt ? new Date(google.syncedAt).toLocaleString() : "—"}
+              {google.lastSyncStatus ? ` · ${google.lastSyncStatus}` : ""}
+              {" · "}
+              <Link href="/dashboard/settings" className="underline underline-offset-2">
+                Manage connection
+              </Link>
+              {" · Run Sync Now after deploy to refresh landing pages / sources"}
+            </p>
           </>
         ) : (
           <div className="text-sm text-black/60 leading-relaxed">
             <p>
               Google is not connected, so web discovery is dark. Connect once in Settings — this page
-              will show sessions, users, organic clicks, impressions, and top queries automatically.
+              will show sessions, users, organic clicks, impressions, landing pages, and sources.
             </p>
             <Link
               href="/dashboard/settings"
