@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSupabase } from "../../../../../lib/supabase-service-client";
+import { getServerSupabase } from "../../../../lib/supabase-service-client";
 import {
   getValidAccessToken,
   listConnections,
-} from "../../../../../lib/dashboard/integrations/connections";
+} from "../../../../lib/dashboard/integrations/connections";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
