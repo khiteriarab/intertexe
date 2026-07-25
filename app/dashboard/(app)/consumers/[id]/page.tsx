@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireHqSession } from "../../../../../../lib/dashboard/auth";
-import { fetchHqConsumerProfile } from "../../../../../../lib/dashboard/acquisition";
-import { formatCount } from "../../../../../../lib/dashboard/metrics";
-import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../../../components/HqUi";
+import { requireHqSession } from "../../../../../lib/dashboard/auth";
+import { fetchHqConsumerProfile } from "../../../../../lib/dashboard/acquisition";
+import { formatCount } from "../../../../../lib/dashboard/metrics";
+import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../../components/HqUi";
 
 export const dynamic = "force-dynamic";
 
