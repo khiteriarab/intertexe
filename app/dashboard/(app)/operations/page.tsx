@@ -155,28 +155,68 @@ export default async function HqOperationsPage() {
 
       <HqCard title="Founder reports">
         {reports.length ? (
-          <ul className="space-y-4">
-            {reports.slice(0, 12).map((r) => (
-              <li key={r.id} className="border-t border-black/5 pt-4 first:border-0 first:pt-0">
-                <p className="text-sm font-medium">{r.subject}</p>
-                <p className="text-xs text-black/45 mt-1">
-                  Week {r.weekStart?.slice(0, 10)} → {r.weekEnd?.slice(0, 10)} · Generated{" "}
-                  {r.generatedAt ? new Date(r.generatedAt).toUTCString() : "—"}
-                  {r.emailSent ? " · Email sent" : r.emailError ? ` · Email failed` : ""}
-                </p>
-                {r.warnings?.length ? (
-                  <ul className="mt-2 text-sm text-amber-900 list-disc pl-4">
-                    {r.warnings.slice(0, 6).map((w) => (
-                      <li key={w}>{w}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            ))}
+          <ul className="space-y-5">
+            {reports.slice(0, 12).map((r) => {
+              const cat = (r.catalog || {}) as Record<string, unknown>;
+              const com = (r.commerce || {}) as Record<string, unknown>;
+              const cons = (r.consumers || {}) as Record<string, unknown>;
+              const acq = (r.acquisition || {}) as Record<string, unknown>;
+              return (
+                <li key={r.id} className="border-t border-black/5 pt-4 first:border-0 first:pt-0">
+                  <p className="text-sm font-medium">{r.subject}</p>
+                  <p className="text-xs text-black/45 mt-1">
+                    Week {r.weekStart?.slice(0, 10)} → {r.weekEnd?.slice(0, 10)} · Generated{" "}
+                    {r.generatedAt ? new Date(r.generatedAt).toUTCString() : "—"}
+                    {r.emailSent ? " · Email sent" : r.emailError ? " · Email failed" : ""}
+                  </p>
+                  <div className="mt-3 grid sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs text-black/70">
+                    <span>
+                      Syncs OK / attn: {String(cat.successfulSyncs ?? "—")} /{" "}
+                      {String(cat.failedOrWarningSyncs ?? "—")}
+                    </span>
+                    <span>
+                      Products +{String(cat.newProducts ?? 0)} / ~{String(cat.updatedProducts ?? 0)}
+                    </span>
+                    <span>
+                      Sales 7d:{" "}
+                      {com.grossSales != null
+                        ? Number(com.grossSales).toLocaleString(undefined, {
+                            style: "currency",
+                            currency: "USD",
+                            maximumFractionDigits: 0,
+                          })
+                        : "—"}
+                    </span>
+                    <span>Regs 7d: {String(cons.registrations ?? "—")}</span>
+                    <span>Scans 7d: {String(cons.scans7d ?? "—")}</span>
+                    <span>Clickouts 7d: {String(cons.affiliateClickouts7d ?? "—")}</span>
+                    <span>
+                      Attributable sales:{" "}
+                      {acq.attributableRevenue != null
+                        ? Number(acq.attributableRevenue).toLocaleString(undefined, {
+                            style: "currency",
+                            currency: "USD",
+                            maximumFractionDigits: 0,
+                          })
+                        : "—"}
+                    </span>
+                    <span>Unknown attrib: {String(acq.unknownAttributionCustomers ?? "—")}</span>
+                  </div>
+                  {r.warnings?.length ? (
+                    <ul className="mt-2 text-sm text-amber-900 list-disc pl-4">
+                      {r.warnings.slice(0, 6).map((w) => (
+                        <li key={w}>{w}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="text-sm text-black/50">
-            Weekly founder reports appear here after the Monday briefing cron runs.
+            Weekly founder reports appear here after the Monday briefing cron runs
+            (`/api/cron/hq-weekly-briefing`, Mondays 07:00 UTC).
           </p>
         )}
       </HqCard>
