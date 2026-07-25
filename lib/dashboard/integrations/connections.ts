@@ -258,11 +258,15 @@ export async function syncProvider(
     const setupWarnings = Array.isArray(result.metrics?.setupWarnings)
       ? (result.metrics.setupWarnings as string[])
       : [];
-    const hasHardError = Boolean(result.metrics?.ga4Error || result.metrics?.gscError);
-    const fullySuccessful = !hasHardError && setupWarnings.length === 0;
+    const hardErrors = [result.metrics?.ga4Error, result.metrics?.gscError]
+      .filter((v): v is string => typeof v === "string" && v.length > 0);
+    const softWarnings = setupWarnings.filter((w) => !hardErrors.includes(w));
+    const hasHardError = hardErrors.length > 0;
+    const fullySuccessful = !hasHardError && softWarnings.length === 0;
     const nowIso = new Date().toISOString();
     const nextMeta = {
       ...(connection.metadata || {}),
+      // Preserve prior lastSuccessfulSyncAt unless this run is fully clean.
       ...(fullySuccessful ? { lastSuccessfulSyncAt: nowIso } : {}),
       lastSyncMetricsSummary: {
         ga4Sessions7d: result.metrics?.ga4Sessions7d ?? null,
@@ -270,14 +274,14 @@ export async function syncProvider(
         gscImpressions7d: result.metrics?.gscImpressions7d ?? null,
       },
     };
-    const warningText = setupWarnings.length ? setupWarnings.join(" · ").slice(0, 500) : null;
+    const detailText = (hasHardError ? hardErrors : softWarnings).join(" · ").slice(0, 500) || null;
     await supabase
       .from("hq_oauth_connections")
       .update({
         last_sync_at: nowIso,
-        last_sync_status: hasHardError || setupWarnings.length ? "warning" : "success",
-        last_sync_error: fullySuccessful ? null : warningText,
-        status: "connected",
+        last_sync_status: hasHardError ? "error" : softWarnings.length ? "warning" : "success",
+        last_sync_error: fullySuccessful ? null : detailText,
+        status: hasHardError ? "degraded" : "connected",
         metadata: nextMeta,
         updated_at: nowIso,
       })
