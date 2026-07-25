@@ -1,17 +1,21 @@
+import Link from "next/link";
 import { requireHqSession } from "../../../lib/dashboard/auth";
+import { fetchInsightsBundle } from "../../../lib/dashboard/insights";
+import { fetchGoogleDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
 import {
-  buildExecutiveBriefing,
-  fetchInsightsBundle,
-} from "../../../lib/dashboard/insights";
+  buildGreeting,
+  buildMorningHighlights,
+  buildMorningPulse,
+} from "../../../lib/dashboard/morning-briefing";
 import {
   fetchNightlySyncOps,
   formatDuration,
   statusBadgeClass,
 } from "../../../lib/dashboard/catalog-sync-ops";
-import { fetchHqCommercePage, formatCount, formatDelta } from "../../../lib/dashboard/metrics";
+import { fetchHqCommercePage, formatCount } from "../../../lib/dashboard/metrics";
 import { HqCard, HqPageHeader } from "../components/HqUi";
 
-export const metadata = { title: "Overview" };
+export const metadata = { title: "Morning Briefing" };
 export const dynamic = "force-dynamic";
 
 function greetingName(fullName: string | null, email: string) {
@@ -20,99 +24,73 @@ function greetingName(fullName: string | null, email: string) {
   return "there";
 }
 
-function todayLine(label: string, value: number | null, hint?: string | null) {
-  return (
-    <li className="flex items-baseline justify-between gap-3">
-      <span className="text-black/65">{label}</span>
-      <span className="tabular-nums font-medium text-black/85">
-        {formatCount(value)}
-        {hint ? <span className="ml-2 text-xs font-normal text-black/40">{hint}</span> : null}
-      </span>
-    </li>
-  );
-}
+const MISSION_LANES = [
+  {
+    href: "/dashboard/acquisition",
+    question: "How are people discovering INTERTEXE?",
+    label: "Acquisition",
+    blurb: "Website sessions, organic search, first-touch revenue.",
+  },
+  {
+    href: "/dashboard/scanner",
+    question: "Once they arrive, do they care?",
+    label: "Engagement",
+    blurb: "Scans, favorites, collections, return behavior.",
+  },
+  {
+    href: "/dashboard/commerce",
+    question: "Is the business making money?",
+    label: "Commerce",
+    blurb: "Affiliate clicks, commission, retailers, brands.",
+  },
+  {
+    href: "/dashboard/operations",
+    question: "Is the catalog healthy?",
+    label: "Product",
+    blurb: "Nightly sync, feed health, failed imports.",
+  },
+] as const;
 
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
-  const [{ metrics: m, live }, commerce, syncOps] = await Promise.all([
+  const [{ metrics: m, live }, commerce, syncOps, google] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
     fetchNightlySyncOps(),
+    fetchGoogleDiscoveryMetrics(session.workspaceId),
   ]);
-  const name = greetingName(session.fullName, session.email);
-  const briefing = buildExecutiveBriefing(name, m, live, {
-    revenueConnected: commerce.revenueConnected,
-    revenueIsDemo: commerce.revenueIsDemo,
-    commission7d: commerce.commission7d,
-  });
 
-  const scanWow = formatDelta(m.scansLast7d.value, m.scansPrev7d.value);
+  const name = greetingName(session.fullName, session.email);
   const totalClicks7d =
     (m.clickoutsLast7d.value || 0) +
     (m.scannerClickoutsLast7d.value || 0) +
     (m.editorialClickoutsLast7d.value || 0);
 
-  const changes = live.filter((i) => i.severity !== "info").slice(0, 4);
-  const changeList = changes.length ? changes : live.slice(0, 4);
-
-  const founderActions = [
-    ...live.slice(0, 4).map((i) => ({
-      key: i.key,
-      text: i.recommendedAction,
-      href:
-        i.key.includes("revenue") || i.key.includes("clicks_without")
-          ? "/dashboard/commerce"
-          : i.key.includes("material")
-            ? "/dashboard/materials"
-            : i.key.includes("scan") || i.key.includes("regs")
-              ? "/dashboard/scanner"
-              : i.key.includes("dpp")
-                ? "/dashboard/dpp"
-                : i.key.includes("campaign")
-                  ? "/dashboard/campaigns"
-                  : "/dashboard/insights",
-    })),
-  ];
-  if (commerce.revenueIsDemo) {
-    founderActions.unshift({
-      key: "replace_demo_revenue",
-      text: "Replace demo revenue with a verified Rakuten transaction report",
-      href: "/dashboard/commerce",
-    });
-  } else if ((commerce.unmatchedTx30d || 0) > 0) {
-    founderActions.unshift({
-      key: "unmatched_tx",
-      text: `Investigate ${commerce.unmatchedTx30d} unmatched affiliate transactions (no SKU/product)`,
-      href: "/dashboard/commerce",
-    });
-  }
-  if (syncOps.latest?.status === "failure" || syncOps.latest?.status === "warning") {
-    founderActions.unshift({
-      key: "nightly_sync_attention",
-      text: "Review nightly catalog sync — requires attention",
-      href: "/dashboard/operations",
-    });
-  }
-
-  const verifiedRevenueLabel = commerce.revenueIsDemo
-    ? "Demo only"
-    : commerce.revenueConnected
-      ? commerce.commission7d != null
-        ? commerce.commission7d.toLocaleString(undefined, {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: 0,
-          })
-        : "Connected"
-      : "Not connected";
+  const pulse = buildMorningPulse({
+    metrics: m,
+    google,
+    commerce,
+    syncLatest: syncOps.latest,
+    totalClicks7d,
+  });
+  const highlights = buildMorningHighlights({
+    metrics: m,
+    google,
+    insights: live,
+    commerce,
+    syncLatest: syncOps.latest,
+    totalClicks7d,
+  });
 
   const latest = syncOps.latest;
+  const opsNeedsAttention =
+    latest?.status === "failure" || latest?.status === "warning";
 
   return (
     <div>
       <HqPageHeader
         title="Today"
-        description="What changed, why it matters, and what needs attention. Internal alpha — treat revenue as verified only when labeled."
+        description="How is INTERTEXE performing — growth, engagement, commerce, and product health. Integrations stay in Settings; this page answers the mission."
         action={
           <a
             href="/api/dashboard/export?kind=overview"
@@ -128,163 +106,86 @@ export default async function HqOverviewPage() {
           <p className="text-[10px] tracking-[0.18em] uppercase text-amber-800/80 mb-1">Demo data</p>
           <p className="font-medium">Sample Rakuten rows are present and are not verified affiliate reporting.</p>
           <p className="text-amber-900/70 mt-1">
-            Verified revenue totals stay blank until a real report is imported.{" "}
-            <a href="/dashboard/commerce" className="underline underline-offset-2">
+            <Link href="/dashboard/commerce" className="underline underline-offset-2">
               Replace with verified affiliate reporting →
-            </a>
+            </Link>
           </p>
         </div>
       ) : null}
 
-      <HqCard className="mb-6" title="Nightly Catalog Sync">
-        {latest ? (
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <span
-                className={`text-[11px] tracking-widest uppercase border px-2 py-1 ${statusBadgeClass(
-                  latest.status
-                )}`}
-              >
-                {latest.displayStatus || latest.status}
-              </span>
-              <span className="text-xs text-black/45">
-                Last run {latest.finishedAt ? new Date(latest.finishedAt).toUTCString() : "—"}
-              </span>
-              {latest.githubRunUrl ? (
-                <a
-                  href={latest.githubRunUrl}
-                  className="text-xs underline underline-offset-2"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Actions run
-                </a>
-              ) : null}
-            </div>
-            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-              <li className="flex justify-between gap-3">
-                <span className="text-black/55">Last successful</span>
-                <span className="tabular-nums">
-                  {syncOps.lastSuccessfulAt
-                    ? new Date(syncOps.lastSuccessfulAt).toISOString().slice(0, 16).replace("T", " ")
-                    : "—"}
-                </span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span className="text-black/55">Duration</span>
-                <span className="tabular-nums">{formatDuration(latest.durationMs)}</span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span className="text-black/55">Files discovered / processed</span>
-                <span className="tabular-nums">
-                  {formatCount(latest.totalCatalogFiles ?? null)} / {formatCount(latest.filesProcessed ?? null)}
-                </span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span className="text-black/55">Inserted / updated / rejected</span>
-                <span className="tabular-nums">
-                  {formatCount(latest.inserted ?? null)} / {formatCount(latest.updated ?? null)} /{" "}
-                  {formatCount(latest.rejected ?? null)}
-                </span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span className="text-black/55">Designers synced</span>
-                <span className="tabular-nums">{formatCount(latest.designersSynced ?? null)}</span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span className="text-black/55">Checkpoint</span>
-                <span className="tabular-nums">
-                  {latest.checkpointBefore ?? "—"} → {latest.checkpointAfter ?? "—"}
-                </span>
-              </li>
-              <li className="flex justify-between gap-3 sm:col-span-2">
-                <span className="text-black/55">Next scheduled run</span>
-                <span className="tabular-nums">
-                  {syncOps.nextScheduledRun
-                    ? new Date(syncOps.nextScheduledRun).toISOString().replace("T", " ").slice(0, 19) +
-                      " UTC"
-                    : "—"}
-                </span>
-              </li>
-            </ul>
-            <a
-              href="/dashboard/operations"
-              className="inline-block text-xs tracking-widest uppercase underline underline-offset-4"
-            >
-              Sync history & founder reports →
-            </a>
-          </div>
-        ) : (
-          <p className="text-sm text-black/50">
-            Awaiting first monitored nightly run.{" "}
-            <a href="/dashboard/operations" className="underline underline-offset-2">
-              Operations →
-            </a>
-          </p>
-        )}
-      </HqCard>
-
       <HqCard className="mb-6">
-        <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-3">Founder briefing</p>
-        <h2 className="text-2xl md:text-3xl font-medium tracking-tight">{briefing[0]}</h2>
-        <p className="text-sm text-black/55 mt-3 max-w-2xl leading-relaxed">
-          {briefing.slice(1).join(" ")}
+        <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-2">Morning briefing</p>
+        <h2 className="text-2xl md:text-3xl font-medium tracking-tight">{buildGreeting(name)}</h2>
+        <p className="text-sm text-black/55 mt-2 max-w-2xl leading-relaxed">
+          Read the pulse, then the highlights. Drill into Acquisition, Engagement, Commerce, or Product when a
+          number needs a decision.
         </p>
       </HqCard>
 
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
-        <HqCard title="Today">
-          <ul className="space-y-2.5 text-sm">
-            {todayLine("Registrations", m.usersToday.value)}
-            {todayLine("Known consumers", m.usersTotal.value)}
-            {todayLine("Scans", m.scansToday.value, scanWow)}
-            {todayLine("Affiliate clicks (7d)", totalClicks7d)}
-            <li className="flex items-baseline justify-between gap-3">
-              <span className="text-black/65">Verified revenue (7d)</span>
-              <span
-                className={`tabular-nums font-medium ${
-                  commerce.revenueIsDemo ? "text-amber-800" : "text-black/85"
-                }`}
-              >
-                {verifiedRevenueLabel}
-              </span>
-            </li>
-          </ul>
-        </HqCard>
-
-        <HqCard title="Important changes">
-          {changeList.length ? (
-            <ul className="space-y-3 text-sm">
-              {changeList.map((i) => (
-                <li key={i.key}>
-                  <p className="font-medium text-black/85">{i.title}</p>
-                  <p className="text-black/50 mt-0.5 leading-relaxed">{i.explanation}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-black/50">No material changes yet this period.</p>
-          )}
-        </HqCard>
-
-        <HqCard title="Founder actions">
-          <ul className="space-y-2.5 text-sm list-disc pl-4 text-black/70">
-            {founderActions.slice(0, 5).map((a) => (
-              <li key={a.key}>
-                <a href={a.href} className="hover:text-black underline-offset-2 hover:underline">
-                  {a.text}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <p className="text-[11px] text-black/35 mt-4">
-            Updated {new Date(m.fetchedAt).toLocaleString()}
-          </p>
-        </HqCard>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+        {pulse.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href || "/dashboard"}
+            className="block bg-white border border-black/10 rounded-xl p-4 hover:border-black/25 transition-colors"
+          >
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/45">{item.label}</p>
+            <p className="text-2xl font-medium mt-2 tabular-nums">{item.value}</p>
+            {item.hint ? <p className="text-xs text-black/45 mt-1">{item.hint}</p> : null}
+          </Link>
+        ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <HqCard title="Material signal (30d sample)">
+      <HqCard className="mb-6" title="Highlights">
+        <ul className="space-y-3">
+          {highlights.map((h) => (
+            <li key={h.key} className="flex gap-3 text-sm leading-relaxed">
+              <span
+                className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                  h.tone === "attention"
+                    ? "bg-red-600"
+                    : h.tone === "positive"
+                      ? "bg-emerald-600"
+                      : "bg-black/35"
+                }`}
+                aria-hidden
+              />
+              <div>
+                <p className="text-black/80">{h.text}</p>
+                {h.href ? (
+                  <Link
+                    href={h.href}
+                    className="inline-block mt-1 text-[11px] tracking-widest uppercase text-black/45 hover:text-black underline-offset-2 hover:underline"
+                  >
+                    Open →
+                  </Link>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="text-[11px] text-black/35 mt-5">
+          Updated {new Date(m.fetchedAt).toLocaleString()}
+          {google.syncedAt ? ` · Web metrics ${new Date(google.syncedAt).toLocaleString()}` : ""}
+        </p>
+      </HqCard>
+
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        {MISSION_LANES.map((lane) => (
+          <Link
+            key={lane.href}
+            href={lane.href}
+            className="block bg-white border border-black/10 rounded-xl p-5 hover:border-black/25 transition-colors"
+          >
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">{lane.label}</p>
+            <p className="text-base font-medium mt-2 text-black/90">{lane.question}</p>
+            <p className="text-sm text-black/50 mt-2 leading-relaxed">{lane.blurb}</p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <HqCard title="Engagement signal (30d materials)">
           {m.topMaterialsLast30d.length ? (
             <ul className="space-y-2 text-sm">
               {m.topMaterialsLast30d.slice(0, 5).map((row) => (
@@ -297,14 +198,15 @@ export default async function HqOverviewPage() {
           ) : (
             <p className="text-sm text-black/50">No fiber_primary sample yet.</p>
           )}
-          <a
-            href="/dashboard/materials"
+          <Link
+            href="/dashboard/scanner"
             className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
           >
-            Material Intelligence →
-          </a>
+            Engagement / Scanner →
+          </Link>
         </HqCard>
-        <HqCard title="Attention: recent scans">
+
+        <HqCard title="Recent scans">
           {m.recentScans.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -333,6 +235,47 @@ export default async function HqOverviewPage() {
           )}
         </HqCard>
       </div>
+
+      <HqCard
+        title="Product health"
+        className={opsNeedsAttention ? "border-amber-300" : undefined}
+      >
+        {latest ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`text-[11px] tracking-widest uppercase border px-2 py-1 ${statusBadgeClass(
+                  latest.status
+                )}`}
+              >
+                {latest.displayStatus || latest.status}
+              </span>
+              <span className="text-xs text-black/45">
+                Last run {latest.finishedAt ? new Date(latest.finishedAt).toUTCString() : "—"}
+              </span>
+              <span className="text-xs text-black/45">Duration {formatDuration(latest.durationMs)}</span>
+            </div>
+            <p className="text-sm text-black/60">
+              {formatCount(latest.filesProcessed ?? null)} files processed ·{" "}
+              {formatCount(latest.designersSynced ?? null)} designers ·{" "}
+              {formatCount(latest.rejected ?? null)} rejected
+            </p>
+            <Link
+              href="/dashboard/operations"
+              className="inline-block text-xs tracking-widest uppercase underline underline-offset-4"
+            >
+              Full sync history & founder reports →
+            </Link>
+          </div>
+        ) : (
+          <p className="text-sm text-black/50">
+            Awaiting first monitored nightly run.{" "}
+            <Link href="/dashboard/operations" className="underline underline-offset-2">
+              Operations →
+            </Link>
+          </p>
+        )}
+      </HqCard>
     </div>
   );
 }

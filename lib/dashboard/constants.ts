@@ -33,15 +33,15 @@ export function isHqHost(host: string | null | undefined): boolean {
 }
 
 export const HQ_NAV = [
-  { href: "/dashboard", label: "Overview", exact: true },
-  { href: "/dashboard/operations", label: "Operations" },
-  { href: "/dashboard/consumers", label: "Consumers" },
+  { href: "/dashboard", label: "Today", exact: true },
   { href: "/dashboard/acquisition", label: "Acquisition" },
-  { href: "/dashboard/scanner", label: "Scanner" },
+  { href: "/dashboard/scanner", label: "Engagement" },
   { href: "/dashboard/commerce", label: "Commerce" },
+  { href: "/dashboard/operations", label: "Product" },
+  { href: "/dashboard/consumers", label: "Consumers" },
   { href: "/dashboard/materials", label: "Materials" },
   { href: "/dashboard/brands", label: "Brands" },
-  { href: "/dashboard/products", label: "Products" },
+  { href: "/dashboard/products", label: "Catalog" },
   { href: "/dashboard/dpp", label: "Digital Product Passport" },
   { href: "/dashboard/campaigns", label: "Campaigns" },
   { href: "/dashboard/insights", label: "Insights" },

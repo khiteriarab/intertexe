@@ -8,7 +8,7 @@ import {
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqPageHeader } from "../../components/HqUi";
 
-export const metadata = { title: "Operations" };
+export const metadata = { title: "Product" };
 export const dynamic = "force-dynamic";
 
 export default async function HqOperationsPage() {
@@ -19,8 +19,8 @@ export default async function HqOperationsPage() {
   return (
     <div>
       <HqPageHeader
-        title="Operations"
-        description="Nightly catalog sync history, alert delivery status, and founder weekly reports."
+        title="Product health"
+        description="Is the catalog healthy? Nightly sync history, feed outcomes, alert delivery, and founder weekly reports."
       />
 
       <HqCard title="Nightly Catalog Sync — latest" className="mb-6">

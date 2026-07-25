@@ -19,7 +19,7 @@ export default async function HqCommercePage() {
     <div>
       <HqPageHeader
         title="Commerce"
-        description="Clickouts plus Rakuten commission/sales once a verified transaction report is imported."
+        description="Is the business making money? Affiliate clicks, verified commission, retailers, and brands."
         action={
           <a
             href="/api/dashboard/export?kind=commerce"

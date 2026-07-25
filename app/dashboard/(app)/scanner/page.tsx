@@ -2,7 +2,7 @@ import { requireHqSession } from "../../../../lib/dashboard/auth";
 import { fetchHqScannerPage, formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
 
-export const metadata = { title: "Scanner" };
+export const metadata = { title: "Engagement" };
 export const dynamic = "force-dynamic";
 
 export default async function HqScannerPage() {
@@ -12,8 +12,8 @@ export default async function HqScannerPage() {
   return (
     <div>
       <HqPageHeader
-        title="Scanner"
-        description="The data collection engine for material intelligence — live from scan_history."
+        title="Engagement"
+        description="Once people arrive, do they care? Scans, materials, and scanner behavior from live product use."
       />
 
       <HqMetricGrid

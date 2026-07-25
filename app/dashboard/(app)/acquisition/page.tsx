@@ -4,6 +4,7 @@ import {
   fetchHqAcquisitionReport,
   type AcquisitionBucket,
 } from "../../../../lib/dashboard/acquisition";
+import { fetchGoogleDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
 
@@ -85,14 +86,17 @@ function ReportTable({
 }
 
 export default async function HqAcquisitionPage() {
-  await requireHqSession();
-  const report = await fetchHqAcquisitionReport();
+  const session = await requireHqSession();
+  const [report, google] = await Promise.all([
+    fetchHqAcquisitionReport(),
+    fetchGoogleDiscoveryMetrics(session.workspaceId),
+  ]);
 
   return (
     <div>
       <HqPageHeader
         title="Acquisition"
-        description="Revenue and behavior by immutable first-touch. Purchases join only when Rakuten u1 matches a Supabase user id. Missing first-touch = Unknown — never fabricated."
+        description="How are people discovering INTERTEXE? Website and Search Console answer demand; first-touch tables answer which channels become customers and revenue."
         action={
           <Link
             href="/dashboard/consumers"
@@ -103,8 +107,94 @@ export default async function HqAcquisitionPage() {
         }
       />
 
+      <HqCard className="mb-6" title="Web discovery (Google)">
+        {google.connected ? (
+          <>
+            <HqMetricGrid
+              items={[
+                {
+                  label: "Sessions (7d)",
+                  value: formatCount(google.ga4Sessions7d),
+                  hint: "GA4",
+                },
+                {
+                  label: "Users (7d)",
+                  value: formatCount(google.ga4Users7d),
+                  hint: "GA4",
+                },
+                {
+                  label: "Organic clicks (7d)",
+                  value: formatCount(google.gscClicks7d),
+                  hint: "Search Console",
+                },
+                {
+                  label: "Organic impressions (7d)",
+                  value: formatCount(google.gscImpressions7d),
+                  hint: "Search Console",
+                },
+              ]}
+            />
+            <div className="mt-5 grid md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                  Top search queries
+                </p>
+                {google.gscTopQueries.length ? (
+                  <ul className="space-y-2 text-sm">
+                    {google.gscTopQueries.map((q, i) => (
+                      <li key={`${q.query || "q"}-${i}`} className="flex justify-between gap-3">
+                        <span className="truncate">{q.query || "—"}</span>
+                        <span className="tabular-nums text-black/50 shrink-0">
+                          {formatCount(q.clicks ?? null)} clicks
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-black/50">No query rows in the latest sync yet.</p>
+                )}
+              </div>
+              <div>
+                <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                  Why this matters
+                </p>
+                <p className="text-sm text-black/60 leading-relaxed">
+                  Sessions and organic search are top-of-funnel for the public site. Compare them to
+                  registrations and first scans on Today — rising web demand with flat scans means
+                  discovery is not converting into product behavior.
+                </p>
+                <p className="text-[11px] text-black/40 mt-3">
+                  Synced {google.syncedAt ? new Date(google.syncedAt).toLocaleString() : "—"}
+                  {google.lastSyncStatus ? ` · ${google.lastSyncStatus}` : ""}
+                  {" · "}
+                  <Link href="/dashboard/settings" className="underline underline-offset-2">
+                    Manage connection
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-sm text-black/60 leading-relaxed">
+            <p>
+              Google is not connected, so web discovery is dark. Connect once in Settings — this page
+              will show sessions, users, organic clicks, impressions, and top queries automatically.
+            </p>
+            <Link
+              href="/dashboard/settings"
+              className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
+            >
+              Open Settings → Integrations
+            </Link>
+          </div>
+        )}
+      </HqCard>
+
       {report.error ? <HqEmptyState title="Could not load acquisition" body={report.error} /> : null}
 
+      <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-3">
+        First-touch → customers & revenue
+      </p>
       <HqMetricGrid
         items={[
           { label: "Customers", value: formatCount(report.totals.customers) },
