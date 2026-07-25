@@ -4,28 +4,68 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HqCard } from "../../components/HqUi";
 
-type IntegrationRow = {
-  id: string;
+type ConnectionInfo = {
+  status: string;
+  accountLabel: string | null;
+  expiresAt: string | null;
+  lastSyncAt: string | null;
+  lastSyncLabel: string;
+  lastSyncStatus: string | null;
+  lastSyncError: string | null;
+};
+
+type IntegrationCard = {
+  cardId: string;
   label: string;
-  description: string;
+  blurb: string;
+  permissions: string[];
+  providerId: string;
   authMode: "oauth" | "api_key";
   appConfigured: boolean;
   missingEnv: string[];
   callbackUrl: string | null;
-  connection: {
-    status: string;
-    accountLabel: string | null;
-    expiresAt: string | null;
-    lastSyncAt: string | null;
-    lastSyncStatus: string | null;
-    lastSyncError: string | null;
-  } | null;
+  needsReconnect: boolean;
+  displayStatus: "connected" | "not_connected" | "needs_reconnect" | "sync_error" | string;
+  connection: ConnectionInfo | null;
 };
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === "connected") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase border border-emerald-200 bg-emerald-50 text-emerald-900 px-2 py-1">
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+        Connected
+      </span>
+    );
+  }
+  if (status === "needs_reconnect") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase border border-amber-200 bg-amber-50 text-amber-950 px-2 py-1">
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-amber-600" />
+        Reconnect required
+      </span>
+    );
+  }
+  if (status === "sync_error") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase border border-red-200 bg-red-50 text-red-900 px-2 py-1">
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-red-600" />
+        Sync error
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase border border-black/10 text-black/50 px-2 py-1">
+      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-red-500" />
+      Not connected
+    </span>
+  );
+}
 
 export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
-  const [rows, setRows] = useState<IntegrationRow[]>([]);
+  const [cards, setCards] = useState<IntegrationCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -33,13 +73,14 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
   const [ascKeyId, setAscKeyId] = useState("");
   const [ascIssuerId, setAscIssuerId] = useState("");
   const [ascFile, setAscFile] = useState<File | null>(null);
+  const [showAscForm, setShowAscForm] = useState(false);
 
   async function load() {
     setLoading(true);
     try {
       const res = await fetch("/api/dashboard/integrations");
       const data = await res.json();
-      setRows(data.integrations || []);
+      setCards(data.cards || []);
     } catch {
       setError("Could not load integrations");
     } finally {
@@ -55,7 +96,7 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
     const connected = params.get("integration_connected");
     const err = params.get("integration_error");
     if (connected) {
-      setMessage(`${connected.replace(/_/g, " ")} connected. Nightly sync will keep data fresh.`);
+      setMessage(`${connected.replace(/_/g, " ")} connected. Nightly sync keeps data fresh — use Sync Now anytime.`);
       router.replace("/dashboard/settings", { scroll: false });
       void load();
     } else if (err) {
@@ -66,6 +107,7 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
 
   async function disconnect(provider: string) {
     if (!canAdmin) return;
+    if (!confirm("Disconnect this integration and delete stored tokens from HQ?")) return;
     setBusy(provider);
     setError(null);
     setMessage(null);
@@ -77,7 +119,7 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Disconnect failed");
-      setMessage("Disconnected.");
+      setMessage("Disconnected — stored tokens removed.");
       await load();
       router.refresh();
     } catch (e: unknown) {
@@ -89,7 +131,7 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
 
   async function syncNow(provider: string) {
     if (!canAdmin) return;
-    setBusy(provider);
+    setBusy(`sync:${provider}`);
     setError(null);
     setMessage(null);
     try {
@@ -99,11 +141,15 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
         body: JSON.stringify({ action: "sync" }),
       });
       const data = await res.json();
-      if (!res.ok || data.ok === false) throw new Error(data.error || data.message || "Sync failed");
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || data.message || "Sync failed — try Reconnect if access was revoked");
+      }
       setMessage("Sync completed.");
       await load();
+      router.refresh();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Sync failed");
+      await load();
     } finally {
       setBusy(null);
     }
@@ -126,8 +172,9 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Upload failed");
-      setMessage("App Store Connect key saved. Tokens are minted automatically for nightly sync.");
+      setMessage("App Store Connect key saved and encrypted.");
       setAscFile(null);
+      setShowAscForm(false);
       await load();
       router.refresh();
     } catch (err: unknown) {
@@ -137,151 +184,205 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
     }
   }
 
+  // Deduplicate ASC form — only once under App Store Connect card.
+  const renderedProviders = new Set<string>();
+
   return (
-    <HqCard title="Integrations" className="mb-6">
-      <p className="text-sm text-black/55 mb-4 leading-relaxed">
-        Connect Google, Meta/Instagram, TikTok, and Pinterest with one click — sign in on the provider site, approve
-        access, and HQ stores encrypted tokens and refreshes them automatically. App Store Connect uses Apple’s API
-        key (OAuth is not available for that API).
-      </p>
+    <div className="mb-6">
+      <HqCard title="Integrations">
+        <p className="text-sm text-black/55 mb-5 leading-relaxed">
+          Connect each provider with OAuth (or an App Store Connect API key). HQ encrypts tokens, refreshes them
+          automatically, and pulls data nightly at 06:00 UTC. Use <span className="font-medium">Sync Now</span> while
+          testing.
+        </p>
 
-      {message ? <p className="text-sm text-emerald-800 mb-3">{message}</p> : null}
-      {error ? <p className="text-sm text-red-700 mb-3">{error}</p> : null}
-      {loading ? <p className="text-sm text-black/45">Loading…</p> : null}
+        {message ? <p className="text-sm text-emerald-800 mb-3">{message}</p> : null}
+        {error ? <p className="text-sm text-red-700 mb-3">{error}</p> : null}
+        {loading ? <p className="text-sm text-black/45 mb-3">Loading…</p> : null}
 
-      <div className="divide-y divide-black/10">
-        {rows.map((row) => {
-          const connected = row.connection?.status === "connected" || row.connection?.status === "degraded";
-          return (
-            <div key={row.id} className="py-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div className="max-w-xl">
-                <p className="text-sm font-medium">{row.label}</p>
-                <p className="text-xs text-black/50 mt-1 leading-relaxed">{row.description}</p>
-                {connected ? (
-                  <p className="text-xs text-black/55 mt-2">
-                    {row.connection?.accountLabel || "Connected"}
-                    {row.connection?.lastSyncAt
-                      ? ` · Last sync ${new Date(row.connection.lastSyncAt).toUTCString()}`
-                      : ""}
-                    {row.connection?.lastSyncError ? ` · ${row.connection.lastSyncError}` : ""}
+        <div className="grid md:grid-cols-2 gap-4">
+          {cards.map((card) => {
+            const linked = Boolean(card.connection);
+            const showAscUpload =
+              card.providerId === "app_store_connect" && (!linked || showAscForm);
+            const firstOfProvider = !renderedProviders.has(card.providerId);
+            if (firstOfProvider) renderedProviders.add(card.providerId);
+
+            return (
+              <div
+                key={card.cardId}
+                className="border border-black/10 rounded-xl p-4 flex flex-col gap-3 bg-white"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">{card.label}</p>
+                    <p className="text-xs text-black/50 mt-1 leading-relaxed">{card.blurb}</p>
+                  </div>
+                  <StatusBadge status={card.displayStatus} />
+                </div>
+
+                <div>
+                  <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-1">Data accessed</p>
+                  <p className="text-xs text-black/65 leading-relaxed">{card.permissions.join(" · ")}</p>
+                </div>
+
+                <div className="text-xs text-black/55 space-y-1">
+                  <p>
+                    <span className="text-black/40">Last sync:</span>{" "}
+                    {card.connection?.lastSyncLabel || "Never"}
                   </p>
-                ) : !row.appConfigured && row.authMode === "oauth" ? (
-                  <p className="text-xs text-amber-800 mt-2">
-                    App registration pending — set {row.missingEnv.join(", ")} in Vercel, then Connect will work.
-                    {row.callbackUrl ? ` Redirect URI: ${row.callbackUrl}` : ""}
-                  </p>
-                ) : null}
-              </div>
+                  {card.connection?.accountLabel ? (
+                    <p>
+                      <span className="text-black/40">Account:</span> {card.connection.accountLabel}
+                    </p>
+                  ) : null}
+                  {card.connection?.lastSyncError ? (
+                    <p className="text-red-700 leading-relaxed">
+                      Sync error: {card.connection.lastSyncError}
+                    </p>
+                  ) : null}
+                  {!card.appConfigured && card.authMode === "oauth" ? (
+                    <p className="text-amber-900 leading-relaxed">
+                      App credentials missing ({card.missingEnv.join(", ")}). Add them in Vercel, then Connect.
+                    </p>
+                  ) : null}
+                </div>
 
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <span
-                  className={`text-[10px] tracking-[0.12em] uppercase border px-2 py-1 ${
-                    connected
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                      : "border-black/10 text-black/50"
-                  }`}
-                >
-                  {connected ? row.connection?.status || "connected" : "Not connected"}
-                </span>
-
-                {row.authMode === "oauth" ? (
-                  connected ? (
+                <div className="flex flex-wrap gap-2 mt-auto pt-1">
+                  {card.authMode === "oauth" ? (
                     <>
-                      <button
-                        type="button"
-                        disabled={!canAdmin || busy === row.id}
-                        onClick={() => void syncNow(row.id)}
-                        className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
-                      >
-                        Sync now
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!canAdmin || busy === row.id}
-                        onClick={() => void disconnect(row.id)}
-                        className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
-                      >
-                        Disconnect
-                      </button>
+                      {!linked || card.needsReconnect ? (
+                        <a
+                          href={
+                            card.appConfigured && canAdmin
+                              ? `/api/dashboard/integrations/${card.providerId}/connect`
+                              : undefined
+                          }
+                          className={`text-xs tracking-widest uppercase px-3 py-2 ${
+                            card.appConfigured && canAdmin
+                              ? "bg-black text-white hover:bg-black/85"
+                              : "bg-black/20 text-white pointer-events-none"
+                          }`}
+                        >
+                          {card.needsReconnect ? "Reconnect" : "Connect"}
+                        </a>
+                      ) : null}
+                      {linked && !card.needsReconnect ? (
+                        <button
+                          type="button"
+                          disabled={!canAdmin || busy === `sync:${card.providerId}`}
+                          onClick={() => void syncNow(card.providerId)}
+                          className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
+                        >
+                          {busy === `sync:${card.providerId}` ? "Syncing…" : "Sync Now"}
+                        </button>
+                      ) : null}
+                      {linked && card.needsReconnect ? (
+                        <button
+                          type="button"
+                          disabled={!canAdmin || busy === `sync:${card.providerId}`}
+                          onClick={() => void syncNow(card.providerId)}
+                          className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
+                        >
+                          Retry sync
+                        </button>
+                      ) : null}
+                      {linked && firstOfProvider ? (
+                        <button
+                          type="button"
+                          disabled={!canAdmin || busy === card.providerId}
+                          onClick={() => void disconnect(card.providerId)}
+                          className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
+                        >
+                          Disconnect
+                        </button>
+                      ) : null}
                     </>
                   ) : (
-                    <a
-                      href={row.appConfigured ? `/api/dashboard/integrations/${row.id}/connect` : undefined}
-                      aria-disabled={!row.appConfigured || !canAdmin}
-                      className={`text-xs tracking-widest uppercase px-3 py-2 ${
-                        row.appConfigured && canAdmin
-                          ? "bg-black text-white hover:bg-black/85"
-                          : "bg-black/20 text-white cursor-not-allowed pointer-events-none"
-                      }`}
-                    >
-                      Connect
-                    </a>
-                  )
-                ) : connected ? (
-                  <>
+                    <>
+                      {linked && !card.needsReconnect ? (
+                        <button
+                          type="button"
+                          disabled={!canAdmin || busy === `sync:${card.providerId}`}
+                          onClick={() => void syncNow(card.providerId)}
+                          className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
+                        >
+                          {busy === `sync:${card.providerId}` ? "Syncing…" : "Sync Now"}
+                        </button>
+                      ) : null}
+                      {linked ? (
+                        <>
+                          <button
+                            type="button"
+                            disabled={!canAdmin}
+                            onClick={() => setShowAscForm(true)}
+                            className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
+                          >
+                            Reconnect
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!canAdmin || busy === card.providerId}
+                            onClick={() => void disconnect(card.providerId)}
+                            className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
+                          >
+                            Disconnect
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={!canAdmin}
+                          onClick={() => setShowAscForm(true)}
+                          className="text-xs tracking-widest uppercase bg-black text-white px-3 py-2 disabled:opacity-50"
+                        >
+                          Connect
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {showAscUpload && canAdmin ? (
+                  <form onSubmit={uploadAsc} className="border-t border-black/10 pt-3 space-y-2">
+                    <p className="text-[10px] tracking-[0.14em] uppercase text-black/45">Upload .p8 API key</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        required
+                        value={ascKeyId}
+                        onChange={(e) => setAscKeyId(e.target.value)}
+                        placeholder="Key ID"
+                        className="border border-black/15 rounded-lg px-2 py-1.5 text-sm"
+                      />
+                      <input
+                        required
+                        value={ascIssuerId}
+                        onChange={(e) => setAscIssuerId(e.target.value)}
+                        placeholder="Issuer ID"
+                        className="border border-black/15 rounded-lg px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                    <input
+                      required
+                      type="file"
+                      accept=".p8,text/plain"
+                      onChange={(e) => setAscFile(e.target.files?.[0] || null)}
+                      className="block w-full text-xs"
+                    />
                     <button
-                      type="button"
-                      disabled={!canAdmin || busy === row.id}
-                      onClick={() => void syncNow(row.id)}
-                      className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
+                      type="submit"
+                      disabled={busy === "app_store_connect"}
+                      className="bg-black text-white text-xs tracking-widest uppercase px-3 py-2 rounded-lg disabled:opacity-60"
                     >
-                      Sync now
+                      Save key
                     </button>
-                    <button
-                      type="button"
-                      disabled={!canAdmin || busy === row.id}
-                      onClick={() => void disconnect(row.id)}
-                      className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
-                    >
-                      Disconnect
-                    </button>
-                  </>
+                  </form>
                 ) : null}
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {canAdmin ? (
-        <form onSubmit={uploadAsc} className="mt-6 border-t border-black/10 pt-5 space-y-3">
-          <p className="text-xs tracking-[0.14em] uppercase text-black/45">App Store Connect API key</p>
-          <p className="text-xs text-black/50 leading-relaxed">
-            Create a key in App Store Connect → Users and Access → Integrations → App Store Connect API. Upload the
-            .p8 once — HQ encrypts it and mints short-lived JWTs for nightly sync.
-          </p>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <input
-              required
-              value={ascKeyId}
-              onChange={(e) => setAscKeyId(e.target.value)}
-              placeholder="Key ID"
-              className="border border-black/15 rounded-lg px-3 py-2 text-sm"
-            />
-            <input
-              required
-              value={ascIssuerId}
-              onChange={(e) => setAscIssuerId(e.target.value)}
-              placeholder="Issuer ID"
-              className="border border-black/15 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-          <input
-            required
-            type="file"
-            accept=".p8,text/plain"
-            onChange={(e) => setAscFile(e.target.files?.[0] || null)}
-            className="block w-full text-sm"
-          />
-          <button
-            type="submit"
-            disabled={busy === "app_store_connect"}
-            className="bg-black text-white text-xs tracking-widest uppercase px-4 py-2.5 rounded-lg disabled:opacity-60"
-          >
-            Save App Store Connect key
-          </button>
-        </form>
-      ) : null}
-    </HqCard>
+            );
+          })}
+        </div>
+      </HqCard>
+    </div>
   );
 }

@@ -268,17 +268,18 @@ export async function syncProvider(
     return { ok: true, metrics: result.metrics };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const authFail = /invalid_grant|revoked|expired|unauthorized|401|403|token/i.test(message);
     await supabase
       .from("hq_oauth_connections")
       .update({
         last_sync_at: new Date().toISOString(),
         last_sync_status: "error",
         last_sync_error: message.slice(0, 500),
-        status: "degraded",
+        status: authFail ? "revoked" : "degraded",
         updated_at: new Date().toISOString(),
       })
       .eq("id", connection.id);
-    await markDataSources(supabase, workspaceId, provider, "degraded");
-    return { ok: false, error: message };
+    await markDataSources(supabase, workspaceId, provider, authFail ? "error" : "degraded");
+    return { ok: false, error: message, needsReconnect: authFail };
   }
 }
