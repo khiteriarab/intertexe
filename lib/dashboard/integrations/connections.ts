@@ -274,7 +274,11 @@ export async function syncProvider(
     return { ok: true, metrics: result.metrics, setupWarnings };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    const authFail = /invalid_grant|revoked|expired|unauthorized|401|403|token/i.test(message);
+    // Do not treat JSON parse messages ("Unexpected token") as auth failures.
+    const authFail =
+      /invalid_grant|access_denied|invalid_token|token.?revoked|token.?expired|unauthorized_client/i.test(
+        message
+      ) || /\b(401|403)\b/.test(message);
     await supabase
       .from("hq_oauth_connections")
       .update({

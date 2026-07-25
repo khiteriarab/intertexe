@@ -84,14 +84,29 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
   const [ascFile, setAscFile] = useState<File | null>(null);
   const [showAscForm, setShowAscForm] = useState(false);
 
+  async function readJson(res: Response) {
+    const contentType = res.headers.get("content-type") || "";
+    const text = await res.text();
+    if (!contentType.includes("application/json")) {
+      const prefix = text.slice(0, 200).replace(/\s+/g, " ").trim();
+      throw new Error(
+        `Expected JSON from ${res.url || "integrations API"} but got HTTP ${res.status} (${contentType || "unknown"}). Body starts: ${prefix}`
+      );
+    }
+    return text ? JSON.parse(text) : {};
+  }
+
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch("/api/dashboard/integrations");
-      const data = await res.json();
+      const res = await fetch("/api/dashboard/integrations", { redirect: "manual" });
+      if (res.status >= 300 && res.status < 400) {
+        throw new Error("Session expired — refresh and sign in again, then reopen Integrations.");
+      }
+      const data = await readJson(res);
       setCards(data.cards || []);
-    } catch {
-      setError("Could not load integrations");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Could not load integrations");
     } finally {
       setLoading(false);
     }
@@ -125,8 +140,12 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "disconnect" }),
+        redirect: "manual",
       });
-      const data = await res.json();
+      if (res.status >= 300 && res.status < 400) {
+        throw new Error("Session expired — sign in again, then retry.");
+      }
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data.message || "Disconnect failed");
       setMessage("Disconnected — stored tokens removed.");
       await load();
@@ -148,8 +167,12 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "sync" }),
+        redirect: "manual",
       });
-      const data = await res.json();
+      if (res.status >= 300 && res.status < 400) {
+        throw new Error("Session expired — sign in again, then retry Sync Now.");
+      }
+      const data = await readJson(res);
       if (!res.ok || data.ok === false) {
         throw new Error(data.error || data.message || "Sync failed — try Reconnect if access was revoked");
       }
@@ -187,8 +210,12 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
       const res = await fetch("/api/dashboard/integrations/app-store-connect", {
         method: "POST",
         body: fd,
+        redirect: "manual",
       });
-      const data = await res.json();
+      if (res.status >= 300 && res.status < 400) {
+        throw new Error("Session expired — sign in again, then retry.");
+      }
+      const data = await readJson(res);
       if (!res.ok) throw new Error(data.message || "Upload failed");
       setMessage("App Store Connect key saved and encrypted.");
       setAscFile(null);

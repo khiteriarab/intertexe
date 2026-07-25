@@ -14,11 +14,36 @@ const SCOPES = [
   "https://www.googleapis.com/auth/webmasters.readonly",
 ].join(" ");
 
+/** Parse Google API JSON without throwing opaque DOCTYPE errors. Never logs secrets. */
+async function readGoogleJson(
+  res: Response,
+  label: string
+): Promise<Record<string, unknown>> {
+  const contentType = res.headers.get("content-type") || "";
+  const text = await res.text();
+  const prefix = text.slice(0, 200).replace(/\s+/g, " ").trim();
+  try {
+    return text ? (JSON.parse(text) as Record<string, unknown>) : {};
+  } catch {
+    throw new Error(
+      `${label} returned non-JSON (HTTP ${res.status}, content-type=${contentType || "unknown"}). Body starts: ${prefix}`
+    );
+  }
+}
+
+function normalizeGa4PropertyId(raw: string): string {
+  const v = raw.trim();
+  if (!v) return "";
+  return v.startsWith("properties/") ? v.slice("properties/".length) : v;
+}
+
 export const googleAdapter: ProviderAdapter = {
   id: "google",
 
   isConfigured() {
-    return Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET);
+    return Boolean(
+      process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() && process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()
+    );
   },
 
   getAuthorizationUrl({ state, redirectUri }) {
@@ -47,8 +72,9 @@ export const googleAdapter: ProviderAdapter = {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
+      redirect: "manual",
     });
-    const json = (await res.json()) as Record<string, unknown>;
+    const json = await readGoogleJson(res, "Google token exchange");
     if (!res.ok) {
       throw new Error(String(json.error_description || json.error || "Google token exchange failed"));
     }
@@ -66,8 +92,9 @@ export const googleAdapter: ProviderAdapter = {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
+      redirect: "manual",
     });
-    const json = (await res.json()) as Record<string, unknown>;
+    const json = await readGoogleJson(res, "Google token refresh");
     if (!res.ok) {
       throw new Error(String(json.error_description || json.error || "Google refresh failed"));
     }
@@ -77,9 +104,14 @@ export const googleAdapter: ProviderAdapter = {
   async enrichAccount(accessToken: string) {
     const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
       headers: { Authorization: `Bearer ${accessToken}` },
+      redirect: "manual",
     });
     if (!res.ok) return {};
-    const u = (await res.json()) as { email?: string; id?: string; name?: string };
+    const u = (await readGoogleJson(res, "Google userinfo")) as {
+      email?: string;
+      id?: string;
+      name?: string;
+    };
     return {
       accountLabel: u.email || u.name || null,
       externalAccountId: u.id || null,
@@ -87,7 +119,9 @@ export const googleAdapter: ProviderAdapter = {
   },
 
   async syncMetrics({ accessToken, metadata }) {
-    const propertyId = String(metadata.ga4PropertyId || process.env.GA4_PROPERTY_ID || "").trim();
+    const propertyId = normalizeGa4PropertyId(
+      String(metadata.ga4PropertyId || process.env.GA4_PROPERTY_ID || "")
+    );
     const siteUrlConfigured = Boolean(
       String(metadata.searchConsoleSiteUrl || process.env.SEARCH_CONSOLE_SITE_URL || "").trim()
     );
@@ -103,30 +137,32 @@ export const googleAdapter: ProviderAdapter = {
       const end = new Date();
       const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
       const fmt = (d: Date) => d.toISOString().slice(0, 10);
-      const gaRes = await fetch(
-        `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            dateRanges: [{ startDate: fmt(start), endDate: fmt(end) }],
-            metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "screenPageViews" }],
-          }),
-        }
-      );
-      const gaJson = await gaRes.json();
+      const gaUrl = `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`;
+      const gaRes = await fetch(gaUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          dateRanges: [{ startDate: fmt(start), endDate: fmt(end) }],
+          metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "screenPageViews" }],
+        }),
+        redirect: "manual",
+      });
+      const gaJson = await readGoogleJson(gaRes, `GA4 runReport (${gaUrl})`);
       raw.ga4 = gaJson;
       if (gaRes.ok) {
-        const values = gaJson?.rows?.[0]?.metricValues || [];
+        const values =
+          (gaJson as { rows?: Array<{ metricValues?: Array<{ value?: string }> }> })?.rows?.[0]
+            ?.metricValues || [];
         metrics.ga4Sessions7d = Number(values[0]?.value || 0);
         metrics.ga4Users7d = Number(values[1]?.value || 0);
         metrics.ga4PageViews7d = Number(values[2]?.value || 0);
       } else {
+        const errObj = gaJson.error as { message?: string } | undefined;
         const msg =
-          gaJson?.error?.message ||
+          errObj?.message ||
           "GA4 report failed — confirm GA4_PROPERTY_ID and that this Google account can access the property";
         metrics.ga4Error = msg;
         setupWarnings.push(msg);
@@ -147,23 +183,22 @@ export const googleAdapter: ProviderAdapter = {
 
     const scEnd = new Date();
     const scStart = new Date(scEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const scRes = await fetch(
-      `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          startDate: scStart.toISOString().slice(0, 10),
-          endDate: scEnd.toISOString().slice(0, 10),
-          dimensions: ["query"],
-          rowLimit: 10,
-        }),
-      }
-    );
-    const scJson = await scRes.json();
+    const scUrl = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`;
+    const scRes = await fetch(scUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        startDate: scStart.toISOString().slice(0, 10),
+        endDate: scEnd.toISOString().slice(0, 10),
+        dimensions: ["query"],
+        rowLimit: 10,
+      }),
+      redirect: "manual",
+    });
+    const scJson = await readGoogleJson(scRes, `Search Console query (${scUrl})`);
     raw.searchConsole = scJson;
     if (scRes.ok) {
       const rows = Array.isArray(scJson.rows) ? scJson.rows : [];
@@ -177,8 +212,9 @@ export const googleAdapter: ProviderAdapter = {
         clicks: r.clicks,
       }));
     } else {
+      const errObj = scJson.error as { message?: string } | undefined;
       const msg =
-        scJson?.error?.message ||
+        errObj?.message ||
         `Search Console query failed for ${siteUrl} — confirm SEARCH_CONSOLE_SITE_URL and site ownership`;
       metrics.gscError = msg;
       setupWarnings.push(msg);
