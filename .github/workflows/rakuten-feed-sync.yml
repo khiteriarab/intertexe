@@ -1,0 +1,117 @@
+# Authoritative production Rakuten FTP sync (GitHub Actions).
+# Vercel /api/cron/rakuten-feed-sync is not scheduled; endpoint refuses cron imports.
+# DB lock system_status.rakuten_feed_sync_lock still guards any emergency/manual overlap.
+name: Rakuten Feed Sync
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      file_limit:
+        description: "Files per run"
+        required: false
+        default: "2"
+      ftp_dir_filter:
+        description: "Optional MID filter (empty = all merchants)"
+        required: false
+        default: ""
+
+concurrency:
+  group: rakuten-production-feed-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts || npm install --ignore-scripts
+
+      - name: Record checkpoint before
+        id: before
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node <<'EOF'
+          const { createClient } = require('@supabase/supabase-js');
+          const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+          (async () => {
+            const { data } = await sb.from('system_status').select('value_json').eq('key','rakuten_feed_chunk_state').maybeSingle();
+            const offset = Number(data?.value_json?.nextFileOffset ?? 0);
+            const total = Number(data?.value_json?.totalCatalogFiles ?? 0);
+            console.log(JSON.stringify({ checkpoint_before: offset, totalCatalogFiles: total }));
+            require('fs').appendFileSync(process.env.GITHUB_OUTPUT, `offset=${offset}\n`);
+            require('fs').appendFileSync(process.env.GITHUB_OUTPUT, `total=${total}\n`);
+          })();
+          EOF
+
+      - name: Run chunked Rakuten FTP sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RAKUTEN_FTP_USER: ${{ secrets.RAKUTEN_FTP_USER }}
+          RAKUTEN_FTP_USERNAME: ${{ secrets.RAKUTEN_FTP_USERNAME }}
+          RAKUTEN_FTP_PASSWORD: ${{ secrets.RAKUTEN_FTP_PASSWORD }}
+          RAKUTEN_FTP_HOST: ${{ secrets.RAKUTEN_FTP_HOST }}
+          RAKUTEN_CHUNK_FILE_LIMIT: ${{ github.event.inputs.file_limit || '2' }}
+          RAKUTEN_FTP_DIR_FILTER: ${{ github.event.inputs.ftp_dir_filter || '' }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          FEED_ALERT_EMAIL: ${{ secrets.FEED_ALERT_EMAIL }}
+          DESIGNER_LIVE_MIN_PRODUCTS: "2"
+          FEED_SYNC_OWNER: gha_${{ github.run_id }}
+        run: node scripts/run-rakuten-feed-chunk.mjs
+
+      - name: Record checkpoint after + summarize
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CHECKPOINT_BEFORE: ${{ steps.before.outputs.offset }}
+        run: |
+          node <<'EOF'
+          const { createClient } = require('@supabase/supabase-js');
+          const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+          (async () => {
+            const { data: chunk } = await sb.from('system_status').select('value_json').eq('key','rakuten_feed_chunk_state').maybeSingle();
+            const { data: sync } = await sb.from('system_status').select('value_json').eq('key','rakuten_feed_sync').maybeSingle();
+            const c = chunk?.value_json || {};
+            const v = sync?.value_json || {};
+            const summary = {
+              event: process.env.GITHUB_EVENT_NAME,
+              checkpoint_before: Number(process.env.CHECKPOINT_BEFORE || 0),
+              checkpoint_after: Number(c.nextFileOffset ?? 0),
+              totalCatalogFiles: Number(c.totalCatalogFiles ?? 0),
+              listingFailed: Boolean(c.listingFailed),
+              filesProcessed: Number(v.filesProcessed ?? c.filesProcessed ?? 0),
+              upserted: Number(v.upserted || 0),
+              inserted: Number(v.newProducts ?? v.inserted ?? v.new ?? 0),
+              updated: Number(v.updatedProducts ?? v.updated ?? 0),
+              rejected: Number(v.rejected || v.skipped || 0),
+              designersSynced: Number(v.designersSynced || 0),
+              errors: Array.isArray(v.errors) ? v.errors.slice(0, 10) : [],
+              updatedAt: v.updatedAt || c.updatedAt || null,
+            };
+            console.log(JSON.stringify(summary, null, 2));
+            const upserted = summary.upserted;
+            const designers = summary.designersSynced;
+            const designerErr = summary.errors.some((e) => /designer_sync/i.test(String(e)));
+            if (upserted > 0 && designers === 0 && designerErr) {
+              console.error('Designer sync failed after product inserts');
+              process.exit(1);
+            }
+            if (summary.listingFailed || summary.totalCatalogFiles === 0) {
+              console.error('FTP listing failed or zero catalog files');
+              process.exit(1);
+            }
+          })();
+          EOF
