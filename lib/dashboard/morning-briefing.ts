@@ -10,6 +10,7 @@ export type MorningPulseItem = {
   hint?: string | null;
   period?: string;
   href?: string;
+  attention?: boolean;
 };
 
 function count(n: number | null | undefined) {
@@ -27,7 +28,7 @@ function money(n: number | null | undefined, demo?: boolean) {
   });
 }
 
-/** Question-led morning pulse with explicit windows + safe WoW deltas. */
+/** Compact founder pulse — few tiles, clear windows, safe WoW deltas. */
 export function buildMorningPulse(input: {
   metrics: HqOverviewMetrics;
   google: GoogleDiscoveryMetrics;
@@ -50,16 +51,17 @@ export function buildMorningPulse(input: {
 
   const items: MorningPulseItem[] = [
     {
-      label: "Website visitors",
-      period: "Trailing 7d",
+      label: "Web visitors",
+      period: "7d",
       value: count(google.ga4Users7d ?? google.ga4Sessions7d),
       hint: google.connected
         ? google.deltas.users7d.label || google.deltas.sessions7d.label
-        : "Connect Google in Settings",
+        : "Google not connected",
       href: "/dashboard/acquisition",
+      attention: !google.connected,
     },
     {
-      label: "New registrations",
+      label: "Registrations",
       period: "Today",
       value: count(m.usersToday.value),
       hint: m.usersYesterday.value != null ? `Yesterday ${count(m.usersYesterday.value)}` : null,
@@ -67,44 +69,47 @@ export function buildMorningPulse(input: {
     },
     {
       label: "Scans",
-      period: "Trailing 7d",
+      period: "7d",
       value: count(m.scansLast7d.value),
-      hint: scanDelta.label,
+      hint:
+        [scanDelta.label, m.scansToday.value != null ? `Today ${count(m.scansToday.value)}` : null]
+          .filter(Boolean)
+          .join(" · ") || null,
       href: "/dashboard/scanner",
-    },
-    {
-      label: "Scans today",
-      period: "Today",
-      value: count(m.scansToday.value),
-      hint: m.scansYesterday.value != null ? `Yesterday ${count(m.scansYesterday.value)}` : null,
-      href: "/dashboard/scanner",
+      attention: Boolean(scanDelta.complete && (scanDelta.percent ?? 0) <= -10),
     },
     {
       label: "Affiliate clicks",
-      period: "Trailing 7d",
+      period: "7d",
       value: count(totalClicks7d),
       hint: clickDelta.label,
       href: "/dashboard/commerce",
     },
     {
-      label: "Verified commission",
-      period: "Trailing 7d",
+      label: "Commission",
+      period: "7d",
       value: money(
         commerce.revenueConnected && !commerce.revenueIsDemo ? commerce.commission7d : null,
         commerce.revenueIsDemo
       ),
-      hint: !commerce.revenueConnected && !commerce.revenueIsDemo ? "Not connected" : null,
+      hint: commerce.revenueIsDemo
+        ? "Demo data — replace"
+        : !commerce.revenueConnected
+          ? "Not connected"
+          : null,
       href: "/dashboard/commerce",
+      attention: Boolean(commerce.revenueIsDemo || !commerce.revenueConnected),
     },
   ];
 
   if (syncLatest?.status === "failure" || syncLatest?.status === "warning") {
-    items.push({
+    items.unshift({
       label: "Catalog sync",
-      period: "Latest run",
-      value: syncLatest.status === "failure" ? "Needs attention" : "Warning",
-      hint: "Product health",
+      period: "Latest",
+      value: syncLatest.status === "failure" ? "Failed" : "Warning",
+      hint: "Needs attention",
       href: "/dashboard/operations",
+      attention: true,
     });
   }
 

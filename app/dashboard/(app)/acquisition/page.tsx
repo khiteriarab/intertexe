@@ -96,13 +96,13 @@ export default async function HqAcquisitionPage() {
     <div>
       <HqPageHeader
         title="Acquisition"
-        description="How are people discovering INTERTEXE? Website and Search Console answer demand; first-touch tables answer which channels become customers and revenue."
+        description="How are people discovering INTERTEXE? Use this when an Action Center item points here — then return to Today."
         action={
           <Link
-            href="/dashboard/consumers"
+            href="/dashboard"
             className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white"
           >
-            Consumers
+            Back to Today
           </Link>
         }
       />
