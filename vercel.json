@@ -5,13 +5,10 @@
       "schedule": "*/2 * * * *"
     },
     {
-      "path": "/api/cron/rakuten-feed-sync",
-      "schedule": "*/30 * * * *"
-    },
-    {
       "path": "/api/cron/daily-catalog-refresh",
       "schedule": "0 3 * * *"
     },
+
     {
       "path": "/api/cron/feed-sync-stale-alert",
       "schedule": "0 12 * * *"

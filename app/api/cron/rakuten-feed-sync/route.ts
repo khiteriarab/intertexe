@@ -14,12 +14,53 @@ function authorize(request: Request): NextResponse | null {
   return null;
 }
 
-/** Manual / emergency trigger only — scheduled Vercel cron removed; GHA owns the schedule.
- *  Distributed lock prevents overlap with GitHub Actions.
+/**
+ * Production importer is owned by GitHub Actions (nightly + workflow_dispatch).
+ * Vercel cron is removed from vercel.json. This route:
+ * - Returns monitoring status for normal / Vercel-cron hits (no import, no checkpoint advance)
+ * - Allows emergency import only with ?force_import=1 + auth
+ * Distributed lock still prevents overlap if force_import is used while GHA runs.
  */
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
+
+  const url = new URL(request.url);
+  const forceImport = url.searchParams.get("force_import") === "1";
+  const isVercelCron = request.headers.get("x-vercel-cron") === "1";
+
+  if (!forceImport || isVercelCron) {
+    const supabase = getChunkSupabase();
+    if (!supabase) {
+      return NextResponse.json({ ok: false, error: "Missing Supabase env" }, { status: 500 });
+    }
+    const { data: chunk } = await supabase
+      .from("system_status")
+      .select("value_json")
+      .eq("key", "rakuten_feed_chunk_state")
+      .maybeSingle();
+    const { data: sync } = await supabase
+      .from("system_status")
+      .select("value_json")
+      .eq("key", "rakuten_feed_sync")
+      .maybeSingle();
+    const { data: lock } = await supabase
+      .from("system_status")
+      .select("value_json")
+      .eq("key", "rakuten_feed_sync_lock")
+      .maybeSingle();
+
+    return NextResponse.json({
+      ok: true,
+      importer: "disabled_on_vercel",
+      authoritativeRunner: "github_actions",
+      monitoringOnly: true,
+      checkpoint: chunk?.value_json ?? null,
+      lastSync: sync?.value_json ?? null,
+      lock: lock?.value_json ?? null,
+      hint: "Use GitHub Actions workflow_dispatch, or ?force_import=1 for emergency only",
+    });
+  }
 
   const supabase = getChunkSupabase();
   if (!supabase) {
@@ -27,7 +68,7 @@ export async function GET(request: Request) {
   }
 
   process.env.FEED_SYNC_OWNER =
-    process.env.FEED_SYNC_OWNER || `vercel_${process.env.VERCEL_REGION || "iad1"}`;
+    process.env.FEED_SYNC_OWNER || `vercel_emergency_${process.env.VERCEL_REGION || "iad1"}`;
 
   const result = await runRakutenFeedChunk(supabase);
   if (result.error?.startsWith("skipped_locked:")) {

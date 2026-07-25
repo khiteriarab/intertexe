@@ -14,16 +14,35 @@ function authorize(request: Request): NextResponse | null {
   return null;
 }
 
+/** Legacy alias — production schedule is GitHub Actions only. */
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
+
+  const url = new URL(request.url);
+  const forceImport = url.searchParams.get("force_import") === "1";
+  if (!forceImport) {
+    return NextResponse.json({
+      ok: true,
+      importer: "disabled_on_vercel",
+      authoritativeRunner: "github_actions",
+      monitoringOnly: true,
+      hint: "Use GitHub Actions, or ?force_import=1 for emergency only",
+    });
+  }
 
   const supabase = getChunkSupabase();
   if (!supabase) {
     return NextResponse.json({ ok: false, error: "Missing Supabase env" }, { status: 500 });
   }
 
+  process.env.FEED_SYNC_OWNER =
+    process.env.FEED_SYNC_OWNER || `vercel_emergency_chunk_${process.env.VERCEL_REGION || "iad1"}`;
+
   const result = await runRakutenFeedChunk(supabase);
+  if (result.error?.startsWith("skipped_locked:")) {
+    return NextResponse.json({ ...result, skipped: true }, { status: 200 });
+  }
   if (!result.ok) {
     return NextResponse.json(result, { status: 500 });
   }
