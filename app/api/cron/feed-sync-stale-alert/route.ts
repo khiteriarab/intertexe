@@ -1,68 +1,155 @@
+/**
+ * Enhanced feed health alerts:
+ * - FTP listing failure / 450
+ * - zero files discovered
+ * - zero upserts with files present
+ * - checkpoint not advancing
+ * - merchant feed stale (optional MID watch list)
+ */
+import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
+
 export const dynamic = "force-dynamic";
 
-import { NextResponse } from "next/server";
-import { getServerSupabase } from "@/lib/supabase-service-client";
-import { EMAIL_FROM } from "@/lib/email-constants";
-import { CATALOG_ALERT_EMAIL } from "@/lib/catalog-daily-report";
+const STALE_MS = 48 * 60 * 60 * 1000;
+const CHECKPOINT_STUCK_MS = 6 * 60 * 60 * 1000;
+const ALERT_EMAIL = process.env.FEED_ALERT_EMAIL || "info@intertexe.com";
 
 function authorize(request: Request): NextResponse | null {
-  const cronSecret = process.env.CRON_SECRET || process.env.FEED_SYNC_SECRET;
-  if (!cronSecret) return null;
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  const expected = process.env.CRON_SECRET || process.env.FEED_SYNC_SECRET;
+  if (!expected) return null;
+  const auth = request.headers.get("authorization") || "";
+  if (auth !== `Bearer ${expected}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return null;
+}
+
+async function sendEmail(subject: string, text: string): Promise<boolean> {
+  if (!process.env.RESEND_API_KEY) return false;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || "INTERTEXE <info@mail.intertexe.com>",
+        to: [ALERT_EMAIL],
+        subject,
+        text,
+      }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
 
-  const supabase = getServerSupabase();
-  if (!supabase) {
+  const supabaseUrl =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceKey) {
     return NextResponse.json({ ok: false, error: "Missing Supabase env" }, { status: 500 });
   }
 
-  const { data: row } = await supabase
-    .from("system_status")
-    .select("updated_at")
-    .eq("key", "rakuten_feed_sync")
-    .maybeSingle();
+  const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-  const lastSync = row?.updated_at ? new Date(row.updated_at) : null;
-  const hoursSinceSync = lastSync
-    ? (Date.now() - lastSync.getTime()) / (1000 * 60 * 60)
-    : null;
-  const stale = !lastSync || (hoursSinceSync ?? 0) > 48;
+  const [{ data: syncRow }, { data: chunkRow }, { data: dailyRow }, { count: displayable }, { count: feedItems }] =
+    await Promise.all([
+      supabase.from("system_status").select("value_json, updated_at").eq("key", "rakuten_feed_sync").maybeSingle(),
+      supabase.from("system_status").select("value_json, updated_at").eq("key", "rakuten_feed_chunk_state").maybeSingle(),
+      supabase.from("system_status").select("value_json, updated_at").eq("key", "daily_catalog_refresh").maybeSingle(),
+      supabase.from("products").select("id", { count: "exact", head: true }).eq("is_displayable", true),
+      supabase.from("homepage_feed_items").select("id", { count: "exact", head: true }),
+    ]);
+
+  const sync = syncRow?.value_json || {};
+  const chunk = chunkRow?.value_json || {};
+  const updatedAt = syncRow?.updated_at ? new Date(syncRow.updated_at).getTime() : 0;
+  const ageMs = updatedAt ? Date.now() - updatedAt : null;
+  const syncStale = !updatedAt || (ageMs != null && ageMs > STALE_MS);
+  const catalogEmpty = (displayable ?? 0) < 50 || (feedItems ?? 0) < 10;
+
+  const errors: string[] = Array.isArray(sync.errors)
+    ? sync.errors.map(String)
+    : [];
+  const listingFailed =
+    sync.listingFailed === true ||
+    chunk.listingFailed === true ||
+    errors.some((e) => /could not list|450|zero catalog/i.test(e));
+  const zeroFiles = Number(sync.totalCatalogFiles ?? chunk.totalCatalogFiles ?? 0) === 0;
+  const zeroUpserts =
+    Number(sync.upserted ?? chunk.upserted ?? 0) === 0 &&
+    Number(sync.filesProcessed ?? chunk.filesProcessed ?? 0) > 0;
+  const checkpointStuck =
+    Number(chunk.nextFileOffset ?? 0) > 0 &&
+    Number(chunk.totalCatalogFiles ?? 0) === 0 &&
+    chunkRow?.updated_at != null &&
+    Date.now() - new Date(chunkRow.updated_at).getTime() > CHECKPOINT_STUCK_MS;
+
+  const problems: string[] = [];
+  if (listingFailed) problems.push("FTP listing failed (450 / could not list)");
+  if (zeroFiles && !syncStale) problems.push("Zero catalog files discovered");
+  if (zeroUpserts) problems.push("Files processed but zero products upserted");
+  if (checkpointStuck) problems.push("Checkpoint stuck (offset not advancing)");
+  if (syncStale) problems.push(`Feed sync stale (${ageMs == null ? "?" : Math.round(ageMs / 3600000)}h)`);
+  if (catalogEmpty) problems.push("Catalog nearly empty");
 
   let emailed = false;
-  if (stale && process.env.RESEND_API_KEY) {
-    try {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: process.env.RESEND_FROM || EMAIL_FROM,
-          to: [CATALOG_ALERT_EMAIL],
-          subject: `INTERTEXE feed sync stale (${hoursSinceSync != null ? Math.round(hoursSinceSync) : "unknown"}h)`,
-          html: `<p>Rakuten feed sync has not run in ${hoursSinceSync != null ? Math.round(hoursSinceSync) : "unknown"} hours. Last sync: ${lastSync?.toISOString() ?? "never"}.</p>`,
-        }),
-      });
-      emailed = res.ok;
-    } catch (e) {
-      console.error("[feed-sync-stale-alert]", e);
-    }
+  if (problems.length && process.env.RESEND_API_KEY) {
+    emailed = await sendEmail(
+      problems.some((p) => /FTP|empty|stuck/i.test(p))
+        ? "INTERTEXE CRITICAL: feed pipeline"
+        : "INTERTEXE feed sync warning",
+      [
+        ...problems.map((p) => `- ${p}`),
+        "",
+        `Last Rakuten sync: ${syncRow?.updated_at || "never"}`,
+        `Last daily refresh: ${dailyRow?.updated_at || "never"}`,
+        `nextFileOffset: ${chunk.nextFileOffset ?? "n/a"}`,
+        `totalCatalogFiles: ${sync.totalCatalogFiles ?? chunk.totalCatalogFiles ?? "n/a"}`,
+        `upserted: ${sync.upserted ?? chunk.upserted ?? "n/a"}`,
+        `errors: ${errors.join(" | ") || "none"}`,
+        `displayable: ${displayable ?? 0}`,
+        `homepage feed items: ${feedItems ?? 0}`,
+      ].join("\n")
+    );
   }
 
-  return NextResponse.json({
-    status: stale ? (emailed ? "alert sent" : "stale") : "ok",
-    stale,
-    last_sync: lastSync?.toISOString() ?? null,
-    hours_since_sync: hoursSinceSync != null ? Math.round(hoursSinceSync) : null,
-    emailed,
-  });
+  const stale = problems.length > 0;
+  return NextResponse.json(
+    {
+      ok: !stale,
+      stale,
+      problems,
+      listingFailed,
+      zeroFiles,
+      zeroUpserts,
+      checkpointStuck,
+      syncStale,
+      catalogEmpty,
+      lastSync: syncRow?.updated_at || null,
+      lastDailyRefresh: dailyRow?.updated_at || null,
+      chunk,
+      syncSummary: {
+        upserted: sync.upserted,
+        filesProcessed: sync.filesProcessed,
+        totalCatalogFiles: sync.totalCatalogFiles,
+        nextFileOffset: sync.nextFileOffset ?? chunk.nextFileOffset,
+        errors,
+      },
+      displayable: displayable ?? 0,
+      homepageFeedItems: feedItems ?? 0,
+      emailed,
+    },
+    { status: stale ? 207 : 200 }
+  );
 }

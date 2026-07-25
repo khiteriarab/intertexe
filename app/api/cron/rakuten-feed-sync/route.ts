@@ -14,7 +14,9 @@ function authorize(request: Request): NextResponse | null {
   return null;
 }
 
-/** Production cron path — stateful chunked Rakuten sync (5 FTP files per run). */
+/** Manual / emergency trigger only — scheduled Vercel cron removed; GHA owns the schedule.
+ *  Distributed lock prevents overlap with GitHub Actions.
+ */
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
@@ -24,7 +26,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: "Missing Supabase env" }, { status: 500 });
   }
 
+  process.env.FEED_SYNC_OWNER =
+    process.env.FEED_SYNC_OWNER || `vercel_${process.env.VERCEL_REGION || "iad1"}`;
+
   const result = await runRakutenFeedChunk(supabase);
+  if (result.error?.startsWith("skipped_locked:")) {
+    return NextResponse.json({ ...result, skipped: true }, { status: 200 });
+  }
   if (!result.ok) {
     return NextResponse.json(result, { status: 500 });
   }
