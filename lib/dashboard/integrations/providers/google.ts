@@ -88,10 +88,14 @@ export const googleAdapter: ProviderAdapter = {
 
   async syncMetrics({ accessToken, metadata }) {
     const propertyId = String(metadata.ga4PropertyId || process.env.GA4_PROPERTY_ID || "").trim();
+    const siteUrlConfigured = Boolean(
+      String(metadata.searchConsoleSiteUrl || process.env.SEARCH_CONSOLE_SITE_URL || "").trim()
+    );
     const siteUrl = String(
       metadata.searchConsoleSiteUrl || process.env.SEARCH_CONSOLE_SITE_URL || "https://www.intertexe.com/"
     ).trim();
 
+    const setupWarnings: string[] = [];
     const metrics: Record<string, unknown> = { syncedAt: new Date().toISOString() };
     const raw: Record<string, unknown> = {};
 
@@ -121,10 +125,24 @@ export const googleAdapter: ProviderAdapter = {
         metrics.ga4Users7d = Number(values[1]?.value || 0);
         metrics.ga4PageViews7d = Number(values[2]?.value || 0);
       } else {
-        metrics.ga4Error = gaJson?.error?.message || "GA4 report failed — set ga4PropertyId in connection metadata";
+        const msg =
+          gaJson?.error?.message ||
+          "GA4 report failed — confirm GA4_PROPERTY_ID and that this Google account can access the property";
+        metrics.ga4Error = msg;
+        setupWarnings.push(msg);
       }
     } else {
-      metrics.ga4Note = "Set GA4_PROPERTY_ID env or connection metadata.ga4PropertyId to enable GA4 pull";
+      const msg =
+        "Setup required: set GA4_PROPERTY_ID in Vercel Production (or connection metadata.ga4PropertyId) to pull Analytics";
+      metrics.ga4Note = msg;
+      setupWarnings.push(msg);
+    }
+
+    if (!siteUrlConfigured) {
+      const msg =
+        "Setup note: SEARCH_CONSOLE_SITE_URL is unset — defaulting to https://www.intertexe.com/. Set it in Vercel if your Search Console property URL differs.";
+      metrics.gscSetupNote = msg;
+      setupWarnings.push(msg);
     }
 
     const scEnd = new Date();
@@ -159,7 +177,15 @@ export const googleAdapter: ProviderAdapter = {
         clicks: r.clicks,
       }));
     } else {
-      metrics.gscError = scJson?.error?.message || "Search Console query failed";
+      const msg =
+        scJson?.error?.message ||
+        `Search Console query failed for ${siteUrl} — confirm SEARCH_CONSOLE_SITE_URL and site ownership`;
+      metrics.gscError = msg;
+      setupWarnings.push(msg);
+    }
+
+    if (setupWarnings.length) {
+      metrics.setupWarnings = setupWarnings;
     }
 
     return { metrics, raw };

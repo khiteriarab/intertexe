@@ -21,15 +21,34 @@ export async function GET() {
 
   const connections = await listConnections(supabase, session.workspaceId);
   const byProvider = new Map(connections.map((c) => [c.provider, c]));
+  const encryptionConfigured = Boolean(process.env.HQ_TOKEN_ENCRYPTION_KEY?.trim());
+  const ga4Configured = Boolean(process.env.GA4_PROPERTY_ID?.trim());
+  const gscConfigured = Boolean(process.env.SEARCH_CONSOLE_SITE_URL?.trim());
 
   const providers = INTEGRATION_DEFINITIONS.map((def) => {
     const adapter = getAdapter(def.id);
     const conn = byProvider.get(def.id) || null;
-    const missingEnv = def.requiredEnv.filter((k) => !process.env[k]);
+    const missingEnv = def.requiredEnv.filter((k) => !process.env[k]?.trim());
     const reconnect = needsReconnect(conn);
     const linked =
       Boolean(conn) &&
       (conn!.status === "connected" || conn!.status === "degraded" || conn!.status === "error");
+    const setupHints: string[] = [];
+    if (def.id === "google") {
+      if (!ga4Configured) {
+        setupHints.push(
+          "Add GA4_PROPERTY_ID in Vercel Production to pull Google Analytics (e.g. properties/123456789)."
+        );
+      }
+      if (!gscConfigured) {
+        setupHints.push(
+          "SEARCH_CONSOLE_SITE_URL unset — sync will default to https://www.intertexe.com/. Set it if your Search Console property URL differs."
+        );
+      }
+    }
+    if (!encryptionConfigured) {
+      setupHints.push("Add HQ_TOKEN_ENCRYPTION_KEY in Vercel Production before connecting.");
+    }
     return {
       id: def.id,
       label: def.label,
@@ -38,6 +57,7 @@ export async function GET() {
       missingEnv,
       callbackUrl: def.authMode === "oauth" ? callbackUrl(def.id) : null,
       needsReconnect: reconnect,
+      setupHints,
       connection: conn
         ? {
             status: conn.status,
@@ -55,7 +75,9 @@ export async function GET() {
           ? "needs_reconnect"
           : conn!.last_sync_status === "error"
             ? "sync_error"
-            : "connected",
+            : conn!.last_sync_status === "warning"
+              ? "setup_warning"
+              : "connected",
     };
   });
 
@@ -75,10 +97,21 @@ export async function GET() {
       missingEnv: provider.missingEnv,
       callbackUrl: provider.callbackUrl,
       needsReconnect: provider.needsReconnect,
+      setupHints: provider.setupHints,
       displayStatus: provider.displayStatus,
       connection: provider.connection,
     };
   });
 
-  return NextResponse.json({ cards, providers });
+  return NextResponse.json({
+    cards,
+    providers,
+    envPresence: {
+      HQ_TOKEN_ENCRYPTION_KEY: encryptionConfigured,
+      GA4_PROPERTY_ID: ga4Configured,
+      SEARCH_CONSOLE_SITE_URL: gscConfigured,
+      GOOGLE_OAUTH_CLIENT_ID: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID?.trim()),
+      GOOGLE_OAUTH_CLIENT_SECRET: Boolean(process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()),
+    },
+  });
 }

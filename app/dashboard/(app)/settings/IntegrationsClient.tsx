@@ -25,7 +25,8 @@ type IntegrationCard = {
   missingEnv: string[];
   callbackUrl: string | null;
   needsReconnect: boolean;
-  displayStatus: "connected" | "not_connected" | "needs_reconnect" | "sync_error" | string;
+  setupHints?: string[];
+  displayStatus: "connected" | "not_connected" | "needs_reconnect" | "sync_error" | "setup_warning" | string;
   connection: ConnectionInfo | null;
 };
 
@@ -35,6 +36,14 @@ function StatusBadge({ status }: { status: string }) {
       <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase border border-emerald-200 bg-emerald-50 text-emerald-900 px-2 py-1">
         <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
         Connected
+      </span>
+    );
+  }
+  if (status === "setup_warning") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase border border-amber-200 bg-amber-50 text-amber-950 px-2 py-1">
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-amber-600" />
+        Setup needed
       </span>
     );
   }
@@ -144,7 +153,16 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
       if (!res.ok || data.ok === false) {
         throw new Error(data.error || data.message || "Sync failed — try Reconnect if access was revoked");
       }
-      setMessage("Sync completed.");
+      const warnings = Array.isArray(data.setupWarnings)
+        ? data.setupWarnings
+        : Array.isArray(data.metrics?.setupWarnings)
+          ? data.metrics.setupWarnings
+          : [];
+      setMessage(
+        warnings.length
+          ? `Sync completed with setup notes: ${warnings.join(" · ")}`
+          : "Sync completed."
+      );
       await load();
       router.refresh();
     } catch (e: unknown) {
@@ -237,10 +255,20 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                     </p>
                   ) : null}
                   {card.connection?.lastSyncError ? (
-                    <p className="text-red-700 leading-relaxed">
-                      Sync error: {card.connection.lastSyncError}
+                    <p
+                      className={`leading-relaxed ${
+                        card.connection.lastSyncStatus === "warning" ? "text-amber-900" : "text-red-700"
+                      }`}
+                    >
+                      {card.connection.lastSyncStatus === "warning" ? "Setup / sync note: " : "Sync error: "}
+                      {card.connection.lastSyncError}
                     </p>
                   ) : null}
+                  {(card.setupHints || []).map((hint) => (
+                    <p key={hint} className="text-amber-900 leading-relaxed">
+                      {hint}
+                    </p>
+                  ))}
                   {!card.appConfigured && card.authMode === "oauth" ? (
                     <p className="text-amber-900 leading-relaxed">
                       App credentials missing ({card.missingEnv.join(", ")}). Add them in Vercel, then Connect.

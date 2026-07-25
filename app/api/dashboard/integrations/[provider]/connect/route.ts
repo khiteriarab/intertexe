@@ -28,10 +28,13 @@ export async function GET(
   }
 
   const adapter = getAdapter(raw);
-  if (!adapter.isConfigured()) {
+  const missingEnv = def.requiredEnv.filter((k) => !process.env[k]?.trim());
+  if (!adapter.isConfigured() || missingEnv.length) {
     return NextResponse.json(
       {
-        message: `App credentials missing. Set ${def.requiredEnv.join(", ")} in Vercel, then retry Connect.`,
+        message: `App credentials missing. Set ${
+          missingEnv.length ? missingEnv.join(", ") : def.requiredEnv.join(", ")
+        } in Vercel, then retry Connect.`,
       },
       { status: 503 }
     );

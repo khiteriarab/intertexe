@@ -3,12 +3,11 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypt
 const ALGO = "aes-256-gcm";
 
 function encryptionKey(): Buffer {
-  const raw =
-    process.env.HQ_TOKEN_ENCRYPTION_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    "";
+  const raw = process.env.HQ_TOKEN_ENCRYPTION_KEY?.trim() || "";
   if (!raw) {
-    throw new Error("HQ_TOKEN_ENCRYPTION_KEY (or SUPABASE_SERVICE_ROLE_KEY) is required to store OAuth tokens");
+    throw new Error(
+      "HQ_TOKEN_ENCRYPTION_KEY is required to store OAuth tokens (set a dedicated key in Vercel Production — do not reuse the Supabase service-role key)"
+    );
   }
   // Normalize any length secret to 32 bytes.
   return createHash("sha256").update(raw).digest();

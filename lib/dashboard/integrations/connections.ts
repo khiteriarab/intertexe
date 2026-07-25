@@ -255,17 +255,23 @@ export async function syncProvider(
       },
       { onConflict: "workspace_id,provider,metric_date" }
     );
+    const setupWarnings = Array.isArray(result.metrics?.setupWarnings)
+      ? (result.metrics.setupWarnings as string[])
+      : [];
+    const hasHardError = Boolean(result.metrics?.ga4Error || result.metrics?.gscError);
+    const warningText = setupWarnings.length ? setupWarnings.join(" · ").slice(0, 500) : null;
     await supabase
       .from("hq_oauth_connections")
       .update({
         last_sync_at: new Date().toISOString(),
-        last_sync_status: "success",
-        last_sync_error: null,
+        last_sync_status: hasHardError ? "warning" : setupWarnings.length ? "warning" : "success",
+        last_sync_error: warningText,
+        status: "connected",
         updated_at: new Date().toISOString(),
       })
       .eq("id", connection.id);
     await markDataSources(supabase, workspaceId, provider, "connected");
-    return { ok: true, metrics: result.metrics };
+    return { ok: true, metrics: result.metrics, setupWarnings };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const authFail = /invalid_grant|revoked|expired|unauthorized|401|403|token/i.test(message);

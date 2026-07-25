@@ -14,7 +14,11 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     description:
       "Connect once with your Google account to pull GA4 traffic and Search Console query data nightly.",
     docsUrl: "https://console.cloud.google.com/apis/credentials",
-    requiredEnv: ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET"],
+    requiredEnv: [
+      "GOOGLE_OAUTH_CLIENT_ID",
+      "GOOGLE_OAUTH_CLIENT_SECRET",
+      "HQ_TOKEN_ENCRYPTION_KEY",
+    ],
   },
   {
     id: "meta",
@@ -24,7 +28,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     description:
       "Sign in with Meta / Facebook to connect the INTERTEXE Instagram professional account and pull insights.",
     docsUrl: "https://developers.facebook.com/apps/",
-    requiredEnv: ["META_OAUTH_APP_ID", "META_OAUTH_APP_SECRET"],
+    requiredEnv: ["META_OAUTH_APP_ID", "META_OAUTH_APP_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
   },
   {
     id: "tiktok",
@@ -33,7 +37,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     authMode: "oauth",
     description: "Connect TikTok for Business / Login Kit to pull account and performance metrics.",
     docsUrl: "https://developers.tiktok.com/",
-    requiredEnv: ["TIKTOK_OAUTH_CLIENT_KEY", "TIKTOK_OAUTH_CLIENT_SECRET"],
+    requiredEnv: ["TIKTOK_OAUTH_CLIENT_KEY", "TIKTOK_OAUTH_CLIENT_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
   },
   {
     id: "pinterest",
@@ -42,7 +46,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     authMode: "oauth",
     description: "Connect your Pinterest Business account via OAuth for pins and ad performance.",
     docsUrl: "https://developers.pinterest.com/",
-    requiredEnv: ["PINTEREST_OAUTH_APP_ID", "PINTEREST_OAUTH_APP_SECRET"],
+    requiredEnv: ["PINTEREST_OAUTH_APP_ID", "PINTEREST_OAUTH_APP_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
   },
   {
     id: "app_store_connect",
@@ -52,7 +56,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     description:
       "Apple does not offer user OAuth for App Store Connect Analytics API. Upload a team API key (.p8) once; HQ stores it encrypted and refreshes JWTs automatically.",
     docsUrl: "https://appstoreconnect.apple.com/access/integrations/api",
-    requiredEnv: [],
+    requiredEnv: ["HQ_TOKEN_ENCRYPTION_KEY"],
   },
 ];
 
