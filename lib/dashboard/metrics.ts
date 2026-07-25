@@ -331,6 +331,9 @@ export type HqConsumerRow = {
   favorites: number;
   lastScanAt: string | null;
   country: string | null;
+  acquisitionSource: string;
+  firstTouchCampaign: string | null;
+  firstLandingPage: string | null;
 };
 
 export async function fetchHqConsumerRows(limit = 40): Promise<{
@@ -341,15 +344,36 @@ export async function fetchHqConsumerRows(limit = 40): Promise<{
   if (!supabase) return { rows: [], error: "supabase_unavailable" };
 
   try {
-    const { data: prefs, error } = await supabase
-      .from("user_preferences")
-      .select("user_id, country_code, updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(limit);
+    let prefs: any[] | null = null;
+    let error: { message: string } | null = null;
+
+    {
+      const withAttr = await supabase
+        .from("user_preferences")
+        .select(
+          "user_id, country_code, updated_at, first_touch_source, first_touch_medium, first_touch_campaign, first_landing_page"
+        )
+        .order("updated_at", { ascending: false })
+        .limit(limit);
+      if (withAttr.error?.message?.includes("first_touch_source") || withAttr.error?.code === "42703") {
+        const fallback = await supabase
+          .from("user_preferences")
+          .select("user_id, country_code, updated_at")
+          .order("updated_at", { ascending: false })
+          .limit(limit);
+        prefs = fallback.data;
+        error = fallback.error;
+      } else {
+        prefs = withAttr.data;
+        error = withAttr.error;
+      }
+    }
 
     if (error) return { rows: [], error: error.message };
     const userIds = (prefs || []).map((p: any) => String(p.user_id)).filter(Boolean);
     if (!userIds.length) return { rows: [] };
+
+    const { displayAcquisitionSource } = await import("./attribution");
 
     const [scans, favorites] = await Promise.all([
       supabase
@@ -389,6 +413,13 @@ export async function fetchHqConsumerRows(limit = 40): Promise<{
       favorites: favCount.get(String(p.user_id)) || 0,
       lastScanAt: lastScan.get(String(p.user_id)) || null,
       country: p.country_code || null,
+      acquisitionSource: displayAcquisitionSource({
+        first_touch_source: p.first_touch_source,
+        first_touch_medium: p.first_touch_medium,
+        first_touch_campaign: p.first_touch_campaign,
+      }),
+      firstTouchCampaign: p.first_touch_campaign || null,
+      firstLandingPage: p.first_landing_page || null,
     }));
 
     rows.sort((a, b) => b.scans - a.scans || b.favorites - a.favorites);

@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { requireHqSession } from "../../../../lib/dashboard/auth";
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
 import { HqCard, HqPageHeader } from "../../components/HqUi";
 import { SettingsAdminClient } from "./SettingsAdminClient";
+import { IntegrationsClient } from "./IntegrationsClient";
 
 export const metadata = { title: "Settings" };
 
@@ -47,7 +49,7 @@ export default async function HqSettingsPage() {
     <div>
       <HqPageHeader
         title="Settings"
-        description="Workspace SaaS controls, team invites, platform API keys, data sources, and partnership CRM."
+        description="Workspace SaaS controls, OAuth integrations, team invites, platform API keys, and partnership CRM."
       />
 
       <div className="grid md:grid-cols-2 gap-4 mb-6">
@@ -74,7 +76,7 @@ export default async function HqSettingsPage() {
           <dl className="space-y-3 text-sm">
             <div>
               <dt className="text-xs uppercase tracking-wider text-black/45">Name</dt>
-              <dd className="mt-1">{session.fullName || "Khiteriara Brown"}</dd>
+              <dd className="mt-1">{session.fullName || "Operator"}</dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wider text-black/45">Email</dt>
@@ -88,6 +90,10 @@ export default async function HqSettingsPage() {
         </HqCard>
       </div>
 
+      <Suspense fallback={<HqCard title="Integrations">Loading…</HqCard>}>
+        <IntegrationsClient canAdmin={canAdmin} />
+      </Suspense>
+
       <SettingsAdminClient
         workspaceName={session.workspaceName}
         workspaceSlug={session.workspaceSlug}
@@ -97,7 +103,8 @@ export default async function HqSettingsPage() {
 
       <HqCard title="Data sources" className="mb-4 mt-6">
         <p className="text-sm text-black/55 mb-4">
-          Honest status only. No fabricated integrations. Import Rakuten revenue under Commerce.
+          Status mirrors Integrations + native systems (Supabase, Rakuten, Resend). Use Connect above for OAuth
+          platforms.
         </p>
         <div className="divide-y divide-black/10">
           {sources.map((row) => (
@@ -113,8 +120,8 @@ export default async function HqSettingsPage() {
 
       <HqCard title="Partnerships CRM">
         <p className="text-sm text-black/60 leading-relaxed mb-4">
-          Brand, retailer, influencer, press, investor, and university pipelines. Nested under Settings so the Dashboard’s
-          primary nav stays focused on material, brand, product, and DPP intelligence.
+          Brand, retailer, influencer, press, investor, and university pipelines. Nested under Settings so the
+          Dashboard’s primary nav stays focused on material, brand, product, and DPP intelligence.
         </p>
         <Link
           href="/dashboard/partnerships"

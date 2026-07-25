@@ -5,6 +5,7 @@ import { getSupabaseAuthUserId } from '../../../../lib/supabase-auth-server';
 import { parsePriceNumber } from '../../../../lib/scanner-copy';
 import { recordFunnelEvent } from '../../../../lib/scanner-funnel';
 import { emitAttributedEvent, extractUtmFromRequest } from '../../../../lib/dashboard/attribution';
+import { appendU1 } from '../../../../lib/affiliate-url';
 
 export async function POST(req: NextRequest) {
   const supabaseUrl =
@@ -82,8 +83,12 @@ export async function POST(req: NextRequest) {
     /* table may not exist yet */
   }
 
+  const u1 = userId || (sessionId ? String(sessionId) : null);
+  const redirectUrl =
+    typeof affiliateUrl === 'string' ? appendU1(affiliateUrl, u1) : affiliateUrl;
+
   return NextResponse.json({
-    redirect_url: affiliateUrl,
+    redirect_url: redirectUrl,
     tracked: true,
   });
 }

@@ -1,29 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRequire } from "module";
-import path from "path";
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
 import { fetchHqOverviewMetrics, fetchHqCommercePage } from "../../../../lib/dashboard/metrics";
-
-export const dynamic = "force-dynamic";
-export const maxDuration = 120;
-
-const require = createRequire(path.join(process.cwd(), "package.json"));
-const {
+import {
   loadNightlySyncOps,
   saveFounderReport,
   sendOpsAlertEmail,
-} = require("./lib/feed-sync/ops-monitor.cjs") as {
-  loadNightlySyncOps: (sb: unknown) => Promise<{
-    latest: Record<string, unknown> | null;
-    runs: Array<Record<string, unknown>>;
-  }>;
-  saveFounderReport: (sb: unknown, report: Record<string, unknown>) => Promise<unknown>;
-  sendOpsAlertEmail: (args: {
-    subject: string;
-    text: string;
-    html: string;
-  }) => Promise<{ ok: boolean; error: string | null }>;
-};
+} from "../../../../lib/feed-sync/ops-monitor";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 async function loadAcquisitionSafe() {
   try {
@@ -74,12 +59,47 @@ export async function GET(request: NextRequest) {
 
   const weekEnd = new Date();
   const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekStartIso = weekStart.toISOString();
 
-  const [metrics, commerce, acquisition, syncOps] = await Promise.all([
+  const [metrics, commerce, acquisition, syncOps, regs7d, topProducts] = await Promise.all([
     fetchHqOverviewMetrics(),
     fetchHqCommercePage(workspace.id),
     loadAcquisitionSafe(),
     loadNightlySyncOps(supabase),
+    (async () => {
+      try {
+        const { count } = await supabase
+          .from("users")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", weekStartIso);
+        return count ?? null;
+      } catch {
+        return null;
+      }
+    })(),
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("hq_affiliate_transactions")
+          .select("product_name, sku, sales_amount, quantity")
+          .eq("workspace_id", workspace.id)
+          .gte("transaction_date", weekStartIso)
+          .order("sales_amount", { ascending: false })
+          .limit(40);
+        if (!Array.isArray(data)) return [] as Array<{ name: string; sales: number }>;
+        const byName = new Map<string, number>();
+        for (const row of data) {
+          const name = String(row.product_name || row.sku || "Unknown").trim();
+          byName.set(name, (byName.get(name) || 0) + Number(row.sales_amount || 0));
+        }
+        return [...byName.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([name, sales]) => ({ name, sales }));
+      } catch {
+        return [] as Array<{ name: string; sales: number }>;
+      }
+    })(),
   ]);
 
   const runs = (syncOps.runs || []).filter((r) => {
@@ -108,6 +128,17 @@ export async function GET(request: NextRequest) {
   if (latest?.status === "failure" || latest?.status === "warning") {
     warnings.push(`Latest nightly sync status: ${latest.status}`);
   }
+  const latestStale = Array.isArray(latest?.affectedMerchants)
+    ? (latest.affectedMerchants as string[])
+    : Array.isArray(latest?.staleMerchants)
+      ? (latest.staleMerchants as string[])
+      : [];
+  if (latestStale.length) {
+    warnings.push(`Stale merchant feeds: ${latestStale.slice(0, 8).join(", ")}`);
+  }
+  if (latest?.emailError) {
+    warnings.push(`Ops alert email delivery previously failed (see HQ Operations; credentials not logged)`);
+  }
 
   const catalog = {
     successfulSyncs: successRuns.length,
@@ -118,9 +149,10 @@ export async function GET(request: NextRequest) {
     designersSynced: sum("designersSynced"),
     filesProcessed: sum("filesProcessed"),
     newMerchants: "n/a (auto-discovered MIDs; see Actions logs)",
-    staleOrFailingFeeds: failedRuns
-      .flatMap((r) => (Array.isArray(r.errors) ? r.errors : []))
-      .slice(0, 8),
+    staleOrFailingFeeds: [
+      ...latestStale.map((m) => `stale MID ${m}`),
+      ...failedRuns.flatMap((r) => (Array.isArray(r.errors) ? r.errors : [])),
+    ].slice(0, 12),
   };
 
   const commerceBlock = {
@@ -128,12 +160,12 @@ export async function GET(request: NextRequest) {
     grossSales: commerce.sales7d ?? null,
     commission: commerce.commission7d ?? null,
     topRetailers: (commerce.topRevenueAdvertisers || []).slice(0, 5),
-    topPurchasedProducts: [] as Array<{ name: string }>,
+    topPurchasedProducts: topProducts,
     revenueConnected: Boolean(commerce.revenueConnected && !commerce.revenueIsDemo),
   };
 
   const consumers = {
-    registrations: metrics.usersToday.value,
+    registrations: regs7d,
     knownConsumers: metrics.usersTotal.value,
     activeUsersHint: metrics.scansLast7d.value,
     scans7d: metrics.scansLast7d.value,
@@ -192,13 +224,28 @@ export async function GET(request: NextRequest) {
     `  Rejected products: ${catalog.rejectedProducts}`,
     `  Designers synced: ${catalog.designersSynced}`,
     `  Files processed: ${catalog.filesProcessed}`,
+    `  Stale/failing feed notes: ${
+      catalog.staleOrFailingFeeds.length
+        ? catalog.staleOrFailingFeeds.join("; ")
+        : "none"
+    }`,
     "",
     "COMMERCE",
+    `  Affiliate orders (7d): ${commerceBlock.affiliateOrders ?? "—"}`,
     `  Gross sales (7d): ${commerceBlock.grossSales ?? "—"}`,
     `  Commission (7d): ${commerceBlock.commission ?? "—"}`,
+    `  Top retailers: ${
+      (commerceBlock.topRetailers || [])
+        .map((r: { brand?: string }) => r.brand || "—")
+        .join(", ") || "—"
+    }`,
+    `  Top products: ${
+      (commerceBlock.topPurchasedProducts || []).map((p) => p.name).join(", ") || "—"
+    }`,
     `  Revenue connected: ${commerceBlock.revenueConnected ? "yes" : "no"}`,
     "",
     "CONSUMERS",
+    `  Registrations (7d): ${consumers.registrations ?? "—"}`,
     `  Known consumers: ${consumers.knownConsumers ?? "—"}`,
     `  Scans (7d): ${consumers.scans7d ?? "—"}`,
     `  Favorites: ${consumers.favorites ?? "—"}`,
@@ -207,9 +254,16 @@ export async function GET(request: NextRequest) {
     "ACQUISITION",
     `  Attributable sales (sources excl. unknown): ${acquisitionBlock.attributableRevenue}`,
     `  Unknown-attribution customers: ${acquisitionBlock.unknownAttributionCustomers ?? "—"}`,
-    `  Top sources: ${(acquisitionBlock.topSources || [])
-      .map((s) => `${s.label} (${s.customers})`)
-      .join(", ") || "—"}`,
+    `  Top sources: ${
+      (acquisitionBlock.topSources || [])
+        .map((s) => `${s.label} (${s.customers})`)
+        .join(", ") || "—"
+    }`,
+    `  Top campaigns: ${
+      (acquisitionBlock.topCampaigns || [])
+        .map((c) => `${c.label} (${c.customers})`)
+        .join(", ") || "—"
+    }`,
     "",
     "WARNINGS",
     ...(warnings.length ? warnings.map((w) => `  - ${w}`) : ["  - none"]),

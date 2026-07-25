@@ -1,7 +1,40 @@
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
   }
+}
+
+const GA_MEASUREMENT_ID = "G-EVKFJLK9BP";
+
+/** Parse GA4 client_id from the _ga cookie. */
+export function getGaClientId(): string | null {
+  if (typeof document === "undefined") return null;
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)_ga=([^;]+)/);
+    if (!m?.[1]) return null;
+    const raw = decodeURIComponent(m[1]);
+    const parts = raw.split(".");
+    if (parts.length >= 4) return `${parts[2]}.${parts[3]}`;
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Associate authenticated Supabase user with GA4 (user_id).
+ * Never send email/name — only the internal UUID.
+ */
+export function setGaUserId(userId: string | null | undefined) {
+  if (typeof window === "undefined" || !userId) return;
+  const id = String(userId).trim();
+  if (!id) return;
+  window.gtag?.("config", GA_MEASUREMENT_ID, {
+    user_id: id,
+    send_page_view: false,
+  });
+  window.gtag?.("set", { user_id: id });
 }
 
 /** Legacy scanner hooks (brand + mode + matched). */
@@ -11,12 +44,14 @@ export function trackScanStart(mode: string) {
 }
 
 export function trackScanComplete(
-  brandOrParams: string | {
-    naturalPercent: number;
-    verdict: string;
-    hasAlternatives: boolean;
-    source: "barcode" | "composition" | "url";
-  },
+  brandOrParams:
+    | string
+    | {
+        naturalPercent: number;
+        verdict: string;
+        hasAlternatives: boolean;
+        source: "barcode" | "composition" | "url";
+      },
   mode?: string,
   matched?: boolean
 ) {
@@ -65,7 +100,6 @@ export function trackAffiliateClick(params: {
   });
 }
 
-/** Editorial landing pages (e.g. /khiteri) — page visits. */
 export function trackEditorialPageView(params: { editSlug: string; editMonth: string }) {
   if (typeof window === "undefined") return;
   window.gtag?.("event", "editorial_page_view", {
@@ -75,7 +109,6 @@ export function trackEditorialPageView(params: { editSlug: string; editMonth: st
   });
 }
 
-/** Leaving-page redirect (brand + destination URL). */
 export function trackAffiliateRedirect(brand: string, url: string) {
   if (typeof window === "undefined") return;
   window.gtag?.("event", "affiliate_redirect", {
@@ -104,8 +137,10 @@ export function trackQuizComplete(params: {
 
 export function trackAccountCreated(params: {
   source: "scanner" | "quiz" | "wishlist" | "direct";
+  userId?: string;
 }) {
   if (typeof window === "undefined") return;
+  if (params.userId) setGaUserId(params.userId);
   window.gtag?.("event", "sign_up", {
     method: "email",
     source: params.source,

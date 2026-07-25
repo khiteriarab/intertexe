@@ -1,14 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { createRequire } from "module";
-import path from "path";
-
-const require = createRequire(path.join(process.cwd(), "package.json"));
-const { finalizeNightlySyncOps } = require("./lib/feed-sync/ops-monitor.cjs") as {
-  finalizeNightlySyncOps: (
-    supabase: SupabaseClient,
-    input: Record<string, unknown>
-  ) => Promise<{ run: Record<string, unknown>; emailSent: boolean; emailError: string | null }>;
-};
+import { detectStaleMerchants, finalizeNightlySyncOps } from "./ops-monitor";
 
 const CHUNK_STATE_KEY = "rakuten_feed_chunk_state";
 const LOCK_KEY = "rakuten_feed_sync_lock";
@@ -351,10 +342,20 @@ async function runRakutenFeedChunkLocked(
   const inserted = Number(syncResult.stats?.newProducts || 0);
   const updated = Number(syncResult.stats?.updatedProducts || 0);
   const rejected = Number(syncResult.stats?.rejected || 0);
+  let staleMerchants: string[] = [];
+  // Only surface stale feeds on cycle completion to avoid alert-every-chunk noise.
+  if (cycleComplete) {
+    try {
+      staleMerchants = await detectStaleMerchants(supabase);
+    } catch {
+      staleMerchants = [];
+    }
+  }
   const ops = await recordOps(supabase, startedAt, {
     ok: !failedList && !designerFailed,
     listingFailed: failedList,
     designerFailed,
+    cycleComplete,
     checkpointBefore: fileOffset,
     checkpointAfter: nextOffset,
     totalCatalogFiles: totalFiles,
@@ -365,6 +366,8 @@ async function runRakutenFeedChunkLocked(
     rejected,
     designersSynced,
     errors: errorMessages,
+    staleMerchants,
+    affectedMerchants: staleMerchants,
     workflowFailed: failedList || designerFailed,
   });
 

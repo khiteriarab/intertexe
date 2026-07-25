@@ -42,11 +42,18 @@ export default async function HqCommercePage() {
 
       <HqMetricGrid
         items={[
-          { label: "All clicks (7d)", value: formatCount(clicks7d) },
-          { label: "Shop clickouts (7d)", value: formatCount(data.shop7d) },
           {
-            label: "Verified commission (7d)",
-            value: data.revenueIsDemo ? "Demo only" : money(data.commission7d),
+            label: "Verified sales (30d)",
+            value: data.revenueIsDemo ? "—" : money(data.sales30d),
+            hint: data.revenueIsDemo
+              ? "Replace with verified reporting"
+              : data.revenueConnected
+                ? "Includes all imported Rakuten orders in window"
+                : "Not connected",
+          },
+          {
+            label: "Verified commission (30d)",
+            value: data.revenueIsDemo ? "Demo only" : money(data.commission30d),
             hint: data.revenueIsDemo
               ? "Not verified"
               : data.revenueConnected
@@ -59,8 +66,13 @@ export default async function HqCommercePage() {
             hint: data.revenueIsDemo
               ? "Replace with verified reporting"
               : data.revenueConnected
-                ? `${formatCount(data.transactions7d)} tx`
+                ? `${formatCount(data.transactions7d)} tx this week`
                 : "Not connected",
+          },
+          {
+            label: "All clicks (7d)",
+            value: formatCount(clicks7d),
+            hint: `Shop ${formatCount(data.shop7d)}`,
           },
         ]}
       />
