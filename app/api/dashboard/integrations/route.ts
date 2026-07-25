@@ -113,5 +113,11 @@ export async function GET() {
       GOOGLE_OAUTH_CLIENT_ID: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID?.trim()),
       GOOGLE_OAUTH_CLIENT_SECRET: Boolean(process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()),
     },
+    // Non-secret config so founders can confirm property targeting without opening Vercel.
+    config: {
+      GA4_PROPERTY_ID: process.env.GA4_PROPERTY_ID?.trim() || null,
+      SEARCH_CONSOLE_SITE_URL:
+        process.env.SEARCH_CONSOLE_SITE_URL?.trim() || "https://www.intertexe.com/ (default)",
+    },
   });
 }

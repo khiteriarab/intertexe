@@ -130,8 +130,83 @@ export const googleAdapter: ProviderAdapter = {
     ).trim();
 
     const setupWarnings: string[] = [];
-    const metrics: Record<string, unknown> = { syncedAt: new Date().toISOString() };
+    const metrics: Record<string, unknown> = {
+      syncedAt: new Date().toISOString(),
+      ga4PropertyIdUsed: propertyId || null,
+      searchConsoleSiteUrlUsed: siteUrl,
+    };
     const raw: Record<string, unknown> = {};
+
+    // Discover what this connected Google account can actually access (for diagnostics).
+    try {
+      const summaryRes = await fetch(
+        "https://analyticsadmin.googleapis.com/v1beta/accountSummaries?pageSize=200",
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          redirect: "manual",
+        }
+      );
+      const summaryJson = await readGoogleJson(summaryRes, "GA4 accountSummaries");
+      raw.ga4AccountSummaries = summaryJson;
+      if (summaryRes.ok) {
+        const accessible: Array<{ propertyId: string; displayName: string; property: string }> = [];
+        for (const account of (summaryJson.accountSummaries as Array<Record<string, unknown>>) || []) {
+          for (const prop of (account.propertySummaries as Array<Record<string, unknown>>) || []) {
+            const resource = String(prop.property || "");
+            const id = resource.startsWith("properties/")
+              ? resource.slice("properties/".length)
+              : resource;
+            if (!id) continue;
+            accessible.push({
+              propertyId: id,
+              property: resource || `properties/${id}`,
+              displayName: String(prop.displayName || id),
+            });
+          }
+        }
+        metrics.ga4AccessibleProperties = accessible;
+        if (propertyId && !accessible.some((p) => p.propertyId === propertyId)) {
+          setupWarnings.push(
+            `Connected account cannot access configured GA4_PROPERTY_ID=${propertyId}. Accessible property IDs: ${
+              accessible.map((p) => `${p.propertyId} (${p.displayName})`).join(", ") || "none"
+            }`
+          );
+        }
+      }
+    } catch (e) {
+      metrics.ga4DiscoveryError = e instanceof Error ? e.message : String(e);
+    }
+
+    try {
+      const sitesRes = await fetch("https://www.googleapis.com/webmasters/v3/sites", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        redirect: "manual",
+      });
+      const sitesJson = await readGoogleJson(sitesRes, "Search Console sites.list");
+      raw.searchConsoleSites = sitesJson;
+      if (sitesRes.ok) {
+        const entries = Array.isArray(sitesJson.siteEntry) ? sitesJson.siteEntry : [];
+        const accessibleSites = entries.map((e: { siteUrl?: string; permissionLevel?: string }) => ({
+          siteUrl: e.siteUrl,
+          permissionLevel: e.permissionLevel,
+        }));
+        metrics.gscAccessibleSites = accessibleSites;
+        const ok = accessibleSites.some(
+          (s: { siteUrl?: string }) =>
+            String(s.siteUrl || "").replace(/\/$/, "") === siteUrl.replace(/\/$/, "") ||
+            String(s.siteUrl || "") === siteUrl
+        );
+        if (!ok) {
+          setupWarnings.push(
+            `Connected account cannot access Search Console site ${siteUrl}. Accessible sites: ${
+              accessibleSites.map((s: { siteUrl?: string }) => s.siteUrl).join(", ") || "none"
+            }`
+          );
+        }
+      }
+    } catch (e) {
+      metrics.gscDiscoveryError = e instanceof Error ? e.message : String(e);
+    }
 
     if (propertyId) {
       const end = new Date();
@@ -150,7 +225,7 @@ export const googleAdapter: ProviderAdapter = {
         }),
         redirect: "manual",
       });
-      const gaJson = await readGoogleJson(gaRes, `GA4 runReport (${gaUrl})`);
+      const gaJson = await readGoogleJson(gaRes, `GA4 runReport (properties/${propertyId})`);
       raw.ga4 = gaJson;
       if (gaRes.ok) {
         const values =
@@ -163,13 +238,13 @@ export const googleAdapter: ProviderAdapter = {
         const errObj = gaJson.error as { message?: string } | undefined;
         const msg =
           errObj?.message ||
-          "GA4 report failed — confirm GA4_PROPERTY_ID and that this Google account can access the property";
+          `GA4 report failed for properties/${propertyId} — confirm GA4_PROPERTY_ID and that this Google account can access the property`;
         metrics.ga4Error = msg;
         setupWarnings.push(msg);
       }
     } else {
       const msg =
-        "Setup required: set GA4_PROPERTY_ID in Vercel Production (or connection metadata.ga4PropertyId) to pull Analytics";
+        "Setup required: set GA4_PROPERTY_ID in Vercel Production (numeric ID, e.g. 123456789)";
       metrics.ga4Note = msg;
       setupWarnings.push(msg);
     }
@@ -198,7 +273,7 @@ export const googleAdapter: ProviderAdapter = {
       }),
       redirect: "manual",
     });
-    const scJson = await readGoogleJson(scRes, `Search Console query (${scUrl})`);
+    const scJson = await readGoogleJson(scRes, `Search Console query (${siteUrl})`);
     raw.searchConsole = scJson;
     if (scRes.ok) {
       const rows = Array.isArray(scJson.rows) ? scJson.rows : [];
