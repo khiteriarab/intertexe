@@ -3,6 +3,11 @@ import {
   buildExecutiveBriefing,
   fetchInsightsBundle,
 } from "../../../lib/dashboard/insights";
+import {
+  fetchNightlySyncOps,
+  formatDuration,
+  statusBadgeClass,
+} from "../../../lib/dashboard/catalog-sync-ops";
 import { fetchHqCommercePage, formatCount, formatDelta } from "../../../lib/dashboard/metrics";
 import { HqCard, HqPageHeader } from "../components/HqUi";
 
@@ -29,9 +34,10 @@ function todayLine(label: string, value: number | null, hint?: string | null) {
 
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
-  const [{ metrics: m, live }, commerce] = await Promise.all([
+  const [{ metrics: m, live }, commerce, syncOps] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
+    fetchNightlySyncOps(),
   ]);
   const name = greetingName(session.fullName, session.email);
   const briefing = buildExecutiveBriefing(name, m, live, {
@@ -80,6 +86,13 @@ export default async function HqOverviewPage() {
       href: "/dashboard/commerce",
     });
   }
+  if (syncOps.latest?.status === "failure" || syncOps.latest?.status === "warning") {
+    founderActions.unshift({
+      key: "nightly_sync_attention",
+      text: "Review nightly catalog sync — requires attention",
+      href: "/dashboard/operations",
+    });
+  }
 
   const verifiedRevenueLabel = commerce.revenueIsDemo
     ? "Demo only"
@@ -92,6 +105,8 @@ export default async function HqOverviewPage() {
           })
         : "Connected"
       : "Not connected";
+
+  const latest = syncOps.latest;
 
   return (
     <div>
@@ -120,6 +135,94 @@ export default async function HqOverviewPage() {
           </p>
         </div>
       ) : null}
+
+      <HqCard className="mb-6" title="Nightly Catalog Sync">
+        {latest ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`text-[11px] tracking-widest uppercase border px-2 py-1 ${statusBadgeClass(
+                  latest.status
+                )}`}
+              >
+                {latest.displayStatus || latest.status}
+              </span>
+              <span className="text-xs text-black/45">
+                Last run {latest.finishedAt ? new Date(latest.finishedAt).toUTCString() : "—"}
+              </span>
+              {latest.githubRunUrl ? (
+                <a
+                  href={latest.githubRunUrl}
+                  className="text-xs underline underline-offset-2"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Actions run
+                </a>
+              ) : null}
+            </div>
+            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+              <li className="flex justify-between gap-3">
+                <span className="text-black/55">Last successful</span>
+                <span className="tabular-nums">
+                  {syncOps.lastSuccessfulAt
+                    ? new Date(syncOps.lastSuccessfulAt).toISOString().slice(0, 16).replace("T", " ")
+                    : "—"}
+                </span>
+              </li>
+              <li className="flex justify-between gap-3">
+                <span className="text-black/55">Duration</span>
+                <span className="tabular-nums">{formatDuration(latest.durationMs)}</span>
+              </li>
+              <li className="flex justify-between gap-3">
+                <span className="text-black/55">Files discovered / processed</span>
+                <span className="tabular-nums">
+                  {formatCount(latest.totalCatalogFiles ?? null)} / {formatCount(latest.filesProcessed ?? null)}
+                </span>
+              </li>
+              <li className="flex justify-between gap-3">
+                <span className="text-black/55">Inserted / updated / rejected</span>
+                <span className="tabular-nums">
+                  {formatCount(latest.inserted ?? null)} / {formatCount(latest.updated ?? null)} /{" "}
+                  {formatCount(latest.rejected ?? null)}
+                </span>
+              </li>
+              <li className="flex justify-between gap-3">
+                <span className="text-black/55">Designers synced</span>
+                <span className="tabular-nums">{formatCount(latest.designersSynced ?? null)}</span>
+              </li>
+              <li className="flex justify-between gap-3">
+                <span className="text-black/55">Checkpoint</span>
+                <span className="tabular-nums">
+                  {latest.checkpointBefore ?? "—"} → {latest.checkpointAfter ?? "—"}
+                </span>
+              </li>
+              <li className="flex justify-between gap-3 sm:col-span-2">
+                <span className="text-black/55">Next scheduled run</span>
+                <span className="tabular-nums">
+                  {syncOps.nextScheduledRun
+                    ? new Date(syncOps.nextScheduledRun).toISOString().replace("T", " ").slice(0, 19) +
+                      " UTC"
+                    : "—"}
+                </span>
+              </li>
+            </ul>
+            <a
+              href="/dashboard/operations"
+              className="inline-block text-xs tracking-widest uppercase underline underline-offset-4"
+            >
+              Sync history & founder reports →
+            </a>
+          </div>
+        ) : (
+          <p className="text-sm text-black/50">
+            Awaiting first monitored nightly run.{" "}
+            <a href="/dashboard/operations" className="underline underline-offset-2">
+              Operations →
+            </a>
+          </p>
+        )}
+      </HqCard>
 
       <HqCard className="mb-6">
         <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-3">Founder briefing</p>

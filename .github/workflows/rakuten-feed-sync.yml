@@ -73,21 +73,32 @@ jobs:
         run: node scripts/run-rakuten-feed-chunk.mjs
 
       - name: Record checkpoint after + summarize
+        if: always()
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CHECKPOINT_BEFORE: ${{ steps.before.outputs.offset }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          FEED_ALERT_EMAIL: ${{ secrets.FEED_ALERT_EMAIL }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          JOB_CONCLUSION: ${{ job.status }}
         run: |
           node <<'EOF'
           const { createClient } = require('@supabase/supabase-js');
+          const { finalizeNightlySyncOps } = require('./lib/feed-sync/ops-monitor.cjs');
           const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
           (async () => {
             const { data: chunk } = await sb.from('system_status').select('value_json').eq('key','rakuten_feed_chunk_state').maybeSingle();
             const { data: sync } = await sb.from('system_status').select('value_json').eq('key','rakuten_feed_sync').maybeSingle();
+            const { data: latest } = await sb.from('system_status').select('value_json').eq('key','rakuten_nightly_sync_latest').maybeSingle();
             const c = chunk?.value_json || {};
             const v = sync?.value_json || {};
+            const runId = process.env.GITHUB_RUN_ID;
+            const latestForThisRun = latest?.value_json?.githubRunId && String(latest.value_json.githubRunId) === String(runId);
             const summary = {
               event: process.env.GITHUB_EVENT_NAME,
+              jobStatus: process.env.JOB_CONCLUSION,
               checkpoint_before: Number(process.env.CHECKPOINT_BEFORE || 0),
               checkpoint_after: Number(c.nextFileOffset ?? 0),
               totalCatalogFiles: Number(c.totalCatalogFiles ?? 0),
@@ -99,9 +110,36 @@ jobs:
               rejected: Number(v.rejected || v.skipped || 0),
               designersSynced: Number(v.designersSynced || 0),
               errors: Array.isArray(v.errors) ? v.errors.slice(0, 10) : [],
+              hqLatestStatus: latest?.value_json?.status || null,
+              emailSent: latest?.value_json?.emailSent ?? null,
+              emailError: latest?.value_json?.emailError ?? null,
               updatedAt: v.updatedAt || c.updatedAt || null,
             };
             console.log(JSON.stringify(summary, null, 2));
+
+            // Safety net: if the job failed and this run never wrote HQ ops, record + alert.
+            if (process.env.JOB_CONCLUSION === 'failure' && !latestForThisRun) {
+              await finalizeNightlySyncOps(sb, {
+                startedAt: new Date(Date.now() - 60 * 1000).toISOString(),
+                finishedAt: new Date().toISOString(),
+                ok: false,
+                listingFailed: summary.listingFailed || summary.totalCatalogFiles === 0,
+                checkpointBefore: summary.checkpoint_before,
+                checkpointAfter: summary.checkpoint_after,
+                totalCatalogFiles: summary.totalCatalogFiles,
+                filesProcessed: summary.filesProcessed,
+                upserted: summary.upserted,
+                inserted: summary.inserted,
+                updated: summary.updated,
+                rejected: summary.rejected,
+                designersSynced: summary.designersSynced,
+                errors: summary.errors.length ? summary.errors : ['Workflow job failed'],
+                workflowFailed: true,
+                exceptionMessage: 'GitHub Actions job failed before a complete ops log was written',
+              });
+            }
+
+            if (process.env.JOB_CONCLUSION === 'failure') process.exit(1);
             const upserted = summary.upserted;
             const designers = summary.designersSynced;
             const designerErr = summary.errors.some((e) => /designer_sync/i.test(String(e)));

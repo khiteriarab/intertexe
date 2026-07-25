@@ -14,6 +14,7 @@ import { createClient } from "@supabase/supabase-js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const require = createRequire(path.join(root, "package.json"));
+const { finalizeNightlySyncOps } = require(path.join(root, "lib/feed-sync/ops-monitor.cjs"));
 
 const LOCK_KEY = "rakuten_feed_sync_lock";
 const CHUNK_STATE_KEY = "rakuten_feed_chunk_state";
@@ -74,6 +75,7 @@ async function main() {
   }
 
   const owner = process.env.FEED_SYNC_OWNER || `gha_${process.env.GITHUB_RUN_ID || process.pid}`;
+  const startedAt = new Date().toISOString();
   const lock = await acquireLock(sb, owner);
   if (!lock.ok) {
     console.log(JSON.stringify({ ok: false, skipped: true, reason: lock.reason }, null, 2));
@@ -88,14 +90,16 @@ async function main() {
   const checkpointBefore = Number(beforeRow?.value_json?.nextFileOffset ?? 0);
 
   try {
-    // Prefer TS runner when available via dynamic import; else pure JS path.
     let result;
+    let opsAlreadyRecorded = false;
     try {
       const mod = await import(
         pathToFileURL(path.join(root, "lib/feed-sync/run-rakuten-chunk.ts")).href
       );
       result = await mod.runRakutenFeedChunk(sb);
-    } catch {
+      opsAlreadyRecorded = Boolean(result?.opsStatus);
+    } catch (importErr) {
+      console.warn("TS runner unavailable, using JS fallback:", importErr?.message || importErr);
       const { syncRakutenFeeds } = require(path.join(root, "lib/feed-sync/rakuten-sync.js"));
       let fileOffset = checkpointBefore;
       const fileLimit = Number(process.env.RAKUTEN_CHUNK_FILE_LIMIT || 2);
@@ -168,6 +172,30 @@ async function main() {
         },
         error: failedList ? errorMessages[0] : undefined,
       };
+
+      const ops = await finalizeNightlySyncOps(sb, {
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        ok: result.ok,
+        listingFailed: failedList,
+        designerFailed: errorMessages.some((m) => /designer_sync/i.test(m)),
+        checkpointBefore: fileOffset,
+        checkpointAfter: nextOffset,
+        totalCatalogFiles: totalFiles,
+        filesProcessed: processed,
+        upserted,
+        inserted: Number(syncResult.stats?.newProducts || 0),
+        updated: Number(syncResult.stats?.updatedProducts || 0),
+        rejected: Number(syncResult.stats?.rejected || 0),
+        designersSynced: syncResult.designersSynced || 0,
+        errors: errorMessages,
+        workflowFailed: !result.ok,
+        source: owner,
+      });
+      result.opsStatus = ops.run.status;
+      result.emailSent = ops.emailSent;
+      result.emailError = ops.emailError;
+      opsAlreadyRecorded = true;
     }
 
     const { data: afterRow } = await sb
@@ -175,6 +203,32 @@ async function main() {
       .select("value_json")
       .eq("key", CHUNK_STATE_KEY)
       .maybeSingle();
+
+    if (!opsAlreadyRecorded) {
+      const sync = result.sync || {};
+      const ops = await finalizeNightlySyncOps(sb, {
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        ok: result.ok,
+        listingFailed: Number(sync.totalCatalogFiles || 0) === 0,
+        designerFailed: (sync.errorMessages || []).some((m) => /designer_sync/i.test(String(m))),
+        checkpointBefore,
+        checkpointAfter: Number(afterRow?.value_json?.nextFileOffset ?? result.nextFileOffset),
+        totalCatalogFiles: Number(sync.totalCatalogFiles || 0),
+        filesProcessed: Number(sync.filesProcessed || 0),
+        upserted: Number(sync.upserted || 0),
+        inserted: Number(sync.newProducts || 0),
+        updated: Number(sync.updatedProducts || 0),
+        rejected: Number(sync.rejected || 0),
+        designersSynced: Number(result.designersSynced || 0),
+        errors: sync.errorMessages || [],
+        workflowFailed: result.ok === false,
+        source: owner,
+      });
+      result.opsStatus = ops.run.status;
+      result.emailSent = ops.emailSent;
+      result.emailError = ops.emailError;
+    }
 
     const report = {
       ...result,
@@ -184,6 +238,27 @@ async function main() {
     };
     console.log(JSON.stringify(report, null, 2));
     if (!result.ok && Number(result.sync?.totalCatalogFiles || 0) === 0) process.exit(1);
+  } catch (err) {
+    try {
+      await finalizeNightlySyncOps(sb, {
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        ok: false,
+        listingFailed: true,
+        checkpointBefore,
+        checkpointAfter: checkpointBefore,
+        totalCatalogFiles: 0,
+        filesProcessed: 0,
+        upserted: 0,
+        errors: [err?.message || String(err)],
+        exceptionMessage: err?.message || String(err),
+        workflowFailed: true,
+        source: owner,
+      });
+    } catch (opsErr) {
+      console.warn("[ops-monitor] finalize after exception failed:", opsErr?.message || opsErr);
+    }
+    throw err;
   } finally {
     await releaseLock(sb, owner);
   }

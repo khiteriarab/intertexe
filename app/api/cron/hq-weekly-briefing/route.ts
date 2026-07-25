@@ -1,15 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createRequire } from "module";
+import path from "path";
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
-import {
-  buildExecutiveBriefing,
-  buildRuleInsights,
-} from "../../../../lib/dashboard/insights";
 import { fetchHqOverviewMetrics, fetchHqCommercePage } from "../../../../lib/dashboard/metrics";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
+
+const require = createRequire(path.join(process.cwd(), "package.json"));
+const {
+  loadNightlySyncOps,
+  saveFounderReport,
+  sendOpsAlertEmail,
+} = require("./lib/feed-sync/ops-monitor.cjs") as {
+  loadNightlySyncOps: (sb: unknown) => Promise<{
+    latest: Record<string, unknown> | null;
+    runs: Array<Record<string, unknown>>;
+  }>;
+  saveFounderReport: (sb: unknown, report: Record<string, unknown>) => Promise<unknown>;
+  sendOpsAlertEmail: (args: {
+    subject: string;
+    text: string;
+    html: string;
+  }) => Promise<{ ok: boolean; error: string | null }>;
+};
+
+async function loadAcquisitionSafe() {
+  try {
+    const mod = await import("../../../../lib/dashboard/acquisition");
+    return await mod.fetchHqAcquisitionReport();
+  } catch {
+    return {
+      bySource: [] as Array<{
+        key: string;
+        label: string;
+        customers: number;
+        purchasers?: number;
+        sales: number;
+        commission: number;
+      }>,
+      byCampaign: [] as Array<{
+        key: string;
+        label: string;
+        customers: number;
+        sales: number;
+        commission: number;
+      }>,
+      totals: { unknown: null as number | null },
+    };
+  }
+}
 
 /**
- * Weekly founder briefing email.
+ * Monday founder operations summary → info@intertexe.com + HQ Founder Reports.
  * Secure with Authorization: Bearer $CRON_SECRET
  */
 export async function GET(request: NextRequest) {
@@ -29,51 +72,186 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
   if (!workspace) return NextResponse.json({ message: "Workspace missing" }, { status: 404 });
 
-  const metrics = await fetchHqOverviewMetrics();
-  const commerce = await fetchHqCommercePage(workspace.id);
-  const insights = buildRuleInsights(metrics);
-  const lines = buildExecutiveBriefing("Khiteri", metrics, insights);
-  if (commerce.revenueConnected) {
-    lines.push(
-      `Revenue 7d — commission $${Number(commerce.commission7d || 0).toFixed(0)}, sales $${Number(commerce.sales7d || 0).toFixed(0)}.`
-    );
-  } else {
-    lines.push("Revenue still not connected — import Rakuten transactions in Dashboard → Commerce.");
-  }
+  const weekEnd = new Date();
+  const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const to = process.env.HQ_WEEKLY_REPORT_EMAIL || "info@intertexe.com";
-  const resendKey = process.env.RESEND_API_KEY;
-  if (!resendKey) {
-    return NextResponse.json({ message: "RESEND_API_KEY missing", preview: lines }, { status: 503 });
-  }
+  const [metrics, commerce, acquisition, syncOps] = await Promise.all([
+    fetchHqOverviewMetrics(),
+    fetchHqCommercePage(workspace.id),
+    fetchHqAcquisitionReport(),
+    loadNightlySyncOps(supabase),
+  ]);
 
-  const html = `
-    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a">
-      <p style="letter-spacing:0.2em;font-size:11px;text-transform:uppercase;color:#888">INTERTEXE Dashboard</p>
-      <h1 style="font-weight:500;font-size:28px">Weekly briefing</h1>
-      ${lines.map((l) => `<p style="line-height:1.5">${l}</p>`).join("")}
-      <p style="margin-top:28px"><a href="https://www.intertexe.com/dashboard">Open Dashboard →</a></p>
-    </div>
-  `;
-
-  const send = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: process.env.RESEND_FROM_EMAIL || "Intertexe <info@mail.intertexe.com>",
-      to: [to],
-      subject: "INTERTEXE weekly briefing",
-      html,
-    }),
+  const runs = (syncOps.runs || []).filter((r) => {
+    const t = r.finishedAt ? Date.parse(String(r.finishedAt)) : 0;
+    return t >= weekStart.getTime();
   });
+  const successRuns = runs.filter((r) => r.status === "success");
+  const failedRuns = runs.filter((r) => r.status === "failure" || r.status === "warning");
+  const sum = (key: string) =>
+    runs.reduce((acc, r) => acc + Number((r as Record<string, unknown>)[key] || 0), 0);
 
-  if (!send.ok) {
-    const text = await send.text();
-    return NextResponse.json({ message: text.slice(0, 400) }, { status: 502 });
+  const warnings: string[] = [];
+  if (failedRuns.length) {
+    warnings.push(`${failedRuns.length} catalog sync run(s) needed attention in the last 7 days`);
+  }
+  if (!commerce.revenueConnected || commerce.revenueIsDemo) {
+    warnings.push("Verified affiliate revenue is not fully connected (demo or missing)");
+  }
+  if ((commerce.unmatchedTx30d || 0) > 0) {
+    warnings.push(`${commerce.unmatchedTx30d} unmatched affiliate transactions (30d)`);
+  }
+  if ((acquisition.totals?.unknown || 0) > 0) {
+    warnings.push(`${acquisition.totals.unknown} consumers with unknown first-touch attribution`);
+  }
+  const latest = syncOps.latest;
+  if (latest?.status === "failure" || latest?.status === "warning") {
+    warnings.push(`Latest nightly sync status: ${latest.status}`);
   }
 
-  return NextResponse.json({ ok: true, to, lines });
+  const catalog = {
+    successfulSyncs: successRuns.length,
+    failedOrWarningSyncs: failedRuns.length,
+    newProducts: sum("inserted"),
+    updatedProducts: sum("updated"),
+    rejectedProducts: sum("rejected"),
+    designersSynced: sum("designersSynced"),
+    filesProcessed: sum("filesProcessed"),
+    newMerchants: "n/a (auto-discovered MIDs; see Actions logs)",
+    staleOrFailingFeeds: failedRuns
+      .flatMap((r) => (Array.isArray(r.errors) ? r.errors : []))
+      .slice(0, 8),
+  };
+
+  const commerceBlock = {
+    affiliateOrders: commerce.transactions7d ?? null,
+    grossSales: commerce.sales7d ?? null,
+    commission: commerce.commission7d ?? null,
+    topRetailers: (commerce.topRevenueAdvertisers || []).slice(0, 5),
+    topPurchasedProducts: [] as Array<{ name: string }>,
+    revenueConnected: Boolean(commerce.revenueConnected && !commerce.revenueIsDemo),
+  };
+
+  const consumers = {
+    registrations: metrics.usersToday.value,
+    knownConsumers: metrics.usersTotal.value,
+    activeUsersHint: metrics.scansLast7d.value,
+    scans7d: metrics.scansLast7d.value,
+    favorites: metrics.favoritesTotal.value,
+    affiliateClickouts7d:
+      (metrics.clickoutsLast7d.value || 0) +
+      (metrics.scannerClickoutsLast7d.value || 0) +
+      (metrics.editorialClickoutsLast7d.value || 0),
+  };
+
+  const acquisitionBlock = {
+    topSources: (acquisition.bySource || []).slice(0, 5).map((b) => ({
+      label: b.label,
+      customers: b.customers,
+      sales: b.sales,
+      commission: b.commission,
+    })),
+    topCampaigns: (acquisition.byCampaign || []).slice(0, 5).map((b) => ({
+      label: b.label,
+      customers: b.customers,
+      sales: b.sales,
+      commission: b.commission,
+    })),
+    attributableRevenue: (acquisition.bySource || [])
+      .filter((b) => b.key !== "unknown")
+      .reduce((a, b) => a + Number(b.sales || 0), 0),
+    unknownAttributionCustomers: acquisition.totals?.unknown ?? null,
+    unknownAttributionPurchasers: (acquisition.bySource || []).find((b) => b.key === "unknown")
+      ?.purchasers,
+  };
+
+  const report = {
+    id: `founder_${weekStart.toISOString().slice(0, 10)}`,
+    weekStart: weekStart.toISOString(),
+    weekEnd: weekEnd.toISOString(),
+    generatedAt: new Date().toISOString(),
+    subject: "INTERTEXE weekly founder operations summary",
+    catalog,
+    commerce: commerceBlock,
+    consumers,
+    acquisition: acquisitionBlock,
+    warnings,
+    emailSent: false,
+    emailError: null as string | null,
+  };
+
+  const text = [
+    "INTERTEXE — Weekly founder operations summary",
+    `Period (UTC): ${weekStart.toISOString().slice(0, 10)} → ${weekEnd.toISOString().slice(0, 10)}`,
+    "",
+    "CATALOG",
+    `  Successful syncs: ${catalog.successfulSyncs}`,
+    `  Failed/warning syncs: ${catalog.failedOrWarningSyncs}`,
+    `  New products: ${catalog.newProducts}`,
+    `  Updated products: ${catalog.updatedProducts}`,
+    `  Rejected products: ${catalog.rejectedProducts}`,
+    `  Designers synced: ${catalog.designersSynced}`,
+    `  Files processed: ${catalog.filesProcessed}`,
+    "",
+    "COMMERCE",
+    `  Gross sales (7d): ${commerceBlock.grossSales ?? "—"}`,
+    `  Commission (7d): ${commerceBlock.commission ?? "—"}`,
+    `  Revenue connected: ${commerceBlock.revenueConnected ? "yes" : "no"}`,
+    "",
+    "CONSUMERS",
+    `  Known consumers: ${consumers.knownConsumers ?? "—"}`,
+    `  Scans (7d): ${consumers.scans7d ?? "—"}`,
+    `  Favorites: ${consumers.favorites ?? "—"}`,
+    `  Affiliate clickouts (7d): ${consumers.affiliateClickouts7d ?? "—"}`,
+    "",
+    "ACQUISITION",
+    `  Attributable sales (sources excl. unknown): ${acquisitionBlock.attributableRevenue}`,
+    `  Unknown-attribution customers: ${acquisitionBlock.unknownAttributionCustomers ?? "—"}`,
+    `  Top sources: ${(acquisitionBlock.topSources || [])
+      .map((s) => `${s.label} (${s.customers})`)
+      .join(", ") || "—"}`,
+    "",
+    "WARNINGS",
+    ...(warnings.length ? warnings.map((w) => `  - ${w}`) : ["  - none"]),
+    "",
+    "Open HQ: https://www.intertexe.com/dashboard/operations",
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#1a1a1a">
+  <p style="letter-spacing:0.18em;font-size:11px;text-transform:uppercase;color:#888">INTERTEXE Founder</p>
+  <h1 style="font-weight:500;font-size:26px">Weekly operations summary</h1>
+  <pre style="white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:13px;line-height:1.45;background:#f7f7f5;padding:16px;border-radius:8px">${text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")}</pre>
+  <p style="margin-top:20px"><a href="https://www.intertexe.com/dashboard/operations">Open INTERTEXE HQ Operations →</a></p>
+</div>`;
+
+  const sent = await sendOpsAlertEmail({
+    subject: report.subject,
+    text,
+    html,
+  });
+  report.emailSent = sent.ok;
+  report.emailError = sent.error;
+
+  try {
+    await saveFounderReport(supabase, report);
+  } catch (err) {
+    return NextResponse.json(
+      {
+        ok: false,
+        emailSent: sent.ok,
+        message: err instanceof Error ? err.message : String(err),
+      },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({
+    ok: true,
+    emailSent: sent.ok,
+    emailError: sent.error,
+    reportId: report.id,
+    warnings,
+  });
 }

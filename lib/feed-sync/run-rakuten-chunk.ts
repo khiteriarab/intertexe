@@ -1,9 +1,18 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createRequire } from "module";
+import path from "path";
+
+const require = createRequire(path.join(process.cwd(), "package.json"));
+const { finalizeNightlySyncOps } = require("./lib/feed-sync/ops-monitor.cjs") as {
+  finalizeNightlySyncOps: (
+    supabase: SupabaseClient,
+    input: Record<string, unknown>
+  ) => Promise<{ run: Record<string, unknown>; emailSent: boolean; emailError: string | null }>;
+};
 
 const CHUNK_STATE_KEY = "rakuten_feed_chunk_state";
 const LOCK_KEY = "rakuten_feed_sync_lock";
 const DEFAULT_FILE_LIMIT = Number(process.env.RAKUTEN_CHUNK_FILE_LIMIT || 2);
-const ALERT_EMAIL = process.env.FEED_ALERT_EMAIL || "info@intertexe.com";
 const LOCK_TTL_MS = 45 * 60 * 1000;
 
 async function acquireFeedLock(
@@ -67,9 +76,14 @@ export type RakutenChunkResult = {
   designersSynced?: number;
   homepageRefreshed?: boolean;
   alerted?: boolean;
+  opsStatus?: string;
+  emailSent?: boolean;
+  emailError?: string | null;
   sync: {
     upserted?: number;
     rejected?: number;
+    newProducts?: number;
+    updatedProducts?: number;
     filesProcessed?: number;
     totalCatalogFiles?: number;
     stockStatusBackfilled?: number;
@@ -93,34 +107,13 @@ function listingFailed(syncResult: {
   return false;
 }
 
-async function sendFeedAlert(subject: string, body: string): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) return false;
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM || "INTERTEXE <info@mail.intertexe.com>",
-        to: [ALERT_EMAIL],
-        subject,
-        text: body,
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
 export async function runRakutenFeedChunk(
   supabase: SupabaseClient
 ): Promise<RakutenChunkResult> {
   const owner =
     process.env.FEED_SYNC_OWNER ||
     `runner_${process.env.GITHUB_RUN_ID || process.env.VERCEL_REGION || "local"}_${process.pid}`;
+  const startedAt = new Date().toISOString();
   const lock = await acquireFeedLock(supabase, owner);
   if (!lock.ok) {
     return {
@@ -135,14 +128,43 @@ export async function runRakutenFeedChunk(
   }
 
   try {
-    return await runRakutenFeedChunkLocked(supabase);
+    return await runRakutenFeedChunkLocked(supabase, startedAt);
   } finally {
     await releaseFeedLock(supabase, owner);
   }
 }
 
+async function recordOps(
+  supabase: SupabaseClient,
+  startedAt: string,
+  partial: Record<string, unknown>
+) {
+  try {
+    const ops = await finalizeNightlySyncOps(supabase, {
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      event: process.env.GITHUB_EVENT_NAME || "manual",
+      source: process.env.FEED_SYNC_OWNER || "rakuten-feed-chunk",
+      ...partial,
+    });
+    return {
+      alerted: Boolean(ops.emailSent),
+      opsStatus: String(ops.run.status || ""),
+      emailSent: ops.emailSent,
+      emailError: ops.emailError,
+    };
+  } catch (err) {
+    console.warn(
+      "[ops-monitor] finalize failed:",
+      err instanceof Error ? err.message : String(err)
+    );
+    return { alerted: false, opsStatus: "failure", emailSent: false, emailError: String(err) };
+  }
+}
+
 async function runRakutenFeedChunkLocked(
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  startedAt: string
 ): Promise<RakutenChunkResult> {
   let fileOffset = 0;
   try {
@@ -204,17 +226,32 @@ async function runRakutenFeedChunkLocked(
       },
       updated_at: new Date().toISOString(),
     });
-    const alerted = await sendFeedAlert(
-      "INTERTEXE CRITICAL: Rakuten FTP sync failed",
-      [`Offset ${fileOffset}`, message, new Date().toISOString()].join("\n")
-    );
+    const ops = await recordOps(supabase, startedAt, {
+      ok: false,
+      listingFailed: true,
+      checkpointBefore: fileOffset,
+      checkpointAfter: 0,
+      totalCatalogFiles: 0,
+      filesProcessed: 0,
+      upserted: 0,
+      inserted: 0,
+      updated: 0,
+      rejected: 0,
+      designersSynced: 0,
+      errors: [message],
+      exceptionMessage: message,
+      workflowFailed: true,
+    });
     return {
       ok: false,
       fileOffset,
       nextFileOffset: 0,
       fileLimit,
       cycleComplete: false,
-      alerted,
+      alerted: ops.alerted,
+      opsStatus: ops.opsStatus,
+      emailSent: ops.emailSent,
+      emailError: ops.emailError,
       sync: { errors: 1, errorMessages: [message] },
       error: message,
     };
@@ -268,17 +305,6 @@ async function runRakutenFeedChunkLocked(
     typeof e === "string" ? e : String((e as { message?: string })?.message || e)
   );
   const designerFailed = errorMessages.some((m) => /designer_sync/i.test(m));
-  if (upserted > 0 && designerFailed) {
-    await sendFeedAlert(
-      "INTERTEXE WARNING: designer sync failed after product upserts",
-      [
-        `upserted=${upserted}`,
-        `designersSynced=${designersSynced}`,
-        `errors=${errorMessages.join(" | ")}`,
-        new Date().toISOString(),
-      ].join("\n")
-    );
-  }
 
   try {
     await supabase.from("system_status").upsert({
@@ -322,23 +348,25 @@ async function runRakutenFeedChunkLocked(
     // non-fatal
   }
 
-  let alerted = false;
-  if (failedList || (totalFiles > 0 && processed === 0 && upserted === 0)) {
-    alerted = await sendFeedAlert(
-      failedList
-        ? "INTERTEXE CRITICAL: Rakuten FTP listing failed"
-        : "INTERTEXE WARNING: Rakuten sync upserted 0 products",
-      [
-        `fileOffset=${fileOffset}`,
-        `nextOffset=${nextOffset}`,
-        `totalCatalogFiles=${totalFiles}`,
-        `filesProcessed=${processed}`,
-        `upserted=${upserted}`,
-        `errors=${errorMessages.join(" | ") || "none"}`,
-        new Date().toISOString(),
-      ].join("\n")
-    );
-  }
+  const inserted = Number(syncResult.stats?.newProducts || 0);
+  const updated = Number(syncResult.stats?.updatedProducts || 0);
+  const rejected = Number(syncResult.stats?.rejected || 0);
+  const ops = await recordOps(supabase, startedAt, {
+    ok: !failedList && !designerFailed,
+    listingFailed: failedList,
+    designerFailed,
+    checkpointBefore: fileOffset,
+    checkpointAfter: nextOffset,
+    totalCatalogFiles: totalFiles,
+    filesProcessed: processed,
+    upserted,
+    inserted,
+    updated,
+    rejected,
+    designersSynced,
+    errors: errorMessages,
+    workflowFailed: failedList || designerFailed,
+  });
 
   return {
     ok: !failedList && !designerFailed,
@@ -348,11 +376,16 @@ async function runRakutenFeedChunkLocked(
     cycleComplete,
     designersSynced,
     homepageRefreshed,
-    alerted,
+    alerted: ops.alerted,
+    opsStatus: ops.opsStatus,
+    emailSent: ops.emailSent,
+    emailError: ops.emailError,
     markInactiveError,
     sync: {
       upserted,
-      rejected: Number(syncResult.stats?.rejected || 0),
+      rejected,
+      newProducts: inserted,
+      updatedProducts: updated,
       filesProcessed: processed,
       totalCatalogFiles: totalFiles,
       stockStatusBackfilled: syncResult.stockStatusBackfilled,

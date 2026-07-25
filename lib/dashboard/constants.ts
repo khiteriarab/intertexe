@@ -34,7 +34,9 @@ export function isHqHost(host: string | null | undefined): boolean {
 
 export const HQ_NAV = [
   { href: "/dashboard", label: "Overview", exact: true },
+  { href: "/dashboard/operations", label: "Operations" },
   { href: "/dashboard/consumers", label: "Consumers" },
+  { href: "/dashboard/acquisition", label: "Acquisition" },
   { href: "/dashboard/scanner", label: "Scanner" },
   { href: "/dashboard/commerce", label: "Commerce" },
   { href: "/dashboard/materials", label: "Materials" },

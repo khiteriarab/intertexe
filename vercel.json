@@ -47,7 +47,7 @@
     },
     {
       "path": "/api/cron/hq-weekly-briefing",
-      "schedule": "0 13 * * 1"
+      "schedule": "0 7 * * 1"
     },
     {
       "path": "/api/cron/rakuten-revenue-pull",
