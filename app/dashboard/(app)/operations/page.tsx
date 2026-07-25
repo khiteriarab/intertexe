@@ -1,11 +1,11 @@
-import { requireHqSession } from "../../../lib/dashboard/auth";
+import { requireHqSession } from "../../../../lib/dashboard/auth";
 import {
   fetchFounderReports,
   fetchNightlySyncOps,
   formatDuration,
   statusBadgeClass,
-} from "../../../lib/dashboard/catalog-sync-ops";
-import { formatCount } from "../../../lib/dashboard/metrics";
+} from "../../../../lib/dashboard/catalog-sync-ops";
+import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqPageHeader } from "../../components/HqUi";
 
 export const metadata = { title: "Operations" };
