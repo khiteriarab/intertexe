@@ -1,34 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRequire } from "module";
-import { fileURLToPath } from "url";
-import path from "path";
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
 import { fetchHqOverviewMetrics, fetchHqCommercePage } from "../../../../lib/dashboard/metrics";
-
-export const dynamic = "force-dynamic";
-export const maxDuration = 120;
-
-const require = createRequire(fileURLToPath(import.meta.url));
-const opsMonitorPath = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../../../lib/feed-sync/ops-monitor.cjs"
-);
-const {
+import {
   loadNightlySyncOps,
   saveFounderReport,
   sendOpsAlertEmail,
-} = require(opsMonitorPath) as {
-  loadNightlySyncOps: (sb: unknown) => Promise<{
-    latest: Record<string, unknown> | null;
-    runs: Array<Record<string, unknown>>;
-  }>;
-  saveFounderReport: (sb: unknown, report: Record<string, unknown>) => Promise<unknown>;
-  sendOpsAlertEmail: (args: {
-    subject: string;
-    text: string;
-    html: string;
-  }) => Promise<{ ok: boolean; error: string | null }>;
-};
+} from "../../../../lib/feed-sync/ops-monitor";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 async function loadAcquisitionSafe() {
   try {

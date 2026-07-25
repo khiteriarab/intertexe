@@ -1,18 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { createRequire } from "module";
-import { fileURLToPath } from "url";
-
-const require = createRequire(fileURLToPath(import.meta.url));
-const {
-  finalizeNightlySyncOps,
-  detectStaleMerchants,
-} = require("./ops-monitor.cjs") as {
-  finalizeNightlySyncOps: (
-    supabase: SupabaseClient,
-    input: Record<string, unknown>
-  ) => Promise<{ run: Record<string, unknown>; emailSent: boolean; emailError: string | null }>;
-  detectStaleMerchants: (supabase: SupabaseClient) => Promise<string[]>;
-};
+import { detectStaleMerchants, finalizeNightlySyncOps } from "./ops-monitor";
 
 const CHUNK_STATE_KEY = "rakuten_feed_chunk_state";
 const LOCK_KEY = "rakuten_feed_sync_lock";

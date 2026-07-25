@@ -1,24 +1,10 @@
 import { getServerSupabase } from "../supabase-service-client";
-import { createRequire } from "module";
-import { fileURLToPath } from "url";
-import path from "path";
-
-const require = createRequire(fileURLToPath(import.meta.url));
-const {
-  loadNightlySyncOps,
-  loadFounderReports,
-  nextScheduledRunIso,
+import {
   LATEST_KEY,
-} = require(path.join(path.dirname(fileURLToPath(import.meta.url)), "../feed-sync/ops-monitor.cjs")) as {
-  loadNightlySyncOps: (sb: unknown) => Promise<{
-    latest: NightlySyncRun | null;
-    runs: NightlySyncRun[];
-    nextScheduledRun: string;
-  }>;
-  loadFounderReports: (sb: unknown) => Promise<FounderReport[]>;
-  nextScheduledRunIso: () => string;
-  LATEST_KEY: string;
-};
+  loadFounderReports,
+  loadNightlySyncOps,
+  nextScheduledRunIso,
+} from "../feed-sync/ops-monitor";
 
 export type NightlySyncRun = {
   id?: string;

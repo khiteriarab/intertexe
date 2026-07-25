@@ -1,24 +1,21 @@
 /**
- * Nightly Rakuten sync operational monitoring for INTERTEXE HQ + Resend alerts.
+ * Nightly Rakuten sync operational monitoring (TS) for INTERTEXE HQ + Resend alerts.
  * Email delivery failures never throw — they are recorded on the run log.
- *
- * CJS entry for GitHub Actions / Node scripts. Next.js imports ops-monitor.ts instead
- * (createRequire(import.meta.url) breaks under webpack page-data collection).
  */
 
-const LATEST_KEY = "rakuten_nightly_sync_latest";
-const HISTORY_KEY = "rakuten_nightly_sync_history";
-const FOUNDER_REPORTS_KEY = "hq_founder_reports";
-const ALERT_EMAIL = process.env.FEED_ALERT_EMAIL || "info@intertexe.com";
+export const LATEST_KEY = "rakuten_nightly_sync_latest";
+export const HISTORY_KEY = "rakuten_nightly_sync_history";
+export const FOUNDER_REPORTS_KEY = "hq_founder_reports";
+export const ALERT_EMAIL = process.env.FEED_ALERT_EMAIL || "info@intertexe.com";
 const HISTORY_LIMIT = 30;
 const FOUNDER_REPORT_LIMIT = 26;
 /** Matches GitHub Actions rakuten-feed-sync schedule (daily 02:00 UTC). */
 const CRON_HOUR_UTC = 2;
 const VOLUME_DROP_RATIO = 0.3; // warn if upserted < 30% of recent median
 /** Merchant feed considered stale when no live product last_seen within this window. */
-const STALE_MERCHANT_HOURS = Number(process.env.STALE_MERCHANT_HOURS || 72);
+export const STALE_MERCHANT_HOURS = Number(process.env.STALE_MERCHANT_HOURS || 72);
 
-function nextScheduledRunIso(from = new Date()) {
+export function nextScheduledRunIso(from = new Date()) {
   const d = new Date(from);
   const next = new Date(
     Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), CRON_HOUR_UTC, 0, 0, 0)
@@ -54,7 +51,7 @@ function median(nums) {
  * @param {object} input
  * @returns {{ status: 'success'|'warning'|'failure', warnings: string[], errors: string[], suggestedNextStep: string|null }}
  */
-function evaluateSyncOutcome(input) {
+export function evaluateSyncOutcome(input) {
   const errors = asMessages(input.errors);
   const warnings = [];
   const totalFiles = Number(input.totalCatalogFiles || 0);
@@ -142,7 +139,7 @@ function evaluateSyncOutcome(input) {
   return { status, warnings: uniqueWarnings, errors: uniqueErrors, suggestedNextStep };
 }
 
-async function sendOpsAlertEmail({ subject, text, html }) {
+export async function sendOpsAlertEmail({ subject, text, html }) {
   if (!process.env.RESEND_API_KEY) {
     return { ok: false, error: "RESEND_API_KEY missing" };
   }
@@ -171,7 +168,7 @@ async function sendOpsAlertEmail({ subject, text, html }) {
   }
 }
 
-function buildAlertEmail(run) {
+export function buildAlertEmail(run) {
   const subject = "INTERTEXE Alert: Nightly Catalog Sync Requires Attention";
   const lines = [
     `Severity: ${String(run.status || "failure").toUpperCase()}`,
@@ -222,7 +219,7 @@ function buildAlertEmail(run) {
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {object} input
  */
-async function finalizeNightlySyncOps(supabase, input) {
+export async function finalizeNightlySyncOps(supabase, input) {
   const startedAt = input.startedAt || new Date().toISOString();
   const finishedAt = input.finishedAt || new Date().toISOString();
   const durationMs = Math.max(0, Date.parse(finishedAt) - Date.parse(startedAt));
@@ -320,7 +317,7 @@ async function finalizeNightlySyncOps(supabase, input) {
   return { run: latestPayload, emailSent: run.emailSent, emailError: run.emailError };
 }
 
-async function loadNightlySyncOps(supabase) {
+export async function loadNightlySyncOps(supabase) {
   const { data: latestRow } = await supabase
     .from("system_status")
     .select("value_json, updated_at")
@@ -340,7 +337,7 @@ async function loadNightlySyncOps(supabase) {
   };
 }
 
-async function saveFounderReport(supabase, report) {
+export async function saveFounderReport(supabase, report) {
   let reports = [];
   try {
     const { data } = await supabase
@@ -361,7 +358,7 @@ async function saveFounderReport(supabase, report) {
   return next;
 }
 
-async function loadFounderReports(supabase) {
+export async function loadFounderReports(supabase) {
   const { data } = await supabase
     .from("system_status")
     .select("value_json")
@@ -376,7 +373,7 @@ async function loadFounderReports(supabase) {
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @returns {Promise<string[]>}
  */
-async function detectStaleMerchants(supabase) {
+export async function detectStaleMerchants(supabase) {
   try {
     const cutoff = new Date(Date.now() - STALE_MERCHANT_HOURS * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
@@ -409,19 +406,3 @@ async function detectStaleMerchants(supabase) {
   }
 }
 
-module.exports = {
-  LATEST_KEY,
-  HISTORY_KEY,
-  FOUNDER_REPORTS_KEY,
-  ALERT_EMAIL,
-  STALE_MERCHANT_HOURS,
-  nextScheduledRunIso,
-  evaluateSyncOutcome,
-  finalizeNightlySyncOps,
-  loadNightlySyncOps,
-  saveFounderReport,
-  loadFounderReports,
-  detectStaleMerchants,
-  sendOpsAlertEmail,
-  buildAlertEmail,
-};
