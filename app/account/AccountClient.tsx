@@ -118,16 +118,29 @@ export default function AccountClient({
         }
         const data = await res.json();
         if (data.token) setTokenValue(data.token);
+        if (data.id) {
+          const { setGaUserId } = await import("../../lib/analytics");
+          setGaUserId(String(data.id));
+        }
       } else {
+        const { getOrCreateSessionId } = await import("../../lib/session");
+        const { collectClientFirstTouch } = await import("../components/UtmCapture");
+        const sessionId = getOrCreateSessionId();
+        const firstTouch = collectClientFirstTouch();
         const res = await fetch("/api/auth/signup", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-session-id": sessionId,
+          },
           body: JSON.stringify({
             username: form.email,
             email: form.email,
             password: form.password,
             firstName: form.firstName.trim(),
             lastName: form.lastName.trim() || undefined,
+            first_session_id: sessionId,
+            ...firstTouch,
           }),
         });
         if (!res.ok) {
@@ -138,7 +151,7 @@ export default function AccountClient({
         if (data.token) {
           setTokenValue(data.token);
           const { trackAccountCreated } = await import("../../lib/analytics");
-          trackAccountCreated({ source: "direct" });
+          trackAccountCreated({ source: "direct", userId: data.id ? String(data.id) : undefined });
         }
       }
       await fetchMe();

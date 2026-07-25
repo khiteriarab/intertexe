@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Suspense, useEffect, useState, useRef } from "react";
 import { trackAffiliateRedirect } from "../../lib/analytics";
+import { affiliateUrlWithClientU1 } from "../../lib/affiliate-url";
 
 function isValidExternalUrl(url: string): boolean {
   try {
@@ -21,7 +22,7 @@ function LeavingContent() {
   const brand = searchParams.get("brand") || "our partner";
 
   const isValid = isValidExternalUrl(rawUrl);
-  const url = isValid ? rawUrl : "";
+  const url = isValid ? affiliateUrlWithClientU1(rawUrl) : "";
 
   const [countdown, setCountdown] = useState(2);
   const trackedRef = useRef(false);

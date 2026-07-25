@@ -203,8 +203,30 @@ function mapCoverage(raw: unknown): CatalogFilterCoverage | null {
 /**
  * Call catalog_browse_page_v2. Returns products in exact server order.
  * Never weakens, drops, or reorders results client-side.
+ * Exception: US brand/search with zero rows retries UK once (UK-only labels).
  */
 export async function queryCatalogBrowsePageV2(
+  opts: CatalogBrowseV2Opts
+): Promise<CatalogBrowseV2Result> {
+  const primary = await queryCatalogBrowsePageV2Once(opts);
+  if (primary.error) return primary;
+
+  const region = (opts.region || "us").toLowerCase();
+  const hasBrandOrSearch = Boolean(
+    opts.brand?.trim() || (opts.q || opts.search || "").trim()
+  );
+  if (
+    region === "us" &&
+    hasBrandOrSearch &&
+    primary.products.length === 0 &&
+    !primary.error
+  ) {
+    return queryCatalogBrowsePageV2Once({ ...opts, region: "uk" });
+  }
+  return primary;
+}
+
+async function queryCatalogBrowsePageV2Once(
   opts: CatalogBrowseV2Opts
 ): Promise<CatalogBrowseV2Result> {
   const rpcParams = buildCatalogBrowseV2Params(opts);

@@ -269,41 +269,6 @@ export default function PlatformPage() {
         </div>
 
         <div className="border-t border-gray-100 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-            <div>
-              <p className="text-xs tracking-widest text-gray-400 uppercase mb-4" style={{ letterSpacing: "0.2em" }}>
-                FOUNDER
-              </p>
-              <h2 className="text-3xl font-light text-gray-900" style={{ fontFamily: "Georgia, serif", lineHeight: 1.3 }}>
-                Khiteriara Brown
-              </h2>
-              <p className="text-sm text-gray-600 leading-relaxed mt-4">
-                Founder of INTERTEXE. Building the consumer scanner, the material data layer, and the private
-                operating system used to run growth, partnerships, and (next) multi-client SaaS workspaces.
-              </p>
-            </div>
-            <div className="text-sm text-gray-600 leading-relaxed space-y-3">
-              <p>
-                Platform / API:{" "}
-                <a href="mailto:info@intertexe.com" className="underline underline-offset-4 text-gray-900">
-                  info@intertexe.com
-                </a>
-              </p>
-              <p>
-                General:{" "}
-                <a href="mailto:hello@intertexe.com" className="underline underline-offset-4 text-gray-900">
-                  hello@intertexe.com
-                </a>
-              </p>
-              <p className="text-xs text-gray-400 pt-2">
-                Contact us for API access, DPP readiness, or catalog enrichment. Internal HQ is private and not
-                linked from the consumer app.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-100 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <div>
               <h2
@@ -314,9 +279,23 @@ export default function PlatformPage() {
               </h2>
             </div>
             <div>
-              <p className="text-sm text-gray-600 leading-relaxed mb-8">
+              <p className="text-sm text-gray-600 leading-relaxed mb-6">
                 We are onboarding a small number of early API partners now. Early partners get priority database
                 coverage, dedicated support, and input into the product roadmap.
+              </p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-8 space-y-1">
+                <span className="block">
+                  Platform / API:{" "}
+                  <a href="mailto:info@intertexe.com" className="underline underline-offset-4 text-gray-900">
+                    info@intertexe.com
+                  </a>
+                </span>
+                <span className="block">
+                  General:{" "}
+                  <a href="mailto:hello@intertexe.com" className="underline underline-offset-4 text-gray-900">
+                    hello@intertexe.com
+                  </a>
+                </span>
               </p>
               <a
                 href="mailto:info@intertexe.com"
@@ -325,7 +304,6 @@ export default function PlatformPage() {
               >
                 Contact us
               </a>
-              <p className="text-xs text-gray-400 text-center">info@intertexe.com</p>
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
+import { useMemo } from "react";
+import { affiliateUrlWithClientU1 } from "../../../lib/affiliate-url";
 
 const TOKEN_KEY = "intertexe_auth_token";
 
@@ -63,7 +65,10 @@ export function ShopNowButton({
   product: ShopNowProduct;
   unavailable?: boolean;
 }) {
-  const shopUrl = product.url;
+  const shopUrl = useMemo(
+    () => (product.url ? affiliateUrlWithClientU1(product.url) : null),
+    [product.url]
+  );
   if (!shopUrl) return null;
 
   if (unavailable) {

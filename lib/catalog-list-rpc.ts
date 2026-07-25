@@ -111,11 +111,13 @@ export async function queryCatalogListRPC(opts: CatalogListRPCOpts): Promise<{
   const category = rpcCategory(opts);
   const brand = opts.brand?.trim() || null;
   const search = (opts.q || opts.search || "").trim() || null;
+  // UK-only brands (e.g. Peachy Den) resolve for US shoppers when brand/search is set.
+  const fallbackRegion = region === "us" && (brand || search) ? "uk" : "us";
 
   try {
     const { data, error } = await supabase.rpc("catalog_list", {
       p_preferred_region: region,
-      p_fallback_region: "us",
+      p_fallback_region: fallbackRegion,
       p_fiber: fiber,
       p_category: category,
       p_brand_slug: brand,
@@ -135,7 +137,7 @@ export async function queryCatalogListRPC(opts: CatalogListRPCOpts): Promise<{
     if (!opts.skipCount) {
       const { data: count, error: countError } = await supabase.rpc("catalog_list_count", {
         p_preferred_region: region,
-        p_fallback_region: "us",
+        p_fallback_region: fallbackRegion,
         p_fiber: fiber,
         p_category: category,
         p_brand_slug: brand,
