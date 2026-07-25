@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSupabaseAnonAuthClient } from "../supabase-auth-server";
@@ -39,15 +40,35 @@ export async function readHqAccessToken(): Promise<string | null> {
   return token || null;
 }
 
-export async function getHqSession(): Promise<HqSession | null> {
+type MembershipRow = {
+  id: string;
+  workspace_id: string;
+  full_name: string | null;
+  is_active: boolean;
+  email: string | null;
+  is_primary: boolean | null;
+};
+
+/** Warm-isolate memo so consecutive HQ navigations reuse session for ~20s. */
+const SESSION_TTL_MS = 20_000;
+const sessionMemo = new Map<string, { at: number; session: HqSession | null }>();
+
+async function resolveHqSession(): Promise<HqSession | null> {
   const token = await readHqAccessToken();
   if (!token) return null;
+
+  const memoKey = token.slice(-48);
+  const hit = sessionMemo.get(memoKey);
+  if (hit && Date.now() - hit.at < SESSION_TTL_MS) return hit.session;
 
   const auth = getSupabaseAnonAuthClient();
   if (!auth) return null;
 
   const { data, error } = await auth.auth.getUser(token);
-  if (error || !data.user?.id || !data.user.email) return null;
+  if (error || !data.user?.id || !data.user.email) {
+    sessionMemo.set(memoKey, { at: Date.now(), session: null });
+    return null;
+  }
 
   const supabase = getServerSupabase();
   if (!supabase) return null;
@@ -68,17 +89,34 @@ export async function getHqSession(): Promise<HqSession | null> {
     if (provisioned) memberships = [provisioned];
   }
 
-  if (!memberships?.length) return null;
+  if (!memberships?.length) {
+    sessionMemo.set(memoKey, { at: Date.now(), session: null });
+    return null;
+  }
 
-  const workspaceIds = memberships.map((m) => m.workspace_id);
-  const { data: workspaceRows } = await supabase
-    .from("hq_workspaces")
-    .select("id, slug, name")
-    .in("id", workspaceIds);
+  const typedMemberships = memberships as MembershipRow[];
+  const workspaceIds = typedMemberships.map((m) => m.workspace_id);
+  const membershipIds = typedMemberships.map((m) => m.id);
 
-  const workspaces = (workspaceRows || [])
+  // One parallel wave instead of workspace → roles → role keys waterfall.
+  const [workspaceRes, roleLinkRes, roleCatalogRes] = await Promise.all([
+    supabase.from("hq_workspaces").select("id, slug, name").in("id", workspaceIds),
+    supabase
+      .from("hq_internal_user_roles")
+      .select("internal_user_id, role_id")
+      .in("internal_user_id", membershipIds),
+    supabase.from("hq_roles").select("id, key"),
+  ]);
+
+  const workspaceRows = workspaceRes.data || [];
+  const roleLinks = roleLinkRes.data || [];
+  const roleById = new Map(
+    (roleCatalogRes.data || []).map((r: { id: string; key: string }) => [r.id, r.key as HqRoleKey])
+  );
+
+  const workspaces = workspaceRows
     .map((w) => {
-      const mem = memberships!.find((m) => m.workspace_id === w.id);
+      const mem = typedMemberships.find((m) => m.workspace_id === w.id);
       if (!mem) return null;
       return {
         id: w.id,
@@ -89,36 +127,34 @@ export async function getHqSession(): Promise<HqSession | null> {
     })
     .filter(Boolean) as Array<{ id: string; slug: string; name: string; internalUserId: string }>;
 
-  if (!workspaces.length) return null;
+  if (!workspaces.length) {
+    sessionMemo.set(memoKey, { at: Date.now(), session: null });
+    return null;
+  }
 
   const jar = await cookies();
   const preferred = jar.get(HQ_WORKSPACE_COOKIE)?.value?.trim();
   const active =
     workspaces.find((w) => w.id === preferred || w.slug === preferred) ||
     workspaces.find((w) => {
-      const mem = memberships!.find((m) => m.id === w.internalUserId);
+      const mem = typedMemberships.find((m) => m.id === w.internalUserId);
       return mem?.is_primary;
     }) ||
     workspaces.find((w) => w.slug === HQ_WORKSPACE_SLUG) ||
     workspaces[0];
 
-  const internal = memberships.find((m) => m.id === active.internalUserId)!;
+  const internal = typedMemberships.find((m) => m.id === active.internalUserId)!;
+  const roles = roleLinks
+    .filter((r) => r.internal_user_id === internal.id)
+    .map((r) => roleById.get(r.role_id))
+    .filter(Boolean) as HqRoleKey[];
 
-  const { data: roleLinks } = await supabase
-    .from("hq_internal_user_roles")
-    .select("role_id")
-    .eq("internal_user_id", internal.id);
-
-  const roleIds = (roleLinks || []).map((r: { role_id: string }) => r.role_id).filter(Boolean);
-  let roles: HqRoleKey[] = [];
-  if (roleIds.length) {
-    const { data: roleRows } = await supabase.from("hq_roles").select("key").in("id", roleIds);
-    roles = (roleRows || []).map((r: { key: string }) => r.key as HqRoleKey).filter(Boolean);
+  if (roles.length === 0) {
+    sessionMemo.set(memoKey, { at: Date.now(), session: null });
+    return null;
   }
 
-  if (roles.length === 0) return null;
-
-  return {
+  const session: HqSession = {
     authUserId: data.user.id,
     email,
     fullName: internal.full_name || (data.user.user_metadata?.name as string) || null,
@@ -130,7 +166,14 @@ export async function getHqSession(): Promise<HqSession | null> {
     accessToken: token,
     workspaces,
   };
+  sessionMemo.set(memoKey, { at: Date.now(), session });
+  return session;
 }
+
+/**
+ * Resolve HQ session once per request (layout + page used to double every Supabase round-trip).
+ */
+export const getHqSession = cache(async (): Promise<HqSession | null> => resolveHqSession());
 
 export async function requireHqSession(opts?: { roles?: HqRoleKey[] }): Promise<HqSession> {
   const session = await getHqSession();
@@ -145,15 +188,11 @@ async function provisionFounder(authUserId: string, email: string, name?: string
   const supabase = getServerSupabase();
   if (!supabase) return null;
 
-  const { data: workspace } = await supabase
-    .from("hq_workspaces")
-    .select("id")
-    .eq("slug", HQ_WORKSPACE_SLUG)
-    .maybeSingle();
-  if (!workspace?.id) return null;
-
-  const { data: role } = await supabase.from("hq_roles").select("id").eq("key", "founder").maybeSingle();
-  if (!role?.id) return null;
+  const [{ data: workspace }, { data: role }] = await Promise.all([
+    supabase.from("hq_workspaces").select("id").eq("slug", HQ_WORKSPACE_SLUG).maybeSingle(),
+    supabase.from("hq_roles").select("id").eq("key", "founder").maybeSingle(),
+  ]);
+  if (!workspace?.id || !role?.id) return null;
 
   const { data: inserted, error } = await supabase
     .from("hq_internal_users")
@@ -214,4 +253,3 @@ export async function writeAuthAudit(input: {
     metadata: input.metadata || {},
   });
 }
-

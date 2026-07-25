@@ -5,6 +5,9 @@ export type HqCountResult = {
   error?: string;
 };
 
+const OVERVIEW_METRICS_TTL_MS = 30_000;
+let overviewMetricsMemo: { at: number; data: HqOverviewMetrics } | null = null;
+
 async function exactCount(
   table: string,
   build?: (q: any) => any
@@ -135,6 +138,11 @@ function aggregateField(
 }
 
 export async function fetchHqOverviewMetrics(): Promise<HqOverviewMetrics> {
+  const cached = overviewMetricsMemo;
+  if (cached && Date.now() - cached.at < OVERVIEW_METRICS_TTL_MS) {
+    return cached.data;
+  }
+
   const supabase = getServerSupabase();
   const today = startOfDay();
   const yesterday = daysAgo(1);
@@ -288,7 +296,7 @@ export async function fetchHqOverviewMetrics(): Promise<HqOverviewMetrics> {
     .sort((a, b) => String(b.clicked_at || "").localeCompare(String(a.clicked_at || "")))
     .slice(0, 12);
 
-  return {
+  const result: HqOverviewMetrics = {
     usersTotal,
     usersYesterday: legacyUsersYesterday.value != null ? legacyUsersYesterday : { value: null },
     usersToday: legacyUsersToday.value != null ? legacyUsersToday : { value: null },
@@ -323,6 +331,8 @@ export async function fetchHqOverviewMetrics(): Promise<HqOverviewMetrics> {
     recentClickouts,
     fetchedAt: new Date().toISOString(),
   };
+  overviewMetricsMemo = { at: Date.now(), data: result };
+  return result;
 }
 
 export type HqConsumerRow = {

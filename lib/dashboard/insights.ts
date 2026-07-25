@@ -163,29 +163,31 @@ export async function syncInsightsToDb(workspaceId: string, insights: HqInsight[
 }
 
 export async function fetchInsightsBundle(workspaceId: string) {
-  const metrics = await fetchHqOverviewMetrics();
-  let live = buildRuleInsights(metrics);
-
   const supabase = getServerSupabase();
-  let revenueConnected = false;
-  let revenueIsDemo = false;
-  if (supabase && workspaceId) {
-    const { count: verifiedCount } = await supabase
-      .from("hq_affiliate_transactions")
-      .select("id", { count: "exact", head: true })
-      .eq("workspace_id", workspaceId)
-      .neq("status", "demo");
-    revenueConnected = (verifiedCount || 0) > 0;
 
-    if (!revenueConnected) {
-      const { count: demoCount } = await supabase
-        .from("hq_affiliate_transactions")
-        .select("id", { count: "exact", head: true })
-        .eq("workspace_id", workspaceId)
-        .eq("status", "demo");
-      revenueIsDemo = (demoCount || 0) > 0;
-    }
-  }
+  // Run overview metrics + revenue presence checks together (was a long waterfall).
+  const [metrics, verifiedRes, demoRes] = await Promise.all([
+    fetchHqOverviewMetrics(),
+    supabase && workspaceId
+      ? supabase
+          .from("hq_affiliate_transactions")
+          .select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspaceId)
+          .neq("status", "demo")
+      : Promise.resolve({ count: 0 }),
+    supabase && workspaceId
+      ? supabase
+          .from("hq_affiliate_transactions")
+          .select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspaceId)
+          .eq("status", "demo")
+      : Promise.resolve({ count: 0 }),
+  ]);
+
+  let live = buildRuleInsights(metrics);
+  const revenueConnected = (verifiedRes.count || 0) > 0;
+  const revenueIsDemo = !revenueConnected && (demoRes.count || 0) > 0;
+
   if (revenueIsDemo) {
     live = live.filter((i) => i.key !== "clicks_without_revenue");
     live.unshift({
@@ -209,20 +211,10 @@ export async function fetchInsightsBundle(workspaceId: string) {
     });
   }
 
-  await syncInsightsToDb(workspaceId, live);
+  // Persist insights off the request path — sequential upserts were adding tens of seconds.
+  void syncInsightsToDb(workspaceId, live).catch(() => {});
 
-  let stored: any[] = [];
-  if (supabase) {
-    const { data } = await supabase
-      .from("hq_generated_insights")
-      .select("*")
-      .eq("workspace_id", workspaceId)
-      .order("detected_at", { ascending: false })
-      .limit(40);
-    stored = data || [];
-  }
-
-  return { metrics, live, stored, revenueConnected, revenueIsDemo };
+  return { metrics, live, stored: [] as any[], revenueConnected, revenueIsDemo };
 }
 
 export function buildExecutiveBriefing(

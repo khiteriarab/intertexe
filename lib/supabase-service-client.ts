@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 function getSupabaseUrl(): string {
   return (
@@ -22,8 +22,13 @@ function getAnonKey(): string {
   );
 }
 
+/** Reuse one service client per serverless isolate — avoids reconnect tax on every HQ query. */
+let cachedServiceClient: SupabaseClient | null = null;
+
 /** Service-role (or anon) Supabase client for server-side catalog RPCs. */
 export function getServerSupabase() {
+  if (cachedServiceClient) return cachedServiceClient;
+
   const url = getSupabaseUrl();
   const key = getServiceRoleKey() || getAnonKey();
   if (!url || !key) {
@@ -32,5 +37,8 @@ export function getServerSupabase() {
     );
     return null;
   }
-  return createClient(url, key);
+  cachedServiceClient = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return cachedServiceClient;
 }
