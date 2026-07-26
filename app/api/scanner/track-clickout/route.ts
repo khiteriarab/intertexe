@@ -38,6 +38,10 @@ export async function POST(req: NextRequest) {
   const altPrice = parsePriceNumber(alternativePrice) ?? (typeof alternativePrice === 'number' ? alternativePrice : null);
   const scanPrice = parsePriceNumber(scannedPrice) ?? (typeof scannedPrice === 'number' ? scannedPrice : null);
 
+  const u1 = userId || (sessionId ? String(sessionId) : null);
+  const redirectUrl =
+    typeof affiliateUrl === 'string' ? appendU1(affiliateUrl, u1) : affiliateUrl;
+
   try {
     if (sessionId) {
       await recordFunnelEvent(supabase, {
@@ -60,7 +64,7 @@ export async function POST(req: NextRequest) {
       alternative_price: altPrice,
       price_difference: altPrice != null && scanPrice != null ? altPrice - scanPrice : null,
       position_in_results: position ?? null,
-      affiliate_url: affiliateUrl || null,
+      affiliate_url: redirectUrl || affiliateUrl || null,
       clicked_at: new Date().toISOString(),
     });
 
@@ -82,10 +86,6 @@ export async function POST(req: NextRequest) {
   } catch {
     /* table may not exist yet */
   }
-
-  const u1 = userId || (sessionId ? String(sessionId) : null);
-  const redirectUrl =
-    typeof affiliateUrl === 'string' ? appendU1(affiliateUrl, u1) : affiliateUrl;
 
   return NextResponse.json({
     redirect_url: redirectUrl,

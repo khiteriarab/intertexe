@@ -51,6 +51,10 @@
     },
     {
       "path": "/api/cron/rakuten-revenue-pull",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/rakuten-revenue-pull",
       "schedule": "0 15 * * *"
     },
     {

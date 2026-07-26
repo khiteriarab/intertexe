@@ -3,8 +3,9 @@
  * Prefer signed-in Supabase user id; fall back to durable anonymous session id.
  */
 
+import { getOrCreateSessionId } from "./session";
+
 const TOKEN_KEY = "intertexe_auth_token";
-const SESSION_KEY = "intertexe_session_id";
 
 export function appendU1(url: string, u1: string | null | undefined): string {
   if (!url || !u1) return url;
@@ -12,7 +13,9 @@ export function appendU1(url: string, u1: string | null | undefined): string {
   if (!id) return url;
   try {
     const parsed = new URL(url);
-    if (!parsed.hostname.includes("linksynergy.com")) return url;
+    // Rakuten click + deeplink hosts
+    const host = parsed.hostname.toLowerCase();
+    if (!host.includes("linksynergy.com") && !host.includes("rakuten")) return url;
     parsed.searchParams.set("u1", id.slice(0, 255));
     return parsed.toString();
   } catch {
@@ -36,29 +39,13 @@ export function readAuthUserIdFromToken(token: string | null | undefined): strin
   }
 }
 
-export function getOrCreateClientSessionId(): string {
-  if (typeof window === "undefined") return "";
-  try {
-    const existing = localStorage.getItem(SESSION_KEY)?.trim();
-    if (existing) return existing;
-    const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
-    localStorage.setItem(SESSION_KEY, id);
-    return id;
-  } catch {
-    return "";
-  }
-}
-
 /** Best available u1 for outbound affiliate links in the browser. */
 export function resolveClientU1(): string | null {
   if (typeof window === "undefined") return null;
   try {
     const fromToken = readAuthUserIdFromToken(localStorage.getItem(TOKEN_KEY));
     if (fromToken) return fromToken;
-    const session = getOrCreateClientSessionId();
+    const session = getOrCreateSessionId();
     return session || null;
   } catch {
     return null;

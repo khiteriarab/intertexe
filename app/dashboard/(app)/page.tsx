@@ -123,7 +123,7 @@ export default async function HqOverviewPage() {
         <p className="text-[10px] tracking-[0.18em] uppercase text-black/40">Pulse</p>
         <p className="text-[10px] text-black/35">Today · Trailing 7d · safe WoW deltas</p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
         {pulse.map((item) => (
           <Link
             key={`${item.label}-${item.period}`}

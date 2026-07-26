@@ -100,7 +100,17 @@ export function buildDeterministicInsights(input: {
     revenueConnected?: boolean;
     revenueIsDemo?: boolean;
     commission7d?: number | null;
+    sales7d?: number | null;
+    salesToday?: number | null;
+    transactionsToday?: number | null;
     unmatchedTx30d?: number | null;
+    lastSaleDate?: string | null;
+    nullU1Tx30d?: number | null;
+    txWithU130d?: number | null;
+    editorial7d?: number | null;
+    shop7d?: number | null;
+    scanner7d?: number | null;
+    topRevenueAdvertisers?: Array<{ brand: string; commission: number; sales: number }>;
   };
   syncLatest?: NightlySyncRun | null;
   totalClicks7d: number;
@@ -230,6 +240,124 @@ export function buildDeterministicInsights(input: {
       href: "/dashboard/commerce",
       expectedImpact: "Enable trustworthy commission and retailer decisions.",
     });
+  } else if (commerce.revenueConnected && !commerce.revenueIsDemo) {
+    const salesToday = commerce.salesToday ?? 0;
+    const sales7d = commerce.sales7d ?? 0;
+    const clicks7d =
+      (commerce.editorial7d || 0) + (commerce.shop7d || 0) + (commerce.scanner7d || 0);
+    const topAdv = commerce.topRevenueAdvertisers?.[0] || null;
+    const nullU1 = commerce.nullU1Tx30d ?? 0;
+    const withU1 = commerce.txWithU130d ?? 0;
+    const txTotal = nullU1 + withU1;
+    const nullU1Rate = txTotal > 0 ? nullU1 / txTotal : 0;
+
+    if (salesToday <= 0) {
+      out.push({
+        fingerprint: "no_sales_today",
+        title: "No verified sales recorded today",
+        whatChanged: `Sales today $0 · last sale ${commerce.lastSaleDate || "unknown"} · 7d sales $${Math.round(sales7d).toLocaleString()}.`,
+        whyItChanged:
+          "Rakuten report lag can delay same-day visibility; still treat a quiet day as a push day until a transaction lands.",
+        attention: "Daily sales goal is unmet until a verified transaction appears.",
+        recommendedAction: topAdv
+          ? `Push ${topAdv.brand} hard today — it led commission in the last 30d. Feature it in /khiteri + shop rails, then recheck Commerce after the afternoon revenue pull.`
+          : "Ship one high-intent push today (editorial MyTheresa/shop rail) and verify clickouts have u1 before evening.",
+        evidence: {
+          salesToday,
+          sales7d,
+          lastSaleDate: commerce.lastSaleDate,
+          topAdvertiser: topAdv,
+          editorialClicks7d: commerce.editorial7d ?? null,
+        },
+        comparisonPeriod: "calendar_today",
+        confidence: "medium",
+        priority: "critical",
+        href: "/dashboard/commerce",
+        expectedImpact: "Create a measurable chance at a same-day or next-day affiliate order.",
+      });
+    }
+
+    if (sales7d <= 0 && clicks7d > 0) {
+      out.push({
+        fingerprint: "clicks_without_sales_7d",
+        title: "Affiliate clicks with zero sales (7d)",
+        whatChanged: `${clicks7d.toLocaleString()} clickouts in 7d and $0 verified sales.`,
+        whyItChanged:
+          "Could be cookie window lag, weak retailer mix, or missing u1/attribution — not proven from this signal alone.",
+        attention: "Traffic is not converting into reportable commission.",
+        recommendedAction:
+          "Prioritize the retailer with historically highest AOV (often MyTheresa), refresh editorial CTAs, and confirm outbound links carry u1.",
+        evidence: {
+          clicks7d,
+          editorial7d: commerce.editorial7d,
+          shop7d: commerce.shop7d,
+          scanner7d: commerce.scanner7d,
+          sales7d,
+        },
+        comparisonPeriod: "trailing_7d",
+        confidence: "medium",
+        priority: "growth",
+        href: "/dashboard/commerce",
+        expectedImpact: "Convert existing demand into commission instead of burning clicks.",
+      });
+    }
+
+    if (topAdv && (commerce.editorial7d || 0) >= 5 && salesToday <= 0) {
+      out.push({
+        fingerprint: "double_down_top_advertiser",
+        title: `Double down on ${topAdv.brand} today`,
+        whatChanged: `${topAdv.brand} leads 30d commission ($${Math.round(topAdv.commission).toLocaleString()}) with ${(commerce.editorial7d || 0).toLocaleString()} editorial clicks in 7d.`,
+        whyItChanged:
+          "Measured from verified transactions + editorial_clickouts — correlation, not proof that today's push will convert.",
+        attention: "Highest-leverage commerce surface is editorial → top advertiser.",
+        recommendedAction: `Update /khiteri with fresh ${topAdv.brand} SKUs and share the edit; track clickouts with u1 so the next order joins.`,
+        evidence: {
+          advertiser: topAdv.brand,
+          commission30d: topAdv.commission,
+          sales30d: topAdv.sales,
+          editorial7d: commerce.editorial7d,
+        },
+        comparisonPeriod: "trailing_30d_commission",
+        confidence: "medium",
+        priority: "growth",
+        href: "/khiteri",
+        expectedImpact: "Exploit the path that already produced large MyTheresa-sized baskets.",
+      });
+    }
+
+    if (txTotal >= 3 && nullU1Rate >= 0.5) {
+      out.push({
+        fingerprint: "affiliate_u1_blind",
+        title: "Most sales lack joinable u1",
+        whatChanged: `${nullU1}/${txTotal} transactions in 30d have blank/null u1 — first-touch and user join stay dark.`,
+        whyItChanged:
+          "Rakuten only returns u1 when the outbound click included it. Editorial was previously shipping raw affiliate URLs.",
+        attention: "Cannot exploit what converted without identity on the click.",
+        recommendedAction:
+          "Confirm shop, scanner, and /khiteri clickouts append u1; re-import revenue and watch null-u1 rate fall.",
+        evidence: { nullU1Tx30d: nullU1, txWithU130d: withU1, nullU1Rate },
+        comparisonPeriod: "trailing_30d",
+        confidence: "high",
+        priority: "operational",
+        href: "/dashboard/commerce",
+        expectedImpact: "Turn anonymous commissions into repeatable growth loops.",
+      });
+    } else if ((commerce.unmatchedTx30d || 0) > 0) {
+      out.push({
+        fingerprint: "unmatched_affiliate_tx",
+        title: "Unmatched affiliate transactions need investigation",
+        whatChanged: `${commerce.unmatchedTx30d} unmatched transactions in 30d.`,
+        whyItChanged: "Transactions lack SKU/product join — cause may be feed mapping or missing u1.",
+        attention: "Revenue attribution incomplete.",
+        recommendedAction: "Investigate unmatched rows in Commerce.",
+        evidence: { unmatchedTx30d: commerce.unmatchedTx30d },
+        comparisonPeriod: "trailing_30d",
+        confidence: "medium",
+        priority: "operational",
+        href: "/dashboard/commerce",
+        expectedImpact: "Improve attributed commission accuracy.",
+      });
+    }
   } else if ((commerce.unmatchedTx30d || 0) > 0) {
     out.push({
       fingerprint: "unmatched_affiliate_tx",

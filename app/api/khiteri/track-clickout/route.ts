@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { appendU1 } from "../../../../lib/affiliate-url";
 import { getSupabaseAuthUserId } from "../../../../lib/supabase-auth-server";
 
 export async function POST(req: NextRequest) {
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
   const userId = accessToken ? await getSupabaseAuthUserId(accessToken) : null;
+  const u1 = userId || (typeof sessionId === "string" && sessionId.trim() ? sessionId.trim() : null);
+  const taggedUrl =
+    typeof affiliateUrl === "string" ? appendU1(affiliateUrl, u1) : affiliateUrl || null;
 
   try {
     await supabase.from("editorial_clickouts").insert({
@@ -37,7 +41,7 @@ export async function POST(req: NextRequest) {
       product_name: productName || null,
       brand_name: brandName || null,
       click_target: clickTarget === "image" || clickTarget === "title" ? clickTarget : null,
-      affiliate_url: affiliateUrl || null,
+      affiliate_url: taggedUrl,
       session_id: sessionId || null,
       user_id: userId,
       clicked_at: new Date().toISOString(),
@@ -46,5 +50,5 @@ export async function POST(req: NextRequest) {
     /* table may not exist yet */
   }
 
-  return NextResponse.json({ tracked: true });
+  return NextResponse.json({ tracked: true, affiliateUrl: taggedUrl, u1Attached: Boolean(u1) });
 }

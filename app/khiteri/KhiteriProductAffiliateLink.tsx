@@ -1,8 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { KhiterisEditProduct } from "../../lib/khiteris-edit";
 import { trackAffiliateClick } from "../../lib/analytics";
+import { affiliateUrlWithClientU1 } from "../../lib/affiliate-url";
 import { getOrCreateSessionId } from "../../lib/session";
 
 function parsePrice(price: string): number {
@@ -15,6 +16,7 @@ async function recordKhiteriClickout(params: {
   editMonth: string;
   product: KhiterisEditProduct;
   clickTarget: "image" | "title";
+  affiliateUrl: string;
 }) {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("intertexe_auth_token") : null;
@@ -32,10 +34,11 @@ async function recordKhiteriClickout(params: {
         productSlot: params.product.id,
         productName: params.product.name,
         brandName: params.product.brand,
-        affiliateUrl: params.product.href,
+        affiliateUrl: params.affiliateUrl,
         clickTarget: params.clickTarget,
         sessionId: getOrCreateSessionId(),
       }),
+      keepalive: true,
     });
   } catch {
     /* non-blocking */
@@ -61,6 +64,12 @@ export function KhiteriProductAffiliateLink({
   ariaLabel,
   children,
 }: Props) {
+  // Tag every editorial outbound with u1 so Rakuten can join the next MyTheresa-sized sale.
+  const href = useMemo(
+    () => (product.href ? affiliateUrlWithClientU1(product.href) : "#"),
+    [product.href]
+  );
+
   const handleClick = () => {
     trackAffiliateClick({
       productId: `khiteri:${product.id}`,
@@ -72,12 +81,18 @@ export function KhiteriProductAffiliateLink({
       editSlug,
       editMonth,
     });
-    void recordKhiteriClickout({ editSlug, editMonth, product, clickTarget });
+    void recordKhiteriClickout({
+      editSlug,
+      editMonth,
+      product,
+      clickTarget,
+      affiliateUrl: href,
+    });
   };
 
   return (
     <a
-      href={product.href}
+      href={href}
       target="_blank"
       rel="noopener noreferrer sponsored"
       className={className}

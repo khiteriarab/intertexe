@@ -340,9 +340,14 @@ export default function ScannerClient() {
       source: "scanner",
     });
     try {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("intertexe_auth_token") : null;
       const res = await fetch("/api/scanner/track-clickout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           productId: product.id,
           productName: product.name,

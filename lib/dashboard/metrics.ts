@@ -519,10 +519,15 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       revenueConnected: false,
       commission7d: null as number | null,
       sales7d: null as number | null,
+      salesToday: null as number | null,
       transactions7d: null as number | null,
+      transactionsToday: null as number | null,
       commission30d: null as number | null,
       sales30d: null as number | null,
       topRevenueAdvertisers: [] as Array<{ brand: string; commission: number; sales: number }>,
+      lastSaleDate: null as string | null,
+      nullU1Tx30d: null as number | null,
+      txWithU130d: null as number | null,
       error: "supabase_unavailable",
     };
   }
@@ -571,22 +576,28 @@ export async function fetchHqCommercePage(workspaceId?: string) {
     .sort((a, b) => String(b.clicked_at || "").localeCompare(String(a.clicked_at || "")))
     .slice(0, 30);
 
+  const todayIso = iso(new Date());
   let revenueConnected = false;
   let revenueIsDemo = false;
   let commission7d: number | null = null;
   let sales7d: number | null = null;
+  let salesToday: number | null = null;
   let transactions7d: number | null = null;
+  let transactionsToday: number | null = null;
   let commission30d: number | null = null;
   let sales30d: number | null = null;
   let recentTransactions: any[] = [];
   let topRevenueAdvertisers: Array<{ brand: string; commission: number; sales: number }> = [];
   let unmatchedTx30d: number | null = null;
+  let lastSaleDate: string | null = null;
+  let nullU1Tx30d: number | null = null;
+  let txWithU130d: number | null = null;
 
   if (workspaceId) {
     const { data: txRows, error: txErr } = await supabase
       .from("hq_affiliate_transactions")
       .select(
-        "id, transaction_date, advertiser_name, product_name, product_id, sku, sales_amount, commission_amount, currency, status, order_id, raw, external_transaction_id"
+        "id, transaction_date, advertiser_name, product_name, product_id, sku, sales_amount, commission_amount, currency, status, order_id, raw, external_transaction_id, u1"
       )
       .eq("workspace_id", workspaceId)
       .gte("transaction_date", iso(d30))
@@ -596,6 +607,12 @@ export async function fetchHqCommercePage(workspaceId?: string) {
     if (!txErr && txRows) {
       const isDemoRow = (r: any) =>
         r.status === "demo" || r.raw?.is_demo === true || String(r.external_transaction_id || "").startsWith("TX-");
+      const isBlankU1 = (r: any) => {
+        const v = r.u1 ?? r.raw?.u1 ?? r.raw?.member_id_u1;
+        if (v == null) return true;
+        const s = String(v).trim().toLowerCase();
+        return !s || s === "null" || s === "undefined" || s === "none";
+      };
       const demoRows = txRows.filter(isDemoRow);
       const verifiedRows = txRows.filter((r) => !isDemoRow(r));
       revenueIsDemo = verifiedRows.length === 0 && demoRows.length > 0;
@@ -603,11 +620,18 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       const activeRows = revenueIsDemo ? [] : verifiedRows;
       revenueConnected = activeRows.length > 0;
       const in7 = activeRows.filter((r) => r.transaction_date && r.transaction_date >= iso(d7));
+      const inToday = activeRows.filter(
+        (r) => r.transaction_date && String(r.transaction_date).slice(0, 10) >= todayIso.slice(0, 10)
+      );
       transactions7d = revenueIsDemo ? demoRows.filter((r) => r.transaction_date && r.transaction_date >= iso(d7)).length : in7.length;
+      transactionsToday = revenueIsDemo ? null : inToday.length;
       commission7d = revenueIsDemo
         ? null
         : in7.reduce((s, r) => s + Number(r.commission_amount || 0), 0);
       sales7d = revenueIsDemo ? null : in7.reduce((s, r) => s + Number(r.sales_amount || 0), 0);
+      salesToday = revenueIsDemo
+        ? null
+        : inToday.reduce((s, r) => s + Number(r.sales_amount || 0), 0);
       commission30d = revenueIsDemo
         ? null
         : activeRows.reduce((s, r) => s + Number(r.commission_amount || 0), 0);
@@ -619,6 +643,11 @@ export async function fetchHqCommercePage(workspaceId?: string) {
         is_demo: isDemoRow(r),
       }));
       unmatchedTx30d = activeRows.filter((r) => !r.product_id && !r.sku).length;
+      nullU1Tx30d = activeRows.filter(isBlankU1).length;
+      txWithU130d = activeRows.length - (nullU1Tx30d || 0);
+      lastSaleDate = activeRows[0]?.transaction_date
+        ? String(activeRows[0].transaction_date).slice(0, 10)
+        : null;
       const byAdv = new Map<string, { commission: number; sales: number }>();
       for (const r of activeRows) {
         const key = r.advertiser_name || "Unknown";
@@ -654,11 +683,16 @@ export async function fetchHqCommercePage(workspaceId?: string) {
     revenueIsDemo,
     commission7d,
     sales7d,
+    salesToday,
     transactions7d,
+    transactionsToday,
     commission30d,
     sales30d,
     topRevenueAdvertisers,
     unmatchedTx30d,
+    lastSaleDate,
+    nullU1Tx30d,
+    txWithU130d,
     error: shop7d.error,
   };
 }

@@ -36,6 +36,9 @@ export function buildMorningPulse(input: {
     revenueConnected?: boolean;
     revenueIsDemo?: boolean;
     commission7d?: number | null;
+    salesToday?: number | null;
+    sales7d?: number | null;
+    lastSaleDate?: string | null;
   };
   syncLatest?: NightlySyncRun | null;
   totalClicks7d: number;
@@ -84,6 +87,31 @@ export function buildMorningPulse(input: {
       value: count(totalClicks7d),
       hint: clickDelta.label,
       href: "/dashboard/commerce",
+    },
+    {
+      label: "Sales",
+      period: "Today",
+      value: money(
+        commerce.revenueConnected && !commerce.revenueIsDemo ? commerce.salesToday ?? 0 : null,
+        commerce.revenueIsDemo
+      ),
+      hint: commerce.revenueIsDemo
+        ? "Demo data — replace"
+        : !commerce.revenueConnected
+          ? "Not connected"
+          : commerce.lastSaleDate
+            ? `Last sale ${commerce.lastSaleDate}${
+                commerce.sales7d != null
+                  ? ` · 7d $${Math.round(commerce.sales7d).toLocaleString()}`
+                  : ""
+              }`
+            : "No verified sales yet",
+      href: "/dashboard/commerce",
+      attention: Boolean(
+        commerce.revenueIsDemo ||
+          !commerce.revenueConnected ||
+          (commerce.revenueConnected && (commerce.salesToday ?? 0) <= 0)
+      ),
     },
     {
       label: "Commission",
