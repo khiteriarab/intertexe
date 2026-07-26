@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { KhiterisEditConfig } from "../../lib/khiteris-edit";
 import { KhiteriPageViewTracker } from "./KhiteriPageViewTracker";
 import { KhiteriProductAffiliateLink } from "./KhiteriProductAffiliateLink";
+import { KhiteriShareButton } from "./KhiteriShareButton";
 
 const FINAL_NOTE = {
   lead: "Love finding better materials?",
@@ -9,10 +10,10 @@ const FINAL_NOTE = {
 };
 
 const BETA_COPY = {
-  headline: "Join the INTERTEXE Beta",
-  body: "Create a free account to access the beta and use the scanner to identify materials while shopping in-store.",
-  primaryCta: "Create Account",
+  headline: "Want the next edit first?",
+  body: "Create a free account for scanner access — or just share this page with someone who shops MyTheresa-level pieces.",
   secondaryCta: "Download the App",
+  accountCta: "Create Account",
 };
 
 type Props = {
@@ -118,6 +119,10 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
             </li>
           ))}
         </ol>
+
+        <div className="khiteris-edit__beta-actions" style={{ marginTop: "2.5rem" }}>
+          <KhiteriShareButton title={edit.title} url="https://www.intertexe.com/khiteri" />
+        </div>
       </section>
 
       {/* Section 4 — Final note */}
@@ -127,13 +132,13 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
         <p className="khiteris-edit__note-body">{FINAL_NOTE.body}</p>
       </section>
 
-      {/* Section 5 — Beta access */}
-      <section className="khiteris-edit__beta" aria-label="Beta access">
+      {/* Section 5 — Soft account / app (secondary to shopping) */}
+      <section className="khiteris-edit__beta" aria-label="Stay close">
         <h2 className="khiteris-edit__beta-headline">{BETA_COPY.headline}</h2>
         <p className="khiteris-edit__beta-body">{BETA_COPY.body}</p>
         <div className="khiteris-edit__beta-actions">
-          <Link href="/account?mode=signup" className="khiteris-edit__cta khiteris-edit__cta--primary">
-            {BETA_COPY.primaryCta}
+          <Link href="/account?mode=signup" className="khiteris-edit__cta khiteris-edit__cta--secondary">
+            {BETA_COPY.accountCta}
           </Link>
           <a
             href={appStoreUrl}
