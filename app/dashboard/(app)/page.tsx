@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireHqSession } from "../../../lib/dashboard/auth";
 import { fetchInsightsBundle } from "../../../lib/dashboard/insights";
-import { fetchGoogleDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
+import { fetchGoogleDiscoveryMetrics, fetchTikTokDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
 import {
   buildDeterministicInsights,
   listFounderActions,
@@ -33,11 +33,12 @@ const MISSION_LANES = [
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
   const supabase = getServerSupabase();
-  const [{ metrics: m, live }, commerce, syncOps, google] = await Promise.all([
+  const [{ metrics: m, live }, commerce, syncOps, google, tiktok] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
     fetchNightlySyncOps(),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
+    fetchTikTokDiscoveryMetrics(session.workspaceId),
   ]);
 
   const name = greetingName(session.fullName, session.email);
@@ -53,6 +54,7 @@ export default async function HqOverviewPage() {
   const pulse = buildMorningPulse({
     metrics: m,
     google,
+    tiktok,
     commerce,
     syncLatest: syncOps.latest,
     totalClicks7d,
@@ -62,6 +64,7 @@ export default async function HqOverviewPage() {
   const deterministic = buildDeterministicInsights({
     metrics: m,
     google,
+    tiktok,
     insights: live,
     commerce,
     syncLatest: syncOps.latest,
@@ -112,6 +115,7 @@ export default async function HqOverviewPage() {
         <p className="text-[11px] text-black/35 mt-4">
           Updated {new Date(m.fetchedAt).toLocaleString()}
           {google.syncedAt ? ` · Web ${new Date(google.syncedAt).toLocaleString()}` : ""}
+          {tiktok.syncedAt ? ` · TikTok ${new Date(tiktok.syncedAt).toLocaleString()}` : ""}
         </p>
       </HqCard>
 
@@ -123,7 +127,7 @@ export default async function HqOverviewPage() {
         <p className="text-[10px] tracking-[0.18em] uppercase text-black/40">Pulse</p>
         <p className="text-[10px] text-black/35">Today · Trailing 7d · safe WoW deltas</p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8">
         {pulse.map((item) => (
           <Link
             key={`${item.label}-${item.period}`}

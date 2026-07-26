@@ -1,4 +1,4 @@
-import type { GoogleDiscoveryMetrics } from "./integration-metrics";
+import type { GoogleDiscoveryMetrics, TikTokDiscoveryMetrics } from "./integration-metrics";
 import type { DeterministicInsight } from "./action-center";
 import type { HqOverviewMetrics } from "./metrics";
 import type { NightlySyncRun } from "./catalog-sync-ops";
@@ -32,6 +32,7 @@ function money(n: number | null | undefined, demo?: boolean) {
 export function buildMorningPulse(input: {
   metrics: HqOverviewMetrics;
   google: GoogleDiscoveryMetrics;
+  tiktok?: TikTokDiscoveryMetrics;
   commerce: {
     revenueConnected?: boolean;
     revenueIsDemo?: boolean;
@@ -44,7 +45,8 @@ export function buildMorningPulse(input: {
   totalClicks7d: number;
   totalClicksPrev7d?: number | null;
 }): MorningPulseItem[] {
-  const { metrics: m, google, commerce, syncLatest, totalClicks7d, totalClicksPrev7d } = input;
+  const { metrics: m, google, tiktok, commerce, syncLatest, totalClicks7d, totalClicksPrev7d } =
+    input;
   const scanDelta = computePeriodDelta(m.scansLast7d.value, m.scansPrev7d.value, {
     periodLabel: "vs prior 7d",
   });
@@ -62,6 +64,22 @@ export function buildMorningPulse(input: {
         : "Google not connected",
       href: "/dashboard/acquisition",
       attention: !google.connected,
+    },
+    {
+      label: "TikTok views",
+      period: "Sample",
+      value: count(tiktok?.connected ? tiktok.viewsSample : null),
+      hint: !tiktok?.connected
+        ? "TikTok not connected"
+        : [
+            tiktok.deltas.viewsSample.label,
+            tiktok.followerCount != null ? `${count(tiktok.followerCount)} followers` : null,
+            tiktok.videosPosted7d != null ? `${count(tiktok.videosPosted7d)} posted 7d` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || "Display API sample",
+      href: "/dashboard/acquisition",
+      attention: !tiktok?.connected,
     },
     {
       label: "Registrations",

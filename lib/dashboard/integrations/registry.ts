@@ -35,8 +35,8 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     label: "TikTok",
     dataSourceKeys: ["tiktok"],
     authMode: "oauth",
-    description: "Connect TikTok for Business / Login Kit to pull account and performance metrics.",
-    docsUrl: "https://developers.tiktok.com/",
+    description: "Connect TikTok Login Kit (Display API) for organic profile + video engagement.",
+    docsUrl: "https://developers.tiktok.com/doc/login-kit-web",
     requiredEnv: ["TIKTOK_OAUTH_CLIENT_KEY", "TIKTOK_OAUTH_CLIENT_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
   },
   {
@@ -95,8 +95,8 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     cardId: "tiktok",
     label: "TikTok",
     providerId: "tiktok",
-    permissions: ["Profile", "Video list", "Views", "Likes", "Comments", "Shares"],
-    blurb: "Connect TikTok Login Kit for organic performance samples.",
+    permissions: ["Profile", "Followers (when approved)", "Video list", "Views", "Likes", "Comments", "Shares"],
+    blurb: "Organic Display API sample — feeds Today, Acquisition, and Action Center (no separate TikTok page).",
   },
   {
     cardId: "pinterest",

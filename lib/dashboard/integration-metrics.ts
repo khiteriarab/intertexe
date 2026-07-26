@@ -211,3 +211,171 @@ function numOrNull(v: unknown): number | null {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
+
+export type TikTokTopVideo = {
+  id: string;
+  title: string;
+  createTime: string | null;
+  shareUrl: string | null;
+  coverImageUrl: string | null;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  shareCount: number;
+  durationSec: number | null;
+};
+
+/**
+ * Organic TikTok discovery from Display / Login Kit snapshots.
+ * Structured so Business API fields can land in the same shape later.
+ */
+export type TikTokDiscoveryMetrics = {
+  connected: boolean;
+  metricDate: string | null;
+  syncedAt: string | null;
+  displayName: string | null;
+  username: string | null;
+  followerCount: number | null;
+  followingCount: number | null;
+  likesCount: number | null;
+  videoCount: number | null;
+  videoSampleCount: number | null;
+  viewsSample: number | null;
+  likesSample: number | null;
+  commentsSample: number | null;
+  sharesSample: number | null;
+  viewsSamplePrev: number | null;
+  videosPosted7d: number | null;
+  videosPostedPrev7d: number | null;
+  viewsOnVideosPosted7d: number | null;
+  viewsOnVideosPostedPrev7d: number | null;
+  topVideos: TikTokTopVideo[];
+  deltas: {
+    viewsSample: ReturnType<typeof computePeriodDelta>;
+    videosPosted7d: ReturnType<typeof computePeriodDelta>;
+  };
+  apiSurface: string | null;
+  extensions: Record<string, unknown> | null;
+  lastSyncStatus: string | null;
+  lastSyncError: string | null;
+  lastSuccessfulSyncAt: string | null;
+};
+
+const EMPTY_TIKTOK: TikTokDiscoveryMetrics = {
+  connected: false,
+  metricDate: null,
+  syncedAt: null,
+  displayName: null,
+  username: null,
+  followerCount: null,
+  followingCount: null,
+  likesCount: null,
+  videoCount: null,
+  videoSampleCount: null,
+  viewsSample: null,
+  likesSample: null,
+  commentsSample: null,
+  sharesSample: null,
+  viewsSamplePrev: null,
+  videosPosted7d: null,
+  videosPostedPrev7d: null,
+  viewsOnVideosPosted7d: null,
+  viewsOnVideosPostedPrev7d: null,
+  topVideos: [],
+  deltas: {
+    viewsSample: computePeriodDelta(null, null),
+    videosPosted7d: computePeriodDelta(null, null),
+  },
+  apiSurface: null,
+  extensions: null,
+  lastSyncStatus: null,
+  lastSyncError: null,
+  lastSuccessfulSyncAt: null,
+};
+
+/** Latest TikTok organic snapshot for Acquisition / Today / Action Center. */
+export async function fetchTikTokDiscoveryMetrics(
+  workspaceId: string
+): Promise<TikTokDiscoveryMetrics> {
+  const supabase = getServerSupabase();
+  if (!supabase || !workspaceId) return EMPTY_TIKTOK;
+
+  const [{ data: conn }, { data: snaps }] = await Promise.all([
+    supabase
+      .from("hq_oauth_connections")
+      .select("status, last_sync_at, last_sync_status, last_sync_error, metadata, account_label")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "tiktok")
+      .maybeSingle(),
+    supabase
+      .from("hq_integration_metric_snapshots")
+      .select("metric_date, metrics, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "tiktok")
+      .order("metric_date", { ascending: false })
+      .limit(2),
+  ]);
+
+  const connected = Boolean(
+    conn && (conn.status === "connected" || conn.status === "degraded" || conn.status === "error")
+  );
+  const latest = snaps?.[0] || null;
+  const prev = snaps?.[1] || null;
+  const metrics = (latest?.metrics || {}) as Record<string, unknown>;
+  const prevMetrics = (prev?.metrics || {}) as Record<string, unknown>;
+  const meta = (conn?.metadata || {}) as Record<string, unknown>;
+
+  const viewsSample = numOrNull(metrics.viewsSample);
+  const viewsSamplePrev = numOrNull(prevMetrics.viewsSample);
+  const videosPosted7d = numOrNull(metrics.videosPosted7d);
+  const videosPostedPrev7d = numOrNull(metrics.videosPostedPrev7d);
+
+  return {
+    connected,
+    metricDate: latest?.metric_date || null,
+    syncedAt:
+      (typeof metrics.syncedAt === "string" && metrics.syncedAt) ||
+      conn?.last_sync_at ||
+      latest?.created_at ||
+      null,
+    displayName:
+      (typeof metrics.displayName === "string" && metrics.displayName) ||
+      conn?.account_label ||
+      null,
+    username: typeof metrics.username === "string" ? metrics.username : null,
+    followerCount: numOrNull(metrics.followerCount),
+    followingCount: numOrNull(metrics.followingCount),
+    likesCount: numOrNull(metrics.likesCount),
+    videoCount: numOrNull(metrics.videoCount),
+    videoSampleCount: numOrNull(metrics.videoSampleCount),
+    viewsSample,
+    likesSample: numOrNull(metrics.likesSample),
+    commentsSample: numOrNull(metrics.commentsSample),
+    sharesSample: numOrNull(metrics.sharesSample),
+    viewsSamplePrev,
+    videosPosted7d,
+    videosPostedPrev7d,
+    viewsOnVideosPosted7d: numOrNull(metrics.viewsOnVideosPosted7d),
+    viewsOnVideosPostedPrev7d: numOrNull(metrics.viewsOnVideosPostedPrev7d),
+    topVideos: Array.isArray(metrics.topVideos)
+      ? (metrics.topVideos as TikTokTopVideo[])
+      : [],
+    deltas: {
+      viewsSample: computePeriodDelta(viewsSample, viewsSamplePrev, {
+        periodLabel: "vs prior sync",
+      }),
+      videosPosted7d: computePeriodDelta(videosPosted7d, videosPostedPrev7d, {
+        periodLabel: "vs prior 7d",
+      }),
+    },
+    apiSurface: typeof metrics.apiSurface === "string" ? metrics.apiSurface : null,
+    extensions:
+      metrics.extensions && typeof metrics.extensions === "object"
+        ? (metrics.extensions as Record<string, unknown>)
+        : null,
+    lastSyncStatus: conn?.last_sync_status || null,
+    lastSyncError: conn?.last_sync_error || null,
+    lastSuccessfulSyncAt:
+      typeof meta.lastSuccessfulSyncAt === "string" ? meta.lastSuccessfulSyncAt : null,
+  };
+}

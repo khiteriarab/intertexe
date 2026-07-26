@@ -6,7 +6,62 @@ function requireEnv(name: string): string {
   return v;
 }
 
-const SCOPES = ["user.info.basic", "video.list"].join(",");
+/**
+ * Display / Login Kit scopes available today.
+ * user.info.stats unlocks follower_count when the TikTok app is approved for it;
+ * sync degrades gracefully if the field is missing.
+ */
+const SCOPES = ["user.info.basic", "user.info.profile", "user.info.stats", "video.list"].join(",");
+
+const VIDEO_FIELDS = [
+  "id",
+  "title",
+  "create_time",
+  "share_url",
+  "cover_image_url",
+  "view_count",
+  "like_count",
+  "comment_count",
+  "share_count",
+  "duration",
+].join(",");
+
+const USER_FIELDS = [
+  "open_id",
+  "display_name",
+  "avatar_url",
+  "username",
+  "follower_count",
+  "following_count",
+  "likes_count",
+  "video_count",
+].join(",");
+
+type TikTokVideoRaw = {
+  id?: string;
+  title?: string;
+  create_time?: number;
+  share_url?: string;
+  cover_image_url?: string;
+  view_count?: number;
+  like_count?: number;
+  comment_count?: number;
+  share_count?: number;
+  duration?: number;
+};
+
+export type TikTokTopVideoMetric = {
+  id: string;
+  title: string;
+  createTime: string | null;
+  shareUrl: string | null;
+  coverImageUrl: string | null;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  shareCount: number;
+  durationSec: number | null;
+};
 
 export const tiktokAdapter: ProviderAdapter = {
   id: "tiktok",
@@ -66,41 +121,143 @@ export const tiktokAdapter: ProviderAdapter = {
   },
 
   async enrichAccount(accessToken: string) {
-    const res = await fetch("https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url", {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const json = await res.json();
-    const user = json?.data?.user || json?.data || {};
+    const user = await fetchTikTokUser(accessToken);
     return {
-      accountLabel: user.display_name || null,
+      accountLabel: user.display_name || user.username || null,
       externalAccountId: user.open_id || null,
     };
   },
 
   async syncMetrics({ accessToken }) {
-    const res = await fetch(
-      "https://open.tiktokapis.com/v2/video/list/?fields=id,title,view_count,like_count,comment_count,share_count",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ max_count: 10 }),
-      }
-    );
-    const json = await res.json();
-    const videos = json?.data?.videos || [];
+    const [user, videoPayload] = await Promise.all([
+      fetchTikTokUser(accessToken),
+      fetchTikTokVideos(accessToken),
+    ]);
+
+    const videos = videoPayload.videos;
+    const now = Date.now();
+    const d7 = now - 7 * 24 * 60 * 60 * 1000;
+    const d14 = now - 14 * 24 * 60 * 60 * 1000;
+
+    const sum = (key: keyof TikTokVideoRaw) =>
+      videos.reduce((s, v) => s + Number(v[key] || 0), 0);
+
+    const createdIn = (fromMs: number, toMs: number) =>
+      videos.filter((v) => {
+        const t = Number(v.create_time || 0) * 1000;
+        return t >= fromMs && t < toMs;
+      });
+
+    const last7 = createdIn(d7, now + 1);
+    const prev7 = createdIn(d14, d7);
+
+    const mapVideo = (v: TikTokVideoRaw): TikTokTopVideoMetric => ({
+      id: String(v.id || ""),
+      title: String(v.title || "").slice(0, 200) || "(untitled)",
+      createTime: v.create_time
+        ? new Date(Number(v.create_time) * 1000).toISOString()
+        : null,
+      shareUrl: v.share_url ? String(v.share_url) : null,
+      coverImageUrl: v.cover_image_url ? String(v.cover_image_url) : null,
+      viewCount: Number(v.view_count || 0),
+      likeCount: Number(v.like_count || 0),
+      commentCount: Number(v.comment_count || 0),
+      shareCount: Number(v.share_count || 0),
+      durationSec: v.duration != null ? Number(v.duration) : null,
+    });
+
+    const topVideos = [...videos]
+      .sort((a, b) => Number(b.view_count || 0) - Number(a.view_count || 0))
+      .slice(0, 10)
+      .map(mapVideo)
+      .filter((v) => v.id);
+
     const metrics: Record<string, unknown> = {
       syncedAt: new Date().toISOString(),
-      videoCountSample: videos.length,
-      viewsSample: videos.reduce((s: number, v: { view_count?: number }) => s + Number(v.view_count || 0), 0),
-      likesSample: videos.reduce((s: number, v: { like_count?: number }) => s + Number(v.like_count || 0), 0),
+      apiSurface: "tiktok_display_login_kit",
+      // Account (fields present when scopes approved)
+      displayName: user.display_name || null,
+      username: user.username || null,
+      openId: user.open_id || null,
+      avatarUrl: user.avatar_url || null,
+      followerCount: numOrNull(user.follower_count),
+      followingCount: numOrNull(user.following_count),
+      likesCount: numOrNull(user.likes_count),
+      videoCount: numOrNull(user.video_count),
+      // Lifetime totals across the latest video page sample (max 20)
+      videoSampleCount: videos.length,
+      viewsSample: sum("view_count"),
+      likesSample: sum("like_count"),
+      commentsSample: sum("comment_count"),
+      sharesSample: sum("share_count"),
+      // Videos posted in window (create_time) — Display API has no daily view series
+      videosPosted7d: last7.length,
+      videosPostedPrev7d: prev7.length,
+      viewsOnVideosPosted7d: last7.reduce((s, v) => s + Number(v.view_count || 0), 0),
+      viewsOnVideosPostedPrev7d: prev7.reduce((s, v) => s + Number(v.view_count || 0), 0),
+      topVideos,
+      // Reserved for richer Business / organic analytics later
+      extensions: {
+        businessOrganicReady: false,
+        note:
+          "Display API returns lifetime engagement on listed videos. Daily series / demographics need Business API when approved.",
+      },
     };
-    if (!res.ok) metrics.tiktokError = json?.error?.message || "TikTok video list failed";
-    return { metrics, raw: json };
+
+    if (videoPayload.error) {
+      metrics.tiktokError = videoPayload.error;
+    }
+    if (user.error) {
+      metrics.tiktokUserError = user.error;
+    }
+
+    return {
+      metrics,
+      raw: { user: user.raw, videos: videoPayload.raw },
+    };
   },
 };
+
+async function fetchTikTokUser(accessToken: string) {
+  const res = await fetch(
+    `https://open.tiktokapis.com/v2/user/info/?fields=${encodeURIComponent(USER_FIELDS)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const json = await res.json();
+  const user = (json?.data?.user || json?.data || {}) as Record<string, unknown>;
+  const errCode = json?.error?.code;
+  const error =
+    !res.ok || (errCode && errCode !== "ok")
+      ? String(json?.error?.message || "TikTok user info failed")
+      : null;
+  return { ...user, error, raw: json };
+}
+
+async function fetchTikTokVideos(accessToken: string): Promise<{
+  videos: TikTokVideoRaw[];
+  error: string | null;
+  raw: unknown;
+}> {
+  const res = await fetch(
+    `https://open.tiktokapis.com/v2/video/list/?fields=${encodeURIComponent(VIDEO_FIELDS)}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ max_count: 20 }),
+    }
+  );
+  const json = await res.json();
+  const videos = (json?.data?.videos || []) as TikTokVideoRaw[];
+  const errCode = json?.error?.code;
+  const error =
+    !res.ok || (errCode && errCode !== "ok")
+      ? String(json?.error?.message || "TikTok video list failed")
+      : null;
+  return { videos, error, raw: json };
+}
 
 function mapTikTokToken(data: Record<string, unknown>): TokenBundle {
   const expiresIn = Number(data.expires_in || 86400);
@@ -114,4 +271,10 @@ function mapTikTokToken(data: Record<string, unknown>): TokenBundle {
       .filter(Boolean),
     externalAccountId: data.open_id ? String(data.open_id) : null,
   };
+}
+
+function numOrNull(v: unknown): number | null {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }

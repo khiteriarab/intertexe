@@ -4,7 +4,7 @@ import {
   fetchHqAcquisitionReport,
   type AcquisitionBucket,
 } from "../../../../lib/dashboard/acquisition";
-import { fetchGoogleDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
+import { fetchGoogleDiscoveryMetrics, fetchTikTokDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
 
@@ -87,9 +87,10 @@ function ReportTable({
 
 export default async function HqAcquisitionPage() {
   const session = await requireHqSession();
-  const [report, google] = await Promise.all([
+  const [report, google, tiktok] = await Promise.all([
     fetchHqAcquisitionReport(),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
+    fetchTikTokDiscoveryMetrics(session.workspaceId),
   ]);
 
   return (
@@ -291,6 +292,114 @@ export default async function HqAcquisitionPage() {
             <p>
               Google is not connected, so web discovery is dark. Connect once in Settings — this page
               will show sessions, users, organic clicks, impressions, landing pages, and sources.
+            </p>
+            <Link
+              href="/dashboard/settings"
+              className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
+            >
+              Open Settings → Integrations
+            </Link>
+          </div>
+        )}
+      </HqCard>
+
+      <HqCard className="mb-6" title="Social discovery (TikTok)">
+        {tiktok.connected ? (
+          <>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
+              Display / Login Kit · lifetime totals on latest video sample · vs prior sync
+            </p>
+            <HqMetricGrid
+              items={[
+                {
+                  label: "Views (sample)",
+                  value: formatCount(tiktok.viewsSample),
+                  hint: tiktok.deltas.viewsSample.label || "vs prior sync",
+                },
+                {
+                  label: "Likes (sample)",
+                  value: formatCount(tiktok.likesSample),
+                },
+                {
+                  label: "Followers",
+                  value: formatCount(tiktok.followerCount),
+                  hint: tiktok.username ? `@${tiktok.username}` : tiktok.displayName || undefined,
+                },
+                {
+                  label: "Posted (7d)",
+                  value: formatCount(tiktok.videosPosted7d),
+                  hint: tiktok.deltas.videosPosted7d.label || "create_time window",
+                },
+              ]}
+            />
+            <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Comments (sample)</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(tiktok.commentsSample)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Shares (sample)</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(tiktok.sharesSample)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Videos in sample</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(tiktok.videoSampleCount)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Account videos</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(tiktok.videoCount)}</p>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                Top videos by views
+              </p>
+              {tiktok.topVideos.length ? (
+                <ul className="space-y-2 text-sm">
+                  {tiktok.topVideos.slice(0, 8).map((v) => (
+                    <li key={v.id} className="flex justify-between gap-3">
+                      <span className="truncate" title={v.title}>
+                        {v.shareUrl ? (
+                          <a
+                            href={v.shareUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-2"
+                          >
+                            {v.title}
+                          </a>
+                        ) : (
+                          v.title
+                        )}
+                      </span>
+                      <span className="tabular-nums text-black/50 shrink-0">
+                        {formatCount(v.viewCount)} views · {formatCount(v.likeCount)} likes
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-black/50">No videos in the latest sync yet.</p>
+              )}
+            </div>
+
+            <p className="text-[11px] text-black/40 mt-4">
+              Synced {tiktok.syncedAt ? new Date(tiktok.syncedAt).toLocaleString() : "—"}
+              {tiktok.lastSyncStatus ? ` · ${tiktok.lastSyncStatus}` : ""}
+              {tiktok.apiSurface ? ` · ${tiktok.apiSurface}` : ""}
+              {" · "}
+              <Link href="/dashboard/settings" className="underline underline-offset-2">
+                Manage connection
+              </Link>
+            </p>
+          </>
+        ) : (
+          <div className="text-sm text-black/60 leading-relaxed">
+            <p>
+              TikTok is not connected, so organic social discovery is dark. Connect Login Kit in
+              Settings — this page will show sample views, likes, followers, and top videos next to
+              Google.
             </p>
             <Link
               href="/dashboard/settings"

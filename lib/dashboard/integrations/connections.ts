@@ -258,8 +258,12 @@ export async function syncProvider(
     const setupWarnings = Array.isArray(result.metrics?.setupWarnings)
       ? (result.metrics.setupWarnings as string[])
       : [];
-    const hardErrors = [result.metrics?.ga4Error, result.metrics?.gscError]
-      .filter((v): v is string => typeof v === "string" && v.length > 0);
+    const hardErrors = [
+      result.metrics?.ga4Error,
+      result.metrics?.gscError,
+      result.metrics?.tiktokError,
+      result.metrics?.tiktokUserError,
+    ].filter((v): v is string => typeof v === "string" && v.length > 0);
     const softWarnings = setupWarnings.filter((w) => !hardErrors.includes(w));
     const hasHardError = hardErrors.length > 0;
     const fullySuccessful = !hasHardError && softWarnings.length === 0;
@@ -272,6 +276,9 @@ export async function syncProvider(
         ga4Sessions7d: result.metrics?.ga4Sessions7d ?? null,
         gscClicks7d: result.metrics?.gscClicks7d ?? null,
         gscImpressions7d: result.metrics?.gscImpressions7d ?? null,
+        tiktokViewsSample: result.metrics?.viewsSample ?? null,
+        tiktokFollowerCount: result.metrics?.followerCount ?? null,
+        tiktokVideosPosted7d: result.metrics?.videosPosted7d ?? null,
       },
     };
     const detailText = (hasHardError ? hardErrors : softWarnings).join(" · ").slice(0, 500) || null;

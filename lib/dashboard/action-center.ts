@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GoogleDiscoveryMetrics } from "./integration-metrics";
+import type { GoogleDiscoveryMetrics, TikTokDiscoveryMetrics } from "./integration-metrics";
 import type { HqInsight } from "./insights";
 import type { NightlySyncRun } from "./catalog-sync-ops";
 import type { HqOverviewMetrics } from "./metrics";
@@ -95,6 +95,7 @@ function rowToAction(row: TaskRow): FounderAction {
 export function buildDeterministicInsights(input: {
   metrics: HqOverviewMetrics;
   google: GoogleDiscoveryMetrics;
+  tiktok?: TikTokDiscoveryMetrics;
   insights: HqInsight[];
   commerce: {
     revenueConnected?: boolean;
@@ -116,7 +117,7 @@ export function buildDeterministicInsights(input: {
   totalClicks7d: number;
   totalClicksPrev7d?: number | null;
 }): DeterministicInsight[] {
-  const { metrics: m, google, commerce, syncLatest } = input;
+  const { metrics: m, google, tiktok, commerce, syncLatest } = input;
   const out: DeterministicInsight[] = [];
 
   const sessionsDelta = google.deltas.sessions7d;
@@ -430,6 +431,101 @@ export function buildDeterministicInsights(input: {
       href: "/dashboard/settings",
       expectedImpact: "Illuminate top-of-funnel demand on Today and Acquisition.",
     });
+  }
+
+  if (!tiktok?.connected) {
+    out.push({
+      fingerprint: "tiktok_not_connected",
+      title: "TikTok discovery is dark",
+      whatChanged: "TikTok Login Kit not connected.",
+      whyItChanged: "No OAuth connection for provider=tiktok in this workspace.",
+      attention: "Cannot see organic TikTok views feeding the private /khiteri link.",
+      recommendedAction: "Connect TikTok under Settings → Integrations, then Sync Now.",
+      evidence: { connected: false },
+      comparisonPeriod: "current",
+      confidence: "high",
+      priority: "operational",
+      href: "/dashboard/settings",
+      expectedImpact: "Measure TikTok reach next to Google on Acquisition and Today.",
+    });
+  } else {
+    const viewsDelta = tiktok.deltas.viewsSample;
+    if (
+      viewsDelta.complete &&
+      viewsDelta.absolute != null &&
+      viewsDelta.absolute > 0 &&
+      (viewsDelta.percent == null || viewsDelta.percent >= 15)
+    ) {
+      const top = tiktok.topVideos[0];
+      out.push({
+        fingerprint: "tiktok_views_up",
+        title: "TikTok sample views increased",
+        whatChanged: `Sample views ${count(viewsDelta.current)} ${viewsDelta.label}.`,
+        whyItChanged: top
+          ? `Top video in sample: “${top.title}” (${count(top.viewCount)} views). Cause beyond Display API not claimed.`
+          : "Lifetime totals on listed videos rose vs prior sync; posting cadence may also differ.",
+        attention: "Organic TikTok demand is rising — push the converting private link while attention is warm.",
+        recommendedAction:
+          "Review Acquisition → Social discovery (TikTok), then post or reshare the winning angle with the private /khiteri link.",
+        evidence: {
+          viewsSample: viewsDelta.current,
+          viewsSamplePrev: viewsDelta.previous,
+          topVideo: top || null,
+          videosPosted7d: tiktok.videosPosted7d,
+        },
+        comparisonPeriod: "vs_prior_sync",
+        confidence: "medium",
+        priority: "growth",
+        href: "/dashboard/acquisition",
+        expectedImpact: "Convert TikTok attention into affiliate clickouts and sales.",
+      });
+    } else if (
+      viewsDelta.complete &&
+      viewsDelta.absolute != null &&
+      viewsDelta.absolute < 0 &&
+      (viewsDelta.percent == null || viewsDelta.percent <= -15)
+    ) {
+      out.push({
+        fingerprint: "tiktok_views_down",
+        title: "TikTok sample views declined",
+        whatChanged: `Sample views ${count(viewsDelta.current)} ${viewsDelta.label}.`,
+        whyItChanged:
+          "Display API only exposes lifetime views on recent videos — decline may mean weaker recent posts or sample composition change.",
+        attention: "TikTok reach soft — risk to the private-link acquisition path.",
+        recommendedAction:
+          "Check Acquisition → top TikTok videos and ship a fresh post pointing at the private /khiteri link.",
+        evidence: {
+          viewsSample: viewsDelta.current,
+          viewsSamplePrev: viewsDelta.previous,
+          videosPosted7d: tiktok.videosPosted7d,
+        },
+        comparisonPeriod: "vs_prior_sync",
+        confidence: "medium",
+        priority: "critical",
+        href: "/dashboard/acquisition",
+        expectedImpact: "Recover TikTok demand before affiliate sales go quiet.",
+      });
+    }
+
+    if ((tiktok.videosPosted7d ?? 0) === 0 && tiktok.connected) {
+      out.push({
+        fingerprint: "tiktok_no_posts_7d",
+        title: "No TikTok videos posted in 7d",
+        whatChanged: `Videos posted (7d): ${count(tiktok.videosPosted7d)} · prior 7d ${count(tiktok.videosPostedPrev7d)}.`,
+        whyItChanged: "Measured from create_time on the Display API video list sample.",
+        attention: "Quiet posting window on the channel that feeds the private editorial link.",
+        recommendedAction: "Publish at least one TikTok with the private /khiteri link today.",
+        evidence: {
+          videosPosted7d: tiktok.videosPosted7d,
+          videosPostedPrev7d: tiktok.videosPostedPrev7d,
+        },
+        comparisonPeriod: "trailing_7d",
+        confidence: "high",
+        priority: "growth",
+        href: "/dashboard/acquisition",
+        expectedImpact: "Keep the TikTok → private link → sale loop alive.",
+      });
+    }
   }
 
   for (const i of input.insights.filter((x) => x.severity === "critical").slice(0, 2)) {

@@ -44,6 +44,14 @@ export async function GET() {
         );
       }
     }
+    if (def.id === "tiktok") {
+      setupHints.push(
+        "Register redirect URI exactly as shown below in TikTok Developer Portal (Login Kit)."
+      );
+      setupHints.push(
+        "Request scopes: user.info.basic, user.info.profile, user.info.stats, video.list. Stats fields appear after TikTok approves them."
+      );
+    }
     if (!encryptionConfigured) {
       setupHints.push("Add HQ_TOKEN_ENCRYPTION_KEY in Vercel Production before connecting.");
     }
@@ -115,6 +123,8 @@ export async function GET() {
       SEARCH_CONSOLE_SITE_URL: gscConfigured,
       GOOGLE_OAUTH_CLIENT_ID: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID?.trim()),
       GOOGLE_OAUTH_CLIENT_SECRET: Boolean(process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()),
+      TIKTOK_OAUTH_CLIENT_KEY: Boolean(process.env.TIKTOK_OAUTH_CLIENT_KEY?.trim()),
+      TIKTOK_OAUTH_CLIENT_SECRET: Boolean(process.env.TIKTOK_OAUTH_CLIENT_SECRET?.trim()),
     },
   });
 }
