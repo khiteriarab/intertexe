@@ -459,7 +459,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           imageUrl="https://cdn.shopify.com/s/files/1/1130/9504/files/S57-FF2904-BLK-23935-FaithfullTheBrand-D2-1184.webp?v=1712029525"
           label="Editorial"
           title="Khiteri's Edit"
-          subtitle="Ten natural-fiber pieces — the highest-intent shop surface on INTERTEXE."
+          subtitle="Ten natural-fiber pieces I'm loving this month."
           testId="link-homepage-khiteri"
           slug="khiteri"
         />
