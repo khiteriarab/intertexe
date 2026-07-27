@@ -114,11 +114,17 @@ export async function listConnections(supabase: SupabaseClient, workspaceId: str
   const { data, error } = await supabase
     .from("hq_oauth_connections")
     .select(
-      "id, provider, status, account_label, external_account_id, scopes, expires_at, metadata, last_sync_at, last_sync_status, last_sync_error, updated_at"
+      "id, provider, status, account_label, external_account_id, scopes, expires_at, metadata, last_sync_at, last_sync_status, last_sync_error, updated_at, refresh_token_enc"
     )
     .eq("workspace_id", workspaceId);
   if (error) throw new Error(error.message);
-  return (data || []) as Array<{
+  return (data || []).map((row) => {
+    const { refresh_token_enc, ...rest } = row as typeof row & { refresh_token_enc?: string | null };
+    return {
+      ...rest,
+      hasRefreshToken: Boolean(refresh_token_enc),
+    };
+  }) as Array<{
     id: string;
     provider: string;
     status: string;
@@ -131,6 +137,7 @@ export async function listConnections(supabase: SupabaseClient, workspaceId: str
     last_sync_status: string | null;
     last_sync_error: string | null;
     updated_at: string;
+    hasRefreshToken: boolean;
   }>;
 }
 

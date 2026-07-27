@@ -148,21 +148,41 @@ export function callbackUrl(provider: OAuthProviderId): string {
   return `${oauthRedirectBase()}/api/dashboard/integrations/callback/${provider}`;
 }
 
-/** Auth / revoke / expiry failures that should surface Reconnect in HQ. */
+/** Auth / revoke failures that should surface Reconnect in HQ.
+ * Do NOT treat short-lived access-token expiry as reconnect — providers
+ * (esp. Google ~1h tokens) refresh automatically via refresh_token.
+ */
 export function needsReconnect(
   conn: {
     status?: string | null;
     expires_at?: string | null;
     last_sync_status?: string | null;
     last_sync_error?: string | null;
+    hasRefreshToken?: boolean | null;
   } | null
 ): boolean {
   if (!conn) return false;
-  if (conn.status === "revoked" || conn.status === "error" || conn.status === "degraded") return true;
-  if (conn.expires_at && Date.parse(conn.expires_at) < Date.now() - 60_000) return true;
+  if (conn.status === "revoked") return true;
+
   const err = String(conn.last_sync_error || "");
-  if (/invalid_grant|revoked|expired|unauthorized|401|403|token/i.test(err)) return true;
-  if (conn.last_sync_status === "error" && /auth|token|reconnect|login/i.test(err)) return true;
+  const authError =
+    /invalid_grant|token.?revoked|refresh.?token.*(expired|invalid|revoked)|unauthorized_client|access_denied|login.?required|consent.?required/i.test(
+      err
+    );
+
+  // Real auth failure on last sync — user must re-consent.
+  if (authError) return true;
+  if (conn.last_sync_status === "error" && /invalid_grant|revoked|unauthorized|401|403/i.test(err)) {
+    return true;
+  }
+
+  // Access token expired with no refresh token on file (cannot silent-refresh).
+  const accessExpired =
+    Boolean(conn.expires_at) && Date.parse(String(conn.expires_at)) < Date.now() - 60_000;
+  if (accessExpired && conn.hasRefreshToken === false) return true;
+
+  // Degraded/error status alone is not reconnect — that is often a metrics API issue.
+  // Only force reconnect when status is explicitly revoked (handled above) or authError.
   return false;
 }
 
