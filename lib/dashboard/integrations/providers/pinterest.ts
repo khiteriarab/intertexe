@@ -1,11 +1,5 @@
 import type { ProviderAdapter, TokenBundle } from "../types";
 
-function requireEnv(name: string): string {
-  const v = process.env[name]?.trim();
-  if (!v) throw new Error(`${name} is not configured`);
-  return v;
-}
-
 /** Prefer OAuth-prefixed names; accept shorter aliases from Vercel. */
 function pinterestAppId(): string | undefined {
   return (
