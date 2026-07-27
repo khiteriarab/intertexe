@@ -379,3 +379,155 @@ export async function fetchTikTokDiscoveryMetrics(
       typeof meta.lastSuccessfulSyncAt === "string" ? meta.lastSuccessfulSyncAt : null,
   };
 }
+
+export type PinterestTopPin = {
+  pinId: string;
+  title: string | null;
+  link: string | null;
+  impression: number;
+  pinClick: number;
+  outboundClick: number;
+  save: number;
+  engagement: number;
+};
+
+/** Organic Pinterest discovery from v5 user_account analytics snapshots. */
+export type PinterestDiscoveryMetrics = {
+  connected: boolean;
+  metricDate: string | null;
+  syncedAt: string | null;
+  username: string | null;
+  businessName: string | null;
+  followerCount: number | null;
+  pinCount: number | null;
+  boardCount: number | null;
+  impressions7d: number | null;
+  pinClicks7d: number | null;
+  outboundClicks7d: number | null;
+  saves7d: number | null;
+  engagement7d: number | null;
+  profileVisits7d: number | null;
+  impressionsPrev7d: number | null;
+  pinClicksPrev7d: number | null;
+  outboundClicksPrev7d: number | null;
+  topPins: PinterestTopPin[];
+  deltas: {
+    impressions7d: ReturnType<typeof computePeriodDelta>;
+    outboundClicks7d: ReturnType<typeof computePeriodDelta>;
+  };
+  apiSurface: string | null;
+  extensions: Record<string, unknown> | null;
+  lastSyncStatus: string | null;
+  lastSyncError: string | null;
+  lastSuccessfulSyncAt: string | null;
+};
+
+const EMPTY_PINTEREST: PinterestDiscoveryMetrics = {
+  connected: false,
+  metricDate: null,
+  syncedAt: null,
+  username: null,
+  businessName: null,
+  followerCount: null,
+  pinCount: null,
+  boardCount: null,
+  impressions7d: null,
+  pinClicks7d: null,
+  outboundClicks7d: null,
+  saves7d: null,
+  engagement7d: null,
+  profileVisits7d: null,
+  impressionsPrev7d: null,
+  pinClicksPrev7d: null,
+  outboundClicksPrev7d: null,
+  topPins: [],
+  deltas: {
+    impressions7d: computePeriodDelta(null, null),
+    outboundClicks7d: computePeriodDelta(null, null),
+  },
+  apiSurface: null,
+  extensions: null,
+  lastSyncStatus: null,
+  lastSyncError: null,
+  lastSuccessfulSyncAt: null,
+};
+
+export async function fetchPinterestDiscoveryMetrics(
+  workspaceId: string
+): Promise<PinterestDiscoveryMetrics> {
+  const supabase = getServerSupabase();
+  if (!supabase || !workspaceId) return EMPTY_PINTEREST;
+
+  const [{ data: conn }, { data: snap }] = await Promise.all([
+    supabase
+      .from("hq_oauth_connections")
+      .select("status, last_sync_at, last_sync_status, last_sync_error, metadata, account_label")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "pinterest")
+      .maybeSingle(),
+    supabase
+      .from("hq_integration_metric_snapshots")
+      .select("metric_date, metrics, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "pinterest")
+      .order("metric_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const connected = Boolean(
+    conn && (conn.status === "connected" || conn.status === "degraded" || conn.status === "error")
+  );
+  const metrics = (snap?.metrics || {}) as Record<string, unknown>;
+  const meta = (conn?.metadata || {}) as Record<string, unknown>;
+
+  const impressions7d = numOrNull(metrics.impressions7d);
+  const impressionsPrev7d = numOrNull(metrics.impressionsPrev7d);
+  const outboundClicks7d = numOrNull(metrics.outboundClicks7d);
+  const outboundClicksPrev7d = numOrNull(metrics.outboundClicksPrev7d);
+
+  return {
+    connected,
+    metricDate: snap?.metric_date || null,
+    syncedAt:
+      (typeof metrics.syncedAt === "string" && metrics.syncedAt) ||
+      conn?.last_sync_at ||
+      snap?.created_at ||
+      null,
+    username:
+      (typeof metrics.username === "string" && metrics.username) ||
+      conn?.account_label ||
+      null,
+    businessName: typeof metrics.businessName === "string" ? metrics.businessName : null,
+    followerCount: numOrNull(metrics.followerCount),
+    pinCount: numOrNull(metrics.pinCount),
+    boardCount: numOrNull(metrics.boardCount),
+    impressions7d,
+    pinClicks7d: numOrNull(metrics.pinClicks7d),
+    outboundClicks7d,
+    saves7d: numOrNull(metrics.saves7d),
+    engagement7d: numOrNull(metrics.engagement7d),
+    profileVisits7d: numOrNull(metrics.profileVisits7d),
+    impressionsPrev7d,
+    pinClicksPrev7d: numOrNull(metrics.pinClicksPrev7d),
+    outboundClicksPrev7d,
+    topPins: Array.isArray(metrics.topPins) ? (metrics.topPins as PinterestTopPin[]) : [],
+    deltas: {
+      impressions7d: computePeriodDelta(impressions7d, impressionsPrev7d, {
+        periodLabel: "vs prior 7d",
+      }),
+      outboundClicks7d: computePeriodDelta(outboundClicks7d, outboundClicksPrev7d, {
+        periodLabel: "vs prior 7d",
+      }),
+    },
+    apiSurface: typeof metrics.apiSurface === "string" ? metrics.apiSurface : null,
+    extensions:
+      metrics.extensions && typeof metrics.extensions === "object"
+        ? (metrics.extensions as Record<string, unknown>)
+        : null,
+    lastSyncStatus: conn?.last_sync_status || null,
+    lastSyncError: conn?.last_sync_error || null,
+    lastSuccessfulSyncAt:
+      typeof meta.lastSuccessfulSyncAt === "string" ? meta.lastSuccessfulSyncAt : null,
+  };
+}

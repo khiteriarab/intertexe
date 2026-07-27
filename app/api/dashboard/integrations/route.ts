@@ -52,6 +52,14 @@ export async function GET() {
         "Request scopes: user.info.basic, user.info.profile, user.info.stats, video.list. Stats fields appear after TikTok approves them."
       );
     }
+    if (def.id === "pinterest") {
+      setupHints.push(
+        "Register redirect URI exactly as shown below in Pinterest Developer Console."
+      );
+      setupHints.push(
+        "Request scopes: user_accounts:read, pins:read, boards:read (organic analytics)."
+      );
+    }
     if (!encryptionConfigured) {
       setupHints.push("Add HQ_TOKEN_ENCRYPTION_KEY in Vercel Production before connecting.");
     }
@@ -125,6 +133,8 @@ export async function GET() {
       GOOGLE_OAUTH_CLIENT_SECRET: Boolean(process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()),
       TIKTOK_OAUTH_CLIENT_KEY: Boolean(process.env.TIKTOK_OAUTH_CLIENT_KEY?.trim()),
       TIKTOK_OAUTH_CLIENT_SECRET: Boolean(process.env.TIKTOK_OAUTH_CLIENT_SECRET?.trim()),
+      PINTEREST_OAUTH_APP_ID: Boolean(process.env.PINTEREST_OAUTH_APP_ID?.trim()),
+      PINTEREST_OAUTH_APP_SECRET: Boolean(process.env.PINTEREST_OAUTH_APP_SECRET?.trim()),
     },
   });
 }

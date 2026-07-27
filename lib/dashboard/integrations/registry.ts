@@ -44,8 +44,9 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     label: "Pinterest",
     dataSourceKeys: ["pinterest"],
     authMode: "oauth",
-    description: "Connect your Pinterest Business account via OAuth for pins and ad performance.",
-    docsUrl: "https://developers.pinterest.com/",
+    description:
+      "Connect Pinterest Business via OAuth for organic pin analytics (impressions, clicks, saves).",
+    docsUrl: "https://developers.pinterest.com/docs/getting-started/set-up-authentication-and-authorization/",
     requiredEnv: ["PINTEREST_OAUTH_APP_ID", "PINTEREST_OAUTH_APP_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
   },
   {
@@ -102,8 +103,8 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     cardId: "pinterest",
     label: "Pinterest",
     providerId: "pinterest",
-    permissions: ["Account profile", "Pins", "Ad read access (when authorized)"],
-    blurb: "Connect your Pinterest Business account for pin activity.",
+    permissions: ["Profile", "Impressions", "Pin clicks", "Outbound clicks", "Saves", "Top pins"],
+    blurb: "Organic Pinterest analytics — feeds Today, Acquisition, and Action Center (no separate Pinterest page).",
   },
   {
     cardId: "app_store_connect",

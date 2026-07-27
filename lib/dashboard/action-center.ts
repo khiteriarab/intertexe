@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GoogleDiscoveryMetrics, TikTokDiscoveryMetrics } from "./integration-metrics";
+import type {
+  GoogleDiscoveryMetrics,
+  PinterestDiscoveryMetrics,
+  TikTokDiscoveryMetrics,
+} from "./integration-metrics";
 import type { HqInsight } from "./insights";
 import type { NightlySyncRun } from "./catalog-sync-ops";
 import type { HqOverviewMetrics } from "./metrics";
@@ -96,6 +100,7 @@ export function buildDeterministicInsights(input: {
   metrics: HqOverviewMetrics;
   google: GoogleDiscoveryMetrics;
   tiktok?: TikTokDiscoveryMetrics;
+  pinterest?: PinterestDiscoveryMetrics;
   insights: HqInsight[];
   commerce: {
     revenueConnected?: boolean;
@@ -117,7 +122,7 @@ export function buildDeterministicInsights(input: {
   totalClicks7d: number;
   totalClicksPrev7d?: number | null;
 }): DeterministicInsight[] {
-  const { metrics: m, google, tiktok, commerce, syncLatest } = input;
+  const { metrics: m, google, tiktok, pinterest, commerce, syncLatest } = input;
   const out: DeterministicInsight[] = [];
 
   const sessionsDelta = google.deltas.sessions7d;
@@ -524,6 +529,79 @@ export function buildDeterministicInsights(input: {
         priority: "growth",
         href: "/dashboard/acquisition",
         expectedImpact: "Keep the TikTok → private link → sale loop alive.",
+      });
+    }
+  }
+
+  if (!pinterest?.connected) {
+    out.push({
+      fingerprint: "pinterest_not_connected",
+      title: "Pinterest discovery is dark",
+      whatChanged: "Pinterest Business OAuth not connected.",
+      whyItChanged: "No OAuth connection for provider=pinterest in this workspace.",
+      attention: "Cannot see organic Pinterest impressions and outbound clicks.",
+      recommendedAction: "Connect Pinterest under Settings → Integrations, then Sync Now.",
+      evidence: { connected: false },
+      comparisonPeriod: "current",
+      confidence: "high",
+      priority: "operational",
+      href: "/dashboard/settings",
+      expectedImpact: "Measure Pinterest reach next to Google and TikTok on Acquisition.",
+    });
+  } else {
+    const impDelta = pinterest.deltas.impressions7d;
+    if (
+      impDelta.complete &&
+      impDelta.absolute != null &&
+      impDelta.absolute > 0 &&
+      (impDelta.percent == null || impDelta.percent >= 15)
+    ) {
+      const top = pinterest.topPins[0];
+      out.push({
+        fingerprint: "pinterest_impressions_up",
+        title: "Pinterest impressions increased (7d)",
+        whatChanged: `Impressions ${count(impDelta.current)} ${impDelta.label}.`,
+        whyItChanged: top
+          ? `Top pin by impressions: “${top.title || top.pinId}” (${count(top.impression)}). Causation beyond Pinterest analytics not claimed.`
+          : "Organic user_account analytics show higher impressions vs prior 7d.",
+        attention: "Pinterest demand is rising — lean into pins that drive outbound clicks.",
+        recommendedAction:
+          "Review Acquisition → Social discovery (Pinterest) and amplify top pins with INTERTEXE product links.",
+        evidence: {
+          impressions7d: impDelta.current,
+          impressionsPrev7d: impDelta.previous,
+          outboundClicks7d: pinterest.outboundClicks7d,
+          topPin: top || null,
+        },
+        comparisonPeriod: "trailing_7d_vs_prior_7d",
+        confidence: "high",
+        priority: "growth",
+        href: "/dashboard/acquisition",
+        expectedImpact: "Convert Pinterest attention into affiliate clickouts.",
+      });
+    } else if (
+      impDelta.complete &&
+      impDelta.absolute != null &&
+      impDelta.absolute < 0 &&
+      (impDelta.percent == null || impDelta.percent <= -15)
+    ) {
+      out.push({
+        fingerprint: "pinterest_impressions_down",
+        title: "Pinterest impressions declined (7d)",
+        whatChanged: `Impressions ${count(impDelta.current)} ${impDelta.label}.`,
+        whyItChanged: "Measured from Pinterest user_account analytics; root cause not proven here.",
+        attention: "Organic Pinterest reach soft.",
+        recommendedAction: "Check top pins on Acquisition and refresh underperforming creatives.",
+        evidence: {
+          impressions7d: impDelta.current,
+          impressionsPrev7d: impDelta.previous,
+          outboundClicks7d: pinterest.outboundClicks7d,
+        },
+        comparisonPeriod: "trailing_7d_vs_prior_7d",
+        confidence: "high",
+        priority: "critical",
+        href: "/dashboard/acquisition",
+        expectedImpact: "Recover Pinterest discovery before outbound clicks drop further.",
       });
     }
   }

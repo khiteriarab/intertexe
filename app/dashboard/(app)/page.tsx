@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireHqSession } from "../../../lib/dashboard/auth";
 import { fetchInsightsBundle } from "../../../lib/dashboard/insights";
-import { fetchGoogleDiscoveryMetrics, fetchTikTokDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
+import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
 import {
   buildDeterministicInsights,
   listFounderActions,
@@ -33,12 +33,13 @@ const MISSION_LANES = [
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
   const supabase = getServerSupabase();
-  const [{ metrics: m, live }, commerce, syncOps, google, tiktok] = await Promise.all([
+  const [{ metrics: m, live }, commerce, syncOps, google, tiktok, pinterest] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
     fetchNightlySyncOps(),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
     fetchTikTokDiscoveryMetrics(session.workspaceId),
+    fetchPinterestDiscoveryMetrics(session.workspaceId),
   ]);
 
   const name = greetingName(session.fullName, session.email);
@@ -55,6 +56,7 @@ export default async function HqOverviewPage() {
     metrics: m,
     google,
     tiktok,
+    pinterest,
     commerce,
     syncLatest: syncOps.latest,
     totalClicks7d,
@@ -65,6 +67,7 @@ export default async function HqOverviewPage() {
     metrics: m,
     google,
     tiktok,
+    pinterest,
     insights: live,
     commerce,
     syncLatest: syncOps.latest,
@@ -116,6 +119,7 @@ export default async function HqOverviewPage() {
           Updated {new Date(m.fetchedAt).toLocaleString()}
           {google.syncedAt ? ` · Web ${new Date(google.syncedAt).toLocaleString()}` : ""}
           {tiktok.syncedAt ? ` · TikTok ${new Date(tiktok.syncedAt).toLocaleString()}` : ""}
+          {pinterest.syncedAt ? ` · Pinterest ${new Date(pinterest.syncedAt).toLocaleString()}` : ""}
         </p>
       </HqCard>
 

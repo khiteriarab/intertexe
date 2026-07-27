@@ -1,4 +1,8 @@
-import type { GoogleDiscoveryMetrics, TikTokDiscoveryMetrics } from "./integration-metrics";
+import type {
+  GoogleDiscoveryMetrics,
+  PinterestDiscoveryMetrics,
+  TikTokDiscoveryMetrics,
+} from "./integration-metrics";
 import type { DeterministicInsight } from "./action-center";
 import type { HqOverviewMetrics } from "./metrics";
 import type { NightlySyncRun } from "./catalog-sync-ops";
@@ -33,6 +37,7 @@ export function buildMorningPulse(input: {
   metrics: HqOverviewMetrics;
   google: GoogleDiscoveryMetrics;
   tiktok?: TikTokDiscoveryMetrics;
+  pinterest?: PinterestDiscoveryMetrics;
   commerce: {
     revenueConnected?: boolean;
     revenueIsDemo?: boolean;
@@ -45,7 +50,7 @@ export function buildMorningPulse(input: {
   totalClicks7d: number;
   totalClicksPrev7d?: number | null;
 }): MorningPulseItem[] {
-  const { metrics: m, google, tiktok, commerce, syncLatest, totalClicks7d, totalClicksPrev7d } =
+  const { metrics: m, google, tiktok, pinterest, commerce, syncLatest, totalClicks7d, totalClicksPrev7d } =
     input;
   const scanDelta = computePeriodDelta(m.scansLast7d.value, m.scansPrev7d.value, {
     periodLabel: "vs prior 7d",
@@ -80,6 +85,23 @@ export function buildMorningPulse(input: {
             .join(" · ") || "Display API sample",
       href: "/dashboard/acquisition",
       attention: !tiktok?.connected,
+    },
+    {
+      label: "Pinterest",
+      period: "7d",
+      value: count(pinterest?.connected ? pinterest.impressions7d : null),
+      hint: !pinterest?.connected
+        ? "Pinterest not connected"
+        : [
+            pinterest.deltas.impressions7d.label,
+            pinterest.outboundClicks7d != null
+              ? `${count(pinterest.outboundClicks7d)} outbound`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || "Organic impressions",
+      href: "/dashboard/acquisition",
+      attention: !pinterest?.connected,
     },
     {
       label: "Registrations",

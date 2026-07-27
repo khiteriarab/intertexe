@@ -4,7 +4,7 @@ import {
   fetchHqAcquisitionReport,
   type AcquisitionBucket,
 } from "../../../../lib/dashboard/acquisition";
-import { fetchGoogleDiscoveryMetrics, fetchTikTokDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
+import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
 
@@ -87,10 +87,11 @@ function ReportTable({
 
 export default async function HqAcquisitionPage() {
   const session = await requireHqSession();
-  const [report, google, tiktok] = await Promise.all([
+  const [report, google, tiktok, pinterest] = await Promise.all([
     fetchHqAcquisitionReport(),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
     fetchTikTokDiscoveryMetrics(session.workspaceId),
+    fetchPinterestDiscoveryMetrics(session.workspaceId),
   ]);
 
   return (
@@ -400,6 +401,116 @@ export default async function HqAcquisitionPage() {
               TikTok is not connected, so organic social discovery is dark. Connect Login Kit in
               Settings — this page will show sample views, likes, followers, and top videos next to
               Google.
+            </p>
+            <Link
+              href="/dashboard/settings"
+              className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
+            >
+              Open Settings → Integrations
+            </Link>
+          </div>
+        )}
+      </HqCard>
+
+      <HqCard className="mb-6" title="Social discovery (Pinterest)">
+        {pinterest.connected ? (
+          <>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
+              Organic user_account analytics · trailing 7d vs prior 7d
+            </p>
+            <HqMetricGrid
+              items={[
+                {
+                  label: "Impressions (7d)",
+                  value: formatCount(pinterest.impressions7d),
+                  hint: pinterest.deltas.impressions7d.label || undefined,
+                },
+                {
+                  label: "Outbound clicks (7d)",
+                  value: formatCount(pinterest.outboundClicks7d),
+                  hint: pinterest.deltas.outboundClicks7d.label || undefined,
+                },
+                {
+                  label: "Pin clicks (7d)",
+                  value: formatCount(pinterest.pinClicks7d),
+                },
+                {
+                  label: "Saves (7d)",
+                  value: formatCount(pinterest.saves7d),
+                  hint: pinterest.username ? `@${pinterest.username}` : undefined,
+                },
+              ]}
+            />
+            <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Engagement (7d)</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(pinterest.engagement7d)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Profile visits (7d)</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(pinterest.profileVisits7d)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Followers</p>
+                <p className="tabular-nums font-medium mt-1">{formatCount(pinterest.followerCount)}</p>
+              </div>
+              <div className="border border-black/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-black/40">Pins / boards</p>
+                <p className="tabular-nums font-medium mt-1">
+                  {formatCount(pinterest.pinCount)} / {formatCount(pinterest.boardCount)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                Top pins by impressions (7d)
+              </p>
+              {pinterest.topPins.length ? (
+                <ul className="space-y-2 text-sm">
+                  {pinterest.topPins.slice(0, 8).map((p) => (
+                    <li key={p.pinId} className="flex justify-between gap-3">
+                      <span className="truncate" title={p.title || p.pinId}>
+                        {p.link ? (
+                          <a
+                            href={p.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-2"
+                          >
+                            {p.title || p.pinId}
+                          </a>
+                        ) : (
+                          p.title || p.pinId
+                        )}
+                      </span>
+                      <span className="tabular-nums text-black/50 shrink-0">
+                        {formatCount(p.impression)} imp · {formatCount(p.outboundClick)} out
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-black/50">No top pins in the latest sync yet.</p>
+              )}
+            </div>
+
+            <p className="text-[11px] text-black/40 mt-4">
+              Synced {pinterest.syncedAt ? new Date(pinterest.syncedAt).toLocaleString() : "—"}
+              {pinterest.lastSyncStatus ? ` · ${pinterest.lastSyncStatus}` : ""}
+              {pinterest.apiSurface ? ` · ${pinterest.apiSurface}` : ""}
+              {" · "}
+              <Link href="/dashboard/settings" className="underline underline-offset-2">
+                Manage connection
+              </Link>
+            </p>
+          </>
+        ) : (
+          <div className="text-sm text-black/60 leading-relaxed">
+            <p>
+              Pinterest is not connected, so organic pin discovery is dark. Connect your Business
+              account in Settings — this page will show impressions, outbound clicks, saves, and top
+              pins next to Google and TikTok.
             </p>
             <Link
               href="/dashboard/settings"

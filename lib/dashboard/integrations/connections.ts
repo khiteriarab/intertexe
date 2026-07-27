@@ -270,6 +270,7 @@ export async function syncProvider(
       result.metrics?.gscError,
       result.metrics?.tiktokError,
       result.metrics?.tiktokUserError,
+      result.metrics?.pinterestError,
     ].filter((v): v is string => typeof v === "string" && v.length > 0);
     const softWarnings = setupWarnings.filter((w) => !hardErrors.includes(w));
     const hasHardError = hardErrors.length > 0;
@@ -286,6 +287,8 @@ export async function syncProvider(
         tiktokViewsSample: result.metrics?.viewsSample ?? null,
         tiktokFollowerCount: result.metrics?.followerCount ?? null,
         tiktokVideosPosted7d: result.metrics?.videosPosted7d ?? null,
+        pinterestImpressions7d: result.metrics?.impressions7d ?? null,
+        pinterestOutboundClicks7d: result.metrics?.outboundClicks7d ?? null,
       },
     };
     const detailText = (hasHardError ? hardErrors : softWarnings).join(" · ").slice(0, 500) || null;
