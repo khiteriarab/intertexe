@@ -41,7 +41,6 @@ const ORGANIC_METRICS = [
   "OUTBOUND_CLICK",
   "SAVE",
   "ENGAGEMENT",
-  "PROFILE_VISIT",
 ].join(",");
 
 function fmtDate(d: Date) {
@@ -186,7 +185,6 @@ export const pinterestAdapter: ProviderAdapter = {
       outboundClicks7d: summary7.OUTBOUND_CLICK ?? null,
       saves7d: summary7.SAVE ?? null,
       engagement7d: summary7.ENGAGEMENT ?? null,
-      profileVisits7d: summary7.PROFILE_VISIT ?? null,
       impressionsPrev7d: summaryPrev.IMPRESSION ?? null,
       pinClicksPrev7d: summaryPrev.PIN_CLICK ?? null,
       outboundClicksPrev7d: summaryPrev.OUTBOUND_CLICK ?? null,
@@ -272,7 +270,6 @@ function sumAnalyticsSummaries(json: unknown): Record<string, number | null> {
     OUTBOUND_CLICK: out.OUTBOUND_CLICK ?? null,
     SAVE: out.SAVE ?? null,
     ENGAGEMENT: out.ENGAGEMENT ?? null,
-    PROFILE_VISIT: out.PROFILE_VISIT ?? null,
   };
 }
 
@@ -283,7 +280,6 @@ function emptyMetricMap(): Record<string, number | null> {
     OUTBOUND_CLICK: null,
     SAVE: null,
     ENGAGEMENT: null,
-    PROFILE_VISIT: null,
   };
 }
 
