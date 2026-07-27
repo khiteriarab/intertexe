@@ -5,13 +5,31 @@
  *   node scripts/run-rakuten-feed-chunk.mjs
  *   RAKUTEN_CHUNK_FILE_LIMIT=2 node scripts/run-rakuten-feed-chunk.mjs
  */
+import { spawnSync } from "child_process";
 import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Large merchant XML feeds can exceed the default ~4GB heap on GitHub Actions.
+// Re-exec once with a larger limit (workflow PAT cannot always update NODE_OPTIONS).
+if (process.env.RAKUTEN_HEAP_RAISED !== "1") {
+  const heapMb = Number(process.env.RAKUTEN_SYNC_HEAP_MB || 8192);
+  const result = spawnSync(
+    process.execPath,
+    [`--max-old-space-size=${heapMb}`, __filename, ...process.argv.slice(2)],
+    {
+      stdio: "inherit",
+      env: { ...process.env, RAKUTEN_HEAP_RAISED: "1" },
+    }
+  );
+  process.exit(result.status === null ? 1 : result.status);
+}
+
 const root = path.resolve(__dirname, "..");
 const require = createRequire(path.join(root, "package.json"));
 const { finalizeNightlySyncOps } = require(path.join(root, "lib/feed-sync/ops-monitor.cjs"));
