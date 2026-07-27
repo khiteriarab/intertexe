@@ -93,19 +93,19 @@ function parseMoney(price: unknown): number {
 }
 
 function applySort(query: any, sort?: string) {
-  // Curator "editor picks" lead every list; the chosen sort orders the rest.
-  query = query.order("is_editor_pick", { ascending: false });
   switch (sort) {
     case "price-low":
-      return query.order("price", { ascending: true });
+      // Price sorts must be pure — editor picks must not jump expensive items ahead.
+      return query.order("price", { ascending: true }).order("id", { ascending: false });
     case "price-high":
-      return query.order("price", { ascending: false });
+      return query.order("price", { ascending: false }).order("id", { ascending: false });
     case "natural-high":
       return query.order("id", { ascending: false });
     case "recommended":
     case "new":
     default:
-      return query.order("id", { ascending: false });
+      // Curator picks only boost the default / recommended rails.
+      return query.order("is_editor_pick", { ascending: false }).order("id", { ascending: false });
   }
 }
 

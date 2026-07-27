@@ -127,6 +127,20 @@ export async function GET(request: Request) {
     }
 
     log.finishedAt = new Date().toISOString();
+    try {
+      await supabase.from("system_status").upsert({
+        key: "daily_catalog_refresh",
+        value_json: {
+          ok: log.errors.length === 0,
+          classified: log.steps.classified ?? null,
+          counts: log.counts ?? null,
+          finishedAt: log.finishedAt,
+        },
+        updated_at: log.finishedAt,
+      });
+    } catch {
+      // monitoring only — never fail the refresh on status write
+    }
     return NextResponse.json(
       { ok: log.errors.length === 0, log, email: emailResult },
       { status: log.errors.length ? 207 : 200 }

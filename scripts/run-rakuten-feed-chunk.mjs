@@ -15,10 +15,10 @@ import { createClient } from "@supabase/supabase-js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Large merchant XML feeds can exceed the default ~4GB heap on GitHub Actions.
-// Re-exec once with a larger limit (workflow PAT cannot always update NODE_OPTIONS).
+// Large merchant XML + upsert can exhaust GitHub-hosted runners (~7GB RAM).
+// Cap heap under physical RAM; process files in flushed waves (see rakuten-sync.js).
 if (process.env.RAKUTEN_HEAP_RAISED !== "1") {
-  const heapMb = Number(process.env.RAKUTEN_SYNC_HEAP_MB || 8192);
+  const heapMb = Number(process.env.RAKUTEN_SYNC_HEAP_MB || 6144);
   const result = spawnSync(
     process.execPath,
     [`--max-old-space-size=${heapMb}`, __filename, ...process.argv.slice(2)],

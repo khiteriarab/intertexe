@@ -13,7 +13,7 @@ export const SHOP_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
     "skirts",
     "swim_resortwear",
     "other_apparel",
-    "lingerie",
+    // Lingerie has its own shop tab — do not let underwear flood Clothing.
   ],
   clothing: [
     "dresses",
@@ -28,7 +28,6 @@ export const SHOP_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
     "skirts",
     "swim_resortwear",
     "other_apparel",
-    "lingerie",
   ],
   dresses: ["dresses"],
   tops: ["tops_blouses", "shirts"],
