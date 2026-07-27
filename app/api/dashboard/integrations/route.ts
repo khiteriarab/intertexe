@@ -14,6 +14,23 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/** Env specs may be `NAME` or `NAME_A|NAME_B` (any alias present is enough). */
+function envConfigured(spec: string): boolean {
+  return spec
+    .split("|")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .some((key) => Boolean(process.env[key]?.trim()));
+}
+
+function missingEnvLabel(spec: string): string {
+  const parts = spec
+    .split("|")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts.length > 1 ? parts.join(" or ") : parts[0] || spec;
+}
+
 export async function GET() {
   const session = await requireHqSession();
   const supabase = getServerSupabase();
@@ -28,7 +45,7 @@ export async function GET() {
   const providers = INTEGRATION_DEFINITIONS.map((def) => {
     const adapter = getAdapter(def.id);
     const conn = byProvider.get(def.id) || null;
-    const missingEnv = def.requiredEnv.filter((k) => !process.env[k]?.trim());
+    const missingEnv = def.requiredEnv.filter((k) => !envConfigured(k)).map(missingEnvLabel);
     const reconnect = needsReconnect(conn);
     const linked =
       Boolean(conn) &&
@@ -46,7 +63,7 @@ export async function GET() {
     }
     if (def.id === "tiktok") {
       setupHints.push(
-        "Register redirect URI exactly as shown below in TikTok Developer Portal (Login Kit)."
+        `Register redirect URI: ${callbackUrl("tiktok")}`
       );
       setupHints.push(
         "Request scopes: user.info.basic, user.info.profile, user.info.stats, video.list. Stats fields appear after TikTok approves them."
@@ -54,7 +71,7 @@ export async function GET() {
     }
     if (def.id === "pinterest") {
       setupHints.push(
-        "Register redirect URI exactly as shown below in Pinterest Developer Console."
+        `Register redirect URI: ${callbackUrl("pinterest")}`
       );
       setupHints.push(
         "Request scopes: user_accounts:read, pins:read, boards:read (organic analytics)."
@@ -133,8 +150,12 @@ export async function GET() {
       GOOGLE_OAUTH_CLIENT_SECRET: Boolean(process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()),
       TIKTOK_OAUTH_CLIENT_KEY: Boolean(process.env.TIKTOK_OAUTH_CLIENT_KEY?.trim()),
       TIKTOK_OAUTH_CLIENT_SECRET: Boolean(process.env.TIKTOK_OAUTH_CLIENT_SECRET?.trim()),
-      PINTEREST_OAUTH_APP_ID: Boolean(process.env.PINTEREST_OAUTH_APP_ID?.trim()),
-      PINTEREST_OAUTH_APP_SECRET: Boolean(process.env.PINTEREST_OAUTH_APP_SECRET?.trim()),
+      PINTEREST_OAUTH_APP_ID: Boolean(
+        process.env.PINTEREST_OAUTH_APP_ID?.trim() || process.env.PINTEREST_APP_ID?.trim()
+      ),
+      PINTEREST_OAUTH_APP_SECRET: Boolean(
+        process.env.PINTEREST_OAUTH_APP_SECRET?.trim() || process.env.PINTEREST_APP_SECRET?.trim()
+      ),
     },
   });
 }

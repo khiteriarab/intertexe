@@ -47,7 +47,12 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     description:
       "Connect Pinterest Business via OAuth for organic pin analytics (impressions, clicks, saves).",
     docsUrl: "https://developers.pinterest.com/docs/getting-started/set-up-authentication-and-authorization/",
-    requiredEnv: ["PINTEREST_OAUTH_APP_ID", "PINTEREST_OAUTH_APP_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
+    requiredEnv: [
+      // Either OAuth-prefixed or short alias is enough (see isConfigured / providers/pinterest).
+      "PINTEREST_OAUTH_APP_ID|PINTEREST_APP_ID",
+      "PINTEREST_OAUTH_APP_SECRET|PINTEREST_APP_SECRET",
+      "HQ_TOKEN_ENCRYPTION_KEY",
+    ],
   },
   {
     id: "app_store_connect",

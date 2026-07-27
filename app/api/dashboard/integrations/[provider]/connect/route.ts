@@ -28,13 +28,25 @@ export async function GET(
   }
 
   const adapter = getAdapter(raw);
-  const missingEnv = def.requiredEnv.filter((k) => !process.env[k]?.trim());
+  const missingEnv = def.requiredEnv.filter(
+    (spec) =>
+      !spec
+        .split("|")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .some((key) => Boolean(process.env[key]?.trim()))
+  );
   if (!adapter.isConfigured() || missingEnv.length) {
+    const labels = (missingEnv.length ? missingEnv : def.requiredEnv).map((spec) =>
+      spec
+        .split("|")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join(" or ")
+    );
     return NextResponse.json(
       {
-        message: `App credentials missing. Set ${
-          missingEnv.length ? missingEnv.join(", ") : def.requiredEnv.join(", ")
-        } in Vercel, then retry Connect.`,
+        message: `App credentials missing. Set ${labels.join(", ")} in Vercel, then retry Connect.`,
       },
       { status: 503 }
     );

@@ -6,6 +6,35 @@ function requireEnv(name: string): string {
   return v;
 }
 
+/** Prefer OAuth-prefixed names; accept shorter aliases from Vercel. */
+function pinterestAppId(): string | undefined {
+  return (
+    process.env.PINTEREST_OAUTH_APP_ID?.trim() ||
+    process.env.PINTEREST_APP_ID?.trim() ||
+    undefined
+  );
+}
+
+function pinterestAppSecret(): string | undefined {
+  return (
+    process.env.PINTEREST_OAUTH_APP_SECRET?.trim() ||
+    process.env.PINTEREST_APP_SECRET?.trim() ||
+    undefined
+  );
+}
+
+function requirePinterestAppId(): string {
+  const v = pinterestAppId();
+  if (!v) throw new Error("PINTEREST_OAUTH_APP_ID (or PINTEREST_APP_ID) is not configured");
+  return v;
+}
+
+function requirePinterestAppSecret(): string {
+  const v = pinterestAppSecret();
+  if (!v) throw new Error("PINTEREST_OAUTH_APP_SECRET (or PINTEREST_APP_SECRET) is not configured");
+  return v;
+}
+
 /**
  * Organic Pinterest scopes for Founder OS discovery.
  * ads:read can be added later for paid analytics without a schema change.
@@ -44,12 +73,12 @@ export const pinterestAdapter: ProviderAdapter = {
   id: "pinterest",
 
   isConfigured() {
-    return Boolean(process.env.PINTEREST_OAUTH_APP_ID && process.env.PINTEREST_OAUTH_APP_SECRET);
+    return Boolean(pinterestAppId() && pinterestAppSecret());
   },
 
   getAuthorizationUrl({ state, redirectUri }) {
     const params = new URLSearchParams({
-      client_id: requireEnv("PINTEREST_OAUTH_APP_ID"),
+      client_id: requirePinterestAppId(),
       redirect_uri: redirectUri,
       response_type: "code",
       scope: SCOPES,
@@ -60,7 +89,7 @@ export const pinterestAdapter: ProviderAdapter = {
 
   async exchangeCode({ code, redirectUri }) {
     const basic = Buffer.from(
-      `${requireEnv("PINTEREST_OAUTH_APP_ID")}:${requireEnv("PINTEREST_OAUTH_APP_SECRET")}`
+      `${requirePinterestAppId()}:${requirePinterestAppSecret()}`
     ).toString("base64");
     const body = new URLSearchParams({
       grant_type: "authorization_code",
@@ -86,7 +115,7 @@ export const pinterestAdapter: ProviderAdapter = {
 
   async refreshAccessToken(refreshToken: string) {
     const basic = Buffer.from(
-      `${requireEnv("PINTEREST_OAUTH_APP_ID")}:${requireEnv("PINTEREST_OAUTH_APP_SECRET")}`
+      `${requirePinterestAppId()}:${requirePinterestAppSecret()}`
     ).toString("base64");
     const res = await fetch("https://api.pinterest.com/v5/oauth/token", {
       method: "POST",
