@@ -709,7 +709,12 @@
 
 /* Airport spotlight — digital-girl 1994 orbit around Attico sweats */
 .khiteris-edit__product--airport .khiteris-edit__product-image {
-  background: #0c0c0c;
+  background: #111;
+}
+
+.khiteris-edit__product--airport .khiteris-edit__product-image img {
+  object-fit: contain;
+  object-position: center center;
 }
 
 .khiteri-airport {
