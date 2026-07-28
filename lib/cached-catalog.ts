@@ -1,9 +1,8 @@
-/**
- * Precomputed / cached catalog reads — luxury UX: fast repeat views, bounded cold paths.
- */
 import { unstable_cache } from "next/cache";
-import { fetchBrandStats, fetchSaleProducts } from "./supabase-server";
+import { fetchBrandStats, fetchSaleProducts, getServerSupabase } from "./supabase-server";
 import { fetchPlatformStats, type PlatformStats } from "./platform-stats";
+import { SHOPPABLE_MIN_PRODUCTS } from "./shoppable-brands";
+import { sanitizeBrandName } from "./brand-display";
 
 const STATS_REVALIDATE = 600;
 const BRAND_DIR_REVALIDATE = 900;
@@ -37,6 +36,25 @@ export type BrandStat = {
   avgNaturalFiber: number;
 };
 
+/** Direct designers-table directory — used when the full brand-stats path is slow. */
+export async function fetchDesignersDirectoryFast(): Promise<BrandStat[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("designers")
+    .select("slug, name, product_count, natural_fiber_percent")
+    .eq("is_live", true)
+    .gte("product_count", SHOPPABLE_MIN_PRODUCTS)
+    .order("name");
+  if (error || !data?.length) return [];
+  return (data as any[]).map((row) => ({
+    slug: String(row.slug || "").toLowerCase(),
+    name: sanitizeBrandName(String(row.name || row.slug || "")),
+    count: Number(row.product_count) || 0,
+    avgNaturalFiber: Number(row.natural_fiber_percent) || 0,
+  }));
+}
+
 export const getCachedPlatformStats = unstable_cache(
   async (): Promise<PlatformStats> =>
     withTimeout(
@@ -50,9 +68,13 @@ export const getCachedPlatformStats = unstable_cache(
 );
 
 export const getCachedBrandStats = unstable_cache(
-  async (): Promise<BrandStat[]> =>
-    withTimeout(fetchBrandStats(), FETCH_BUDGET_MS, [], "brand-directory"),
-  ["brand-directory-v6"],
+  async (): Promise<BrandStat[]> => {
+    const full = await withTimeout(fetchBrandStats(), FETCH_BUDGET_MS, [] as BrandStat[], "brand-directory");
+    if (full.length > 0) return full;
+    // Never ship an empty directory if the designers table is healthy.
+    return withTimeout(fetchDesignersDirectoryFast(), 4_000, [] as BrandStat[], "brand-directory-fast");
+  },
+  ["brand-directory-v7"],
   { revalidate: BRAND_DIR_REVALIDATE, tags: ["brand-directory"] }
 );
 

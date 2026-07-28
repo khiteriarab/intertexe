@@ -24,7 +24,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DesignersPage() {
-  const brandStats = await getCachedBrandStats();
+  let brandStats = await getCachedBrandStats();
+  if (brandStats.length === 0) {
+    const { fetchDesignersDirectoryFast } = await import("../../lib/cached-catalog");
+    brandStats = await fetchDesignersDirectoryFast();
+  }
   const shoppableBrands = brandStats.filter((b) => b.count >= 2);
   const shoppableBrandCount = resolveShoppableBrandCount(0, shoppableBrands.length);
 
