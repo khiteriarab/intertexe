@@ -3,8 +3,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-/** Bump when intro choreography changes so returning visitors see it once. */
-const INTRO_SEEN_KEY = "intertexe_khiteri_intro_seen_v5";
 const BRAND = "INTERTEXE";
 /** ms between each letter */
 const TYPE_MS = 95;
@@ -14,7 +12,7 @@ const EXIT_MS = 650;
 
 /**
  * Brand intro — INTERTEXE types out in Playfair Display bold over the editorial cover.
- * Photography stays primary; plays once per visitor (or ?intro=1).
+ * Photography stays primary; plays every time someone opens /khiteri.
  */
 export function KhiteriIntroMotion() {
   const prefersReducedMotion = useReducedMotion();
@@ -24,16 +22,7 @@ export function KhiteriIntroMotion() {
 
   useEffect(() => {
     if (prefersReducedMotion) return;
-    try {
-      const force =
-        typeof window !== "undefined" &&
-        new URLSearchParams(window.location.search).get("intro") === "1";
-      if (!force && localStorage.getItem(INTRO_SEEN_KEY) === "1") return;
-      setShow(true);
-      if (!force) localStorage.setItem(INTRO_SEEN_KEY, "1");
-    } catch {
-      // ignore localStorage failures
-    }
+    setShow(true);
   }, [prefersReducedMotion]);
 
   useEffect(() => {

@@ -3,7 +3,8 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { ProductLink } from "./ProductLink";
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag, X } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { AppDownloadBanner } from "./AppDownloadBanner";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
 import { editorialHeroForSlug, HOMEPAGE_HERO_IMAGE } from "../../lib/editorial-assets";
@@ -22,63 +23,11 @@ import { NewInHomeRail } from "./NewInHomeRail";
 import { SaleHomeRail } from "./SaleHomeRail";
 import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "./ShopTheEditCarousel";
 import { CatalogProductImage } from "./CatalogProductImage";
-import Image from "next/image";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
 import { CATALOG_STATS } from "../../lib/catalog-stats";
 
-const SIGNUP_URL = "/signup";
 const BLUR_DATA_URL =
   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k=";
-
-function AppDownloadBanner() {
-  const [dismissed, setDismissed] = useState(true);
-
-  useEffect(() => {
-    const hidden = localStorage.getItem("app-banner-dismissed");
-    if (!hidden) setDismissed(false);
-  }, []);
-
-  if (dismissed) return null;
-
-  const handleDismiss = () => {
-    setDismissed(true);
-    localStorage.setItem("app-banner-dismissed", "1");
-  };
-
-  return (
-    <div
-      className="w-full shrink-0 bg-[#111] text-white flex flex-wrap items-center gap-3 px-4 md:px-6 py-2.5"
-      data-testid="banner-app-download"
-    >
-      <button
-        onClick={handleDismiss}
-        className="flex-shrink-0 p-0.5 text-white/50 hover:text-white transition-colors"
-        aria-label="Dismiss"
-        data-testid="button-dismiss-banner"
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
-      <Image
-        src="/app-icon.png"
-        alt="Intertexe app"
-        width={40}
-        height={40}
-        className="h-10 w-10 shrink-0 rounded-[9px] object-cover"
-        data-testid="img-app-banner-icon"
-      />
-      <p className="flex-1 min-w-0 text-[11px] md:text-[12px] leading-snug font-medium">
-        Get early access to the Intertexe app
-      </p>
-      <Link
-        href={SIGNUP_URL}
-        className="flex-shrink-0 border border-white text-white px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-colors"
-        data-testid="link-app-download"
-      >
-        Get Early Access
-      </Link>
-    </div>
-  );
-}
 
 function optimizeImageUrl(url: string, width: number): string {
   return cfHomepageRail(url);

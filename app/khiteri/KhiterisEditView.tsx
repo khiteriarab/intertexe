@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { KhiterisEditConfig } from "../../lib/khiteris-edit";
 import { KHITERIS_EDIT_ARCHIVE } from "../../lib/khiteris-edit";
+import { AppDownloadBanner } from "../components/AppDownloadBanner";
 import { KhiteriPageViewTracker } from "./KhiteriPageViewTracker";
 import { KhiteriProductAffiliateLink } from "./KhiteriProductAffiliateLink";
 import { KhiteriIntroMotion } from "./KhiteriIntroMotion";
@@ -45,6 +46,12 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
 
   return (
     <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]" data-catalog-region={catalogRegion}>
+      <AppDownloadBanner
+        appStoreUrl={appStoreUrl}
+        dismissKey="khiteri-app-banner-dismissed"
+        message="Download the INTERTEXE app"
+        testId="banner-khiteri-app-download"
+      />
       <KhiteriIntroMotion />
       <KhiteriPageViewTracker editSlug={edit.slug} editMonth={edit.monthLabel} />
       <header className="khiteris-edit__masthead">
