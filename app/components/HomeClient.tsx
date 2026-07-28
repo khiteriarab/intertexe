@@ -383,14 +383,25 @@ interface HomePageData {
   saleProducts: any[];
 }
 
-const EDIT_CAROUSEL_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
-  slug: collection.slug,
-  title: collection.label,
-  kicker: collection.kicker,
-  subtitle: EDIT_CAROUSEL_SHORT_SUBTITLES[collection.slug] ?? collection.subtitle,
-  href: collection.href,
-  imageUrl: editorialHeroForSlug(collection.slug),
-}));
+const EDIT_CAROUSEL_SLIDES = [
+  {
+    slug: "khiteri",
+    title: "Khiteri's Edit",
+    kicker: "Editorial",
+    subtitle: EDIT_CAROUSEL_SHORT_SUBTITLES.khiteri ?? "10 natural-fiber pieces I'm loving this month.",
+    href: "/khiteri",
+    imageUrl:
+      "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/cb/P01129806.jpg",
+  },
+  ...COLLECTION_SECTIONS.map((collection) => ({
+    slug: collection.slug,
+    title: collection.label,
+    kicker: collection.kicker,
+    subtitle: EDIT_CAROUSEL_SHORT_SUBTITLES[collection.slug] ?? collection.subtitle,
+    href: collection.href,
+    imageUrl: editorialHeroForSlug(collection.slug),
+  })),
+];
 
 export function HomePageContent({ initialData }: { initialData?: HomePageData }) {
   const [data, setData] = useState<HomePageData>(initialData || {

@@ -14,6 +14,13 @@ export type EditCarouselSlide = {
 
 const DEFAULT_SLIDES: EditCarouselSlide[] = [
   {
+    slug: "khiteri",
+    title: "Khiteri's Edit",
+    kicker: "Editorial",
+    subtitle: "10 natural-fiber pieces I'm loving this month.",
+    href: "/khiteri",
+  },
+  {
     slug: "vacation",
     title: "Vacation",
     kicker: "Resort",
@@ -50,7 +57,10 @@ const DEFAULT_SLIDES: EditCarouselSlide[] = [
   },
 ].map((slide) => ({
   ...slide,
-  imageUrl: editorialHeroForSlug(slide.slug),
+  imageUrl:
+    slide.slug === "khiteri"
+      ? "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/cb/P01129806.jpg"
+      : editorialHeroForSlug(slide.slug),
 }));
 
 /** Short overlay copy for the carousel — matches NAP one-line subtext. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInfiniteScroll } from "../hooks/use-infinite-scroll";
 import Link from "next/link";
 import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
@@ -16,6 +16,7 @@ import { getShopBrands } from "../shop/actions";
 import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
 import { materialTypeSectionTitle } from "../../lib/catalog-material-taxonomy";
+import { prioritizeFavoritedProducts } from "../../lib/prioritize-favorited-products";
 import { DesignerSearchFilter } from "../components/DesignerSearchFilter";
 import {
   CatalogMobileToolbar,
@@ -24,7 +25,7 @@ import {
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { CatalogProductImage } from "../components/CatalogProductImage";
 
-type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
+type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather" | "shoes";
 type SaleSort = "discount" | "new" | "price-low" | "price-high" | "natural-high";
 
 const PAGE_SIZE = 24;
@@ -37,6 +38,7 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "cotton", label: "Cotton" },
   { key: "wool", label: "Wool" },
   { key: "leather", label: "Leather" },
+  { key: "shoes", label: "Shoes" },
 ];
 
 const SALE_CATEGORIES = [{ key: "all" as const, label: "All" }, ...SHOP_CATEGORY_OPTIONS];
@@ -147,9 +149,14 @@ function buildSaleParams(
   params.set("region", "us");
   params.set("limit", String(limit));
   params.set("offset", String(offset));
-  if (fiberTab !== "all") params.set("fiber", fiberTab);
+  // Shoes are a category (not a fiber) — apparel-only sale feed excludes footwear.
+  if (fiberTab === "shoes") {
+    params.set("category", "shoes");
+  } else if (fiberTab !== "all") {
+    params.set("fiber", fiberTab);
+  }
   if (priceTier !== "any") params.set("price", priceTier);
-  if (categoryFilter !== "all") params.set("category", categoryFilter);
+  if (categoryFilter !== "all" && fiberTab !== "shoes") params.set("category", categoryFilter);
   if (selectedColor) params.set("color", selectedColor);
   if (selectedBrands.length) params.set("brand", selectedBrands[0]);
   if (selectedFiberSubtypes.length) params.set("materialSubtype", selectedFiberSubtypes[0]);
@@ -183,6 +190,11 @@ export default function SaleClient({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const { favorites } = useProductFavorites();
+  const rankedProducts = useMemo(
+    () => prioritizeFavoritedProducts(products, favorites),
+    [products, favorites]
+  );
 
   useEffect(() => {
     getShopBrands()
@@ -561,10 +573,10 @@ export default function SaleClient({
                     </div>
                   ))}
                 </div>
-              ) : products.length > 0 ? (
+              ) : rankedProducts.length > 0 ? (
                 <>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12" data-testid="sale-product-grid">
-                    {products.map((product: any, i: number) => (
+                    {rankedProducts.map((product: any, i: number) => (
                       <SaleProductCard key={product.id} product={product} eager={i < 12} />
                     ))}
                   </div>

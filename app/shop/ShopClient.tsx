@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { ProductLink } from "../components/ProductLink";
 import { useSearchParams } from "next/navigation";
 import { ShoppingBag, ArrowRight, Heart, ChevronDown, Search, X } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
+import { prioritizeFavoritedProducts } from "../../lib/prioritize-favorited-products";
 import { getShopProducts, getShopCatalogCount, getShopMeta, getShopBrands } from "./actions";
 import {
   SHOP_COLOR_OPTIONS,
@@ -320,6 +321,11 @@ export default function ShopClient({
   const [isLoading, setIsLoading] = useState(false);
   const [countLoading, setCountLoading] = useState(!initialMeta);
   const initialFetchDone = useRef(initialProducts?.length > 0);
+  const { favorites } = useProductFavorites();
+  const rankedProducts = useMemo(
+    () => prioritizeFavoritedProducts(products, favorites),
+    [products, favorites]
+  );
 
   const scrollRestored = useRef(false);
 
@@ -1086,7 +1092,7 @@ export default function ShopClient({
         ) : (
           <>
             <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12 transition-opacity ${isLoading && products.length > 0 ? "opacity-60" : ""}`}>
-              {products.map((product: any, i: number) => (
+              {rankedProducts.map((product: any, i: number) => (
                 <ProductCard key={product.id} product={product} eager={i < 12} />
               ))}
             </div>

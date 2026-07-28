@@ -1309,7 +1309,8 @@ function mapBrandCatalogRow(row: Record<string, unknown>): Product | null {
   return product;
 }
 
-/** Scan live brand rows until consumer filters yield enough cards (PostgREST range runs before JS guards). */
+/** Scan brand rows until consumer filters yield enough cards (PostgREST range runs before JS guards).
+ * Uses displayable `products` (not apparel-only view) so shoe designers like Manolo / Roger Vivier appear. */
 async function collectBrandCatalogPage(
   supabase: UntypedSupabase,
   canonicalSlug: string,
@@ -1328,8 +1329,10 @@ async function collectBrandCatalogPage(
   let exhausted = false;
 
   while (rawCursor < maxRawScan) {
-    const { data, error } = await liveProductsApparelFrom(supabase)
+    const { data, error } = await supabase
+      .from("products")
       .select("*")
+      .eq("is_displayable", true)
       .eq("region", region)
       .eq("brand_slug", canonicalSlug)
       .gte("natural_fiber_percent", 80)
@@ -1338,7 +1341,14 @@ async function collectBrandCatalogPage(
       .range(rawCursor, rawCursor + batchSize - 1);
 
     if (error && isCatalogTimeoutError(error)) {
-      return { products: page, filteredTotal: allFiltered.length, timedOut: true, hasMoreHint: false };
+      allFiltered.sort((a, b) => Number(!!b.isSale) - Number(!!a.isSale));
+      const orderedPage = allFiltered.slice(offset, offset + limit);
+      return {
+        products: orderedPage.length ? orderedPage : page,
+        filteredTotal: allFiltered.length,
+        timedOut: true,
+        hasMoreHint: false,
+      };
     }
 
     const rows = data || [];
@@ -1348,8 +1358,8 @@ async function collectBrandCatalogPage(
     }
     rawCursor += rows.length;
 
-    for (const row of dedupeLiveApparelRows(rows, region, region)) {
-      const product = mapBrandCatalogRow(row);
+    for (const row of rows) {
+      const product = mapBrandCatalogRow(row as Record<string, unknown>);
       if (!product) continue;
       const key = catalogDedupeKeyFromProduct(product);
       if (seen.has(key)) continue;
@@ -1373,8 +1383,16 @@ async function collectBrandCatalogPage(
     }
   }
 
-  const hasMoreHint = !exhausted && page.length >= limit;
-  return { products: page, filteredTotal: allFiltered.length, timedOut: false, hasMoreHint };
+  // Sale first on designer grids so markdowns appear under the designer name.
+  allFiltered.sort((a, b) => Number(!!b.isSale) - Number(!!a.isSale));
+  const orderedPage = allFiltered.slice(offset, offset + limit);
+  const hasMoreHint = !exhausted && orderedPage.length >= limit;
+  return {
+    products: orderedPage.length ? orderedPage : page,
+    filteredTotal: allFiltered.length,
+    timedOut: false,
+    hasMoreHint,
+  };
 }
 
 export async function fetchProductsByBrand(
@@ -2215,7 +2233,7 @@ function applySaleProductFilters(
   }
 ): Product[] {
   let filtered = products.filter((p) => p.imageUrl && p.price);
-  if (opts.fiber && opts.fiber !== "all") {
+  if (opts.fiber && opts.fiber !== "all" && opts.fiber.toLowerCase() !== "shoes") {
     const needle = opts.fiber.toLowerCase();
     filtered = filtered.filter((p) => (p.composition || "").toLowerCase().includes(needle));
   }
@@ -2265,6 +2283,12 @@ function applySaleQuerySort(query: any, sort?: string) {
   }
 }
 
+function wantsSaleShoes(opts: { fiber?: string; category?: string }): boolean {
+  const fiber = (opts.fiber || "").toLowerCase();
+  const category = (opts.category || "").toLowerCase();
+  return fiber === "shoes" || category === "shoes" || category === "footwear";
+}
+
 function buildSaleDirectQuery(
   supabase: NonNullable<ReturnType<typeof getServerSupabase>>,
   region: string,
@@ -2272,6 +2296,25 @@ function buildSaleDirectQuery(
   columns = "*",
   selectOptions?: { count: "exact"; head: true }
 ) {
+  // Footwear lives on `products`, not apparel-only views — dedicated sale-shoes path.
+  if (wantsSaleShoes(opts)) {
+    let q = supabase
+      .from("products")
+      .select(columns, selectOptions)
+      .eq("is_displayable", true)
+      .eq("is_sale", true)
+      .eq("region", region)
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .not("price", "is", null)
+      .or(
+        "garment_type.eq.shoes,category.ilike.%Footwear%,category.ilike.%shoe%,name.ilike.%sandal%,name.ilike.%pump%,name.ilike.%mule%,name.ilike.%loafer%,name.ilike.%boot%,name.ilike.%sneaker%,name.ilike.%heel%"
+      );
+    if (opts.color) q = q.eq("color", opts.color);
+    if (opts.brand) q = q.eq("brand_slug", opts.brand.toLowerCase());
+    return q;
+  }
+
   let q = liveProductsApparelFrom(supabase)
     .select(columns, selectOptions)
     .eq("is_sale", true)
@@ -2279,7 +2322,7 @@ function buildSaleDirectQuery(
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null);
-  if (opts.fiber && opts.fiber !== "all") {
+  if (opts.fiber && opts.fiber !== "all" && opts.fiber.toLowerCase() !== "shoes") {
     q = q.ilike("composition", `%${opts.fiber}%`);
   }
   if (opts.fiberSubtype) {
@@ -2517,18 +2560,24 @@ export async function fetchBrandStats(): Promise<
   { slug: string; name: string; count: number; avgNaturalFiber: number }[]
 > {
   const brands = await fetchShoppableBrands({ maxBrands: 1200 });
-  if (brands.length >= 50) {
-    return brands.map((b) => ({
-      slug: b.slug,
-      name: b.name,
-      count: b.count,
-      avgNaturalFiber: b.avgNaturalFiber,
-    }));
-  }
+  const bySlug = new Map(
+    brands.map((b) => [
+      b.slug,
+      {
+        slug: b.slug,
+        name: b.name,
+        count: b.count,
+        avgNaturalFiber: b.avgNaturalFiber,
+      },
+    ])
+  );
 
   const supabase = getServerSupabase();
-  if (!supabase) return brands.map((b) => ({ slug: b.slug, name: b.name, count: b.count, avgNaturalFiber: b.avgNaturalFiber }));
+  if (!supabase) {
+    return [...bySlug.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
 
+  // Merge live designers table so footwear houses (often missing from apparel-only RPC) still appear.
   const { data, error } = await supabase
     .from("designers")
     .select("slug, name, product_count, natural_fiber_percent")
@@ -2536,19 +2585,23 @@ export async function fetchBrandStats(): Promise<
     .gte("product_count", SHOPPABLE_MIN_PRODUCTS)
     .order("name");
 
-  if (error || !data?.length) {
-    return brands.map((b) => ({
-      slug: b.slug,
-      name: b.name,
-      count: b.count,
-      avgNaturalFiber: b.avgNaturalFiber,
-    }));
+  if (!error && data?.length) {
+    for (const row of data as any[]) {
+      const slug = String(row.slug || "").toLowerCase();
+      if (!slug) continue;
+      const count = Number(row.product_count) || 0;
+      if (count < SHOPPABLE_MIN_PRODUCTS) continue;
+      const prev = bySlug.get(slug);
+      if (!prev || count > prev.count) {
+        bySlug.set(slug, {
+          slug,
+          name: sanitizeBrandName(String(row.name || slug)),
+          count,
+          avgNaturalFiber: Number(row.natural_fiber_percent) || prev?.avgNaturalFiber || 0,
+        });
+      }
+    }
   }
 
-  return data.map((row: any) => ({
-    slug: String(row.slug || "").toLowerCase(),
-    name: sanitizeBrandName(String(row.name || row.slug || "")),
-    count: Number(row.product_count) || 0,
-    avgNaturalFiber: Number(row.natural_fiber_percent) || 0,
-  }));
+  return [...bySlug.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

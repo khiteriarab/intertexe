@@ -19,6 +19,7 @@ export const FEATURED_BRAND_SLUGS = [
   "manolo-blahnik",
   "roger-vivier",
   "golden-goose",
+  "gianvito-rossi",
 ] as const;
 
 /** DB slug may differ from curated key (e.g. alc → a-l-c-). */

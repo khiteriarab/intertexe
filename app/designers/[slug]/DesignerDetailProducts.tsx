@@ -8,6 +8,8 @@ import { CatalogMobileToolbar, CatalogMobileSheet } from "../../components/Catal
 import { Heart } from "lucide-react";
 import { useProductFavorites } from "../../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../../lib/format-display-price";
+import { prioritizeFavoritedProducts } from "../../../lib/prioritize-favorited-products";
+import { canonicalProductId } from "../../../lib/canonical-product-id";
 
 const CATEGORY_LABELS: Record<string, string> = {
   all: "All",
@@ -138,9 +140,11 @@ export function DesignerDetailProducts({
         const pb = parsePrice(b.price);
         return priceSort === "price-low" ? pa - pb : pb - pa;
       });
+    } else {
+      filtered = prioritizeFavoritedProducts(filtered, favorites);
     }
     return filtered;
-  }, [visibleProducts, activeCategory, showSaleOnly, searchQuery, priceSort, fiberFilter]);
+  }, [visibleProducts, activeCategory, showSaleOnly, searchQuery, priceSort, fiberFilter, favorites]);
 
   const paginatedProducts = useMemo(() => {
     if (shopMode) return filteredProducts;
@@ -351,10 +355,18 @@ export function DesignerDetailProducts({
           {filteredProducts.length > 0 ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                {paginatedProducts.map((product) => (
+                {paginatedProducts.map((product) => {
+                  const favKey = canonicalProductId({
+                    id: product.id,
+                    productId: product.productId,
+                  });
+                  const saved = favorites.has(favKey) || favorites.has(String(product.id));
+                  return (
                   <div
                     key={product.productId || product.id}
-                    className="group relative bg-background border border-border/20 hover:border-border/60 transition-all flex flex-col"
+                    className={`group relative bg-background border transition-all flex flex-col ${
+                      saved ? "border-red-500/50 ring-1 ring-red-500/30" : "border-border/20 hover:border-border/60"
+                    }`}
                     data-testid={`card-product-${product.productId || product.id}`}
                   >
                     <ProductLink href={`/product/${product.id}`} className="flex flex-col flex-1">
@@ -371,10 +383,24 @@ export function DesignerDetailProducts({
                             <svg className="w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                           </div>
                         )}
-                        {product.naturalFiberPercent > 0 && (
+                        {saved && (
+                          <div className="absolute top-2 left-2 pointer-events-none z-[1]">
+                            <span className="bg-white/95 text-[#420217] px-2 py-0.5 text-[8px] uppercase tracking-[0.12em] font-medium">
+                              Saved
+                            </span>
+                          </div>
+                        )}
+                        {!saved && product.naturalFiberPercent > 0 && (
                           <div className="absolute top-2 left-2 pointer-events-none">
                             <span className="bg-emerald-900/90 text-emerald-100 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium backdrop-blur-sm">
                               {product.naturalFiberPercent}% Natural
+                            </span>
+                          </div>
+                        )}
+                        {product.isSale && (
+                          <div className="absolute bottom-2 left-2 pointer-events-none">
+                            <span className="bg-red-600/90 text-white px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-medium">
+                              Sale
                             </span>
                           </div>
                         )}
@@ -406,15 +432,20 @@ export function DesignerDetailProducts({
                     </ProductLink>
                     <button
                       type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProductFav(String(product.id)); }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleProductFav(favKey || String(product.id));
+                      }}
                       className="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
                       data-testid={`btn-fav-${product.id}`}
-                      aria-label={favorites.has(String(product.id)) ? "Remove from favorites" : "Add to favorites"}
+                      aria-label={saved ? "Remove from favorites" : "Add to favorites"}
                     >
-                      <Heart className={`w-3.5 h-3.5 ${favorites.has(String(product.id)) ? "fill-red-500 text-red-500" : "text-foreground/70"}`} />
+                      <Heart className={`w-3.5 h-3.5 ${saved ? "fill-red-500 text-red-500" : "text-foreground/70"}`} />
                     </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
               {shopMode && hasMore && <div ref={loadMoreSentinelRef} className="h-2 w-full" aria-hidden="true" />}
               {hasMore && !shopMode && (
