@@ -224,12 +224,12 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   moodBoard: {
     images: [
       {
-        src: "/khiteri/cult-gaia-sarah-green.jpg",
-        alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
+        src: "/khiteri/attico-barrel-sweats.jpg",
+        alt: "The Attico Cotton Jersey Barrel Leg Sweatpants — full length",
       },
       {
-        src: "/khiteri/attico-barrel-sweats.jpg",
-        alt: "The Attico Cotton Jersey Barrel Leg Sweatpants",
+        src: "/khiteri/cult-gaia-sarah-green.jpg",
+        alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
       },
       {
         src: "/khiteri/redone-denim-laced-midi.jpg",

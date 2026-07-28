@@ -598,15 +598,13 @@
 }
 
 .khiteris-edit__mood-cell--0 img {
-  object-position: center top;
+  object-fit: contain;
+  object-position: center center;
+  background: #f3f1ec;
 }
 
 .khiteris-edit__mood-cell--1 {
   aspect-ratio: 1;
-}
-
-.khiteris-edit__mood-cell--1 img {
-  object-position: center 35%;
 }
 
 .khiteris-edit__mood-cell--2 {
