@@ -118,6 +118,8 @@ const DESIGNER_PRODUCT_SLUG_ALIASES: Record<string, string> = {
   faithfull: "faithfull-the-brand",
   alaia: "alaia",
   "azzedine-alaia": "alaia",
+  // Broken diacritic slugify of "Alaïa" (ï → empty) — must not stay as its own brand.
+  "ala-a": "alaia",
 };
 
 /** Strip diacritics so Alaïa → alaia matches products.brand_slug. */
@@ -1327,8 +1329,12 @@ async function collectBrandCatalogPage(
   resolveFullTotal = true
 ): Promise<{ products: Product[]; filteredTotal: number; timedOut: boolean; hasMoreHint: boolean }> {
   // First page: smaller batch so designer PLPs return in ~1s (iOS HTTP timeout is 8s).
+  // Pagination scans must cover offset+limit after JS gender/consumer filters — the old
+  // `offset + limit * 3` cap stopped Helmut Lang / FRAME / etc. after ~1 page (hasMore=false).
   const batchSize = resolveFullTotal ? Math.max(limit * 4, 96) : Math.max(limit * 2, 64);
-  const maxRawScan = resolveFullTotal ? 6000 : Math.min(800, offset + limit * 3);
+  const maxRawScan = resolveFullTotal
+    ? 6000
+    : Math.min(4000, Math.max(480, (offset + limit) * 10));
   let rawCursor = 0;
   let skipped = 0;
   const seen = new Set<string>();
@@ -1337,7 +1343,7 @@ async function collectBrandCatalogPage(
   let exhausted = false;
 
   while (rawCursor < maxRawScan) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("products")
       .select(
         [
@@ -1366,9 +1372,17 @@ async function collectBrandCatalogPage(
         ].join(",")
       )
       .eq("is_displayable", true)
-      .eq("region", region)
       .eq("brand_slug", canonicalSlug)
-      .gte("natural_fiber_percent", 80)
+      .gte("natural_fiber_percent", 80);
+
+    // US: include mistagged MyTheresa US (MID 43172) rows stored as region=eu.
+    if (region === "us") {
+      query = query.or("region.eq.us,url.ilike.*mid=43172*");
+    } else {
+      query = query.eq("region", region);
+    }
+
+    const { data, error } = await query
       .order("natural_fiber_percent", { ascending: false })
       .order("created_at", { ascending: false })
       .range(rawCursor, rawCursor + batchSize - 1);
@@ -1419,7 +1433,10 @@ async function collectBrandCatalogPage(
   // Sale first on designer grids so markdowns appear under the designer name.
   allFiltered.sort((a, b) => Number(!!b.isSale) - Number(!!a.isSale));
   const orderedPage = allFiltered.slice(offset, offset + limit);
-  const hasMoreHint = !exhausted && orderedPage.length >= limit;
+  const hitScanCap = !exhausted && rawCursor >= maxRawScan;
+  // Full page ⇒ more may exist. Hit scan cap with a short page ⇒ keep paging (do not stall).
+  const hasMoreHint =
+    orderedPage.length >= limit ? !exhausted || hitScanCap : hitScanCap;
   return {
     products: orderedPage.length ? orderedPage : page,
     filteredTotal: allFiltered.length,
@@ -2348,13 +2365,25 @@ function buildSaleDirectQuery(
     return q;
   }
 
-  let q = liveProductsApparelFrom(supabase)
+  // Use `products` + is_displayable so natural-leather footwear sale can appear alongside
+  // apparel (parity with brand PLPs). live_products_apparel strips all shoes.
+  let q = supabase
+    .from("products")
     .select(columns, selectOptions)
+    .eq("is_displayable", true)
     .eq("is_sale", true)
-    .eq("region", region)
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null);
+
+  // US shoppers: also include mistagged MyTheresa US (Rakuten MID 43172) rows that were
+  // historically stored as region=eu despite USD + mytheresa.com/us storefront links.
+  if (region === "us") {
+    q = q.or("region.eq.us,url.ilike.*mid=43172*");
+  } else {
+    q = q.eq("region", region);
+  }
+
   if (opts.fiber && opts.fiber !== "all" && opts.fiber.toLowerCase() !== "shoes") {
     q = q.ilike("composition", `%${opts.fiber}%`);
   }

@@ -333,12 +333,14 @@ export async function GET(request: NextRequest) {
       const hasMore =
         result.hasMore ??
         catalogHasMore(result.products.length, limit, offset, brandTotal);
+      const nextOffset = hasMore ? offset + result.products.length : null;
       return respond({
         products: result.products,
         total: brandTotal,
         limit,
         offset,
         hasMore,
+        nextOffset,
       });
     }
 
