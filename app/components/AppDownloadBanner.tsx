@@ -20,7 +20,7 @@ function resolveAppStoreUrl(explicit?: string): string {
   if (fromProp) return fromProp;
   const fromEnv = (process.env.NEXT_PUBLIC_APP_STORE_URL || "").trim();
   if (fromEnv) return fromEnv;
-  return "https://apps.apple.com";
+  return "https://apps.apple.com/app/id6770476520";
 }
 
 /**
