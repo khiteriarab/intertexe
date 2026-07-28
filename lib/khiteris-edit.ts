@@ -216,7 +216,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   slug: "khiteri",
   monthLabel: "August 2026",
   title: "KHITERI'S EDIT",
-  subtitle: "My favorites — linen, silk, leather — shoppable via MyTheresa.",
+  subtitle: "Dissh linen & silk — plus MyTheresa favorites in leather, cotton, and silk.",
   coverImage: {
     src: "/khiteri/cover-august.jpg",
     alt: "Dissh Cora Natural Midi Linen Dress on model",
@@ -229,12 +229,12 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
         alt: "Dissh Cora Natural Midi Linen Dress",
       },
       {
-        src: "/khiteri/attico-barrel-sweats.jpg",
-        alt: "The Attico Cotton Jersey Barrel Leg Sweatpants",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS111268OLI.545_10.jpg?v=1756249849",
+        alt: "Dissh Darcy Olive Silk Maxi Dress",
       },
       {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/65/P01129372.jpg",
-        alt: "Rebecca Vallance Elise Halterneck Silk Satin Top",
+        src: "/khiteri/attico-barrel-sweats.jpg",
+        alt: "The Attico Cotton Jersey Barrel Leg Sweatpants",
       },
       {
         src: "/khiteri/chloe-nama-thong.jpg",
@@ -257,6 +257,54 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
     },
     {
       id: "02",
+      name: "Darcy Olive Silk Maxi Dress",
+      composition: "100% Silk",
+      price: "$150",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/darcy-olive-silk-maxi-dress-1",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS111268OLI.545_10.jpg?v=1756249849",
+        alt: "Dissh Darcy Olive Silk Maxi Dress on model",
+      },
+    },
+    {
+      id: "03",
+      name: "Finny White Sleeveless Linen Top",
+      composition: "100% Linen",
+      price: "$130",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/finny-white-linen-top",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS04516WE.100_10.jpg?v=1761021880",
+        alt: "Dissh Finny White Sleeveless Linen Top on model",
+      },
+    },
+    {
+      id: "04",
+      name: "Percy Black Silk Long Sleeve Shirt",
+      composition: "100% Silk",
+      price: "$170",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/percy-black-silk-long-sleeve-shirt",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS03289BK.600_10.jpg?v=1761641075",
+        alt: "Dissh Percy Black Silk Long Sleeve Shirt on model",
+      },
+    },
+    {
+      id: "05",
+      name: "Pippy Buttermilk Linen Strapless Top",
+      composition: "100% Linen",
+      price: "$100",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/pippy-buttermilk-linen-straples-top",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS04517BMK.199_10.jpg?v=1765356293",
+        alt: "Dissh Pippy Buttermilk Linen Strapless Top on model",
+      },
+    },
+    {
+      id: "06",
       name: "Cotton Jersey Barrel Leg Sweatpants",
       composition: "100% Cotton",
       price: "$590",
@@ -273,7 +321,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "03",
+      id: "07",
       name: "Elise Halterneck Silk Satin Top",
       composition: "100% Silk",
       price: "$400",
@@ -286,7 +334,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "04",
+      id: "08",
       name: "Crochet Cotton Polo Dress",
       composition: "100% Cotton",
       price: "$310",
@@ -299,7 +347,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "05",
+      id: "09",
       name: "Midi Dress",
       composition: "100% Silk",
       price: "$1,100",
@@ -312,7 +360,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "06",
+      id: "10",
       name: "Nama Leather Platform Thong Sandals",
       composition: "Upper: 100% Bovine leather",
       price: "$690",
@@ -325,7 +373,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "07",
+      id: "11",
       name: "Elmer Suede Thong Sandals",
       composition: "Upper: 100% Goat leather",
       price: "$260",
@@ -338,7 +386,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "08",
+      id: "12",
       name: "Horsebit Suede Mules",
       composition: "Upper: 100% Bovine Leather",
       price: "$1,290",
@@ -351,7 +399,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "09",
+      id: "13",
       name: "Cirry Leather Mules",
       composition: "Upper: 100% bovine leather",
       price: "$1,690",
@@ -364,7 +412,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "10",
+      id: "14",
       name: "Rockstud Leather Thong Sandals",
       composition: "Upper: 100% Bovine Leather",
       price: "$750",

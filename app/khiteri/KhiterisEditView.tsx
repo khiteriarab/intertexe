@@ -31,6 +31,11 @@ const PIECE_WORDS = [
   "Eight",
   "Nine",
   "Ten",
+  "Eleven",
+  "Twelve",
+  "Thirteen",
+  "Fourteen",
+  "Fifteen",
 ] as const;
 
 type Props = {
