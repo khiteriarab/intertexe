@@ -10,6 +10,7 @@ import {
 import { buildGreeting, buildMorningPulse } from "../../../lib/dashboard/morning-briefing";
 import { fetchNightlySyncOps, statusBadgeClass } from "../../../lib/dashboard/catalog-sync-ops";
 import { fetchHqCommercePage } from "../../../lib/dashboard/metrics";
+import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
 import { HqCard, HqPageHeader } from "../components/HqUi";
 import { ActionCenterClient } from "./ActionCenterClient";
@@ -85,6 +86,8 @@ export default async function HqOverviewPage() {
   const opsNeedsAttention = latest?.status === "failure" || latest?.status === "warning";
   const canAdmin = session.roles.some((r) => r === "founder" || r === "admin");
   const top = actions[0] || null;
+  const goal = commerce.revenueGoal;
+  const recs = commerce.revenueRecommendations || [];
 
   return (
     <div>
@@ -121,6 +124,71 @@ export default async function HqOverviewPage() {
           {tiktok.syncedAt ? ` · TikTok ${new Date(tiktok.syncedAt).toLocaleString()}` : ""}
           {pinterest.syncedAt ? ` · Pinterest ${new Date(pinterest.syncedAt).toLocaleString()}` : ""}
         </p>
+      </HqCard>
+
+      <HqCard className="mb-6" title="$1M revenue path">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-3">
+          <div>
+            <p className="text-2xl font-medium tabular-nums tracking-tight">
+              {goal.mode === "demo" || goal.mode === "disconnected"
+                ? "—"
+                : formatMoneyUsd(goal.progressUsd)}
+              <span className="text-sm font-normal text-black/40">
+                {" "}
+                / {formatMoneyUsd(goal.goalUsd)}
+              </span>
+            </p>
+            <p className="text-[11px] text-black/45 mt-1">
+              {goal.mode === "demo"
+                ? "Demo revenue only — connect verified reporting"
+                : goal.mode === "disconnected"
+                  ? "No verified sales yet — import Rakuten to start the clock"
+                  : goal.mode === "ytd"
+                    ? `YTD verified GMV · 30d ${formatMoneyUsd(goal.sales30d)} · run-rate ${formatMoneyUsd(goal.runRateUsd)}/yr`
+                    : `Annualized from 30d ${formatMoneyUsd(goal.sales30d)} · ${goal.daysToGoal != null ? `~${goal.daysToGoal} days at current pace` : "no pace yet"}`}
+            </p>
+          </div>
+          <Link
+            href="/dashboard/commerce#revenue-goal"
+            className="text-[11px] tracking-widest uppercase underline underline-offset-4 shrink-0"
+          >
+            Commerce detail →
+          </Link>
+        </div>
+        <div className="h-2 rounded-full bg-black/5 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-black transition-[width]"
+            style={{ width: `${Math.min(100, Math.max(0, goal.pct))}%` }}
+          />
+        </div>
+        <p className="text-[11px] text-black/40 mt-2 tabular-nums">{goal.pct}% of goal</p>
+      </HqCard>
+
+      <HqCard className="mb-6" title="Make money today">
+        <p className="text-[11px] text-black/45 mb-3">
+          Three concrete moves — each links to an Action Center theme / Commerce surface.
+        </p>
+        <ol className="space-y-3">
+          {recs.map((rec, idx) => (
+            <li key={rec.fingerprint} className="border border-black/10 rounded-lg p-3.5">
+              <div className="flex items-start gap-3">
+                <span className="text-[10px] tracking-widest uppercase text-black/35 tabular-nums pt-0.5">
+                  {String(idx + 1).padStart(2, "0")}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium leading-snug">{rec.title}</p>
+                  <p className="text-[12px] text-black/55 mt-1 leading-relaxed">{rec.detail}</p>
+                  <a
+                    href={rec.href}
+                    className="inline-block mt-2 text-[11px] tracking-widest uppercase underline underline-offset-4"
+                  >
+                    Work on this →
+                  </a>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
       </HqCard>
 
       <HqCard className="mb-6" title="Action center">

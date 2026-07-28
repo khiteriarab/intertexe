@@ -46,8 +46,10 @@ function ReportTable({
               <th className="py-2 pr-3 font-medium">Dimension</th>
               <th className="py-2 pr-3 font-medium">Customers</th>
               <th className="py-2 pr-3 font-medium">Purchasers</th>
+              <th className="py-2 pr-3 font-medium">Conv%</th>
               <th className="py-2 pr-3 font-medium">Revenue</th>
               <th className="py-2 pr-3 font-medium">Commission</th>
+              <th className="py-2 pr-3 font-medium">Rev/cust</th>
               <th className="py-2 pr-3 font-medium">Avg order</th>
               <th className="py-2 pr-3 font-medium">CLV</th>
               <th className="py-2 pr-3 font-medium">Reg→buy</th>
@@ -56,15 +58,24 @@ function ReportTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {rows.map((row) => {
+              const conv =
+                row.customers > 0 ? (row.purchasers / row.customers) * 100 : null;
+              const revPerCustomer =
+                row.customers > 0 ? row.sales / row.customers : null;
+              return (
               <tr key={row.key} className="border-t border-black/5">
                 <td className="py-2 pr-3 max-w-[200px] truncate" title={row.label}>
                   {row.label}
                 </td>
                 <td className="py-2 pr-3 tabular-nums">{formatCount(row.customers)}</td>
                 <td className="py-2 pr-3 tabular-nums">{formatCount(row.purchasers)}</td>
+                <td className="py-2 pr-3 tabular-nums">
+                  {conv == null ? "—" : `${conv.toFixed(1)}%`}
+                </td>
                 <td className="py-2 pr-3 tabular-nums">{money(row.sales)}</td>
                 <td className="py-2 pr-3 tabular-nums">{money(row.commission)}</td>
+                <td className="py-2 pr-3 tabular-nums">{money(revPerCustomer)}</td>
                 <td className="py-2 pr-3 tabular-nums">{money(row.avgOrder)}</td>
                 <td className="py-2 pr-3 tabular-nums">{money(row.lifetimeValue)}</td>
                 <td className="py-2 pr-3 tabular-nums">{days(row.avgDaysToPurchase)}</td>
@@ -77,7 +88,8 @@ function ReportTable({
                     : row.avgFavoritesBeforePurchase.toFixed(1)}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -98,7 +110,7 @@ export default async function HqAcquisitionPage() {
     <div>
       <HqPageHeader
         title="Acquisition"
-        description="How are people discovering INTERTEXE? Use this when an Action Center item points here — then return to Today."
+        description="How are people discovering INTERTEXE — and which sources convert to revenue? Use this when Action Center points here."
         action={
           <Link
             href="/dashboard"
@@ -538,11 +550,19 @@ export default async function HqAcquisitionPage() {
           {
             label: "Attributed revenue",
             value: money(report.totals.sales),
-            hint: `${formatCount(report.totals.purchasers)} purchasers`,
+            hint: `${formatCount(report.totals.purchasers)} purchasers · ${
+              report.totals.customers > 0
+                ? `${((report.totals.purchasers / report.totals.customers) * 100).toFixed(1)}% conv`
+                : "—"
+            }`,
           },
           {
             label: "Commission",
             value: money(report.totals.commission),
+            hint:
+              report.totals.customers > 0
+                ? `${money(report.totals.sales / report.totals.customers)} rev/customer`
+                : undefined,
           },
         ]}
       />

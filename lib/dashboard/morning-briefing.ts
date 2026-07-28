@@ -45,6 +45,12 @@ export function buildMorningPulse(input: {
     salesToday?: number | null;
     sales7d?: number | null;
     lastSaleDate?: string | null;
+    revenueGoal?: {
+      pct?: number;
+      progressUsd?: number;
+      mode?: string;
+      daysToGoal?: number | null;
+    } | null;
   };
   syncLatest?: NightlySyncRun | null;
   totalClicks7d: number;
@@ -60,6 +66,28 @@ export function buildMorningPulse(input: {
   });
 
   const items: MorningPulseItem[] = [
+    {
+      label: "$1M path",
+      period: "Goal",
+      value:
+        commerce.revenueIsDemo || !commerce.revenueConnected
+          ? "—"
+          : `${Math.round(commerce.revenueGoal?.pct ?? 0)}%`,
+      hint:
+        commerce.revenueIsDemo
+          ? "Demo only"
+          : !commerce.revenueConnected
+            ? "Connect revenue"
+            : commerce.revenueGoal?.daysToGoal != null
+              ? `~${commerce.revenueGoal.daysToGoal}d at current pace`
+              : "Annualized / YTD progress",
+      href: "/dashboard/commerce#revenue-goal",
+      attention: Boolean(
+        commerce.revenueIsDemo ||
+          !commerce.revenueConnected ||
+          (commerce.revenueGoal?.pct ?? 0) < 5
+      ),
+    },
     {
       label: "Web visitors",
       period: "7d",

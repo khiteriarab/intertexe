@@ -117,6 +117,8 @@ export function buildDeterministicInsights(input: {
     shop7d?: number | null;
     scanner7d?: number | null;
     topRevenueAdvertisers?: Array<{ brand: string; commission: number; sales: number }>;
+    categoryPerformance?: Array<{ category: string; sales: number; commission: number; shareOfSales: number }>;
+    topProductsByCommission?: Array<{ product: string; brand: string; commission: number; orders: number }>;
   };
   syncLatest?: NightlySyncRun | null;
   totalClicks7d: number;
@@ -328,6 +330,31 @@ export function buildDeterministicInsights(input: {
         priority: "growth",
         href: "/khiteri",
         expectedImpact: "Exploit the path that already produced large MyTheresa-sized baskets.",
+      });
+    }
+
+    const shoeCat = commerce.categoryPerformance?.find((c) => c.category === "Shoes");
+    if (shoeCat && shoeCat.shareOfSales >= 0.35 && shoeCat.sales > 0) {
+      out.push({
+        fingerprint: "double_down_shoes",
+        title: "Shoes are the money category — lean in",
+        whatChanged: `Shoes are ${Math.round(shoeCat.shareOfSales * 100)}% of verified sales ($${Math.round(shoeCat.sales).toLocaleString()}) in the import window.`,
+        whyItChanged:
+          "Category inferred from product names on verified affiliate rows — directional until catalog category joins are denser.",
+        attention: "Apparel-heavy edits may under-index vs what actually pays.",
+        recommendedAction:
+          "Stock /khiteri and shop rails with sandals, mules, and heels that match sold styles; demote low-RPC apparel.",
+        evidence: {
+          shareOfSales: shoeCat.shareOfSales,
+          sales: shoeCat.sales,
+          commission: shoeCat.commission,
+          topProduct: commerce.topProductsByCommission?.[0] || null,
+        },
+        comparisonPeriod: "trailing_30d",
+        confidence: "medium",
+        priority: "growth",
+        href: "/dashboard/commerce#category-performance",
+        expectedImpact: "Concentrate inventory and editorial energy where GMV already concentrates.",
       });
     }
 

@@ -1,5 +1,17 @@
 import { getServerSupabase } from "../supabase-service-client";
 import { formatPeriodDelta } from "./period-delta";
+import {
+  buildCategoryPerformance,
+  buildEditorialPerformance,
+  buildProductMoneyRows,
+  buildRevenueGoalProgress,
+  buildRevenueRecommendations,
+  type CategoryPerformanceRow,
+  type EditorialPerformanceRow,
+  type ProductMoneyRow,
+  type RevenueGoalProgress,
+  type RevenueRecommendation,
+} from "./commerce-intelligence";
 
 export type HqCountResult = {
   value: number | null;
@@ -524,10 +536,18 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       transactionsToday: null as number | null,
       commission30d: null as number | null,
       sales30d: null as number | null,
+      salesYtd: null as number | null,
       topRevenueAdvertisers: [] as Array<{ brand: string; commission: number; sales: number }>,
       lastSaleDate: null as string | null,
       nullU1Tx30d: null as number | null,
       txWithU130d: null as number | null,
+      topProductsBySales: [] as ProductMoneyRow[],
+      topProductsByCommission: [] as ProductMoneyRow[],
+      topProductsByRpc: [] as ProductMoneyRow[],
+      categoryPerformance: [] as CategoryPerformanceRow[],
+      editorialPerformance: [] as EditorialPerformanceRow[],
+      revenueGoal: buildRevenueGoalProgress({ revenueConnected: false }),
+      revenueRecommendations: buildRevenueRecommendations({ revenueConnected: false }),
       error: "supabase_unavailable",
     };
   }
@@ -544,7 +564,7 @@ export async function fetchHqCommercePage(workspaceId?: string) {
         .limit(500),
       supabase
         .from("editorial_clickouts")
-        .select("brand_name, product_name, clicked_at")
+        .select("brand_name, product_name, clicked_at, edit_slug, edit_month, product_slot")
         .gte("clicked_at", iso(d30))
         .limit(500),
       supabase
@@ -592,17 +612,28 @@ export async function fetchHqCommercePage(workspaceId?: string) {
   let lastSaleDate: string | null = null;
   let nullU1Tx30d: number | null = null;
   let txWithU130d: number | null = null;
+  let salesYtd: number | null = null;
+  let activeTxForIntel: any[] = [];
 
   if (workspaceId) {
-    const { data: txRows, error: txErr } = await supabase
-      .from("hq_affiliate_transactions")
-      .select(
-        "id, transaction_date, advertiser_name, product_name, product_id, sku, sales_amount, commission_amount, currency, status, order_id, raw, external_transaction_id, u1"
-      )
-      .eq("workspace_id", workspaceId)
-      .gte("transaction_date", iso(d30))
-      .order("transaction_date", { ascending: false })
-      .limit(500);
+    const ytdStart = `${new Date().getUTCFullYear()}-01-01T00:00:00.000Z`;
+    const [{ data: txRows, error: txErr }, ytdRes] = await Promise.all([
+      supabase
+        .from("hq_affiliate_transactions")
+        .select(
+          "id, transaction_date, advertiser_name, product_name, product_id, sku, sales_amount, commission_amount, currency, status, order_id, raw, external_transaction_id, u1"
+        )
+        .eq("workspace_id", workspaceId)
+        .gte("transaction_date", iso(d30))
+        .order("transaction_date", { ascending: false })
+        .limit(500),
+      supabase
+        .from("hq_affiliate_transactions")
+        .select("sales_amount, status, raw, external_transaction_id")
+        .eq("workspace_id", workspaceId)
+        .gte("transaction_date", ytdStart)
+        .limit(2000),
+    ]);
 
     if (!txErr && txRows) {
       const isDemoRow = (r: any) =>
@@ -618,6 +649,7 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       revenueIsDemo = verifiedRows.length === 0 && demoRows.length > 0;
       // Verified revenue only — never mix demo into commercial totals shown as live.
       const activeRows = revenueIsDemo ? [] : verifiedRows;
+      activeTxForIntel = activeRows;
       revenueConnected = activeRows.length > 0;
       const in7 = activeRows.filter((r) => r.transaction_date && r.transaction_date >= iso(d7));
       const inToday = activeRows.filter(
@@ -662,6 +694,15 @@ export async function fetchHqCommercePage(workspaceId?: string) {
         .slice(0, 10);
     }
 
+    if (!ytdRes.error && ytdRes.data) {
+      const isDemoRow = (r: any) =>
+        r.status === "demo" || r.raw?.is_demo === true || String(r.external_transaction_id || "").startsWith("TX-");
+      const verified = (ytdRes.data as any[]).filter((r) => !isDemoRow(r));
+      if (verified.length) {
+        salesYtd = verified.reduce((s, r) => s + Number(r.sales_amount || 0), 0);
+      }
+    }
+
     if (!revenueConnected && !revenueIsDemo) {
       const { count } = await supabase
         .from("hq_affiliate_transactions")
@@ -671,6 +712,46 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       revenueConnected = (count || 0) > 0;
     }
   }
+
+  const editorialRows = (editorialSample.data || []) as any[];
+  const clickSamplesForIntel = [
+    ...editorialRows.map((r) => ({
+      product_name: r.product_name,
+      brand_name: r.brand_name,
+      edit_slug: r.edit_slug,
+      edit_month: r.edit_month,
+    })),
+    ...((scannerSample.data || []) as any[]).map((r) => ({
+      product_name: r.product_name,
+      brand_slug: r.brand_slug,
+    })),
+  ];
+  const productMoney = buildProductMoneyRows(activeTxForIntel, clickSamplesForIntel, 8);
+  const categories = buildCategoryPerformance(activeTxForIntel);
+  const editorialPerformance = buildEditorialPerformance(editorialRows, activeTxForIntel);
+  const revenueGoal = buildRevenueGoalProgress({
+    revenueConnected,
+    revenueIsDemo,
+    sales30d,
+    salesYtd,
+  });
+  const revenueRecommendations = buildRevenueRecommendations({
+    revenueConnected,
+    revenueIsDemo,
+    salesToday,
+    sales7d,
+    sales30d,
+    commission30d,
+    editorial7d: editorial7d.value,
+    shop7d: shop7d.value,
+    scanner7d: scanner7d.value,
+    nullU1Tx30d,
+    txWithU130d,
+    topRevenueAdvertisers,
+    categories,
+    topByCommission: productMoney.byCommission,
+    goal: revenueGoal,
+  });
 
   return {
     shop7d: shop7d.value,
@@ -688,11 +769,19 @@ export async function fetchHqCommercePage(workspaceId?: string) {
     transactionsToday,
     commission30d,
     sales30d,
+    salesYtd,
     topRevenueAdvertisers,
     unmatchedTx30d,
     lastSaleDate,
     nullU1Tx30d,
     txWithU130d,
+    topProductsBySales: productMoney.bySales as ProductMoneyRow[],
+    topProductsByCommission: productMoney.byCommission as ProductMoneyRow[],
+    topProductsByRpc: productMoney.byRpc as ProductMoneyRow[],
+    categoryPerformance: categories as CategoryPerformanceRow[],
+    editorialPerformance: editorialPerformance as EditorialPerformanceRow[],
+    revenueGoal: revenueGoal as RevenueGoalProgress,
+    revenueRecommendations: revenueRecommendations as RevenueRecommendation[],
     error: shop7d.error,
   };
 }
