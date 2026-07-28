@@ -607,7 +607,11 @@
 
 .khiteris-edit__mood-cell--3 {
   grid-column: 1 / -1;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 3 / 2;
+}
+
+.khiteris-edit__mood-cell--3 img {
+  object-position: center 55%;
 }
 
 .khiteris-edit__mood-caption {
