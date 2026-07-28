@@ -43,11 +43,24 @@ export async function POST(request: NextRequest) {
   let savedPrice: number | null = body.savedPrice ?? null;
   let savedCurrency: string | null = body.savedCurrency ?? null;
   if (savedPrice == null) {
-    const { data: product } = await supabase
+    // Favorites usually store external Rakuten IDs — try product_id first, then UUID id.
+    let product: { price: unknown; currency: string | null } | null = null;
+    const byExternal = await supabase
       .from("products")
       .select("price, currency")
-      .eq("id", productId)
+      .eq("product_id", productId)
+      .limit(1)
       .maybeSingle();
+    if (byExternal.data) {
+      product = byExternal.data;
+    } else {
+      const byUuid = await supabase
+        .from("products")
+        .select("price, currency")
+        .eq("id", productId)
+        .maybeSingle();
+      product = byUuid.data;
+    }
     if (product?.price) {
       const n = parseFloat(String(product.price).replace(/[^0-9.]/g, ""));
       if (Number.isFinite(n)) savedPrice = n;

@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
   const userIds = [...new Set(eligible.map((n) => n.user_id))];
   const emailByUser = new Map<string, string>();
   const nameByUser = new Map<string, string>();
+  const optedOut = new Set<string>();
 
   for (const uid of userIds) {
     const { data: userData } = await supabase.auth.admin.getUserById(uid);
@@ -59,10 +60,32 @@ export async function GET(request: NextRequest) {
       emailByUser.set(uid, email);
       const meta = userData.user.user_metadata || {};
       nameByUser.set(uid, String(meta.first_name || meta.name || "").split(" ")[0] || "");
+      // Honor iOS local + server prefs: notify_price_drops false OR marketing unsubscribed.
+      if (meta.notify_price_drops === false || meta.notify_price_drops === "false") {
+        optedOut.add(uid);
+      }
     }
   }
 
+  if (userIds.length) {
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("user_id, marketing_emails, unsubscribed_at")
+      .in("user_id", userIds);
+    for (const row of prefs || []) {
+      if (row.marketing_emails === false || row.unsubscribed_at) {
+        optedOut.add(String(row.user_id));
+      }
+    }
+  }
+
+  let skippedOptOut = 0;
+
   for (const notif of eligible) {
+    if (optedOut.has(notif.user_id)) {
+      skippedOptOut++;
+      continue;
+    }
     const product = productsByKey.get(String(notif.product_id));
     if (!product) {
       skippedNoProduct++;
@@ -112,6 +135,19 @@ export async function GET(request: NextRequest) {
           .update({ saved_price: currentPrice })
           .eq("id", notif.id);
       }
+
+      // Durable dedupe log (best-effort — ignore schema drift).
+      try {
+        await supabase.from("price_drop_notifications").insert({
+          user_id: notif.user_id,
+          product_id: notif.product_id,
+          old_price: savedPrice,
+          new_price: currentPrice,
+          emailed_at: new Date().toISOString(),
+        });
+      } catch {
+        /* ignore */
+      }
     } catch (e) {
       console.error("Price drop email failed:", e);
     }
@@ -124,5 +160,6 @@ export async function GET(request: NextRequest) {
     emailed,
     skippedNoEmail,
     skippedNoProduct,
+    skippedOptOut,
   });
 }

@@ -59,7 +59,7 @@ const DEFAULT_SLIDES: EditCarouselSlide[] = [
   ...slide,
   imageUrl:
     slide.slug === "khiteri"
-      ? "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/cb/P01129806.jpg"
+      ? "https://cdn.shopify.com/s/files/1/0501/1669/files/003-05WDNLCMN_DENIMLACEDMINI_INDIGO_1.jpg?v=1756232001"
       : editorialHeroForSlug(slide.slug),
 }));
 

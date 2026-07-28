@@ -391,7 +391,7 @@ const EDIT_CAROUSEL_SLIDES = [
     subtitle: EDIT_CAROUSEL_SHORT_SUBTITLES.khiteri ?? "10 natural-fiber pieces I'm loving this month.",
     href: "/khiteri",
     imageUrl:
-      "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/cb/P01129806.jpg",
+      "https://cdn.shopify.com/s/files/1/0501/1669/files/003-05WDNLCMN_DENIMLACEDMINI_INDIGO_1.jpg?v=1756232001",
   },
   ...COLLECTION_SECTIONS.map((collection) => ({
     slug: collection.slug,

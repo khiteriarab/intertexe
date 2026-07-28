@@ -213,16 +213,13 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   title: "KHITERI'S EDIT",
   subtitle: "Natural fibers, sculpted lines, and leather done right.",
   coverImage: {
-    src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/cb/P01129806.jpg",
-    alt: "Zimmermann Awaken Floral Cotton and Silk Maxi Dress",
+    // Full editorial on-model cover — Re/Done laced midi leads the August favorites.
+    src: "https://cdn.shopify.com/s/files/1/0501/1669/files/003-05WDNLCMN_DENIMLACEDMINI_INDIGO_1.jpg?v=1756232001",
+    alt: "Re/Done Denim Laced Midi - Indigo",
   },
   moodBoard: {
     caption: "From denim to linen to real leather — the pieces I keep returning to.",
     images: [
-      {
-        src: "https://cdn.shopify.com/s/files/1/0501/1669/files/003-05WDNLCMN_DENIMLACEDMINI_INDIGO_1.jpg?v=1756232001",
-        alt: "Re/Done Denim Laced Midi - Indigo",
-      },
       {
         src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/6b8f293be8ff4cec872359ee718d91e9.jpg?v=1739934266",
         alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
@@ -234,6 +231,10 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       {
         src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/06/P01188299.jpg",
         alt: "Chloe Nama Leather Platform Thong Sandals",
+      },
+      {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/cb/P01129806.jpg",
+        alt: "Zimmermann Awaken Floral Cotton and Silk Maxi Dress",
       },
     ],
   },

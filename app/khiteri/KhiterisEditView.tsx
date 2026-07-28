@@ -27,7 +27,7 @@ type Props = {
 export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
   return (
     <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]" data-catalog-region={catalogRegion}>
-      <KhiteriIntroMotion coverSrc={edit.coverImage.src} coverAlt={edit.coverImage.alt} />
+      <KhiteriIntroMotion />
       <KhiteriPageViewTracker editSlug={edit.slug} editMonth={edit.monthLabel} />
       <header className="khiteris-edit__masthead">
         <Link href="/" className="khiteris-edit__masthead-link" aria-label="INTERTEXE home">

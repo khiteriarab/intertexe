@@ -3,14 +3,14 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
-const INTRO_SEEN_KEY = "intertexe_khiteri_intro_seen_v3";
+/** Bump when intro choreography changes so returning visitors see it once. */
+const INTRO_SEEN_KEY = "intertexe_khiteri_intro_seen_v4";
 
-type Props = {
-  coverSrc: string;
-  coverAlt: string;
-};
-
-export function KhiteriIntroMotion({ coverSrc, coverAlt }: Props) {
+/**
+ * Premium brand intro — transparent overlay over the editorial cover.
+ * Photography stays the primary focus; INTERTEXE marks appear once, then exit.
+ */
+export function KhiteriIntroMotion() {
   const prefersReducedMotion = useReducedMotion();
   const [show, setShow] = useState(false);
 
@@ -30,20 +30,20 @@ export function KhiteriIntroMotion({ coverSrc, coverAlt }: Props) {
 
   const timings = useMemo(
     () => ({
-      hero: { duration: 1.05 },
-      tx: { delay: 0.25, duration: 0.55 },
-      wordmark: { delay: 0.55, duration: 0.5 },
-      tagline: { delay: 0.9, duration: 0.45 },
-      hideAtMs: 2300,
+      tx: { delay: 0.15, duration: 0.7 },
+      wordmark: { delay: 0.55, duration: 0.65 },
+      tagline: { delay: 0.95, duration: 0.55 },
+      holdMs: 2600,
+      exitMs: 700,
     }),
     []
   );
 
   useEffect(() => {
     if (!show) return;
-    const t = window.setTimeout(() => setShow(false), timings.hideAtMs);
+    const t = window.setTimeout(() => setShow(false), timings.holdMs);
     return () => window.clearTimeout(t);
-  }, [show, timings.hideAtMs]);
+  }, [show, timings.holdMs]);
 
   if (prefersReducedMotion) return null;
 
@@ -53,49 +53,43 @@ export function KhiteriIntroMotion({ coverSrc, coverAlt }: Props) {
         <motion.div
           className="khiteri-intro"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.45, ease: "easeOut" } }}
+          exit={{ opacity: 0, transition: { duration: timings.exitMs / 1000, ease: [0.22, 1, 0.36, 1] } }}
+          aria-hidden
         >
-          <motion.img
-            src={coverSrc}
-            alt={coverAlt}
-            className="khiteri-intro__hero"
-            initial={{ opacity: 0, scale: 0.985 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: timings.hero.duration, ease: [0.22, 1, 0.36, 1] }}
-          />
-          <div className="khiteri-intro__veil" aria-hidden />
+          {/* Soft vignette only — cover photography underneath remains fully visible. */}
+          <div className="khiteri-intro__veil" />
 
           <div className="khiteri-intro__brand">
             <motion.img
               src="/khiteri/brand/tx-mark-white.png"
-              alt="TX"
+              alt=""
               className="khiteri-intro__tx"
-              initial={{ opacity: 0, y: 10, scale: 0.97 }}
-              animate={{ opacity: 0.92, y: 0, scale: 1 }}
-              transition={{ duration: timings.tx.duration, delay: timings.tx.delay, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: timings.tx.duration, delay: timings.tx.delay, ease: [0.22, 1, 0.36, 1] }}
             />
 
             <motion.img
               src="/khiteri/brand/intertexe-horizontal-white.png"
-              alt="INTERTEXE"
+              alt=""
               className="khiteri-intro__wordmark"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 0.95, y: 0 }}
+              initial={{ opacity: 0, y: 10, letterSpacing: "0.2em" }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{
                 duration: timings.wordmark.duration,
                 delay: timings.wordmark.delay,
-                ease: "easeOut",
+                ease: [0.22, 1, 0.36, 1],
               }}
             />
 
             <motion.p
               className="khiteri-intro__tagline"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 0.88, y: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 0.9, y: 0 }}
               transition={{
                 duration: timings.tagline.duration,
                 delay: timings.tagline.delay,
-                ease: "easeOut",
+                ease: [0.22, 1, 0.36, 1],
               }}
             >
               The Material Standard

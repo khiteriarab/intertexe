@@ -2559,48 +2559,59 @@ export async function fetchSaleProducts(options: {
 export async function fetchBrandStats(): Promise<
   { slug: string; name: string; count: number; avgNaturalFiber: number }[]
 > {
-  const brands = await fetchShoppableBrands({ maxBrands: 1200 });
-  const bySlug = new Map(
-    brands.map((b) => [
-      b.slug,
-      {
-        slug: b.slug,
-        name: b.name,
-        count: b.count,
-        avgNaturalFiber: b.avgNaturalFiber,
-      },
-    ])
-  );
+  const bySlug = new Map<
+    string,
+    { slug: string; name: string; count: number; avgNaturalFiber: number }
+  >();
 
   const supabase = getServerSupabase();
-  if (!supabase) {
-    return [...bySlug.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }
+  // Fast path first: live designers table (footwear houses + apparel). Avoid waiting on
+  // shoppable RPC before we have a directory — empty timeout fallbacks were wiping /designers.
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("designers")
+      .select("slug, name, product_count, natural_fiber_percent")
+      .eq("is_live", true)
+      .gte("product_count", SHOPPABLE_MIN_PRODUCTS)
+      .order("name");
 
-  // Merge live designers table so footwear houses (often missing from apparel-only RPC) still appear.
-  const { data, error } = await supabase
-    .from("designers")
-    .select("slug, name, product_count, natural_fiber_percent")
-    .eq("is_live", true)
-    .gte("product_count", SHOPPABLE_MIN_PRODUCTS)
-    .order("name");
-
-  if (!error && data?.length) {
-    for (const row of data as any[]) {
-      const slug = String(row.slug || "").toLowerCase();
-      if (!slug) continue;
-      const count = Number(row.product_count) || 0;
-      if (count < SHOPPABLE_MIN_PRODUCTS) continue;
-      const prev = bySlug.get(slug);
-      if (!prev || count > prev.count) {
+    if (!error && data?.length) {
+      for (const row of data as any[]) {
+        const slug = String(row.slug || "").toLowerCase();
+        if (!slug) continue;
+        const count = Number(row.product_count) || 0;
+        if (count < SHOPPABLE_MIN_PRODUCTS) continue;
         bySlug.set(slug, {
           slug,
           name: sanitizeBrandName(String(row.name || slug)),
           count,
-          avgNaturalFiber: Number(row.natural_fiber_percent) || prev?.avgNaturalFiber || 0,
+          avgNaturalFiber: Number(row.natural_fiber_percent) || 0,
         });
       }
     }
+  }
+
+  // Enrich with shoppable apparel stats when available (bounded — never block directory).
+  try {
+    const shoppable = await Promise.race([
+      fetchShoppableBrands({ maxBrands: 1200 }),
+      new Promise<Awaited<ReturnType<typeof fetchShoppableBrands>>>((resolve) =>
+        setTimeout(() => resolve([]), 3500)
+      ),
+    ]);
+    for (const b of shoppable) {
+      const prev = bySlug.get(b.slug);
+      if (!prev || b.count > prev.count) {
+        bySlug.set(b.slug, {
+          slug: b.slug,
+          name: b.name,
+          count: b.count,
+          avgNaturalFiber: b.avgNaturalFiber || prev?.avgNaturalFiber || 0,
+        });
+      }
+    }
+  } catch {
+    // keep designers-table results
   }
 
   return [...bySlug.values()].sort((a, b) => a.name.localeCompare(b.name));

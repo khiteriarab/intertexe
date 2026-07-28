@@ -57,6 +57,15 @@ export async function GET(req: NextRequest) {
 
     const { data: userData } = await supabase.auth.admin.getUserById(fav.user_id);
     if (!userData?.user?.email) continue;
+    const meta = userData.user.user_metadata || {};
+    if (meta.notify_price_drops === false || meta.notify_price_drops === "false") continue;
+
+    const { data: prefs } = await supabase
+      .from("user_preferences")
+      .select("marketing_emails, unsubscribed_at")
+      .eq("user_id", fav.user_id)
+      .maybeSingle();
+    if (prefs?.marketing_emails === false || prefs?.unsubscribed_at) continue;
 
     try {
       const dropPercent = Math.round((1 - currentPrice / savedPrice) * 100);
