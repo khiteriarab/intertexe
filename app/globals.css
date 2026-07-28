@@ -461,14 +461,8 @@
   position: absolute;
   inset: auto 0 0;
   padding: 2.5rem 1.25rem 2rem;
-  background: linear-gradient(180deg, transparent 0%, rgba(16, 14, 12, 0.55) 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(16, 14, 12, 0.62) 100%);
   text-align: center;
-}
-
-.khiteris-edit__eyebrow--on-media,
-.khiteris-edit__month--on-media,
-.khiteris-edit__subtitle--on-media {
-  color: rgba(255, 255, 255, 0.82);
 }
 
 .khiteris-edit__title--on-media {
@@ -536,6 +530,17 @@
   color: #5c5854;
   max-width: 20rem;
   margin: 0 auto;
+}
+
+.khiteris-edit__eyebrow--on-media,
+.khiteris-edit__month--on-media,
+.khiteris-edit__subtitle--on-media {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.khiteris-edit__subtitle--on-media {
+  max-width: 24rem;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
 }
 
 .khiteris-edit__mood {
