@@ -6,7 +6,7 @@
  * - subtitle (optional)
  * - coverImage
  * - moodBoard.images (+ optional caption)
- * - products (exactly 10)
+ * - products (curated list for the month)
  *
  * Everything else (copy, layout, CTAs) stays the same.
  */
@@ -29,6 +29,11 @@ export type KhiterisEditProduct = {
   /** Optional catalog SKU (e.g. Mytheresa P01184019) to match the correct affiliate row. */
   catalogSku?: string;
   image: KhiterisEditImage;
+  /** Optional editorial spotlight treatment (e.g. airport travel story). */
+  spotlight?: {
+    kind: "airport";
+    note: string;
+  };
 };
 
 export type KhiterisEditConfig = {
@@ -211,132 +216,112 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   slug: "khiteri",
   monthLabel: "August 2026",
   title: "KHITERI'S EDIT",
-  subtitle: "Natural fibers, sculpted lines, and leather done right.",
+  subtitle: "Linen, silk, cotton jersey — and leather that travels.",
   coverImage: {
-    // Full editorial on-model cover — Re/Done laced midi leads the August favorites.
-    src: "https://cdn.shopify.com/s/files/1/0501/1669/files/003-05WDNLCMN_DENIMLACEDMINI_INDIGO_1.jpg?v=1756232001",
-    alt: "Re/Done Denim Laced Midi - Indigo",
+    src: "/khiteri/cover-august.jpg",
+    alt: "Dissh Cora Natural Midi Linen Dress on model",
   },
   moodBoard: {
-    caption: "From denim to linen to real leather — the pieces I keep returning to.",
+    caption: "Airport soft, dinner ready — natural fibers that move with you.",
     images: [
       {
-        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/6b8f293be8ff4cec872359ee718d91e9.jpg?v=1739934266",
-        alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DQF01039NAT.150_10.jpg?v=1751878227",
+        alt: "Dissh Cora Natural Midi Linen Dress",
       },
       {
-        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/75032f2b1a394b9abee12f57b4d616d7.png?v=1782438623",
-        alt: "The Attico Animal Print Plunging V Dress",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS111268OLI.545_10.jpg?v=1756249849",
+        alt: "Dissh Darcy Olive Silk Maxi Dress",
       },
       {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/06/P01188299.jpg",
-        alt: "Chloe Nama Leather Platform Thong Sandals",
+        src: "/khiteri/attico-barrel-sweats.jpg",
+        alt: "The Attico Cotton Jersey Barrel Leg Sweatpants",
       },
       {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/cb/P01129806.jpg",
-        alt: "Zimmermann Awaken Floral Cotton and Silk Maxi Dress",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS03289BK.600_10.jpg?v=1761641075",
+        alt: "Dissh Percy Black Silk Long Sleeve Shirt",
       },
     ],
   },
   products: [
     {
       id: "01",
-      name: "Denim Laced Midi - Indigo",
-      composition: "98% Cotton, 2% Elastane",
-      price: "$345",
-      brand: "Re/Done",
-      href: "https://shopredone.com/products/denim-laced-midi-indigo",
+      name: "Cora Natural Midi Linen Dress",
+      composition: "100% Linen",
+      price: "$95",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/cora-natural-linen-midi-dress",
       image: {
-        src: "https://cdn.shopify.com/s/files/1/0501/1669/files/003-05WDNLCMN_DENIMLACEDMINI_INDIGO_1.jpg?v=1756232001",
-        alt: "Re/Done Denim Laced Midi - Indigo",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DQF01039NAT.150_10.jpg?v=1751878227",
+        alt: "Dissh Cora Natural Midi Linen Dress on model",
       },
     },
     {
       id: "02",
-      name: "Sarah Halter Long Top in Green Linen",
-      composition: "100% Linen",
-      price: "$433",
-      brand: "Cult Gaia",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1949172.507459433874613666330777&type=15&murl=https%3A%2F%2Fshop.simon.com%2Fproducts%2Fcult-gaia-sarah-halter-long-top-in-green-linen%3Fvariant%3D42569289334844",
+      name: "Darcy Olive Silk Maxi Dress",
+      composition: "100% Silk",
+      price: "$150",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/darcy-olive-silk-maxi-dress-1",
       image: {
-        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/6b8f293be8ff4cec872359ee718d91e9.jpg?v=1739934266",
-        alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS111268OLI.545_10.jpg?v=1756249849",
+        alt: "Dissh Darcy Olive Silk Maxi Dress on model",
       },
     },
     {
       id: "03",
-      name: "Animal Print Plunging V Dress",
-      composition: "100% Cotton",
-      price: "$1,255",
-      brand: "The Attico",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1949172.507459344117555708119821&type=15&murl=https%3A%2F%2Fshop.simon.com%2Fproducts%2Fanimal-print-plunging-v-dress%3Fvariant%3D45705199812668",
+      name: "Finny White Sleeveless Linen Top",
+      composition: "100% Linen",
+      price: "$130",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/finny-white-linen-top",
       image: {
-        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/75032f2b1a394b9abee12f57b4d616d7.png?v=1782438623",
-        alt: "The Attico Animal Print Plunging V Dress",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS04516WE.100_10.jpg?v=1761021880",
+        alt: "Dissh Finny White Sleeveless Linen Top on model",
       },
     },
     {
       id: "04",
-      name: "Nama Leather Platform Thong Sandals",
-      composition: "100% Leather upper",
-      price: "$690",
-      brand: "Chloe",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431722513529180149466356&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fchloe-nama-leather-platform-thong-sandals-brown-p01188299%3Ffeed_num%3DP01188299%26feed_des%3DChlo%C3%A9%26feed_mwg%3Dshoes",
+      name: "Cotton Jersey Barrel Leg Sweatpants",
+      composition: "100% Cotton",
+      price: "$590",
+      brand: "The Attico",
+      catalogSku: "P01179244",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431729916695830791739469&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fthe-attico-cotton-jersey-barrel-leg-sweatpants-grey-p01179244%3Ffeed_num%3DP01179244%26feed_des%3DTheAttico%26feed_mwg%3Dclothing",
       image: {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/06/P01188299.jpg",
-        alt: "Chloe Nama Leather Platform Thong Sandals",
+        src: "/khiteri/attico-barrel-sweats.jpg",
+        alt: "The Attico Cotton Jersey Barrel Leg Sweatpants — airport soft",
+      },
+      spotlight: {
+        kind: "airport",
+        note: "Gate soft. Barrel leg. Built for the terminal — and whatever comes after.",
       },
     },
     {
       id: "05",
-      name: "Elmer Suede Thong Sandals",
-      composition: "100% Goat leather upper",
-      price: "$260",
-      brand: "A. Emery",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431729017730550002643256&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fa-emery-elmer-suede-thong-sandals-green-p01170372%3Ffeed_num%3DP01170372%26feed_des%3DA.Emery%26feed_mwg%3Dshoes",
+      name: "Percy Black Silk Long Sleeve Shirt",
+      composition: "100% Silk",
+      price: "$170",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/percy-black-silk-long-sleeve-shirt",
       image: {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/33/P01170372.jpg",
-        alt: "A. Emery Elmer Suede Thong Sandals",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS03289BK.600_10.jpg?v=1761641075",
+        alt: "Dissh Percy Black Silk Long Sleeve Shirt on model",
       },
     },
     {
       id: "06",
-      name: "Plot Woven Leather Sandals",
-      composition: "100% Leather",
-      price: "$910",
-      brand: "JW Anderson",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317210593848628384159073&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fjw-anderson-plot-leather-sandals-red-p01172976%3Ffeed_num%3DP01172976%26feed_des%3DJWAnderson%26feed_mwg%3Dshoes",
+      name: "Pippy Buttermilk Linen Strapless Top",
+      composition: "100% Linen",
+      price: "$100",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/pippy-buttermilk-linen-straples-top",
       image: {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/ed/P01172976.jpg",
-        alt: "JW Anderson Plot Woven Leather Sandals",
+        src: "https://cdn.shopify.com/s/files/1/2243/5959/files/DFS04517BMK.199_10.jpg?v=1765356293",
+        alt: "Dissh Pippy Buttermilk Linen Strapless Top on model",
       },
     },
     {
       id: "07",
-      name: "Awaken Floral Cotton and Silk Maxi Dress",
-      composition: "77% Cotton, 23% Silk",
-      price: "$1,450",
-      brand: "Zimmermann",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431721137112754509419368&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fzimmermann-awaken-floral-cotton-and-silk-maxi-dress-multicoloured-p01129806%3Ffeed_num%3DP01129806%26feed_des%3DZimmermann%26feed_mwg%3Dclothing",
-      image: {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/cb/P01129806.jpg",
-        alt: "Zimmermann Awaken Floral Cotton and Silk Maxi Dress",
-      },
-    },
-    {
-      id: "08",
-      name: "Tailored Linen Trouser",
-      composition: "100% Linen",
-      price: "$770",
-      brand: "Toteme",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317211581083702894072780&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ftoteme-cropped-linen-wide-leg-pants-beige-p01192864%3Ffeed_num%3DP01192864%26feed_des%3DToteme%26feed_mwg%3Dclothing",
-      image: {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/58/P01192864.jpg",
-        alt: "Toteme Tailored Linen Trouser",
-      },
-    },
-    {
-      id: "09",
       name: "Horsebit Suede Mules",
       composition: "100% Leather upper",
       price: "$1,290",
@@ -345,18 +330,6 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       image: {
         src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/61/P01170520.jpg",
         alt: "Gucci Horsebit Suede Mules",
-      },
-    },
-    {
-      id: "10",
-      name: "La Cala Polka Dot Halterneck Linen Midi Dress",
-      composition: "100% Linen",
-      price: "$385",
-      brand: "Faithfull",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431722902923977740353750&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ffaithfull-la-cala-polka-dot-halterneck-linen-midi-dress-black-p01196498%3Ffeed_num%3DP01196498%26feed_des%3DFaithfull%26feed_mwg%3Dclothing",
-      image: {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/5a/P01196498.jpg",
-        alt: "Faithfull La Cala Polka Dot Halterneck Linen Midi Dress",
       },
     },
   ],

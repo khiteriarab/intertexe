@@ -28,7 +28,13 @@ export default async function KhiteriPage(props: { searchParams?: Promise<{ prev
   const catalogRegion = catalogRegionFromCountry(country);
   const params = (await props.searchParams) || {};
   const sourceEdit = params.preview === "2026-07" ? KHITERIS_EDIT_JULY_2026 : baseEdit;
+  // Regional catalog lookup is soft-budgeted so the page never waits on a slow Supabase round-trip.
   const edit = await resolveKhiterisEditForRegion(sourceEdit, catalogRegion);
 
-  return <KhiterisEditView edit={edit} appStoreUrl={appStoreUrl} catalogRegion={catalogRegion} />;
+  return (
+    <>
+      <link rel="preload" as="image" href={edit.coverImage.src} />
+      <KhiterisEditView edit={edit} appStoreUrl={appStoreUrl} catalogRegion={catalogRegion} />
+    </>
+  );
 }

@@ -13,6 +13,8 @@ import { canonicalProductId } from "../../../lib/canonical-product-id";
 
 const CATEGORY_LABELS: Record<string, string> = {
   all: "All",
+  clothing: "Clothing",
+  shoes: "Shoes",
   dresses: "Dresses",
   tops: "Tops",
   knitwear: "Knitwear",
@@ -23,6 +25,32 @@ const CATEGORY_LABELS: Record<string, string> = {
   shirts: "Shirts",
   jackets: "Jackets",
 };
+
+/** Net-a-Porter-style department buckets for designer PLPs. */
+function designerDepartment(category: string, name: string): string {
+  const cat = `${category} ${name}`.toLowerCase();
+  if (/(shoe|footwear|sandal|boot|sneaker|heel|pump|loafer|mule|slipper|espadrille)/.test(cat)) {
+    return "shoes";
+  }
+  if (/(dress|gown|kaftan|caftan)/.test(cat)) return "dresses";
+  if (/(skirt)/.test(cat)) return "skirts";
+  if (/(pant|trouser|jean|short)/.test(cat)) return "bottoms";
+  if (/(coat|jacket|blazer|outerwear|cape)/.test(cat)) return "outerwear";
+  if (/(knit|sweater|cardigan|jumper)/.test(cat)) return "knitwear";
+  if (/(shirt|blouse|top|tee|tank)/.test(cat)) return "tops";
+  return "clothing";
+}
+
+const DEPARTMENT_ORDER = [
+  "clothing",
+  "dresses",
+  "tops",
+  "knitwear",
+  "bottoms",
+  "skirts",
+  "outerwear",
+  "shoes",
+] as const;
 
 const PRODUCTS_PER_PAGE = 24;
 const DESIGNER_PAGE_SIZE = 48;
@@ -103,12 +131,14 @@ export function DesignerDetailProducts({
   const categories = useMemo(() => {
     const cats: Record<string, number> = {};
     visibleProducts.forEach((p) => {
-      const cat = (p.category || "").toLowerCase().trim();
-      if (cat) cats[cat] = (cats[cat] || 0) + 1;
+      const dept = designerDepartment(p.category || "", p.name || "");
+      cats[dept] = (cats[dept] || 0) + 1;
     });
-    return Object.entries(cats)
-      .sort((a, b) => b[1] - a[1])
-      .map(([cat, count]) => ({ key: cat, label: CATEGORY_LABELS[cat] || cat.charAt(0).toUpperCase() + cat.slice(1), count }));
+    return DEPARTMENT_ORDER.filter((key) => (cats[key] || 0) > 0).map((key) => ({
+      key,
+      label: CATEGORY_LABELS[key] || key,
+      count: cats[key],
+    }));
   }, [visibleProducts]);
 
   const saleCount = useMemo(() => {
@@ -121,7 +151,9 @@ export function DesignerDetailProducts({
       filtered = filtered.filter((p) => p.isSale);
     }
     if (activeCategory !== "all") {
-      filtered = filtered.filter((p) => (p.category || "").toLowerCase().trim() === activeCategory);
+      filtered = filtered.filter(
+        (p) => designerDepartment(p.category || "", p.name || "") === activeCategory
+      );
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();

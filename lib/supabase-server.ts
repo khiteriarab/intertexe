@@ -116,10 +116,17 @@ const DESIGNER_PRODUCT_SLUG_ALIASES: Record<string, string> = {
   ragbone: "rag-and-bone",
   lagence: "l-agence",
   faithfull: "faithfull-the-brand",
+  alaia: "alaia",
+  "azzedine-alaia": "alaia",
 };
 
+/** Strip diacritics so Alaïa → alaia matches products.brand_slug. */
 export function canonicalDesignerProductSlug(slug: string): string {
-  const normalized = String(slug || "").trim().toLowerCase();
+  const normalized = String(slug || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
   if (!normalized) return normalized;
   return DESIGNER_PRODUCT_SLUG_ALIASES[normalized] || normalized;
 }
@@ -1319,8 +1326,9 @@ async function collectBrandCatalogPage(
   offset: number,
   resolveFullTotal = true
 ): Promise<{ products: Product[]; filteredTotal: number; timedOut: boolean; hasMoreHint: boolean }> {
-  const batchSize = Math.max(limit * 4, 96);
-  const maxRawScan = 6000;
+  // First page: smaller batch so designer PLPs return in ~1s (iOS HTTP timeout is 8s).
+  const batchSize = resolveFullTotal ? Math.max(limit * 4, 96) : Math.max(limit * 2, 64);
+  const maxRawScan = resolveFullTotal ? 6000 : Math.min(800, offset + limit * 3);
   let rawCursor = 0;
   let skipped = 0;
   const seen = new Set<string>();
@@ -1331,7 +1339,32 @@ async function collectBrandCatalogPage(
   while (rawCursor < maxRawScan) {
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select(
+        [
+          "id",
+          "product_id",
+          "canonical_id",
+          "name",
+          "brand_slug",
+          "brand_name",
+          "category",
+          "composition",
+          "natural_fiber_percent",
+          "price",
+          "original_price",
+          "is_sale",
+          "url",
+          "image_url",
+          "region",
+          "color",
+          "stock_status",
+          "matching_set_id",
+          "collection_slugs",
+          "fiber_subtype",
+          "fiber_subtype_label",
+          "created_at",
+        ].join(",")
+      )
       .eq("is_displayable", true)
       .eq("region", region)
       .eq("brand_slug", canonicalSlug)

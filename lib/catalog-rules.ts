@@ -6,6 +6,7 @@ import {
   materialPrimaryForShopFiber,
   rowMatchesGarmentFilter,
 } from "./catalog-shop-mappings";
+import { consumerExclusionReason as consumerExclusionReasonShared } from "./catalog-consumer-rules.js";
 
 export {
   garmentTypesForShopCategory,

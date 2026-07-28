@@ -390,9 +390,9 @@
 .khiteri-intro__veil {
   position: absolute;
   inset: 0;
-  /* Clear photography — barely-there vignette so the brand marks read without washing the image. */
+  /* Soft vignette so bold type reads without washing the cover photo. */
   background:
-    radial-gradient(ellipse at center, rgba(8, 6, 4, 0.05) 0%, rgba(8, 6, 4, 0.18) 55%, rgba(8, 6, 4, 0.28) 100%);
+    radial-gradient(ellipse at center, rgba(8, 6, 4, 0.08) 0%, rgba(8, 6, 4, 0.22) 58%, rgba(8, 6, 4, 0.34) 100%);
   pointer-events: none;
 }
 
@@ -404,29 +404,49 @@
   align-items: center;
   text-align: center;
   padding: 1.5rem;
-  max-width: min(92vw, 420px);
+  max-width: min(94vw, 640px);
 }
 
-.khiteri-intro__tx {
-  width: min(72px, 16vw);
-  height: auto;
-  margin-bottom: 0.85rem;
-  filter: drop-shadow(0 1px 10px rgba(0, 0, 0, 0.28));
+.khiteri-intro__typewriter {
+  margin: 0;
+  font-family: var(--font-serif), "Playfair Display", Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(2.75rem, 11vw, 5.5rem);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
 }
 
-.khiteri-intro__wordmark {
-  width: min(220px, 52vw);
-  height: auto;
-  filter: drop-shadow(0 1px 10px rgba(0, 0, 0, 0.28));
+.khiteri-intro__typed {
+  display: inline;
 }
 
-.khiteri-intro__tagline {
-  margin-top: 0.85rem;
-  font-size: 9px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+.khiteri-intro__caret {
+  display: inline-block;
+  width: 0.06em;
+  height: 0.88em;
+  margin-left: 0.06em;
+  vertical-align: -0.06em;
+  background: rgba(255, 255, 255, 0.95);
+  animation: khiteri-caret-blink 0.85s steps(1) infinite;
+}
+
+.khiteri-intro__caret--done {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes khiteri-caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .khiteris-edit__cover--editorial {
@@ -666,6 +686,77 @@
 .khiteris-edit__product-link.khiteris-edit__product-image:hover img,
 .khiteris-edit__product-link.khiteris-edit__product-image:focus-visible img {
   opacity: 0.92;
+}
+
+/* Airport spotlight — digital-girl 1994 orbit around Attico sweats */
+.khiteris-edit__product--airport .khiteris-edit__product-image {
+  background: #0c0c0c;
+}
+
+.khiteri-airport {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.khiteri-airport__orbit {
+  position: absolute;
+  inset: 8%;
+  animation: khiteri-airport-spin 18s linear infinite;
+}
+
+.khiteri-airport__stamp {
+  --angle: calc((360deg / var(--n)) * var(--i));
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max-content;
+  padding: 0.2rem 0.45rem;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: clamp(8px, 2.1vw, 11px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #39ff14;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(57, 255, 20, 0.75);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.25);
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-42%) rotate(calc(-1 * var(--angle)));
+  white-space: nowrap;
+}
+
+.khiteri-airport__note {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.85rem;
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  line-height: 1.45;
+  color: #e8ffe4;
+  background: linear-gradient(180deg, rgba(8, 12, 8, 0.15), rgba(8, 12, 8, 0.82));
+  border-top: 1px solid rgba(57, 255, 20, 0.35);
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.35);
+}
+
+@keyframes khiteri-airport-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .khiteri-airport__orbit {
+    animation: none;
+  }
 }
 
 .khiteris-edit__product-name-link {

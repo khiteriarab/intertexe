@@ -81,6 +81,12 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
   const initialHasMore =
     brandCatalog.hasMore ||
     (brandCatalog.total == null && products.length >= 48);
+  const countLabel =
+    brandCatalog.total != null && brandCatalog.total > 0
+      ? visibleCount.toLocaleString()
+      : initialHasMore
+        ? `${visibleCount.toLocaleString()}+`
+        : visibleCount.toLocaleString();
 
   return (
     <div className="pb-24 md:pb-16 flex flex-col w-full">
@@ -104,7 +110,7 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 {visibleCount > 0 ? (
                   <>
-                    <span className="text-foreground font-medium">{visibleCount.toLocaleString()} items</span>
+                    <span className="text-foreground font-medium">{countLabel} items</span>
                     {scoreLabel != null && (
                       <>
                         {" · "}

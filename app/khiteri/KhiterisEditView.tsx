@@ -4,6 +4,7 @@ import { KHITERIS_EDIT_ARCHIVE } from "../../lib/khiteris-edit";
 import { KhiteriPageViewTracker } from "./KhiteriPageViewTracker";
 import { KhiteriProductAffiliateLink } from "./KhiteriProductAffiliateLink";
 import { KhiteriIntroMotion } from "./KhiteriIntroMotion";
+import { KhiteriAirportOrbit } from "./KhiteriAirportOrbit";
 
 const FINAL_NOTE = {
   lead: "Love finding better materials?",
@@ -17,6 +18,20 @@ const BETA_COPY = {
   secondaryCta: "Download the App",
 };
 
+const PIECE_WORDS = [
+  "Zero",
+  "One",
+  "Two",
+  "Three",
+  "Four",
+  "Five",
+  "Six",
+  "Seven",
+  "Eight",
+  "Nine",
+  "Ten",
+] as const;
+
 type Props = {
   edit: KhiterisEditConfig;
   appStoreUrl: string;
@@ -25,6 +40,9 @@ type Props = {
 };
 
 export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
+  const pieceCount = edit.products.length;
+  const pieceLabel = PIECE_WORDS[pieceCount] ?? String(pieceCount);
+
   return (
     <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]" data-catalog-region={catalogRegion}>
       <KhiteriIntroMotion />
@@ -78,12 +96,15 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
       <section className="khiteris-edit__products" aria-label="The edit">
         <div className="khiteris-edit__section-intro">
           <p className="khiteris-edit__eyebrow">The Edit</p>
-          <h2 className="khiteris-edit__section-title">Ten pieces.</h2>
+          <h2 className="khiteris-edit__section-title">{pieceLabel} pieces.</h2>
         </div>
 
         <ol className="khiteris-edit__product-list">
           {edit.products.map((product, index) => (
-            <li key={product.id} className="khiteris-edit__product">
+            <li
+              key={product.id}
+              className={`khiteris-edit__product${product.spotlight?.kind === "airport" ? " khiteris-edit__product--airport" : ""}`}
+            >
               <span className="khiteris-edit__product-index" aria-hidden>
                 {String(index + 1).padStart(2, "0")}
               </span>
@@ -101,6 +122,9 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
                   loading="lazy"
                   draggable={false}
                 />
+                {product.spotlight?.kind === "airport" ? (
+                  <KhiteriAirportOrbit note={product.spotlight.note} />
+                ) : null}
               </KhiteriProductAffiliateLink>
               <div className="khiteris-edit__product-meta">
                 <p className="khiteris-edit__product-brand">{product.brand}</p>

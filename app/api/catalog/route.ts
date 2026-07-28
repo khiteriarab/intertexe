@@ -315,10 +315,12 @@ export async function GET(request: NextRequest) {
     const region = catalogRegion || "us";
 
     if (mode === "brand") {
+      // Always skip full-brand filtered total scans. Full counts were 8–25s+ and
+      // caused iOS designer PLPs to time out into Retry. hasMore drives infinite scroll.
       const result = await fetchProductsByBrand(brandSlug, {
         limit,
         offset,
-        skipTotal: false,
+        skipTotal: true,
         region: catalogRegion || "us",
       });
       if (result.error === "timeout") return catalogTimeoutResponse(limit, offset);
@@ -326,7 +328,7 @@ export async function GET(request: NextRequest) {
         result.total,
         result.products.length,
         offset,
-        false
+        true
       );
       const hasMore =
         result.hasMore ??

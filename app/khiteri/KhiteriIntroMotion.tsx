@@ -1,18 +1,26 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 /** Bump when intro choreography changes so returning visitors see it once. */
-const INTRO_SEEN_KEY = "intertexe_khiteri_intro_seen_v4";
+const INTRO_SEEN_KEY = "intertexe_khiteri_intro_seen_v5";
+const BRAND = "INTERTEXE";
+/** ms between each letter */
+const TYPE_MS = 95;
+/** pause after full word before exit */
+const HOLD_MS = 1100;
+const EXIT_MS = 650;
 
 /**
- * Premium brand intro — transparent overlay over the editorial cover.
- * Photography stays the primary focus; INTERTEXE marks appear once, then exit.
+ * Brand intro — INTERTEXE types out in Playfair Display bold over the editorial cover.
+ * Photography stays primary; plays once per visitor (or ?intro=1).
  */
 export function KhiteriIntroMotion() {
   const prefersReducedMotion = useReducedMotion();
   const [show, setShow] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [doneTyping, setDoneTyping] = useState(false);
 
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -28,22 +36,27 @@ export function KhiteriIntroMotion() {
     }
   }, [prefersReducedMotion]);
 
-  const timings = useMemo(
-    () => ({
-      tx: { delay: 0.15, duration: 0.7 },
-      wordmark: { delay: 0.55, duration: 0.65 },
-      tagline: { delay: 0.95, duration: 0.55 },
-      holdMs: 2600,
-      exitMs: 700,
-    }),
-    []
-  );
-
   useEffect(() => {
     if (!show) return;
-    const t = window.setTimeout(() => setShow(false), timings.holdMs);
+    let i = 0;
+    setTyped("");
+    setDoneTyping(false);
+    const id = window.setInterval(() => {
+      i += 1;
+      setTyped(BRAND.slice(0, i));
+      if (i >= BRAND.length) {
+        window.clearInterval(id);
+        setDoneTyping(true);
+      }
+    }, TYPE_MS);
+    return () => window.clearInterval(id);
+  }, [show]);
+
+  useEffect(() => {
+    if (!show || !doneTyping) return;
+    const t = window.setTimeout(() => setShow(false), HOLD_MS);
     return () => window.clearTimeout(t);
-  }, [show, timings.holdMs]);
+  }, [show, doneTyping]);
 
   if (prefersReducedMotion) return null;
 
@@ -53,47 +66,18 @@ export function KhiteriIntroMotion() {
         <motion.div
           className="khiteri-intro"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: timings.exitMs / 1000, ease: [0.22, 1, 0.36, 1] } }}
+          exit={{ opacity: 0, transition: { duration: EXIT_MS / 1000, ease: [0.22, 1, 0.36, 1] } }}
           aria-hidden
         >
-          {/* Soft vignette only — cover photography underneath remains fully visible. */}
           <div className="khiteri-intro__veil" />
 
           <div className="khiteri-intro__brand">
-            <motion.img
-              src="/khiteri/brand/tx-mark-white.png"
-              alt=""
-              className="khiteri-intro__tx"
-              initial={{ opacity: 0, y: 14, filter: "blur(4px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ duration: timings.tx.duration, delay: timings.tx.delay, ease: [0.22, 1, 0.36, 1] }}
-            />
-
-            <motion.img
-              src="/khiteri/brand/intertexe-horizontal-white.png"
-              alt=""
-              className="khiteri-intro__wordmark"
-              initial={{ opacity: 0, y: 10, letterSpacing: "0.2em" }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: timings.wordmark.duration,
-                delay: timings.wordmark.delay,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            />
-
-            <motion.p
-              className="khiteri-intro__tagline"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 0.9, y: 0 }}
-              transition={{
-                duration: timings.tagline.duration,
-                delay: timings.tagline.delay,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            >
-              The Material Standard
-            </motion.p>
+            <p className="khiteri-intro__typewriter" aria-label="INTERTEXE">
+              <span className="khiteri-intro__typed">{typed}</span>
+              <span
+                className={`khiteri-intro__caret${doneTyping ? " khiteri-intro__caret--done" : ""}`}
+              />
+            </p>
           </div>
         </motion.div>
       ) : null}

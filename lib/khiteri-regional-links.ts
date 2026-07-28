@@ -123,36 +123,23 @@ function resolveProductHref(
   return product.href;
 }
 
-/**
- * Swap static Khiteri hrefs for regional affiliate URLs.
- * Prefers curated `hrefByRegion`, then displayable catalog rows with brand + SKU match.
- */
-export async function resolveKhiterisEditForRegion(
+function withStaticHrefs(config: KhiterisEditConfig, regionChain: string[]): KhiterisEditConfig {
+  return {
+    ...config,
+    products: config.products.map((product) => ({
+      ...product,
+      href: resolveProductHref(product, [], regionChain),
+    })),
+  };
+}
+
+async function resolveFromCatalog(
   config: KhiterisEditConfig,
-  catalogRegion: string
+  regionChain: string[]
 ): Promise<KhiterisEditConfig> {
-  const regionChain = catalogRegionFallbackChain(catalogRegion);
-
-  const allCurated = config.products.every((p) => hrefFromCuratedRegions(p, regionChain));
-  if (allCurated) {
-    return {
-      ...config,
-      products: config.products.map((product) => ({
-        ...product,
-        href: resolveProductHref(product, [], regionChain),
-      })),
-    };
-  }
-
   const sb = supabaseAdmin();
   if (!sb || config.products.length === 0) {
-    return {
-      ...config,
-      products: config.products.map((product) => ({
-        ...product,
-        href: resolveProductHref(product, [], regionChain),
-      })),
-    };
+    return withStaticHrefs(config, regionChain);
   }
 
   const regionsToFetch = [...new Set([...regionChain, "us", "uk", "eu"])];
@@ -168,10 +155,42 @@ export async function resolveKhiterisEditForRegion(
 
   const rows = !error && data?.length ? (data as CatalogUrlRow[]) : [];
 
-  const products = config.products.map((product) => ({
-    ...product,
-    href: resolveProductHref(product, rows, regionChain),
-  }));
+  return {
+    ...config,
+    products: config.products.map((product) => ({
+      ...product,
+      href: resolveProductHref(product, rows, regionChain),
+    })),
+  };
+}
 
-  return { ...config, products };
+/** Soft budget so /khiteri never blocks on a slow catalog lookup. */
+const REGIONAL_RESOLVE_BUDGET_MS = 350;
+
+/**
+ * Swap static Khiteri hrefs for regional affiliate URLs.
+ * Prefers curated `hrefByRegion`, then displayable catalog rows with brand + SKU match.
+ * Falls back to curated/static hrefs within ~350ms so the page stays fast.
+ */
+export async function resolveKhiterisEditForRegion(
+  config: KhiterisEditConfig,
+  catalogRegion: string
+): Promise<KhiterisEditConfig> {
+  const regionChain = catalogRegionFallbackChain(catalogRegion);
+
+  const allCurated = config.products.every((p) => hrefFromCuratedRegions(p, regionChain));
+  if (allCurated) {
+    return withStaticHrefs(config, regionChain);
+  }
+
+  const fallback = withStaticHrefs(config, regionChain);
+
+  const catalogPromise = resolveFromCatalog(config, regionChain).catch(() => fallback);
+
+  return Promise.race([
+    catalogPromise,
+    new Promise<KhiterisEditConfig>((resolve) => {
+      setTimeout(() => resolve(fallback), REGIONAL_RESOLVE_BUDGET_MS);
+    }),
+  ]);
 }
