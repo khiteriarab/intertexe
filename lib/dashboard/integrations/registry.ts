@@ -37,7 +37,11 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     authMode: "oauth",
     description: "Connect TikTok Login Kit (Display API) for organic profile + video engagement.",
     docsUrl: "https://developers.tiktok.com/doc/login-kit-web",
-    requiredEnv: ["TIKTOK_OAUTH_CLIENT_KEY", "TIKTOK_OAUTH_CLIENT_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
+    requiredEnv: [
+      "TIKTOK_OAUTH_CLIENT_KEY|TIKTOK_SANDBOX_CLIENT_KEY",
+      "TIKTOK_OAUTH_CLIENT_SECRET|TIKTOK_SANDBOX_CLIENT_SECRET",
+      "HQ_TOKEN_ENCRYPTION_KEY",
+    ],
   },
   {
     id: "pinterest",

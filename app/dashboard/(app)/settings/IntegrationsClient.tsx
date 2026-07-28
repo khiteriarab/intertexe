@@ -73,6 +73,11 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function connectLabel(providerId: string, needsReconnect: boolean): string {
+  if (providerId === "tiktok" && !needsReconnect) return "Continue with TikTok";
+  return needsReconnect ? "Reconnect" : "Connect";
+}
+
 export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -343,7 +348,7 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                               : "bg-black/20 text-white pointer-events-none"
                           }`}
                         >
-                          {card.needsReconnect ? "Reconnect" : "Connect"}
+                          {connectLabel(card.providerId, card.needsReconnect)}
                         </a>
                       ) : null}
                       {linked && !card.needsReconnect ? (

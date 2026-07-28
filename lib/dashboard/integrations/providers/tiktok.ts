@@ -6,12 +6,43 @@ function requireEnv(name: string): string {
   return v;
 }
 
+function isSandboxMode(): boolean {
+  return String(process.env.TIKTOK_USE_SANDBOX || "").trim() === "1";
+}
+
+function tiktokClientKey(): string {
+  if (isSandboxMode()) {
+    return (
+      process.env.TIKTOK_SANDBOX_CLIENT_KEY?.trim() ||
+      process.env.TIKTOK_OAUTH_CLIENT_KEY?.trim() ||
+      requireEnv("TIKTOK_SANDBOX_CLIENT_KEY")
+    );
+  }
+  return requireEnv("TIKTOK_OAUTH_CLIENT_KEY");
+}
+
+function tiktokClientSecret(): string {
+  if (isSandboxMode()) {
+    return (
+      process.env.TIKTOK_SANDBOX_CLIENT_SECRET?.trim() ||
+      process.env.TIKTOK_OAUTH_CLIENT_SECRET?.trim() ||
+      requireEnv("TIKTOK_SANDBOX_CLIENT_SECRET")
+    );
+  }
+  return requireEnv("TIKTOK_OAUTH_CLIENT_SECRET");
+}
+
 /**
  * Display / Login Kit scopes available today.
  * user.info.stats unlocks follower_count when the TikTok app is approved for it;
  * sync degrades gracefully if the field is missing.
  */
-const SCOPES = ["user.info.basic", "user.info.profile", "user.info.stats", "video.list"].join(",");
+const DEFAULT_SCOPES = ["user.info.basic", "user.info.profile", "user.info.stats", "video.list"].join(",");
+
+function tiktokScopes(): string {
+  const scoped = process.env.TIKTOK_OAUTH_SCOPES?.trim();
+  return scoped || DEFAULT_SCOPES;
+}
 
 const VIDEO_FIELDS = [
   "id",
@@ -50,6 +81,17 @@ type TikTokVideoRaw = {
   duration?: number;
 };
 
+type TikTokUserRaw = {
+  open_id?: string;
+  display_name?: string;
+  avatar_url?: string;
+  username?: string;
+  follower_count?: number;
+  following_count?: number;
+  likes_count?: number;
+  video_count?: number;
+};
+
 export type TikTokTopVideoMetric = {
   id: string;
   title: string;
@@ -67,13 +109,19 @@ export const tiktokAdapter: ProviderAdapter = {
   id: "tiktok",
 
   isConfigured() {
+    if (isSandboxMode()) {
+      return Boolean(
+        (process.env.TIKTOK_SANDBOX_CLIENT_KEY || process.env.TIKTOK_OAUTH_CLIENT_KEY) &&
+          (process.env.TIKTOK_SANDBOX_CLIENT_SECRET || process.env.TIKTOK_OAUTH_CLIENT_SECRET)
+      );
+    }
     return Boolean(process.env.TIKTOK_OAUTH_CLIENT_KEY && process.env.TIKTOK_OAUTH_CLIENT_SECRET);
   },
 
   getAuthorizationUrl({ state, redirectUri }) {
     const params = new URLSearchParams({
-      client_key: requireEnv("TIKTOK_OAUTH_CLIENT_KEY"),
-      scope: SCOPES,
+      client_key: tiktokClientKey(),
+      scope: tiktokScopes(),
       response_type: "code",
       redirect_uri: redirectUri,
       state,
@@ -86,8 +134,8 @@ export const tiktokAdapter: ProviderAdapter = {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_key: requireEnv("TIKTOK_OAUTH_CLIENT_KEY"),
-        client_secret: requireEnv("TIKTOK_OAUTH_CLIENT_SECRET"),
+        client_key: tiktokClientKey(),
+        client_secret: tiktokClientSecret(),
         code,
         grant_type: "authorization_code",
         redirect_uri: redirectUri,
@@ -106,8 +154,8 @@ export const tiktokAdapter: ProviderAdapter = {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_key: requireEnv("TIKTOK_OAUTH_CLIENT_KEY"),
-        client_secret: requireEnv("TIKTOK_OAUTH_CLIENT_SECRET"),
+        client_key: tiktokClientKey(),
+        client_secret: tiktokClientSecret(),
         grant_type: "refresh_token",
         refresh_token: refreshToken,
       }),
@@ -218,13 +266,15 @@ export const tiktokAdapter: ProviderAdapter = {
   },
 };
 
-async function fetchTikTokUser(accessToken: string) {
+async function fetchTikTokUser(
+  accessToken: string
+): Promise<TikTokUserRaw & { error: string | null; raw: unknown }> {
   const res = await fetch(
     `https://open.tiktokapis.com/v2/user/info/?fields=${encodeURIComponent(USER_FIELDS)}`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
   const json = await res.json();
-  const user = (json?.data?.user || json?.data || {}) as Record<string, unknown>;
+  const user = (json?.data?.user || json?.data || {}) as TikTokUserRaw;
   const errCode = json?.error?.code;
   const error =
     !res.ok || (errCode && errCode !== "ok")
@@ -266,7 +316,7 @@ function mapTikTokToken(data: Record<string, unknown>): TokenBundle {
     refreshToken: data.refresh_token ? String(data.refresh_token) : null,
     expiresAt: new Date(Date.now() + expiresIn * 1000),
     tokenType: "Bearer",
-    scopes: String(data.scope || SCOPES)
+    scopes: String(data.scope || tiktokScopes())
       .split(/[,\s]+/)
       .filter(Boolean),
     externalAccountId: data.open_id ? String(data.open_id) : null,

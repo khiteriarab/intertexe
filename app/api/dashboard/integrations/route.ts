@@ -62,11 +62,20 @@ export async function GET() {
       }
     }
     if (def.id === "tiktok") {
+      const sandboxMode = String(process.env.TIKTOK_USE_SANDBOX || "") === "1";
       setupHints.push(
         `Register redirect URI: ${callbackUrl("tiktok")}`
       );
       setupHints.push(
         "Request scopes: user.info.basic, user.info.profile, user.info.stats, video.list. Stats fields appear after TikTok approves them."
+      );
+      setupHints.push(
+        sandboxMode
+          ? "Sandbox mode ON: uses TIKTOK_SANDBOX_CLIENT_KEY / TIKTOK_SANDBOX_CLIENT_SECRET when present."
+          : "Sandbox mode OFF: set TIKTOK_USE_SANDBOX=1 for review/demo recording before production approval."
+      );
+      setupHints.push(
+        "In TikTok Developer Portal Sandbox, add your TikTok account under Target users before testing Connect."
       );
     }
     if (def.id === "pinterest") {
@@ -150,6 +159,9 @@ export async function GET() {
       GOOGLE_OAUTH_CLIENT_SECRET: Boolean(process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()),
       TIKTOK_OAUTH_CLIENT_KEY: Boolean(process.env.TIKTOK_OAUTH_CLIENT_KEY?.trim()),
       TIKTOK_OAUTH_CLIENT_SECRET: Boolean(process.env.TIKTOK_OAUTH_CLIENT_SECRET?.trim()),
+      TIKTOK_SANDBOX_CLIENT_KEY: Boolean(process.env.TIKTOK_SANDBOX_CLIENT_KEY?.trim()),
+      TIKTOK_SANDBOX_CLIENT_SECRET: Boolean(process.env.TIKTOK_SANDBOX_CLIENT_SECRET?.trim()),
+      TIKTOK_USE_SANDBOX: String(process.env.TIKTOK_USE_SANDBOX || "") === "1",
       PINTEREST_OAUTH_APP_ID: Boolean(
         process.env.PINTEREST_OAUTH_APP_ID?.trim() || process.env.PINTEREST_APP_ID?.trim()
       ),
