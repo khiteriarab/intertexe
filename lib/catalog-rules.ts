@@ -53,6 +53,8 @@ export function classifyGarment(category = "", name = ""): string {
   return "other_apparel";
 }
 
+import { consumerExclusionReason as consumerExclusionReasonShared } from "./catalog-consumer-rules.js";
+
 export function consumerExclusionReason(row: {
   category?: string;
   name?: string;
@@ -61,30 +63,24 @@ export function consumerExclusionReason(row: {
   imageUrl?: string;
   price?: string;
   url?: string;
+  brand_slug?: string;
+  brandSlug?: string;
 }): string | null {
-  const imageUrl = row.image_url ?? row.imageUrl;
-  if (!imageUrl || !String(imageUrl).trim()) return "missing_image";
-  const priceText = String(row.price || "").trim().toLowerCase();
-  if (!priceText || ["n/a", "na", "0", "0.00", "$0", "$0.00"].includes(priceText)) return "missing_price";
-  if (!row.url || !/^https?:\/\//i.test(String(row.url).trim())) return "missing_url";
-  if (!row.composition || !String(row.composition).trim()) return "missing_composition";
-
-  const cat = String(row.category || "").toLowerCase();
-  const nam = String(row.name || "").toLowerCase();
-  if (/(shoe|footwear|sandal|boot|sneaker|heel|pump|loafer|mule)/.test(cat) || /(shoe|sandal|boot|sneaker|heel|pump|loafer|mule)/.test(nam)) return "shoes";
-  if (/(bag|handbag|tote|clutch|pouch|wallet|backpack)/.test(cat) || /(handbag|tote bag|clutch)/.test(nam)) return "bags";
-  if (/(jewelry|jewellery|earring|necklace|bracelet|brooch)/.test(cat)) return "jewelry";
-  if (cat.includes("watch") || nam.includes(" watch ")) return "watches";
-  if (/(belt|scarf|hat|cap|glove|sunglass|eyewear|accessory|accessories)/.test(cat)) return "accessories";
-  if ((cat.includes("mens") || cat.startsWith("men") || nam.includes(" for men") || nam.includes(" mens "))
-    && !cat.includes("women") && !nam.includes("women")) return "mens";
-  const brandSlug = String((row as { brand_slug?: string; brandSlug?: string }).brand_slug
-    || (row as { brandSlug?: string }).brandSlug || "").toLowerCase();
+  const brandSlug = String(row.brand_slug || row.brandSlug || "").toLowerCase();
   if (brandSlug && /^(orlebar-brown|orlebarbrown|canali|hackett)/.test(brandSlug)) return "mens";
-  if (/\b(polo\s+shirt|dress\s+shirt|men'?s\s+polo)\b/.test(nam) && !/\bwomen'?s\b/.test(nam + cat)) return "mens";
-  if (/(kid|kids|child|children|girl|boy|baby|infant)/.test(cat)) return "kids";
-  if (/(beauty|fragrance|perfume|makeup|skincare|cosmetic|home|decor|furniture|candle)/.test(cat)) return "beauty_home";
-  return null;
+  const nam = String(row.name || "").toLowerCase();
+  const cat = String(row.category || "").toLowerCase();
+  if (/\b(polo\s+shirt|dress\s+shirt|men'?s\s+polo)\b/.test(nam) && !/\bwomen'?s\b/.test(nam + cat)) {
+    return "mens";
+  }
+  return consumerExclusionReasonShared({
+    category: row.category,
+    name: row.name,
+    composition: row.composition,
+    imageUrl: row.image_url ?? row.imageUrl,
+    price: row.price,
+    url: row.url,
+  });
 }
 
 export function offerCompletenessStatus(row: Record<string, unknown>): string {
