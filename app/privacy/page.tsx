@@ -32,7 +32,7 @@ export default function PrivacyPage() {
             <li><strong className="text-foreground">Favorites:</strong> Products and designers you save to your wishlist, including price at save for drop alerts.</li>
             <li><strong className="text-foreground">Scan history:</strong> Fiber composition results, barcodes scanned, and label data you submit through the scanner.</li>
             <li><strong className="text-foreground">Usage Data:</strong> Pages visited, search queries, features used, and general browsing patterns.</li>
-            <li><strong className="text-foreground">Device tokens:</strong> If you enable push notifications on iOS, we store your device token to send price-drop and re-engagement alerts.</li>
+            <li><strong className="text-foreground">Device tokens:</strong> If you enable push notifications on iOS, we store your device token to send welcome, price-drop, and re-engagement alerts.</li>
           </ul>
         </section>
 

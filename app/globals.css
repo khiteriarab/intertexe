@@ -587,9 +587,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   display: block;
-  /* Soft 90s editorial grade — cooler blacks, slight film */
-  filter: saturate(0.88) contrast(1.06) brightness(0.98);
+  filter: saturate(0.92) contrast(1.04) brightness(0.99);
 }
 
 .khiteris-edit__mood-cell--0 {
@@ -597,8 +597,16 @@
   aspect-ratio: 3 / 4;
 }
 
+.khiteris-edit__mood-cell--0 img {
+  object-position: center top;
+}
+
 .khiteris-edit__mood-cell--1 {
   aspect-ratio: 1;
+}
+
+.khiteris-edit__mood-cell--1 img {
+  object-position: center 35%;
 }
 
 .khiteris-edit__mood-cell--2 {
@@ -611,7 +619,7 @@
 }
 
 .khiteris-edit__mood-cell--3 img {
-  object-position: center 55%;
+  object-position: center 45%;
 }
 
 .khiteris-edit__mood-caption {

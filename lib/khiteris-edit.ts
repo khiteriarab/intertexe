@@ -216,18 +216,13 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   slug: "khiteri",
   monthLabel: "August 2026",
   title: "KHITERI'S EDIT",
-  subtitle: "Linen, silk, cotton jersey — and the airport pant of the summer.",
+  subtitle: "August travel edit — linen for the flight, silk for arrival, and the airport pant of the summer.",
   coverImage: {
     src: "/khiteri/cover-august.jpg",
     alt: "Dissh Cora Natural Midi Linen Dress on model",
   },
   moodBoard: {
-    caption: "90s ease. Soft linen. Silk after dark. Terminal-ready cotton.",
     images: [
-      {
-        src: "/khiteri/dissh-cora.jpg",
-        alt: "Dissh Cora Natural Midi Linen Dress",
-      },
       {
         src: "/khiteri/cult-gaia-sarah-green.jpg",
         alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
@@ -237,8 +232,12 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
         alt: "The Attico Cotton Jersey Barrel Leg Sweatpants",
       },
       {
-        src: "/khiteri/jw-anderson-plot.jpg",
-        alt: "JW Anderson Plot Woven Leather Sandals",
+        src: "/khiteri/redone-denim-laced-midi.jpg",
+        alt: "Re/Done Denim Laced Midi skirt",
+      },
+      {
+        src: "/khiteri/manolo-sumbasan.jpg",
+        alt: "Manolo Blahnik Sumbasan Embellished Satin Sandals",
       },
     ],
   },
