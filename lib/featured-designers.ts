@@ -9,12 +9,16 @@ export const FEATURED_BRAND_SLUGS = [
   "toteme",
   "faithfull-the-brand",
   "frame",
+  "rag-and-bone",
   "vince",
   "posse",
   "alemais",
   "alc",
   "reformation",
   "brunello-cucinelli",
+  "manolo-blahnik",
+  "roger-vivier",
+  "golden-goose",
 ] as const;
 
 /** DB slug may differ from curated key (e.g. alc → a-l-c-). */

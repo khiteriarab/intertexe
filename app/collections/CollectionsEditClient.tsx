@@ -100,7 +100,7 @@ export function CollectionsEditClient() {
               key={slug}
               slug={slug}
               compact
-              className="aspect-square"
+              className="aspect-[3/4]"
             />
           ))}
         </div>

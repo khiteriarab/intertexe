@@ -46,6 +46,14 @@ export function consumerExclusionForProduct(p: {
   ) {
     return "mens";
   }
+  const brandSlug = String(p.brandSlug || "").toLowerCase();
+  const hay = `${p.name || ""} ${p.category || ""} ${brandSlug}`.toLowerCase();
+  if (
+    /-kids$|_kids$|kids$/.test(brandSlug) ||
+    /\bkids\b|\bchildren\b|\btoddler\b|\binfant\b/.test(hay)
+  ) {
+    return "kids";
+  }
   return consumerExclusionReason({
     name: p.name ?? "",
     category: p.category ?? "",

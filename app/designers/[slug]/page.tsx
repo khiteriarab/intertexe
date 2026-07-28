@@ -35,9 +35,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function DesignerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const productSlug = canonicalDesignerProductSlug(slug);
+  // First page only — skip full brand total scan (timeouts made grids look empty).
   const [dbDesigner, brandCatalog] = await Promise.all([
     fetchDesignerBySlug(slug),
-    fetchProductsByBrand(productSlug, { limit: 48, offset: 0 }),
+    fetchProductsByBrand(productSlug, { limit: 48, offset: 0, skipTotal: true }),
   ]);
   const products = brandCatalog.products;
   const profile = getBrandProfile(slug);
@@ -77,6 +78,9 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
     brandCatalog.total != null && brandCatalog.total > 0
       ? brandCatalog.total
       : products.filter((p) => p.imageUrl).length;
+  const initialHasMore =
+    brandCatalog.hasMore ||
+    (brandCatalog.total == null && products.length >= 48);
 
   return (
     <div className="pb-24 md:pb-16 flex flex-col w-full">
@@ -133,7 +137,7 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
           naturalFiberPercent={fiberPercent}
           hasProfile={!!profile}
           profileMaterialStrengths={profile?.materialStrengths || []}
-          initialHasMore={brandCatalog.hasMore}
+          initialHasMore={initialHasMore}
           initialTotal={brandCatalog.total}
         />
       </div>

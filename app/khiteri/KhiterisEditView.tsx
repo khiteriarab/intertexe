@@ -27,7 +27,7 @@ type Props = {
 export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
   return (
     <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]" data-catalog-region={catalogRegion}>
-      <KhiteriIntroMotion />
+      <KhiteriIntroMotion coverSrc={edit.coverImage.src} coverAlt={edit.coverImage.alt} />
       <KhiteriPageViewTracker editSlug={edit.slug} editMonth={edit.monthLabel} />
       <header className="khiteris-edit__masthead">
         <Link href="/" className="khiteris-edit__masthead-link" aria-label="INTERTEXE home">
@@ -36,7 +36,7 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
       </header>
 
       {/* Section 1 — Cover */}
-      <section className="khiteris-edit__cover" aria-label="Cover">
+      <section className="khiteris-edit__cover khiteris-edit__cover--editorial" aria-label="Cover">
         <div className="khiteris-edit__cover-image">
           <img
             src={edit.coverImage.src}
@@ -46,14 +46,14 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
             fetchPriority="high"
             draggable={false}
           />
-        </div>
-        <div className="khiteris-edit__cover-text">
-          <p className="khiteris-edit__eyebrow">Editorial</p>
-          <h1 className="khiteris-edit__title">{edit.title}</h1>
-          <p className="khiteris-edit__month">{edit.monthLabel}</p>
-          {edit.subtitle ? (
-            <p className="khiteris-edit__subtitle">{edit.subtitle}</p>
-          ) : null}
+          <div className="khiteris-edit__cover-overlay">
+            <p className="khiteris-edit__eyebrow khiteris-edit__eyebrow--on-media">Editorial</p>
+            <h1 className="khiteris-edit__title khiteris-edit__title--on-media">{edit.title}</h1>
+            <p className="khiteris-edit__month khiteris-edit__month--on-media">{edit.monthLabel}</p>
+            {edit.subtitle ? (
+              <p className="khiteris-edit__subtitle khiteris-edit__subtitle--on-media">{edit.subtitle}</p>
+            ) : null}
+          </div>
         </div>
       </section>
 

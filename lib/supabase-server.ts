@@ -1129,8 +1129,12 @@ function isNotMensProduct(p: any): boolean {
   if (isMensCatalogRow(p)) return false;
   const slug = String(p.brand_slug || p.brandSlug || "").toLowerCase();
   if (isMensOnlyBrand(slug)) return false;
+  if (/-kids$|_kids$|kids$/.test(slug) || slug.includes("-kids-")) return false;
+  const brand = String(p.brand_name || p.brandName || "").toLowerCase();
   const name = (p.title || p.name || "").toLowerCase();
   const cat = (p.category || "").toLowerCase();
+  const kidsTerms = [" kids", "kids ", "children", "toddler", "infant", "baby girl", "baby boy"];
+  if (kidsTerms.some((t) => brand.includes(t) || name.includes(t) || cat.includes(t))) return false;
   const mensTerms = ["men's", "mens ", " men ", "for men", "man's", "male ", " male", "boy's", "boys "];
   for (const term of mensTerms) {
     if (name.includes(term) || cat.includes(term)) {
@@ -1406,15 +1410,22 @@ export async function fetchProductsByBrand(
     `rows:${products.length} filteredTotal:${filteredTotal} offset:${offset}`
   );
 
+  // Never discard a partial page on timeout — that caused designer grids to look
+  // empty (~14–22 items / Retry) even when products had already been fetched.
   if (timedOut) {
-    return { products: [], total: 0, hasMore: false, error: "timeout" };
+    return {
+      products,
+      total: products.length > 0 ? null : 0,
+      hasMore: products.length >= limit || hasMoreHint,
+      error: products.length > 0 ? undefined : "timeout",
+    };
   }
 
   if (skipTotal) {
     return {
       products,
       total: null,
-      hasMore: hasMoreHint || offset + products.length < filteredTotal,
+      hasMore: hasMoreHint || products.length >= limit,
     };
   }
 
