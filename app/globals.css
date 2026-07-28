@@ -364,8 +364,56 @@
   text-decoration: none;
 }
 
+.khiteris-edit__masthead-logo {
+  width: min(220px, 56vw);
+  height: auto;
+  opacity: 0.8;
+  margin: 0 auto;
+  display: block;
+}
+
 .khiteris-edit__masthead-link:hover {
   opacity: 0.7;
+}
+
+.khiteri-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: #f7f5f0;
+}
+
+.khiteri-intro__backdrop {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #fbfaf7 0%, #f4f1ea 100%);
+}
+
+.khiteri-intro__tx {
+  position: relative;
+  width: min(160px, 34vw);
+  height: auto;
+  z-index: 2;
+  margin-bottom: 1.1rem;
+}
+
+.khiteri-intro__wordmark {
+  position: relative;
+  width: min(340px, 72vw);
+  height: auto;
+  z-index: 2;
+}
+
+.khiteri-intro__tagline {
+  position: relative;
+  z-index: 2;
+  margin-top: 0.75rem;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #78736d;
 }
 
 .khiteris-edit__cover {
@@ -715,6 +763,51 @@
   text-transform: uppercase;
   color: #b0aba4;
   margin: 0;
+}
+
+.khiteris-edit__archive {
+  padding: 0 1.5rem 3rem;
+  max-width: 24rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.khiteris-edit__archive-title {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 300;
+  margin: 0 0 0.5rem;
+}
+
+.khiteris-edit__archive-subtitle {
+  margin: 0 0 1.2rem;
+  color: #6b665f;
+  font-size: 13px;
+}
+
+.khiteris-edit__archive-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.khiteris-edit__archive-item {
+  border: 1px solid #dfd9d0;
+  background: #fbf9f4;
+}
+
+.khiteris-edit__archive-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  text-decoration: none;
+  color: #1a1a1a;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 @media (min-width: 768px) {

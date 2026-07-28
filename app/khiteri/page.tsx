@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { getKhiterisEditConfig } from "../../lib/khiteris-edit";
+import { getKhiterisEditConfig, KHITERIS_EDIT_JULY_2026 } from "../../lib/khiteris-edit";
 import { catalogRegionFromCountry, getCountryFromHeaders } from "../../lib/geo-detect";
 import { resolveKhiterisEditForRegion } from "../../lib/khiteri-regional-links";
 import { KhiterisEditView } from "./KhiterisEditView";
@@ -22,11 +22,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function KhiteriPage() {
+export default async function KhiteriPage(props: { searchParams?: Promise<{ preview?: string }> }) {
   const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL || "https://apps.apple.com";
   const country = getCountryFromHeaders(await headers());
   const catalogRegion = catalogRegionFromCountry(country);
-  const edit = await resolveKhiterisEditForRegion(baseEdit, catalogRegion);
+  const params = (await props.searchParams) || {};
+  const sourceEdit = params.preview === "2026-07" ? KHITERIS_EDIT_JULY_2026 : baseEdit;
+  const edit = await resolveKhiterisEditForRegion(sourceEdit, catalogRegion);
 
   return <KhiterisEditView edit={edit} appStoreUrl={appStoreUrl} catalogRegion={catalogRegion} />;
 }

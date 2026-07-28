@@ -13,8 +13,13 @@ export async function GET(request: NextRequest) {
 
   const userId = String(user.id);
   try {
+    // Never hard-delete on GET — catalog gaps previously wiped real wishlist rows.
     const { kept, removed } = await pruneUnavailableProductFavorites(supabase, userId);
-    return NextResponse.json({ productIds: kept, removedCount: removed.length });
+    return NextResponse.json({
+      productIds: kept,
+      unavailableProductIds: removed,
+      removedCount: 0,
+    });
   } catch (err) {
     console.error("[product-favorites] prune failed:", err);
     const { data } = await supabase.from("product_favorites").select("product_id").eq("user_id", userId);

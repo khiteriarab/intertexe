@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { KhiterisEditConfig } from "../../lib/khiteris-edit";
+import { KHITERIS_EDIT_ARCHIVE } from "../../lib/khiteris-edit";
 import { KhiteriPageViewTracker } from "./KhiteriPageViewTracker";
 import { KhiteriProductAffiliateLink } from "./KhiteriProductAffiliateLink";
+import { KhiteriIntroMotion } from "./KhiteriIntroMotion";
 
 const FINAL_NOTE = {
   lead: "Love finding better materials?",
@@ -25,10 +27,11 @@ type Props = {
 export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
   return (
     <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]" data-catalog-region={catalogRegion}>
+      <KhiteriIntroMotion />
       <KhiteriPageViewTracker editSlug={edit.slug} editMonth={edit.monthLabel} />
       <header className="khiteris-edit__masthead">
         <Link href="/" className="khiteris-edit__masthead-link" aria-label="INTERTEXE home">
-          INTER<span className="font-medium">TEXE</span>
+          <img src="/khiteri/brand/intertexe-horizontal.png" alt="INTERTEXE" className="khiteris-edit__masthead-logo" />
         </Link>
       </header>
 
@@ -143,6 +146,21 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
             {BETA_COPY.secondaryCta}
           </a>
         </div>
+      </section>
+
+      <section className="khiteris-edit__archive" aria-label="Past postings">
+        <h2 className="khiteris-edit__archive-title">Past postings</h2>
+        <p className="khiteris-edit__archive-subtitle">Explore previous edits and keep building your collection.</p>
+        <ul className="khiteris-edit__archive-list">
+          {KHITERIS_EDIT_ARCHIVE.map((entry) => (
+            <li key={entry.monthLabel} className="khiteris-edit__archive-item">
+              <Link href={entry.href} className="khiteris-edit__archive-link">
+                <span>{entry.monthLabel}</span>
+                <span aria-hidden>→</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <footer className="khiteris-edit__footer">

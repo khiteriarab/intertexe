@@ -207,7 +207,166 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
 };
 
 /** Point to the current month's config. Swap this export when publishing a new edit. */
-export const ACTIVE_KHITERIS_EDIT = KHITERIS_EDIT_JULY_2026;
+export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
+  slug: "khiteri",
+  monthLabel: "August 2026",
+  title: "KHITERI'S EDIT",
+  subtitle: "The pieces I keep returning to right now.",
+  coverImage: {
+    src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/75032f2b1a394b9abee12f57b4d616d7.png?v=1782438623",
+    alt: "The Attico Animal Print Plunging V Dress",
+  },
+  moodBoard: {
+    caption: "Natural fibers, sculpted lines, and leather done right.",
+    images: [
+      {
+        src: "https://cdn.shopify.com/s/files/1/0501/1669/files/003-05WDNLCMN_DENIMLACEDMINI_INDIGO_1.jpg?v=1756232001",
+        alt: "Re/Done Denim Laced Midi - Indigo",
+      },
+      {
+        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/6b8f293be8ff4cec872359ee718d91e9.jpg?v=1739934266",
+        alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
+      },
+      {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/06/P01188299.jpg",
+        alt: "Chloe Nama Leather Platform Thong Sandals",
+      },
+      {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/33/P01170372.jpg",
+        alt: "A. Emery Elmer Suede Thong Sandals",
+      },
+    ],
+  },
+  products: [
+    {
+      id: "01",
+      name: "Denim Laced Midi - Indigo",
+      composition: "98% Cotton, 2% Elastane",
+      price: "$345",
+      brand: "Re/Done",
+      href: "https://shopredone.com/products/denim-laced-midi-indigo",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/0501/1669/files/003-05WDNLCMN_DENIMLACEDMINI_INDIGO_1.jpg?v=1756232001",
+        alt: "Re/Done Denim Laced Midi - Indigo",
+      },
+    },
+    {
+      id: "02",
+      name: "Sarah Halter Long Top in Green Linen",
+      composition: "100% Linen",
+      price: "$433",
+      brand: "Cult Gaia",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1949172.507459433874613666330777&type=15&murl=https%3A%2F%2Fshop.simon.com%2Fproducts%2Fcult-gaia-sarah-halter-long-top-in-green-linen%3Fvariant%3D42569289334844",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/6b8f293be8ff4cec872359ee718d91e9.jpg?v=1739934266",
+        alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
+      },
+    },
+    {
+      id: "03",
+      name: "Animal Print Plunging V Dress",
+      composition: "100% Cotton",
+      price: "$1,254.52",
+      brand: "The Attico",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1949172.507459344117555708119821&type=15&murl=https%3A%2F%2Fshop.simon.com%2Fproducts%2Fanimal-print-plunging-v-dress%3Fvariant%3D45705199812668",
+      image: {
+        src: "https://cdn.shopify.com/s/files/1/0291/4536/6588/files/75032f2b1a394b9abee12f57b4d616d7.png?v=1782438623",
+        alt: "The Attico Animal Print Plunging V Dress",
+      },
+    },
+    {
+      id: "04",
+      name: "Nama Leather Platform Thong Sandals",
+      composition: "100% Leather upper",
+      price: "$690",
+      brand: "Chloe",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431722513529180149466356&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fchloe-nama-leather-platform-thong-sandals-brown-p01188299%3Ffeed_num%3DP01188299%26feed_des%3DChlo%C3%A9%26feed_mwg%3Dshoes",
+      image: {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/06/P01188299.jpg",
+        alt: "Chloe Nama Leather Platform Thong Sandals",
+      },
+    },
+    {
+      id: "05",
+      name: "Elmer Suede Thong Sandals",
+      composition: "100% Goat leather upper",
+      price: "$260",
+      brand: "A. Emery",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431729017730550002643256&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fa-emery-elmer-suede-thong-sandals-green-p01170372%3Ffeed_num%3DP01170372%26feed_des%3DA.Emery%26feed_mwg%3Dshoes",
+      image: {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/33/P01170372.jpg",
+        alt: "A. Emery Elmer Suede Thong Sandals",
+      },
+    },
+    {
+      id: "06",
+      name: "Plot Woven Leather Sandals",
+      composition: "100% Leather",
+      price: "$910",
+      brand: "JW Anderson",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317210593848628384159073&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fjw-anderson-plot-leather-sandals-red-p01172976%3Ffeed_num%3DP01172976%26feed_des%3DJWAnderson%26feed_mwg%3Dshoes",
+      image: {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/ed/P01172976.jpg",
+        alt: "JW Anderson Plot Woven Leather Sandals",
+      },
+    },
+    {
+      id: "07",
+      name: "Tailored Linen Trouser",
+      composition: "100% Linen",
+      price: "$770",
+      brand: "Toteme",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317211581083702894072780&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ftoteme-cropped-linen-wide-leg-pants-beige-p01192864%3Ffeed_num%3DP01192864%26feed_des%3DToteme%26feed_mwg%3Dclothing",
+      image: {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/58/P01192864.jpg",
+        alt: "Toteme Tailored Linen Trouser",
+      },
+    },
+    {
+      id: "08",
+      name: "Fluffy Denim Corsage Dress",
+      composition: "100% Cotton",
+      price: "$495",
+      brand: "Ganni",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.1386713528434723343423044&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fganni-fluffy-denim-corsage-dress%3FID%3D5319317%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      image: {
+        src: "https://images.bloomingdalesassets.com/is/image/BLM/products/2/optimized/14158492_fpx.tif?wid=800&qlt=100,0&layer=comp&op_sharpen=0&resMode=bilin&op_usm=0.7,1.0,0.5,0&fmt=jpeg&4msn=.jpg",
+        alt: "Ganni Fluffy Denim Corsage Dress",
+      },
+    },
+    {
+      id: "09",
+      name: "Passeggiata Leather Combat Boots",
+      composition: "100% Leather",
+      price: "$1,650",
+      brand: "The Attico",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431728026185948213648248&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fthe-attico-passeggiata-leather-combat-boots-brown-p01128780%3Ffeed_num%3DP01128780%26feed_des%3DTheAttico%26feed_mwg%3Dshoes",
+      image: {
+        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/a9/P01128780.jpg",
+        alt: "The Attico Passeggiata Leather Combat Boots",
+      },
+    },
+    {
+      id: "10",
+      name: "Printed Shearling Leather Jacket",
+      composition: "100% Leather, 100% Shearling trim",
+      price: "$1,051",
+      brand: "Nasty Gal",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.1386717045153245323614139&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fnasty-gal-printed-shearling-leather-jacket%3FID%3D6128954%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      image: {
+        src: "https://images.bloomingdalesassets.com/is/image/BLM/products/4/optimized/16082894_fpx.tif?wid=800&qlt=100,0&layer=comp&op_sharpen=0&resMode=bilin&op_usm=0.7,1.0,0.5,0&fmt=jpeg&4msn=.jpg",
+        alt: "Nasty Gal Printed Shearling Leather Jacket",
+      },
+    },
+  ],
+};
+
+export const KHITERIS_EDIT_ARCHIVE: Array<Pick<KhiterisEditConfig, "monthLabel" | "title" | "subtitle"> & { href: string }> = [
+  { monthLabel: KHITERIS_EDIT_AUGUST_2026.monthLabel, title: KHITERIS_EDIT_AUGUST_2026.title, subtitle: KHITERIS_EDIT_AUGUST_2026.subtitle, href: "/khiteri" },
+  { monthLabel: KHITERIS_EDIT_JULY_2026.monthLabel, title: KHITERIS_EDIT_JULY_2026.title, subtitle: KHITERIS_EDIT_JULY_2026.subtitle, href: "/khiteri?preview=2026-07" },
+];
+
+export const ACTIVE_KHITERIS_EDIT = KHITERIS_EDIT_AUGUST_2026;
 
 export function getKhiterisEditConfig(): KhiterisEditConfig {
   return ACTIVE_KHITERIS_EDIT;
