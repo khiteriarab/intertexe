@@ -398,7 +398,10 @@
 .khiteri-intro__veil {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(20, 18, 16, 0.18) 0%, rgba(20, 18, 16, 0.42) 100%);
+  /* Soft vignette only — keep photography readable through the brand moment. */
+  background:
+    radial-gradient(ellipse at center, rgba(12, 10, 8, 0.08) 0%, rgba(12, 10, 8, 0.28) 70%, rgba(12, 10, 8, 0.38) 100%);
+  pointer-events: none;
 }
 
 .khiteri-intro__brand {
@@ -409,27 +412,29 @@
   align-items: center;
   text-align: center;
   padding: 1.5rem;
+  max-width: min(92vw, 420px);
 }
 
 .khiteri-intro__tx {
-  width: min(120px, 28vw);
+  width: min(88px, 20vw);
   height: auto;
-  margin-bottom: 0.85rem;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.25));
+  margin-bottom: 0.7rem;
+  filter: drop-shadow(0 2px 18px rgba(0, 0, 0, 0.35));
 }
 
 .khiteri-intro__wordmark {
-  width: min(300px, 68vw);
+  width: min(240px, 58vw);
   height: auto;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 2px 18px rgba(0, 0, 0, 0.35));
 }
 
 .khiteri-intro__tagline {
-  margin-top: 0.85rem;
-  font-size: 11px;
-  letter-spacing: 0.24em;
+  margin-top: 0.7rem;
+  font-size: 10px;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
 }
 
 .khiteris-edit__cover--editorial {
