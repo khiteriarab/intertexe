@@ -496,3 +496,131 @@ export function formatMoneyUsd(n: number | null | undefined) {
     maximumFractionDigits: 0,
   });
 }
+
+/** Trailing-period funnel: attention → views → clicks → sales → money. Complements revenue totals. */
+export type PerformanceFunnelStage = {
+  id:
+    | "scans"
+    | "product_views"
+    | "retailer_clicks"
+    | "confirmed_sales"
+    | "conversion_rate"
+    | "revenue_to_retailers"
+    | "affiliate_commission";
+  label: string;
+  value: number | null;
+  kind: "count" | "money" | "percent";
+  /** Share of prior volume stage (views←scans, clicks←views, sales←clicks); null when not applicable. */
+  dropOffFromPrior: number | null;
+};
+
+export type PerformanceFunnel = {
+  windowLabel: string;
+  stages: PerformanceFunnelStage[];
+  /** clicks → confirmed sales */
+  conversionRate: number | null;
+  diagnosis: string;
+};
+
+export function buildPerformanceFunnel(input: {
+  scans7d?: number | null;
+  productViews7d?: number | null;
+  retailerClicks7d?: number | null;
+  confirmedSales7d?: number | null;
+  sales7d?: number | null;
+  commission7d?: number | null;
+  revenueConnected?: boolean;
+  revenueIsDemo?: boolean;
+}): PerformanceFunnel {
+  const scans = input.scans7d ?? null;
+  const views = input.productViews7d ?? null;
+  const clicks = input.retailerClicks7d ?? null;
+  const salesCount =
+    input.revenueIsDemo || !input.revenueConnected ? null : (input.confirmedSales7d ?? null);
+  const salesUsd = input.revenueIsDemo || !input.revenueConnected ? null : (input.sales7d ?? null);
+  const commission =
+    input.revenueIsDemo || !input.revenueConnected ? null : (input.commission7d ?? null);
+
+  const pct = (num: number | null, den: number | null): number | null => {
+    if (num == null || den == null || den <= 0) return null;
+    return moneyRound((num / den) * 100);
+  };
+
+  const conversionRate = pct(salesCount, clicks);
+
+  const stages: PerformanceFunnelStage[] = [
+    {
+      id: "scans",
+      label: "Scans",
+      value: scans,
+      kind: "count",
+      dropOffFromPrior: null,
+    },
+    {
+      id: "product_views",
+      label: "Product views",
+      value: views,
+      kind: "count",
+      dropOffFromPrior: pct(views, scans),
+    },
+    {
+      id: "retailer_clicks",
+      label: "Retailer clicks",
+      value: clicks,
+      kind: "count",
+      dropOffFromPrior: pct(clicks, views ?? scans),
+    },
+    {
+      id: "confirmed_sales",
+      label: "Confirmed sales",
+      value: salesCount,
+      kind: "count",
+      dropOffFromPrior: conversionRate,
+    },
+    {
+      id: "conversion_rate",
+      label: "Conversion rate",
+      value: conversionRate,
+      kind: "percent",
+      dropOffFromPrior: null,
+    },
+    {
+      id: "revenue_to_retailers",
+      label: "Revenue sent to retailers",
+      value: salesUsd,
+      kind: "money",
+      dropOffFromPrior: null,
+    },
+    {
+      id: "affiliate_commission",
+      label: "Affiliate commission",
+      value: commission,
+      kind: "money",
+      dropOffFromPrior: null,
+    },
+  ];
+
+  let diagnosis =
+    "This helps you diagnose where improvements will have the biggest impact. For example, if retailer clicks are low, you improve product pages. If clicks are high but sales are low, the retailer’s conversion experience or the products themselves may be the limiting factor.";
+
+  if (input.revenueIsDemo || !input.revenueConnected) {
+    diagnosis =
+      "Connect verified affiliate reporting to complete the lower funnel. Until then, use scans → views → clicks to find attention leaks above the buy.";
+  } else if ((clicks ?? 0) > 20 && (salesCount ?? 0) <= 0) {
+    diagnosis =
+      "Clicks are flowing but verified sales are flat — check u1 attribution, retailer landing experience, and whether featured products actually convert.";
+  } else if ((views ?? 0) > 0 && (clicks ?? 0) > 0 && (pct(clicks, views) ?? 100) < 5) {
+    diagnosis =
+      "Product views outpace retailer clicks — tighten PDP CTAs, price clarity, and retailer assortment on high-view SKUs.";
+  } else if ((scans ?? 0) > 0 && (views ?? 0) > 0 && (pct(views, scans) ?? 100) < 10) {
+    diagnosis =
+      "Scans aren’t turning into product views — improve post-scan recommendations and deep links into shoppable PDPs.";
+  }
+
+  return {
+    windowLabel: "Trailing 7d",
+    stages,
+    conversionRate,
+    diagnosis,
+  };
+}

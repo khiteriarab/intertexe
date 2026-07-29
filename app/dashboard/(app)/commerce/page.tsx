@@ -1,11 +1,21 @@
 import { requireHqSession } from "../../../../lib/dashboard/auth";
 import { fetchHqCommercePage, formatCount } from "../../../../lib/dashboard/metrics";
-import { formatMoneyUsd } from "../../../../lib/dashboard/commerce-intelligence";
+import {
+  formatMoneyUsd,
+  type PerformanceFunnelStage,
+} from "../../../../lib/dashboard/commerce-intelligence";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
 import { RevenueImportClient } from "./RevenueImportClient";
 
 export const metadata = { title: "Commerce" };
 export const dynamic = "force-dynamic";
+
+function formatFunnelValue(stage: PerformanceFunnelStage): string {
+  if (stage.value == null) return "—";
+  if (stage.kind === "money") return formatMoneyUsd(stage.value);
+  if (stage.kind === "percent") return `${stage.value}%`;
+  return formatCount(stage.value);
+}
 
 function ProductTable({
   title,
@@ -130,6 +140,46 @@ export default async function HqCommercePage() {
           <div className="h-2 rounded-full bg-black/5 overflow-hidden">
             <div className="h-full rounded-full bg-black" style={{ width: `${Math.min(100, goal.pct)}%` }} />
           </div>
+        </HqCard>
+      </div>
+
+      <div id="performance-funnel" className="mb-6 scroll-mt-24">
+        <HqCard title="Performance funnel">
+          <div className="flex items-end justify-between gap-3 mb-3">
+            <p className="text-[11px] text-black/45">
+              Attention → buy → money · {data.performanceFunnel.windowLabel}
+            </p>
+            <p className="text-[10px] tracking-widest uppercase text-black/35 shrink-0">
+              Complements revenue totals
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-[10px] uppercase tracking-wider text-black/40">
+                <tr>
+                  <th className="py-2 pr-3 font-medium">Stage</th>
+                  <th className="py-2 pr-3 font-medium text-right">Value</th>
+                  <th className="py-2 font-medium text-right">vs prior</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.performanceFunnel.stages.map((stage) => (
+                  <tr key={stage.id} className="border-t border-black/5">
+                    <td className="py-2.5 pr-3">{stage.label}</td>
+                    <td className="py-2.5 pr-3 text-right tabular-nums font-medium">
+                      {formatFunnelValue(stage)}
+                    </td>
+                    <td className="py-2.5 text-right tabular-nums text-black/45">
+                      {stage.dropOffFromPrior == null ? "—" : `${stage.dropOffFromPrior}%`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[12px] text-black/55 mt-4 leading-relaxed">
+            {data.performanceFunnel.diagnosis}
+          </p>
         </HqCard>
       </div>
 

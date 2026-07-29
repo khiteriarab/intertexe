@@ -232,10 +232,6 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
         alt: "The Attico Cotton Jersey Barrel Leg Sweatpants — full length",
       },
       {
-        src: "/khiteri/coperni-floral-swimsuit.jpg",
-        alt: "Coperni Floral-appliqué swimsuit",
-      },
-      {
         src: "/khiteri/manolo-sumbasan.jpg",
         alt: "Manolo Blahnik Sumbasan Embellished Satin Sandals",
       },
@@ -255,22 +251,6 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       image: {
         src: "/khiteri/cult-gaia-derry.jpg",
         alt: "Cult Gaia Derry Dress in linen",
-      },
-    },
-    {
-      id: "02",
-      name: "Floral-appliqué Swimsuit",
-      composition: "80% Polyamide, 20% Elastane",
-      price: "$320",
-      brand: "Coperni",
-      catalogSku: "P00996331",
-      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=43172&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fcoperni-floral-applique-swimsuit-black-p00996331",
-      hrefByRegion: {
-        us: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=43172&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fcoperni-floral-applique-swimsuit-black-p00996331",
-      },
-      image: {
-        src: "/khiteri/coperni-floral-swimsuit.jpg",
-        alt: "Coperni Floral-appliqué swimsuit on Mytheresa",
       },
     },
     {

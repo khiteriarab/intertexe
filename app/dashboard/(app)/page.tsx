@@ -206,6 +206,16 @@ export default async function HqOverviewPage() {
           />
         </div>
         <p className="text-[11px] text-black/40 mt-2 tabular-nums">{goal.pct}% of goal</p>
+        <p className="text-[11px] text-black/45 mt-3">
+          Diagnose leaks in{" "}
+          <Link
+            href="/dashboard/commerce#performance-funnel"
+            className="underline underline-offset-4"
+          >
+            scans → views → clicks → sales
+          </Link>
+          .
+        </p>
       </HqCard>
 
       <HqCard className="mb-6" title="Make money today">

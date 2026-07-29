@@ -3,11 +3,13 @@ import { formatPeriodDelta } from "./period-delta";
 import {
   buildCategoryPerformance,
   buildEditorialPerformance,
+  buildPerformanceFunnel,
   buildProductMoneyRows,
   buildRevenueGoalProgress,
   buildRevenueRecommendations,
   type CategoryPerformanceRow,
   type EditorialPerformanceRow,
+  type PerformanceFunnel,
   type ProductMoneyRow,
   type RevenueGoalProgress,
   type RevenueRecommendation,
@@ -525,6 +527,8 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       shop7d: null as number | null,
       scanner7d: null as number | null,
       editorial7d: null as number | null,
+      scans7d: null as number | null,
+      productViews7d: null as number | null,
       topBrands: [] as Array<{ brand: string; clicks: number }>,
       recent: [] as any[],
       recentTransactions: [] as any[],
@@ -548,15 +552,27 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       editorialPerformance: [] as EditorialPerformanceRow[],
       revenueGoal: buildRevenueGoalProgress({ revenueConnected: false }),
       revenueRecommendations: buildRevenueRecommendations({ revenueConnected: false }),
+      performanceFunnel: buildPerformanceFunnel({ revenueConnected: false }),
       error: "supabase_unavailable",
     };
   }
 
-  const [shop7d, scanner7d, editorial7d, scannerSample, editorialSample, shopRecent, scannerRecent] =
-    await Promise.all([
+  const [
+    shop7d,
+    scanner7d,
+    editorial7d,
+    scans7d,
+    productViews7d,
+    scannerSample,
+    editorialSample,
+    shopRecent,
+    scannerRecent,
+  ] = await Promise.all([
       exactCount("user_product_clickouts", (q) => q.gte("clicked_at", iso(d7))),
       exactCount("scanner_clickouts", (q) => q.gte("clicked_at", iso(d7))),
       exactCount("editorial_clickouts", (q) => q.gte("clicked_at", iso(d7))),
+      exactCount("scan_history", (q) => q.gte("scanned_at", iso(d7))),
+      exactCount("user_product_views", (q) => q.gte("viewed_at", iso(d7))),
       supabase
         .from("scanner_clickouts")
         .select("brand_slug, product_name, clicked_at, converted, conversion_value")
@@ -753,10 +769,28 @@ export async function fetchHqCommercePage(workspaceId?: string) {
     goal: revenueGoal,
   });
 
+  const retailerClicks7d =
+    (shop7d.value || 0) + (scanner7d.value || 0) + (editorial7d.value || 0);
+  const performanceFunnel = buildPerformanceFunnel({
+    scans7d: scans7d.value,
+    productViews7d: productViews7d.value,
+    retailerClicks7d:
+      shop7d.value == null && scanner7d.value == null && editorial7d.value == null
+        ? null
+        : retailerClicks7d,
+    confirmedSales7d: transactions7d,
+    sales7d,
+    commission7d,
+    revenueConnected,
+    revenueIsDemo,
+  });
+
   return {
     shop7d: shop7d.value,
     scanner7d: scanner7d.value,
     editorial7d: editorial7d.value,
+    scans7d: scans7d.value,
+    productViews7d: productViews7d.value,
     topBrands,
     recent,
     recentTransactions,
@@ -782,7 +816,8 @@ export async function fetchHqCommercePage(workspaceId?: string) {
     editorialPerformance: editorialPerformance as EditorialPerformanceRow[],
     revenueGoal: revenueGoal as RevenueGoalProgress,
     revenueRecommendations: revenueRecommendations as RevenueRecommendation[],
-    error: shop7d.error,
+    performanceFunnel: performanceFunnel as PerformanceFunnel,
+    error: shop7d.error || scans7d.error || productViews7d.error,
   };
 }
 
