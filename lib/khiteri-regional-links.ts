@@ -57,6 +57,15 @@ function scoreCatalogRow(row: CatalogUrlRow, product: KhiterisEditProduct): numb
   const dest = decodeAffiliateDest(row.url);
   const image = (row.image_url || "").toLowerCase();
 
+  // Outlet / marketplace hosts are fine in catalog, but never win editorial click-outs
+  // over MyTheresa / Bloomingdale's / brand sites (e.g. Cult Gaia → shop.simon).
+  if (/shop\.simon\.com|shopsimon/i.test(dest)) {
+    score -= 200;
+  }
+  if (/mytheresa\.com|bloomingdales\.com|net-a-porter\.com|shopbop\.com|cultgaia\.com/i.test(dest)) {
+    score += 50;
+  }
+
   if (hint) {
     if (dest.includes(hint.toLowerCase())) score += 80;
     if (image.includes(hint.toLowerCase())) score += 40;

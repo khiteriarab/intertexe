@@ -18,6 +18,7 @@ import {
   safeCatalogLimit,
   safeCatalogOffset,
   catalogHasMore,
+  CATALOG_BRAND_MAX_OFFSET,
 } from "../../../lib/catalog-fetch-limits";
 
 export const revalidate = 300;
@@ -287,7 +288,7 @@ export async function GET(request: NextRequest) {
   const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 0;
   const explicitOffset = sp.get("offset");
   const offset = explicitOffset != null
-    ? safeCatalogOffset(explicitOffset)
+    ? safeCatalogOffset(explicitOffset, mode === "brand" ? CATALOG_BRAND_MAX_OFFSET : undefined)
     : Math.max(0, page * limit);
   const category = sp.get("category") || undefined;
   const market = catalogMarketFromParams(sp);
@@ -332,7 +333,13 @@ export async function GET(request: NextRequest) {
       );
       const hasMore =
         result.hasMore ??
-        catalogHasMore(result.products.length, limit, offset, brandTotal);
+        catalogHasMore(
+          result.products.length,
+          limit,
+          offset,
+          brandTotal,
+          CATALOG_BRAND_MAX_OFFSET
+        );
       const nextOffset = hasMore ? offset + result.products.length : null;
       return respond({
         products: result.products,

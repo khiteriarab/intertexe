@@ -39,9 +39,22 @@ export function isMensCatalogRow(row: {
   name?: string;
   title?: string;
   url?: string;
+  gender_scope?: string | null;
+  genderScope?: string | null;
 }): boolean {
   const slug = String(row.brand_slug || row.brandSlug || "").toLowerCase();
   if (isMensOnlyBrand(slug)) return true;
+
+  const scope = String(row.gender_scope || row.genderScope || "")
+    .trim()
+    .toLowerCase();
+  if (scope && ["men", "male", "mens", "boys", "man"].includes(scope)) {
+    return true;
+  }
+  // Dual-gender houses (Kiton, etc.) — keep women's rows even when titles are generic.
+  if (scope && ["women", "woman", "female", "ladies", "womens"].includes(scope)) {
+    return false;
+  }
 
   const cat = String(row.category || "").toLowerCase();
   const name = String(row.name || row.title || "").toLowerCase();
@@ -70,12 +83,12 @@ export function isMensCatalogRow(row: {
   if (/^(men|mens|men'?s|male|homme|uomo)\b/i.test(cat.trim())) return true;
 
   // Rakuten / affiliate menswear feeds: ALL CAPS style | COLOR without gender copy.
+  // Only treat as mens when category/URL also looks menswear — do not wipe dual-gender brands.
   const rawName = String(row.name || row.title || "").trim();
   if (/^[A-Z][A-Z0-9 '\-|&.]+$/.test(rawName) && rawName.includes("|")) {
     const mensCategoryHints = ["shirt", "tee", "t-shirt", "top", "polo", "knit", "sweater", "trouser", "pant", "jean"];
     if (mensCategoryHints.some((hint) => cat.includes(hint))) return true;
     if (/\/(men|mens|menswear|man|homme|uomo)(\/|$|\?)/i.test(url)) return true;
-    return true;
   }
 
   return false;

@@ -193,11 +193,24 @@ export async function GET(request: Request) {
     }
 
     if (duplicateIds.length > 0) {
-      const { error: delError } = await supabase
-        .from("products")
-        .delete()
-        .in("id", duplicateIds);
-      if (!delError) duplicatesRemoved = duplicateIds.length;
+      const allowDestructive =
+        process.env.CATALOG_ALLOW_DESTRUCTIVE_CRON === "1" ||
+        new URL(request.url).searchParams.get("allow_delete") === "1";
+      if (!allowDestructive) {
+        report.fixes.push({
+          type: "duplicate_delete_skipped",
+          count: duplicateIds.length,
+          reason:
+            "Destructive deletes are disabled. Set CATALOG_ALLOW_DESTRUCTIVE_CRON=1 or ?allow_delete=1 to remove duplicates.",
+          sampleIds: duplicateIds.slice(0, 20),
+        });
+      } else {
+        const { error: delError } = await supabase
+          .from("products")
+          .delete()
+          .in("id", duplicateIds);
+        if (!delError) duplicatesRemoved = duplicateIds.length;
+      }
     }
 
     const { data: finalProducts } = await supabase

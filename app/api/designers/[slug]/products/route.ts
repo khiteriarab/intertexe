@@ -7,6 +7,7 @@ import {
   catalogHasMore,
   safeCatalogLimit,
   safeCatalogOffset,
+  CATALOG_BRAND_MAX_OFFSET,
 } from "../../../../../lib/catalog-fetch-limits";
 
 const JSON_HEADERS = {
@@ -21,7 +22,7 @@ export async function GET(
   const { slug } = await params;
   const sp = request.nextUrl.searchParams;
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
-  const offset = safeCatalogOffset(sp.get("offset"));
+  const offset = safeCatalogOffset(sp.get("offset"), CATALOG_BRAND_MAX_OFFSET);
   const skipCount = sp.get("skipCount") === "1";
   const regionParam = sp.get("region") || sp.get("catalogRegion");
   const region = regionParam?.trim().toLowerCase() || "us";
@@ -58,7 +59,13 @@ export async function GET(
         total,
         limit,
         offset,
-        hasMore: catalogHasMore(result.products.length, limit, offset, total),
+        hasMore: catalogHasMore(
+          result.products.length,
+          limit,
+          offset,
+          total,
+          CATALOG_BRAND_MAX_OFFSET
+        ),
       },
       { headers: JSON_HEADERS }
     );

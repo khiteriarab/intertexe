@@ -2,8 +2,14 @@
 export const BRANDS_WE_LOVE_HIGHLIGHTS: Record<string, string> = {
   "re-done":
     "They pioneered vintage-repurposed denim — cotton-forward pieces we verify piece by piece for natural fiber content.",
-  diesel:
-    "Italian denim with consistently strong natural-fiber scores across women's jeans, skirts, and cotton ready-to-wear.",
+  "the-attico":
+    "Milanese ease with cotton jersey, silk, and leather — the airport pant house of the summer edit.",
+  toteme:
+    "Stockholm tailoring in linen and wool — quiet luxury with compositions that clear our natural-fiber bar.",
+  "cult-gaia":
+    "Sculptural linen and silk ready-to-wear — heirloom silhouettes from the brand and Bloomingdale's.",
+  zimmermann:
+    "Australian romance in cotton and silk — floral maxis and resort dressing from MyTheresa.",
   "isabel-marant":
     "Parisian ease built on cotton, wool, silk, and linen — bohemian luxury with every composition checked.",
 };

@@ -1,6 +1,8 @@
 /** Hard caps for catalog API + client pagination (prevents timeouts and runaway loads). */
 export const CATALOG_API_MAX_LIMIT = 48;
 export const CATALOG_MAX_OFFSET = 500;
+/** Brand PLPs are per-slug — allow deeper infinite scroll than global shop. */
+export const CATALOG_BRAND_MAX_OFFSET = 2000;
 export const DEFAULT_SHOP_FIBER = "silk";
 
 export function safeCatalogLimit(limit: unknown, fallback = 48): number {
@@ -9,10 +11,10 @@ export function safeCatalogLimit(limit: unknown, fallback = 48): number {
   return Math.min(Math.floor(n), CATALOG_API_MAX_LIMIT);
 }
 
-export function safeCatalogOffset(offset: unknown): number {
+export function safeCatalogOffset(offset: unknown, maxOffset = CATALOG_MAX_OFFSET): number {
   const n = Number(offset);
   if (!Number.isFinite(n) || n < 0) return 0;
-  return Math.min(Math.floor(n), CATALOG_MAX_OFFSET);
+  return Math.min(Math.floor(n), maxOffset);
 }
 
 /** True when more catalog rows exist — always prefer exact total over page fill size. */
@@ -20,9 +22,10 @@ export function catalogHasMore(
   pageLength: number,
   pageSize: number,
   offset: number,
-  total: number | null | undefined
+  total: number | null | undefined,
+  maxOffset = CATALOG_MAX_OFFSET
 ): boolean {
-  if (offset >= CATALOG_MAX_OFFSET) return false;
+  if (offset >= maxOffset) return false;
   if (total != null && total >= 0) {
     return offset + pageLength < total;
   }

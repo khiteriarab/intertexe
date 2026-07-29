@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
   const brand = sp.get("brand") || undefined;
   const sort = sp.get("sort") || "discount";
   const region = sp.get("region") || sp.get("market") || undefined;
+  const skipCount =
+    sp.get("skipCount") === "1" ||
+    (Number(sp.get("limit") || 40) <= 48 && Number(sp.get("offset") || 0) === 0);
   const priceTier = parsePriceTier(sp.get("price"));
   const priceBounds = priceBoundsFromTier(priceTier);
   const legacyMax = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
@@ -45,25 +48,30 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       useMerchFeedPreview: false,
-      skipTotal: false,
+      // First page: skip exact count so iOS paints in ~1–2s (count was forcing Try again).
+      skipTotal: skipCount,
     });
 
     const products = result.products ?? [];
-    const total = result.total ?? 0;
-    const hasMore = products.length > 0 && offset + products.length < total;
+    const total = result.total;
+    const hasMore =
+      result.hasMore ??
+      (total != null
+        ? products.length > 0 && offset + products.length < total
+        : products.length >= limit);
 
     return NextResponse.json(
       {
         products,
-        total,
+        total: total ?? null,
         limit,
         offset,
         hasMore,
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-          "CDN-Cache-Control": "public, max-age=300",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+          "CDN-Cache-Control": "public, max-age=60",
         },
       }
     );

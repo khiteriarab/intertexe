@@ -105,6 +105,8 @@ export interface Product {
   canonicalId?: string | null;
   /** Dedupe key exposed for clients (canonical or style hash). */
   offerKey?: string | null;
+  /** Catalog gender tag when present (women / men / …). */
+  genderScope?: string | null;
 }
 
 const DESIGNER_PRODUCT_SLUG_ALIASES: Record<string, string> = {
@@ -985,6 +987,12 @@ export function mapProductRow(row: any): Product {
         ? String(row.canonical_id).trim()
         : null,
     offerKey: catalogDedupeKey(row),
+    genderScope:
+      row.gender_scope != null && String(row.gender_scope).trim()
+        ? String(row.gender_scope).trim().toLowerCase()
+        : row.genderScope != null && String(row.genderScope).trim()
+          ? String(row.genderScope).trim().toLowerCase()
+          : null,
   };
 }
 
@@ -1328,13 +1336,12 @@ async function collectBrandCatalogPage(
   offset: number,
   resolveFullTotal = true
 ): Promise<{ products: Product[]; filteredTotal: number; timedOut: boolean; hasMoreHint: boolean }> {
-  // First page: smaller batch so designer PLPs return in ~1s (iOS HTTP timeout is 8s).
-  // Pagination scans must cover offset+limit after JS gender/consumer filters — the old
-  // `offset + limit * 3` cap stopped Helmut Lang / FRAME / etc. after ~1 page (hasMore=false).
-  const batchSize = resolveFullTotal ? Math.max(limit * 4, 96) : Math.max(limit * 2, 64);
+  // Brand PLPs are per-slug and small vs global shop — scan enough rows that gender /
+  // consumer filters still fill pages, and sale rows surface under the designer name.
+  const batchSize = resolveFullTotal ? Math.max(limit * 4, 96) : Math.max(limit * 3, 96);
   const maxRawScan = resolveFullTotal
     ? 6000
-    : Math.min(4000, Math.max(480, (offset + limit) * 10));
+    : Math.min(4000, Math.max(2000, (offset + limit) * 12));
   let rawCursor = 0;
   let skipped = 0;
   const seen = new Set<string>();
@@ -1343,7 +1350,7 @@ async function collectBrandCatalogPage(
   let exhausted = false;
 
   while (rawCursor < maxRawScan) {
-    let query = supabase
+    const { data, error } = await supabase
       .from("products")
       .select(
         [
@@ -1368,21 +1375,17 @@ async function collectBrandCatalogPage(
           "collection_slugs",
           "fiber_subtype",
           "fiber_subtype_label",
+          "gender_scope",
           "created_at",
         ].join(",")
       )
       .eq("is_displayable", true)
+      .eq("region", region)
       .eq("brand_slug", canonicalSlug)
-      .gte("natural_fiber_percent", 80);
-
-    // US: include mistagged MyTheresa US (MID 43172) rows stored as region=eu.
-    if (region === "us") {
-      query = query.or("region.eq.us,url.ilike.*mid=43172*");
-    } else {
-      query = query.eq("region", region);
-    }
-
-    const { data, error } = await query
+      // Brand PLPs: 70% keeps blended luxury visible; global shop stays at 80%.
+      .gte("natural_fiber_percent", 70)
+      // Sale first so markdowns land in the scan window under the designer name.
+      .order("is_sale", { ascending: false })
       .order("natural_fiber_percent", { ascending: false })
       .order("created_at", { ascending: false })
       .range(rawCursor, rawCursor + batchSize - 1);
@@ -2365,25 +2368,15 @@ function buildSaleDirectQuery(
     return q;
   }
 
-  // Use `products` + is_displayable so natural-leather footwear sale can appear alongside
-  // apparel (parity with brand PLPs). live_products_apparel strips all shoes.
-  let q = supabase
-    .from("products")
+  // Fast indexed path — `live_products_apparel` + region equality.
+  // Do NOT use `url ILIKE mid=43172` here: that scan times out and forces iOS "Try again".
+  let q = liveProductsApparelFrom(supabase)
     .select(columns, selectOptions)
-    .eq("is_displayable", true)
     .eq("is_sale", true)
+    .eq("region", region)
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null);
-
-  // US shoppers: also include mistagged MyTheresa US (Rakuten MID 43172) rows that were
-  // historically stored as region=eu despite USD + mytheresa.com/us storefront links.
-  if (region === "us") {
-    q = q.or("region.eq.us,url.ilike.*mid=43172*");
-  } else {
-    q = q.eq("region", region);
-  }
-
   if (opts.fiber && opts.fiber !== "all" && opts.fiber.toLowerCase() !== "shoes") {
     q = q.ilike("composition", `%${opts.fiber}%`);
   }

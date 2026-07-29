@@ -224,16 +224,16 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   moodBoard: {
     images: [
       {
+        src: "/khiteri/zimmermann-awaken.jpg",
+        alt: "Zimmermann Awaken Floral Cotton Maxi Dress",
+      },
+      {
         src: "/khiteri/attico-barrel-sweats.jpg",
         alt: "The Attico Cotton Jersey Barrel Leg Sweatpants — full length",
       },
       {
-        src: "/khiteri/cult-gaia-sarah-green.jpg",
-        alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
-      },
-      {
-        src: "/khiteri/redone-denim-laced-midi.jpg",
-        alt: "Re/Done Denim Laced Midi skirt",
+        src: "/khiteri/toteme-linen-trouser.jpg",
+        alt: "Toteme Tailored Linen Trouser",
       },
       {
         src: "/khiteri/manolo-sumbasan.jpg",
@@ -244,54 +244,38 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   products: [
     {
       id: "01",
-      name: "Cora Natural Midi Linen Dress",
-      composition: "100% Linen",
-      price: "$95",
-      brand: "Dissh",
-      href: "https://www.dissh.com.au/products/cora-natural-linen-midi-dress",
+      name: "Awaken Floral Cotton Maxi Dress",
+      composition: "100% Cotton",
+      price: "$995",
+      brand: "Zimmermann",
+      catalogSku: "P01129812",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317217151635318523069848&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fzimmermann-awaken-floral-cotton-maxi-dress-beige-p01129812%3Ffeed_num%3DP01129812%26feed_des%3DZimmermann%26feed_mwg%3Dclothing",
+      hrefByRegion: {
+        us: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317217151635318523069848&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fzimmermann-awaken-floral-cotton-maxi-dress-beige-p01129812%3Ffeed_num%3DP01129812%26feed_des%3DZimmermann%26feed_mwg%3Dclothing",
+      },
       image: {
-        src: "/khiteri/dissh-cora.jpg",
-        alt: "Dissh Cora Natural Midi Linen Dress on model",
+        src: "/khiteri/zimmermann-awaken.jpg",
+        alt: "Zimmermann Awaken Floral Cotton Maxi Dress on MyTheresa",
       },
     },
     {
       id: "02",
-      name: "Darcy Olive Silk Maxi Dress",
-      composition: "100% Silk",
-      price: "$385",
-      brand: "Dissh",
-      href: "https://www.dissh.com.au/products/darcy-olive-silk-maxi-dress-1",
+      name: "Tailored Linen Trouser",
+      composition: "100% Linen",
+      price: "$770",
+      brand: "Toteme",
+      catalogSku: "P01192864",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317211581083702894072780&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ftoteme-cropped-linen-wide-leg-pants-beige-p01192864%3Ffeed_num%3DP01192864%26feed_des%3DToteme%26feed_mwg%3Dclothing",
+      hrefByRegion: {
+        us: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317211581083702894072780&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ftoteme-cropped-linen-wide-leg-pants-beige-p01192864%3Ffeed_num%3DP01192864%26feed_des%3DToteme%26feed_mwg%3Dclothing",
+      },
       image: {
-        src: "/khiteri/dissh-darcy.jpg",
-        alt: "Dissh Darcy Olive Silk Maxi Dress on model",
+        src: "/khiteri/toteme-linen-trouser.jpg",
+        alt: "Toteme Tailored Linen Trouser on MyTheresa",
       },
     },
     {
       id: "03",
-      name: "Sarah Halter Long Top",
-      composition: "100% Linen",
-      price: "$433",
-      brand: "Cult Gaia",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1949172.507459433874613666330777&type=15&murl=https%3A%2F%2Fshop.simon.com%2Fproducts%2Fcult-gaia-sarah-halter-long-top-in-green-linen%3Fvariant%3D42569289334844",
-      image: {
-        src: "/khiteri/cult-gaia-sarah-green.jpg",
-        alt: "Cult Gaia Sarah Halter Long Top in Green Linen",
-      },
-    },
-    {
-      id: "04",
-      name: "Finny White Sleeveless Linen Top",
-      composition: "100% Linen",
-      price: "$130",
-      brand: "Dissh",
-      href: "https://www.dissh.com.au/products/finny-white-linen-top",
-      image: {
-        src: "/khiteri/dissh-finny.jpg",
-        alt: "Dissh Finny White Sleeveless Linen Top on model",
-      },
-    },
-    {
-      id: "05",
       name: "Cotton Jersey Barrel Leg Sweatpants",
       composition: "100% Cotton",
       price: "$590",
@@ -308,7 +292,58 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
+      id: "04",
+      name: "Cora Natural Midi Linen Dress",
+      composition: "100% Linen",
+      price: "$95",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/cora-natural-linen-midi-dress",
+      image: {
+        src: "/khiteri/dissh-cora.jpg",
+        alt: "Dissh Cora Natural Midi Linen Dress on model",
+      },
+    },
+    {
+      id: "05",
+      name: "Darcy Olive Silk Maxi Dress",
+      composition: "100% Silk",
+      price: "$385",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/darcy-olive-silk-maxi-dress-1",
+      image: {
+        src: "/khiteri/dissh-darcy.jpg",
+        alt: "Dissh Darcy Olive Silk Maxi Dress on model",
+      },
+    },
+    {
       id: "06",
+      name: "Derry Dress",
+      composition: "100% Linen",
+      price: "$698",
+      brand: "Cult Gaia",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.1386715038447296182783142&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcult-gaia-derry-dress%3FID%3D6094442%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      hrefByRegion: {
+        us: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.1386715038447296182783142&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcult-gaia-derry-dress%3FID%3D6094442%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      },
+      image: {
+        src: "/khiteri/cult-gaia-derry.jpg",
+        alt: "Cult Gaia Derry Dress in linen",
+      },
+    },
+    {
+      id: "07",
+      name: "Finny White Sleeveless Linen Top",
+      composition: "100% Linen",
+      price: "$130",
+      brand: "Dissh",
+      href: "https://www.dissh.com.au/products/finny-white-linen-top",
+      image: {
+        src: "/khiteri/dissh-finny.jpg",
+        alt: "Dissh Finny White Sleeveless Linen Top on model",
+      },
+    },
+    {
+      id: "08",
       name: "Denim Laced Midi",
       composition: "98% Cotton, 2% Elastane",
       price: "$345",
@@ -320,7 +355,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "07",
+      id: "09",
       name: "Percy Black Silk Long Sleeve Shirt",
       composition: "100% Silk",
       price: "$170",
@@ -332,7 +367,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "08",
+      id: "10",
       name: "Pippy Buttermilk Linen Strapless Top",
       composition: "100% Linen",
       price: "$100",
@@ -344,7 +379,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "09",
+      id: "11",
       name: "Lily Babydoll Dress",
       composition: "100% Silk",
       price: "$498",
@@ -356,7 +391,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "10",
+      id: "12",
       name: "Nama Leather Platform Thong Sandals",
       composition: "Upper: 100% Bovine leather",
       price: "$690",
@@ -369,7 +404,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "11",
+      id: "13",
       name: "Plot Woven Leather Sandals",
       composition: "Upper: 100% Lamb Leather",
       price: "$910",
@@ -382,7 +417,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "12",
+      id: "14",
       name: "Sumbasan Embellished Satin Sandals",
       composition: "Upper: 100% Fabric",
       price: "$1,150",

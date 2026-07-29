@@ -1,6 +1,9 @@
-/** Homepage “Brands we love” — three editorial houses (web). */
+/** Homepage “Brands we love” — editorial houses (web). */
 export const CURATED_BRAND_SLUGS = [
   "re-done",
-  "diesel",
+  "the-attico",
+  "toteme",
+  "cult-gaia",
+  "zimmermann",
   "isabel-marant",
 ] as const;
