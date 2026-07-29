@@ -230,15 +230,44 @@ Execute this release **in phases**. After each phase, stop and return:
 
 **Live dataset protected against failed/incomplete feed?** **YES** (nightly off + ingest/publish kill switches armed + live writes denied by default). Re-enable only after staged dry-runs.
 
+### Controlled stage dry-run (2026-07-29 evening)
+
+Status framing agreed:
+
+- **Protected today:** Yes (containment).
+- **Ready to turn nightly automation back on:** **No.**
+- **Another overnight wipe while flags stay armed:** Yes, prevented.
+
+Evidence file: `docs/p0-evidence/stage-dry-run-2026-07-29T20-07-04-974Z.json`
+
+| Dry-run ask | Result | Notes |
+|---|---|---|
+| 1. Feed enters staging only | PARTIAL | Fixture staging wrote 2 rows to `feed_staged_rows`; live product/editor-pick fingerprints unchanged. Rakuten FTP returned `530 Authentication problem` with current Vercel FTP secrets — real merchant XML not ingested this run. |
+| 2. Expected files/chunks reconciled | NO | Blocked by FTP auth failure; no authoritative file inventory this run. |
+| 3. Validation gates block bad promote | YES | Promote refused with `catalog_publish_blocked` while switches remain armed. Incomplete-cycle rejects also coded in `promote-staging.ts`. |
+| 4. Full snapshot before promote | PARTIAL | Snapshot + restore tables applied in prod (`catalog_product_snapshots*`). Dry-run restore path available; full uncapped capture of ~1.6M rows not executed in this run. |
+| 5. Transactional promotion succeeding | NO | Not attempted against live (correctly blocked). |
+| 6. Smoke after promotion | NO | Not run — no live promote. |
+| 7. Failed smoke → rollback | NO | Not exercised against live catalog (per isolation rule). |
+| 8. Previous catalog restored | NO | Not exercised against live catalog. |
+| 9. Merchandising/Editor’s Picks/URLs/materials intact | YES (observed) | Before/after editor-pick sample fingerprint identical; estimated product count unchanged (~1,598,310). |
+
+Migrations applied to prod via Management API: `20260727_catalog_product_snapshots.sql`, `20260729_feed_staging_and_kill_switch.sql`.
+
+**Can the Rakuten schedule now be re-enabled safely with all ingestion going exclusively through staging → validate → promote → smoke → rollback?** **No.**
+
+Do not clear kill switches. Do not set `FEED_LIVE_INGEST_ENABLED=1`. Fix Rakuten FTP credentials, complete a full stage cycle from real feeds, then prove promote→smoke→rollback on an isolated path before unlocking automation.
+
 ### Production baseline counts (Phase 1)
 
 | Metric | Count | Captured at (UTC) | Source |
 |---|---|---|---|
-| products | | | |
-| displayable products | | | |
+| products | ~1,598,310 (estimated) | 2026-07-29T20:07Z | stage dry-run evidence |
+| displayable products | 446,941 (LKG) | 2026-07-29T20:07Z | `catalog_last_known_good` |
 | merchants | | | |
 | designers | | | |
 | categories | | | |
 | sale-eligible | | | |
 | rails | | | |
 | collections | | | |
+| editor picks (sample) | 71 | 2026-07-29T20:07Z | stage dry-run integrity |

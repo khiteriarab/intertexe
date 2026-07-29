@@ -61,7 +61,7 @@ test("publish kill switch blocks ingest", async () => {
   });
   const result = await assertIngestAllowed(sb as any);
   assert.equal(result.ok, false);
-  assert.match(result.reason, /catalog_publish_blocked/);
+  assert.match(result.reason, /catalog_publish_blocked|kill_switches_armed/);
 });
 
 test("ingest kill switch blocks ingest", async () => {
@@ -71,14 +71,16 @@ test("ingest kill switch blocks ingest", async () => {
   });
   const result = await assertIngestAllowed(sb as any);
   assert.equal(result.ok, false);
-  assert.match(result.reason, /feed_ingest_blocked/);
+  assert.match(result.reason, /feed_ingest_blocked|kill_switches_armed/);
 });
 
 test("clear switches + no live flag => stage mode", async () => {
   const prevLive = process.env.FEED_LIVE_INGEST_ENABLED;
   const prevStage = process.env.FEED_STAGE_ONLY;
+  const prevDry = process.env.FEED_STAGE_DRY_RUN;
   delete process.env.FEED_LIVE_INGEST_ENABLED;
   delete process.env.FEED_STAGE_ONLY;
+  delete process.env.FEED_STAGE_DRY_RUN;
   const sb = fakeSupabase({
     catalog_publish_blocked: { blocked: false },
     feed_ingest_blocked: { blocked: false },
@@ -88,6 +90,45 @@ test("clear switches + no live flag => stage mode", async () => {
   assert.equal(result.mode, "stage");
   process.env.FEED_LIVE_INGEST_ENABLED = prevLive;
   process.env.FEED_STAGE_ONLY = prevStage;
+  process.env.FEED_STAGE_DRY_RUN = prevDry;
+});
+
+test("armed switches block stage unless FEED_STAGE_DRY_RUN=1", async () => {
+  const prevLive = process.env.FEED_LIVE_INGEST_ENABLED;
+  const prevStage = process.env.FEED_STAGE_ONLY;
+  const prevDry = process.env.FEED_STAGE_DRY_RUN;
+  delete process.env.FEED_LIVE_INGEST_ENABLED;
+  process.env.FEED_STAGE_ONLY = "1";
+  delete process.env.FEED_STAGE_DRY_RUN;
+  const sb = fakeSupabase({
+    catalog_publish_blocked: { blocked: true },
+    feed_ingest_blocked: { blocked: true },
+  });
+  const blocked = await assertIngestAllowed(sb as any);
+  assert.equal(blocked.ok, false);
+  process.env.FEED_STAGE_DRY_RUN = "1";
+  const dry = await assertIngestAllowed(sb as any);
+  assert.equal(dry.ok, true);
+  assert.equal(dry.mode, "stage");
+  process.env.FEED_LIVE_INGEST_ENABLED = prevLive;
+  process.env.FEED_STAGE_ONLY = prevStage;
+  process.env.FEED_STAGE_DRY_RUN = prevDry;
+});
+
+test("armed switches still block live even with dry-run flag", async () => {
+  const prevLive = process.env.FEED_LIVE_INGEST_ENABLED;
+  const prevDry = process.env.FEED_STAGE_DRY_RUN;
+  process.env.FEED_LIVE_INGEST_ENABLED = "1";
+  process.env.FEED_STAGE_DRY_RUN = "1";
+  const sb = fakeSupabase({
+    catalog_publish_blocked: { blocked: true },
+    feed_ingest_blocked: { blocked: true },
+  });
+  const result = await assertIngestAllowed(sb as any);
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /catalog_publish_blocked|feed_ingest_blocked/);
+  process.env.FEED_LIVE_INGEST_ENABLED = prevLive;
+  process.env.FEED_STAGE_DRY_RUN = prevDry;
 });
 
 test("clear switches + live flag => live mode", async () => {

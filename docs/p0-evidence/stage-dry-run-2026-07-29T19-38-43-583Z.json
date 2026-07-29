@@ -1,0 +1,44 @@
+{
+  "startedAt": "2026-07-29T19:38:43.593Z",
+  "constraints": {
+    "FEED_LIVE_INGEST_ENABLED": "0",
+    "FEED_STAGE_ONLY": "1",
+    "FEED_STAGE_DRY_RUN": "1",
+    "CATALOG_ALLOW_MARK_INACTIVE": "0",
+    "RAKUTEN_CHUNK_FILE_LIMIT": "1"
+  },
+  "killSwitchesBefore": {
+    "catalog_publish_blocked": {
+      "at": "2026-07-29T19:11:17.632Z",
+      "setBy": "ingest-guard",
+      "reason": "p0_audit_fix_2026-07-29_ingest_blocked_until_stage_promote_proven",
+      "blocked": true
+    },
+    "feed_ingest_blocked": {
+      "at": "2026-07-29T19:11:17.632Z",
+      "setBy": "ingest-guard",
+      "reason": "p0_audit_fix_2026-07-29_ingest_blocked_until_stage_promote_proven",
+      "blocked": true
+    }
+  },
+  "ingestGate": {
+    "ok": true,
+    "mode": "stage",
+    "reason": "stage_dry_run_while_switches_armed"
+  },
+  "productsBefore": null,
+  "displayableBefore": null,
+  "integrityBefore": null,
+  "syncResult": null,
+  "stagingSession": null,
+  "stagedRowCount": null,
+  "productsAfter": null,
+  "displayableAfter": null,
+  "integrityAfter": null,
+  "liveUntouched": null,
+  "promoteAttempt": null,
+  "snapshotDryRun": null,
+  "conclusions": [],
+  "error": "[object Object]",
+  "finishedAt": "2026-07-29T19:39:46.709Z"
+}
