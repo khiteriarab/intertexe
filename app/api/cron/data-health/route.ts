@@ -89,6 +89,35 @@ export async function GET(request: Request) {
     issues.push(`${snapshot.brandsAffected} brands have pending high-NFP products`);
   }
 
+  const { data: blockedRow } = await supabase
+    .from("system_status")
+    .select("value_json")
+    .eq("key", "catalog_publish_blocked")
+    .maybeSingle();
+  if ((blockedRow?.value_json as { blocked?: boolean } | null)?.blocked) {
+    issues.push("Catalog drop guard / publish blocked is active");
+  }
+
+  const { data: latestSnap } = await supabase
+    .from("catalog_product_snapshots")
+    .select("captured_at")
+    .order("captured_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!latestSnap?.captured_at) {
+    issues.push("No row-level catalog snapshot — take one via /api/cron/catalog-snapshot");
+  } else {
+    const ageH = (Date.now() - Date.parse(String(latestSnap.captured_at))) / 3600000;
+    if (ageH > 72) issues.push(`Catalog snapshot stale (${Math.round(ageH)}h old)`);
+  }
+
+  const { data: healthRow } = await supabase
+    .from("system_status")
+    .select("value_json")
+    .eq("key", "catalog_health_score")
+    .maybeSingle();
+  const healthScore = (healthRow?.value_json as { score?: number; belowThreshold?: boolean } | null) || null;
+
   if (issues.length > 0) {
     console.error("DATA HEALTH ISSUES:", issues);
   }
@@ -102,6 +131,7 @@ export async function GET(request: Request) {
       should_be_live: snapshot.shouldBeLiveCount,
       brands_affected: snapshot.brandsAffected,
     },
+    catalog_health_score: healthScore,
     metrics: {
       total_us: totalUS,
       color_pct: colorPct,

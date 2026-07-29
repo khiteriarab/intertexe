@@ -1,5 +1,13 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { detectStaleMerchants, finalizeNightlySyncOps } from "./ops-monitor";
+import { takeCatalogSnapshot, restoreCatalogFromSnapshot, latestCatalogSnapshot } from "../catalog-snapshot";
+import {
+  buildAiCatalogVerification,
+  computeCatalogHealthScore,
+  evaluatePromoteGates,
+  persistCatalogHealthState,
+  runCatalogSmokeTests,
+} from "../catalog-health";
 
 const CHUNK_STATE_KEY = "rakuten_feed_chunk_state";
 const LOCK_KEY = "rakuten_feed_sync_lock";
@@ -83,6 +91,8 @@ export type RakutenChunkResult = {
   };
   error?: string;
   markInactiveError?: string;
+  postCycleVerify?: Record<string, unknown>;
+  preInactiveSnapshotId?: string;
 };
 
 function listingFailed(syncResult: {
@@ -269,15 +279,52 @@ async function runRakutenFeedChunkLocked(
   // full-table RPC here — it times out and can mask successful product inserts.
   let designersSynced = Number((syncResult as { designersSynced?: number }).designersSynced || 0);
 
-  if (cycleComplete && process.env.RAKUTEN_MARK_INACTIVE_ON_CYCLE === "true") {
+  let preInactiveSnapshotId: string | undefined;
+  let postCycleVerify: Record<string, unknown> | undefined;
+
+  if (cycleComplete) {
+    // Row-level LKG before any inactive pass (incident 2026-07-27).
     try {
-      await syncRakutenFeeds({
-        fileOffset: 0,
-        fileLimit: 0,
-        feedUrls: [],
-        markInactive: true,
-        skipFtp: true,
-      });
+      const snap = await takeCatalogSnapshot(
+        supabase,
+        "pre_mark_inactive_cycle",
+        "cycleComplete before markInactive"
+      );
+      preInactiveSnapshotId = snap.snapshotId;
+    } catch (err: unknown) {
+      markInactiveError = `snapshot_failed:${err instanceof Error ? err.message : String(err)}`;
+    }
+  }
+
+  if (
+    cycleComplete &&
+    !markInactiveError &&
+    process.env.RAKUTEN_MARK_INACTIVE_ON_CYCLE === "true"
+  ) {
+    try {
+      const gates = await evaluatePromoteGates(supabase, { requirePrevious: true });
+      if (!gates.ready) {
+        markInactiveError = `promote_gates_blocked:${gates.blockers.join("|")}`;
+        await supabase.from("system_status").upsert({
+          key: "catalog_publish_blocked",
+          value_json: {
+            blocked: true,
+            reason: "promote_gates_blocked",
+            blockers: gates.blockers,
+            warnings: gates.warnings,
+            at: new Date().toISOString(),
+          },
+          updated_at: new Date().toISOString(),
+        });
+      } else {
+        await syncRakutenFeeds({
+          fileOffset: 0,
+          fileLimit: 0,
+          feedUrls: [],
+          markInactive: true,
+          skipFtp: true,
+        });
+      }
     } catch (err: unknown) {
       markInactiveError = err instanceof Error ? err.message : String(err);
     }
@@ -289,6 +336,53 @@ async function runRakutenFeedChunkLocked(
       homepageRefreshed = !railErr;
     } catch {
       homepageRefreshed = false;
+    }
+
+    // Production smoke + health score + advisory AI verification.
+    try {
+      const gates = await evaluatePromoteGates(supabase);
+      const smoke = await runCatalogSmokeTests();
+      const health = await computeCatalogHealthScore(supabase, smoke);
+      const verification = buildAiCatalogVerification({
+        previous: gates.previous,
+        counts: gates.counts,
+        smokeOk: smoke.ok,
+        gates,
+        health,
+      });
+      await persistCatalogHealthState(supabase, { health, smoke, verification, gates });
+
+      let rolledBack = false;
+      if (
+        process.env.CATALOG_SMOKE_AUTOROLLBACK === "1" &&
+        (!smoke.ok || verification.recommendation === "rollback") &&
+        preInactiveSnapshotId
+      ) {
+        await restoreCatalogFromSnapshot(supabase, preInactiveSnapshotId);
+        rolledBack = true;
+      } else if (
+        process.env.CATALOG_SMOKE_AUTOROLLBACK === "1" &&
+        (!smoke.ok || verification.recommendation === "rollback")
+      ) {
+        const latest = await latestCatalogSnapshot(supabase);
+        if (latest?.snapshotId) {
+          await restoreCatalogFromSnapshot(supabase, latest.snapshotId);
+          rolledBack = true;
+        }
+      }
+
+      postCycleVerify = {
+        smokeOk: smoke.ok,
+        healthScore: health.score,
+        recommendation: verification.recommendation,
+        blockers: gates.blockers,
+        rolledBack,
+        preInactiveSnapshotId: preInactiveSnapshotId || null,
+      };
+    } catch (err: unknown) {
+      postCycleVerify = {
+        error: err instanceof Error ? err.message : String(err),
+      };
     }
   }
 
@@ -372,7 +466,7 @@ async function runRakutenFeedChunkLocked(
   });
 
   return {
-    ok: !failedList && !designerFailed,
+    ok: !failedList && !designerFailed && !markInactiveError,
     fileOffset,
     nextFileOffset: nextOffset,
     fileLimit,
@@ -384,6 +478,8 @@ async function runRakutenFeedChunkLocked(
     emailSent: ops.emailSent,
     emailError: ops.emailError,
     markInactiveError,
+    postCycleVerify,
+    preInactiveSnapshotId,
     sync: {
       upserted,
       rejected,
@@ -399,7 +495,9 @@ async function runRakutenFeedChunkLocked(
       ? errorMessages[0] || "FTP listing failed"
       : designerFailed
         ? "designer_sync_failed"
-        : undefined,
+        : markInactiveError
+          ? markInactiveError
+          : undefined,
   };
 }
 

@@ -33,7 +33,8 @@ export const metadata: Metadata = {
     "editorial fashion edit",
   ],
   alternates: { canonical: CANONICAL },
-  robots: { index: true, follow: true },
+  // Private editorial link: accessible directly, but not discoverable in search.
+  robots: { index: false, follow: false },
   openGraph: {
     type: "website",
     siteName: "INTERTEXE",

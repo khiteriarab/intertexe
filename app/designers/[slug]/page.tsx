@@ -10,7 +10,9 @@ import { getBrandProfile } from "../../../lib/brand-profiles";
 import { displayNaturalFiberPercent } from "../../../lib/display-natural-fiber";
 import { DesignerShopSection } from "./DesignerShopSection";
 
-export const dynamic = "force-dynamic";
+// Catalog inventory can be a few minutes stale; serving the last generated page
+// avoids repeating a multi-second database scan for every designer visit.
+export const revalidate = 300;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

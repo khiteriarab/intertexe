@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /**
- * Restore is_active / is_displayable from catalog_last_known_good metadata
- * and optionally re-activate products deactivated after a given timestamp.
+ * Restore catalog from row-level snapshot (preferred) or legacy timestamp heuristic.
  *
- * Dry-run by default:
+ * Dry-run:
  *   node scripts/rollback-catalog-from-snapshot.mjs
- * Apply:
+ * Apply latest row-level snapshot:
  *   node scripts/rollback-catalog-from-snapshot.mjs --apply
+ * Apply specific snapshot:
+ *   node scripts/rollback-catalog-from-snapshot.mjs --apply --snapshot=<uuid>
  *
  * Requires SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
  */
@@ -18,6 +19,8 @@ import { createClient } from "@supabase/supabase-js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const apply = process.argv.includes("--apply");
+const snapshotArg = process.argv.find((a) => a.startsWith("--snapshot="));
+const snapshotIdArg = snapshotArg ? snapshotArg.split("=")[1] : null;
 
 function loadEnv() {
   for (const f of [
@@ -55,6 +58,76 @@ if (!url || !key) {
 
 const sb = createClient(url, key, { auth: { persistSession: false } });
 
+let snapshotId = snapshotIdArg;
+if (!snapshotId) {
+  const { data: latest } = await sb
+    .from("catalog_product_snapshots")
+    .select("snapshot_id, captured_at, displayable_count, source")
+    .order("captured_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (latest?.snapshot_id) {
+    snapshotId = latest.snapshot_id;
+    console.log("Using latest row-level snapshot:", latest);
+  }
+}
+
+if (snapshotId) {
+  const MAX = Number(process.env.CATALOG_ROLLBACK_MAX || 20000);
+  const PAGE = 500;
+  let restored = 0;
+  let offset = 0;
+  console.log("Mode:", apply ? "APPLY" : "DRY-RUN", "snapshot=", snapshotId);
+
+  while (restored < MAX) {
+    const { data: page, error } = await sb
+      .from("catalog_product_snapshot_rows")
+      .select("product_id, id, is_active")
+      .eq("snapshot_id", snapshotId)
+      .eq("is_active", true)
+      .order("product_id", { ascending: true })
+      .range(offset, offset + PAGE - 1);
+    if (error) throw error;
+    if (!page?.length) break;
+
+    if (apply) {
+      const ids = page.map((r) => r.id).filter(Boolean);
+      const productIds = page.map((r) => r.product_id).filter(Boolean);
+      if (ids.length) {
+        const { error: upErr } = await sb.from("products").update({ is_active: true }).in("id", ids);
+        if (upErr) throw upErr;
+      } else if (productIds.length) {
+        const { error: upErr } = await sb
+          .from("products")
+          .update({ is_active: true })
+          .in("product_id", productIds);
+        if (upErr) throw upErr;
+      }
+    }
+    restored += page.length;
+    offset += page.length;
+    console.log(apply ? "restored" : "would_restore", restored);
+    if (page.length < PAGE) break;
+  }
+
+  if (apply) {
+    await sb.from("system_status").upsert({
+      key: "catalog_publish_blocked",
+      value_json: {
+        blocked: false,
+        clearedBy: "rollback-catalog-from-snapshot",
+        snapshotId,
+        restored,
+        at: new Date().toISOString(),
+      },
+      updated_at: new Date().toISOString(),
+    });
+  }
+  console.log("Row-level rollback complete. restored=", restored, "apply=", apply);
+  process.exit(0);
+}
+
+// Legacy fallback: timestamp heuristic from catalog_last_known_good
 const { data: snap, error } = await sb
   .from("system_status")
   .select("value_json,updated_at")
@@ -62,15 +135,14 @@ const { data: snap, error } = await sb
   .maybeSingle();
 if (error) throw error;
 if (!snap?.value_json) {
-  console.error("No catalog_last_known_good snapshot found");
+  console.error("No catalog_product_snapshots row and no catalog_last_known_good");
   process.exit(1);
 }
 
 const capturedAt = snap.value_json.capturedAt || snap.updated_at;
-console.log("Snapshot:", snap.value_json);
+console.log("Legacy snapshot metadata:", snap.value_json);
 console.log("Mode:", apply ? "APPLY" : "DRY-RUN");
 
-// Re-activate products that were marked inactive after the snapshot, with composition present.
 const { count: candidates } = await sb
   .from("products")
   .select("id", { count: "exact", head: true })
@@ -100,10 +172,7 @@ while (restored < MAX) {
   if (selErr) throw selErr;
   if (!batch?.length) break;
   const ids = batch.map((r) => r.id);
-  const { error: upErr } = await sb
-    .from("products")
-    .update({ is_active: true })
-    .in("id", ids);
+  const { error: upErr } = await sb.from("products").update({ is_active: true }).in("id", ids);
   if (upErr) throw upErr;
   restored += ids.length;
   console.log("restored", restored);
@@ -114,11 +183,11 @@ await sb.from("system_status").upsert({
   key: "catalog_publish_blocked",
   value_json: {
     blocked: false,
-    clearedBy: "rollback-catalog-from-snapshot",
+    clearedBy: "rollback-catalog-from-snapshot-legacy",
     restored,
     at: new Date().toISOString(),
   },
   updated_at: new Date().toISOString(),
 });
 
-console.log("Rollback complete. restored=", restored);
+console.log("Legacy rollback complete. restored=", restored);

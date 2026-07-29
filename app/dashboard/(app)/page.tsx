@@ -53,6 +53,48 @@ export default async function HqOverviewPage() {
     (m.scannerClickoutsPrev7d.value || 0) +
     (m.editorialClickoutsPrev7d.value || 0);
 
+  let catalogHealth: {
+    score?: number;
+    threshold?: number;
+    belowThreshold?: boolean;
+    components?: Array<{ key: string; label: string; ok: boolean }>;
+    verification?: { recommendation?: string; summary?: string };
+    smokeOk?: boolean;
+    blocked?: boolean;
+    snapshotAgeDays?: number | null;
+  } | null = null;
+
+  if (supabase) {
+    const [{ data: healthRow }, { data: blockedRow }, { data: snapRow }] = await Promise.all([
+      supabase.from("system_status").select("value_json").eq("key", "catalog_health_score").maybeSingle(),
+      supabase.from("system_status").select("value_json").eq("key", "catalog_publish_blocked").maybeSingle(),
+      supabase
+        .from("catalog_product_snapshots")
+        .select("captured_at")
+        .order("captured_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    const hv = (healthRow?.value_json || {}) as Record<string, unknown>;
+    const bv = (blockedRow?.value_json || {}) as { blocked?: boolean };
+    const capturedAt = snapRow?.captured_at ? Date.parse(String(snapRow.captured_at)) : NaN;
+    const snapshotAgeDays = Number.isFinite(capturedAt)
+      ? (Date.now() - capturedAt) / 86400000
+      : null;
+    catalogHealth = {
+      score: typeof hv.score === "number" ? hv.score : undefined,
+      threshold: typeof hv.threshold === "number" ? hv.threshold : 95,
+      belowThreshold: Boolean(hv.belowThreshold),
+      components: Array.isArray(hv.components)
+        ? (hv.components as Array<{ key: string; label: string; ok: boolean }>)
+        : [],
+      verification: (hv.verification as { recommendation?: string; summary?: string }) || undefined,
+      smokeOk: typeof hv.smokeOk === "boolean" ? hv.smokeOk : undefined,
+      blocked: Boolean(bv.blocked),
+      snapshotAgeDays,
+    };
+  }
+
   const pulse = buildMorningPulse({
     metrics: m,
     google,
@@ -62,6 +104,7 @@ export default async function HqOverviewPage() {
     syncLatest: syncOps.latest,
     totalClicks7d,
     totalClicksPrev7d,
+    catalogHealth,
   });
 
   const deterministic = buildDeterministicInsights({
@@ -74,6 +117,7 @@ export default async function HqOverviewPage() {
     syncLatest: syncOps.latest,
     totalClicks7d,
     totalClicksPrev7d,
+    catalogHealth,
   });
 
   let actions: Awaited<ReturnType<typeof listFounderActions>> = [];

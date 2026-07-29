@@ -33,6 +33,7 @@ import {
   classifyGarment,
   catalogDedupeKey,
   catalogDedupeKeyFromProduct,
+  catalogNormalizeImageUrl,
   dedupeCatalogProducts,
   dedupeCatalogRows,
   offerCompletenessStatus,
@@ -107,6 +108,9 @@ export interface Product {
   offerKey?: string | null;
   /** Catalog gender tag when present (women / men / …). */
   genderScope?: string | null;
+  /** Curator favorite — surfaces first on homepage rails. */
+  isEditorPick?: boolean;
+  editorPickedAt?: string | null;
 }
 
 const DESIGNER_PRODUCT_SLUG_ALIASES: Record<string, string> = {
@@ -993,6 +997,11 @@ export function mapProductRow(row: any): Product {
         : row.genderScope != null && String(row.genderScope).trim()
           ? String(row.genderScope).trim().toLowerCase()
           : null,
+    isEditorPick: row.is_editor_pick === true,
+    editorPickedAt:
+      row.editor_picked_at != null && String(row.editor_picked_at).trim()
+        ? String(row.editor_picked_at).trim()
+        : null,
   };
 }
 
@@ -1338,13 +1347,16 @@ async function collectBrandCatalogPage(
 ): Promise<{ products: Product[]; filteredTotal: number; timedOut: boolean; hasMoreHint: boolean }> {
   // Brand PLPs are per-slug and small vs global shop — scan enough rows that gender /
   // consumer filters still fill pages, and sale rows surface under the designer name.
-  const batchSize = resolveFullTotal ? Math.max(limit * 4, 96) : Math.max(limit * 3, 96);
+  // Avoid 4–6 sequential PostgREST round trips on variant-heavy brands.
+  // A single wider indexed read is much faster and dedupes in-process.
+  const batchSize = Math.max(limit * 8, 384);
   const maxRawScan = resolveFullTotal
     ? 6000
     : Math.min(4000, Math.max(2000, (offset + limit) * 12));
   let rawCursor = 0;
   let skipped = 0;
   const seen = new Set<string>();
+  const seenImages = new Set<string>();
   const page: Product[] = [];
   const allFiltered: Product[] = [];
   let exhausted = false;
@@ -1388,6 +1400,7 @@ async function collectBrandCatalogPage(
       .order("is_sale", { ascending: false })
       .order("natural_fiber_percent", { ascending: false })
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .range(rawCursor, rawCursor + batchSize - 1);
 
     if (error && isCatalogTimeoutError(error)) {
@@ -1409,11 +1422,16 @@ async function collectBrandCatalogPage(
     rawCursor += rows.length;
 
     for (const row of rows) {
-      const product = mapBrandCatalogRow(row as Record<string, unknown>);
+      const product = mapBrandCatalogRow(row as unknown as Record<string, unknown>);
       if (!product) continue;
       const key = catalogDedupeKeyFromProduct(product);
-      if (seen.has(key)) continue;
+      const imageKey = catalogNormalizeImageUrl(product.imageUrl);
+      // Feed rows occasionally carry different product/canonical ids for the exact
+      // same brand image. Treat those as one visible offer without collapsing
+      // legitimate colour variants, whose image URLs differ.
+      if (seen.has(key) || (imageKey != null && seenImages.has(imageKey))) continue;
       seen.add(key);
+      if (imageKey != null) seenImages.add(imageKey);
       allFiltered.push(product);
       if (skipped < offset) {
         skipped += 1;

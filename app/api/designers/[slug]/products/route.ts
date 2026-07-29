@@ -12,7 +12,9 @@ import {
 
 const JSON_HEADERS = {
   "Content-Type": "application/json",
-  "Cache-Control": "no-store, no-cache, must-revalidate",
+  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+  "CDN-Cache-Control": "public, s-maxage=300",
+  "Vercel-CDN-Cache-Control": "public, s-maxage=300",
 };
 
 export async function GET(
@@ -23,7 +25,9 @@ export async function GET(
   const sp = request.nextUrl.searchParams;
   const limit = safeCatalogLimit(sp.get("limit"), CATALOG_PAGE_SIZE);
   const offset = safeCatalogOffset(sp.get("offset"), CATALOG_BRAND_MAX_OFFSET);
-  const skipCount = sp.get("skipCount") === "1";
+  // A full filtered count scans the entire brand and made cold first pages take
+  // 8–25 seconds. Infinite scroll only needs hasMore, so first paint never counts.
+  const skipCount = sp.get("skipCount") === "1" || offset === 0;
   const regionParam = sp.get("region") || sp.get("catalogRegion");
   const region = regionParam?.trim().toLowerCase() || "us";
 

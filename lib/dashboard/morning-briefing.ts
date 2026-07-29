@@ -55,9 +55,26 @@ export function buildMorningPulse(input: {
   syncLatest?: NightlySyncRun | null;
   totalClicks7d: number;
   totalClicksPrev7d?: number | null;
+  catalogHealth?: {
+    score?: number;
+    threshold?: number;
+    belowThreshold?: boolean;
+    blocked?: boolean;
+    smokeOk?: boolean;
+    components?: Array<{ key: string; label: string; ok: boolean }>;
+  } | null;
 }): MorningPulseItem[] {
-  const { metrics: m, google, tiktok, pinterest, commerce, syncLatest, totalClicks7d, totalClicksPrev7d } =
-    input;
+  const {
+    metrics: m,
+    google,
+    tiktok,
+    pinterest,
+    commerce,
+    syncLatest,
+    totalClicks7d,
+    totalClicksPrev7d,
+    catalogHealth,
+  } = input;
   const scanDelta = computePeriodDelta(m.scansLast7d.value, m.scansPrev7d.value, {
     periodLabel: "vs prior 7d",
   });
@@ -206,6 +223,31 @@ export function buildMorningPulse(input: {
       hint: "Needs attention",
       href: "/dashboard/operations",
       attention: true,
+    });
+  }
+
+  if (catalogHealth?.score != null || catalogHealth?.blocked) {
+    const failing = (catalogHealth.components || []).filter((c) => !c.ok).map((c) => c.label);
+    items.unshift({
+      label: "Catalog Health",
+      period: "Live",
+      value:
+        catalogHealth.blocked
+          ? "Blocked"
+          : catalogHealth.score != null
+            ? `${catalogHealth.score}%`
+            : "—",
+      hint: failing.length
+        ? failing.slice(0, 3).join(" · ")
+        : catalogHealth.smokeOk === false
+          ? "Smoke failed"
+          : catalogHealth.belowThreshold
+            ? `Below ${catalogHealth.threshold ?? 95}%`
+            : "All clear",
+      href: "/dashboard/operations",
+      attention: Boolean(
+        catalogHealth.blocked || catalogHealth.belowThreshold || catalogHealth.smokeOk === false
+      ),
     });
   }
 

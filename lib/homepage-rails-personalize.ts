@@ -72,6 +72,29 @@ const ACCESSORY_EXCLUSIONS = [
   "scarf",
 ];
 
+function isMytheresaProduct(product: Pick<Product, "url" | "imageUrl">): boolean {
+  return [product.url, product.imageUrl].some((value) => {
+    if (!value) return false;
+    try {
+      const hostname = new URL(value).hostname.toLowerCase();
+      return hostname === "mytheresa.com" || hostname.endsWith(".mytheresa.com");
+    } catch {
+      return String(value).toLowerCase().includes("mytheresa.");
+    }
+  });
+}
+
+/** Put up to four saved Mytheresa pieces in premium Just Landed slots. */
+function prioritizeJustLandedFavorites(products: Product[]): Product[] {
+  const mytheresa = products.filter(isMytheresaProduct);
+  const other = products.filter((product) => !isMytheresaProduct(product));
+  return [
+    ...mytheresa.slice(0, 4),
+    ...other,
+    ...mytheresa.slice(4),
+  ];
+}
+
 export type HomepageRailsPayload = {
   version: 1;
   personalized: boolean;
@@ -154,7 +177,7 @@ async function resolveFavoriteProducts(
   const externalIds = favoriteIds.filter((id) => !UUID_RE.test(id));
   const byKey = new Map<string, Product>();
   const cols =
-    "id, product_id, brand_slug, brand_name, name, title, url, image_url, price, original_price, composition, natural_fiber_percent, category, color, matching_set_id, is_sale, region, collection_slugs, stock_status, canonical_id, is_displayable, is_active";
+    "id, product_id, brand_slug, brand_name, name, url, image_url, price, original_price, composition, natural_fiber_percent, category, color, matching_set_id, is_sale, region, collection_slugs, stock_status, canonical_id, is_displayable, is_active, is_editor_pick, editor_picked_at";
 
   for (const batch of chunk(uuidIds, 100)) {
     const { data } = await supabase.from("products").select(cols).in("id", batch);
@@ -217,7 +240,7 @@ async function fetchNaturalShoesBaseRail(limit: number): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, product_id, brand_slug, brand_name, name, title, url, image_url, price, original_price, composition, natural_fiber_percent, category, color, matching_set_id, is_sale, region, collection_slugs, stock_status, canonical_id"
+      "id, product_id, brand_slug, brand_name, name, url, image_url, price, original_price, composition, natural_fiber_percent, category, color, matching_set_id, is_sale, region, collection_slugs, stock_status, canonical_id, is_editor_pick, editor_picked_at"
     )
     .eq("is_displayable", true)
     .eq("region", "us")
@@ -227,6 +250,7 @@ async function fetchNaturalShoesBaseRail(limit: number): Promise<Product[]> {
     .or(
       "garment_type.eq.shoes,category.ilike.%Footwear%,category.ilike.%shoe%,name.ilike.%sandal%,name.ilike.%pump%,name.ilike.%mule%,name.ilike.%loafer%,name.ilike.%boot%,name.ilike.%sneaker%,name.ilike.%heel%"
     )
+    .order("is_editor_pick", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(Math.min(Math.max(limit * 2, 24), 64));
 
@@ -259,6 +283,38 @@ async function loadFavoriteIds(userId: string): Promise<string[]> {
     .filter(Boolean);
 }
 
+async function fetchEditorPickProducts(limit: number): Promise<Product[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "id, product_id, brand_slug, brand_name, name, url, image_url, price, original_price, composition, natural_fiber_percent, category, color, matching_set_id, is_sale, region, collection_slugs, stock_status, canonical_id, is_editor_pick, editor_picked_at"
+    )
+    .eq("is_displayable", true)
+    .eq("is_editor_pick", true)
+    .eq("region", "us")
+    .not("image_url", "is", null)
+    .not("price", "is", null)
+    .order("editor_picked_at", { ascending: false })
+    .limit(Math.min(Math.max(limit * 3, 36), 72));
+
+  if (error || !data?.length) return [];
+
+  const seen = new Set<string>();
+  const out: Product[] = [];
+  for (const row of data) {
+    const product = mapProductRow(row);
+    const key = canonicalProductId(product) || product.id;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(product);
+    if (out.length >= limit * 2) break;
+  }
+  return out;
+}
+
 export async function buildPersonalizedHomepageRails(opts?: {
   userId?: string | null;
   limit?: number;
@@ -266,21 +322,38 @@ export async function buildPersonalizedHomepageRails(opts?: {
   const limit = Math.min(Math.max(opts?.limit ?? 12, 4), 24);
   const userId = opts?.userId ? String(opts.userId) : null;
 
-  const [newInBase, shoesBase] = await Promise.all([
+  const [newInBase, shoesBase, editorPicks] = await Promise.all([
     fetchMerchRailProducts(MERCH_RAIL_KEYS.newIn, { limit: Math.min(limit * 2, 28) }),
     fetchNaturalShoesBaseRail(limit),
+    fetchEditorPickProducts(limit),
   ]);
 
   const clothingRail = newInBase.filter((p) => !isFootwearProduct(p));
+  const clothingEditorPicks = prioritizeJustLandedFavorites(
+    editorPicks.filter((p) => !isFootwearProduct(p))
+  );
+  const shoeEditorPicks = editorPicks.filter((p) => isFootwearProduct(p));
+  const editorPickIds = new Set(editorPicks.flatMap((p) => productKeys(p)));
 
   if (!userId) {
     return {
       version: 1,
-      personalized: false,
+      personalized: clothingEditorPicks.length > 0 || shoeEditorPicks.length > 0,
       sectionOrder: [...HOMEPAGE_SECTION_ORDER],
       rails: {
-        new_in: clothingRail.slice(0, limit),
-        natural_shoes: shoesBase.slice(0, limit),
+        // Curator favorites (is_editor_pick) lead New In for every shopper.
+        new_in: mergeLeadingFavorites(
+          clothingEditorPicks,
+          clothingRail,
+          limit,
+          editorPickIds
+        ),
+        natural_shoes: mergeLeadingFavorites(
+          shoeEditorPicks,
+          shoesBase,
+          limit,
+          editorPickIds
+        ),
       },
       favoritePolicy: {
         neverAutoDelete: true,
@@ -291,7 +364,7 @@ export async function buildPersonalizedHomepageRails(opts?: {
   }
 
   const favoriteIdsList = await loadFavoriteIds(userId);
-  const favoriteIds = new Set(favoriteIdsList);
+  const favoriteIds = new Set([...favoriteIdsList, ...editorPickIds]);
   const { products: favoriteProducts, unavailableProductIds } =
     await resolveFavoriteProducts(favoriteIdsList);
 
@@ -301,17 +374,21 @@ export async function buildPersonalizedHomepageRails(opts?: {
 
   return {
     version: 1,
-    personalized: favoriteIds.size > 0,
+    personalized: favoriteIdsList.length > 0 || editorPickIds.size > 0,
     sectionOrder: [...HOMEPAGE_SECTION_ORDER],
     rails: {
       new_in: mergeLeadingFavorites(
-        favoritedInNewIn.concat(clothingFavorites),
+        // Saved Mytheresa clothing gets premium slots, followed by other
+        // favorites/editor picks and the regular Just Landed feed.
+        prioritizeJustLandedFavorites(
+          favoritedInNewIn.concat(clothingFavorites).concat(clothingEditorPicks)
+        ),
         clothingRail,
         limit,
         favoriteIds
       ),
       natural_shoes: mergeLeadingFavorites(
-        shoeFavorites,
+        shoeFavorites.concat(shoeEditorPicks),
         shoesBase,
         limit,
         favoriteIds

@@ -123,8 +123,18 @@ export function buildDeterministicInsights(input: {
   syncLatest?: NightlySyncRun | null;
   totalClicks7d: number;
   totalClicksPrev7d?: number | null;
+  catalogHealth?: {
+    score?: number;
+    threshold?: number;
+    belowThreshold?: boolean;
+    components?: Array<{ key: string; label: string; ok: boolean }>;
+    verification?: { recommendation?: string; summary?: string };
+    smokeOk?: boolean;
+    blocked?: boolean;
+    snapshotAgeDays?: number | null;
+  } | null;
 }): DeterministicInsight[] {
-  const { metrics: m, google, tiktok, pinterest, commerce, syncLatest } = input;
+  const { metrics: m, google, tiktok, pinterest, commerce, syncLatest, catalogHealth } = input;
   const out: DeterministicInsight[] = [];
 
   const sessionsDelta = google.deltas.sessions7d;
@@ -445,6 +455,88 @@ export function buildDeterministicInsights(input: {
       priority: "operational",
       href: "/dashboard/operations",
       expectedImpact: "Keep feed health from degrading availability.",
+    });
+  }
+
+  if (catalogHealth?.blocked) {
+    out.push({
+      fingerprint: "catalog_publish_blocked",
+      title: "Catalog publish is blocked",
+      whatChanged: "Drop guard or post-promote verification blocked catalog changes.",
+      whyItChanged: "Deterministic safety gate — live catalog must not shrink unsafely.",
+      attention: "Do not re-enable nightly inactive until cleared.",
+      recommendedAction: "Open Operations, review catalog_health_score, restore snapshot if needed.",
+      evidence: { catalogHealth },
+      comparisonPeriod: "current",
+      confidence: "high",
+      priority: "critical",
+      href: "/dashboard/operations",
+      expectedImpact: "Prevent another live-catalog wipe.",
+    });
+  }
+
+  if (catalogHealth?.belowThreshold) {
+    out.push({
+      fingerprint: "catalog_health_below_threshold",
+      title: `Catalog Health ${catalogHealth.score ?? "—"}% (below ${catalogHealth.threshold ?? 95}%)`,
+      whatChanged: catalogHealth.verification?.summary || "One or more catalog health components failed.",
+      whyItChanged: "Computed from products, designers, merchants, rails, sale, feeds, and smoke tests.",
+      attention: "Customer experience may be degraded even if totals look fine.",
+      recommendedAction: "Review failing health components, run /api/cron/catalog-promote-verify, consider rollback.",
+      evidence: {
+        score: catalogHealth.score,
+        components: catalogHealth.components || [],
+        smokeOk: catalogHealth.smokeOk ?? null,
+        recommendation: catalogHealth.verification?.recommendation || null,
+      },
+      comparisonPeriod: "current",
+      confidence: "high",
+      priority: "critical",
+      href: "/dashboard/operations",
+      expectedImpact: "Restore a single health indicator before diving into details.",
+    });
+  }
+
+  if (
+    catalogHealth?.verification?.recommendation === "rollback" ||
+    catalogHealth?.verification?.recommendation === "review"
+  ) {
+    out.push({
+      fingerprint: `catalog_ai_verify_${catalogHealth.verification.recommendation}`,
+      title:
+        catalogHealth.verification.recommendation === "rollback"
+          ? "AI catalog verification recommends rollback"
+          : "AI catalog verification needs review",
+      whatChanged: catalogHealth.verification.summary || "Advisory verification flagged the promotion.",
+      whyItChanged: "Advisory second pair of eyes — promotion gates remain deterministic.",
+      attention: "Confirm before trusting the new catalog version.",
+      recommendedAction:
+        catalogHealth.verification.recommendation === "rollback"
+          ? "Roll back to previous snapshot and keep publish blocked."
+          : "Review diffs in Operations, then approve or roll back.",
+      evidence: { verification: catalogHealth.verification },
+      comparisonPeriod: "latest_promote",
+      confidence: "medium",
+      priority: catalogHealth.verification.recommendation === "rollback" ? "critical" : "operational",
+      href: "/dashboard/operations",
+      expectedImpact: "Catch abnormal catalog deltas that count gates might miss.",
+    });
+  }
+
+  if (catalogHealth?.snapshotAgeDays != null && catalogHealth.snapshotAgeDays > 2) {
+    out.push({
+      fingerprint: "catalog_snapshot_stale",
+      title: "Catalog LKG snapshot is stale",
+      whatChanged: `Last row-level snapshot is ${Math.round(catalogHealth.snapshotAgeDays)} days old.`,
+      whyItChanged: "No recent pre-promote snapshot was captured.",
+      attention: "Rollback would restore an outdated state.",
+      recommendedAction: "Run /api/cron/catalog-snapshot before the next feed cycle.",
+      evidence: { snapshotAgeDays: catalogHealth.snapshotAgeDays },
+      comparisonPeriod: "current",
+      confidence: "high",
+      priority: "operational",
+      href: "/dashboard/operations",
+      expectedImpact: "Guarantee a fresh restore point.",
     });
   }
 

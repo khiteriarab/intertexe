@@ -224,16 +224,16 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   moodBoard: {
     images: [
       {
-        src: "/khiteri/zimmermann-awaken.jpg",
-        alt: "Zimmermann Awaken Floral Cotton Maxi Dress",
+        src: "/khiteri/cult-gaia-derry.jpg",
+        alt: "Cult Gaia Derry linen dress",
       },
       {
         src: "/khiteri/attico-barrel-sweats.jpg",
         alt: "The Attico Cotton Jersey Barrel Leg Sweatpants — full length",
       },
       {
-        src: "/khiteri/toteme-linen-trouser.jpg",
-        alt: "Toteme Tailored Linen Trouser",
+        src: "/khiteri/coperni-floral-swimsuit.jpg",
+        alt: "Coperni Floral-appliqué swimsuit",
       },
       {
         src: "/khiteri/manolo-sumbasan.jpg",
@@ -244,34 +244,33 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
   products: [
     {
       id: "01",
-      name: "Awaken Floral Cotton Maxi Dress",
-      composition: "100% Cotton",
-      price: "$995",
-      brand: "Zimmermann",
-      catalogSku: "P01129812",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317217151635318523069848&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fzimmermann-awaken-floral-cotton-maxi-dress-beige-p01129812%3Ffeed_num%3DP01129812%26feed_des%3DZimmermann%26feed_mwg%3Dclothing",
+      name: "Derry Dress",
+      composition: "100% Linen",
+      price: "$698",
+      brand: "Cult Gaia",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=13867&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcult-gaia-derry-dress%3FID%3D6094442",
       hrefByRegion: {
-        us: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317217151635318523069848&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fzimmermann-awaken-floral-cotton-maxi-dress-beige-p01129812%3Ffeed_num%3DP01129812%26feed_des%3DZimmermann%26feed_mwg%3Dclothing",
+        us: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=13867&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcult-gaia-derry-dress%3FID%3D6094442",
       },
       image: {
-        src: "/khiteri/zimmermann-awaken.jpg",
-        alt: "Zimmermann Awaken Floral Cotton Maxi Dress on MyTheresa",
+        src: "/khiteri/cult-gaia-derry.jpg",
+        alt: "Cult Gaia Derry Dress in linen",
       },
     },
     {
       id: "02",
-      name: "Tailored Linen Trouser",
-      composition: "100% Linen",
-      price: "$770",
-      brand: "Toteme",
-      catalogSku: "P01192864",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317211581083702894072780&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ftoteme-cropped-linen-wide-leg-pants-beige-p01192864%3Ffeed_num%3DP01192864%26feed_des%3DToteme%26feed_mwg%3Dclothing",
+      name: "Floral-appliqué Swimsuit",
+      composition: "80% Polyamide, 20% Elastane",
+      price: "$320",
+      brand: "Coperni",
+      catalogSku: "P00996331",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=43172&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fcoperni-floral-applique-swimsuit-black-p00996331",
       hrefByRegion: {
-        us: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317211581083702894072780&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ftoteme-cropped-linen-wide-leg-pants-beige-p01192864%3Ffeed_num%3DP01192864%26feed_des%3DToteme%26feed_mwg%3Dclothing",
+        us: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=43172&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fcoperni-floral-applique-swimsuit-black-p00996331",
       },
       image: {
-        src: "/khiteri/toteme-linen-trouser.jpg",
-        alt: "Toteme Tailored Linen Trouser on MyTheresa",
+        src: "/khiteri/coperni-floral-swimsuit.jpg",
+        alt: "Coperni Floral-appliqué swimsuit on Mytheresa",
       },
     },
     {
@@ -317,21 +316,6 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
     },
     {
       id: "06",
-      name: "Derry Dress",
-      composition: "100% Linen",
-      price: "$698",
-      brand: "Cult Gaia",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.1386715038447296182783142&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcult-gaia-derry-dress%3FID%3D6094442%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
-      hrefByRegion: {
-        us: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.1386715038447296182783142&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcult-gaia-derry-dress%3FID%3D6094442%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
-      },
-      image: {
-        src: "/khiteri/cult-gaia-derry.jpg",
-        alt: "Cult Gaia Derry Dress in linen",
-      },
-    },
-    {
-      id: "07",
       name: "Finny White Sleeveless Linen Top",
       composition: "100% Linen",
       price: "$130",
@@ -343,7 +327,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "08",
+      id: "07",
       name: "Denim Laced Midi",
       composition: "98% Cotton, 2% Elastane",
       price: "$345",
@@ -355,7 +339,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "09",
+      id: "08",
       name: "Percy Black Silk Long Sleeve Shirt",
       composition: "100% Silk",
       price: "$170",
@@ -367,7 +351,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "10",
+      id: "09",
       name: "Pippy Buttermilk Linen Strapless Top",
       composition: "100% Linen",
       price: "$100",
@@ -379,7 +363,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "11",
+      id: "10",
       name: "Lily Babydoll Dress",
       composition: "100% Silk",
       price: "$498",
@@ -391,7 +375,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "12",
+      id: "11",
       name: "Nama Leather Platform Thong Sandals",
       composition: "Upper: 100% Bovine leather",
       price: "$690",
@@ -404,7 +388,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "13",
+      id: "12",
       name: "Plot Woven Leather Sandals",
       composition: "Upper: 100% Lamb Leather",
       price: "$910",
@@ -417,7 +401,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
       },
     },
     {
-      id: "14",
+      id: "13",
       name: "Sumbasan Embellished Satin Sandals",
       composition: "Upper: 100% Fabric",
       price: "$1,150",
