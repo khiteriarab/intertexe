@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../../lib/auth-helpers";
 import { getServerSupabase } from "../../../../lib/supabase-server";
+import { clearCuratorEditorPickAfterUnfavorite } from "../../../../lib/editor-pick-sync";
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ productId: string }> }) {
   const user = await getUserFromToken(request.headers.get("authorization"));
@@ -11,6 +12,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const supabase = getServerSupabase();
   if (!supabase) return NextResponse.json({ message: "Database not available" }, { status: 500 });
 
-  await supabase.from("product_favorites").delete().eq("user_id", String(user.id)).eq("product_id", productId);
-  return NextResponse.json({ message: "Removed" });
+  const result = await clearCuratorEditorPickAfterUnfavorite(supabase, user, productId);
+  return NextResponse.json({
+    message: "Removed",
+    aliases: result.aliases,
+    clearedEditorPick: result.clearedEditorPick,
+  });
 }

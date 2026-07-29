@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../lib/auth-helpers";
 import { getServerSupabase } from "../../../lib/supabase-server";
 import { pruneUnavailableProductFavorites } from "../../../lib/prune-product-favorites";
+import { bustHomepageCacheForCuratorFavorite } from "../../../lib/editor-pick-sync";
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromToken(request.headers.get("authorization"));
@@ -81,5 +82,6 @@ export async function POST(request: NextRequest) {
     .upsert(row, { onConflict: "user_id,product_id" });
 
   if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  bustHomepageCacheForCuratorFavorite(user);
   return NextResponse.json({ success: true }, { status: 201 });
 }

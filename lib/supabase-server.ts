@@ -55,6 +55,7 @@ import {
 import { normalizeCatalogRegion } from "./shipping-regions";
 import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { rowMatchesTaxonomy } from "./unified-catalog-taxonomy";
+import { queryCatalogBrowsePageV2 } from "./catalog-browse-v2";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
@@ -396,6 +397,22 @@ export async function fetchCatalogProductsByFiber(opts: {
   const rangeEnd = offset + limit - 1;
   const t0 = Date.now();
   let rows: any[] = [];
+
+  // Same authoritative browse path as iOS. Its default ordering promotes
+  // curator favorites within the requested material/category for every user.
+  const authoritative = await queryCatalogBrowsePageV2({
+    region: "us",
+    fiber: normalizedFiber,
+    category,
+    limit,
+    offset,
+    sort: "new",
+    includeUnverified: true,
+    apparelOnly: true,
+  });
+  if (!authoritative.error && authoritative.products.length > 0) {
+    return authoritative.products;
+  }
 
   let query = liveProductsApparelFrom(supabase)
     
