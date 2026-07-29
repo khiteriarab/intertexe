@@ -218,7 +218,7 @@ Execute this release **in phases**. After each phase, stop and return:
 
 | Claim | Result | Evidence |
 |---|---|---|
-| Nightly Rakuten schedule disabled | YES | `.github/workflows/rakuten-feed-sync.yml` schedule commented out |
+| Nightly Rakuten schedule disabled | YES | GitHub Actions workflow `Rakuten Feed Sync` state `disabled_manually` (id 320291642). Local YAML also has schedule commented; remote YAML push needs `workflow` PAT scope. |
 | No direct live `products` writes by default | YES | `ingest-guard.cjs` + `rakuten-sync.js` refuse live unless `FEED_LIVE_INGEST_ENABLED=1` and kill switches clear; prod kill switches `blocked:true` |
 | Staging → validate → promote implemented | YES (armed off) | staging tables + `promote-staging.ts` gates on complete/non-empty/full-file sessions |
 | Failed/partial/empty cannot affect prod | YES while blocked | Kill switches + schedule off + live ingest env `0`; promote rejects `empty_session` / `partial_files_processed` / `cycle_incomplete` |
