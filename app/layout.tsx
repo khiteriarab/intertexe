@@ -61,10 +61,8 @@ export const metadata: Metadata = {
     images: [OG_IMAGE.url],
   },
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon.png", type: "image/png" },
-    ],
+    icon: [{ url: "/favicon.png", type: "image/png", sizes: "32x32" }],
+    apple: [{ url: "/app-icon.png", type: "image/png", sizes: "1024x1024" }],
   },
   other: {
     "theme-color": "#FAFAF8",
@@ -79,7 +77,7 @@ const orgSchema = {
   name: "INTERTEXE",
   alternateName: ["intertexe", "Intertexe", "INTERTEXE.COM"],
   url: SITE_URL,
-  logo: `${SITE_URL}/favicon.svg`,
+  logo: `${SITE_URL}/app-icon.png`,
   description: GENERIC_SITE_DESCRIPTION,
   foundingDate: "2025",
   foundingLocation: {

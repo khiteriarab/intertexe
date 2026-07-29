@@ -288,7 +288,8 @@ export async function computeCatalogHealthScore(
 
   const { count: railCount } = await supabase
     .from("homepage_feed_items")
-    .select("id", { count: "exact", head: true });
+    // No `id` column on this table — `select('id')` yields a null count.
+    .select("rail_key", { count: "exact", head: true });
 
   const components: CatalogHealthComponent[] = [
     {

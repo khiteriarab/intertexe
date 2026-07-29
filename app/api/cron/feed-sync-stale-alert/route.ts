@@ -4,7 +4,9 @@
  * - zero files discovered
  * - zero upserts with files present
  * - checkpoint not advancing
- * - merchant feed stale (optional MID watch list)
+ * - feed sync stale
+ * - catalog nearly empty (displayable products only)
+ * - homepage rails empty (separate from catalog health)
  */
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
@@ -51,6 +53,9 @@ export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
 
+  // Emergency mute: keep monitoring JSON, stop email spam during intentional pause.
+  const alertsMuted = String(process.env.FEED_SYNC_ALERTS_MUTED || "") === "1";
+
   const supabaseUrl =
     process.env.SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -68,7 +73,8 @@ export async function GET(request: Request) {
       supabase.from("system_status").select("value_json, updated_at").eq("key", "rakuten_feed_chunk_state").maybeSingle(),
       supabase.from("system_status").select("value_json, updated_at").eq("key", "daily_catalog_refresh").maybeSingle(),
       supabase.from("products").select("id", { count: "exact", head: true }).eq("is_displayable", true),
-      supabase.from("homepage_feed_items").select("id", { count: "exact", head: true }),
+      // homepage_feed_items has no `id` column — selecting id returns a null count and false "empty" alerts.
+      supabase.from("homepage_feed_items").select("rail_key", { count: "exact", head: true }),
     ]);
 
   const sync = syncRow?.value_json || {};
@@ -76,7 +82,12 @@ export async function GET(request: Request) {
   const updatedAt = syncRow?.updated_at ? new Date(syncRow.updated_at).getTime() : 0;
   const ageMs = updatedAt ? Date.now() - updatedAt : null;
   const syncStale = !updatedAt || (ageMs != null && ageMs > STALE_MS);
-  const catalogEmpty = (displayable ?? 0) < 50 || (feedItems ?? 0) < 10;
+  const displayableCount = displayable ?? 0;
+  const homepageFeedCount = feedItems ?? 0;
+  // Catalog emptiness is about live products — not homepage rail cache.
+  const catalogNearlyEmpty = displayableCount < 50;
+  const homepageRailsEmpty = homepageFeedCount < 10;
+  const dailyRefreshMissing = !dailyRow?.updated_at;
 
   const errors: string[] = Array.isArray(sync.errors)
     ? sync.errors.map(String)
@@ -95,31 +106,50 @@ export async function GET(request: Request) {
     chunkRow?.updated_at != null &&
     Date.now() - new Date(chunkRow.updated_at).getTime() > CHECKPOINT_STUCK_MS;
 
-  const problems: string[] = [];
-  if (listingFailed) problems.push("FTP listing failed (450 / could not list)");
-  if (zeroFiles && !syncStale) problems.push("Zero catalog files discovered");
-  if (zeroUpserts) problems.push("Files processed but zero products upserted");
-  if (checkpointStuck) problems.push("Checkpoint stuck (offset not advancing)");
-  if (syncStale) problems.push(`Feed sync stale (${ageMs == null ? "?" : Math.round(ageMs / 3600000)}h)`);
-  if (catalogEmpty) problems.push("Catalog nearly empty");
+  const critical: string[] = [];
+  const warnings: string[] = [];
+
+  if (listingFailed) critical.push("FTP listing failed (450 / could not list)");
+  if (zeroFiles && !syncStale) critical.push("Zero catalog files discovered");
+  if (zeroUpserts) critical.push("Files processed but zero products upserted");
+  if (checkpointStuck) critical.push("Checkpoint stuck (offset not advancing)");
+  if (catalogNearlyEmpty) {
+    critical.push(`Catalog nearly empty (displayable=${displayableCount})`);
+  }
+
+  if (syncStale) {
+    const ageH = ageMs == null ? "?" : Math.round(ageMs / 3600000);
+    // Stale sync with a healthy catalog is an ops warning, not a catalog wipe signal.
+    if (catalogNearlyEmpty) critical.push(`Feed sync stale (${ageH}h)`);
+    else warnings.push(`Feed sync stale (${ageH}h) — catalog still displayable=${displayableCount}`);
+  }
+  if (homepageRailsEmpty) {
+    warnings.push(
+      `Homepage rails empty (homepage_feed_items=${homepageFeedCount}) — run refresh_homepage_feeds; catalog displayable=${displayableCount}`
+    );
+  }
+  if (dailyRefreshMissing) {
+    warnings.push("Daily catalog refresh has never recorded a successful run");
+  }
+
+  const problems = [...critical, ...warnings];
+  const isCritical = critical.length > 0;
 
   let emailed = false;
-  if (problems.length && process.env.RESEND_API_KEY) {
+  if (problems.length && process.env.RESEND_API_KEY && !alertsMuted) {
     emailed = await sendEmail(
-      problems.some((p) => /FTP|empty|stuck/i.test(p))
-        ? "INTERTEXE CRITICAL: feed pipeline"
-        : "INTERTEXE feed sync warning",
+      isCritical ? "INTERTEXE CRITICAL: feed pipeline" : "INTERTEXE feed sync warning",
       [
-        ...problems.map((p) => `- ${p}`),
-        "",
+        ...(critical.length ? ["Critical:", ...critical.map((p) => `- ${p}`), ""] : []),
+        ...(warnings.length ? ["Warnings:", ...warnings.map((p) => `- ${p}`), ""] : []),
         `Last Rakuten sync: ${syncRow?.updated_at || "never"}`,
         `Last daily refresh: ${dailyRow?.updated_at || "never"}`,
         `nextFileOffset: ${chunk.nextFileOffset ?? "n/a"}`,
         `totalCatalogFiles: ${sync.totalCatalogFiles ?? chunk.totalCatalogFiles ?? "n/a"}`,
         `upserted: ${sync.upserted ?? chunk.upserted ?? "n/a"}`,
         `errors: ${errors.join(" | ") || "none"}`,
-        `displayable: ${displayable ?? 0}`,
-        `homepage feed items: ${feedItems ?? 0}`,
+        `displayable: ${displayableCount}`,
+        `homepage feed items: ${homepageFeedCount}`,
       ].join("\n")
     );
   }
@@ -130,12 +160,18 @@ export async function GET(request: Request) {
       ok: !stale,
       stale,
       problems,
+      critical,
+      warnings,
       listingFailed,
       zeroFiles,
       zeroUpserts,
       checkpointStuck,
       syncStale,
-      catalogEmpty,
+      catalogNearlyEmpty,
+      homepageRailsEmpty,
+      dailyRefreshMissing,
+      /** @deprecated use catalogNearlyEmpty — kept for older monitors */
+      catalogEmpty: catalogNearlyEmpty,
       lastSync: syncRow?.updated_at || null,
       lastDailyRefresh: dailyRow?.updated_at || null,
       chunk,
@@ -146,9 +182,10 @@ export async function GET(request: Request) {
         nextFileOffset: sync.nextFileOffset ?? chunk.nextFileOffset,
         errors,
       },
-      displayable: displayable ?? 0,
-      homepageFeedItems: feedItems ?? 0,
+      displayable: displayableCount,
+      homepageFeedItems: homepageFeedCount,
       emailed,
+      alertsMuted,
     },
     { status: stale ? 207 : 200 }
   );
