@@ -188,6 +188,41 @@ async function runRakutenFeedChunkLocked(
   }
 
   const fileLimit = DEFAULT_FILE_LIMIT;
+
+  // P0: refuse chunk runs that would mutate live catalog while kill switches are armed,
+  // unless stage-only mode is active.
+  const { createRequire } = await import("node:module");
+  const requireCjs = createRequire(import.meta.url);
+  const { assertIngestAllowed } = requireCjs("./ingest-guard.cjs");
+  const ingestGate = await assertIngestAllowed(supabase);
+  if (!ingestGate.ok) {
+    const ops = await recordOps(supabase, startedAt, {
+      ok: false,
+      listingFailed: false,
+      checkpointBefore: fileOffset,
+      checkpointAfter: fileOffset,
+      totalCatalogFiles: 0,
+      filesProcessed: 0,
+      upserted: 0,
+      inserted: 0,
+      updated: 0,
+      rejected: 0,
+      designersSynced: 0,
+      errors: [ingestGate.reason],
+      ingestBlocked: true,
+    });
+    return {
+      ok: false,
+      fileOffset,
+      nextFileOffset: fileOffset,
+      fileLimit,
+      cycleComplete: false,
+      sync: { errors: 1, errorMessages: [ingestGate.reason], upserted: 0 },
+      error: ingestGate.reason,
+      ...ops,
+    };
+  }
+
   const { syncRakutenFeeds } = await import("./rakuten-sync.js");
 
   let syncResult: Awaited<ReturnType<typeof syncRakutenFeeds>>;

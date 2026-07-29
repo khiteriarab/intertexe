@@ -184,8 +184,8 @@ export async function takeCatalogSnapshot(
 
     offset += rows.length;
     if (rows.length < ROW_PAGE) break;
-    // Safety cap — full catalog snapshot is large; live surface is enough for restore.
-    if (offset >= 250000) break;
+  // Safety cap removed (P0): capture the full displayable surface for restore.
+  // Previously capped at 250k which left most of a multi-million catalog unrestorable.
   }
 
   await supabase.from("system_status").upsert({
@@ -263,7 +263,12 @@ export async function restoreCatalogFromSnapshot(
   snapshotId: string,
   options?: { maxRows?: number; dryRun?: boolean }
 ): Promise<{ restored: number; dryRun: boolean; snapshotId: string }> {
-  const maxRows = options?.maxRows ?? Number(process.env.CATALOG_ROLLBACK_MAX || 20000);
+  // Uncapped by default (P0). Set CATALOG_ROLLBACK_MAX only to intentionally bound restores.
+  const maxRows =
+    options?.maxRows ??
+    (process.env.CATALOG_ROLLBACK_MAX
+      ? Number(process.env.CATALOG_ROLLBACK_MAX)
+      : Number.POSITIVE_INFINITY);
   const dryRun = options?.dryRun === true;
   let restored = 0;
   let offset = 0;

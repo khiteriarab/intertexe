@@ -73,7 +73,9 @@ if (!snapshotId) {
 }
 
 if (snapshotId) {
-  const MAX = Number(process.env.CATALOG_ROLLBACK_MAX || 20000);
+  const MAX = process.env.CATALOG_ROLLBACK_MAX
+    ? Number(process.env.CATALOG_ROLLBACK_MAX)
+    : Number.POSITIVE_INFINITY;
   const PAGE = 500;
   let restored = 0;
   let offset = 0;
@@ -158,7 +160,9 @@ if (!apply) {
   process.exit(0);
 }
 
-const MAX = Number(process.env.CATALOG_ROLLBACK_MAX || 5000);
+  const MAX = process.env.CATALOG_ROLLBACK_MAX
+    ? Number(process.env.CATALOG_ROLLBACK_MAX)
+    : Number.POSITIVE_INFINITY;
 let restored = 0;
 while (restored < MAX) {
   const { data: batch, error: selErr } = await sb

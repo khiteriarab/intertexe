@@ -205,14 +205,30 @@ Execute this release **in phases**. After each phase, stop and return:
 
 | Phase | Completed | Evidence | Blockers |
 |---|---|---|---|
-| 1 Baseline | | | |
-| 2 Staging/promote/rollback | | | |
-| 3 Gates/smoke/health/AI | | | |
-| 4 P0 proof / nightly sync | | | |
+| 1 Baseline | 2026-07-29 | Audit: live `products` still large; kill switches armed in `system_status`; GHA schedule disabled in `.github/workflows/rakuten-feed-sync.yml` | Full baseline count table still to be refreshed from prod SQL |
+| 2 Staging/promote/rollback | 2026-07-29 | Migration `20260729_feed_staging_and_kill_switch.sql`; `lib/feed-sync/staging.cjs`, `promote-staging.ts`, `ingest-guard.cjs`; snapshot uncapped in `lib/catalog-snapshot.ts`; prod tables `feed_staging_*` present; kill switch script `scripts/set-catalog-kill-switch.mjs` | Live promote remains blocked by design until operators clear kill switches after stage dry-runs |
+| 3 Gates/smoke/health/AI | Partial | Existing `evaluatePromoteGates` / `runCatalogSmokeTests`; `CATALOG_SMOKE_AUTOROLLBACK=1` set on Vercel Production+Preview | Full AI advisory evidence still open |
+| 4 P0 proof / nightly sync | 2026-07-29 | Nightly cron commented out; fixture suite `scripts/feed-protection.test.ts` (8/8 pass); live ingest default-denied | Do **not** re-enable nightly until stage→promote dry-run evidence is attached |
 | 5 Designer | | | |
 | 6 Sale | | | |
 | 7 Rich push | | | |
 | 8 Production closeout | | | |
+
+### P0 protection audit (2026-07-29)
+
+| Claim | Result | Evidence |
+|---|---|---|
+| Nightly Rakuten schedule disabled | YES | `.github/workflows/rakuten-feed-sync.yml` schedule commented out |
+| No direct live `products` writes by default | YES | `ingest-guard.cjs` + `rakuten-sync.js` refuse live unless `FEED_LIVE_INGEST_ENABLED=1` and kill switches clear; prod kill switches `blocked:true` |
+| Staging → validate → promote implemented | YES (armed off) | staging tables + `promote-staging.ts` gates on complete/non-empty/full-file sessions |
+| Failed/partial/empty cannot affect prod | YES while blocked | Kill switches + schedule off + live ingest env `0`; promote rejects `empty_session` / `partial_files_processed` / `cycle_incomplete` |
+| Uncapped snapshot/rollback | YES (code) | Removed 250k capture cap; rollback default uncapped unless `CATALOG_ROLLBACK_MAX` set |
+| Promote gates/smoke automatic | PARTIAL | Vercel crons exist; post-cycle verify in chunk runner |
+| Smoke failure auto-rollback | YES (armed) | Code path + `CATALOG_SMOKE_AUTOROLLBACK=1` on Vercel |
+| Emergency kill switch | YES | `scripts/set-catalog-kill-switch.mjs`; `catalog_publish_blocked` + `feed_ingest_blocked` set in prod 2026-07-29T19:11:17Z |
+| Evidence doc has proof | YES (this section) | Fixture output: 8/8 pass on `node --import tsx --test scripts/feed-protection.test.ts` |
+
+**Live dataset protected against failed/incomplete feed?** **YES** (nightly off + ingest/publish kill switches armed + live writes denied by default). Re-enable only after staged dry-runs.
 
 ### Production baseline counts (Phase 1)
 
