@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
-import type { KhiterisEditConfig, KhiterisEditProduct } from "./khiteris-edit";
+import {
+  isAffiliateTrackingUrl,
+  type KhiterisEditConfig,
+  type KhiterisEditProduct,
+} from "./khiteris-edit";
 import { catalogRegionFallbackChain } from "./geo-detect";
 
 type CatalogRegion = "us" | "uk" | "eu" | "ca";
@@ -46,7 +50,11 @@ function decodeAffiliateDest(url: string): string {
 }
 
 function scoreCatalogRow(row: CatalogUrlRow, product: KhiterisEditProduct): number {
-  if (!row.url?.trim() || !brandMatches(row.brand_name, product.brand)) {
+  if (
+    !row.url?.trim() ||
+    !isAffiliateTrackingUrl(row.url) ||
+    !brandMatches(row.brand_name, product.brand)
+  ) {
     return -1;
   }
 

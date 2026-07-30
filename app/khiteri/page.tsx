@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { getKhiterisEditConfig, KHITERIS_EDIT_JULY_2026 } from "../../lib/khiteris-edit";
+import {
+  affiliateOnlyKhiterisEdit,
+  getKhiterisEditConfig,
+  KHITERIS_EDIT_JULY_2026,
+} from "../../lib/khiteris-edit";
 import { catalogRegionFromCountry, getCountryFromHeaders } from "../../lib/geo-detect";
 import { resolveKhiterisEditForRegion } from "../../lib/khiteri-regional-links";
 import { KhiterisEditView } from "./KhiterisEditView";
@@ -56,7 +60,9 @@ export default async function KhiteriPage(props: { searchParams?: Promise<{ prev
   const country = getCountryFromHeaders(await headers());
   const catalogRegion = catalogRegionFromCountry(country);
   const params = (await props.searchParams) || {};
-  const sourceEdit = params.preview === "2026-07" ? KHITERIS_EDIT_JULY_2026 : baseEdit;
+  const sourceEdit = affiliateOnlyKhiterisEdit(
+    params.preview === "2026-07" ? KHITERIS_EDIT_JULY_2026 : baseEdit
+  );
   // Regional catalog lookup is soft-budgeted so the page never waits on a slow Supabase round-trip.
   const edit = await resolveKhiterisEditForRegion(sourceEdit, catalogRegion);
 

@@ -238,7 +238,12 @@ async function scrapeBrand(brand) {
       composition,
       natural_fiber_percent: naturalFiberPercent,
       category,
-      approved: "yes",
+      // Direct brand-store discovery is not commissionable. Keep it out of
+      // consumer catalog surfaces until an affiliate offer is attached.
+      approved: "no",
+      is_active: false,
+      is_displayable: false,
+      feed_source: "direct_nonaffiliate",
     });
   }
   return results;

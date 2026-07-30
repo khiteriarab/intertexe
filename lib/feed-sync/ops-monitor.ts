@@ -278,8 +278,9 @@ export async function finalizeNightlySyncOps(supabase, input) {
     run.lastSuccessfulAt = finishedAt;
   }
 
-  // Email only when action required
-  if (evaluated.status === "failure" || evaluated.status === "warning") {
+  // Keep HQ run history during an intentional feed pause, but suppress alert spam.
+  const alertsMuted = String(process.env.FEED_SYNC_ALERTS_MUTED || "") === "1";
+  if (!alertsMuted && (evaluated.status === "failure" || evaluated.status === "warning")) {
     const mail = buildAlertEmail(run);
     const sent = await sendOpsAlertEmail(mail);
     run.emailSent = sent.ok;

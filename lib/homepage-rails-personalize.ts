@@ -371,6 +371,15 @@ export async function buildPersonalizedHomepageRails(opts?: {
   const clothingFavorites = favoriteProducts.filter((p) => !isFootwearProduct(p));
   const shoeFavorites = favoriteProducts.filter((p) => isFootwearProduct(p));
   const favoritedInNewIn = clothingRail.filter((p) => isSaved(p, favoriteIds));
+  const isEditorPickKey = (product: Product) =>
+    productKeys(product).some((key) => editorPickIds.has(key));
+  // Editor's Picks always lead — never demote them behind the shopper's hearts.
+  // Mytheresa premium slots apply only among non-curator favorites.
+  const clothingFavoriteLeaders = prioritizeJustLandedFavorites(
+    favoritedInNewIn
+      .concat(clothingFavorites)
+      .filter((product) => !isEditorPickKey(product))
+  );
 
   return {
     version: 1,
@@ -378,17 +387,13 @@ export async function buildPersonalizedHomepageRails(opts?: {
     sectionOrder: [...HOMEPAGE_SECTION_ORDER],
     rails: {
       new_in: mergeLeadingFavorites(
-        // Saved Mytheresa clothing gets premium slots, followed by other
-        // favorites/editor picks and the regular Just Landed feed.
-        prioritizeJustLandedFavorites(
-          favoritedInNewIn.concat(clothingFavorites).concat(clothingEditorPicks)
-        ),
+        clothingEditorPicks.concat(clothingFavoriteLeaders),
         clothingRail,
         limit,
         favoriteIds
       ),
       natural_shoes: mergeLeadingFavorites(
-        shoeFavorites.concat(shoeEditorPicks),
+        shoeEditorPicks.concat(shoeFavorites),
         shoesBase,
         limit,
         favoriteIds

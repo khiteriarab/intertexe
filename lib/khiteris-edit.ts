@@ -50,6 +50,30 @@ export type KhiterisEditConfig = {
   products: KhiterisEditProduct[];
 };
 
+const FIRST_SALE_MYTHERESA_URL =
+  "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2034086.356631096927065432749883&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fgb%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing";
+
+/** The /khiteri Mytheresa click most closely associated with INTERTEXE's first sale. */
+const FIRST_SALE_MYTHERESA_PRODUCT: KhiterisEditProduct = {
+  id: "first-sale-mytheresa",
+  name: "Tailored Linen Trouser",
+  composition: "100% Linen",
+  price: "$298",
+  brand: "Citizens of Humanity",
+  catalogSku: "P01184019",
+  href: FIRST_SALE_MYTHERESA_URL,
+  hrefByRegion: {
+    us: FIRST_SALE_MYTHERESA_URL,
+    ca: FIRST_SALE_MYTHERESA_URL,
+    uk: FIRST_SALE_MYTHERESA_URL,
+    eu: FIRST_SALE_MYTHERESA_URL,
+  },
+  image: {
+    src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/22/P01184019.jpg",
+    alt: "Citizens of Humanity Tailored Linen Trouser on model",
+  },
+};
+
 /** July 2026 — live catalog picks (full-body on-model images where available). */
 export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
   slug: "khiteri",
@@ -82,24 +106,7 @@ export const KHITERIS_EDIT_JULY_2026: KhiterisEditConfig = {
     ],
   },
   products: [
-    {
-      id: "01",
-      name: "Tailored Linen Trouser",
-      composition: "100% Linen",
-      price: "$298",
-      brand: "Citizens of Humanity",
-      catalogSku: "P01184019",
-      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138678912206130907219885&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcitizens-of-humanity-brynn-drawstring-linen-trousers%3FID%3D5885503%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
-      hrefByRegion: {
-        us: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138678912206130907219885&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fcitizens-of-humanity-brynn-drawstring-linen-trousers%3FID%3D5885503%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
-        uk: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2034086.356631096927065432749883&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fgb%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing",
-        eu: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2034086.356631096927065432749883&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fgb%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing",
-      },
-      image: {
-        src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/22/P01184019.jpg",
-        alt: "Citizens of Humanity Tailored Linen Trouser on model",
-      },
-    },
+    FIRST_SALE_MYTHERESA_PRODUCT,
     {
       id: "02",
       name: "Maceio Maxi Dress Black",
@@ -238,6 +245,7 @@ export const KHITERIS_EDIT_AUGUST_2026: KhiterisEditConfig = {
     ],
   },
   products: [
+    FIRST_SALE_MYTHERESA_PRODUCT,
     {
       id: "01",
       name: "Derry Dress",
@@ -403,6 +411,34 @@ export const KHITERIS_EDIT_ARCHIVE: Array<Pick<KhiterisEditConfig, "monthLabel" 
 
 export const ACTIVE_KHITERIS_EDIT = KHITERIS_EDIT_AUGUST_2026;
 
+/** Editorial product links must be commission-tracked, never raw brand-store URLs. */
+export function isAffiliateTrackingUrl(value: string): boolean {
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    return (
+      host === "click.linksynergy.com" ||
+      host.endsWith(".awin1.com") ||
+      host === "awin1.com" ||
+      host === "go.redirectingat.com"
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function affiliateOnlyKhiterisEdit(config: KhiterisEditConfig): KhiterisEditConfig {
+  return {
+    ...config,
+    products: config.products.filter((product) => {
+      const urls = [
+        product.href,
+        ...Object.values(product.hrefByRegion || {}),
+      ].filter((url): url is string => Boolean(url));
+      return urls.length > 0 && urls.every(isAffiliateTrackingUrl);
+    }),
+  };
+}
+
 export function getKhiterisEditConfig(): KhiterisEditConfig {
-  return ACTIVE_KHITERIS_EDIT;
+  return affiliateOnlyKhiterisEdit(ACTIVE_KHITERIS_EDIT);
 }

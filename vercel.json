@@ -10,10 +10,6 @@
     },
 
     {
-      "path": "/api/cron/feed-sync-stale-alert",
-      "schedule": "0 12 * * *"
-    },
-    {
       "path": "/api/notifications/price-drops",
       "schedule": "0 9 * * *"
     },
