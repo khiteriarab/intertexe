@@ -229,15 +229,56 @@ async function fetchNaturalShoesBaseRail(limit: number): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
 
-  const leather = await fetchMerchRailProducts(MERCH_RAIL_KEYS.leatherSuede, {
-    limit: Math.min(limit * 3, 48),
-  });
-  const fromLeather = leather.filter(isFootwearProduct);
-  if (fromLeather.length >= Math.min(limit, 6)) {
-    return fromLeather.slice(0, limit);
+  // Prefer the footwear live catalog. `fabrics:leather-suede` is leather apparel
+  // (skirts/jackets), so using it first produced an empty Natural Shoes rail and
+  // forced a slow products-table fallback that timed out on iOS.
+  const seen = new Set<string>();
+  const out: Product[] = [];
+
+  const ingest = (rows: any[] | null | undefined) => {
+    for (const row of rows || []) {
+      const product = mapProductRow(row);
+      if (!isFootwearProduct(product)) continue;
+      if (!product.imageUrl?.trim() || !product.price?.trim()) continue;
+      const key = canonicalProductId(product) || product.productId || product.id;
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(product);
+      if (out.length >= limit) return true;
+    }
+    return false;
+  };
+
+  for (const region of ["us", "eu"] as const) {
+    if (out.length >= limit) break;
+    const { data: rpcRows } = await supabase.rpc("footwear_catalog_page", {
+      p_region: region,
+      p_limit: Math.min(Math.max(limit * 2, 24), 48),
+      p_offset: 0,
+    });
+    const rows = Array.isArray(rpcRows) ? rpcRows : rpcRows?.products;
+    if (ingest(rows)) break;
+
+    if (out.length >= limit) break;
+    const { data: liveRows } = await supabase
+      .from("live_products_footwear")
+      .select(
+        "id, product_id, brand_slug, brand_name, name, url, image_url, price, original_price, composition, natural_fiber_percent, category, color, matching_set_id, is_sale, region, collection_slugs, stock_status, canonical_id"
+      )
+      .eq("region", region)
+      .eq("is_displayable", true)
+      .not("image_url", "is", null)
+      .not("price", "is", null)
+      .limit(Math.min(Math.max(limit * 2, 24), 48));
+    if (ingest(liveRows)) break;
   }
 
-  const { data, error } = await supabase
+  if (out.length >= Math.min(limit, 4)) {
+    return out.slice(0, limit);
+  }
+
+  // Last resort: displayable products query (slower, but better than empty rail).
+  const { data } = await supabase
     .from("products")
     .select(
       "id, product_id, brand_slug, brand_name, name, url, image_url, price, original_price, composition, natural_fiber_percent, category, color, matching_set_id, is_sale, region, collection_slugs, stock_status, canonical_id, is_editor_pick, editor_picked_at"
@@ -254,20 +295,8 @@ async function fetchNaturalShoesBaseRail(limit: number): Promise<Product[]> {
     .order("created_at", { ascending: false })
     .limit(Math.min(Math.max(limit * 2, 24), 64));
 
-  if (error || !data?.length) return fromLeather.slice(0, limit);
-
-  const seen = new Set<string>();
-  const out: Product[] = [];
-  for (const row of data) {
-    const product = mapProductRow(row);
-    if (!isFootwearProduct(product)) continue;
-    const key = canonicalProductId(product) || product.id;
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push(product);
-    if (out.length >= limit) break;
-  }
-  return out.length > 0 ? out : fromLeather.slice(0, limit);
+  ingest(data);
+  return out.slice(0, limit);
 }
 
 async function loadFavoriteIds(userId: string): Promise<string[]> {
