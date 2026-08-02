@@ -1,0 +1,40 @@
+name: Background Job Cost Gate
+
+# Permanent engineering standard: block merges/deploys that introduce
+# expensive/unregistered crons, warm fan-out, or high-frequency schedules.
+on:
+  pull_request:
+    paths:
+      - "vercel.json"
+      - "lib/background-jobs/**"
+      - "lib/job-guard.ts"
+      - "app/api/cron/**"
+      - "scripts/check-background-jobs.ts"
+      - "scripts/background-jobs.test.ts"
+      - "package.json"
+  push:
+    branches: [main]
+    paths:
+      - "vercel.json"
+      - "lib/background-jobs/**"
+      - "lib/job-guard.ts"
+      - "app/api/cron/**"
+      - "scripts/check-background-jobs.ts"
+      - "scripts/background-jobs.test.ts"
+      - "package.json"
+
+jobs:
+  background-jobs-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Cost review + deployment checklist
+        run: npm run check:background-jobs
+      - name: Background job unit tests
+        run: npm run test:background-jobs
