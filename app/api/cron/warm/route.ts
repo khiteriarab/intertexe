@@ -5,19 +5,19 @@ import {
   warmCronEnabled,
   withJobLock,
 } from "@/lib/job-guard";
+import { assertWarmRoutesAllowed, WARM_ALLOWED_PATHS } from "@/lib/background-jobs/warm-policy";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 20;
 
 /**
- * Optional cache warmer. DEFAULT OFF (WARM_CRON_ENABLED=0).
+ * OPTIONAL cache warmer. DEFAULT OFF (WARM_CRON_ENABLED=0).
  *
- * Historical incident: every-2-minute schedule with 11 fan-out catalog/sale/scan
- * fetches and no fetch timeouts produced continuous Fluid Provisioned Memory
- * billing while Active CPU stayed low (I/O wait still bills provisioned memory).
- *
- * This route is no longer registered in vercel.json. Manual/auth hits remain
- * for controlled testing only.
+ * Permanent policy:
+ * - Not scheduled in vercel.json
+ * - Production requires explicit WARM_CRON_ENABLED=1
+ * - Only lightweight health endpoints may be warmed
+ * - Catalog / sale / scan / recommend are FORBIDDEN
  */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -38,15 +38,18 @@ export async function GET(req: NextRequest) {
       ok: true,
       skipped: true,
       reason: "WARM_CRON_ENABLED=0",
-      note: "Warm cron disabled after Fluid Provisioned Memory cost incident.",
+      note: "Warm cron disabled by default. Production requires explicit manual opt-in.",
+      allowedPaths: WARM_ALLOWED_PATHS,
     });
   }
 
   const locked = await withJobLock("warm", 25_000, async () => {
-    const routes = [
-      "/api/catalog?region=us&limit=12",
-      "/api/sale?region=us&limit=12",
-    ];
+    const routes = [...WARM_ALLOWED_PATHS];
+    const policy = assertWarmRoutesAllowed(routes);
+    if (!policy.ok) {
+      throw new Error(`Warm policy violation: ${policy.forbidden.join(", ")}`);
+    }
+
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com";
 
@@ -56,8 +59,8 @@ export async function GET(req: NextRequest) {
         try {
           const res = await fetchWithTimeout(`${baseUrl}${route}`, {
             method: "GET",
-            timeoutMs: 5_000,
-            headers: { "User-Agent": "intertexe-warm/2.0" },
+            timeoutMs: 3_000,
+            headers: { "User-Agent": "intertexe-warm/3.0" },
           });
           return {
             route,

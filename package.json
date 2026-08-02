@@ -6,11 +6,13 @@
   "scripts": {
     "dev:client": "vite dev --port 5000",
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "next build",
+    "build": "npm run check:background-jobs && next build",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
+    "check:background-jobs": "node --import tsx scripts/check-background-jobs.ts",
     "db:push": "drizzle-kit push",
-    "test:hq": "node --import tsx --test scripts/period-delta.test.ts"
+    "test:hq": "node --import tsx --test scripts/period-delta.test.ts",
+    "test:background-jobs": "node --import tsx --test scripts/background-jobs.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -135,7 +135,7 @@ export async function GET(request: Request) {
         backgroundJobsEnabled: backgroundJobsEnabled(),
         expensiveJobsEnabled: expensiveJobsEnabled(),
         warmCronEnabled: warmCronEnabled(),
-        warmCronScheduled: false,
+        warmCronScheduled: false, // permanently unscheduled in registry / vercel.json
       },
       budgetUsd: configuredBudget,
       proxy: {

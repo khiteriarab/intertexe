@@ -6,6 +6,7 @@ import {
   statusBadgeClass,
 } from "../../../../lib/dashboard/catalog-sync-ops";
 import { fetchCostSnapshot } from "../../../../lib/dashboard/cost-observability";
+import { fetchBackgroundJobStatuses } from "../../../../lib/dashboard/background-jobs";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqPageHeader } from "../../components/HqUi";
 
@@ -14,19 +15,106 @@ export const dynamic = "force-dynamic";
 
 export default async function HqOperationsPage() {
   await requireHqSession();
-  const [ops, reports, cost] = await Promise.all([
+  const [ops, reports, cost, backgroundJobs] = await Promise.all([
     fetchNightlySyncOps(),
     fetchFounderReports(),
     fetchCostSnapshot(),
+    fetchBackgroundJobStatuses(),
   ]);
   const latest = ops.latest;
+  const scheduledJobs = backgroundJobs.filter((j) => j.scheduledInProduction);
+  const unscheduledJobs = backgroundJobs.filter((j) => !j.scheduledInProduction);
 
   return (
     <div>
       <HqPageHeader
         title="Product health"
-        description="Is the catalog healthy? Nightly sync history, feed outcomes, alert delivery, infrastructure cost proxies, and founder weekly reports."
+        description="Is the catalog healthy? Nightly sync history, feed outcomes, alert delivery, infrastructure cost proxies, background jobs, and founder weekly reports."
       />
+
+      <HqCard title="Background Jobs" className="mb-6">
+        <div className="space-y-4">
+          <p className="text-sm text-black/55">
+            Registry-backed production jobs. Adding a cron requires an entry in{" "}
+            <code className="text-xs">lib/background-jobs/registry.ts</code> with cost-review
+            fields; CI and <code className="text-xs">npm run build</code> fail otherwise. See{" "}
+            <code className="text-xs">docs/BACKGROUND_JOBS_STANDARD.md</code>.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-[10px] uppercase tracking-wider text-black/40">
+                <tr>
+                  <th className="py-2 pr-3 font-medium">Job</th>
+                  <th className="py-2 pr-3 font-medium">Schedule</th>
+                  <th className="py-2 pr-3 font-medium">Next</th>
+                  <th className="py-2 pr-3 font-medium">Last</th>
+                  <th className="py-2 pr-3 font-medium">Avg / Max</th>
+                  <th className="py-2 pr-3 font-medium">Fail</th>
+                  <th className="py-2 pr-3 font-medium">Retries</th>
+                  <th className="py-2 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scheduledJobs.map((j) => (
+                  <tr key={j.id} className="border-t border-black/5 align-top">
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">{j.id}</div>
+                      <div className="text-xs text-black/45 max-w-[220px]">{j.purpose}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-black/35 mt-1">
+                        {j.owner}
+                        {j.expensive ? " · expensive" : ""}
+                      </div>
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums whitespace-nowrap text-xs">
+                      {j.schedule || "—"}
+                    </td>
+                    <td className="py-2 pr-3 text-xs whitespace-nowrap">
+                      {j.nextRun ? fmtTime(j.nextRun) : "—"}
+                    </td>
+                    <td className="py-2 pr-3 text-xs whitespace-nowrap">
+                      {j.lastRun ? fmtTime(j.lastRun) : "—"}
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums text-xs whitespace-nowrap">
+                      {formatDuration(j.averageDurationMs)} / {formatDuration(j.maxDurationMs)}
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums">
+                      {j.failures}/{j.runs || 0}
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums">{j.retries}</td>
+                    <td className="py-2">
+                      <span
+                        className={`text-[10px] uppercase tracking-wider border px-1.5 py-0.5 ${jobStatusClass(
+                          j.status
+                        )}`}
+                      >
+                        {j.enabled ? j.status : "disabled"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {unscheduledJobs.length ? (
+            <div>
+              <p className="text-[10px] tracking-[0.14em] uppercase text-black/45 mb-2">
+                Registered but not scheduled (must stay off Vercel cron)
+              </p>
+              <ul className="text-sm space-y-1">
+                {unscheduledJobs.map((j) => (
+                  <li key={j.id} className="text-black/65">
+                    <span className="font-medium">{j.id}</span>
+                    {" — "}
+                    {j.purpose}
+                    <span className="text-xs text-black/40"> · {j.status}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </HqCard>
 
       <HqCard title="Infrastructure / Cost" className="mb-6">
         <div className="space-y-4">
@@ -354,6 +442,23 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-medium mt-1 tabular-nums break-words">{value}</p>
     </div>
   );
+}
+
+function jobStatusClass(status: string) {
+  switch (status) {
+    case "enabled":
+      return "border-emerald-700/30 text-emerald-900 bg-emerald-50";
+    case "disabled":
+    case "unscheduled":
+      return "border-black/20 text-black/50 bg-black/[0.03]";
+    case "locked":
+      return "border-amber-700/30 text-amber-900 bg-amber-50";
+    case "stale_lock":
+    case "failing":
+      return "border-red-700/30 text-red-900 bg-red-50";
+    default:
+      return "border-black/15 text-black/60";
+  }
 }
 
 function fmtTime(iso?: string | null) {
