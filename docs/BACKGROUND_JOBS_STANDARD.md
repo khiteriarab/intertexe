@@ -17,14 +17,12 @@
 
 4. **Environment protection.** `WARM_CRON_ENABLED` defaults to `0`. Production warm requires explicit manual opt-in. Warm is **not** in `vercel.json`.
 
-5. **Deployment checklist (automatic).** `npm run check:background-jobs` runs on every Vercel build (`npm run build`) and on GitHub Actions via [`.github/workflows/background-jobs-gate.yml`](../.github/workflows/background-jobs-gate.yml) (`pull_request` + `push` to `main`). It verifies:
+5. **Deployment checklist (automatic).** `npm run check:background-jobs` runs on every Vercel build (`npm run build`). The same check is intended for GitHub Actions via [`.github/workflows/background-jobs-gate.yml`](../.github/workflows/background-jobs-gate.yml) on `pull_request` and `push` to `main` (install blocked until a `workflow`-scoped token can push the file; template: [`docs/BACKGROUND_JOBS_GATE.workflow.yml`](./BACKGROUND_JOBS_GATE.workflow.yml)). It verifies:
    - no unregistered / new crons vs registry
    - no increased high-frequency schedules
    - no background `setInterval` / unbounded loops in cron routes
    - no overlapping schedule stacks (>3 jobs same minute)
    - no expensive warming endpoints
-
-   Template copy also kept at [`docs/BACKGROUND_JOBS_GATE.workflow.yml`](./BACKGROUND_JOBS_GATE.workflow.yml).
 
 6. **Founder Dashboard.** Product → Background Jobs panel shows every registered job, schedule, last/next run, durations, failures, and enabled status.
 
