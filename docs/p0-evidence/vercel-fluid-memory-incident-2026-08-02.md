@@ -129,7 +129,9 @@ Summary: [`background-jobs-gate-2026-08-02/SUMMARY.md`](./background-jobs-gate-2
 
 ### GitHub workflow install status
 
-- Workflow file prepared at `.github/workflows/background-jobs-gate.yml` (and docs template).
-- Push to `origin/main` on 2026-08-02 was **rejected**: Personal Access Token lacks `workflow` scope (`refusing to allow a Personal Access Token to create or update workflow ... without workflow scope`).
-- **Action required once a workflow-scoped token is available:** commit and push `.github/workflows/background-jobs-gate.yml` unchanged. Until then, **Vercel build gate remains the production enforcement** (`npm run build` → `check:background-jobs`).
+- **Installed on main** (2026-08-02): `.github/workflows/background-jobs-gate.yml`
+- Commit: `5de97858c4ebf2cebbf1269f878aa6405a1be76b`
+- Triggers: `pull_request` + `push` to `main` (path-filtered)
+- Runs: `npm run check:background-jobs` and `npm run test:background-jobs`
+- Vercel build gate remains active in parallel
 
