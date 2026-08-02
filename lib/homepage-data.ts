@@ -10,7 +10,8 @@ import {
   type CatalogFetchOpts,
 } from "./supabase-server";
 import { getCuratedScore } from "./curated-quality-scores";
-import { CURATED_BRAND_SLUGS } from "./homepage-constants";
+import { CURATED_BRAND_SLUGS, CURATED_BRAND_LABELS } from "./homepage-constants";
+import { getBrandHeroImage } from "./brand-hero-images";
 import {
   HOMEPAGE_LIMITS,
   NEW_IN_BRAND_SLUGS,
@@ -28,9 +29,8 @@ import {
 } from "./merch-feed";
 import { getCachedPlatformStats } from "./cached-catalog";
 import { CATALOG_STATS } from "./catalog-stats";
-import { enrichDesignersWithHeroImages } from "./brand-hero-selection";
-import { getServerSupabase } from "./supabase-service-client";
 import { filterHomepageSaleProducts } from "./homepage-sale-filter";
+import { leadNewInWithEditorPicks } from "./homepage-rails-personalize";
 
 /** Set `HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS=1` to force catalog RPC on rails (slower). Default: live_products_apparel only. */
 const HOMEPAGE_USE_CATALOG_RPC = process.env.HOMEPAGE_USE_CATALOG_RPC_FOR_RAILS === "1";
@@ -182,24 +182,41 @@ function postProcessHomepageMaterialRail(products: Product[]): Product[] {
 async function fetchCuratedDesignersFast(): Promise<any[]> {
   const list = await fetchDesignersBySlugs([...CURATED_BRAND_SLUGS]);
   const bySlug = new Map(list.map((d) => [d.slug, d]));
-  const curated = CURATED_BRAND_SLUGS.map((slug) => {
-    const d = bySlug.get(slug);
-    if (!d) return null;
-    if (d.naturalFiberPercent != null) return d;
-    const score = getCuratedScore(d.name);
-    return score != null ? { ...d, naturalFiberPercent: score } : d;
-  }).filter(Boolean) as any[];
 
-  const supabase = getServerSupabase();
-  if (!supabase || curated.length === 0) return curated;
-  return enrichDesignersWithHeroImages(
-    supabase,
-    curated.map((d: any) => ({
-      ...d,
-      hero_image: d.heroImage ?? null,
-    }))
-  );
+  // Never blank Brands We Love: static labels + local heroes if DB is slow/empty.
+  // Do not run catalog product hero scans here — those timed out and wiped the section.
+  return CURATED_BRAND_SLUGS.map((slug) => {
+    const d = bySlug.get(slug);
+    const name = d?.name || CURATED_BRAND_LABELS[slug];
+    const score =
+      d?.naturalFiberPercent != null
+        ? d.naturalFiberPercent
+        : getCuratedScore(name);
+    const heroImageUrl =
+      d?.heroImage ||
+      getBrandHeroImage(name) ||
+      getBrandHeroImage(slug) ||
+      null;
+    return {
+      ...(d || {}),
+      slug,
+      name,
+      naturalFiberPercent: score,
+      heroImageUrl,
+    };
+  });
 }
+
+/** Instant fallback if the designers query itself times out. */
+const CURATED_DESIGNERS_STATIC_FALLBACK = CURATED_BRAND_SLUGS.map((slug) => {
+  const name = CURATED_BRAND_LABELS[slug];
+  return {
+    slug,
+    name,
+    naturalFiberPercent: getCuratedScore(name),
+    heroImageUrl: getBrandHeroImage(name) || getBrandHeroImage(slug) || null,
+  };
+});
 
 async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const t0 = Date.now();
@@ -215,7 +232,12 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
 
   const [curatedDesigners, platformStats, railsByKey, newInCount, saleRailPool, newInRailPool] =
     await Promise.all([
-    withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
+    withHomepageRailTimeout(
+      "rail:curated-designers",
+      CURATED_SECTION_TIMEOUT_MS,
+      fetchCuratedDesignersFast,
+      CURATED_DESIGNERS_STATIC_FALLBACK
+    ),
     withHomepageRailTimeout(
       "platform-stats",
       8_000,
@@ -252,9 +274,12 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     newInRailPool.length > (railsByKey[MERCH_RAIL_KEYS.newIn]?.length ?? 0)
       ? newInRailPool
       : railsByKey[MERCH_RAIL_KEYS.newIn] || [];
-  const newInProducts = postProcessHomepageMaterialRail(newInSource).slice(
-    0,
-    MERCH_HOME_NEW_IN_DISPLAY_LIMIT
+  const newInBase = postProcessHomepageMaterialRail(newInSource);
+  const newInProducts = await withHomepageRailTimeout(
+    "rail:new-in-editor-picks",
+    RAIL_TIMEOUT_MS,
+    () => leadNewInWithEditorPicks(newInBase, MERCH_HOME_NEW_IN_DISPLAY_LIMIT),
+    newInBase.slice(0, MERCH_HOME_NEW_IN_DISPLAY_LIMIT)
   );
   const vacationProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.vacation] || []);
   const eveningProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.evening] || []);
@@ -329,7 +354,12 @@ export async function getHomePageData(): Promise<HomePageData> {
         }),
       { products: [], total: 0 }
     ),
-    withHomepageRailTimeout("rail:curated-designers", CURATED_SECTION_TIMEOUT_MS, fetchCuratedDesignersFast, []),
+    withHomepageRailTimeout(
+      "rail:curated-designers",
+      CURATED_SECTION_TIMEOUT_MS,
+      fetchCuratedDesignersFast,
+      CURATED_DESIGNERS_STATIC_FALLBACK
+    ),
     getCachedPlatformStats(),
     Promise.all(
       [...NEW_IN_BRAND_SLUGS].map((slug) =>
@@ -413,14 +443,21 @@ export async function getHomePageData(): Promise<HomePageData> {
   }
   homepageTiming("phase:new-in-compose", tNewInCompose, `items=${newInProducts.length}`);
 
+  const newInWithEditorPicks = await withHomepageRailTimeout(
+    "rail:new-in-editor-picks",
+    RAIL_TIMEOUT_MS,
+    () => leadNewInWithEditorPicks(newInProducts, MERCH_HOME_NEW_IN_DISPLAY_LIMIT),
+    newInProducts.slice(0, MERCH_HOME_NEW_IN_DISPLAY_LIMIT)
+  );
+
   return {
     designers,
     productCount: platformStats.productCount,
     brandCount: platformStats.brandCount,
     productCountByBrand: {},
     curatedDesigners,
-    newInProducts,
-    newInCount: newInProducts.length,
+    newInProducts: newInWithEditorPicks,
+    newInCount: newInWithEditorPicks.length,
     vacationProducts,
     eveningProducts: [] as Product[],
     tailoringProducts: [] as Product[],
@@ -433,6 +470,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v11"],
+  ["homepage-payload-v13"],
   { revalidate: HOMEPAGE_REVALIDATE_SEC, tags: ["homepage"] }
 );

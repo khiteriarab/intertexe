@@ -541,6 +541,7 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       commission30d: null as number | null,
       sales30d: null as number | null,
       salesYtd: null as number | null,
+      commissionYtd: null as number | null,
       topRevenueAdvertisers: [] as Array<{ brand: string; commission: number; sales: number }>,
       lastSaleDate: null as string | null,
       nullU1Tx30d: null as number | null,
@@ -629,6 +630,7 @@ export async function fetchHqCommercePage(workspaceId?: string) {
   let nullU1Tx30d: number | null = null;
   let txWithU130d: number | null = null;
   let salesYtd: number | null = null;
+  let commissionYtd: number | null = null;
   let activeTxForIntel: any[] = [];
 
   if (workspaceId) {
@@ -645,7 +647,7 @@ export async function fetchHqCommercePage(workspaceId?: string) {
         .limit(500),
       supabase
         .from("hq_affiliate_transactions")
-        .select("sales_amount, status, raw, external_transaction_id")
+        .select("sales_amount, commission_amount, status, raw, external_transaction_id")
         .eq("workspace_id", workspaceId)
         .gte("transaction_date", ytdStart)
         .limit(2000),
@@ -716,6 +718,7 @@ export async function fetchHqCommercePage(workspaceId?: string) {
       const verified = (ytdRes.data as any[]).filter((r) => !isDemoRow(r));
       if (verified.length) {
         salesYtd = verified.reduce((s, r) => s + Number(r.sales_amount || 0), 0);
+        commissionYtd = verified.reduce((s, r) => s + Number(r.commission_amount || 0), 0);
       }
     }
 
@@ -750,6 +753,8 @@ export async function fetchHqCommercePage(workspaceId?: string) {
     revenueIsDemo,
     sales30d,
     salesYtd,
+    commission30d,
+    commissionYtd,
   });
   const revenueRecommendations = buildRevenueRecommendations({
     revenueConnected,
@@ -804,6 +809,7 @@ export async function fetchHqCommercePage(workspaceId?: string) {
     commission30d,
     sales30d,
     salesYtd,
+    commissionYtd,
     topRevenueAdvertisers,
     unmatchedTx30d,
     lastSaleDate,

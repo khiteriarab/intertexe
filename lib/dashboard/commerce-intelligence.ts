@@ -1,6 +1,8 @@
 /**
  * Commerce Intelligence — revenue density for the existing Founder Dashboard.
- * Pure helpers; no new nav pages. Goal framing defaults to $1M annual GMV.
+ * Pure helpers; no new nav pages.
+ * Goal framing defaults to $1M annual affiliate commission (INTERTEXE revenue),
+ * with shopper GMV shown alongside — we do not earn full ticket.
  */
 
 export const REVENUE_GOAL_USD = 1_000_000;
@@ -43,18 +45,26 @@ export type EditorialPerformanceRow = {
 
 export type RevenueGoalProgress = {
   goalUsd: number;
-  /** Best available GMV toward the goal (YTD when known, else annualized 30d run-rate). */
+  /** Commission toward the $1M revenue goal (YTD when known, else annualized 30d). */
   progressUsd: number;
-  /** Raw trailing-30d verified sales. */
-  sales30d: number;
-  /** Annualized run-rate from 30d sales. */
+  /** Trailing-30d verified commission (what INTERTEXE earns). */
+  commission30d: number;
+  /** Annualized run-rate from 30d commission. */
   runRateUsd: number;
-  /** YTD sales when the import window covers it; else null. */
+  /** YTD commission when the import window covers it; else null. */
+  commissionYtd: number | null;
+  /** Trailing-30d verified GMV (what shoppers spent). */
+  sales30d: number;
+  /** Annualized GMV run-rate from 30d sales. */
+  salesRunRateUsd: number;
+  /** YTD GMV when the import window covers it; else null. */
   salesYtd: number | null;
+  /** Effective take rate: commission / GMV for the progress window; null if no GMV. */
+  takeRatePct: number | null;
   mode: "ytd" | "annualized_30d" | "disconnected" | "demo";
   pct: number;
   remainingUsd: number;
-  /** Days to goal at current 30d run-rate; null if no pace. */
+  /** Days to goal at current 30d commission run-rate; null if no pace. */
   daysToGoal: number | null;
 };
 
@@ -301,55 +311,63 @@ export function buildEditorialPerformance(
 export function buildRevenueGoalProgress(input: {
   revenueConnected?: boolean;
   revenueIsDemo?: boolean;
+  /** Shopper spend (GMV). */
   sales30d?: number | null;
   salesYtd?: number | null;
+  /** Affiliate commission (INTERTEXE revenue). */
+  commission30d?: number | null;
+  commissionYtd?: number | null;
   goalUsd?: number;
 }): RevenueGoalProgress {
   const goalUsd = input.goalUsd ?? REVENUE_GOAL_USD;
   const sales30d = Number(input.sales30d || 0);
-  const runRateUsd = moneyRound((sales30d / 30) * 365);
+  const commission30d = Number(input.commission30d || 0);
   const salesYtd = input.salesYtd != null ? Number(input.salesYtd) : null;
+  const commissionYtd = input.commissionYtd != null ? Number(input.commissionYtd) : null;
+  const runRateUsd = moneyRound((commission30d / 30) * 365);
+  const salesRunRateUsd = moneyRound((sales30d / 30) * 365);
 
-  if (input.revenueIsDemo) {
-    return {
-      goalUsd,
-      progressUsd: 0,
-      sales30d,
-      runRateUsd: 0,
-      salesYtd: null,
-      mode: "demo",
-      pct: 0,
-      remainingUsd: goalUsd,
-      daysToGoal: null,
-    };
-  }
-  if (!input.revenueConnected) {
-    return {
-      goalUsd,
-      progressUsd: 0,
-      sales30d: 0,
-      runRateUsd: 0,
-      salesYtd: null,
-      mode: "disconnected",
-      pct: 0,
-      remainingUsd: goalUsd,
-      daysToGoal: null,
-    };
-  }
+  const empty = (mode: RevenueGoalProgress["mode"]): RevenueGoalProgress => ({
+    goalUsd,
+    progressUsd: 0,
+    commission30d: mode === "demo" ? moneyRound(commission30d) : 0,
+    runRateUsd: 0,
+    commissionYtd: null,
+    sales30d: mode === "demo" ? moneyRound(sales30d) : 0,
+    salesRunRateUsd: 0,
+    salesYtd: null,
+    takeRatePct: null,
+    mode,
+    pct: 0,
+    remainingUsd: goalUsd,
+    daysToGoal: null,
+  });
 
-  const useYtd = salesYtd != null && salesYtd > 0;
-  const progressUsd = useYtd ? moneyRound(salesYtd) : runRateUsd;
+  if (input.revenueIsDemo) return empty("demo");
+  if (!input.revenueConnected) return empty("disconnected");
+
+  const useYtd = commissionYtd != null && commissionYtd > 0;
+  const progressUsd = useYtd ? moneyRound(commissionYtd) : runRateUsd;
   const pct = Math.min(100, moneyRound((progressUsd / goalUsd) * 100));
-  const remainingUsd = Math.max(0, moneyRound(goalUsd - (useYtd ? salesYtd! : progressUsd)));
-  const daily = sales30d / 30;
+  const remainingUsd = Math.max(0, moneyRound(goalUsd - progressUsd));
+  const daily = commission30d / 30;
   const daysToGoal = daily > 0 ? Math.ceil(remainingUsd / daily) : null;
+
+  const gmvForRate = useYtd && salesYtd != null && salesYtd > 0 ? salesYtd : sales30d;
+  const commissionForRate = useYtd ? commissionYtd! : commission30d;
+  const takeRatePct =
+    gmvForRate > 0 ? moneyRound((commissionForRate / gmvForRate) * 100) : null;
 
   return {
     goalUsd,
     progressUsd,
-    sales30d: moneyRound(sales30d),
+    commission30d: moneyRound(commission30d),
     runRateUsd,
+    commissionYtd: commissionYtd != null ? moneyRound(commissionYtd) : null,
+    sales30d: moneyRound(sales30d),
+    salesRunRateUsd,
     salesYtd: salesYtd != null ? moneyRound(salesYtd) : null,
+    takeRatePct,
     mode: useYtd ? "ytd" : "annualized_30d",
     pct,
     remainingUsd,
@@ -458,7 +476,7 @@ export function buildRevenueRecommendations(input: {
         input.goal.daysToGoal != null
           ? `Hold pace — ~${input.goal.daysToGoal} days to $1M at current run-rate`
           : "Accelerate toward the $1M goal",
-      detail: `Progress ${Math.round(input.goal.pct)}% · $${Math.round(input.goal.progressUsd).toLocaleString()} toward $${(input.goal.goalUsd / 1e6).toFixed(0)}M. Raise daily GMV via editorial shoes + top advertiser.`,
+      detail: `Progress ${Math.round(input.goal.pct)}% · $${Math.round(input.goal.progressUsd).toLocaleString()} commission toward $${(input.goal.goalUsd / 1e6).toFixed(0)}M (shoppers spent $${Math.round(input.goal.salesYtd ?? input.goal.sales30d).toLocaleString()}). Raise daily commission via editorial shoes + top advertiser.`,
       href: "/dashboard/commerce#revenue-goal",
       priority: "growth",
     });

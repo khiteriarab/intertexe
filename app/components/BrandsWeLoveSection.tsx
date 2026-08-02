@@ -7,7 +7,7 @@ import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { BRANDS_WE_LOVE_HIGHLIGHTS } from "../../lib/brands-we-love-editorial";
 import { getQualityTier } from "../../lib/quality-tiers";
 import { displayNaturalFiberPercent } from "../../lib/display-natural-fiber";
-import { CURATED_BRAND_SLUGS } from "../../lib/homepage-constants";
+import { CURATED_BRAND_SLUGS, CURATED_BRAND_LABELS } from "../../lib/homepage-constants";
 import { HORIZONTAL_RAIL_INSET_CLASS } from "../../lib/horizontal-rail";
 
 type BrandDesigner = {
@@ -20,7 +20,7 @@ type BrandDesigner = {
 function BrandLoveCard({ designer }: { designer: BrandDesigner }) {
   const [failed, setFailed] = useState(false);
   const imageUrl =
-    !failed && (designer.heroImageUrl || getBrandHeroImage(designer.name) || "");
+    !failed && (designer.heroImageUrl || getBrandHeroImage(designer.name) || getBrandHeroImage(designer.slug) || "");
   const highlight = BRANDS_WE_LOVE_HIGHLIGHTS[designer.slug] || "";
   const score = displayNaturalFiberPercent(designer.naturalFiberPercent);
   const tier = getQualityTier(designer.naturalFiberPercent);
@@ -77,25 +77,16 @@ function BrandLoveCard({ designer }: { designer: BrandDesigner }) {
 }
 
 export function BrandsWeLoveSection({ designers }: { designers: BrandDesigner[] }) {
-  const ordered = CURATED_BRAND_SLUGS.map((slug) => designers.find((d) => d.slug === slug)).filter(
-    Boolean
-  ) as BrandDesigner[];
-
-  if (ordered.length === 0) {
-    return (
-      <section className="py-10 md:py-16 border-t border-neutral-200/60" data-testid="homepage-brands-we-love">
-        <div className="rounded-sm border border-neutral-200/80 bg-neutral-50/50 px-4 py-8 text-center">
-          <p className="text-[12px] text-neutral-500 max-w-md mx-auto leading-relaxed">
-            Designer highlights are refreshing. Explore the{" "}
-            <Link href="/designers" className="underline text-neutral-800">
-              brand directory
-            </Link>{" "}
-            for every label we track.
-          </p>
-        </div>
-      </section>
-    );
-  }
+  const ordered = CURATED_BRAND_SLUGS.map((slug) => {
+    const fromApi = designers.find((d) => d.slug === slug);
+    if (fromApi) return fromApi;
+    return {
+      slug,
+      name: CURATED_BRAND_LABELS[slug],
+      heroImageUrl: getBrandHeroImage(CURATED_BRAND_LABELS[slug]) || getBrandHeroImage(slug),
+      naturalFiberPercent: null,
+    } satisfies BrandDesigner;
+  });
 
   return (
     <section className="py-10 md:py-16 lg:py-20 border-t border-neutral-200/60" data-testid="homepage-brands-we-love">

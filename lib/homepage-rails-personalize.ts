@@ -312,7 +312,7 @@ async function loadFavoriteIds(userId: string): Promise<string[]> {
     .filter(Boolean);
 }
 
-async function fetchEditorPickProducts(limit: number): Promise<Product[]> {
+export async function fetchEditorPickProducts(limit: number): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
 
@@ -342,6 +342,28 @@ async function fetchEditorPickProducts(limit: number): Promise<Product[]> {
     if (out.length >= limit * 2) break;
   }
   return out;
+}
+
+/**
+ * Put curator `is_editor_pick` apparel ahead of a New In / merch base rail.
+ * Used by web homepage SSR and `/api/homepage/rails` so both surfaces match.
+ */
+export async function leadNewInWithEditorPicks(
+  baseRail: Product[],
+  limit: number
+): Promise<Product[]> {
+  const editorPicks = await fetchEditorPickProducts(limit);
+  const clothingEditorPicks = prioritizeJustLandedFavorites(
+    editorPicks.filter((p) => !isFootwearProduct(p))
+  );
+  const editorPickIds = new Set(editorPicks.flatMap((p) => productKeys(p)));
+  const clothingBase = baseRail.filter((p) => !isFootwearProduct(p));
+  return mergeLeadingFavorites(
+    clothingEditorPicks,
+    clothingBase,
+    limit,
+    editorPickIds
+  );
 }
 
 export async function buildPersonalizedHomepageRails(opts?: {

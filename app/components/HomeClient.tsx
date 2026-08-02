@@ -401,14 +401,14 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         <NewInHomeRail products={data.newInProducts} newInCount={data.newInCount} />
       </div>
 
+      <BrandsWeLoveSection designers={curatedOrdered} />
+
       <section
         className="border-t border-neutral-200/60 layout-bleed-full mt-[0.25in]"
         data-testid="homepage-shop-the-edit"
       >
         <ShopTheEditCarousel slides={EDIT_CAROUSEL_SLIDES} />
       </section>
-
-      <BrandsWeLoveSection designers={curatedOrdered} />
 
       <SaleHomeRail products={data.saleProducts} />
 

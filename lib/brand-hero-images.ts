@@ -136,6 +136,8 @@ const NAME_TO_SLUG: Record<string, string> = {
   "stella mccartney": "stella-mccartney",
   "stine goya": "stine-goya",
   "ted baker": "ted-baker",
+  "the attico": "the-attico",
+  "the-attico": "the-attico",
   "the kooples": "the-kooples",
   "the row": "the-row",
   "theory": "theory",

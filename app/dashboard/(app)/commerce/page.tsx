@@ -127,9 +127,9 @@ export default async function HqCommercePage() {
               </p>
               <p className="text-[11px] text-black/45 mt-1">
                 {goal.mode === "ytd"
-                  ? `YTD GMV · 30d ${money(goal.sales30d)} · run-rate ${money(goal.runRateUsd)}/yr`
+                  ? `YTD commission · shoppers spent ${money(goal.salesYtd ?? goal.sales30d)}${goal.takeRatePct != null ? ` · ${goal.takeRatePct}% take` : ""} · 30d commission ${money(goal.commission30d)} · run-rate ${money(goal.runRateUsd)}/yr`
                   : goal.mode === "annualized_30d"
-                    ? `Annualized from 30d ${money(goal.sales30d)}${goal.daysToGoal != null ? ` · ~${goal.daysToGoal}d to goal` : ""}`
+                    ? `Annualized from 30d commission ${money(goal.commission30d)} · shoppers spent ${money(goal.sales30d)}${goal.takeRatePct != null ? ` · ${goal.takeRatePct}% take` : ""}${goal.daysToGoal != null ? ` · ~${goal.daysToGoal}d to goal` : ""}`
                     : goal.mode === "demo"
                       ? "Demo excluded from goal progress"
                       : "Connect verified revenue to track the path"}
@@ -137,9 +137,30 @@ export default async function HqCommercePage() {
             </div>
             <p className="text-sm tabular-nums text-black/55">{goal.pct}%</p>
           </div>
+          {goal.mode !== "demo" && goal.mode !== "disconnected" ? (
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="border border-black/10 rounded-lg px-3 py-2.5">
+                <p className="text-[10px] tracking-widest uppercase text-black/35">Shopper spend</p>
+                <p className="text-sm font-medium tabular-nums mt-1">
+                  {money(goal.mode === "ytd" ? (goal.salesYtd ?? goal.sales30d) : goal.sales30d)}
+                </p>
+                <p className="text-[10px] text-black/40 mt-0.5">
+                  {goal.mode === "ytd" ? "YTD GMV" : "30d GMV"}
+                </p>
+              </div>
+              <div className="border border-black/10 rounded-lg px-3 py-2.5">
+                <p className="text-[10px] tracking-widest uppercase text-black/35">Our commission</p>
+                <p className="text-sm font-medium tabular-nums mt-1">{money(goal.progressUsd)}</p>
+                <p className="text-[10px] text-black/40 mt-0.5">
+                  {goal.mode === "ytd" ? "YTD toward $1M" : "annualized toward $1M"}
+                </p>
+              </div>
+            </div>
+          ) : null}
           <div className="h-2 rounded-full bg-black/5 overflow-hidden">
             <div className="h-full rounded-full bg-black" style={{ width: `${Math.min(100, goal.pct)}%` }} />
           </div>
+          <p className="text-[11px] text-black/40 mt-2 tabular-nums">{goal.pct}% of $1M commission goal</p>
         </HqCard>
       </div>
 

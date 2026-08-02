@@ -96,8 +96,8 @@ export function buildMorningPulse(input: {
           : !commerce.revenueConnected
             ? "Connect revenue"
             : commerce.revenueGoal?.daysToGoal != null
-              ? `~${commerce.revenueGoal.daysToGoal}d at current pace`
-              : "Annualized / YTD progress",
+              ? `~${commerce.revenueGoal.daysToGoal}d at commission pace`
+              : "YTD / annualized commission",
       href: "/dashboard/commerce#revenue-goal",
       attention: Boolean(
         commerce.revenueIsDemo ||
