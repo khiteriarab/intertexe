@@ -5,6 +5,7 @@ import {
   formatDuration,
   statusBadgeClass,
 } from "../../../../lib/dashboard/catalog-sync-ops";
+import { fetchCostSnapshot } from "../../../../lib/dashboard/cost-observability";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqPageHeader } from "../../components/HqUi";
 
@@ -13,15 +14,137 @@ export const dynamic = "force-dynamic";
 
 export default async function HqOperationsPage() {
   await requireHqSession();
-  const [ops, reports] = await Promise.all([fetchNightlySyncOps(), fetchFounderReports()]);
+  const [ops, reports, cost] = await Promise.all([
+    fetchNightlySyncOps(),
+    fetchFounderReports(),
+    fetchCostSnapshot(),
+  ]);
   const latest = ops.latest;
 
   return (
     <div>
       <HqPageHeader
         title="Product health"
-        description="Is the catalog healthy? Nightly sync history, feed outcomes, alert delivery, and founder weekly reports."
+        description="Is the catalog healthy? Nightly sync history, feed outcomes, alert delivery, infrastructure cost proxies, and founder weekly reports."
       />
+
+      <HqCard title="Infrastructure / Cost" className="mb-6">
+        <div className="space-y-4">
+          <p className="text-sm text-black/55">
+            {cost.billingApiNote}
+          </p>
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <Metric
+              label="Proxy observed spend"
+              value={`$${cost.proxy.observedSpendUsd.toFixed(2)}`}
+            />
+            <Metric
+              label="Projected month-end"
+              value={`$${cost.proxy.projectedMonthEndUsd.toFixed(2)}`}
+            />
+            <Metric label="Monthly budget" value={`$${cost.budgetUsd.toFixed(0)}`} />
+            <Metric
+              label="Vs budget"
+              value={
+                cost.proxy.projectedMonthEndUsd > cost.budgetUsd
+                  ? `Over by $${(cost.proxy.projectedMonthEndUsd - cost.budgetUsd).toFixed(2)}`
+                  : `Under by $${(cost.budgetUsd - cost.proxy.projectedMonthEndUsd).toFixed(2)}`
+              }
+            />
+            <Metric
+              label="Warm cron"
+              value={
+                cost.killSwitches.warmCronScheduled
+                  ? "SCHEDULED (bad)"
+                  : cost.killSwitches.warmCronEnabled
+                    ? "Enabled env (manual only)"
+                    : "Off"
+              }
+            />
+            <Metric
+              label="Background jobs"
+              value={cost.killSwitches.backgroundJobsEnabled ? "Armed" : "Disabled"}
+            />
+            <Metric
+              label="Expensive jobs"
+              value={cost.killSwitches.expensiveJobsEnabled ? "Armed" : "Disabled"}
+            />
+            <Metric label="Snapshot" value={cost.at ? fmtTime(cost.at) : "Not yet"} />
+          </div>
+
+          {cost.alerts.warmStillEnabled ||
+          cost.alerts.projectedOver50 ||
+          cost.alerts.projectedOver30 ||
+          cost.alerts.staleLocks ? (
+            <div className="text-sm space-y-1">
+              {cost.alerts.warmStillEnabled ? (
+                <p className="text-red-800">Alert: warm cron still enabled — known Fluid memory driver.</p>
+              ) : null}
+              {cost.alerts.projectedOver50 ? (
+                <p className="text-red-800">Alert: projected spend over $50.</p>
+              ) : cost.alerts.projectedOver30 ? (
+                <p className="text-amber-900">Alert: projected spend over $30.</p>
+              ) : null}
+              {cost.alerts.staleLocks ? (
+                <p className="text-amber-900">Alert: stale job lock detected.</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/45 mb-2">
+              Longest observed jobs
+            </p>
+            {cost.longestJobs.length ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-[10px] uppercase tracking-wider text-black/40">
+                    <tr>
+                      <th className="py-2 pr-3 font-medium">Job</th>
+                      <th className="py-2 pr-3 font-medium">Max</th>
+                      <th className="py-2 pr-3 font-medium">Avg</th>
+                      <th className="py-2 pr-3 font-medium">Runs</th>
+                      <th className="py-2 font-medium">Failures</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cost.longestJobs.slice(0, 8).map((j) => (
+                      <tr key={j.job} className="border-t border-black/5">
+                        <td className="py-2 pr-3">{j.job}</td>
+                        <td className="py-2 pr-3 tabular-nums">{formatDuration(j.maxDurationMs)}</td>
+                        <td className="py-2 pr-3 tabular-nums">{formatDuration(j.avgDurationMs)}</td>
+                        <td className="py-2 pr-3 tabular-nums">{j.runs}</td>
+                        <td className="py-2 tabular-nums">{j.failures}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-black/50">
+                No job observations yet. Cron `/api/cron/cost-observability` populates this every 6h.
+              </p>
+            )}
+          </div>
+
+          {cost.activeLocks.length ? (
+            <div>
+              <p className="text-[10px] tracking-[0.14em] uppercase text-black/45 mb-2">
+                Active / stale locks
+              </p>
+              <ul className="text-sm space-y-1">
+                {cost.activeLocks.map((l) => (
+                  <li key={l.key} className={l.stale ? "text-amber-900" : "text-black/70"}>
+                    {l.jobName}
+                    {l.stale ? " (stale)" : ""}
+                    {l.startedAt ? ` · since ${fmtTime(l.startedAt)}` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </HqCard>
 
       <HqCard title="Nightly Catalog Sync — latest" className="mb-6">
         {latest ? (

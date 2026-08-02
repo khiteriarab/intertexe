@@ -9,6 +9,7 @@ import {
 } from "../../../lib/dashboard/action-center";
 import { buildGreeting, buildMorningPulse } from "../../../lib/dashboard/morning-briefing";
 import { fetchNightlySyncOps, statusBadgeClass } from "../../../lib/dashboard/catalog-sync-ops";
+import { fetchCostSnapshot } from "../../../lib/dashboard/cost-observability";
 import { fetchHqCommercePage } from "../../../lib/dashboard/metrics";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
@@ -34,14 +35,16 @@ const MISSION_LANES = [
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
   const supabase = getServerSupabase();
-  const [{ metrics: m, live }, commerce, syncOps, google, tiktok, pinterest] = await Promise.all([
-    fetchInsightsBundle(session.workspaceId),
-    fetchHqCommercePage(session.workspaceId),
-    fetchNightlySyncOps(),
-    fetchGoogleDiscoveryMetrics(session.workspaceId),
-    fetchTikTokDiscoveryMetrics(session.workspaceId),
-    fetchPinterestDiscoveryMetrics(session.workspaceId),
-  ]);
+  const [{ metrics: m, live }, commerce, syncOps, google, tiktok, pinterest, costSnap] =
+    await Promise.all([
+      fetchInsightsBundle(session.workspaceId),
+      fetchHqCommercePage(session.workspaceId),
+      fetchNightlySyncOps(),
+      fetchGoogleDiscoveryMetrics(session.workspaceId),
+      fetchTikTokDiscoveryMetrics(session.workspaceId),
+      fetchPinterestDiscoveryMetrics(session.workspaceId),
+      fetchCostSnapshot(),
+    ]);
 
   const name = greetingName(session.fullName, session.email);
   const totalClicks7d =
@@ -118,6 +121,16 @@ export default async function HqOverviewPage() {
     totalClicks7d,
     totalClicksPrev7d,
     catalogHealth,
+    cost: {
+      budgetUsd: costSnap.budgetUsd,
+      projectedMonthEndUsd: costSnap.proxy.projectedMonthEndUsd,
+      observedSpendUsd: costSnap.proxy.observedSpendUsd,
+      warmCronEnabled: costSnap.killSwitches.warmCronEnabled,
+      warmCronScheduled: costSnap.killSwitches.warmCronScheduled,
+      staleLocks: costSnap.alerts.staleLocks,
+      longestJobMs: costSnap.longestJobs[0]?.maxDurationMs || 0,
+      longestJobName: costSnap.longestJobs[0]?.job || null,
+    },
   });
 
   let actions: Awaited<ReturnType<typeof listFounderActions>> = [];

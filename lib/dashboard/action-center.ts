@@ -133,8 +133,18 @@ export function buildDeterministicInsights(input: {
     blocked?: boolean;
     snapshotAgeDays?: number | null;
   } | null;
+  cost?: {
+    budgetUsd?: number;
+    projectedMonthEndUsd?: number;
+    observedSpendUsd?: number;
+    warmCronEnabled?: boolean;
+    warmCronScheduled?: boolean;
+    staleLocks?: boolean;
+    longestJobMs?: number;
+    longestJobName?: string | null;
+  } | null;
 }): DeterministicInsight[] {
-  const { metrics: m, google, tiktok, pinterest, commerce, syncLatest, catalogHealth } = input;
+  const { metrics: m, google, tiktok, pinterest, commerce, syncLatest, catalogHealth, cost } = input;
   const out: DeterministicInsight[] = [];
 
   const sessionsDelta = google.deltas.sessions7d;
@@ -721,6 +731,115 @@ export function buildDeterministicInsights(input: {
         priority: "critical",
         href: "/dashboard/acquisition",
         expectedImpact: "Recover Pinterest discovery before outbound clicks drop further.",
+      });
+    }
+  }
+
+  if (cost) {
+    const projected = Number(cost.projectedMonthEndUsd || 0);
+    const budget = Number(cost.budgetUsd || 30);
+    if (projected > 50) {
+      out.push({
+        fingerprint: "vercel_projected_spend_over_50",
+        title: "Projected Vercel spend exceeds $50",
+        whatChanged: `Proxy projected month-end spend is $${projected.toFixed(2)} (budget $${budget.toFixed(0)}).`,
+        whyItChanged:
+          "Derived from observed job wall-clock durations × assumed 1GB Fluid memory rate. Not a live Vercel invoice line-item.",
+        attention: "Infrastructure cost risk.",
+        recommendedAction:
+          "Confirm WARM_CRON_ENABLED=0, keep warm cron unscheduled, and review longest jobs on Product → Infrastructure.",
+        evidence: {
+          projectedMonthEndUsd: projected,
+          observedSpendUsd: cost.observedSpendUsd ?? null,
+          budgetUsd: budget,
+          warmCronEnabled: Boolean(cost.warmCronEnabled),
+        },
+        comparisonPeriod: "month_to_date_proxy",
+        confidence: "medium",
+        priority: "critical",
+        href: "/dashboard/operations",
+        expectedImpact: "Prevent another Fluid Provisioned Memory invoice spike.",
+      });
+    } else if (projected > 30 || projected > budget) {
+      out.push({
+        fingerprint: "vercel_projected_spend_over_30",
+        title: "Projected Vercel spend exceeds $30",
+        whatChanged: `Proxy projected month-end spend is $${projected.toFixed(2)} (budget $${budget.toFixed(0)}).`,
+        whyItChanged:
+          "Derived from observed job wall-clock durations × assumed 1GB Fluid memory rate. Not a live Vercel invoice line-item.",
+        attention: "Cost watch.",
+        recommendedAction: "Review longest-running crons and keep expensive background work disabled if storefront is healthy.",
+        evidence: {
+          projectedMonthEndUsd: projected,
+          observedSpendUsd: cost.observedSpendUsd ?? null,
+          budgetUsd: budget,
+        },
+        comparisonPeriod: "month_to_date_proxy",
+        confidence: "medium",
+        priority: "operational",
+        href: "/dashboard/operations",
+        expectedImpact: "Keep monthly infra near the $20–$30 target band.",
+      });
+    }
+
+    if (cost.warmCronEnabled || cost.warmCronScheduled) {
+      out.push({
+        fingerprint: "vercel_warm_cron_enabled",
+        title: "Warm cron is enabled — known cost driver",
+        whatChanged:
+          "WARM_CRON_ENABLED is on and/or /api/cron/warm is scheduled. Prior incident: every-2-minute fan-out to catalog/sale/scan drove Fluid Provisioned Memory.",
+        whyItChanged: "Configuration state from cost snapshot kill switches.",
+        attention: "Immediate cost risk.",
+        recommendedAction: "Set WARM_CRON_ENABLED=0 and keep warm out of vercel.json crons.",
+        evidence: {
+          warmCronEnabled: Boolean(cost.warmCronEnabled),
+          warmCronScheduled: Boolean(cost.warmCronScheduled),
+        },
+        comparisonPeriod: "config",
+        confidence: "high",
+        priority: "critical",
+        href: "/dashboard/operations",
+        expectedImpact: "Eliminate the primary provisioned-memory amplifier.",
+      });
+    }
+
+    if (cost.staleLocks) {
+      out.push({
+        fingerprint: "vercel_stale_job_lock",
+        title: "Stale background job lock detected",
+        whatChanged: "A job_lock:* row is older than its maxAgeMs — a prior run may have crashed without releasing.",
+        whyItChanged: "Lock age exceeds configured max from job-guard.",
+        attention: "Possible stuck or overlapping cron.",
+        recommendedAction: "Inspect Product → Infrastructure locks and clear the stale lock if the job is not running.",
+        evidence: { staleLocks: true },
+        comparisonPeriod: "live",
+        confidence: "high",
+        priority: "operational",
+        href: "/dashboard/operations",
+        expectedImpact: "Prevent overlapping Fluid instances from stacking memory charges.",
+      });
+    }
+
+    if ((cost.longestJobMs || 0) >= 60_000) {
+      out.push({
+        fingerprint: "vercel_long_running_job",
+        title: "A background job ran longer than 60s",
+        whatChanged: `${cost.longestJobName || "unknown"} max duration ${Math.round(
+          (cost.longestJobMs || 0) / 1000
+        )}s.`,
+        whyItChanged:
+          "Wall-clock duration is billed as Fluid Provisioned Memory even while waiting on Supabase/HTTP/FTP.",
+        attention: "Long I/O-bound job.",
+        recommendedAction: "Cap retries, add checkpoints, or move the workload off Vercel Functions.",
+        evidence: {
+          job: cost.longestJobName || null,
+          maxDurationMs: cost.longestJobMs || null,
+        },
+        comparisonPeriod: "observed_jobs",
+        confidence: "high",
+        priority: "operational",
+        href: "/dashboard/operations",
+        expectedImpact: "Reduce GB-hours from I/O waits.",
       });
     }
   }

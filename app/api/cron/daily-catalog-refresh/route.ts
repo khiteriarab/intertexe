@@ -1,9 +1,14 @@
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 120;
 
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase-service-client";
 import { sendCatalogDailyEmail } from "@/lib/catalog-daily-report";
+import {
+  expensiveJobsEnabled,
+  recordJobObservation,
+  withJobLock,
+} from "@/lib/job-guard";
 
 function authorize(request: Request): Response | null {
   const cronSecret = process.env.CRON_SECRET || process.env.FEED_SYNC_SECRET;
@@ -15,33 +20,52 @@ function authorize(request: Request): Response | null {
   return null;
 }
 
-/** Classification + stats refresh. Rakuten feed runs via chunked cron every 30m. */
+/** Classification + stats refresh. Checkpointed; capped to avoid Fluid memory overruns. */
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
 
-  const supabase = getServerSupabase();
-  if (!supabase) {
-    return NextResponse.json({ ok: false, error: "Missing Supabase env" }, { status: 500 });
+  if (!expensiveJobsEnabled()) {
+    return NextResponse.json({
+      ok: true,
+      skipped: true,
+      reason: "EXPENSIVE_BACKGROUND_JOBS_ENABLED=0 or BACKGROUND_JOBS_ENABLED=0",
+    });
   }
 
-  const log: {
-    startedAt: string;
-    steps: Record<string, unknown>;
-    errors: { step: string; message: string }[];
-    counts?: { active: number | null; displayable: number | null };
-    finishedAt?: string;
-  } = {
-    startedAt: new Date().toISOString(),
-    steps: {},
-    errors: [],
-  };
+  const startedAt = new Date().toISOString();
+  const locked = await withJobLock("daily-catalog-refresh", 130_000, async () => {
+    const supabase = getServerSupabase();
+    if (!supabase) {
+      throw new Error("Missing Supabase env");
+    }
 
-  try {
-    const classifyBatch = Number(process.env.SWOOP_CLASSIFY_BATCH || 50);
-    const maxRounds = Number(process.env.SWOOP_CLASSIFY_MAX_ROUNDS || 400);
+    const log: {
+      startedAt: string;
+      steps: Record<string, unknown>;
+      errors: { step: string; message: string }[];
+      counts?: { active: number | null; displayable: number | null };
+      finishedAt?: string;
+    } = {
+      startedAt,
+      steps: {},
+      errors: [],
+    };
+
+    // Hard caps — prior default 400 rounds could hold a 300s Fluid instance open.
+    const classifyBatch = Math.min(Number(process.env.SWOOP_CLASSIFY_BATCH || 50), 50);
+    const maxRounds = Math.min(Number(process.env.SWOOP_CLASSIFY_MAX_ROUNDS || 40), 60);
+    const hardStopAt = Date.now() + 90_000;
     let classified = 0;
     for (let i = 0; i < maxRounds; i += 1) {
+      if (Date.now() > hardStopAt) {
+        log.steps.classifyStoppedEarly = {
+          reason: "hard_timeout_90s",
+          rounds: i,
+          classified,
+        };
+        break;
+      }
       const { data, error } = await supabase.rpc("swoop_classify_core_batch", {
         p_limit: classifyBatch,
       });
@@ -54,6 +78,7 @@ export async function GET(request: Request) {
       if (n === 0) break;
     }
     log.steps.classified = classified;
+    log.steps.classifyCaps = { classifyBatch, maxRounds };
 
     try {
       const { error: hubErr } = await supabase.rpc("catalog_refresh_material_hub_counts");
@@ -107,7 +132,7 @@ export async function GET(request: Request) {
 
     log.steps.rakuten = {
       skipped: true,
-      reason: "Use /api/cron/rakuten-feed-sync every 30m for stock + feed updates",
+      reason: "Feed ingest stays off Vercel; GitHub Actions / stage path owns imports.",
     };
 
     let emailResult: {
@@ -116,7 +141,7 @@ export async function GET(request: Request) {
     } = { sent: false };
     try {
       emailResult = await sendCatalogDailyEmail(supabase, {
-        syncSummary: "Rakuten feed via 30m chunked cron; classification ran in this job.",
+        syncSummary: "Daily classify+stats only; feed ingest not on Vercel.",
       });
       log.steps.email = emailResult;
     } catch (emailErr: unknown) {
@@ -135,19 +160,46 @@ export async function GET(request: Request) {
           classified: log.steps.classified ?? null,
           counts: log.counts ?? null,
           finishedAt: log.finishedAt,
+          classifyCaps: log.steps.classifyCaps,
         },
         updated_at: log.finishedAt,
       });
     } catch {
-      // monitoring only — never fail the refresh on status write
+      // monitoring only
     }
-    return NextResponse.json(
-      { ok: log.errors.length === 0, log, email: emailResult },
-      { status: log.errors.length ? 207 : 200 }
-    );
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    log.errors.push({ step: "fatal", message });
-    return NextResponse.json({ ok: false, log, error: message }, { status: 500 });
+
+    return {
+      ok: log.errors.length === 0,
+      log,
+      email: emailResult,
+      status: log.errors.length ? 207 : 200,
+    };
+  });
+
+  if (!locked.ok) {
+    await recordJobObservation({
+      job: "daily-catalog-refresh",
+      startedAt,
+      ok: false,
+      skipped: true,
+      detail: locked.body,
+    });
+    return NextResponse.json(locked.body, { status: locked.status });
   }
+
+  await recordJobObservation({
+    job: "daily-catalog-refresh",
+    startedAt,
+    finishedAt: locked.result.log.finishedAt,
+    ok: locked.result.ok,
+    detail: {
+      classified: locked.result.log.steps.classified,
+      errors: locked.result.log.errors.length,
+    },
+  });
+
+  return NextResponse.json(
+    { ok: locked.result.ok, log: locked.result.log, email: locked.result.email },
+    { status: locked.result.status }
+  );
 }
