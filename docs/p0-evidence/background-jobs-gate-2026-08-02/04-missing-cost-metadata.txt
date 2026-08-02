@@ -1,0 +1,10 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> rest-express@1.0.0 check:background-jobs
+> node --import tsx scripts/check-background-jobs.ts
+
+[background-jobs] baseline v1 (2026-08-02)
+
+[background-jobs] FAIL: Job weekly-edit-send missing cost-review justification (min 20 chars)
+
+metadata_exit=1

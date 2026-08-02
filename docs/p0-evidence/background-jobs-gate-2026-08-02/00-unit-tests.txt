@@ -1,0 +1,19 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> rest-express@1.0.0 test:background-jobs
+> node --import tsx --test scripts/background-jobs.test.ts
+
+✔ warm defaults off (2.200286ms)
+✔ catalog/sale/scan/recommend are forbidden warm targets (0.906868ms)
+✔ warm job is registered but not scheduled (0.654798ms)
+✔ no scheduled job exceeds founder monthly invocation ceiling (0.470649ms)
+✔ every scheduled job has cost-review justification (0.336271ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2040.013599
+tests_exit=0

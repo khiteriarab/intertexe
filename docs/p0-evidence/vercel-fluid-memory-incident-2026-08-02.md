@@ -93,3 +93,43 @@ At iad1 provisioned-memory rate **$0.0106 / GB-hr**, returning to the prior-peri
 2. Trailing 24h logs: `/api/cron/warm` ≈ 0; `/api/catalog` no longer ≈ 9× warm
 3. `system_status.vercel_cost_snapshot.killSwitches.warmCronScheduled === false`
 4. No active `job_lock:*` older than maxAge
+
+## Remediation status
+
+**Remediated (2026-08-02).** Warm cron unscheduled; kill switches + job locks live; Founder Dashboard cost + background-jobs panels shipped. No further warming behavior changes without documented business need and explicit approval.
+
+## Final governance — Background Job Cost Gate
+
+Permanent standard: [`docs/BACKGROUND_JOBS_STANDARD.md`](../BACKGROUND_JOBS_STANDARD.md)
+
+### Enforcement surfaces
+
+1. **Vercel production builds** — `package.json` runs `npm run check:background-jobs` before `next build`. A failing gate aborts the deployment.
+2. **GitHub Actions** — `.github/workflows/background-jobs-gate.yml` (installed from `docs/BACKGROUND_JOBS_GATE.workflow.yml`) runs on:
+   - `pull_request` (path-filtered to cron/registry/package changes)
+   - `push` to `main` (same path filters)
+   - Steps: `npm run check:background-jobs` + `npm run test:background-jobs`
+
+### Negative-test evidence (local, same checker Vercel/CI invoke)
+
+Directory: [`docs/p0-evidence/background-jobs-gate-2026-08-02/`](./background-jobs-gate-2026-08-02/)
+
+| Violation | Result | Evidence file |
+|---|---|---|
+| Undeclared cron added to `vercel.json` | **FAIL** exit 1 | `01-undeclared-cron.txt` |
+| Cron frequency increased (registry mismatch) | **FAIL** exit 1 | `02-increased-frequency.txt` |
+| Monthly invocations above founder ceiling | **FAIL** exit 1 | `02b-high-frequency-policy.txt` |
+| Forbidden high-frequency schedule `*/2 * * * *` | **FAIL** exit 1 | `02c-schedule-string-policy.txt` |
+| Expensive route added to warming (`/api/catalog`) | **FAIL** exit 1 | `03-expensive-warm.txt` |
+| Registry cost metadata / justification missing | **FAIL** exit 1 | `04-missing-cost-metadata.txt` |
+| Clean tree (control) | **PASS** exit 0 | `00-clean-pass.txt` |
+| Unit tests | **PASS** exit 0 | `00-unit-tests.txt` |
+
+Summary: [`background-jobs-gate-2026-08-02/SUMMARY.md`](./background-jobs-gate-2026-08-02/SUMMARY.md)
+
+### GitHub workflow install status
+
+- Workflow file prepared at `.github/workflows/background-jobs-gate.yml` (and docs template).
+- Push to `origin/main` on 2026-08-02 was **rejected**: Personal Access Token lacks `workflow` scope (`refusing to allow a Personal Access Token to create or update workflow ... without workflow scope`).
+- **Action required once a workflow-scoped token is available:** commit and push `.github/workflows/background-jobs-gate.yml` unchanged. Until then, **Vercel build gate remains the production enforcement** (`npm run build` → `check:background-jobs`).
+
