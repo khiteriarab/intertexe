@@ -50,8 +50,18 @@ export type KhiterisEditConfig = {
   products: KhiterisEditProduct[];
 };
 
-const FIRST_SALE_MYTHERESA_URL =
+const FIRST_SALE_MYTHERESA_DEST_PATH =
+  "women/citizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019?feed_num=P01184019&feed_des=CitizensofHumanity&feed_mwg=clothing";
+
+/** UK / GB MyTheresa affiliate — historical first-sale click-out. */
+const FIRST_SALE_MYTHERESA_UK_URL =
   "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2034086.356631096927065432749883&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fgb%2Fen%2Fwomen%2Fcitizens-of-humanity-brynn-linen-wide-leg-pants-beige-p01184019%3Ffeed_num%3DP01184019%26feed_des%3DCitizensofHumanity%26feed_mwg%3Dclothing";
+
+/** US / CA MyTheresa affiliate (Rakuten MID 43172). */
+const FIRST_SALE_MYTHERESA_US_URL =
+  `https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=43172&murl=${encodeURIComponent(
+    `https://www.mytheresa.com/us/en/${FIRST_SALE_MYTHERESA_DEST_PATH}`
+  )}`;
 
 /** The /khiteri Mytheresa click most closely associated with INTERTEXE's first sale. */
 const FIRST_SALE_MYTHERESA_PRODUCT: KhiterisEditProduct = {
@@ -61,12 +71,13 @@ const FIRST_SALE_MYTHERESA_PRODUCT: KhiterisEditProduct = {
   price: "$298",
   brand: "Citizens of Humanity",
   catalogSku: "P01184019",
-  href: FIRST_SALE_MYTHERESA_URL,
+  // Default to US — geo unknown maps to catalog region `us`.
+  href: FIRST_SALE_MYTHERESA_US_URL,
   hrefByRegion: {
-    us: FIRST_SALE_MYTHERESA_URL,
-    ca: FIRST_SALE_MYTHERESA_URL,
-    uk: FIRST_SALE_MYTHERESA_URL,
-    eu: FIRST_SALE_MYTHERESA_URL,
+    us: FIRST_SALE_MYTHERESA_US_URL,
+    ca: FIRST_SALE_MYTHERESA_US_URL,
+    uk: FIRST_SALE_MYTHERESA_UK_URL,
+    eu: FIRST_SALE_MYTHERESA_UK_URL,
   },
   image: {
     src: "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/22/P01184019.jpg",
