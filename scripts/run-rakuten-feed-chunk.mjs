@@ -118,7 +118,10 @@ async function main() {
       opsAlreadyRecorded = Boolean(result?.opsStatus);
     } catch (importErr) {
       console.warn("TS runner unavailable, using JS fallback:", importErr?.message || importErr);
-      const { syncRakutenFeeds } = require(path.join(root, "lib/feed-sync/rakuten-sync.js"));
+      // package.json is "type":"module" — never require() ESM rakuten-sync.js
+      const { syncRakutenFeeds } = await import(
+        pathToFileURL(path.join(root, "lib/feed-sync/rakuten-sync.js")).href
+      );
       let fileOffset = checkpointBefore;
       const fileLimit = Number(process.env.RAKUTEN_CHUNK_FILE_LIMIT || 2);
       const syncResult = await syncRakutenFeeds({
