@@ -13,6 +13,7 @@ import { EmailBanner } from "./EmailBanner";
 import { SignInBenefitsBanner } from "./SignInBenefitsBanner";
 import { AuthLoginPromptProvider } from "../hooks/use-auth-login-prompt";
 import { UtmCapture } from "./UtmCapture";
+import { AppDownloadPrompt } from "./AppDownloadPrompt";
 
 const B2B_ROUTE_PREFIXES = ["/platform", "/partners", "/khiteri", "/dashboard"];
 const DOCUMENT_ROUTE_PREFIXES = ["/press-kit"];
@@ -72,6 +73,7 @@ export function ClientApp({ children }: { children: ReactNode }) {
         {!minimalChrome && <Footer />}
         {!minimalChrome && <EmailBanner />}
         {!minimalChrome && <ScrollToTop />}
+        {!minimalChrome && <AppDownloadPrompt />}
       </div>
       <Toaster position="top-right" />
       </AuthLoginPromptProvider>

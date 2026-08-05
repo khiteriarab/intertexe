@@ -13,6 +13,7 @@ import {
   SITE_URL,
   pageAlternates,
 } from "../lib/seo-international";
+import { APP_STORE_ID } from "../lib/app-store";
 
 const HOME_DESCRIPTION =
   `Discover ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces across ${CATALOG_STATS.brandCountFormatted} brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to find better natural fiber alternatives at your price point.`;
@@ -141,6 +142,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
+        <meta
+          name="apple-itunes-app"
+          content={`app-id=${APP_STORE_ID}, app-argument=${SITE_URL}`}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){var r=0;window.addEventListener("error",function(e){if(e&&e.message&&e.message.indexOf("Loading chunk")!==-1&&r<3){r++;setTimeout(function(){window.location.reload()},1500)}},true);window.addEventListener("unhandledrejection",function(e){if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf("Loading chunk")!==-1&&r<3){r++;setTimeout(function(){window.location.reload()},1500)}},true)})();`,

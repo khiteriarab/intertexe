@@ -23,6 +23,7 @@ import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
 import { useInfiniteScroll } from "../hooks/use-infinite-scroll";
 import { ProductGridSkeleton } from "../components/ProductGridSkeleton";
+import { CatalogProductImage } from "../components/CatalogProductImage";
 import { CountrySelector } from "../components/CountrySelector";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "../components/ShopTheEditCarousel";

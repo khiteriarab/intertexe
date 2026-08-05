@@ -1,40 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { getAppStoreUrl, openAppOrStore } from "../../lib/app-store";
 
 type Props = {
   /** Same App Store URL as the site “Download the App” buttons. */
   appStoreUrl?: string;
   /** localStorage key so home vs /khiteri dismissals stay independent. */
   dismissKey?: string;
-  /** Short line next to the icon. */
-  message?: string;
+  /** Serif headline (NAP: “SHOP THE APP”). */
+  title?: string;
+  /** Supporting line under the title. */
+  subtitle?: string;
   className?: string;
   testId?: string;
 };
 
-function resolveAppStoreUrl(explicit?: string): string {
-  const fromProp = (explicit || "").trim();
-  if (fromProp) return fromProp;
-  const fromEnv = (process.env.NEXT_PUBLIC_APP_STORE_URL || "").trim();
-  if (fromEnv) return fromEnv;
-  return "https://apps.apple.com/app/id6770476520";
-}
-
 /**
- * Sticky black app download bar — same CTA/link as “Download the App” on the site.
+ * NAP-style sticky app bar: “SHOP THE APP” + large white OPEN CTA.
+ * OPEN tries the native app when a URL scheme is configured, else App Store.
  */
 export function AppDownloadBanner({
   appStoreUrl,
   dismissKey = "app-banner-dismissed",
-  message = "Download the Intertexe app",
+  title = "Shop the app",
+  subtitle = "For a personalized shopping experience.",
   className = "",
   testId = "banner-app-download",
 }: Props) {
   const [dismissed, setDismissed] = useState(true);
-  const href = resolveAppStoreUrl(appStoreUrl);
+  const href = getAppStoreUrl(appStoreUrl);
 
   useEffect(() => {
     try {
@@ -56,38 +53,52 @@ export function AppDownloadBanner({
     }
   };
 
+  const handleOpen = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    openAppOrStore({ storeUrl: href });
+  };
+
   return (
     <div
-      className={`w-full shrink-0 bg-[#111] text-white flex flex-wrap items-center gap-3 px-4 md:px-6 py-2.5 ${className}`}
+      className={`w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-3 md:gap-4 px-3 md:px-6 py-3 md:py-3.5 ${className}`}
       data-testid={testId}
     >
       <button
         onClick={handleDismiss}
-        className="flex-shrink-0 p-0.5 text-white/50 hover:text-white transition-colors"
+        className="flex-shrink-0 p-1.5 -ml-0.5 text-white/55 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
         aria-label="Dismiss"
         data-testid="button-dismiss-banner"
         type="button"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="w-4 h-4" strokeWidth={1.75} />
       </button>
+
       <Image
         src="/app-icon.png"
-        alt="Intertexe app"
-        width={40}
-        height={40}
-        className="h-10 w-10 shrink-0 rounded-[9px] object-cover"
+        alt=""
+        width={44}
+        height={44}
+        className="h-11 w-11 shrink-0 rounded-[10px] object-cover"
         data-testid="img-app-banner-icon"
       />
-      <p className="flex-1 min-w-0 text-[11px] md:text-[12px] leading-snug font-medium">
-        {message}
-      </p>
+
+      <div className="flex-1 min-w-0 py-0.5">
+        <p className="font-serif text-[15px] md:text-[17px] leading-tight tracking-wide text-white">
+          {title}
+        </p>
+        <p className="mt-0.5 text-[11px] md:text-[12px] leading-snug text-white/65 font-light truncate">
+          {subtitle}
+        </p>
+      </div>
+
       <a
         href={href}
-        className="flex-shrink-0 border border-white text-white px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-colors"
+        onClick={handleOpen}
+        className="flex-shrink-0 bg-white text-black px-5 md:px-7 py-2.5 md:py-3 text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
         rel="noopener noreferrer"
-        data-testid="link-app-download"
+        data-testid="link-app-open"
       >
-        Download
+        Open
       </a>
     </div>
   );

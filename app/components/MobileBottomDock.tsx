@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
-import { Home, Layers, Scan, ShoppingBag, User } from "lucide-react";
+import { Home, Layers, Scan, ShoppingBag, User, Tag } from "lucide-react";
 
 const mobileNavLinks = [
   { name: "Home", href: "/", icon: Home },
-  { name: "New In", href: "/shop?sort=new", icon: ShoppingBag },
+  { name: "Shop", href: "/shop/hub", icon: ShoppingBag },
   { name: "Scanner", href: "/scanner", icon: Scan },
   { name: "Fabrics", href: "/materials", icon: Layers },
   { name: "Designers", href: "/designers", icon: User },
-  { name: "Sale", href: "/sale", icon: ShoppingBag },
+  { name: "Sale", href: "/sale", icon: Tag },
 ];
 
 /** Fixed mobile chrome portaled to body so it never scrolls with page content (iOS-safe). */
@@ -35,8 +35,11 @@ export function MobileBottomDock() {
       <nav className="flex justify-around items-center h-[56px] px-1 bg-background/95 backdrop-blur-md">
         {mobileNavLinks.map((link) => {
           const Icon = link.icon;
-          const isActive =
-            pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href.split("?")[0]));
+          const pathOnly = link.href.split("?")[0];
+          const isShopTab = pathOnly === "/shop/hub";
+          const isActive = isShopTab
+            ? pathname === "/shop/hub" || pathname === "/shop" || pathname.startsWith("/shop/")
+            : pathname === pathOnly || (pathOnly !== "/" && pathname.startsWith(pathOnly));
           return (
             <Link
               key={link.name}

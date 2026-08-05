@@ -99,7 +99,7 @@ export function NewInHomeRail({
           >
             {hasItems ? (
               railProducts.map((product: any, i: number) => (
-                <NewInProductCard key={product.id} product={product} eager={i < 8} />
+                <NewInProductCard key={product.id} product={product} eager={i < 3} />
               ))
             ) : (
               <p className="text-[12px] text-neutral-400 max-w-sm leading-relaxed py-6">
