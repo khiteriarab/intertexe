@@ -4,7 +4,7 @@
  */
 export const SHOP_HUB_MENU = [
   { name: "Clothing", href: "/shop" },
-  { name: "Shoes", href: "/materials/leather" },
+  { name: "Shoes", href: "/shop/shoes" },
   { name: "Collections", href: "/collections" },
   { name: "Designers", href: "/designers" },
   { name: "Fabrics", href: "/materials" },
