@@ -43,7 +43,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/((?!api/|_next/static|_next/image|favicon).*)',
+        source: '/((?!api/|_next/static|_next/image|favicon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
           { key: 'Pragma', value: 'no-cache' },

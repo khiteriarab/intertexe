@@ -2,27 +2,31 @@
 
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { getAppStoreUrl, openAppOrStore } from "../../lib/app-store";
+import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 const DISMISS_KEY = "app-download-prompt-dismissed-at";
 const PROMPT_DELAY_MS = 3 * 60 * 1000; // ~3 minutes engaged — enough to browse before asking
 const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // don’t re-ask for a week
 const SKIP_PREFIXES = ["/dashboard", "/platform", "/partners", "/press-kit", "/api"];
+const APP_ICON_SRC = "/app-icon.png";
+const APP_ICON_FALLBACK = "/favicon.png";
 
 function shouldSkipPath(pathname: string) {
   return SKIP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 /**
- * Soft NAP-style modal after a few minutes on site — big download CTA, easy dismiss.
+ * Soft NAP-style modal after a few minutes on site — mobile web only.
  */
 export function AppDownloadPrompt() {
   const pathname = usePathname() || "/";
+  const isMobile = useIsMobileWeb();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const href = getAppStoreUrl();
 
   useEffect(() => {
@@ -30,7 +34,7 @@ export function AppDownloadPrompt() {
   }, []);
 
   useEffect(() => {
-    if (!mounted || shouldSkipPath(pathname)) return;
+    if (!mounted || !isMobile || shouldSkipPath(pathname)) return;
 
     try {
       const raw = localStorage.getItem(DISMISS_KEY);
@@ -38,18 +42,15 @@ export function AppDownloadPrompt() {
         const at = Number(raw);
         if (Number.isFinite(at) && Date.now() - at < DISMISS_COOLDOWN_MS) return;
       }
-      if (localStorage.getItem("app-banner-dismissed") === "1") {
-        // Still allow the timed prompt later unless they dismissed the prompt itself.
-      }
     } catch {
       // ignore
     }
 
     const timer = window.setTimeout(() => setOpen(true), PROMPT_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [mounted, pathname]);
+  }, [mounted, isMobile, pathname]);
 
-  if (!mounted || !open || shouldSkipPath(pathname)) return null;
+  if (!mounted || !isMobile || !open || shouldSkipPath(pathname)) return null;
 
   const dismiss = () => {
     setOpen(false);
@@ -73,7 +74,7 @@ export function AppDownloadPrompt() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[180] flex items-end sm:items-center justify-center p-0 sm:p-6"
+      className="fixed inset-0 z-[180] flex items-end justify-center p-0"
       role="dialog"
       aria-modal="true"
       aria-labelledby="app-download-prompt-title"
@@ -85,7 +86,7 @@ export function AppDownloadPrompt() {
         aria-label="Close"
         onClick={dismiss}
       />
-      <div className="relative w-full sm:max-w-md bg-white text-neutral-900 shadow-2xl px-6 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:rounded-sm">
+      <div className="relative w-full max-w-md bg-white text-neutral-900 shadow-2xl px-6 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] rounded-t-sm">
         <button
           type="button"
           onClick={dismiss}
@@ -96,19 +97,23 @@ export function AppDownloadPrompt() {
         </button>
 
         <div className="flex flex-col items-center text-center pt-4 pb-2">
-          <Image
-            src="/app-icon.png"
-            alt=""
+          {/* Native img — more reliable than next/image inside a portal */}
+          <img
+            src={iconSrc}
+            alt="Intertexe"
             width={72}
             height={72}
-            className="h-[72px] w-[72px] rounded-[16px] object-cover mb-5"
+            className="h-[72px] w-[72px] rounded-[16px] object-cover mb-5 bg-neutral-900"
+            onError={() => {
+              if (iconSrc !== APP_ICON_FALLBACK) setIconSrc(APP_ICON_FALLBACK);
+            }}
           />
           <p className="text-[10px] uppercase tracking-[0.28em] text-neutral-400 mb-3">
             Intertexe app
           </p>
           <h2
             id="app-download-prompt-title"
-            className="font-serif text-[26px] sm:text-[28px] leading-tight mb-3"
+            className="font-serif text-[26px] leading-tight mb-3"
           >
             Shop the app
           </h2>
