@@ -13,6 +13,13 @@ import {
   type CatalogBrowseV2Result,
   type CatalogFilterCoverage,
 } from "./catalog-browse-v2";
+import { isFootwearListing } from "./catalog-product-filters";
+
+function apparelOnlyProducts<T extends { category?: string | null; name?: string | null }>(
+  products: T[]
+): T[] {
+  return products.filter((p) => !isFootwearListing(p));
+}
 
 const CATALOG_TABLE = "live_products_apparel";
 
@@ -258,8 +265,10 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       pq = applySort(pq, opts.sort);
       const { data, error } = await pq.range(offset, offset + limit - 1);
       if (error) throw error;
-      const products = filterConsumerCatalogProducts(
-        (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
+      const products = apparelOnlyProducts(
+        filterConsumerCatalogProducts(
+          (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
+        )
       );
       return {
         products,
@@ -286,8 +295,10 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       fq = applySort(fq, opts.sort);
       const { data, error } = await fq.range(offset, offset + limit - 1);
       if (error) throw error;
-      const products = filterConsumerCatalogProducts(
-        (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
+      const products = apparelOnlyProducts(
+        filterConsumerCatalogProducts(
+          (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
+        )
       );
       return {
         products,
@@ -383,8 +394,10 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       rows = rows.filter((row: any) => parseMoney(row.price) >= opts.minPrice!);
     }
 
-    const products = filterConsumerCatalogProducts(
-      rows.map((row: any) => mapDirectRow(row as Record<string, unknown>))
+    const products = apparelOnlyProducts(
+      filterConsumerCatalogProducts(
+        rows.map((row: any) => mapDirectRow(row as Record<string, unknown>))
+      )
     );
     const total = opts.skipCount ? null : offset + products.length + (products.length >= limit ? 1 : 0);
     const hasMore = products.length >= limit;
@@ -427,11 +440,13 @@ function mapDirectRow(row: Record<string, unknown>): DirectCatalogProduct {
 }
 
 function mapV2Result(v2: CatalogBrowseV2Result): CatalogLiveQueryResult {
+  // Shop clothing PLP — shoes live on /shop/shoes only.
+  const products = apparelOnlyProducts(v2.products as DirectCatalogProduct[]);
   return {
-    products: v2.products as DirectCatalogProduct[],
+    products,
     total: v2.total,
     hasMore: v2.hasMore,
-    productIds: v2.productIds,
+    productIds: products.map((p) => p.id).filter(Boolean),
     rpcVersion: v2.rpcVersion,
     totalStatus: v2.totalStatus,
     filterCoverage: v2.filterCoverage,

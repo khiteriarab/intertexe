@@ -5,6 +5,7 @@
  */
 import { canonicalProductId } from "./canonical-product-id";
 import type { DirectCatalogProduct } from "./catalog-direct-query";
+import { isFootwearListing } from "./catalog-product-filters";
 import { fetchEditorPickProducts } from "./homepage-rails-personalize";
 import type { Product } from "./supabase-server";
 
@@ -40,8 +41,7 @@ function toShopProduct(p: Product): DirectCatalogProduct {
 }
 
 function isFootwear(p: DirectCatalogProduct | Product): boolean {
-  const hay = `${p.category || ""} ${p.name || ""}`.toLowerCase();
-  return /\b(shoe|shoes|footwear|sandal|boot|sneaker|heel|pump|loafer|mule)\b/.test(hay);
+  return isFootwearListing(p);
 }
 
 /** Merge pre-fetched curator picks ahead of browse results (no extra DB round-trip). */

@@ -399,7 +399,9 @@ export default function ShopClient({
       setIsLoading(false);
     } else {
       const fetchProducts = async () => {
-        setIsLoading(true);
+        // Only dim the grid on a full refresh — load-more uses loadingMore instead.
+        if (listOffset === 0) setIsLoading(true);
+        else setLoadingMore(true);
         try {
           const result = await getShopProducts({
             fiber: fiberTab !== "all" ? fiberTab : undefined,
@@ -1095,7 +1097,7 @@ export default function ShopClient({
           </div>
         ) : (
           <>
-            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12 transition-opacity ${isLoading && products.length > 0 ? "opacity-60" : ""}`}>
+            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-5 md:gap-y-12 ${isLoading && products.length > 0 && listOffset === 0 ? "opacity-60 transition-opacity" : ""}`}>
               {rankedProducts.map((product: any, i: number) => (
                 <ProductCard key={product.id} product={product} eager={i < 12} />
               ))}

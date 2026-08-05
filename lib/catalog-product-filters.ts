@@ -181,8 +181,20 @@ export function isEditorialWomensApparel(row: {
 }): boolean {
   const cat = (row.category || "").toLowerCase();
   const name = (row.name || "").toLowerCase();
-  if (/(accessories|scarves|bags|shoes|jewelry|belt|hat|glove|sock)/.test(cat)) return false;
+  if (/(accessories|scarves|bags|shoes|jewelry|belt|hat|glove|sock|footwear)\b/.test(cat)) return false;
   if (/\b(scarf|wallet|sunglasses|keychain|pouch|stole|shawl)\b/.test(name)) return false;
   if (/\b(blazer|suit jacket|sport coat)\b/.test(name) && !/(dress|skirt)/.test(cat)) return false;
   return true;
+}
+
+/** True when a listing is shoes/boots — keep out of Shop clothing (/shop). */
+export function isFootwearListing(product: {
+  category?: string | null;
+  name?: string | null;
+}): boolean {
+  const text = `${product.category || ""} ${product.name || ""}`.toLowerCase();
+  if (/\b(belt|wallet|purse|clutch|handbag|tote|backpack|scarf|glove)\b/.test(text)) return false;
+  return /\b(shoe|shoes|footwear|sandal|sandals|boot|boots|bootie|booties|sneaker|sneakers|heel|heels|pump|pumps|loafer|loafers|mule|mules|wedge|wedges|espadrille|espadrilles|trainer|trainers|slide|slides|flip[- ]?flop)\b/.test(
+    text
+  );
 }
