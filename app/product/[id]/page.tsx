@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ShoppingBag, Leaf, ArrowRight } from "lucide-react";
 import {
   fetchProductById,
@@ -8,7 +9,7 @@ import {
   fetchMoreOnSale,
   fetchMoreInFiber,
   fetchMoreAtPrice,
-  fetchAllProductIds,
+  type Product,
 } from "../../../lib/supabase-server";
 import { ProductFavoriteButton } from "./ProductFavoriteButton";
 import { ShopNowButton } from "./ShopNowButton";
@@ -191,15 +192,6 @@ export default async function ProductPage({
   const originalShown = formatDisplayOriginalPrice(product);
 
   const isSaleItem = Boolean(product.isSale);
-
-  const [moreFromBrand, moreOnSale, moreInFiber, moreAtPrice] = await Promise.all([
-    !isSaleItem && product.brandSlug
-      ? fetchMoreFromBrand(String(product.id), product.brandSlug, 12)
-      : Promise.resolve([]),
-    isSaleItem ? fetchMoreOnSale(String(product.id), 12) : Promise.resolve([]),
-    fetchMoreInFiber(String(product.id), product.composition, 4, { saleOnly: isSaleItem }),
-    fetchMoreAtPrice(String(product.id), product.price, 4, { saleOnly: isSaleItem }),
-  ]);
 
   const breadcrumbItems: any[] = [
     { "@type": "ListItem", position: 1, name: "Home", item: "https://www.intertexe.com/" },
@@ -389,42 +381,94 @@ export default async function ProductPage({
           </div>
         </div>
 
-        {(isSaleItem
-          ? [
-              { items: moreOnSale, title: "More on sale", testId: "section-more-on-sale" },
-              {
-                items: moreInFiber,
-                title: primaryFiber
-                  ? `More sale in ${primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}`
-                  : "More sale picks",
-                testId: "section-more-in-fiber",
-              },
-              { items: moreAtPrice, title: "More sale at this price", testId: "section-more-at-price" },
-            ]
-          : [
-              { items: moreFromBrand, title: `More from ${product.brandName}`, testId: "section-more-from-brand" },
-              {
-                items: moreInFiber,
-                title: primaryFiber
-                  ? `More in ${primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}`
-                  : "Similar Materials",
-                testId: "section-more-in-fiber",
-              },
-              { items: moreAtPrice, title: "More at This Price", testId: "section-more-at-price" },
-            ]
-        ).filter((s) => s.items.length > 0).map((section) => (
-          <section key={section.testId} className="flex flex-col gap-5 border-t border-border/30 pt-8" data-testid={section.testId}>
-            <h2 className="text-xs uppercase tracking-[0.2em] font-medium text-muted-foreground">
-              {section.title}
-            </h2>
-            <div className="product-rail-scroll flex gap-3 md:gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
-              {section.items.map((p) => (
-                <RelatedProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </section>
-        ))}
+        <Suspense fallback={null}>
+          <RelatedProductRails
+            productId={String(product.id)}
+            brandSlug={product.brandSlug}
+            brandName={product.brandName}
+            composition={product.composition}
+            price={product.price}
+            primaryFiber={primaryFiber}
+            isSaleItem={isSaleItem}
+          />
+        </Suspense>
       </div>
     </div>
+  );
+}
+
+async function RelatedProductRails({
+  productId,
+  brandSlug,
+  brandName,
+  composition,
+  price,
+  primaryFiber,
+  isSaleItem,
+}: {
+  productId: string;
+  brandSlug?: string | null;
+  brandName?: string | null;
+  composition?: string | null;
+  price?: string | null;
+  primaryFiber: string | null;
+  isSaleItem: boolean;
+}) {
+  const [moreFromBrand, moreOnSale, moreInFiber, moreAtPrice] = await Promise.all([
+    !isSaleItem && brandSlug
+      ? fetchMoreFromBrand(productId, brandSlug, 12)
+      : Promise.resolve([] as Product[]),
+    isSaleItem ? fetchMoreOnSale(productId, 12) : Promise.resolve([] as Product[]),
+    fetchMoreInFiber(productId, composition ?? null, 4, { saleOnly: isSaleItem }),
+    fetchMoreAtPrice(productId, price ?? null, 4, { saleOnly: isSaleItem }),
+  ]);
+
+  const sections = (
+    isSaleItem
+      ? [
+          { items: moreOnSale, title: "More on sale", testId: "section-more-on-sale" },
+          {
+            items: moreInFiber,
+            title: primaryFiber
+              ? `More sale in ${primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}`
+              : "More sale picks",
+            testId: "section-more-in-fiber",
+          },
+          { items: moreAtPrice, title: "More sale at this price", testId: "section-more-at-price" },
+        ]
+      : [
+          { items: moreFromBrand, title: `More from ${brandName}`, testId: "section-more-from-brand" },
+          {
+            items: moreInFiber,
+            title: primaryFiber
+              ? `More in ${primaryFiber.charAt(0).toUpperCase() + primaryFiber.slice(1)}`
+              : "Similar Materials",
+            testId: "section-more-in-fiber",
+          },
+          { items: moreAtPrice, title: "More at This Price", testId: "section-more-at-price" },
+        ]
+  ).filter((s) => s.items.length > 0);
+
+  if (!sections.length) return null;
+
+  return (
+    <>
+      {sections.map((section) => (
+        <section
+          key={section.testId}
+          className="flex flex-col gap-5 border-t border-border/30 pt-8"
+          data-testid={section.testId}
+        >
+          <h2 className="text-xs uppercase tracking-[0.2em] font-medium text-muted-foreground">
+            {section.title}
+          </h2>
+          <div className="product-rail-scroll flex gap-3 md:gap-4 pb-2 -mx-4 px-4 scrollbar-hide">
+            {section.items.map((p) => (
+              <RelatedProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </>
   );
 }

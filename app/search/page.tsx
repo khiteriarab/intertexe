@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { liveProductsApparelFrom } from "@/lib/global-catalog-scope";
 import Link from "next/link";
 import { getServerSupabase } from "../../lib/supabase-service-client";
+import { queryCatalogBrowsePageV2 } from "../../lib/catalog-browse-v2";
 import { SearchInput } from "./SearchInput";
 import { ProductLink } from "../components/ProductLink";
 import { CatalogProductImage } from "../components/CatalogProductImage";
@@ -31,20 +31,37 @@ export default async function SearchPage({
 
   if (supabase && query.length >= 2) {
     const safe = query.replace(/[%_]/g, "");
-    const { data: productResults } = await liveProductsApparelFrom(supabase)
-      
-      .select("id, name, brand_name, brand_slug, price, image_url, composition, natural_fiber_percent")
-      .or(`name.ilike.%${safe}%,brand_name.ilike.%${safe}%,composition.ilike.%${safe}%`)
-      .limit(48);
+    const [browse, designerResults] = await Promise.all([
+      queryCatalogBrowsePageV2({
+        region: "us",
+        q: safe,
+        limit: 48,
+        offset: 0,
+        sort: "new",
+        apparelOnly: true,
+      }),
+      supabase
+        .from("designers")
+        .select("name, slug, hero_image, natural_fiber_percent")
+        .ilike("name", `%${safe}%`)
+        .limit(6)
+        .then(({ data }) => data || []),
+    ]);
 
-    const { data: designerResults } = await supabase
-      .from("designers")
-      .select("name, slug, hero_image, natural_fiber_percent")
-      .ilike("name", `%${safe}%`)
-      .limit(6);
-
-    products = productResults || [];
-    designers = designerResults || [];
+    products = (browse.products || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      brand_name: p.brandName,
+      brand_slug: p.brandSlug,
+      price: p.price,
+      image_url: p.imageUrl,
+      composition: p.composition,
+      natural_fiber_percent: p.naturalFiberPercent,
+      currency: undefined,
+      listingRegion: p.listingRegion,
+      productId: p.productId,
+    }));
+    designers = designerResults;
   }
 
   const resultCount = products.length + designers.length;
@@ -109,7 +126,12 @@ export default async function SearchPage({
                 <p className="text-sm font-serif line-clamp-2">{p.name}</p>
                 {p.price && (
                   <p className="text-xs">
-                    {formatDisplayPrice({ price: p.price, currency: p.currency } as any)}
+                    {formatDisplayPrice({
+                      price: p.price,
+                      currency: p.currency,
+                      listingRegion: p.listingRegion,
+                      productId: p.productId,
+                    } as any)}
                   </p>
                 )}
               </ProductLink>
@@ -118,13 +140,8 @@ export default async function SearchPage({
         </div>
       )}
 
-      {query.length >= 2 && products.length === 0 && designers.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-sm text-muted-foreground">No results for &ldquo;{query}&rdquo;</p>
-          <p className="text-xs text-muted-foreground mt-2">
-            Try searching for a fiber — silk, cashmere, linen — or a brand name.
-          </p>
-        </div>
+      {query.length >= 2 && resultCount === 0 && (
+        <p className="text-sm text-muted-foreground mt-8">No results found.</p>
       )}
     </div>
   );

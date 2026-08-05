@@ -11,6 +11,7 @@ import { canonicalProductId } from "./canonical-product-id";
 import { HOMEPAGE_SECTION_ORDER } from "./homepage-merchandising-manifest";
 import { MERCH_RAIL_KEYS, fetchMerchRailProducts } from "./merch-feed";
 import { getServerSupabase, mapProductRow, type Product } from "./supabase-server";
+import { cache } from "react";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -312,7 +313,9 @@ async function loadFavoriteIds(userId: string): Promise<string[]> {
     .filter(Boolean);
 }
 
-export async function fetchEditorPickProducts(limit: number): Promise<Product[]> {
+export const fetchEditorPickProducts = cache(async function fetchEditorPickProducts(
+  limit: number
+): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
 
@@ -342,7 +345,7 @@ export async function fetchEditorPickProducts(limit: number): Promise<Product[]>
     if (out.length >= limit * 2) break;
   }
   return out;
-}
+});
 
 /**
  * Put curator `is_editor_pick` apparel ahead of a New In / merch base rail.

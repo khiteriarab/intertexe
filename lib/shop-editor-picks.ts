@@ -44,24 +44,13 @@ function isFootwear(p: DirectCatalogProduct | Product): boolean {
   return /\b(shoe|shoes|footwear|sandal|boot|sneaker|heel|pump|loafer|mule)\b/.test(hay);
 }
 
-/**
- * Put curator favorites first, then the browse page — for default clothing / newest.
- */
-export async function leadShopWithEditorPicks(
+/** Merge pre-fetched curator picks ahead of browse results (no extra DB round-trip). */
+export function mergeShopWithEditorPicks(
   base: DirectCatalogProduct[],
+  picks: DirectCatalogProduct[],
   limit: number
-): Promise<DirectCatalogProduct[]> {
+): DirectCatalogProduct[] {
   const lim = Math.min(Math.max(limit, 1), 48);
-  let picks: DirectCatalogProduct[] = [];
-  try {
-    const raw = await fetchEditorPickProducts(lim);
-    picks = raw
-      .filter((p) => !isFootwear(p) && Boolean(String(p.imageUrl || "").trim()))
-      .map(toShopProduct);
-  } catch {
-    picks = [];
-  }
-
   if (!picks.length) return base.slice(0, lim);
 
   const seen = new Set<string>();
@@ -84,6 +73,31 @@ export async function leadShopWithEditorPicks(
     if (out.length >= lim) return out;
   }
   return out;
+}
+
+export async function loadEditorPickShopLead(
+  limit: number
+): Promise<DirectCatalogProduct[]> {
+  const lim = Math.min(Math.max(limit, 1), 48);
+  try {
+    const raw = await fetchEditorPickProducts(lim);
+    return raw
+      .filter((p) => !isFootwear(p) && Boolean(String(p.imageUrl || "").trim()))
+      .map(toShopProduct);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Put curator favorites first, then the browse page — for default clothing / newest.
+ */
+export async function leadShopWithEditorPicks(
+  base: DirectCatalogProduct[],
+  limit: number
+): Promise<DirectCatalogProduct[]> {
+  const picks = await loadEditorPickShopLead(limit);
+  return mergeShopWithEditorPicks(base, picks, limit);
 }
 
 export function shouldLeadShopWithEditorPicks(opts: {

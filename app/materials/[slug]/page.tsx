@@ -3,7 +3,7 @@ import Link from "next/link";
 import {
   fetchProductsByFiberAndCategory,
   fetchCatalogProductsByFiber,
-  fetchDesigners,
+  fetchTopNaturalFiberDesigners,
   fetchMaterialHubDisplayCount,
 } from "../../../lib/supabase-server";
 import { CATALOG_INITIAL_PAGE } from "../../../lib/catalog-rules";
@@ -738,22 +738,17 @@ async function MainFiberPage({ slug }: { slug: string }) {
   const fiberQueries = FIBER_QUERIES[slug] || [slug];
   const categoryLinks = CATEGORY_LINKS[slug] || [];
 
-  const [products, designers, productCount] = await Promise.all([
+  const [products, relatedDesigners, productCount] = await Promise.all([
     fetchCatalogProductsByFiber({
       fiber: slug,
       limit: CATALOG_INITIAL_PAGE,
       offset: 0,
     }).then((rows) => rows.filter((p) => p.imageUrl)),
-    fetchDesigners(undefined, 200),
+    fetchTopNaturalFiberDesigners(8),
     fetchMaterialHubDisplayCount(slug),
   ]);
 
   const brandCount = new Set(products.map((p: any) => p.brandSlug)).size;
-
-  const relatedDesigners = designers
-    .filter((d) => d.naturalFiberPercent != null && (d.naturalFiberPercent as number) > 70)
-    .sort((a, b) => ((b.naturalFiberPercent || 0) - (a.naturalFiberPercent || 0)))
-    .slice(0, 8);
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -1013,28 +1008,33 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
   const parentFiber = getParentFiber(slug);
   const primaryFiber = config.fiberQuery[0] || parentFiber;
 
-  let products: any[] = [];
-  if (config.category) {
-    products = await fetchCatalogProductsByFiber({
-      fiber: primaryFiber,
-      category: config.category,
-      limit: CATALOG_INITIAL_PAGE,
-      offset: 0,
-    });
-  } else {
-    const allProducts: any[] = [];
-    for (const fiber of config.fiberQuery) {
-      const results = await fetchProductsByFiberAndCategory(fiber, config.category, CATALOG_INITIAL_PAGE, 0);
-      allProducts.push(...results);
-    }
-    const seen = new Set<string>();
-    products = allProducts.filter((p) => {
-      const id = p.productId || p.id;
-      if (seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    });
-  }
+  const [productsResult, hubDisplayCount] = await Promise.all([
+    (async () => {
+      if (config.category) {
+        return fetchCatalogProductsByFiber({
+          fiber: primaryFiber,
+          category: config.category,
+          limit: CATALOG_INITIAL_PAGE,
+          offset: 0,
+        });
+      }
+      const batches = await Promise.all(
+        config.fiberQuery.map((fiber) =>
+          fetchProductsByFiberAndCategory(fiber, config.category, CATALOG_INITIAL_PAGE, 0)
+        )
+      );
+      const seen = new Set<string>();
+      return batches.flat().filter((p) => {
+        const id = p.productId || p.id;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    })(),
+    fetchMaterialHubDisplayCount(primaryFiber, config.category),
+  ]);
+
+  let products: any[] = productsResult;
 
   let productsWithImages = products.filter((p: any) => p.imageUrl);
 
@@ -1153,10 +1153,7 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
         <FabricProductGrid
           products={productsWithImages}
           fiberName={config.fiber}
-          totalCount={Math.max(
-            productsWithImages.length,
-            await fetchMaterialHubDisplayCount(primaryFiber, config.category)
-          )}
+          totalCount={Math.max(productsWithImages.length, hubDisplayCount)}
           catalogFiber={primaryFiber}
           catalogCategory={config.category}
         />

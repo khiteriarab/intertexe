@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeBrandName } from "./brand-display";
 import { displayNaturalFiberPercent } from "./display-natural-fiber";
@@ -1228,6 +1229,20 @@ export async function fetchDesigners(query?: string, limit?: number): Promise<De
   });
 }
 
+/** Top designers by natural-fiber % — for material hub sidebars (avoids SELECT * LIMIT 200). */
+export async function fetchTopNaturalFiberDesigners(limit = 8): Promise<Designer[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("designers")
+    .select("*")
+    .gt("natural_fiber_percent", 70)
+    .order("natural_fiber_percent", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 24));
+  if (error || !data) return [];
+  return data.map(mapDesignerRow);
+}
+
 export async function fetchDesignerBySlug(slug: string): Promise<Designer | null> {
   const supabase = getServerSupabase();
   if (!supabase) return null;
@@ -1251,7 +1266,10 @@ export async function fetchDesignersBySlugs(slugs: string[]): Promise<Designer[]
   return slugs.map((s) => bySlug.get(s.trim().toLowerCase())).filter(Boolean) as Designer[];
 }
 
-export async function fetchProductById(id: string): Promise<Product | null> {
+/** Dedupes generateMetadata + page fetch in the same request. */
+export const fetchProductById = cache(async function fetchProductById(
+  id: string
+): Promise<Product | null> {
   const supabase = getServerSupabase();
   if (!supabase) return null;
   let query;
@@ -1286,7 +1304,7 @@ export async function fetchProductById(id: string): Promise<Product | null> {
   const mapped = mapProductRow(row);
   if (consumerExclusionForProduct(mapped)) return null;
   return mapped;
-}
+});
 
 export async function fetchProductsByFiberAndCategory(
   fiber: string,
@@ -1305,27 +1323,26 @@ export async function fetchProductsByFiberAndCategory(
   const terms = [...new Set(fiberInputs.flatMap((f) => fiberTerms[f] || [f]))];
   const hasDenimTerm = fiberInputs.some((f) => f === "denim" || f === "jeans" || f === "jean");
   const pageLimit = Math.min(Math.max(limit, 40), 500);
-  const allProducts: Product[] = [];
-
-  for (const term of terms) {
-    const chunk = await fetchCatalogProductsByFiber({
+  const termFetches = terms.map((term) =>
+    fetchCatalogProductsByFiber({
       fiber: term,
       category,
       limit: pageLimit,
       offset,
-    });
-    allProducts.push(...chunk);
-  }
-
+    })
+  );
   if (hasDenimTerm) {
-    const denim = await fetchCatalogProductsByFiber({
-      fiber: "denim",
-      category,
-      limit: pageLimit,
-      offset,
-    });
-    allProducts.push(...denim);
+    termFetches.push(
+      fetchCatalogProductsByFiber({
+        fiber: "denim",
+        category,
+        limit: pageLimit,
+        offset,
+      })
+    );
   }
+  const chunks = await Promise.all(termFetches);
+  const allProducts = chunks.flat();
 
   const seen = new Set<string>();
   return allProducts
@@ -1595,26 +1612,34 @@ export async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
 }
 
 export async function fetchFiberCounts(): Promise<Record<string, number>> {
-  const supabase = getServerSupabase();
-  if (!supabase) return {};
-  const fibers = ["cashmere", "silk", "wool", "cotton", "linen"];
-  const counts: Record<string, number> = {};
-  await Promise.all(
-    fibers.map(async (fiber) => {
-      const n = await rpcCatalogListCount(supabase, {
-        preferred: "us",
-        fallback: "us",
-        fiber,
-        category: null,
-        brandSlug: null,
-        search: null,
-        minNfp: 80,
-      });
-      if (n != null) counts[fiber] = n;
-    })
-  );
-  return counts;
+  return getCachedFiberCounts();
 }
+
+const getCachedFiberCounts = unstable_cache(
+  async (): Promise<Record<string, number>> => {
+    const supabase = getServerSupabase();
+    if (!supabase) return {};
+    const fibers = ["cashmere", "silk", "wool", "cotton", "linen"];
+    const counts: Record<string, number> = {};
+    await Promise.all(
+      fibers.map(async (fiber) => {
+        const n = await rpcCatalogListCount(supabase, {
+          preferred: "us",
+          fallback: "us",
+          fiber,
+          category: null,
+          brandSlug: null,
+          search: null,
+          minNfp: 80,
+        });
+        if (n != null) counts[fiber] = n;
+      })
+    );
+    return counts;
+  },
+  ["fiber-counts-v1"],
+  { revalidate: 600, tags: ["fiber-counts"] }
+);
 
 /** Full verified catalog total — live_products_apparel (300k+), not deduped shop-card count. */
 export async function fetchProductCount(): Promise<number> {
@@ -1640,7 +1665,7 @@ export async function fetchProductCount(): Promise<number> {
   return 0;
 }
 
-/** Per-material hub count — catalog_list_count first (full catalog), then precomputed hub row. */
+/** Per-material hub count — precomputed hub row first, then RPC, never block on ILIKE full scan. */
 export async function fetchMaterialHubDisplayCount(
   materialSlug: string,
   category?: string
@@ -1648,11 +1673,19 @@ export async function fetchMaterialHubDisplayCount(
   const supabase = getServerSupabase();
   if (!supabase) return 0;
 
-  const liveTotal = await countLiveProductsApparel(supabase, {
-    region: "us",
-    fiber: materialSlug,
-  });
-  if (liveTotal > 0) return liveTotal;
+  try {
+    const { data: hub } = await supabase
+      .from("catalog_material_hub_counts")
+      .select("card_count")
+      .eq("fiber", materialSlug)
+      .eq("category", category || "")
+      .maybeSingle();
+    if (hub?.card_count != null && Number(hub.card_count) > 0) {
+      return Number(hub.card_count);
+    }
+  } catch {
+    // ignore missing table
+  }
 
   const cnt = await rpcCatalogListCount(supabase, {
     preferred: "us",
@@ -1665,15 +1698,7 @@ export async function fetchMaterialHubDisplayCount(
   });
   if (cnt != null && cnt > 0) return cnt;
 
-  const { data: hub } = await supabase
-    .from("catalog_material_hub_counts")
-    .select("card_count")
-    .eq("fiber", materialSlug)
-    .eq("category", category || "")
-    .maybeSingle();
-  if (hub?.card_count != null && Number(hub.card_count) > 0) {
-    return Number(hub.card_count);
-  }
+  // Never exact-count with ILIKE on the hot path — use product grid length as fallback.
   return 0;
 }
 
@@ -2177,7 +2202,7 @@ export async function fetchMoreOnSale(productId: string, limit = 12): Promise<Pr
     [productId, String(productId)].map((s) => s.trim()).filter(Boolean)
   );
   const target = Math.min(Math.max(limit, 8), 16);
-  const fetchLimit = Math.min(target * 6, 72);
+  const fetchLimit = Math.min(target * 3, 36);
   const { preferred } = catalogRegionsFromMarket(undefined);
 
   const { data, error } = await applySaleQuerySort(
@@ -2260,7 +2285,7 @@ export async function fetchMoreAtPrice(
   }
   const { data, error } = await query
     .order("natural_fiber_percent", { ascending: false })
-    .limit(60);
+    .limit(16);
   if (error || !data) return [];
   const filtered = data
     .filter(isClothingProduct)

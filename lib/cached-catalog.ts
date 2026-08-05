@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { fetchBrandStats, fetchSaleProducts, getServerSupabase } from "./supabase-server";
 import { fetchPlatformStats, type PlatformStats } from "./platform-stats";
 import { SHOPPABLE_MIN_PRODUCTS } from "./shoppable-brands";
@@ -67,15 +68,17 @@ export const getCachedPlatformStats = unstable_cache(
   { revalidate: STATS_REVALIDATE, tags: ["platform-stats"] }
 );
 
-export const getCachedBrandStats = unstable_cache(
-  async (): Promise<BrandStat[]> => {
-    const full = await withTimeout(fetchBrandStats(), FETCH_BUDGET_MS, [] as BrandStat[], "brand-directory");
-    if (full.length > 0) return full;
-    // Never ship an empty directory if the designers table is healthy.
-    return withTimeout(fetchDesignersDirectoryFast(), 4_000, [] as BrandStat[], "brand-directory-fast");
-  },
-  ["brand-directory-v7"],
-  { revalidate: BRAND_DIR_REVALIDATE, tags: ["brand-directory"] }
+export const getCachedBrandStats = cache(
+  unstable_cache(
+    async (): Promise<BrandStat[]> => {
+      const full = await withTimeout(fetchBrandStats(), FETCH_BUDGET_MS, [] as BrandStat[], "brand-directory");
+      if (full.length > 0) return full;
+      // Never ship an empty directory if the designers table is healthy.
+      return withTimeout(fetchDesignersDirectoryFast(), 4_000, [] as BrandStat[], "brand-directory-fast");
+    },
+    ["brand-directory-v7"],
+    { revalidate: BRAND_DIR_REVALIDATE, tags: ["brand-directory"] }
+  )
 );
 
 /** First sale grid — cached; skip exact count on cold path for faster TTFB. */

@@ -5,7 +5,8 @@ import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
 import { getCachedCatalogStatsMemo, getShopCatalogKnownTotal } from "../../lib/cached-catalog-stats";
 import { queryLiveCatalog } from "../../lib/catalog-direct-query";
 import {
-  leadShopWithEditorPicks,
+  loadEditorPickShopLead,
+  mergeShopWithEditorPicks,
   shouldLeadShopWithEditorPicks,
 } from "../../lib/shop-editor-picks";
 
@@ -70,50 +71,50 @@ export async function getShopProducts(options: {
 
   try {
     const sortKey = options.sort === "recommended" ? "new" : options.sort;
-    const result = await queryLiveCatalog({
-      region: options.catalogRegion || "us",
-      limit,
-      offset,
-      fiber: options.fiber && options.fiber !== "all" ? options.fiber : undefined,
-      category: options.categories?.[0],
+    const leadPicks = shouldLeadShopWithEditorPicks({
       sort: sortKey,
+      offset,
+      fiber: options.fiber,
+      categories: options.categories,
+      brand: options.brandSlugs?.[0],
       search: options.search,
       color: options.color,
       materialSubtype: subtype,
       fabricConstruction: construction,
-      brand: options.brandSlugs?.[0],
-      minPrice: options.minPrice != null && options.minPrice > 0 ? options.minPrice : undefined,
+      minPrice: options.minPrice ?? undefined,
       maxPrice: options.maxPrice ?? undefined,
-      skipCount: options.skipTotal,
     });
+    const needKnownTotal =
+      !options.skipTotal && isUnfilteredShopQuery(options) && offset === 0;
 
-    let products = result.products || [];
-    if (
-      shouldLeadShopWithEditorPicks({
-        sort: sortKey,
+    const [result, knownTotal, editorPicks] = await Promise.all([
+      queryLiveCatalog({
+        region: options.catalogRegion || "us",
+        limit,
         offset,
-        fiber: options.fiber,
-        categories: options.categories,
-        brand: options.brandSlugs?.[0],
+        fiber: options.fiber && options.fiber !== "all" ? options.fiber : undefined,
+        category: options.categories?.[0],
+        sort: sortKey,
         search: options.search,
         color: options.color,
         materialSubtype: subtype,
         fabricConstruction: construction,
-        minPrice: options.minPrice ?? undefined,
+        brand: options.brandSlugs?.[0],
+        minPrice: options.minPrice != null && options.minPrice > 0 ? options.minPrice : undefined,
         maxPrice: options.maxPrice ?? undefined,
-      })
-    ) {
-      products = await leadShopWithEditorPicks(products, limit);
-    }
+        skipCount: options.skipTotal,
+      }),
+      needKnownTotal ? getShopCatalogKnownTotal() : Promise.resolve(null),
+      leadPicks ? loadEditorPickShopLead(limit) : Promise.resolve([]),
+    ]);
 
-    let total = result.total ?? 0;
-    if (!options.skipTotal && isUnfilteredShopQuery(options) && offset === 0) {
-      total = await getShopCatalogKnownTotal();
-    }
+    const products = leadPicks
+      ? mergeShopWithEditorPicks(result.products || [], editorPicks, limit)
+      : result.products || [];
 
     return {
       products,
-      total,
+      total: knownTotal != null ? knownTotal : result.total ?? 0,
       hasMore: result.hasMore ?? false,
       error: result.error,
       productIds: products.map((p) => p.id),

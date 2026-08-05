@@ -10,7 +10,8 @@ import { getShopBrands, getShopMeta } from "./actions";
 import { getCachedCatalogStatsMemo, getShopCatalogKnownTotal } from "../../lib/cached-catalog-stats";
 import { queryLiveCatalog } from "../../lib/catalog-direct-query";
 import {
-  leadShopWithEditorPicks,
+  loadEditorPickShopLead,
+  mergeShopWithEditorPicks,
   shouldLeadShopWithEditorPicks,
 } from "../../lib/shop-editor-picks";
 
@@ -71,18 +72,16 @@ async function loadShopCatalog(opts: {
 }) {
   try {
     const materialSubtype = opts.materialSubtype || opts.fiberSubtype;
-    const result = await queryLiveCatalog({
-      region: "us",
-      limit: 24,
+    const leadPicks = shouldLeadShopWithEditorPicks({
+      sort: opts.sort,
       offset: 0,
       fiber: opts.fiber,
       category: opts.category,
+      brand: opts.brand,
       search: opts.search,
-      sort: opts.sort === "recommended" ? "new" : opts.sort,
       color: opts.color,
       materialSubtype,
       fabricConstruction: opts.fabricConstruction,
-      brand: opts.brand,
       minPrice: opts.minPrice,
       maxPrice: opts.maxPrice,
     });
@@ -98,33 +97,33 @@ async function loadShopCatalog(opts: {
       opts.minPrice == null &&
       opts.maxPrice == null;
 
-    let products = result.products || [];
-    if (
-      shouldLeadShopWithEditorPicks({
-        sort: opts.sort,
+    const [result, knownTotal, editorPicks] = await Promise.all([
+      queryLiveCatalog({
+        region: "us",
+        limit: 24,
         offset: 0,
         fiber: opts.fiber,
         category: opts.category,
-        brand: opts.brand,
         search: opts.search,
+        sort: opts.sort === "recommended" ? "new" : opts.sort,
         color: opts.color,
         materialSubtype,
         fabricConstruction: opts.fabricConstruction,
+        brand: opts.brand,
         minPrice: opts.minPrice,
         maxPrice: opts.maxPrice,
-      })
-    ) {
-      products = await leadShopWithEditorPicks(products, 24);
-    }
+      }),
+      isUnfiltered ? getShopCatalogKnownTotal() : Promise.resolve(null),
+      leadPicks ? loadEditorPickShopLead(24) : Promise.resolve([]),
+    ]);
 
-    let total = result.total ?? 0;
-    if (isUnfiltered) {
-      total = await getShopCatalogKnownTotal();
-    }
+    const products = leadPicks
+      ? mergeShopWithEditorPicks(result.products || [], editorPicks, 24)
+      : result.products || [];
 
     return {
       products,
-      total,
+      total: knownTotal != null ? knownTotal : result.total ?? 0,
       hasMore: result.hasMore ?? false,
     };
   } catch {
