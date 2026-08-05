@@ -62,6 +62,8 @@ catalog_browse_page_v2(
 | Color | `p_color` | Lowercase family |
 | Price | `p_min_price` / `p_max_price` | Server-side only |
 | Sort | `p_sort` | `newest` \| `price_asc` \| `price_desc` \| `most_natural` |
+
+**Editor picks (curator favorites):** Web Shop leads default clothing / newest with `products.is_editor_pick` via `leadShopWithEditorPicks` (account favorites for the curator email). `catalog_browse_page_v2` itself still sorts newest by `created_at` — restore `ORDER BY is_editor_pick DESC, created_at DESC, id DESC` in the RPC for iOS↔web parity when that SQL patch lands.
 | Material NFP floor | `p_min_nfp = 80` | When family is set |
 
 **iOS:** `CatalogBrowseRequest` → `SupabaseManager.fetchAuthoritativeBrowsePageV2`  

@@ -9,6 +9,10 @@ import { formatListingPrice } from "../../lib/format-display-price";
 import { getShopBrands, getShopMeta } from "./actions";
 import { getCachedCatalogStatsMemo, getShopCatalogKnownTotal } from "../../lib/cached-catalog-stats";
 import { queryLiveCatalog } from "../../lib/catalog-direct-query";
+import {
+  leadShopWithEditorPicks,
+  shouldLeadShopWithEditorPicks,
+} from "../../lib/shop-editor-picks";
 
 export const dynamic = "force-dynamic";
 
@@ -94,13 +98,32 @@ async function loadShopCatalog(opts: {
       opts.minPrice == null &&
       opts.maxPrice == null;
 
+    let products = result.products || [];
+    if (
+      shouldLeadShopWithEditorPicks({
+        sort: opts.sort,
+        offset: 0,
+        fiber: opts.fiber,
+        category: opts.category,
+        brand: opts.brand,
+        search: opts.search,
+        color: opts.color,
+        materialSubtype,
+        fabricConstruction: opts.fabricConstruction,
+        minPrice: opts.minPrice,
+        maxPrice: opts.maxPrice,
+      })
+    ) {
+      products = await leadShopWithEditorPicks(products, 24);
+    }
+
     let total = result.total ?? 0;
     if (isUnfiltered) {
       total = await getShopCatalogKnownTotal();
     }
 
     return {
-      products: result.products || [],
+      products,
       total,
       hasMore: result.hasMore ?? false,
     };

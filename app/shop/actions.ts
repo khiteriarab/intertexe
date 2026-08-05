@@ -4,6 +4,10 @@ import { fetchFiberCounts } from "../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
 import { getCachedCatalogStatsMemo, getShopCatalogKnownTotal } from "../../lib/cached-catalog-stats";
 import { queryLiveCatalog } from "../../lib/catalog-direct-query";
+import {
+  leadShopWithEditorPicks,
+  shouldLeadShopWithEditorPicks,
+} from "../../lib/shop-editor-picks";
 
 function isUnfilteredShopQuery(options: {
   fiber?: string;
@@ -65,13 +69,14 @@ export async function getShopProducts(options: {
     options.fabricConstruction || options.fabricConstructions?.[0];
 
   try {
+    const sortKey = options.sort === "recommended" ? "new" : options.sort;
     const result = await queryLiveCatalog({
       region: options.catalogRegion || "us",
       limit,
       offset,
       fiber: options.fiber && options.fiber !== "all" ? options.fiber : undefined,
       category: options.categories?.[0],
-      sort: options.sort === "recommended" ? "new" : options.sort,
+      sort: sortKey,
       search: options.search,
       color: options.color,
       materialSubtype: subtype,
@@ -82,17 +87,36 @@ export async function getShopProducts(options: {
       skipCount: options.skipTotal,
     });
 
+    let products = result.products || [];
+    if (
+      shouldLeadShopWithEditorPicks({
+        sort: sortKey,
+        offset,
+        fiber: options.fiber,
+        categories: options.categories,
+        brand: options.brandSlugs?.[0],
+        search: options.search,
+        color: options.color,
+        materialSubtype: subtype,
+        fabricConstruction: construction,
+        minPrice: options.minPrice ?? undefined,
+        maxPrice: options.maxPrice ?? undefined,
+      })
+    ) {
+      products = await leadShopWithEditorPicks(products, limit);
+    }
+
     let total = result.total ?? 0;
     if (!options.skipTotal && isUnfilteredShopQuery(options) && offset === 0) {
       total = await getShopCatalogKnownTotal();
     }
 
     return {
-      products: result.products || [],
+      products,
       total,
       hasMore: result.hasMore ?? false,
       error: result.error,
-      productIds: result.productIds ?? (result.products || []).map((p) => p.id),
+      productIds: products.map((p) => p.id),
       rpcVersion: result.rpcVersion ?? null,
       totalStatus: result.totalStatus ?? null,
       filterCoverage: result.filterCoverage ?? null,

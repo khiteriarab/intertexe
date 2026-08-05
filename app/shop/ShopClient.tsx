@@ -32,6 +32,7 @@ import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
+import { cfProductCard } from "../../lib/cloudflare-images";
 import {
   constructionOptionsForFamily,
   materialTypeSectionTitle,
@@ -113,7 +114,9 @@ const SHOP_EDIT_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
 }));
 
 function optimizeImageUrl(url: string, _width: number): string {
-  return url.trim();
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  return cfProductCard(trimmed) || trimmed;
 }
 
 function ProductCard({ product, eager }: { product: any; eager?: boolean }) {
