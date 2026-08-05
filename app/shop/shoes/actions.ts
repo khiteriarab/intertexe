@@ -3,7 +3,7 @@
 import {
   fetchFootwearCatalogCount,
   fetchFootwearCatalogPage,
-} from "../../lib/footwear-catalog";
+} from "../../../lib/footwear-catalog";
 
 export async function getShoesProducts(opts?: { limit?: number; offset?: number }) {
   return fetchFootwearCatalogPage({
