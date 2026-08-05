@@ -1,0 +1,20 @@
+{
+  "startedAt": "2026-08-04T07:31:32.456Z",
+  "merchant": "MyTheresa",
+  "mid": "43172",
+  "constraints": {
+    "FEED_LIVE_INGEST_ENABLED": "0",
+    "FEED_STAGE_ONLY": "1",
+    "FEED_STAGE_DRY_RUN": "1",
+    "FEED_STAGE_FORCE_NEW_SESSION": "1",
+    "CATALOG_ALLOW_MARK_INACTIVE": "0",
+    "RAKUTEN_FTP_DIR_FILTER": "43172",
+    "RAKUTEN_CHUNK_FILE_LIMIT": "50",
+    "hasSupabaseUrl": true,
+    "hasServiceKey": true,
+    "ftpUserLen": 11,
+    "ftpPassLen": 24
+  },
+  "error": "{\"message\":\"TypeError: fetch failed\",\"details\":\"TypeError: fetch failed\\n\\nCaused by: Error: getaddrinfo ENOTFOUND burrylupizvggupsryuj.supabase.co (ENOTFOUND)\\nError: getaddrinfo ENOTFOUND burrylupizvggupsryuj.supabase.co\\n    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)\",\"hint\":\"\",\"code\":\"\"}",
+  "finishedAt": "2026-08-04T07:31:32.492Z"
+}

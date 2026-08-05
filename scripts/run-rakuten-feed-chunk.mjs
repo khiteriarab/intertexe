@@ -135,22 +135,26 @@ async function main() {
       const errorMessages = (syncResult.errors || []).map((e) =>
         typeof e === "string" ? e : e?.message || String(e)
       );
+      const ingestBlocked = Boolean(syncResult.ingestBlocked);
       const failedList =
-        totalFiles === 0 ||
-        errorMessages.some((m) => /could not list|450|zero catalog/i.test(m));
-      let nextOffset = failedList ? 0 : fileOffset + Math.max(processed, 0);
-      if (!failedList && totalFiles > 0 && nextOffset >= totalFiles) nextOffset = 0;
+        !ingestBlocked &&
+        (totalFiles === 0 ||
+          errorMessages.some((m) => /could not list|450|zero catalog/i.test(m)));
+      let nextOffset = failedList || ingestBlocked ? fileOffset : fileOffset + Math.max(processed, 0);
+      if (!failedList && !ingestBlocked && totalFiles > 0 && nextOffset >= totalFiles) nextOffset = 0;
 
       await sb.from("system_status").upsert({
         key: CHUNK_STATE_KEY,
         value_json: {
-          nextFileOffset: nextOffset,
+          nextFileOffset: ingestBlocked ? fileOffset : nextOffset,
           lastFileOffset: fileOffset,
           filesProcessed: processed,
           totalCatalogFiles: totalFiles,
-          cycleComplete: !failedList && totalFiles > 0 && nextOffset === 0 && fileOffset > 0,
+          cycleComplete:
+            !ingestBlocked && !failedList && totalFiles > 0 && nextOffset === 0 && fileOffset > 0,
           upserted,
           listingFailed: failedList,
+          ingestBlocked,
           designersSynced: syncResult.designersSynced || 0,
           source: owner,
           updatedAt: new Date().toISOString(),
@@ -162,11 +166,12 @@ async function main() {
         value_json: {
           ...(syncResult.stats || {}),
           fileOffset,
-          nextFileOffset: nextOffset,
+          nextFileOffset: ingestBlocked ? fileOffset : nextOffset,
           filesProcessed: processed,
           totalCatalogFiles: totalFiles,
           upserted,
           listingFailed: failedList,
+          ingestBlocked,
           designersSynced: syncResult.designersSynced || 0,
           errors: errorMessages,
           source: owner,
@@ -176,11 +181,12 @@ async function main() {
       });
 
       result = {
-        ok: !failedList && errorMessages.length === 0,
+        ok: !ingestBlocked && !failedList && errorMessages.length === 0,
         fileOffset,
-        nextFileOffset: nextOffset,
+        nextFileOffset: ingestBlocked ? fileOffset : nextOffset,
         fileLimit,
         designersSynced: syncResult.designersSynced || 0,
+        ingestBlocked,
         sync: {
           upserted,
           rejected: Number(syncResult.stats?.rejected || 0),
@@ -190,8 +196,9 @@ async function main() {
           errorMessages,
           newProducts: syncResult.stats?.newProducts,
           updatedProducts: syncResult.stats?.updatedProducts,
+          ingestBlocked,
         },
-        error: failedList ? errorMessages[0] : undefined,
+        error: ingestBlocked || failedList ? errorMessages[0] : undefined,
       };
 
       const ops = await finalizeNightlySyncOps(sb, {
@@ -199,9 +206,10 @@ async function main() {
         finishedAt: new Date().toISOString(),
         ok: result.ok,
         listingFailed: failedList,
+        ingestBlocked,
         designerFailed: errorMessages.some((m) => /designer_sync/i.test(m)),
         checkpointBefore: fileOffset,
-        checkpointAfter: nextOffset,
+        checkpointAfter: ingestBlocked ? fileOffset : nextOffset,
         totalCatalogFiles: totalFiles,
         filesProcessed: processed,
         upserted,
@@ -210,7 +218,7 @@ async function main() {
         rejected: Number(syncResult.stats?.rejected || 0),
         designersSynced: syncResult.designersSynced || 0,
         errors: errorMessages,
-        workflowFailed: !result.ok,
+        workflowFailed: !result.ok && !ingestBlocked,
         source: owner,
       });
       result.opsStatus = ops.run.status;
@@ -227,11 +235,13 @@ async function main() {
 
     if (!opsAlreadyRecorded) {
       const sync = result.sync || {};
+      const ingestBlocked = Boolean(result.ingestBlocked || sync.ingestBlocked);
       const ops = await finalizeNightlySyncOps(sb, {
         startedAt,
         finishedAt: new Date().toISOString(),
         ok: result.ok,
-        listingFailed: Number(sync.totalCatalogFiles || 0) === 0,
+        listingFailed: ingestBlocked ? false : Number(sync.totalCatalogFiles || 0) === 0,
+        ingestBlocked,
         designerFailed: (sync.errorMessages || []).some((m) => /designer_sync/i.test(String(m))),
         checkpointBefore,
         checkpointAfter: Number(afterRow?.value_json?.nextFileOffset ?? result.nextFileOffset),
@@ -243,7 +253,7 @@ async function main() {
         rejected: Number(sync.rejected || 0),
         designersSynced: Number(result.designersSynced || 0),
         errors: sync.errorMessages || [],
-        workflowFailed: result.ok === false,
+        workflowFailed: result.ok === false && !ingestBlocked,
         source: owner,
       });
       result.opsStatus = ops.run.status;
@@ -258,7 +268,11 @@ async function main() {
       owner,
     };
     console.log(JSON.stringify(report, null, 2));
-    if (!result.ok && Number(result.sync?.totalCatalogFiles || 0) === 0) process.exit(1);
+    const blockedIntentionally = Boolean(result.ingestBlocked || result.sync?.ingestBlocked);
+    // Intentional safety blocks are not FTP failures — exit 0 so Actions stays green.
+    if (!result.ok && !blockedIntentionally && Number(result.sync?.totalCatalogFiles || 0) === 0) {
+      process.exit(1);
+    }
   } catch (err) {
     try {
       await finalizeNightlySyncOps(sb, {

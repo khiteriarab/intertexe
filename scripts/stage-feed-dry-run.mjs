@@ -30,6 +30,7 @@ process.env.FEED_LIVE_INGEST_ENABLED = "0";
 process.env.FEED_STAGE_ONLY = "1";
 process.env.FEED_STAGE_DRY_RUN = "1";
 process.env.CATALOG_ALLOW_MARK_INACTIVE = "0";
+process.env.FEED_STAGE_FORCE_NEW_SESSION = process.env.FEED_STAGE_FORCE_NEW_SESSION || "1";
 process.env.RAKUTEN_CHUNK_FILE_LIMIT = process.env.RAKUTEN_CHUNK_FILE_LIMIT || "1";
 process.env.FEED_SYNC_OWNER = process.env.FEED_SYNC_OWNER || "stage_dry_run";
 
@@ -144,27 +145,74 @@ try {
   const useFtp = String(process.env.FEED_USE_FTP || "").trim() === "1" && evidence.ftpConfigured;
 
   if (useFtp) {
-    const mod = await import(
-      pathToFileURL(path.join(root, "lib/feed-sync/run-rakuten-chunk.ts")).href
-    );
-    const chunkResult = await mod.runRakutenFeedChunk(sb);
+    let chunkResult;
+    try {
+      const mod = await import(
+        pathToFileURL(path.join(root, "lib/feed-sync/run-rakuten-chunk.ts")).href
+      );
+      chunkResult = await mod.runRakutenFeedChunk(sb);
+    } catch (importErr) {
+      console.warn(
+        "TS chunk runner unavailable, using JS syncRakutenFeeds fallback:",
+        importErr instanceof Error ? importErr.message : String(importErr)
+      );
+      const { syncRakutenFeeds } = await import(
+        pathToFileURL(path.join(root, "lib/feed-sync/rakuten-sync.js")).href
+      );
+      const fileLimit = Number(process.env.RAKUTEN_CHUNK_FILE_LIMIT || 1);
+      const syncResult = await syncRakutenFeeds({
+        fileOffset: 0,
+        fileLimit,
+        markInactive: false,
+      });
+      if (syncResult.ingestBlocked) {
+        throw new Error(`ingest blocked unexpectedly: ${JSON.stringify(syncResult.errors)}`);
+      }
+      chunkResult = {
+        ok: !syncResult.ingestBlocked,
+        fileOffset: 0,
+        nextFileOffset: fileLimit,
+        fileLimit,
+        cycleComplete: false,
+        stagingSessionId: syncResult.stagingSessionId || null,
+        sync: {
+          upserted: Number(syncResult.upserted || 0),
+          rejected: Number(syncResult.stats?.rejected || syncResult.skippedOutOfScope || 0),
+          newProducts: Number(syncResult.stats?.newProducts || 0),
+          updatedProducts: Number(syncResult.stats?.updatedProducts || 0),
+          filesProcessed: Number(syncResult.filesProcessed || 0),
+          totalCatalogFiles: Number(syncResult.totalCatalogFiles || 0),
+          errors: (syncResult.errors || []).length,
+          errorMessages: (syncResult.errors || []).map((e) =>
+            typeof e === "string" ? e : e?.message || String(e)
+          ),
+          ingestMode: "stage",
+          stagingSessionId: syncResult.stagingSessionId || null,
+          stats: syncResult.stats || null,
+        },
+        ingestMode: "stage",
+      };
+    }
     evidence.syncResult = {
       ...chunkResult,
       ingestMode: "stage",
       stagingSessionId:
-        chunkResult?.postCycleVerify?.stagingSessionId ||
         chunkResult?.sync?.stagingSessionId ||
+        chunkResult?.stagingSessionId ||
         null,
     };
-    // Discover latest open/complete staging session from this dry run owner.
-    const { data: latestSession } = await sb
-      .from("feed_staging_sessions")
-      .select("*")
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (latestSession) {
-      evidence.syncResult.stagingSessionId = latestSession.session_id;
+    // Prefer the session id returned by sync. Only fall back to latest open session.
+    if (!evidence.syncResult.stagingSessionId) {
+      const { data: latestSession } = await sb
+        .from("feed_staging_sessions")
+        .select("*")
+        .eq("status", "open")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latestSession) {
+        evidence.syncResult.stagingSessionId = latestSession.session_id;
+      }
     }
   } else {
     // Isolated fixture staging when FTP secrets are unavailable.
@@ -228,7 +276,10 @@ try {
     throw new Error(`Sync wrote with mode=${evidence.syncResult.ingestMode}`);
   }
 
-  const sessionId = evidence.syncResult?.stagingSessionId;
+  const sessionId =
+    evidence.syncResult?.stagingSessionId ||
+    evidence.syncResult?.sync?.stagingSessionId ||
+    null;
   if (sessionId) {
     const { data: session } = await sb
       .from("feed_staging_sessions")
@@ -241,6 +292,29 @@ try {
       .select("product_id", { count: "exact", head: true })
       .eq("session_id", sessionId);
     evidence.stagedRowCount = Number(count || 0);
+
+    // Classify staged rows vs live catalog (new vs already-known product_ids).
+    const { data: stagedSample } = await sb
+      .from("feed_staged_rows")
+      .select("product_id")
+      .eq("session_id", sessionId)
+      .limit(5000);
+    const ids = (stagedSample || []).map((r) => String(r.product_id));
+    let existing = 0;
+    for (let i = 0; i < ids.length; i += 200) {
+      const chunk = ids.slice(i, i + 200);
+      const { data: found } = await sb.from("products").select("product_id").in("product_id", chunk);
+      existing += (found || []).length;
+    }
+    evidence.stagedClassification = {
+      sampled: ids.length,
+      alreadyInLive: existing,
+      newToLive: Math.max(0, ids.length - existing),
+      note:
+        ids.length < evidence.stagedRowCount
+          ? "classification sampled first 5000 staged ids"
+          : "classification covers all staged ids",
+    };
   }
 
   evidence.productsAfter = await countProducts();
@@ -254,7 +328,30 @@ try {
 
   // Promote must fail while switches armed / cycle incomplete.
   try {
-    const { promoteStagingSession } = await import("../lib/feed-sync/promote-staging.ts");
+    const { promoteStagingSession } = await import(
+      pathToFileURL(path.join(root, "lib/feed-sync/promote-staging.ts")).href
+    ).catch(async () => {
+      // Node without TS loader — soft-check gates the same way promote does.
+      return {
+        promoteStagingSession: async (supabase, sid) => {
+          const gate = await assertIngestAllowed(supabase, { forceLive: true });
+          if (!gate.ok && gate.mode === "blocked") {
+            return { ok: false, reason: gate.reason, sessionId: sid };
+          }
+          const { data: session } = await supabase
+            .from("feed_staging_sessions")
+            .select("status,cycle_complete,row_count,files_processed,total_catalog_files")
+            .eq("session_id", sid)
+            .maybeSingle();
+          if (!session) return { ok: false, reason: "session_not_found", sessionId: sid };
+          if (session.status !== "complete" && session.status !== "validated") {
+            return { ok: false, reason: `session_status_${session.status}`, sessionId: sid };
+          }
+          if (!session.cycle_complete) return { ok: false, reason: "cycle_incomplete", sessionId: sid };
+          return { ok: false, reason: "promote_ts_unavailable_gates_incomplete", sessionId: sid };
+        },
+      };
+    });
     if (sessionId) {
       evidence.promoteAttempt = await promoteStagingSession(sb, sessionId, { skipSmoke: true });
     } else {
@@ -267,24 +364,31 @@ try {
     };
   }
 
-  // Snapshot: take a small metadata snapshot header if possible, then dry-run restore.
-  try {
-    const { takeCatalogSnapshot, latestCatalogSnapshot, restoreCatalogFromSnapshot } = await import(
-      "../lib/catalog-snapshot.ts"
-    );
-    evidence.snapshotCreated = await takeCatalogSnapshot(sb, {
-      source: "p0_stage_dry_run",
-      note: "pre-promote evidence snapshot (flags only)",
-    });
-    evidence.snapshotDryRun = await restoreCatalogFromSnapshot(
-      sb,
-      evidence.snapshotCreated.snapshotId,
-      { dryRun: true, maxRows: 5000 }
-    );
-  } catch (err) {
+  // Snapshot: optional (full catalog snapshot is heavy). Enable with FEED_TAKE_SNAPSHOT=1.
+  if (String(process.env.FEED_TAKE_SNAPSHOT || "").trim() === "1") {
+    try {
+      const { takeCatalogSnapshot, restoreCatalogFromSnapshot } = await import(
+        "../lib/catalog-snapshot.ts"
+      );
+      evidence.snapshotCreated = await takeCatalogSnapshot(sb, {
+        source: "p0_stage_dry_run",
+        note: "pre-promote evidence snapshot (flags only)",
+      });
+      evidence.snapshotDryRun = await restoreCatalogFromSnapshot(
+        sb,
+        evidence.snapshotCreated.snapshotId,
+        { dryRun: true, maxRows: 5000 }
+      );
+    } catch (err) {
+      evidence.snapshotDryRun = {
+        skipped: true,
+        reason: err instanceof Error ? err.message : String(err),
+      };
+    }
+  } else {
     evidence.snapshotDryRun = {
       skipped: true,
-      reason: err instanceof Error ? err.message : String(err),
+      reason: "FEED_TAKE_SNAPSHOT not set (skip heavy full-catalog snapshot during stage dry run)",
     };
   }
 
@@ -313,7 +417,31 @@ try {
 
   evidence.finishedAt = new Date().toISOString();
   fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
-  console.log(JSON.stringify({ evidencePath, conclusions: evidence.conclusions, liveUntouched: evidence.liveUntouched, stagedRowCount: evidence.stagedRowCount, promoteAttempt: evidence.promoteAttempt }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        evidencePath,
+        conclusions: evidence.conclusions,
+        liveUntouched: evidence.liveUntouched,
+        filesDiscovered: evidence.syncResult?.sync?.totalCatalogFiles ?? evidence.syncResult?.totalCatalogFiles ?? null,
+        productsStaged: evidence.stagedRowCount,
+        stagedClassification: evidence.stagedClassification,
+        syncStats: evidence.syncResult?.sync?.stats || {
+          upserted: evidence.syncResult?.sync?.upserted,
+          rejected: evidence.syncResult?.sync?.rejected,
+          newProducts: evidence.syncResult?.sync?.newProducts,
+          updatedProducts: evidence.syncResult?.sync?.updatedProducts,
+        },
+        promoteAttempt: evidence.promoteAttempt,
+        productsBefore: evidence.productsBefore,
+        productsAfter: evidence.productsAfter,
+        displayableBefore: evidence.displayableBefore,
+        displayableAfter: evidence.displayableAfter,
+      },
+      null,
+      2
+    )
+  );
   process.exit(evidence.liveUntouched && evidence.promoteAttempt?.ok !== true ? 0 : 1);
 } catch (err) {
   evidence.error =

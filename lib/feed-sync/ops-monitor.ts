@@ -3,6 +3,20 @@
  * Email delivery failures never throw — they are recorded on the run log.
  */
 
+import {
+  classifySyncMessages,
+  describeLatestSyncRun,
+  isSafetyBlockMessage,
+  summarizeCatalogOpsForBriefing,
+} from "./sync-outcome-classify";
+
+export {
+  classifySyncMessages,
+  describeLatestSyncRun,
+  isSafetyBlockMessage,
+  summarizeCatalogOpsForBriefing,
+};
+
 export const LATEST_KEY = "rakuten_nightly_sync_latest";
 export const HISTORY_KEY = "rakuten_nightly_sync_history";
 export const FOUNDER_REPORTS_KEY = "hq_founder_reports";
@@ -49,10 +63,18 @@ function median(nums) {
 
 /**
  * @param {object} input
- * @returns {{ status: 'success'|'warning'|'failure', warnings: string[], errors: string[], suggestedNextStep: string|null }}
+ * @returns {{
+ *   status: 'success'|'warning'|'failure',
+ *   warnings: string[],
+ *   errors: string[],
+ *   suggestedNextStep: string|null,
+ *   failureKind: string,
+ *   intentionalSafetyBlock: boolean
+ * }}
  */
 export function evaluateSyncOutcome(input) {
-  const errors = asMessages(input.errors);
+  const rawMessages = asMessages(input.errors);
+  const classified = classifySyncMessages(rawMessages);
   const warnings = [];
   const totalFiles = Number(input.totalCatalogFiles || 0);
   const processed = Number(input.filesProcessed || 0);
@@ -60,43 +82,69 @@ export function evaluateSyncOutcome(input) {
   const before = Number(input.checkpointBefore ?? 0);
   const after = Number(input.checkpointAfter ?? before);
   const listingFailed = Boolean(input.listingFailed);
-  const okFlag = input.ok !== false;
-  const joined = errors.join(" | ");
+  const intentionalSafetyBlock =
+    Boolean(input.ingestBlocked) || classified.kind === "safety_block" || classified.safetyBlocks.length > 0;
 
-  const ftpAuth =
-    /530|login incorrect|authentication failed|ftp.*(auth|login)|auth.*(ftp|failed)/i.test(
-      joined
+  const errors = intentionalSafetyBlock
+    ? [...classified.ftpAuthErrors, ...classified.requireEsmErrors, ...classified.otherErrors]
+    : [
+        ...classified.ftpAuthErrors,
+        ...classified.ftpListingErrors,
+        ...classified.requireEsmErrors,
+        ...classified.otherErrors,
+      ];
+
+  if (intentionalSafetyBlock) {
+    warnings.push(
+      "Ingest blocked intentionally by catalog safety controls (kill switches / stage-only gate) — not an FTP credential failure"
     );
-  const ftpConn =
-    listingFailed ||
-    /could not list|450|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|control socket|zero catalog/i.test(joined);
-  const designerFailed =
-    Boolean(input.designerFailed) || errors.some((m) => /designer_sync/i.test(m));
-
-  if (!okFlag && errors.length) {
-    /* keep */
+    for (const m of classified.safetyBlocks) {
+      warnings.push(m);
+    }
   }
+
+  const ftpAuth = classified.ftpAuthErrors.length > 0;
+  const ftpConn =
+    !intentionalSafetyBlock &&
+    (listingFailed ||
+      /could not list|450|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|control socket|zero catalog/i.test(
+        rawMessages.join(" | ")
+      ));
+  const designerFailed =
+    Boolean(input.designerFailed) || rawMessages.some((m) => /designer_sync/i.test(m));
+
   if (ftpAuth) errors.unshift("FTP authentication failed");
-  if (listingFailed || (totalFiles === 0 && !input.skippedLocked)) {
+  // Do not treat "zero files" as FTP listing failure when ingest never ran (safety gate).
+  if (
+    !intentionalSafetyBlock &&
+    (listingFailed || (totalFiles === 0 && !input.skippedLocked))
+  ) {
     errors.push("Zero catalog files discovered or FTP listing failed");
   }
-  if (ftpConn && !listingFailed && totalFiles === 0) {
+  if (!intentionalSafetyBlock && ftpConn && !listingFailed && totalFiles === 0) {
     errors.push("FTP connection/listing failure");
   }
-  if (processed > 0 && upserted === 0) {
+  if (processed > 0 && upserted === 0 && !intentionalSafetyBlock) {
     warnings.push("Zero products upserted after processing catalog files");
   }
   // Cycle wrap resets offset to 0 — that is advancement, not a stuck checkpoint.
   const checkpointWrapped =
     Boolean(input.cycleComplete) ||
     (totalFiles > 0 && processed > 0 && after === 0 && before + processed >= totalFiles);
-  if (!listingFailed && totalFiles > 0 && processed > 0 && after === before && !checkpointWrapped) {
+  if (
+    !intentionalSafetyBlock &&
+    !listingFailed &&
+    totalFiles > 0 &&
+    processed > 0 &&
+    after === before &&
+    !checkpointWrapped
+  ) {
     warnings.push("Checkpoint did not advance");
   }
   if (designerFailed) {
     warnings.push("Designer synchronization failed");
   }
-  if (input.exceptionMessage) {
+  if (input.exceptionMessage && !isSafetyBlockMessage(String(input.exceptionMessage))) {
     errors.push(`Unexpected exception: ${input.exceptionMessage}`);
   }
 
@@ -120,12 +168,28 @@ export function evaluateSyncOutcome(input) {
   const uniqueErrors = [...new Set(errors)];
   const uniqueWarnings = [...new Set(warnings)];
   let status = "success";
-  if (uniqueErrors.length || listingFailed || input.workflowFailed) status = "failure";
-  else if (uniqueWarnings.length) status = "warning";
+  if (uniqueErrors.length || (listingFailed && !intentionalSafetyBlock) || (input.workflowFailed && !intentionalSafetyBlock)) {
+    status = "failure";
+  } else if (uniqueWarnings.length || intentionalSafetyBlock) {
+    status = "warning";
+  }
+
+  let failureKind = "none";
+  if (intentionalSafetyBlock && !uniqueErrors.length) failureKind = "safety_block";
+  else if (ftpAuth) failureKind = "ftp_auth";
+  else if (listingFailed || uniqueErrors.some((e) => /Zero catalog|FTP connection\/listing/i.test(e)))
+    failureKind = "ftp_listing";
+  else if (classified.requireEsmErrors.length) failureKind = "require_esm";
+  else if (uniqueErrors.length) failureKind = "operational";
+  else if (intentionalSafetyBlock) failureKind = "safety_block";
 
   let suggestedNextStep = null;
-  if (ftpAuth) suggestedNextStep = "Verify RAKUTEN_FTP_USERNAME / RAKUTEN_FTP_PASSWORD repository secrets.";
-  else if (listingFailed || totalFiles === 0)
+  if (intentionalSafetyBlock && !uniqueErrors.length) {
+    suggestedNextStep =
+      "Next safe step: stage-only dry run with FEED_STAGE_DRY_RUN=1 (do not re-enable nightly live ingest or write live products).";
+  } else if (ftpAuth)
+    suggestedNextStep = "Verify RAKUTEN_FTP_USERNAME / RAKUTEN_FTP_PASSWORD repository secrets.";
+  else if (listingFailed || (!intentionalSafetyBlock && totalFiles === 0))
     suggestedNextStep = "Check Rakuten FTP connectivity from GitHub Actions and review listing retries.";
   else if (designerFailed)
     suggestedNextStep = "Inspect designer_sync errors in the Actions log; re-run workflow_dispatch after fix.";
@@ -136,7 +200,14 @@ export function evaluateSyncOutcome(input) {
   else if (uniqueWarnings.some((w) => /checkpoint/i.test(w)))
     suggestedNextStep = "Inspect rakuten_feed_chunk_state and the distributed lock in system_status.";
 
-  return { status, warnings: uniqueWarnings, errors: uniqueErrors, suggestedNextStep };
+  return {
+    status,
+    warnings: uniqueWarnings,
+    errors: uniqueErrors,
+    suggestedNextStep,
+    failureKind,
+    intentionalSafetyBlock,
+  };
 }
 
 export async function sendOpsAlertEmail({ subject, text, html }) {
@@ -169,11 +240,19 @@ export async function sendOpsAlertEmail({ subject, text, html }) {
 }
 
 export function buildAlertEmail(run) {
-  const subject = "INTERTEXE Alert: Nightly Catalog Sync Requires Attention";
+  const safetyOnly =
+    Boolean(run.intentionalSafetyBlock) && !(run.errors || []).length;
+  const subject = safetyOnly
+    ? "INTERTEXE Notice: Catalog ingest blocked by safety controls (not an FTP failure)"
+    : "INTERTEXE Alert: Nightly Catalog Sync Requires Attention";
   const lines = [
     `Severity: ${String(run.status || "failure").toUpperCase()}`,
+    `Failure kind: ${run.failureKind || "unknown"}`,
     `UTC time: ${run.finishedAt || new Date().toISOString()}`,
     "",
+    safetyOnly
+      ? "This run did not fail FTP authentication. Ingest was stopped intentionally by catalog safety controls."
+      : null,
     "Summary:",
     ...(run.errors || []).map((e) => `  - ERROR: ${e}`),
     ...(run.warnings || []).map((w) => `  - WARNING: ${w}`),
@@ -249,6 +328,9 @@ export async function finalizeNightlySyncOps(supabase, input) {
     id: input.id || `run_${process.env.GITHUB_RUN_ID || Date.now()}`,
     event: input.event || process.env.GITHUB_EVENT_NAME || "manual",
     status: evaluated.status,
+    failureKind: evaluated.failureKind,
+    intentionalSafetyBlock: evaluated.intentionalSafetyBlock,
+    ingestBlocked: Boolean(input.ingestBlocked) || evaluated.intentionalSafetyBlock,
     startedAt,
     finishedAt,
     durationMs,
@@ -292,7 +374,14 @@ export async function finalizeNightlySyncOps(supabase, input) {
 
   const latestPayload = {
     ...run,
-    displayStatus: run.status === "success" ? "Success" : run.status === "warning" ? "Warning" : "Failure",
+    displayStatus:
+      run.intentionalSafetyBlock && run.status === "warning"
+        ? "Blocked (safety)"
+        : run.status === "success"
+          ? "Success"
+          : run.status === "warning"
+            ? "Warning"
+            : "Failure",
   };
 
   const nextHistory = [run, ...history].slice(0, HISTORY_LIMIT);

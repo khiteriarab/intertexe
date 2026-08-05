@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { detectStaleMerchants, finalizeNightlySyncOps } from "./ops-monitor";
+import { isSafetyBlockMessage } from "./sync-outcome-classify";
 import { takeCatalogSnapshot, restoreCatalogFromSnapshot, latestCatalogSnapshot } from "../catalog-snapshot";
 import {
   buildAiCatalogVerification,
@@ -99,10 +100,13 @@ function listingFailed(syncResult: {
   errors?: Array<{ message?: string } | string>;
   totalCatalogFiles?: number;
   upserted?: number;
+  ingestBlocked?: boolean;
 }): boolean {
+  if (syncResult.ingestBlocked) return false;
   const msgs = (syncResult.errors || []).map((e) =>
     typeof e === "string" ? e : String(e?.message || "")
   );
+  if (msgs.some((m) => isSafetyBlockMessage(m))) return false;
   if (msgs.some((m) => /could not list|zero catalog files|450/i.test(m))) return true;
   if (Number(syncResult.totalCatalogFiles || 0) === 0) return true;
   return false;
@@ -296,6 +300,40 @@ async function runRakutenFeedChunkLocked(
   const totalFiles = Number(syncResult.totalCatalogFiles ?? 0);
   const processed = Number(syncResult.filesProcessed ?? 0);
   const upserted = Number(syncResult.upserted ?? 0);
+  const ingestBlocked = Boolean(
+    (syncResult as { ingestBlocked?: boolean }).ingestBlocked
+  );
+  if (ingestBlocked) {
+    const errorMessages = (syncResult.errors || []).map((e) =>
+      typeof e === "string" ? e : String((e as { message?: string })?.message || e)
+    );
+    const ops = await recordOps(supabase, startedAt, {
+      ok: false,
+      listingFailed: false,
+      ingestBlocked: true,
+      checkpointBefore: fileOffset,
+      checkpointAfter: fileOffset,
+      totalCatalogFiles: 0,
+      filesProcessed: 0,
+      upserted: 0,
+      inserted: 0,
+      updated: 0,
+      rejected: 0,
+      designersSynced: 0,
+      errors: errorMessages,
+      workflowFailed: false,
+    });
+    return {
+      ok: false,
+      fileOffset,
+      nextFileOffset: fileOffset,
+      fileLimit,
+      cycleComplete: false,
+      sync: { errors: errorMessages.length, errorMessages, upserted: 0, totalCatalogFiles: 0 },
+      error: errorMessages[0],
+      ...ops,
+    };
+  }
   const failedList = listingFailed(syncResult);
 
   // Never advance checkpoint when listing failed or nothing was discovered.

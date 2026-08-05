@@ -2,8 +2,6 @@
 export const BRANDS_WE_LOVE_HIGHLIGHTS: Record<string, string> = {
   "re-done":
     "They pioneered vintage-repurposed denim — cotton-forward pieces we verify piece by piece for natural fiber content.",
-  "the-attico":
-    "Milanese ease with cotton jersey, silk, and leather — the airport pant house of the summer edit.",
   toteme:
     "Stockholm tailoring in linen and wool — quiet luxury with compositions that clear our natural-fiber bar.",
   "cult-gaia":

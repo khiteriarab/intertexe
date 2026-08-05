@@ -5,6 +5,7 @@ import {
   loadNightlySyncOps,
   saveFounderReport,
   sendOpsAlertEmail,
+  summarizeCatalogOpsForBriefing,
 } from "../../../../lib/feed-sync/ops-monitor";
 
 export const dynamic = "force-dynamic";
@@ -107,13 +108,24 @@ export async function GET(request: NextRequest) {
     return t >= weekStart.getTime();
   });
   const successRuns = runs.filter((r) => r.status === "success");
-  const failedRuns = runs.filter((r) => r.status === "failure" || r.status === "warning");
+  const catalogOps = summarizeCatalogOpsForBriefing(
+    runs as Array<Record<string, unknown>>,
+    (syncOps.latest || null) as Record<string, unknown> | null
+  );
+  const genuineFailedCount = catalogOps.genuineFailureCount;
   const sum = (key: string) =>
     runs.reduce((acc, r) => acc + Number((r as Record<string, unknown>)[key] || 0), 0);
 
   const warnings: string[] = [];
-  if (failedRuns.length) {
-    warnings.push(`${failedRuns.length} catalog sync run(s) needed attention in the last 7 days`);
+  if (genuineFailedCount) {
+    warnings.push(
+      `${genuineFailedCount} genuine catalog sync failure(s) in the last 7 days (excludes intentional safety blocks)`
+    );
+  }
+  if (catalogOps.intentionalSafetyBlockCount) {
+    warnings.push(
+      `${catalogOps.intentionalSafetyBlockCount} run(s) blocked intentionally by catalog safety controls (not FTP credential failures)`
+    );
   }
   if (!commerce.revenueConnected || commerce.revenueIsDemo) {
     warnings.push("Verified affiliate revenue is not fully connected (demo or missing)");
@@ -125,8 +137,14 @@ export async function GET(request: NextRequest) {
     warnings.push(`${acquisition.totals.unknown} consumers with unknown first-touch attribution`);
   }
   const latest = syncOps.latest;
-  if (latest?.status === "failure" || latest?.status === "warning") {
-    warnings.push(`Latest nightly sync status: ${latest.status}`);
+  if (catalogOps.latestIntentionalBlock) {
+    warnings.push(
+      "Latest controlled test: FTP credentials OK; ingest blocked intentionally by stage-only / kill-switch safety (not an FTP failure)"
+    );
+  } else if (latest?.status === "failure") {
+    warnings.push(`Latest sync status: ${latest.status} (${catalogOps.latestLabel})`);
+  } else if (latest?.status === "warning" && !catalogOps.latestIntentionalBlock) {
+    warnings.push(`Latest sync status: ${latest.status}`);
   }
   const latestStale = Array.isArray(latest?.affectedMerchants)
     ? (latest.affectedMerchants as string[])
@@ -140,19 +158,32 @@ export async function GET(request: NextRequest) {
     warnings.push(`Ops alert email delivery previously failed (see HQ Operations; credentials not logged)`);
   }
 
+  const historicalFeedNotes = [
+    ...catalogOps.historicalFtpAuthNotes.map((n) => `[historical FTP auth] ${n}`),
+    ...catalogOps.historicalFtpListingNotes.map((n) => `[historical FTP listing] ${n}`),
+    ...catalogOps.historicalRequireEsmNotes.map((n) => `[historical require/ESM] ${n}`),
+    ...catalogOps.historicalOperationalNotes.map((n) => `[historical ops] ${n}`),
+    ...latestStale.map((m) => `stale MID ${m}`),
+  ].slice(0, 12);
+
   const catalog = {
     successfulSyncs: successRuns.length,
-    failedOrWarningSyncs: failedRuns.length,
+    failedOrWarningSyncs: genuineFailedCount,
+    intentionalSafetyBlocks: catalogOps.intentionalSafetyBlockCount,
     newProducts: sum("inserted"),
     updatedProducts: sum("updated"),
     rejectedProducts: sum("rejected"),
     designersSynced: sum("designersSynced"),
     filesProcessed: sum("filesProcessed"),
     newMerchants: "n/a (auto-discovered MIDs; see Actions logs)",
-    staleOrFailingFeeds: [
-      ...latestStale.map((m) => `stale MID ${m}`),
-      ...failedRuns.flatMap((r) => (Array.isArray(r.errors) ? r.errors : [])),
-    ].slice(0, 12),
+    staleOrFailingFeeds: historicalFeedNotes,
+    currentFtpAuthStatus: catalogOps.currentFtpAuthStatus,
+    latestControlledTest: catalogOps.latestLabel,
+    latestControlledTestAt: catalogOps.latestFinishedAt,
+    latestControlledTestUrl: catalogOps.latestGithubRunUrl,
+    remaining530InLatest: catalogOps.remaining530InLatest,
+    requireEsmIssuePresentInLatest: !catalogOps.requireEsmFixedInLatest,
+    suggestedNextStep: catalogOps.suggestedNextStep,
   };
 
   const commerceBlock = {
@@ -218,16 +249,32 @@ export async function GET(request: NextRequest) {
     "",
     "CATALOG",
     `  Successful syncs: ${catalog.successfulSyncs}`,
-    `  Failed/warning syncs: ${catalog.failedOrWarningSyncs}`,
+    `  Genuine failed/warning syncs: ${catalog.failedOrWarningSyncs}`,
+    `  Intentional safety blocks (not FTP failures): ${catalog.intentionalSafetyBlocks}`,
     `  New products: ${catalog.newProducts}`,
     `  Updated products: ${catalog.updatedProducts}`,
     `  Rejected products: ${catalog.rejectedProducts}`,
     `  Designers synced: ${catalog.designersSynced}`,
     `  Files processed: ${catalog.filesProcessed}`,
-    `  Stale/failing feed notes: ${
+    "",
+    "CATALOG — CURRENT CREDENTIAL STATUS",
+    `  Current FTP authentication: ${catalog.currentFtpAuthStatus}`,
+    `  Remaining 530 in latest run: ${catalog.remaining530InLatest ? "yes" : "no"}`,
+    `  require is not defined in latest run: ${catalog.requireEsmIssuePresentInLatest ? "yes (still present)" : "no (fixed)"}`,
+    "",
+    "CATALOG — LATEST CONTROLLED TEST",
+    `  Result: ${catalog.latestControlledTest}`,
+    `  Finished (UTC): ${catalog.latestControlledTestAt || "—"}`,
+    catalog.latestControlledTestUrl
+      ? `  Actions run: ${catalog.latestControlledTestUrl}`
+      : null,
+    `  Suggested next step: ${catalog.suggestedNextStep}`,
+    "",
+    "CATALOG — HISTORICAL FAILURES IN PERIOD",
+    `  Notes: ${
       catalog.staleOrFailingFeeds.length
         ? catalog.staleOrFailingFeeds.join("; ")
-        : "none"
+        : "none (or only intentional safety blocks)"
     }`,
     "",
     "COMMERCE",
@@ -269,7 +316,9 @@ export async function GET(request: NextRequest) {
     ...(warnings.length ? warnings.map((w) => `  - ${w}`) : ["  - none"]),
     "",
     "Open HQ: https://www.intertexe.com/dashboard/operations",
-  ].join("\n");
+  ]
+    .filter((x) => x != null)
+    .join("\n");
 
   const html = `<div style="font-family:Georgia,serif;max-width:640px;margin:0 auto;color:#1a1a1a">
   <p style="letter-spacing:0.18em;font-size:11px;text-transform:uppercase;color:#888">INTERTEXE Founder</p>

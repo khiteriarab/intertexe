@@ -414,15 +414,21 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <section className="-mx-4 md:-mx-8 bg-[#f8f7f5]">
         <div className="max-w-5xl mx-auto py-10 md:py-14 px-6 md:px-12">
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs tracking-widest text-gray-500 uppercase">
-            <span>{displayBrands} brands</span>
-            <span aria-hidden>·</span>
-            <span>{displayCount} pieces</span>
-            <span aria-hidden>·</span>
-            <span>95%+ natural fiber</span>
-            <span aria-hidden>·</span>
-            <span>Every composition verified</span>
-          </div>
+          <ul className="grid grid-cols-2 md:grid-cols-4 gap-y-5 gap-x-4 md:gap-x-6 text-center list-none m-0 p-0">
+            {[
+              `${displayBrands} brands`,
+              `${displayCount} pieces`,
+              "95%+ natural fiber",
+              "Every composition verified",
+            ].map((label) => (
+              <li
+                key={label}
+                className="text-[10px] md:text-xs tracking-[0.18em] md:tracking-widest text-gray-500 uppercase leading-snug"
+              >
+                {label}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
