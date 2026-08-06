@@ -61,15 +61,14 @@ export function AppDownloadPrompt() {
     }
   };
 
-  const handleDownload = (e: MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  const handleDownload = () => {
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     } catch {
       // ignore
     }
     setOpen(false);
-    window.location.href = href;
+    // Do not preventDefault — let the browser follow href to the App Store.
   };
 
   return createPortal(

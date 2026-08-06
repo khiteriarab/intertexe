@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 
 type Props = {
@@ -13,13 +13,9 @@ type Props = {
   onAfterClick?: () => void;
 };
 
-function goToAppStore(url: string, e: MouseEvent<HTMLAnchorElement>) {
-  e.preventDefault();
-  window.location.href = url;
-}
-
 /**
- * Download App — opens the App Store directly (hard navigation, https only).
+ * Plain App Store link — no preventDefault / location.href
+ * (those trigger Safari “Action can't be completed” even when the store opens).
  */
 export function AppStoreCtaLink({
   className,
@@ -36,10 +32,7 @@ export function AppStoreCtaLink({
       href={href}
       className={className}
       data-testid={testId}
-      onClick={(e) => {
-        onAfterClick?.();
-        goToAppStore(href, e);
-      }}
+      onClick={() => onAfterClick?.()}
     >
       {children ?? label}
     </a>

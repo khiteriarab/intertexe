@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
@@ -19,14 +19,9 @@ type Props = {
 const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
-function goToAppStore(url: string, e: MouseEvent<HTMLAnchorElement>) {
-  // Hard navigate to App Store — no same-site hop, no custom scheme.
-  e.preventDefault();
-  window.location.href = url;
-}
-
 /**
- * Sticky app bar — Download opens the App Store directly.
+ * Sticky app bar — plain App Store <a>, no JS navigation
+ * (preventDefault + location.href triggers Safari “Action can't be completed”).
  */
 export function AppDownloadBanner({
   appStoreUrl,
@@ -101,7 +96,6 @@ export function AppDownloadBanner({
 
       <a
         href={href}
-        onClick={(e) => goToAppStore(href, e)}
         className="flex-shrink-0 bg-white text-black px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.1em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[40px] flex items-center justify-center"
         data-testid="link-app-open"
       >
