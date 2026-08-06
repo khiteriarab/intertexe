@@ -2,13 +2,10 @@
 
 export const APP_STORE_ID = "6770476520";
 
-/** Canonical App Store listing (never put this in visible CTA hrefs — TikTok blocks it). */
+/** Canonical live App Store listing. */
 export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/us/app/id${APP_STORE_ID}`;
 
-/**
- * Same-origin Download CTA path.
- * TikTok/Instagram allow in-site links; they block direct apps.apple.com / x-safari-https.
- */
+/** Optional same-origin hop (kept for bookmarks). */
 export const APP_DOWNLOAD_PATH = "/download";
 
 export const DEFAULT_APP_URL_SCHEME = "intertexe";
@@ -46,9 +43,9 @@ export function getAppStoreUrl(explicit?: string): string {
   return DEFAULT_APP_STORE_URL;
 }
 
-/** CTA href — always same-origin so in-app browsers don't see/block App Store URLs. */
-export function getAppStoreOpenUrl(_explicit?: string): string {
-  return APP_DOWNLOAD_PATH;
+/** CTA href — direct App Store URL. */
+export function getAppStoreOpenUrl(explicit?: string): string {
+  return getAppStoreUrl(explicit);
 }
 
 export function getAppUrlScheme(): string {
@@ -59,19 +56,9 @@ export function getAppUrlScheme(): string {
   return DEFAULT_APP_URL_SCHEME;
 }
 
-/**
- * Build the store URL without a contiguous apps.apple.com string in the call site.
- * Used only on /download after TikTok has already navigated same-origin.
- */
-export function resolveStoreDestination(): string {
-  const id = APP_STORE_ID;
-  const host = ["ap", "ps.", "app", "le.", "com"].join("");
-  return `https://${host}/us/app/id${id}`;
-}
-
-export function openAppStore(_explicit?: string): void {
+export function openAppStore(explicit?: string): void {
   if (typeof window === "undefined") return;
-  window.location.href = APP_DOWNLOAD_PATH;
+  window.location.href = getAppStoreUrl(explicit);
 }
 
 export function readLikelyAppInstalled(): boolean {
@@ -80,8 +67,4 @@ export function readLikelyAppInstalled(): boolean {
 
 export function getAppCtaLabel(_likelyInstalled?: boolean): string {
   return "Download App";
-}
-
-export function isIosInAppBrowser(): boolean {
-  return false;
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { APP_DOWNLOAD_PATH } from "../../lib/app-store";
+import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 type Props = {
@@ -19,11 +19,9 @@ type Props = {
 const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
-/**
- * Sticky app bar. Download goes to same-origin /download only
- * (TikTok blocks direct App Store / x-safari links).
- */
+/** Sticky app bar — Download opens the App Store directly. */
 export function AppDownloadBanner({
+  appStoreUrl,
   dismissKey = "app-banner-dismissed",
   title = "Scan Any Garment",
   subtitle = "Find better fabrics",
@@ -34,6 +32,7 @@ export function AppDownloadBanner({
   const [dismissed, setDismissed] = useState(true);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const isMobile = useIsMobileWeb();
+  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
 
   useEffect(() => {
     try {
@@ -93,7 +92,7 @@ export function AppDownloadBanner({
       </div>
 
       <a
-        href={APP_DOWNLOAD_PATH}
+        href={href}
         className="flex-shrink-0 bg-white text-black px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[40px] flex items-center justify-center"
         data-testid="link-app-open"
       >
