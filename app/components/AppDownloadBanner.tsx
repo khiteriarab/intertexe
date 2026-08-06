@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
+import { useAppStoreHref } from "../../lib/use-app-store-href";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 type Props = {
@@ -20,8 +20,8 @@ const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
 /**
- * Sticky app bar — plain App Store <a>, no JS navigation
- * (preventDefault + location.href triggers Safari “Action can't be completed”).
+ * Sticky app bar. In Instagram/TikTok in-app browsers, href uses x-safari-https
+ * so iOS can leave the WebView and open the App Store (avoids “Action can't be completed”).
  */
 export function AppDownloadBanner({
   appStoreUrl,
@@ -35,7 +35,7 @@ export function AppDownloadBanner({
   const [dismissed, setDismissed] = useState(true);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const isMobile = useIsMobileWeb();
-  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
+  const href = useAppStoreHref(appStoreUrl);
 
   useEffect(() => {
     try {

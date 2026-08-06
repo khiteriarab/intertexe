@@ -55,6 +55,32 @@ export function getAppStoreUrl(explicit?: string): string {
   return DEFAULT_APP_STORE_URL;
 }
 
+/**
+ * Instagram / TikTok / Facebook in-app browsers block App Store opens and show
+ * “Action can't be completed”. Detect those WebViews.
+ */
+export function isIosInAppBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  if (!/iPhone|iPad|iPod/i.test(ua)) return false;
+  return /Instagram|FBAN|FBAV|FB_IAB|FBIOS|Twitter|TikTok|BytedanceWebview|musical_ly|Snapchat|Line\/|MicroMessenger|Pinterest|LinkedInApp|GSA\//i.test(
+    ua
+  );
+}
+
+/**
+ * URL that actually opens the App Store from the current browser.
+ * In iOS in-app browsers, hand off to Safari via x-safari-https://
+ */
+export function getAppStoreOpenUrl(explicit?: string): string {
+  const httpsUrl = getAppStoreUrl(explicit);
+  if (typeof window === "undefined") return httpsUrl;
+  if (isIosInAppBrowser()) {
+    return httpsUrl.replace(/^https:\/\//i, "x-safari-https://");
+  }
+  return httpsUrl;
+}
+
 export function getAppUrlScheme(): string {
   const fromEnv = (process.env.NEXT_PUBLIC_APP_URL_SCHEME || "")
     .trim()

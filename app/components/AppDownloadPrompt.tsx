@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
+import { useAppStoreHref } from "../../lib/use-app-store-href";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 const DISMISS_KEY = "app-download-prompt-dismissed-at";
@@ -27,7 +27,7 @@ export function AppDownloadPrompt() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
-  const href = getAppStoreUrl() || DEFAULT_APP_STORE_URL;
+  const href = useAppStoreHref();
 
   useEffect(() => {
     setMounted(true);

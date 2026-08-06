@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
+import { useAppStoreHref } from "../../lib/use-app-store-href";
 
 type Props = {
   className?: string;
@@ -14,8 +14,8 @@ type Props = {
 };
 
 /**
- * Plain App Store link — no preventDefault / location.href
- * (those trigger Safari “Action can't be completed” even when the store opens).
+ * App Store CTA — uses x-safari-https:// inside iOS in-app browsers
+ * so Instagram/TikTok can hand off to Safari → App Store.
  */
 export function AppStoreCtaLink({
   className,
@@ -25,7 +25,7 @@ export function AppStoreCtaLink({
   testId = "link-app-store-cta",
   onAfterClick,
 }: Props) {
-  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
+  const href = useAppStoreHref(appStoreUrl);
 
   return (
     <a
