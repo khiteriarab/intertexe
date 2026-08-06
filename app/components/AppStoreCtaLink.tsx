@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useAppStoreDownload } from "../../lib/use-app-store-download";
+import { APP_DOWNLOAD_PATH } from "../../lib/app-store";
 
 type Props = {
   className?: string;
@@ -13,30 +13,22 @@ type Props = {
   onAfterClick?: () => void;
 };
 
+/** Same-origin /download only — no App Store URL in the markup. */
 export function AppStoreCtaLink({
   className,
-  appStoreUrl,
   label = "Download App",
   children,
   testId = "link-app-store-cta",
   onAfterClick,
 }: Props) {
-  const { href, onDownloadClick, help } = useAppStoreDownload(appStoreUrl);
-
   return (
-    <>
-      <a
-        href={href}
-        className={className}
-        data-testid={testId}
-        onClick={(e) => {
-          onAfterClick?.();
-          onDownloadClick(e);
-        }}
-      >
-        {children ?? label}
-      </a>
-      {help}
-    </>
+    <a
+      href={APP_DOWNLOAD_PATH}
+      className={className}
+      data-testid={testId}
+      onClick={() => onAfterClick?.()}
+    >
+      {children ?? label}
+    </a>
   );
 }
