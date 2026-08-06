@@ -17,7 +17,7 @@ type Props = {
   path?: string;
   /** localStorage key so home vs /khiteri dismissals stay independent. */
   dismissKey?: string;
-  /** Serif headline (NAP: “SHOP THE APP”). */
+  /** Serif headline. */
   title?: string;
   /** Supporting line under the title. */
   subtitle?: string;
@@ -31,14 +31,14 @@ const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
 /**
- * NAP-style sticky app bar — Open App → app or App Store.
+ * NAP-style sticky app bar — Download/Open App → App Store (or app when deep links are live).
  */
 export function AppDownloadBanner({
   appStoreUrl,
   path,
   dismissKey = "app-banner-dismissed",
-  title = "Shop the app",
-  subtitle = "To use the scanner.",
+  title = "Scan Any Garment, Find Better Fabrics",
+  subtitle = "Available in the app.",
   className = "",
   testId = "banner-app-download",
   mobileOnly = true,
@@ -104,7 +104,7 @@ export function AppDownloadBanner({
       />
 
       <div className="flex-1 min-w-0 py-0.5">
-        <p className="font-serif text-[15px] leading-tight tracking-wide text-white">
+        <p className="font-serif text-[13px] leading-snug tracking-wide text-white line-clamp-2">
           {title}
         </p>
         <p className="mt-0.5 text-[11px] leading-snug text-white/65 font-light truncate">
