@@ -142,7 +142,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
-        <meta name="apple-itunes-app" content={`app-id=${APP_STORE_ID}`} />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){var r=0;window.addEventListener("error",function(e){if(e&&e.message&&e.message.indexOf("Loading chunk")!==-1&&r<3){r++;setTimeout(function(){window.location.reload()},1500)}},true);window.addEventListener("unhandledrejection",function(e){if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf("Loading chunk")!==-1&&r<3){r++;setTimeout(function(){window.location.reload()},1500)}},true)})();`,

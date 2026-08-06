@@ -1,38 +1,45 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { APP_DOWNLOAD_PATH } from "../../lib/app-store";
+import type { MouseEvent, ReactNode } from "react";
+import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 
 type Props = {
   className?: string;
-  /** Unused — Download always goes through /download until deep links ship. */
   appStoreUrl?: string;
-  /** Unused until deep links are live (kept for API stability). */
   path?: string;
-  /** Override label (defaults to Download App). */
   label?: string;
   children?: ReactNode;
   testId?: string;
   onAfterClick?: () => void;
 };
 
+function goToAppStore(url: string, e: MouseEvent<HTMLAnchorElement>) {
+  e.preventDefault();
+  window.location.href = url;
+}
+
 /**
- * Plain /download hop → App Store. No custom scheme, no apps.apple.com direct
- * link from Universal Link pages (fixes Safari on /khiteri).
+ * Download App — opens the App Store directly (hard navigation, https only).
  */
 export function AppStoreCtaLink({
   className,
+  appStoreUrl,
   label = "Download App",
   children,
   testId = "link-app-store-cta",
   onAfterClick,
 }: Props) {
+  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
+
   return (
     <a
-      href={APP_DOWNLOAD_PATH}
+      href={href}
       className={className}
       data-testid={testId}
-      onClick={() => onAfterClick?.()}
+      onClick={(e) => {
+        onAfterClick?.();
+        goToAppStore(href, e);
+      }}
     >
       {children ?? label}
     </a>

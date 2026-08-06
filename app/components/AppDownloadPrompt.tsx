@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { APP_DOWNLOAD_PATH } from "../../lib/app-store";
+import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 const DISMISS_KEY = "app-download-prompt-dismissed-at";
-const PROMPT_DELAY_MS = 3 * 60 * 1000; // ~3 minutes engaged — enough to browse before asking
-const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // don’t re-ask for a week
+const PROMPT_DELAY_MS = 3 * 60 * 1000;
+const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 const SKIP_PREFIXES = ["/dashboard", "/platform", "/partners", "/press-kit", "/api"];
 const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
@@ -27,7 +27,7 @@ export function AppDownloadPrompt() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
-  const href = APP_DOWNLOAD_PATH;
+  const href = getAppStoreUrl() || DEFAULT_APP_STORE_URL;
 
   useEffect(() => {
     setMounted(true);
@@ -61,13 +61,15 @@ export function AppDownloadPrompt() {
     }
   };
 
-  const markDismissed = () => {
+  const handleDownload = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     } catch {
       // ignore
     }
     setOpen(false);
+    window.location.href = href;
   };
 
   return createPortal(
@@ -119,7 +121,7 @@ export function AppDownloadPrompt() {
           </p>
           <a
             href={href}
-            onClick={markDismissed}
+            onClick={handleDownload}
             className="w-full bg-black text-white text-[12px] uppercase tracking-[0.18em] font-medium py-4 min-h-[52px] flex items-center justify-center hover:bg-neutral-800 active:scale-[0.99] transition-all"
             data-testid="link-app-download-prompt"
           >

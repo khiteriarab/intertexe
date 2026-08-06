@@ -1,34 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { X } from "lucide-react";
-import { APP_DOWNLOAD_PATH } from "../../lib/app-store";
+import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 type Props = {
-  /** Unused — Download always goes through /download until deep links ship. */
   appStoreUrl?: string;
-  /** Unused until deep links are live (kept for API stability). */
   path?: string;
-  /** localStorage key so home vs /khiteri dismissals stay independent. */
   dismissKey?: string;
-  /** Serif headline. */
   title?: string;
-  /** Supporting line under the title. */
   subtitle?: string;
   className?: string;
   testId?: string;
-  /** When true (default), hide on desktop viewports. */
   mobileOnly?: boolean;
 };
 
 const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
+function goToAppStore(url: string, e: MouseEvent<HTMLAnchorElement>) {
+  // Hard navigate to App Store — no same-site hop, no custom scheme.
+  e.preventDefault();
+  window.location.href = url;
+}
+
 /**
- * Sticky app bar. Download goes to /download → App Store (never intertexe://).
+ * Sticky app bar — Download opens the App Store directly.
  */
 export function AppDownloadBanner({
+  appStoreUrl,
   dismissKey = "app-banner-dismissed",
   title = "Scan Any Garment",
   subtitle = "Find better fabrics",
@@ -39,6 +40,7 @@ export function AppDownloadBanner({
   const [dismissed, setDismissed] = useState(true);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const isMobile = useIsMobileWeb();
+  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
 
   useEffect(() => {
     try {
@@ -63,25 +65,25 @@ export function AppDownloadBanner({
 
   return (
     <div
-      className={`relative z-[200] w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-3 px-3 py-3 ${className}`}
+      className={`relative z-[200] w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-2 pl-1 pr-2.5 py-2.5 ${className}`}
       data-testid={testId}
     >
       <button
         onClick={handleDismiss}
-        className="flex-shrink-0 p-1.5 -ml-0.5 text-white/55 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="flex-shrink-0 p-1 text-white/55 hover:text-white transition-colors min-h-[40px] min-w-[36px] flex items-center justify-center"
         aria-label="Dismiss"
         data-testid="button-dismiss-banner"
         type="button"
       >
-        <X className="w-4 h-4" strokeWidth={1.75} />
+        <X className="w-3.5 h-3.5" strokeWidth={1.75} />
       </button>
 
       <img
         src={iconSrc}
         alt=""
-        width={44}
-        height={44}
-        className="h-11 w-11 shrink-0 rounded-[10px] object-cover bg-neutral-800"
+        width={36}
+        height={36}
+        className="h-9 w-9 shrink-0 rounded-[8px] object-cover bg-neutral-800"
         data-testid="img-app-banner-icon"
         onError={() => {
           if (iconSrc !== APP_ICON_FALLBACK) setIconSrc(APP_ICON_FALLBACK);
@@ -89,17 +91,18 @@ export function AppDownloadBanner({
       />
 
       <div className="flex-1 min-w-0 py-0.5">
-        <p className="font-serif text-[13px] leading-snug tracking-wide text-white whitespace-nowrap overflow-hidden text-ellipsis">
+        <p className="font-serif text-[12px] sm:text-[13px] leading-tight tracking-wide text-white whitespace-nowrap">
           {title}
         </p>
-        <p className="mt-0.5 text-[11px] leading-snug text-white/65 font-light truncate">
+        <p className="mt-0.5 text-[10px] leading-snug text-white/65 font-light whitespace-nowrap">
           {subtitle}
         </p>
       </div>
 
       <a
-        href={APP_DOWNLOAD_PATH}
-        className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
+        href={href}
+        onClick={(e) => goToAppStore(href, e)}
+        className="flex-shrink-0 bg-white text-black px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.1em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[40px] flex items-center justify-center"
         data-testid="link-app-open"
       >
         Download App

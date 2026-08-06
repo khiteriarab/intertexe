@@ -4,13 +4,10 @@ import { SITE_URL } from "./seo-international";
 
 export const APP_STORE_ID = "6770476520";
 
-/** Canonical live App Store listing (Apple’s `id` form). */
-export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/us/app/intertexe/id${APP_STORE_ID}`;
+/** Canonical live App Store listing. */
+export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/us/app/id${APP_STORE_ID}`;
 
-/**
- * Same-site hop used by Download CTAs.
- * Avoids Universal Link / custom-scheme conflicts on pages like /khiteri.
- */
+/** @deprecated CTAs open the App Store URL directly — kept for old /download links. */
 export const APP_DOWNLOAD_PATH = "/download";
 
 /** Custom scheme registered on the iOS app — required for same-domain Safari CTAs. */
@@ -45,7 +42,7 @@ export function normalizeAppStoreUrl(raw: string): string {
   if (!trimmed || isPlaceholderEnv(trimmed)) return DEFAULT_APP_STORE_URL;
   const idMatch =
     trimmed.match(/(?:id|\/app\/)(\d{8,12})\b/i) || trimmed.match(/\b(\d{8,12})\b/);
-  if (idMatch?.[1]) return `https://apps.apple.com/us/app/intertexe/id${idMatch[1]}`;
+  if (idMatch?.[1]) return `https://apps.apple.com/us/app/id${idMatch[1]}`;
   if (/^https?:\/\/apps\.apple\.com\//i.test(trimmed)) return trimmed;
   return DEFAULT_APP_STORE_URL;
 }

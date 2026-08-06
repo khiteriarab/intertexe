@@ -1,9 +1,7 @@
 /**
- * Apple App Site Association — Universal Links for INTERTEXE.
- *
- * Until the App Store build with associated domains + routing ships, only
- * claim /open*. Claiming /khiteri* made Safari try (and fail) to hand off
- * to the app from the editorial page Download CTA.
+ * Apple App Site Association.
+ * Empty content paths until the App Store build with UL routing is live —
+ * claiming /khiteri* caused Safari “Action can't be completed” on Download.
  */
 const AASA = {
   applinks: {
@@ -11,10 +9,7 @@ const AASA = {
     details: [
       {
         appIDs: ["4VXD5QFLA2.com.stellarcommunications.intertexe"],
-        components: [
-          // Re-add shop/product/designers/collections/scanner/khiteri after the UL build is live.
-          { "/": "/open*" },
-        ],
+        components: [] as { "/": string }[],
       },
     ],
   },
@@ -28,7 +23,7 @@ export function GET() {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=300",
     },
   });
 }
