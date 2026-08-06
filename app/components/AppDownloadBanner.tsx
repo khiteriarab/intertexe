@@ -32,8 +32,8 @@ const APP_ICON_FALLBACK = "/favicon.png";
 export function AppDownloadBanner({
   appStoreUrl,
   dismissKey = "app-banner-dismissed",
-  title = "Scan Any Garment, Find Better Fabrics",
-  subtitle = "Available in the app.",
+  title = "Scan Any Garment",
+  subtitle = "Find better fabrics",
   className = "",
   testId = "banner-app-download",
   mobileOnly = true,
