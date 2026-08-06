@@ -1,7 +1,9 @@
 /**
  * Apple App Site Association — Universal Links for INTERTEXE.
- * Served at /.well-known/apple-app-site-association (no file extension).
- * Team ID 4VXD5QFLA2 · bundle com.stellarcommunications.intertexe
+ *
+ * Until the App Store build with associated domains + routing ships, only
+ * claim /open*. Claiming /khiteri* made Safari try (and fail) to hand off
+ * to the app from the editorial page Download CTA.
  */
 const AASA = {
   applinks: {
@@ -10,18 +12,8 @@ const AASA = {
       {
         appIDs: ["4VXD5QFLA2.com.stellarcommunications.intertexe"],
         components: [
-          { "/": "/" },
+          // Re-add shop/product/designers/collections/scanner/khiteri after the UL build is live.
           { "/": "/open*" },
-          { "/": "/shop*" },
-          { "/": "/product/*" },
-          { "/": "/designers/*" },
-          { "/": "/collections/*" },
-          { "/": "/scanner*" },
-          { "/": "/sale*" },
-          { "/": "/account*" },
-          { "/": "/khiteri*" },
-          { "/": "/materials*" },
-          { "/": "/favorites*" },
         ],
       },
     ],

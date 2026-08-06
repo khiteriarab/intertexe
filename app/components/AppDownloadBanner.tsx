@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
+import { APP_DOWNLOAD_PATH } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 type Props = {
-  /** Same App Store URL as the site “Download the App” buttons. */
+  /** Unused — Download always goes through /download until deep links ship. */
   appStoreUrl?: string;
   /** Unused until deep links are live (kept for API stability). */
   path?: string;
@@ -26,11 +26,9 @@ const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
 /**
- * Sticky app bar. Download App is a plain App Store link — no JS navigation
- * (iOS Safari “Action can't be completed” comes from custom-scheme probes).
+ * Sticky app bar. Download goes to /download → App Store (never intertexe://).
  */
 export function AppDownloadBanner({
-  appStoreUrl,
   dismissKey = "app-banner-dismissed",
   title = "Scan Any Garment",
   subtitle = "Find better fabrics",
@@ -41,7 +39,6 @@ export function AppDownloadBanner({
   const [dismissed, setDismissed] = useState(true);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const isMobile = useIsMobileWeb();
-  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
 
   useEffect(() => {
     try {
@@ -66,7 +63,7 @@ export function AppDownloadBanner({
 
   return (
     <div
-      className={`w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-3 px-3 py-3 ${className}`}
+      className={`relative z-[200] w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-3 px-3 py-3 ${className}`}
       data-testid={testId}
     >
       <button
@@ -101,8 +98,7 @@ export function AppDownloadBanner({
       </div>
 
       <a
-        href={href}
-        target="_self"
+        href={APP_DOWNLOAD_PATH}
         className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
         data-testid="link-app-open"
       >

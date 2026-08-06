@@ -7,6 +7,12 @@ export const APP_STORE_ID = "6770476520";
 /** Canonical live App Store listing (Apple’s `id` form). */
 export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/us/app/intertexe/id${APP_STORE_ID}`;
 
+/**
+ * Same-site hop used by Download CTAs.
+ * Avoids Universal Link / custom-scheme conflicts on pages like /khiteri.
+ */
+export const APP_DOWNLOAD_PATH = "/download";
+
 /** Custom scheme registered on the iOS app — required for same-domain Safari CTAs. */
 export const DEFAULT_APP_URL_SCHEME = "intertexe";
 

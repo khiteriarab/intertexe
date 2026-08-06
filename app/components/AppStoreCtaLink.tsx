@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
+import type { ReactNode } from "react";
+import { APP_DOWNLOAD_PATH } from "../../lib/app-store";
 
 type Props = {
   className?: string;
+  /** Unused — Download always goes through /download until deep links ship. */
   appStoreUrl?: string;
   /** Unused until deep links are live (kept for API stability). */
   path?: string;
@@ -16,32 +17,24 @@ type Props = {
 };
 
 /**
- * Plain App Store link — no custom-scheme probe (Safari “Action can't be completed”).
+ * Plain /download hop → App Store. No custom scheme, no apps.apple.com direct
+ * link from Universal Link pages (fixes Safari on /khiteri).
  */
 export function AppStoreCtaLink({
   className,
-  appStoreUrl,
   label = "Download App",
   children,
   testId = "link-app-store-cta",
   onAfterClick,
 }: Props) {
-  const [mounted, setMounted] = useState(false);
-  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
     <a
-      href={href}
-      target="_self"
+      href={APP_DOWNLOAD_PATH}
       className={className}
       data-testid={testId}
       onClick={() => onAfterClick?.()}
     >
-      {children ?? (mounted ? label : "Download App")}
+      {children ?? label}
     </a>
   );
 }
