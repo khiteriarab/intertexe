@@ -121,10 +121,10 @@ export function AppDownloadPrompt() {
             id="app-download-prompt-title"
             className="font-serif text-[26px] leading-tight mb-3"
           >
-            Shop the app
+            Scan Any Garment, Find Better Fabrics
           </h2>
           <p className="text-[14px] text-neutral-500 font-light leading-relaxed max-w-xs mb-8">
-            Scan any label, save favorites, and shop verified natural fibers — built for your phone.
+            Available in the app.
           </p>
           <a
             href={href}
