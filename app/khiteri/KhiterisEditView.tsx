@@ -17,7 +17,7 @@ const BETA_COPY = {
   headline: "Join the INTERTEXE Beta",
   body: "Create a free account to access the beta and use the scanner to identify materials while shopping in-store.",
   primaryCta: "Create Account",
-  secondaryCta: "Download App",
+  secondaryCta: "Open App",
 };
 
 const PIECE_WORDS = [
@@ -54,6 +54,7 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
     <div className="khiteris-edit min-h-screen bg-[#F7F5F0] text-[#1a1a1a]" data-catalog-region={catalogRegion}>
       <AppDownloadBanner
         appStoreUrl={appStoreUrl}
+        path="/khiteri"
         dismissKey="khiteri-app-banner-dismissed"
         title="Shop the app"
         subtitle="To use the scanner."
@@ -178,6 +179,7 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
           </Link>
           <AppStoreCtaLink
             appStoreUrl={appStoreUrl}
+            path="/khiteri"
             className="khiteris-edit__cta khiteris-edit__cta--secondary"
             testId="link-khiteri-app-store"
           />

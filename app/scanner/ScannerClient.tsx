@@ -663,6 +663,7 @@ export default function ScannerClient() {
         </p>
         <AppStoreCtaLink
           appStoreUrl={appStoreUrl}
+          path="/scanner"
           className="w-full max-w-xs bg-black text-white text-xs tracking-widest uppercase py-4 text-center mb-4"
           testId="link-scanner-app-store"
         />

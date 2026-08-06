@@ -5,7 +5,7 @@ import { readLikelyAppInstalled } from "./app-store";
 
 /**
  * True when we’ve previously seen the custom scheme open the native app.
- * Defaults to false (Download) until proven otherwise.
+ * CTA still defaults to “Open App”; this mainly keeps the label accurate after a successful open.
  */
 export function useLikelyAppInstalled(): boolean {
   const [likely, setLikely] = useState(false);

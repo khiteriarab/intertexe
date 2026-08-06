@@ -43,7 +43,23 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/((?!api/|_next/static|_next/image|favicon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+        // Universal Links file — must stay cacheable JSON (Apple CDN + device fetch).
+        source: '/.well-known/apple-app-site-association',
+        headers: [
+          { key: 'Content-Type', value: 'application/json' },
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
+        ],
+      },
+      {
+        source: '/apple-app-site-association',
+        headers: [
+          { key: 'Content-Type', value: 'application/json' },
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
+        ],
+      },
+      {
+        source:
+          '/((?!api/|_next/static|_next/image|favicon|\\.well-known|apple-app-site-association|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
           { key: 'Pragma', value: 'no-cache' },

@@ -5,13 +5,14 @@ import {
   getAppCtaLabel,
   getAppStoreUrl,
   openAppOrStore,
-  openAppStore,
 } from "../../lib/app-store";
 import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
 
 type Props = {
   className?: string;
   appStoreUrl?: string;
+  /** Deep-link path (e.g. `/scanner`). Defaults to current page. */
+  path?: string;
   /** Override auto Open/Download label. */
   label?: string;
   children?: ReactNode;
@@ -20,11 +21,12 @@ type Props = {
 };
 
 /**
- * App Store CTA — Download opens the store in the same tab; Open tries the native scheme.
+ * Permanent Open App CTA — tries the native app for this path, falls back to App Store.
  */
 export function AppStoreCtaLink({
   className,
   appStoreUrl,
+  path,
   label,
   children,
   testId = "link-app-store-cta",
@@ -33,7 +35,7 @@ export function AppStoreCtaLink({
   const likelyInstalled = useLikelyAppInstalled();
   const [mounted, setMounted] = useState(false);
   const href = getAppStoreUrl(appStoreUrl);
-  const text = label ?? (mounted ? getAppCtaLabel(likelyInstalled) : "Download App");
+  const text = label ?? (mounted ? getAppCtaLabel(likelyInstalled) : "Open App");
 
   useEffect(() => {
     setMounted(true);
@@ -41,11 +43,7 @@ export function AppStoreCtaLink({
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    if (likelyInstalled) {
-      openAppOrStore({ storeUrl: href, preferApp: true });
-    } else {
-      openAppStore(href);
-    }
+    openAppOrStore({ storeUrl: href, path });
     onAfterClick?.();
   };
 

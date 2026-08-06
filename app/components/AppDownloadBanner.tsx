@@ -6,7 +6,6 @@ import {
   getAppCtaLabel,
   getAppStoreUrl,
   openAppOrStore,
-  openAppStore,
 } from "../../lib/app-store";
 import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
@@ -14,6 +13,8 @@ import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 type Props = {
   /** Same App Store URL as the site “Download the App” buttons. */
   appStoreUrl?: string;
+  /** Deep-link path (e.g. `/khiteri`). Defaults to current page. */
+  path?: string;
   /** localStorage key so home vs /khiteri dismissals stay independent. */
   dismissKey?: string;
   /** Serif headline (NAP: “SHOP THE APP”). */
@@ -30,10 +31,11 @@ const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
 /**
- * NAP-style sticky app bar — Open App if installed, Download App otherwise.
+ * NAP-style sticky app bar — Open App → app or App Store.
  */
 export function AppDownloadBanner({
   appStoreUrl,
+  path,
   dismissKey = "app-banner-dismissed",
   title = "Shop the app",
   subtitle = "To use the scanner.",
@@ -71,12 +73,7 @@ export function AppDownloadBanner({
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    if (likelyInstalled) {
-      openAppOrStore({ storeUrl: href, preferApp: true });
-      return;
-    }
-    // Same-tab App Store navigation — most reliable on iOS Safari / in-app browsers.
-    openAppStore(href);
+    openAppOrStore({ storeUrl: href, path });
   };
 
   return (

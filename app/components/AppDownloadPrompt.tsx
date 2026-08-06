@@ -4,7 +4,7 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { getAppStoreUrl, openAppOrStore, getAppCtaLabel, openAppStore } from "../../lib/app-store";
+import { getAppStoreUrl, openAppOrStore, getAppCtaLabel } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
 
@@ -21,6 +21,7 @@ function shouldSkipPath(pathname: string) {
 
 /**
  * Soft NAP-style modal after a few minutes on site — mobile web only.
+ * CTA always tries Open App → App Store fallback.
  */
 export function AppDownloadPrompt() {
   const pathname = usePathname() || "/";
@@ -64,18 +65,14 @@ export function AppDownloadPrompt() {
     }
   };
 
-  const handleDownload = (e: MouseEvent<HTMLAnchorElement>) => {
+  const handleOpen = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     } catch {
       // ignore
     }
-    if (likelyInstalled) {
-      openAppOrStore({ storeUrl: href, preferApp: true });
-    } else {
-      openAppStore(href);
-    }
+    openAppOrStore({ storeUrl: href, path: pathname });
     setOpen(false);
   };
 
@@ -104,7 +101,6 @@ export function AppDownloadPrompt() {
         </button>
 
         <div className="flex flex-col items-center text-center pt-4 pb-2">
-          {/* Native img — more reliable than next/image inside a portal */}
           <img
             src={iconSrc}
             alt="Intertexe"
@@ -129,7 +125,7 @@ export function AppDownloadPrompt() {
           </p>
           <a
             href={href}
-            onClick={handleDownload}
+            onClick={handleOpen}
             rel="noopener noreferrer"
             className="w-full bg-black text-white text-[12px] uppercase tracking-[0.18em] font-medium py-4 min-h-[52px] flex items-center justify-center hover:bg-neutral-800 active:scale-[0.99] transition-all"
             data-testid="link-app-download-prompt"
