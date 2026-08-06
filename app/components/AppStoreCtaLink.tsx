@@ -1,13 +1,7 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
-import { useEffect, useState } from "react";
-import {
-  DEFAULT_APP_STORE_URL,
-  getAppStoreOpenUrl,
-  getAppStoreUrl,
-  isIosInAppBrowser,
-} from "../../lib/app-store";
+import type { ReactNode } from "react";
+import { useAppStoreDownload } from "../../lib/use-app-store-download";
 
 type Props = {
   className?: string;
@@ -27,22 +21,22 @@ export function AppStoreCtaLink({
   testId = "link-app-store-cta",
   onAfterClick,
 }: Props) {
-  const [href, setHref] = useState(getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL);
-
-  useEffect(() => {
-    setHref(getAppStoreOpenUrl(appStoreUrl));
-  }, [appStoreUrl]);
-
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    onAfterClick?.();
-    if (!isIosInAppBrowser()) return;
-    e.preventDefault();
-    window.location.href = getAppStoreOpenUrl(appStoreUrl);
-  };
+  const { href, onDownloadClick, help } = useAppStoreDownload(appStoreUrl);
 
   return (
-    <a href={href} className={className} data-testid={testId} onClick={handleClick}>
-      {children ?? label}
-    </a>
+    <>
+      <a
+        href={href}
+        className={className}
+        data-testid={testId}
+        onClick={(e) => {
+          onAfterClick?.();
+          onDownloadClick(e);
+        }}
+      >
+        {children ?? label}
+      </a>
+      {help}
+    </>
   );
 }
