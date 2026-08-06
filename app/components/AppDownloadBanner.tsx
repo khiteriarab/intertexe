@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import {
   getAppCtaLabel,
   getAppStoreUrl,
+  isAppDeepLinkReady,
   openAppOrStore,
 } from "../../lib/app-store";
 import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
@@ -37,8 +38,8 @@ export function AppDownloadBanner({
   appStoreUrl,
   path,
   dismissKey = "app-banner-dismissed",
-  title = "Shop the app",
-  subtitle = "To use the scanner.",
+  title = "Scan Any Garment, Find Better Fabrics",
+  subtitle = "Available in the app.",
   className = "",
   testId = "banner-app-download",
   mobileOnly = true,
@@ -72,6 +73,8 @@ export function AppDownloadBanner({
   };
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    // Native same-tab App Store navigation is the reliable path on iOS Safari.
+    if (!isAppDeepLinkReady()) return;
     e.preventDefault();
     openAppOrStore({ storeUrl: href, path });
   };
@@ -104,7 +107,7 @@ export function AppDownloadBanner({
       />
 
       <div className="flex-1 min-w-0 py-0.5">
-        <p className="font-serif text-[15px] leading-tight tracking-wide text-white">
+        <p className="font-serif text-[13px] leading-snug tracking-wide text-white line-clamp-2">
           {title}
         </p>
         <p className="mt-0.5 text-[11px] leading-snug text-white/65 font-light truncate">
@@ -115,7 +118,6 @@ export function AppDownloadBanner({
       <a
         href={href}
         onClick={handleClick}
-        rel="noopener noreferrer"
         className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
         data-testid="link-app-open"
       >

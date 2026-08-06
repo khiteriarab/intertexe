@@ -5,7 +5,7 @@ import { SITE_URL } from "./seo-international";
 export const APP_STORE_ID = "6770476520";
 
 /** Canonical live App Store listing (Apple’s `id` form). */
-export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/app/id${APP_STORE_ID}`;
+export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/us/app/intertexe/id${APP_STORE_ID}`;
 
 /** Custom scheme registered on the iOS app — required for same-domain Safari CTAs. */
 export const DEFAULT_APP_URL_SCHEME = "intertexe";
@@ -40,7 +40,7 @@ export function normalizeAppStoreUrl(raw: string): string {
   if (!trimmed || isPlaceholderEnv(trimmed)) return DEFAULT_APP_STORE_URL;
   const idMatch =
     trimmed.match(/(?:id|\/app\/)(\d{8,12})\b/i) || trimmed.match(/\b(\d{8,12})\b/);
-  if (idMatch?.[1]) return `https://apps.apple.com/app/id${idMatch[1]}`;
+  if (idMatch?.[1]) return `https://apps.apple.com/us/app/intertexe/id${idMatch[1]}`;
   if (/^https?:\/\/apps\.apple\.com\//i.test(trimmed)) return trimmed;
   return DEFAULT_APP_STORE_URL;
 }
@@ -137,11 +137,12 @@ export function universalLinkForPath(path?: string): string {
 
 /**
  * Same-tab App Store open.
- * Avoid target=_blank — Safari often shows “Action can't be completed”.
+ * Prefer a real `<a href>` click when possible — JS assign can fail on iOS Safari.
  */
 export function openAppStore(storeUrl?: string): void {
   if (typeof window === "undefined") return;
-  window.location.assign(getAppStoreUrl(storeUrl));
+  const url = getAppStoreUrl(storeUrl);
+  window.location.href = url;
 }
 
 /**

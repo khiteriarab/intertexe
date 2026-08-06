@@ -4,6 +4,7 @@ import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import {
   getAppCtaLabel,
   getAppStoreUrl,
+  isAppDeepLinkReady,
   openAppOrStore,
 } from "../../lib/app-store";
 import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
@@ -21,7 +22,7 @@ type Props = {
 };
 
 /**
- * Permanent Open App CTA — tries the native app for this path, falls back to App Store.
+ * App Store CTA — until deep links are live, a normal App Store href (no JS hijack).
  */
 export function AppStoreCtaLink({
   className,
@@ -42,6 +43,10 @@ export function AppStoreCtaLink({
   }, []);
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!isAppDeepLinkReady()) {
+      onAfterClick?.();
+      return;
+    }
     e.preventDefault();
     openAppOrStore({ storeUrl: href, path });
     onAfterClick?.();
@@ -52,7 +57,6 @@ export function AppStoreCtaLink({
       href={href}
       onClick={handleClick}
       className={className}
-      rel="noopener noreferrer"
       data-testid={testId}
     >
       {children ?? text}
