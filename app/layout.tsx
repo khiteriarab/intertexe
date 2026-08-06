@@ -13,7 +13,6 @@ import {
   SITE_URL,
   pageAlternates,
 } from "../lib/seo-international";
-import { APP_STORE_ID } from "../lib/app-store";
 
 const HOME_DESCRIPTION =
   `Discover ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces across ${CATALOG_STATS.brandCountFormatted} brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to find better natural fiber alternatives at your price point.`;
