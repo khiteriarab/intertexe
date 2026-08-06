@@ -17,7 +17,7 @@ const BETA_COPY = {
   headline: "Join the INTERTEXE Beta",
   body: "Create a free account to access the beta and use the scanner to identify materials while shopping in-store.",
   primaryCta: "Create Account",
-  secondaryCta: "Open App",
+  secondaryCta: "Download App",
 };
 
 const PIECE_WORDS = [

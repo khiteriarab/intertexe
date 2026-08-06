@@ -35,7 +35,7 @@ export function AppStoreCtaLink({
   const likelyInstalled = useLikelyAppInstalled();
   const [mounted, setMounted] = useState(false);
   const href = getAppStoreUrl(appStoreUrl);
-  const text = label ?? (mounted ? getAppCtaLabel(likelyInstalled) : "Open App");
+  const text = label ?? (mounted ? getAppCtaLabel(likelyInstalled) : "Download App");
 
   useEffect(() => {
     setMounted(true);

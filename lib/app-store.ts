@@ -10,6 +10,16 @@ export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/app/id${APP_STORE_I
 /** Custom scheme registered on the iOS app — required for same-domain Safari CTAs. */
 export const DEFAULT_APP_URL_SCHEME = "intertexe";
 
+/**
+ * Until the App Store build with Universal Links + `intertexe://` is public,
+ * CTAs say Download App and go straight to the store (no scheme probe).
+ * Set `NEXT_PUBLIC_APP_DEEP_LINK_READY=1` after that build is live to restore Open App.
+ */
+export function isAppDeepLinkReady(): boolean {
+  const v = (process.env.NEXT_PUBLIC_APP_DEEP_LINK_READY || "").trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
 const LIKELY_INSTALLED_KEY = "intertexe-app-likely-installed";
 const PREFER_DOWNLOAD_KEY = "intertexe-cta-prefer-download";
 
@@ -99,15 +109,15 @@ function readPreferDownloadThisSession(): boolean {
 
 /**
  * NAP-style label:
- * - Open App when we believe the app is installed (or unknown)
- * - Download App after a failed open this session (fallback to store)
+ * - Download App until deep-link build is public
+ * - Then Open App when installed / default; Download App after a failed open this session
  */
 export function getAppCtaLabel(likelyInstalled?: boolean): string {
+  if (!isAppDeepLinkReady()) return "Download App";
   const installed =
     typeof likelyInstalled === "boolean" ? likelyInstalled : readLikelyAppInstalled();
   if (installed) return "Open App";
   if (readPreferDownloadThisSession()) return "Download App";
-  // Launch default: Open App (store shows Open if already installed).
   return "Open App";
 }
 
@@ -149,6 +159,11 @@ export function openAppOrStore(opts?: {
 }): void {
   if (typeof window === "undefined") return;
   const storeUrl = getAppStoreUrl(opts?.storeUrl);
+  // Pre–deep-link build: never probe intertexe:// (Safari “invalid address”).
+  if (!isAppDeepLinkReady()) {
+    openAppStore(storeUrl);
+    return;
+  }
   const scheme = getAppUrlScheme();
   const path = deepLinkPathFromLocation(opts?.path);
   const deepLink = path ? `${scheme}://${path}${window.location.search || ""}` : `${scheme}://`;
