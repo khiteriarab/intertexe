@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { getAppStoreUrl, openAppOrStore, getAppCtaLabel, isAppDeepLinkReady } from "../../lib/app-store";
+import { getAppStoreUrl, DEFAULT_APP_STORE_URL } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
-import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
 
 const DISMISS_KEY = "app-download-prompt-dismissed-at";
 const PROMPT_DELAY_MS = 3 * 60 * 1000; // ~3 minutes engaged — enough to browse before asking
@@ -21,7 +20,6 @@ function shouldSkipPath(pathname: string) {
 
 /**
  * Soft NAP-style modal after a few minutes on site — mobile web only.
- * CTA always tries Open App → App Store fallback.
  */
 export function AppDownloadPrompt() {
   const pathname = usePathname() || "/";
@@ -29,9 +27,7 @@ export function AppDownloadPrompt() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
-  const href = getAppStoreUrl();
-  const likelyInstalled = useLikelyAppInstalled();
-  const ctaLabel = getAppCtaLabel(likelyInstalled);
+  const href = getAppStoreUrl() || DEFAULT_APP_STORE_URL;
 
   useEffect(() => {
     setMounted(true);
@@ -65,16 +61,13 @@ export function AppDownloadPrompt() {
     }
   };
 
-  const handleOpen = (e: MouseEvent<HTMLAnchorElement>) => {
+  const markDismissed = () => {
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     } catch {
       // ignore
     }
     setOpen(false);
-    if (!isAppDeepLinkReady()) return;
-    e.preventDefault();
-    openAppOrStore({ storeUrl: href, path: pathname });
   };
 
   return createPortal(
@@ -126,11 +119,12 @@ export function AppDownloadPrompt() {
           </p>
           <a
             href={href}
-            onClick={handleOpen}
+            target="_self"
+            onClick={markDismissed}
             className="w-full bg-black text-white text-[12px] uppercase tracking-[0.18em] font-medium py-4 min-h-[52px] flex items-center justify-center hover:bg-neutral-800 active:scale-[0.99] transition-all"
             data-testid="link-app-download-prompt"
           >
-            {ctaLabel}
+            Download App
           </a>
           <button
             type="button"

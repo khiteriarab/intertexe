@@ -11,13 +11,12 @@ export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/us/app/intertexe/id
 export const DEFAULT_APP_URL_SCHEME = "intertexe";
 
 /**
- * Until the App Store build with Universal Links + `intertexe://` is public,
- * CTAs say Download App and go straight to the store (no scheme probe).
- * Set `NEXT_PUBLIC_APP_DEEP_LINK_READY=1` after that build is live to restore Open App.
+ * Deep-link Open App path is OFF until the App Store build with
+ * Universal Links + `intertexe://` is public.
+ * Always false for now — do not read env (avoids a Vercel flag re-enabling scheme probes).
  */
 export function isAppDeepLinkReady(): boolean {
-  const v = (process.env.NEXT_PUBLIC_APP_DEEP_LINK_READY || "").trim().toLowerCase();
-  return v === "1" || v === "true" || v === "yes";
+  return false;
 }
 
 const LIKELY_INSTALLED_KEY = "intertexe-app-likely-installed";

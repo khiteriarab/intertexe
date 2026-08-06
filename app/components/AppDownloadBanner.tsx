@@ -1,20 +1,14 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import {
-  getAppCtaLabel,
-  getAppStoreUrl,
-  isAppDeepLinkReady,
-  openAppOrStore,
-} from "../../lib/app-store";
-import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
+import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 type Props = {
   /** Same App Store URL as the site “Download the App” buttons. */
   appStoreUrl?: string;
-  /** Deep-link path (e.g. `/khiteri`). Defaults to current page. */
+  /** Unused until deep links are live (kept for API stability). */
   path?: string;
   /** localStorage key so home vs /khiteri dismissals stay independent. */
   dismissKey?: string;
@@ -32,11 +26,11 @@ const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
 /**
- * NAP-style sticky app bar — Download/Open App → App Store (or app when deep links are live).
+ * Sticky app bar. Download App is a plain App Store link — no JS navigation
+ * (iOS Safari “Action can't be completed” comes from custom-scheme probes).
  */
 export function AppDownloadBanner({
   appStoreUrl,
-  path,
   dismissKey = "app-banner-dismissed",
   title = "Scan Any Garment, Find Better Fabrics",
   subtitle = "Available in the app.",
@@ -47,9 +41,7 @@ export function AppDownloadBanner({
   const [dismissed, setDismissed] = useState(true);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const isMobile = useIsMobileWeb();
-  const likelyInstalled = useLikelyAppInstalled();
-  const href = getAppStoreUrl(appStoreUrl);
-  const ctaLabel = getAppCtaLabel(likelyInstalled);
+  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
 
   useEffect(() => {
     try {
@@ -70,13 +62,6 @@ export function AppDownloadBanner({
     } catch {
       // ignore
     }
-  };
-
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    // Native same-tab App Store navigation is the reliable path on iOS Safari.
-    if (!isAppDeepLinkReady()) return;
-    e.preventDefault();
-    openAppOrStore({ storeUrl: href, path });
   };
 
   return (
@@ -117,11 +102,11 @@ export function AppDownloadBanner({
 
       <a
         href={href}
-        onClick={handleClick}
+        target="_self"
         className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
         data-testid="link-app-open"
       >
-        {ctaLabel}
+        Download App
       </a>
     </div>
   );

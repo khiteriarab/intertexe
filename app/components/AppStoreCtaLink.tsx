@@ -1,20 +1,14 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
-import {
-  getAppCtaLabel,
-  getAppStoreUrl,
-  isAppDeepLinkReady,
-  openAppOrStore,
-} from "../../lib/app-store";
-import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
+import { useEffect, useState, type ReactNode } from "react";
+import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 
 type Props = {
   className?: string;
   appStoreUrl?: string;
-  /** Deep-link path (e.g. `/scanner`). Defaults to current page. */
+  /** Unused until deep links are live (kept for API stability). */
   path?: string;
-  /** Override auto Open/Download label. */
+  /** Override label (defaults to Download App). */
   label?: string;
   children?: ReactNode;
   testId?: string;
@@ -22,44 +16,32 @@ type Props = {
 };
 
 /**
- * App Store CTA — until deep links are live, a normal App Store href (no JS hijack).
+ * Plain App Store link — no custom-scheme probe (Safari “Action can't be completed”).
  */
 export function AppStoreCtaLink({
   className,
   appStoreUrl,
-  path,
-  label,
+  label = "Download App",
   children,
   testId = "link-app-store-cta",
   onAfterClick,
 }: Props) {
-  const likelyInstalled = useLikelyAppInstalled();
   const [mounted, setMounted] = useState(false);
-  const href = getAppStoreUrl(appStoreUrl);
-  const text = label ?? (mounted ? getAppCtaLabel(likelyInstalled) : "Download App");
+  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (!isAppDeepLinkReady()) {
-      onAfterClick?.();
-      return;
-    }
-    e.preventDefault();
-    openAppOrStore({ storeUrl: href, path });
-    onAfterClick?.();
-  };
-
   return (
     <a
       href={href}
-      onClick={handleClick}
+      target="_self"
       className={className}
       data-testid={testId}
+      onClick={() => onAfterClick?.()}
     >
-      {children ?? text}
+      {children ?? (mounted ? label : "Download App")}
     </a>
   );
 }
