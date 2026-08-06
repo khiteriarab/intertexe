@@ -7,9 +7,9 @@ import {
 } from "../../lib/khiteris-edit";
 import { catalogRegionFromCountry, getCountryFromHeaders } from "../../lib/geo-detect";
 import { resolveKhiterisEditForRegion } from "../../lib/khiteri-regional-links";
+import { getAppStoreUrl } from "../../lib/app-store";
 import { KhiterisEditView } from "./KhiterisEditView";
 
-const APP_STORE_URL = "https://apps.apple.com/app/6770476520";
 const CANONICAL = "https://www.intertexe.com/khiteri";
 
 const baseEdit = getKhiterisEditConfig();
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
 };
 
 export default async function KhiteriPage(props: { searchParams?: Promise<{ preview?: string }> }) {
-  const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL || APP_STORE_URL;
+  const appStoreUrl = getAppStoreUrl();
   const country = getCountryFromHeaders(await headers());
   const catalogRegion = catalogRegionFromCountry(country);
   const params = (await props.searchParams) || {};

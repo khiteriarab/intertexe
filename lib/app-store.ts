@@ -2,25 +2,17 @@
 
 export const APP_STORE_ID = "6770476520";
 
-/** Canonical live App Store listing. */
-export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/app/${APP_STORE_ID}`;
+/** Canonical live App Store listing (Apple’s `id` form). */
+export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/app/id${APP_STORE_ID}`;
 
 /**
  * Custom scheme on the iOS app (`intertexe://…`).
  * Only used when we already know the app is installed — probing an unregistered
- * scheme makes Safari show “address is invalid”.
+ * scheme makes Safari show “address is invalid” / “Action can't be completed”.
  */
 export const DEFAULT_APP_URL_SCHEME = "intertexe";
 
 const LIKELY_INSTALLED_KEY = "intertexe-app-likely-installed";
-
-export function getAppStoreUrl(explicit?: string): string {
-  const fromProp = (explicit || "").trim();
-  if (fromProp && !isPlaceholderEnv(fromProp)) return fromProp;
-  const fromEnv = (process.env.NEXT_PUBLIC_APP_STORE_URL || "").trim();
-  if (fromEnv && !isPlaceholderEnv(fromEnv)) return fromEnv;
-  return DEFAULT_APP_STORE_URL;
-}
 
 function isPlaceholderEnv(value: string): boolean {
   const v = value.toLowerCase();
@@ -31,6 +23,25 @@ function isPlaceholderEnv(value: string): boolean {
     v.includes("your-") ||
     v.includes("example")
   );
+}
+
+/** Normalize any App Store URL to the stable https://apps.apple.com/app/id… form. */
+export function normalizeAppStoreUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed || isPlaceholderEnv(trimmed)) return DEFAULT_APP_STORE_URL;
+  // Extract numeric app id from common Apple URL shapes.
+  const idMatch = trimmed.match(/(?:id|\/app\/)(\d{8,12})\b/i) || trimmed.match(/\b(\d{8,12})\b/);
+  if (idMatch?.[1]) return `https://apps.apple.com/app/id${idMatch[1]}`;
+  if (/^https?:\/\/apps\.apple\.com\//i.test(trimmed)) return trimmed;
+  return DEFAULT_APP_STORE_URL;
+}
+
+export function getAppStoreUrl(explicit?: string): string {
+  const fromProp = (explicit || "").trim();
+  if (fromProp && !isPlaceholderEnv(fromProp)) return normalizeAppStoreUrl(fromProp);
+  const fromEnv = (process.env.NEXT_PUBLIC_APP_STORE_URL || "").trim();
+  if (fromEnv && !isPlaceholderEnv(fromEnv)) return normalizeAppStoreUrl(fromEnv);
+  return DEFAULT_APP_STORE_URL;
 }
 
 /** Custom scheme once registered on the iOS app (default: `intertexe`). */
@@ -58,20 +69,32 @@ export function markAppLikelyInstalled(): void {
   }
 }
 
+export function clearLikelyAppInstalled(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(LIKELY_INSTALLED_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 /** Button copy: installed users see Open; everyone else sees Download. */
 export function getAppCtaLabel(likelyInstalled: boolean): string {
   return likelyInstalled ? "Open App" : "Download App";
 }
 
-/** Go straight to the App Store (Download path — no custom scheme). */
+/**
+ * Always open the App Store in the same tab.
+ * Avoid target=_blank — Safari often shows “Action can't be completed” for App Store links in a new tab.
+ */
 export function openAppStore(storeUrl?: string): void {
   if (typeof window === "undefined") return;
   window.location.assign(getAppStoreUrl(storeUrl));
 }
 
 /**
- * Open the native app when we believe it’s installed; otherwise App Store only.
- * Never probe `intertexe://` for Download — Safari errors on an unregistered scheme.
+ * Open the native app only when we believe it’s installed; otherwise App Store.
+ * Never probe `intertexe://` for Download.
  */
 export function openAppOrStore(opts?: {
   path?: string;
@@ -85,7 +108,7 @@ export function openAppOrStore(opts?: {
   const scheme = getAppUrlScheme();
 
   if (!preferApp || !scheme) {
-    window.location.assign(storeUrl);
+    openAppStore(storeUrl);
     return;
   }
 
@@ -97,21 +120,29 @@ export function openAppOrStore(opts?: {
   let left = false;
 
   const onHide = () => {
-    left = true;
-    markAppLikelyInstalled();
+    // Only count a real backgrounding — `blur` alone fires too often and falsely marks “installed”.
+    if (document.hidden) {
+      left = true;
+      markAppLikelyInstalled();
+    }
   };
   document.addEventListener("visibilitychange", onHide);
   window.addEventListener("pagehide", onHide);
-  window.addEventListener("blur", onHide);
 
-  window.location.href = deepLink;
+  try {
+    window.location.href = deepLink;
+  } catch {
+    clearLikelyAppInstalled();
+    openAppStore(storeUrl);
+    return;
+  }
 
   window.setTimeout(() => {
     document.removeEventListener("visibilitychange", onHide);
     window.removeEventListener("pagehide", onHide);
-    window.removeEventListener("blur", onHide);
     if (!left && Date.now() - started < 2200 && !document.hidden) {
-      window.location.assign(storeUrl);
+      clearLikelyAppInstalled();
+      openAppStore(storeUrl);
     }
   }, 1600);
 }

@@ -6,6 +6,7 @@ import {
   getAppCtaLabel,
   getAppStoreUrl,
   openAppOrStore,
+  openAppStore,
 } from "../../lib/app-store";
 import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
@@ -69,10 +70,13 @@ export function AppDownloadBanner({
   };
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    // Download: let the https App Store link work natively (no intertexe:// probe).
-    if (!likelyInstalled) return;
     e.preventDefault();
-    openAppOrStore({ storeUrl: href, preferApp: true });
+    if (likelyInstalled) {
+      openAppOrStore({ storeUrl: href, preferApp: true });
+      return;
+    }
+    // Same-tab App Store navigation — most reliable on iOS Safari / in-app browsers.
+    openAppStore(href);
   };
 
   return (
@@ -114,7 +118,6 @@ export function AppDownloadBanner({
       <a
         href={href}
         onClick={handleClick}
-        target="_blank"
         rel="noopener noreferrer"
         className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
         data-testid="link-app-open"

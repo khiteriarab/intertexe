@@ -4,7 +4,7 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { getAppStoreUrl, openAppOrStore, getAppCtaLabel } from "../../lib/app-store";
+import { getAppStoreUrl, openAppOrStore, getAppCtaLabel, openAppStore } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
 
@@ -65,16 +65,17 @@ export function AppDownloadPrompt() {
   };
 
   const handleDownload = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     } catch {
       // ignore
     }
     if (likelyInstalled) {
-      e.preventDefault();
       openAppOrStore({ storeUrl: href, preferApp: true });
+    } else {
+      openAppStore(href);
     }
-    // else: let the https App Store link open normally
     setOpen(false);
   };
 
@@ -129,7 +130,6 @@ export function AppDownloadPrompt() {
           <a
             href={href}
             onClick={handleDownload}
-            target="_blank"
             rel="noopener noreferrer"
             className="w-full bg-black text-white text-[12px] uppercase tracking-[0.18em] font-medium py-4 min-h-[52px] flex items-center justify-center hover:bg-neutral-800 active:scale-[0.99] transition-all"
             data-testid="link-app-download-prompt"

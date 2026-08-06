@@ -5,6 +5,7 @@ import {
   getAppCtaLabel,
   getAppStoreUrl,
   openAppOrStore,
+  openAppStore,
 } from "../../lib/app-store";
 import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
 
@@ -19,7 +20,7 @@ type Props = {
 };
 
 /**
- * App Store CTA — Download uses a normal https link; Open tries the native scheme.
+ * App Store CTA — Download opens the store in the same tab; Open tries the native scheme.
  */
 export function AppStoreCtaLink({
   className,
@@ -39,12 +40,12 @@ export function AppStoreCtaLink({
   }, []);
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (!likelyInstalled) {
-      onAfterClick?.();
-      return; // let https App Store href open normally
-    }
     e.preventDefault();
-    openAppOrStore({ storeUrl: href, preferApp: true });
+    if (likelyInstalled) {
+      openAppOrStore({ storeUrl: href, preferApp: true });
+    } else {
+      openAppStore(href);
+    }
     onAfterClick?.();
   };
 
@@ -53,7 +54,6 @@ export function AppStoreCtaLink({
       href={href}
       onClick={handleClick}
       className={className}
-      target="_blank"
       rel="noopener noreferrer"
       data-testid={testId}
     >
