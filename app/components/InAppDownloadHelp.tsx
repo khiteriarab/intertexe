@@ -80,11 +80,11 @@ export function InAppDownloadHelp({ open, onClose, appStoreUrl }: Props) {
           Open in Safari
         </p>
         <h2 id="in-app-download-title" className="font-serif text-[22px] leading-tight mb-3 pr-8">
-          TikTok can&apos;t open the App Store
+          Open the App Store in Safari
         </h2>
         <p className="text-[14px] text-neutral-500 font-light leading-relaxed mb-6">
-          Tap below to leave TikTok and open the App Store in Safari. Or tap{" "}
-          <span className="text-neutral-800">···</span> at the top →{" "}
+          TikTok&apos;s browser can&apos;t open the App Store directly. Tap below to continue in
+          Safari. Or tap <span className="text-neutral-800">···</span> →{" "}
           <span className="text-neutral-800">Open in Browser</span>, then Download App.
         </p>
 
