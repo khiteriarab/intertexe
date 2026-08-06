@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { KhiterisEditConfig } from "../../lib/khiteris-edit";
 import { KHITERIS_EDIT_ARCHIVE } from "../../lib/khiteris-edit";
 import { AppDownloadBanner } from "../components/AppDownloadBanner";
+import { AppStoreCtaLink } from "../components/AppStoreCtaLink";
 import { KhiteriPageViewTracker } from "./KhiteriPageViewTracker";
 import { KhiteriProductAffiliateLink } from "./KhiteriProductAffiliateLink";
 import { KhiteriIntroMotion } from "./KhiteriIntroMotion";
@@ -16,7 +17,7 @@ const BETA_COPY = {
   headline: "Join the INTERTEXE Beta",
   body: "Create a free account to access the beta and use the scanner to identify materials while shopping in-store.",
   primaryCta: "Create Account",
-  secondaryCta: "Download the App",
+  secondaryCta: "Download App",
 };
 
 const PIECE_WORDS = [
@@ -175,13 +176,11 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
           <Link href="/account?mode=signup" className="khiteris-edit__cta khiteris-edit__cta--primary">
             {BETA_COPY.primaryCta}
           </Link>
-          <a
-            href={appStoreUrl}
+          <AppStoreCtaLink
+            appStoreUrl={appStoreUrl}
             className="khiteris-edit__cta khiteris-edit__cta--secondary"
-            rel="noopener noreferrer"
-          >
-            {BETA_COPY.secondaryCta}
-          </a>
+            testId="link-khiteri-app-store"
+          />
         </div>
       </section>
 

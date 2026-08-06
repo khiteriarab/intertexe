@@ -9,7 +9,7 @@ import { catalogRegionFromCountry, getCountryFromHeaders } from "../../lib/geo-d
 import { resolveKhiterisEditForRegion } from "../../lib/khiteri-regional-links";
 import { KhiterisEditView } from "./KhiterisEditView";
 
-const APP_STORE_URL = "https://apps.apple.com/app/id6770476520";
+const APP_STORE_URL = "https://apps.apple.com/app/6770476520";
 const CANONICAL = "https://www.intertexe.com/khiteri";
 
 const baseEdit = getKhiterisEditConfig();

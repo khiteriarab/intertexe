@@ -10,6 +10,8 @@ import { getOrCreateSessionId } from "../../lib/session";
 import { scoreColor, FIRST_SCAN_FOOTNOTE, parsePriceNumber } from "../../lib/scanner-copy";
 import { ScanResultEditorial } from "./ScanResultEditorial";
 import { QRCodeSVG } from "qrcode.react";
+import { AppStoreCtaLink } from "../components/AppStoreCtaLink";
+import { getAppStoreUrl } from "../../lib/app-store";
 
 type FiberEntry = { fiber: string; percent: number; isNatural: boolean; classification?: string };
 
@@ -645,7 +647,7 @@ export default function ScannerClient() {
     return () => { stopCamera(); };
   }, [stopCamera]);
 
-  const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL || "#";
+  const appStoreUrl = getAppStoreUrl();
 
   if (device === "iphone" && showInterstitial) {
     return (
@@ -659,13 +661,11 @@ export default function ScannerClient() {
         <p className="text-sm text-gray-500 leading-relaxed mb-12 max-w-xs">
           Point your camera at any price tag or fabric label. Get the fiber composition instantly. Find better natural fiber alternatives at a similar price.
         </p>
-        <a
-          href={appStoreUrl}
+        <AppStoreCtaLink
+          appStoreUrl={appStoreUrl}
           className="w-full max-w-xs bg-black text-white text-xs tracking-widest uppercase py-4 text-center mb-4"
-          style={{ letterSpacing: "0.2em", borderRadius: 0 }}
-        >
-          Download on the App Store
-        </a>
+          testId="link-scanner-app-store"
+        />
         <button type="button" onClick={() => setShowInterstitial(false)} className="text-xs text-gray-400">
           Continue browsing instead
         </button>

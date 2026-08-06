@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState, type MouseEvent } from "react";
-import Image from "next/image";
 import { X } from "lucide-react";
-import { getAppStoreUrl, openAppOrStore } from "../../lib/app-store";
+import {
+  getAppCtaLabel,
+  getAppStoreUrl,
+  openAppOrStore,
+} from "../../lib/app-store";
+import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
+import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 type Props = {
   /** Same App Store URL as the site “Download the App” buttons. */
@@ -16,11 +21,15 @@ type Props = {
   subtitle?: string;
   className?: string;
   testId?: string;
+  /** When true (default), hide on desktop viewports. */
+  mobileOnly?: boolean;
 };
 
+const APP_ICON_SRC = "/app-icon.png";
+const APP_ICON_FALLBACK = "/favicon.png";
+
 /**
- * NAP-style sticky app bar: “SHOP THE APP” + large white OPEN CTA.
- * OPEN tries the native app when a URL scheme is configured, else App Store.
+ * NAP-style sticky app bar — Open App if installed, Download App otherwise.
  */
 export function AppDownloadBanner({
   appStoreUrl,
@@ -29,9 +38,14 @@ export function AppDownloadBanner({
   subtitle = "For a personalized shopping experience.",
   className = "",
   testId = "banner-app-download",
+  mobileOnly = true,
 }: Props) {
   const [dismissed, setDismissed] = useState(true);
+  const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
+  const isMobile = useIsMobileWeb();
+  const likelyInstalled = useLikelyAppInstalled();
   const href = getAppStoreUrl(appStoreUrl);
+  const ctaLabel = getAppCtaLabel(likelyInstalled);
 
   useEffect(() => {
     try {
@@ -43,6 +57,7 @@ export function AppDownloadBanner({
   }, [dismissKey]);
 
   if (dismissed) return null;
+  if (mobileOnly && !isMobile) return null;
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -60,7 +75,7 @@ export function AppDownloadBanner({
 
   return (
     <div
-      className={`w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-3 md:gap-4 px-3 md:px-6 py-3 md:py-3.5 ${className}`}
+      className={`w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-3 px-3 py-3 ${className}`}
       data-testid={testId}
     >
       <button
@@ -73,20 +88,23 @@ export function AppDownloadBanner({
         <X className="w-4 h-4" strokeWidth={1.75} />
       </button>
 
-      <Image
-        src="/app-icon.png"
+      <img
+        src={iconSrc}
         alt=""
         width={44}
         height={44}
-        className="h-11 w-11 shrink-0 rounded-[10px] object-cover"
+        className="h-11 w-11 shrink-0 rounded-[10px] object-cover bg-neutral-800"
         data-testid="img-app-banner-icon"
+        onError={() => {
+          if (iconSrc !== APP_ICON_FALLBACK) setIconSrc(APP_ICON_FALLBACK);
+        }}
       />
 
       <div className="flex-1 min-w-0 py-0.5">
-        <p className="font-serif text-[15px] md:text-[17px] leading-tight tracking-wide text-white">
+        <p className="font-serif text-[15px] leading-tight tracking-wide text-white">
           {title}
         </p>
-        <p className="mt-0.5 text-[11px] md:text-[12px] leading-snug text-white/65 font-light truncate">
+        <p className="mt-0.5 text-[11px] leading-snug text-white/65 font-light truncate">
           {subtitle}
         </p>
       </div>
@@ -94,11 +112,11 @@ export function AppDownloadBanner({
       <a
         href={href}
         onClick={handleOpen}
-        className="flex-shrink-0 bg-white text-black px-5 md:px-7 py-2.5 md:py-3 text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
+        className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
         rel="noopener noreferrer"
         data-testid="link-app-open"
       >
-        Open
+        {ctaLabel}
       </a>
     </div>
   );

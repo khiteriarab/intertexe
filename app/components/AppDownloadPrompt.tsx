@@ -4,8 +4,9 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { getAppStoreUrl, openAppOrStore } from "../../lib/app-store";
+import { getAppStoreUrl, openAppOrStore, getAppCtaLabel } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
+import { useLikelyAppInstalled } from "../../lib/use-likely-app-installed";
 
 const DISMISS_KEY = "app-download-prompt-dismissed-at";
 const PROMPT_DELAY_MS = 3 * 60 * 1000; // ~3 minutes engaged — enough to browse before asking
@@ -28,6 +29,8 @@ export function AppDownloadPrompt() {
   const [open, setOpen] = useState(false);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const href = getAppStoreUrl();
+  const likelyInstalled = useLikelyAppInstalled();
+  const ctaLabel = getAppCtaLabel(likelyInstalled);
 
   useEffect(() => {
     setMounted(true);
@@ -127,7 +130,7 @@ export function AppDownloadPrompt() {
             rel="noopener noreferrer"
             data-testid="link-app-download-prompt"
           >
-            Download on the App Store
+            {ctaLabel}
           </a>
           <button
             type="button"
