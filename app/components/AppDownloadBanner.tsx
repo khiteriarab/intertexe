@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { X } from "lucide-react";
-import { useAppStoreHref } from "../../lib/use-app-store-href";
+import {
+  DEFAULT_APP_STORE_URL,
+  getAppStoreOpenUrl,
+  getAppStoreUrl,
+  isIosInAppBrowser,
+} from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 type Props = {
@@ -20,8 +25,8 @@ const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
 /**
- * Sticky app bar. In Instagram/TikTok in-app browsers, href uses x-safari-https
- * so iOS can leave the WebView and open the App Store (avoids “Action can't be completed”).
+ * Sticky app bar.
+ * In Instagram/TikTok WebViews, break out to Safari so the App Store can open.
  */
 export function AppDownloadBanner({
   appStoreUrl,
@@ -34,8 +39,12 @@ export function AppDownloadBanner({
 }: Props) {
   const [dismissed, setDismissed] = useState(true);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
+  const [href, setHref] = useState(getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL);
   const isMobile = useIsMobileWeb();
-  const href = useAppStoreHref(appStoreUrl);
+
+  useEffect(() => {
+    setHref(getAppStoreOpenUrl(appStoreUrl));
+  }, [appStoreUrl]);
 
   useEffect(() => {
     try {
@@ -58,35 +67,41 @@ export function AppDownloadBanner({
     }
   };
 
+  const handleDownload = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!isIosInAppBrowser()) return; // let Safari follow https normally
+    e.preventDefault();
+    window.location.href = getAppStoreOpenUrl(appStoreUrl);
+  };
+
   return (
     <div
-      className={`relative z-[200] w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-3 px-3 py-3 ${className}`}
+      className={`relative z-[200] w-full shrink-0 bg-[#0a0a0a] text-white flex items-center gap-2 px-2.5 py-2.5 ${className}`}
       data-testid={testId}
     >
       <button
         onClick={handleDismiss}
-        className="flex-shrink-0 p-1.5 -ml-0.5 text-white/55 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="flex-shrink-0 p-1 text-white/55 hover:text-white transition-colors min-h-[40px] min-w-[32px] flex items-center justify-center"
         aria-label="Dismiss"
         data-testid="button-dismiss-banner"
         type="button"
       >
-        <X className="w-4 h-4" strokeWidth={1.75} />
+        <X className="w-3.5 h-3.5" strokeWidth={1.75} />
       </button>
 
       <img
         src={iconSrc}
         alt=""
-        width={44}
-        height={44}
-        className="h-11 w-11 shrink-0 rounded-[10px] object-cover bg-neutral-800"
+        width={40}
+        height={40}
+        className="h-10 w-10 shrink-0 rounded-[9px] object-cover bg-neutral-800"
         data-testid="img-app-banner-icon"
         onError={() => {
           if (iconSrc !== APP_ICON_FALLBACK) setIconSrc(APP_ICON_FALLBACK);
         }}
       />
 
-      <div className="flex-1 min-w-0 py-0.5">
-        <p className="font-serif text-[14px] leading-tight tracking-wide text-white whitespace-nowrap">
+      <div className="flex-1 min-w-0 py-0.5 overflow-visible">
+        <p className="font-serif text-[13px] leading-tight text-white whitespace-nowrap">
           {title}
         </p>
         <p className="mt-0.5 text-[11px] leading-snug text-white/65 font-light whitespace-nowrap">
@@ -96,7 +111,8 @@ export function AppDownloadBanner({
 
       <a
         href={href}
-        className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
+        onClick={handleDownload}
+        className="flex-shrink-0 bg-white text-black px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[40px] flex items-center justify-center"
         data-testid="link-app-open"
       >
         Download App

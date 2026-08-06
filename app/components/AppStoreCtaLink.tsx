@@ -1,7 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useAppStoreHref } from "../../lib/use-app-store-href";
+import type { MouseEvent, ReactNode } from "react";
+import { useEffect, useState } from "react";
+import {
+  DEFAULT_APP_STORE_URL,
+  getAppStoreOpenUrl,
+  getAppStoreUrl,
+  isIosInAppBrowser,
+} from "../../lib/app-store";
 
 type Props = {
   className?: string;
@@ -13,10 +19,6 @@ type Props = {
   onAfterClick?: () => void;
 };
 
-/**
- * App Store CTA — uses x-safari-https:// inside iOS in-app browsers
- * so Instagram/TikTok can hand off to Safari → App Store.
- */
 export function AppStoreCtaLink({
   className,
   appStoreUrl,
@@ -25,15 +27,21 @@ export function AppStoreCtaLink({
   testId = "link-app-store-cta",
   onAfterClick,
 }: Props) {
-  const href = useAppStoreHref(appStoreUrl);
+  const [href, setHref] = useState(getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL);
+
+  useEffect(() => {
+    setHref(getAppStoreOpenUrl(appStoreUrl));
+  }, [appStoreUrl]);
+
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    onAfterClick?.();
+    if (!isIosInAppBrowser()) return;
+    e.preventDefault();
+    window.location.href = getAppStoreOpenUrl(appStoreUrl);
+  };
 
   return (
-    <a
-      href={href}
-      className={className}
-      data-testid={testId}
-      onClick={() => onAfterClick?.()}
-    >
+    <a href={href} className={className} data-testid={testId} onClick={handleClick}>
       {children ?? label}
     </a>
   );

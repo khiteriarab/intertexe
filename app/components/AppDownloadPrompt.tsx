@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { useAppStoreHref } from "../../lib/use-app-store-href";
+import {
+  DEFAULT_APP_STORE_URL,
+  getAppStoreOpenUrl,
+  getAppStoreUrl,
+  isIosInAppBrowser,
+} from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 const DISMISS_KEY = "app-download-prompt-dismissed-at";
@@ -18,19 +23,17 @@ function shouldSkipPath(pathname: string) {
   return SKIP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-/**
- * Soft NAP-style modal after a few minutes on site — mobile web only.
- */
 export function AppDownloadPrompt() {
   const pathname = usePathname() || "/";
   const isMobile = useIsMobileWeb();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
-  const href = useAppStoreHref();
+  const [href, setHref] = useState(DEFAULT_APP_STORE_URL);
 
   useEffect(() => {
     setMounted(true);
+    setHref(getAppStoreOpenUrl());
   }, []);
 
   useEffect(() => {
@@ -61,14 +64,16 @@ export function AppDownloadPrompt() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = (e: MouseEvent<HTMLAnchorElement>) => {
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     } catch {
       // ignore
     }
     setOpen(false);
-    // Do not preventDefault — let the browser follow href to the App Store.
+    if (!isIosInAppBrowser()) return;
+    e.preventDefault();
+    window.location.href = getAppStoreOpenUrl();
   };
 
   return createPortal(
@@ -119,7 +124,7 @@ export function AppDownloadPrompt() {
             Scan any label, save favorites, and shop verified natural fibers.
           </p>
           <a
-            href={href}
+            href={href || getAppStoreUrl()}
             onClick={handleDownload}
             className="w-full bg-black text-white text-[12px] uppercase tracking-[0.18em] font-medium py-4 min-h-[52px] flex items-center justify-center hover:bg-neutral-800 active:scale-[0.99] transition-all"
             data-testid="link-app-download-prompt"
