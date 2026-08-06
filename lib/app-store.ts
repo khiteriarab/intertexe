@@ -5,7 +5,11 @@ export const APP_STORE_ID = "6770476520";
 /** Canonical live App Store listing. */
 export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/app/${APP_STORE_ID}`;
 
-/** Custom scheme registered on the iOS app (`intertexe://…`). */
+/**
+ * Custom scheme on the iOS app (`intertexe://…`).
+ * Only used when we already know the app is installed — probing an unregistered
+ * scheme makes Safari show “address is invalid”.
+ */
 export const DEFAULT_APP_URL_SCHEME = "intertexe";
 
 const LIKELY_INSTALLED_KEY = "intertexe-app-likely-installed";
@@ -59,23 +63,35 @@ export function getAppCtaLabel(likelyInstalled: boolean): string {
   return likelyInstalled ? "Open App" : "Download App";
 }
 
+/** Go straight to the App Store (Download path — no custom scheme). */
+export function openAppStore(storeUrl?: string): void {
+  if (typeof window === "undefined") return;
+  window.location.assign(getAppStoreUrl(storeUrl));
+}
+
 /**
- * Try to open the native app via custom scheme, then fall back to the App Store.
- * If the scheme opens the app (tab hides), we remember that for future “Open App” labels.
+ * Open the native app when we believe it’s installed; otherwise App Store only.
+ * Never probe `intertexe://` for Download — Safari errors on an unregistered scheme.
  */
-export function openAppOrStore(opts?: { path?: string; storeUrl?: string }): void {
+export function openAppOrStore(opts?: {
+  path?: string;
+  storeUrl?: string;
+  /** Force scheme attempt even if we haven’t seen an install yet. */
+  preferApp?: boolean;
+}): void {
   if (typeof window === "undefined") return;
   const storeUrl = getAppStoreUrl(opts?.storeUrl);
+  const preferApp = opts?.preferApp ?? readLikelyAppInstalled();
   const scheme = getAppUrlScheme();
-  const path = (opts?.path || window.location.pathname || "/")
-    .replace(/^\//, "")
-    .replace(/\/$/, "");
 
-  if (!scheme) {
-    window.location.href = storeUrl;
+  if (!preferApp || !scheme) {
+    window.location.assign(storeUrl);
     return;
   }
 
+  const path = (opts?.path || window.location.pathname || "/")
+    .replace(/^\//, "")
+    .replace(/\/$/, "");
   const deepLink = path ? `${scheme}://${path}${window.location.search || ""}` : `${scheme}://`;
   const started = Date.now();
   let left = false;
@@ -95,7 +111,7 @@ export function openAppOrStore(opts?: { path?: string; storeUrl?: string }): voi
     window.removeEventListener("pagehide", onHide);
     window.removeEventListener("blur", onHide);
     if (!left && Date.now() - started < 2200 && !document.hidden) {
-      window.location.href = storeUrl;
+      window.location.assign(storeUrl);
     }
   }, 1600);
 }

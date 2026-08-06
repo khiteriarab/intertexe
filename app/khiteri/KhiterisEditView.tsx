@@ -56,7 +56,7 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
         appStoreUrl={appStoreUrl}
         dismissKey="khiteri-app-banner-dismissed"
         title="Shop the app"
-        subtitle="Download INTERTEXE for a personalized shopping experience."
+        subtitle="To use the scanner."
         testId="banner-khiteri-app-download"
       />
       <KhiteriIntroMotion />

@@ -35,7 +35,7 @@ export function AppDownloadBanner({
   appStoreUrl,
   dismissKey = "app-banner-dismissed",
   title = "Shop the app",
-  subtitle = "For a personalized shopping experience.",
+  subtitle = "To use the scanner.",
   className = "",
   testId = "banner-app-download",
   mobileOnly = true,
@@ -68,9 +68,11 @@ export function AppDownloadBanner({
     }
   };
 
-  const handleOpen = (e: MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    // Download: let the https App Store link work natively (no intertexe:// probe).
+    if (!likelyInstalled) return;
     e.preventDefault();
-    openAppOrStore({ storeUrl: href });
+    openAppOrStore({ storeUrl: href, preferApp: true });
   };
 
   return (
@@ -111,9 +113,10 @@ export function AppDownloadBanner({
 
       <a
         href={href}
-        onClick={handleOpen}
-        className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
+        onClick={handleClick}
+        target="_blank"
         rel="noopener noreferrer"
+        className="flex-shrink-0 bg-white text-black px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[44px] flex items-center justify-center"
         data-testid="link-app-open"
       >
         {ctaLabel}

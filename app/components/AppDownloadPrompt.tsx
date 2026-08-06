@@ -65,13 +65,16 @@ export function AppDownloadPrompt() {
   };
 
   const handleDownload = (e: MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
     } catch {
       // ignore
     }
-    openAppOrStore({ storeUrl: href });
+    if (likelyInstalled) {
+      e.preventDefault();
+      openAppOrStore({ storeUrl: href, preferApp: true });
+    }
+    // else: let the https App Store link open normally
     setOpen(false);
   };
 
@@ -126,8 +129,9 @@ export function AppDownloadPrompt() {
           <a
             href={href}
             onClick={handleDownload}
-            className="w-full bg-black text-white text-[12px] uppercase tracking-[0.18em] font-medium py-4 min-h-[52px] flex items-center justify-center hover:bg-neutral-800 active:scale-[0.99] transition-all"
+            target="_blank"
             rel="noopener noreferrer"
+            className="w-full bg-black text-white text-[12px] uppercase tracking-[0.18em] font-medium py-4 min-h-[52px] flex items-center justify-center hover:bg-neutral-800 active:scale-[0.99] transition-all"
             data-testid="link-app-download-prompt"
           >
             {ctaLabel}

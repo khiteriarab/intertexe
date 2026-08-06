@@ -19,8 +19,7 @@ type Props = {
 };
 
 /**
- * Single App Store CTA — “Open App” if we’ve seen the install, otherwise “Download App”.
- * Click always tries the native scheme first, then the store.
+ * App Store CTA — Download uses a normal https link; Open tries the native scheme.
  */
 export function AppStoreCtaLink({
   className,
@@ -40,8 +39,12 @@ export function AppStoreCtaLink({
   }, []);
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!likelyInstalled) {
+      onAfterClick?.();
+      return; // let https App Store href open normally
+    }
     e.preventDefault();
-    openAppOrStore({ storeUrl: href });
+    openAppOrStore({ storeUrl: href, preferApp: true });
     onAfterClick?.();
   };
 
@@ -50,6 +53,7 @@ export function AppStoreCtaLink({
       href={href}
       onClick={handleClick}
       className={className}
+      target="_blank"
       rel="noopener noreferrer"
       data-testid={testId}
     >
