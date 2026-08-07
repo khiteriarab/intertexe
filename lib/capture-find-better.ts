@@ -1,6 +1,6 @@
 /**
- * Find Better — ranked INTERTEXE catalog alternatives for an enriched capture.
- * Reads verified catalog via catalog_browse_page_v2 / getSmartAlternatives.
+ * Find Better / TX Match — ranked INTERTEXE catalog alternatives for an enriched capture.
+ * Reads verified catalog via catalog_browse_page_v2.
  * Never writes to products / live_products.
  */
 
