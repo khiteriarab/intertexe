@@ -6,7 +6,6 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSmartAlternatives } from "./scanner/get-smart-alternatives";
-import { queryCatalogBrowsePageV2 } from "./catalog-browse-v2";
 import type { CaptureEnrichment, MatchBrief } from "./capture-enrichment";
 
 export type FindBetterAlternative = {
@@ -282,61 +281,46 @@ export async function findBetterAlternatives(
 
   let rows: Record<string, unknown>[] = [];
 
-  // Primary: authoritative catalog_browse_page_v2 (fast, category-hard)
+  // Primary: authoritative catalog_browse_page_v2 via caller client (never products writes)
   if (browseCat) {
-    const minPrice = price != null && price > 0 ? Math.round(price * 0.6) : undefined;
-    const maxPrice = price != null && price > 0 ? Math.round(price * 1.4) : undefined;
+    const minPrice = price != null && price > 0 ? Math.round(price * 0.6) : null;
+    const maxPrice = price != null && price > 0 ? Math.round(price * 1.4) : null;
     const browse = await withTimeout(
-      queryCatalogBrowsePageV2({
-        region,
-        category: browseCat,
-        limit: 48,
-        sort: "most_natural",
-        minPrice,
-        maxPrice,
-        color: input.color || undefined,
-      }),
+      (async () => {
+        const { data, error } = await supabase.rpc("catalog_browse_page_v2", {
+          p_region: region,
+          p_category: browseCat === "pants" ? "bottoms" : browseCat,
+          p_limit: 48,
+          p_offset: 0,
+          p_sort: "most_natural",
+          p_min_price: minPrice,
+          p_max_price: maxPrice,
+          p_color: input.color ? input.color.toLowerCase() : null,
+          p_include_unverified: false,
+        });
+        if (error) throw error;
+        return data as { products?: Record<string, unknown>[] } | null;
+      })(),
       20000
     );
     if (browse?.products?.length) {
-      rows = browse.products.map(browseProductToRow);
-    }
-
-    if (rows.length < 4 && price != null && price > 0) {
-      const wide = await withTimeout(
-        queryCatalogBrowsePageV2({
-          region,
-          category: browseCat,
-          limit: 48,
-          sort: "most_natural",
-          minPrice: Math.round(price * 0.4),
-          maxPrice: Math.round(price * 2.0),
-        }),
-        15000
-      );
-      if (wide?.products?.length) {
-        rows = [...rows, ...wide.products.map(browseProductToRow)];
-      }
-    }
-
-    if (rows.length < 3) {
-      const open = await withTimeout(
-        queryCatalogBrowsePageV2({
-          region,
-          category: browseCat,
-          limit: 48,
-          sort: "most_natural",
-        }),
-        15000
-      );
-      if (open?.products?.length) {
-        rows = [...rows, ...open.products.map(browseProductToRow)];
-      }
+      rows = browse.products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        brand_name: p.brand_name || p.brandName,
+        brand_slug: p.brand_slug || p.brandSlug,
+        image_url: p.image_url || p.imageUrl,
+        price: p.price,
+        currency: p.currency || "USD",
+        composition: p.composition,
+        natural_fiber_percent: p.natural_fiber_percent ?? p.naturalFiberPercent,
+        category: p.category,
+      }));
     }
   }
 
-  // Fallback: getSmartAlternatives when browse empty
-  if (rows.length === 0) {
+  // Fallback: getSmartAlternatives (uses same supabase client)
+  if (rows.length < 4) {
     const smart = await withTimeout(
       getSmartAlternatives(supabase, {
         composition: input.compositionText,
@@ -345,28 +329,18 @@ export async function findBetterAlternatives(
         currency: input.currency,
         category: input.category,
         garmentType,
+        primaryFiber: null,
         naturalFiberPercent: input.naturalFiberPercent,
         region,
-        excludeBrandSlug: null,
-      }).catch((e) => {
-        console.warn("[findBetter] getSmartAlternatives failed", e);
-        return [] as Record<string, unknown>[];
+        excludeBrandSlug: input.brand?.toLowerCase().replace(/\s+/g, "-") || null,
       }),
-      12000
+      15000
     );
-    if (smart?.length) rows = smart as Record<string, unknown>[];
+    if (smart?.length) {
+      const asRows = smart.map((p: Record<string, unknown>) => p);
+      rows = [...rows, ...asRows];
+    }
   }
 
-  const ranked = rankAlternatives(rows, input);
-
-  if (price != null && price > 0 && ranked.length > 0) {
-    const inBand = ranked.filter((a) => {
-      const p = parsePrice(a.price);
-      if (p == null) return true;
-      return p >= price * 0.6 && p <= price * 1.4;
-    });
-    if (inBand.length >= 2) return inBand.slice(0, 8);
-  }
-
-  return ranked.slice(0, 8);
+  return rankAlternatives(rows, input);
 }
