@@ -14,6 +14,11 @@ import {
   type CatalogFilterCoverage,
 } from "./catalog-browse-v2";
 import { isFootwearListing } from "./catalog-product-filters";
+import {
+  filterProductsForIntegrity,
+  integritySpecFromBrowseOpts,
+  type FilterIntegritySpec,
+} from "./catalog-filter-integrity";
 
 function apparelOnlyProducts<T extends { category?: string | null; name?: string | null }>(
   products: T[]
@@ -93,6 +98,34 @@ export type CatalogDirectQueryOpts = {
   isSale?: boolean;
   skipCount?: boolean;
 };
+
+/** Shared post-query integrity gate for every catalog product list. */
+function applyCatalogIntegrity<T extends DirectCatalogProduct>(
+  products: T[],
+  opts: CatalogDirectQueryOpts & { apparelOnly?: boolean }
+): T[] {
+  const categories = opts.categories?.length
+    ? opts.categories
+    : opts.category
+      ? [opts.category]
+      : [];
+  const category =
+    categories.find((c) => c && c !== "all" && c !== "apparel" && c !== "clothing") ||
+    (opts.category === "clothing" ? "clothing" : undefined);
+  const spec: FilterIntegritySpec = integritySpecFromBrowseOpts({
+    category,
+    fiber: opts.fiber,
+    minPrice: opts.minPrice,
+    maxPrice: opts.maxPrice,
+    brand: opts.brand,
+    color: opts.color,
+    isSale: opts.isSale,
+    materialSubtype: opts.materialSubtype || opts.fiberSubtype,
+    fabricConstruction: opts.fabricConstruction,
+    apparelOnly: opts.apparelOnly !== false,
+  });
+  return filterProductsForIntegrity(products, spec);
+}
 
 function parseMoney(price: unknown): number {
   const n = parseFloat(String(price ?? "").replace(/[^0-9.]/g, ""));
@@ -236,8 +269,13 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
         .order("id", { ascending: false })
         .range(offset, offset + limit - 1);
       if (!error && data?.length) {
-        const products = filterConsumerCatalogProducts(
-          data.map((row) => mapDirectRow(row as Record<string, unknown>))
+        const products = applyCatalogIntegrity(
+          apparelOnlyProducts(
+            filterConsumerCatalogProducts(
+              data.map((row) => mapDirectRow(row as Record<string, unknown>))
+            )
+          ),
+          opts
         );
         return {
           products,
@@ -250,8 +288,33 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
     // Consumer catalog — use indexed catalog_list RPC (same as iOS; direct view scan times out).
     if (canUseCatalogListRPC && (!hasNarrowingFilter || opts.fiber || categories.length === 1 || opts.brand || searchText.length >= 2)) {
       const rpc = await queryCatalogListRPC(opts);
-      if (!rpc.error && rpc.products.length > 0) return rpc;
-      if (!hasNarrowingFilter && !rpc.error) return rpc;
+      if (!rpc.error && rpc.products.length > 0) {
+        const products = applyCatalogIntegrity(
+          apparelOnlyProducts(rpc.products as DirectCatalogProduct[]),
+          opts
+        );
+        return {
+          ...rpc,
+          products,
+          total:
+            products.length === 0
+              ? 0
+              : rpc.total,
+          hasMore: products.length === 0 ? false : rpc.hasMore,
+        };
+      }
+      if (!hasNarrowingFilter && !rpc.error) {
+        const products = applyCatalogIntegrity(
+          apparelOnlyProducts((rpc.products || []) as DirectCatalogProduct[]),
+          opts
+        );
+        return {
+          ...rpc,
+          products,
+          total: products.length === 0 && (rpc.products?.length ?? 0) > 0 ? 0 : rpc.total,
+          hasMore: products.length === 0 ? false : rpc.hasMore,
+        };
+      }
     }
 
     // Consumer catalog only — scoped view (composition, womenswear, active, NFP ≥ 80).
@@ -265,10 +328,13 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       pq = applySort(pq, opts.sort);
       const { data, error } = await pq.range(offset, offset + limit - 1);
       if (error) throw error;
-      const products = apparelOnlyProducts(
-        filterConsumerCatalogProducts(
-          (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
-        )
+      const products = applyCatalogIntegrity(
+        apparelOnlyProducts(
+          filterConsumerCatalogProducts(
+            (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
+          )
+        ),
+        opts
       );
       return {
         products,
@@ -295,10 +361,13 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       fq = applySort(fq, opts.sort);
       const { data, error } = await fq.range(offset, offset + limit - 1);
       if (error) throw error;
-      const products = apparelOnlyProducts(
-        filterConsumerCatalogProducts(
-          (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
-        )
+      const products = applyCatalogIntegrity(
+        apparelOnlyProducts(
+          filterConsumerCatalogProducts(
+            (data || []).map((row: any) => mapDirectRow(row as Record<string, unknown>))
+          )
+        ),
+        opts
       );
       return {
         products,
@@ -394,13 +463,20 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       rows = rows.filter((row: any) => parseMoney(row.price) >= opts.minPrice!);
     }
 
-    const products = apparelOnlyProducts(
-      filterConsumerCatalogProducts(
-        rows.map((row: any) => mapDirectRow(row as Record<string, unknown>))
-      )
+    const products = applyCatalogIntegrity(
+      apparelOnlyProducts(
+        filterConsumerCatalogProducts(
+          rows.map((row: any) => mapDirectRow(row as Record<string, unknown>))
+        )
+      ),
+      opts
     );
-    const total = opts.skipCount ? null : offset + products.length + (products.length >= limit ? 1 : 0);
-    const hasMore = products.length >= limit;
+    const total = opts.skipCount
+      ? null
+      : products.length === 0 && rows.length > 0
+        ? 0
+        : offset + products.length + (products.length >= limit ? 1 : 0);
+    const hasMore = products.length >= limit && products.length > 0;
 
     return { products, total, hasMore };
   } catch (err) {
@@ -440,18 +516,21 @@ function mapDirectRow(row: Record<string, unknown>): DirectCatalogProduct {
 }
 
 function mapV2Result(v2: CatalogBrowseV2Result): CatalogLiveQueryResult {
-  // Shop clothing PLP — shoes live on /shop/shoes only.
+  // Shop clothing PLP — shoes live on /shop/shoes only. Integrity already applied in v2.
   const products = apparelOnlyProducts(v2.products as DirectCatalogProduct[]);
   return {
     products,
-    total: v2.total,
-    hasMore: v2.hasMore,
+    total: products.length === 0 && v2.products.length > 0 ? 0 : v2.total,
+    hasMore: products.length === 0 ? false : v2.hasMore,
     productIds: products.map((p) => p.id).filter(Boolean),
     rpcVersion: v2.rpcVersion,
     totalStatus: v2.totalStatus,
     filterCoverage: v2.filterCoverage,
     rpcParams: v2.rpcParams,
-    emptyReason: v2.emptyReason,
+    emptyReason:
+      products.length === 0 && v2.products.length > 0
+        ? "filter_integrity_empty"
+        : v2.emptyReason,
     error: v2.error,
   };
 }

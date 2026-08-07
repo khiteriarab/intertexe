@@ -2,9 +2,15 @@
  * Authoritative shop browse — same `catalog_browse_page_v2` as iOS.
  *
  * Parity rule: for identical RPC params, product IDs must match iOS in order.
- * Do not post-filter, reorder, or broaden results after the RPC returns.
+ * Do not reorder or broaden results after the RPC returns.
+ * Exception: hard-filter integrity may drop invalid rows (never refill).
  */
 import { getServerSupabase } from "./supabase-service-client";
+import {
+  filterProductsForIntegrity,
+  integritySpecFromBrowseOpts,
+  type FilterIntegrityProduct,
+} from "./catalog-filter-integrity";
 
 export type CatalogBrowseV2Opts = {
   region?: string;
@@ -202,7 +208,8 @@ function mapCoverage(raw: unknown): CatalogFilterCoverage | null {
 
 /**
  * Call catalog_browse_page_v2. Returns products in exact server order.
- * Never weakens, drops, or reorders results client-side.
+ * Never weakens filters, reorders, or refills from other categories.
+ * Hard-filter integrity drops invalid rows; empty → honest empty state.
  * Exception: US brand/search with zero rows retries UK once (UK-only labels).
  */
 export async function queryCatalogBrowsePageV2(
@@ -256,15 +263,6 @@ async function queryCatalogBrowsePageV2Once(
 
     const payload = (data ?? {}) as Record<string, unknown>;
     const rows = Array.isArray(payload.products) ? payload.products : [];
-    // Preserve exact RPC order — no consumer post-filter (parity with iOS authoritative path).
-    const products = rows.map((row) => mapProductRow(row as Record<string, unknown>));
-    const productIds = products.map((p) => p.id).filter(Boolean);
-
-    const totalStatus = String(payload.total_status ?? "unavailable") as CatalogBrowseV2Result["totalStatus"];
-    const verifiedTotal =
-      payload.verified_total == null ? null : Number(payload.verified_total);
-    const totalRaw = payload.total == null ? null : Number(payload.total);
-    const total = totalStatus === "exact" ? totalRaw ?? verifiedTotal : null;
     const debug = (payload.debug ?? {}) as Record<string, unknown>;
 
     const emptyReason =
@@ -276,20 +274,88 @@ async function queryCatalogBrowsePageV2Once(
       matchQuality === "error" ||
       rpcError?.code === "timeout";
 
+    const integritySpec = integritySpecFromBrowseOpts(opts);
+    const mapped = rows.map((row) => {
+      const r = row as Record<string, unknown>;
+      const product = mapProductRow(r);
+      const integrityRow: FilterIntegrityProduct = {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        brandSlug: product.brandSlug,
+        price: product.price,
+        composition: product.composition,
+        isSale: product.isSale,
+        shopMaterialFamily: product.shopMaterialFamily,
+        materialSubtype: product.materialSubtype,
+        fabricConstruction: product.fabricConstruction,
+        garment_type: r.garment_type != null ? String(r.garment_type) : null,
+        color: r.color != null ? String(r.color) : null,
+        material_primary: r.material_primary != null ? String(r.material_primary) : null,
+        shop_material_family:
+          r.shop_material_family != null
+            ? String(r.shop_material_family)
+            : product.shopMaterialFamily ?? null,
+        material_subtype:
+          r.material_subtype != null
+            ? String(r.material_subtype)
+            : product.materialSubtype ?? null,
+        fabric_construction:
+          r.fabric_construction != null
+            ? String(r.fabric_construction)
+            : product.fabricConstruction ?? null,
+        is_sale: product.isSale,
+      };
+      return { product, integrityRow };
+    });
+
+    // Preserve RPC order; drop any row that violates hard filters. Never refill.
+    const validIds = new Set(
+      isTimeout
+        ? []
+        : filterProductsForIntegrity(
+            mapped.map((m) => m.integrityRow),
+            integritySpec
+          ).map((p) => String(p.id ?? ""))
+    );
+    const products = isTimeout
+      ? []
+      : mapped.filter((m) => validIds.has(m.product.id)).map((m) => m.product);
+    const productIds = products.map((p) => p.id).filter(Boolean);
+    const integrityEmpty =
+      !isTimeout && mapped.length > 0 && products.length === 0;
+    const emptyIntegrityReason = integritySpec.category
+      ? "no_category_matches"
+      : "filter_integrity_empty";
+
+    const totalStatus = String(payload.total_status ?? "unavailable") as CatalogBrowseV2Result["totalStatus"];
+    const verifiedTotal =
+      payload.verified_total == null ? null : Number(payload.verified_total);
+    const totalRaw = payload.total == null ? null : Number(payload.total);
+    const total = integrityEmpty
+      ? 0
+      : totalStatus === "exact"
+        ? totalRaw ?? verifiedTotal
+        : null;
+
     return {
-      products: isTimeout ? [] : products,
-      productIds: isTimeout ? [] : productIds,
+      products,
+      productIds,
       total: isTimeout ? null : total,
-      hasMore: isTimeout ? false : Boolean(payload.has_more),
-      totalStatus: isTimeout ? "unavailable" : totalStatus,
-      verifiedTotal: isTimeout ? null : verifiedTotal,
+      hasMore: isTimeout || integrityEmpty ? false : Boolean(payload.has_more),
+      totalStatus: isTimeout ? "unavailable" : integrityEmpty ? "exact" : totalStatus,
+      verifiedTotal: isTimeout ? null : integrityEmpty ? 0 : verifiedTotal,
       unverifiedTotal: Number(payload.unverified_total ?? 0),
-      matchQuality: isTimeout ? "error" : matchQuality,
+      matchQuality: isTimeout ? "error" : integrityEmpty ? "none" : matchQuality,
       filterCoverage: mapCoverage(payload.filter_coverage),
       sparseFilters: Array.isArray(payload.sparse_filters)
         ? payload.sparse_filters.map(String)
         : [],
-      emptyReason: isTimeout ? "request_timeout" : emptyReason,
+      emptyReason: isTimeout
+        ? "request_timeout"
+        : integrityEmpty
+          ? emptyIntegrityReason
+          : emptyReason,
       rpcVersion: String(debug.rpc_version ?? "catalog_browse_page_v2"),
       rpcParams,
       error: isTimeout ? "timeout" : undefined,

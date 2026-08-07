@@ -4,7 +4,12 @@ export const revalidate = 0;
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAuthUserId } from "../../../lib/supabase-auth-server";
-import { insertCapture, decodeCapture, type CreateCaptureInput } from "../../../lib/capture";
+import {
+  insertCapture,
+  decodeCapture,
+  enrichCaptureMetadata,
+  type CreateCaptureInput,
+} from "../../../lib/capture";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
 
 function userClient(accessToken: string) {
@@ -29,6 +34,9 @@ function userClient(accessToken: string) {
  *   description?, compositionText?, sku?, collectionId?, decodeNow?,
  *   sourceApp?, itemType?
  * }
+ *
+ * Returns the capture immediately. Async: always light OG/title/image enrichment;
+ * Find Better alternatives when decodeNow / decode_requested.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -67,17 +75,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 
+    const service = getServerSupabase();
     const { capture, duplicate } = await insertCapture(supabase, userId, body, {
-      serviceClient: getServerSupabase(),
+      serviceClient: service,
     });
 
-    if (body.decodeNow && !duplicate) {
+    // Fire-and-forget: save stays immediate
+    // - Always: light URL enrichment (OG/title/image/price) via service client when possible
+    // - decodeNow: full Find Better (enrichment + alternatives)
+    if (!duplicate) {
+      const bgClient = service || supabase;
       const origin = new URL(req.url).origin;
-      // Fire-and-forget decode so save stays immediate
-      void decodeCapture(supabase, userId, capture.id, {
-        accessToken: token,
-        siteOrigin: origin,
-      }).catch(() => undefined);
+      if (body.decodeNow) {
+        void decodeCapture(bgClient, userId, capture.id, {
+          accessToken: token,
+          siteOrigin: origin,
+          findAlternatives: true,
+        }).catch(() => undefined);
+      } else {
+        void enrichCaptureMetadata(bgClient, userId, capture.id).catch(() => undefined);
+      }
     }
 
     return NextResponse.json({
@@ -85,7 +102,7 @@ export async function POST(req: NextRequest) {
       duplicate,
       capture,
       copy: {
-        decodeAction: "Decode This",
+        decodeAction: "Find Better",
         alternativesPrompt: "Love the shape? See it in better materials.",
       },
     });

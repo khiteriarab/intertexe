@@ -32,19 +32,34 @@ export const SHOP_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
   dresses: ["dresses"],
   tops: ["tops_blouses", "shirts"],
   knitwear: ["knitwear", "sweaters_cardigans"],
-  trousers: ["pants_trousers", "shorts"],
-  bottoms: ["pants_trousers", "shorts"],
+  trousers: ["pants_trousers"],
+  bottoms: ["pants_trousers"],
+  pants: ["pants_trousers"],
   outerwear: ["coats", "jackets_blazers"],
   skirts: ["skirts"],
-  jumpsuits: ["other_apparel"],
+  // Hard category: never map to other_apparel (that bucket is polluted with Footwear).
+  jumpsuits: ["jumpsuits"],
   swimwear: ["swim_resortwear"],
-  lingerie: ["other_apparel", "lingerie"],
+  lingerie: ["lingerie"],
   shoes: ["shoes"],
+  bags: ["bags", "handbags"],
   shorts: ["shorts"],
 };
 
 /** Alias for direct-query layer. */
 export const CATEGORY_TO_GARMENT_TYPE = SHOP_CATEGORY_GARMENT_TYPES;
+
+/** Name/category keywords required for coarse buckets (hard AND, not preference). */
+export const SHOP_CATEGORY_TEXT_KEYWORDS: Record<string, string[]> = {
+  jumpsuits: ["jumpsuit", "romper", "playsuit", "overall", "boilersuit"],
+  dresses: ["dress", "gown", "kaftan", "caftan"],
+  trousers: ["pant", "trouser", "slack", "chino", "jean", "denim", "legging", "culotte", "short"],
+  shoes: ["shoe", "sandal", "boot", "sneaker", "loafer", "heel", "pump", "mule", "espadrille"],
+  bags: ["bag", "tote", "handbag", "clutch", "purse", "backpack"],
+};
+
+const FOOTWEAR_TEXT_RE =
+  /\b(shoe|shoes|footwear|sandal|sandals|boot|boots|bootie|booties|sneaker|sneakers|heel|heels|pump|pumps|loafer|loafers|mule|mules|wedge|wedges|espadrille|espadrilles|trainer|trainers|slide|slides|flip[- ]?flop)\b/i;
 
 /** Collection slugs used as shop-style category filters in sale/shop APIs. */
 const COLLECTION_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
@@ -59,10 +74,51 @@ export function applyCategoryFilter(query: any, category: string): any {
   const garmentTypes =
     SHOP_CATEGORY_GARMENT_TYPES[key] ?? COLLECTION_CATEGORY_GARMENT_TYPES[key];
   if (garmentTypes?.length) {
-    return query.in("garment_type", garmentTypes);
+    let q = query.in("garment_type", garmentTypes);
+    // Jumpsuits: also require name/category keyword so residual mislabels cannot leak.
+    if (key === "jumpsuits") {
+      q = q.or(
+        "name.ilike.%jumpsuit%,category.ilike.%jumpsuit%,name.ilike.%romper%,category.ilike.%romper%,name.ilike.%playsuit%,category.ilike.%playsuit%,name.ilike.%overall%,category.ilike.%overall%,name.ilike.%boilersuit%,category.ilike.%boilersuit%"
+      );
+    }
+    return q;
   }
   const needle = category.toLowerCase();
   return query.or(`name.ilike.%${needle}%,category.ilike.%${needle}%`);
+}
+
+/** Post-RPC integrity gate — never ship category-wrong rows. */
+export function productMatchesHardCategory(
+  row: { category?: string | null; name?: string | null; garment_type?: string | null },
+  category?: string | null
+): boolean {
+  if (!category || category === "all" || category === "clothing" || category === "apparel") {
+    // Apparel PLPs must still exclude footwear.
+    return !isFootwearText(`${row.category || ""} ${row.name || ""}`);
+  }
+  const key = category.toLowerCase();
+  const text = `${row.category || ""} ${row.name || ""}`.toLowerCase();
+  if (key !== "shoes" && isFootwearText(text)) return false;
+  const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
+  if (keywords?.length) {
+    if (!keywords.some((k) => text.includes(k))) return false;
+  }
+  const types = garmentTypesForShopCategory(key);
+  if (types?.length) {
+    const gt = String(row.garment_type || "").toLowerCase();
+    if (gt && !types.includes(gt) && key === "jumpsuits") {
+      // Allow keyword-matched jumpsuits even if garment_type not yet backfilled.
+      return keywords!.some((k) => text.includes(k));
+    }
+  }
+  return true;
+}
+
+function isFootwearText(text: string): boolean {
+  if (/\b(belt|wallet|purse|clutch|handbag|tote|backpack|scarf|glove)\b/i.test(text)) {
+    return false;
+  }
+  return FOOTWEAR_TEXT_RE.test(text);
 }
 
 export const SHOP_FIBER_TO_MATERIAL: Record<string, string> = {

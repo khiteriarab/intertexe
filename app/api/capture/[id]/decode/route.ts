@@ -21,7 +21,7 @@ function userClient(accessToken: string) {
 
 type Ctx = { params: Promise<{ id: string }> };
 
-/** POST /api/capture/[id]/decode — Decode This */
+/** POST /api/capture/[id]/decode — Find Better */
 export async function POST(req: NextRequest, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
@@ -36,13 +36,14 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     const capture = await decodeCapture(supabase, userId, id, {
       accessToken: token,
       siteOrigin: new URL(req.url).origin,
+      findAlternatives: true,
     });
 
     return NextResponse.json({
       ok: true,
       capture,
       copy: {
-        decodeAction: "Decode This",
+        decodeAction: "Find Better",
         alternativesPrompt: "Love the shape? See it in better materials.",
       },
     });
