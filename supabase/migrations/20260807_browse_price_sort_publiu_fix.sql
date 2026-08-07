@@ -1,0 +1,4 @@
+-- Fix: alias rewrite replace(order_sql,'c.','u.') corrupted public. → publiu.
+-- Applied live 2026-08-07. Re-apply by patching catalog_browse_page_v2:
+--   replace(replace(order_sql, 'c.', 'u.'), 'p.', 'u.')
+-- with word-boundary regexp_replace that does not rewrite the public schema qualifier.
