@@ -69,6 +69,8 @@ function constraintsLabel(opts) {
   if (opts.minPrice != null) parts.push(`minPrice=${opts.minPrice}`);
   if (opts.brand) parts.push(`brand=${opts.brand}`);
   if (opts.color) parts.push(`color=${opts.color}`);
+  if (opts.sale === true) parts.push("sale=true");
+  if (opts.justIn === true) parts.push("justIn=true");
   if (opts.apparelOnly === false) parts.push("apparelOnly=false");
   return parts.join(", ") || "(none)";
 }
@@ -145,8 +147,16 @@ async function main() {
       opts: { category: "dresses", fiber: "silk", maxPrice: 500 },
     },
     {
+      name: "dresses fiber silk maxPrice 300",
+      opts: { category: "dresses", fiber: "silk", maxPrice: 300 },
+    },
+    {
       name: "trousers fiber linen",
       opts: { category: "trousers", fiber: "linen" },
+    },
+    {
+      name: "trousers fiber linen sale",
+      opts: { category: "trousers", fiber: "linen", sale: true },
     },
     {
       name: "shoes fiber leather maxPrice 300",
@@ -157,18 +167,34 @@ async function main() {
       opts: { fiber: "cashmere", category: "clothing", apparelOnly: true },
     },
     {
+      name: "fiber cashmere justIn",
+      opts: { fiber: "cashmere", category: "clothing", justIn: true, apparelOnly: true },
+    },
+    {
       name: "dresses color black maxPrice 400",
       opts: { category: "dresses", color: "black", maxPrice: 400 },
     },
     {
-      name: brand ? `dresses brand ${brand}` : "dresses brand (skipped)",
+      name: brand ? `dresses brand ${brand} maxPrice 600` : "dresses brand (skipped)",
       opts: brand
-        ? { category: "dresses", brand }
-        : { category: "dresses" },
+        ? { category: "dresses", brand, maxPrice: 600 }
+        : { category: "dresses", maxPrice: 600 },
+    },
+    {
+      name: "tops fiber cotton color white maxPrice 250",
+      opts: { category: "tops", fiber: "cotton", color: "white", maxPrice: 250 },
+    },
+    {
+      name: "skirts fiber silk maxPrice 400",
+      opts: { category: "skirts", fiber: "silk", maxPrice: 400 },
     },
     { name: "jumpsuits no price", opts: { category: "jumpsuits" } },
     { name: "trousers maxPrice 200", opts: { category: "trousers", maxPrice: 200 } },
     { name: "shoes no extras", opts: { category: "shoes", apparelOnly: false } },
+    {
+      name: "dresses sale maxPrice 300",
+      opts: { category: "dresses", sale: true, maxPrice: 300 },
+    },
   ];
 
   const offsets = [0, 24];

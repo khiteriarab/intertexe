@@ -1,12 +1,19 @@
 /**
  * Find Better — ranked INTERTEXE catalog alternatives for an enriched capture.
- * Reads verified catalog via catalog_browse / getSmartAlternatives.
+ * Reads verified catalog via catalog_browse_page_v2 / getSmartAlternatives.
  * Never writes to products / live_products.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSmartAlternatives } from "./scanner/get-smart-alternatives";
 import type { CaptureEnrichment, MatchBrief } from "./capture-enrichment";
+import { buildCatalogBrowseV2Params } from "./catalog-browse-v2";
+import { productMatchesHardCategory } from "./catalog-shop-mappings";
+import {
+  filterProductsForIntegrity,
+  integritySpecFromBrowseOpts,
+  type FilterIntegrityProduct,
+} from "./catalog-filter-integrity";
 
 export type FindBetterAlternative = {
   id: string;
@@ -44,45 +51,89 @@ export type FindBetterInput = {
 const SHOE_RE =
   /\b(shoe|shoes|boot|boots|sneaker|sneakers|heel|heels|sandal|sandals|loafer|footwear)\b/i;
 
+/** Map enrichment garment/category tokens → shop browse category slug. */
 const GARMENT_TO_BROWSE_CATEGORY: Record<string, string> = {
-  trouser: "pants",
-  pants: "pants",
-  trousers: "pants",
+  trouser: "trousers",
+  trousers: "trousers",
+  pant: "trousers",
+  pants: "trousers",
+  bottom: "trousers",
+  bottoms: "trousers",
   dress: "dresses",
+  dresses: "dresses",
   skirt: "skirts",
+  skirts: "skirts",
   top: "tops",
+  tops: "tops",
+  tee: "tops",
+  tshirt: "tops",
+  "t-shirt": "tops",
+  blouse: "tops",
+  shirt: "tops",
+  shirts: "tops",
   knitwear: "knitwear",
+  sweater: "knitwear",
+  cardigan: "knitwear",
   outerwear: "outerwear",
+  coat: "outerwear",
+  jacket: "outerwear",
   jumpsuit: "jumpsuits",
+  jumpsuits: "jumpsuits",
+  romper: "jumpsuits",
+  shoe: "shoes",
+  shoes: "shoes",
+  footwear: "shoes",
 };
 
 function isPantsInspiration(input: FindBetterInput): boolean {
   const cat = `${input.category || ""} ${input.subcategory || ""} ${input.garmentType || ""}`.toLowerCase();
   const must = (input.matchBrief?.mustMatch || []).join(" ").toLowerCase();
+  const title = (input.title || "").toLowerCase();
   return (
     /\b(pant|pants|trouser|trousers)\b/.test(cat) ||
     /\b(pant|pants|trouser|trousers)\b/.test(must) ||
+    /\b(pant|pants|trouser|trousers)\b/.test(title) ||
     input.garmentType === "trouser"
   );
 }
 
 function browseCategoryFor(input: FindBetterInput): string | null {
-  if (isPantsInspiration(input)) return "pants";
-  const key = (input.garmentType || input.category || "").toLowerCase();
-  return GARMENT_TO_BROWSE_CATEGORY[key] || input.category || null;
+  if (isPantsInspiration(input)) return "trousers";
+  const candidates = [
+    input.garmentType,
+    input.subcategory,
+    input.category,
+    ...(input.matchBrief?.mustMatch || []),
+  ]
+    .filter(Boolean)
+    .map((s) => String(s).toLowerCase().trim());
+
+  for (const key of candidates) {
+    if (GARMENT_TO_BROWSE_CATEGORY[key]) return GARMENT_TO_BROWSE_CATEGORY[key];
+    // Partial: "Women's Tops" → tops
+    for (const [token, slug] of Object.entries(GARMENT_TO_BROWSE_CATEGORY)) {
+      if (key.includes(token)) return slug;
+    }
+  }
+  return null;
 }
 
+/**
+ * Hard category gate only — matchBrief.mustMatch is preference/ranking, not a hard AND.
+ * Rule: never return shoes for apparel inspiration; require garment-family match.
+ */
 function matchesHardCategory(product: Record<string, unknown>, input: FindBetterInput): boolean {
-  const hay = `${product.name || ""} ${product.category || ""} ${product.subcategory || ""}`.toLowerCase();
-
-  if (isPantsInspiration(input)) {
-    if (SHOE_RE.test(hay)) return false;
-    return /\b(trouser|trousers|pant|pants|jean|jeans|legging|culotte|slack)\b/.test(hay);
+  const browseCat = browseCategoryFor(input);
+  const row = {
+    category: product.category != null ? String(product.category) : null,
+    name: product.name != null ? String(product.name) : null,
+    garment_type: product.garment_type != null ? String(product.garment_type) : null,
+  };
+  if (browseCat) {
+    return productMatchesHardCategory(row, browseCat);
   }
-
-  const must = input.matchBrief?.mustMatch || [];
-  if (must.length === 0) return !SHOE_RE.test(hay);
-  return must.some((term) => hay.includes(term.toLowerCase())) && !SHOE_RE.test(hay);
+  const hay = `${row.name || ""} ${row.category || ""}`.toLowerCase();
+  return !SHOE_RE.test(hay);
 }
 
 function parsePrice(raw: unknown): number | null {
@@ -106,6 +157,7 @@ function whyFor(
   else if (nfp >= 80) parts.push("Verified natural fiber");
 
   if (isPantsInspiration(input)) parts.push("Same garment type (trousers/pants)");
+  else if (browseCategoryFor(input)) parts.push(`Same category (${browseCategoryFor(input)})`);
 
   const sil = input.silhouette || input.subcategory;
   if (
@@ -174,8 +226,12 @@ function rankAlternatives(
       else score -= 15;
     }
     const hay = `${p.name || ""} ${p.category || ""}`.toLowerCase();
+    // Preferences — never hard-require
     for (const pref of input.matchBrief?.preferred || []) {
       if (pref && hay.includes(pref.toLowerCase())) score += 8;
+    }
+    for (const must of input.matchBrief?.mustMatch || []) {
+      if (must && hay.includes(must.toLowerCase())) score += 15;
     }
     for (const d of input.distinctiveDetails || []) {
       if (d && hay.includes(d.toLowerCase())) score += 12;
@@ -239,34 +295,9 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null
   }
 }
 
-function browseProductToRow(p: {
-  id: string;
-  name: string;
-  brandName: string;
-  brandSlug: string;
-  imageUrl: string;
-  price: string;
-  composition: string;
-  naturalFiberPercent: number;
-  category: string;
-}): Record<string, unknown> {
-  return {
-    id: p.id,
-    name: p.name,
-    brand_name: p.brandName,
-    brand_slug: p.brandSlug,
-    image_url: p.imageUrl,
-    price: p.price,
-    currency: "USD",
-    composition: p.composition,
-    natural_fiber_percent: p.naturalFiberPercent,
-    category: p.category,
-  };
-}
-
 /**
  * Query verified catalog for better-material alternatives.
- * Hard-ANDs garment category (trousers/pants for pant inspiration).
+ * Hard-ANDs garment category; never loosens filters to fill results.
  */
 export async function findBetterAlternatives(
   supabase: SupabaseClient,
@@ -283,39 +314,70 @@ export async function findBetterAlternatives(
 
   // Primary: authoritative catalog_browse_page_v2 via caller client (never products writes)
   if (browseCat) {
-    const minPrice = price != null && price > 0 ? Math.round(price * 0.6) : null;
-    const maxPrice = price != null && price > 0 ? Math.round(price * 1.4) : null;
+    const minPrice = price != null && price > 0 ? Math.round(price * 0.5) : null;
+    const maxPrice = price != null && price > 0 ? Math.round(price * 1.6) : null;
+    const rpcParams = buildCatalogBrowseV2Params({
+      region,
+      category: browseCat,
+      limit: 48,
+      offset: 0,
+      sort: "most_natural",
+      minPrice: minPrice ?? undefined,
+      maxPrice: maxPrice ?? undefined,
+      color: input.color || undefined,
+      includeUnverified: false,
+      apparelOnly: browseCat !== "shoes",
+    });
+
     const browse = await withTimeout(
       (async () => {
-        const { data, error } = await supabase.rpc("catalog_browse_page_v2", {
-          p_region: region,
-          p_category: browseCat === "pants" ? "bottoms" : browseCat,
-          p_limit: 48,
-          p_offset: 0,
-          p_sort: "most_natural",
-          p_min_price: minPrice,
-          p_max_price: maxPrice,
-          p_color: input.color ? input.color.toLowerCase() : null,
-          p_include_unverified: false,
-        });
+        const { data, error } = await supabase.rpc("catalog_browse_page_v2", rpcParams);
         if (error) throw error;
         return data as { products?: Record<string, unknown>[] } | null;
       })(),
       20000
     );
-    if (browse?.products?.length) {
-      rows = browse.products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        brand_name: p.brand_name || p.brandName,
-        brand_slug: p.brand_slug || p.brandSlug,
-        image_url: p.image_url || p.imageUrl,
-        price: p.price,
-        currency: p.currency || "USD",
-        composition: p.composition,
-        natural_fiber_percent: p.natural_fiber_percent ?? p.naturalFiberPercent,
-        category: p.category,
+
+    const products = Array.isArray(browse?.products) ? browse!.products! : [];
+    if (products.length) {
+      const integritySpec = integritySpecFromBrowseOpts({
+        category: browseCat,
+        minPrice,
+        maxPrice,
+        color: input.color,
+        apparelOnly: browseCat !== "shoes",
+      });
+      const integrityRows: FilterIntegrityProduct[] = products.map((p) => ({
+        id: String(p.id ?? ""),
+        name: String(p.name ?? ""),
+        category: p.category != null ? String(p.category) : null,
+        garment_type: p.garment_type != null ? String(p.garment_type) : null,
+        brand_slug: p.brand_slug != null ? String(p.brand_slug) : null,
+        price: p.price as string | number | null,
+        composition: p.composition != null ? String(p.composition) : "",
+        color: p.color != null ? String(p.color) : null,
+        shop_material_family:
+          p.shop_material_family != null ? String(p.shop_material_family) : null,
+        material_primary: p.material_primary != null ? String(p.material_primary) : null,
       }));
+      const keptIds = new Set(
+        filterProductsForIntegrity(integrityRows, integritySpec).map((r) => String(r.id))
+      );
+      rows = products
+        .filter((p) => keptIds.has(String(p.id)))
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          brand_name: p.brand_name || p.brandName,
+          brand_slug: p.brand_slug || p.brandSlug,
+          image_url: p.image_url || p.imageUrl,
+          price: p.price,
+          currency: p.currency || "USD",
+          composition: p.composition,
+          natural_fiber_percent: p.natural_fiber_percent ?? p.naturalFiberPercent,
+          category: p.category,
+          garment_type: p.garment_type,
+        }));
     }
   }
 
@@ -327,7 +389,7 @@ export async function findBetterAlternatives(
         detectedPrice: price,
         price,
         currency: input.currency,
-        category: input.category,
+        category: browseCat || input.category,
         garmentType,
         primaryFiber: null,
         naturalFiberPercent: input.naturalFiberPercent,
