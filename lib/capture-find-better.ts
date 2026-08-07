@@ -5,7 +5,6 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSmartAlternatives } from "./scanner/get-smart-alternatives";
 import type { CaptureEnrichment, MatchBrief } from "./capture-enrichment";
 import { buildCatalogBrowseV2Params } from "./catalog-browse-v2";
 import { productMatchesHardCategory } from "./catalog-shop-mappings";
@@ -152,10 +151,10 @@ function whyFor(
 ): string {
   const parts: string[] = [];
   const nfp = Number(product.natural_fiber_percent) || 0;
-  if (nfp >= 90) parts.push(`${Math.round(nfp)}% natural fiber`);
-  else if (nfp > scannedNfp) parts.push("Higher natural fiber than original");
-  else if (nfp >= 80) parts.push("Verified natural fiber");
+  const price = parsePrice(product.price);
+  const target = input.price;
 
+  // Visual / product affinity first — TX Match is not only material conversion.
   if (isPantsInspiration(input)) parts.push("Same garment type (trousers/pants)");
   else if (browseCategoryFor(input)) parts.push(`Same category (${browseCategoryFor(input)})`);
 
@@ -169,14 +168,27 @@ function whyFor(
     parts.push("Similar silhouette");
   }
 
-  const price = parsePrice(product.price);
-  const target = input.price;
-  if (price != null && target != null && target > 0) {
-    const diff = Math.abs(price - target) / target;
-    if (diff <= 0.4) parts.push("Similar price band");
+  if (input.color) {
+    const color = String(input.color).toLowerCase();
+    const hay = `${product.name || ""} ${product.category || ""}`.toLowerCase();
+    if (color.length >= 3 && hay.includes(color)) parts.push(`Similar color (${input.color})`);
   }
 
-  if (parts.length === 0) parts.push("Catalog match for your inspiration");
+  if (price != null && target != null && target > 0) {
+    const savings = target - price;
+    if (savings >= 50) parts.push(`$${Math.round(savings)} less`);
+    else {
+      const diff = Math.abs(price - target) / target;
+      if (diff <= 0.4) parts.push("Similar price band");
+    }
+  }
+
+  if (nfp >= 90) parts.push(`${Math.round(nfp)}% natural fiber`);
+  else if (scannedNfp > 0 && nfp > scannedNfp + 5) {
+    parts.push("Higher natural fiber than original");
+  } else if (nfp >= 80) parts.push("Verified natural fiber");
+
+  if (parts.length === 0) parts.push("Strong INTERTEXE match for this look");
   return parts.slice(0, 3).join(" · ");
 }
 
@@ -217,15 +229,27 @@ function rankAlternatives(
   const scored = filtered.map((p) => {
     let score = 0;
     const nfp = Number(p.natural_fiber_percent) || 0;
-    score += nfp;
+    // Natural fiber is a quality signal, not the sole definition of a TX Match.
+    score += Math.min(nfp, 100) * 0.45;
     const price = parsePrice(p.price);
     if (targetPrice != null && price != null && targetPrice > 0) {
+      const savings = targetPrice - price;
+      if (savings >= 50) score += 35;
+      else if (savings > 0) score += 18;
       const diff = Math.abs(price - targetPrice) / targetPrice;
-      if (diff <= 0.4) score += 25;
-      else if (diff <= 0.7) score += 10;
-      else score -= 15;
+      if (diff <= 0.35) score += 22;
+      else if (diff <= 0.7) score += 8;
+      else if (price > targetPrice * 1.25) score -= 12;
     }
     const hay = `${p.name || ""} ${p.category || ""}`.toLowerCase();
+    if (input.color) {
+      const color = String(input.color).toLowerCase();
+      if (color.length >= 3 && hay.includes(color)) score += 14;
+    }
+    if (input.silhouette) {
+      const sil = String(input.silhouette).toLowerCase().split(/\s+/)[0];
+      if (sil && hay.includes(sil)) score += 16;
+    }
     // Preferences — never hard-require
     for (const pref of input.matchBrief?.preferred || []) {
       if (pref && hay.includes(pref.toLowerCase())) score += 8;
@@ -249,8 +273,17 @@ function rankAlternatives(
   const out: FindBetterAlternative[] = [];
   for (const { p } of scored) {
     const id = String(p.id);
-    if (seen.has(id)) continue;
+    const brandKey = String(p.brand_name || "")
+      .toLowerCase()
+      .trim();
+    const nameKey = String(p.name || "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    const dedupeKey = `${brandKey}::${nameKey}`;
+    if (seen.has(id) || (nameKey && seen.has(dedupeKey))) continue;
     seen.add(id);
+    if (nameKey) seen.add(dedupeKey);
     out.push(toAlternative(p, input, scannedNfp));
     if (out.length >= 12) break;
   }
@@ -324,7 +357,7 @@ export async function findBetterAlternatives(
       sort: "most_natural",
       minPrice: minPrice ?? undefined,
       maxPrice: maxPrice ?? undefined,
-      color: input.color || undefined,
+      // Color/silhouette are ranking preferences for TX Match — not hard browse filters.
       includeUnverified: false,
       apparelOnly: browseCat !== "shoes",
     });
@@ -344,7 +377,6 @@ export async function findBetterAlternatives(
         category: browseCat,
         minPrice,
         maxPrice,
-        color: input.color,
         apparelOnly: browseCat !== "shoes",
       });
       const integrityRows: FilterIntegrityProduct[] = products.map((p) => ({
@@ -381,28 +413,70 @@ export async function findBetterAlternatives(
     }
   }
 
-  // Fallback: getSmartAlternatives (uses same supabase client)
-  if (rows.length < 4) {
-    const smart = await withTimeout(
-      getSmartAlternatives(supabase, {
-        composition: input.compositionText,
-        detectedPrice: price,
-        price,
-        currency: input.currency,
-        category: browseCat || input.category,
-        garmentType,
-        primaryFiber: null,
-        naturalFiberPercent: input.naturalFiberPercent,
-        region,
-        excludeBrandSlug: input.brand?.toLowerCase().replace(/\s+/g, "-") || null,
-      }),
-      15000
+  // Retry browse without price band when the first pass is thin.
+  if (rows.length < 4 && browseCat) {
+    const wide = await withTimeout(
+      (async () => {
+        const { data, error } = await supabase.rpc(
+          "catalog_browse_page_v2",
+          buildCatalogBrowseV2Params({
+            region,
+            category: browseCat,
+            limit: 48,
+            offset: 0,
+            sort: "most_natural",
+            includeUnverified: false,
+            apparelOnly: browseCat !== "shoes",
+          })
+        );
+        if (error) throw error;
+        return data as { products?: Record<string, unknown>[] } | null;
+      })(),
+      12000
     );
-    if (smart?.length) {
-      const asRows = smart.map((p: Record<string, unknown>) => p);
-      rows = [...rows, ...asRows];
+    const products = Array.isArray(wide?.products) ? wide!.products! : [];
+    if (products.length) {
+      const integritySpec = integritySpecFromBrowseOpts({
+        category: browseCat,
+        apparelOnly: browseCat !== "shoes",
+      });
+      const integrityRows: FilterIntegrityProduct[] = products.map((p) => ({
+        id: String(p.id ?? ""),
+        name: String(p.name ?? ""),
+        category: p.category != null ? String(p.category) : null,
+        garment_type: p.garment_type != null ? String(p.garment_type) : null,
+        brand_slug: p.brand_slug != null ? String(p.brand_slug) : null,
+        price: p.price as string | number | null,
+        composition: p.composition != null ? String(p.composition) : "",
+        color: p.color != null ? String(p.color) : null,
+        shop_material_family:
+          p.shop_material_family != null ? String(p.shop_material_family) : null,
+        material_primary: p.material_primary != null ? String(p.material_primary) : null,
+      }));
+      const keptIds = new Set(
+        filterProductsForIntegrity(integrityRows, integritySpec).map((r) => String(r.id))
+      );
+      const extra = products
+        .filter((p) => keptIds.has(String(p.id)))
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          brand_name: p.brand_name || p.brandName,
+          brand_slug: p.brand_slug || p.brandSlug,
+          image_url: p.image_url || p.imageUrl,
+          price: p.price,
+          currency: p.currency || "USD",
+          composition: p.composition,
+          natural_fiber_percent: p.natural_fiber_percent ?? p.naturalFiberPercent,
+          category: p.category,
+          garment_type: p.garment_type,
+        }));
+      rows = [...rows, ...extra];
     }
   }
+
+  // Optional smart fallback removed from the hot path — it can hang on cold catalog queries.
+  // TX Match relies on catalog_browse_page_v2 (category-hard) + ranking preferences.
 
   return rankAlternatives(rows, input);
 }

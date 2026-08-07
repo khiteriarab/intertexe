@@ -12,8 +12,18 @@ import {
 import { detectGarmentType } from "./scanner/detect-garment-type";
 
 export type ProvenanceEntry = {
-  source: "json_ld" | "open_graph" | "meta" | "heuristics" | "retailer" | "url";
+  source:
+    | "json_ld"
+    | "open_graph"
+    | "meta"
+    | "heuristics"
+    | "retailer"
+    | "url"
+    | "catalog"
+    | "openai_inferred";
   confidence: number;
+  model?: string;
+  at?: string;
 };
 
 export type MatchBrief = {
@@ -423,6 +433,8 @@ export function buildMatchBrief(input: {
     mustMatch,
     preferred,
     flexible,
+    // Soft catalog preference — not the product definition of TX Match.
+    // Price, silhouette, color, and details can rank a match even when NFP is already high.
     targetNaturalFiberImprovement: true,
     targetPriceRange,
     region: "us",
@@ -443,10 +455,15 @@ function looksLikeComposition(text: string): boolean {
 }
 
 function cleanComposition(text: string): string {
-  return text
-    .replace(/\s*(hand wash|machine wash|dry clean|do not|wash cold|wash warm)[\s\S]*$/i, "")
-    .replace(/\s+/g, " ")
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  // Keep only the fiber-percentage clause — never append care/fit marketing copy.
+  const m = trimmed.match(
+    /^(\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*(?:,\s*\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*){0,6})/
+  );
+  const core = (m?.[1] || trimmed)
+    .replace(/\s*(hand wash|machine wash|dry clean|do not|wash cold|wash warm|straight cut|flowing hem|washable)[\s\S]*$/i, "")
     .trim();
+  return core;
 }
 
 function extractCompositionHeuristics(html: string): string | null {
@@ -756,4 +773,120 @@ export function enrichmentToAttributes(e: CaptureEnrichment): Record<string, unk
     distinctiveDetails: e.distinctiveDetails,
     garmentType: e.garmentType,
   };
+}
+
+function isHostnameLikeTitle(title: string | null | undefined, retailer: string | null | undefined): boolean {
+  const t = String(title || "").trim().toLowerCase();
+  if (!t) return true;
+  const host = String(retailer || "").trim().toLowerCase().replace(/^www\./, "");
+  if (host && (t === host || t === `www.${host}`)) return true;
+  return /^[a-z0-9.-]+\.(com|co|net|org|io|shop)(\.[a-z]{2})?$/i.test(t);
+}
+
+/**
+ * Enough structured signal for TX Match without OpenAI.
+ * Composition is optional — never block matching on missing composition.
+ */
+export function enrichmentIsSufficient(e: CaptureEnrichment): boolean {
+  if (isHostnameLikeTitle(e.title, e.retailer)) return false;
+  if (!e.title || !e.imageUrl) return false;
+  if (!e.brand && !e.retailer) return false;
+  if (e.price == null) return false;
+  if (!e.category && !e.garmentType) return false;
+  return true;
+}
+
+export function materialStatusFromCompositionProvenance(
+  provenance: Record<string, ProvenanceEntry>,
+  compositionText: string | null | undefined
+): "verified" | "source_page" | "ai_estimated" | "unknown" {
+  if (!compositionText || !String(compositionText).trim()) return "unknown";
+  const entry = provenance.compositionText;
+  if (!entry) return "ai_estimated";
+  if (entry.source === "catalog") return "verified";
+  if (
+    entry.source === "json_ld" ||
+    entry.source === "open_graph" ||
+    entry.source === "retailer" ||
+    entry.source === "meta"
+  ) {
+    return "source_page";
+  }
+  // heuristics + openai_inferred → inferred, never verified
+  return "ai_estimated";
+}
+
+export function mergeEnrichment(
+  base: CaptureEnrichment,
+  patch: Partial<CaptureEnrichment>,
+  patchProvenance: Record<string, ProvenanceEntry>
+): CaptureEnrichment {
+  const out: CaptureEnrichment = { ...base, provenance: { ...base.provenance } };
+  const fill = <K extends keyof CaptureEnrichment>(key: K) => {
+    const current = out[key];
+    const next = patch[key];
+    const empty =
+      current == null ||
+      current === "" ||
+      (Array.isArray(current) && current.length === 0);
+    if (empty && next != null && next !== "") {
+      (out as any)[key] = next;
+      if (patchProvenance[String(key)]) {
+        out.provenance[String(key)] = patchProvenance[String(key)];
+      }
+    }
+  };
+  fill("title");
+  fill("brand");
+  fill("price");
+  fill("currency");
+  fill("imageUrl");
+  fill("description");
+  fill("compositionText");
+  fill("category");
+  fill("subcategory");
+  fill("color");
+  fill("pattern");
+  fill("silhouette");
+  fill("fit");
+  fill("length");
+  fill("garmentType");
+  if (
+    (!(out.distinctiveDetails?.length > 0) &&
+      Array.isArray(patch.distinctiveDetails) &&
+      patch.distinctiveDetails.length > 0)
+  ) {
+    out.distinctiveDetails = patch.distinctiveDetails;
+    if (patchProvenance.distinctiveDetails) {
+      out.provenance.distinctiveDetails = patchProvenance.distinctiveDetails;
+    }
+  }
+  if (patch.matchBrief) {
+    out.matchBrief = patch.matchBrief;
+    if (patchProvenance.matchBrief) out.provenance.matchBrief = patchProvenance.matchBrief;
+  }
+  return out;
+}
+
+/** Compact page text for AI fallback (optional). */
+export function pageTextSnippetFromHtml(html: string): string {
+  if (!html) return "";
+  const og: string[] = [];
+  const metaRegex =
+    /<meta[^>]*(?:property|name)=["']([^"']+)["'][^>]*content=["']([^"']*)["'][^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = metaRegex.exec(html)) !== null) {
+    og.push(`${m[1]}=${m[2]}`);
+  }
+  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "";
+  const body = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 4500);
+  return [`Title: ${title}`, og.length ? `Meta: ${og.slice(0, 40).join(", ")}` : "", body]
+    .filter(Boolean)
+    .join("\n\n");
 }

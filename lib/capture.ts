@@ -4,13 +4,23 @@ import { normalizeScanURL } from "./url-composition-cache";
 import {
   enrichFromUrl,
   enrichmentToAttributes,
+  enrichmentIsSufficient,
+  materialStatusFromCompositionProvenance,
+  mergeEnrichment,
+  pageTextSnippetFromHtml,
   type CaptureEnrichment,
 } from "./capture-enrichment";
+import { enrichGapsWithOpenAI } from "./capture-enrichment-ai";
 import {
   findBetterAlternatives,
   findBetterInputFromEnrichment,
   type FindBetterAlternative,
 } from "./capture-find-better";
+import { fetchPageHTML } from "./scanner/retailer-extraction";
+import { getServerSupabase } from "./supabase-service-client";
+
+const MAX_ENRICHMENT_ATTEMPTS = 4;
+const ENRICHMENT_LOCK_MS = 3 * 60 * 1000;
 
 export type CaptureItemType =
   | "catalog_product"
@@ -332,14 +342,20 @@ function enrichmentPatch(
     match_brief: enrichment.matchBrief,
     provenance: enrichment.provenance,
     enrichment_status: "ready",
+    material_status:
+      extras?.materialStatus ||
+      materialStatusFromCompositionProvenance(
+        enrichment.provenance,
+        preferComposition
+      ),
+    material_confidence:
+      extras?.materialConfidence ??
+      enrichment.provenance?.compositionText?.source ??
+      null,
     ...(extras?.naturalFiberPercent != null
       ? { natural_fiber_percent: extras.naturalFiberPercent }
       : {}),
     ...(extras?.fiberBreakdown != null ? { fiber_breakdown: extras.fiberBreakdown } : {}),
-    ...(extras?.materialStatus ? { material_status: extras.materialStatus } : {}),
-    ...(extras?.materialConfidence != null
-      ? { material_confidence: extras.materialConfidence }
-      : {}),
     ...(extras?.resolutionStatus
       ? { resolution_status: extras.resolutionStatus }
       : {}),
@@ -354,58 +370,346 @@ function enrichmentPatch(
 
 /**
  * Light metadata enrichment (OG/title/image/price/category). Always safe async after save.
- * Does NOT write products. Skips Find Better alternatives.
+ * Durable state machine: pending → enriching → ready | enrichment_retry | needs_information | failed
+ * Does NOT write products. Skips Find Better alternatives unless decode was requested.
  */
 export async function enrichCaptureMetadata(
   supabase: SupabaseClient,
   userId: string,
-  captureId: string
+  captureId: string,
+  opts?: { force?: boolean; findAlternatives?: boolean }
 ) {
+  const claimed = await claimEnrichmentLock(supabase, userId, captureId, opts?.force === true);
+  if (!claimed.ok) {
+    return claimed.capture;
+  }
+
+  const capture = claimed.capture;
+  const url = (capture.canonical_url || capture.original_url) as string | null;
+  if (!url) {
+    await supabase
+      .from("external_captures")
+      .update({
+        enrichment_status: "skipped",
+        enrichment_locked_at: null,
+        error_message: "No source URL",
+      })
+      .eq("id", captureId);
+    return capture;
+  }
+
+  try {
+    let enrichment = await enrichFromUrl(url);
+
+    // OpenAI fallback only when deterministic extraction is insufficient
+    let aiUsed = false;
+    let aiModel: string | null = null;
+    let aiTokens: number | null = null;
+    if (!enrichmentIsSufficient(enrichment)) {
+      let snippet = "";
+      try {
+        const html = await fetchPageHTML(url);
+        snippet = pageTextSnippetFromHtml(html || "");
+      } catch {
+        snippet = "";
+      }
+      const ai = await enrichGapsWithOpenAI({
+        url,
+        existing: enrichment,
+        pageTextSnippet: snippet,
+        imageUrl: enrichment.imageUrl,
+      });
+      if (!ai.skipped) {
+        enrichment = mergeEnrichment(enrichment, ai.patch, ai.provenance);
+        aiUsed = true;
+        aiModel = ai.usage.model;
+        aiTokens = ai.usage.totalTokens;
+        await logCaptureAiUsage(userId, captureId, ai.usage);
+      }
+    }
+
+    const materialStatus = materialStatusFromCompositionProvenance(
+      enrichment.provenance,
+      enrichment.compositionText
+    );
+
+    let alternatives: FindBetterAlternative[] | null = null;
+    let resolutionStatus: ResolutionStatus | undefined;
+    const shouldFindAlts =
+      opts?.findAlternatives === true || Boolean(capture.decode_requested);
+
+    if (shouldFindAlts) {
+      try {
+        const fbInput = findBetterInputFromEnrichment(enrichment, {
+          naturalFiberPercent:
+            typeof capture.natural_fiber_percent === "number"
+              ? capture.natural_fiber_percent
+              : null,
+        });
+        alternatives = await findBetterAlternatives(supabase, fbInput);
+        resolutionStatus = alternatives.length ? "alternatives_ready" : "analyzed";
+      } catch (e) {
+        console.warn("[enrichCaptureMetadata] TX Match alternatives failed", e);
+        resolutionStatus = "analyzed";
+        alternatives = [];
+      }
+    }
+
+    const sufficient = enrichmentIsSufficient(enrichment);
+    const patch = {
+      ...enrichmentPatch(enrichment, capture, {
+        materialStatus,
+        resolutionStatus,
+        alternatives: alternatives ?? undefined,
+      }),
+      enrichment_status: sufficient
+        ? "ready"
+        : enrichment.title && !isPlaceholderTitle(enrichment.title, enrichment.retailer)
+          ? "needs_information"
+          : "enrichment_retry",
+      enrichment_locked_at: null,
+      enrichment_next_retry_at: sufficient
+        ? null
+        : new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      enrichment_ai_used: aiUsed || Boolean(capture.enrichment_ai_used),
+      enrichment_ai_model: aiModel || capture.enrichment_ai_model || null,
+      enrichment_ai_at: aiUsed ? new Date().toISOString() : capture.enrichment_ai_at || null,
+      enrichment_ai_tokens: aiTokens ?? capture.enrichment_ai_tokens ?? null,
+      error_message: sufficient ? null : "Enrichment incomplete — will retry",
+      // Never lose original URL
+      original_url: capture.original_url,
+      canonical_url: capture.canonical_url || capture.original_url,
+    };
+
+    // Soft-fail columns that may not exist pre-migration
+    let { data: updated, error: upErr } = await supabase
+      .from("external_captures")
+      .update(patch)
+      .eq("id", captureId)
+      .select("*")
+      .single();
+
+    if (upErr && /column|schema cache/i.test(upErr.message)) {
+      const {
+        enrichment_ai_used: _a,
+        enrichment_ai_model: _b,
+        enrichment_ai_at: _c,
+        enrichment_ai_tokens: _d,
+        enrichment_next_retry_at: _e,
+        enrichment_locked_at: _f,
+        ...core
+      } = patch as Record<string, unknown>;
+      ({ data: updated, error: upErr } = await supabase
+        .from("external_captures")
+        .update(core)
+        .eq("id", captureId)
+        .select("*")
+        .single());
+    }
+    if (upErr) throw upErr;
+
+    await supabase.from("capture_events").insert({
+      user_id: userId,
+      capture_id: captureId,
+      event_type: "enrichment_succeeded",
+      metadata: {
+        sufficient,
+        ai_used: aiUsed,
+        ai_tokens: aiTokens,
+        alternatives_count: alternatives?.length ?? 0,
+      },
+    });
+
+    return updated;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Enrichment failed";
+    const attempts = Number(capture.enrichment_attempt_count || 0);
+    const status =
+      attempts >= MAX_ENRICHMENT_ATTEMPTS ? "failed" : "enrichment_retry";
+    await supabase
+      .from("external_captures")
+      .update({
+        enrichment_status: status,
+        enrichment_locked_at: null,
+        enrichment_next_retry_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        error_message: message,
+      })
+      .eq("id", captureId);
+
+    await supabase.from("capture_events").insert({
+      user_id: userId,
+      capture_id: captureId,
+      event_type: "enrichment_failed",
+      metadata: { error: message, status, attempts },
+    });
+    throw e;
+  }
+}
+
+type ClaimResult =
+  | { ok: true; capture: Record<string, unknown> }
+  | { ok: false; capture: Record<string, unknown> | null; reason: string };
+
+async function claimEnrichmentLock(
+  supabase: SupabaseClient,
+  userId: string,
+  captureId: string,
+  force: boolean
+): Promise<ClaimResult> {
   const { data: capture, error } = await supabase
     .from("external_captures")
     .select("*")
     .eq("id", captureId)
     .eq("user_id", userId)
     .maybeSingle();
-
   if (error) throw error;
-  if (!capture) throw new Error("Capture not found");
+  if (!capture) return { ok: false, capture: null, reason: "not_found" };
 
-  const url = capture.canonical_url || capture.original_url;
-  if (!url) {
-    await supabase
-      .from("external_captures")
-      .update({ enrichment_status: "skipped" })
-      .eq("id", captureId);
-    return capture;
+  const status = String(capture.enrichment_status || "pending");
+  const lockedAt = capture.enrichment_locked_at
+    ? new Date(String(capture.enrichment_locked_at)).getTime()
+    : 0;
+  const lockFresh =
+    (status === "enriching" || status === "running") &&
+    lockedAt > 0 &&
+    Date.now() - lockedAt < ENRICHMENT_LOCK_MS;
+
+  if (lockFresh && !force) {
+    return { ok: false, capture, reason: "locked" };
   }
 
-  await supabase
-    .from("external_captures")
-    .update({ enrichment_status: "running" })
-    .eq("id", captureId);
+  const attempts = Number(capture.enrichment_attempt_count || 0);
+  if (!force && status === "ready" && !isCaptureEnrichmentIncomplete(capture)) {
+    return { ok: false, capture, reason: "already_ready" };
+  }
+  if (!force && attempts >= MAX_ENRICHMENT_ATTEMPTS && status === "failed") {
+    return { ok: false, capture, reason: "max_attempts" };
+  }
 
-  try {
-    const enrichment = await enrichFromUrl(url);
-    const patch = {
-      ...enrichmentPatch(enrichment, capture),
-      enrichment_status: "ready",
-    };
-    const { data: updated, error: upErr } = await supabase
+  const nextAttempt = attempts + 1;
+  const { data: claimed, error: claimErr } = await supabase
+    .from("external_captures")
+    .update({
+      enrichment_status: "enriching",
+      enrichment_locked_at: new Date().toISOString(),
+      enrichment_attempt_count: nextAttempt,
+      error_message: null,
+    })
+    .eq("id", captureId)
+    .eq("user_id", userId)
+    .select("*")
+    .maybeSingle();
+
+  if (claimErr && /column|schema cache/i.test(claimErr.message)) {
+    // Pre-migration: fall back to running without lock columns
+    const { data: claimedLegacy } = await supabase
       .from("external_captures")
-      .update(patch)
+      .update({ enrichment_status: "running" })
       .eq("id", captureId)
+      .eq("user_id", userId)
       .select("*")
-      .single();
-    if (upErr) throw upErr;
-    return updated;
+      .maybeSingle();
+    if (!claimedLegacy) return { ok: false, capture, reason: "claim_failed" };
+    return { ok: true, capture: { ...claimedLegacy, enrichment_attempt_count: nextAttempt } };
+  }
+
+  if (claimErr) throw claimErr;
+  if (!claimed) return { ok: false, capture, reason: "claim_failed" };
+  return { ok: true, capture: claimed };
+}
+
+export function isCaptureEnrichmentIncomplete(capture: Record<string, unknown>): boolean {
+  const status = String(capture.enrichment_status || "pending");
+  if (
+    status === "pending" ||
+    status === "enrichment_retry" ||
+    status === "needs_information" ||
+    status === "failed"
+  ) {
+    return true;
+  }
+  if (isPlaceholderTitle(capture.title, capture.retailer)) return true;
+  if (!capture.image_url && (capture.original_url || capture.canonical_url)) return true;
+  // Stale enriching lock
+  if (status === "enriching" || status === "running") {
+    const lockedAt = capture.enrichment_locked_at
+      ? new Date(String(capture.enrichment_locked_at)).getTime()
+      : 0;
+    if (!lockedAt || Date.now() - lockedAt >= ENRICHMENT_LOCK_MS) return true;
+  }
+  return false;
+}
+
+/**
+ * Opening an Inspiration recovers stalled/failed enrichment without re-sharing.
+ * Safe against duplicate concurrent workers via claimEnrichmentLock.
+ */
+export async function recoverCaptureEnrichment(
+  supabase: SupabaseClient,
+  userId: string,
+  captureId: string
+): Promise<{ triggered: boolean; reason: string }> {
+  const { data: capture } = await supabase
+    .from("external_captures")
+    .select("*")
+    .eq("id", captureId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!capture) return { triggered: false, reason: "not_found" };
+  if (!isCaptureEnrichmentIncomplete(capture)) {
+    return { triggered: false, reason: "complete" };
+  }
+  // Prefer service client for background recovery when available
+  const client = getServerSupabase() || supabase;
+  const findAlts = Boolean(capture.decode_requested);
+  // Fire work; caller should schedule via after()
+  await enrichCaptureMetadata(client, userId, captureId, {
+    findAlternatives: findAlts,
+  }).catch((e) => {
+    console.error("[recoverCaptureEnrichment]", captureId, e);
+  });
+  return { triggered: true, reason: "recovered" };
+}
+
+async function logCaptureAiUsage(
+  userId: string,
+  captureId: string,
+  usage: {
+    model: string;
+    promptTokens: number | null;
+    completionTokens: number | null;
+    totalTokens: number | null;
+    at: string;
+  }
+) {
+  try {
+    const sb = getServerSupabase();
+    if (!sb) return;
+    const key = "ai_usage:capture_enrichment";
+    const { data } = await sb
+      .from("system_status")
+      .select("value_json")
+      .eq("key", key)
+      .maybeSingle();
+    const prev = (data?.value_json || {}) as Record<string, unknown>;
+    const calls = Number(prev.calls || 0) + 1;
+    const tokens = Number(prev.total_tokens || 0) + Number(usage.totalTokens || 0);
+    await sb.from("system_status").upsert({
+      key,
+      value_json: {
+        calls,
+        total_tokens: tokens,
+        last_model: usage.model,
+        last_capture_id: captureId,
+        last_user_id: userId,
+        last_prompt_tokens: usage.promptTokens,
+        last_completion_tokens: usage.completionTokens,
+        last_at: usage.at,
+      },
+      updated_at: new Date().toISOString(),
+    });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Enrichment failed";
-    await supabase
-      .from("external_captures")
-      .update({ enrichment_status: "failed", error_message: message })
-      .eq("id", captureId);
-    throw e;
+    console.warn("[logCaptureAiUsage] failed", e);
   }
 }
 
@@ -489,6 +793,30 @@ export async function decodeCapture(
     if (pageUrl) {
       try {
         enrichment = await enrichFromUrl(pageUrl);
+        if (!enrichmentIsSufficient(enrichment)) {
+          let snippet = "";
+          try {
+            const html = await fetchPageHTML(pageUrl);
+            snippet = pageTextSnippetFromHtml(html || "");
+          } catch {
+            snippet = "";
+          }
+          const ai = await enrichGapsWithOpenAI({
+            url: pageUrl,
+            existing: enrichment,
+            pageTextSnippet: snippet,
+            imageUrl: (working.image_url as string) || enrichment.imageUrl,
+          });
+          if (!ai.skipped) {
+            enrichment = mergeEnrichment(enrichment, ai.patch, ai.provenance);
+            via = `${via}+openai`;
+            await logCaptureAiUsage(userId, captureId, ai.usage);
+            working.enrichment_ai_used = true;
+            working.enrichment_ai_model = ai.usage.model;
+            working.enrichment_ai_tokens = ai.usage.totalTokens;
+            working.enrichment_ai_at = ai.usage.at;
+          }
+        }
         working = {
           ...working,
           ...enrichmentPatch(enrichment, working),
@@ -652,7 +980,14 @@ export async function decodeCapture(
       natural_fiber_percent: working.natural_fiber_percent ?? null,
       fiber_breakdown: working.fiber_breakdown || null,
       material_status: (working.material_status as MaterialStatus) ||
-        (working.composition_text ? "source_page" : "unknown"),
+        (enrichment
+          ? materialStatusFromCompositionProvenance(
+              enrichment.provenance,
+              (working.composition_text as string) || enrichment.compositionText
+            )
+          : working.composition_text
+            ? "source_page"
+            : "unknown"),
       material_confidence: working.material_confidence || null,
       category: working.category || null,
       subcategory: working.subcategory || null,
@@ -665,7 +1000,13 @@ export async function decodeCapture(
       attributes: working.attributes || (enrichment ? enrichmentToAttributes(enrichment) : null),
       match_brief: working.match_brief || enrichment?.matchBrief || null,
       provenance: working.provenance || enrichment?.provenance || null,
-      enrichment_status: enrichment ? "ready" : pageUrl ? "failed" : "skipped",
+      enrichment_status: enrichment ? "ready" : pageUrl ? "enrichment_retry" : "skipped",
+      enrichment_locked_at: null,
+      enrichment_ai_used: Boolean(working.enrichment_ai_used),
+      enrichment_ai_model: (working.enrichment_ai_model as string) || null,
+      enrichment_ai_at: (working.enrichment_ai_at as string) || null,
+      enrichment_ai_tokens:
+        working.enrichment_ai_tokens != null ? Number(working.enrichment_ai_tokens) : null,
       resolution_status: resolutionStatus,
       alternatives: alternatives.length ? alternatives : null,
       alternatives_ready_at: alternatives.length ? new Date().toISOString() : null,

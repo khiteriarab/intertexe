@@ -1,9 +1,14 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAuthUserId } from "../../../../lib/supabase-auth-server";
+import {
+  isCaptureEnrichmentIncomplete,
+  recoverCaptureEnrichment,
+} from "../../../../lib/capture";
+import { getServerSupabase } from "../../../../lib/supabase-service-client";
 
 function userClient(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -20,7 +25,7 @@ function userClient(accessToken: string) {
 
 type Ctx = { params: Promise<{ id: string }> };
 
-/** GET /api/capture/[id] */
+/** GET /api/capture/[id] — also recovers stalled enrichment without re-sharing */
 export async function GET(req: NextRequest, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
@@ -41,6 +46,14 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 
     if (error) throw error;
     if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    if (isCaptureEnrichmentIncomplete(data as Record<string, unknown>)) {
+      const bg = getServerSupabase() || supabase;
+      after(() => {
+        void recoverCaptureEnrichment(bg, userId, id);
+      });
+    }
+
     return NextResponse.json({ capture: data });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Fetch failed";
