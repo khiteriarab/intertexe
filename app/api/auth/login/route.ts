@@ -12,6 +12,7 @@ async function signInWithSupabase(email: string, password: string) {
   if (error || !data.session?.access_token) return null;
   return {
     token: data.session.access_token,
+    refreshToken: data.session.refresh_token || null,
     user: {
       id: data.user.id,
       email: data.user.email ?? email,
@@ -43,7 +44,11 @@ export async function POST(request: NextRequest) {
       if (userId) {
         generatePermanentReferralCode(userId).catch(console.error);
       }
-      return NextResponse.json({ ...snakeToCamel(supabaseSession.user), token: supabaseSession.token });
+      return NextResponse.json({
+        ...snakeToCamel(supabaseSession.user),
+        token: supabaseSession.token,
+        refreshToken: supabaseSession.refreshToken,
+      });
     }
 
     let user = await getUserByUsername(email);
@@ -58,7 +63,11 @@ export async function POST(request: NextRequest) {
       if (userId) {
         generatePermanentReferralCode(userId).catch(console.error);
       }
-      return NextResponse.json({ ...snakeToCamel(migrated.user), token: migrated.token });
+      return NextResponse.json({
+        ...snakeToCamel(migrated.user),
+        token: migrated.token,
+        refreshToken: migrated.refreshToken,
+      });
     }
 
     const token = await storeToken(String(user.id));
