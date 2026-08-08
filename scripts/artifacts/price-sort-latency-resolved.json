@@ -1,0 +1,26 @@
+{
+  "incident": "catalog_price_sort_latency",
+  "status": "resolved",
+  "resolved_at": "2026-08-08T08:40:00Z",
+  "rules": {
+    "no_warming": true,
+    "block_release_on_2_to_3_7s_paths": false,
+    "reopen_if_user_facing_path_exceeds_ms": 5000
+  },
+  "baseline": {
+    "queries_tested": 94,
+    "over_5s": 0,
+    "under_or_equal_1_5s": 86,
+    "knitwear_price_asc_ms": 548,
+    "dresses_price_desc_ms": 584,
+    "tops_price_desc_ms": 466,
+    "trousers_price_desc_warm_ms": 487
+  },
+  "backlog": [
+    "outerwear pagination offsets (~2–3.7s)",
+    "designer browse (~1.6–2.1s)",
+    "some category+color combos (~1.5–2.3s)"
+  ],
+  "fix_commit": "eb01acf",
+  "artifact": "scripts/artifacts/catalog-latency-audit.json"
+}
