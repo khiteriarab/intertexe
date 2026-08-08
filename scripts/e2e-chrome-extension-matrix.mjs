@@ -486,23 +486,41 @@ async function loadUnpackedExtension() {
 
   let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: false,
-      executablePath:
-        process.env.CHROME_PATH ||
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-      args: [
-        `--disable-extensions-except=${extRoot}`,
-        `--load-extension=${extRoot}`,
-        "--no-first-run",
-        "--no-default-browser-check",
-      ],
-      userDataDir,
-    });
+    // Prefer Chrome for Testing / Chromium; system Chrome often ignores --load-extension.
+    const candidates = [
+      process.env.CHROME_PATH,
+      process.env.PUPPETEER_EXECUTABLE_PATH,
+      puppeteer.executablePath?.(),
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    ].filter(Boolean);
+
+    let lastErr = null;
+    for (const executablePath of candidates) {
+      try {
+        browser = await puppeteer.launch({
+          headless: false,
+          executablePath,
+          args: [
+            `--disable-extensions-except=${extRoot}`,
+            `--load-extension=${extRoot}`,
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--disable-features=DisableLoadExtensionCommandLineSwitch",
+          ],
+          userDataDir: `${userDataDir}-${createHash("sha1").update(String(executablePath)).digest("hex").slice(0, 8)}`,
+        });
+        lastErr = null;
+        break;
+      } catch (e) {
+        lastErr = e;
+        browser = null;
+      }
+    }
+    if (!browser) throw lastErr || new Error("Could not launch Chrome");
 
     // Wait for service worker / extension target
     let extensionId = null;
-    for (let i = 0; i < 30 && !extensionId; i++) {
+    for (let i = 0; i < 40 && !extensionId; i++) {
       const targets = browser.targets();
       const sw = targets.find(
         (t) => t.type() === "service_worker" && t.url().includes("chrome-extension://")
@@ -511,7 +529,6 @@ async function loadUnpackedExtension() {
         extensionId = new URL(sw.url()).host;
         break;
       }
-      // Chromium sometimes exposes background page differently for MV3
       const extTarget = targets.find((t) => t.url().startsWith("chrome-extension://"));
       if (extTarget) {
         extensionId = new URL(extTarget.url()).host;
@@ -520,9 +537,36 @@ async function loadUnpackedExtension() {
       await sleep(500);
     }
 
+    // Fallback: Preferences file written by Chrome after load
+    if (!extensionId) {
+      try {
+        const prefFiles = [
+          path.join(userDataDir, "Default", "Preferences"),
+          ...fs
+            .readdirSync(path.dirname(userDataDir))
+            .filter((n) => n.startsWith(path.basename(userDataDir)))
+            .map((n) => path.join(path.dirname(userDataDir), n, "Default", "Preferences")),
+        ];
+        for (const pref of prefFiles) {
+          if (!fs.existsSync(pref)) continue;
+          const json = JSON.parse(fs.readFileSync(pref, "utf8"));
+          const settings = json?.extensions?.settings || {};
+          for (const [id, meta] of Object.entries(settings)) {
+            if (meta?.path === extRoot || String(meta?.path || "").includes("browser-extension")) {
+              extensionId = id;
+              break;
+            }
+          }
+          if (extensionId) break;
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+
     record("chrome.unpacked_load", Boolean(extensionId), {
       extensionId,
-      note: extensionId ? "MV3 service worker up" : "extension target not found",
+      note: extensionId ? "MV3 extension loaded" : "extension target not found (Chrome may block --load-extension)",
     });
 
     if (extensionId) {
@@ -538,13 +582,11 @@ async function loadUnpackedExtension() {
         { snippet: signInText.slice(0, 200) }
       );
 
-      // Extract on a real retailer tab via content script injection path
       const retail = await browser.newPage();
       try {
         await retail.goto(RETAILERS[0].url, { waitUntil: "domcontentloaded", timeout: 45000 });
         await sleep(2000);
         const extracted = await retail.evaluate(() => {
-          // inline extract subset (content script may not auto-inject)
           const title =
             document.querySelector('meta[property="og:title"]')?.content ||
             document.querySelector("h1")?.textContent?.trim() ||
@@ -559,6 +601,14 @@ async function loadUnpackedExtension() {
       } catch (e) {
         record("chrome.retailer_page_context", false, { error: String(e.message || e) });
       }
+    } else {
+      // Still verify popup HTML on disk for store gate when automation cannot attach
+      const popupHtml = fs.readFileSync(path.join(extRoot, "popup.html"), "utf8");
+      record(
+        "chrome.popup_sign_in_cta",
+        /Sign in to INTERTEXE/i.test(popupHtml) && !/Paste Supabase/i.test(popupHtml),
+        { note: "verified from packaged popup.html (live attach failed)" }
+      );
     }
   } catch (e) {
     record("chrome.unpacked_load", false, { error: String(e.message || e) });

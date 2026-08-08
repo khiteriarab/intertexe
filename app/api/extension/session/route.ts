@@ -11,6 +11,9 @@ function cors(res: NextResponse) {
   res.headers.set("Access-Control-Allow-Origin", "*");
   res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  res.headers.set("CDN-Cache-Control", "no-store");
+  res.headers.set("Vercel-CDN-Cache-Control", "no-store");
   return res;
 }
 
@@ -106,15 +109,25 @@ export async function GET(req: NextRequest) {
       .eq("ext_session", extSession)
       .maybeSingle();
 
-    if (row && !row.consumed_at) {
+    if (row) {
+      if (row.consumed_at) {
+        return cors(NextResponse.json({ pending: true }));
+      }
       if (new Date(row.expires_at).getTime() < Date.now()) {
         await supabase.from("extension_auth_codes").delete().eq("ext_session", extSession);
         return cors(NextResponse.json({ pending: true, expired: true }));
       }
-      await supabase
+      // Atomic one-time consume: only the first reader wins.
+      const { data: consumed, error: consumeErr } = await supabase
         .from("extension_auth_codes")
         .update({ consumed_at: new Date().toISOString() })
-        .eq("ext_session", extSession);
+        .eq("ext_session", extSession)
+        .is("consumed_at", null)
+        .select("access_token, refresh_token, user_id")
+        .maybeSingle();
+      if (consumeErr || !consumed?.access_token) {
+        return cors(NextResponse.json({ pending: true }));
+      }
       void supabase
         .from("extension_auth_codes")
         .delete()
@@ -122,9 +135,9 @@ export async function GET(req: NextRequest) {
       return cors(
         NextResponse.json({
           ok: true,
-          accessToken: row.access_token,
-          refreshToken: row.refresh_token || null,
-          userId: row.user_id,
+          accessToken: consumed.access_token,
+          refreshToken: consumed.refresh_token || null,
+          userId: consumed.user_id,
         })
       );
     }
