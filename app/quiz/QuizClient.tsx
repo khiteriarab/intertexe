@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Check, ArrowRight, ArrowLeft, Loader2, Search, X, ShoppingBag, ExternalLink, CheckCircle2, Star, Heart } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { trackQuizStart, trackQuizComplete } from "../../lib/analytics";
-import { assignPersona } from "../../shared/personas";
+import { assignPersona } from "@shared/personas";
 import { BRAND_PROFILES, getTierLabel, type BrandProfile } from "../../lib/brand-profiles";
 import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";

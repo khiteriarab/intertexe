@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const nextConfig = {
   env: {
     NEXT_PUBLIC_SUPABASE_URL:
@@ -6,21 +11,23 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY:
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY,
   },
+  // Avoid resolving the parent monorepo lockfile as the tracing root.
+  outputFileTracingRoot: path.join(__dirname),
   reactStrictMode: false,
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'cdn.shopify.com' },
-      { protocol: 'https', hostname: 'intertexe.com' },
-      { protocol: 'https', hostname: 'www.intertexe.com' },
-      { protocol: 'https', hostname: 'media.thereformation.com' },
-      { protocol: 'https', hostname: 'us.sandro-paris.com' },
-      { protocol: 'https', hostname: 'intl.isabelmarant.com' },
-      { protocol: 'https', hostname: 'staud.clothing' },
-      { protocol: 'https', hostname: 'lagence.com' },
-      { protocol: 'https', hostname: 'faithfullthebrand.com' },
-      { protocol: 'https', hostname: 'www.zimmermann.com' },
-      { protocol: 'https', hostname: '**.supabase.co' },
-      { protocol: 'https', hostname: 'thum.io' },
+      { protocol: "https", hostname: "cdn.shopify.com" },
+      { protocol: "https", hostname: "intertexe.com" },
+      { protocol: "https", hostname: "www.intertexe.com" },
+      { protocol: "https", hostname: "media.thereformation.com" },
+      { protocol: "https", hostname: "us.sandro-paris.com" },
+      { protocol: "https", hostname: "intl.isabelmarant.com" },
+      { protocol: "https", hostname: "staud.clothing" },
+      { protocol: "https", hostname: "lagence.com" },
+      { protocol: "https", hostname: "faithfullthebrand.com" },
+      { protocol: "https", hostname: "www.zimmermann.com" },
+      { protocol: "https", hostname: "**.supabase.co" },
+      { protocol: "https", hostname: "thum.io" },
     ],
     unoptimized: true,
   },
@@ -30,56 +37,72 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  allowedDevOrigins: ['*.kirk.replit.dev', '*.replit.dev', '*.repl.co', 'localhost', '127.0.0.1', '0.0.0.0'],
-  serverExternalPackages: ['@supabase/supabase-js'],
+  allowedDevOrigins: [
+    "*.kirk.replit.dev",
+    "*.replit.dev",
+    "*.repl.co",
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+  ],
+  serverExternalPackages: ["@supabase/supabase-js"],
   /** Seconds before static generation times out (default 60). Keep bounded so a slow DB cannot burn the whole deploy. */
   staticPageGenerationTimeout: 60,
   experimental: {
     serverActions: {
-      bodySizeLimit: '2mb',
+      bodySizeLimit: "2mb",
     },
   },
   devIndicators: false,
   async headers() {
     return [
       {
-        // Universal Links file — must stay cacheable JSON (Apple CDN + device fetch).
-        source: '/.well-known/apple-app-site-association',
+        source: "/.well-known/apple-app-site-association",
         headers: [
-          { key: 'Content-Type', value: 'application/json' },
-          { key: 'Cache-Control', value: 'public, max-age=3600' },
+          { key: "Content-Type", value: "application/json" },
+          { key: "Cache-Control", value: "public, max-age=3600" },
         ],
       },
       {
-        source: '/apple-app-site-association',
+        source: "/apple-app-site-association",
         headers: [
-          { key: 'Content-Type', value: 'application/json' },
-          { key: 'Cache-Control', value: 'public, max-age=3600' },
+          { key: "Content-Type", value: "application/json" },
+          { key: "Cache-Control", value: "public, max-age=3600" },
         ],
       },
       {
         source:
-          '/((?!api/|_next/static|_next/image|favicon|\\.well-known|apple-app-site-association|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+          "/((?!api/|_next/static|_next/image|favicon|\\.well-known|apple-app-site-association|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
         headers: [
-          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
-          { key: 'Pragma', value: 'no-cache' },
-          { key: 'Expires', value: '0' },
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+          { key: "Pragma", value: "no-cache" },
+          { key: "Expires", value: "0" },
         ],
       },
     ];
   },
   webpack: (config, { dev }) => {
+    // Explicit aliases so `@/emails` is never swallowed by `@/*` → client/src.
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      "@/emails": path.join(__dirname, "emails"),
+      "@shared": path.join(__dirname, "shared"),
+      "@app": path.join(__dirname, "app"),
+    };
     if (dev) {
       config.watchOptions = {
         ...config.watchOptions,
         ignored: [
-          '**/node_modules/**',
-          '**/.next/**',
-          '**/.git/**',
-          '**/.local/**',
-          '**/.cache/**',
-          '**/.upm/**',
-          '**/client/**',
+          "**/node_modules/**",
+          "**/.next/**",
+          "**/.git/**",
+          "**/.local/**",
+          "**/.cache/**",
+          "**/.upm/**",
+          "**/client/**",
         ],
       };
     }

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2, TrendingDown, Settings, Pencil, KeyRound, Trash2, ArrowLeft, Check } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { usePriceAlerts } from "../hooks/use-price-alerts";
-import { FABRIC_PERSONAS } from "../../shared/personas";
+import { FABRIC_PERSONAS } from "@shared/personas";
 import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { RecentlyViewedRail } from "./RecentlyViewedRail";

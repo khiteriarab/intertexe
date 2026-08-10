@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { assignPersona } from "../../../shared/personas";
+import { assignPersona } from "@shared/personas";
 
 export async function POST(request: NextRequest) {
   try {

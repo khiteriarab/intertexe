@@ -42,11 +42,11 @@
       }
     ],
     "paths": {
+      "@/emails/*": [
+        "./emails/*"
+      ],
       "@/lib/*": [
         "./lib/*"
-      ],
-      "@/*": [
-        "./client/src/*"
       ],
       "@shared/*": [
         "./shared/*"
@@ -54,8 +54,8 @@
       "@app/*": [
         "./app/*"
       ],
-      "@/emails/*": [
-        "./emails/*"
+      "@/*": [
+        "./client/src/*"
       ]
     },
     "target": "ES2017",
