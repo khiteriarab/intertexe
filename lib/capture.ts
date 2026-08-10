@@ -103,59 +103,45 @@ export async function uploadCaptureImage(
   };
 }
 
-/** Download a remote image (or page screenshot fallback) into capture storage. */
+/** Download a remote product image into capture storage. Never screenshots HTML pages. */
 export async function persistCaptureImageFromUrl(
   service: SupabaseClient,
   userId: string,
-  imageOrPageUrl: string,
-  opts?: { treatAsPage?: boolean }
+  imageUrl: string
 ): Promise<{ imageUrl: string; imageStoragePath: string } | null> {
-  const sources: string[] = [];
-  if (opts?.treatAsPage || !isUsableCaptureImageUrl(imageOrPageUrl)) {
-    sources.push(
-      `https://image.thum.io/get/auth/no-animate/width/800/${imageOrPageUrl}`,
-      `https://image.thum.io/get/width/800/crop/1000/${imageOrPageUrl}`
-    );
-  } else {
-    sources.push(imageOrPageUrl);
-    sources.push(
-      `https://image.thum.io/get/auth/no-animate/width/800/${imageOrPageUrl}`
-    );
-  }
+  const cleaned = canonicalizeCaptureImageUrl(imageUrl);
+  if (!cleaned || !isUsableCaptureImageUrl(cleaned)) return null;
 
-  for (const src of sources) {
-    try {
-      const res = await fetch(src, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
-          Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-        },
-        redirect: "follow",
-        signal: AbortSignal.timeout(20000),
-      });
-      if (!res.ok) continue;
-      const ctype = (res.headers.get("content-type") || "").toLowerCase();
-      if (!ctype.includes("image")) continue;
-      const buffer = Buffer.from(await res.arrayBuffer());
-      if (!buffer.length || buffer.length > MAX_IMAGE_BYTES) continue;
-      const imageHash = createHash("sha256").update(buffer).digest("hex").slice(0, 32);
-      const ext = ctype.includes("png") ? "png" : ctype.includes("webp") ? "webp" : "jpg";
-      const path = `${userId}/${imageHash}.${ext}`;
-      const { error } = await service.storage
-        .from("external-captures")
-        .upload(path, buffer, { contentType: ctype.split(";")[0], upsert: true });
-      if (error) continue;
-      const { data: signed } = await service.storage
-        .from("external-captures")
-        .createSignedUrl(path, 60 * 60 * 24 * 30);
-      if (!signed?.signedUrl) continue;
-      return { imageUrl: signed.signedUrl, imageStoragePath: path };
-    } catch {
-      /* try next source */
-    }
+  try {
+    const res = await fetch(cleaned, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+        Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) return null;
+    const ctype = (res.headers.get("content-type") || "").toLowerCase();
+    if (!ctype.includes("image")) return null;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    if (!buffer.length || buffer.length > MAX_IMAGE_BYTES) return null;
+    const imageHash = createHash("sha256").update(buffer).digest("hex").slice(0, 32);
+    const ext = ctype.includes("png") ? "png" : ctype.includes("webp") ? "webp" : "jpg";
+    const path = `${userId}/${imageHash}.${ext}`;
+    const { error } = await service.storage
+      .from("external-captures")
+      .upload(path, buffer, { contentType: ctype.split(";")[0], upsert: true });
+    if (error) return null;
+    const { data: signed } = await service.storage
+      .from("external-captures")
+      .createSignedUrl(path, 60 * 60 * 24 * 30);
+    if (!signed?.signedUrl) return null;
+    return { imageUrl: signed.signedUrl, imageStoragePath: path };
+  } catch {
+    return null;
   }
-  return null;
 }
 
 export function hashUrl(raw: string | null | undefined): string | null {
@@ -538,7 +524,7 @@ export async function enrichCaptureMetadata(
           ? "needs_information"
           : "enrichment_retry";
 
-    // Persist a durable image when the retailer CDN is blocked / HTML was stored as image.
+    // Persist a durable image when the retailer CDN is hotlink-prone but fetchable.
     const pageUrl = url;
     let imageUrl = preferCaptureImageUrl(
       capture.image_url as string | null,
@@ -546,27 +532,18 @@ export async function enrichCaptureMetadata(
       pageUrl
     );
     const service = getServerSupabase();
-    if (
-      service &&
-      (!imageUrl || !isUsableCaptureImageUrl(imageUrl, pageUrl))
-    ) {
-      const persisted = await persistCaptureImageFromUrl(
-        service,
-        userId,
-        pageUrl,
-        { treatAsPage: true }
-      );
-      if (persisted?.imageUrl) {
-        imageUrl = persisted.imageUrl;
-        enrichment = { ...enrichment, imageUrl };
+    if (service && imageUrl && isUsableCaptureImageUrl(imageUrl, pageUrl)) {
+      if (/allsaints\.com|net-a-porter\.com|media\.net-a-porter\.com/i.test(imageUrl)) {
+        const persisted = await persistCaptureImageFromUrl(service, userId, imageUrl);
+        if (persisted?.imageUrl) {
+          imageUrl = persisted.imageUrl;
+          enrichment = { ...enrichment, imageUrl };
+        }
       }
-    } else if (service && imageUrl && /allsaints\.com|net-a-porter\.com/i.test(imageUrl)) {
-      // Hotlink-prone hosts: mirror into our storage when fetchable.
-      const persisted = await persistCaptureImageFromUrl(service, userId, imageUrl);
-      if (persisted?.imageUrl) {
-        imageUrl = persisted.imageUrl;
-        enrichment = { ...enrichment, imageUrl };
-      }
+    } else if (!isUsableCaptureImageUrl(imageUrl, pageUrl)) {
+      // Never store HTML pages / bot-wall screenshots as the product image.
+      imageUrl = null;
+      enrichment = { ...enrichment, imageUrl: null };
     }
 
     const patch = {

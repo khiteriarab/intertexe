@@ -60,3 +60,33 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+/** DELETE /api/capture/[id] — remove an Inspiration for the signed-in owner */
+export async function DELETE(req: NextRequest, ctx: Ctx) {
+  try {
+    const { id } = await ctx.params;
+    const auth = req.headers.get("authorization") || "";
+    const token = auth.replace(/^Bearer\s+/i, "").trim();
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const userId = await getSupabaseAuthUserId(token);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const supabase = userClient(token);
+    if (!supabase) return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
+
+    const { data, error } = await supabase
+      .from("external_captures")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    return NextResponse.json({ ok: true, id: data.id });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Delete failed";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
