@@ -226,9 +226,62 @@ function productMatchesColor(
 ): boolean {
   const color = normalizeColorToken(inputColor || "");
   if (color.length < 3) return false;
-  const tokens = color.split(" ").filter((t) => t.length >= 3);
-  const hay = `${product.color || ""} ${product.name || ""} ${product.category || ""}`.toLowerCase();
+  const stop = new Set([
+    "wash",
+    "cali",
+    "soft",
+    "dark",
+    "light",
+    "medium",
+    "bright",
+    "pale",
+    "deep",
+    "vintage",
+    "perfect",
+    "heathered",
+    "washed",
+    "the",
+    "and",
+    "with",
+  ]);
+  const known = new Set([
+    "black",
+    "white",
+    "ivory",
+    "cream",
+    "beige",
+    "brown",
+    "tan",
+    "camel",
+    "navy",
+    "blue",
+    "indigo",
+    "denim",
+    "green",
+    "olive",
+    "red",
+    "burgundy",
+    "pink",
+    "rose",
+    "purple",
+    "lilac",
+    "yellow",
+    "gold",
+    "orange",
+    "grey",
+    "gray",
+    "silver",
+    "metallic",
+  ]);
+  const tokens = color
+    .split(" ")
+    .filter((t) => t.length >= 3 && !stop.has(t))
+    .map((t) => (t === "denim" || t === "indigo" ? "blue" : t));
+  const primary = tokens.filter((t) => known.has(t));
+  const hay = `${product.color || ""} ${product.name || ""}`.toLowerCase();
+  // Prefer exact/full phrase, then known color tokens only (avoid "wash"/"cali" false hits).
   if (hay.includes(color)) return true;
+  if (primary.length) return primary.some((t) => hay.includes(t));
   return tokens.some((t) => hay.includes(t));
 }
 
