@@ -76,14 +76,14 @@ export async function POST(req: NextRequest) {
     }
 
     const productImageUrl = String(body.productImageUrl || "").trim();
-    const primaryImageUrl = /^https?:\/\//i.test(productImageUrl)
-      ? productImageUrl
-      : captureImageUrl;
+    const hasProductImage = /^https?:\/\//i.test(productImageUrl)
+      && !/\/scan-captures\//i.test(productImageUrl);
 
     // Best-effort attach to scan_history (column may be missing pre-migration).
+    // Capture is backend data — never promote it onto image_url (Scans thumb = product or TX).
     const { data: existing } = await service
       .from("scan_history")
-      .select("id, raw_analysis")
+      .select("id, image_url, raw_analysis")
       .eq("id", scanId)
       .eq("user_id", userId.toLowerCase())
       .maybeSingle();
@@ -95,11 +95,23 @@ export async function POST(req: NextRequest) {
           : {};
       rawAnalysis.capture_image_url = captureImageUrl;
 
-      const withColumn = {
-        image_url: primaryImageUrl,
+      const withColumn: Record<string, unknown> = {
         capture_image_url: captureImageUrl,
         raw_analysis: rawAnalysis,
       };
+      if (hasProductImage) {
+        withColumn.image_url = productImageUrl;
+      } else {
+        const existingImage = String(existing.image_url || "");
+        // Clear mistaken capture-as-thumb rows so clients show TX instead.
+        if (
+          !existingImage ||
+          existingImage === captureImageUrl ||
+          /\/scan-captures\//i.test(existingImage)
+        ) {
+          withColumn.image_url = null;
+        }
+      }
       let { error: updateError } = await service
         .from("scan_history")
         .update(withColumn)
@@ -107,9 +119,11 @@ export async function POST(req: NextRequest) {
         .eq("user_id", userId.toLowerCase());
 
       if (updateError && /capture_image_url/i.test(updateError.message || "")) {
+        const legacy: Record<string, unknown> = { raw_analysis: rawAnalysis };
+        if (hasProductImage) legacy.image_url = productImageUrl;
         ({ error: updateError } = await service
           .from("scan_history")
-          .update({ image_url: primaryImageUrl, raw_analysis: rawAnalysis })
+          .update(legacy)
           .eq("id", scanId)
           .eq("user_id", userId.toLowerCase()));
       }
@@ -121,7 +135,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       captureImageUrl,
-      imageUrl: primaryImageUrl,
+      imageUrl: hasProductImage ? productImageUrl : null,
       storagePath: path,
     });
   } catch (err: any) {
