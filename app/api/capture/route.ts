@@ -150,9 +150,21 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    const captures = data || [];
+    // List payloads omit full TX Match arrays (detail GET still returns them) so
+    // Inspirations stays fast and resilient to alternative-shape drift.
+    const captures = (data || []).map((row) => {
+      const alts = Array.isArray(row.alternatives) ? row.alternatives : [];
+      const { alternatives: _omit, ...rest } = row as Record<string, unknown> & {
+        alternatives?: unknown;
+      };
+      return {
+        ...rest,
+        alternatives_count: alts.length,
+      };
+    });
+
     // Kick stalled enrichment/recovery so hostname-only rows finish after list open.
-    const incomplete = captures.filter((c) =>
+    const incomplete = (data || []).filter((c) =>
       isCaptureEnrichmentIncomplete(c as Record<string, unknown>)
     );
     if (incomplete.length) {
