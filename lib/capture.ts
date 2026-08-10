@@ -456,26 +456,36 @@ export async function enrichCaptureMetadata(
     }
 
     const sufficient = enrichmentIsSufficient(enrichment);
+    const hasUsableTitle =
+      Boolean(enrichment.title) &&
+      !isPlaceholderTitle(enrichment.title, enrichment.retailer || enrichment.brand);
+    const hasAlts = (alternatives?.length || 0) > 0;
+    // TX Matches + a real title means the Inspiration is usable — don't leave it
+    // labeled "needs_information" just because price/category gaps remain.
+    const enrichmentStatus = sufficient
+      ? "ready"
+      : hasAlts && hasUsableTitle
+        ? "ready"
+        : hasUsableTitle
+          ? "needs_information"
+          : "enrichment_retry";
     const patch = {
       ...enrichmentPatch(enrichment, capture, {
         materialStatus,
         resolutionStatus,
         alternatives: alternatives ?? undefined,
       }),
-      enrichment_status: sufficient
-        ? "ready"
-        : enrichment.title && !isPlaceholderTitle(enrichment.title, enrichment.retailer)
-          ? "needs_information"
-          : "enrichment_retry",
+      enrichment_status: enrichmentStatus,
       enrichment_locked_at: null,
-      enrichment_next_retry_at: sufficient
-        ? null
-        : new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      enrichment_next_retry_at:
+        enrichmentStatus === "ready"
+          ? null
+          : new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       enrichment_ai_used: aiUsed || Boolean(capture.enrichment_ai_used),
       enrichment_ai_model: aiModel || capture.enrichment_ai_model || null,
       enrichment_ai_at: aiUsed ? new Date().toISOString() : capture.enrichment_ai_at || null,
       enrichment_ai_tokens: aiTokens ?? capture.enrichment_ai_tokens ?? null,
-      error_message: sufficient ? null : "Enrichment incomplete — will retry",
+      error_message: enrichmentStatus === "ready" ? null : "Enrichment incomplete — will retry",
       // Never lose original URL
       original_url: capture.original_url,
       canonical_url: capture.canonical_url || capture.original_url,
@@ -828,10 +838,18 @@ export async function decodeCapture(
       }
     }
 
-    // 3) Call existing scan API for URL/image when available
+    // 3) Optional scan API assist — never block TX Match on a hung scanner path.
+    // Chrome / Share Extension already send structured hints; enrichment is authoritative.
     const origin =
       opts?.siteOrigin || process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com";
-    if ((capture.original_url || capture.image_url) && opts?.accessToken) {
+    const sourceApp = String(capture.source_app || "");
+    const skipScanAssist =
+      sourceApp === "chrome_extension" || sourceApp === "safari_extension";
+    if (
+      !skipScanAssist &&
+      (capture.original_url || capture.image_url) &&
+      opts?.accessToken
+    ) {
       const body: Record<string, unknown> = {
         session_id: `capture_${captureId}`,
       };
@@ -844,69 +862,77 @@ export async function decodeCapture(
         body.ai_assist = true;
       }
 
-      const res = await fetch(`${origin}/api/scan`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${opts.accessToken}`,
-        },
-        body: JSON.stringify(body),
-      });
+      try {
+        const controller = new AbortController();
+        const scanTimer = setTimeout(() => controller.abort(), 20_000);
+        const res = await fetch(`${origin}/api/scan`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${opts.accessToken}`,
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+        clearTimeout(scanTimer);
 
-      if (res.ok) {
-        const json = (await res.json()) as {
-          tagInfo?: {
-            brand?: string;
-            productName?: string;
-            composition?: string;
-            productImageUrl?: string;
-            confidence?: string;
+        if (res.ok) {
+          const json = (await res.json()) as {
+            tagInfo?: {
+              brand?: string;
+              productName?: string;
+              composition?: string;
+              productImageUrl?: string;
+              confidence?: string;
+            };
+            naturalPercent?: number;
+            fiberBreakdown?: unknown;
+            matched?: boolean;
+            betterAlternatives?: unknown[];
           };
-          naturalPercent?: number;
-          fiberBreakdown?: unknown;
-          matched?: boolean;
-          betterAlternatives?: unknown[];
-        };
 
-        const confidence = String(json.tagInfo?.confidence || "").toLowerCase();
-        let materialStatus: MaterialStatus = "unknown";
-        if (json.tagInfo?.composition) {
-          if (
-            confidence.includes("database") ||
-            confidence.includes("label") ||
-            confidence.includes("confirmed") ||
-            confidence.includes("source")
-          ) {
-            materialStatus = confidence.includes("database") ? "verified" : "source_page";
-          } else if (
-            confidence.includes("ai") ||
-            confidence.includes("estimate") ||
-            confidence.includes("infer") ||
-            confidence.includes("vision")
-          ) {
-            materialStatus = "ai_estimated";
-          } else if (confidence.includes("high") || confidence.includes("medium")) {
-            materialStatus = "source_page";
-          } else {
-            materialStatus = "ai_estimated";
+          const confidence = String(json.tagInfo?.confidence || "").toLowerCase();
+          let materialStatus: MaterialStatus = "unknown";
+          if (json.tagInfo?.composition) {
+            if (
+              confidence.includes("database") ||
+              confidence.includes("label") ||
+              confidence.includes("confirmed") ||
+              confidence.includes("source")
+            ) {
+              materialStatus = confidence.includes("database") ? "verified" : "source_page";
+            } else if (
+              confidence.includes("ai") ||
+              confidence.includes("estimate") ||
+              confidence.includes("infer") ||
+              confidence.includes("vision")
+            ) {
+              materialStatus = "ai_estimated";
+            } else if (confidence.includes("high") || confidence.includes("medium")) {
+              materialStatus = "source_page";
+            } else {
+              materialStatus = "ai_estimated";
+            }
           }
-        }
 
-        working = {
-          ...working,
-          title: working.title || json.tagInfo?.productName || null,
-          brand_name: working.brand_name || json.tagInfo?.brand || null,
-          composition_text: json.tagInfo?.composition || working.composition_text,
-          natural_fiber_percent: json.naturalPercent ?? working.natural_fiber_percent,
-          fiber_breakdown: json.fiberBreakdown || working.fiber_breakdown,
-          image_url: working.image_url || json.tagInfo?.productImageUrl || null,
-          material_status: materialStatus,
-          material_confidence: json.tagInfo?.confidence || working.material_confidence,
-        };
-        if (json.betterAlternatives?.length) {
-          scanAlternatives = json.betterAlternatives;
+          working = {
+            ...working,
+            title: working.title || json.tagInfo?.productName || null,
+            brand_name: working.brand_name || json.tagInfo?.brand || null,
+            composition_text: json.tagInfo?.composition || working.composition_text,
+            natural_fiber_percent: json.naturalPercent ?? working.natural_fiber_percent,
+            fiber_breakdown: json.fiberBreakdown || working.fiber_breakdown,
+            image_url: working.image_url || json.tagInfo?.productImageUrl || null,
+            material_status: materialStatus,
+            material_confidence: json.tagInfo?.confidence || working.material_confidence,
+          };
+          if (json.betterAlternatives?.length) {
+            scanAlternatives = json.betterAlternatives;
+          }
+          via = `${via}+api_scan`;
         }
-        via = `${via}+api_scan`;
+      } catch (e) {
+        console.warn("[decodeCapture] /api/scan assist skipped", e);
       }
     }
 
@@ -1000,7 +1026,12 @@ export async function decodeCapture(
       attributes: working.attributes || (enrichment ? enrichmentToAttributes(enrichment) : null),
       match_brief: working.match_brief || enrichment?.matchBrief || null,
       provenance: working.provenance || enrichment?.provenance || null,
-      enrichment_status: enrichment ? "ready" : pageUrl ? "enrichment_retry" : "skipped",
+      enrichment_status:
+        enrichment || alternatives.length
+          ? "ready"
+          : pageUrl
+            ? "enrichment_retry"
+            : "skipped",
       enrichment_locked_at: null,
       enrichment_ai_used: Boolean(working.enrichment_ai_used),
       enrichment_ai_model: (working.enrichment_ai_model as string) || null,

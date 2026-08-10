@@ -1,0 +1,93 @@
+{
+  "ran_at": "2026-08-07T23:29:34.256Z",
+  "rows": [
+    {
+      "name": "dresses+price_desc",
+      "before_ms": 41265,
+      "after_ms": 33395,
+      "n": 24,
+      "err": null,
+      "over_5s": true
+    },
+    {
+      "name": "tops+price_desc",
+      "before_ms": 29628,
+      "after_ms": 39110,
+      "n": 24,
+      "err": null,
+      "over_5s": true
+    },
+    {
+      "name": "skirts+price_desc",
+      "before_ms": 18078,
+      "after_ms": 60888,
+      "n": 0,
+      "err": null,
+      "over_5s": true
+    },
+    {
+      "name": "shoes+price_desc",
+      "before_ms": 9699,
+      "after_ms": 16188,
+      "n": 24,
+      "err": null,
+      "over_5s": true
+    },
+    {
+      "name": "shoes+price_asc",
+      "before_ms": 9066,
+      "after_ms": 9217,
+      "n": 24,
+      "err": null,
+      "over_5s": true
+    },
+    {
+      "name": "knitwear+color:black",
+      "before_ms": 6801,
+      "after_ms": 3177,
+      "n": 24,
+      "err": null,
+      "over_5s": false
+    },
+    {
+      "name": "designer:the-row",
+      "before_ms": 6417,
+      "after_ms": 1765,
+      "n": 24,
+      "err": null,
+      "over_5s": false
+    },
+    {
+      "name": "outerwear+price_desc",
+      "before_ms": 6067,
+      "after_ms": 95357,
+      "n": 0,
+      "err": null,
+      "over_5s": true
+    },
+    {
+      "name": "trousers+price_desc",
+      "before_ms": 5714,
+      "after_ms": 60530,
+      "n": 0,
+      "err": null,
+      "over_5s": true
+    },
+    {
+      "name": "outerwear+offset24",
+      "before_ms": 5210,
+      "after_ms": 10379,
+      "n": 24,
+      "err": null,
+      "over_5s": true
+    },
+    {
+      "name": "knitwear+price_asc",
+      "before_ms": 9300,
+      "after_ms": 917,
+      "n": 24,
+      "err": null,
+      "over_5s": false
+    }
+  ]
+}

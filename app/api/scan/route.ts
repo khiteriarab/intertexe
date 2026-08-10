@@ -29,6 +29,7 @@ import {
   fetchProductImageFromURL,
   getRetailerPattern,
 } from "../../../lib/scanner/retailer-extraction";
+import { extractBrandFromURL } from "../../../lib/scanner/retailer-brand-map";
 import {
   cacheURLComposition,
   lookupURLComposition,

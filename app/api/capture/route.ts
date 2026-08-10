@@ -8,6 +8,8 @@ import {
   insertCapture,
   decodeCapture,
   enrichCaptureMetadata,
+  isCaptureEnrichmentIncomplete,
+  recoverCaptureEnrichment,
   type CreateCaptureInput,
 } from "../../../lib/capture";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
@@ -147,7 +149,22 @@ export async function GET(req: NextRequest) {
       .limit(limit);
 
     if (error) throw error;
-    return NextResponse.json({ captures: data || [] });
+
+    const captures = data || [];
+    // Kick stalled enrichment/recovery so hostname-only rows finish after list open.
+    const incomplete = captures.filter((c) =>
+      isCaptureEnrichmentIncomplete(c as Record<string, unknown>)
+    );
+    if (incomplete.length) {
+      const bg = getServerSupabase() || supabase;
+      after(() => {
+        for (const c of incomplete.slice(0, 5)) {
+          void recoverCaptureEnrichment(bg, userId, String(c.id));
+        }
+      });
+    }
+
+    return NextResponse.json({ captures });
   } catch (e) {
     const message = e instanceof Error ? e.message : "List failed";
     return NextResponse.json({ error: message }, { status: 500 });

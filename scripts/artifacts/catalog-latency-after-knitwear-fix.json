@@ -1,0 +1,187 @@
+{
+  "ran_at": "2026-08-07T23:22:48.252Z",
+  "results": [
+    {
+      "name": "bags",
+      "ms": 5299,
+      "n": 11,
+      "err": null,
+      "before": null,
+      "over_2s": true,
+      "over_5s": true
+    },
+    {
+      "name": "knitwear+price_asc",
+      "ms": 2860,
+      "n": 24,
+      "err": null,
+      "before": 9300,
+      "over_2s": true,
+      "over_5s": false
+    },
+    {
+      "name": "shoes",
+      "ms": 2189,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": true,
+      "over_5s": false
+    },
+    {
+      "name": "knitwear",
+      "ms": 1545,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "dresses",
+      "ms": 1260,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "dresses+price_asc",
+      "ms": 1110,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "sale_tops",
+      "ms": 994,
+      "n": 22,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "knitwear+price_desc",
+      "ms": 969,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "trousers",
+      "ms": 921,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "new_in",
+      "ms": 531,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    }
+  ],
+  "worst": [
+    {
+      "name": "bags",
+      "ms": 5299,
+      "n": 11,
+      "err": null,
+      "before": null,
+      "over_2s": true,
+      "over_5s": true
+    },
+    {
+      "name": "knitwear+price_asc",
+      "ms": 2860,
+      "n": 24,
+      "err": null,
+      "before": 9300,
+      "over_2s": true,
+      "over_5s": false
+    },
+    {
+      "name": "shoes",
+      "ms": 2189,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": true,
+      "over_5s": false
+    },
+    {
+      "name": "knitwear",
+      "ms": 1545,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "dresses",
+      "ms": 1260,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "dresses+price_asc",
+      "ms": 1110,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "sale_tops",
+      "ms": 994,
+      "n": 22,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "knitwear+price_desc",
+      "ms": 969,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "trousers",
+      "ms": 921,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    },
+    {
+      "name": "new_in",
+      "ms": 531,
+      "n": 24,
+      "err": null,
+      "before": null,
+      "over_2s": false,
+      "over_5s": false
+    }
+  ]
+}

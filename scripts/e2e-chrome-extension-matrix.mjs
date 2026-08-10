@@ -17,8 +17,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createRequire } from "module";
-import { createHash } from "crypto";
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const extRoot = path.resolve(root, "../browser-extension");
@@ -203,39 +201,70 @@ const RETAILERS = [
     id: "retailer.easy_structured",
     label: "Easy structured-data (Madewell)",
     url: "https://www.madewell.com/the-perfect-vintage-jean-in-cali-blue-wash-NJ794.html",
-    expect: { minAlts: 0 },
+    // Client hints like the extension would send; server enrichment remains authoritative.
+    client: {
+      title: "The Perfect Vintage Jean in Cali Blue Wash",
+      brandName: "Madewell",
+      price: 128,
+      currency: "USD",
+    },
+    expect: { minAlts: 1 },
   },
   {
     id: "retailer.luxury",
     label: "Luxury (Pucci)",
     url: "https://www.pucci.com/us/en/pucci/clothing/dresses/mini-dresses/mini-dress-in-cotton-3QAB05-3QAB05_M0000.html",
-    expect: {},
+    client: {
+      title: "Mini Dress in Cotton",
+      brandName: "Pucci",
+      price: 1520,
+      currency: "USD",
+      compositionText: "100% cotton",
+    },
+    expect: { minAlts: 1 },
   },
   {
     id: "retailer.incomplete_meta",
     label: "Incomplete metadata path (generic PDP query)",
     url: "https://www.uniqlo.com/us/en/products/E455910-000/00?colorDisplayCode=69&sizeDisplayCode=003",
-    expect: {},
+    client: { title: "Men's Ultra Light Down Jacket", brandName: "Uniqlo" },
+    expect: { minAlts: 0 },
   },
   {
     id: "retailer.bot_protected",
     label: "Difficult / bot-protected (Everlane)",
     url: "https://www.everlane.com/products/womens-the-way-high-jean-medium-indigo",
-    expect: {},
+    client: {
+      title: "The Way High Jean",
+      brandName: "Everlane",
+      price: 98,
+      currency: "USD",
+    },
+    expect: { minAlts: 1 },
   },
   {
     id: "retailer.excellent_composition",
     label: "Excellent original composition (prove TX Match ≠ fiber conversion only)",
     // 100% cotton / high-quality source — matches should still consider style/price/color
     url: "https://www.patagonia.com/product/womens-organic-cotton-quilt-snap-pullover/26280.html",
-    expect: { compositionQuality: "high" },
+    client: {
+      title: "Women's Organic Cotton Quilt Snap Pullover",
+      brandName: "Patagonia",
+      price: 119,
+      currency: "USD",
+      compositionText: "100% organic cotton",
+    },
+    expect: { compositionQuality: "high", minAlts: 1 },
   },
 ];
 
 async function captureAsExtension(user, product, { decodeNow = true } = {}) {
-  const bust = `${product.url}${product.url.includes("?") ? "&" : "?"}e2e=${Date.now()}`;
+  // Fragment bust keeps the product URL fetchable while avoiding duplicate collisions.
+  const originalUrl = product.url.includes("#")
+    ? product.url
+    : `${product.url}#e2e-${Date.now()}`;
   const body = {
-    originalUrl: bust,
+    originalUrl,
     title: product.title || null,
     imageUrl: product.imageUrl || null,
     brandName: product.brandName || null,
@@ -304,6 +333,7 @@ async function runRetailerMatrix(user) {
     const { res, json, capture, duplicate } = await captureAsExtension(user, {
       url: r.url,
       retailer: new URL(r.url).hostname.replace(/^www\./, ""),
+      ...(r.client || {}),
     });
     if (!res.ok || !capture?.id) {
       record(r.id, false, { error: json.error || res.status, url: r.url });
@@ -323,12 +353,9 @@ async function runRetailerMatrix(user) {
       source_app: owned?.source_app,
     });
 
-    const enriched = await waitEnrichment(user, capture.id);
+    const enriched = await waitEnrichment(user, capture.id, { timeoutMs: 240_000 });
     const alts = Array.isArray(enriched.alternatives) ? enriched.alternatives.length : 0;
     const status = enriched.enrichment_status;
-    const hasTitle =
-      Boolean(enriched.title) &&
-      !String(enriched.title).includes(new URL(r.url).hostname.replace(/^www\./, ""));
     record(`${r.id}.enrichment`, ["ready", "skipped", "needs_information", "failed", "enrichment_retry"].includes(String(status)) || alts > 0, {
       enrichment_status: status,
       resolution_status: enriched.resolution_status,
@@ -340,11 +367,18 @@ async function runRetailerMatrix(user) {
       note: "listable on iOS after refresh/realtime — same row",
     });
 
+    const minAlts = Number(r.expect?.minAlts || 0);
+    record(`${r.id}.tx_matches`, alts >= minAlts, {
+      alternatives: alts,
+      minAlts,
+      note: minAlts > 0 ? "TX Matches required for this retailer class" : "honest empty allowed",
+    });
+
     if (r.expect.compositionQuality === "high") {
       // TX Match must not be "empty because already natural fiber"
-      record(`${r.id}.tx_match_not_fiber_only`, alts > 0 || String(enriched.resolution_status) === "analyzed", {
+      record(`${r.id}.tx_match_not_fiber_only`, alts > 0, {
         alternatives: alts,
-        note: "style/price/color matching path acceptable even with strong source composition",
+        note: "style/price/color matching — not merely natural-fiber conversion",
       });
     }
 
@@ -481,15 +515,24 @@ async function loadUnpackedExtension() {
     { note: "activeTab + scripting inject on demand" }
   );
 
-  const userDataDir = path.join(root, "scripts/artifacts/.chrome-e2e-profile");
+  const chromeForTesting = path.join(
+    root,
+    "scripts/artifacts/browsers/chrome/mac-151.0.7922.77/chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+  );
+
+  const userDataDir = path.join(
+    root,
+    `scripts/artifacts/.chrome-e2e-profile-${Date.now()}`
+  );
   fs.mkdirSync(userDataDir, { recursive: true });
 
   let browser;
   try {
-    // Prefer Chrome for Testing / Chromium; system Chrome often ignores --load-extension.
+    // Prefer Chrome for Testing — system Chrome often ignores --load-extension.
     const candidates = [
       process.env.CHROME_PATH,
       process.env.PUPPETEER_EXECUTABLE_PATH,
+      fs.existsSync(chromeForTesting) ? chromeForTesting : null,
       puppeteer.executablePath?.(),
       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     ].filter(Boolean);
@@ -507,7 +550,7 @@ async function loadUnpackedExtension() {
             "--no-default-browser-check",
             "--disable-features=DisableLoadExtensionCommandLineSwitch",
           ],
-          userDataDir: `${userDataDir}-${createHash("sha1").update(String(executablePath)).digest("hex").slice(0, 8)}`,
+          userDataDir,
         });
         lastErr = null;
         break;
@@ -520,8 +563,8 @@ async function loadUnpackedExtension() {
 
     // Wait for service worker / extension target
     let extensionId = null;
-    for (let i = 0; i < 40 && !extensionId; i++) {
-      const targets = browser.targets();
+    for (let i = 0; i < 50 && !extensionId; i++) {
+      const targets = typeof browser.targets === "function" ? browser.targets() : [];
       const sw = targets.find(
         (t) => t.type() === "service_worker" && t.url().includes("chrome-extension://")
       );
@@ -534,30 +577,40 @@ async function loadUnpackedExtension() {
         extensionId = new URL(extTarget.url()).host;
         break;
       }
-      await sleep(500);
+      // Puppeteer newer API
+      try {
+        const pages = await browser.pages();
+        for (const p of pages) {
+          const u = p.url();
+          if (u.startsWith("chrome-extension://")) {
+            extensionId = new URL(u).host;
+            break;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+      await sleep(400);
     }
 
     // Fallback: Preferences file written by Chrome after load
     if (!extensionId) {
       try {
-        const prefFiles = [
-          path.join(userDataDir, "Default", "Preferences"),
-          ...fs
-            .readdirSync(path.dirname(userDataDir))
-            .filter((n) => n.startsWith(path.basename(userDataDir)))
-            .map((n) => path.join(path.dirname(userDataDir), n, "Default", "Preferences")),
-        ];
-        for (const pref of prefFiles) {
-          if (!fs.existsSync(pref)) continue;
+        const pref = path.join(userDataDir, "Default", "Preferences");
+        if (fs.existsSync(pref)) {
           const json = JSON.parse(fs.readFileSync(pref, "utf8"));
           const settings = json?.extensions?.settings || {};
           for (const [id, meta] of Object.entries(settings)) {
-            if (meta?.path === extRoot || String(meta?.path || "").includes("browser-extension")) {
+            const pth = String(meta?.path || "");
+            if (
+              pth === extRoot ||
+              pth.includes("browser-extension") ||
+              meta?.manifest?.name === "Save to INTERTEXE"
+            ) {
               extensionId = id;
               break;
             }
           }
-          if (extensionId) break;
         }
       } catch {
         /* ignore */
@@ -566,7 +619,9 @@ async function loadUnpackedExtension() {
 
     record("chrome.unpacked_load", Boolean(extensionId), {
       extensionId,
-      note: extensionId ? "MV3 extension loaded" : "extension target not found (Chrome may block --load-extension)",
+      note: extensionId
+        ? "MV3 extension loaded"
+        : "extension target not found (Chrome may block --load-extension)",
     });
 
     if (extensionId) {
@@ -654,6 +709,7 @@ async function main() {
   const criticalIds = [
     "auth.bridge.park",
     "auth.bridge.poll_once",
+    "auth.bridge.one_time",
     "auth.refresh",
     "chrome.unpacked_load",
     "chrome.no_token_paste_ui",
@@ -663,9 +719,12 @@ async function main() {
   const retailerPass = RETAILERS.every((r) =>
     RESULTS.some((x) => x.id === `${r.id}.immediate_capture` && x.pass)
   );
+  const txMatchPass = RESULTS.some(
+    (r) => r.id.endsWith(".tx_matches") && r.pass && Number(r.alternatives || 0) > 0
+  );
 
   const chrome_store_ready =
-    !criticalFail && retailerPass && failed === 0 && passed > 0;
+    !criticalFail && retailerPass && txMatchPass && failed === 0 && passed > 0;
 
   const out = {
     startedAt,
