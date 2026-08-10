@@ -12,6 +12,10 @@ import {
   recoverCaptureEnrichment,
   type CreateCaptureInput,
 } from "../../../lib/capture";
+import {
+  canonicalizeCaptureImageUrl,
+  isUsableCaptureImageUrl,
+} from "../../../lib/capture-enrichment";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
 
 function userClient(accessToken: string) {
@@ -154,11 +158,18 @@ export async function GET(req: NextRequest) {
     // Inspirations stays fast and resilient to alternative-shape drift.
     const captures = (data || []).map((row) => {
       const alts = Array.isArray(row.alternatives) ? row.alternatives : [];
+      const pageUrl = String(row.canonical_url || row.original_url || "");
+      const fixedImage =
+        canonicalizeCaptureImageUrl(row.image_url as string | null, pageUrl) ||
+        (isUsableCaptureImageUrl(row.image_url as string | null, pageUrl)
+          ? (row.image_url as string)
+          : null);
       const { alternatives: _omit, ...rest } = row as Record<string, unknown> & {
         alternatives?: unknown;
       };
       return {
         ...rest,
+        image_url: fixedImage,
         alternatives_count: alts.length,
       };
     });

@@ -690,6 +690,8 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
 
   if (retailer) setProv(provenance, "retailer", "url", 1);
 
+  imageUrl = canonicalizeCaptureImageUrl(imageUrl, url);
+
   // Color from image filename heuristics (e.g. ...BLACK_ONMODEL...)
   let colorFromImage: string | null = null;
   if (imageUrl) {
@@ -890,3 +892,79 @@ export function pageTextSnippetFromHtml(html: string): string {
     .filter(Boolean)
     .join("\n\n");
 }
+
+/** True when a URL looks like a real product image (not an HTML PDP). */
+export function isUsableCaptureImageUrl(
+  raw: string | null | undefined,
+  pageUrl?: string | null
+): boolean {
+  const value = String(raw || "").trim();
+  if (!value || !/^https?:\/\//i.test(value)) return false;
+  let u: URL;
+  try {
+    u = new URL(value);
+  } catch {
+    return false;
+  }
+  if (pageUrl) {
+    try {
+      const page = new URL(pageUrl);
+      if (u.href.split("#")[0] === page.href.split("#")[0]) return false;
+      if (u.pathname === page.pathname && u.hostname === page.hostname) return false;
+    } catch {
+      /* ignore */
+    }
+  }
+  const path = u.pathname.toLowerCase();
+  if (/\.(html?|php|aspx?)(?:$|\?)/i.test(path)) return false;
+  if (/\/(products?|shop|pdp|item)\//i.test(path) && !/\.(jpe?g|png|webp|gif|avif)(?:$|\?)/i.test(path)) {
+    // Likely a product page path without an image extension
+    if (!/\/(image|images|photos|media|cdn|static|dw\/image|variants\/images)\//i.test(path)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Retailer-specific image URL rewrites for CDNs that hotlink-block common media hosts.
+ */
+export function canonicalizeCaptureImageUrl(
+  raw: string | null | undefined,
+  pageUrl?: string | null
+): string | null {
+  const value = String(raw || "").trim();
+  if (!value) return null;
+
+  // Net-a-Porter / MR Porter media host often fails in-app; variants path works.
+  const nap = value.match(
+    /(?:media\.)?(?:www\.)?net-a-porter\.com\/photos\/(\d{10,})/i
+  ) || value.match(/net-a-porter\.com\/(?:[^/]+\/)*photos\/(\d{10,})/i);
+  if (nap?.[1]) {
+    return `https://www.net-a-porter.com/variants/images/${nap[1]}/in/w800.jpg`;
+  }
+  const napIdFromPage = String(pageUrl || "").match(/\/(\d{14,})(?:\/|$|\?)/);
+  if (/net-a-porter\.com/i.test(value) && napIdFromPage?.[1] && !/\/variants\/images\//i.test(value)) {
+    return `https://www.net-a-porter.com/variants/images/${napIdFromPage[1]}/in/w800.jpg`;
+  }
+
+  if (!isUsableCaptureImageUrl(value, pageUrl)) return null;
+  return value;
+}
+
+/** Prefer a newly extracted image over a bad/stale stored one. */
+export function preferCaptureImageUrl(
+  existing: string | null | undefined,
+  next: string | null | undefined,
+  pageUrl?: string | null
+): string | null {
+  const cleanedNext = canonicalizeCaptureImageUrl(next, pageUrl);
+  const cleanedExisting = canonicalizeCaptureImageUrl(existing, pageUrl);
+  if (cleanedExisting && isUsableCaptureImageUrl(cleanedExisting, pageUrl)) {
+    // Upgrade NAP media → variants even when existing looked "usable"
+    if (cleanedNext && cleanedNext !== existing) return cleanedNext;
+    return cleanedExisting;
+  }
+  return cleanedNext;
+}
+
