@@ -1,8 +1,14 @@
+node_modules/
+.next/
+.vercel
+.env
+.env.local
+.env.vercel.local
+.env.*.local
+*.env
 scripts/artifacts/
 scripts/artifacts/**
 .chrome-e2e-profile*/
 **/browsers/**
 **/.chrome-e2e-profile/**
 **/.chrome-e2e-profile-*/
-.next/
-node_modules/
