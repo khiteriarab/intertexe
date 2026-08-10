@@ -6,3 +6,7 @@ node_modules/
 .env.vercel.local
 .env.*.local
 *.env
+
+# Local E2E chrome artifacts
+scripts/artifacts/.chrome-e2e-profile*/
+scripts/artifacts/browsers/
