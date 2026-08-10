@@ -176,7 +176,15 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ captures });
+    return NextResponse.json(
+      { captures },
+      {
+        headers: {
+          "Cache-Control": "private, no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+        },
+      }
+    );
   } catch (e) {
     const message = e instanceof Error ? e.message : "List failed";
     return NextResponse.json({ error: message }, { status: 500 });
