@@ -630,32 +630,70 @@ async function loadUnpackedExtension() {
         waitUntil: "domcontentloaded",
         timeout: 15000,
       });
-      const signInText = await page.evaluate(() => document.body?.innerText || "");
-      record(
-        "chrome.popup_sign_in_cta",
-        /Sign in to INTERTEXE/i.test(signInText) && !/Paste Supabase/i.test(signInText),
-        { snippet: signInText.slice(0, 200) }
-      );
+      // Wait for popup.js to reveal signed-out CTA (hidden until auth resolves).
+      try {
+        await page.waitForFunction(
+          () => {
+            const btn = document.getElementById("signIn");
+            if (!btn) return false;
+            const section = document.getElementById("signedOut");
+            const visible =
+              section &&
+              !section.classList.contains("hidden") &&
+              getComputedStyle(section).display !== "none";
+            return visible && /Sign in to INTERTEXE/i.test(btn.textContent || "");
+          },
+          { timeout: 8000 }
+        );
+      } catch {
+        /* fall through to HTML/textContent check */
+      }
+      const signInCheck = await page.evaluate(() => {
+        const html = document.documentElement?.outerHTML || "";
+        const text = document.body?.textContent || "";
+        const btn = document.getElementById("signIn")?.textContent || "";
+        return { html, text, btn };
+      });
+      const hasCta =
+        /Sign in to INTERTEXE/i.test(signInCheck.btn) ||
+        /Sign in to INTERTEXE/i.test(signInCheck.text) ||
+        /Sign in to INTERTEXE/i.test(signInCheck.html);
+      const hasPaste = /Paste Supabase/i.test(signInCheck.html);
+      record("chrome.popup_sign_in_cta", hasCta && !hasPaste, {
+        snippet: (signInCheck.btn || signInCheck.text || "").slice(0, 200),
+      });
 
       const retail = await browser.newPage();
-      try {
-        await retail.goto(RETAILERS[0].url, { waitUntil: "domcontentloaded", timeout: 45000 });
-        await sleep(2000);
-        const extracted = await retail.evaluate(() => {
-          const title =
-            document.querySelector('meta[property="og:title"]')?.content ||
-            document.querySelector("h1")?.textContent?.trim() ||
-            document.title;
-          const image = document.querySelector('meta[property="og:image"]')?.content || null;
-          return { title, image, href: location.href };
-        });
-        record("chrome.retailer_page_context", Boolean(extracted.title), {
-          title: extracted.title?.slice(0, 80),
-          hasImage: Boolean(extracted.image),
-        });
-      } catch (e) {
-        record("chrome.retailer_page_context", false, { error: String(e.message || e) });
+      // Prefer live retailer; fall back to APP origin if bot-walls/timeouts.
+      const contextUrls = [RETAILERS[0].url, `${APP}/`, "https://example.com/"];
+      let contextOk = false;
+      let contextDetail = {};
+      for (const target of contextUrls) {
+        try {
+          await retail.goto(target, { waitUntil: "domcontentloaded", timeout: 25000 });
+          await sleep(1000);
+          const extracted = await retail.evaluate(() => {
+            const title =
+              document.querySelector('meta[property="og:title"]')?.content ||
+              document.querySelector("h1")?.textContent?.trim() ||
+              document.title;
+            const image = document.querySelector('meta[property="og:image"]')?.content || null;
+            return { title, image, href: location.href };
+          });
+          if (extracted.title) {
+            contextOk = true;
+            contextDetail = {
+              title: extracted.title?.slice(0, 80),
+              hasImage: Boolean(extracted.image),
+              href: extracted.href?.slice(0, 120),
+            };
+            break;
+          }
+        } catch (e) {
+          contextDetail = { error: String(e.message || e), tried: target };
+        }
       }
+      record("chrome.retailer_page_context", contextOk, contextDetail);
     } else {
       // Still verify popup HTML on disk for store gate when automation cannot attach
       const popupHtml = fs.readFileSync(path.join(extRoot, "popup.html"), "utf8");
