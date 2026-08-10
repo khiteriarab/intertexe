@@ -12,3 +12,5 @@ scripts/artifacts/**
 **/browsers/**
 **/.chrome-e2e-profile/**
 **/.chrome-e2e-profile-*/
+
+attached_assets/
