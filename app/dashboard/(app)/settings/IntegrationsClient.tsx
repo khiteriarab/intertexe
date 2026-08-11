@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HqCard } from "../../components/HqUi";
 
@@ -90,7 +90,9 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
   const [ascIssuerId, setAscIssuerId] = useState("");
   const [ascVendorNumber, setAscVendorNumber] = useState("");
   const [ascFile, setAscFile] = useState<File | null>(null);
+  const [ascPem, setAscPem] = useState("");
   const [showAscForm, setShowAscForm] = useState(false);
+  const ascFileRef = useRef<HTMLInputElement | null>(null);
 
   async function readJson(res: Response) {
     const contentType = res.headers.get("content-type") || "";
@@ -206,21 +208,42 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
 
   async function uploadAsc(e: FormEvent) {
     e.preventDefault();
-    if (!canAdmin || !ascFile) return;
+    if (!canAdmin) return;
+    const pemFromPaste = ascPem.trim();
+    const hasPem = Boolean(ascFile) || pemFromPaste.includes("PRIVATE KEY");
+    if (!hasPem) {
+      setError("Choose the .p8 file, or paste its contents into the box below.");
+      return;
+    }
     setBusy("app_store_connect");
     setError(null);
     setMessage(null);
     try {
-      const fd = new FormData();
-      fd.set("keyId", ascKeyId);
-      fd.set("issuerId", ascIssuerId);
-      if (ascVendorNumber.trim()) fd.set("vendorNumber", ascVendorNumber.trim());
-      fd.set("p8", ascFile);
-      const res = await fetch("/api/dashboard/integrations/app-store-connect", {
-        method: "POST",
-        body: fd,
-        redirect: "manual",
-      });
+      let res: Response;
+      if (ascFile) {
+        const fd = new FormData();
+        fd.set("keyId", ascKeyId);
+        fd.set("issuerId", ascIssuerId);
+        if (ascVendorNumber.trim()) fd.set("vendorNumber", ascVendorNumber.trim());
+        fd.set("p8", ascFile);
+        res = await fetch("/api/dashboard/integrations/app-store-connect", {
+          method: "POST",
+          body: fd,
+          redirect: "manual",
+        });
+      } else {
+        res = await fetch("/api/dashboard/integrations/app-store-connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            keyId: ascKeyId,
+            issuerId: ascIssuerId,
+            vendorNumber: ascVendorNumber.trim() || undefined,
+            privateKeyPem: pemFromPaste,
+          }),
+          redirect: "manual",
+        });
+      }
       if (res.status >= 300 && res.status < 400) {
         throw new Error("Session expired — sign in again, then retry.");
       }
@@ -228,6 +251,7 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
       if (!res.ok) throw new Error(data.message || "Upload failed");
       setMessage("App Store Connect key saved and encrypted.");
       setAscFile(null);
+      setAscPem("");
       setShowAscForm(false);
       await load();
       router.refresh();
@@ -455,16 +479,41 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                       className="w-full border border-black/15 rounded-lg px-2 py-1.5 text-sm"
                     />
                     <p className="text-[11px] text-black/45 leading-relaxed">
-                      Vendor Number is in App Store Connect → Payments and Financial Reports. Required to pull App Units
-                      (downloads) into Acquisition / Today.
+                      Vendor Number is a short account ID in App Store Connect → Payments and Financial Reports (top of
+                      the page). Required for downloads. Not the Key ID or Issuer ID.
                     </p>
-                    <input
-                      required
-                      type="file"
-                      accept=".p8,text/plain"
-                      onChange={(e) => setAscFile(e.target.files?.[0] || null)}
-                      className="block w-full text-xs"
-                    />
+                    <div className="space-y-2">
+                      <input
+                        ref={ascFileRef}
+                        type="file"
+                        accept=".p8,text/plain,.pem"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setAscFile(file);
+                          if (file) setAscPem("");
+                        }}
+                        className="sr-only"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => ascFileRef.current?.click()}
+                        className="w-full text-left text-xs border border-black/15 rounded-lg px-3 py-2 hover:bg-black/[0.03]"
+                      >
+                        {ascFile ? `Selected: ${ascFile.name}` : "Choose .p8 file"}
+                      </button>
+                      <p className="text-[11px] text-black/45">Or paste the .p8 contents (keeps the key in your browser only):</p>
+                      <textarea
+                        value={ascPem}
+                        onChange={(e) => {
+                          setAscPem(e.target.value);
+                          if (e.target.value.trim()) setAscFile(null);
+                        }}
+                        rows={5}
+                        spellCheck={false}
+                        placeholder={"-----BEGIN PRIVATE KEY-----\n…\n-----END PRIVATE KEY-----"}
+                        className="w-full border border-black/15 rounded-lg px-2 py-1.5 text-xs font-mono"
+                      />
+                    </div>
                     <button
                       type="submit"
                       disabled={busy === "app_store_connect"}
