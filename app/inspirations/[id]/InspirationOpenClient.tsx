@@ -1,9 +1,26 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
 
 const TOKEN_KEY = "intertexe_auth_token";
+
+type CaptureAlt = {
+  id?: string;
+  name?: string | null;
+  brand_name?: string | null;
+  brand_slug?: string | null;
+  image_url?: string | null;
+  url?: string | null;
+  price?: number | string | null;
+  currency?: string | null;
+  composition?: string | null;
+  natural_fiber_percent?: number | null;
+  why?: string | null;
+  is_editor_pick?: boolean;
+  is_sale?: boolean;
+};
 
 type Capture = {
   id: string;
@@ -16,7 +33,7 @@ type Capture = {
   original_url?: string | null;
   enrichment_status?: string | null;
   resolution_status?: string | null;
-  alternatives?: unknown[] | null;
+  alternatives?: CaptureAlt[] | null;
 };
 
 export default function InspirationOpenClient({ captureId }: { captureId: string }) {
@@ -52,10 +69,13 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
     };
   }, [captureId]);
 
-  const alts = Array.isArray(capture?.alternatives) ? capture!.alternatives!.length : 0;
+  const alts = useMemo(
+    () => (Array.isArray(capture?.alternatives) ? capture!.alternatives! : []),
+    [capture]
+  );
   const processing =
     capture &&
-    !alts &&
+    !alts.length &&
     ["pending", "enriching", "running", "enrichment_retry"].includes(
       String(capture.enrichment_status || "")
     );
@@ -119,8 +139,8 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
                 .join(" · ")}
             </p>
             <p style={{ margin: "14px 0 0", fontSize: 15 }}>
-              {alts
-                ? `${alts} TX Matches`
+              {alts.length
+                ? `${alts.length} TX Matches`
                 : processing
                   ? "Finding your TX Matches…"
                   : "Saved to Inspirations"}
@@ -135,6 +155,26 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
                 </a>
               </p>
             ) : null}
+
+            {alts.length > 0 ? (
+              <section style={{ marginTop: 28 }}>
+                <p
+                  style={{
+                    margin: "0 0 12px",
+                    fontSize: 11,
+                    letterSpacing: "0.14em",
+                    fontWeight: 600,
+                  }}
+                >
+                  YOUR TX MATCHES
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {alts.map((alt, idx) => (
+                    <MatchCard key={String(alt.id || idx)} alt={alt} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </article>
         ) : !needsAuth && !error ? (
           <p style={{ marginTop: 16, color: "#6b6560" }}>Loading inspiration…</p>
@@ -142,6 +182,72 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
       </div>
     </main>
   );
+}
+
+function MatchCard({ alt }: { alt: CaptureAlt }) {
+  const href = affiliateHref(alt);
+  const price = formatPrice(
+    typeof alt.price === "string" ? parseFloat(alt.price) : alt.price,
+    alt.currency
+  );
+  const body = (
+    <>
+      {alt.image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={alt.image_url}
+          alt=""
+          style={{ width: 64, height: 80, objectFit: "cover", background: "#ddd5cb" }}
+        />
+      ) : (
+        <div style={{ width: 64, height: 80, background: "#ddd5cb" }} />
+      )}
+      <div>
+        {alt.brand_name ? (
+          <p style={{ margin: "0 0 2px", fontSize: 11, color: "#6b6560" }}>{alt.brand_name}</p>
+        ) : null}
+        <p style={{ margin: "0 0 4px", fontSize: 15, lineHeight: 1.3 }}>
+          {alt.name || "TX Match"}
+        </p>
+        <p style={{ margin: "0 0 4px", fontSize: 12 }}>
+          {[price, alt.composition || (alt.natural_fiber_percent != null ? `${Math.round(alt.natural_fiber_percent)}% natural` : null)]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+        {alt.why ? (
+          <p style={{ margin: 0, fontSize: 11, color: "#8a837c", lineHeight: 1.4 }}>{alt.why}</p>
+        ) : null}
+        {href ? (
+          <p style={{ margin: "6px 0 0", fontSize: 11, letterSpacing: "0.08em", color: "#1f3d2b" }}>
+            SHOP VIA AFFILIATE →
+          </p>
+        ) : null}
+      </div>
+    </>
+  );
+
+  if (!href) {
+    return <div style={cardStyle}>{body}</div>;
+  }
+
+  return (
+    <a href={href} target="_blank" rel="noreferrer" style={{ ...cardStyle, textDecoration: "none", color: "inherit" }}>
+      {body}
+    </a>
+  );
+}
+
+/** Prefer catalog/affiliate URL via /leaving (Rakuten u1), else INTERTEXE PDP. */
+function affiliateHref(alt: CaptureAlt): string | null {
+  const raw = String(alt.url || "").trim();
+  if (raw.startsWith("http")) {
+    const tracked = affiliateUrlWithClientU1(raw);
+    const brand = encodeURIComponent(alt.brand_name || "partner");
+    return `/leaving?brand=${brand}&url=${encodeURIComponent(tracked)}`;
+  }
+  if (alt.id) return `/product/${encodeURIComponent(alt.id)}`;
+  if (alt.brand_slug) return `/brands/${encodeURIComponent(alt.brand_slug)}`;
+  return null;
 }
 
 function formatPrice(price?: number | null, currency?: string | null) {
@@ -157,4 +263,12 @@ function formatPrice(price?: number | null, currency?: string | null) {
 const linkStyle: CSSProperties = {
   color: "#1f3d2b",
   textDecoration: "underline",
+};
+
+const cardStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "64px 1fr",
+  gap: 12,
+  padding: "10px 0",
+  borderTop: "1px solid #ddd5cb",
 };
