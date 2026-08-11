@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireHqSession } from "../../../lib/dashboard/auth";
 import { fetchInsightsBundle } from "../../../lib/dashboard/insights";
-import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
+import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchAppStoreDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
 import {
   buildDeterministicInsights,
   listFounderActions,
@@ -35,7 +35,7 @@ const MISSION_LANES = [
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
   const supabase = getServerSupabase();
-  const [{ metrics: m, live }, commerce, syncOps, google, tiktok, pinterest, costSnap] =
+  const [{ metrics: m, live }, commerce, syncOps, google, tiktok, pinterest, appStore, costSnap] =
     await Promise.all([
       fetchInsightsBundle(session.workspaceId),
       fetchHqCommercePage(session.workspaceId),
@@ -43,6 +43,7 @@ export default async function HqOverviewPage() {
       fetchGoogleDiscoveryMetrics(session.workspaceId),
       fetchTikTokDiscoveryMetrics(session.workspaceId),
       fetchPinterestDiscoveryMetrics(session.workspaceId),
+      fetchAppStoreDiscoveryMetrics(session.workspaceId),
       fetchCostSnapshot(),
     ]);
 
@@ -103,6 +104,7 @@ export default async function HqOverviewPage() {
     google,
     tiktok,
     pinterest,
+    appStore,
     commerce,
     syncLatest: syncOps.latest,
     totalClicks7d,

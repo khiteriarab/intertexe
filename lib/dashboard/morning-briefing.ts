@@ -1,4 +1,5 @@
 import type {
+  AppStoreDiscoveryMetrics,
   GoogleDiscoveryMetrics,
   PinterestDiscoveryMetrics,
   TikTokDiscoveryMetrics,
@@ -38,6 +39,7 @@ export function buildMorningPulse(input: {
   google: GoogleDiscoveryMetrics;
   tiktok?: TikTokDiscoveryMetrics;
   pinterest?: PinterestDiscoveryMetrics;
+  appStore?: AppStoreDiscoveryMetrics;
   commerce: {
     revenueConnected?: boolean;
     revenueIsDemo?: boolean;
@@ -69,6 +71,7 @@ export function buildMorningPulse(input: {
     google,
     tiktok,
     pinterest,
+    appStore,
     commerce,
     syncLatest,
     totalClicks7d,
@@ -114,6 +117,19 @@ export function buildMorningPulse(input: {
         : "Google not connected",
       href: "/dashboard/acquisition",
       attention: !google.connected,
+    },
+    {
+      label: "App downloads",
+      period: "7d",
+      value: count(appStore?.connected && appStore.downloadsReady ? appStore.appUnits7d : null),
+      hint: !appStore?.connected
+        ? "App Store not connected"
+        : !appStore.downloadsReady
+          ? "Add Vendor Number"
+          : appStore.deltas.appUnits7d.label ||
+            (appStore.reportLatestDate ? `Through ${appStore.reportLatestDate}` : "App Units"),
+      href: "/dashboard/acquisition",
+      attention: !appStore?.connected || !appStore.downloadsReady,
     },
     {
       label: "TikTok views",

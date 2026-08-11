@@ -531,3 +531,132 @@ export async function fetchPinterestDiscoveryMetrics(
       typeof meta.lastSuccessfulSyncAt === "string" ? meta.lastSuccessfulSyncAt : null,
   };
 }
+
+
+export type AppStoreDailyPoint = { date: string; appUnits: number };
+
+export type AppStoreDiscoveryMetrics = {
+  connected: boolean;
+  metricDate: string | null;
+  syncedAt: string | null;
+  appsVisible: number | null;
+  appNames: string[];
+  vendorNumber: string | null;
+  reportLatestDate: string | null;
+  appUnitsLatestDay: number | null;
+  appUnits7d: number | null;
+  appUnitsPrev7d: number | null;
+  appUnits30d: number | null;
+  downloadsReady: boolean;
+  daily: AppStoreDailyPoint[];
+  deltas: {
+    appUnits7d: ReturnType<typeof computePeriodDelta>;
+  };
+  lastSyncStatus: string | null;
+  lastSyncError: string | null;
+  lastSuccessfulSyncAt: string | null;
+  setupWarnings: string[];
+};
+
+const EMPTY_APP_STORE: AppStoreDiscoveryMetrics = {
+  connected: false,
+  metricDate: null,
+  syncedAt: null,
+  appsVisible: null,
+  appNames: [],
+  vendorNumber: null,
+  reportLatestDate: null,
+  appUnitsLatestDay: null,
+  appUnits7d: null,
+  appUnitsPrev7d: null,
+  appUnits30d: null,
+  downloadsReady: false,
+  daily: [],
+  deltas: {
+    appUnits7d: computePeriodDelta(null, null),
+  },
+  lastSyncStatus: null,
+  lastSyncError: null,
+  lastSuccessfulSyncAt: null,
+  setupWarnings: [],
+};
+
+/** Latest App Store Connect App Units (downloads) for Acquisition / Today. */
+export async function fetchAppStoreDiscoveryMetrics(
+  workspaceId: string
+): Promise<AppStoreDiscoveryMetrics> {
+  const supabase = getServerSupabase();
+  if (!supabase || !workspaceId) return EMPTY_APP_STORE;
+
+  const [{ data: conn }, { data: snap }] = await Promise.all([
+    supabase
+      .from("hq_oauth_connections")
+      .select("status, last_sync_at, last_sync_status, last_sync_error, metadata")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "app_store_connect")
+      .maybeSingle(),
+    supabase
+      .from("hq_integration_metric_snapshots")
+      .select("metric_date, metrics, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "app_store_connect")
+      .order("metric_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const connected = Boolean(
+    conn && (conn.status === "connected" || conn.status === "degraded" || conn.status === "error")
+  );
+  const metrics = (snap?.metrics || {}) as Record<string, unknown>;
+  const meta = (conn?.metadata || {}) as Record<string, unknown>;
+  const appUnits7d = numOrNull(metrics.appUnits7d ?? metrics.downloads7d);
+  const appUnitsPrev7d = numOrNull(metrics.appUnitsPrev7d ?? metrics.downloadsPrev7d);
+  const setupWarnings = Array.isArray(metrics.setupWarnings)
+    ? (metrics.setupWarnings as string[]).filter((s) => typeof s === "string")
+    : [];
+  if (typeof meta.vendorNumber !== "string" || !String(meta.vendorNumber).trim()) {
+    if (!setupWarnings.some((w) => /vendor/i.test(w))) {
+      setupWarnings.push("Add Vendor Number to pull downloads");
+    }
+  }
+
+  return {
+    connected,
+    metricDate: snap?.metric_date || null,
+    syncedAt:
+      (typeof metrics.syncedAt === "string" && metrics.syncedAt) ||
+      conn?.last_sync_at ||
+      snap?.created_at ||
+      null,
+    appsVisible: numOrNull(metrics.appsVisible),
+    appNames: Array.isArray(metrics.appNames)
+      ? (metrics.appNames as string[]).filter((n) => typeof n === "string")
+      : [],
+    vendorNumber:
+      (typeof metrics.vendorNumber === "string" && metrics.vendorNumber) ||
+      (typeof meta.vendorNumber === "string" && meta.vendorNumber) ||
+      null,
+    reportLatestDate: typeof metrics.reportLatestDate === "string" ? metrics.reportLatestDate : null,
+    appUnitsLatestDay: numOrNull(metrics.appUnitsLatestDay),
+    appUnits7d,
+    appUnitsPrev7d,
+    appUnits30d: numOrNull(metrics.appUnits30d ?? metrics.downloads30d),
+    downloadsReady: Boolean(metrics.downloadsReady),
+    daily: Array.isArray(metrics.daily)
+      ? (metrics.daily as AppStoreDailyPoint[]).filter(
+          (d) => d && typeof d.date === "string" && typeof d.appUnits === "number"
+        )
+      : [],
+    deltas: {
+      appUnits7d: computePeriodDelta(appUnits7d, appUnitsPrev7d, {
+        periodLabel: "vs prior 7d",
+      }),
+    },
+    lastSyncStatus: conn?.last_sync_status || null,
+    lastSyncError: conn?.last_sync_error || null,
+    lastSuccessfulSyncAt:
+      typeof meta.lastSuccessfulSyncAt === "string" ? meta.lastSuccessfulSyncAt : null,
+    setupWarnings,
+  };
+}
