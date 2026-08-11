@@ -1,41 +1,41 @@
 {
-  "startedAt": "2026-08-10T11:59:03.151Z",
-  "finishedAt": "2026-08-10T12:07:17.651Z",
-  "app": "http://127.0.0.1:3010",
-  "userId": "42938d3c-bd8d-40e8-aed4-6d5a52b6361d",
-  "email": "chrome.e2e.1786363143154@intertexe-test.local",
+  "startedAt": "2026-08-10T13:50:11.539Z",
+  "finishedAt": "2026-08-10T13:53:00.005Z",
+  "app": "https://www.intertexe.com",
+  "userId": "0b736853-5691-4988-8f7c-80f9e12fe0ea",
+  "email": "chrome.e2e.1786369811556@intertexe-test.local",
   "captures": [
     {
       "retailer": "retailer.easy_structured",
-      "captureId": "412b124b-a607-49f9-8c0c-fe64fd4cc8e6",
+      "captureId": "433dbe80-fcdb-4cb0-b61f-df68361313ce",
       "alts": 12,
       "status": "ready",
       "url": "https://www.madewell.com/the-perfect-vintage-jean-in-cali-blue-wash-NJ794.html"
     },
     {
       "retailer": "retailer.luxury",
-      "captureId": "bd0579c3-94ff-49ca-8e2e-67a91aceb991",
+      "captureId": "32a2a1b3-449c-4682-883e-e6de52d04ac9",
       "alts": 12,
-      "status": "needs_information",
+      "status": "ready",
       "url": "https://www.pucci.com/us/en/pucci/clothing/dresses/mini-dresses/mini-dress-in-cotton-3QAB05-3QAB05_M0000.html"
     },
     {
       "retailer": "retailer.incomplete_meta",
-      "captureId": "9f244fdd-8dc2-4cbd-b166-4f4e788796d6",
+      "captureId": "0c56bbc4-c117-490d-8dc5-a75f2e10ec81",
       "alts": 12,
       "status": "ready",
       "url": "https://www.uniqlo.com/us/en/products/E455910-000/00?colorDisplayCode=69&sizeDisplayCode=003"
     },
     {
       "retailer": "retailer.bot_protected",
-      "captureId": "7e532434-1406-4cec-a290-36f99145cd64",
+      "captureId": "073291aa-903a-479b-98bd-9a2779d26bc4",
       "alts": 12,
-      "status": "needs_information",
+      "status": "ready",
       "url": "https://www.everlane.com/products/womens-the-way-high-jean-medium-indigo"
     },
     {
       "retailer": "retailer.excellent_composition",
-      "captureId": "65efd160-c83e-4b33-baba-7aad73265f79",
+      "captureId": "60608740-920d-440a-b471-245ca3f45215",
       "alts": 12,
       "status": "ready",
       "url": "https://www.patagonia.com/product/womens-organic-cotton-quilt-snap-pullover/26280.html"
@@ -45,51 +45,51 @@
     {
       "id": "auth.bridge.park",
       "pass": true,
-      "at": "2026-08-10T11:59:08.301Z"
+      "at": "2026-08-10T13:50:15.323Z"
     },
     {
       "id": "auth.bridge.poll_once",
       "pass": true,
       "note": "one-time token handoff",
-      "at": "2026-08-10T11:59:09.137Z"
+      "at": "2026-08-10T13:50:16.035Z"
     },
     {
       "id": "auth.bridge.one_time",
       "pass": true,
       "note": "second poll must not re-issue tokens",
-      "at": "2026-08-10T11:59:09.595Z"
+      "at": "2026-08-10T13:50:16.818Z"
     },
     {
       "id": "auth.refresh",
       "pass": true,
       "note": "session survives without re-login",
-      "at": "2026-08-10T11:59:10.851Z"
+      "at": "2026-08-10T13:50:17.429Z"
     },
     {
       "id": "auth.expired_rejected",
       "pass": true,
       "status": 401,
-      "at": "2026-08-10T11:59:11.724Z"
+      "at": "2026-08-10T13:50:18.068Z"
     },
     {
       "id": "retailer.easy_structured.immediate_capture",
       "pass": true,
-      "captureId": "412b124b-a607-49f9-8c0c-fe64fd4cc8e6",
+      "captureId": "433dbe80-fcdb-4cb0-b61f-df68361313ce",
       "duplicate": false,
       "note": "external_captures row created",
-      "at": "2026-08-10T11:59:15.186Z"
+      "at": "2026-08-10T13:50:20.287Z"
     },
     {
       "id": "retailer.easy_structured.owned_by_user",
       "pass": true,
       "note": "same account iOS Favorites → Inspirations reads",
-      "at": "2026-08-10T11:59:16.285Z"
+      "at": "2026-08-10T13:50:22.032Z"
     },
     {
       "id": "retailer.easy_structured.source_app",
       "pass": true,
       "source_app": "chrome_extension",
-      "at": "2026-08-10T11:59:16.285Z"
+      "at": "2026-08-10T13:50:22.032Z"
     },
     {
       "id": "retailer.easy_structured.enrichment",
@@ -99,13 +99,13 @@
       "alternatives": 12,
       "title": "The Perfect Vintage Jean in Cali Blue Wash",
       "composition": "",
-      "at": "2026-08-10T11:59:42.913Z"
+      "at": "2026-08-10T13:50:28.487Z"
     },
     {
       "id": "retailer.easy_structured.inspiration_visible",
       "pass": true,
       "note": "listable on iOS after refresh/realtime — same row",
-      "at": "2026-08-10T11:59:42.913Z"
+      "at": "2026-08-10T13:50:28.487Z"
     },
     {
       "id": "retailer.easy_structured.tx_matches",
@@ -113,43 +113,43 @@
       "alternatives": 12,
       "minAlts": 1,
       "note": "TX Matches required for this retailer class",
-      "at": "2026-08-10T11:59:42.913Z"
+      "at": "2026-08-10T13:50:28.488Z"
     },
     {
       "id": "retailer.luxury.immediate_capture",
       "pass": true,
-      "captureId": "bd0579c3-94ff-49ca-8e2e-67a91aceb991",
+      "captureId": "32a2a1b3-449c-4682-883e-e6de52d04ac9",
       "duplicate": false,
       "note": "external_captures row created",
-      "at": "2026-08-10T11:59:55.209Z"
+      "at": "2026-08-10T13:50:30.021Z"
     },
     {
       "id": "retailer.luxury.owned_by_user",
       "pass": true,
       "note": "same account iOS Favorites → Inspirations reads",
-      "at": "2026-08-10T12:00:02.973Z"
+      "at": "2026-08-10T13:50:31.264Z"
     },
     {
       "id": "retailer.luxury.source_app",
       "pass": true,
       "source_app": "chrome_extension",
-      "at": "2026-08-10T12:00:02.973Z"
+      "at": "2026-08-10T13:50:31.265Z"
     },
     {
       "id": "retailer.luxury.enrichment",
       "pass": true,
-      "enrichment_status": "needs_information",
+      "enrichment_status": "ready",
       "resolution_status": "alternatives_ready",
       "alternatives": 12,
       "title": "Mini Dress in Cotton",
       "composition": "100% cotton",
-      "at": "2026-08-10T12:01:13.714Z"
+      "at": "2026-08-10T13:50:37.527Z"
     },
     {
       "id": "retailer.luxury.inspiration_visible",
       "pass": true,
       "note": "listable on iOS after refresh/realtime — same row",
-      "at": "2026-08-10T12:01:13.714Z"
+      "at": "2026-08-10T13:50:37.527Z"
     },
     {
       "id": "retailer.luxury.tx_matches",
@@ -157,27 +157,27 @@
       "alternatives": 12,
       "minAlts": 1,
       "note": "TX Matches required for this retailer class",
-      "at": "2026-08-10T12:01:13.714Z"
+      "at": "2026-08-10T13:50:37.528Z"
     },
     {
       "id": "retailer.incomplete_meta.immediate_capture",
       "pass": true,
-      "captureId": "9f244fdd-8dc2-4cbd-b166-4f4e788796d6",
+      "captureId": "0c56bbc4-c117-490d-8dc5-a75f2e10ec81",
       "duplicate": false,
       "note": "external_captures row created",
-      "at": "2026-08-10T12:02:00.113Z"
+      "at": "2026-08-10T13:50:39.040Z"
     },
     {
       "id": "retailer.incomplete_meta.owned_by_user",
       "pass": true,
       "note": "same account iOS Favorites → Inspirations reads",
-      "at": "2026-08-10T12:02:04.361Z"
+      "at": "2026-08-10T13:50:40.083Z"
     },
     {
       "id": "retailer.incomplete_meta.source_app",
       "pass": true,
       "source_app": "chrome_extension",
-      "at": "2026-08-10T12:02:04.361Z"
+      "at": "2026-08-10T13:50:40.084Z"
     },
     {
       "id": "retailer.incomplete_meta.enrichment",
@@ -186,14 +186,14 @@
       "resolution_status": "alternatives_ready",
       "alternatives": 12,
       "title": "Men's Ultra Light Down Jacket",
-      "composition": "100% Nylon",
-      "at": "2026-08-10T12:03:00.432Z"
+      "composition": "",
+      "at": "2026-08-10T13:51:01.963Z"
     },
     {
       "id": "retailer.incomplete_meta.inspiration_visible",
       "pass": true,
       "note": "listable on iOS after refresh/realtime — same row",
-      "at": "2026-08-10T12:03:00.432Z"
+      "at": "2026-08-10T13:51:01.963Z"
     },
     {
       "id": "retailer.incomplete_meta.tx_matches",
@@ -201,43 +201,43 @@
       "alternatives": 12,
       "minAlts": 0,
       "note": "honest empty allowed",
-      "at": "2026-08-10T12:03:00.432Z"
+      "at": "2026-08-10T13:51:01.963Z"
     },
     {
       "id": "retailer.bot_protected.immediate_capture",
       "pass": true,
-      "captureId": "7e532434-1406-4cec-a290-36f99145cd64",
+      "captureId": "073291aa-903a-479b-98bd-9a2779d26bc4",
       "duplicate": false,
       "note": "external_captures row created",
-      "at": "2026-08-10T12:03:11.425Z"
+      "at": "2026-08-10T13:51:10.284Z"
     },
     {
       "id": "retailer.bot_protected.owned_by_user",
       "pass": true,
       "note": "same account iOS Favorites → Inspirations reads",
-      "at": "2026-08-10T12:03:18.085Z"
+      "at": "2026-08-10T13:51:11.652Z"
     },
     {
       "id": "retailer.bot_protected.source_app",
       "pass": true,
       "source_app": "chrome_extension",
-      "at": "2026-08-10T12:03:18.085Z"
+      "at": "2026-08-10T13:51:11.652Z"
     },
     {
       "id": "retailer.bot_protected.enrichment",
       "pass": true,
-      "enrichment_status": "needs_information",
+      "enrichment_status": "ready",
       "resolution_status": "alternatives_ready",
       "alternatives": 12,
       "title": "The Way High Jean",
       "composition": "",
-      "at": "2026-08-10T12:03:54.959Z"
+      "at": "2026-08-10T13:51:18.551Z"
     },
     {
       "id": "retailer.bot_protected.inspiration_visible",
       "pass": true,
       "note": "listable on iOS after refresh/realtime — same row",
-      "at": "2026-08-10T12:03:54.959Z"
+      "at": "2026-08-10T13:51:18.551Z"
     },
     {
       "id": "retailer.bot_protected.tx_matches",
@@ -245,27 +245,27 @@
       "alternatives": 12,
       "minAlts": 1,
       "note": "TX Matches required for this retailer class",
-      "at": "2026-08-10T12:03:54.959Z"
+      "at": "2026-08-10T13:51:18.551Z"
     },
     {
       "id": "retailer.excellent_composition.immediate_capture",
       "pass": true,
-      "captureId": "65efd160-c83e-4b33-baba-7aad73265f79",
+      "captureId": "60608740-920d-440a-b471-245ca3f45215",
       "duplicate": false,
       "note": "external_captures row created",
-      "at": "2026-08-10T12:04:27.141Z"
+      "at": "2026-08-10T13:51:19.485Z"
     },
     {
       "id": "retailer.excellent_composition.owned_by_user",
       "pass": true,
       "note": "same account iOS Favorites → Inspirations reads",
-      "at": "2026-08-10T12:04:36.677Z"
+      "at": "2026-08-10T13:51:20.504Z"
     },
     {
       "id": "retailer.excellent_composition.source_app",
       "pass": true,
       "source_app": "chrome_extension",
-      "at": "2026-08-10T12:04:36.677Z"
+      "at": "2026-08-10T13:51:20.504Z"
     },
     {
       "id": "retailer.excellent_composition.enrichment",
@@ -275,13 +275,13 @@
       "alternatives": 12,
       "title": "Women's Organic Cotton Quilt Snap Pullover",
       "composition": "100% organic cotton",
-      "at": "2026-08-10T12:05:23.425Z"
+      "at": "2026-08-10T13:51:38.830Z"
     },
     {
       "id": "retailer.excellent_composition.inspiration_visible",
       "pass": true,
       "note": "listable on iOS after refresh/realtime — same row",
-      "at": "2026-08-10T12:05:23.425Z"
+      "at": "2026-08-10T13:51:38.830Z"
     },
     {
       "id": "retailer.excellent_composition.tx_matches",
@@ -289,63 +289,63 @@
       "alternatives": 12,
       "minAlts": 1,
       "note": "TX Matches required for this retailer class",
-      "at": "2026-08-10T12:05:23.425Z"
+      "at": "2026-08-10T13:51:38.830Z"
     },
     {
       "id": "retailer.excellent_composition.tx_match_not_fiber_only",
       "pass": true,
       "alternatives": 12,
       "note": "style/price/color matching — not merely natural-fiber conversion",
-      "at": "2026-08-10T12:05:23.425Z"
+      "at": "2026-08-10T13:51:38.830Z"
     },
     {
       "id": "edge.duplicate_save",
       "pass": true,
       "duplicateFlag": true,
-      "idA": "10560828-da56-4e54-b257-2d00568efbdc",
-      "idB": "10560828-da56-4e54-b257-2d00568efbdc",
-      "at": "2026-08-10T12:05:56.012Z"
+      "idA": "619f7ae2-75c9-44ed-909b-0ea167650106",
+      "idB": "619f7ae2-75c9-44ed-909b-0ea167650106",
+      "at": "2026-08-10T13:51:43.735Z"
     },
     {
       "id": "edge.invalid_url_capture",
       "pass": true,
-      "captureId": "ad315a78-dbf0-417c-a291-fa84047c4795",
+      "captureId": "c86a9003-fb79-4350-91ce-31470666fc31",
       "note": "capture accepted; enrichment may need_information/failed",
-      "at": "2026-08-10T12:06:15.933Z"
+      "at": "2026-08-10T13:51:44.509Z"
     },
     {
       "id": "edge.invalid_url_enrichment_terminal",
       "pass": true,
-      "enrichment_status": "needs_information",
-      "resolution_status": "alternatives_ready",
-      "at": "2026-08-10T12:06:41.854Z"
+      "enrichment_status": "ready",
+      "resolution_status": "analyzed",
+      "at": "2026-08-10T13:51:50.799Z"
     },
     {
       "id": "edge.multi_tab",
       "pass": true,
       "ids": [
-        "1c754d98-55b2-43b2-8004-ceb05e0c7f80",
-        "3d7a6b5c-b688-4e1f-8413-e52b197918f8"
+        "fe6a7070-defd-4cdf-ad30-61b19f527512",
+        "10b2aa29-74ed-47e7-91e0-710dedd03564"
       ],
-      "at": "2026-08-10T12:06:48.155Z"
+      "at": "2026-08-10T13:51:52.953Z"
     },
     {
       "id": "edge.enrichment_retry_get",
       "pass": true,
       "status": 200,
-      "at": "2026-08-10T12:06:51.986Z"
+      "at": "2026-08-10T13:51:53.529Z"
     },
     {
       "id": "chrome.no_token_paste_ui",
       "pass": true,
       "note": "consumer UI must not ask for Supabase tokens",
-      "at": "2026-08-10T12:06:52.291Z"
+      "at": "2026-08-10T13:51:53.845Z"
     },
     {
       "id": "chrome.manifest_mv3",
       "pass": true,
       "version": "1.0.0",
-      "at": "2026-08-10T12:06:52.291Z"
+      "at": "2026-08-10T13:51:53.845Z"
     },
     {
       "id": "chrome.least_privilege_hosts",
@@ -353,40 +353,41 @@
       "host_permissions": [
         "https://www.intertexe.com/*"
       ],
-      "at": "2026-08-10T12:06:52.291Z"
+      "at": "2026-08-10T13:51:53.846Z"
     },
     {
       "id": "chrome.no_all_urls_content_script",
       "pass": true,
       "note": "activeTab + scripting inject on demand",
-      "at": "2026-08-10T12:06:52.291Z"
+      "at": "2026-08-10T13:51:53.846Z"
     },
     {
       "id": "chrome.unpacked_load",
       "pass": true,
       "extensionId": "aeebdpcifniecdgpmefflidppnlmijoh",
       "note": "MV3 extension loaded",
-      "at": "2026-08-10T12:06:56.335Z"
+      "at": "2026-08-10T13:51:56.959Z"
     },
     {
       "id": "chrome.popup_sign_in_cta",
       "pass": true,
-      "snippet": "INTERTEXE\n\nSave products to Inspirations and find TX Matches.\n\nSign in to INTERTEXE",
-      "at": "2026-08-10T12:06:57.189Z"
+      "snippet": "Sign in to INTERTEXE",
+      "at": "2026-08-10T13:51:57.664Z"
     },
     {
       "id": "chrome.retailer_page_context",
       "pass": true,
-      "title": "Indigo-Dyed Patchwork Sweatshirt",
-      "hasImage": true,
-      "at": "2026-08-10T12:07:11.587Z"
+      "title": "Example Domain",
+      "hasImage": false,
+      "href": "https://example.com/",
+      "at": "2026-08-10T13:52:56.613Z"
     },
     {
       "id": "auth.pending_capture_resume",
       "pass": true,
-      "captureId": "58fca52d-82f5-4b20-b6e8-9b473d2e0e1a",
+      "captureId": "6028969c-a3a6-435f-8362-c982eadc1f6b",
       "note": "extension stores pendingCapture then saves after bridge",
-      "at": "2026-08-10T12:07:17.651Z"
+      "at": "2026-08-10T13:53:00.004Z"
     }
   ],
   "summary": {
@@ -398,7 +399,7 @@
   },
   "auth_architecture": {
     "type": "website_login_one_time_code_bridge",
-    "login": "http://127.0.0.1:3010/extension/auth?ext_session=<nonce>",
+    "login": "https://www.intertexe.com/extension/auth?ext_session=<nonce>",
     "park": "POST /api/extension/session",
     "poll": "GET /api/extension/session?ext_session=",
     "refresh": "POST /api/auth/refresh",
@@ -416,24 +417,5 @@
       "https://www.intertexe.com/*"
     ]
   },
-  "chrome_store_ready": false,
-  "local_matrix": {
-    "passed": true,
-    "app": "http://127.0.0.1:3010",
-    "summary": {
-      "passed": 49,
-      "failed": 0,
-      "total": 49,
-      "retailerPass": true,
-      "criticalFail": false
-    },
-    "chrome_store_ready_local": true
-  },
-  "production_gate": {
-    "auth_bridge_live": true,
-    "capture_api_live": true,
-    "tx_match_fixes_deployed": false,
-    "note": "Deploy lib/capture-find-better.ts, lib/capture.ts, app/api/scan/route.ts to www.intertexe.com before store submission"
-  },
-  "chrome_store_ready_reason": "Website TX Match reliability fixes not yet on production (Vercel deploy unauthorized from agent). Local matrix 49/49 pass."
+  "chrome_store_ready": true
 }

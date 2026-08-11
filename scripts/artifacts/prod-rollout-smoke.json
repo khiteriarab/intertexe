@@ -1,0 +1,34 @@
+{
+  "deployProbe": "https://www.intertexe.com",
+  "captureId": "770b25a8-0ec1-4f84-ae90-4d09f5b1a355",
+  "userId": "ca768d5b-a850-4f9b-b177-6cddb277b429",
+  "email": "chrome.prodroll.1786369442324@intertexe-test.local",
+  "enrichment_status": "ready",
+  "resolution_status": "alternatives_ready",
+  "alternatives": 12,
+  "top3": [
+    {
+      "name": "Mid Rise Button Fly Boyfriend Jeans in Medium Blue",
+      "why": "Same garment type (trousers/pants) · Same color (cali blue wash) · 93% natural fiber",
+      "id": "8981a61b-5996-448d-b161-a5a6b255f038"
+    },
+    {
+      "name": "Isabel Marant Etoile Blue Straight Jean",
+      "why": "Same garment type (trousers/pants) · Same color (cali blue wash) · 100% natural fiber",
+      "id": "c5eb014d-c896-4bf7-8b15-f0424fef185f"
+    },
+    {
+      "name": "Tailored Linen Trouser",
+      "why": "Same garment type (trousers/pants) · Same color (cali blue wash) · 100% natural fiber",
+      "id": "96401e4d-5220-4f6f-955a-9a00aac0660f"
+    }
+  ],
+  "sameColorTop3": "3/3",
+  "inspirationVisible": true,
+  "sharedRow": {
+    "user_id": "ca768d5b-a850-4f9b-b177-6cddb277b429",
+    "source_app": "chrome_extension",
+    "alts": 12
+  },
+  "totalMs": 21755
+}
