@@ -88,6 +88,7 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [ascKeyId, setAscKeyId] = useState("");
   const [ascIssuerId, setAscIssuerId] = useState("");
+  const [ascVendorNumber, setAscVendorNumber] = useState("");
   const [ascFile, setAscFile] = useState<File | null>(null);
   const [showAscForm, setShowAscForm] = useState(false);
 
@@ -213,6 +214,7 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
       const fd = new FormData();
       fd.set("keyId", ascKeyId);
       fd.set("issuerId", ascIssuerId);
+      if (ascVendorNumber.trim()) fd.set("vendorNumber", ascVendorNumber.trim());
       fd.set("p8", ascFile);
       const res = await fetch("/api/dashboard/integrations/app-store-connect", {
         method: "POST",
@@ -446,6 +448,16 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                         className="border border-black/15 rounded-lg px-2 py-1.5 text-sm"
                       />
                     </div>
+                    <input
+                      value={ascVendorNumber}
+                      onChange={(e) => setAscVendorNumber(e.target.value)}
+                      placeholder="Vendor Number (for downloads)"
+                      className="w-full border border-black/15 rounded-lg px-2 py-1.5 text-sm"
+                    />
+                    <p className="text-[11px] text-black/45 leading-relaxed">
+                      Vendor Number is in App Store Connect → Payments and Financial Reports. Required to pull App Units
+                      (downloads) into Acquisition / Today.
+                    </p>
                     <input
                       required
                       type="file"

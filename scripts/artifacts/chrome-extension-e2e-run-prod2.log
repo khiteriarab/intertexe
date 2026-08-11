@@ -1,0 +1,72 @@
+APP https://www.intertexe.com
+Extension root /Users/khiteri/Desktop/intertexe-ios/browser-extension
+E2E user chrome.e2e.1786369811556@intertexe-test.local 0b736853-5691-4988-8f7c-80f9e12fe0ea
+PASS  auth.bridge.park 
+PASS  auth.bridge.poll_once one-time token handoff
+PASS  auth.bridge.one_time second poll must not re-issue tokens
+PASS  auth.refresh session survives without re-login
+PASS  auth.expired_rejected 
+
+--- Easy structured-data (Madewell) ---
+PASS  retailer.easy_structured.immediate_capture external_captures row created
+PASS  retailer.easy_structured.owned_by_user same account iOS Favorites → Inspirations reads
+PASS  retailer.easy_structured.source_app 
+PASS  retailer.easy_structured.enrichment 
+PASS  retailer.easy_structured.inspiration_visible listable on iOS after refresh/realtime — same row
+PASS  retailer.easy_structured.tx_matches TX Matches required for this retailer class
+
+--- Luxury (Pucci) ---
+PASS  retailer.luxury.immediate_capture external_captures row created
+PASS  retailer.luxury.owned_by_user same account iOS Favorites → Inspirations reads
+PASS  retailer.luxury.source_app 
+PASS  retailer.luxury.enrichment 
+PASS  retailer.luxury.inspiration_visible listable on iOS after refresh/realtime — same row
+PASS  retailer.luxury.tx_matches TX Matches required for this retailer class
+
+--- Incomplete metadata path (generic PDP query) ---
+PASS  retailer.incomplete_meta.immediate_capture external_captures row created
+PASS  retailer.incomplete_meta.owned_by_user same account iOS Favorites → Inspirations reads
+PASS  retailer.incomplete_meta.source_app 
+PASS  retailer.incomplete_meta.enrichment 
+PASS  retailer.incomplete_meta.inspiration_visible listable on iOS after refresh/realtime — same row
+PASS  retailer.incomplete_meta.tx_matches honest empty allowed
+
+--- Difficult / bot-protected (Everlane) ---
+PASS  retailer.bot_protected.immediate_capture external_captures row created
+PASS  retailer.bot_protected.owned_by_user same account iOS Favorites → Inspirations reads
+PASS  retailer.bot_protected.source_app 
+PASS  retailer.bot_protected.enrichment 
+PASS  retailer.bot_protected.inspiration_visible listable on iOS after refresh/realtime — same row
+PASS  retailer.bot_protected.tx_matches TX Matches required for this retailer class
+
+--- Excellent original composition (prove TX Match ≠ fiber conversion only) ---
+PASS  retailer.excellent_composition.immediate_capture external_captures row created
+PASS  retailer.excellent_composition.owned_by_user same account iOS Favorites → Inspirations reads
+PASS  retailer.excellent_composition.source_app 
+PASS  retailer.excellent_composition.enrichment 
+PASS  retailer.excellent_composition.inspiration_visible listable on iOS after refresh/realtime — same row
+PASS  retailer.excellent_composition.tx_matches TX Matches required for this retailer class
+PASS  retailer.excellent_composition.tx_match_not_fiber_only style/price/color matching — not merely natural-fiber conversion
+PASS  edge.duplicate_save 
+PASS  edge.invalid_url_capture capture accepted; enrichment may need_information/failed
+PASS  edge.invalid_url_enrichment_terminal 
+PASS  edge.multi_tab 
+PASS  edge.enrichment_retry_get 
+PASS  chrome.no_token_paste_ui consumer UI must not ask for Supabase tokens
+PASS  chrome.manifest_mv3 
+PASS  chrome.least_privilege_hosts 
+PASS  chrome.no_all_urls_content_script activeTab + scripting inject on demand
+PASS  chrome.unpacked_load MV3 extension loaded
+PASS  chrome.popup_sign_in_cta 
+PASS  chrome.retailer_page_context 
+PASS  auth.pending_capture_resume extension stores pendingCapture then saves after bridge
+
+Wrote /Users/khiteri/Desktop/intertexe-ios/intertexe-website/scripts/artifacts/chrome-extension-e2e-matrix.json
+summary {
+  passed: 49,
+  failed: 0,
+  total: 49,
+  retailerPass: true,
+  criticalFail: false
+}
+chrome_store_ready= true

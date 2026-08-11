@@ -1,0 +1,35 @@
+{
+  "at": "2026-08-10T19:01:55.490312Z",
+  "migration": {
+    "capture_image_url_column": true,
+    "scan_captures_bucket": true,
+    "storage_policies": [
+      "scan_captures_insert_own",
+      "scan_captures_update_own",
+      "scan_captures_delete_own",
+      "scan_captures_select_public"
+    ],
+    "hq_emit_cast_fixed": true
+  },
+  "e2e_care_label": {
+    "result": "PASS",
+    "steps": [
+      "create user + sign in",
+      "upsert scan_history metadata",
+      "POST /api/scan-history/capture",
+      "re-upsert with capture_image_url",
+      "GET public Storage URL 200",
+      "sign out/in equivalent (fresh client) fetch row with capture_image_url"
+    ],
+    "notes": "Server-path mirrors iOS saveScanHistory order. Device camera relaunch still requires one manual care-label on build with 23921cf+."
+  },
+  "ios_pushed": [
+    "f9d78c2",
+    "23921cf",
+    "36158c3"
+  ],
+  "website": {
+    "prod_redeployed": true,
+    "pr": "https://github.com/khiteriarab/intertexe/pull/9"
+  }
+}

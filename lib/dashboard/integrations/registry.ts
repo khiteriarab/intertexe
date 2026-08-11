@@ -119,8 +119,8 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     cardId: "app_store_connect",
     label: "App Store Connect",
     providerId: "app_store_connect",
-    permissions: ["Apps list", "Analytics/Sales via API key JWT (no user OAuth)"],
-    blurb: "Upload a team .p8 API key — Apple does not support OAuth for this API.",
+    permissions: ["App Units (downloads)", "Sales SUMMARY daily reports", "Apps list"],
+    blurb: "Upload a team .p8 API key + Vendor Number — downloads feed Acquisition and Today.",
   },
 ];
 

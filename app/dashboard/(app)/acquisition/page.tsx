@@ -4,7 +4,7 @@ import {
   fetchHqAcquisitionReport,
   type AcquisitionBucket,
 } from "../../../../lib/dashboard/acquisition";
-import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
+import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchAppStoreDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
 
@@ -99,11 +99,12 @@ function ReportTable({
 
 export default async function HqAcquisitionPage() {
   const session = await requireHqSession();
-  const [report, google, tiktok, pinterest] = await Promise.all([
+  const [report, google, tiktok, pinterest, appStore] = await Promise.all([
     fetchHqAcquisitionReport(),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
     fetchTikTokDiscoveryMetrics(session.workspaceId),
     fetchPinterestDiscoveryMetrics(session.workspaceId),
+    fetchAppStoreDiscoveryMetrics(session.workspaceId),
   ]);
 
   return (
@@ -120,6 +121,87 @@ export default async function HqAcquisitionPage() {
           </Link>
         }
       />
+
+      <HqCard className="mb-6" title="App Store downloads">
+        {appStore.connected ? (
+          <>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
+              App Units from App Store Connect Sales SUMMARY · trailing 7d vs prior 7d
+            </p>
+            <HqMetricGrid
+              items={[
+                {
+                  label: "Downloads (7d)",
+                  value: formatCount(appStore.appUnits7d),
+                  hint: appStore.deltas.appUnits7d.label || "App Units",
+                },
+                {
+                  label: "Downloads (30d)",
+                  value: formatCount(appStore.appUnits30d),
+                  hint: appStore.reportLatestDate
+                    ? `Through ${appStore.reportLatestDate}`
+                    : "App Units",
+                },
+                {
+                  label: "Latest report day",
+                  value: formatCount(appStore.appUnitsLatestDay),
+                  hint: appStore.reportLatestDate || "Sales lag 1–2 days",
+                },
+                {
+                  label: "Apps visible",
+                  value: formatCount(appStore.appsVisible),
+                  hint: appStore.appNames.slice(0, 2).join(", ") || "ASC apps list",
+                },
+              ]}
+            />
+            {appStore.daily.length ? (
+              <div className="mt-5">
+                <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                  Daily App Units (recent)
+                </p>
+                <ul className="space-y-2 text-sm max-h-48 overflow-y-auto">
+                  {[...appStore.daily].reverse().map((d) => (
+                    <li key={d.date} className="flex justify-between gap-3">
+                      <span className="tabular-nums text-black/60">{d.date}</span>
+                      <span className="tabular-nums font-medium">{formatCount(d.appUnits)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {appStore.setupWarnings.length ? (
+              <p className="text-sm text-amber-900 mt-4">{appStore.setupWarnings.join(" · ")}</p>
+            ) : null}
+            {!appStore.downloadsReady ? (
+              <p className="text-sm text-black/60 mt-4 leading-relaxed">
+                API key is connected, but downloads need your Vendor Number. Reconnect in Settings and add it, then Sync
+                Now.
+              </p>
+            ) : null}
+            <p className="text-[11px] text-black/40 mt-4">
+              Synced {appStore.syncedAt ? new Date(appStore.syncedAt).toLocaleString() : "—"}
+              {appStore.lastSyncStatus ? ` · ${appStore.lastSyncStatus}` : ""}
+              {" · "}
+              <Link href="/dashboard/settings" className="underline underline-offset-2">
+                Manage connection
+              </Link>
+            </p>
+          </>
+        ) : (
+          <div className="text-sm text-black/60 leading-relaxed">
+            <p>
+              App Store Connect is not connected, so iOS downloads are dark. Upload a team .p8 API key and Vendor Number
+              in Settings — this page will show App Units (downloads).
+            </p>
+            <Link
+              href="/dashboard/settings"
+              className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
+            >
+              Open Settings → Integrations
+            </Link>
+          </div>
+        )}
+      </HqCard>
 
       <HqCard className="mb-6" title="Web discovery (Google)">
         {google.connected ? (
