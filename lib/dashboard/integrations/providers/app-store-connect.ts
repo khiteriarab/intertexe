@@ -90,10 +90,29 @@ export const appStoreConnectAdapter: ProviderAdapter = {
       jwt,
       vendorNumber,
       bundleIdFilter,
-      daysBack: 16,
+      daysBack: 21,
     });
 
-    const dates = Object.keys(byDate).sort();
+    // Weekly fallback when daily rows are empty (new apps / lag).
+    if (Object.keys(byDate).filter((k) => k !== "__errors" && k !== "__meta").length === 0) {
+      const weekly = await fetchWeeklyAppUnits({
+        jwt,
+        vendorNumber,
+        bundleIdFilter,
+      });
+      if (weekly.units != null && weekly.weekStart) {
+        byDate[weekly.weekStart] = weekly.units;
+      }
+      if (weekly.error) {
+        const errs = byDate.__errors || [];
+        errs.push(weekly.error);
+        byDate.__errors = errs;
+      }
+    }
+
+    const dates = Object.keys(byDate)
+      .filter((k) => k !== "__errors" && k !== "__meta")
+      .sort();
     const latestDate = dates.length ? dates[dates.length - 1] : null;
     const sumRange = (endExclusiveOffsetDays: number, length: number) => {
       if (!latestDate) return 0;
@@ -109,17 +128,31 @@ export const appStoreConnectAdapter: ProviderAdapter = {
       return total;
     };
 
-    const appUnitsLatestDay = latestDate ? byDate[latestDate] || 0 : null;
-    const appUnits7d = latestDate ? sumRange(0, 7) : null;
-    const appUnitsPrev7d = latestDate ? sumRange(7, 7) : null;
-    const appUnits30d = latestDate ? sumRange(0, Math.min(30, dates.length)) : null;
+    const appUnitsLatestDay = latestDate ? byDate[latestDate] || 0 : 0;
+    const appUnits7d = latestDate ? sumRange(0, 7) : 0;
+    const appUnitsPrev7d = latestDate ? sumRange(7, 7) : 0;
+    const appUnits30d = latestDate ? sumRange(0, Math.min(30, Math.max(dates.length, 1))) : 0;
 
     const daily = dates.slice(-14).map((date) => ({
       date,
       appUnits: byDate[date] || 0,
     }));
 
-    const fetchErrors = (byDate as { __errors?: string[] }).__errors || [];
+    const fetchErrors = byDate.__errors || [];
+    const metaInfo = byDate.__meta || {};
+    const vendorLooksWrong = fetchErrors.some((e) =>
+      /vendor|forbidden|unauthorized|not valid|invalid/i.test(e)
+    );
+
+    const warnings: string[] = [];
+    if (dates.length === 0) {
+      warnings.push(
+        vendorLooksWrong
+          ? "Sales API rejected this Vendor Number — double-check it in Payments and Financial Reports."
+          : "No Sales SUMMARY rows in the last ~3 weeks yet (normal before first downloads, or reports still lagging)."
+      );
+    }
+    warnings.push(...fetchErrors.slice(0, 2));
 
     return {
       metrics: {
@@ -127,6 +160,7 @@ export const appStoreConnectAdapter: ProviderAdapter = {
         appsVisible: apps.length,
         appNames: appSummaries.map((a) => a.name).filter(Boolean),
         vendorNumber,
+        vendorNumberHint: vendorNumber.length > 2 ? `…${vendorNumber.slice(-2)}` : null,
         reportLatestDate: latestDate,
         appUnitsLatestDay,
         appUnits7d,
@@ -138,20 +172,21 @@ export const appStoreConnectAdapter: ProviderAdapter = {
         downloadsReady: true,
         daily,
         reportDaysFetched: dates.length,
-        ...(fetchErrors.length
-          ? { setupWarnings: fetchErrors.slice(0, 3) }
-          : {}),
-        ...(dates.length === 0
+        emptyReportDays: metaInfo.emptyDays ?? null,
+        ...(warnings.length ? { setupWarnings: warnings } : {}),
+        // Hard error only when Apple rejects the vendor / auth for Sales.
+        ...(vendorLooksWrong
           ? {
               ascError:
-                "Connected, but no Sales SUMMARY daily rows returned yet (reports lag 1–2 days, or Vendor Number may be wrong).",
+                fetchErrors[0] ||
+                "Sales API rejected this Vendor Number — reconnect with the correct one.",
             }
           : {}),
       },
       raw: {
         apps: appSummaries,
         daily,
-        vendorNumber,
+        vendorNumberHint: vendorNumber.length > 2 ? `…${vendorNumber.slice(-2)}` : null,
       },
     };
   },
@@ -228,38 +263,74 @@ async function fetchDailyAppUnits(args: {
   vendorNumber: string;
   bundleIdFilter: string;
   daysBack: number;
-}): Promise<Record<string, number> & { __errors?: string[] }> {
-  const out: Record<string, number> & { __errors?: string[] } = {};
+}): Promise<Record<string, number> & { __errors?: string[]; __meta?: { emptyDays: number } }> {
+  const out: Record<string, number> & {
+    __errors?: string[];
+    __meta?: { emptyDays: number };
+  } = {};
   const errors: string[] = [];
+  let emptyDays = 0;
   const today = new Date();
-  // Sales reports typically lag ~1–2 days; skip "today".
   for (let i = 1; i <= args.daysBack; i++) {
     const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
     d.setUTCDate(d.getUTCDate() - i);
     const reportDate = isoDate(d);
     try {
-      const units = await fetchOneSalesDay({
+      const units = await fetchOneSalesReport({
         jwt: args.jwt,
         vendorNumber: args.vendorNumber,
+        frequency: "DAILY",
         reportDate,
         bundleIdFilter: args.bundleIdFilter,
       });
       if (units != null) out[reportDate] = units;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      // Empty days / not-yet-available are normal — only keep real API failures.
-      if (!/no sales|404|not found|empty report/i.test(msg)) {
-        errors.push(`${reportDate}: ${msg}`.slice(0, 160));
+      if (/no sales|404|not found|empty report|no data/i.test(msg)) {
+        emptyDays += 1;
+      } else {
+        errors.push(`${reportDate}: ${msg}`.slice(0, 180));
       }
     }
   }
   if (errors.length) out.__errors = errors;
+  out.__meta = { emptyDays };
   return out;
 }
 
-async function fetchOneSalesDay(args: {
+async function fetchWeeklyAppUnits(args: {
   jwt: string;
   vendorNumber: string;
+  bundleIdFilter: string;
+}): Promise<{ weekStart: string | null; units: number | null; error?: string }> {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0 Sun
+  const lastSunday = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (day || 7))
+  );
+  const weekStart = isoDate(lastSunday);
+  try {
+    const units = await fetchOneSalesReport({
+      jwt: args.jwt,
+      vendorNumber: args.vendorNumber,
+      frequency: "WEEKLY",
+      reportDate: weekStart,
+      bundleIdFilter: args.bundleIdFilter,
+    });
+    return { weekStart, units: units ?? 0 };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/no sales|404|not found|empty report|no data/i.test(msg)) {
+      return { weekStart, units: null };
+    }
+    return { weekStart, units: null, error: `weekly: ${msg}`.slice(0, 180) };
+  }
+}
+
+async function fetchOneSalesReport(args: {
+  jwt: string;
+  vendorNumber: string;
+  frequency: "DAILY" | "WEEKLY";
   reportDate: string;
   bundleIdFilter: string;
 }): Promise<number | null> {
@@ -267,7 +338,7 @@ async function fetchOneSalesDay(args: {
   params.set("filter[vendorNumber]", args.vendorNumber);
   params.set("filter[reportType]", "SALES");
   params.set("filter[reportSubType]", "SUMMARY");
-  params.set("filter[frequency]", "DAILY");
+  params.set("filter[frequency]", args.frequency);
   params.set("filter[reportDate]", args.reportDate);
 
   const res = await fetch(
@@ -280,17 +351,17 @@ async function fetchOneSalesDay(args: {
     }
   );
 
-  if (res.status === 404) {
-    throw new Error("no sales for date");
-  }
   if (!res.ok) {
     const text = await res.text();
     let detail = text.slice(0, 240);
     try {
       const j = JSON.parse(text);
-      detail = j?.errors?.[0]?.detail || detail;
+      detail = j?.errors?.[0]?.detail || j?.errors?.[0]?.code || detail;
     } catch {
       /* keep text */
+    }
+    if (res.status === 404) {
+      throw new Error(detail || "no sales for date");
     }
     throw new Error(detail || `salesReports ${res.status}`);
   }
@@ -327,15 +398,9 @@ function sumAppUnitsFromSalesTsv(tsv: string, bundleIdFilter: string): number {
     const type = (cols[typeIdx] || "").trim().toUpperCase();
     if (!APP_UNIT_TYPES.has(type)) continue;
     if (bundleIdFilter) {
-      const hay = [
-        cols[skuIdx] || "",
-        cols[titleIdx] || "",
-        cols[appleIdIdx] || "",
-      ]
+      const hay = [cols[skuIdx] || "", cols[titleIdx] || "", cols[appleIdIdx] || ""]
         .join(" ")
         .toLowerCase();
-      // Soft filter: if a bundle hint is set and nothing matches, still count all app units
-      // unless the row clearly looks like a different app SKU — keep simple: no filter on SKU.
       void hay;
     }
     const units = Number(String(cols[unitsIdx] || "0").replace(/,/g, ""));
