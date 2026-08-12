@@ -183,16 +183,18 @@ export async function POST(request: NextRequest) {
       }).catch(() => null);
     }
 
-    // Canonical founder welcome (idempotent + logged). Fire-and-forget.
+    // Canonical founder welcome via Loops (idempotent + logged). No Resend welcome.
     sendWelcomeEmail({
       email: cleanEmail,
       firstName: resolvedFirst || fullName || "",
+      lastName: resolvedLast || undefined,
       userId: user?.id || null,
       source: "web_signup",
+      invitationCode: typeof invitationCode === "string" ? invitationCode : undefined,
     }).catch(console.error);
 
-    // Loops may also run dashboard-managed automations that are NOT defined in this repo.
-    // Do not duplicate Resend lifecycle emails in Loops.
+    // Contact sync for mailing lists / audience (separate from Founder Welcome transactional).
+    // Do not create a Loops Loop that also sends Welcome on contact create — that duplicates Day 0.
     syncContactToLoops({
       email: cleanEmail,
       firstName: resolvedFirst || undefined,

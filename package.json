@@ -14,6 +14,7 @@
     "test:hq": "node --import tsx --test scripts/period-delta.test.ts",
     "test:background-jobs": "node --import tsx --test scripts/background-jobs.test.ts",
     "test:email-lifecycle": "node --import tsx --test scripts/email-lifecycle.test.ts",
+    "test:founder-welcome": "node --import tsx --test scripts/founder-welcome.test.ts",
     "test:paid-acquisition": "node --import tsx --test scripts/paid-acquisition.test.ts"
   },
   "dependencies": {

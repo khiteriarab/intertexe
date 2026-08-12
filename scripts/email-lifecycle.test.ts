@@ -9,6 +9,7 @@ import {
   EMAIL_FROM,
   EMAIL_FROM_FOUNDER,
   EMAIL_REPLY_TO,
+  EMAIL_REPLY_TO_FOUNDER,
   EMAIL_TYPES,
   LIFECYCLE_BRANCHES,
   founderWelcomeSubject,
@@ -47,7 +48,8 @@ test("founder welcome subject variants", () => {
 });
 
 test("founder From and Reply-To identities", () => {
-  assert.equal(EMAIL_FROM_FOUNDER, "Khiteri from INTERTEXE <khiteri@intertexe.com>");
+  assert.equal(EMAIL_FROM_FOUNDER, "Khiteri <khiteri@intertexe.com>");
+  assert.equal(EMAIL_REPLY_TO_FOUNDER, "khiteri@intertexe.com");
   assert.equal(EMAIL_REPLY_TO, "info@intertexe.com");
   assert.equal(EMAIL_FROM, "Intertexe <info@mail.intertexe.com>");
   assert.equal(EMAIL_TYPES.FOUNDER_WELCOME, "founder_welcome");

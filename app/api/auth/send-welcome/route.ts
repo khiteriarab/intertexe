@@ -7,9 +7,8 @@ import { sendWelcomeEmail } from "../../../../server/resend";
  * Trigger founder welcome for the authenticated user (iOS registration).
  *
  * Auth: Supabase JWT only.
- * - Derives email/user from the token (client-provided email is ignored for targeting).
- * - No CRON_SECRET / shared-secret fallback.
- * - Idempotent via email_deliveries.
+ * Delivery: Loops transactional only (no Resend welcome).
+ * Idempotent via email_deliveries (provider=loops).
  */
 export async function POST(request: NextRequest) {
   try {

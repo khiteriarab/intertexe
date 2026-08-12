@@ -2,7 +2,7 @@ import { render } from "@react-email/render";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import LifecycleCheckpointEmail from "../emails/LifecycleCheckpointEmail";
 import {
-  EMAIL_FROM_FOUNDER,
+  EMAIL_FROM,
   EMAIL_REPLY_TO,
   EMAIL_TYPES,
   LIFECYCLE_BRANCHES,
@@ -217,7 +217,7 @@ export async function sendLifecycleCheckpointForUser(
     html,
     emailType,
     userId: candidate.userId,
-    from: EMAIL_FROM_FOUNDER,
+    from: EMAIL_FROM,
     replyTo: EMAIL_REPLY_TO,
     deliveryId: claim.deliveryId,
     metadata: {

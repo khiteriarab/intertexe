@@ -72,6 +72,7 @@ export type EmailEngineBundle = {
     email: string;
     emailType: string;
     status: string;
+    provider: string | null;
     providerMessageId: string | null;
     sentAt: string | null;
     deliveredAt: string | null;
@@ -88,6 +89,7 @@ type DeliveryLite = {
   email: string;
   email_type: string;
   status: string;
+  provider?: string | null;
   provider_message_id: string | null;
   sent_at: string | null;
   delivered_at: string | null;
@@ -127,7 +129,7 @@ async function loadRecentDeliveries(
   const { data, error } = await supabase
     .from("email_deliveries")
     .select(
-      "id, email, email_type, status, provider_message_id, sent_at, delivered_at, bounced_at, complained_at, failed_at, created_at, metadata"
+      "id, email, email_type, status, provider, provider_message_id, sent_at, delivered_at, bounced_at, complained_at, failed_at, created_at, metadata"
     )
     .gte("created_at", sinceIso)
     .order("created_at", { ascending: false })
@@ -306,6 +308,7 @@ export async function fetchEmailEngineBundle(): Promise<EmailEngineBundle> {
     email: row.email,
     emailType: row.email_type,
     status: row.status,
+    provider: row.provider || null,
     providerMessageId: row.provider_message_id,
     sentAt: row.sent_at,
     deliveredAt: row.delivered_at,

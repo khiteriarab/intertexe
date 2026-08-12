@@ -85,11 +85,14 @@ export async function claimTypedEmailSend(
     userId?: string | null;
     email: string;
     metadata?: Record<string, unknown>;
+    /** Delivery provider — founder welcome uses loops; everything else resend. */
+    provider?: "resend" | "loops";
   }
 ): Promise<ClaimResult> {
   const email = normalizeEmail(opts.email);
   const userId = opts.userId || null;
   const emailType = opts.emailType;
+  const provider = opts.provider || "resend";
 
   let blocking: EmailDeliveryRow | null = null;
   if (userId) {
@@ -139,6 +142,7 @@ export async function claimTypedEmailSend(
         status: EMAIL_STATUSES.PENDING,
         email,
         user_id: userId,
+        provider,
         failure_reason: null,
         failed_at: null,
         provider_message_id: null,
@@ -165,7 +169,7 @@ export async function claimTypedEmailSend(
       user_id: userId,
       email,
       email_type: emailType,
-      provider: "resend",
+      provider,
       status: EMAIL_STATUSES.PENDING,
       metadata: opts.metadata || {},
     })
@@ -189,6 +193,7 @@ export async function claimFounderWelcomeSend(
     userId?: string | null;
     email: string;
     metadata?: Record<string, unknown>;
+    provider?: "resend" | "loops";
   }
 ): Promise<ClaimResult> {
   return claimTypedEmailSend(supabase, {
@@ -196,6 +201,7 @@ export async function claimFounderWelcomeSend(
     userId: opts.userId,
     email: opts.email,
     metadata: opts.metadata,
+    provider: opts.provider || "loops",
   });
 }
 
@@ -235,17 +241,18 @@ export async function createEmailDelivery(
 export async function markEmailDeliverySent(
   supabase: SupabaseClient,
   deliveryId: string,
-  providerMessageId?: string | null
+  providerMessageId?: string | null,
+  opts?: { provider?: "resend" | "loops" }
 ): Promise<void> {
-  await supabase
-    .from("email_deliveries")
-    .update({
-      status: EMAIL_STATUSES.SENT,
-      provider_message_id: providerMessageId || null,
-      sent_at: nowIso(),
-      updated_at: nowIso(),
-    })
-    .eq("id", deliveryId);
+  const patch: Record<string, unknown> = {
+    status: EMAIL_STATUSES.SENT,
+    provider_message_id: providerMessageId || null,
+    sent_at: nowIso(),
+    updated_at: nowIso(),
+  };
+  if (opts?.provider) patch.provider = opts.provider;
+
+  await supabase.from("email_deliveries").update(patch).eq("id", deliveryId);
 }
 
 export async function markEmailDeliveryFailed(

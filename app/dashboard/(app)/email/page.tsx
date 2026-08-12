@@ -128,6 +128,7 @@ export default async function HqEmailPage() {
                 <tr className="text-[10px] tracking-widest uppercase text-black/40 border-b border-black/10">
                   <th className="py-2 pr-3 font-medium">Type</th>
                   <th className="py-2 pr-3 font-medium">To</th>
+                  <th className="py-2 pr-3 font-medium">Provider</th>
                   <th className="py-2 pr-3 font-medium">Status</th>
                   <th className="py-2 pr-3 font-medium">Source</th>
                   <th className="py-2 font-medium">When</th>
@@ -138,6 +139,7 @@ export default async function HqEmailPage() {
                   <tr key={row.id} className="border-b border-black/5">
                     <td className="py-2 pr-3 font-mono text-[11px]">{row.emailType}</td>
                     <td className="py-2 pr-3 truncate max-w-[220px]">{row.email}</td>
+                    <td className="py-2 pr-3 text-[11px] text-black/50">{row.provider || "—"}</td>
                     <td className="py-2 pr-3 tabular-nums">{row.status}</td>
                     <td className="py-2 pr-3 text-black/50 text-[11px]">{row.source || "—"}</td>
                     <td className="py-2 text-[11px] text-black/50">
@@ -156,7 +158,7 @@ export default async function HqEmailPage() {
           ← Today
         </Link>
         {" · "}
-        Replies are not counted here — they come from Gmail, not Resend.
+        Replies are not counted here — they come from Gmail / inbox, not the ESP webhook.
       </p>
     </div>
   );

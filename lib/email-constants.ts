@@ -1,13 +1,24 @@
-/** Shared Resend identity for customer-facing INTERTEXE email. */
+/** Shared email identity constants.
 
-/** Visible From for founder welcome and lifecycle checkpoints. */
-export const EMAIL_FROM_FOUNDER = "Khiteri from INTERTEXE <khiteri@intertexe.com>";
+ * Channel split:
+ * - Resend (mail.intertexe.com): automated / system mail — lifecycle, weekly edit, price drops
+ * - Loops (khiteri@intertexe.com): Founder Welcome only — From configured in Loops template UI
+ */
 
-/** Default From for other customer-facing emails. */
+/** Default From for Resend customer-facing emails (verified domain: mail.intertexe.com). */
 export const EMAIL_FROM = "Intertexe <info@mail.intertexe.com>";
 
-/** Monitored inbox for customer replies. */
+/** Default Reply-To for Resend customer emails. */
 export const EMAIL_REPLY_TO = "info@intertexe.com";
+
+/**
+ * Founder Welcome From identity — configured in the Loops transactional template,
+ * not sent via Resend. Documented here for dashboards / tests.
+ */
+export const EMAIL_FROM_FOUNDER = "Khiteri <khiteri@intertexe.com>";
+
+/** Founder Welcome Reply-To — set in the Loops template to match From. */
+export const EMAIL_REPLY_TO_FOUNDER = "khiteri@intertexe.com";
 
 export const EMAIL_TYPES = {
   FOUNDER_WELCOME: "founder_welcome",

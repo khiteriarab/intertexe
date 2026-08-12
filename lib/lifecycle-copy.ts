@@ -107,7 +107,7 @@ export function copyForLifecycleBranch(
         hook: `${hi}\n\nIt looks like a scan didn’t go as expected.`,
         body: "I’d genuinely like to know what happened. Just reply to this email with a photo or a short note — I read the responses and use them to improve INTERTEXE.",
         ctaLabel: "Reply to Khiteri",
-        ctaUrl: "mailto:info@intertexe.com?subject=Scan%20feedback",
+        ctaUrl: "mailto:khiteri@intertexe.com?subject=Scan%20feedback",
         closing: "Thank you — Khiteri, Founder",
       };
     default: {
