@@ -1,7 +1,7 @@
 /** Shared Resend identity for customer-facing INTERTEXE email. */
 
-/** Visible From for founder welcome (sending domain stays mail.intertexe.com). */
-export const EMAIL_FROM_FOUNDER = "Khiteri from INTERTEXE <info@mail.intertexe.com>";
+/** Visible From for founder welcome and lifecycle checkpoints. */
+export const EMAIL_FROM_FOUNDER = "Khiteri from INTERTEXE <khiteri@intertexe.com>";
 
 /** Default From for other customer-facing emails. */
 export const EMAIL_FROM = "Intertexe <info@mail.intertexe.com>";

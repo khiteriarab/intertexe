@@ -47,7 +47,7 @@ test("founder welcome subject variants", () => {
 });
 
 test("founder From and Reply-To identities", () => {
-  assert.equal(EMAIL_FROM_FOUNDER, "Khiteri from INTERTEXE <info@mail.intertexe.com>");
+  assert.equal(EMAIL_FROM_FOUNDER, "Khiteri from INTERTEXE <khiteri@intertexe.com>");
   assert.equal(EMAIL_REPLY_TO, "info@intertexe.com");
   assert.equal(EMAIL_FROM, "Intertexe <info@mail.intertexe.com>");
   assert.equal(EMAIL_TYPES.FOUNDER_WELCOME, "founder_welcome");
