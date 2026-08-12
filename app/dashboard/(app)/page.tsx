@@ -12,6 +12,8 @@ import { fetchNightlySyncOps, statusBadgeClass } from "../../../lib/dashboard/ca
 import { fetchCostSnapshot } from "../../../lib/dashboard/cost-observability";
 import { fetchHqCommercePage } from "../../../lib/dashboard/metrics";
 import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
+import { fetchPaidAcquisitionReport } from "../../../lib/dashboard/paid-acquisition";
+import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
 import { HqCard, HqPageHeader } from "../components/HqUi";
@@ -46,6 +48,7 @@ export default async function HqOverviewPage() {
     appStore,
     costSnap,
     emailEngine,
+    paidAcquisition,
   ] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
@@ -56,6 +59,7 @@ export default async function HqOverviewPage() {
     fetchAppStoreDiscoveryMetrics(session.workspaceId),
     fetchCostSnapshot(),
     fetchEmailEngineBundle(),
+    fetchPaidAcquisitionReport(),
   ]);
 
   const name = greetingName(session.fullName, session.email);
@@ -296,6 +300,8 @@ export default async function HqOverviewPage() {
       <HqCard className="mb-6" title="Action center">
         <ActionCenterClient initialActions={actions} canAdmin={canAdmin} />
       </HqCard>
+
+      <PaidAcquisitionSection report={paidAcquisition} compact />
 
       <HqCard className="mb-6" title="Email today">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">

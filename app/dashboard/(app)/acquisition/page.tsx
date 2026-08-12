@@ -5,8 +5,10 @@ import {
   type AcquisitionBucket,
 } from "../../../../lib/dashboard/acquisition";
 import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchAppStoreDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
+import { fetchPaidAcquisitionReport } from "../../../../lib/dashboard/paid-acquisition";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
+import { PaidAcquisitionSection } from "../../components/PaidAcquisitionSection";
 
 export const metadata = { title: "Acquisition" };
 export const dynamic = "force-dynamic";
@@ -99,8 +101,9 @@ function ReportTable({
 
 export default async function HqAcquisitionPage() {
   const session = await requireHqSession();
-  const [report, google, tiktok, pinterest, appStore] = await Promise.all([
+  const [report, paidAcquisition, google, tiktok, pinterest, appStore] = await Promise.all([
     fetchHqAcquisitionReport(),
+    fetchPaidAcquisitionReport(),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
     fetchTikTokDiscoveryMetrics(session.workspaceId),
     fetchPinterestDiscoveryMetrics(session.workspaceId),
@@ -121,6 +124,10 @@ export default async function HqAcquisitionPage() {
           </Link>
         }
       />
+
+      <div id="paid-acquisition">
+        <PaidAcquisitionSection report={paidAcquisition} />
+      </div>
 
       <HqCard className="mb-6" title="App Store downloads">
         {appStore.connected ? (
