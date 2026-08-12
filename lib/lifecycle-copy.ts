@@ -1,4 +1,4 @@
-import { getAppStoreUrl } from "./app-store";
+import { getAppStoreOpenUrl, getAppStoreUrl } from "./app-store";
 import { LIFECYCLE_BRANCHES, type LifecycleBranch } from "./email-constants";
 
 export type LifecycleCopy = {
@@ -96,7 +96,7 @@ export function copyForLifecycleBranch(
         hook: `${hi}\n\nWhat got in the way?`,
         body: "If INTERTEXE didn’t click yet, that’s useful to know. The simplest next step is one scan — or reply to this email and tell me what would make it useful.",
         ctaLabel: "Open INTERTEXE",
-        ctaUrl: getAppStoreUrl(),
+        ctaUrl: getAppStoreOpenUrl("/scanner"),
         closing: "I read the replies. — Khiteri",
       };
     case LIFECYCLE_BRANCHES.DAY25_FEEDBACK:

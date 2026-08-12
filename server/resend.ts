@@ -1,6 +1,6 @@
 import { render } from "@react-email/render";
 import WelcomeEmail from "../emails/WelcomeEmail";
-import { getAppStoreUrl, isAppDeepLinkReady } from "../lib/app-store";
+import { getAppStoreOpenUrl, getAppStoreUrl, isAppDeepLinkReady } from "../lib/app-store";
 import {
   EMAIL_FROM_FOUNDER,
   EMAIL_REPLY_TO,
@@ -28,9 +28,9 @@ export type SendWelcomeEmailResult = {
 };
 
 function resolveWelcomeCtaUrl(): string {
-  // Deep links are intentionally gated off until production-ready (lib/app-store.ts).
+  // Prefer HTTPS Universal Link when AASA is live; otherwise direct App Store.
   if (isAppDeepLinkReady()) {
-    return getAppStoreUrl();
+    return getAppStoreOpenUrl("/scanner");
   }
   return getAppStoreUrl();
 }

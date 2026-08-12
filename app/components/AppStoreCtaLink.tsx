@@ -1,11 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
+import {
+  DEFAULT_APP_STORE_URL,
+  getAppStoreOpenUrl,
+  getAppStoreUrl,
+  isAppDeepLinkReady,
+} from "../../lib/app-store";
 
 type Props = {
   className?: string;
   appStoreUrl?: string;
+  /** In-app destination for Universal Link CTAs, e.g. /scanner or /product/123 */
   path?: string;
   label?: string;
   children?: ReactNode;
@@ -13,16 +19,20 @@ type Props = {
   onAfterClick?: () => void;
 };
 
-/** Direct App Store link. */
+/** Smart Universal Link when ready; App Store when not. */
 export function AppStoreCtaLink({
   className,
   appStoreUrl,
-  label = "Download App",
+  path,
+  label,
   children,
   testId = "link-app-store-cta",
   onAfterClick,
 }: Props) {
-  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
+  const href = isAppDeepLinkReady()
+    ? getAppStoreOpenUrl(path)
+    : getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
+  const resolvedLabel = label || (isAppDeepLinkReady() ? "Open App" : "Download App");
 
   return (
     <a
@@ -31,7 +41,7 @@ export function AppStoreCtaLink({
       data-testid={testId}
       onClick={() => onAfterClick?.()}
     >
-      {children ?? label}
+      {children ?? resolvedLabel}
     </a>
   );
 }

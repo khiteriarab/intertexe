@@ -1,17 +1,27 @@
-/** Shared App Store helpers. */
+/** Shared App Store + Universal Link helpers. */
 
 export const APP_STORE_ID = "6770476520";
 
 /** Canonical live App Store listing. */
 export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/us/app/id${APP_STORE_ID}`;
 
-/** Optional same-origin hop (kept for bookmarks). */
+/** Explicit App Store-only hop (not claimed in AASA). */
 export const APP_DOWNLOAD_PATH = "/download";
+
+/** Smart-link wrapper claimed in AASA — opens app if installed, else /open → App Store. */
+export const APP_UNIVERSAL_OPEN_PATH = "/open";
 
 export const DEFAULT_APP_URL_SCHEME = "intertexe";
 
+/** Public site origin used for Universal Link CTAs. */
+export const APP_UNIVERSAL_ORIGIN = "https://www.intertexe.com";
+
+/**
+ * Live App Store 1.0.1 includes UL routing for claimed AASA paths.
+ * Flip only after production AASA components are live on origin (+ Apple CDN).
+ */
 export function isAppDeepLinkReady(): boolean {
-  return false;
+  return true;
 }
 
 function isPlaceholderEnv(value: string): boolean {
@@ -43,9 +53,34 @@ export function getAppStoreUrl(explicit?: string): string {
   return DEFAULT_APP_STORE_URL;
 }
 
-/** CTA href — direct App Store URL. */
-export function getAppStoreOpenUrl(explicit?: string): string {
-  return getAppStoreUrl(explicit);
+/**
+ * Build an HTTPS Universal Link that opens INTERTEXE when installed.
+ * Falls back to the /open web page → App Store when not installed.
+ *
+ * Prefer destinations the live binary can route:
+ * /scanner, /product/*, /shop, /designers/*, /collections/*, /capture, /sale, /account
+ * Do not use /inspirations/* (1.0.1 has no handler).
+ */
+export function getUniversalOpenUrl(nextPath?: string): string {
+  const next = (nextPath || "/").trim() || "/";
+  const normalized = next.startsWith("/") ? next : `/${next}`;
+  const params = new URLSearchParams();
+  if (normalized && normalized !== "/") {
+    params.set("next", normalized);
+  }
+  const qs = params.toString();
+  return `${APP_UNIVERSAL_ORIGIN}${APP_UNIVERSAL_OPEN_PATH}${qs ? `?${qs}` : ""}`;
+}
+
+/**
+ * CTA href for “open / download app”.
+ * When Universal Links are ready → HTTPS /open smart link; else direct App Store.
+ */
+export function getAppStoreOpenUrl(nextPath?: string, explicitStoreUrl?: string): string {
+  if (isAppDeepLinkReady()) {
+    return getUniversalOpenUrl(nextPath);
+  }
+  return getAppStoreUrl(explicitStoreUrl);
 }
 
 export function getAppUrlScheme(): string {
@@ -66,5 +101,5 @@ export function readLikelyAppInstalled(): boolean {
 }
 
 export function getAppCtaLabel(_likelyInstalled?: boolean): string {
-  return "Download App";
+  return isAppDeepLinkReady() ? "Open App" : "Download App";
 }

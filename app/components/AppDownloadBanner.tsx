@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
+import { getAppStoreOpenUrl, getAppCtaLabel } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 type Props = {
@@ -19,9 +19,10 @@ type Props = {
 const APP_ICON_SRC = "/app-icon.png";
 const APP_ICON_FALLBACK = "/favicon.png";
 
-/** Sticky app bar — Download opens the App Store directly. */
+/** Sticky app bar — Universal Link smart open (App Store fallback via /open). */
 export function AppDownloadBanner({
-  appStoreUrl,
+  appStoreUrl: _appStoreUrl,
+  path = "/scanner",
   dismissKey = "app-banner-dismissed",
   title = "Scan Any Garment",
   subtitle = "Find better fabrics",
@@ -32,7 +33,7 @@ export function AppDownloadBanner({
   const [dismissed, setDismissed] = useState(true);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const isMobile = useIsMobileWeb();
-  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
+  const href = getAppStoreOpenUrl(path);
 
   useEffect(() => {
     try {
@@ -96,7 +97,7 @@ export function AppDownloadBanner({
         className="flex-shrink-0 bg-white text-black px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-neutral-100 active:scale-[0.98] transition-all min-h-[40px] flex items-center justify-center"
         data-testid="link-app-open"
       >
-        Download App
+        {getAppCtaLabel()}
       </a>
     </div>
   );

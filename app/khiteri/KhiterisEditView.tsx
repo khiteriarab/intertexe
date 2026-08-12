@@ -177,7 +177,7 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
           </Link>
           <AppStoreCtaLink
             appStoreUrl={appStoreUrl}
-            path="/khiteri"
+            path="/scanner"
             className="khiteris-edit__cta khiteris-edit__cta--secondary"
             testId="link-khiteri-app-store"
           />
