@@ -233,7 +233,12 @@ export default async function ProductPage({
 
   return (
     <div className="min-h-screen pb-16">
-      <ProductViewBeacon productId={String(product.id)} />
+      <ProductViewBeacon
+        productId={String(product.id)}
+        contentName={`${product.brandName || ""} ${product.name || ""}`.trim()}
+        price={product.price}
+        currency={product.currency || "USD"}
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: breadcrumbItems }) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
 

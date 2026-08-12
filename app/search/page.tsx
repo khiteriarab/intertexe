@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getServerSupabase } from "../../lib/supabase-service-client";
 import { queryCatalogBrowsePageV2 } from "../../lib/catalog-browse-v2";
 import { SearchInput } from "./SearchInput";
+import { SearchResultsBeacon } from "./SearchResultsBeacon";
 import { ProductLink } from "../components/ProductLink";
 import { CatalogProductImage } from "../components/CatalogProductImage";
 import { formatDisplayPrice } from "../../lib/format-display-price";
@@ -69,6 +70,9 @@ export default async function SearchPage({
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12 w-full">
       <SearchInput defaultValue={query} resultCount={resultCount} />
+      {query.length >= 2 ? (
+        <SearchResultsBeacon searchTerm={query} resultCount={resultCount} />
+      ) : null}
 
       {query.length >= 2 && (
         <p className="text-xs text-muted-foreground mt-4 mb-8" data-testid="text-search-count">

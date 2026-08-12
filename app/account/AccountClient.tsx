@@ -150,9 +150,13 @@ export default function AccountClient({
         const data = await res.json();
         if (data.token) {
           setTokenValue(data.token);
-          const { trackAccountCreated } = await import("../../lib/analytics");
-          trackAccountCreated({ source: "direct", userId: data.id ? String(data.id) : undefined });
         }
+        // CompleteRegistration only after successful web signup API response (not form open).
+        const { trackAccountCreated } = await import("../../lib/analytics");
+        trackAccountCreated({
+          source: "direct",
+          userId: data.id ? String(data.id) : data.user?.id ? String(data.user.id) : undefined,
+        });
       }
       await fetchMe();
     } catch (err: any) {

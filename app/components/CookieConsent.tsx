@@ -2,23 +2,30 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { META_PIXEL_CONSENT_EVENT, META_PIXEL_CONSENT_KEY } from "../../lib/meta-pixel";
 
 export function CookieConsent() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("cookie_consent");
+    const consent = localStorage.getItem(META_PIXEL_CONSENT_KEY);
     if (!consent) setShow(true);
   }, []);
 
   const accept = () => {
-    localStorage.setItem("cookie_consent", "accepted");
+    localStorage.setItem(META_PIXEL_CONSENT_KEY, "accepted");
     setShow(false);
+    window.dispatchEvent(
+      new CustomEvent(META_PIXEL_CONSENT_EVENT, { detail: { status: "accepted" } })
+    );
   };
 
   const decline = () => {
-    localStorage.setItem("cookie_consent", "declined");
+    localStorage.setItem(META_PIXEL_CONSENT_KEY, "declined");
     setShow(false);
+    window.dispatchEvent(
+      new CustomEvent(META_PIXEL_CONSENT_EVENT, { detail: { status: "declined" } })
+    );
   };
 
   if (!show) return null;
@@ -32,7 +39,8 @@ export function CookieConsent() {
     >
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <p className="text-xs text-muted-foreground leading-relaxed max-w-xl">
-          We use cookies to improve your experience and analyze site usage. By continuing you agree to our{" "}
+          We use cookies to improve your experience, analyze site usage, and measure advertising
+          (including Meta). By continuing you agree to our{" "}
           <Link href="/privacy" className="underline text-foreground">
             Privacy Policy
           </Link>

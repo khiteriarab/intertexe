@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { trackViewContent } from "../../../lib/analytics";
 
 const TOKEN_KEY = "intertexe_auth_token";
 const LOCAL_KEY = "intertexe_recently_viewed";
@@ -29,14 +30,37 @@ function getToken(): string | null {
   }
 }
 
-/** Fire-and-forget product view — local + Supabase when signed in. */
-export function ProductViewBeacon({ productId }: { productId: string }) {
+function parsePrice(price: string | number | null | undefined): number | null {
+  if (price == null) return null;
+  const n = typeof price === "number" ? price : parseFloat(String(price).replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Fire-and-forget product view — local + Supabase when signed in + Meta ViewContent. */
+export function ProductViewBeacon({
+  productId,
+  contentName,
+  price,
+  currency,
+}: {
+  productId: string;
+  contentName?: string;
+  price?: string | number | null;
+  currency?: string | null;
+}) {
   useEffect(() => {
     if (!productId) return;
 
     const local = loadLocal().filter((id) => id !== productId);
     local.unshift(productId);
     saveLocal(local);
+
+    trackViewContent({
+      productId,
+      contentName,
+      value: parsePrice(price),
+      currency: currency || "USD",
+    });
 
     const token = getToken();
     if (!token) return;
@@ -49,7 +73,7 @@ export function ProductViewBeacon({ productId }: { productId: string }) {
       },
       body: JSON.stringify({ productId }),
     }).catch(() => {});
-  }, [productId]);
+  }, [productId, contentName, price, currency]);
 
   return null;
 }

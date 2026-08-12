@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { requireHqSession } from "../../../../lib/dashboard/auth";
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
+import { getMetaPixelId } from "../../../../lib/meta-pixel";
 import { HqCard, HqPageHeader } from "../../components/HqUi";
 import { SettingsAdminClient } from "./SettingsAdminClient";
 import { IntegrationsClient } from "./IntegrationsClient";
@@ -18,6 +19,7 @@ const FALLBACK_SOURCES = [
   { key: "app_store_connect", label: "App Store Connect", status: "not_connected" },
   { key: "tiktok", label: "TikTok", status: "not_connected" },
   { key: "instagram", label: "Instagram", status: "not_connected" },
+  { key: "meta_pixel", label: "Meta Pixel (website)", status: "not_connected" },
   { key: "pinterest", label: "Pinterest", status: "not_connected" },
   { key: "google_analytics", label: "Google Analytics", status: "not_connected" },
   { key: "search_console", label: "Search Console", status: "not_connected" },
@@ -36,6 +38,7 @@ export default async function HqSettingsPage() {
   const canAdmin = session.roles.some((r) => ["founder", "admin"].includes(r));
 
   let sources = FALLBACK_SOURCES;
+  const pixelId = getMetaPixelId();
   if (supabase) {
     const { data, error } = await supabase
       .from("hq_data_sources")
@@ -44,6 +47,15 @@ export default async function HqSettingsPage() {
       .order("label");
     if (!error && data?.length) sources = data;
   }
+  sources = sources.map((s) =>
+    s.key === "meta_pixel"
+      ? {
+          ...s,
+          label: pixelId ? `Meta Pixel (${pixelId})` : "Meta Pixel (website)",
+          status: pixelId ? "connected" : "not_connected",
+        }
+      : s
+  );
 
   return (
     <div>

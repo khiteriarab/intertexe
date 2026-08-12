@@ -142,6 +142,16 @@ export function useProductFavorites() {
           }
         } catch {}
       }
+      const priceNum = price ? parseFloat(String(price).replace(/[^0-9.]/g, "")) : null;
+      void import("../../lib/analytics")
+        .then((m) =>
+          m.trackProductFavorite({
+            productId,
+            contentName: brandName,
+            value: Number.isFinite(priceNum as number) ? priceNum : null,
+          })
+        )
+        .catch(() => {});
     } else {
       current.delete(productId);
     }

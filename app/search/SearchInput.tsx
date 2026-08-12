@@ -3,13 +3,12 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Search } from "lucide-react";
-import { trackSearch } from "../../lib/analytics";
 
 export function SearchInput({
   defaultValue = "",
-  resultCount,
 }: {
   defaultValue?: string;
+  /** @deprecated Search fires via SearchResultsBeacon on results page. */
   resultCount?: number;
 }) {
   const router = useRouter();
@@ -18,9 +17,6 @@ export function SearchInput({
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     const q = value.trim();
-    if (q.length >= 2 && resultCount != null) {
-      trackSearch({ searchTerm: q, resultCount });
-    }
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
   }
 

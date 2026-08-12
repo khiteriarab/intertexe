@@ -98,6 +98,21 @@ export function ShopNowButton({
         rel="noopener noreferrer"
         onClick={() => {
           void recordClickOut(product);
+          const priceNum =
+            product.price != null
+              ? parseFloat(String(product.price).replace(/[^0-9.]/g, ""))
+              : NaN;
+          void import("../../../lib/analytics")
+            .then((m) =>
+              m.trackAffiliateClick({
+                productId: String(product.id),
+                brandName: String(product.brandName ?? product.brand_name ?? ""),
+                price: Number.isFinite(priceNum) ? priceNum : 0,
+                currency: String(product.currency || "USD"),
+                source: "shop",
+              })
+            )
+            .catch(() => null);
         }}
         className="flex items-center justify-center gap-3 w-full bg-foreground text-background px-8 py-4 uppercase tracking-[0.2em] text-xs font-medium hover:opacity-90 transition-opacity active:scale-[0.98]"
         data-testid="link-shop-now"

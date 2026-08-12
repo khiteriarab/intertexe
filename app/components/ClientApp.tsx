@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { Navbar } from "./Navbar";
 import { ScrollToTop } from "./ScrollToTop";
 import { Analytics } from "./Analytics";
+import { MetaPixel } from "./MetaPixel";
 import { Footer } from "./Footer";
 import { EmailBanner } from "./EmailBanner";
 import { SignInBenefitsBanner } from "./SignInBenefitsBanner";
@@ -51,6 +52,7 @@ export function ClientApp({ children }: { children: ReactNode }) {
       <AuthLoginPromptProvider>
       <UtmCapture />
       <Analytics />
+      <MetaPixel />
       <Suspense fallback={null}>
         <RouteProgress />
       </Suspense>
