@@ -14,7 +14,13 @@ function resolveUserGroup(invitationCode?: string): string {
   return "general";
 }
 
-/** Sync a new signup to Loops (no-op when LOOPS_API_KEY is unset). */
+/**
+ * Sync a new signup to Loops (no-op when LOOPS_API_KEY is unset).
+ *
+ * NOTE: Loops may contain dashboard-managed automations (drip sequences, campaigns)
+ * that are NOT visible in this repository. Do not duplicate future Resend lifecycle
+ * emails as Loops automations — pick one channel per message.
+ */
 export async function syncContactToLoops(input: LoopsContactInput): Promise<void> {
   const apiKey = process.env.LOOPS_API_KEY;
   if (!apiKey) return;

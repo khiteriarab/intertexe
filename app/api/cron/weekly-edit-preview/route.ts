@@ -5,7 +5,7 @@ import { render } from "@react-email/render";
 import { Resend } from "resend";
 import WeeklyEditEmail from "@/emails/WeeklyEditEmail";
 import { authorizeCron, getWeekNumber } from "@/lib/cron-auth";
-import { EMAIL_FROM } from "@/lib/email-constants";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/email-constants";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getWeeklyEditMeta, selectWeeklyEditProducts } from "@/lib/weekly-edit";
 
@@ -57,12 +57,32 @@ export async function GET(req: NextRequest) {
     );
 
     const resend = new Resend(apiKey);
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: previewEmail,
+      replyTo: EMAIL_REPLY_TO,
       subject: `[PREVIEW] Friday Edit — Week ${weekNumber} — Approve by midnight`,
       html: previewHtml,
     });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Preview is internal ops — still log for delivery audit.
+    try {
+      const { createEmailDelivery, markEmailDeliverySent } = await import(
+        "@/lib/email-deliveries"
+      );
+      const { EMAIL_TYPES } = await import("@/lib/email-constants");
+      const deliveryId = await createEmailDelivery(supabase, {
+        email: previewEmail,
+        emailType: EMAIL_TYPES.WEEKLY_EDIT_PREVIEW,
+        metadata: { week_number: weekNumber, classification: "internal_preview" },
+      });
+      await markEmailDeliverySent(supabase, deliveryId, data?.id || null);
+    } catch (logErr) {
+      console.error("weekly edit preview delivery log failed:", logErr);
+    }
 
     return NextResponse.json({
       success: true,

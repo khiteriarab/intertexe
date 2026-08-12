@@ -2,10 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { render } from "@react-email/render";
-import { Resend } from "resend";
 import PriceDropEmail from "@/emails/PriceDropEmail";
 import { authorizeCron } from "@/lib/cron-auth";
-import { EMAIL_FROM } from "@/lib/email-constants";
+import { EMAIL_FROM, EMAIL_REPLY_TO, EMAIL_TYPES } from "@/lib/email-constants";
+import { sendCustomerEmail } from "@/lib/resend-customer";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   isPriceDrop,
@@ -14,12 +14,16 @@ import {
   type FavoritePriceRow,
 } from "@/lib/price-drop-favorites";
 
+/**
+ * Canonical price-drop email pipeline.
+ * Deduped by price_drop_notifications + email_deliveries logging.
+ * /api/cron/price-check no longer sends email.
+ */
 export async function GET(request: NextRequest) {
   const denied = authorizeCron(request);
   if (denied) return denied;
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
   }
 
@@ -43,10 +47,11 @@ export async function GET(request: NextRequest) {
     return isPriceDrop(parsePrice(fav.saved_price), parsePrice(product.price));
   });
 
-  const resend = new Resend(apiKey);
   let emailed = 0;
   let skippedNoEmail = 0;
   let skippedNoProduct = 0;
+  let skippedDuplicate = 0;
+  let skippedOptOut = 0;
 
   const userIds = [...new Set(eligible.map((n) => n.user_id))];
   const emailByUser = new Map<string, string>();
@@ -60,7 +65,6 @@ export async function GET(request: NextRequest) {
       emailByUser.set(uid, email);
       const meta = userData.user.user_metadata || {};
       nameByUser.set(uid, String(meta.first_name || meta.name || "").split(" ")[0] || "");
-      // Honor iOS local + server prefs: notify_price_drops false OR marketing unsubscribed.
       if (meta.notify_price_drops === false || meta.notify_price_drops === "false") {
         optedOut.add(uid);
       }
@@ -78,8 +82,6 @@ export async function GET(request: NextRequest) {
       }
     }
   }
-
-  let skippedOptOut = 0;
 
   for (const notif of eligible) {
     if (optedOut.has(notif.user_id)) {
@@ -101,8 +103,23 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
+    // Structural dedupe: same user + product + new_price already emailed → skip.
+    const { data: prior } = await supabase
+      .from("price_drop_notifications")
+      .select("id")
+      .eq("user_id", notif.user_id)
+      .eq("product_id", notif.product_id)
+      .eq("new_price", currentPrice)
+      .limit(1)
+      .maybeSingle();
+    if (prior?.id) {
+      skippedDuplicate++;
+      continue;
+    }
+
     const currency = product.currency || notif.saved_currency || "USD";
     const productUrl = product.url || `https://www.intertexe.com/product/${product.id}`;
+    const drop = Math.round((1 - currentPrice / savedPrice) * 100);
 
     try {
       const emailHtml = await render(
@@ -119,16 +136,29 @@ export async function GET(request: NextRequest) {
         })
       );
 
-      const drop = Math.round((1 - currentPrice / savedPrice) * 100);
-      await resend.emails.send({
-        from: EMAIL_FROM,
+      const sendResult = await sendCustomerEmail({
         to: email,
         subject: `Price drop on your saved item — ${drop}% off`,
         html: emailHtml,
+        emailType: EMAIL_TYPES.PRICE_DROP,
+        userId: notif.user_id,
+        from: EMAIL_FROM,
+        replyTo: EMAIL_REPLY_TO,
+        metadata: {
+          product_id: notif.product_id,
+          old_price: savedPrice,
+          new_price: currentPrice,
+          classification: "transactional_alert",
+        },
       });
+
+      if (!sendResult.ok) {
+        console.error("Price drop email failed:", sendResult.error);
+        continue;
+      }
+
       emailed++;
 
-      // Prevent repeat alerts for the same drop level.
       if (notif.id) {
         await supabase
           .from("product_favorites")
@@ -136,18 +166,13 @@ export async function GET(request: NextRequest) {
           .eq("id", notif.id);
       }
 
-      // Durable dedupe log (best-effort — ignore schema drift).
-      try {
-        await supabase.from("price_drop_notifications").insert({
-          user_id: notif.user_id,
-          product_id: notif.product_id,
-          old_price: savedPrice,
-          new_price: currentPrice,
-          emailed_at: new Date().toISOString(),
-        });
-      } catch {
-        /* ignore */
-      }
+      await supabase.from("price_drop_notifications").insert({
+        user_id: notif.user_id,
+        product_id: notif.product_id,
+        old_price: savedPrice,
+        new_price: currentPrice,
+        emailed_at: new Date().toISOString(),
+      });
     } catch (e) {
       console.error("Price drop email failed:", e);
     }
@@ -161,5 +186,6 @@ export async function GET(request: NextRequest) {
     skippedNoEmail,
     skippedNoProduct,
     skippedOptOut,
+    skippedDuplicate,
   });
 }

@@ -2,18 +2,17 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { render } from "@react-email/render";
-import { Resend } from "resend";
 import ScanFollowUpEmail from "@/emails/ScanFollowUpEmail";
 import { authorizeCron } from "@/lib/cron-auth";
-import { EMAIL_FROM } from "@/lib/email-constants";
+import { EMAIL_FROM, EMAIL_REPLY_TO, EMAIL_TYPES } from "@/lib/email-constants";
+import { sendCustomerEmail } from "@/lib/resend-customer";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export async function GET(req: NextRequest) {
   const denied = authorizeCron(req);
   if (denied) return denied;
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
   }
 
@@ -33,7 +32,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sent: 0 });
   }
 
-  const resend = new Resend(apiKey);
+  let sent = 0;
+  let failed = 0;
 
   for (const item of pending) {
     const emailHtml = await render(
@@ -46,16 +46,28 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    await resend.emails.send({
-      from: EMAIL_FROM,
+    const result = await sendCustomerEmail({
       to: item.email,
       subject: "Your scan result from Intertexe",
       html: emailHtml,
+      emailType: EMAIL_TYPES.SCAN_FOLLOWUP,
+      from: EMAIL_FROM,
+      replyTo: EMAIL_REPLY_TO,
+      metadata: {
+        queue_id: item.id,
+        classification: "transactional_followup",
+      },
     });
 
-    await supabase.from("scan_follow_up_queue").update({ sent: true }).eq("id", item.id);
+    if (result.ok) {
+      await supabase.from("scan_follow_up_queue").update({ sent: true }).eq("id", item.id);
+      sent++;
+    } else {
+      failed++;
+      console.error("scan follow-up send failed:", result.error);
+    }
     await new Promise((r) => setTimeout(r, 200));
   }
 
-  return NextResponse.json({ sent: pending.length });
+  return NextResponse.json({ sent, failed });
 }

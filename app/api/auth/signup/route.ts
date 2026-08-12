@@ -183,7 +183,16 @@ export async function POST(request: NextRequest) {
       }).catch(() => null);
     }
 
-    sendWelcomeEmail(cleanEmail, resolvedFirst || fullName || "").catch(console.error);
+    // Canonical founder welcome (idempotent + logged). Fire-and-forget.
+    sendWelcomeEmail({
+      email: cleanEmail,
+      firstName: resolvedFirst || fullName || "",
+      userId: user?.id || null,
+      source: "web_signup",
+    }).catch(console.error);
+
+    // Loops may also run dashboard-managed automations that are NOT defined in this repo.
+    // Do not duplicate Resend lifecycle emails in Loops.
     syncContactToLoops({
       email: cleanEmail,
       firstName: resolvedFirst || undefined,

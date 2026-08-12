@@ -118,7 +118,14 @@ export function setupAuth(app: Express) {
         name: name || null,
       });
 
-      sendWelcomeEmail(email, name).catch(() => {});
+      // LEGACY Express/local signup path (not used by Vercel production Next.js auth).
+      // Still routes through canonical sendWelcomeEmail for idempotency if this server runs.
+      sendWelcomeEmail({
+        email,
+        firstName: name || "",
+        userId: null,
+        source: "legacy_express_auth",
+      }).catch(() => {});
       db.insert(analyticsEvents).values({ event: "signup", userId: user.id }).catch(() => {});
 
       const token = await storeToken(user.id);

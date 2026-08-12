@@ -115,7 +115,14 @@ export async function registerRoutes(
         fabric_persona: null,
       });
 
-      sendWelcomeEmail(email, name).catch(() => {});
+      // LEGACY Express/Supabase hybrid signup (Replit-era). Production website uses app/api/auth/signup.
+      // Canonical idempotent sender still used if this path is exercised.
+      sendWelcomeEmail({
+        email,
+        firstName: name || "",
+        userId: userId || null,
+        source: "legacy_express_routes",
+      }).catch(() => {});
       trackEvent("signup", userId).catch(() => {});
 
       return res.status(201).json({

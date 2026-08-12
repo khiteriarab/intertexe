@@ -1,9 +1,9 @@
+import * as React from "react";
 import {
   Body,
   Column,
   Container,
   Head,
-  Heading,
   Hr,
   Html,
   Link,
@@ -15,13 +15,21 @@ import {
 
 export interface WelcomeEmailProps {
   firstName: string;
+  /** Primary CTA — App Store URL until deep links are production-ready. */
+  ctaUrl: string;
 }
 
-export default function WelcomeEmail({ firstName }: WelcomeEmailProps) {
+export default function WelcomeEmail({ firstName, ctaUrl }: WelcomeEmailProps) {
+  const greeting = firstName?.trim()
+    ? `Hi ${firstName.trim()},`
+    : "Hi,";
+
   return (
     <Html>
       <Head />
-      <Preview>Welcome to Intertexe. Know what you are wearing.</Preview>
+      <Preview>
+        I&apos;m Khiteri, the founder of INTERTEXE. Here&apos;s where to start.
+      </Preview>
       <Body style={styles.main}>
         <Container style={styles.container}>
           <Section style={styles.header}>
@@ -31,89 +39,69 @@ export default function WelcomeEmail({ firstName }: WelcomeEmailProps) {
           <Hr style={styles.divider} />
 
           <Section style={styles.section}>
-            <Heading style={styles.heading}>
-              Welcome{firstName ? `, ${firstName}` : ""}.
-            </Heading>
+            <Text style={styles.body}>{greeting}</Text>
             <Text style={styles.body}>
-              You now have access to 84,704+ verified natural fiber pieces across 253 brands. Every
-              composition checked. Every piece verified.
+              I&apos;m Khiteri, the founder of INTERTEXE. I built INTERTEXE because I wanted a
+              better way to shop, one where what something is made of matters just as much as how it
+              looks.
             </Text>
-            <Text style={styles.body}>
-              This is fashion the way it should be. You know exactly what you are wearing.
-            </Text>
+            <Text style={styles.body}>Now that you&apos;re in, here are three things to try:</Text>
           </Section>
 
-          <Hr style={styles.divider} />
-
-          <Section style={styles.section}>
-            <Text style={styles.label}>GET STARTED</Text>
-
-            <Row style={{ marginBottom: "20px" }}>
-              <Column style={styles.numberCol}>
-                <Text style={styles.number}>01</Text>
-              </Column>
+          <Section style={{ ...styles.section, paddingTop: 0 }}>
+            <Row style={{ marginBottom: "28px" }}>
               <Column>
-                <Text style={styles.featureTitle}>Use the scanner</Text>
+                <Text style={styles.featureTitle}>SCAN BEFORE YOU BUY</Text>
                 <Text style={styles.featureBody}>
-                  Point your camera at any care label or price tag in any store. Know exactly what it
-                  is made of in seconds.
+                  Shopping in person? Scan a clothing label to see what it&apos;s actually made of
+                  and discover better-fabric alternatives in your budget.
                 </Text>
               </Column>
             </Row>
 
-            <Row style={{ marginBottom: "20px" }}>
-              <Column style={styles.numberCol}>
-                <Text style={styles.number}>02</Text>
-              </Column>
+            <Row style={{ marginBottom: "28px" }}>
               <Column>
-                <Text style={styles.featureTitle}>Take the fabric quiz</Text>
+                <Text style={styles.featureTitle}>SHOP BY MATERIAL</Text>
                 <Text style={styles.featureBody}>
-                  One minute. Four questions. Your personal natural fiber identity and a curated brand
-                  edit matched to how you want to feel in your clothes.
+                  Browse silk, linen, cotton, wool, cashmere and other natural-fabric pieces across
+                  the brands you already shop.
                 </Text>
               </Column>
             </Row>
 
             <Row style={{ marginBottom: "0" }}>
-              <Column style={styles.numberCol}>
-                <Text style={styles.number}>03</Text>
-              </Column>
               <Column>
-                <Text style={styles.featureTitle}>Save what you love</Text>
+                <Text style={styles.featureTitle}>FIND THE BETTER VERSION</Text>
                 <Text style={styles.featureBody}>
-                  Heart any piece to save it to your edit. We will tell you when the price drops.
+                  See something you love? INTERTEXE helps you discover similar pieces based on
+                  fabric, style, color, silhouette and price.
                 </Text>
               </Column>
             </Row>
           </Section>
 
-          <Hr style={styles.divider} />
-
-          <Section style={{ ...styles.section, textAlign: "center" as const }}>
-            <Link href="https://www.intertexe.com/shop" style={styles.button}>
-              Start browsing
+          <Section style={{ ...styles.section, textAlign: "center" as const, paddingTop: 8 }}>
+            <Link href={ctaUrl} style={styles.button}>
+              Open INTERTEXE
             </Link>
-            <Text style={{ ...styles.small, marginTop: "16px" }}>
-              or{" "}
-              <Link href="https://apps.apple.com/app/id6770476520" style={styles.textLink}>
-                download the iOS app
-              </Link>
+          </Section>
+
+          <Section style={{ ...styles.section, paddingTop: 0 }}>
+            <Text style={styles.body}>
+              We&apos;re still early, and I&apos;d genuinely love to know what you think. Just reply
+              to this email. I read the responses.
+            </Text>
+            <Text style={styles.signature}>
+              Khiteri
+              <br />
+              Founder, INTERTEXE
             </Text>
           </Section>
 
           <Hr style={styles.divider} />
 
-          <Section style={{ ...styles.section, textAlign: "center" as const }}>
-            <Text style={styles.footerTagline}>
-              The destination for natural fiber fashion.
-              <br />
-              Every piece verified. Every brand vetted.
-            </Text>
+          <Section style={{ ...styles.section, textAlign: "center" as const, paddingTop: 24, paddingBottom: 36 }}>
             <Text style={styles.footerLinks}>
-              <Link href="https://www.intertexe.com" style={styles.footerLink}>
-                intertexe.com
-              </Link>
-              {" · "}
               <Link href="https://www.intertexe.com/privacy" style={styles.footerLink}>
                 Privacy
               </Link>
@@ -155,50 +143,34 @@ const styles = {
     margin: "0",
   },
   section: {
-    padding: "40px",
+    padding: "36px 40px",
   },
   heading: {
     fontFamily: 'Georgia, "Times New Roman", serif',
-    fontSize: "30px",
+    fontSize: "28px",
     fontWeight: "300",
     color: "#1C2B2A",
     lineHeight: "1.3",
     margin: "0 0 20px",
   },
   body: {
-    fontSize: "14px",
-    color: "#666666",
+    fontSize: "15px",
+    color: "#444444",
     lineHeight: "1.7",
-    margin: "0 0 12px",
-    fontWeight: "300",
-  },
-  label: {
-    fontSize: "9px",
-    letterSpacing: "3px",
-    color: "#AAAAAA",
-    margin: "0 0 28px",
-    textTransform: "uppercase" as const,
-  },
-  numberCol: {
-    width: "44px",
-    verticalAlign: "top" as const,
-  },
-  number: {
-    fontSize: "10px",
-    color: "#DDDDDD",
-    margin: "2px 0 0",
+    margin: "0 0 16px",
     fontWeight: "300",
   },
   featureTitle: {
-    fontSize: "13px",
+    fontSize: "11px",
+    letterSpacing: "2px",
     color: "#1C2B2A",
     fontWeight: "500",
-    margin: "0 0 4px",
+    margin: "0 0 8px",
   },
   featureBody: {
-    fontSize: "13px",
-    color: "#888888",
-    lineHeight: "1.6",
+    fontSize: "14px",
+    color: "#666666",
+    lineHeight: "1.65",
     margin: "0",
     fontWeight: "300",
   },
@@ -206,26 +178,18 @@ const styles = {
     display: "inline-block",
     backgroundColor: "#1C2B2A",
     color: "#FFFFFF",
-    fontSize: "10px",
-    letterSpacing: "2.5px",
+    fontSize: "11px",
+    letterSpacing: "2px",
     textTransform: "uppercase" as const,
-    padding: "16px 44px",
+    padding: "16px 40px",
     textDecoration: "none",
   },
-  textLink: {
-    color: "#888888",
-    textDecoration: "underline",
-  },
-  small: {
-    fontSize: "12px",
-    color: "#AAAAAA",
-    margin: "0",
-  },
-  footerTagline: {
-    fontSize: "11px",
-    color: "#CCCCCC",
-    lineHeight: "1.7",
-    margin: "0 0 12px",
+  signature: {
+    fontSize: "15px",
+    color: "#1C2B2A",
+    lineHeight: "1.6",
+    margin: "24px 0 0",
+    fontWeight: "300",
   },
   footerLinks: {
     fontSize: "11px",

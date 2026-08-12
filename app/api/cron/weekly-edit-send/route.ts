@@ -2,10 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { render } from "@react-email/render";
-import { Resend } from "resend";
 import WeeklyEditEmail from "@/emails/WeeklyEditEmail";
 import { authorizeCron, getWeekNumber } from "@/lib/cron-auth";
-import { EMAIL_FROM } from "@/lib/email-constants";
+import { EMAIL_FROM, EMAIL_REPLY_TO, EMAIL_TYPES } from "@/lib/email-constants";
+import { sendCustomerEmailBatch } from "@/lib/resend-customer";
 import { createServiceClient } from "@/lib/supabase/server";
 import { listMarketingSubscriberEmails } from "@/lib/weekly-edit";
 
@@ -13,8 +13,7 @@ export async function GET(req: NextRequest) {
   const denied = authorizeCron(req);
   if (denied) return denied;
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
   }
 
@@ -36,6 +35,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Honors user_preferences.marketing_emails / unsubscribed_at.
     const subscribers = await listMarketingSubscriberEmails(supabase);
     if (subscribers.length === 0) {
       return NextResponse.json({ error: "No subscribers found" }, { status: 500 });
@@ -54,21 +54,29 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    const resend = new Resend(apiKey);
+    const subject = `The Intertexe Edit — ${queuedEdit.collection_name} and eight verified pieces`;
     const batchSize = 100;
     let sent = 0;
+    let failed = 0;
 
     for (let i = 0; i < subscribers.length; i += batchSize) {
       const batch = subscribers.slice(i, i + batchSize);
-      await resend.batch.send(
+      const result = await sendCustomerEmailBatch(
         batch.map((to) => ({
-          from: EMAIL_FROM,
           to,
-          subject: `The Intertexe Edit — ${queuedEdit.collection_name} and eight verified pieces`,
+          subject,
           html: emailHtml,
+          emailType: EMAIL_TYPES.WEEKLY_EDIT,
+          from: EMAIL_FROM,
+          replyTo: EMAIL_REPLY_TO,
+          metadata: {
+            week_number: weekNumber,
+            classification: "marketing",
+          },
         }))
       );
-      sent += batch.length;
+      sent += result.sent;
+      failed += result.failed;
       await new Promise((r) => setTimeout(r, 500));
     }
 
@@ -77,7 +85,7 @@ export async function GET(req: NextRequest) {
       .update({ status: "sent", sent_at: new Date().toISOString(), sent_count: sent })
       .eq("week_number", weekNumber);
 
-    return NextResponse.json({ success: true, sent });
+    return NextResponse.json({ success: true, sent, failed });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Weekly edit send failed";
     return NextResponse.json({ error: message }, { status: 500 });

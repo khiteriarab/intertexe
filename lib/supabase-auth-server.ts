@@ -19,9 +19,27 @@ export function getSupabaseAnonAuthClient() {
 
 /** Resolve Supabase Auth user id from Bearer access token (shared web + iOS). */
 export async function getSupabaseAuthUserId(accessToken: string): Promise<string | null> {
+  const user = await getSupabaseAuthUser(accessToken);
+  return user?.id ?? null;
+}
+
+/** Resolve Supabase Auth user (id + email) from Bearer access token. */
+export async function getSupabaseAuthUser(
+  accessToken: string
+): Promise<{ id: string; email: string | null; firstName: string | null } | null> {
   const client = getSupabaseAnonAuthClient();
   if (!client || !accessToken) return null;
   const { data, error } = await client.auth.getUser(accessToken);
   if (error || !data.user?.id) return null;
-  return data.user.id;
+  const meta = (data.user.user_metadata || {}) as Record<string, unknown>;
+  const firstName =
+    (typeof meta.first_name === "string" && meta.first_name) ||
+    (typeof meta.firstName === "string" && meta.firstName) ||
+    (typeof meta.name === "string" && String(meta.name).split(" ")[0]) ||
+    null;
+  return {
+    id: data.user.id,
+    email: data.user.email ? data.user.email.trim().toLowerCase() : null,
+    firstName,
+  };
 }

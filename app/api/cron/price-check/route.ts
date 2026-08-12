@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { Resend } from "resend";
-import { render } from "@react-email/render";
-import PriceDropEmail from "@/emails/PriceDropEmail";
-import { EMAIL_FROM } from "@/lib/email-constants";
 import {
   isPriceDrop,
   loadFavoriteProductsForPriceCheck,
@@ -13,17 +9,21 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/**
+ * LEGACY price-check cron — email sending RETIRED.
+ *
+ * Canonical customer price-drop emails are sent only by:
+ *   GET /api/notifications/price-drops (deduped via price_drop_notifications + email_deliveries)
+ *
+ * This route no longer sends Resend email. It remains callable for manual ops to
+ * refresh last_price_check timestamps only. Removed from vercel.json schedules.
+ */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
-  }
-  const resend = new Resend(apiKey);
   const supabase = createServiceClient();
 
   const { data: favorites, error } = await supabase
@@ -35,12 +35,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   if (!favorites?.length) {
-    return NextResponse.json({ checked: 0, drops: 0 });
+    return NextResponse.json({
+      checked: 0,
+      dropsDetected: 0,
+      emailed: 0,
+      note: "Email sending retired — use /api/notifications/price-drops",
+    });
   }
 
   const favRows = favorites as FavoritePriceRow[];
   const productsByKey = await loadFavoriteProductsForPriceCheck(supabase, favRows);
-  let priceDrops = 0;
+  let dropsDetected = 0;
   let matched = 0;
 
   for (const fav of favRows) {
@@ -55,50 +60,7 @@ export async function GET(req: NextRequest) {
       continue;
     }
 
-    const { data: userData } = await supabase.auth.admin.getUserById(fav.user_id);
-    if (!userData?.user?.email) continue;
-    const meta = userData.user.user_metadata || {};
-    if (meta.notify_price_drops === false || meta.notify_price_drops === "false") continue;
-
-    const { data: prefs } = await supabase
-      .from("user_preferences")
-      .select("marketing_emails, unsubscribed_at")
-      .eq("user_id", fav.user_id)
-      .maybeSingle();
-    if (prefs?.marketing_emails === false || prefs?.unsubscribed_at) continue;
-
-    try {
-      const dropPercent = Math.round((1 - currentPrice / savedPrice) * 100);
-      const emailHtml = await render(
-        PriceDropEmail({
-          firstName: userData.user.user_metadata?.first_name || "",
-          productName: product.name,
-          brandName: product.brand_name,
-          originalPrice: savedPrice,
-          newPrice: currentPrice,
-          currency: product.currency || fav.saved_currency || "USD",
-          imageUrl: product.image_url || "",
-          productUrl: product.url || `https://www.intertexe.com/product/${product.id}`,
-          naturalFiberPercent: product.natural_fiber_percent || 0,
-        })
-      );
-
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: userData.user.email,
-        subject: `Price drop on your saved item — ${dropPercent}% off`,
-        html: emailHtml,
-      });
-
-      priceDrops++;
-      await supabase
-        .from("product_favorites")
-        .update({ saved_price: currentPrice })
-        .eq("id", fav.id);
-    } catch (err) {
-      console.error("Price drop email failed:", err);
-    }
-
+    dropsDetected++;
     await supabase
       .from("products")
       .update({ last_price_check: new Date().toISOString() })
@@ -108,6 +70,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     checked: favRows.length,
     matched,
-    drops: priceDrops,
+    dropsDetected,
+    emailed: 0,
+    note: "Email sending retired — use /api/notifications/price-drops",
   });
 }
