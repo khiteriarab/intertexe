@@ -11,6 +11,7 @@ import { buildGreeting, buildMorningPulse } from "../../../lib/dashboard/morning
 import { fetchNightlySyncOps, statusBadgeClass } from "../../../lib/dashboard/catalog-sync-ops";
 import { fetchCostSnapshot } from "../../../lib/dashboard/cost-observability";
 import { fetchHqCommercePage } from "../../../lib/dashboard/metrics";
+import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
 import { HqCard, HqPageHeader } from "../components/HqUi";
@@ -35,17 +36,27 @@ const MISSION_LANES = [
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
   const supabase = getServerSupabase();
-  const [{ metrics: m, live }, commerce, syncOps, google, tiktok, pinterest, appStore, costSnap] =
-    await Promise.all([
-      fetchInsightsBundle(session.workspaceId),
-      fetchHqCommercePage(session.workspaceId),
-      fetchNightlySyncOps(),
-      fetchGoogleDiscoveryMetrics(session.workspaceId),
-      fetchTikTokDiscoveryMetrics(session.workspaceId),
-      fetchPinterestDiscoveryMetrics(session.workspaceId),
-      fetchAppStoreDiscoveryMetrics(session.workspaceId),
-      fetchCostSnapshot(),
-    ]);
+  const [
+    { metrics: m, live },
+    commerce,
+    syncOps,
+    google,
+    tiktok,
+    pinterest,
+    appStore,
+    costSnap,
+    emailEngine,
+  ] = await Promise.all([
+    fetchInsightsBundle(session.workspaceId),
+    fetchHqCommercePage(session.workspaceId),
+    fetchNightlySyncOps(),
+    fetchGoogleDiscoveryMetrics(session.workspaceId),
+    fetchTikTokDiscoveryMetrics(session.workspaceId),
+    fetchPinterestDiscoveryMetrics(session.workspaceId),
+    fetchAppStoreDiscoveryMetrics(session.workspaceId),
+    fetchCostSnapshot(),
+    fetchEmailEngineBundle(),
+  ]);
 
   const name = greetingName(session.fullName, session.email);
   const totalClicks7d =
@@ -284,6 +295,38 @@ export default async function HqOverviewPage() {
 
       <HqCard className="mb-6" title="Action center">
         <ActionCenterClient initialActions={actions} canAdmin={canAdmin} />
+      </HqCard>
+
+      <HqCard className="mb-6" title="Email today">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
+          {emailEngine.today.byProgram.map((row) => (
+            <div key={row.emailType} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+              <span className="text-black/55">{row.label}</span>
+              <span className="tabular-nums font-medium">
+                {row.status === "ACTIVE" ? row.sentToday ?? 0 : "—"}
+              </span>
+            </div>
+          ))}
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Delivered</span>
+            <span className="tabular-nums font-medium">{emailEngine.today.deliveredToday}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Bounced</span>
+            <span className="tabular-nums font-medium">{emailEngine.today.bouncedToday}</span>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-black/40">
+            From <code className="text-[10px]">email_deliveries</code> · UTC day
+          </p>
+          <Link
+            href="/dashboard/email"
+            className="text-[11px] tracking-widest uppercase underline underline-offset-4 shrink-0"
+          >
+            Email Engine →
+          </Link>
+        </div>
       </HqCard>
 
       <div className="mb-2 flex items-end justify-between gap-3">
