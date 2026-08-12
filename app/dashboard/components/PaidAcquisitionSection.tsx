@@ -5,7 +5,7 @@ import type {
   TrackingComponentStatus,
 } from "../../../lib/dashboard/paid-acquisition";
 import { formatCount } from "../../../lib/dashboard/metrics";
-import { HqCard, HqMetricGrid } from "../HqUi";
+import { HqCard, HqMetricGrid } from "./HqUi";
 
 function money(n: number | null | undefined) {
   if (n == null) return "—";
