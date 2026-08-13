@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAuthUser } from "../../../../lib/supabase-auth-server";
 import { sendWelcomeEmail } from "../../../../server/resend";
+import { linkHqContactOnSignup } from "../../../../lib/hq-contacts";
 
 /**
  * Trigger founder welcome for the authenticated user (iOS registration).
@@ -32,6 +33,8 @@ export async function POST(request: NextRequest) {
     } catch {
       /* empty body is fine */
     }
+
+    await linkHqContactOnSignup({ email: user.email, userId: user.id }).catch(() => null);
 
     const result = await sendWelcomeEmail({
       email: user.email,

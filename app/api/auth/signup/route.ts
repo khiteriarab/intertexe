@@ -16,6 +16,7 @@ import {
   extractFirstTouchFromRequest,
   firstTouchToPreferenceColumns,
 } from "../../../../lib/dashboard/attribution";
+import { linkHqContactOnSignup } from "../../../../lib/hq-contacts";
 
 export async function POST(request: NextRequest) {
   try {
@@ -181,6 +182,8 @@ export async function POST(request: NextRequest) {
           msclkid: firstTouch.msclkid || null,
         },
       }).catch(() => null);
+
+      await linkHqContactOnSignup({ email: cleanEmail, userId: user.id }).catch(() => null);
     }
 
     // Canonical founder welcome via Loops (idempotent + logged). No Resend welcome.

@@ -51,7 +51,7 @@ test("Loops founder welcome is gated off by default", () => {
   else process.env.LOOPS_FOUNDER_WELCOME_TRANSACTIONAL_ID = prevId;
 });
 
-test("welcome CTA resolves to HTTPS open or App Store", () => {
+test("welcome CTA opens the installed app via /open", () => {
   const url = resolveWelcomeCtaUrl();
-  assert.match(url, /intertexe\.com\/open|apps\.apple\.com/);
+  assert.equal(url, "https://www.intertexe.com/open");
 });

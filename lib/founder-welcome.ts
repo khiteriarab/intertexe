@@ -4,7 +4,7 @@
  * Flow: claim email_deliveries (provider=loops) → Loops transactional → mark sent.
  * Never falls back to Resend (prevents dual Welcome).
  */
-import { getAppStoreOpenUrl, getAppStoreUrl, isAppDeepLinkReady } from "./app-store";
+import { getAppStoreUrl, getUniversalOpenUrl, isAppDeepLinkReady } from "./app-store";
 import {
   EMAIL_TYPES,
   founderWelcomeSubject,
@@ -43,7 +43,8 @@ export type SendWelcomeEmailResult = {
 
 export function resolveWelcomeCtaUrl(): string {
   if (isAppDeepLinkReady()) {
-    return getAppStoreOpenUrl("/scanner");
+    // Post-registration: open the installed app. Do not send them back to Download.
+    return getUniversalOpenUrl();
   }
   return getAppStoreUrl();
 }

@@ -13,6 +13,7 @@ import { fetchCostSnapshot } from "../../../lib/dashboard/cost-observability";
 import { fetchHqCommercePage } from "../../../lib/dashboard/metrics";
 import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
 import { fetchPaidAcquisitionReport } from "../../../lib/dashboard/paid-acquisition";
+import { fetchContentToday } from "../../../lib/dashboard/content-today";
 import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
@@ -49,6 +50,7 @@ export default async function HqOverviewPage() {
     costSnap,
     emailEngine,
     paidAcquisition,
+    contentToday,
   ] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
@@ -60,6 +62,7 @@ export default async function HqOverviewPage() {
     fetchCostSnapshot(),
     fetchEmailEngineBundle(),
     fetchPaidAcquisitionReport(),
+    fetchContentToday(session.workspaceId),
   ]);
 
   const name = greetingName(session.fullName, session.email);
@@ -331,6 +334,32 @@ export default async function HqOverviewPage() {
             className="text-[11px] tracking-widest uppercase underline underline-offset-4 shrink-0"
           >
             Email Engine →
+          </Link>
+        </div>
+      </HqCard>
+
+      <HqCard className="mb-6" title="Content today">
+        <div className="grid grid-cols-2 gap-x-4 text-sm">
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Due today</span>
+            <span className="tabular-nums font-medium">{contentToday.dueToday}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">In pipeline</span>
+            <span className="tabular-nums font-medium">{contentToday.inPipeline}</span>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-black/40">
+            {contentToday.tableReady
+              ? "hq_content_items · UTC day"
+              : "Apply hq_content_items migration to activate"}
+          </p>
+          <Link
+            href="/dashboard/content"
+            className="text-[11px] tracking-widest uppercase underline underline-offset-4 shrink-0"
+          >
+            Content →
           </Link>
         </div>
       </HqCard>

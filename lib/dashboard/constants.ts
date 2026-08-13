@@ -45,6 +45,7 @@ export const HQ_NAV = [
   { href: "/dashboard/products", label: "Catalog" },
   { href: "/dashboard/dpp", label: "Digital Product Passport" },
   { href: "/dashboard/campaigns", label: "Campaigns" },
+  { href: "/dashboard/content", label: "Content" },
   { href: "/dashboard/insights", label: "Insights" },
   { href: "/dashboard/ai", label: "AI" },
   { href: "/dashboard/settings", label: "Settings" },
