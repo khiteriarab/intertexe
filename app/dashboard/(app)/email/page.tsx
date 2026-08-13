@@ -45,7 +45,7 @@ export default async function HqEmailPage() {
     <div>
       <HqPageHeader
         title="Email Engine"
-        description="Lifecycle email from Resend → email_deliveries. Gmail founder outreach / replies stay separate."
+        description="Canonical ledger is email_deliveries (Resend Day 4/10/25 + Loops Founder Welcome when enabled). Gmail founder outreach / replies stay separate."
       />
 
       <HqCard className="mb-6" title="Delivery outcomes (7d)">

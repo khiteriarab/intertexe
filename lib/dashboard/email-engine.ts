@@ -1,5 +1,6 @@
 /**
- * HQ Email Engine — source of truth is email_deliveries (Resend lifecycle).
+ * HQ Email Engine — source of truth is email_deliveries for every provider
+ * (Resend lifecycle + Loops founder welcome). Rows include `provider`.
  * Gmail founder outreach / replies are intentionally out of scope here.
  */
 

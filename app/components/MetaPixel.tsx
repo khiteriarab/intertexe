@@ -5,8 +5,9 @@
  * fbevents.js loads only after cookie_consent === "accepted".
  */
 import { Suspense, useEffect, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
+  flushMetaPixelQueue,
   getMetaPixelId,
   hasMarketingConsent,
   metaTrackPageView,
@@ -60,6 +61,7 @@ function initFbq(pixelId: string) {
   if (typeof window === "undefined") return;
   if (window.__intertexeMetaPixelInitialized) return;
   ensureFbqStub();
+  // Explicit init only — do not auto-track PageView here (SPA handler owns it).
   window.fbq?.("init", pixelId);
   window.__intertexeMetaPixelInitialized = true;
 }
@@ -67,7 +69,6 @@ function initFbq(pixelId: string) {
 function MetaPixelInner() {
   const pixelId = getMetaPixelId();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [allowed, setAllowed] = useState(false);
   const [ready, setReady] = useState(false);
   const lastPathRef = useRef<string | null>(null);
@@ -92,6 +93,8 @@ function MetaPixelInner() {
     loadFbevents().then(() => {
       if (cancelled) return;
       initFbq(pixelId);
+      // Drain any ViewContent/Search/etc. that fired while the script loaded.
+      flushMetaPixelQueue();
       setReady(true);
     });
     return () => {
@@ -103,11 +106,13 @@ function MetaPixelInner() {
     if (!pixelId || !allowed || !ready) return;
     if (!shouldTrackPath(pathname)) return;
 
-    const key = `${pathname}${searchParams?.toString() ? `?${searchParams}` : ""}`;
+    // Path only — ignore UTM/fbclid query churn so attribution params do not
+    // double-fire PageView.
+    const key = pathname || "";
     if (lastPathRef.current === key) return;
     lastPathRef.current = key;
     metaTrackPageView(pathname || undefined);
-  }, [pixelId, allowed, ready, pathname, searchParams]);
+  }, [pixelId, allowed, ready, pathname]);
 
   if (!pixelId || !allowed) return null;
 

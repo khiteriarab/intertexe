@@ -2,6 +2,9 @@
  * Meta Pixel (browser) helpers.
  * Consent-gated via localStorage cookie_consent === "accepted".
  * First-touch UTMs/fbclid remain in UtmCapture — this is marketing only.
+ *
+ * Events that fire before fbevents.js finishes loading are queued and flushed
+ * on ready — otherwise ViewContent/Search/Wishlist silently drop on hard loads.
  */
 
 declare global {
@@ -14,6 +17,23 @@ declare global {
 
 export const META_PIXEL_CONSENT_KEY = "cookie_consent";
 export const META_PIXEL_CONSENT_EVENT = "intertexe:cookie-consent";
+export const META_PIXEL_READY_EVENT = "intertexe:meta-pixel-ready";
+
+type PendingMetaEvent = {
+  kind: "track" | "trackCustom";
+  eventName: string;
+  params?: Record<string, unknown>;
+  eventId?: string;
+};
+
+const pendingMetaEvents: PendingMetaEvent[] = [];
+const MAX_PENDING = 40;
+
+/** Prefer globalThis.window so Node unit tests can inject a stub. */
+function getBrowserWindow(): Window | undefined {
+  if (typeof globalThis === "undefined") return undefined;
+  return (globalThis as { window?: Window }).window;
+}
 
 export function getMetaPixelId(): string | null {
   const id = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
@@ -21,19 +41,21 @@ export function getMetaPixelId(): string | null {
 }
 
 export function hasMarketingConsent(): boolean {
-  if (typeof window === "undefined") return false;
+  const w = getBrowserWindow();
+  if (!w) return false;
   try {
-    return localStorage.getItem(META_PIXEL_CONSENT_KEY) === "accepted";
+    return w.localStorage.getItem(META_PIXEL_CONSENT_KEY) === "accepted";
   } catch {
     return false;
   }
 }
 
 export function isMetaPixelReady(): boolean {
+  const w = getBrowserWindow();
   return Boolean(
-    typeof window !== "undefined" &&
-      window.__intertexeMetaPixelInitialized &&
-      typeof window.fbq === "function" &&
+    w &&
+      w.__intertexeMetaPixelInitialized &&
+      typeof w.fbq === "function" &&
       hasMarketingConsent() &&
       getMetaPixelId()
   );
@@ -52,22 +74,76 @@ type FbqTrackOpts = {
   eventId?: string;
 };
 
-function fbqTrack(eventName: string, params?: Record<string, unknown>, opts?: FbqTrackOpts) {
-  if (!isMetaPixelReady() || !window.fbq) return;
-  if (opts?.eventId) {
-    window.fbq("track", eventName, params || {}, { eventID: opts.eventId });
+function canQueueMetaEvent(): boolean {
+  return Boolean(getBrowserWindow() && hasMarketingConsent() && getMetaPixelId());
+}
+
+function enqueueMetaEvent(item: PendingMetaEvent) {
+  if (pendingMetaEvents.length >= MAX_PENDING) pendingMetaEvents.shift();
+  pendingMetaEvents.push(item);
+}
+
+function dispatchFbq(item: PendingMetaEvent) {
+  const w = getBrowserWindow();
+  if (!w?.fbq) return;
+  if (item.kind === "trackCustom") {
+    if (item.eventId) {
+      w.fbq("trackCustom", item.eventName, item.params || {}, { eventID: item.eventId });
+    } else {
+      w.fbq("trackCustom", item.eventName, item.params || {});
+    }
+    return;
+  }
+  if (item.eventId) {
+    w.fbq("track", item.eventName, item.params || {}, { eventID: item.eventId });
   } else {
-    window.fbq("track", eventName, params || {});
+    w.fbq("track", item.eventName, item.params || {});
   }
 }
 
-function fbqTrackCustom(eventName: string, params?: Record<string, unknown>, opts?: FbqTrackOpts) {
-  if (!isMetaPixelReady() || !window.fbq) return;
-  if (opts?.eventId) {
-    window.fbq("trackCustom", eventName, params || {}, { eventID: opts.eventId });
-  } else {
-    window.fbq("trackCustom", eventName, params || {});
+/** Flush queued events after Pixel init. Safe to call repeatedly. */
+export function flushMetaPixelQueue() {
+  if (!isMetaPixelReady()) return;
+  while (pendingMetaEvents.length > 0) {
+    const item = pendingMetaEvents.shift();
+    if (item) dispatchFbq(item);
   }
+  const w = getBrowserWindow();
+  try {
+    w?.dispatchEvent(new Event(META_PIXEL_READY_EVENT));
+  } catch {
+    /* ignore */
+  }
+}
+
+function fbqTrack(eventName: string, params?: Record<string, unknown>, opts?: FbqTrackOpts) {
+  if (!canQueueMetaEvent()) return;
+  const item: PendingMetaEvent = {
+    kind: "track",
+    eventName,
+    params,
+    eventId: opts?.eventId,
+  };
+  if (!isMetaPixelReady()) {
+    enqueueMetaEvent(item);
+    return;
+  }
+  dispatchFbq(item);
+}
+
+function fbqTrackCustom(eventName: string, params?: Record<string, unknown>, opts?: FbqTrackOpts) {
+  if (!canQueueMetaEvent()) return;
+  const item: PendingMetaEvent = {
+    kind: "trackCustom",
+    eventName,
+    params,
+    eventId: opts?.eventId,
+  };
+  if (!isMetaPixelReady()) {
+    enqueueMetaEvent(item);
+    return;
+  }
+  dispatchFbq(item);
 }
 
 export function metaTrackPageView(path?: string) {
