@@ -26,13 +26,19 @@ type PendingMetaEvent = {
   eventId?: string;
 };
 
-const pendingMetaEvents: PendingMetaEvent[] = [];
 const MAX_PENDING = 40;
 
 /** Prefer globalThis.window so Node unit tests can inject a stub. */
-function getBrowserWindow(): Window | undefined {
+function getBrowserWindow(): Window & { __intertexeMetaPixelPending?: PendingMetaEvent[] } | undefined {
   if (typeof globalThis === "undefined") return undefined;
-  return (globalThis as { window?: Window }).window;
+  return (globalThis as { window?: Window & { __intertexeMetaPixelPending?: PendingMetaEvent[] } }).window;
+}
+
+function getPendingQueue(): PendingMetaEvent[] {
+  const w = getBrowserWindow();
+  if (!w) return [];
+  if (!w.__intertexeMetaPixelPending) w.__intertexeMetaPixelPending = [];
+  return w.__intertexeMetaPixelPending;
 }
 
 export function getMetaPixelId(): string | null {
@@ -79,6 +85,7 @@ function canQueueMetaEvent(): boolean {
 }
 
 function enqueueMetaEvent(item: PendingMetaEvent) {
+  const pendingMetaEvents = getPendingQueue();
   if (pendingMetaEvents.length >= MAX_PENDING) pendingMetaEvents.shift();
   pendingMetaEvents.push(item);
 }
@@ -104,6 +111,7 @@ function dispatchFbq(item: PendingMetaEvent) {
 /** Flush queued events after Pixel init. Safe to call repeatedly. */
 export function flushMetaPixelQueue() {
   if (!isMetaPixelReady()) return;
+  const pendingMetaEvents = getPendingQueue();
   while (pendingMetaEvents.length > 0) {
     const item = pendingMetaEvents.shift();
     if (item) dispatchFbq(item);

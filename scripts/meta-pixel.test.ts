@@ -37,6 +37,7 @@ test("metaTrackViewContent queues until pixel ready then flushes", () => {
   const calls: unknown[][] = [];
   (globalThis as { window?: unknown }).window = {
     __intertexeMetaPixelInitialized: false,
+    __intertexeMetaPixelPending: [],
     localStorage: {
       store: { [META_PIXEL_CONSENT_KEY]: "accepted" } as Record<string, string>,
       getItem(k: string) {
