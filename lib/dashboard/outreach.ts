@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerSupabase } from "../supabase-service-client";
 import { nextStatusForEvent, type HqOutreachStatus } from "../hq-contacts";
 
-const FOLLOW_UP_DAYS = 7;
+const FOLLOW_UP_DAYS = 4;
 
 export type OutreachDailyProgress = {
   sent_today: number;

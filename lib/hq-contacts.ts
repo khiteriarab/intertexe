@@ -15,6 +15,32 @@ export const HQ_CONTACT_TYPES = [
 
 export type HqContactType = (typeof HQ_CONTACT_TYPES)[number];
 
+export const HQ_CONTACT_SOURCES = [
+  "founder_network",
+  "tiktok",
+  "instagram",
+  "event",
+  "press_research",
+  "creator_research",
+  "brand_research",
+  "organization_outreach",
+  "referral",
+  "google_sheet_legacy",
+  "inbound",
+] as const;
+
+export type HqContactSource = (typeof HQ_CONTACT_SOURCES)[number];
+
+export const HQ_RELATIONSHIP_STATUSES = [
+  "prospect",
+  "contacted",
+  "engaged",
+  "partner",
+  "inactive",
+] as const;
+
+export type HqRelationshipStatus = (typeof HQ_RELATIONSHIP_STATUSES)[number];
+
 export const HQ_OUTREACH_STATUSES = [
   "not_contacted",
   "contacted",

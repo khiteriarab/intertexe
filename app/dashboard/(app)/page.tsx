@@ -11,12 +11,14 @@ import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
 import { fetchPaidAcquisitionReport } from "../../../lib/dashboard/paid-acquisition";
 import { fetchContentToday } from "../../../lib/dashboard/content-today";
 import {
+  buildBdBriefing,
   buildMoneyMove,
   fetchDataFreshness,
   fetchFounderToday,
   fetchRevenueSnapshot,
   fetchSourceComparison,
   pct,
+  sourceLabel,
 } from "../../../lib/dashboard/command-center";
 import { OutreachSyncButton } from "./OutreachSyncButton";
 import { AppStoreSyncButton } from "./AppStoreSyncButton";
@@ -105,6 +107,8 @@ export default async function HqOverviewPage() {
 
   const name = greetingName(session.fullName, session.email);
   const f = founder.funnel;
+  const cf = founder.bd.canonicalFunnel;
+  const briefing = founder.tableReady ? buildBdBriefing(founder) : null;
   const moneyMove = buildMoneyMove({ founder, paid: paidAcquisition });
   const appleReady = appStore.connected && appStore.downloadsReady;
   const revenueOk = revenue.connected && !revenue.isDemo;
@@ -203,24 +207,90 @@ export default async function HqOverviewPage() {
         />
       </HqCard>
 
-      <HqCard className="mb-6" title="Outreach today">
+      {briefing ? (
+        <HqCard className="mb-6" title={briefing.title}>
+          <p className="text-sm text-black/70 leading-relaxed">{briefing.lines[0]}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-3">
+            {[
+              ["Introductions to send", Math.min(founder.outreach.remainingToday, founder.bd.introductionsDue)],
+              ["Follow-ups due", founder.bd.followUpsDue],
+              ["Replies need you", founder.bd.repliesNeedAttention],
+              ["High-value attention", founder.bd.highValueAttention],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">{label}</span>
+                <span className="tabular-nums font-medium">{value as number}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-black/45 mt-3 leading-relaxed">{briefing.lines[3]}</p>
+          <p className="text-sm text-black/70 mt-2 leading-relaxed">{briefing.priority}</p>
+          <p className="text-[11px] text-black/40 mt-2">
+            System queues who needs Gmail. It does not send relationship emails.
+          </p>
+        </HqCard>
+      ) : null}
+
+      <HqCard className="mb-6" title="Business development">
         <p className="text-2xl font-medium tabular-nums tracking-tight">
           {founder.tableReady ? founder.outreach.sentToday : "—"}
           <span className="text-sm font-normal text-black/40"> / {founder.outreach.targetToday} sent</span>
         </p>
         <p className="text-sm text-black/50 mt-1 tabular-nums">
-          {founder.outreach.remainingToday} remaining · {founder.timezone}
+          {founder.outreach.remainingToday} remaining of {founder.outreach.targetToday} · {founder.bd.introductionsDue}{" "}
+          introductions waiting · {founder.timezone}
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-3">
           {[
-            ["Influencers", founder.outreach.influencer],
-            ["Customers", founder.outreach.customer],
-            ["Businesses", founder.outreach.business],
-            ["Brands", founder.outreach.brand],
-            ["Replies", founder.outreach.repliesToday],
-            ["Follow-ups due", founder.followUpsDue],
+            ["Influencers sent", founder.outreach.influencer],
+            ["Customers sent", founder.outreach.customer],
+            ["Businesses sent", founder.outreach.business],
+            ["Brands sent", founder.outreach.brand],
+            ["Replies today", founder.outreach.repliesToday],
+            ["Follow-ups due", founder.bd.followUpsDue],
             ["Accounts from contacts", founder.accountsFromContactsToday],
             ["Activated from contacts", founder.activatedFromContactsToday],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+              <span className="text-black/55">{label}</span>
+              <span className="tabular-nums font-medium">{value as number}</span>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-4">
+          <p className="col-span-2 md:col-span-4 text-[10px] tracking-[0.14em] uppercase text-black/40">This week</p>
+          {[
+            ["Contacted", founder.bd.weekContacted],
+            ["Replies", founder.bd.weekReplies],
+            ["Accounts", founder.bd.weekAccounts],
+            ["Activated", founder.bd.weekActivated],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+              <span className="text-black/55">{label}</span>
+              <span className="tabular-nums font-medium">
+                {value as number}
+                {label === "Replies" && founder.bd.weekContacted >= 8
+                  ? ` · ${pct(founder.bd.weekReplies, founder.bd.weekContacted)}`
+                  : ""}
+                {label === "Accounts" && founder.bd.weekContacted >= 8
+                  ? ` · ${pct(founder.bd.weekAccounts, founder.bd.weekContacted)}`
+                  : ""}
+                {label === "Activated" && founder.bd.weekContacted >= 8
+                  ? ` · ${pct(founder.bd.weekActivated, founder.bd.weekContacted)}`
+                  : ""}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-4">
+          <p className="col-span-2 md:col-span-4 text-[10px] tracking-[0.14em] uppercase text-black/40">
+            Conversations waiting
+          </p>
+          {[
+            ["Influencers", founder.bd.opportunities.influencer],
+            ["Brands", founder.bd.opportunities.brand],
+            ["Organizations", founder.bd.opportunities.organization],
+            ["Press", founder.bd.opportunities.press],
           ].map(([label, value]) => (
             <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
               <span className="text-black/55">{label}</span>
@@ -236,34 +306,38 @@ export default async function HqOverviewPage() {
         </div>
       </HqCard>
 
-      <HqCard className="mb-6" title="Outreach funnel">
+      <HqCard className="mb-6" title="BD funnel">
         <Funnel
           steps={[
-            { label: "Imported", value: formatCount(f.imported) },
-            { label: "Emailed", value: formatCount(f.emailed) },
-            { label: "Replied", value: formatCount(f.replied) },
-            { label: "Account", value: formatCount(f.accounts) },
-            { label: "Activated", value: formatCount(f.activated) },
-            { label: "Retailer", value: formatCount(f.retailerClicked) },
+            { label: "Discovered", value: formatCount(cf.discovered || f.imported) },
+            { label: "Targeted", value: formatCount(cf.targeted || f.imported) },
+            { label: "Contacted", value: formatCount(cf.contacted || f.emailed) },
+            { label: "Engaged", value: formatCount(cf.engaged || f.replied) },
+            { label: "Acquired", value: formatCount(cf.acquired || f.accounts) },
+            { label: "Activated", value: formatCount(cf.activated || f.activated) },
+            { label: "Engaged user", value: formatCount(cf.engagedUser) },
+            { label: "Commercial", value: formatCount(cf.commercial || f.retailerClicked) },
           ]}
-          note="Account creation is the deterministic conversion. Not claimed as app download."
+          note="Account creation is the deterministic conversion. Engaged user = 2+ scans. Commercial = retailer click. Not claimed as app download."
         />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-4">
           <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
             <span className="text-black/55">Contacted → reply</span>
-            <span className="tabular-nums font-medium">{pct(f.replied, f.emailed)}</span>
+            <span className="tabular-nums font-medium">{pct(cf.engaged || f.replied, cf.contacted || f.emailed)}</span>
           </div>
           <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
             <span className="text-black/55">Contacted → account</span>
-            <span className="tabular-nums font-medium">{pct(f.contactedBecameUsers, f.emailed)}</span>
+            <span className="tabular-nums font-medium">
+              {pct(f.contactedBecameUsers, cf.contacted || f.emailed)}
+            </span>
           </div>
           <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
             <span className="text-black/55">Account → activated</span>
-            <span className="tabular-nums font-medium">{pct(f.activated, f.accounts)}</span>
+            <span className="tabular-nums font-medium">{pct(cf.activated || f.activated, cf.acquired || f.accounts)}</span>
           </div>
           <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
             <span className="text-black/55">Contacted → activated</span>
-            <span className="tabular-nums font-medium">{pct(f.activated, f.emailed)}</span>
+            <span className="tabular-nums font-medium">{pct(cf.activated || f.activated, cf.contacted || f.emailed)}</span>
           </div>
         </div>
       </HqCard>
@@ -302,6 +376,38 @@ export default async function HqOverviewPage() {
         </div>
         <p className="text-[11px] text-black/40 mt-2">Individual people stay in Supabase Table Editor → hq_contacts.</p>
       </HqCard>
+
+      {founder.bd.bySource.length ? (
+        <HqCard className="mb-6" title="BD source">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-[10px] uppercase tracking-wider text-black/40">
+                <tr>
+                  <th className="py-2 pr-3">Source</th>
+                  <th className="py-2 pr-3">Discovered</th>
+                  <th className="py-2 pr-3">Contacted</th>
+                  <th className="py-2 pr-3">Accounts</th>
+                  <th className="py-2">Activated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {founder.bd.bySource.map((row) => (
+                  <tr key={row.source || "unknown"} className="border-t border-black/5">
+                    <td className="py-2 pr-3">{sourceLabel(row.source)}</td>
+                    <td className="py-2 pr-3 tabular-nums">{row.discovered}</td>
+                    <td className="py-2 pr-3 tabular-nums">{row.contacted}</td>
+                    <td className="py-2 pr-3 tabular-nums">{row.accounts}</td>
+                    <td className="py-2 tabular-nums">{row.activated}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-black/40 mt-2">
+            Contacted → account is shown only as counts until a source has n≥8 contacted.
+          </p>
+        </HqCard>
+      ) : null}
 
       <PaidAcquisitionSection report={paidAcquisition} compact />
 

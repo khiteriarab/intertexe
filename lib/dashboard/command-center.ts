@@ -43,12 +43,156 @@ export type FounderToday = {
     contactedBecameUsers: number;
   };
   byType: Record<"customer" | "influencer" | "business" | "brand", OutreachByTypeRow>;
+  bd: BdToday;
   tableReady: boolean;
   gmailConnected: boolean;
   gmailSyncedAt: string | null;
 };
 
+export type BdToday = {
+  introductionsDue: number;
+  followUpsDue: number;
+  repliesNeedAttention: number;
+  highValueAttention: number;
+  weekContacted: number;
+  weekReplies: number;
+  weekAccounts: number;
+  weekActivated: number;
+  yesterdaySent: number;
+  yesterdayReplies: number;
+  yesterdayRegistrations: number;
+  opportunities: { influencer: number; brand: number; organization: number; press: number };
+  introQueue: {
+    influencer: number;
+    customer: number;
+    brand: number;
+    business: number;
+    organization: number;
+    press: number;
+  };
+  canonicalFunnel: {
+    discovered: number;
+    targeted: number;
+    contacted: number;
+    engaged: number;
+    acquired: number;
+    activated: number;
+    engagedUser: number;
+    commercial: number;
+  };
+  bySource: Array<{
+    source: string;
+    discovered: number;
+    contacted: number;
+    replied: number;
+    accounts: number;
+    activated: number;
+  }>;
+};
+
 const ZERO_TYPE: OutreachByTypeRow = { contacted: 0, replied: 0, accounts: 0, activated: 0 };
+
+const EMPTY_BD: BdToday = {
+  introductionsDue: 0,
+  followUpsDue: 0,
+  repliesNeedAttention: 0,
+  highValueAttention: 0,
+  weekContacted: 0,
+  weekReplies: 0,
+  weekAccounts: 0,
+  weekActivated: 0,
+  yesterdaySent: 0,
+  yesterdayReplies: 0,
+  yesterdayRegistrations: 0,
+  opportunities: { influencer: 0, brand: 0, organization: 0, press: 0 },
+  introQueue: { influencer: 0, customer: 0, brand: 0, business: 0, organization: 0, press: 0 },
+  canonicalFunnel: {
+    discovered: 0,
+    targeted: 0,
+    contacted: 0,
+    engaged: 0,
+    acquired: 0,
+    activated: 0,
+    engagedUser: 0,
+    commercial: 0,
+  },
+  bySource: [],
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+  founder_network: "Founder network",
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  event: "Event",
+  press_research: "Press research",
+  creator_research: "Creator research",
+  brand_research: "Brand research",
+  organization_outreach: "Organization outreach",
+  referral: "Referral",
+  google_sheet_legacy: "Google Sheet (legacy)",
+  inbound: "Inbound",
+};
+
+export function sourceLabel(key: string | null | undefined): string {
+  const k = String(key || "");
+  return SOURCE_LABELS[k] || k || "Unknown";
+}
+
+function parseBd(raw: unknown): BdToday {
+  const row = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const opp = (row.opportunities || {}) as Record<string, unknown>;
+  const intro = (row.intro_queue || {}) as Record<string, unknown>;
+  const funnel = (row.canonical_funnel || {}) as Record<string, unknown>;
+  const sources = Array.isArray(row.by_source) ? row.by_source : [];
+  return {
+    introductionsDue: num(row.introductions_due),
+    followUpsDue: num(row.follow_ups_due),
+    repliesNeedAttention: num(row.replies_need_attention),
+    highValueAttention: num(row.high_value_attention),
+    weekContacted: num(row.week_contacted),
+    weekReplies: num(row.week_replies),
+    weekAccounts: num(row.week_accounts),
+    weekActivated: num(row.week_activated),
+    yesterdaySent: num(row.yesterday_sent),
+    yesterdayReplies: num(row.yesterday_replies),
+    yesterdayRegistrations: num(row.yesterday_registrations),
+    opportunities: {
+      influencer: num(opp.influencer),
+      brand: num(opp.brand),
+      organization: num(opp.organization),
+      press: num(opp.press),
+    },
+    introQueue: {
+      influencer: num(intro.influencer),
+      customer: num(intro.customer),
+      brand: num(intro.brand),
+      business: num(intro.business),
+      organization: num(intro.organization),
+      press: num(intro.press),
+    },
+    canonicalFunnel: {
+      discovered: num(funnel.discovered),
+      targeted: num(funnel.targeted),
+      contacted: num(funnel.contacted),
+      engaged: num(funnel.engaged),
+      acquired: num(funnel.acquired),
+      activated: num(funnel.activated),
+      engagedUser: num(funnel.engaged_user),
+      commercial: num(funnel.commercial),
+    },
+    bySource: sources.map((s) => {
+      const r = (s && typeof s === "object" ? s : {}) as Record<string, unknown>;
+      return {
+        source: String(r.source || ""),
+        discovered: num(r.discovered),
+        contacted: num(r.contacted),
+        replied: num(r.replied),
+        accounts: num(r.accounts),
+        activated: num(r.activated),
+      };
+    }),
+  };
+}
 
 const EMPTY: FounderToday = {
   timezone: "Europe/Paris",
@@ -87,6 +231,7 @@ const EMPTY: FounderToday = {
     business: ZERO_TYPE,
     brand: ZERO_TYPE,
   },
+  bd: EMPTY_BD,
   tableReady: false,
   gmailConnected: false,
   gmailSyncedAt: null,
@@ -138,7 +283,7 @@ export async function fetchFounderToday(workspaceId: string): Promise<FounderTod
   const funnel = (row.funnel || {}) as Record<string, unknown>;
   const byType = (row.by_type || {}) as Record<string, unknown>;
 
-  return {
+  const result: FounderToday = {
     timezone: String(row.timezone || "Europe/Paris"),
     dayStart: String(row.day_start || ""),
     dayEnd: String(row.day_end || ""),
@@ -185,10 +330,160 @@ export async function fetchFounderToday(workspaceId: string): Promise<FounderTod
       business: typeRow(byType.business),
       brand: typeRow(byType.brand),
     },
+    bd: parseBd(row.bd),
     tableReady: true,
     gmailConnected,
     gmailSyncedAt,
   };
+
+  if (!result.bd.canonicalFunnel.discovered && result.funnel.imported) {
+    result.bd = await deriveBdFromContacts(workspaceId, result);
+  }
+  return result;
+}
+
+function inWindow(iso: string | null | undefined, startMs: number, endMs: number): boolean {
+  if (!iso) return false;
+  const t = Date.parse(iso);
+  return Number.isFinite(t) && t >= startMs && t < endMs;
+}
+
+function mapSourceKey(raw: string | null | undefined, sheetTab: string | null | undefined): string {
+  const s = String(raw || "").trim().toLowerCase();
+  if (SOURCE_LABELS[s]) return s;
+  if (["xlsx_import", "google_sheet", "sheet", "spreadsheet"].includes(s)) return "google_sheet_legacy";
+  if (["gmail_signoff", "founder", "personal"].includes(s)) return "founder_network";
+  if (!s) return sheetTab ? "google_sheet_legacy" : "founder_network";
+  return "google_sheet_legacy";
+}
+
+async function deriveBdFromContacts(workspaceId: string, founder: FounderToday): Promise<BdToday> {
+  const supabase = getServerSupabase();
+  if (!supabase) return founder.bd;
+
+  const { data, error } = await supabase
+    .from("hq_contacts")
+    .select(
+      "contact_type, outreach_status, source, sheet_tab, last_contacted_at, last_replied_at, next_follow_up_at, user_id, account_created_at, added_at"
+    )
+    .eq("workspace_id", workspaceId)
+    .limit(500);
+  if (error || !data?.length) return founder.bd;
+
+  const userIds = [...new Set(data.map((c) => String(c.user_id || "")).filter(Boolean))];
+  const scanCount = new Map<string, number>();
+  if (userIds.length) {
+    const scans = await supabase.from("scan_history").select("user_id").in("user_id", userIds).limit(2000);
+    for (const row of scans.data || []) {
+      const uid = String((row as { user_id?: string }).user_id || "");
+      if (!uid) continue;
+      scanCount.set(uid, (scanCount.get(uid) || 0) + 1);
+    }
+  }
+
+  const tz = founder.timezone || "Europe/Paris";
+  const dayStart = founder.dayStart ? Date.parse(founder.dayStart) : Date.now();
+  const dayEnd = founder.dayEnd ? Date.parse(founder.dayEnd) : dayStart + 86400000;
+  const yStart = dayStart - 86400000;
+  const d7 = dayStart - 7 * 86400000;
+  const follow1Ms = 4 * 86400000;
+  const now = Date.now();
+
+  const bd: BdToday = {
+    ...EMPTY_BD,
+    introQueue: { ...EMPTY_BD.introQueue },
+    opportunities: { ...EMPTY_BD.opportunities },
+    canonicalFunnel: { ...EMPTY_BD.canonicalFunnel },
+  };
+
+  const sourceMap = new Map<string, BdToday["bySource"][number]>();
+  const bumpIntro = (type: string) => {
+    if (type in bd.introQueue) {
+      bd.introQueue[type as keyof BdToday["introQueue"]] += 1;
+    }
+  };
+
+  for (const c of data) {
+    const type = String(c.contact_type || "other");
+    const status = String(c.outreach_status || "not_contacted");
+    const inactive = status === "not_interested" || status === "dormant";
+    const uid = c.user_id ? String(c.user_id) : "";
+    const scans = uid ? scanCount.get(uid) || 0 : 0;
+    const lastSend = c.last_contacted_at ? Date.parse(String(c.last_contacted_at)) : NaN;
+    const lastReply = c.last_replied_at ? Date.parse(String(c.last_replied_at)) : NaN;
+    const src = mapSourceKey(c.source, c.sheet_tab);
+    const srcRow = sourceMap.get(src) || {
+      source: src,
+      discovered: 0,
+      contacted: 0,
+      replied: 0,
+      accounts: 0,
+      activated: 0,
+    };
+    srcRow.discovered += 1;
+    if (c.last_contacted_at) srcRow.contacted += 1;
+    if (c.last_replied_at) srcRow.replied += 1;
+    if (uid) srcRow.accounts += 1;
+    if (scans >= 1) srcRow.activated += 1;
+    sourceMap.set(src, srcRow);
+
+    bd.canonicalFunnel.discovered += 1;
+    if (!inactive) bd.canonicalFunnel.targeted += 1;
+    if (c.last_contacted_at) bd.canonicalFunnel.contacted += 1;
+    if (c.last_replied_at) bd.canonicalFunnel.engaged += 1;
+    if (uid) bd.canonicalFunnel.acquired += 1;
+    if (scans >= 1) bd.canonicalFunnel.activated += 1;
+    if (scans >= 2) bd.canonicalFunnel.engagedUser += 1;
+
+    if (inWindow(c.last_contacted_at, d7, dayEnd)) bd.weekContacted += 1;
+    if (inWindow(c.last_replied_at, d7, dayEnd)) bd.weekReplies += 1;
+    if (inWindow(c.account_created_at, d7, dayEnd)) bd.weekAccounts += 1;
+    if (inWindow(c.account_created_at, yStart, dayStart)) bd.yesterdayRegistrations += 1;
+
+    if (inactive) continue;
+    if (uid && scans >= 2) {
+      bd.highValueAttention += 1;
+      continue;
+    }
+    if (uid) continue;
+    if (Number.isFinite(lastReply) && (!Number.isFinite(lastSend) || lastReply >= lastSend)) {
+      bd.repliesNeedAttention += 1;
+      if (type === "influencer" || type === "brand" || type === "organization" || type === "press") {
+        bd.opportunities[type] += 1;
+      }
+      continue;
+    }
+    if (!c.last_contacted_at) {
+      bd.introductionsDue += 1;
+      bumpIntro(type);
+      continue;
+    }
+    const due =
+      (c.next_follow_up_at && Date.parse(String(c.next_follow_up_at)) <= now) ||
+      (Number.isFinite(lastSend) && now >= lastSend + follow1Ms);
+    if (due) bd.followUpsDue += 1;
+  }
+
+  bd.canonicalFunnel.commercial = founder.funnel.retailerClicked;
+  bd.bySource = [...sourceMap.values()].sort((a, b) => b.discovered - a.discovered);
+  bd.yesterdaySent = 0;
+  bd.yesterdayReplies = 0;
+
+  const { data: events } = await supabase
+    .from("hq_contact_outreach")
+    .select("event_type, sent_at, received_at, created_at, channel")
+    .gte("created_at", new Date(yStart).toISOString())
+    .limit(200);
+  for (const e of events || []) {
+    const sent = e.sent_at ? Date.parse(String(e.sent_at)) : NaN;
+    const rec = Date.parse(String(e.received_at || e.created_at || ""));
+    if (e.event_type === "email_sent" || e.event_type === "follow_up_sent") {
+      if (e.channel === "gmail" && sent >= yStart && sent < dayStart) bd.yesterdaySent += 1;
+    }
+    if (e.event_type === "email_reply_received" && rec >= yStart && rec < dayStart) bd.yesterdayReplies += 1;
+  }
+
+  return bd;
 }
 
 export type SourceRow = {
@@ -353,6 +648,71 @@ export async function fetchDataFreshness(workspaceId: string): Promise<Freshness
     ...r,
     stale: r.id === "supabase" ? false : isStale(r.at),
   }));
+}
+
+export function buildBdBriefing(founder: FounderToday): {
+  title: string;
+  lines: string[];
+  priority: string;
+} {
+  const o = founder.outreach;
+  const bd = founder.bd;
+  const introsToday = Math.min(o.remainingToday, bd.introductionsDue);
+  const date = new Date().toLocaleDateString("en-US", {
+    timeZone: founder.timezone || "Europe/Paris",
+    month: "short",
+    day: "numeric",
+  }).toUpperCase();
+
+  const queue = bd.introQueue;
+  const queueEntries = (
+    [
+      ["Influencers", queue.influencer],
+      ["Customers", queue.customer],
+      ["Brands", queue.brand],
+      ["Businesses", queue.business],
+      ["Organizations", queue.organization],
+      ["Press", queue.press],
+    ] as const
+  ).filter(([, n]) => n > 0);
+  queueEntries.sort((a, b) => b[1] - a[1]);
+  const topQueue = queueEntries[0];
+
+  const typeRows = [
+    ["Influencers", founder.byType.influencer],
+    ["Customers", founder.byType.customer],
+    ["Businesses", founder.byType.business],
+    ["Brands", founder.byType.brand],
+  ] as const;
+  const comparable = typeRows.filter(([, r]) => r.contacted >= 8);
+  let conversionNote = "Conversion by type needs more than a test send.";
+  if (comparable.length >= 2) {
+    const scored = comparable
+      .map(([label, r]) => ({ label, rate: r.accounts / r.contacted, n: r.contacted }))
+      .sort((a, b) => b.rate - a.rate);
+    const best = scored[0];
+    const rest = scored[1];
+    if (rest && rest.rate > 0 && best.rate / rest.rate >= 1.5) {
+      conversionNote = `Last contacted → account: ${best.label} ${(best.rate * 100).toFixed(0)}% vs ${rest.label} ${(rest.rate * 100).toFixed(0)}% (n≥8).`;
+    } else if (best) {
+      conversionNote = `${best.label} lead contacted → account at ${(best.rate * 100).toFixed(0)}% (n=${best.n}).`;
+    }
+  }
+
+  const priority = topQueue
+    ? `Priority today: ${topQueue[0]} (${topQueue[1]} introductions waiting). ${conversionNote}`
+    : conversionNote;
+
+  return {
+    title: `INTERTEXE BD — ${date}`,
+    lines: [
+      `Goal: ${o.targetToday} new contacts`,
+      `${introsToday} introductions to send · ${bd.followUpsDue} follow-ups due · ${bd.repliesNeedAttention} replies need a human response`,
+      `${founder.accountsFromContactsToday} contacts became users today · ${bd.highValueAttention} high-value relationships need attention`,
+      `Yesterday: ${bd.yesterdaySent} sent → ${bd.yesterdayReplies} replies → ${bd.yesterdayRegistrations} registrations`,
+    ],
+    priority,
+  };
 }
 
 export function buildMoneyMove(input: {
