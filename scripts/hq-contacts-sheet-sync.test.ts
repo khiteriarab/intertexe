@@ -12,6 +12,7 @@ import {
   planSheetContactSync,
   assertNoSupabaseOwnedFields,
   SUPABASE_OWNED_FIELDS,
+  gmailHasSheetsScope,
   type ExistingContact,
   type SheetOwnedRecord,
 } from "../lib/dashboard/hq-contacts-sheet-sync.ts";
@@ -178,4 +179,15 @@ test("duplicate emails across tabs keep the first tab", () => {
   assert.equal(plan.insert[0].contact_type, "customer");
   assert.equal(plan.dupesInSheet.length, 1);
   assert.equal(plan.dupesInSheet[0].droppedType, "influencer");
+});
+
+test("gmailHasSheetsScope detects reconnect need", () => {
+  assert.equal(gmailHasSheetsScope(["https://www.googleapis.com/auth/gmail.readonly"]), false);
+  assert.equal(
+    gmailHasSheetsScope([
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/spreadsheets.readonly",
+    ]),
+    true
+  );
 });

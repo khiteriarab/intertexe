@@ -270,6 +270,60 @@ export function configuredContactsSheetId(): string {
   return parseSheetId(process.env.HQ_CONTACTS_SHEET_ID);
 }
 
+export function gmailHasSheetsScope(scopes: string[] | null | undefined): boolean {
+  return (scopes || []).some((s) => s.includes("spreadsheets.readonly"));
+}
+
+export async function resolveContactsSheetId(
+  supabase: SupabaseClient,
+  workspaceId: string
+): Promise<string> {
+  const { data } = await supabase
+    .from("hq_data_sources")
+    .select("config")
+    .eq("workspace_id", workspaceId)
+    .eq("key", "google_contacts_sheet")
+    .maybeSingle();
+  const config = (data?.config || {}) as { spreadsheetId?: string; sheetUrl?: string };
+  return (
+    parseSheetId(config.spreadsheetId) ||
+    parseSheetId(config.sheetUrl) ||
+    configuredContactsSheetId()
+  );
+}
+
+export async function saveContactsSheetUrl(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  rawUrl: string
+): Promise<{ spreadsheetId: string; sheetUrl: string }> {
+  const spreadsheetId = parseSheetId(rawUrl);
+  if (!spreadsheetId) throw new Error("Paste a Google Sheet URL (or the id from /d/…/).");
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+  const { data: existing } = await supabase
+    .from("hq_data_sources")
+    .select("config")
+    .eq("workspace_id", workspaceId)
+    .eq("key", "google_contacts_sheet")
+    .maybeSingle();
+  const config = { ...((existing?.config || {}) as Record<string, unknown>), spreadsheetId, sheetUrl };
+  const { error } = await supabase.from("hq_data_sources").upsert(
+    {
+      workspace_id: workspaceId,
+      key: "google_contacts_sheet",
+      label: "Google contacts sheet",
+      status: "not_connected",
+      sync_frequency: "hourly",
+      config,
+      error_message: null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "workspace_id,key" }
+  );
+  if (error) throw new Error(error.message);
+  return { spreadsheetId, sheetUrl };
+}
+
 type ServiceAccount = { client_email: string; private_key: string };
 
 function parseServiceAccount(): ServiceAccount | null {
@@ -426,7 +480,7 @@ export async function syncHqContactsFromSheet(args: {
   supabase: SupabaseClient;
   workspaceId: string;
 }): Promise<SheetSyncResult> {
-  const spreadsheetId = configuredContactsSheetId();
+  const spreadsheetId = await resolveContactsSheetId(args.supabase, args.workspaceId);
   const empty: SheetSyncResult = {
     ok: true,
     skipped: true,
@@ -439,7 +493,7 @@ export async function syncHqContactsFromSheet(args: {
     errors: [],
   };
   if (!spreadsheetId) {
-    return { ...empty, reason: "HQ_CONTACTS_SHEET_ID unset" };
+    return { ...empty, reason: "Contact sheet URL not set" };
   }
 
   let accessToken: string;
