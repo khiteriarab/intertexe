@@ -27,7 +27,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     dataSourceKeys: ["gmail_outreach"],
     authMode: "oauth",
     description:
-      "Connect khiteri@intertexe.com so sent/reply headers for known hq_contacts are logged automatically. Read-only. Bodies are never stored.",
+      "Connect khiteri@intertexe.com for outreach logging and Prepare drafts (Gmail drafts only — never auto-send).",
     docsUrl: "https://console.cloud.google.com/apis/library/gmail.googleapis.com",
     requiredEnv: [
       "GMAIL_OAUTH_CLIENT_ID|GOOGLE_OAUTH_CLIENT_ID",
@@ -113,9 +113,9 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     cardId: "gmail_outreach",
     label: "Gmail outreach",
     providerId: "gmail",
-    permissions: ["Sent headers", "Reply headers", "Message ids", "No bodies stored"],
+    permissions: ["Sent headers", "Reply headers", "Create drafts", "Message ids", "No auto-send"],
     blurb:
-      "Connect the INTERTEXE Gmail that sends outreach. Matching hq_contacts are logged automatically. Not a CRM.",
+      "Connect the INTERTEXE Gmail that sends outreach. Matching hq_contacts are logged automatically. Prepare drafts creates Gmail drafts only — never auto-sends.",
   },
   {
     cardId: "instagram",

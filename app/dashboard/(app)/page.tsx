@@ -22,6 +22,7 @@ import {
   sourceLabel,
 } from "../../../lib/dashboard/command-center";
 import { OutreachSyncButton } from "./OutreachSyncButton";
+import { PrepareDraftsButton } from "./PrepareDraftsButton";
 import { AppStoreSyncButton } from "./AppStoreSyncButton";
 import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
@@ -365,11 +366,15 @@ export default async function HqOverviewPage() {
             </div>
           ))}
         </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-[11px] text-black/40">
-            Gmail headers only · target 25 is configurable in hq_metric_definitions
+        <div className="mt-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <p className="text-[11px] text-black/40 leading-relaxed max-w-xl">
+            Prepare drafts fills To + {"{firstname}"} from hq_contacts into your two Gmail templates.
+            Review in Gmail Drafts and press Send yourself — HQ never auto-sends relationship email.
           </p>
-          <OutreachSyncButton connected={founder.gmailConnected} />
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <PrepareDraftsButton connected={founder.gmailConnected} />
+            <OutreachSyncButton connected={founder.gmailConnected} />
+          </div>
         </div>
       </HqCard>
 
