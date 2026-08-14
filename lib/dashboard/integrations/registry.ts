@@ -30,8 +30,8 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
       "Connect khiteri@intertexe.com so sent/reply headers for known hq_contacts are logged automatically. Read-only. Bodies are never stored.",
     docsUrl: "https://console.cloud.google.com/apis/library/gmail.googleapis.com",
     requiredEnv: [
-      "GOOGLE_OAUTH_CLIENT_ID",
-      "GOOGLE_OAUTH_CLIENT_SECRET",
+      "GMAIL_OAUTH_CLIENT_ID|GOOGLE_OAUTH_CLIENT_ID",
+      "GMAIL_OAUTH_CLIENT_SECRET|GOOGLE_OAUTH_CLIENT_SECRET",
       "HQ_TOKEN_ENCRYPTION_KEY",
     ],
   },

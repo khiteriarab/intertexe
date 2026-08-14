@@ -2,10 +2,21 @@ import type { ProviderAdapter, TokenBundle } from "../types";
 import { getServerSupabase } from "../../../../supabase-service-client";
 import { ingestGmailOutreach } from "../../gmail-outreach";
 
-function requireEnv(name: string): string {
-  const v = process.env[name]?.trim();
-  if (!v) throw new Error(`${name} is not configured`);
-  return v;
+/** Gmail uses its own OAuth client so Analytics/Search Console is not overwritten. */
+function gmailClientId(): string {
+  return (
+    process.env.GMAIL_OAUTH_CLIENT_ID?.trim() ||
+    process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() ||
+    ""
+  );
+}
+
+function gmailClientSecret(): string {
+  return (
+    process.env.GMAIL_OAUTH_CLIENT_SECRET?.trim() ||
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim() ||
+    ""
+  );
 }
 
 /** Read-only. Message bodies are requested as metadata headers only and are never stored. */
@@ -46,14 +57,14 @@ export const gmailAdapter: ProviderAdapter = {
   id: "gmail",
 
   isConfigured() {
-    return Boolean(
-      process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() && process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim()
-    );
+    return Boolean(gmailClientId() && gmailClientSecret());
   },
 
   getAuthorizationUrl({ state, redirectUri }) {
+    const clientId = gmailClientId();
+    if (!clientId) throw new Error("GMAIL_OAUTH_CLIENT_ID is not configured");
     const params = new URLSearchParams({
-      client_id: requireEnv("GOOGLE_OAUTH_CLIENT_ID"),
+      client_id: clientId,
       redirect_uri: redirectUri,
       response_type: "code",
       scope: SCOPES,
@@ -69,8 +80,8 @@ export const gmailAdapter: ProviderAdapter = {
   async exchangeCode({ code, redirectUri }) {
     const body = new URLSearchParams({
       code,
-      client_id: requireEnv("GOOGLE_OAUTH_CLIENT_ID"),
-      client_secret: requireEnv("GOOGLE_OAUTH_CLIENT_SECRET"),
+      client_id: gmailClientId(),
+      client_secret: gmailClientSecret(),
       redirect_uri: redirectUri,
       grant_type: "authorization_code",
     });
@@ -89,8 +100,8 @@ export const gmailAdapter: ProviderAdapter = {
 
   async refreshAccessToken(refreshToken: string) {
     const body = new URLSearchParams({
-      client_id: requireEnv("GOOGLE_OAUTH_CLIENT_ID"),
-      client_secret: requireEnv("GOOGLE_OAUTH_CLIENT_SECRET"),
+      client_id: gmailClientId(),
+      client_secret: gmailClientSecret(),
       refresh_token: refreshToken,
       grant_type: "refresh_token",
     });
