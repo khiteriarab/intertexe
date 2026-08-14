@@ -187,7 +187,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Canonical founder welcome via Loops (idempotent + logged). No Resend welcome.
-    sendWelcomeEmail({
+    // Must await: Vercel can freeze the isolate after the HTTP response, leaving
+    // email_deliveries stuck at pending.
+    await sendWelcomeEmail({
       email: cleanEmail,
       firstName: resolvedFirst || fullName || "",
       lastName: resolvedLast || undefined,
@@ -198,7 +200,7 @@ export async function POST(request: NextRequest) {
 
     // Contact sync for mailing lists / audience (separate from Founder Welcome transactional).
     // Do not create a Loops Loop that also sends Welcome on contact create — that duplicates Day 0.
-    syncContactToLoops({
+    await syncContactToLoops({
       email: cleanEmail,
       firstName: resolvedFirst || undefined,
       lastName: resolvedLast || undefined,
