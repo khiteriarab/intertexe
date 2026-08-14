@@ -19,12 +19,13 @@ function gmailClientSecret(): string {
   );
 }
 
-/** Read-only. Message bodies are requested as metadata headers only and are never stored. */
+/** Read-only Gmail headers + the outreach contact sheet. Bodies are never stored. */
 const SCOPES = [
   "openid",
   "email",
   "profile",
   "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/spreadsheets.readonly",
 ].join(" ");
 
 async function readGoogleJson(res: Response, label: string): Promise<Record<string, unknown>> {

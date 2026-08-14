@@ -65,6 +65,10 @@
       "schedule": "0 */6 * * *"
     },
     {
+      "path": "/api/cron/hq-contacts-sheet-sync",
+      "schedule": "10 * * * *"
+    },
+    {
       "path": "/api/cron/gmail-outreach-sync",
       "schedule": "15 * * * *"
     }

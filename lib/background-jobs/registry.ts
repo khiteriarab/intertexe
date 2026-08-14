@@ -55,10 +55,10 @@ export const MAX_MONTHLY_INVOCATIONS_WITHOUT_FOUNDER_REVIEW = 2_000;
  * only way to add/change production crons. CI fails if vercel.json diverges.
  */
 export const APPROVED_CRON_BASELINE = {
-  version: 3,
+  version: 4,
   updatedAt: "2026-08-14",
   note:
-    "Paused catalog-snapshot. Expensive jobs default OFF. Hourly Gmail outreach header sync added (skips if disconnected).",
+    "Paused catalog-snapshot. Expensive jobs default OFF. Hourly Gmail header sync + Google Sheets → hq_contacts ingest (skips if sheet id unset).",
 } as const;
 
 export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
@@ -370,6 +370,23 @@ export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
     expectedMonthlyInvocations: 720,
     justification:
       "Founder-requested Gmail logging for the daily 25 outreach goal. Skips immediately when Gmail is not connected. Headers only — no bodies, no catalog scans.",
+    productionSafe: true,
+    scheduledInProduction: true,
+    maxDurationSeconds: 60,
+    expensive: false,
+  },
+  {
+    id: "hq-contacts-sheet-sync",
+    path: "/api/cron/hq-contacts-sheet-sync",
+    purpose: "Ingest Google Sheets contact tabs into hq_contacts (identity fields only)",
+    owner: "founder-hq",
+    schedule: "10 * * * *",
+    estimatedRuntime: "5–20s",
+    estimatedRuntimeSeconds: 15,
+    expectedDailyExecutions: 24,
+    expectedMonthlyInvocations: 720,
+    justification:
+      "Keeps the founder sheet as the list editor without CSV exports. Skips when HQ_CONTACTS_SHEET_ID is unset. No catalog access and never sends email.",
     productionSafe: true,
     scheduledInProduction: true,
     maxDurationSeconds: 60,

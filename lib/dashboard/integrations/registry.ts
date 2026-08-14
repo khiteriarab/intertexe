@@ -113,7 +113,7 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     cardId: "gmail_outreach",
     label: "Gmail outreach",
     providerId: "gmail",
-    permissions: ["Sent headers", "Reply headers", "Message ids", "No bodies stored"],
+    permissions: ["Sent headers", "Reply headers", "Message ids", "Contact sheet (read)", "No bodies stored"],
     blurb:
       "Connect the INTERTEXE Gmail that sends outreach. Matching hq_contacts are logged automatically. Not a CRM.",
   },

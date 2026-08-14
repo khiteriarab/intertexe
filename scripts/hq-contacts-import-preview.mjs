@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * Preview Google Sheet → hq_contacts import. Does not email anyone.
+ * Emergency CSV preview for hq_contacts. Production uses hourly
+ * /api/cron/hq-contacts-sheet-sync — do not export CSVs as the normal path.
+ * Does not email anyone.
  *
  * Usage:
  *   node scripts/hq-contacts-import-preview.mjs customers.csv influencers.csv businesses.csv

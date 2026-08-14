@@ -83,6 +83,9 @@ export async function GET() {
       setupHints.push("Enable Gmail API on the existing Google Cloud project.");
       setupHints.push("Connect as khiteri@intertexe.com (the sending account), not the GA/GSC login.");
       setupHints.push("Read-only: sent/reply headers for people already in hq_contacts. Bodies are never stored.");
+      setupHints.push(
+        "Contact list: set HQ_CONTACTS_SHEET_ID and Reconnect once so hourly sheet sync can read Customers / Influencers / Businesses. Sheet edits names only — outreach state stays in Supabase."
+      );
     }
     if (def.id === "pinterest") {
       setupHints.push(`Register redirect URI: ${callbackUrl("pinterest")}`);
