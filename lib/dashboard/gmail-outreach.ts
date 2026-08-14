@@ -3,7 +3,9 @@ import { normalizeEmail } from "../email-constants";
 import { recordOutreachEvent } from "./outreach";
 
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
-const MAX_MESSAGES = 50;
+/** Cap per query; paginate so a big send batch (e.g. 80) is fully ingested. */
+const MAX_MESSAGES = 200;
+const PAGE_SIZE = 100;
 
 type GmailHeader = { name?: string; value?: string };
 type GmailMessage = {

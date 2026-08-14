@@ -4,7 +4,7 @@ import { getServerSupabase } from "@/lib/supabase-service-client";
 import { syncProvider } from "@/lib/dashboard/integrations/connections";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 /** Founder-triggered Gmail header sync. HQ session required. */
 export async function POST() {
