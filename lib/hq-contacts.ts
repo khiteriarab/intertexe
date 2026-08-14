@@ -126,6 +126,7 @@ export async function linkHqContactOnSignup(input: {
       .update({
         user_id: userId,
         outreach_status: next,
+        account_created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("id", row.id);

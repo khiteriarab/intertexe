@@ -14,7 +14,7 @@ import { fetchHqCommercePage } from "../../../lib/dashboard/metrics";
 import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
 import { fetchPaidAcquisitionReport } from "../../../lib/dashboard/paid-acquisition";
 import { fetchContentToday } from "../../../lib/dashboard/content-today";
-import { fetchOutreachToday } from "../../../lib/dashboard/outreach";
+import { fetchOutreachToday, fetchOutreachFunnel } from "../../../lib/dashboard/outreach";
 import { OutreachSyncButton } from "./OutreachSyncButton";
 import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
@@ -54,6 +54,7 @@ export default async function HqOverviewPage() {
     paidAcquisition,
     contentToday,
     outreachToday,
+    outreachFunnel,
   ] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
@@ -67,6 +68,7 @@ export default async function HqOverviewPage() {
     fetchPaidAcquisitionReport(),
     fetchContentToday(session.workspaceId),
     fetchOutreachToday(session.workspaceId),
+    fetchOutreachFunnel(session.workspaceId),
   ]);
 
   const name = greetingName(session.fullName, session.email);
@@ -347,8 +349,11 @@ export default async function HqOverviewPage() {
           {outreachToday.tableReady ? outreachToday.sent_today : "—"}
           <span className="text-sm font-normal text-black/40">
             {" "}
-            / {outreachToday.target_today} sent
+            / {outreachToday.target_today}
           </span>
+        </p>
+        <p className="text-sm text-black/50 mt-1 tabular-nums">
+          {outreachToday.tableReady ? `${outreachToday.remaining_today} remaining` : "— remaining"}
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm mt-3">
           <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
@@ -362,6 +367,10 @@ export default async function HqOverviewPage() {
           <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
             <span className="text-black/55">Businesses</span>
             <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.business : "—"}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Brands</span>
+            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.brand : "—"}</span>
           </div>
           <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
             <span className="text-black/55">Replies</span>
@@ -381,11 +390,64 @@ export default async function HqOverviewPage() {
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="text-[11px] text-black/40">
             {outreachToday.tableReady
-              ? `Remaining ${outreachToday.remaining_today} · ${outreachToday.timezone}`
+              ? `Gmail headers only · ${outreachToday.timezone}`
               : "Apply hq_contacts outreach SQL in Supabase to activate"}
           </p>
           <OutreachSyncButton connected={outreachToday.gmailConnected} />
         </div>
+        {outreachFunnel.tableReady ? (
+          <div className="mt-5 pt-4 border-t border-black/10">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+              Funnel · imported → emailed → replied → account → scan → retailer
+            </p>
+            <p className="text-sm tabular-nums text-black/80">
+              {outreachFunnel.imported} → {outreachFunnel.emailed} → {outreachFunnel.replied} →{" "}
+              {outreachFunnel.accounts} → {outreachFunnel.scanned} → {outreachFunnel.retailer_clicked}
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm mt-3">
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Contacted → account</span>
+                <span className="tabular-nums font-medium">
+                  {outreachFunnel.contacted_to_account_rate == null
+                    ? "—"
+                    : `${outreachFunnel.contacted_to_account_rate}%`}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Imported → account</span>
+                <span className="tabular-nums font-medium">
+                  {outreachFunnel.imported_to_account_rate == null
+                    ? "—"
+                    : `${outreachFunnel.imported_to_account_rate}%`}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Days email → signup</span>
+                <span className="tabular-nums font-medium">
+                  {outreachFunnel.avg_days_contact_to_signup == null
+                    ? "—"
+                    : outreachFunnel.avg_days_contact_to_signup}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Customer accounts</span>
+                <span className="tabular-nums font-medium">{outreachFunnel.customer_accounts}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Influencer accounts</span>
+                <span className="tabular-nums font-medium">{outreachFunnel.influencer_accounts}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Brand accounts</span>
+                <span className="tabular-nums font-medium">{outreachFunnel.brand_accounts}</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-black/40 mt-2">
+              Has account = INTERTEXE signup. Active = first scan. Not claimed as app download.
+              Add people in Supabase Table Editor → hq_contacts. Gmail stays the send interface.
+            </p>
+          </div>
+        ) : null}
       </HqCard>
 
       <HqCard className="mb-6" title="Content today">

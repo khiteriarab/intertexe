@@ -83,9 +83,6 @@ export async function GET() {
       setupHints.push("Enable Gmail API on the existing Google Cloud project.");
       setupHints.push("Connect as khiteri@intertexe.com (the sending account), not the GA/GSC login.");
       setupHints.push("Read-only: sent/reply headers for people already in hq_contacts. Bodies are never stored.");
-      setupHints.push(
-        "Contact list: paste the Google Sheet URL below. Reconnect Gmail once if Google asks for Sheets access. Tabs: Customers, Influencers, Businesses. Never emails."
-      );
     }
     if (def.id === "pinterest") {
       setupHints.push(`Register redirect URI: ${callbackUrl("pinterest")}`);

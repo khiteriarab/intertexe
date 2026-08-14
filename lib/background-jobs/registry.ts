@@ -55,10 +55,10 @@ export const MAX_MONTHLY_INVOCATIONS_WITHOUT_FOUNDER_REVIEW = 2_000;
  * only way to add/change production crons. CI fails if vercel.json diverges.
  */
 export const APPROVED_CRON_BASELINE = {
-  version: 4,
+  version: 5,
   updatedAt: "2026-08-14",
   note:
-    "Paused catalog-snapshot. Expensive jobs default OFF. Hourly Gmail header sync + Google Sheets → hq_contacts ingest (skips if sheet id unset).",
+    "Paused catalog-snapshot. Expensive jobs default OFF. Hourly Gmail header sync. Google Sheet contact sync retired after one-time xlsx import.",
 } as const;
 
 export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
@@ -378,17 +378,17 @@ export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
   {
     id: "hq-contacts-sheet-sync",
     path: "/api/cron/hq-contacts-sheet-sync",
-    purpose: "Ingest Google Sheets contact tabs into hq_contacts (identity fields only)",
+    purpose: "Retired Google Sheets ingest — hq_contacts is edited in Supabase Table Editor",
     owner: "founder-hq",
-    schedule: "10 * * * *",
-    estimatedRuntime: "5–20s",
-    estimatedRuntimeSeconds: 15,
-    expectedDailyExecutions: 24,
-    expectedMonthlyInvocations: 720,
+    schedule: null,
+    estimatedRuntime: "n/a (unscheduled)",
+    estimatedRuntimeSeconds: 0,
+    expectedDailyExecutions: 0,
+    expectedMonthlyInvocations: 0,
     justification:
-      "Keeps the founder sheet as the list editor without CSV exports. Skips when HQ_CONTACTS_SHEET_ID is unset. No catalog access and never sends email.",
+      "One-time xlsx migration replaced ongoing Sheets sync. Contacts are canonical in Supabase; HQ is reporting only.",
     productionSafe: true,
-    scheduledInProduction: true,
+    scheduledInProduction: false,
     maxDurationSeconds: 60,
     expensive: false,
   },

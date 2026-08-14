@@ -55,12 +55,11 @@ test("gmail outreach sync is scheduled hourly and not expensive", () => {
   assert.equal(job!.schedule, "15 * * * *");
 });
 
-test("contacts sheet sync is scheduled hourly and not expensive", () => {
+test("contacts sheet sync is retired after one-time import", () => {
   const job = BACKGROUND_JOBS.find((j) => j.id === "hq-contacts-sheet-sync");
   assert.ok(job);
-  assert.equal(job!.scheduledInProduction, true);
-  assert.equal(job!.expensive, false);
-  assert.equal(job!.schedule, "10 * * * *");
+  assert.equal(job!.scheduledInProduction, false);
+  assert.equal(job!.schedule, null);
 });
 
 test("catalog/sale/scan/recommend are forbidden warm targets", () => {

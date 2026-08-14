@@ -11,6 +11,7 @@ export type OutreachDailyProgress = {
   customer: number;
   influencer: number;
   business: number;
+  brand: number;
   replies_today: number;
   new_accounts_from_contacts_today: number;
   follow_ups_due: number;
@@ -21,6 +22,42 @@ export type OutreachDailyProgress = {
   gmailConnected: boolean;
 };
 
+export type OutreachFunnel = {
+  imported: number;
+  emailed: number;
+  replied: number;
+  accounts: number;
+  scanned: number;
+  retailer_clicked: number;
+  customer_accounts: number;
+  influencer_accounts: number;
+  business_accounts: number;
+  brand_accounts: number;
+  contacted_became_users: number;
+  contacted_to_account_rate: number | null;
+  imported_to_account_rate: number | null;
+  avg_days_contact_to_signup: number | null;
+  tableReady: boolean;
+};
+
+const EMPTY_FUNNEL: OutreachFunnel = {
+  imported: 0,
+  emailed: 0,
+  replied: 0,
+  accounts: 0,
+  scanned: 0,
+  retailer_clicked: 0,
+  customer_accounts: 0,
+  influencer_accounts: 0,
+  business_accounts: 0,
+  brand_accounts: 0,
+  contacted_became_users: 0,
+  contacted_to_account_rate: null,
+  imported_to_account_rate: null,
+  avg_days_contact_to_signup: null,
+  tableReady: false,
+};
+
 const EMPTY: OutreachDailyProgress = {
   sent_today: 0,
   target_today: 25,
@@ -28,6 +65,7 @@ const EMPTY: OutreachDailyProgress = {
   customer: 0,
   influencer: 0,
   business: 0,
+  brand: 0,
   replies_today: 0,
   new_accounts_from_contacts_today: 0,
   follow_ups_due: 0,
@@ -81,6 +119,7 @@ export async function fetchOutreachToday(workspaceId: string): Promise<OutreachD
     customer: Number(row.customer || 0),
     influencer: Number(row.influencer || 0),
     business: Number(row.business || 0),
+    brand: Number(row.brand || 0),
     replies_today: Number(row.replies_today || 0),
     new_accounts_from_contacts_today: Number(row.new_accounts_from_contacts_today || 0),
     follow_ups_due: Number(row.follow_ups_due || 0),
@@ -89,6 +128,37 @@ export async function fetchOutreachToday(workspaceId: string): Promise<OutreachD
     day_end: String(row.day_end || ""),
     tableReady: true,
     gmailConnected,
+  };
+}
+
+export async function fetchOutreachFunnel(workspaceId: string): Promise<OutreachFunnel> {
+  const supabase = getServerSupabase();
+  if (!supabase) return EMPTY_FUNNEL;
+  const { data, error } = await supabase.rpc("hq_outreach_funnel", { p_workspace_id: workspaceId });
+  if (error || !data) {
+    if (isMissingTable(error)) return EMPTY_FUNNEL;
+    return EMPTY_FUNNEL;
+  }
+  const row = (typeof data === "object" ? data : {}) as Record<string, unknown>;
+  return {
+    imported: Number(row.imported || 0),
+    emailed: Number(row.emailed || 0),
+    replied: Number(row.replied || 0),
+    accounts: Number(row.accounts || 0),
+    scanned: Number(row.scanned || 0),
+    retailer_clicked: Number(row.retailer_clicked || 0),
+    customer_accounts: Number(row.customer_accounts || 0),
+    influencer_accounts: Number(row.influencer_accounts || 0),
+    business_accounts: Number(row.business_accounts || 0),
+    brand_accounts: Number(row.brand_accounts || 0),
+    contacted_became_users: Number(row.contacted_became_users || 0),
+    contacted_to_account_rate:
+      row.contacted_to_account_rate == null ? null : Number(row.contacted_to_account_rate),
+    imported_to_account_rate:
+      row.imported_to_account_rate == null ? null : Number(row.imported_to_account_rate),
+    avg_days_contact_to_signup:
+      row.avg_days_contact_to_signup == null ? null : Number(row.avg_days_contact_to_signup),
+    tableReady: true,
   };
 }
 
@@ -114,7 +184,7 @@ export async function recordOutreachEvent(
 ): Promise<{ inserted: boolean; skipped?: string }> {
   const { data: contact, error: contactError } = await supabase
     .from("hq_contacts")
-    .select("id, email, outreach_status, first_contacted_at, last_replied_at")
+    .select("id, email, outreach_status, first_contacted_at, last_replied_at, account_created_at")
     .eq("id", input.contactId)
     .maybeSingle();
   if (contactError || !contact) {
@@ -164,6 +234,10 @@ export async function recordOutreachEvent(
     const receivedAt = input.receivedAt || new Date().toISOString();
     patch.last_replied_at = receivedAt;
     patch.next_follow_up_at = null;
+  }
+
+  if (input.eventType === "account_created" && !contact.account_created_at) {
+    patch.account_created_at = new Date().toISOString();
   }
 
   await supabase.from("hq_contacts").update(patch).eq("id", input.contactId);

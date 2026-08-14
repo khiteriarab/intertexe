@@ -78,124 +78,6 @@ function connectLabel(providerId: string, needsReconnect: boolean): string {
   return needsReconnect ? "Reconnect" : "Connect";
 }
 
-function ContactSheetConnect({ canAdmin }: { canAdmin: boolean }) {
-  const [sheetUrl, setSheetUrl] = useState("");
-  const [status, setStatus] = useState<string>("not_connected");
-  const [gmailHasSheetsScope, setGmailHasSheetsScope] = useState(true);
-  const [gmailConnected, setGmailConnected] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-
-  async function load() {
-    const res = await fetch("/api/dashboard/contacts-sheet");
-    const data = await res.json().catch(() => ({}));
-    if (data.sheetUrl) setSheetUrl(data.sheetUrl);
-    setStatus(data.status || "not_connected");
-    setGmailHasSheetsScope(Boolean(data.gmailHasSheetsScope));
-    setGmailConnected(Boolean(data.gmailConnected));
-    if (data.errorMessage) setError(data.errorMessage);
-  }
-
-  useEffect(() => {
-    void load();
-  }, []);
-
-  async function save(e: FormEvent) {
-    e.preventDefault();
-    if (!canAdmin) return;
-    setBusy("save");
-    setError(null);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/dashboard/contacts-sheet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sheetUrl }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || "Save failed");
-      setMessage("Sheet linked. Sync runs hourly, or click Sync sheet now.");
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function syncNow() {
-    if (!canAdmin) return;
-    setBusy("sync");
-    setError(null);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/dashboard/contacts-sheet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "sync" }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok === false) {
-        throw new Error(data.reason || data.message || "Sheet sync failed");
-      }
-      setMessage(
-        data.skipped
-          ? data.reason || "Sheet sync skipped"
-          : `Sheet synced — ${data.inserted || 0} added, ${data.updated || 0} updated. No email sent.`
-      );
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Sheet sync failed");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  return (
-    <form onSubmit={save} className="border-t border-black/10 pt-3 space-y-2">
-      <p className="text-[10px] tracking-[0.14em] uppercase text-black/45">Google Sheet → hq_contacts</p>
-      <p className="text-[11px] text-black/50 leading-relaxed">
-        Paste the sheet with Customers / Influencers / Businesses tabs. HQ is not a CRM — this only copies names and
-        emails into Supabase. Status {status.replace(/_/g, " ")}.
-      </p>
-      <input
-        value={sheetUrl}
-        onChange={(e) => setSheetUrl(e.target.value)}
-        placeholder="https://docs.google.com/spreadsheets/d/…"
-        className="w-full border border-black/15 rounded-lg px-2 py-1.5 text-sm"
-      />
-      {gmailConnected && !gmailHasSheetsScope ? (
-        <p className="text-[11px] text-amber-900 leading-relaxed">
-          <a href="/api/dashboard/integrations/gmail/connect" className="underline underline-offset-4">
-            Reconnect Gmail outreach
-          </a>{" "}
-          once so Google can grant read-only Sheets access. Enable the Sheets API in Google Cloud first.
-        </p>
-      ) : null}
-      {message ? <p className="text-[11px] text-emerald-800">{message}</p> : null}
-      {error ? <p className="text-[11px] text-red-700 leading-relaxed">{error}</p> : null}
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="submit"
-          disabled={!canAdmin || busy !== null}
-          className="text-xs tracking-widest uppercase bg-black text-white px-3 py-2 disabled:opacity-50"
-        >
-          {busy === "save" ? "Saving…" : "Save sheet"}
-        </button>
-        <button
-          type="button"
-          disabled={!canAdmin || busy !== null}
-          onClick={() => void syncNow()}
-          className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
-        >
-          {busy === "sync" ? "Syncing…" : "Sync sheet now"}
-        </button>
-      </div>
-    </form>
-  );
-}
-
 export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -570,8 +452,6 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                     </>
                   )}
                 </div>
-
-                {card.cardId === "gmail_outreach" ? <ContactSheetConnect canAdmin={canAdmin} /> : null}
 
                 {showAscUpload && canAdmin ? (
                   <form onSubmit={uploadAsc} className="border-t border-black/10 pt-3 space-y-2">
