@@ -8,6 +8,7 @@ import {
 import { isValidProvider } from "../../../../../lib/dashboard/integrations/registry";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 export async function POST(
   request: NextRequest,

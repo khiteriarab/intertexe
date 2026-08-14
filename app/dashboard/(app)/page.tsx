@@ -10,12 +10,13 @@ import {
 import { buildGreeting, buildMorningPulse } from "../../../lib/dashboard/morning-briefing";
 import { fetchNightlySyncOps, statusBadgeClass } from "../../../lib/dashboard/catalog-sync-ops";
 import { fetchCostSnapshot } from "../../../lib/dashboard/cost-observability";
-import { fetchHqCommercePage } from "../../../lib/dashboard/metrics";
+import { fetchHqCommercePage, formatCount } from "../../../lib/dashboard/metrics";
 import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
 import { fetchPaidAcquisitionReport } from "../../../lib/dashboard/paid-acquisition";
 import { fetchContentToday } from "../../../lib/dashboard/content-today";
 import { fetchOutreachToday, fetchOutreachFunnel } from "../../../lib/dashboard/outreach";
 import { OutreachSyncButton } from "./OutreachSyncButton";
+import { AppStoreSyncButton } from "./AppStoreSyncButton";
 import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
@@ -207,6 +208,70 @@ export default async function HqOverviewPage() {
           {tiktok.syncedAt ? ` · TikTok ${new Date(tiktok.syncedAt).toLocaleString()}` : ""}
           {pinterest.syncedAt ? ` · Pinterest ${new Date(pinterest.syncedAt).toLocaleString()}` : ""}
         </p>
+      </HqCard>
+
+      <HqCard className="mb-6" title="App downloads">
+        {appStore.connected && appStore.downloadsReady ? (
+          <>
+            <p className="text-2xl font-medium tabular-nums tracking-tight">
+              {formatCount(appStore.appUnitsLatestDay)}
+              <span className="text-sm font-normal text-black/40"> latest report day</span>
+            </p>
+            <p className="text-sm text-black/50 mt-1">
+              {appStore.reportLatestDate
+                ? `Apple Sales SUMMARY through ${appStore.reportLatestDate}`
+                : "App Store Connect App Units"}
+              {appStore.deltas.appUnits7d.label ? ` · ${appStore.deltas.appUnits7d.label}` : ""}
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm mt-3">
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Last 7 days</span>
+                <span className="tabular-nums font-medium">{formatCount(appStore.appUnits7d)}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Last 30 days</span>
+                <span className="tabular-nums font-medium">{formatCount(appStore.appUnits30d)}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                <span className="text-black/55">Prior 7 days</span>
+                <span className="tabular-nums font-medium">{formatCount(appStore.appUnitsPrev7d)}</span>
+              </div>
+            </div>
+            {appStore.daily.length ? (
+              <ul className="mt-3 space-y-1.5 text-sm max-h-36 overflow-y-auto">
+                {[...appStore.daily].reverse().slice(0, 7).map((d) => (
+                  <li key={d.date} className="flex justify-between gap-3 border-b border-black/5 py-1">
+                    <span className="tabular-nums text-black/55">{d.date}</span>
+                    <span className="tabular-nums font-medium">{formatCount(d.appUnits)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-sm text-black/55 leading-relaxed">
+            {appStore.connected
+              ? "App Store Connect is linked, but downloads need your Vendor Number in Settings."
+              : "App Store Connect is not connected, so iOS downloads are dark."}
+          </p>
+        )}
+        {appStore.setupWarnings.length ? (
+          <p className="text-[12px] text-amber-900 mt-3 leading-relaxed">
+            {appStore.setupWarnings.join(" · ")}
+          </p>
+        ) : null}
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-black/40">
+            {appStore.syncedAt
+              ? `Synced ${new Date(appStore.syncedAt).toLocaleString()} · Apple reports lag 1–2 days`
+              : "Apple reports lag 1–2 days · not claimed from outreach"}
+          </p>
+          <AppStoreSyncButton
+            connected={appStore.connected}
+            downloadsReady={appStore.downloadsReady}
+            syncedAt={appStore.syncedAt || appStore.lastSuccessfulSyncAt}
+          />
+        </div>
       </HqCard>
 
       <HqCard className="mb-6" title="$1M revenue path">
