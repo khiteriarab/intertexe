@@ -25,11 +25,19 @@ export function warmCronEnabled(): boolean {
 
 export function expensiveJobsEnabled(): boolean {
   if (!backgroundJobsEnabled()) return false;
-  const raw = String(process.env.EXPENSIVE_BACKGROUND_JOBS_ENABLED ?? "1")
+  // Default OFF — Small compute cannot absorb classify/snapshot/feed scans.
+  const raw = String(process.env.EXPENSIVE_BACKGROUND_JOBS_ENABLED ?? "0")
     .trim()
     .toLowerCase();
-  if (raw === "0" || raw === "false" || raw === "off" || raw === "no") return false;
-  return true;
+  return raw === "1" || raw === "true" || raw === "on" || raw === "yes";
+}
+
+export function expensiveJobSkipBody() {
+  return {
+    ok: true as const,
+    skipped: true as const,
+    reason: "EXPENSIVE_BACKGROUND_JOBS_ENABLED=0 or BACKGROUND_JOBS_ENABLED=0",
+  };
 }
 
 export async function isBackgroundJobsBlockedInDb(): Promise<boolean> {

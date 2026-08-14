@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authorizeCron } from "@/lib/cron-auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { liveProductsApparelFrom } from "@/lib/global-catalog-scope";
+import { expensiveJobSkipBody, expensiveJobsEnabled } from "@/lib/job-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,10 @@ async function accumulateBrandCounts(
 export async function GET(req: NextRequest) {
   const denied = authorizeCron(req);
   if (denied) return denied;
+
+  if (!expensiveJobsEnabled()) {
+    return NextResponse.json(expensiveJobSkipBody());
+  }
 
   const supabase = createServiceClient();
   const brandCounts = new Map<string, number>();

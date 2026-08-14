@@ -55,10 +55,10 @@ export const MAX_MONTHLY_INVOCATIONS_WITHOUT_FOUNDER_REVIEW = 2_000;
  * only way to add/change production crons. CI fails if vercel.json diverges.
  */
 export const APPROVED_CRON_BASELINE = {
-  version: 1,
-  updatedAt: "2026-08-02",
+  version: 2,
+  updatedAt: "2026-08-14",
   note:
-    "Post Fluid Provisioned Memory incident. Warm cron removed. Cost observability added.",
+    "Paused catalog-snapshot (full row copy) after Small compute hit 89% disk. Expensive jobs default OFF.",
 } as const;
 
 export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
@@ -122,25 +122,27 @@ export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
     estimatedRuntimeSeconds: 30,
     expectedDailyExecutions: 1,
     expectedMonthlyInvocations: 30,
-    justification: "Lightweight monitoring; must not fan out to catalog APIs.",
+    justification:
+      "Catalog emptiness / health counts. Exact counts scan live_products_apparel — gated behind EXPENSIVE_BACKGROUND_JOBS_ENABLED while Small compute is disk-constrained.",
     productionSafe: true,
     scheduledInProduction: true,
     maxDurationSeconds: 60,
-    expensive: false,
+    expensive: true,
   },
   {
     id: "catalog-snapshot",
     path: "/api/cron/catalog-snapshot",
     purpose: "Row-level catalog snapshot for rollback",
     owner: "catalog",
-    schedule: "0 1 * * *",
-    estimatedRuntime: "30–120s",
-    estimatedRuntimeSeconds: 120,
-    expectedDailyExecutions: 1,
-    expectedMonthlyInvocations: 30,
-    justification: "Daily snapshot supports promote/rollback safety.",
-    productionSafe: true,
-    scheduledInProduction: true,
+    schedule: null,
+    estimatedRuntime: "paused (disk)",
+    estimatedRuntimeSeconds: 0,
+    expectedDailyExecutions: 0,
+    expectedMonthlyInvocations: 0,
+    justification:
+      "Paused 2026-08-14: nightly full-catalog row copy on Small compute at 89% disk. Re-enable only after disk headroom and EXPENSIVE_BACKGROUND_JOBS_ENABLED=1.",
+    productionSafe: false,
+    scheduledInProduction: false,
     maxDurationSeconds: 180,
     expensive: true,
   },
@@ -235,11 +237,12 @@ export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
     estimatedRuntimeSeconds: 60,
     expectedDailyExecutions: 1,
     expectedMonthlyInvocations: 30,
-    justification: "Daily designer sync keeps /designers accurate.",
+    justification:
+      "Daily designer sync keeps /designers accurate. Full catalog page scans — gated behind EXPENSIVE_BACKGROUND_JOBS_ENABLED.",
     productionSafe: true,
     scheduledInProduction: true,
     maxDurationSeconds: 90,
-    expensive: false,
+    expensive: true,
   },
   {
     id: "refresh-catalog-stats",

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase-service-client";
 import { COLLECTION_CANONICAL_SLUGS } from "@/lib/catalog-direct-query";
 import { fetchCatalogHealthSnapshot } from "@/lib/catalog-daily-report";
+import { expensiveJobSkipBody, expensiveJobsEnabled } from "@/lib/job-guard";
 
 const COLLECTION_SLUGS = [
   "vacation",
@@ -26,6 +27,10 @@ function authorize(request: Request): NextResponse | null {
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
+
+  if (!expensiveJobsEnabled()) {
+    return NextResponse.json(expensiveJobSkipBody());
+  }
 
   const supabase = getServerSupabase();
   if (!supabase) {

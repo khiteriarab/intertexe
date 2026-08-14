@@ -51,7 +51,7 @@ const EMPTY: CostSnapshot = {
     "No cost snapshot yet. Cron /api/cron/cost-observability writes vercel_cost_snapshot every 6 hours.",
   killSwitches: {
     backgroundJobsEnabled: true,
-    expensiveJobsEnabled: true,
+    expensiveJobsEnabled: false,
     warmCronEnabled: false,
     warmCronScheduled: false,
   },

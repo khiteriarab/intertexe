@@ -14,7 +14,7 @@ import {
   BACKGROUND_JOBS,
   MAX_MONTHLY_INVOCATIONS_WITHOUT_FOUNDER_REVIEW,
 } from "../lib/background-jobs/registry.ts";
-import { warmCronEnabled } from "../lib/job-guard.ts";
+import { warmCronEnabled, expensiveJobsEnabled } from "../lib/job-guard.ts";
 
 test("warm defaults off", () => {
   const prev = process.env.WARM_CRON_ENABLED;
@@ -22,6 +22,29 @@ test("warm defaults off", () => {
   assert.equal(warmCronEnabled(), false);
   if (prev === undefined) delete process.env.WARM_CRON_ENABLED;
   else process.env.WARM_CRON_ENABLED = prev;
+});
+
+test("expensive background jobs default off", () => {
+  const prev = process.env.EXPENSIVE_BACKGROUND_JOBS_ENABLED;
+  const prevBg = process.env.BACKGROUND_JOBS_ENABLED;
+  delete process.env.EXPENSIVE_BACKGROUND_JOBS_ENABLED;
+  delete process.env.BACKGROUND_JOBS_ENABLED;
+  assert.equal(expensiveJobsEnabled(), false);
+  if (prev === undefined) delete process.env.EXPENSIVE_BACKGROUND_JOBS_ENABLED;
+  else process.env.EXPENSIVE_BACKGROUND_JOBS_ENABLED = prev;
+  if (prevBg === undefined) delete process.env.BACKGROUND_JOBS_ENABLED;
+  else process.env.BACKGROUND_JOBS_ENABLED = prevBg;
+});
+
+test("catalog-snapshot is registered but not scheduled", () => {
+  const snap = BACKGROUND_JOBS.find((j) => j.id === "catalog-snapshot");
+  assert.ok(snap);
+  assert.equal(snap!.scheduledInProduction, false);
+  assert.equal(snap!.schedule, null);
+  assert.equal(
+    expectedVercelCrons().some((c) => c.path.includes("/catalog-snapshot")),
+    false
+  );
 });
 
 test("catalog/sale/scan/recommend are forbidden warm targets", () => {

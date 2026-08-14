@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase-service-client";
 import { sendCatalogDailyEmail } from "@/lib/catalog-daily-report";
 import {
+  expensiveJobSkipBody,
   expensiveJobsEnabled,
   recordJobObservation,
   withJobLock,
@@ -26,11 +27,7 @@ export async function GET(request: Request) {
   if (denied) return denied;
 
   if (!expensiveJobsEnabled()) {
-    return NextResponse.json({
-      ok: true,
-      skipped: true,
-      reason: "EXPENSIVE_BACKGROUND_JOBS_ENABLED=0 or BACKGROUND_JOBS_ENABLED=0",
-    });
+    return NextResponse.json(expensiveJobSkipBody());
   }
 
   const startedAt = new Date().toISOString();

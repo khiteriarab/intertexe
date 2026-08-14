@@ -157,6 +157,9 @@ function checkJobGuardDefaults() {
   if (!/WARM_CRON_ENABLED\s*\?\?\s*["']0["']/.test(guard)) {
     fail('lib/job-guard.ts must default WARM_CRON_ENABLED to "0"');
   }
+  if (!/EXPENSIVE_BACKGROUND_JOBS_ENABLED\s*\?\?\s*["']0["']/.test(guard)) {
+    fail('lib/job-guard.ts must default EXPENSIVE_BACKGROUND_JOBS_ENABLED to "0"');
+  }
 }
 
 function checkNoBackgroundLoopsInCronRoutes() {

@@ -94,6 +94,37 @@ async function main() {
 
   const owner = process.env.FEED_SYNC_OWNER || `gha_${process.env.GITHUB_RUN_ID || process.pid}`;
   const startedAt = new Date().toISOString();
+
+  const feedFlag = String(process.env.RAKUTEN_FEED_SYNC_ENABLED ?? "1").trim().toLowerCase();
+  if (feedFlag === "0" || feedFlag === "false" || feedFlag === "off" || feedFlag === "no") {
+    console.log(JSON.stringify({ ok: true, skipped: true, reason: "RAKUTEN_FEED_SYNC_ENABLED=0" }));
+    process.exit(0);
+  }
+
+  const { data: jobsKill } = await sb
+    .from("system_status")
+    .select("value_json")
+    .eq("key", "background_jobs_disabled")
+    .maybeSingle();
+  if (jobsKill?.value_json?.blocked) {
+    console.log(
+      JSON.stringify({ ok: true, skipped: true, reason: "system_status.background_jobs_disabled" })
+    );
+    process.exit(0);
+  }
+
+  const { data: feedKill } = await sb
+    .from("system_status")
+    .select("value_json")
+    .eq("key", "rakuten_feed_sync_disabled")
+    .maybeSingle();
+  if (feedKill?.value_json?.blocked) {
+    console.log(
+      JSON.stringify({ ok: true, skipped: true, reason: "system_status.rakuten_feed_sync_disabled" })
+    );
+    process.exit(0);
+  }
+
   const lock = await acquireLock(sb, owner);
   if (!lock.ok) {
     console.log(JSON.stringify({ ok: false, skipped: true, reason: lock.reason }, null, 2));

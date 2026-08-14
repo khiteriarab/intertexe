@@ -8,6 +8,7 @@ export const maxDuration = 300;
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase-service-client";
 import { takeCatalogSnapshot } from "@/lib/catalog-snapshot";
+import { expensiveJobSkipBody, expensiveJobsEnabled } from "@/lib/job-guard";
 
 function authorize(request: Request): NextResponse | null {
   const cronSecret = process.env.CRON_SECRET || process.env.FEED_SYNC_SECRET;
@@ -22,6 +23,10 @@ function authorize(request: Request): NextResponse | null {
 export async function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
+
+  if (!expensiveJobsEnabled()) {
+    return NextResponse.json(expensiveJobSkipBody());
+  }
 
   const supabase = getServerSupabase();
   if (!supabase) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pullRakutenRevenueReports } from "../../../../lib/dashboard/rakuten-revenue-ftp";
 import {
+  expensiveJobSkipBody,
   expensiveJobsEnabled,
   recordJobObservation,
   withJobLock,
@@ -24,11 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!expensiveJobsEnabled()) {
-    return NextResponse.json({
-      ok: true,
-      skipped: true,
-      reason: "EXPENSIVE_BACKGROUND_JOBS_ENABLED=0 or BACKGROUND_JOBS_ENABLED=0",
-    });
+    return NextResponse.json(expensiveJobSkipBody());
   }
 
   const dryRun = request.nextUrl.searchParams.get("dryRun") === "1";

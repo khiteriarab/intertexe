@@ -14,7 +14,7 @@ export async function linkHqContactOnSignup(input: {
   if (!email || !userId) return;
 
   const supabase = createServiceClient();
-  await supabase
+  const { error } = await supabase
     .from("hq_contacts")
     .update({
       user_id: userId,
@@ -22,4 +22,16 @@ export async function linkHqContactOnSignup(input: {
     })
     .ilike("email", email)
     .is("user_id", null);
+  if (error) {
+    const code = String(error.code || "");
+    const message = String(error.message || "");
+    if (
+      code === "PGRST205" ||
+      /hq_contacts/i.test(message) ||
+      /schema cache/i.test(message) ||
+      /does not exist/i.test(message)
+    ) {
+      return;
+    }
+  }
 }

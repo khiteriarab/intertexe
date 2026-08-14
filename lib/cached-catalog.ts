@@ -10,20 +10,35 @@ const BRAND_DIR_REVALIDATE = 900;
 const SALE_PAGE_REVALIDATE = 600;
 /** Keep build/request paths from hanging when Supabase Disk IO is elevated. */
 const FETCH_BUDGET_MS = 8_000;
+const CATALOG_CIRCUIT_MS = 15 * 60 * 1000;
+let catalogCircuitOpenUntil = 0;
 
-function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T, label: string): Promise<T> {
+function withTimeout<T>(
+  run: () => Promise<T>,
+  ms: number,
+  fallback: T,
+  label: string
+): Promise<T> {
+  if (Date.now() < catalogCircuitOpenUntil) {
+    console.warn(`[cached-catalog] ${label} skipped (circuit open)`);
+    return Promise.resolve(fallback);
+  }
   return new Promise((resolve) => {
     const timer = setTimeout(() => {
-      console.warn(`[cached-catalog] ${label} timeout after ${ms}ms`);
+      catalogCircuitOpenUntil = Date.now() + CATALOG_CIRCUIT_MS;
+      console.warn(
+        `[cached-catalog] ${label} timeout after ${ms}ms; circuit open ${CATALOG_CIRCUIT_MS}ms`
+      );
       resolve(fallback);
     }, ms);
-    promise
+    run()
       .then((value) => {
         clearTimeout(timer);
         resolve(value);
       })
       .catch((err) => {
         clearTimeout(timer);
+        catalogCircuitOpenUntil = Date.now() + CATALOG_CIRCUIT_MS;
         console.warn(`[cached-catalog] ${label} failed`, err?.message || err);
         resolve(fallback);
       });
@@ -59,7 +74,7 @@ export async function fetchDesignersDirectoryFast(): Promise<BrandStat[]> {
 export const getCachedPlatformStats = unstable_cache(
   async (): Promise<PlatformStats> =>
     withTimeout(
-      fetchPlatformStats(),
+      () => fetchPlatformStats(),
       FETCH_BUDGET_MS,
       { productCount: 0, brandCount: 0 },
       "platform-stats"
@@ -71,10 +86,20 @@ export const getCachedPlatformStats = unstable_cache(
 export const getCachedBrandStats = cache(
   unstable_cache(
     async (): Promise<BrandStat[]> => {
-      const full = await withTimeout(fetchBrandStats(), FETCH_BUDGET_MS, [] as BrandStat[], "brand-directory");
+      const full = await withTimeout(
+        () => fetchBrandStats(),
+        FETCH_BUDGET_MS,
+        [] as BrandStat[],
+        "brand-directory"
+      );
       if (full.length > 0) return full;
       // Never ship an empty directory if the designers table is healthy.
-      return withTimeout(fetchDesignersDirectoryFast(), 4_000, [] as BrandStat[], "brand-directory-fast");
+      return withTimeout(
+        () => fetchDesignersDirectoryFast(),
+        4_000,
+        [] as BrandStat[],
+        "brand-directory-fast"
+      );
     },
     ["brand-directory-v7"],
     { revalidate: BRAND_DIR_REVALIDATE, tags: ["brand-directory"] }
@@ -85,12 +110,13 @@ export const getCachedBrandStats = cache(
 export const getCachedSalePageData = unstable_cache(
   async () =>
     withTimeout(
-      fetchSaleProducts({
-        limit: 24,
-        offset: 0,
-        useMerchFeedPreview: false,
-        skipTotal: true,
-      }),
+      () =>
+        fetchSaleProducts({
+          limit: 24,
+          offset: 0,
+          useMerchFeedPreview: false,
+          skipTotal: true,
+        }),
       FETCH_BUDGET_MS,
       { products: [], total: 0, hasMore: false },
       "sale-page"
