@@ -45,18 +45,29 @@ async function gmailJson(
 }
 
 async function listIds(accessToken: string, query: string): Promise<string[]> {
-  const q = encodeURIComponent(query);
-  const { ok, json } = await gmailJson(
-    accessToken,
-    `/messages?q=${q}&maxResults=${MAX_MESSAGES}`
-  );
-  if (!ok) {
-    throw new Error(
-      String((json.error as { message?: string } | undefined)?.message || json.error || "Gmail list failed")
-    );
+  const ids: string[] = [];
+  let pageToken: string | undefined;
+  while (ids.length < MAX_MESSAGES) {
+    const params = new URLSearchParams({
+      q: query,
+      maxResults: String(Math.min(PAGE_SIZE, MAX_MESSAGES - ids.length)),
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+    const { ok, json } = await gmailJson(accessToken, `/messages?${params.toString()}`);
+    if (!ok) {
+      throw new Error(
+        String((json.error as { message?: string } | undefined)?.message || json.error || "Gmail list failed")
+      );
+    }
+    const messages = (json.messages as Array<{ id?: string }> | undefined) || [];
+    for (const m of messages) {
+      const id = String(m.id || "");
+      if (id) ids.push(id);
+    }
+    pageToken = typeof json.nextPageToken === "string" ? json.nextPageToken : undefined;
+    if (!pageToken || messages.length === 0) break;
   }
-  const messages = (json.messages as Array<{ id?: string }> | undefined) || [];
-  return messages.map((m) => String(m.id || "")).filter(Boolean);
+  return ids;
 }
 
 async function getMetadata(accessToken: string, id: string): Promise<GmailMessage> {
