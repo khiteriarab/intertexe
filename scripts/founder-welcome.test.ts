@@ -20,6 +20,7 @@ import {
   isLoopsFounderWelcomeEnabled,
 } from "../lib/loops.ts";
 import { resolveWelcomeCtaUrl } from "../lib/founder-welcome.ts";
+import { getAppSchemeOpenUrl } from "../lib/app-store.ts";
 
 test("channel split identities", () => {
   assert.equal(EMAIL_FROM, "Intertexe <info@mail.intertexe.com>");
@@ -57,6 +58,11 @@ test("Loops founder welcome is gated off by default", () => {
 test("welcome CTA opens the installed app via /open", () => {
   const url = resolveWelcomeCtaUrl();
   assert.equal(url, "https://www.intertexe.com/open");
+});
+
+test("custom scheme opens the installed app when Gmail swallows Universal Links", () => {
+  assert.equal(getAppSchemeOpenUrl(), "intertexe://");
+  assert.equal(getAppSchemeOpenUrl("/scanner"), "intertexe://open?next=%2Fscanner");
 });
 
 test("Loops template dataVariables include lowercase firstname", () => {

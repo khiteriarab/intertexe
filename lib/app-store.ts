@@ -91,6 +91,20 @@ export function getAppUrlScheme(): string {
   return DEFAULT_APP_URL_SCHEME;
 }
 
+/**
+ * Custom URL scheme for when Universal Links are swallowed (Gmail in-app browser).
+ * Live 1.0.1 registers `intertexe://` and opens the app.
+ */
+export function getAppSchemeOpenUrl(nextPath?: string): string {
+  const scheme = getAppUrlScheme();
+  const next = (nextPath || "/").trim() || "/";
+  const normalized = next.startsWith("/") ? next : `/${next}`;
+  if (normalized && normalized !== "/") {
+    return `${scheme}://open?next=${encodeURIComponent(normalized)}`;
+  }
+  return `${scheme}://`;
+}
+
 export function openAppStore(explicit?: string): void {
   if (typeof window === "undefined") return;
   window.location.href = getAppStoreUrl(explicit);
