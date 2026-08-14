@@ -511,15 +511,15 @@ SELECT
   END AS scan_count,
   CASE
     WHEN c.user_id IS NULL THEN NULL
-    ELSE (SELECT count(*)::int FROM public.user_saved_products p WHERE p.user_id = c.user_id)
+    ELSE (SELECT count(*)::int FROM public.user_saved_products p WHERE p.user_id::text = c.user_id::text)
   END AS save_count,
   CASE
     WHEN c.user_id IS NULL THEN NULL
     ELSE (
       SELECT (
-        COALESCE((SELECT count(*) FROM public.user_product_clickouts x WHERE x.user_id = c.user_id), 0)
-        + COALESCE((SELECT count(*) FROM public.scanner_clickouts x WHERE x.user_id = c.user_id), 0)
-        + COALESCE((SELECT count(*) FROM public.editorial_clickouts x WHERE x.user_id = c.user_id), 0)
+        COALESCE((SELECT count(*) FROM public.user_product_clickouts x WHERE x.user_id::text = c.user_id::text), 0)
+        + COALESCE((SELECT count(*) FROM public.scanner_clickouts x WHERE x.user_id::text = c.user_id::text), 0)
+        + COALESCE((SELECT count(*) FROM public.editorial_clickouts x WHERE x.user_id::text = c.user_id::text), 0)
       )::int
     )
   END AS retailer_click_count,
