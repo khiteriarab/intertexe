@@ -24,7 +24,7 @@ export function AppDownloadPrompt() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
-  const href = getAppStoreOpenUrl("/scanner");
+  const href = getAppStoreOpenUrl("/scanner", undefined, { cta: "timed_prompt" });
 
   useEffect(() => {
     setMounted(true);

@@ -61,12 +61,25 @@ export function getAppStoreUrl(explicit?: string): string {
  * /scanner, /product/*, /shop, /designers/*, /collections/*, /capture, /sale, /account
  * Do not use /inspirations/* (1.0.1 has no handler).
  */
-export function getUniversalOpenUrl(nextPath?: string): string {
+export type OpenUrlExtra = {
+  cta?: string;
+  params?: Record<string, string | undefined | null>;
+};
+
+export function getUniversalOpenUrl(nextPath?: string, extra?: OpenUrlExtra): string {
   const next = (nextPath || "/").trim() || "/";
   const normalized = next.startsWith("/") ? next : `/${next}`;
   const params = new URLSearchParams();
   if (normalized && normalized !== "/") {
     params.set("next", normalized);
+  }
+  if (extra?.cta) params.set("itx_cta", extra.cta.slice(0, 80));
+  if (extra?.params) {
+    for (const [key, value] of Object.entries(extra.params)) {
+      const v = (value || "").trim();
+      if (!key || !v || params.has(key)) continue;
+      params.set(key, v.slice(0, 200));
+    }
   }
   const qs = params.toString();
   return `${APP_UNIVERSAL_ORIGIN}${APP_UNIVERSAL_OPEN_PATH}${qs ? `?${qs}` : ""}`;
@@ -76,9 +89,13 @@ export function getUniversalOpenUrl(nextPath?: string): string {
  * CTA href for “open / download app”.
  * When Universal Links are ready → HTTPS /open smart link; else direct App Store.
  */
-export function getAppStoreOpenUrl(nextPath?: string, explicitStoreUrl?: string): string {
+export function getAppStoreOpenUrl(
+  nextPath?: string,
+  explicitStoreUrl?: string,
+  extra?: OpenUrlExtra
+): string {
   if (isAppDeepLinkReady()) {
-    return getUniversalOpenUrl(nextPath);
+    return getUniversalOpenUrl(nextPath, extra);
   }
   return getAppStoreUrl(explicitStoreUrl);
 }

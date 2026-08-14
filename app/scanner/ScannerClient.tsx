@@ -664,6 +664,7 @@ export default function ScannerClient() {
         <AppStoreCtaLink
           appStoreUrl={appStoreUrl}
           path="/scanner"
+          cta="scanner_interstitial"
           className="w-full max-w-xs bg-black text-white text-xs tracking-widest uppercase py-4 text-center mb-4"
           testId="link-scanner-app-store"
         />
@@ -687,7 +688,7 @@ export default function ScannerClient() {
         <div className="flex flex-col items-center gap-6">
           <div className="border border-gray-100 p-4 inline-block" style={{ borderRadius: 0 }}>
             <QRCodeSVG
-              value="https://www.intertexe.com/scanner?utm_source=desktop_qr&utm_medium=qr&utm_campaign=desktop_scanner"
+              value="https://www.intertexe.com/open?next=%2Fscanner&itx_cta=scanner_desktop_qr&utm_source=desktop_qr&utm_medium=qr&utm_campaign=desktop_scanner"
               size={180}
               fgColor="#1C2B2A"
               bgColor="#FFFFFF"

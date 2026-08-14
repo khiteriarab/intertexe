@@ -1,12 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { isAppDeepLinkReady } from "../../lib/app-store";
 import {
   DEFAULT_APP_STORE_URL,
   getAppStoreOpenUrl,
   getAppStoreUrl,
-  isAppDeepLinkReady,
 } from "../../lib/app-store";
+import { trackAppDownloadClick } from "../../lib/app-download-click";
 
 type Props = {
   className?: string;
@@ -16,6 +17,7 @@ type Props = {
   label?: string;
   children?: ReactNode;
   testId?: string;
+  cta?: string;
   onAfterClick?: () => void;
 };
 
@@ -27,19 +29,27 @@ export function AppStoreCtaLink({
   label,
   children,
   testId = "link-app-store-cta",
+  cta,
   onAfterClick,
 }: Props) {
+  const ctaName = cta || testId || "app_store_cta";
   const href = isAppDeepLinkReady()
-    ? getAppStoreOpenUrl(path)
+    ? getAppStoreOpenUrl(path, undefined, { cta: ctaName })
     : getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
   const resolvedLabel = label || (isAppDeepLinkReady() ? "Open App" : "Download App");
+  const goesToOpen = href.includes("/open");
 
   return (
     <a
       href={href}
       className={className}
       data-testid={testId}
-      onClick={() => onAfterClick?.()}
+      onClick={() => {
+        if (!goesToOpen) {
+          trackAppDownloadClick({ ctaLocation: ctaName, destination: "app_store" });
+        }
+        onAfterClick?.();
+      }}
     >
       {children ?? resolvedLabel}
     </a>

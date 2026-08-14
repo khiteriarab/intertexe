@@ -16,6 +16,17 @@ function reviewUrl(): string {
   return `${getAppStoreUrl()}?action=write-review`;
 }
 
+function lifecycleOpenUrl(path: string, branch: LifecycleBranch): string {
+  return getAppStoreOpenUrl(path, undefined, {
+    cta: `email_${branch}`,
+    params: {
+      utm_source: "resend",
+      utm_medium: "email",
+      utm_campaign: branch,
+    },
+  });
+}
+
 /** One message + one CTA per behavior branch. */
 export function copyForLifecycleBranch(
   branch: LifecycleBranch,
@@ -33,7 +44,7 @@ export function copyForLifecycleBranch(
         hook: `${hi}\n\nYou downloaded INTERTEXE. Now try the part that changes how you shop.`,
         body: "Shopping in person? Point your camera at a clothing label. INTERTEXE shows what it’s actually made of — and better-fabric alternatives in your budget.",
         ctaLabel: "Scan something",
-        ctaUrl: getAppStoreOpenUrl("/scanner"),
+        ctaUrl: lifecycleOpenUrl("/scanner", branch),
       };
     case LIFECYCLE_BRANCHES.DAY4_HAS_SCAN:
       return {
@@ -43,7 +54,7 @@ export function copyForLifecycleBranch(
         hook: `${hi}\n\nYou’ve seen the label. Here’s how to find the better version.`,
         body: "After a scan, INTERTEXE surfaces similar pieces based on fabric, style, color, silhouette, and price — so you can choose with material intelligence, not guesswork.",
         ctaLabel: "Find alternatives",
-        ctaUrl: getAppStoreOpenUrl("/scanner"),
+        ctaUrl: lifecycleOpenUrl("/scanner", branch),
       };
     case LIFECYCLE_BRANCHES.DAY10_FAVORITES:
       return {
@@ -53,7 +64,7 @@ export function copyForLifecycleBranch(
         hook: `${hi}\n\nFound something you love? Don’t stop at the label.`,
         body: "Your saved pieces are in INTERTEXE. Come back to compare fabric quality, watch prices, and keep shopping with materials in mind.",
         ctaLabel: "View saved pieces",
-        ctaUrl: getAppStoreOpenUrl("/account"),
+        ctaUrl: lifecycleOpenUrl("/account", branch),
       };
     case LIFECYCLE_BRANCHES.DAY10_TX_MATCH:
       return {
@@ -63,7 +74,7 @@ export function copyForLifecycleBranch(
         hook: `${hi}\n\nYou found a match. Here’s how to go deeper.`,
         body: "TX Match is only the start. Open your matches, compare composition and price, and save the pieces worth wearing.",
         ctaLabel: "Open your matches",
-        ctaUrl: getAppStoreOpenUrl("/account"),
+        ctaUrl: lifecycleOpenUrl("/account", branch),
       };
     case LIFECYCLE_BRANCHES.DAY10_INACTIVE:
       return {
@@ -73,7 +84,7 @@ export function copyForLifecycleBranch(
         hook: `${hi}\n\nHere’s the easiest way to use INTERTEXE.`,
         body: "Open the app, scan one clothing label, and see what it’s made of. That’s the whole idea — materials first, then better alternatives.",
         ctaLabel: "Scan something",
-        ctaUrl: getAppStoreOpenUrl("/scanner"),
+        ctaUrl: lifecycleOpenUrl("/scanner", branch),
       };
     case LIFECYCLE_BRANCHES.DAY25_ACTIVE_REVIEW:
       return {
@@ -94,7 +105,7 @@ export function copyForLifecycleBranch(
         hook: `${hi}\n\nWhat got in the way?`,
         body: "If INTERTEXE didn’t click yet, that’s useful to know. The simplest next step is one scan — or reply to this email and tell me what would make it useful.",
         ctaLabel: "Open INTERTEXE",
-        ctaUrl: getAppStoreOpenUrl("/scanner"),
+        ctaUrl: lifecycleOpenUrl("/scanner", branch),
         closing: "I read the replies. — Khiteri",
       };
     case LIFECYCLE_BRANCHES.DAY25_FEEDBACK:

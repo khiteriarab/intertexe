@@ -57,7 +57,10 @@ test("Loops founder welcome is gated off by default", () => {
 
 test("welcome CTA opens the installed app via /open", () => {
   const url = resolveWelcomeCtaUrl();
-  assert.equal(url, "https://www.intertexe.com/open");
+  assert.equal(
+    url,
+    "https://www.intertexe.com/open?itx_cta=email_founder_welcome&utm_source=loops&utm_medium=email&utm_campaign=founder_welcome"
+  );
 });
 
 test("custom scheme opens the installed app when Gmail swallows Universal Links", () => {

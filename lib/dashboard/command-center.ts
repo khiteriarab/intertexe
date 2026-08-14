@@ -762,6 +762,127 @@ export function pct(n: number, d: number): string {
   return `${Math.round((n / d) * 1000) / 10}%`;
 }
 
+/** Europe/Paris calendar midnight as UTC ms (matches hq_founder_today day_start). */
+function startOfDayInTimeZone(timeZone: string, date = new Date()): number {
+  const dateStr = date.toLocaleDateString("en-CA", { timeZone });
+  let left = date.getTime() - 36 * 3600 * 1000;
+  let right = date.getTime() + 36 * 3600 * 1000;
+  while (right - left > 500) {
+    const mid = Math.floor((left + right) / 2);
+    const midStr = new Date(mid).toLocaleDateString("en-CA", { timeZone });
+    if (midStr < dateStr) left = mid;
+    else right = mid;
+  }
+  return right;
+}
+
+export type AppDownloadChannelKey = "website" | "meta" | "tiktok" | "email" | "qr" | "other";
+
+export type AppDownloadClicksReport = {
+  today: number;
+  d7: number;
+  d30: number;
+  byChannel: Record<AppDownloadChannelKey, number>;
+  bySourceCampaign: Array<{
+    source: string;
+    campaign: string;
+    channel: AppDownloadChannelKey;
+    count: number;
+  }>;
+  timezone: string;
+};
+
+const EMPTY_APP_DL: AppDownloadClicksReport = {
+  today: 0,
+  d7: 0,
+  d30: 0,
+  byChannel: { website: 0, meta: 0, tiktok: 0, email: 0, qr: 0, other: 0 },
+  bySourceCampaign: [],
+  timezone: "Europe/Paris",
+};
+
+/**
+ * First-party App Store / /open CTA clicks from hq_customer_events.
+ * Not Apple App Units. Not account creation.
+ */
+export async function fetchAppDownloadClicks(
+  workspaceId: string
+): Promise<AppDownloadClicksReport> {
+  const supabase = getServerSupabase();
+  if (!supabase || !workspaceId) return EMPTY_APP_DL;
+
+  const tz = "Europe/Paris";
+  const dayStart = startOfDayInTimeZone(tz);
+  const dayEnd = dayStart + 86400000;
+  const d7 = dayStart - 7 * 86400000;
+  const d30 = dayStart - 30 * 86400000;
+
+  const { data, error } = await supabase
+    .from("hq_customer_events")
+    .select("event_timestamp, metadata")
+    .eq("workspace_id", workspaceId)
+    .eq("event_name", "app_download_click")
+    .gte("event_timestamp", new Date(d30).toISOString())
+    .lt("event_timestamp", new Date(dayEnd).toISOString())
+    .order("event_timestamp", { ascending: false })
+    .limit(2000);
+
+  if (error || !data) return EMPTY_APP_DL;
+
+  const byChannel: Record<AppDownloadChannelKey, number> = {
+    website: 0,
+    meta: 0,
+    tiktok: 0,
+    email: 0,
+    qr: 0,
+    other: 0,
+  };
+  const campaignMap = new Map<string, AppDownloadClicksReport["bySourceCampaign"][number]>();
+  let today = 0;
+  let d7Count = 0;
+  let d30Count = 0;
+
+  for (const row of data) {
+    const ts = Date.parse(String(row.event_timestamp || ""));
+    if (!Number.isFinite(ts)) continue;
+    d30Count += 1;
+    if (ts >= d7) d7Count += 1;
+    if (ts >= dayStart && ts < dayEnd) today += 1;
+
+    const meta = (row.metadata && typeof row.metadata === "object"
+      ? row.metadata
+      : {}) as Record<string, unknown>;
+    const channelRaw = String(meta.channel || "other").toLowerCase();
+    const channel: AppDownloadChannelKey =
+      channelRaw === "website" ||
+      channelRaw === "meta" ||
+      channelRaw === "tiktok" ||
+      channelRaw === "email" ||
+      channelRaw === "qr"
+        ? channelRaw
+        : "other";
+    byChannel[channel] += 1;
+
+    const source = String(meta.utm_source || "").trim() || "(none)";
+    const campaign = String(meta.utm_campaign || "").trim() || "(none)";
+    const key = `${source}||${campaign}||${channel}`;
+    const existing = campaignMap.get(key);
+    if (existing) existing.count += 1;
+    else campaignMap.set(key, { source, campaign, channel, count: 1 });
+  }
+
+  const bySourceCampaign = [...campaignMap.values()].sort((a, b) => b.count - a.count).slice(0, 12);
+
+  return {
+    today,
+    d7: d7Count,
+    d30: d30Count,
+    byChannel,
+    bySourceCampaign,
+    timezone: tz,
+  };
+}
+
 export type RevenueSnapshot = {
   connected: boolean;
   isDemo: boolean;

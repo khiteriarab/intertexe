@@ -13,6 +13,7 @@ import { fetchContentToday } from "../../../lib/dashboard/content-today";
 import {
   buildBdBriefing,
   buildMoneyMove,
+  fetchAppDownloadClicks,
   fetchDataFreshness,
   fetchFounderToday,
   fetchRevenueSnapshot,
@@ -91,6 +92,7 @@ export default async function HqOverviewPage() {
     contentToday,
     sources,
     freshness,
+    appDownloadClicks,
   ] = await Promise.all([
     fetchFounderToday(session.workspaceId),
     fetchRevenueSnapshot(session.workspaceId),
@@ -103,6 +105,7 @@ export default async function HqOverviewPage() {
     fetchContentToday(session.workspaceId),
     fetchSourceComparison(),
     fetchDataFreshness(session.workspaceId),
+    fetchAppDownloadClicks(session.workspaceId),
   ]);
 
   const name = greetingName(session.fullName, session.email);
@@ -131,14 +134,24 @@ export default async function HqOverviewPage() {
         description={`${name} · How INTERTEXE is growing, where users come from, and what to do next. HQ reports only — contacts stay in Supabase.`}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
         <HqCard>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">App downloads</p>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">App download clicks</p>
+          <p className="text-2xl font-medium tabular-nums mt-1">{formatCount(appDownloadClicks.today)}</p>
+          <p className="text-[11px] text-black/45 mt-1">
+            First-party CTA · {appDownloadClicks.timezone}
+          </p>
+          <p className="text-[11px] text-black/40 mt-2 tabular-nums">
+            7d {formatCount(appDownloadClicks.d7)} · 30d {formatCount(appDownloadClicks.d30)}
+          </p>
+        </HqCard>
+        <HqCard>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Apple App Units</p>
           <p className="text-2xl font-medium tabular-nums mt-1">
             {appleReady ? formatCount(appStore.appUnitsLatestDay) : "—"}
           </p>
           <p className="text-[11px] text-black/45 mt-1">
-            Apple · through {appleReady ? throughDate(appStore.reportLatestDate) : "—"}
+            Apple report · through {appleReady ? throughDate(appStore.reportLatestDate) : "—"}
           </p>
           <p className="text-[11px] text-black/40 mt-2 tabular-nums">
             7d {appleReady ? formatCount(appStore.appUnits7d) : "—"} · 30d{" "}
@@ -156,7 +169,7 @@ export default async function HqOverviewPage() {
         <HqCard>
           <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">New accounts</p>
           <p className="text-2xl font-medium tabular-nums mt-1">{formatCount(founder.accounts.today)}</p>
-          <p className="text-[11px] text-black/45 mt-1">Supabase Auth · {founder.timezone}</p>
+          <p className="text-[11px] text-black/45 mt-1">Supabase signup · {founder.timezone}</p>
           <p className="text-[11px] text-black/40 mt-2 tabular-nums">
             7d {formatCount(founder.accounts.d7)} · 30d {formatCount(founder.accounts.d30)}
           </p>
@@ -196,15 +209,69 @@ export default async function HqOverviewPage() {
       <HqCard className="mb-6" title="Company funnel">
         <Funnel
           steps={[
-            { label: "Downloads", value: appleReady ? formatCount(appStore.appUnits7d) : "—" },
+            { label: "App Download Clicks", value: formatCount(appDownloadClicks.d7) },
+            { label: "Apple App Units", value: appleReady ? formatCount(appStore.appUnits7d) : "—" },
             { label: "Accounts", value: formatCount(founder.accounts.d7) },
             { label: "Activated", value: formatCount(founder.activated.d7) },
-            { label: "Scans", value: formatCount(founder.scans.d7) },
-            { label: "Clicks", value: formatCount(founder.clicks.d7) },
+            { label: "Retailer clicks", value: formatCount(founder.clicks.d7) },
             { label: "Commission", value: revenueOk ? formatMoneyUsd(revenue.commission7d) : "—" },
           ]}
-          note={`7-day operating view · ${founder.timezone}. Apple App Units are delayed aggregate Sales SUMMARY (through ${throughDate(appStore.reportLatestDate)}), not user-level install attribution. Account → activated ${accountActivation}.`}
+          note={`7-day operating view · ${founder.timezone}. These are different metrics — do not conflate them: App Download Click = first-party CTA toward App Store or /open; Apple App Unit = Apple Sales SUMMARY download (delayed, not user-level attribution); Account = Supabase signup; Activated = first scan. Apple through ${throughDate(appStore.reportLatestDate)}. Account → activated ${accountActivation}.`}
         />
+      </HqCard>
+
+      <HqCard className="mb-6" title="App download clicks">
+        <p className="text-[11px] text-black/45 mb-3 leading-relaxed">
+          First-party CTA clicks only (website /open and App Store links). Not Apple App Units. Not accounts.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-2 text-sm mb-4">
+          {(
+            [
+              ["Website", appDownloadClicks.byChannel.website],
+              ["Meta", appDownloadClicks.byChannel.meta],
+              ["TikTok", appDownloadClicks.byChannel.tiktok],
+              ["Email", appDownloadClicks.byChannel.email],
+              ["QR / sticker", appDownloadClicks.byChannel.qr],
+              ["Other", appDownloadClicks.byChannel.other],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+              <span className="text-black/55">{label}</span>
+              <span className="tabular-nums font-medium">{formatCount(value)}</span>
+            </div>
+          ))}
+        </div>
+        {appDownloadClicks.bySourceCampaign.length > 0 ? (
+          <div className="overflow-x-auto">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">By source / campaign · 30d</p>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[11px] text-black/40 border-b border-black/10">
+                  <th className="py-1.5 font-normal">Source</th>
+                  <th className="py-1.5 font-normal">Campaign</th>
+                  <th className="py-1.5 font-normal">Channel</th>
+                  <th className="py-1.5 font-normal text-right">Clicks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {appDownloadClicks.bySourceCampaign.map((row) => (
+                  <tr key={`${row.source}-${row.campaign}-${row.channel}`} className="border-b border-black/5">
+                    <td className="py-1.5">{row.source}</td>
+                    <td className="py-1.5">{row.campaign}</td>
+                    <td className="py-1.5 capitalize text-black/55">{row.channel === "qr" ? "QR / sticker" : row.channel}</td>
+                    <td className="py-1.5 text-right tabular-nums">{formatCount(row.count)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-black/45">
+            No tagged CTA clicks in the last 30 days yet. Meta / TikTok / email / QR need{" "}
+            <code className="text-xs">utm_*</code> on{" "}
+            <code className="text-xs">/open</code> destinations.
+          </p>
+        )}
       </HqCard>
 
       {briefing ? (

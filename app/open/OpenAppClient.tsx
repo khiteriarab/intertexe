@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { trackAppDownloadClick } from "../../lib/app-download-click";
 import {
   getAppSchemeOpenUrl,
   getAppStoreUrl,
@@ -19,10 +20,16 @@ export default function OpenAppPage() {
   const next = params.get("next") || "/";
   const storeUrl = getAppStoreUrl();
   const schemeUrl = getAppSchemeOpenUrl(next);
+  const cta = params.get("itx_cta") || "open_landing";
 
   useEffect(() => {
     let cancelled = false;
     let leftPage = false;
+
+    trackAppDownloadClick({
+      ctaLocation: cta,
+      destination: "open",
+    });
 
     const markLeft = () => {
       leftPage = true;
@@ -49,7 +56,7 @@ export default function OpenAppPage() {
       window.removeEventListener("pagehide", markLeft);
       window.removeEventListener("blur", markLeft);
     };
-  }, [schemeUrl, storeUrl]);
+  }, [schemeUrl, storeUrl, cta]);
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 text-center">
@@ -71,6 +78,12 @@ export default function OpenAppPage() {
         href={storeUrl}
         className="mt-4 text-[12px] text-muted-foreground hover:text-foreground"
         data-testid="link-open-fallback-store"
+        onClick={() => {
+          trackAppDownloadClick({
+            ctaLocation: "open_store_fallback",
+            destination: "app_store",
+          });
+        }}
       >
         Download on the App Store
       </a>

@@ -44,7 +44,14 @@ export type SendWelcomeEmailResult = {
 export function resolveWelcomeCtaUrl(): string {
   if (isAppDeepLinkReady()) {
     // Post-registration: open the installed app. Do not send them back to Download.
-    return getUniversalOpenUrl();
+    return getUniversalOpenUrl("/", {
+      cta: "email_founder_welcome",
+      params: {
+        utm_source: "loops",
+        utm_medium: "email",
+        utm_campaign: "founder_welcome",
+      },
+    });
   }
   return getAppStoreUrl();
 }

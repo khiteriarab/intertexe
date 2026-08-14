@@ -57,6 +57,7 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
         path="/khiteri"
         dismissKey="khiteri-app-banner-dismissed"
         testId="banner-khiteri-app-download"
+        cta="khiteri_banner"
       />
       <KhiteriIntroMotion />
       <KhiteriPageViewTracker editSlug={edit.slug} editMonth={edit.monthLabel} />
@@ -178,6 +179,7 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
           <AppStoreCtaLink
             appStoreUrl={appStoreUrl}
             path="/scanner"
+            cta="khiteri_edit_cta"
             className="khiteris-edit__cta khiteris-edit__cta--secondary"
             testId="link-khiteri-app-store"
           />

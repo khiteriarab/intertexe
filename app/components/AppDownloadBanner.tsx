@@ -13,6 +13,8 @@ type Props = {
   subtitle?: string;
   className?: string;
   testId?: string;
+  /** First-party CTA name for app_download_click (via /open?itx_cta=). */
+  cta?: string;
   mobileOnly?: boolean;
 };
 
@@ -28,12 +30,13 @@ export function AppDownloadBanner({
   subtitle = "Find better fabrics",
   className = "",
   testId = "banner-app-download",
+  cta = "home_banner",
   mobileOnly = true,
 }: Props) {
   const [dismissed, setDismissed] = useState(true);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
   const isMobile = useIsMobileWeb();
-  const href = getAppStoreOpenUrl(path);
+  const href = getAppStoreOpenUrl(path, undefined, { cta });
 
   useEffect(() => {
     try {
