@@ -257,7 +257,7 @@ export async function fetchPaidAcquisitionReport(): Promise<PaidAcquisitionRepor
     const { data: usersRaw, error: usersErr } = await supabase
       .from("user_preferences")
       .select(
-        `user_id, created_at, first_touch_at,
+        `user_id, first_touch_at,
          first_touch_source, first_touch_medium, first_touch_campaign, first_touch_content,
          ttclid, fbclid, gclid, acquisition_platform`
       )
@@ -270,7 +270,7 @@ export async function fetchPaidAcquisitionReport(): Promise<PaidAcquisitionRepor
 
     const users: UserAttributionRow[] = (usersRaw || []).map((u: any) => ({
       userId: String(u.user_id),
-      registeredAt: u.created_at || null,
+      registeredAt: u.first_touch_at || null,
       firstTouchAt: u.first_touch_at || null,
       source: u.first_touch_source || null,
       medium: u.first_touch_medium || null,
