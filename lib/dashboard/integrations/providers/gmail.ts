@@ -1,5 +1,5 @@
 import type { ProviderAdapter, TokenBundle } from "../types";
-import { getServerSupabase } from "../../../../supabase-service-client";
+import { getServerSupabase } from "@/lib/supabase-service-client";
 import { ingestGmailOutreach } from "../../gmail-outreach";
 
 /** Gmail uses its own OAuth client so Analytics/Search Console is not overwritten. */

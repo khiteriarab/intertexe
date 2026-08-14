@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { requireHqSession } from "../../../../lib/dashboard/auth";
-import { getServerSupabase } from "../../../../lib/supabase-service-client";
-import { syncProvider } from "../../../../lib/dashboard/integrations/connections";
+import { requireHqSession } from "@/lib/dashboard/auth";
+import { getServerSupabase } from "@/lib/supabase-service-client";
+import { syncProvider } from "@/lib/dashboard/integrations/connections";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
