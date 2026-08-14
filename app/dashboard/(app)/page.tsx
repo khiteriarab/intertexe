@@ -1,27 +1,28 @@
 import Link from "next/link";
 import { requireHqSession } from "../../../lib/dashboard/auth";
-import { fetchInsightsBundle } from "../../../lib/dashboard/insights";
-import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchAppStoreDiscoveryMetrics } from "../../../lib/dashboard/integration-metrics";
 import {
-  buildDeterministicInsights,
-  listFounderActions,
-  upsertFounderActionsFromInsights,
-} from "../../../lib/dashboard/action-center";
-import { buildGreeting, buildMorningPulse } from "../../../lib/dashboard/morning-briefing";
-import { fetchNightlySyncOps, statusBadgeClass } from "../../../lib/dashboard/catalog-sync-ops";
-import { fetchCostSnapshot } from "../../../lib/dashboard/cost-observability";
-import { fetchHqCommercePage, formatCount } from "../../../lib/dashboard/metrics";
+  fetchGoogleDiscoveryMetrics,
+  fetchPinterestDiscoveryMetrics,
+  fetchTikTokDiscoveryMetrics,
+  fetchAppStoreDiscoveryMetrics,
+} from "../../../lib/dashboard/integration-metrics";
+import { formatCount } from "../../../lib/dashboard/metrics";
 import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
 import { fetchPaidAcquisitionReport } from "../../../lib/dashboard/paid-acquisition";
 import { fetchContentToday } from "../../../lib/dashboard/content-today";
-import { fetchOutreachToday, fetchOutreachFunnel } from "../../../lib/dashboard/outreach";
+import {
+  buildMoneyMove,
+  fetchDataFreshness,
+  fetchFounderToday,
+  fetchRevenueSnapshot,
+  fetchSourceComparison,
+  pct,
+} from "../../../lib/dashboard/command-center";
 import { OutreachSyncButton } from "./OutreachSyncButton";
 import { AppStoreSyncButton } from "./AppStoreSyncButton";
 import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
-import { getServerSupabase } from "../../../lib/supabase-service-client";
 import { HqCard, HqPageHeader } from "../components/HqUi";
-import { ActionCenterClient } from "./ActionCenterClient";
 
 export const metadata = { title: "Today" };
 export const dynamic = "force-dynamic";
@@ -32,487 +33,308 @@ function greetingName(fullName: string | null, email: string) {
   return "there";
 }
 
-const MISSION_LANES = [
-  { href: "/dashboard/acquisition", label: "Acquisition", question: "How are people finding us?" },
-  { href: "/dashboard/scanner", label: "Engagement", question: "Do they care once here?" },
-  { href: "/dashboard/commerce", label: "Commerce", question: "Are we making money?" },
-  { href: "/dashboard/operations", label: "Product", question: "Is the catalog healthy?" },
-] as const;
+function throughDate(iso: string | null) {
+  if (!iso) return "pending";
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (!Number.isFinite(d.getTime())) return iso;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function ago(iso: string | null) {
+  if (!iso) return "never";
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return "—";
+  const mins = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 36) return `${hrs}h ago`;
+  return `${Math.round(hrs / 24)}d ago`;
+}
+
+function Funnel({
+  steps,
+  note,
+}: {
+  steps: Array<{ label: string; value: string }>;
+  note?: string;
+}) {
+  return (
+    <div>
+      <p className="text-sm tabular-nums text-black/80 leading-relaxed">
+        {steps.map((s, i) => (
+          <span key={s.label}>
+            {i > 0 ? <span className="text-black/30"> → </span> : null}
+            <span className="text-black/45">{s.label} </span>
+            {s.value}
+          </span>
+        ))}
+      </p>
+      {note ? <p className="text-[11px] text-black/40 mt-2 leading-relaxed">{note}</p> : null}
+    </div>
+  );
+}
 
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
-  const supabase = getServerSupabase();
   const [
-    { metrics: m, live },
-    commerce,
-    syncOps,
+    founder,
+    revenue,
     google,
     tiktok,
     pinterest,
     appStore,
-    costSnap,
     emailEngine,
     paidAcquisition,
     contentToday,
-    outreachToday,
-    outreachFunnel,
+    sources,
+    freshness,
   ] = await Promise.all([
-    fetchInsightsBundle(session.workspaceId),
-    fetchHqCommercePage(session.workspaceId),
-    fetchNightlySyncOps(),
+    fetchFounderToday(session.workspaceId),
+    fetchRevenueSnapshot(session.workspaceId),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
     fetchTikTokDiscoveryMetrics(session.workspaceId),
     fetchPinterestDiscoveryMetrics(session.workspaceId),
     fetchAppStoreDiscoveryMetrics(session.workspaceId),
-    fetchCostSnapshot(),
     fetchEmailEngineBundle(),
     fetchPaidAcquisitionReport(),
     fetchContentToday(session.workspaceId),
-    fetchOutreachToday(session.workspaceId),
-    fetchOutreachFunnel(session.workspaceId),
+    fetchSourceComparison(),
+    fetchDataFreshness(session.workspaceId),
   ]);
 
   const name = greetingName(session.fullName, session.email);
-  const totalClicks7d =
-    (m.clickoutsLast7d.value || 0) +
-    (m.scannerClickoutsLast7d.value || 0) +
-    (m.editorialClickoutsLast7d.value || 0);
-  const totalClicksPrev7d =
-    (m.clickoutsPrev7d.value || 0) +
-    (m.scannerClickoutsPrev7d.value || 0) +
-    (m.editorialClickoutsPrev7d.value || 0);
+  const f = founder.funnel;
+  const moneyMove = buildMoneyMove({ founder, paid: paidAcquisition });
+  const appleReady = appStore.connected && appStore.downloadsReady;
+  const revenueOk = revenue.connected && !revenue.isDemo;
+  const accountActivation =
+    founder.accounts.total && founder.activated.total != null
+      ? pct(founder.activated.total || 0, founder.accounts.total || 0)
+      : "—";
 
-  let catalogHealth: {
-    score?: number;
-    threshold?: number;
-    belowThreshold?: boolean;
-    components?: Array<{ key: string; label: string; ok: boolean }>;
-    verification?: { recommendation?: string; summary?: string };
-    smokeOk?: boolean;
-    blocked?: boolean;
-    snapshotAgeDays?: number | null;
-  } | null = null;
-
-  if (supabase) {
-    const [{ data: healthRow }, { data: blockedRow }, { data: snapRow }] = await Promise.all([
-      supabase.from("system_status").select("value_json").eq("key", "catalog_health_score").maybeSingle(),
-      supabase.from("system_status").select("value_json").eq("key", "catalog_publish_blocked").maybeSingle(),
-      supabase
-        .from("catalog_product_snapshots")
-        .select("captured_at")
-        .order("captured_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
-    const hv = (healthRow?.value_json || {}) as Record<string, unknown>;
-    const bv = (blockedRow?.value_json || {}) as { blocked?: boolean };
-    const capturedAt = snapRow?.captured_at ? Date.parse(String(snapRow.captured_at)) : NaN;
-    const snapshotAgeDays = Number.isFinite(capturedAt)
-      ? (Date.now() - capturedAt) / 86400000
-      : null;
-    catalogHealth = {
-      score: typeof hv.score === "number" ? hv.score : undefined,
-      threshold: typeof hv.threshold === "number" ? hv.threshold : 95,
-      belowThreshold: Boolean(hv.belowThreshold),
-      components: Array.isArray(hv.components)
-        ? (hv.components as Array<{ key: string; label: string; ok: boolean }>)
-        : [],
-      verification: (hv.verification as { recommendation?: string; summary?: string }) || undefined,
-      smokeOk: typeof hv.smokeOk === "boolean" ? hv.smokeOk : undefined,
-      blocked: Boolean(bv.blocked),
-      snapshotAgeDays,
-    };
+  const appleFresh = freshness.find((r) => r.id === "apple");
+  if (appleFresh) {
+    appleFresh.note = appStore.reportLatestDate
+      ? `Sales SUMMARY through ${throughDate(appStore.reportLatestDate)} · not real-time`
+      : "Apple reports lag 1–2 days";
   }
-
-  const pulse = buildMorningPulse({
-    metrics: m,
-    google,
-    tiktok,
-    pinterest,
-    appStore,
-    commerce,
-    syncLatest: syncOps.latest,
-    totalClicks7d,
-    totalClicksPrev7d,
-    catalogHealth,
-  });
-
-  const deterministic = buildDeterministicInsights({
-    metrics: m,
-    google,
-    tiktok,
-    pinterest,
-    insights: live,
-    commerce,
-    syncLatest: syncOps.latest,
-    totalClicks7d,
-    totalClicksPrev7d,
-    catalogHealth,
-    cost: {
-      budgetUsd: costSnap.budgetUsd,
-      projectedMonthEndUsd: costSnap.proxy.projectedMonthEndUsd,
-      observedSpendUsd: costSnap.proxy.observedSpendUsd,
-      warmCronEnabled: costSnap.killSwitches.warmCronEnabled,
-      warmCronScheduled: costSnap.killSwitches.warmCronScheduled,
-      staleLocks: costSnap.alerts.staleLocks,
-      longestJobMs: costSnap.longestJobs[0]?.maxDurationMs || 0,
-      longestJobName: costSnap.longestJobs[0]?.job || null,
-    },
-  });
-
-  let actions: Awaited<ReturnType<typeof listFounderActions>> = [];
-  if (supabase) {
-    await upsertFounderActionsFromInsights(supabase, session.workspaceId, deterministic);
-    actions = await listFounderActions(supabase, session.workspaceId);
-  }
-
-  const latest = syncOps.latest;
-  const opsNeedsAttention = latest?.status === "failure" || latest?.status === "warning";
-  const canAdmin = session.roles.some((r) => r === "founder" || r === "admin");
-  const top = actions[0] || null;
-  const goal = commerce.revenueGoal;
-  const recs = commerce.revenueRecommendations || [];
 
   return (
     <div>
       <HqPageHeader
         title="Today"
-        description="Decide what to do in the next five minutes. Integrations stay in Settings."
+        description={`${name} · How INTERTEXE is growing, where users come from, and what to do next. HQ reports only — contacts stay in Supabase.`}
       />
 
-      <HqCard className="mb-6">
-        <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-2">Founder OS</p>
-        <h2 className="text-2xl md:text-3xl font-medium tracking-tight">{buildGreeting(name)}</h2>
-        {top ? (
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <p className="text-sm text-black/60 leading-relaxed flex-1">
-              <span className="text-black/40">Focus:</span> {top.title}
-            </p>
-            {top.href ? (
-              <a
-                href={top.href}
-                className="inline-flex justify-center text-[11px] tracking-widest uppercase bg-black text-white px-4 py-2.5 hover:bg-black/85 shrink-0"
-              >
-                Start now
-              </a>
-            ) : null}
-          </div>
-        ) : (
-          <p className="text-sm text-black/55 mt-3">
-            No critical queue — skim the pulse, then move on.
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        <HqCard>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">App downloads</p>
+          <p className="text-2xl font-medium tabular-nums mt-1">
+            {appleReady ? formatCount(appStore.appUnitsLatestDay) : "—"}
           </p>
-        )}
-        <p className="text-[11px] text-black/35 mt-4">
-          Updated {new Date(m.fetchedAt).toLocaleString()}
-          {google.syncedAt ? ` · Web ${new Date(google.syncedAt).toLocaleString()}` : ""}
-          {tiktok.syncedAt ? ` · TikTok ${new Date(tiktok.syncedAt).toLocaleString()}` : ""}
-          {pinterest.syncedAt ? ` · Pinterest ${new Date(pinterest.syncedAt).toLocaleString()}` : ""}
-        </p>
-      </HqCard>
-
-      <HqCard className="mb-6" title="App downloads">
-        {appStore.connected && appStore.downloadsReady ? (
-          <>
-            <p className="text-2xl font-medium tabular-nums tracking-tight">
-              {formatCount(appStore.appUnitsLatestDay)}
-              <span className="text-sm font-normal text-black/40"> latest report day</span>
-            </p>
-            <p className="text-sm text-black/50 mt-1">
-              {appStore.reportLatestDate
-                ? `Apple Sales SUMMARY through ${appStore.reportLatestDate}`
-                : "App Store Connect App Units"}
-              {appStore.deltas.appUnits7d.label ? ` · ${appStore.deltas.appUnits7d.label}` : ""}
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm mt-3">
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Last 7 days</span>
-                <span className="tabular-nums font-medium">{formatCount(appStore.appUnits7d)}</span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Last 30 days</span>
-                <span className="tabular-nums font-medium">{formatCount(appStore.appUnits30d)}</span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Prior 7 days</span>
-                <span className="tabular-nums font-medium">{formatCount(appStore.appUnitsPrev7d)}</span>
-              </div>
-            </div>
-            {appStore.daily.length ? (
-              <ul className="mt-3 space-y-1.5 text-sm max-h-36 overflow-y-auto">
-                {[...appStore.daily].reverse().slice(0, 7).map((d) => (
-                  <li key={d.date} className="flex justify-between gap-3 border-b border-black/5 py-1">
-                    <span className="tabular-nums text-black/55">{d.date}</span>
-                    <span className="tabular-nums font-medium">{formatCount(d.appUnits)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </>
-        ) : (
-          <p className="text-sm text-black/55 leading-relaxed">
-            {appStore.connected
-              ? "App Store Connect is linked, but downloads need your Vendor Number in Settings."
-              : "App Store Connect is not connected, so iOS downloads are dark."}
+          <p className="text-[11px] text-black/45 mt-1">
+            Apple · through {appleReady ? throughDate(appStore.reportLatestDate) : "—"}
           </p>
-        )}
-        {appStore.setupWarnings.length ? (
-          <p className="text-[12px] text-amber-900 mt-3 leading-relaxed">
-            {appStore.setupWarnings.join(" · ")}
+          <p className="text-[11px] text-black/40 mt-2 tabular-nums">
+            7d {appleReady ? formatCount(appStore.appUnits7d) : "—"} · 30d{" "}
+            {appleReady ? formatCount(appStore.appUnits30d) : "—"}
+            {appStore.deltas.appUnits7d.label ? ` · ${appStore.deltas.appUnits7d.label}` : ""}
           </p>
-        ) : null}
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-[11px] text-black/40">
-            {appStore.syncedAt
-              ? `Synced ${new Date(appStore.syncedAt).toLocaleString()} · Apple reports lag 1–2 days`
-              : "Apple reports lag 1–2 days · not claimed from outreach"}
+          <div className="mt-2">
+            <AppStoreSyncButton
+              connected={appStore.connected}
+              downloadsReady={appStore.downloadsReady}
+              syncedAt={appStore.syncedAt || appStore.lastSuccessfulSyncAt}
+            />
+          </div>
+        </HqCard>
+        <HqCard>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">New accounts</p>
+          <p className="text-2xl font-medium tabular-nums mt-1">{formatCount(founder.accounts.today)}</p>
+          <p className="text-[11px] text-black/45 mt-1">Supabase Auth · {founder.timezone}</p>
+          <p className="text-[11px] text-black/40 mt-2 tabular-nums">
+            7d {formatCount(founder.accounts.d7)} · 30d {formatCount(founder.accounts.d30)}
           </p>
-          <AppStoreSyncButton
-            connected={appStore.connected}
-            downloadsReady={appStore.downloadsReady}
-            syncedAt={appStore.syncedAt || appStore.lastSuccessfulSyncAt}
-          />
-        </div>
-      </HqCard>
-
-      <HqCard className="mb-6" title="$1M revenue path">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-3">
-          <div>
-            <p className="text-2xl font-medium tabular-nums tracking-tight">
-              {goal.mode === "demo" || goal.mode === "disconnected"
-                ? "—"
-                : formatMoneyUsd(goal.progressUsd)}
-              <span className="text-sm font-normal text-black/40">
-                {" "}
-                / {formatMoneyUsd(goal.goalUsd)}
-              </span>
-            </p>
-            <p className="text-[11px] text-black/45 mt-1">
-              {goal.mode === "demo"
-                ? "Demo revenue only — connect verified reporting"
-                : goal.mode === "disconnected"
-                  ? "No verified sales yet — import Rakuten to start the clock"
-                  : goal.mode === "ytd"
-                    ? `YTD commission · shoppers spent ${formatMoneyUsd(goal.salesYtd ?? goal.sales30d)}${goal.takeRatePct != null ? ` · ${goal.takeRatePct}% take` : ""} · 30d commission ${formatMoneyUsd(goal.commission30d)} · run-rate ${formatMoneyUsd(goal.runRateUsd)}/yr`
-                    : `Annualized from 30d commission ${formatMoneyUsd(goal.commission30d)} · shoppers spent ${formatMoneyUsd(goal.sales30d)}${goal.takeRatePct != null ? ` · ${goal.takeRatePct}% take` : ""}${goal.daysToGoal != null ? ` · ~${goal.daysToGoal} days at current pace` : ""}`}
-            </p>
-          </div>
-          <Link
-            href="/dashboard/commerce#revenue-goal"
-            className="text-[11px] tracking-widest uppercase underline underline-offset-4 shrink-0"
-          >
-            Commerce detail →
-          </Link>
-        </div>
-        {goal.mode !== "demo" && goal.mode !== "disconnected" ? (
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <div className="border border-black/10 rounded-lg px-3 py-2.5">
-              <p className="text-[10px] tracking-widest uppercase text-black/35">Shopper spend</p>
-              <p className="text-sm font-medium tabular-nums mt-1">
-                {formatMoneyUsd(goal.mode === "ytd" ? (goal.salesYtd ?? goal.sales30d) : goal.sales30d)}
-              </p>
-              <p className="text-[10px] text-black/40 mt-0.5">
-                {goal.mode === "ytd" ? "YTD GMV" : "30d GMV"}
-              </p>
-            </div>
-            <div className="border border-black/10 rounded-lg px-3 py-2.5">
-              <p className="text-[10px] tracking-widest uppercase text-black/35">Our commission</p>
-              <p className="text-sm font-medium tabular-nums mt-1">
-                {formatMoneyUsd(goal.progressUsd)}
-              </p>
-              <p className="text-[10px] text-black/40 mt-0.5">
-                {goal.mode === "ytd" ? "YTD toward $1M" : "annualized toward $1M"}
-              </p>
-            </div>
-          </div>
-        ) : null}
-        <div className="h-2 rounded-full bg-black/5 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-black transition-[width]"
-            style={{ width: `${Math.min(100, Math.max(0, goal.pct))}%` }}
-          />
-        </div>
-        <p className="text-[11px] text-black/40 mt-2 tabular-nums">{goal.pct}% of $1M commission goal</p>
-        <p className="text-[11px] text-black/45 mt-3">
-          Diagnose leaks in{" "}
-          <Link
-            href="/dashboard/commerce#performance-funnel"
-            className="underline underline-offset-4"
-          >
-            scans → views → clicks → sales
-          </Link>
-          .
-        </p>
-      </HqCard>
-
-      <HqCard className="mb-6" title="Make money today">
-        <p className="text-[11px] text-black/45 mb-3">
-          Three concrete moves — each links to an Action Center theme / Commerce surface.
-        </p>
-        <ol className="space-y-3">
-          {recs.map((rec, idx) => (
-            <li key={rec.fingerprint} className="border border-black/10 rounded-lg p-3.5">
-              <div className="flex items-start gap-3">
-                <span className="text-[10px] tracking-widest uppercase text-black/35 tabular-nums pt-0.5">
-                  {String(idx + 1).padStart(2, "0")}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium leading-snug">{rec.title}</p>
-                  <p className="text-[12px] text-black/55 mt-1 leading-relaxed">{rec.detail}</p>
-                  <a
-                    href={rec.href}
-                    className="inline-block mt-2 text-[11px] tracking-widest uppercase underline underline-offset-4"
-                  >
-                    Work on this →
-                  </a>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </HqCard>
-
-      <HqCard className="mb-6" title="Action center">
-        <ActionCenterClient initialActions={actions} canAdmin={canAdmin} />
-      </HqCard>
-
-      <PaidAcquisitionSection report={paidAcquisition} compact />
-
-      <HqCard className="mb-6" title="Email today">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
-          {emailEngine.today.byProgram.map((row) => (
-            <div key={row.emailType} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-              <span className="text-black/55">{row.label}</span>
-              <span className="tabular-nums font-medium">
-                {row.status === "ACTIVE" ? row.sentToday ?? 0 : "—"}
-              </span>
-            </div>
-          ))}
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Delivered</span>
-            <span className="tabular-nums font-medium">{emailEngine.today.deliveredToday}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Bounced</span>
-            <span className="tabular-nums font-medium">{emailEngine.today.bouncedToday}</span>
-          </div>
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-[11px] text-black/40">
-            From <code className="text-[10px]">email_deliveries</code> · UTC day
+        </HqCard>
+        <HqCard>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Activated users</p>
+          <p className="text-2xl font-medium tabular-nums mt-1">{formatCount(founder.activated.today)}</p>
+          <p className="text-[11px] text-black/45 mt-1">First scan · {accountActivation} of accounts</p>
+          <p className="text-[11px] text-black/40 mt-2 tabular-nums">
+            7d {formatCount(founder.activated.d7)} · lifetime {formatCount(founder.activated.total)}
           </p>
-          <Link
-            href="/dashboard/email"
-            className="text-[11px] tracking-widest uppercase underline underline-offset-4 shrink-0"
-          >
-            Email Engine →
-          </Link>
-        </div>
+        </HqCard>
+        <HqCard>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Retailer clicks</p>
+          <p className="text-2xl font-medium tabular-nums mt-1">{formatCount(founder.clicks.today)}</p>
+          <p className="text-[11px] text-black/45 mt-1">Shop + scanner + editorial</p>
+          <p className="text-[11px] text-black/40 mt-2 tabular-nums">
+            7d {formatCount(founder.clicks.d7)} · 30d {formatCount(founder.clicks.d30)}
+          </p>
+        </HqCard>
+        <HqCard>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Revenue</p>
+          <p className="text-2xl font-medium tabular-nums mt-1">
+            {revenueOk ? formatMoneyUsd(revenue.commissionToday) : "—"}
+          </p>
+          <p className="text-[11px] text-black/45 mt-1">
+            {revenueOk ? `Affiliate commission · today · ${founder.timezone}` : "Rakuten not verified"}
+          </p>
+          <p className="text-[11px] text-black/40 mt-2 tabular-nums">
+            7d {revenueOk ? formatMoneyUsd(revenue.commission7d) : "—"} · month{" "}
+            {revenueOk ? formatMoneyUsd(revenue.commission30d) : "—"}
+            {revenue.lastSaleDate ? ` · last ${throughDate(revenue.lastSaleDate)}` : ""}
+          </p>
+        </HqCard>
+      </div>
+
+      <HqCard className="mb-6" title="Company funnel">
+        <Funnel
+          steps={[
+            { label: "Downloads", value: appleReady ? formatCount(appStore.appUnits7d) : "—" },
+            { label: "Accounts", value: formatCount(founder.accounts.d7) },
+            { label: "Activated", value: formatCount(founder.activated.d7) },
+            { label: "Scans", value: formatCount(founder.scans.d7) },
+            { label: "Clicks", value: formatCount(founder.clicks.d7) },
+            { label: "Commission", value: revenueOk ? formatMoneyUsd(revenue.commission7d) : "—" },
+          ]}
+          note={`7-day operating view · ${founder.timezone}. Apple App Units are delayed aggregate Sales SUMMARY (through ${throughDate(appStore.reportLatestDate)}), not user-level install attribution. Account → activated ${accountActivation}.`}
+        />
       </HqCard>
 
       <HqCard className="mb-6" title="Outreach today">
         <p className="text-2xl font-medium tabular-nums tracking-tight">
-          {outreachToday.tableReady ? outreachToday.sent_today : "—"}
-          <span className="text-sm font-normal text-black/40">
-            {" "}
-            / {outreachToday.target_today}
-          </span>
+          {founder.tableReady ? founder.outreach.sentToday : "—"}
+          <span className="text-sm font-normal text-black/40"> / {founder.outreach.targetToday} sent</span>
         </p>
         <p className="text-sm text-black/50 mt-1 tabular-nums">
-          {outreachToday.tableReady ? `${outreachToday.remaining_today} remaining` : "— remaining"}
+          {founder.outreach.remainingToday} remaining · {founder.timezone}
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm mt-3">
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Influencers</span>
-            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.influencer : "—"}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Customers</span>
-            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.customer : "—"}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Businesses</span>
-            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.business : "—"}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Brands</span>
-            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.brand : "—"}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Replies</span>
-            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.replies_today : "—"}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Accounts created</span>
-            <span className="tabular-nums font-medium">
-              {outreachToday.tableReady ? outreachToday.new_accounts_from_contacts_today : "—"}
-            </span>
-          </div>
-          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-            <span className="text-black/55">Follow-ups due</span>
-            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.follow_ups_due : "—"}</span>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-3">
+          {[
+            ["Influencers", founder.outreach.influencer],
+            ["Customers", founder.outreach.customer],
+            ["Businesses", founder.outreach.business],
+            ["Brands", founder.outreach.brand],
+            ["Replies", founder.outreach.repliesToday],
+            ["Follow-ups due", founder.followUpsDue],
+            ["Accounts from contacts", founder.accountsFromContactsToday],
+            ["Activated from contacts", founder.activatedFromContactsToday],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+              <span className="text-black/55">{label}</span>
+              <span className="tabular-nums font-medium">{value as number}</span>
+            </div>
+          ))}
         </div>
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="text-[11px] text-black/40">
-            {outreachToday.tableReady
-              ? `Gmail headers only · ${outreachToday.timezone}`
-              : "Apply hq_contacts outreach SQL in Supabase to activate"}
+            Gmail headers only · target 25 is configurable in hq_metric_definitions
           </p>
-          <OutreachSyncButton connected={outreachToday.gmailConnected} />
+          <OutreachSyncButton connected={founder.gmailConnected} />
         </div>
-        {outreachFunnel.tableReady ? (
-          <div className="mt-5 pt-4 border-t border-black/10">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
-              Funnel · imported → emailed → replied → account → scan → retailer
-            </p>
-            <p className="text-sm tabular-nums text-black/80">
-              {outreachFunnel.imported} → {outreachFunnel.emailed} → {outreachFunnel.replied} →{" "}
-              {outreachFunnel.accounts} → {outreachFunnel.scanned} → {outreachFunnel.retailer_clicked}
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm mt-3">
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Contacted → account</span>
-                <span className="tabular-nums font-medium">
-                  {outreachFunnel.contacted_to_account_rate == null
-                    ? "—"
-                    : `${outreachFunnel.contacted_to_account_rate}%`}
-                </span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Imported → account</span>
-                <span className="tabular-nums font-medium">
-                  {outreachFunnel.imported_to_account_rate == null
-                    ? "—"
-                    : `${outreachFunnel.imported_to_account_rate}%`}
-                </span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Days email → signup</span>
-                <span className="tabular-nums font-medium">
-                  {outreachFunnel.avg_days_contact_to_signup == null
-                    ? "—"
-                    : outreachFunnel.avg_days_contact_to_signup}
-                </span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Customer accounts</span>
-                <span className="tabular-nums font-medium">{outreachFunnel.customer_accounts}</span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Influencer accounts</span>
-                <span className="tabular-nums font-medium">{outreachFunnel.influencer_accounts}</span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-                <span className="text-black/55">Brand accounts</span>
-                <span className="tabular-nums font-medium">{outreachFunnel.brand_accounts}</span>
-              </div>
-            </div>
-            <p className="text-[11px] text-black/40 mt-2">
-              Has account = INTERTEXE signup. Active = first scan. Not claimed as app download.
-              Add people in Supabase Table Editor → hq_contacts. Gmail stays the send interface.
-            </p>
+      </HqCard>
+
+      <HqCard className="mb-6" title="Outreach funnel">
+        <Funnel
+          steps={[
+            { label: "Imported", value: formatCount(f.imported) },
+            { label: "Emailed", value: formatCount(f.emailed) },
+            { label: "Replied", value: formatCount(f.replied) },
+            { label: "Account", value: formatCount(f.accounts) },
+            { label: "Activated", value: formatCount(f.activated) },
+            { label: "Retailer", value: formatCount(f.retailerClicked) },
+          ]}
+          note="Account creation is the deterministic conversion. Not claimed as app download."
+        />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-4">
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Contacted → reply</span>
+            <span className="tabular-nums font-medium">{pct(f.replied, f.emailed)}</span>
           </div>
-        ) : null}
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Contacted → account</span>
+            <span className="tabular-nums font-medium">{pct(f.contactedBecameUsers, f.emailed)}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Account → activated</span>
+            <span className="tabular-nums font-medium">{pct(f.activated, f.accounts)}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Contacted → activated</span>
+            <span className="tabular-nums font-medium">{pct(f.activated, f.emailed)}</span>
+          </div>
+        </div>
+      </HqCard>
+
+      <HqCard className="mb-6" title="Outreach by type">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-[10px] uppercase tracking-wider text-black/40">
+              <tr>
+                <th className="py-2 pr-3">Type</th>
+                <th className="py-2 pr-3">Contacted</th>
+                <th className="py-2 pr-3">Replied</th>
+                <th className="py-2 pr-3">Accounts</th>
+                <th className="py-2">Activated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(
+                [
+                  ["Influencers", founder.byType.influencer],
+                  ["Customers", founder.byType.customer],
+                  ["Businesses", founder.byType.business],
+                  ["Brands", founder.byType.brand],
+                ] as const
+              ).map(([label, row]) => (
+                <tr key={label} className="border-t border-black/5">
+                  <td className="py-2 pr-3">{label}</td>
+                  <td className="py-2 pr-3 tabular-nums">{row.contacted}</td>
+                  <td className="py-2 pr-3 tabular-nums">{row.replied}</td>
+                  <td className="py-2 pr-3 tabular-nums">{row.accounts}</td>
+                  <td className="py-2 tabular-nums">{row.activated}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11px] text-black/40 mt-2">Individual people stay in Supabase Table Editor → hq_contacts.</p>
+      </HqCard>
+
+      <PaidAcquisitionSection report={paidAcquisition} compact />
+
+      <HqCard className="mb-6" title="Which channels create users">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-[10px] uppercase tracking-wider text-black/40">
+              <tr>
+                <th className="py-2 pr-3">Source</th>
+                <th className="py-2 pr-3">Accounts</th>
+                <th className="py-2 pr-3">Activated</th>
+                <th className="py-2 pr-3">Retailer clicks</th>
+                <th className="py-2">Commission</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sources.map((s) => (
+                <tr key={s.id} className="border-t border-black/5">
+                  <td className="py-2 pr-3">{s.label}</td>
+                  <td className="py-2 pr-3 tabular-nums">{s.accounts}</td>
+                  <td className="py-2 pr-3 tabular-nums">{s.activated}</td>
+                  <td className="py-2 pr-3 tabular-nums">{s.clicks}</td>
+                  <td className="py-2 tabular-nums">{s.revenue == null ? "—" : formatMoneyUsd(s.revenue)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11px] text-black/40 mt-2">
+          First-party only. Paid install attribution is not claimed. Organic TikTok sample {formatCount(tiktok.connected ? tiktok.viewsSample : null)} views
+          {google.connected ? ` · Web 7d ${formatCount(google.ga4Users7d ?? google.ga4Sessions7d)}` : ""}
+          {pinterest.connected ? ` · Pinterest 7d ${formatCount(pinterest.impressions7d)}` : ""}.
+        </p>
       </HqCard>
 
       <HqCard className="mb-6" title="Content today">
@@ -526,82 +348,52 @@ export default async function HqOverviewPage() {
             <span className="tabular-nums font-medium">{contentToday.inPipeline}</span>
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-[11px] text-black/40">
-            {contentToday.tableReady
-              ? "hq_content_items · UTC day"
-              : "Apply hq_content_items migration to activate"}
-          </p>
-          <Link
-            href="/dashboard/content"
-            className="text-[11px] tracking-widest uppercase underline underline-offset-4 shrink-0"
-          >
+        <div className="mt-3 flex justify-end">
+          <Link href="/dashboard/content" className="text-[11px] tracking-widest uppercase underline underline-offset-4">
             Content →
           </Link>
         </div>
       </HqCard>
 
-      <div className="mb-2 flex items-end justify-between gap-3">
-        <p className="text-[10px] tracking-[0.18em] uppercase text-black/40">Pulse</p>
-        <p className="text-[10px] text-black/35">Today · Trailing 7d · safe WoW deltas</p>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8">
-        {pulse.map((item) => (
-          <Link
-            key={`${item.label}-${item.period}`}
-            href={item.href || "/dashboard"}
-            className={`block rounded-xl border p-3.5 hover:border-black/25 transition-colors ${
-              item.attention ? "border-amber-300 bg-amber-50/40" : "border-black/10 bg-white"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] tracking-[0.12em] uppercase text-black/45 truncate">
-                {item.label}
-              </p>
-              {item.period ? (
-                <p className="text-[10px] text-black/35 shrink-0">{item.period}</p>
-              ) : null}
+      <HqCard className="mb-6" title="Email today">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
+          {emailEngine.today.byProgram.map((row) => (
+            <div key={row.emailType} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+              <span className="text-black/55">{row.label}</span>
+              <span className="tabular-nums font-medium">
+                {row.status === "ACTIVE" ? row.sentToday ?? 0 : "—"}
+              </span>
             </div>
-            <p className="text-xl font-medium mt-1.5 tabular-nums">{item.value}</p>
-            {item.hint ? (
-              <p className="text-[11px] text-black/45 mt-1 leading-snug line-clamp-2">{item.hint}</p>
-            ) : null}
+          ))}
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Link href="/dashboard/email" className="text-[11px] tracking-widest uppercase underline underline-offset-4">
+            Email Engine →
           </Link>
-        ))}
-      </div>
+        </div>
+      </HqCard>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
-        {MISSION_LANES.map((lane) => (
-          <Link
-            key={lane.href}
-            href={lane.href}
-            className="block rounded-xl border border-black/10 bg-white px-3.5 py-3 hover:border-black/25 transition-colors"
-          >
-            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">{lane.label}</p>
-            <p className="text-sm font-medium mt-1 text-black/85 leading-snug">{lane.question}</p>
-          </Link>
-        ))}
-      </div>
-
-      {opsNeedsAttention && latest ? (
-        <HqCard title="Product health" className="border-amber-300">
-          <div className="flex flex-wrap items-center gap-3">
-            <span
-              className={`text-[11px] tracking-widest uppercase border px-2 py-1 ${statusBadgeClass(
-                latest.status
-              )}`}
-            >
-              {latest.displayStatus || latest.status}
-            </span>
-            <Link
-              href="/dashboard/operations"
-              className="text-xs tracking-widest uppercase underline underline-offset-4"
-            >
-              Review sync →
-            </Link>
-          </div>
+      {moneyMove ? (
+        <HqCard className="mb-6" title={moneyMove.title}>
+          <p className="text-sm text-black/70 leading-relaxed">{moneyMove.body}</p>
         </HqCard>
       ) : null}
+
+      <HqCard className="mb-6" title="Data freshness">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm">
+          {freshness.map((row) => (
+            <div key={row.id} className="border-b border-black/5 py-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-black/55">{row.label}</span>
+                <span className={`tabular-nums ${row.stale ? "text-amber-800" : "font-medium"}`}>
+                  {row.stale ? "stale" : ago(row.at)}
+                </span>
+              </div>
+              {row.note ? <p className="text-[11px] text-black/40 mt-0.5">{row.note}</p> : null}
+            </div>
+          ))}
+        </div>
+      </HqCard>
     </div>
   );
 }

@@ -92,6 +92,24 @@ export function PaidAcquisitionSection({
   report: PaidAcquisitionReport;
   compact?: boolean;
 }) {
+  const paidRows = [
+    ["Spend", money(report.today.meta.spend), money(report.today.tiktok.spend)],
+    ["Impressions", "—", "—"],
+    ["Clicks", "—", "—"],
+    ["App Store visits", "—", "—"],
+    [
+      "Attributed installs",
+      report.today.meta.attributedInstalls == null ? "—" : formatCount(report.today.meta.attributedInstalls),
+      report.today.tiktok.attributedInstalls == null ? "—" : formatCount(report.today.tiktok.attributedInstalls),
+    ],
+    ["Accounts", formatCount(report.today.meta.accounts), formatCount(report.today.tiktok.accounts)],
+    ["Activated", formatCount(report.today.meta.activatedUsers), formatCount(report.today.tiktok.activatedUsers)],
+    ["Cost / account", money(report.today.meta.costPerAccount), money(report.today.tiktok.costPerAccount)],
+    ["Cost / activated", money(report.today.meta.costPerActivated), money(report.today.tiktok.costPerActivated)],
+    ["Retailer clicks", formatCount(report.today.meta.affiliateClicks), formatCount(report.today.tiktok.affiliateClicks)],
+    ["Commission", money(report.today.meta.commission), money(report.today.tiktok.commission)],
+  ] as const;
+
   return (
     <HqCard className="mb-6" title="Paid acquisition">
       <p className="text-sm text-black/55 leading-relaxed mb-4">
@@ -106,14 +124,47 @@ export function PaidAcquisitionSection({
         <p className="text-sm text-amber-900 mb-4">Could not load: {report.error}</p>
       ) : null}
 
-      <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-3">Today</p>
-      <div className="grid md:grid-cols-2 gap-4 mb-6">
-        <PlatformToday summary={report.today.tiktok} />
-        <PlatformToday summary={report.today.meta} />
-      </div>
-
-      {!compact ? (
+      {compact ? (
         <>
+          <div className="overflow-x-auto mb-3">
+            <table className="w-full text-sm text-left">
+              <thead className="text-[10px] uppercase tracking-wider text-black/40">
+                <tr>
+                  <th className="py-2 pr-3">Metric</th>
+                  <th className="py-2 pr-3">Meta</th>
+                  <th className="py-2">TikTok</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paidRows.map(([label, meta, tiktok]) => (
+                  <tr key={label} className="border-t border-black/5">
+                    <td className="py-2 pr-3 text-black/55">{label}</td>
+                    <td className="py-2 pr-3 tabular-nums">{meta}</td>
+                    <td className="py-2 tabular-nums">{tiktok}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-black/40 mb-3 leading-relaxed">
+            Spend, impressions, clicks, App Store visits, and attributed installs stay as — until Meta/TikTok ads
+            APIs are connected. CPI is not inferred from Apple downloads.
+          </p>
+          <Link
+            href="/dashboard/acquisition#paid-acquisition"
+            className="text-[11px] tracking-widest uppercase underline underline-offset-4"
+          >
+            Full paid acquisition audit →
+          </Link>
+        </>
+      ) : (
+        <>
+          <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-3">Today</p>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <PlatformToday summary={report.today.tiktok} />
+            <PlatformToday summary={report.today.meta} />
+          </div>
+
           <p className="text-[10px] tracking-[0.18em] uppercase text-black/40 mb-3">
             By creative (first-party, trailing registrations)
           </p>
@@ -175,13 +226,6 @@ export function PaidAcquisitionSection({
             </Link>
           </p>
         </>
-      ) : (
-        <Link
-          href="/dashboard/acquisition#paid-acquisition"
-          className="text-[11px] tracking-widest uppercase underline underline-offset-4"
-        >
-          Full paid acquisition audit →
-        </Link>
       )}
     </HqCard>
   );
