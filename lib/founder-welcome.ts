@@ -127,6 +127,9 @@ export async function sendWelcomeEmail(
   }).catch(() => null);
 
   const ctaUrl = resolveWelcomeCtaUrl();
+  const subject = founderWelcomeSubject(firstName);
+  // Loops templates are case-sensitive. This published template requires
+  // lowercase `firstname`; also send camelCase so either UI convention works.
   const result = await sendLoopsTransactionalEmail({
     transactionalId,
     email,
@@ -134,8 +137,10 @@ export async function sendWelcomeEmail(
     idempotencyKey: claim.deliveryId,
     dataVariables: {
       firstName: firstName || "",
+      firstname: firstName || "",
       ctaUrl,
-      subject: founderWelcomeSubject(firstName),
+      ctaurl: ctaUrl,
+      subject,
     },
   });
 

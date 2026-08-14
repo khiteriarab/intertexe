@@ -4,6 +4,9 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import {
   EMAIL_FROM,
   EMAIL_FROM_FOUNDER,
@@ -54,4 +57,15 @@ test("Loops founder welcome is gated off by default", () => {
 test("welcome CTA opens the installed app via /open", () => {
   const url = resolveWelcomeCtaUrl();
   assert.equal(url, "https://www.intertexe.com/open");
+});
+
+test("Loops template dataVariables include lowercase firstname", () => {
+  // Production failure 2026-08-14: "Missing required data variable(s): firstname."
+  const src = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../lib/founder-welcome.ts"),
+    "utf8"
+  );
+  assert.match(src, /firstname:/);
+  assert.match(src, /firstName:/);
+  assert.match(src, /ctaUrl/);
 });
