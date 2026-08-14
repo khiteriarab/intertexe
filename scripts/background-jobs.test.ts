@@ -47,6 +47,14 @@ test("catalog-snapshot is registered but not scheduled", () => {
   );
 });
 
+test("gmail outreach sync is scheduled hourly and not expensive", () => {
+  const job = BACKGROUND_JOBS.find((j) => j.id === "gmail-outreach-sync");
+  assert.ok(job);
+  assert.equal(job!.scheduledInProduction, true);
+  assert.equal(job!.expensive, false);
+  assert.equal(job!.schedule, "15 * * * *");
+});
+
 test("catalog/sale/scan/recommend are forbidden warm targets", () => {
   assert.equal(isWarmPathForbidden("/api/catalog?region=us"), true);
   assert.equal(isWarmPathForbidden("/api/sale"), true);

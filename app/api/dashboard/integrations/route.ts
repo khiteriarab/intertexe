@@ -78,13 +78,15 @@ export async function GET() {
         "In TikTok Developer Portal Sandbox, add your TikTok account under Target users before testing Connect."
       );
     }
+    if (def.id === "gmail") {
+      setupHints.push(`Register redirect URI: ${callbackUrl("gmail")}`);
+      setupHints.push("Enable Gmail API on the existing Google Cloud project.");
+      setupHints.push("Connect as khiteri@intertexe.com (the sending account), not the GA/GSC login.");
+      setupHints.push("Read-only: sent/reply headers for people already in hq_contacts. Bodies are never stored.");
+    }
     if (def.id === "pinterest") {
-      setupHints.push(
-        `Register redirect URI: ${callbackUrl("pinterest")}`
-      );
-      setupHints.push(
-        "Request scopes: user_accounts:read, pins:read, boards:read (organic analytics)."
-      );
+      setupHints.push(`Register redirect URI: ${callbackUrl("pinterest")}`);
+      setupHints.push("Request scopes: user_accounts:read, pins:read, boards:read (organic analytics).");
     }
     if (!encryptionConfigured) {
       setupHints.push("Add HQ_TOKEN_ENCRYPTION_KEY in Vercel Production before connecting.");

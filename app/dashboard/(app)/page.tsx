@@ -14,6 +14,8 @@ import { fetchHqCommercePage } from "../../../lib/dashboard/metrics";
 import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
 import { fetchPaidAcquisitionReport } from "../../../lib/dashboard/paid-acquisition";
 import { fetchContentToday } from "../../../lib/dashboard/content-today";
+import { fetchOutreachToday } from "../../../lib/dashboard/outreach";
+import { OutreachSyncButton } from "./OutreachSyncButton";
 import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
@@ -51,6 +53,7 @@ export default async function HqOverviewPage() {
     emailEngine,
     paidAcquisition,
     contentToday,
+    outreachToday,
   ] = await Promise.all([
     fetchInsightsBundle(session.workspaceId),
     fetchHqCommercePage(session.workspaceId),
@@ -63,6 +66,7 @@ export default async function HqOverviewPage() {
     fetchEmailEngineBundle(),
     fetchPaidAcquisitionReport(),
     fetchContentToday(session.workspaceId),
+    fetchOutreachToday(session.workspaceId),
   ]);
 
   const name = greetingName(session.fullName, session.email);
@@ -335,6 +339,52 @@ export default async function HqOverviewPage() {
           >
             Email Engine →
           </Link>
+        </div>
+      </HqCard>
+
+      <HqCard className="mb-6" title="Outreach today">
+        <p className="text-2xl font-medium tabular-nums tracking-tight">
+          {outreachToday.tableReady ? outreachToday.sent_today : "—"}
+          <span className="text-sm font-normal text-black/40">
+            {" "}
+            / {outreachToday.target_today} sent
+          </span>
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm mt-3">
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Influencers</span>
+            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.influencer : "—"}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Customers</span>
+            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.customer : "—"}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Businesses</span>
+            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.business : "—"}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Replies</span>
+            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.replies_today : "—"}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Accounts created</span>
+            <span className="tabular-nums font-medium">
+              {outreachToday.tableReady ? outreachToday.new_accounts_from_contacts_today : "—"}
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+            <span className="text-black/55">Follow-ups due</span>
+            <span className="tabular-nums font-medium">{outreachToday.tableReady ? outreachToday.follow_ups_due : "—"}</span>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-black/40">
+            {outreachToday.tableReady
+              ? `Remaining ${outreachToday.remaining_today} · ${outreachToday.timezone}`
+              : "Apply hq_contacts outreach SQL in Supabase to activate"}
+          </p>
+          <OutreachSyncButton connected={outreachToday.gmailConnected} />
         </div>
       </HqCard>
 

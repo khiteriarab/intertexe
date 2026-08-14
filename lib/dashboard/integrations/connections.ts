@@ -87,6 +87,7 @@ export async function markDataSources(
   const labels: Record<string, string> = {
     google_analytics: "Google Analytics",
     search_console: "Search Console",
+    gmail_outreach: "Gmail outreach",
     instagram: "Instagram",
     tiktok: "TikTok",
     pinterest: "Pinterest",
@@ -178,7 +179,7 @@ export async function getValidAccessToken(
   const row = await loadFullConnection(supabase, workspaceId, provider);
   if (!row || !row.access_token_enc) throw new Error("Integration not connected");
 
-  const metadata = { ...(row.metadata || {}) };
+  const metadata = { ...(row.metadata || {}), workspaceId, accountLabel: row.account_label };
   if (provider === "app_store_connect") {
     if (row.refresh_token_enc) {
       metadata.privateKeyPem = decryptSecret(row.refresh_token_enc);

@@ -63,6 +63,10 @@
     {
       "path": "/api/cron/cost-observability",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/gmail-outreach-sync",
+      "schedule": "15 * * * *"
     }
   ]
 }

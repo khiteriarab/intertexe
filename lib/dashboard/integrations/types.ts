@@ -1,5 +1,6 @@
 export type OAuthProviderId =
   | "google"
+  | "gmail"
   | "meta"
   | "tiktok"
   | "pinterest"

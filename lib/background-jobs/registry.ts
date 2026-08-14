@@ -55,10 +55,10 @@ export const MAX_MONTHLY_INVOCATIONS_WITHOUT_FOUNDER_REVIEW = 2_000;
  * only way to add/change production crons. CI fails if vercel.json diverges.
  */
 export const APPROVED_CRON_BASELINE = {
-  version: 2,
+  version: 3,
   updatedAt: "2026-08-14",
   note:
-    "Paused catalog-snapshot (full row copy) after Small compute hit 89% disk. Expensive jobs default OFF.",
+    "Paused catalog-snapshot. Expensive jobs default OFF. Hourly Gmail outreach header sync added (skips if disconnected).",
 } as const;
 
 export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
@@ -356,6 +356,23 @@ export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
     productionSafe: true,
     scheduledInProduction: true,
     maxDurationSeconds: 30,
+    expensive: false,
+  },
+  {
+    id: "gmail-outreach-sync",
+    path: "/api/cron/gmail-outreach-sync",
+    purpose: "Ingest Gmail sent/reply headers for known hq_contacts",
+    owner: "founder-hq",
+    schedule: "15 * * * *",
+    estimatedRuntime: "5–20s",
+    estimatedRuntimeSeconds: 15,
+    expectedDailyExecutions: 24,
+    expectedMonthlyInvocations: 720,
+    justification:
+      "Founder-requested Gmail logging for the daily 25 outreach goal. Skips immediately when Gmail is not connected. Headers only — no bodies, no catalog scans.",
+    productionSafe: true,
+    scheduledInProduction: true,
+    maxDurationSeconds: 60,
     expensive: false,
   },
   // --- Intentionally UNSCHEDULED (registered so CI can forbid accidental scheduling) ---

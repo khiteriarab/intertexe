@@ -1,5 +1,6 @@
 import type { IntegrationDefinition, OAuthProviderId, ProviderAdapter } from "./types";
 import { googleAdapter } from "./providers/google";
+import { gmailAdapter } from "./providers/gmail";
 import { metaAdapter } from "./providers/meta";
 import { tiktokAdapter } from "./providers/tiktok";
 import { pinterestAdapter } from "./providers/pinterest";
@@ -14,6 +15,20 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     description:
       "Connect once with your Google account to pull GA4 traffic and Search Console query data nightly.",
     docsUrl: "https://console.cloud.google.com/apis/credentials",
+    requiredEnv: [
+      "GOOGLE_OAUTH_CLIENT_ID",
+      "GOOGLE_OAUTH_CLIENT_SECRET",
+      "HQ_TOKEN_ENCRYPTION_KEY",
+    ],
+  },
+  {
+    id: "gmail",
+    label: "Gmail outreach",
+    dataSourceKeys: ["gmail_outreach"],
+    authMode: "oauth",
+    description:
+      "Connect khiteri@intertexe.com so sent/reply headers for known hq_contacts are logged automatically. Read-only. Bodies are never stored.",
+    docsUrl: "https://console.cloud.google.com/apis/library/gmail.googleapis.com",
     requiredEnv: [
       "GOOGLE_OAUTH_CLIENT_ID",
       "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -95,6 +110,14 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     blurb: "Nightly Search Console query performance for www.intertexe.com.",
   },
   {
+    cardId: "gmail_outreach",
+    label: "Gmail outreach",
+    providerId: "gmail",
+    permissions: ["Sent headers", "Reply headers", "Message ids", "No bodies stored"],
+    blurb:
+      "Connect the INTERTEXE Gmail that sends outreach. Matching hq_contacts are logged automatically. Not a CRM.",
+  },
+  {
     cardId: "instagram",
     label: "Instagram",
     providerId: "meta",
@@ -126,6 +149,7 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
 
 const ADAPTERS: Record<OAuthProviderId, ProviderAdapter> = {
   google: googleAdapter,
+  gmail: gmailAdapter,
   meta: metaAdapter,
   tiktok: tiktokAdapter,
   pinterest: pinterestAdapter,

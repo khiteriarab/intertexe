@@ -8,6 +8,7 @@ export const maxDuration = 120;
 
 const PROVIDERS: OAuthProviderId[] = [
   "google",
+  "gmail",
   "meta",
   "tiktok",
   "pinterest",
