@@ -49,10 +49,22 @@ export const HQ_OUTREACH_STATUSES = [
   "follow_up_due",
   "converted",
   "not_interested",
+  "undeliverable",
   "dormant",
 ] as const;
 
 export type HqOutreachStatus = (typeof HQ_OUTREACH_STATUSES)[number];
+
+export const HQ_OUTREACH_EVENT_TYPES = [
+  "email_sent",
+  "follow_up_sent",
+  "email_reply_received",
+  "account_created",
+  "contact_imported",
+  "email_bounced",
+] as const;
+
+export type HqOutreachEventType = (typeof HQ_OUTREACH_EVENT_TYPES)[number];
 
 const TERMINAL = new Set<HqOutreachStatus>(["not_interested", "dormant"]);
 const CONVERTED_LOCK = new Set<HqOutreachStatus>(["converted", "not_interested", "dormant"]);
@@ -93,7 +105,7 @@ export function canonicalizeContactType(raw: string | null | undefined): HqConta
 
 export function nextStatusForEvent(
   current: string | null | undefined,
-  eventType: "email_sent" | "follow_up_sent" | "email_reply_received" | "account_created" | "contact_imported"
+  eventType: HqOutreachEventType
 ): HqOutreachStatus {
   const cur = (HQ_OUTREACH_STATUSES as readonly string[]).includes(String(current))
     ? (current as HqOutreachStatus)
@@ -101,6 +113,9 @@ export function nextStatusForEvent(
   if (eventType === "contact_imported") return cur || "not_contacted";
   if (eventType === "account_created") {
     return TERMINAL.has(cur) ? cur : "converted";
+  }
+  if (eventType === "email_bounced") {
+    return CONVERTED_LOCK.has(cur) ? cur : "undeliverable";
   }
   if (eventType === "email_reply_received") {
     return CONVERTED_LOCK.has(cur) ? cur : "replied";

@@ -26,8 +26,8 @@ export type FounderToday = {
     remainingToday: number;
     customer: number;
     influencer: number;
-    business: number;
     brand: number;
+    organization: number;
     repliesToday: number;
   };
   followUpsDue: number;
@@ -42,7 +42,7 @@ export type FounderToday = {
     retailerClicked: number;
     contactedBecameUsers: number;
   };
-  byType: Record<"customer" | "influencer" | "business" | "brand", OutreachByTypeRow>;
+  byType: Record<"customer" | "influencer" | "brand" | "organization", OutreachByTypeRow>;
   bd: BdToday;
   tableReady: boolean;
   gmailConnected: boolean;
@@ -58,6 +58,7 @@ export type BdToday = {
   weekReplies: number;
   weekAccounts: number;
   weekActivated: number;
+  weekByType: { influencer: number; customer: number; brand: number; organization: number };
   yesterdaySent: number;
   yesterdayReplies: number;
   yesterdayRegistrations: number;
@@ -101,6 +102,7 @@ const EMPTY_BD: BdToday = {
   weekReplies: 0,
   weekAccounts: 0,
   weekActivated: 0,
+  weekByType: { influencer: 0, customer: 0, brand: 0, organization: 0 },
   yesterdaySent: 0,
   yesterdayReplies: 0,
   yesterdayRegistrations: 0,
@@ -153,6 +155,14 @@ function parseBd(raw: unknown): BdToday {
     weekReplies: num(row.week_replies),
     weekAccounts: num(row.week_accounts),
     weekActivated: num(row.week_activated),
+    weekByType: {
+      influencer: num((row.week_by_type as Record<string, unknown> | undefined)?.influencer),
+      customer: num((row.week_by_type as Record<string, unknown> | undefined)?.customer),
+      brand: num((row.week_by_type as Record<string, unknown> | undefined)?.brand),
+      organization:
+        num((row.week_by_type as Record<string, unknown> | undefined)?.organization) +
+        num((row.week_by_type as Record<string, unknown> | undefined)?.business),
+    },
     yesterdaySent: num(row.yesterday_sent),
     yesterdayReplies: num(row.yesterday_replies),
     yesterdayRegistrations: num(row.yesterday_registrations),
@@ -167,7 +177,7 @@ function parseBd(raw: unknown): BdToday {
       customer: num(intro.customer),
       brand: num(intro.brand),
       business: num(intro.business),
-      organization: num(intro.organization),
+      organization: num(intro.organization) + num(intro.business),
       press: num(intro.press),
     },
     canonicalFunnel: {
@@ -209,8 +219,8 @@ const EMPTY: FounderToday = {
     remainingToday: 25,
     customer: 0,
     influencer: 0,
-    business: 0,
     brand: 0,
+    organization: 0,
     repliesToday: 0,
   },
   followUpsDue: 0,
@@ -228,8 +238,8 @@ const EMPTY: FounderToday = {
   byType: {
     customer: ZERO_TYPE,
     influencer: ZERO_TYPE,
-    business: ZERO_TYPE,
     brand: ZERO_TYPE,
+    organization: ZERO_TYPE,
   },
   bd: EMPTY_BD,
   tableReady: false,
@@ -240,6 +250,24 @@ const EMPTY: FounderToday = {
 function num(v: unknown): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
+}
+
+function mergeTypeRows(a: OutreachByTypeRow, b: OutreachByTypeRow): OutreachByTypeRow {
+  return {
+    contacted: a.contacted + b.contacted,
+    replied: a.replied + b.replied,
+    accounts: a.accounts + b.accounts,
+    activated: a.activated + b.activated,
+  };
+}
+
+export type CanonicalOutreachType = "influencer" | "customer" | "brand" | "organization";
+
+export function canonicalOutreachType(raw: string | null | undefined): CanonicalOutreachType | null {
+  const type = String(raw || "").trim().toLowerCase();
+  if (type === "influencer" || type === "customer" || type === "brand") return type;
+  if (type === "organization" || type === "business") return "organization";
+  return null;
 }
 
 function typeRow(raw: unknown): OutreachByTypeRow {
@@ -308,8 +336,8 @@ export async function fetchFounderToday(workspaceId: string): Promise<FounderTod
       remainingToday: num(outreach.remaining_today),
       customer: num(outreach.customer),
       influencer: num(outreach.influencer),
-      business: num(outreach.business),
       brand: num(outreach.brand),
+      organization: num(outreach.organization) + num(outreach.business),
       repliesToday: num(outreach.replies_today),
     },
     followUpsDue: num(row.follow_ups_due),
@@ -327,8 +355,8 @@ export async function fetchFounderToday(workspaceId: string): Promise<FounderTod
     byType: {
       customer: typeRow(byType.customer),
       influencer: typeRow(byType.influencer),
-      business: typeRow(byType.business),
       brand: typeRow(byType.brand),
+      organization: mergeTypeRows(typeRow(byType.organization), typeRow(byType.business)),
     },
     bd: parseBd(row.bd),
     tableReady: true,
@@ -394,12 +422,14 @@ async function deriveBdFromContacts(workspaceId: string, founder: FounderToday):
     introQueue: { ...EMPTY_BD.introQueue },
     opportunities: { ...EMPTY_BD.opportunities },
     canonicalFunnel: { ...EMPTY_BD.canonicalFunnel },
+    weekByType: { ...EMPTY_BD.weekByType },
   };
 
   const sourceMap = new Map<string, BdToday["bySource"][number]>();
   const bumpIntro = (type: string) => {
-    if (type in bd.introQueue) {
-      bd.introQueue[type as keyof BdToday["introQueue"]] += 1;
+    const canonical = canonicalOutreachType(type);
+    if (canonical) {
+      bd.introQueue[canonical] += 1;
     }
   };
 
@@ -435,7 +465,11 @@ async function deriveBdFromContacts(workspaceId: string, founder: FounderToday):
     if (scans >= 1) bd.canonicalFunnel.activated += 1;
     if (scans >= 2) bd.canonicalFunnel.engagedUser += 1;
 
-    if (inWindow(c.last_contacted_at, d7, dayEnd)) bd.weekContacted += 1;
+    if (inWindow(c.last_contacted_at, d7, dayEnd)) {
+      bd.weekContacted += 1;
+      const weekType = canonicalOutreachType(type);
+      if (weekType) bd.weekByType[weekType] += 1;
+    }
     if (inWindow(c.last_replied_at, d7, dayEnd)) bd.weekReplies += 1;
     if (inWindow(c.account_created_at, d7, dayEnd)) bd.weekAccounts += 1;
     if (inWindow(c.account_created_at, yStart, dayStart)) bd.yesterdayRegistrations += 1;
@@ -448,8 +482,13 @@ async function deriveBdFromContacts(workspaceId: string, founder: FounderToday):
     if (uid) continue;
     if (Number.isFinite(lastReply) && (!Number.isFinite(lastSend) || lastReply >= lastSend)) {
       bd.repliesNeedAttention += 1;
-      if (type === "influencer" || type === "brand" || type === "organization" || type === "press") {
-        bd.opportunities[type] += 1;
+      if (type === "influencer" || type === "brand" || type === "organization" || type === "business" || type === "press") {
+        const oppType = canonicalOutreachType(type);
+        if (oppType === "brand" || oppType === "influencer" || oppType === "organization") {
+          bd.opportunities[oppType] += 1;
+        } else if (type === "press") {
+          bd.opportunities.press += 1;
+        }
       }
       continue;
     }
@@ -670,9 +709,7 @@ export function buildBdBriefing(founder: FounderToday): {
       ["Influencers", queue.influencer],
       ["Customers", queue.customer],
       ["Brands", queue.brand],
-      ["Businesses", queue.business],
-      ["Organizations", queue.organization],
-      ["Press", queue.press],
+      ["Organizations", queue.organization + queue.business],
     ] as const
   ).filter(([, n]) => n > 0);
   queueEntries.sort((a, b) => b[1] - a[1]);
@@ -681,8 +718,8 @@ export function buildBdBriefing(founder: FounderToday): {
   const typeRows = [
     ["Influencers", founder.byType.influencer],
     ["Customers", founder.byType.customer],
-    ["Businesses", founder.byType.business],
     ["Brands", founder.byType.brand],
+    ["Organizations", founder.byType.organization],
   ] as const;
   const comparable = typeRows.filter(([, r]) => r.contacted >= 8);
   let conversionNote = "Conversion by type needs more than a test send.";

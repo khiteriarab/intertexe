@@ -29,7 +29,7 @@ import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { HqCard, HqPageHeader } from "../components/HqUi";
 
-export const metadata = { title: "Today" };
+export const metadata = { title: "This week" };
 export const dynamic = "force-dynamic";
 
 function greetingName(fullName: string | null, email: string) {
@@ -134,8 +134,8 @@ export default async function HqOverviewPage() {
   return (
     <div>
       <HqPageHeader
-        title="Today"
-        description={`${name} · How INTERTEXE is growing, where users come from, and what to do next. HQ reports only — contacts stay in Supabase.`}
+        title="This week"
+        description={`${name} · Week progress with today’s movement beside it. HQ reports only — contacts stay in Supabase.`}
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
@@ -302,66 +302,73 @@ export default async function HqOverviewPage() {
         </HqCard>
       ) : null}
 
-      <HqCard className="mb-6" title="Business development">
-        <p className="text-2xl font-medium tabular-nums tracking-tight">
-          {founder.tableReady ? founder.outreach.sentToday : "—"}
-          <span className="text-sm font-normal text-black/40"> / {founder.outreach.targetToday} sent</span>
-        </p>
-        <p className="text-sm text-black/50 mt-1 tabular-nums">
-          {founder.outreach.remainingToday} remaining of {founder.outreach.targetToday} · {founder.bd.introductionsDue}{" "}
-          introductions waiting · {founder.timezone}
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-3">
-          {[
-            ["Influencers sent", founder.outreach.influencer],
-            ["Customers sent", founder.outreach.customer],
-            ["Businesses sent", founder.outreach.business],
-            ["Brands sent", founder.outreach.brand],
-            ["Replies today", founder.outreach.repliesToday],
-            ["Follow-ups due", founder.bd.followUpsDue],
-            ["Accounts from contacts", founder.accountsFromContactsToday],
-            ["Activated from contacts", founder.activatedFromContactsToday],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-              <span className="text-black/55">{label}</span>
-              <span className="tabular-nums font-medium">{value as number}</span>
+      <HqCard className="mb-6" title="Outreach">
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="md:col-span-2">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">This week</p>
+            <p className="text-2xl font-medium tabular-nums tracking-tight mt-1">
+              {founder.tableReady ? founder.bd.weekContacted : "—"}
+              <span className="text-sm font-normal text-black/40"> contacted</span>
+            </p>
+            <p className="text-sm text-black/50 mt-1 tabular-nums">
+              {founder.bd.weekReplies} replies
+              {founder.bd.weekContacted >= 8 ? ` · ${pct(founder.bd.weekReplies, founder.bd.weekContacted)}` : ""}
+              {" · "}
+              {founder.bd.weekAccounts} accounts
+              {founder.bd.weekContacted >= 8 ? ` · ${pct(founder.bd.weekAccounts, founder.bd.weekContacted)}` : ""}
+              {" · "}
+              {founder.bd.weekActivated} activated
+              {founder.bd.weekContacted >= 8 ? ` · ${pct(founder.bd.weekActivated, founder.bd.weekContacted)}` : ""}
+            </p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mt-3">
+              {[
+                ["Influencers", founder.bd.weekByType.influencer],
+                ["Customers", founder.bd.weekByType.customer],
+                ["Brands", founder.bd.weekByType.brand],
+                ["Organizations", founder.bd.weekByType.organization],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
+                  <span className="text-black/55">{label}</span>
+                  <span className="tabular-nums font-medium">{value as number}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-4">
-          <p className="col-span-2 md:col-span-4 text-[10px] tracking-[0.14em] uppercase text-black/40">This week</p>
-          {[
-            ["Contacted", founder.bd.weekContacted],
-            ["Replies", founder.bd.weekReplies],
-            ["Accounts", founder.bd.weekAccounts],
-            ["Activated", founder.bd.weekActivated],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
-              <span className="text-black/55">{label}</span>
-              <span className="tabular-nums font-medium">
-                {value as number}
-                {label === "Replies" && founder.bd.weekContacted >= 8
-                  ? ` · ${pct(founder.bd.weekReplies, founder.bd.weekContacted)}`
-                  : ""}
-                {label === "Accounts" && founder.bd.weekContacted >= 8
-                  ? ` · ${pct(founder.bd.weekAccounts, founder.bd.weekContacted)}`
-                  : ""}
-                {label === "Activated" && founder.bd.weekContacted >= 8
-                  ? ` · ${pct(founder.bd.weekActivated, founder.bd.weekContacted)}`
-                  : ""}
-              </span>
+          </div>
+          <div className="border border-black/10 p-4">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Today</p>
+            <p className="text-xl font-medium tabular-nums tracking-tight mt-1">
+              {founder.tableReady ? founder.outreach.sentToday : "—"}
+              <span className="text-sm font-normal text-black/40"> / {founder.outreach.targetToday} sent</span>
+            </p>
+            <p className="text-[11px] text-black/45 mt-1 tabular-nums">
+              {founder.outreach.remainingToday} remaining of {founder.outreach.targetToday} · {founder.timezone}
+            </p>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm mt-3">
+              {[
+                ["Influencers", founder.outreach.influencer],
+                ["Customers", founder.outreach.customer],
+                ["Brands", founder.outreach.brand],
+                ["Organizations", founder.outreach.organization],
+                ["Replies", founder.outreach.repliesToday],
+                ["Accounts", founder.accountsFromContactsToday],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1">
+                  <span className="text-black/55 text-[13px]">{label}</span>
+                  <span className="tabular-nums font-medium">{value as number}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mt-4">
           <p className="col-span-2 md:col-span-4 text-[10px] tracking-[0.14em] uppercase text-black/40">
-            Conversations waiting
+            Introductions waiting
           </p>
           {[
-            ["Influencers", founder.bd.opportunities.influencer],
-            ["Brands", founder.bd.opportunities.brand],
-            ["Organizations", founder.bd.opportunities.organization],
-            ["Press", founder.bd.opportunities.press],
+            ["Influencers", founder.bd.introQueue.influencer],
+            ["Customers", founder.bd.introQueue.customer],
+            ["Brands", founder.bd.introQueue.brand],
+            ["Organizations", founder.bd.introQueue.organization],
           ].map(([label, value]) => (
             <div key={String(label)} className="flex items-baseline justify-between gap-2 border-b border-black/5 py-1.5">
               <span className="text-black/55">{label}</span>
@@ -371,8 +378,8 @@ export default async function HqOverviewPage() {
         </div>
         <div className="mt-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <p className="text-[11px] text-black/40 leading-relaxed max-w-xl">
-            Prepare drafts fills To + {"{firstname}"} from hq_contacts into your two Gmail templates.
-            Review in Gmail Drafts and press Send yourself — HQ never auto-sends relationship email.
+            Gmail templates exist for influencers and customers only. Brands and organizations
+            stay on the list until those drafts exist. HQ never auto-sends relationship email.
           </p>
           <div className="flex flex-col items-end gap-2 shrink-0">
             <PrepareDraftsButton connected={founder.gmailConnected} />
@@ -434,8 +441,8 @@ export default async function HqOverviewPage() {
                 [
                   ["Influencers", founder.byType.influencer],
                   ["Customers", founder.byType.customer],
-                  ["Businesses", founder.byType.business],
                   ["Brands", founder.byType.brand],
+                  ["Organizations", founder.byType.organization],
                 ] as const
               ).map(([label, row]) => (
                 <tr key={label} className="border-t border-black/5">

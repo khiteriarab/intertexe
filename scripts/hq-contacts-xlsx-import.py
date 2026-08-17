@@ -82,7 +82,8 @@ def blank(v):
 
 
 def emails_from(value):
-    return sorted({e.lower() for e in EMAIL_RE.findall(str(value or ""))})
+    cleaned = re.sub(r"@{2,}", "@", str(value or ""))
+    return sorted({e.lower() for e in EMAIL_RE.findall(cleaned)})
 
 
 def header_map(row):
@@ -103,7 +104,7 @@ def col(m, row, names):
 
 
 def type_from_tab(name):
-    return TAB_TYPE.get(name.strip().lower(), "other")
+    return TAB_TYPE.get(name.strip().lower())
 
 
 def parse_xlsx(path):
@@ -112,6 +113,8 @@ def parse_xlsx(path):
     invalid = []
     tab_counts = {}
     for sheet_name in wb.sheetnames:
+        if not type_from_tab(sheet_name):
+            continue
         ws = wb[sheet_name]
         rows = list(ws.iter_rows(values_only=True))
         if not rows:
@@ -129,6 +132,8 @@ def parse_xlsx(path):
             tab_counts[sheet_name] = {"rows": empty_n, "valid": 0}
             continue
         contact_type = type_from_tab(sheet_name)
+        if not contact_type:
+            continue
         valid = 0
         for r in rows[header_idx + 1 :]:
             if not any(c not in (None, "") for c in r):
@@ -143,7 +148,23 @@ def parse_xlsx(path):
             first = col(hmap, r, ["first_name", "firstname", "first"])
             last = col(hmap, r, ["last_name", "lastname", "last"])
             full = col(hmap, r, ["full_name", "fullname", "name"]) or " ".join(x for x in [first, last] if x) or None
-            company = col(hmap, r, ["brand", "company", "company_name", "organization"])
+            company = col(
+                hmap,
+                r,
+                [
+                    "brand",
+                    "company",
+                    "company_name",
+                    "organization",
+                    "organization_name",
+                    "organisation",
+                    "organisation_name",
+                ],
+            )
+            title = col(hmap, r, ["title", "role", "job_title"])
+            notes = col(hmap, r, ["notes", "note", "reference", "estimated_tier"])
+            if title:
+                notes = " ".join(x for x in [notes, f"Title: {title}"] if x)
             for email in found:
                 parsed.append(
                     {
@@ -160,10 +181,10 @@ def parse_xlsx(path):
                         "tiktok": col(hmap, r, ["tiktok", "tt"]),
                         "city": col(hmap, r, ["city"]),
                         "country": col(hmap, r, ["country"]),
-                        "notes": col(hmap, r, ["notes", "note", "reference", "estimated_tier"]),
+                        "notes": notes,
                         "contact_type": contact_type,
                         "sheet_tab": sheet_name,
-                        "source": "xlsx_import",
+                        "source": "google_sheet_legacy",
                         "marketing_eligible": False,
                     }
                 )

@@ -285,7 +285,7 @@ async function pickContacts(
     const email = normalizeEmail(c.email || "");
     if (!email || !email.includes("@")) return false;
     const status = String(c.outreach_status || "");
-    if (["converted", "not_interested", "dormant"].includes(status)) return false;
+    if (["converted", "not_interested", "dormant", "undeliverable"].includes(status)) return false;
     if (c.last_contacted_at) return false;
     return true;
   });

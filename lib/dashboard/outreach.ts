@@ -165,7 +165,7 @@ export async function fetchOutreachFunnel(workspaceId: string): Promise<Outreach
 export type OutreachEventInput = {
   contactId: string;
   email: string;
-  eventType: "email_sent" | "email_reply_received" | "follow_up_sent" | "contact_imported" | "account_created";
+  eventType: "email_sent" | "email_reply_received" | "follow_up_sent" | "contact_imported" | "account_created" | "email_bounced";
   channel?: "gmail" | "loops" | "resend" | "system" | "other";
   direction?: "outbound" | "inbound" | "system";
   provider?: string;
@@ -184,7 +184,7 @@ export async function recordOutreachEvent(
 ): Promise<{ inserted: boolean; skipped?: string }> {
   const { data: contact, error: contactError } = await supabase
     .from("hq_contacts")
-    .select("id, email, outreach_status, first_contacted_at, last_replied_at, account_created_at")
+    .select("id, email, outreach_status, first_contacted_at, last_replied_at, account_created_at, notes")
     .eq("id", input.contactId)
     .maybeSingle();
   if (contactError || !contact) {
@@ -210,7 +210,10 @@ export async function recordOutreachEvent(
   const { error } = await supabase.from("hq_contact_outreach").insert(row);
   if (error) {
     if (error.code === "23505") return { inserted: false, skipped: "duplicate" };
-    return { inserted: false, skipped: error.message };
+    const checkBlocked =
+      input.eventType === "email_bounced" &&
+      (error.code === "23514" || /event_type|check constraint/i.test(error.message || ""));
+    if (!checkBlocked) return { inserted: false, skipped: error.message };
   }
 
   const next = nextStatusForEvent(contact.outreach_status, input.eventType);
@@ -236,12 +239,27 @@ export async function recordOutreachEvent(
     patch.next_follow_up_at = null;
   }
 
+  if (input.eventType === "email_bounced") {
+    const bouncedAt = input.receivedAt || new Date().toISOString();
+    patch.last_bounced_at = bouncedAt;
+    patch.next_follow_up_at = null;
+    const stamp = `[undeliverable ${bouncedAt.slice(0, 10)}] Gmail bounce — address rejected`;
+    const notes = String(contact.notes || "");
+    if (!notes.includes("[undeliverable")) {
+      patch.notes = [notes.trim(), stamp].filter(Boolean).join("\n");
+    }
+  }
+
   if (input.eventType === "account_created" && !contact.account_created_at) {
     patch.account_created_at = new Date().toISOString();
   }
 
-  await supabase.from("hq_contacts").update(patch).eq("id", input.contactId);
-  return { inserted: true };
+  const { error: updateError } = await supabase.from("hq_contacts").update(patch).eq("id", input.contactId);
+  if (updateError && input.eventType === "email_bounced" && patch.last_bounced_at) {
+    delete patch.last_bounced_at;
+    await supabase.from("hq_contacts").update(patch).eq("id", input.contactId);
+  }
+  return { inserted: !error };
 }
 
 export function isMissingOutreachTable(error: { code?: string; message?: string } | null): boolean {

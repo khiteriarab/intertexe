@@ -35,10 +35,11 @@ export function PrepareDraftsButton({ connected }: { connected: boolean }) {
 
   async function prepare() {
     const confirmed = window.confirm(
-      "Create up to 40 influencer + 40 customer Gmail drafts from your two template drafts?\n\n" +
+        "Create Gmail drafts from your two templates?\n\n" +
         "• Influencers ← “you might love what we built…”\n" +
         "• Customers ← “i think you'd love the intertexe clothing app…”\n\n" +
-        "Drafts get the correct To: email and {firstname} filled in.\n" +
+        "Up to 40 of each, from uncontacted hq_contacts.\n" +
+        "Brands and organizations are not included — those templates are not set up.\n" +
         "Nothing is sent — you review and press Send in Gmail."
     );
     if (!confirmed) return;
@@ -103,7 +104,7 @@ export function PrepareDraftsButton({ connected }: { connected: boolean }) {
         disabled={busy}
         className="text-[11px] tracking-widest uppercase underline underline-offset-4 disabled:opacity-40"
       >
-        {busy ? "Preparing drafts…" : "Prepare 40+40 drafts"}
+        {busy ? "Preparing drafts…" : "Prepare influencer + customer drafts"}
       </button>
     </div>
   );
