@@ -4,7 +4,7 @@ import {
   fetchHqAcquisitionReport,
   type AcquisitionBucket,
 } from "../../../../lib/dashboard/acquisition";
-import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchAppStoreDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
+import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchInstagramDiscoveryMetrics, fetchAppStoreDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
 import { fetchPaidAcquisitionReport } from "../../../../lib/dashboard/paid-acquisition";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
@@ -101,11 +101,12 @@ function ReportTable({
 
 export default async function HqAcquisitionPage() {
   const session = await requireHqSession();
-  const [report, paidAcquisition, google, tiktok, pinterest, appStore] = await Promise.all([
+  const [report, paidAcquisition, google, tiktok, instagram, pinterest, appStore] = await Promise.all([
     fetchHqAcquisitionReport(),
     fetchPaidAcquisitionReport(session.workspaceId),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
     fetchTikTokDiscoveryMetrics(session.workspaceId),
+    fetchInstagramDiscoveryMetrics(session.workspaceId),
     fetchPinterestDiscoveryMetrics(session.workspaceId),
     fetchAppStoreDiscoveryMetrics(session.workspaceId),
   ]);
@@ -507,9 +508,67 @@ export default async function HqAcquisitionPage() {
         ) : (
           <div className="text-sm text-black/60 leading-relaxed">
             <p>
-              TikTok is not connected, so organic social discovery is dark. Connect Login Kit in
-              Settings — this page will show sample views, likes, followers, and top videos next to
-              Google.
+              TikTok Login Kit was not approved for INTERTEXE HQ (internal brand dashboards are
+              not allowed). Organic follower growth lives in the TikTok Analytics app. Paid spend
+              still syncs here once the TikTok For Business ads token is in Vercel.
+            </p>
+            <Link
+              href="/dashboard/settings"
+              className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
+            >
+              Open Settings → Integrations
+            </Link>
+          </div>
+        )}
+      </HqCard>
+
+      <HqCard className="mb-6" title="Social discovery (Instagram)">
+        {instagram.connected ? (
+          <>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
+              Meta Graph · follower count vs 7d ago
+            </p>
+            {instagram.igError ? (
+              <p className="text-sm text-amber-900 mb-3 leading-relaxed">{instagram.igError}</p>
+            ) : null}
+            <HqMetricGrid
+              items={[
+                {
+                  label: "Followers",
+                  value: formatCount(instagram.followerCount),
+                  hint:
+                    instagram.deltas.followerCount.label ||
+                    (instagram.username ? `@${instagram.username}` : undefined),
+                },
+                {
+                  label: "Posts",
+                  value: formatCount(instagram.mediaCount),
+                },
+                {
+                  label: "Reach (latest day)",
+                  value: formatCount(instagram.igReach),
+                },
+                {
+                  label: "Profile views (latest day)",
+                  value: formatCount(instagram.igProfileViews),
+                },
+              ]}
+            />
+            <p className="text-[11px] text-black/40 mt-4">
+              Synced {instagram.syncedAt ? new Date(instagram.syncedAt).toLocaleString() : "—"}
+              {instagram.lastSyncStatus ? ` · ${instagram.lastSyncStatus}` : ""}
+              {instagram.apiSurface ? ` · ${instagram.apiSurface}` : ""}
+              {" · "}
+              <Link href="/dashboard/settings" className="underline underline-offset-2">
+                Manage connection
+              </Link>
+            </p>
+          </>
+        ) : (
+          <div className="text-sm text-black/60 leading-relaxed">
+            <p>
+              Connect Instagram via Meta in Settings. HQ will show follower count and 7-day growth
+              for the INTERTEXE Business account linked to your Facebook Page.
             </p>
             <Link
               href="/dashboard/settings"

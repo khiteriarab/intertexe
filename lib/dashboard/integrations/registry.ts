@@ -41,7 +41,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     dataSourceKeys: ["instagram"],
     authMode: "oauth",
     description:
-      "Sign in with Meta / Facebook for Instagram insights and Meta Ads spend (requires ads_read + META_ADS_ACCOUNT_ID).",
+      "Sign in with Meta / Facebook for Instagram follower growth and Meta Ads spend (requires ads_read + META_ADS_ACCOUNT_ID).",
     docsUrl: "https://developers.facebook.com/apps/",
     requiredEnv: ["META_OAUTH_APP_ID", "META_OAUTH_APP_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
   },
@@ -51,7 +51,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     dataSourceKeys: ["tiktok"],
     authMode: "oauth",
     description:
-      "Connect TikTok Login Kit for organic profile metrics. Add TIKTOK_ADS_* env vars for paid spend in HQ.",
+      "TikTok Login Kit is not available for HQ (TikTok rejects internal brand dashboards). Paid spend uses TIKTOK_ADS_* after the For Business app is approved.",
     docsUrl: "https://developers.tiktok.com/doc/login-kit-web",
     requiredEnv: [
       "TIKTOK_OAUTH_CLIENT_KEY",
@@ -123,12 +123,14 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     label: "Instagram",
     providerId: "meta",
     permissions: [
-      "Pages",
+      "Profile",
+      "Followers",
+      "Posts",
       "Meta Ads spend",
       "Impressions",
       "Clicks",
     ],
-    blurb: "Connect via Meta Login. Reconnect after enabling ads_read for Ads Manager spend in Acquisition.",
+    blurb: "Connect via Meta Login for Instagram follower growth and Ads Manager spend.",
   },
   {
     cardId: "tiktok",
@@ -144,7 +146,7 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
       "Shares",
       "Ads spend (with TIKTOK_ADS_* env)",
     ],
-    blurb: "Organic Display API + optional TikTok Ads token for paid spend on Acquisition.",
+    blurb: "Organic Login Kit is blocked by TikTok policy. Paid ads token still feeds Acquisition spend when set.",
   },
   {
     cardId: "pinterest",

@@ -1,6 +1,7 @@
 import type {
   AppStoreDiscoveryMetrics,
   GoogleDiscoveryMetrics,
+  InstagramDiscoveryMetrics,
   PinterestDiscoveryMetrics,
   TikTokDiscoveryMetrics,
 } from "./integration-metrics";
@@ -38,6 +39,7 @@ export function buildMorningPulse(input: {
   metrics: HqOverviewMetrics;
   google: GoogleDiscoveryMetrics;
   tiktok?: TikTokDiscoveryMetrics;
+  instagram?: InstagramDiscoveryMetrics;
   pinterest?: PinterestDiscoveryMetrics;
   appStore?: AppStoreDiscoveryMetrics;
   commerce: {
@@ -70,6 +72,7 @@ export function buildMorningPulse(input: {
     metrics: m,
     google,
     tiktok,
+    instagram,
     pinterest,
     appStore,
     commerce,
@@ -136,17 +139,25 @@ export function buildMorningPulse(input: {
       period: "Now",
       value: count(tiktok?.connected ? tiktok.followerCount : null),
       hint: !tiktok?.connected
-        ? "TikTok not connected"
+        ? "Login Kit not approved for HQ — use TikTok Analytics"
         : tiktok.followerCount == null
-          ? tiktok.tiktokUserError || "Approve user.info.stats and reconnect"
-          : [
-              tiktok.deltas.followerCount.label,
-              tiktok.viewsSample != null ? `${count(tiktok.viewsSample)} views (sample)` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ") || "Production Login Kit",
+          ? tiktok.tiktokUserError || "Follower count unavailable"
+          : tiktok.deltas.followerCount.label,
       href: "/dashboard/acquisition",
-      attention: !tiktok?.connected || tiktok.followerCount == null,
+      attention: true,
+    },
+    {
+      label: "Instagram followers",
+      period: "Now",
+      value: count(instagram?.connected ? instagram.followerCount : null),
+      hint: !instagram?.connected
+        ? "Connect Instagram in Settings"
+        : instagram.followerCount == null
+          ? instagram.igError || "Sync after Connect"
+          : instagram.deltas.followerCount.label ||
+            (instagram.username ? `@${instagram.username}` : "vs 7d ago"),
+      href: "/dashboard/acquisition",
+      attention: !instagram?.connected || instagram.followerCount == null,
     },
     {
       label: "Pinterest",

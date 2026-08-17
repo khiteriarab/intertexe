@@ -565,6 +565,128 @@ export async function fetchPinterestDiscoveryMetrics(
   };
 }
 
+/** Organic Instagram from Meta Graph snapshots (brand account linked to a Facebook Page). */
+export type InstagramDiscoveryMetrics = {
+  connected: boolean;
+  metricDate: string | null;
+  syncedAt: string | null;
+  username: string | null;
+  displayName: string | null;
+  followerCount: number | null;
+  followerCountPrev7d: number | null;
+  followsCount: number | null;
+  mediaCount: number | null;
+  igImpressions: number | null;
+  igReach: number | null;
+  igProfileViews: number | null;
+  deltas: {
+    followerCount: ReturnType<typeof computePeriodDelta>;
+  };
+  igError: string | null;
+  apiSurface: string | null;
+  lastSyncStatus: string | null;
+  lastSyncError: string | null;
+  lastSuccessfulSyncAt: string | null;
+};
+
+const EMPTY_INSTAGRAM: InstagramDiscoveryMetrics = {
+  connected: false,
+  metricDate: null,
+  syncedAt: null,
+  username: null,
+  displayName: null,
+  followerCount: null,
+  followerCountPrev7d: null,
+  followsCount: null,
+  mediaCount: null,
+  igImpressions: null,
+  igReach: null,
+  igProfileViews: null,
+  deltas: {
+    followerCount: computePeriodDelta(null, null),
+  },
+  igError: null,
+  apiSurface: null,
+  lastSyncStatus: null,
+  lastSyncError: null,
+  lastSuccessfulSyncAt: null,
+};
+
+export async function fetchInstagramDiscoveryMetrics(
+  workspaceId: string
+): Promise<InstagramDiscoveryMetrics> {
+  const supabase = getServerSupabase();
+  if (!supabase || !workspaceId) return EMPTY_INSTAGRAM;
+
+  const [{ data: conn }, { data: snaps }, { data: baselineSnap }] = await Promise.all([
+    supabase
+      .from("hq_oauth_connections")
+      .select("status, last_sync_at, last_sync_status, last_sync_error, metadata, account_label")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "meta")
+      .maybeSingle(),
+    supabase
+      .from("hq_integration_metric_snapshots")
+      .select("metric_date, metrics, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "meta")
+      .order("metric_date", { ascending: false })
+      .limit(2),
+    supabase
+      .from("hq_integration_metric_snapshots")
+      .select("metric_date, metrics, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "meta")
+      .lte("metric_date", isoDaysAgo(7))
+      .order("metric_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const connected = Boolean(
+    conn && (conn.status === "connected" || conn.status === "degraded" || conn.status === "error")
+  );
+  const latest = snaps?.[0] || null;
+  const metrics = (latest?.metrics || {}) as Record<string, unknown>;
+  const baselineMetrics = (baselineSnap?.metrics || {}) as Record<string, unknown>;
+  const meta = (conn?.metadata || {}) as Record<string, unknown>;
+  const followerCount = numOrNull(metrics.followerCount);
+  const followerCountPrev7d = numOrNull(baselineMetrics.followerCount);
+
+  return {
+    connected,
+    metricDate: latest?.metric_date || null,
+    syncedAt:
+      (typeof metrics.syncedAt === "string" && metrics.syncedAt) ||
+      conn?.last_sync_at ||
+      latest?.created_at ||
+      null,
+    username:
+      (typeof metrics.username === "string" && metrics.username) ||
+      (typeof meta.igUsername === "string" && meta.igUsername) ||
+      conn?.account_label ||
+      null,
+    displayName: typeof metrics.displayName === "string" ? metrics.displayName : null,
+    followerCount,
+    followerCountPrev7d,
+    followsCount: numOrNull(metrics.followsCount),
+    mediaCount: numOrNull(metrics.mediaCount),
+    igImpressions: numOrNull(metrics.ig_impressions),
+    igReach: numOrNull(metrics.ig_reach),
+    igProfileViews: numOrNull(metrics.ig_profile_views),
+    deltas: {
+      followerCount: computePeriodDelta(followerCount, followerCountPrev7d, {
+        periodLabel: "vs 7d ago",
+      }),
+    },
+    igError: typeof metrics.igError === "string" ? metrics.igError : null,
+    apiSurface: typeof metrics.apiSurface === "string" ? metrics.apiSurface : null,
+    lastSyncStatus: conn?.last_sync_status || null,
+    lastSyncError: conn?.last_sync_error || null,
+    lastSuccessfulSyncAt:
+      typeof meta.lastSuccessfulSyncAt === "string" ? meta.lastSuccessfulSyncAt : null,
+  };
+}
 
 export type AppStoreDailyPoint = { date: string; appUnits: number };
 

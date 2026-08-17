@@ -83,14 +83,19 @@ export const metaAdapter: ProviderAdapter = {
     );
     const me = (await meRes.json()) as { id?: string; name?: string };
     const pagesRes = await fetch(
-      `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}&access_token=${encodeURIComponent(accessToken)}`
+      `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,followers_count,media_count}&access_token=${encodeURIComponent(accessToken)}`
     );
     const pages = (await pagesRes.json()) as {
       data?: Array<{
         id: string;
         name: string;
         access_token?: string;
-        instagram_business_account?: { id: string; username?: string };
+        instagram_business_account?: {
+          id: string;
+          username?: string;
+          followers_count?: number;
+          media_count?: number;
+        };
       }>;
     };
     const withIg = (pages.data || []).find((p) => p.instagram_business_account?.id);
@@ -107,8 +112,11 @@ export const metaAdapter: ProviderAdapter = {
       externalAccountId: withIg?.instagram_business_account?.id || me.id || null,
       metadata: {
         pageId: withIg?.id || null,
+        pageAccessToken: withIg?.access_token || null,
         igUserId: withIg?.instagram_business_account?.id || null,
         igUsername: withIg?.instagram_business_account?.username || null,
+        followerCount: withIg?.instagram_business_account?.followers_count ?? null,
+        mediaCount: withIg?.instagram_business_account?.media_count ?? null,
         adAccountId,
       },
     };
@@ -121,6 +129,32 @@ export const metaAdapter: ProviderAdapter = {
     const raw: Record<string, unknown> = {};
 
     if (igUserId) {
+      const profileRes = await fetch(
+        `https://graph.facebook.com/v21.0/${igUserId}?fields=id,username,name,followers_count,follows_count,media_count&access_token=${encodeURIComponent(pageToken)}`
+      );
+      const profileJson = (await profileRes.json()) as {
+        username?: string;
+        name?: string;
+        followers_count?: number;
+        follows_count?: number;
+        media_count?: number;
+        error?: { message?: string };
+      };
+      raw.profile = profileJson;
+      if (profileRes.ok && !profileJson.error) {
+        metrics.apiSurface = "instagram_graph_facebook_login";
+        metrics.username = profileJson.username || metadata.igUsername || null;
+        metrics.displayName = profileJson.name || null;
+        metrics.followerCount =
+          profileJson.followers_count != null ? Number(profileJson.followers_count) : null;
+        metrics.followsCount =
+          profileJson.follows_count != null ? Number(profileJson.follows_count) : null;
+        metrics.mediaCount =
+          profileJson.media_count != null ? Number(profileJson.media_count) : null;
+      } else {
+        metrics.igError = profileJson.error?.message || "Instagram profile failed";
+      }
+
       const insightRes = await fetch(
         `https://graph.facebook.com/v21.0/${igUserId}/insights?metric=impressions,reach,profile_views&period=day&access_token=${encodeURIComponent(pageToken)}`
       );
@@ -132,8 +166,10 @@ export const metaAdapter: ProviderAdapter = {
           const last = vals[vals.length - 1];
           metrics[`ig_${row.name}`] = last?.value ?? null;
         }
-      } else {
-        metrics.igError = insightJson?.error?.message || "Instagram insights failed";
+      } else if (!metrics.igError) {
+        metrics.igInsightsNote =
+          insightJson?.error?.message ||
+          "Daily Instagram insights need extra Meta permissions; follower count still syncs from the profile.";
       }
     } else {
       metrics.igNote = "No Instagram business account linked — ads metrics still sync when configured.";

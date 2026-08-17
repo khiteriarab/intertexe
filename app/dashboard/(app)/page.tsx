@@ -4,6 +4,7 @@ import {
   fetchGoogleDiscoveryMetrics,
   fetchPinterestDiscoveryMetrics,
   fetchTikTokDiscoveryMetrics,
+  fetchInstagramDiscoveryMetrics,
   fetchAppStoreDiscoveryMetrics,
 } from "../../../lib/dashboard/integration-metrics";
 import { formatCount } from "../../../lib/dashboard/metrics";
@@ -86,6 +87,7 @@ export default async function HqOverviewPage() {
     revenue,
     google,
     tiktok,
+    instagram,
     pinterest,
     appStore,
     emailEngine,
@@ -99,6 +101,7 @@ export default async function HqOverviewPage() {
     fetchRevenueSnapshot(session.workspaceId),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
     fetchTikTokDiscoveryMetrics(session.workspaceId),
+    fetchInstagramDiscoveryMetrics(session.workspaceId),
     fetchPinterestDiscoveryMetrics(session.workspaceId),
     fetchAppStoreDiscoveryMetrics(session.workspaceId),
     fetchEmailEngineBundle(),
@@ -509,7 +512,13 @@ export default async function HqOverviewPage() {
           </table>
         </div>
         <p className="text-[11px] text-black/40 mt-2">
-          First-party only. Paid install attribution is not claimed. Organic TikTok sample {formatCount(tiktok.connected ? tiktok.viewsSample : null)} views
+          First-party only. Paid install attribution is not claimed.
+          {instagram.connected
+            ? ` Instagram ${formatCount(instagram.followerCount)} followers`
+            : ""}
+          {tiktok.connected
+            ? ` · TikTok sample ${formatCount(tiktok.viewsSample)} views`
+            : ""}
           {google.connected ? ` · Web 7d ${formatCount(google.ga4Users7d ?? google.ga4Sessions7d)}` : ""}
           {pinterest.connected ? ` · Pinterest 7d ${formatCount(pinterest.impressions7d)}` : ""}.
         </p>
