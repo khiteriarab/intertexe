@@ -32,10 +32,12 @@ export default function OpenAppPage() {
     let cancelled = false;
     let leftPage = false;
 
-    trackAppDownloadClick({
-      ctaLocation: cta,
-      destination: "open",
-    });
+    if (!isAuthHandoff) {
+      trackAppDownloadClick({
+        ctaLocation: cta,
+        destination: "open",
+      });
+    }
 
     const markLeft = () => {
       leftPage = true;
