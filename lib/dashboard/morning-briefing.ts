@@ -139,9 +139,9 @@ export function buildMorningPulse(input: {
       period: "Now",
       value: count(tiktok?.connected ? tiktok.followerCount : null),
       hint: !tiktok?.connected
-        ? "Login Kit not approved for HQ — use TikTok Analytics"
+        ? "Log numbers from TikTok Analytics on Acquisition"
         : tiktok.followerCount == null
-          ? tiktok.tiktokUserError || "Follower count unavailable"
+          ? tiktok.tiktokUserError || "Log followers from Analytics"
           : tiktok.deltas.followerCount.label,
       href: "/dashboard/acquisition",
       attention: true,

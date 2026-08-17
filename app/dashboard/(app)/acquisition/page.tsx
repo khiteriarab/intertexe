@@ -8,7 +8,7 @@ import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTo
 import { fetchPaidAcquisitionReport } from "../../../../lib/dashboard/paid-acquisition";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
-import { PaidAcquisitionSection } from "../../components/PaidAcquisitionSection";
+import { TikTokOrganicLogClient } from "./TikTokOrganicLogClient";
 
 export const metadata = { title: "Acquisition" };
 export const dynamic = "force-dynamic";
@@ -101,6 +101,7 @@ function ReportTable({
 
 export default async function HqAcquisitionPage() {
   const session = await requireHqSession();
+  const canAdmin = session.roles.some((r) => ["founder", "admin"].includes(r));
   const [report, paidAcquisition, google, tiktok, instagram, pinterest, appStore] = await Promise.all([
     fetchHqAcquisitionReport(),
     fetchPaidAcquisitionReport(session.workspaceId),
@@ -407,17 +408,13 @@ export default async function HqAcquisitionPage() {
       </HqCard>
 
       <HqCard className="mb-6" title="Social discovery (TikTok)">
-        {tiktok.connected ? (
+        <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
+          {tiktok.apiSurface === "tiktok_analytics_manual"
+            ? "Logged from TikTok Analytics · follower growth vs 7d ago"
+            : "TikTok Analytics log · ads spend syncs separately when the ads token is set"}
+        </p>
+        {tiktok.followerCount != null || tiktok.viewsSample != null ? (
           <>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
-              Production Login Kit · follower growth vs 7d ago · video sample totals
-            </p>
-            {tiktok.statsScopeMissing || tiktok.tiktokUserError ? (
-              <p className="text-sm text-amber-900 mb-3 leading-relaxed">
-                {tiktok.tiktokUserError ||
-                  "Follower count not returned yet — approve user.info.stats on your TikTok app, then reconnect."}
-              </p>
-            ) : null}
             <HqMetricGrid
               items={[
                 {
@@ -425,48 +422,29 @@ export default async function HqAcquisitionPage() {
                   value: formatCount(tiktok.followerCount),
                   hint:
                     tiktok.deltas.followerCount.label ||
-                    (tiktok.username ? `@${tiktok.username}` : tiktok.displayName || undefined),
+                    (tiktok.username ? `@${tiktok.username}` : undefined),
                 },
                 {
-                  label: "Views (sample)",
+                  label: "Views (7d)",
                   value: formatCount(tiktok.viewsSample),
-                  hint: tiktok.deltas.viewsSample.label || "vs prior sync",
+                  hint: tiktok.deltas.viewsSample.label || "from Analytics log",
                 },
                 {
-                  label: "Likes (sample)",
+                  label: "Likes (7d)",
                   value: formatCount(tiktok.likesSample),
                 },
                 {
                   label: "Posted (7d)",
                   value: formatCount(tiktok.videosPosted7d),
-                  hint: tiktok.deltas.videosPosted7d.label || "create_time window",
+                  hint: tiktok.deltas.videosPosted7d.label || undefined,
                 },
               ]}
             />
-            <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-              <div className="border border-black/10 rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-black/40">Comments (sample)</p>
-                <p className="tabular-nums font-medium mt-1">{formatCount(tiktok.commentsSample)}</p>
-              </div>
-              <div className="border border-black/10 rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-black/40">Shares (sample)</p>
-                <p className="tabular-nums font-medium mt-1">{formatCount(tiktok.sharesSample)}</p>
-              </div>
-              <div className="border border-black/10 rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-black/40">Videos in sample</p>
-                <p className="tabular-nums font-medium mt-1">{formatCount(tiktok.videoSampleCount)}</p>
-              </div>
-              <div className="border border-black/10 rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-black/40">Account videos</p>
-                <p className="tabular-nums font-medium mt-1">{formatCount(tiktok.videoCount)}</p>
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
-                Top videos by views
-              </p>
-              {tiktok.topVideos.length ? (
+            {tiktok.topVideos.length ? (
+              <div className="mt-5">
+                <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-2">
+                  Top videos by views
+                </p>
                 <ul className="space-y-2 text-sm">
                   {tiktok.topVideos.slice(0, 8).map((v) => (
                     <li key={v.id} className="flex justify-between gap-3">
@@ -490,36 +468,25 @@ export default async function HqAcquisitionPage() {
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-sm text-black/50">No videos in the latest sync yet.</p>
-              )}
-            </div>
-
+              </div>
+            ) : null}
             <p className="text-[11px] text-black/40 mt-4">
               Synced {tiktok.syncedAt ? new Date(tiktok.syncedAt).toLocaleString() : "—"}
               {tiktok.lastSyncStatus ? ` · ${tiktok.lastSyncStatus}` : ""}
               {tiktok.apiSurface ? ` · ${tiktok.apiSurface}` : ""}
-              {" · "}
-              <Link href="/dashboard/settings" className="underline underline-offset-2">
-                Manage connection
-              </Link>
             </p>
           </>
         ) : (
-          <div className="text-sm text-black/60 leading-relaxed">
-            <p>
-              TikTok Login Kit was not approved for INTERTEXE HQ (internal brand dashboards are
-              not allowed). Organic follower growth lives in the TikTok Analytics app. Paid spend
-              still syncs here once the TikTok For Business ads token is in Vercel.
-            </p>
-            <Link
-              href="/dashboard/settings"
-              className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
-            >
-              Open Settings → Integrations
-            </Link>
-          </div>
+          <p className="text-sm text-black/60 leading-relaxed">
+            No TikTok numbers in HQ yet. Open Analytics, copy followers and 7-day views, then save
+            below.
+          </p>
         )}
+        <TikTokOrganicLogClient
+          canAdmin={canAdmin}
+          username={tiktok.username}
+          lastFollowerCount={tiktok.followerCount}
+        />
       </HqCard>
 
       <HqCard className="mb-6" title="Social discovery (Instagram)">

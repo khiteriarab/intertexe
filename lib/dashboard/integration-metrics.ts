@@ -339,9 +339,6 @@ export async function fetchTikTokDiscoveryMetrics(
       .maybeSingle(),
   ]);
 
-  const connected = Boolean(
-    conn && (conn.status === "connected" || conn.status === "degraded" || conn.status === "error")
-  );
   const latest = snaps?.[0] || null;
   const prev = snaps?.[1] || null;
   const metrics = (latest?.metrics || {}) as Record<string, unknown>;
@@ -351,10 +348,18 @@ export async function fetchTikTokDiscoveryMetrics(
 
   const followerCount = numOrNull(metrics.followerCount);
   const followerCountPrev7d = numOrNull(baselineMetrics.followerCount);
-  const viewsSample = numOrNull(metrics.viewsSample);
-  const viewsSamplePrev = numOrNull(prevMetrics.viewsSample);
+  const viewsSample = numOrNull(metrics.viewsSample) ?? numOrNull(metrics.views7d);
+  const viewsSamplePrev = numOrNull(prevMetrics.viewsSample) ?? numOrNull(prevMetrics.views7d);
   const videosPosted7d = numOrNull(metrics.videosPosted7d);
   const videosPostedPrev7d = numOrNull(metrics.videosPostedPrev7d);
+  const oauthConnected = Boolean(
+    conn && (conn.status === "connected" || conn.status === "degraded" || conn.status === "error")
+  );
+  const hasOrganicLog =
+    followerCount != null ||
+    viewsSample != null ||
+    metrics.apiSurface === "tiktok_analytics_manual";
+  const connected = oauthConnected || hasOrganicLog;
 
   return {
     connected,
@@ -368,7 +373,9 @@ export async function fetchTikTokDiscoveryMetrics(
       (typeof metrics.displayName === "string" && metrics.displayName) ||
       conn?.account_label ||
       null,
-    username: typeof metrics.username === "string" ? metrics.username : null,
+    username:
+      (typeof metrics.username === "string" && metrics.username) ||
+      "intertexe",
     followerCount,
     followerCountPrev7d,
     followingCount: numOrNull(metrics.followingCount),
@@ -376,7 +383,7 @@ export async function fetchTikTokDiscoveryMetrics(
     videoCount: numOrNull(metrics.videoCount),
     videoSampleCount: numOrNull(metrics.videoSampleCount),
     viewsSample,
-    likesSample: numOrNull(metrics.likesSample),
+    likesSample: numOrNull(metrics.likesSample) ?? numOrNull(metrics.likes7d),
     commentsSample: numOrNull(metrics.commentsSample),
     sharesSample: numOrNull(metrics.sharesSample),
     viewsSamplePrev,
