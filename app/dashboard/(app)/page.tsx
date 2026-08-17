@@ -152,13 +152,13 @@ export default async function HqOverviewPage() {
         <HqCard>
           <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Apple App Units</p>
           <p className="text-2xl font-medium tabular-nums mt-1">
-            {appleReady ? formatCount(appStore.appUnitsLatestDay) : "—"}
+            {appleReady ? formatCount(appStore.appUnits7d) : "—"}
           </p>
           <p className="text-[11px] text-black/45 mt-1">
-            Apple report · through {appleReady ? throughDate(appStore.reportLatestDate) : "—"}
+            7-day downloads · through {appleReady ? throughDate(appStore.reportLatestDate) : "—"}
           </p>
           <p className="text-[11px] text-black/40 mt-2 tabular-nums">
-            7d {appleReady ? formatCount(appStore.appUnits7d) : "—"} · 30d{" "}
+            Latest Apple day {appleReady ? formatCount(appStore.appUnitsLatestDay) : "—"} · 30d{" "}
             {appleReady ? formatCount(appStore.appUnits30d) : "—"}
             {appStore.deltas.appUnits7d.label ? ` · ${appStore.deltas.appUnits7d.label}` : ""}
           </p>
