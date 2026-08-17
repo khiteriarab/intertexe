@@ -61,6 +61,18 @@ export async function GET() {
         );
       }
     }
+    if (def.id === "meta") {
+      setupHints.push(`Register redirect URI: ${callbackUrl("meta")}`);
+      setupHints.push(
+        "Request scopes: pages_show_list, pages_read_engagement, business_management, ads_read."
+      );
+      setupHints.push(
+        "Set META_ADS_ACCOUNT_ID in Vercel (act_XXXXX from Meta Ads Manager → Settings → Account)."
+      );
+      setupHints.push(
+        "After adding ads_read, disconnect and reconnect Meta in HQ so the token includes Ads access."
+      );
+    }
     if (def.id === "tiktok") {
       const sandboxMode = String(process.env.TIKTOK_USE_SANDBOX || "") === "1";
       setupHints.push(
@@ -76,6 +88,9 @@ export async function GET() {
       );
       setupHints.push(
         "In TikTok Developer Portal Sandbox, add your TikTok account under Target users before testing Connect."
+      );
+      setupHints.push(
+        "For paid ads on Acquisition: set TIKTOK_ADS_ACCESS_TOKEN + TIKTOK_ADS_ADVERTISER_ID in Vercel (from TikTok Ads Manager → Tools → Events/API)."
       );
     }
     if (def.id === "gmail") {
@@ -170,6 +185,9 @@ export async function GET() {
       PINTEREST_OAUTH_APP_SECRET: Boolean(
         process.env.PINTEREST_OAUTH_APP_SECRET?.trim() || process.env.PINTEREST_APP_SECRET?.trim()
       ),
+      META_ADS_ACCOUNT_ID: Boolean(process.env.META_ADS_ACCOUNT_ID?.trim()),
+      TIKTOK_ADS_ACCESS_TOKEN: Boolean(process.env.TIKTOK_ADS_ACCESS_TOKEN?.trim()),
+      TIKTOK_ADS_ADVERTISER_ID: Boolean(process.env.TIKTOK_ADS_ADVERTISER_ID?.trim()),
     },
   });
 }

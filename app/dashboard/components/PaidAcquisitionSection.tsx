@@ -33,7 +33,17 @@ function PlatformToday({ summary }: { summary: PaidPlatformSummary }) {
       <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">{summary.label}</p>
       <HqMetricGrid
         items={[
-          { label: "Spend", value: money(summary.spend), hint: "From ad platform — not wired" },
+          { label: "Spend", value: money(summary.spend), hint: summary.adsConnected ? "From ad platform sync" : "Not wired" },
+          {
+            label: "Impressions",
+            value: summary.impressions == null ? "—" : formatCount(summary.impressions),
+            hint: "Ad platform",
+          },
+          {
+            label: "Clicks",
+            value: summary.clicks == null ? "—" : formatCount(summary.clicks),
+            hint: "Ad platform",
+          },
           {
             label: "Attributed installs",
             value: summary.attributedInstalls == null ? "—" : formatCount(summary.attributedInstalls),
@@ -94,8 +104,16 @@ export function PaidAcquisitionSection({
 }) {
   const paidRows = [
     ["Spend", money(report.today.meta.spend), money(report.today.tiktok.spend)],
-    ["Impressions", "—", "—"],
-    ["Clicks", "—", "—"],
+    [
+      "Impressions",
+      report.today.meta.impressions == null ? "—" : formatCount(report.today.meta.impressions),
+      report.today.tiktok.impressions == null ? "—" : formatCount(report.today.tiktok.impressions),
+    ],
+    [
+      "Clicks",
+      report.today.meta.clicks == null ? "—" : formatCount(report.today.meta.clicks),
+      report.today.tiktok.clicks == null ? "—" : formatCount(report.today.tiktok.clicks),
+    ],
     ["App Store visits", "—", "—"],
     [
       "Attributed installs",
@@ -113,11 +131,9 @@ export function PaidAcquisitionSection({
   return (
     <HqCard className="mb-6" title="Paid acquisition">
       <p className="text-sm text-black/55 leading-relaxed mb-4">
-        First-party funnel by channel.{" "}
-        <strong className="font-medium text-black/70">
-          Promote → App Store does not prove install attribution.
-        </strong>{" "}
-        Spend and platform-attributed installs require TikTok/Meta app events or an MMP.
+        Platform spend (Meta Ads + TikTok Ads) syncs nightly from Settings → Integrations.
+        Accounts, scans, and revenue are first-party INTERTEXE — tie them to ads with tagged{" "}
+        <code className="text-xs">/open?utm_source=…&amp;utm_medium=paid</code> links.
       </p>
 
       {report.error ? (
@@ -147,8 +163,8 @@ export function PaidAcquisitionSection({
             </table>
           </div>
           <p className="text-[11px] text-black/40 mb-3 leading-relaxed">
-            Spend, impressions, clicks, App Store visits, and attributed installs stay as — until Meta/TikTok ads
-            APIs are connected. CPI is not inferred from Apple downloads.
+            App Store visits and platform-attributed installs still require SKAN/MMP. Cost per
+            account uses ad spend ÷ first-party signups when both exist.
           </p>
           <Link
             href="/dashboard/acquisition#paid-acquisition"

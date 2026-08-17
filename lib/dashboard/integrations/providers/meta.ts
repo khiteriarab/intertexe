@@ -1,4 +1,5 @@
 import type { ProviderAdapter, TokenBundle } from "../types";
+import { resolveMetaAdAccountId, syncMetaAdsMetrics } from "../ads-platform-metrics";
 
 function requireEnv(name: string): string {
   const v = process.env[name]?.trim();
@@ -6,12 +7,12 @@ function requireEnv(name: string): string {
   return v;
 }
 
+/** Instagram Basic Display scopes were retired; requesting them fails OAuth in Live mode. */
 const SCOPES = [
   "pages_show_list",
   "pages_read_engagement",
-  "instagram_basic",
-  "instagram_manage_insights",
   "business_management",
+  "ads_read",
 ].join(",");
 
 export const metaAdapter: ProviderAdapter = {
@@ -93,6 +94,12 @@ export const metaAdapter: ProviderAdapter = {
       }>;
     };
     const withIg = (pages.data || []).find((p) => p.instagram_business_account?.id);
+    let adAccountId: string | null = null;
+    try {
+      adAccountId = await resolveMetaAdAccountId(accessToken, {});
+    } catch {
+      /* optional */
+    }
     return {
       accountLabel: withIg?.instagram_business_account?.username
         ? `@${withIg.instagram_business_account.username}`
@@ -102,6 +109,7 @@ export const metaAdapter: ProviderAdapter = {
         pageId: withIg?.id || null,
         igUserId: withIg?.instagram_business_account?.id || null,
         igUsername: withIg?.instagram_business_account?.username || null,
+        adAccountId,
       },
     };
   },
@@ -112,25 +120,28 @@ export const metaAdapter: ProviderAdapter = {
     const metrics: Record<string, unknown> = { syncedAt: new Date().toISOString() };
     const raw: Record<string, unknown> = {};
 
-    if (!igUserId) {
-      metrics.note = "No Instagram business account linked to the Meta user yet";
-      return { metrics, raw };
-    }
-
-    const insightRes = await fetch(
-      `https://graph.facebook.com/v21.0/${igUserId}/insights?metric=impressions,reach,profile_views&period=day&access_token=${encodeURIComponent(pageToken)}`
-    );
-    const insightJson = await insightRes.json();
-    raw.insights = insightJson;
-    if (insightRes.ok && Array.isArray(insightJson.data)) {
-      for (const row of insightJson.data) {
-        const vals = row.values || [];
-        const last = vals[vals.length - 1];
-        metrics[`ig_${row.name}`] = last?.value ?? null;
+    if (igUserId) {
+      const insightRes = await fetch(
+        `https://graph.facebook.com/v21.0/${igUserId}/insights?metric=impressions,reach,profile_views&period=day&access_token=${encodeURIComponent(pageToken)}`
+      );
+      const insightJson = await insightRes.json();
+      raw.insights = insightJson;
+      if (insightRes.ok && Array.isArray(insightJson.data)) {
+        for (const row of insightJson.data) {
+          const vals = row.values || [];
+          const last = vals[vals.length - 1];
+          metrics[`ig_${row.name}`] = last?.value ?? null;
+        }
+      } else {
+        metrics.igError = insightJson?.error?.message || "Instagram insights failed";
       }
     } else {
-      metrics.igError = insightJson?.error?.message || "Instagram insights failed";
+      metrics.igNote = "No Instagram business account linked — ads metrics still sync when configured.";
     }
+
+    const ads = await syncMetaAdsMetrics(accessToken, metadata);
+    Object.assign(metrics, ads.metrics);
+    raw.ads = ads.raw;
 
     return { metrics, raw };
   },

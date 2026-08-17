@@ -102,7 +102,7 @@ export default async function HqOverviewPage() {
     fetchPinterestDiscoveryMetrics(session.workspaceId),
     fetchAppStoreDiscoveryMetrics(session.workspaceId),
     fetchEmailEngineBundle(),
-    fetchPaidAcquisitionReport(),
+    fetchPaidAcquisitionReport(session.workspaceId),
     fetchContentToday(session.workspaceId),
     fetchSourceComparison(),
     fetchDataFreshness(session.workspaceId),

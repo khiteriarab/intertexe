@@ -103,7 +103,7 @@ export default async function HqAcquisitionPage() {
   const session = await requireHqSession();
   const [report, paidAcquisition, google, tiktok, pinterest, appStore] = await Promise.all([
     fetchHqAcquisitionReport(),
-    fetchPaidAcquisitionReport(),
+    fetchPaidAcquisitionReport(session.workspaceId),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
     fetchTikTokDiscoveryMetrics(session.workspaceId),
     fetchPinterestDiscoveryMetrics(session.workspaceId),

@@ -1,4 +1,5 @@
 import type { ProviderAdapter, TokenBundle } from "../types";
+import { syncTikTokAdsMetrics } from "../ads-platform-metrics";
 
 function requireEnv(name: string): string {
   const v = process.env[name]?.trim();
@@ -259,9 +260,11 @@ export const tiktokAdapter: ProviderAdapter = {
       metrics.tiktokUserError = user.error;
     }
 
+    const ads = await syncTikTokAdsMetrics();
+    Object.assign(metrics, ads.metrics);
     return {
       metrics,
-      raw: { user: user.raw, videos: videoPayload.raw },
+      raw: { user: user.raw, videos: videoPayload.raw, ads: ads.raw },
     };
   },
 };

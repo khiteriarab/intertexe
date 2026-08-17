@@ -41,7 +41,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     dataSourceKeys: ["instagram"],
     authMode: "oauth",
     description:
-      "Sign in with Meta / Facebook to connect the INTERTEXE Instagram professional account and pull insights.",
+      "Sign in with Meta / Facebook for Instagram insights and Meta Ads spend (requires ads_read + META_ADS_ACCOUNT_ID).",
     docsUrl: "https://developers.facebook.com/apps/",
     requiredEnv: ["META_OAUTH_APP_ID", "META_OAUTH_APP_SECRET", "HQ_TOKEN_ENCRYPTION_KEY"],
   },
@@ -50,7 +50,8 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     label: "TikTok",
     dataSourceKeys: ["tiktok"],
     authMode: "oauth",
-    description: "Connect TikTok Login Kit (Display API) for organic profile + video engagement.",
+    description:
+      "Connect TikTok Login Kit for organic profile metrics. Add TIKTOK_ADS_* env vars for paid spend in HQ.",
     docsUrl: "https://developers.tiktok.com/doc/login-kit-web",
     requiredEnv: [
       "TIKTOK_OAUTH_CLIENT_KEY|TIKTOK_SANDBOX_CLIENT_KEY",
@@ -121,15 +122,29 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     cardId: "instagram",
     label: "Instagram",
     providerId: "meta",
-    permissions: ["Impressions", "Reach", "Profile views", "Linked professional account"],
-    blurb: "Connect via Meta Login to the INTERTEXE Instagram professional account.",
+    permissions: [
+      "Pages",
+      "Meta Ads spend",
+      "Impressions",
+      "Clicks",
+    ],
+    blurb: "Connect via Meta Login. Reconnect after enabling ads_read for Ads Manager spend in Acquisition.",
   },
   {
     cardId: "tiktok",
     label: "TikTok",
     providerId: "tiktok",
-    permissions: ["Profile", "Followers (when approved)", "Video list", "Views", "Likes", "Comments", "Shares"],
-    blurb: "Organic Display API sample — feeds Today, Acquisition, and Action Center (no separate TikTok page).",
+    permissions: [
+      "Profile",
+      "Followers (when approved)",
+      "Video list",
+      "Views",
+      "Likes",
+      "Comments",
+      "Shares",
+      "Ads spend (with TIKTOK_ADS_* env)",
+    ],
+    blurb: "Organic Display API + optional TikTok Ads token for paid spend on Acquisition.",
   },
   {
     cardId: "pinterest",

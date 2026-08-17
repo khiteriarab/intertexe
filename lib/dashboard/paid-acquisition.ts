@@ -1,8 +1,12 @@
 /**
  * Paid acquisition funnel — first-party truth from user_preferences + product tables.
- * Ad-platform spend/install metrics are NOT fabricated; see trackingStatus.
+ * Ad-platform spend/impressions/clicks come from hq_integration_metric_snapshots (nightly sync).
  */
 import { getServerSupabase } from "../supabase-service-client";
+import {
+  parseAdsSnapshotMetrics,
+  type ParsedAdsSnapshot,
+} from "./integrations/ads-platform-metrics";
 
 export type PaidPlatformId = "tiktok" | "meta" | "google" | "other_paid" | "organic" | "unknown";
 
@@ -41,12 +45,17 @@ export type PaidPlatformSummary = PaidFunnelCounts & {
   platform: PaidPlatformId;
   label: string;
   spend: number | null;
+  impressions: number | null;
+  clicks: number | null;
+  reach: number | null;
   attributedInstalls: number | null;
   costPerInstall: number | null;
   costPerAccount: number | null;
   costPerActivated: number | null;
   roas: number | null;
   trackingNote: string;
+  adsConnected: boolean;
+  adsError: string | null;
 };
 
 export type PaidCreativeRow = PaidFunnelCounts & {
@@ -155,20 +164,77 @@ function withEconomics(
   platform: PaidPlatformId,
   label: string,
   counts: PaidFunnelCounts,
+  ads: ParsedAdsSnapshot | null,
   trackingNote: string
 ): PaidPlatformSummary {
+  const period = ads?.today.spend != null ? ads.today : ads?.last7d || ads?.last30d || null;
+  const spend = period?.spend ?? null;
+  const impressions = period?.impressions ?? null;
+  const clicks = period?.clicks ?? null;
+  const reach = period?.reach ?? null;
+
   return {
     platform,
     label,
     ...counts,
-    spend: null,
+    spend,
+    impressions,
+    clicks,
+    reach,
     attributedInstalls: null,
     costPerInstall: null,
-    costPerAccount: null,
-    costPerActivated: null,
-    roas: null,
+    costPerAccount: spend != null && counts.accounts > 0 ? spend / counts.accounts : null,
+    costPerActivated:
+      spend != null && counts.activatedUsers > 0 ? spend / counts.activatedUsers : null,
+    roas: spend != null && spend > 0 && counts.commission > 0 ? counts.commission / spend : null,
     trackingNote,
+    adsConnected: Boolean(ads?.connected),
+    adsError: ads?.error || null,
   };
+}
+
+async function fetchAdsSnapshots(
+  workspaceId: string | null | undefined
+): Promise<{ meta: ParsedAdsSnapshot | null; tiktok: ParsedAdsSnapshot | null }> {
+  if (!workspaceId) return { meta: null, tiktok: null };
+  const supabase = getServerSupabase();
+  if (!supabase) return { meta: null, tiktok: null };
+
+  const { data } = await supabase
+    .from("hq_integration_metric_snapshots")
+    .select("provider, metrics, metric_date, created_at")
+    .eq("workspace_id", workspaceId)
+    .in("provider", ["meta", "tiktok"])
+    .order("metric_date", { ascending: false })
+    .limit(10);
+
+  const latestMeta = (data || []).find((r) => r.provider === "meta");
+  const latestTiktok = (data || []).find((r) => r.provider === "tiktok");
+
+  return {
+    meta: latestMeta
+      ? parseAdsSnapshotMetrics("meta", latestMeta.metrics as Record<string, unknown>)
+      : null,
+    tiktok: latestTiktok
+      ? parseAdsSnapshotMetrics("tiktok", latestTiktok.metrics as Record<string, unknown>)
+      : null,
+  };
+}
+
+function adsTrackingNote(platform: "meta" | "tiktok", ads: ParsedAdsSnapshot | null): string {
+  if (ads?.connected) {
+    const p = ads.today.spend != null ? ads.today : ads.last7d;
+    const parts: string[] = [];
+    if (p.spend != null) parts.push(`Spend synced from ${platform === "meta" ? "Meta Ads" : "TikTok Ads"}.`);
+    if (p.impressions != null) parts.push(`${p.impressions.toLocaleString()} impressions in window.`);
+    parts.push("Account/scan/revenue rows are first-party INTERTEXE only.");
+    return parts.join(" ");
+  }
+  if (ads?.error) return ads.error;
+  if (platform === "meta") {
+    return "Connect Meta in Settings → Integrations, set META_ADS_ACCOUNT_ID, and reconnect for ads_read.";
+  }
+  return "Set TIKTOK_ADS_ACCESS_TOKEN + TIKTOK_ADS_ADVERTISER_ID in Vercel, then Sync Now on TikTok.";
 }
 
 function isOnOrAfter(iso: string | null | undefined, floorIso: string): boolean {
@@ -185,15 +251,18 @@ function thirtyDaysAgoIso(): string {
   return new Date(Date.now() - 30 * 86400000).toISOString();
 }
 
-export async function fetchPaidAcquisitionReport(): Promise<PaidAcquisitionReport> {
+export async function fetchPaidAcquisitionReport(
+  workspaceId?: string | null
+): Promise<PaidAcquisitionReport> {
   const supabase = getServerSupabase();
   const generatedAt = new Date().toISOString();
   const todayFloor = startOfTodayUtc();
   const d30 = thirtyDaysAgoIso();
+  const adsSnapshots = await fetchAdsSnapshots(workspaceId);
 
   const trackingStatus: PaidAcquisitionReport["trackingStatus"] = {
     tiktok: {
-      click: "PARTIAL",
+      click: adsSnapshots.tiktok?.connected ? "WORKING" : "PARTIAL",
       install: "NOT_IMPLEMENTED",
       account: "PARTIAL",
       scan: "WORKING",
@@ -202,7 +271,7 @@ export async function fetchPaidAcquisitionReport(): Promise<PaidAcquisitionRepor
       purchase: "PARTIAL",
     },
     meta: {
-      click: "NOT_IMPLEMENTED",
+      click: adsSnapshots.meta?.connected ? "WORKING" : "NOT_IMPLEMENTED",
       install: "NOT_IMPLEMENTED",
       account: "PARTIAL",
       scan: "WORKING",
@@ -228,24 +297,43 @@ export async function fetchPaidAcquisitionReport(): Promise<PaidAcquisitionRepor
         "tiktok",
         "TikTok",
         emptyFunnel(),
-        "Spend/install attribution requires TikTok App Events + SKAN or an MMP — not connected."
+        adsSnapshots.tiktok,
+        adsTrackingNote("tiktok", adsSnapshots.tiktok)
       ),
       meta: withEconomics(
         "meta",
         "Meta",
         emptyFunnel(),
-        "Meta Ads / CAPI not connected. HQ Meta OAuth is organic Instagram only."
+        adsSnapshots.meta,
+        adsTrackingNote("meta", adsSnapshots.meta)
       ),
-      organic: withEconomics("organic", "Organic / other", emptyFunnel(), "First-party only."),
+      organic: withEconomics("organic", "Organic / other", emptyFunnel(), null, "First-party only."),
     },
     trailing30d: {
       tiktok: withEconomics(
         "tiktok",
         "TikTok",
         emptyFunnel(),
-        "Promote → App Store direct links do not pass UTMs into the app."
+        adsSnapshots.tiktok
+          ? {
+              ...adsSnapshots.tiktok,
+              today: adsSnapshots.tiktok.last30d,
+            }
+          : null,
+        adsTrackingNote("tiktok", adsSnapshots.tiktok)
       ),
-      meta: withEconomics("meta", "Meta", emptyFunnel(), "Connect Meta Ads + app events for paid install attribution."),
+      meta: withEconomics(
+        "meta",
+        "Meta",
+        emptyFunnel(),
+        adsSnapshots.meta
+          ? {
+              ...adsSnapshots.meta,
+              today: adsSnapshots.meta.last30d,
+            }
+          : null,
+        adsTrackingNote("meta", adsSnapshots.meta)
+      ),
     },
     creatives: [],
     trackingStatus,
@@ -283,7 +371,30 @@ export async function fetchPaidAcquisitionReport(): Promise<PaidAcquisitionRepor
     }));
 
     const userIds = users.map((u) => u.userId).filter(Boolean);
-    if (!userIds.length) return empty;
+
+    const creativeSpend = new Map<string, number>();
+    for (const row of adsSnapshots.meta?.campaigns || []) {
+      creativeSpend.set(`meta::${row.campaign}`, row.spend || 0);
+    }
+    for (const row of adsSnapshots.tiktok?.campaigns || []) {
+      creativeSpend.set(`tiktok::${row.campaign}`, row.spend || 0);
+    }
+
+    if (!userIds.length) {
+      return {
+        ...empty,
+        creatives: Array.from(creativeSpend.entries()).map(([key, spend]) => {
+          const [platform, campaign] = key.split("::");
+          return {
+            platform: platform as "meta" | "tiktok",
+            campaign,
+            creative: "(platform)",
+            spend,
+            ...emptyFunnel(),
+          };
+        }),
+      };
+    }
 
     const [scansRes, favsRes, shopClicks, scannerClicks, editorialClicks, txRes] = await Promise.all([
       supabase.from("scan_history").select("user_id").in("user_id", userIds).limit(50000),
@@ -379,7 +490,7 @@ export async function fetchPaidAcquisitionReport(): Promise<PaidAcquisitionRepor
             platform: channel,
             campaign,
             creative,
-            spend: null,
+            spend: creativeSpend.get(`${channel}::${campaign}`) ?? null,
             ...emptyFunnel(),
           } satisfies PaidCreativeRow);
         bumpFunnel(row, meta);
@@ -387,23 +498,53 @@ export async function fetchPaidAcquisitionReport(): Promise<PaidAcquisitionRepor
       }
     }
 
-    const tiktokNote =
-      "HQ TikTok OAuth is Display API (organic). Promote spend/installs live in TikTok Ads Manager only.";
-    const metaNote = "Meta OAuth not connected in production. No Meta Ads API or app events.";
-
     return {
       generatedAt,
       today: {
-        tiktok: withEconomics("tiktok", "TikTok", todayBuckets.tiktok, tiktokNote),
-        meta: withEconomics("meta", "Meta", todayBuckets.meta, metaNote),
-        organic: withEconomics("organic", "Organic / other", todayBuckets.organic, "Non-paid first-touch."),
+        tiktok: withEconomics(
+          "tiktok",
+          "TikTok",
+          todayBuckets.tiktok,
+          adsSnapshots.tiktok,
+          adsTrackingNote("tiktok", adsSnapshots.tiktok)
+        ),
+        meta: withEconomics(
+          "meta",
+          "Meta",
+          todayBuckets.meta,
+          adsSnapshots.meta,
+          adsTrackingNote("meta", adsSnapshots.meta)
+        ),
+        organic: withEconomics(
+          "organic",
+          "Organic / other",
+          todayBuckets.organic,
+          null,
+          "Non-paid first-touch."
+        ),
       },
       trailing30d: {
-        tiktok: withEconomics("tiktok", "TikTok", d30Buckets.tiktok, tiktokNote),
-        meta: withEconomics("meta", "Meta", d30Buckets.meta, metaNote),
+        tiktok: withEconomics(
+          "tiktok",
+          "TikTok",
+          d30Buckets.tiktok,
+          adsSnapshots.tiktok
+            ? { ...adsSnapshots.tiktok, today: adsSnapshots.tiktok.last30d }
+            : null,
+          adsTrackingNote("tiktok", adsSnapshots.tiktok)
+        ),
+        meta: withEconomics(
+          "meta",
+          "Meta",
+          d30Buckets.meta,
+          adsSnapshots.meta
+            ? { ...adsSnapshots.meta, today: adsSnapshots.meta.last30d }
+            : null,
+          adsTrackingNote("meta", adsSnapshots.meta)
+        ),
       },
-      creatives: [...creativeMap.values()].sort(
-        (a, b) => b.accounts - a.accounts || b.activatedUsers - a.activatedUsers
+      creatives: Array.from(creativeMap.values()).sort(
+        (a, b) => (b.spend || 0) - (a.spend || 0) || b.accounts - a.accounts
       ),
       trackingStatus,
     };
