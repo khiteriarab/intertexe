@@ -64,7 +64,6 @@ export async function findBlockingFounderWelcome(
     .from("email_deliveries")
     .select("*")
     .eq("email_type", EMAIL_TYPES.FOUNDER_WELCOME)
-    .is("user_id", null)
     .ilike("email", email)
     .in("status", ACTIVE_STATUSES)
     .order("created_at", { ascending: false })
@@ -95,7 +94,9 @@ export async function claimTypedEmailSend(
   const provider = opts.provider || "resend";
 
   let blocking: EmailDeliveryRow | null = null;
-  if (userId) {
+  if (emailType === EMAIL_TYPES.FOUNDER_WELCOME) {
+    blocking = await findBlockingFounderWelcome(supabase, { userId, email });
+  } else if (userId) {
     const { data } = await supabase
       .from("email_deliveries")
       .select("*")
@@ -106,8 +107,6 @@ export async function claimTypedEmailSend(
       .limit(1)
       .maybeSingle();
     blocking = (data as EmailDeliveryRow) || null;
-  } else if (emailType === EMAIL_TYPES.FOUNDER_WELCOME) {
-    blocking = await findBlockingFounderWelcome(supabase, { userId: null, email });
   }
 
   if (blocking) {
