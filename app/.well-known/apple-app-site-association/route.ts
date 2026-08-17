@@ -27,6 +27,8 @@ const AASA = {
           { "/": "/favorites/*" },
           { "/": "/account" },
           { "/": "/account/*" },
+          { "/": "/reset-password" },
+          { "/": "/reset-password/*" },
           { "/": "/capture" },
           { "/": "/capture/*" },
           { "/": "/sale" },

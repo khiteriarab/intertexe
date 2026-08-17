@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import AccountClient from "./AccountClient";
+import { AuthConfirmBridge } from "./AuthConfirmBridge";
 
 export const metadata: Metadata = {
   title: "Account | INTERTEXE",
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function AccountPage() {
   return (
     <Suspense fallback={null}>
+      <AuthConfirmBridge />
       <AccountClient />
     </Suspense>
   );

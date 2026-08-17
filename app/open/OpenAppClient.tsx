@@ -17,10 +17,16 @@ import {
  */
 export default function OpenAppPage() {
   const params = useSearchParams();
-  const next = params.get("next") || "/";
-  const storeUrl = getAppStoreUrl();
-  const schemeUrl = getAppSchemeOpenUrl(next);
-  const cta = params.get("itx_cta") || "open_landing";
+    const next = params.get("next") || "/";
+    const storeUrl = getAppStoreUrl();
+    const schemeUrl = getAppSchemeOpenUrl(next);
+    const cta = params.get("itx_cta") || "open_landing";
+    const isAuthHandoff =
+      cta === "email_confirm" ||
+      cta === "password_reset" ||
+      cta === "password_reset_done" ||
+      next.startsWith("/reset-password") ||
+      next.startsWith("/account");
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +52,7 @@ export default function OpenAppPage() {
 
     const t = window.setTimeout(() => {
       if (cancelled || leftPage || document.hidden) return;
+      if (isAuthHandoff) return;
       openAppStore(storeUrl);
     }, 1400);
 
@@ -56,7 +63,7 @@ export default function OpenAppPage() {
       window.removeEventListener("pagehide", markLeft);
       window.removeEventListener("blur", markLeft);
     };
-  }, [schemeUrl, storeUrl, cta]);
+  }, [schemeUrl, storeUrl, cta, isAuthHandoff]);
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 text-center">
