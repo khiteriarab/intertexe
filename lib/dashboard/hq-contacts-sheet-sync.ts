@@ -31,7 +31,7 @@ export const SUPABASE_OWNED_FIELDS = [
   "consent_at",
 ] as const;
 
-const TAB_TYPES = ["customer", "influencer", "business"] as const;
+const TAB_TYPES = ["customer", "influencer", "business", "brand", "organization"] as const;
 export type SheetContactType = (typeof TAB_TYPES)[number];
 
 export type SheetOwnedRecord = {
@@ -130,7 +130,7 @@ export function parseSheetId(raw: string | null | undefined): string {
 
 export function typeFromTabTitle(title: string): SheetContactType | null {
   const v = canonicalizeContactType(title);
-  if (v === "customer" || v === "influencer" || v === "business") return v;
+  if ((TAB_TYPES as readonly string[]).includes(v)) return v as SheetContactType;
   return null;
 }
 

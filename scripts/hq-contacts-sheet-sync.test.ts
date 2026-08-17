@@ -31,6 +31,10 @@ test("tab titles map to canonical types", () => {
   assert.equal(typeFromTabTitle("Influencers"), "influencer");
   assert.equal(typeFromTabTitle("Creators"), "influencer");
   assert.equal(typeFromTabTitle("BUSINESSES"), "business");
+  assert.equal(typeFromTabTitle("Brands"), "brand");
+  assert.equal(typeFromTabTitle("Organizations"), "organization");
+  assert.equal(typeFromTabTitle("Partners"), "organization");
+  assert.notEqual(typeFromTabTitle("Organizations"), "brand");
   assert.equal(typeFromTabTitle("Press"), null);
   assert.equal(typeFromTabTitle("Sheet1"), null);
 });

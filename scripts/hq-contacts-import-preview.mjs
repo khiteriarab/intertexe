@@ -9,9 +9,11 @@
  *   node scripts/hq-contacts-import-preview.mjs --apply customers.csv influencers.csv businesses.csv
  *
  * Tabs map to contact_type:
- *   *customer*    → customer
- *   *influencer*  → influencer
- *   *business*    → business
+ *   *customer*      → customer
+ *   *influencer*    → influencer
+ *   *business*      → business
+ *   *brand*         → brand
+ *   *organization*  → organization (Partners tab also maps here; not Brand)
  *
  * Default is preview only. --apply writes after printing the preview.
  */
@@ -30,6 +32,8 @@ function normalizeEmail(email) {
 function typeFromFile(file) {
   const base = path.basename(file).toLowerCase();
   if (base.includes("influencer") || base.includes("creator")) return "influencer";
+  if (base.includes("brand")) return "brand";
+  if (base.includes("organiz") || base.includes("organis") || base.includes("partner")) return "organization";
   if (base.includes("business")) return "business";
   return "customer";
 }

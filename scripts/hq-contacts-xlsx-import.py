@@ -18,10 +18,18 @@ XLSX = next((a for a in sys.argv[1:] if a != "--apply"), "/Users/khiteri/Desktop
 
 TAB_TYPE = {
     "customers": "customer",
+    "customer": "customer",
     "influencers": "influencer",
+    "influencer": "influencer",
     "businesses": "business",
+    "business": "business",
     "brands": "brand",
+    "brand": "brand",
+    "organizations": "organization",
+    "organization": "organization",
+    "organisations": "organization",
     "partners": "organization",
+    "partner": "organization",
 }
 
 
@@ -254,7 +262,7 @@ def main():
             for r in insert[:8]
         ],
         "already_in_supabase": already[:8],
-        "partners_note": "Partners tab has no email column and is not imported.",
+        "partners_note": "Partners/Organizations import only when a row has an email. Brand and Organization stay separate types.",
     }
     print(json.dumps(preview, indent=2))
     if not APPLY:
