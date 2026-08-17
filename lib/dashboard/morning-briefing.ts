@@ -132,20 +132,21 @@ export function buildMorningPulse(input: {
       attention: !appStore?.connected || !appStore.downloadsReady,
     },
     {
-      label: "TikTok views",
-      period: "Sample",
-      value: count(tiktok?.connected ? tiktok.viewsSample : null),
+      label: "TikTok followers",
+      period: "Now",
+      value: count(tiktok?.connected ? tiktok.followerCount : null),
       hint: !tiktok?.connected
         ? "TikTok not connected"
-        : [
-            tiktok.deltas.viewsSample.label,
-            tiktok.followerCount != null ? `${count(tiktok.followerCount)} followers` : null,
-            tiktok.videosPosted7d != null ? `${count(tiktok.videosPosted7d)} posted 7d` : null,
-          ]
-            .filter(Boolean)
-            .join(" · ") || "Display API sample",
+        : tiktok.followerCount == null
+          ? tiktok.tiktokUserError || "Approve user.info.stats and reconnect"
+          : [
+              tiktok.deltas.followerCount.label,
+              tiktok.viewsSample != null ? `${count(tiktok.viewsSample)} views (sample)` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || "Production Login Kit",
       href: "/dashboard/acquisition",
-      attention: !tiktok?.connected,
+      attention: !tiktok?.connected || tiktok.followerCount == null,
     },
     {
       label: "Pinterest",

@@ -212,6 +212,12 @@ function numOrNull(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function isoDaysAgo(days: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
 export type TikTokTopVideo = {
   id: string;
   title: string;
@@ -236,6 +242,7 @@ export type TikTokDiscoveryMetrics = {
   displayName: string | null;
   username: string | null;
   followerCount: number | null;
+  followerCountPrev7d: number | null;
   followingCount: number | null;
   likesCount: number | null;
   videoCount: number | null;
@@ -253,7 +260,10 @@ export type TikTokDiscoveryMetrics = {
   deltas: {
     viewsSample: ReturnType<typeof computePeriodDelta>;
     videosPosted7d: ReturnType<typeof computePeriodDelta>;
+    followerCount: ReturnType<typeof computePeriodDelta>;
   };
+  statsScopeMissing: boolean;
+  tiktokUserError: string | null;
   apiSurface: string | null;
   extensions: Record<string, unknown> | null;
   lastSyncStatus: string | null;
@@ -268,6 +278,7 @@ const EMPTY_TIKTOK: TikTokDiscoveryMetrics = {
   displayName: null,
   username: null,
   followerCount: null,
+  followerCountPrev7d: null,
   followingCount: null,
   likesCount: null,
   videoCount: null,
@@ -285,7 +296,10 @@ const EMPTY_TIKTOK: TikTokDiscoveryMetrics = {
   deltas: {
     viewsSample: computePeriodDelta(null, null),
     videosPosted7d: computePeriodDelta(null, null),
+    followerCount: computePeriodDelta(null, null),
   },
+  statsScopeMissing: false,
+  tiktokUserError: null,
   apiSurface: null,
   extensions: null,
   lastSyncStatus: null,
@@ -300,7 +314,7 @@ export async function fetchTikTokDiscoveryMetrics(
   const supabase = getServerSupabase();
   if (!supabase || !workspaceId) return EMPTY_TIKTOK;
 
-  const [{ data: conn }, { data: snaps }] = await Promise.all([
+  const [{ data: conn }, { data: snaps }, { data: baselineSnap }] = await Promise.all([
     supabase
       .from("hq_oauth_connections")
       .select("status, last_sync_at, last_sync_status, last_sync_error, metadata, account_label")
@@ -314,6 +328,15 @@ export async function fetchTikTokDiscoveryMetrics(
       .eq("provider", "tiktok")
       .order("metric_date", { ascending: false })
       .limit(2),
+    supabase
+      .from("hq_integration_metric_snapshots")
+      .select("metric_date, metrics, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "tiktok")
+      .lte("metric_date", isoDaysAgo(7))
+      .order("metric_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const connected = Boolean(
@@ -323,8 +346,11 @@ export async function fetchTikTokDiscoveryMetrics(
   const prev = snaps?.[1] || null;
   const metrics = (latest?.metrics || {}) as Record<string, unknown>;
   const prevMetrics = (prev?.metrics || {}) as Record<string, unknown>;
+  const baselineMetrics = (baselineSnap?.metrics || {}) as Record<string, unknown>;
   const meta = (conn?.metadata || {}) as Record<string, unknown>;
 
+  const followerCount = numOrNull(metrics.followerCount);
+  const followerCountPrev7d = numOrNull(baselineMetrics.followerCount);
   const viewsSample = numOrNull(metrics.viewsSample);
   const viewsSamplePrev = numOrNull(prevMetrics.viewsSample);
   const videosPosted7d = numOrNull(metrics.videosPosted7d);
@@ -343,7 +369,8 @@ export async function fetchTikTokDiscoveryMetrics(
       conn?.account_label ||
       null,
     username: typeof metrics.username === "string" ? metrics.username : null,
-    followerCount: numOrNull(metrics.followerCount),
+    followerCount,
+    followerCountPrev7d,
     followingCount: numOrNull(metrics.followingCount),
     likesCount: numOrNull(metrics.likesCount),
     videoCount: numOrNull(metrics.videoCount),
@@ -367,7 +394,13 @@ export async function fetchTikTokDiscoveryMetrics(
       videosPosted7d: computePeriodDelta(videosPosted7d, videosPostedPrev7d, {
         periodLabel: "vs prior 7d",
       }),
+      followerCount: computePeriodDelta(followerCount, followerCountPrev7d, {
+        periodLabel: "vs 7d ago",
+      }),
     },
+    statsScopeMissing: Boolean(metrics.statsScopeMissing),
+    tiktokUserError:
+      typeof metrics.tiktokUserError === "string" ? metrics.tiktokUserError : null,
     apiSurface: typeof metrics.apiSurface === "string" ? metrics.apiSurface : null,
     extensions:
       metrics.extensions && typeof metrics.extensions === "object"

@@ -409,10 +409,23 @@ export default async function HqAcquisitionPage() {
         {tiktok.connected ? (
           <>
             <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
-              Display / Login Kit · lifetime totals on latest video sample · vs prior sync
+              Production Login Kit · follower growth vs 7d ago · video sample totals
             </p>
+            {tiktok.statsScopeMissing || tiktok.tiktokUserError ? (
+              <p className="text-sm text-amber-900 mb-3 leading-relaxed">
+                {tiktok.tiktokUserError ||
+                  "Follower count not returned yet — approve user.info.stats on your TikTok app, then reconnect."}
+              </p>
+            ) : null}
             <HqMetricGrid
               items={[
+                {
+                  label: "Followers",
+                  value: formatCount(tiktok.followerCount),
+                  hint:
+                    tiktok.deltas.followerCount.label ||
+                    (tiktok.username ? `@${tiktok.username}` : tiktok.displayName || undefined),
+                },
                 {
                   label: "Views (sample)",
                   value: formatCount(tiktok.viewsSample),
@@ -421,11 +434,6 @@ export default async function HqAcquisitionPage() {
                 {
                   label: "Likes (sample)",
                   value: formatCount(tiktok.likesSample),
-                },
-                {
-                  label: "Followers",
-                  value: formatCount(tiktok.followerCount),
-                  hint: tiktok.username ? `@${tiktok.username}` : tiktok.displayName || undefined,
                 },
                 {
                   label: "Posted (7d)",

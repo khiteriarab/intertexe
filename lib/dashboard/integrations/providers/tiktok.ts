@@ -7,29 +7,11 @@ function requireEnv(name: string): string {
   return v;
 }
 
-function isSandboxMode(): boolean {
-  return String(process.env.TIKTOK_USE_SANDBOX || "").trim() === "1";
-}
-
 function tiktokClientKey(): string {
-  if (isSandboxMode()) {
-    return (
-      process.env.TIKTOK_SANDBOX_CLIENT_KEY?.trim() ||
-      process.env.TIKTOK_OAUTH_CLIENT_KEY?.trim() ||
-      requireEnv("TIKTOK_SANDBOX_CLIENT_KEY")
-    );
-  }
   return requireEnv("TIKTOK_OAUTH_CLIENT_KEY");
 }
 
 function tiktokClientSecret(): string {
-  if (isSandboxMode()) {
-    return (
-      process.env.TIKTOK_SANDBOX_CLIENT_SECRET?.trim() ||
-      process.env.TIKTOK_OAUTH_CLIENT_SECRET?.trim() ||
-      requireEnv("TIKTOK_SANDBOX_CLIENT_SECRET")
-    );
-  }
   return requireEnv("TIKTOK_OAUTH_CLIENT_SECRET");
 }
 
@@ -38,11 +20,17 @@ function tiktokClientSecret(): string {
  * user.info.stats unlocks follower_count when the TikTok app is approved for it;
  * sync degrades gracefully if the field is missing.
  */
-const DEFAULT_SCOPES = ["user.info.basic", "user.info.profile", "user.info.stats", "video.list"].join(",");
+const REQUIRED_SCOPES = [
+  "user.info.basic",
+  "user.info.profile",
+  "user.info.stats",
+  "video.list",
+];
 
 function tiktokScopes(): string {
   const scoped = process.env.TIKTOK_OAUTH_SCOPES?.trim();
-  return scoped || DEFAULT_SCOPES;
+  const fromEnv = scoped ? scoped.split(/[,\s]+/).filter(Boolean) : [];
+  return [...new Set([...REQUIRED_SCOPES, ...fromEnv])].join(",");
 }
 
 const VIDEO_FIELDS = [
@@ -110,12 +98,6 @@ export const tiktokAdapter: ProviderAdapter = {
   id: "tiktok",
 
   isConfigured() {
-    if (isSandboxMode()) {
-      return Boolean(
-        (process.env.TIKTOK_SANDBOX_CLIENT_KEY || process.env.TIKTOK_OAUTH_CLIENT_KEY) &&
-          (process.env.TIKTOK_SANDBOX_CLIENT_SECRET || process.env.TIKTOK_OAUTH_CLIENT_SECRET)
-      );
-    }
     return Boolean(process.env.TIKTOK_OAUTH_CLIENT_KEY && process.env.TIKTOK_OAUTH_CLIENT_SECRET);
   },
 
@@ -221,9 +203,15 @@ export const tiktokAdapter: ProviderAdapter = {
       .map(mapVideo)
       .filter((v) => v.id);
 
+    const statsScopeMissing =
+      user.follower_count == null &&
+      user.following_count == null &&
+      user.likes_count == null &&
+      user.video_count == null;
+
     const metrics: Record<string, unknown> = {
       syncedAt: new Date().toISOString(),
-      apiSurface: "tiktok_display_login_kit",
+      apiSurface: "tiktok_display_login_kit_production",
       // Account (fields present when scopes approved)
       displayName: user.display_name || null,
       username: user.username || null,
@@ -246,6 +234,7 @@ export const tiktokAdapter: ProviderAdapter = {
       viewsOnVideosPostedPrev7d: prev7.reduce((s, v) => s + Number(v.view_count || 0), 0),
       topVideos,
       // Reserved for richer Business / organic analytics later
+      statsScopeMissing,
       extensions: {
         businessOrganicReady: false,
         note:
@@ -258,6 +247,9 @@ export const tiktokAdapter: ProviderAdapter = {
     }
     if (user.error) {
       metrics.tiktokUserError = user.error;
+    } else if (statsScopeMissing) {
+      metrics.tiktokUserError =
+        "Follower count unavailable — reconnect TikTok after user.info.stats is approved on your production Login Kit app.";
     }
 
     const ads = await syncTikTokAdsMetrics();

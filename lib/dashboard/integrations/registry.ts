@@ -54,8 +54,8 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
       "Connect TikTok Login Kit for organic profile metrics. Add TIKTOK_ADS_* env vars for paid spend in HQ.",
     docsUrl: "https://developers.tiktok.com/doc/login-kit-web",
     requiredEnv: [
-      "TIKTOK_OAUTH_CLIENT_KEY|TIKTOK_SANDBOX_CLIENT_KEY",
-      "TIKTOK_OAUTH_CLIENT_SECRET|TIKTOK_SANDBOX_CLIENT_SECRET",
+      "TIKTOK_OAUTH_CLIENT_KEY",
+      "TIKTOK_OAUTH_CLIENT_SECRET",
       "HQ_TOKEN_ENCRYPTION_KEY",
     ],
   },
