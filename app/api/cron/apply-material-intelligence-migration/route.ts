@@ -4,13 +4,21 @@ export const maxDuration = 300;
 import { NextResponse } from "next/server";
 import { applyMaterialIntelligenceMigration } from "../../../../lib/apply-material-intelligence-migration";
 
+function bearerToken(request: Request): string {
+  const header = request.headers.get("authorization") || "";
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() || "";
+}
+
 function authorize(request: Request): NextResponse | null {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
+  const token = bearerToken(request);
+  const allowed = [process.env.CRON_SECRET, process.env.SUPABASE_SERVICE_ROLE_KEY].filter(
+    (value): value is string => Boolean(value)
+  );
+  if (!allowed.length) {
+    return NextResponse.json({ error: "No apply credential configured" }, { status: 500 });
   }
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  if (!token || !allowed.includes(token)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return null;

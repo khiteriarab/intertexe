@@ -96,17 +96,27 @@ async function applyMigration(supabase: ReturnType<typeof serviceClient>) {
     console.log(`apply via ${result.via || "local"}: ${result.message}`);
   }
 
-  if (cronSecret) {
-    const res = await fetch(`${SITE}/api/cron/apply-material-intelligence-migration`, {
-      headers: { Authorization: `Bearer ${cronSecret}` },
-    });
-    const body = await jsonNoSecrets(res);
-    if (res.ok && body.ok) {
-      await new Promise((r) => setTimeout(r, 1500));
-      record("apply_migration", true, "applied via production cron");
-      return true;
+  const applyToken = cronSecret || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (applyToken) {
+    maskSecret(applyToken);
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const res = await fetch(`${SITE}/api/cron/apply-material-intelligence-migration`, {
+        headers: { Authorization: `Bearer ${applyToken}` },
+      });
+      if (res.status === 404 || res.status === 401) {
+        console.log(`apply cron HTTP ${res.status} (waiting for production deploy ${attempt + 1}/30)`);
+        await new Promise((r) => setTimeout(r, 20000));
+        continue;
+      }
+      const body = await jsonNoSecrets(res);
+      if (res.ok && body.ok) {
+        await new Promise((r) => setTimeout(r, 2000));
+        record("apply_migration", true, "applied via production cron");
+        return true;
+      }
+      console.log(`apply via cron: HTTP ${res.status} ${String(body.message || body.error || "")}`);
+      break;
     }
-    console.log(`apply via cron: HTTP ${res.status} ${String(body.message || body.error || "")}`);
   }
 
   const ready = await materialIntelligenceTablesReady({
