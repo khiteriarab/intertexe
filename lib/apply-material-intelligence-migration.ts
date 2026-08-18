@@ -4,8 +4,12 @@
  */
 import fs from "fs";
 import path from "path";
+import dns from "node:dns";
+import { lookup as dnsLookup } from "node:dns/promises";
 import pg from "pg";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+dns.setDefaultResultOrder("ipv4first");
 
 export const MATERIAL_INTELLIGENCE_MIGRATION_FILE = "20260819_material_intelligence_api.sql";
 
@@ -103,10 +107,14 @@ function supabaseProjectRef(): string {
   }
 }
 
-async function applySqlWithPg(sql: string, databaseUrl: string): Promise<{ ok: boolean; message: string }> {
+async function applySqlWithPg(
+  sql: string,
+  databaseUrl: string,
+  servername?: string
+): Promise<{ ok: boolean; message: string }> {
   const client = new pg.Client({
     connectionString: databaseUrl,
-    ssl: { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: false, ...(servername ? { servername } : {}) },
     statement_timeout: 600_000,
     connectionTimeoutMillis: 8000,
   });
@@ -134,19 +142,32 @@ async function applyViaDerivedPostgres(sql: string): Promise<{ ok: boolean; mess
     return { ok: false, message: "no project ref or db credential", via: "derived_postgres" };
   }
   const enc = encodeURIComponent(password);
-  const urls = [
-    `postgresql://postgres:${enc}@db.${ref}.supabase.co:5432/postgres?sslmode=no-verify`,
-    `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
-    `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=no-verify`,
-    `postgresql://postgres.${ref}:${enc}@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
-    `postgresql://postgres.${ref}:${enc}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
+  const candidates: Array<{ url: string; label: string; servername?: string }> = [
+    {
+      url: `postgresql://postgres:${enc}@db.${ref}.supabase.co:5432/postgres?sslmode=no-verify`,
+      label: "direct",
+      servername: `db.${ref}.supabase.co`,
+    },
+    {
+      url: `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
+      label: "pooler_east_tx",
+    },
   ];
-  const labels = ["direct", "pooler_east_tx", "pooler_east_session", "pooler_euwest", "pooler_eucentral"];
+  try {
+    const v4 = await dnsLookup(`db.${ref}.supabase.co`, { family: 4 });
+    candidates.unshift({
+      url: `postgresql://postgres:${enc}@${v4.address}:5432/postgres?sslmode=no-verify`,
+      label: "direct_v4",
+      servername: `db.${ref}.supabase.co`,
+    });
+  } catch {
+    /* hostname fallback only */
+  }
   const notes: string[] = [];
-  for (let i = 0; i < urls.length; i++) {
-    const result = await applySqlWithPg(sql, urls[i]);
+  for (const item of candidates) {
+    const result = await applySqlWithPg(sql, item.url, item.servername);
     if (result.ok) return { ok: true, message: result.message, via: "derived_postgres" };
-    notes.push(`${labels[i]}: ${result.message.split("\n")[0]}`);
+    notes.push(`${item.label}: ${result.message.split("\n")[0]}`);
   }
   return { ok: false, message: notes.join("; "), via: "derived_postgres" };
 }
