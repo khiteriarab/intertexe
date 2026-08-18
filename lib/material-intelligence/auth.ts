@@ -42,7 +42,7 @@ export async function authenticateMaterialKey(
     return { ok: false, status: 401, code: "unauthorized", message: "Invalid API key." };
   }
   if (key.status === "revoked") {
-    return { ok: false, status: 403, code: "revoked", message: "This API key has been revoked." };
+    return { ok: false, status: 401, code: "revoked", message: "This API key has been revoked." };
   }
   if (key.expires_at && new Date(key.expires_at).getTime() < Date.now()) {
     return { ok: false, status: 403, code: "expired", message: "This API key has expired." };

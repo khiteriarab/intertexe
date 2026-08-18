@@ -1,3 +1,12 @@
+-- Additive only: CREATE TABLE IF NOT EXISTS, indexes, RLS, and grants.
+-- Does not alter products, barcode_compositions, or upc_brand_prefixes.
+-- Reverse (manual, drops new objects only):
+--   DROP TABLE IF EXISTS public.material_api_usage;
+--   DROP TABLE IF EXISTS public.material_api_keys;
+--   DROP TABLE IF EXISTS public.material_api_clients;
+--   DROP TABLE IF EXISTS public.material_snapshot_leads;
+--   DROP TABLE IF EXISTS public.material_evidence;
+
 -- Material Intelligence API clients, hashed keys, usage, snapshot leads.
 -- Service-role only: RLS enabled with no anon/authenticated policies.
 

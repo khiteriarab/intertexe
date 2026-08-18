@@ -3,7 +3,7 @@ import { dppAlignmentFor, EMPTY_COMPOSITION } from "./envelope";
 import type { MaterialLookupData } from "./types";
 
 /** Checksum-valid demonstration identifiers. Not production catalog GTINs. */
-export const DEMO_GTIN_VERIFIED = "0123456789012";
+export const DEMO_GTIN_VERIFIED = "0200000000035";
 export const DEMO_GTIN_REPORTED = "0200000000011";
 export const DEMO_GTIN_MISSING = "0200000000028";
 

@@ -97,7 +97,7 @@ export default function PlatformDocsPage() {
         <p>{DPP_ALIGNMENT_NOTICE}</p>
 
         <h2 className="text-2xl font-light text-[#1a1a1a] mt-12 mb-3" style={{ fontFamily: "Georgia, serif" }}>Errors</h2>
-        <p>401 missing/invalid key · 403 revoked/inactive · 422 invalid GTIN · 429 rate limit. Body is always {"{ api_version, request_id, error: { code, message } }"} with X-Request-ID. Stack traces are not returned.</p>
+        <p>401 missing, invalid or revoked key · 403 inactive/expired · 422 invalid GTIN · 429 rate limit. Body is always {"{ api_version, request_id, error: { code, message } }"} with X-Request-ID. Stack traces are not returned.</p>
 
         <h2 className="text-2xl font-light text-[#1a1a1a] mt-12 mb-3" style={{ fontFamily: "Georgia, serif" }}>Response schema</h2>
         <p>

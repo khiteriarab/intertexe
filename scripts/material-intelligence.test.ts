@@ -82,7 +82,7 @@ describe("Authentication", () => {
     );
     assert.equal(revoked.ok, false);
     if (!revoked.ok) {
-      assert.equal(revoked.status, 403);
+      assert.equal(revoked.status, 401);
       assert.equal(revoked.code, "revoked");
     }
 
@@ -207,9 +207,9 @@ describe("Production lookup", () => {
 
 describe("Production HTTP handler", () => {
   it("requires a bearer key and returns request ids without secrets", async () => {
-    const req = new NextRequest("https://www.intertexe.com/api/v1/composition/0123456789012");
+    const req = new NextRequest(`https://www.intertexe.com/api/v1/composition/${DEMO_GTIN_VERIFIED}`);
     const res = await handleAuthenticatedCompositionGet(req, {
-      params: Promise.resolve({ gtin: "0123456789012" }),
+      params: Promise.resolve({ gtin: DEMO_GTIN_VERIFIED }),
     }, authClient(generateApiKey("live").raw) as never);
     assert.equal(res.status, 401);
     const body = await res.json();
@@ -221,29 +221,29 @@ describe("Production HTTP handler", () => {
     assert.deepEqual(assertEnvelopeMatchesOpenApi(body), []);
   });
 
-  it("returns 403 for revoked keys", async () => {
+  it("returns 401 for revoked keys", async () => {
     const generated = generateApiKey("live");
-    const req = new NextRequest("https://www.intertexe.com/api/v1/composition/0123456789012", {
+    const req = new NextRequest(`https://www.intertexe.com/api/v1/composition/${DEMO_GTIN_VERIFIED}`, {
       headers: { authorization: `Bearer ${generated.raw}` },
     });
     const res = await handleAuthenticatedCompositionGet(
       req,
-      { params: Promise.resolve({ gtin: "0123456789012" }) },
+      { params: Promise.resolve({ gtin: DEMO_GTIN_VERIFIED }) },
       authClient(generated.raw, { status: "revoked" }) as never
     );
-    assert.equal(res.status, 403);
+    assert.equal(res.status, 401);
     const body = await res.json();
     assert.equal(body.error.code, "revoked");
   });
 
   it("returns 429 when rate limited", async () => {
     const generated = generateApiKey("live");
-    const req = new NextRequest("https://www.intertexe.com/api/v1/composition/0123456789012", {
+    const req = new NextRequest(`https://www.intertexe.com/api/v1/composition/${DEMO_GTIN_VERIFIED}`, {
       headers: { authorization: `Bearer ${generated.raw}` },
     });
     const res = await handleAuthenticatedCompositionGet(
       req,
-      { params: Promise.resolve({ gtin: "0123456789012" }) },
+      { params: Promise.resolve({ gtin: DEMO_GTIN_VERIFIED }) },
       authClient(generated.raw, { usage: 2 }) as never
     );
     assert.equal(res.status, 429);
@@ -321,10 +321,10 @@ describe("Production HTTP handler", () => {
 
 describe("manufacturer_only contract", () => {
   it("never attaches composition", () => {
-    const row = manufacturerOnlyResult("0123456789012", "Validated Prefix Co");
+    const row = manufacturerOnlyResult(DEMO_GTIN_VERIFIED, "Validated Prefix Co");
     assert.equal(row.composition.components.length, 0);
     assert.equal(row.composition.primary_fiber, null);
-    assert.equal(notFoundResult("0123456789012").composition.components.length, 0);
+    assert.equal(notFoundResult(DEMO_GTIN_VERIFIED).composition.components.length, 0);
   });
 });
 

@@ -24,10 +24,9 @@ describe("GTIN validation", () => {
     const gtin14 = appendGtinCheckDigit("0001234567890");
     assert.equal(parseGtin(gtin8).ok, true);
     assert.equal(parseGtin(gtin12).ok, true);
-    assert.equal((parseGtin(gtin13) as { gtin: string }).gtin, "0123456789012");
+    assert.equal((parseGtin(gtin13) as { gtin: string }).gtin, DEMO_GTIN_VERIFIED);
     assert.equal(parseGtin(gtin14).ok, true);
-    assert.equal(parseGtin("0123456789012").ok, true);
-    assert.equal(isValidGtinCheckDigit("0123456789012"), true);
+    assert.equal(isValidGtinCheckDigit(DEMO_GTIN_VERIFIED), true);
   });
 
   it("rejects the previous invalid demo GTIN-13", () => {
