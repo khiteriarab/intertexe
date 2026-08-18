@@ -3,82 +3,185 @@ import { describe, it } from "node:test";
 import fs from "node:fs";
 import path from "node:path";
 import {
-  DPP_READINESS_NOTICE,
-  PREFIX_COMPOSITION_NOTICE,
-  compositionIsAssumedVerified,
-  lookupDemoComposition,
-} from "../lib/platform-demo.ts";
+  DEMO_GTIN_MISSING,
+  DEMO_GTIN_REPORTED,
+  DEMO_GTIN_VERIFIED,
+  DEMO_ILLUSTRATIVE_NOTICE,
+  lookupDemoRecord,
+} from "../lib/material-intelligence/demo-records.ts";
+import { parseGtin, isValidGtinCheckDigit, appendGtinCheckDigit } from "../lib/gtin.ts";
+import { parseCompositionText } from "../lib/material-intelligence/composition.ts";
+import { evidenceStatusFromSource } from "../lib/material-intelligence/evidence.ts";
+import { assertEnvelopeMatchesOpenApi, materialOpenApiDocument } from "../lib/material-intelligence/openapi.ts";
+import { successEnvelope, errorEnvelope, newRequestId } from "../lib/material-intelligence/envelope.ts";
+import { DPP_ALIGNMENT_NOTICE } from "../lib/material-intelligence/types.ts";
 
-describe("Material Intelligence demo records", () => {
-  it("returns verified label evidence for the exact GTIN", () => {
-    const record = lookupDemoComposition("0123456789012");
-    assert.equal(record.product.match_type, "exact_gtin");
-    assert.equal(record.product.name, "Silk Midi Skirt");
-    assert.deepEqual(record.composition, [
-      { fiber: "silk", percentage: 96 },
-      { fiber: "elastane", percentage: 4 },
-    ]);
-    assert.equal(record.material_intelligence.natural_fiber_percentage, 96);
-    assert.equal(record.provenance.status, "verified");
-    assert.equal(record.provenance.source_type, "garment_label");
-    assert.equal(record.provenance.reviewed, true);
-    assert.equal(record.dpp_readiness.status, "partial");
-    assert.ok(record.dpp_readiness.mapped_fields.includes("fiber_composition"));
-    assert.ok(record.dpp_readiness.missing_fields.includes("country_of_origin"));
-    assert.match(record.notice, /not legal certification/i);
-    assert.equal(compositionIsAssumedVerified(record), true);
+describe("GTIN validation", () => {
+  it("accepts checksum-valid GTIN-8/12/13/14 and preserves leading zeroes", () => {
+    const gtin8 = appendGtinCheckDigit("0000000");
+    const gtin12 = appendGtinCheckDigit("01234567890");
+    const gtin13 = DEMO_GTIN_VERIFIED;
+    const gtin14 = appendGtinCheckDigit("0001234567890");
+    assert.equal(parseGtin(gtin8).ok, true);
+    assert.equal(parseGtin(gtin12).ok, true);
+    assert.equal((parseGtin(gtin13) as { gtin: string }).gtin, "0123456789012");
+    assert.equal(parseGtin(gtin14).ok, true);
+    assert.equal(parseGtin("0123456789012").ok, true);
+    assert.equal(isValidGtinCheckDigit("0123456789012"), true);
   });
 
-  it("accepts SKU aliases for the verified and reported examples", () => {
-    const bySku = lookupDemoComposition("SILK-MIDI-SKIRT");
-    assert.equal(bySku.product.gtin, "0123456789012");
-    assert.equal(bySku.product.match_type, "sku");
-    assert.equal(lookupDemoComposition("COTTON-POPLIN-SHIRT").provenance.status, "reported");
+  it("rejects the previous invalid demo GTIN-13", () => {
+    assert.equal(isValidGtinCheckDigit("0198765432104"), false);
+    assert.equal(parseGtin("0198765432104").ok, false);
+  });
+});
+
+describe("Demo fixtures", () => {
+  it("uses checksum-valid identifiers for all three records", () => {
+    for (const gtin of [DEMO_GTIN_VERIFIED, DEMO_GTIN_REPORTED, DEMO_GTIN_MISSING]) {
+      assert.equal(parseGtin(gtin).ok, true, gtin);
+    }
   });
 
-  it("labels retailer composition as reported, not verified", () => {
-    const record = lookupDemoComposition("0198765432104");
-    assert.equal(record.provenance.status, "reported");
-    assert.equal(record.provenance.source_type, "retailer_feed");
-    assert.equal(record.provenance.reviewed, false);
-    assert.ok(record.composition.length > 0);
-    assert.equal(compositionIsAssumedVerified(record), false);
+  it("labels the verified fixture as an illustrative sample", () => {
+    const record = lookupDemoRecord(DEMO_GTIN_VERIFIED);
+    assert.ok(record);
+    assert.equal(record.evidence.status, "verified_label");
+    assert.equal(record.match_type, "exact_gtin");
+    assert.match(record.message || "", /Illustrative verified-label example/i);
+    assert.equal(record.message, DEMO_ILLUSTRATIVE_NOTICE);
+    assert.equal(record.product.brand, "INTERTEXE Sample");
+    assert.ok(!/reviewed garment-label evidence/i.test(JSON.stringify(record)));
   });
 
-  it("identifies a manufacturer from a company prefix without guessing composition", () => {
-    const record = lookupDemoComposition("0500123456789");
-    assert.equal(record.product.match_type, "company_prefix");
-    assert.equal(record.product.brand, "Demo House");
-    assert.equal(record.product.name, null);
-    assert.deepEqual(record.composition, []);
-    assert.equal(record.material_intelligence.primary_fiber, null);
-    assert.equal(record.provenance.status, "not_found");
-    assert.equal(record.provenance.source_type, "company_prefix");
-    assert.equal(record.provenance.reviewed, false);
-    assert.equal(compositionIsAssumedVerified(record), false);
-    assert.match(record.notice, /does not verify a specific product/i);
+  it("accepts SKU aliases without inventing a manufacturer", () => {
+    assert.equal(lookupDemoRecord("SAMPLE-VERIFIED")?.product.gtin, DEMO_GTIN_VERIFIED);
+    assert.equal(lookupDemoRecord("SAMPLE-REPORTED")?.evidence.status, "reported_retailer");
+    const missing = lookupDemoRecord("SAMPLE-MISSING");
+    assert.equal(missing?.match_type, "not_found");
+    assert.equal(missing?.product.brand, null);
+    assert.equal(missing?.composition.components.length, 0);
   });
 
-  it("does not invent composition for an unknown identifier", () => {
-    const record = lookupDemoComposition("9999999999999");
-    assert.equal(record.product.match_type, "none");
-    assert.deepEqual(record.composition, []);
-    assert.equal(record.provenance.status, "not_found");
-    assert.equal(compositionIsAssumedVerified(record), false);
+  it("does not invent a company from a sample prefix", () => {
+    const record = lookupDemoRecord(DEMO_GTIN_MISSING);
+    assert.ok(record);
+    assert.equal(record.match_type, "not_found");
+    assert.equal(record.product.brand, null);
+    assert.equal(record.composition.components.length, 0);
+    assert.doesNotMatch(JSON.stringify(record), /Demo House/);
+    assert.match(record.message || "", /No manufacturer was assumed/);
   });
 
+  it("does not search production for unknown valid GTINs", () => {
+    const unknown = appendGtinCheckDigit("999999999999");
+    assert.equal(lookupDemoRecord(unknown), null);
+  });
+});
+
+describe("Provenance mapping", () => {
+  it("never upgrades retailer, affiliate, or user_scan data to verified_label", () => {
+    assert.equal(
+      evidenceStatusFromSource({ source: "affiliate_feed", hasComposition: true }),
+      "reported_retailer"
+    );
+    assert.equal(
+      evidenceStatusFromSource({ source: "retailer_page", hasComposition: true }),
+      "reported_retailer"
+    );
+    assert.equal(
+      evidenceStatusFromSource({ source: "user_scan", verifiedBy: "user_scan", hasComposition: true }),
+      "unknown_legacy"
+    );
+    assert.equal(
+      evidenceStatusFromSource({ source: "inferred", hasComposition: true }),
+      "inferred"
+    );
+    assert.equal(
+      evidenceStatusFromSource({
+        source: "physical_label_scan",
+        verifiedBy: "label_reviewer",
+        reviewedAt: "2026-08-02T12:00:00Z",
+        hasComposition: true,
+      }),
+      "verified_label"
+    );
+  });
+});
+
+describe("Composition parsing", () => {
+  it("does not invent a remainder to reach 100", () => {
+    const parsed = parseCompositionText("80% cotton");
+    assert.equal(parsed.total_percentage, 80);
+    assert.equal(parsed.components.length, 1);
+    assert.ok(parsed.normalization_warnings.some((w) => /not invented/i.test(w)));
+  });
+});
+
+describe("OpenAPI contract", () => {
+  it("describes OpenAPI 3.1 and the production path", () => {
+    const doc = materialOpenApiDocument();
+    assert.equal(doc.openapi, "3.1.0");
+    assert.ok(doc.paths["/api/v1/composition/{gtin}"]);
+    assert.ok(doc.paths["/api/v1/demo/composition/{gtin}"]);
+  });
+
+  it("matches runtime success and error envelopes", () => {
+    const record = lookupDemoRecord(DEMO_GTIN_VERIFIED);
+    assert.ok(record);
+    const ok = successEnvelope(newRequestId(), record);
+    assert.deepEqual(assertEnvelopeMatchesOpenApi(ok as unknown as Record<string, unknown>), []);
+    const err = errorEnvelope("req_test", "invalid_gtin", "bad identifier");
+    assert.deepEqual(assertEnvelopeMatchesOpenApi(err as unknown as Record<string, unknown>), []);
+    assert.equal("stack" in err, false);
+    assert.match(ok.data.dpp_alignment.notice, /not legal certification/i);
+    assert.equal(ok.data.dpp_alignment.notice, DPP_ALIGNMENT_NOTICE);
+  });
+});
+
+describe("Public demo and docs source safety", () => {
   it("keeps the public demo route free of database credentials", () => {
     const route = fs.readFileSync(
       path.join(process.cwd(), "app/api/v1/demo/composition/[gtin]/route.ts"),
       "utf8"
     );
     assert.equal(/supabase|SERVICE_ROLE|createClient/i.test(route), false);
-    assert.match(route, /lookupDemoComposition/);
+    assert.match(route, /lookupDemoRecord/);
     assert.match(route, /demoRateLimit/);
   });
 
-  it("keeps certification language out of verified notices", () => {
-    assert.match(DPP_READINESS_NOTICE, /not legal certification/i);
-    assert.match(PREFIX_COMPOSITION_NOTICE, /company prefix/i);
+  it("does not use a wildcard CORS policy on the production endpoint", () => {
+    const route = fs.readFileSync(
+      path.join(process.cwd(), "app/api/v1/composition/[gtin]/route.ts"),
+      "utf8"
+    );
+    assert.match(route, /https:\/\/www\.intertexe\.com/);
+    assert.equal(/\*\s*["']/.test(route) && /Access-Control-Allow-Origin["']:\s*["']\*/.test(route), false);
+    assert.doesNotMatch(route, /Access-Control-Allow-Origin": "\*"/);
+  });
+
+  it("does not select raw key hashes for the founder list endpoint", () => {
+    const route = fs.readFileSync(
+      path.join(process.cwd(), "app/api/dashboard/material-api-clients/route.ts"),
+      "utf8"
+    );
+    assert.match(route, /key_prefix, last_four/);
+    assert.doesNotMatch(route, /select\("[^"]*key_hash/);
+  });
+
+  it("does not accept confidential catalog uploads on the public form", () => {
+    const form = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformLeadForm.tsx"), "utf8");
+    assert.doesNotMatch(form, /type=["']file["']/);
+    assert.match(form, /Do not attach confidential catalogs/);
+  });
+
+  it("keeps documentation examples on the demo endpoint and OpenAPI URL", () => {
+    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/docs/page.tsx"), "utf8");
+    assert.match(docs, /\/api\/v1\/demo\/composition\//);
+    assert.match(docs, /\/api\/openapi\.json/);
+    assert.match(docs, /DEMO_GTIN_VERIFIED/);
+    assert.doesNotMatch(docs, /0198765432104/);
+    assert.match(docs, /unknown_legacy/);
+    assert.match(docs, /Authorization: Bearer/);
   });
 });

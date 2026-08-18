@@ -1,49 +1,69 @@
 import { NextRequest, NextResponse } from "next/server";
-import { lookupDemoComposition } from "../../../../../lib/platform-demo";
-import { clientIpFromHeaders, demoRateLimit } from "../../../../../lib/platform-demo-rate-limit";
+import { parseGtin } from "../../../../../../lib/gtin";
+import { demoNotFound, lookupDemoRecord } from "../../../../../../lib/material-intelligence/demo-records";
+import { errorEnvelope, newRequestId, successEnvelope } from "../../../../../../lib/material-intelligence/envelope";
+import { clientIpFromHeaders, demoRateLimit } from "../../../../../../lib/platform-demo-rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-function rateHeaders(limit: number, remaining: number, resetAt: number) {
+function headers(requestId: string, extra: Record<string, string> = {}) {
   return {
-    "X-RateLimit-Limit": String(limit),
-    "X-RateLimit-Remaining": String(remaining),
-    "X-RateLimit-Reset": String(Math.ceil(resetAt / 1000)),
-    "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
+    "X-Request-ID": requestId,
+    "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
+    ...extra,
   };
 }
 
 type Ctx = { params: Promise<{ gtin: string }> };
 
-/** GET /api/v1/demo/composition/{gtin} — read-only demonstration data. */
 export async function GET(req: NextRequest, ctx: Ctx) {
+  const requestId = newRequestId();
   const limited = demoRateLimit(clientIpFromHeaders(req.headers));
   if (!limited.ok) {
-    return NextResponse.json(
-      {
-        error: "Rate limit reached",
-        notice: "This demonstration endpoint is read-only and rate-limited.",
+    return NextResponse.json(errorEnvelope(requestId, "rate_limited", "Rate limit reached."), {
+      status: 429,
+      headers: {
+        ...headers(requestId, { "Cache-Control": "no-store", "Retry-After": "60" }),
+        "X-RateLimit-Remaining": "0",
       },
-      {
-        status: 429,
-        headers: {
-          ...rateHeaders(limited.limit, 0, limited.resetAt),
-          "Cache-Control": "no-store",
-          "Retry-After": String(Math.max(1, Math.ceil((limited.resetAt - Date.now()) / 1000))),
-        },
-      }
+    });
+  }
+
+  const { gtin: raw } = await ctx.params;
+  const decoded = decodeURIComponent(raw || "");
+  const allowlisted = lookupDemoRecord(decoded);
+  if (allowlisted) {
+    return NextResponse.json(successEnvelope(requestId, allowlisted), {
+      status: 200,
+      headers: headers(requestId, {
+        "X-RateLimit-Limit": String(limited.limit),
+        "X-RateLimit-Remaining": String(limited.remaining),
+      }),
+    });
+  }
+
+  const parsed = parseGtin(decoded);
+  if (!parsed.ok) {
+    return NextResponse.json(
+      errorEnvelope(
+        requestId,
+        "invalid_gtin",
+        "Provide a checksum-valid GTIN-8, GTIN-12, GTIN-13 or GTIN-14, or a curated sample identifier."
+      ),
+      { status: 422, headers: headers(requestId, { "Cache-Control": "no-store" }) }
     );
   }
 
-  const { gtin } = await ctx.params;
-  const record = lookupDemoComposition(gtin);
-  return NextResponse.json(record, {
+  return NextResponse.json(successEnvelope(requestId, demoNotFound(parsed.gtin)), {
     status: 200,
-    headers: rateHeaders(limited.limit, limited.remaining, limited.resetAt),
+    headers: headers(requestId),
   });
 }
 
 export async function POST() {
-  return NextResponse.json({ error: "Method not allowed. This demo API is read-only." }, { status: 405 });
+  return NextResponse.json(
+    { error: { code: "method_not_allowed", message: "This demonstration endpoint is read-only." } },
+    { status: 405 }
+  );
 }

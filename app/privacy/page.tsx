@@ -166,7 +166,18 @@ export default function PrivacyPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">11. Contact</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">11. Material Intelligence API and B2B leads</h2>
+          <p>
+            If you request a Material Data Snapshot, founding pilot, or API access, we collect the work
+            contact details you submit (name, email, company, role, website, approximate catalog size, and
+            related qualification fields). We use them to reply and to deliver a paid engagement if you
+            proceed. We do not ask for confidential catalogs on the public form. Public demonstration records
+            are samples and are not production user scans.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">12. Contact</h2>
           <p>
             If you have any questions about this privacy policy, please contact us at{" "}
             <a href="mailto:info@intertexe.com" className="border-b border-foreground hover:text-muted-foreground transition-colors">info@intertexe.com</a>.

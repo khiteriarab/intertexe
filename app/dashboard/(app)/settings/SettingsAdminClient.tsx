@@ -12,11 +12,35 @@ type Client = {
   name: string;
   company: string | null;
   email: string;
-  api_key: string;
   plan: string;
   monthly_limit: number;
-  calls_this_month: number;
   is_active: boolean;
+};
+type ApiKey = {
+  id: string;
+  client_id: string;
+  key_prefix: string;
+  last_four: string;
+  status: string;
+  environment: string;
+};
+type Lead = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  company: string;
+  intent: string;
+  created_at: string;
+};
+type UsageSummary = {
+  window: string;
+  requests: number;
+  matches: number;
+  notFound: number;
+  errors: number;
+  notFoundRate: number;
+  errorRate: number;
 };
 
 export function SettingsAdminClient({
@@ -34,6 +58,9 @@ export function SettingsAdminClient({
   const [invites, setInvites] = useState<Invite[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [usage, setUsage] = useState<UsageSummary | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("analyst");
   const [wsName, setWsName] = useState("");
@@ -46,11 +73,14 @@ export function SettingsAdminClient({
     if (!canAdmin) return;
     const [inv, plat] = await Promise.all([
       fetch("/api/dashboard/invites").then((r) => r.json()),
-      fetch("/api/dashboard/platform-clients").then((r) => r.json()),
+      fetch("/api/dashboard/material-api-clients").then((r) => r.json()),
     ]);
     setInvites(inv.invites || []);
     setMembers(inv.members || []);
     setClients(plat.clients || []);
+    setApiKeys(plat.keys || []);
+    setLeads(plat.leads || []);
+    setUsage(plat.usage || null);
   }
 
   useEffect(() => {
@@ -108,17 +138,21 @@ export function SettingsAdminClient({
     e.preventDefault();
     setError(null);
     setMessage(null);
-    const res = await fetch("/api/dashboard/platform-clients", {
+    const res = await fetch("/api/dashboard/material-api-clients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: clientName, email: clientEmail, plan: "starter" }),
+      body: JSON.stringify({ name: clientName, email: clientEmail, plan: "founding_pilot" }),
     });
     const data = await res.json();
     if (!res.ok) {
       setError(data.message || "Client create failed");
       return;
     }
-    setMessage(`API key created for ${data.client.name}`);
+    setMessage(
+      data.rawKey
+        ? `Raw key (shown once): ${data.rawKey}`
+        : `API client created for ${data.client?.name || clientName}`
+    );
     setClientName("");
     setClientEmail("");
     await load();
@@ -221,11 +255,17 @@ export function SettingsAdminClient({
             </div>
           </HqCard>
 
-          <HqCard title="Platform API clients">
+          <HqCard title="Material Intelligence API">
             <p className="text-sm text-black/55 mb-4">
-              Issue <span className="font-mono text-xs">itx_</span> keys for /platform lookup (barcode → composition /
-              DPP). Public pitch stays at /platform; keys live here.
+              Founder-issued keys for <span className="font-mono text-xs">GET /api/v1/composition/{"{gtin}"}</span>.
+              Raw keys are hashed. They are shown once.
             </p>
+            {usage ? (
+              <p className="text-xs text-black/50 mb-4">
+                Last {usage.window}: {usage.requests} requests · {usage.matches} matches · {usage.notFound}{" "}
+                not found · {usage.errors} errors
+              </p>
+            ) : null}
             <form onSubmit={createClient} className="grid sm:grid-cols-3 gap-2 mb-4">
               <input
                 required
@@ -252,8 +292,8 @@ export function SettingsAdminClient({
                   <tr>
                     <th className="py-2 pr-3 font-medium">Name</th>
                     <th className="py-2 pr-3 font-medium">Plan</th>
-                    <th className="py-2 pr-3 font-medium">Usage</th>
-                    <th className="py-2 font-medium">API key</th>
+                    <th className="py-2 pr-3 font-medium">Limit</th>
+                    <th className="py-2 font-medium">Keys</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -264,16 +304,52 @@ export function SettingsAdminClient({
                         <div className="text-xs text-black/40">{c.email}</div>
                       </td>
                       <td className="py-2 pr-3 capitalize">{c.plan}</td>
-                      <td className="py-2 pr-3 tabular-nums">
-                        {c.calls_this_month}/{c.monthly_limit}
+                      <td className="py-2 pr-3 tabular-nums">{c.monthly_limit}/mo</td>
+                      <td className="py-2 font-mono text-xs">
+                        {apiKeys
+                          .filter((k) => k.client_id === c.id)
+                          .map((k) => (
+                            <div key={k.id} className="flex items-center gap-2 mb-1">
+                              <span>
+                                {k.key_prefix}…{k.last_four} ({k.status})
+                              </span>
+                              {k.status === "active" ? (
+                                <button
+                                  type="button"
+                                  className="underline text-[10px] uppercase tracking-wider"
+                                  onClick={async () => {
+                                    await fetch("/api/dashboard/material-api-clients", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ action: "revoke", keyId: k.id }),
+                                    });
+                                    await load();
+                                  }}
+                                >
+                                  Revoke
+                                </button>
+                              ) : null}
+                            </div>
+                          ))}
                       </td>
-                      <td className="py-2 font-mono text-xs break-all">{c.api_key}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {!clients.length ? <p className="text-sm text-black/45 mt-3">No platform clients yet.</p> : null}
+              {!clients.length ? <p className="text-sm text-black/45 mt-3">No API clients yet.</p> : null}
             </div>
+            {leads.length ? (
+              <div className="mt-6">
+                <p className="text-[10px] uppercase tracking-wider text-black/40 mb-2">Snapshot leads</p>
+                <ul className="text-sm space-y-1">
+                  {leads.slice(0, 12).map((lead) => (
+                    <li key={lead.id}>
+                      {lead.company} · {lead.intent} · {lead.email}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </HqCard>
         </>
       ) : null}

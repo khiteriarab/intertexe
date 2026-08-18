@@ -19,7 +19,9 @@
     "test:tx-match": "node --import tsx --test scripts/capture-find-better.test.ts scripts/capture-page-signals.test.ts",
     "test:meta-pixel": "node --import tsx --test scripts/meta-pixel.test.ts",
     "test:paid-acquisition": "node --import tsx --test scripts/paid-acquisition.test.ts",
-    "test:platform-demo": "node --import tsx --test scripts/platform-demo.test.ts"
+    "test:platform-demo": "node --import tsx --test scripts/platform-demo.test.ts scripts/material-intelligence.test.ts",
+    "test:material-api": "node --import tsx --test scripts/platform-demo.test.ts scripts/material-intelligence.test.ts",
+    "test:secret-scan": "node scripts/secret-scan.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

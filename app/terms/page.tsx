@@ -117,7 +117,18 @@ export default function TermsPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">11. Contact</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">11. Material Intelligence API</h2>
+          <p>
+            INTERTEXE provides material-data infrastructure and readiness tooling. It does not provide legal
+            advice, conformity assessment, certification, or a guarantee of Digital Product Passport
+            compliance. A business customer retains ownership of catalogs it submits. INTERTEXE does not
+            publicly expose confidential client catalog data without written permission. Public demo records
+            are samples. API keys, if issued, remain INTERTEXE credentials and may be revoked.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">12. Contact</h2>
           <p>
             For questions about these terms, please contact us at{" "}
             <a href="mailto:info@intertexe.com" className="border-b border-foreground hover:text-muted-foreground transition-colors">info@intertexe.com</a>.
@@ -125,7 +136,7 @@ export default function TermsPage() {
         </section>
 
         <section id="returns" className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">12. Returns &amp; refunds</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">13. Returns &amp; refunds</h2>
           <p>
             INTERTEXE does not sell, ship, or process payment for garments. When you click through to buy, your contract is with that retailer. Orders, shipping, exchanges, refunds, and customer service are handled only by the retailer, under their return policy.
           </p>

@@ -29,6 +29,7 @@ export const EMAIL_TYPES = {
   LIFECYCLE_DAY4: "lifecycle_day4",
   LIFECYCLE_DAY10: "lifecycle_day10",
   LIFECYCLE_DAY25: "lifecycle_day25",
+  PLATFORM_LEAD: "platform_lead",
 } as const;
 
 export type EmailType = (typeof EMAIL_TYPES)[keyof typeof EMAIL_TYPES];

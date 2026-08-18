@@ -80,6 +80,7 @@ export async function GET(request: Request) {
       xml += urlEntry("/platform", { priority: "0.5", freq: "monthly" });
       xml += urlEntry("/platform/demo", { priority: "0.55", freq: "weekly" });
       xml += urlEntry("/platform/docs", { priority: "0.45", freq: "monthly" });
+      xml += urlEntry("/platform/request", { priority: "0.4", freq: "monthly" });
       xml += urlEntry("/materials", { priority: "0.9", freq: "weekly" });
       xml += urlEntry("/designers", { priority: "0.9", freq: "weekly" });
       xml += urlEntry("/designers/all", { priority: "0.8", freq: "weekly" });
