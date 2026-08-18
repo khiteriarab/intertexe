@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Save to INTERTEXE",
+  "name": "INTERTEXE: Fabric Scanner",
   "version": "1.0.1",
-  "description": "Save a product to INTERTEXE Inspirations and see TX Matches in better materials.",
+  "description": "Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.",
   "homepage_url": "https://www.intertexe.com",
   "icons": {
     "16": "icons/icon16.png",
@@ -11,7 +11,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "Save to INTERTEXE",
+    "default_title": "INTERTEXE: Fabric Scanner",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",

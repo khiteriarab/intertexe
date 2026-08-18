@@ -5,17 +5,22 @@ Upload this zip to the Chrome Web Store:
 That zip is the updated folder. Manifest is at the root of the zip.
 Do not zip the zip. Do not include this .txt file.
 
-Chrome Web Store → your item → Package → Upload new package.
+Chrome Web Store → your existing item (ID aeebdpcifniecdgpmefflidppnlmijoh)
+→ Package → Upload new package.
 
 Version in the zip: 1.0.1
-Name: Save to INTERTEXE
 Privacy policy URL: https://www.intertexe.com/privacy
 
-This package has no Chrome public key. If Google already listed
-Save to INTERTEXE (ID aeebdpcifniecdgpmefflidppnlmijoh), uploading
-this zip as a *new* item will create a different extension ID.
-To update the existing listing, upload this zip onto that same
-item in the developer dashboard — do not create a second listing.
+Paste this on the listing (and it is already in the zip’s manifest):
+
+Name:
+INTERTEXE: Fabric Scanner
+
+Short description:
+Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.
+
+This package has no Chrome public key. Upload it onto the existing
+item — do not create a second listing.
 
 Do not publish until you have clicked Save this page on a live
 product while signed in and confirmed it appears in iOS Inspirations.
