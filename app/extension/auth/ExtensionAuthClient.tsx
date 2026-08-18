@@ -2,12 +2,12 @@
 
 import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 
 const TOKEN_KEY = "intertexe_auth_token";
 const REFRESH_KEY = "intertexe_refresh_token";
 
-type Phase = "loading" | "login" | "parking" | "done" | "error";
+type Phase = "loading" | "form" | "parking" | "confirm" | "done" | "error";
+type Mode = "login" | "signup";
 
 export default function ExtensionAuthClient() {
   const params = useSearchParams();
@@ -17,10 +17,14 @@ export default function ExtensionAuthClient() {
   );
 
   const [phase, setPhase] = useState<Phase>("loading");
+  const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendNote, setResendNote] = useState<string | null>(null);
 
   async function parkSession(accessToken: string, refreshToken: string | null) {
     if (!extSession) {
@@ -45,6 +49,13 @@ export default function ExtensionAuthClient() {
     setPhase("done");
   }
 
+  function storeTokens(token: string, refreshToken: string | null) {
+    localStorage.setItem(TOKEN_KEY, token);
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_KEY, refreshToken);
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -56,7 +67,7 @@ export default function ExtensionAuthClient() {
       const existing = localStorage.getItem(TOKEN_KEY);
       const existingRefresh = localStorage.getItem(REFRESH_KEY);
       if (!existing) {
-        setPhase("login");
+        setPhase("form");
         return;
       }
       try {
@@ -67,7 +78,7 @@ export default function ExtensionAuthClient() {
         if (!me.ok) {
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(REFRESH_KEY);
-          setPhase("login");
+          setPhase("form");
           return;
         }
         await parkSession(existing, existingRefresh);
@@ -89,6 +100,32 @@ export default function ExtensionAuthClient() {
     setError(null);
     setSubmitting(true);
     try {
+      if (mode === "signup") {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.trim(),
+            username: email.trim(),
+            password,
+            firstName: firstName.trim() || undefined,
+            source: "chrome_extension",
+            acquisition_platform: "chrome_extension",
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.message || "Unable to create account");
+        }
+        if (data.needsEmailConfirmation || !data.token) {
+          setPhase("confirm");
+          return;
+        }
+        storeTokens(data.token, data.refreshToken || null);
+        await parkSession(data.token, data.refreshToken || null);
+        return;
+      }
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,16 +135,35 @@ export default function ExtensionAuthClient() {
       if (!res.ok || !data.token) {
         throw new Error(data.message || "Invalid email or password");
       }
-      localStorage.setItem(TOKEN_KEY, data.token);
-      if (data.refreshToken) {
-        localStorage.setItem(REFRESH_KEY, data.refreshToken);
-      }
+      storeTokens(data.token, data.refreshToken || null);
       await parkSession(data.token, data.refreshToken || null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed");
-      setPhase("login");
+      setError(err instanceof Error ? err.message : mode === "signup" ? "Sign up failed" : "Sign in failed");
+      setPhase("form");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function onResendConfirmation() {
+    setResendNote(null);
+    setError(null);
+    setResending(true);
+    try {
+      const res = await fetch("/api/auth/resend-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || "Unable to resend confirmation");
+      }
+      setResendNote("Confirmation email sent. Check your inbox.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to resend confirmation");
+    } finally {
+      setResending(false);
     }
   }
 
@@ -144,11 +200,16 @@ export default function ExtensionAuthClient() {
           INTERTEXE
         </p>
         <h1 style={{ margin: "8px 0 6px", fontSize: 28, fontWeight: 600 }}>
-          Sign in to INTERTEXE
+          {phase === "confirm"
+            ? "Confirm your email"
+            : mode === "signup"
+              ? "Create your INTERTEXE account"
+              : "Sign in to INTERTEXE"}
         </h1>
         <p style={{ margin: "0 0 20px", color: "#6b6560", fontSize: 14, lineHeight: 1.45 }}>
-          Authorize the browser extension to save products to your Inspirations. You can close this
-          tab when you see confirmation.
+          {phase === "confirm"
+            ? "We sent a confirmation email. Confirm, then sign in here to authorize the extension."
+            : "Authorize the browser extension to save products to your Inspirations. You can close this tab when you see confirmation."}
         </p>
 
         {phase === "loading" || phase === "parking" ? (
@@ -166,9 +227,58 @@ export default function ExtensionAuthClient() {
           </div>
         ) : null}
 
-        {phase === "login" ? (
+        {phase === "confirm" ? (
+          <div>
+            {error ? (
+              <p style={{ color: "#8b2e2e", fontSize: 13, margin: "0 0 10px" }}>{error}</p>
+            ) : null}
+            {resendNote ? (
+              <p style={{ color: "#1f3d2b", fontSize: 13, margin: "0 0 10px" }}>{resendNote}</p>
+            ) : null}
+            <button
+              type="button"
+              disabled={resending || !email.trim()}
+              onClick={onResendConfirmation}
+              style={buttonStyle}
+            >
+              {resending ? "Sending…" : "Resend confirmation email"}
+            </button>
+            <p style={{ marginTop: 14, fontSize: 13, color: "#6b6560" }}>
+              Already confirmed?{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("login");
+                  setPhase("form");
+                  setError(null);
+                  setResendNote(null);
+                }}
+                style={linkButtonStyle}
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
+        ) : null}
+
+        {phase === "form" ? (
           <form onSubmit={onSubmit}>
-            <label style={labelStyle} htmlFor="email">
+            {mode === "signup" ? (
+              <>
+                <label style={labelStyle} htmlFor="firstName">
+                  First name (optional)
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  autoComplete="given-name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  style={inputStyle}
+                />
+              </>
+            ) : null}
+            <label style={{ ...labelStyle, marginTop: mode === "signup" ? 12 : 0 }} htmlFor="email">
               Email
             </label>
             <input
@@ -186,7 +296,7 @@ export default function ExtensionAuthClient() {
             <input
               id="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -196,14 +306,44 @@ export default function ExtensionAuthClient() {
               <p style={{ color: "#8b2e2e", fontSize: 13, margin: "10px 0 0" }}>{error}</p>
             ) : null}
             <button type="submit" disabled={submitting} style={buttonStyle}>
-              {submitting ? "Signing in…" : "Sign in"}
+              {submitting
+                ? mode === "signup"
+                  ? "Creating account…"
+                  : "Signing in…"
+                : mode === "signup"
+                  ? "Create account"
+                  : "Sign in"}
             </button>
             <p style={{ marginTop: 14, fontSize: 13, color: "#6b6560" }}>
-              New here?{" "}
-              <Link href="/account?mode=signup" style={{ color: "#1f3d2b" }}>
-                Create an account
-              </Link>
-              , then return to this page.
+              {mode === "signup" ? (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setError(null);
+                    }}
+                    style={linkButtonStyle}
+                  >
+                    Sign in
+                  </button>
+                </>
+              ) : (
+                <>
+                  New here?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("signup");
+                      setError(null);
+                    }}
+                    style={linkButtonStyle}
+                  >
+                    Create an account
+                  </button>
+                </>
+              )}
             </p>
           </form>
         ) : null}
@@ -244,5 +384,16 @@ const buttonStyle: CSSProperties = {
   padding: "11px 14px",
   font: "inherit",
   fontSize: 15,
+  cursor: "pointer",
+};
+
+const linkButtonStyle: CSSProperties = {
+  border: 0,
+  background: "none",
+  padding: 0,
+  font: "inherit",
+  fontSize: 13,
+  color: "#1f3d2b",
+  textDecoration: "underline",
   cursor: "pointer",
 };

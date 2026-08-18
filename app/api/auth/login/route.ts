@@ -1,4 +1,9 @@
 export const dynamic = "force-dynamic";
+/**
+ * Sign-in only. Never sends Founder Welcome — that is claimed once at
+ * POST /api/auth/signup (Loops + email_deliveries). Repeated logins,
+ * extension reinstalls, and confirmation retries must not send another.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { comparePasswords, storeToken, getUserByUsername, getUserByEmail } from "../../../../lib/auth-helpers";
 import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server";
