@@ -11,20 +11,52 @@ import { getQualityTier, getTierColor } from "../../lib/quality-tiers";
 import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { RecentlyViewedRail } from "./RecentlyViewedRail";
 import { shareMessage } from "../../lib/referral-share-message";
+import { affiliateUrlWithClientU1 } from "../../lib/affiliate-url";
 
 const TOKEN_KEY = "intertexe_auth_token";
+const REFRESH_KEY = "intertexe_refresh_token";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY);
 }
 
-function setTokenValue(token: string) {
+function setTokenValue(token: string, refreshToken?: string | null) {
   localStorage.setItem(TOKEN_KEY, token);
+  if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
 }
 
-function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
+function recordSavedProductClick(product: {
+  id?: string;
+  brandName?: string;
+  brand_name?: string;
+  name?: string;
+  url?: string;
+  price?: number | string;
+  currency?: string;
+  naturalFiberPercent?: number;
+  natural_fiber_percent?: number;
+}) {
+  const token = getToken();
+  if (!token || !product.id) return;
+  void fetch("/api/account/product-clickout", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    keepalive: true,
+    body: JSON.stringify({
+      productId: String(product.id),
+      brandName: product.brandName || product.brand_name,
+      productName: product.name,
+      productUrl: product.url,
+      price: product.price,
+      currency: product.currency,
+      naturalFiberPercent: product.naturalFiberPercent ?? product.natural_fiber_percent,
+      source: "saved_inspiration",
+    }),
+  }).catch(() => null);
 }
 
 interface UserData {
@@ -107,9 +139,14 @@ export default function AccountClient({
       }
 
       if (mode === "login") {
+        const { getOrCreateSessionId } = await import("../../lib/session");
+        const sessionId = getOrCreateSessionId();
         const res = await fetch("/api/auth/login", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-session-id": sessionId,
+          },
           body: JSON.stringify({ username: form.email, password: form.password }),
         });
         if (!res.ok) {
@@ -117,7 +154,7 @@ export default function AccountClient({
           throw new Error(body.message || "Login failed");
         }
         const data = await res.json();
-        if (data.token) setTokenValue(data.token);
+        if (data.token) setTokenValue(data.token, data.refreshToken);
         if (data.id) {
           const { setGaUserId } = await import("../../lib/analytics");
           setGaUserId(String(data.id));
@@ -149,7 +186,7 @@ export default function AccountClient({
         }
         const data = await res.json();
         if (data.token) {
-          setTokenValue(data.token);
+          setTokenValue(data.token, data.refreshToken);
         }
         // CompleteRegistration only after successful web signup API response (not form open).
         const { trackAccountCreated } = await import("../../lib/analytics");
@@ -169,9 +206,14 @@ export default function AccountClient({
   const handleLogout = async () => {
     try {
       const token = getToken();
+      const refreshToken = typeof window !== "undefined" ? localStorage.getItem(REFRESH_KEY) : null;
       await fetch("/api/auth/logout", {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ refreshToken }),
       });
     } catch {}
     clearToken();
@@ -799,7 +841,7 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
                       const brandName = product.brandName || product.brand_name || "";
                       const fiberPercent = product.naturalFiberPercent || product.natural_fiber_percent;
                       const productId = String(product.id);
-                      const shopUrl = product.url || null;
+                      const shopUrl = product.url ? affiliateUrlWithClientU1(String(product.url)) : null;
                       const priceDrop = getPriceDrop(productId, product.price);
                       return (
                         <div key={productId} className={`group flex flex-col bg-background border transition-all ${priceDrop ? "border-emerald-500/60 hover:border-emerald-500" : "border-border/40 hover:border-foreground/30"}`} data-testid={`card-saved-product-${productId}`}>
@@ -857,7 +899,13 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
                             </div>
                           </div>
                           {shopUrl && (
-                            <a href={shopUrl} target="_blank" rel="noopener noreferrer" className={`flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] transition-colors ${priceDrop ? "bg-emerald-700 text-white hover:bg-emerald-800" : "bg-foreground text-background hover:bg-foreground/90"}`}>
+                            <a
+                              href={shopUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => recordSavedProductClick(product)}
+                              className={`flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] transition-colors ${priceDrop ? "bg-emerald-700 text-white hover:bg-emerald-800" : "bg-foreground text-background hover:bg-foreground/90"}`}
+                            >
                               {priceDrop ? "Price Dropped — Shop Now" : "Shop Now"} <ExternalLink className="w-3 h-3" />
                             </a>
                           )}

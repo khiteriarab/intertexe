@@ -647,9 +647,7 @@ export async function POST(request: NextRequest) {
     if (accessToken) {
       userId = await getSupabaseAuthUserId(accessToken);
     }
-    if (!userId && bodyUserId) {
-      userId = String(bodyUserId);
-    }
+    // Ignore body.user_id — it is not a signed identity.
 
     const scanSessionId =
       (typeof sessionId === "string" && sessionId.trim()) ||

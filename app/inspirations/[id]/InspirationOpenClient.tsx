@@ -46,6 +46,7 @@ type Capture = {
   alternatives?: CaptureAlt[] | null;
   created_at?: string | null;
   updated_at?: string | null;
+  source_app?: string | null;
   attributes?: { inferred_fiber?: string | null; country?: string | null } | null;
 };
 
@@ -248,6 +249,8 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
                       alt={alt}
                       originalPrice={capture.price}
                       originalCurrency={capture.currency}
+                      sourceApp={capture.source_app}
+                      captureId={capture.id}
                     />
                   ))}
                 </div>
@@ -306,10 +309,14 @@ function MatchCard({
   alt,
   originalPrice,
   originalCurrency,
+  sourceApp,
+  captureId,
 }: {
   alt: CaptureAlt;
   originalPrice?: number | null;
   originalCurrency?: string | null;
+  sourceApp?: string | null;
+  captureId?: string;
 }) {
   const href = affiliateHref(alt);
   const price = formatCapturePrice(
@@ -370,13 +377,52 @@ function MatchCard({
   }
 
   return (
-    <a href={href} target="_blank" rel="noreferrer" style={{ ...cardStyle, textDecoration: "none", color: "inherit" }}>
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      onClick={() => logInspirationRetailerClick({ alt, sourceApp, captureId })}
+      style={{ ...cardStyle, textDecoration: "none", color: "inherit" }}
+    >
       {body}
     </a>
   );
 }
 
-/** Prefer catalog/affiliate URL via /leaving (Rakuten u1), else INTERTEXE PDP. */
+/** One first-party retailer click before leaving INTERTEXE. */
+function logInspirationRetailerClick(input: {
+  alt: CaptureAlt;
+  sourceApp?: string | null;
+  captureId?: string;
+}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+  if (!token) return;
+  const productId = String(input.alt.id || input.captureId || "").trim();
+  if (!productId) return;
+  const source =
+    input.sourceApp === "chrome_extension" || input.sourceApp === "safari_extension"
+      ? "chrome_extension"
+      : "saved_inspiration";
+  void fetch("/api/account/product-clickout", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    keepalive: true,
+    body: JSON.stringify({
+      productId,
+      brandName: input.alt.brand_name,
+      productName: input.alt.name,
+      productUrl: input.alt.url,
+      price: input.alt.price,
+      currency: input.alt.currency,
+      naturalFiberPercent: input.alt.natural_fiber_percent,
+      source,
+    }),
+  }).catch(() => null);
+}
+
 function affiliateHref(alt: CaptureAlt): string | null {
   const raw = String(alt.url || "").trim();
   if (raw.startsWith("http")) {

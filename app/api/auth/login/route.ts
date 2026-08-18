@@ -4,6 +4,7 @@ import { comparePasswords, storeToken, getUserByUsername, getUserByEmail } from 
 import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server";
 import { snakeToCamel } from "../../../../lib/case-utils";
 import { generatePermanentReferralCode } from "../../../../lib/invitation-codes";
+import { linkScannerSessionToUser } from "../../../../lib/link-scanner-session";
 
 async function signInWithSupabase(email: string, password: string) {
   const auth = getSupabaseAnonAuthClient();
@@ -43,6 +44,10 @@ export async function POST(request: NextRequest) {
       const userId = supabaseSession.user.id;
       if (userId) {
         generatePermanentReferralCode(userId).catch(console.error);
+        const sid = request.headers.get("x-session-id")?.trim();
+        if (sid) {
+          await linkScannerSessionToUser(sid, userId);
+        }
       }
       return NextResponse.json({
         ...snakeToCamel(supabaseSession.user),

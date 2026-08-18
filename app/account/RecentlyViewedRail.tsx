@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { HORIZONTAL_RAIL_INSET_CLASS, HORIZONTAL_RAIL_PRODUCT_CARD_CLASS } from "../../lib/horizontal-rail";
+import { affiliateUrlWithClientU1 } from "../../lib/affiliate-url";
 
 const TOKEN_KEY = "intertexe_auth_token";
 
@@ -74,7 +75,9 @@ export function RecentlyViewedRail() {
       ) : (
         <div className={HORIZONTAL_RAIL_INSET_CLASS}>
           {clickouts.slice(0, 10).map((clickout) => {
-            const shopUrl = clickout.product_url;
+            const shopUrl = clickout.product_url
+              ? affiliateUrlWithClientU1(clickout.product_url)
+              : null;
             const imageUrl = clickout.image_url;
             const card = (
               <>
@@ -116,6 +119,28 @@ export function RecentlyViewedRail() {
                 href={shopUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+                  if (!token || !clickout.product_id) return;
+                  void fetch("/api/account/product-clickout", {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      "Content-Type": "application/json",
+                    },
+                    keepalive: true,
+                    body: JSON.stringify({
+                      productId: clickout.product_id,
+                      brandName: clickout.brand_name,
+                      productName: clickout.product_name,
+                      productUrl: clickout.product_url,
+                      price: clickout.price,
+                      currency: clickout.currency,
+                      naturalFiberPercent: clickout.natural_fiber_percent,
+                      source: "account_clickout",
+                    }),
+                  }).catch(() => null);
+                }}
                 className={`group flex flex-col ${HORIZONTAL_RAIL_PRODUCT_CARD_CLASS}`}
                 data-rail-card
                 data-testid={`link-recently-viewed-${clickout.product_id ?? clickout.id}`}

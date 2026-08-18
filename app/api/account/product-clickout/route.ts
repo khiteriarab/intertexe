@@ -6,6 +6,7 @@ import { getUserFromToken } from "../../../../lib/auth-helpers";
 import { getSupabaseAuthUserId } from "../../../../lib/supabase-auth-server";
 import { parsePriceNumber } from "../../../../lib/scanner-copy";
 import { emitAttributedEvent, extractUtmFromRequest } from "../../../../lib/dashboard/attribution";
+import { normalizeRetailerClickSource } from "../../../../lib/retailer-click-source";
 
 function getServiceSupabase() {
   const supabaseUrl =
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     eventName: "affiliate_click",
     eventCategory: "commerce",
     customerId: userId,
-    source: "shop",
+    source: normalizeRetailerClickSource(body.source || body.source_channel, "shop"),
     productId: String(productId),
     utm,
     metadata: {

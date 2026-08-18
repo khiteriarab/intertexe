@@ -17,6 +17,7 @@ import {
   isUsableCaptureImageUrl,
 } from "../../../lib/capture-enrichment";
 import { buildTxMatchCopyFromCapture, buildTxMatchLinks } from "../../../lib/tx-match-copy";
+import { getServerSupabase } from "../../../lib/supabase-service-client";
 
 function userClient(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -88,11 +89,16 @@ export async function POST(req: NextRequest) {
 
     // Keep work alive after the response on Vercel — bare `void` is often killed
     // mid-enrichment, which leaves Inspirations stuck on hostname placeholders.
-    if (!duplicate) {
-      const bgClient = service || supabase;
-      const origin = new URL(req.url).origin;
-      const captureId = capture.id;
-      if (body.decodeNow) {
+    const bgClient = service || supabase;
+    const origin = new URL(req.url).origin;
+    const captureId = capture.id;
+    const existingAlts = Array.isArray((capture as { alternatives?: unknown[] }).alternatives)
+      ? ((capture as { alternatives?: unknown[] }).alternatives as unknown[])
+      : [];
+    const queueDecode =
+      Boolean(body.decodeNow) && (!duplicate || existingAlts.length === 0);
+    if (!duplicate || queueDecode) {
+      if (queueDecode) {
         after(() =>
           decodeCapture(bgClient, userId, captureId, {
             accessToken: token,
@@ -102,7 +108,7 @@ export async function POST(req: NextRequest) {
             console.error("[capture] decodeCapture failed", captureId, e);
           })
         );
-      } else {
+      } else if (!duplicate) {
         after(() =>
           enrichCaptureMetadata(bgClient, userId, captureId).catch((e) => {
             console.error("[capture] enrichCaptureMetadata failed", captureId, e);

@@ -233,6 +233,7 @@ export async function POST(request: NextRequest) {
           username: cleanEmail,
         }),
         token: session.access_token,
+        refreshToken: session.refresh_token || null,
       },
       { status: 201 }
     );

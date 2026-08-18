@@ -6,15 +6,11 @@ import { getSupabaseAuthUserId } from "./supabase-auth-server";
 const scryptAsync = promisify(scrypt);
 
 function getTokenSecret(): string {
-  const secret = process.env.TOKEN_SECRET
-    || process.env.SUPABASE_ANON_KEY
-    || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    || process.env.VITE_SUPABASE_ANON_KEY
-    || process.env.SUPABASE_SERVICE_ROLE_KEY
-    || null;
+  const secret = (process.env.TOKEN_SECRET || "").trim();
   if (secret) return secret;
+  // Never HMAC with the public anon key or service role — both can mint forged sessions.
   if (process.env.NODE_ENV !== "production") return "intertexe-dev-only-secret-key";
-  return "intertexe-build-placeholder";
+  return "intertexe-hmac-disabled";
 }
 const TOKEN_TTL = 30 * 24 * 60 * 60 * 1000;
 
@@ -188,6 +184,11 @@ export async function deleteUserAccount(userId: string): Promise<boolean> {
   await supabase.from("quiz_results").delete().eq("user_id", userId);
   await supabase.from("scan_history").delete().eq("user_id", userId);
   await supabase.from("price_watches").delete().eq("user_id", userId);
+  await supabase.from("user_product_clickouts").delete().eq("user_id", userId);
+  await supabase.from("scanner_clickouts").delete().eq("user_id", userId);
+  await supabase.from("user_product_views").delete().eq("user_id", userId);
+  await supabase.from("capture_events").delete().eq("user_id", userId);
+  await supabase.from("external_captures").delete().eq("user_id", userId);
   const { error } = await supabase.from("users").delete().eq("id", userId);
   if (error) return false;
 

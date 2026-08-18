@@ -3,6 +3,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "../../../../lib/auth-helpers";
 import { getServerSupabase } from "../../../../lib/supabase-server";
+import { emitAttributedEvent } from "../../../../lib/dashboard/attribution";
+import { normalizeRetailerClickSource } from "../../../../lib/retailer-click-source";
 
 const MAX_CLICKOUTS = 48;
 
@@ -25,6 +27,14 @@ export async function POST(request: NextRequest) {
     clicked_at: new Date().toISOString(),
   });
   if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+
+  emitAttributedEvent({
+    eventName: "affiliate_click",
+    eventCategory: "commerce",
+    customerId: userId,
+    source: normalizeRetailerClickSource(body.source, "ios_product_detail"),
+    productId,
+  }).catch(() => null);
 
   const { data: recent } = await supabase
     .from("user_product_clickouts")

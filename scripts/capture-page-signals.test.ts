@@ -12,6 +12,10 @@ import {
   titleCaseName,
   uniqueTitleCaseNames,
 } from "../lib/capture-page-signals.ts";
+import {
+  normalizeRetailerClickSource,
+  resolveAuthenticatedUserId,
+} from "../lib/retailer-click-source.ts";
 
 describe("retailer material capture", () => {
   it("reads Material: silk without a percentage", () => {
@@ -75,5 +79,19 @@ describe("display consistency", () => {
     assert.equal(titleCaseName("VERBENA SKIRT LILAC"), "Verbena Skirt Lilac");
     assert.equal(titleCaseName("Rag & Bone"), "Rag & Bone");
     assert.equal(shopAtLabel("go by go silk"), "Shop at Go By Go Silk →");
+  });
+});
+
+describe("cross-platform identity helpers", () => {
+  it("never trusts a body user id without a JWT", () => {
+    assert.equal(resolveAuthenticatedUserId(null, "attacker-id"), null);
+    assert.equal(resolveAuthenticatedUserId("real-user", "attacker-id"), "real-user");
+  });
+
+  it("maps capture source_app onto retailer click channels", () => {
+    assert.equal(normalizeRetailerClickSource("chrome_extension"), "chrome_extension");
+    assert.equal(normalizeRetailerClickSource("ios_app"), "ios_product_detail");
+    assert.equal(normalizeRetailerClickSource("saved_inspiration"), "saved_inspiration");
+    assert.equal(normalizeRetailerClickSource("unknown", "website"), "website");
   });
 });
