@@ -94,6 +94,90 @@ export async function materialIntelligenceTablesReady(opts?: {
   return { ok: false, missing: [...REQUIRED_TABLES], via: null };
 }
 
+function supabaseProjectRef(): string {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
+  try {
+    return new URL(url).hostname.split(".")[0] || "";
+  } catch {
+    return "";
+  }
+}
+
+async function applySqlWithPg(sql: string, databaseUrl: string): Promise<{ ok: boolean; message: string }> {
+  const client = new pg.Client({
+    connectionString: databaseUrl,
+    ssl: { rejectUnauthorized: false },
+    statement_timeout: 600_000,
+    connectionTimeoutMillis: 8000,
+  });
+  try {
+    await client.connect();
+    await client.query(sql);
+    await notifyPostgrest(client);
+    return { ok: true, message: "migration applied" };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false, message: message.replace(/postgresql:\/\/[^@\s]+@/g, "postgresql://***@") };
+  } finally {
+    try {
+      await client.end();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+async function applyViaDerivedPostgres(sql: string): Promise<{ ok: boolean; message: string; via: string }> {
+  const ref = supabaseProjectRef();
+  const password = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_DB_PASSWORD || "";
+  if (!ref || !password) {
+    return { ok: false, message: "no project ref or db credential", via: "derived_postgres" };
+  }
+  const enc = encodeURIComponent(password);
+  const urls = [
+    `postgresql://postgres:${enc}@db.${ref}.supabase.co:5432/postgres?sslmode=require`,
+    `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require`,
+    `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require`,
+    `postgresql://postgres.${ref}:${enc}@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require`,
+    `postgresql://postgres.${ref}:${enc}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require`,
+  ];
+  let last = "no connection";
+  for (const url of urls) {
+    const result = await applySqlWithPg(sql, url);
+    if (result.ok) return { ok: true, message: result.message, via: "derived_postgres" };
+    last = result.message;
+  }
+  return { ok: false, message: last, via: "derived_postgres" };
+}
+
+async function applyViaManagementApi(sql: string): Promise<{ ok: boolean; message: string; via: string }> {
+  const ref = supabaseProjectRef();
+  const token = process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!ref || !token) {
+    return { ok: false, message: "no management credential", via: "management_api" };
+  }
+  const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query: sql }),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    return {
+      ok: false,
+      message: `HTTP ${res.status}`,
+      via: "management_api",
+    };
+  }
+  if (/error/i.test(text) && /permission|invalid|jwt/i.test(text)) {
+    return { ok: false, message: "management query rejected", via: "management_api" };
+  }
+  return { ok: true, message: "migration applied", via: "management_api" };
+}
+
 async function notifyPostgrest(client: pg.Client) {
   await client.query(`NOTIFY pgrst, 'reload schema';`);
 }
@@ -106,27 +190,36 @@ export async function applyMaterialIntelligenceMigration(opts?: {
   const dbUrl = resolveDatabaseUrl(opts?.databaseUrl);
 
   if (dbUrl) {
-    const client = new pg.Client({
-      connectionString: dbUrl,
-      ssl: { rejectUnauthorized: false },
-      statement_timeout: 600_000,
-    });
-    await client.connect();
-    try {
-      await client.query(sql);
-      await notifyPostgrest(client);
-      const ready = await materialIntelligenceTablesReady({ databaseUrl: dbUrl });
-      if (!ready.ok) {
-        return { ok: false, message: `tables missing: ${ready.missing.join(", ")}`, via: "database_url" };
-      }
-      return { ok: true, message: "migration applied", via: "database_url", checks: { tables: REQUIRED_TABLES } };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { ok: false, message, via: "database_url" };
-    } finally {
-      await client.end();
+    const applied = await applySqlWithPg(sql, dbUrl);
+    if (!applied.ok) return { ok: false, message: applied.message, via: "database_url" };
+    const ready = await materialIntelligenceTablesReady({ databaseUrl: dbUrl, supabase: opts?.supabase });
+    if (!ready.ok) {
+      return { ok: false, message: `tables missing: ${ready.missing.join(", ")}`, via: "database_url" };
     }
+    return { ok: true, message: "migration applied", via: "database_url", checks: { tables: REQUIRED_TABLES } };
   }
+
+  const derived = await applyViaDerivedPostgres(sql);
+  if (derived.ok) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const ready = await materialIntelligenceTablesReady({ supabase: opts?.supabase });
+    if (!ready.ok) {
+      return { ok: false, message: `tables missing after derived postgres: ${ready.missing.join(", ")}`, via: derived.via };
+    }
+    return { ok: true, message: derived.message, via: derived.via, checks: { tables: REQUIRED_TABLES } };
+  }
+
+  const managed = await applyViaManagementApi(sql);
+  if (managed.ok) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const ready = await materialIntelligenceTablesReady({ supabase: opts?.supabase });
+    if (!ready.ok) {
+      return { ok: false, message: `tables missing after management api: ${ready.missing.join(", ")}`, via: managed.via };
+    }
+    return { ok: true, message: managed.message, via: managed.via, checks: { tables: REQUIRED_TABLES } };
+  }
+
+  const prior = `derived_postgres: ${derived.message}; management_api: ${managed.message}`;
 
   if (opts?.supabase) {
     const statements = [...materialIntelligenceSqlStatements(sql), "NOTIFY pgrst, 'reload schema'"];
@@ -142,11 +235,11 @@ export async function applyMaterialIntelligenceMigration(opts?: {
         }
         lastError = error.message;
         if (/could not find the function/i.test(error.message)) {
-          return { ok: false, message: "exec_sql is not available and DATABASE_URL is not set", via: "exec_sql" };
+          return { ok: false, message: `${prior}; exec_sql unavailable`, via: "exec_sql" };
         }
       }
       if (!applied) {
-        return { ok: false, message: lastError || "exec_sql failed", via: "exec_sql" };
+        return { ok: false, message: `${prior}; exec_sql: ${lastError || "failed"}`, via: "exec_sql" };
       }
     }
     await new Promise((r) => setTimeout(r, 1500));
@@ -157,5 +250,5 @@ export async function applyMaterialIntelligenceMigration(opts?: {
     return { ok: true, message: "migration applied", via: "exec_sql", checks: { tables: REQUIRED_TABLES } };
   }
 
-  return { ok: false, message: "DATABASE_URL not set and no Supabase client provided" };
+  return { ok: false, message: `${prior}; no supabase client` };
 }
