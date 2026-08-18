@@ -174,6 +174,19 @@ describe("Public demo and docs source safety", () => {
     assert.match(form, /Do not attach confidential catalogs/);
   });
 
+  it("keeps the Material Intelligence migration additive and reversible", () => {
+    const sql = fs.readFileSync(
+      path.join(process.cwd(), "supabase/migrations/20260819_material_intelligence_api.sql"),
+      "utf8"
+    );
+    assert.match(sql, /Additive only/);
+    assert.match(sql, /CREATE TABLE IF NOT EXISTS public\.material_api_clients/);
+    assert.match(sql, /DROP TABLE IF EXISTS public\.material_evidence/);
+    assert.doesNotMatch(sql, /^\s*ALTER TABLE public\.(products|barcode_compositions|upc_brand_prefixes)/m);
+    assert.match(sql, /^--\s+DROP TABLE IF EXISTS public\.material_api_usage;/m);
+    assert.doesNotMatch(sql, /^\s*DROP TABLE /m);
+  });
+
   it("keeps documentation examples on the demo endpoint and OpenAPI URL", () => {
     const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/docs/page.tsx"), "utf8");
     assert.match(docs, /\/api\/v1\/demo\/composition\//);
