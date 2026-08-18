@@ -17,6 +17,12 @@ import {
   firstTouchToPreferenceColumns,
 } from "../../../../lib/dashboard/attribution";
 import { linkHqContactOnSignup } from "../../../../lib/hq-contacts";
+import {
+  applySignupSourceToFirstTouch,
+  isDuplicateSupabaseSignUp,
+  parseSignupSource,
+  welcomeSourceForSignup,
+} from "../../../../lib/signup-source";
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,8 +47,13 @@ export async function POST(request: NextRequest) {
       username: providedUsername,
       invitationCode,
       gdprConsent,
+      source: bodySource,
     } = body;
-    const firstTouch = extractFirstTouchFromRequest(request, body);
+    const signupSource = parseSignupSource(bodySource ?? body.acquisition_platform);
+    const firstTouch = applySignupSourceToFirstTouch(
+      extractFirstTouchFromRequest(request, body),
+      signupSource
+    );
     if (!firstTouch.first_session_id && sessionId) {
       firstTouch.first_session_id = sessionId;
     }
@@ -65,6 +76,22 @@ export async function POST(request: NextRequest) {
     const existingUser = await getUserByUsername(username);
     if (existingUser) {
       return NextResponse.json({ message: "An account with this email already exists" }, { status: 400 });
+    }
+
+    const serviceForDedupe = createServiceClient();
+    if (serviceForDedupe) {
+      const { data: existingPrefByEmail } = await serviceForDedupe
+        .from("user_preferences")
+        .select("user_id")
+        .ilike("email", cleanEmail.toLowerCase())
+        .limit(1)
+        .maybeSingle();
+      if (existingPrefByEmail?.user_id) {
+        return NextResponse.json(
+          { message: "An account with this email already exists" },
+          { status: 400 }
+        );
+      }
     }
 
     const auth = getSupabaseAnonAuthClient();
@@ -96,6 +123,21 @@ export async function POST(request: NextRequest) {
     }
 
     const user = data.user;
+    if (!user?.id) {
+      return NextResponse.json(
+        { message: "Unable to create account. Please try again later." },
+        { status: 500 }
+      );
+    }
+
+    // Fake success: email already registered. Do not write profile or send welcome.
+    if (isDuplicateSupabaseSignUp(user)) {
+      return NextResponse.json(
+        { message: "An account with this email already exists" },
+        { status: 400 }
+      );
+    }
+
     if (user?.id) {
       const service = createServiceClient();
       if (service) {
@@ -162,7 +204,7 @@ export async function POST(request: NextRequest) {
         eventName: "signup",
         eventCategory: "acquisition",
         customerId: user.id,
-        source: "website",
+        source: firstTouch.acquisition_platform || "website",
         sessionId: firstTouch.first_session_id || sessionId || undefined,
         utm: {
           utm_source: firstTouch.utm_source,
@@ -173,6 +215,7 @@ export async function POST(request: NextRequest) {
         },
         metadata: {
           invitationCode: invitationCode || null,
+          signup_source: signupSource,
           first_referrer: firstTouch.first_referrer || null,
           first_landing_page: firstTouch.first_landing_page || null,
           ga_client_id: firstTouch.ga_client_id || null,
@@ -187,14 +230,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Canonical founder welcome via Loops (idempotent + logged). No Resend welcome.
+    // Trigger is this server signup path for web + Chrome extension (not iOS-only).
     // Must await: Vercel can freeze the isolate after the HTTP response, leaving
     // email_deliveries stuck at pending.
     await sendWelcomeEmail({
       email: cleanEmail,
       firstName: resolvedFirst || fullName || "",
       lastName: resolvedLast || undefined,
-      userId: user?.id || null,
-      source: "web_signup",
+      userId: user.id,
+      source: welcomeSourceForSignup(signupSource),
       invitationCode: typeof invitationCode === "string" ? invitationCode : undefined,
     }).catch(console.error);
 
@@ -204,7 +248,7 @@ export async function POST(request: NextRequest) {
       email: cleanEmail,
       firstName: resolvedFirst || undefined,
       lastName: resolvedLast || undefined,
-      source: "signup",
+      source: signupSource === "web_signup" ? "signup" : signupSource,
       invitationCode: typeof invitationCode === "string" ? invitationCode : undefined,
     }).catch(console.error);
 
@@ -233,6 +277,7 @@ export async function POST(request: NextRequest) {
           username: cleanEmail,
         }),
         token: session.access_token,
+        refreshToken: session.refresh_token || null,
       },
       { status: 201 }
     );

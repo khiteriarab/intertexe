@@ -21,7 +21,7 @@ export type FirstTouchAttribution = UtmBag & {
   ttclid?: string;
   fbclid?: string;
   msclkid?: string;
-  acquisition_platform?: "website" | "ios";
+  acquisition_platform?: "website" | "ios" | "chrome_extension";
   attribution_extra?: Record<string, unknown>;
 };
 
@@ -120,6 +120,16 @@ export function extractFirstTouchFromRequest(
     acquisition_platform: "website",
   };
 
+  const platformRaw =
+    typeof body?.acquisition_platform === "string" ? body.acquisition_platform.trim().toLowerCase() : "";
+  if (
+    platformRaw === "chrome_extension" ||
+    platformRaw === "ios" ||
+    platformRaw === "website"
+  ) {
+    merged.acquisition_platform = platformRaw;
+  }
+
   // Infer a channel label when UTMs missing but click id present
   if (!merged.utm_source) {
     if (merged.ttclid) merged.utm_source = "tiktok";
@@ -148,7 +158,9 @@ export function firstTouchToPreferenceColumns(ft: FirstTouchAttribution): Record
     ft.ttclid ||
     ft.fbclid ||
     ft.msclkid ||
-    ft.first_session_id;
+    ft.first_session_id ||
+    (ft.acquisition_platform && ft.acquisition_platform !== "website") ||
+    Boolean(ft.attribution_extra?.signup_source);
 
   return {
     first_touch_source: ft.utm_source || null,

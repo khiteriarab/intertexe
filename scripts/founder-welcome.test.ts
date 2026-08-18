@@ -78,3 +78,8 @@ test("Loops template dataVariables include lowercase firstname", () => {
   assert.match(src, /firstName:/);
   assert.match(src, /ctaUrl/);
 });
+
+test("welcome CTA origin is https://www.intertexe.com/open", () => {
+  const url = resolveWelcomeCtaUrl();
+  assert.ok(url.startsWith("https://www.intertexe.com/open"));
+});

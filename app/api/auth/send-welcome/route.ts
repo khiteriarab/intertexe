@@ -5,11 +5,13 @@ import { sendWelcomeEmail } from "../../../../server/resend";
 import { linkHqContactOnSignup } from "../../../../lib/hq-contacts";
 
 /**
- * Trigger founder welcome for the authenticated user (iOS registration).
+ * Safety-net founder welcome for the authenticated user (iOS native signup
+ * and AuthConfirmBridge after email confirm). Website + Chrome extension
+ * already send from POST /api/auth/signup.
  *
  * Auth: Supabase JWT only.
  * Delivery: Loops transactional only (no Resend welcome).
- * Idempotent via email_deliveries (provider=loops).
+ * Idempotent via email_deliveries (provider=loops) — a second call skips.
  */
 export async function POST(request: NextRequest) {
   try {
