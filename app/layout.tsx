@@ -13,6 +13,7 @@ import {
   SITE_URL,
   pageAlternates,
 } from "../lib/seo-international";
+import { GA_MEASUREMENT_ID } from "../lib/analytics";
 
 const HOME_DESCRIPTION =
   `Discover ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces across ${CATALOG_STATS.brandCountFormatted} brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to find better natural fiber alternatives at your price point.`;
@@ -140,6 +141,21 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Official gtag snippet in raw HTML <head> so Merchant Center / Search Console
+            crawlers that do not execute JS can still find G-{id}. Do not move this to
+            next/script afterInteractive — that only emits a preload link. */}
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_MEASUREMENT_ID}');`,
+          }}
+        />
         <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
         <script
           dangerouslySetInnerHTML={{
