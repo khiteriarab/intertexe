@@ -12,6 +12,7 @@
     "check:background-jobs": "node --import tsx scripts/check-background-jobs.ts",
     "db:push": "drizzle-kit push",
     "test:hq": "node --import tsx --test scripts/period-delta.test.ts",
+    "test:hq-command-center": "node --import tsx --test scripts/hq-revenue-command-center.test.ts",
     "test:background-jobs": "node --import tsx --test scripts/background-jobs.test.ts",
     "test:contacts-sheet": "node --import tsx --test scripts/hq-contacts-sheet-sync.test.ts",
     "test:email-lifecycle": "node --import tsx --test scripts/email-lifecycle.test.ts",
