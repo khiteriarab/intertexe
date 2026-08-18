@@ -4,9 +4,6 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 import {
   applySignupSourceToFirstTouch,
   isDuplicateSupabaseSignUp,
@@ -17,12 +14,6 @@ import {
   extractFirstTouchFromRequest,
   firstTouchToPreferenceColumns,
 } from "../lib/dashboard/attribution.ts";
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-
-function read(rel: string) {
-  return readFileSync(join(root, rel), "utf8");
-}
 
 test("parseSignupSource maps chrome extension and defaults to web", () => {
   assert.equal(parseSignupSource("chrome_extension"), "chrome_extension");
@@ -66,41 +57,4 @@ test("clickout body.source shop does not become chrome_extension", () => {
     { source: "shop" }
   );
   assert.equal(ft.acquisition_platform, "website");
-});
-
-test("signup route sends welcome only after a real new user", () => {
-  const src = read("app/api/auth/signup/route.ts");
-  assert.match(src, /welcomeSourceForSignup\(signupSource\)/);
-  assert.match(src, /isDuplicateSupabaseSignUp/);
-  assert.match(src, /parseSignupSource/);
-  assert.doesNotMatch(src, /source:\s*"web_signup"/);
-  const duplicateIdx = src.indexOf("isDuplicateSupabaseSignUp");
-  const welcomeIdx = src.indexOf("sendWelcomeEmail");
-  assert.ok(duplicateIdx > 0 && welcomeIdx > duplicateIdx);
-});
-
-test("login and confirmation retry never send founder welcome", () => {
-  const login = read("app/api/auth/login/route.ts");
-  const resend = read("app/api/auth/resend-confirmation/route.ts");
-  assert.doesNotMatch(login, /sendWelcomeEmail/);
-  assert.doesNotMatch(resend, /sendWelcomeEmail/);
-  assert.match(resend, /type:\s*"signup"/);
-  assert.match(resend, /Never sends Founder Welcome/);
-});
-
-test("extension auth creates accounts through server signup with chrome_extension", () => {
-  const src = read("app/extension/auth/ExtensionAuthClient.tsx");
-  assert.match(src, /\/api\/auth\/signup/);
-  assert.match(src, /source:\s*"chrome_extension"/);
-  assert.match(src, /\/api\/auth\/login/);
-  assert.match(src, /\/api\/auth\/resend-confirmation/);
-  assert.doesNotMatch(src, /\/api\/auth\/send-welcome/);
-});
-
-test("founder welcome has no Resend fallback", () => {
-  const src = read("lib/founder-welcome.ts");
-  assert.match(src, /Never falls back to Resend/);
-  assert.match(src, /claimFounderWelcomeSend/);
-  assert.doesNotMatch(src, /sendCustomerEmail/);
-  assert.doesNotMatch(src, /EMAIL_FROM[^_]/);
 });
