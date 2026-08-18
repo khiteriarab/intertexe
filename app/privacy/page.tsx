@@ -108,10 +108,10 @@ export default function PrivacyPage() {
 
           <h3 className="text-lg font-serif text-foreground pt-2">When the extension reads a retailer page</h3>
           <p>
-            The extension does not run on every page you visit. It does not use always-on content scripts. Opening the toolbar icon does not scrape the page. When you click <strong className="text-foreground">Save this page</strong>, the extension injects a script into the active tab and reads product information from that tab only.
+            The extension does not run on every page you visit. It does not use always-on content scripts. When you open the toolbar popup, it reads the active tab so it can show the product on screen (image, brand, title, price, and a short material line). Nothing is sent to INTERTEXE until you tap <strong className="text-foreground">TX MATCH</strong> or <strong className="text-foreground">Save to Inspirations</strong>.
           </p>
           <p>
-            If you click Save this page while signed out, the extracted product fields are stored on your computer until you finish signing in, then they are sent to INTERTEXE.
+            If you tap those actions while signed out, the extracted product fields are stored on your computer until you finish signing in, then they are sent to INTERTEXE.
           </p>
 
           <h3 className="text-lg font-serif text-foreground pt-2">Product-page data</h3>
@@ -121,7 +121,7 @@ export default function PrivacyPage() {
             <li>Title, image URL, and meta description</li>
             <li>Structured product data (JSON-LD) such as brand, SKU, price, currency, and listed material</li>
             <li>The retailer hostname</li>
-            <li>Visible page text, used only on your device to find a short fiber or composition line (for example “100% silk”). We transmit that short composition line, not a dump of the full page.</li>
+            <li>Visible page text, used only on your device to find a short fiber or composition line (for example “100% SILK”). We transmit that short composition line, not a dump of the full page.</li>
           </ul>
 
           <h3 className="text-lg font-serif text-foreground pt-2">Account authentication</h3>

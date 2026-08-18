@@ -1,6 +1,6 @@
 import { SITE_URL } from "./seo-international";
 import { getUniversalOpenUrl } from "./app-store";
-import { hasPercentages } from "./capture-page-signals";
+import { formatMaterialVerdict, hasPercentages } from "./capture-page-signals";
 
 export const TX_MATCH_TAGLINE = "Know the material before you buy.";
 export const AFFILIATE_DISCLOSURE =
@@ -149,7 +149,7 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
     altCount: alts.length,
     compositionListed: listed,
     listedWithoutPercentages: listed && !hasPercentages(composition),
-    listedMaterial: listed ? composition : null,
+    listedMaterial: listed ? formatMaterialVerdict(composition) || composition : null,
     captureId: row.id != null ? String(row.id) : null,
   });
 }

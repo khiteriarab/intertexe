@@ -140,3 +140,72 @@ describe("TX Match copy", () => {
     assert.equal(copy.openInIntertexeUrl, links.openInIntertexeUrl);
   });
 });
+
+describe("TX Match same-color lead and honest cards", () => {
+  it("pins the first three results to the same color when three valid matches exist", () => {
+    const products = [
+      ...[1, 2, 3, 4].map((n) => skirt(`lilac-${n}`, "silk", 300 + n, "lilac")),
+      ...[1, 2, 3].map((n) => skirt(`brown-${n}`, "silk", 310 + n, "chocolate brown")),
+    ];
+    const ranked = rankTxMatchAlternatives(products, {
+      title: "Chocolate brown silk skirt",
+      compositionText: "100% silk",
+      garmentType: "skirt",
+      category: "skirts",
+      price: 320,
+      color: "chocolate brown",
+    });
+    assert.ok(ranked.length >= 3);
+    for (const alt of ranked.slice(0, 3)) {
+      assert.match(String(alt.name), /brown/i);
+    }
+  });
+
+  it("drops a cotton-named card that claims silk composition", () => {
+    const ranked = rankTxMatchAlternatives(
+      [
+        {
+          id: "lie",
+          name: "Hazy Daisy Cotton Mini Skirt",
+          brand_name: "Test",
+          image_url: "https://example.com/x.jpg",
+          price: 90,
+          currency: "USD",
+          composition: "96% Silk",
+          natural_fiber_percent: 96,
+          category: "skirts",
+          color: "brown",
+        },
+        skirt("honest", "silk", 300, "brown"),
+      ],
+      {
+        title: "Silk slip",
+        compositionText: "100% silk",
+        garmentType: "skirt",
+        category: "skirts",
+        price: 280,
+        color: "brown",
+      }
+    );
+    assert.equal(ranked.some((a) => a.id === "lie"), false);
+    assert.equal(ranked[0].id, "honest");
+  });
+
+  it("drops matches without a product image", () => {
+    const ranked = rankTxMatchAlternatives(
+      [
+        { ...skirt("noimg", "silk", 300, "lilac"), image_url: null },
+        skirt("img", "silk", 300, "lilac"),
+      ],
+      {
+        title: "Lilac silk skirt",
+        compositionText: "silk",
+        garmentType: "skirt",
+        category: "skirts",
+        color: "lilac",
+      }
+    );
+    assert.equal(ranked.some((a) => a.id === "noimg"), false);
+    assert.equal(ranked[0].id, "img");
+  });
+});

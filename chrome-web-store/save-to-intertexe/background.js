@@ -16,6 +16,8 @@ async function getStore() {
     "lastResult",
     "uiStatus",
     "uiError",
+    "previewProduct",
+    "processing",
   ]);
 }
 
@@ -29,6 +31,8 @@ async function publicState() {
     signedIn: Boolean(store.accessToken),
     busy: Boolean(store.extSession),
     result: store.lastResult || null,
+    preview: store.previewProduct || null,
+    processing: Boolean(store.processing),
     status: store.uiStatus || "",
     error: Boolean(store.uiError),
   };
@@ -138,15 +142,25 @@ function extractProductFromPage() {
   }
 
   const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 12000);
-  const fiberRe =
-    /\b(\d{1,3}(?:\.\d+)?%\s*)?(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
-  const hits = bodyText.match(fiberRe);
-  if (!compositionText && hits?.length) {
-    const listed = hits.slice(0, 8).join(", ");
-    if (listed.length < 180) compositionText = listed;
+  const pct = bodyText.match(
+    /(\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|wool|linen|silk|cashmere|hemp|alpaca|merino|leather|suede|cupro))\b/i
+  );
+  const labeled = bodyText.match(
+    /(?:material|composition|fabric|made\s+from|made\s+of)\s*[:\-–]\s*([^.;|\n]{1,80})/i
+  );
+  if (!compositionText && pct) compositionText = pct[1];
+  else if (!compositionText && labeled) compositionText = labeled[1].trim();
+  else if (!compositionText) {
+    const fiberRe =
+      /\b(cotton|wool|linen|silk|cashmere|hemp|alpaca|merino|leather|suede)\b/gi;
+    const hits = bodyText.match(fiberRe) || [];
+    const unique = [];
+    for (const h of hits) {
+      const k = h.toLowerCase();
+      if (!unique.includes(k)) unique.push(k);
+    }
+    if (unique.length === 1) compositionText = unique[0];
   }
-  // Visible page text is read locally to find a composition line. It is not
-  // transmitted as a raw page dump — only the short compositionText above.
 
   let retailer = null;
   try {
@@ -173,7 +187,7 @@ async function extractActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) throw new Error("No active tab");
   if (!tab.url || !/^https?:/i.test(tab.url)) {
-    throw new Error("Open a product page, then save.");
+    throw new Error("Open a product page, then tap TX MATCH.");
   }
   const injected = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
@@ -210,7 +224,7 @@ function enrichmentDone(capture) {
   return false;
 }
 
-async function pollCapture(id, timeoutMs = 25000) {
+async function pollCapture(id, timeoutMs = 45000) {
   const t0 = Date.now();
   let last = null;
   while (Date.now() - t0 < timeoutMs) {
@@ -224,21 +238,31 @@ async function pollCapture(id, timeoutMs = 25000) {
   return last;
 }
 
-async function savePayload(payload) {
+async function savePayload(payload, { waitForMatches = true } = {}) {
+  await chrome.storage.local.set({ processing: Boolean(waitForMatches) });
+  if (waitForMatches) await setUi("Finding your TX Matches…");
   const { res, json } = await authedFetch("/api/capture", {
     method: "POST",
     body: payload,
   });
   if (res.status === 401) {
+    await chrome.storage.local.set({ processing: false });
     return { needsSignIn: true, payload };
   }
   if (!res.ok || !(json.capture || json).id) {
+    await chrome.storage.local.set({ processing: false });
     throw new Error(json.error || json.message || "Could not save this page");
   }
   const captureId = (json.capture || json).id;
-  const polled = await pollCapture(captureId);
+  const polled = waitForMatches ? await pollCapture(captureId) : json;
   const result = polled || json;
-  await chrome.storage.local.set({ lastResult: result, pendingCapture: null });
+  await chrome.storage.local.set({
+    lastResult: result,
+    pendingCapture: null,
+    processing: false,
+    uiStatus: result?.capture?.id ? "Saved to Inspirations" : "",
+  });
+  broadcast();
   return { result };
 }
 
@@ -256,10 +280,10 @@ async function pollAuthSession(extSession, tabId) {
       if (tabId) chrome.tabs.remove(tabId).catch(() => {});
       const store = await getStore();
       if (store.pendingCapture) {
-        await setUi("Signed in — saving…");
+        await setUi("Finding your TX Matches…");
         try {
-          const saved = await savePayload(store.pendingCapture);
-          await setUi(saved.result ? "Saved to Inspirations." : "");
+          const saved = await savePayload(store.pendingCapture, { waitForMatches: true });
+          await setUi(saved.result ? "Saved to Inspirations" : "");
         } catch (e) {
           await setUi(e instanceof Error ? e.message : "Save failed", true);
         }
@@ -299,6 +323,8 @@ async function signOut() {
     "refreshToken",
     "pendingCapture",
     "lastResult",
+    "previewProduct",
+    "processing",
     "extSession",
     "authTabId",
     "uiStatus",
@@ -335,6 +361,18 @@ async function openMatch(alt, captureId) {
   await chrome.tabs.create({ url: matchHref(alt), active: true });
 }
 
+async function runCapture({ waitForMatches }) {
+  const payload = await extractActiveTab();
+  await chrome.storage.local.set({ previewProduct: payload });
+  const store = await getStore();
+  if (!store.accessToken) {
+    await chrome.storage.local.set({ pendingCapture: payload });
+    await startSignIn();
+    return { needsSignIn: true };
+  }
+  return savePayload(payload, { waitForMatches });
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     if (msg?.type === "GET_STATE") {
@@ -351,18 +389,31 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       sendResponse({ ok: true });
       return;
     }
-    if (msg?.type === "SAVE_TAB") {
+    if (msg?.type === "PEEK_TAB") {
       try {
-        const payload = await extractActiveTab();
-        const store = await getStore();
-        if (!store.accessToken) {
-          await chrome.storage.local.set({ pendingCapture: payload });
-          await startSignIn();
-          sendResponse({ needsSignIn: true });
-          return;
-        }
-        const saved = await savePayload(payload);
-        sendResponse(saved);
+        const preview = await extractActiveTab();
+        await chrome.storage.local.set({ previewProduct: preview });
+        broadcast();
+        sendResponse({ preview });
+      } catch (e) {
+        sendResponse({ error: e instanceof Error ? e.message : "Could not read this page" });
+      }
+      return;
+    }
+    if (msg?.type === "TX_MATCH" || msg?.type === "SAVE_TAB") {
+      try {
+        sendResponse(await runCapture({ waitForMatches: true }));
+      } catch (e) {
+        const error = e instanceof Error ? e.message : "TX MATCH failed";
+        await chrome.storage.local.set({ processing: false });
+        await setUi(error, true);
+        sendResponse({ error });
+      }
+      return;
+    }
+    if (msg?.type === "SAVE_INSPIRATION") {
+      try {
+        sendResponse(await runCapture({ waitForMatches: false }));
       } catch (e) {
         const error = e instanceof Error ? e.message : "Save failed";
         await setUi(error, true);
