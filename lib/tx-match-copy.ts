@@ -1,14 +1,31 @@
-/**
- * User-facing TX Match copy for the Chrome extension, iOS, and web.
- * The button must say it opens more options — "TX MATCH" alone is not enough.
- */
+import { SITE_URL } from "./seo-international";
+import { getUniversalOpenUrl } from "./app-store";
 
 export type TxMatchCopy = {
   decodeAction: string;
   decodeSupporting: string;
   alternativesTitle: string;
   compositionNote: string | null;
+  viewAllMatchesUrl?: string;
+  openInIntertexeUrl?: string;
 };
+
+export type TxMatchLinks = {
+  viewAllMatchesUrl: string;
+  openInIntertexeUrl: string;
+};
+
+/** View all = web TX Match list. Open in INTERTEXE = app (or /capture on desktop). */
+export function buildTxMatchLinks(captureId: string | null | undefined): TxMatchLinks | null {
+  const id = String(captureId || "").trim();
+  if (!id) return null;
+  return {
+    viewAllMatchesUrl: `${SITE_URL}/inspirations/${encodeURIComponent(id)}`,
+    openInIntertexeUrl: getUniversalOpenUrl(`/capture/${id}`, {
+      cta: "chrome_extension_open",
+    }),
+  };
+}
 
 const FIBERS = [
   "silk",
@@ -46,11 +63,13 @@ export function buildTxMatchCopy(opts: {
   altCount?: number;
   compositionListed?: boolean;
   inferredFiber?: string | null;
+  captureId?: string | null;
 }): TxMatchCopy {
   const fiber = fiberLabel(opts.inferredFiber || opts.fiber);
   const garment = garmentLabel(opts.garment);
   const look = [fiber, garment].filter(Boolean).join(" ");
   const count = opts.altCount && opts.altCount > 0 ? opts.altCount : null;
+  const links = buildTxMatchLinks(opts.captureId);
 
   const decodeAction = look
     ? count
@@ -73,6 +92,7 @@ export function buildTxMatchCopy(opts: {
     decodeSupporting: "Tap to open more pieces in this fabric, style, and price — not a random mix.",
     alternativesTitle,
     compositionNote,
+    ...(links || {}),
   };
 }
 
@@ -101,6 +121,7 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
     garment: String(row.category || row.subcategory || row.title || ""),
     altCount: alts.length,
     compositionListed: composition.length > 0 && !/estimated/i.test(composition),
+    captureId: row.id != null ? String(row.id) : null,
   });
 }
 

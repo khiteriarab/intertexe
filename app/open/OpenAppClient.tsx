@@ -9,24 +9,39 @@ import {
   openAppStore,
 } from "../../lib/app-store";
 
+function resolveOpenDest(next: string): { appNext: string; webNext: string } {
+  const raw = (next || "/").trim() || "/";
+  const path = raw.startsWith("/") ? raw : `/${raw}`;
+  const inspiration = path.match(/^\/inspirations\/([^/?#]+)/);
+  if (inspiration) {
+    const capturePath = `/capture/${inspiration[1]}`;
+    return { appNext: capturePath, webNext: capturePath };
+  }
+  return { appNext: path, webNext: path };
+}
+
 /**
  * Fallback when a Universal Link is opened in a webview (Gmail, etc.)
  * instead of the installed app.
  *
  * Order: custom scheme `intertexe://` (opens installed app) → App Store.
+ * Chrome extension "Open in INTERTEXE" should not dump desktop users on the App Store.
  */
 export default function OpenAppPage() {
   const params = useSearchParams();
     const next = params.get("next") || "/";
+    const dest = resolveOpenDest(next);
     const storeUrl = getAppStoreUrl();
-    const schemeUrl = getAppSchemeOpenUrl(next);
+    const schemeUrl = getAppSchemeOpenUrl(dest.appNext);
     const cta = params.get("itx_cta") || "open_landing";
     const isAuthHandoff =
       cta === "email_confirm" ||
       cta === "password_reset" ||
       cta === "password_reset_done" ||
-      next.startsWith("/reset-password") ||
-      next.startsWith("/account");
+      dest.appNext.startsWith("/reset-password") ||
+      dest.appNext.startsWith("/account");
+    const isExtensionOpen =
+      cta === "chrome_extension_open" || dest.appNext.startsWith("/capture/");
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +70,10 @@ export default function OpenAppPage() {
     const t = window.setTimeout(() => {
       if (cancelled || leftPage || document.hidden) return;
       if (isAuthHandoff) return;
+      if (isExtensionOpen) {
+        window.location.href = dest.webNext;
+        return;
+      }
       openAppStore(storeUrl);
     }, 1400);
 
@@ -65,7 +84,7 @@ export default function OpenAppPage() {
       window.removeEventListener("pagehide", markLeft);
       window.removeEventListener("blur", markLeft);
     };
-  }, [schemeUrl, storeUrl, cta, isAuthHandoff]);
+  }, [schemeUrl, storeUrl, cta, isAuthHandoff, isExtensionOpen, dest.webNext]);
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 text-center">
@@ -97,7 +116,7 @@ export default function OpenAppPage() {
         Download on the App Store
       </a>
       <a
-        href={next.startsWith("/") ? next : "/"}
+        href={dest.webNext.startsWith("/") ? dest.webNext : "/"}
         className="mt-4 text-[12px] text-muted-foreground hover:text-foreground"
       >
         Continue on the web

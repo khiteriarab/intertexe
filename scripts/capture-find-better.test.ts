@@ -5,7 +5,7 @@ import {
   productMatchesFiber,
   rankTxMatchAlternatives,
 } from "../lib/capture-find-better.ts";
-import { buildTxMatchCopy } from "../lib/tx-match-copy.ts";
+import { buildTxMatchCopy, buildTxMatchLinks } from "../lib/tx-match-copy.ts";
 
 function skirt(id: string, fiber: string, price: number, color = "lilac") {
   return {
@@ -110,5 +110,18 @@ describe("TX Match copy", () => {
     const copy = buildTxMatchCopy({ compositionListed: false, altCount: 8 });
     assert.equal(copy.decodeAction, "See more like this");
     assert.doesNotMatch(copy.alternativesTitle, /silk/i);
+  });
+
+  it("sends View all matches and Open in INTERTEXE to different URLs", () => {
+    const id = "cap-123";
+    const links = buildTxMatchLinks(id);
+    assert.ok(links);
+    assert.match(links.viewAllMatchesUrl, /\/inspirations\/cap-123$/);
+    assert.match(links.openInIntertexeUrl, /\/open\?/);
+    assert.match(links.openInIntertexeUrl, /capture/);
+    assert.notEqual(links.viewAllMatchesUrl, links.openInIntertexeUrl);
+    const copy = buildTxMatchCopy({ captureId: id, altCount: 12, inferredFiber: "silk", garment: "skirt" });
+    assert.equal(copy.viewAllMatchesUrl, links.viewAllMatchesUrl);
+    assert.equal(copy.openInIntertexeUrl, links.openInIntertexeUrl);
   });
 });

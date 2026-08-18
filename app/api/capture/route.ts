@@ -16,7 +16,7 @@ import {
   canonicalizeCaptureImageUrl,
   isUsableCaptureImageUrl,
 } from "../../../lib/capture-enrichment";
-import { buildTxMatchCopy } from "../../../lib/tx-match-copy";
+import { buildTxMatchCopy, buildTxMatchLinks } from "../../../lib/tx-match-copy";
 
 function userClient(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -119,7 +119,9 @@ export async function POST(req: NextRequest) {
         fiber: (capture as { attributes?: { inferred_fiber?: string } }).attributes?.inferred_fiber || null,
         garment: String((capture as { category?: string; title?: string }).category || (capture as { title?: string }).title || ""),
         compositionListed: Boolean((capture as { composition_text?: string }).composition_text),
+        captureId: (capture as { id?: string }).id || null,
       }),
+      links: buildTxMatchLinks((capture as { id?: string }).id),
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Capture failed";
