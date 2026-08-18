@@ -28,6 +28,14 @@ type TrajectoryPoint = {
 const PLOT_W = 720;
 const PLOT_H = 200;
 
+/** Reads as plain language: behind plan, ahead of plan, or exactly on it. */
+function gapPhrase(gap: number | null): string {
+  if (gap == null) return "";
+  if (gap > 0) return `gap ${formatPlanMoney(gap)} behind plan`;
+  if (gap < 0) return `${formatPlanMoney(-gap)} ahead of plan`;
+  return "exactly on plan";
+}
+
 function niceCeiling(max: number): number {
   if (max <= 0) return 1000;
   const steps = [5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000, 60000, 75000, 100000];
@@ -197,7 +205,11 @@ export function TrajectoryChart({
                   onBlur={() => setActiveIndex(null)}
                   aria-label={`Week of ${formatPlanDate(p.weekStart)}. Target ${formatPlanMoney(
                     p.target
-                  )}. ${p.actual == null ? "Actual not yet recorded." : `Actual ${formatPlanMoney(p.actual)}. Gap ${formatPlanMoney(p.gap ?? 0)}.`}`}
+                  )}. ${
+                    p.actual == null
+                      ? "Actual not yet recorded."
+                      : `Actual ${formatPlanMoney(p.actual)}. ${gapPhrase(p.gap)}.`
+                  }`}
                 />
               ))}
             </div>
@@ -215,7 +227,7 @@ export function TrajectoryChart({
         {active
           ? `Week of ${formatPlanDate(active.weekStart)} · target ${formatPlanMoney(active.target)} · actual ${
               active.actual == null ? "not recorded" : formatPlanMoney(active.actual)
-            }${active.gap == null ? "" : ` · gap ${formatPlanMoney(active.gap)}`}`
+            }${active.gap == null ? "" : ` · ${gapPhrase(active.gap)}`}`
           : "Hover or tab across the chart for target, actual and gap by week."}
       </p>
     </div>
@@ -449,14 +461,14 @@ export function WeeklyActivityChart({
           return (
             <div key={series.key}>
               <p className="text-[12px] text-black/70 mb-1.5">{series.label}</p>
-              <div className="flex items-end gap-1" style={{ height: 48 }}>
+              <div className="flex items-end gap-1.5" style={{ height: 48 }}>
                 {weeks.map((week) => {
                   const value = week.counts[series.key] || 0;
                   const met = target > 0 && value >= target;
                   return (
                     <div
                       key={week.weekStart}
-                      className="flex-1 relative flex items-end"
+                      className="relative flex items-end w-full max-w-[22px]"
                       style={{ height: 48 }}
                       title={`Week of ${formatPlanDate(week.weekStart)} · ${value} vs target ${target}`}
                     >
@@ -483,10 +495,10 @@ export function WeeklyActivityChart({
           );
         })}
       </div>
-      <div className="flex justify-between text-[11px] text-black/40 mt-2">
-        <span>{formatPlanDate(weeks[0].weekStart)}</span>
-        <span>{formatPlanDate(weeks[weeks.length - 1].weekStart)}</span>
-      </div>
+      <p className="text-[11px] text-black/40 mt-2">
+        Week of {formatPlanDate(weeks[0].weekStart)} through {formatPlanDate(weeks[weeks.length - 1].weekStart)} ·
+        one bar per week, dashed line is the weekly target
+      </p>
     </div>
   );
 }
