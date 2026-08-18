@@ -41,6 +41,9 @@ export const metadata: Metadata = {
     "natural fabric clothing",
   ],
   metadataBase: new URL(SITE_URL),
+  verification: {
+    google: "qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRW1PBo0kStg",
+  },
   alternates: pageAlternates(),
   robots: GLOBAL_ROBOTS,
   openGraph: {
@@ -155,6 +158,10 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', '${GA_MEASUREMENT_ID}');`,
           }}
+        />
+        <meta
+          name="google-site-verification"
+          content="qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRW1PBo0kStg"
         />
         <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
         <script
