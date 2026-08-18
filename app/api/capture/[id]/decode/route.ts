@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAuthUserId } from "../../../../../lib/supabase-auth-server";
 import { decodeCapture } from "../../../../../lib/capture";
+import { buildTxMatchCopyFromCapture } from "../../../../../lib/tx-match-copy";
 
 function userClient(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -42,10 +43,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({
       ok: true,
       capture,
-      copy: {
-        decodeAction: "Find Better",
-        alternativesPrompt: "Love the shape? See it in better materials.",
-      },
+      copy: buildTxMatchCopyFromCapture(capture as Record<string, unknown>),
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Decode failed";

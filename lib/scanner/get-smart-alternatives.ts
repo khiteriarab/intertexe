@@ -143,8 +143,10 @@ function scoreAlternative(
   score += Math.max(0, 40 - priceDiff * 40);
   score += ((product.natural_fiber_percent || 0) / 100) * 30;
   const comp = String(product.composition || '').toLowerCase();
-  if (context.targetFibers.some((fiber) => comp.includes(fiber.toLowerCase()))) {
-    score += 20;
+  if (context.targetFibers[0] && comp.includes(context.targetFibers[0].toLowerCase())) {
+    score += 50;
+  } else if (context.targetFibers.some((fiber) => comp.includes(fiber.toLowerCase()))) {
+    score += 16;
   }
   if (context.garmentType && matchesGarmentType(product, context.garmentType)) {
     score += 10;
@@ -162,6 +164,7 @@ function finalizeAlternatives(
     requireGarmentType?: boolean;
     anchorPrice?: number;
     scannedNfp?: number;
+    pinFiber?: string | null;
   }
 ): any[] {
   const filtered = postFilterAlternatives(products, {
@@ -184,7 +187,14 @@ function finalizeAlternatives(
   const sorted = [...filtered].sort(
     (a, b) => scoreAlternative(b, scoreContext) - scoreAlternative(a, scoreContext)
   );
-  return deduplicateById(sorted).slice(0, 6);
+  const pin = (opts.pinFiber || '').toLowerCase();
+  let ordered = sorted;
+  if (pin) {
+    const hits = sorted.filter((p) => String(p.composition || '').toLowerCase().includes(pin));
+    const rest = sorted.filter((p) => !String(p.composition || '').toLowerCase().includes(pin));
+    ordered = [...hits.slice(0, 5), ...rest, ...hits.slice(5)];
+  }
+  return deduplicateById(ordered).slice(0, 6);
 }
 
 function extractPrimaryFiber(composition: string): string | null {
@@ -304,6 +314,7 @@ export async function getSmartAlternatives(
       requireGarmentType: opts.requireGarmentType ?? !!garmentType,
       anchorPrice: priceUSD!,
       scannedNfp: naturalFiberPercent ?? 0,
+      pinFiber: preferredFiber,
     });
     return tagPriceMatchNote(finalized, opts.priceMatchNote);
   };

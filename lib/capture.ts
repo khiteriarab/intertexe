@@ -17,6 +17,7 @@ import { enrichGapsWithOpenAI } from "./capture-enrichment-ai";
 import {
   findBetterAlternatives,
   findBetterInputFromEnrichment,
+  preferredFiberFromInput,
   type FindBetterAlternative,
 } from "./capture-find-better";
 import { fetchPageHTML } from "./scanner/retailer-extraction";
@@ -1016,6 +1017,7 @@ export async function decodeCapture(
 
     // 4) Find Better alternatives from verified catalog (never products writes)
     let alternatives: FindBetterAlternative[] = [];
+    let inferredFiber: string | null = null;
     if (findAlternatives) {
       const fbInput = enrichment
         ? findBetterInputFromEnrichment(enrichment, {
@@ -1042,6 +1044,8 @@ export async function decodeCapture(
         (working.composition_text as string) || fbInput.compositionText;
       fbInput.naturalFiberPercent =
         (working.natural_fiber_percent as number | null) ?? fbInput.naturalFiberPercent;
+      fbInput.userId = userId;
+      inferredFiber = preferredFiberFromInput(fbInput);
 
       try {
         alternatives = await findBetterAlternatives(supabase, fbInput);
@@ -1072,6 +1076,30 @@ export async function decodeCapture(
       ? "alternatives_ready"
       : "analyzed";
 
+    const baseMaterialStatus: MaterialStatus =
+      (working.material_status as MaterialStatus) ||
+      (enrichment
+        ? materialStatusFromCompositionProvenance(
+            enrichment.provenance,
+            (working.composition_text as string) || enrichment.compositionText
+          )
+        : working.composition_text
+          ? "source_page"
+          : "unknown");
+    const materialStatus: MaterialStatus =
+      baseMaterialStatus === "unknown" && inferredFiber ? "ai_estimated" : baseMaterialStatus;
+
+    const existingAttrs =
+      working.attributes && typeof working.attributes === "object"
+        ? (working.attributes as Record<string, unknown>)
+        : enrichment
+          ? enrichmentToAttributes(enrichment)
+          : {};
+    const attributes = {
+      ...existingAttrs,
+      inferred_fiber: inferredFiber,
+    };
+
     const patch: Record<string, unknown> = {
       title: working.title || null,
       brand_name: working.brand_name || null,
@@ -1083,16 +1111,8 @@ export async function decodeCapture(
       image_url: working.image_url || null,
       natural_fiber_percent: working.natural_fiber_percent ?? null,
       fiber_breakdown: working.fiber_breakdown || null,
-      material_status: (working.material_status as MaterialStatus) ||
-        (enrichment
-          ? materialStatusFromCompositionProvenance(
-              enrichment.provenance,
-              (working.composition_text as string) || enrichment.compositionText
-            )
-          : working.composition_text
-            ? "source_page"
-            : "unknown"),
-      material_confidence: working.material_confidence || null,
+      material_status: materialStatus,
+      material_confidence: working.material_confidence || (inferredFiber ? "ai_estimated" : null),
       category: working.category || null,
       subcategory: working.subcategory || null,
       color: working.color || null,
@@ -1101,7 +1121,7 @@ export async function decodeCapture(
       fit: working.fit || null,
       length: working.length || null,
       distinctive_details: working.distinctive_details || enrichment?.distinctiveDetails || [],
-      attributes: working.attributes || (enrichment ? enrichmentToAttributes(enrichment) : null),
+      attributes,
       match_brief: working.match_brief || enrichment?.matchBrief || null,
       provenance: working.provenance || enrichment?.provenance || null,
       enrichment_status:

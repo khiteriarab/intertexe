@@ -9,6 +9,7 @@ import {
   recoverCaptureEnrichment,
 } from "../../../../lib/capture";
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
+import { buildTxMatchCopyFromCapture } from "../../../../lib/tx-match-copy";
 
 function userClient(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -54,7 +55,10 @@ export async function GET(req: NextRequest, ctx: Ctx) {
       });
     }
 
-    return NextResponse.json({ capture: data });
+    return NextResponse.json({
+      capture: data,
+      copy: buildTxMatchCopyFromCapture(data as Record<string, unknown>),
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Fetch failed";
     return NextResponse.json({ error: message }, { status: 500 });

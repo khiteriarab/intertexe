@@ -16,6 +16,7 @@
     "test:contacts-sheet": "node --import tsx --test scripts/hq-contacts-sheet-sync.test.ts",
     "test:email-lifecycle": "node --import tsx --test scripts/email-lifecycle.test.ts",
     "test:founder-welcome": "node --import tsx --test scripts/founder-welcome.test.ts",
+    "test:tx-match": "node --import tsx --test scripts/capture-find-better.test.ts",
     "test:meta-pixel": "node --import tsx --test scripts/meta-pixel.test.ts",
     "test:paid-acquisition": "node --import tsx --test scripts/paid-acquisition.test.ts"
   },

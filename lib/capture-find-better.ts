@@ -13,6 +13,7 @@ import {
   integritySpecFromBrowseOpts,
   type FilterIntegrityProduct,
 } from "./catalog-filter-integrity";
+import { fetchTastePreferences } from "./taste-preferences";
 
 export type FindBetterAlternative = {
   id: string;
@@ -45,6 +46,10 @@ export type FindBetterInput = {
   fit?: string | null;
   length?: string | null;
   region?: string | null;
+  userId?: string | null;
+  preferredFibers?: string[];
+  userPriceMin?: number | null;
+  userPriceMax?: number | null;
 };
 
 const SHOE_RE =
@@ -153,6 +158,11 @@ function whyFor(
   const nfp = Number(product.natural_fiber_percent) || 0;
   const price = parsePrice(product.price);
   const target = input.price;
+
+  const fiber = preferredFiberFromInput(input);
+  if (fiber && productMatchesFiber(product, fiber)) {
+    parts.push(`Same fabric (${fiber})`);
+  }
 
   // Visual / product affinity first — TX Match is not only material conversion.
   if (isPantsInspiration(input)) parts.push("Same garment type (trousers/pants)");
@@ -285,11 +295,104 @@ function productMatchesColor(
   return tokens.some((t) => hay.includes(t));
 }
 
+const NATURAL_FIBERS = [
+  "silk",
+  "cashmere",
+  "linen",
+  "wool",
+  "cotton",
+  "leather",
+  "merino",
+] as const;
+
+const SYNTHETIC_FIBERS = new Set([
+  "viscose",
+  "polyester",
+  "polyamide",
+  "nylon",
+  "acrylic",
+  "elastane",
+  "spandex",
+  "rayon",
+  "acetate",
+]);
+
+const TITLE_FIBER_HINTS: Array<[RegExp, string]> = [
+  [/\bsilk\b/, "silk"],
+  [/\bcharmeuse\b/, "silk"],
+  [/\bchiffon\b/, "silk"],
+  [/\bsatin\b/, "silk"],
+  [/\bcashmere\b/, "cashmere"],
+  [/\blinen\b/, "linen"],
+  [/\bwool\b/, "wool"],
+  [/\bmerino\b/, "wool"],
+  [/\bcotton\b/, "cotton"],
+  [/\bdenim\b/, "cotton"],
+  [/\bleather\b/, "leather"],
+  [/\bsuede\b/, "leather"],
+];
+
+export function extractFiberFromText(text: string | null | undefined): string | null {
+  const lower = String(text || "").toLowerCase();
+  if (!lower.trim()) return null;
+  for (const f of NATURAL_FIBERS) {
+    if (new RegExp(`\\b${f}\\b`).test(lower)) return f === "merino" ? "wool" : f;
+  }
+  for (const [re, fiber] of TITLE_FIBER_HINTS) {
+    if (re.test(lower)) return fiber;
+  }
+  for (const f of SYNTHETIC_FIBERS) {
+    if (new RegExp(`\\b${f}\\b`).test(lower)) return f;
+  }
+  return null;
+}
+
+/** Fabric the shopper is looking at — same-fiber matches must lead the list. */
+export function preferredFiberFromInput(input: FindBetterInput): string | null {
+  const fromComposition = extractFiberFromText(input.compositionText);
+  if (fromComposition && !SYNTHETIC_FIBERS.has(fromComposition)) return fromComposition;
+  for (const token of [...(input.matchBrief?.mustMatch || []), ...(input.matchBrief?.preferred || [])]) {
+    const f = extractFiberFromText(token);
+    if (f && !SYNTHETIC_FIBERS.has(f)) return f;
+  }
+  const fromTitle = extractFiberFromText(input.title);
+  if (fromTitle && !SYNTHETIC_FIBERS.has(fromTitle)) return fromTitle;
+  for (const d of input.distinctiveDetails || []) {
+    const f = extractFiberFromText(d);
+    if (f && !SYNTHETIC_FIBERS.has(f)) return f;
+  }
+  const userPref = (input.preferredFibers || [])
+    .map((f) => extractFiberFromText(f))
+    .find((f) => f && !SYNTHETIC_FIBERS.has(f));
+  if (userPref) return userPref;
+  if (fromComposition && SYNTHETIC_FIBERS.has(fromComposition)) return "silk";
+  return null;
+}
+
+export function productMatchesFiber(
+  product: Record<string, unknown>,
+  fiber: string | null | undefined
+): boolean {
+  if (!fiber) return false;
+  const f = fiber.toLowerCase();
+  const hay = `${product.composition || ""} ${product.material_primary || ""} ${product.shop_material_family || ""} ${product.name || ""}`.toLowerCase();
+  if (f === "wool") return /\b(wool|merino)\b/.test(hay);
+  return new RegExp(`\\b${f}\\b`).test(hay);
+}
+
+export function rankTxMatchAlternatives(
+  products: Record<string, unknown>[],
+  input: FindBetterInput
+): FindBetterAlternative[] {
+  return rankAlternatives(products, input);
+}
+
 function rankAlternatives(
   products: Record<string, unknown>[],
   input: FindBetterInput
 ): FindBetterAlternative[] {
   const scannedNfp = input.naturalFiberPercent ?? 0;
+  const preferredFiber = preferredFiberFromInput(input);
   const targetPrice =
     input.price ??
     (input.matchBrief?.targetPriceRange
@@ -301,28 +404,34 @@ function rankAlternatives(
   const scored = filtered.map((p) => {
     let score = 0;
     const nfp = Number(p.natural_fiber_percent) || 0;
-    // Natural fiber is a quality signal, not the sole definition of a TX Match.
-    score += Math.min(nfp, 100) * 0.45;
+    const sameFiber = productMatchesFiber(p, preferredFiber);
+    // Fabric of the saved piece leads. Do not let cheaper cotton outrank silk.
+    if (sameFiber) score += 120;
+    else if (preferredFiber) score -= 25;
+
+    const userFibers = (input.preferredFibers || []).map((f) => extractFiberFromText(f)).filter(Boolean);
+    if (userFibers.some((f) => productMatchesFiber(p, f))) score += 18;
+
+    score += Math.min(nfp, 100) * 0.2;
     const price = parsePrice(p.price);
     if (targetPrice != null && price != null && targetPrice > 0) {
-      const savings = targetPrice - price;
-      if (savings >= 50) score += 35;
-      else if (savings > 0) score += 18;
       const diff = Math.abs(price - targetPrice) / targetPrice;
-      if (diff <= 0.35) score += 22;
+      if (diff <= 0.25) score += 36;
+      else if (diff <= 0.45) score += 22;
       else if (diff <= 0.7) score += 8;
-      else if (price > targetPrice * 1.25) score -= 12;
+      else score -= 10;
+      // Cheaper is a bonus only inside the same fabric — never a reason to switch fiber.
+      if (sameFiber && targetPrice - price >= 50) score += 10;
     }
+    if (input.userPriceMax != null && price != null && price > input.userPriceMax) score -= 20;
     const sameColor = productMatchesColor(p, input.color);
-    // Color is a hard preference for the top of the list — weight it above fiber alone.
-    if (sameColor) score += 80;
+    if (sameColor) score += 28;
     if (input.silhouette) {
       const sil = String(input.silhouette).toLowerCase().split(/\s+/)[0];
       const hay = `${p.name || ""} ${p.category || ""}`.toLowerCase();
-      if (sil && hay.includes(sil)) score += 16;
+      if (sil && hay.includes(sil)) score += 24;
     }
     const hay = `${p.name || ""} ${p.category || ""} ${p.color || ""}`.toLowerCase();
-    // Preferences — never hard-require
     for (const pref of input.matchBrief?.preferred || []) {
       if (pref && hay.includes(pref.toLowerCase())) score += 8;
     }
@@ -332,22 +441,22 @@ function rankAlternatives(
     for (const d of input.distinctiveDetails || []) {
       if (d && hay.includes(d.toLowerCase())) score += 12;
     }
-    return { p, score, sameColor };
+    return { p, score, sameColor, sameFiber };
   });
 
   scored.sort(
     (a, b) =>
+      Number(b.sameFiber) - Number(a.sameFiber) ||
       b.score - a.score ||
       (Number(b.p.natural_fiber_percent) || 0) - (Number(a.p.natural_fiber_percent) || 0)
   );
 
-  // Guarantee: when inspiration has a color, the first 3 TX Matches share that color
-  // whenever enough same-color catalog candidates exist.
+  // First 5 must be the same fabric when we have enough catalog hits.
   let ordered = scored;
-  if (normalizeColorToken(input.color || "").length >= 3) {
-    const colorHits = scored.filter((s) => s.sameColor);
-    const others = scored.filter((s) => !s.sameColor);
-    ordered = [...colorHits.slice(0, 3), ...others, ...colorHits.slice(3)];
+  if (preferredFiber) {
+    const fiberHits = scored.filter((s) => s.sameFiber);
+    const others = scored.filter((s) => !s.sameFiber);
+    ordered = [...fiberHits.slice(0, 5), ...others, ...fiberHits.slice(5)];
   }
 
   const seen = new Set<string>();
@@ -456,24 +565,43 @@ export async function findBetterAlternatives(
   supabase: SupabaseClient,
   input: FindBetterInput
 ): Promise<FindBetterAlternative[]> {
-  const garmentType =
-    input.garmentType || (isPantsInspiration(input) ? "trouser" : null);
+  let resolved: FindBetterInput = { ...input };
+  if (resolved.userId && !(resolved.preferredFibers && resolved.preferredFibers.length)) {
+    try {
+      const taste = await fetchTastePreferences(supabase, resolved.userId);
+      if (taste) {
+        resolved = {
+          ...resolved,
+          preferredFibers: taste.preferredFibers || [],
+          userPriceMin: taste.priceMin ?? resolved.userPriceMin,
+          userPriceMax: taste.priceMax ?? resolved.userPriceMax,
+        };
+      }
+    } catch {
+      /* taste is optional */
+    }
+  }
 
-  const region = (input.region || input.matchBrief?.region || "us").toLowerCase();
-  const price = input.price ?? null;
-  const browseCat = browseCategoryFor(input);
+  const region = (resolved.region || resolved.matchBrief?.region || "us").toLowerCase();
+  const price = resolved.price ?? null;
+  const browseCat = browseCategoryFor(resolved);
+  const preferredFiber = preferredFiberFromInput(resolved);
 
   let rows: Record<string, unknown>[] = [];
 
   // Primary: authoritative catalog_browse_page_v2 via caller client (never products writes)
   if (browseCat) {
-    const minPrice = price != null && price > 0 ? Math.round(price * 0.5) : null;
-    const maxPrice = price != null && price > 0 ? Math.round(price * 1.6) : null;
+    const minPrice = price != null && price > 0 ? Math.round(price * 0.5) : resolved.userPriceMin ?? null;
+    let maxPrice = price != null && price > 0 ? Math.round(price * 1.6) : resolved.userPriceMax ?? null;
+    if (resolved.userPriceMax != null && resolved.userPriceMax > 0) {
+      maxPrice = maxPrice == null ? resolved.userPriceMax : Math.min(maxPrice, resolved.userPriceMax);
+    }
     // Prefer newest for the first pass — most_natural category browses can exceed
     // serverless budgets; rankAlternatives already elevates natural-fiber quality.
     const rpcParams = buildCatalogBrowseV2Params({
       region,
       category: browseCat,
+      fiber: preferredFiber && !SYNTHETIC_FIBERS.has(preferredFiber) ? preferredFiber : undefined,
       limit: 48,
       offset: 0,
       sort: "newest",
@@ -532,6 +660,8 @@ export async function findBetterAlternatives(
           category: p.category,
           garment_type: p.garment_type,
           color: p.color ?? null,
+          shop_material_family: p.shop_material_family ?? null,
+          material_primary: p.material_primary ?? null,
         }));
     }
   }
@@ -594,6 +724,8 @@ export async function findBetterAlternatives(
           category: p.category,
           garment_type: p.garment_type,
           color: p.color ?? null,
+          shop_material_family: p.shop_material_family ?? null,
+          material_primary: p.material_primary ?? null,
         }));
       rows = [...rows, ...extra];
     }
@@ -602,5 +734,5 @@ export async function findBetterAlternatives(
   // Optional smart fallback removed from the hot path — it can hang on cold catalog queries.
   // TX Match relies on catalog_browse_page_v2 (category-hard) + ranking preferences.
 
-  return rankAlternatives(rows, input);
+  return rankAlternatives(rows, resolved);
 }

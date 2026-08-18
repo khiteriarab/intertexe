@@ -31,13 +31,23 @@ type Capture = {
   price?: number | null;
   currency?: string | null;
   original_url?: string | null;
+  composition_text?: string | null;
   enrichment_status?: string | null;
   resolution_status?: string | null;
   alternatives?: CaptureAlt[] | null;
+  attributes?: { inferred_fiber?: string | null } | null;
+};
+
+type TxCopy = {
+  decodeAction?: string;
+  decodeSupporting?: string;
+  alternativesTitle?: string;
+  compositionNote?: string | null;
 };
 
 export default function InspirationOpenClient({ captureId }: { captureId: string }) {
   const [capture, setCapture] = useState<Capture | null>(null);
+  const [copy, setCopy] = useState<TxCopy | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
 
@@ -59,7 +69,10 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
         }
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Could not load inspiration");
-        if (!cancelled) setCapture(data.capture || data);
+        if (!cancelled) {
+          setCapture(data.capture || data);
+          if (data.copy) setCopy(data.copy);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Load failed");
       }
@@ -140,13 +153,18 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
             </p>
             <p style={{ margin: "14px 0 0", fontSize: 15 }}>
               {alts.length
-                ? `${alts.length} TX Matches`
+                ? copy?.decodeAction || `See ${alts.length} matches like this`
                 : processing
-                  ? "Finding your TX Matches…"
+                  ? "Finding more options like this…"
                   : "Saved to Inspirations"}
             </p>
+            {copy?.compositionNote ? (
+              <p style={{ margin: "8px 0 0", color: "#6b6560", fontSize: 13, lineHeight: 1.45 }}>
+                {copy.compositionNote}
+              </p>
+            ) : null}
             <p style={{ margin: "6px 0 0", color: "#6b6560", fontSize: 13 }}>
-              More like this, made for you.
+              {copy?.decodeSupporting || "More pieces in this fabric, style, and price."}
             </p>
             {capture.original_url ? (
               <p style={{ marginTop: 18 }}>
@@ -166,7 +184,7 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
                     fontWeight: 600,
                   }}
                 >
-                  YOUR TX MATCHES
+                  {copy?.alternativesTitle || "YOUR TX MATCHES"}
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {alts.map((alt, idx) => (
