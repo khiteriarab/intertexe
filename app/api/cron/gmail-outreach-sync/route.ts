@@ -6,6 +6,7 @@ import { authorizeCron } from "@/lib/cron-auth";
 import { getServerSupabase } from "@/lib/supabase-service-client";
 import { syncProvider } from "@/lib/dashboard/integrations/connections";
 import { recordJobObservation } from "@/lib/job-guard";
+import { applyMaterialIntelligenceMigration } from "@/lib/apply-material-intelligence-migration";
 
 /**
  * Hourly Gmail header ingest for known hq_contacts.
@@ -14,6 +15,8 @@ import { recordJobObservation } from "@/lib/job-guard";
 export async function GET(req: NextRequest) {
   const denied = authorizeCron(req);
   if (denied) return denied;
+
+  await applyMaterialIntelligenceMigration().catch(() => null);
 
   const startedAt = new Date().toISOString();
   const supabase = getServerSupabase();

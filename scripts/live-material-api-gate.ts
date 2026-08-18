@@ -38,8 +38,15 @@ function redact(value: string): string {
   return value.replace(/itx_(?:live|test)_[A-Za-z0-9_-]{16,}/g, "itx_***");
 }
 
-function containsRawKey(value: string): boolean {
-  return /itx_(?:live|test)_[A-Za-z0-9_-]{16,}/.test(value);
+function jwtRole(token: string): string {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return "none";
+    const json = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { role?: string };
+    return String(json.role || "unknown");
+  } catch {
+    return "unparsed";
+  }
 }
 
 async function fetchNoFollow(url: string) {
@@ -96,16 +103,20 @@ async function applyMigration(supabase: ReturnType<typeof serviceClient>) {
     console.log(`apply via ${result.via || "local"}: ${result.message}`);
   }
 
-  const applyToken = cronSecret || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const applyToken = (cronSecret || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
   if (applyToken) {
     maskSecret(applyToken);
-    for (let attempt = 0; attempt < 30; attempt++) {
+    console.log(`apply token jwt role=${jwtRole(applyToken)}`);
+    for (let attempt = 0; attempt < 4; attempt++) {
       const res = await fetch(`${SITE}/api/cron/apply-material-intelligence-migration`, {
-        headers: { Authorization: `Bearer ${applyToken}` },
+        headers: {
+          Authorization: `Bearer ${applyToken}`,
+          "x-itx-apply-token": applyToken,
+        },
       });
       if (res.status === 404 || res.status === 401) {
-        console.log(`apply cron HTTP ${res.status} (waiting for production deploy ${attempt + 1}/30)`);
-        await new Promise((r) => setTimeout(r, 20000));
+        console.log(`apply cron HTTP ${res.status} (attempt ${attempt + 1}/4)`);
+        await new Promise((r) => setTimeout(r, 15000));
         continue;
       }
       const body = await jsonNoSecrets(res);
@@ -117,6 +128,20 @@ async function applyMigration(supabase: ReturnType<typeof serviceClient>) {
       console.log(`apply via cron: HTTP ${res.status} ${String(body.message || body.error || "")}`);
       break;
     }
+  }
+
+  console.log("waiting for scheduled production apply (gmail-outreach-sync piggyback)");
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const ready = await materialIntelligenceTablesReady({
+      databaseUrl: process.env.DATABASE_URL,
+      supabase,
+    });
+    if (ready.ok) {
+      record("apply_migration", true, `tables present after wait via ${ready.via}`);
+      return true;
+    }
+    console.log(`tables still missing (${attempt + 1}/36)`);
+    await new Promise((r) => setTimeout(r, 20000));
   }
 
   const ready = await materialIntelligenceTablesReady({

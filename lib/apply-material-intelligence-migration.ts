@@ -17,6 +17,18 @@ const REQUIRED_TABLES = [
   "material_evidence",
 ] as const;
 
+export function resolveDatabaseUrl(explicit?: string): string {
+  return (
+    explicit ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.DIRECT_URL ||
+    process.env.SUPABASE_DB_URL ||
+    ""
+  );
+}
+
 export function resolveMaterialIntelligenceSql(repoRoot?: string): string {
   const root = repoRoot || path.join(process.cwd(), "..");
   const candidates = [
@@ -46,7 +58,7 @@ export async function materialIntelligenceTablesReady(opts?: {
   databaseUrl?: string;
   supabase?: SupabaseClient | null;
 }): Promise<{ ok: boolean; missing: string[]; via: string | null }> {
-  const dbUrl = opts?.databaseUrl || process.env.DATABASE_URL;
+  const dbUrl = resolveDatabaseUrl(opts?.databaseUrl);
   if (dbUrl) {
     const client = new pg.Client({
       connectionString: dbUrl,
@@ -91,7 +103,7 @@ export async function applyMaterialIntelligenceMigration(opts?: {
   supabase?: SupabaseClient | null;
 }): Promise<{ ok: boolean; message: string; via?: string; checks?: Record<string, unknown> }> {
   const sql = resolveMaterialIntelligenceSql();
-  const dbUrl = opts?.databaseUrl || process.env.DATABASE_URL;
+  const dbUrl = resolveDatabaseUrl(opts?.databaseUrl);
 
   if (dbUrl) {
     const client = new pg.Client({
