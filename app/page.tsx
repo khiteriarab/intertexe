@@ -31,6 +31,9 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     keywords: "INTERTEXE, intertexe, natural fiber fashion, shop by fabric, silk clothing, cashmere clothing, linen clothing, wool clothing, cotton clothing, luxury fashion, natural fabric clothing, sustainable fashion",
     alternates: { canonical: "https://www.intertexe.com" },
+    verification: {
+      google: "qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRW1PBo0kStg",
+    },
   };
 }
 
