@@ -1,0 +1,35 @@
+DO NOT PUBLISH. This file is not inside the zip.
+
+This is a first Chrome Web Store listing. The dashboard has no existing
+items. Create a New item. Do not use “Upload new package.”
+
+Package to attach on the New item form:
+
+  save-to-intertexe-1.0.1.zip
+
+The zip has manifest.json at its root. Do not zip the zip.
+Do not include this .txt file in any archive you upload.
+
+Version: 1.0.1
+Privacy policy URL (after the website update is live):
+  https://www.intertexe.com/privacy
+
+Listing fields (also in the zip’s manifest):
+
+Name:
+INTERTEXE: Fabric Scanner
+
+Short description:
+Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.
+
+A missing Chrome public key is expected. Google will assign a new
+extension ID. After that ID exists, test sign-in and every URL the
+extension opens (auth, capture, inspirations, product, click-out)
+from the installed store item. This package does not use
+chrome.identity, so there is no OAuth redirect URI to register until
+that API is added.
+
+Do not submit for review until:
+  1. https://www.intertexe.com/privacy shows the Chrome extension section
+  2. You have loaded this unpacked folder locally and saved one product
+  3. Google has not yet been asked to publish — wait until you choose to submit

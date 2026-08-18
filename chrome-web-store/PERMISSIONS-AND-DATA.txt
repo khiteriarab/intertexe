@@ -1,0 +1,56 @@
+INTERTEXE: Fabric Scanner 1.0.1 — permissions and data (from the code)
+
+Manifest permissions
+  activeTab   Temporary access to the tab the user is on when they use the
+              extension action (open the popup / click Save this page).
+  scripting   Injects extractProductFromPage into that tab on Save this page.
+              There are no content_scripts. Nothing runs on page load.
+  storage     chrome.storage.local for session tokens and a pending save.
+  tabs        Opens/closes the INTERTEXE sign-in tab and reads the active
+              tab’s URL/title when saving. The code does not query all tabs
+              and does not record browsing history.
+
+Host permission
+  https://www.intertexe.com/*
+              Network calls only to INTERTEXE (auth, capture, click-out,
+              logout). The extension does not fetch retailer origins.
+
+When product-page data is read
+  Not on every page visit. Not when the popup merely opens.
+  chrome.scripting.executeScript runs when the user clicks “Save this page.”
+  If they were signed out, that extracted payload is stored locally as
+  pendingCapture and sent after sign-in finishes.
+
+Product-page fields read from the active tab (on Save this page)
+  Page URL (canonical / og:url / location.href)
+  Title (og:title / h1 / document.title)
+  Image URL (og:image / twitter:image / first img)
+  Meta description
+  JSON-LD Product brand, sku/mpn, price, currency, material
+  Retailer hostname
+  Visible body text is scanned locally for a short fiber/composition line.
+  Raw page HTML and raw body text are not transmitted.
+
+Stored in chrome.storage.local
+  accessToken, refreshToken
+  pendingCapture (product payload until signed in)
+  lastResult (last save / TX Match copy)
+  extSession, authTabId, uiStatus, uiError
+
+Transmitted to https://www.intertexe.com (authenticated)
+  POST /api/extension/session poll  — one-time auth handoff
+  POST /api/auth/refresh            — new access token
+  POST /api/auth/logout             — sign out
+  POST /api/capture                 — originalUrl, title, imageUrl,
+                                      description, brandName, sku, price,
+                                      currency, compositionText, retailer,
+                                      sourceApp=chrome_extension, decodeNow
+  GET  /api/capture/{id}            — wait for TX Match copy
+  POST /api/account/product-clickout — when the user clicks a match
+                                      (productId, brand, name, url, price,
+                                      currency, naturalFiberPercent,
+                                      source=chrome_extension)
+
+Not collected
+  Payment cards, passwords (password is typed on intertexe.com, not in the
+  extension), contacts, location, microphone/camera, other open tabs.

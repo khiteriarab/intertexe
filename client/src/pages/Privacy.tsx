@@ -4,14 +4,14 @@ export default function Privacy() {
       <header className="flex flex-col gap-4 md:gap-6">
         <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Legal</span>
         <h1 className="text-3xl md:text-6xl font-serif" data-testid="text-privacy-title">Privacy Policy</h1>
-        <p className="text-sm text-muted-foreground">Last updated: February 2026</p>
+        <p className="text-sm text-muted-foreground">Last updated: August 2026</p>
       </header>
 
       <div className="flex flex-col gap-8 md:gap-10 text-sm md:text-base text-foreground/80 leading-relaxed">
         <section className="flex flex-col gap-3">
           <h2 className="text-xl md:text-2xl font-serif text-foreground">1. Introduction</h2>
           <p>
-            Intertexe ("we," "our," or "us") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website and use our services.
+            Intertexe ("we," "our," or "us") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website, use the INTERTEXE iOS app, or use the Chrome extension INTERTEXE: Fabric Scanner.
           </p>
         </section>
 
@@ -23,6 +23,7 @@ export default function Privacy() {
             <li><strong className="text-foreground">Quiz Responses:</strong> Your material preferences, spending range, and brand selections when you take our Style Quiz.</li>
             <li><strong className="text-foreground">Favorites:</strong> Designers you save to your wishlist.</li>
             <li><strong className="text-foreground">Usage Data:</strong> Pages visited, features used, and general browsing patterns.</li>
+            <li><strong className="text-foreground">Chrome extension saves:</strong> Product-page data you ask INTERTEXE: Fabric Scanner to save (see section 8 below).</li>
           </ul>
         </section>
 
@@ -73,14 +74,21 @@ export default function Privacy() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">8. Changes to This Policy</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">8. Chrome extension (INTERTEXE: Fabric Scanner)</h2>
+          <p>
+            The extension does not run on every page you visit and does not use always-on content scripts. Opening the toolbar icon does not scrape the page. When you click Save this page, it reads the active tab’s product URL, title, image, description, JSON-LD product fields, retailer hostname, and a short composition line found in visible text. Sign-in happens on intertexe.com; the extension stores access and refresh tokens in Chrome local storage. Saved products become Inspirations on INTERTEXE servers. A retailer click from the extension records one click-out (product, URL, price, source chrome_extension). Network requests go only to https://www.intertexe.com (hosted on Vercel; auth and database via Supabase; optional server-side OpenAI enrichment after a save). Tokens remain until you sign out or uninstall. Saved products and click-outs are deleted when you delete your account.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">9. Changes to This Policy</h2>
           <p>
             We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.
           </p>
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">9. Contact</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">10. Contact</h2>
           <p>
             If you have any questions about this privacy policy, please contact us at{" "}
             <a href="mailto:info@intertexe.com" className="border-b border-foreground hover:text-muted-foreground transition-colors">info@intertexe.com</a>.
