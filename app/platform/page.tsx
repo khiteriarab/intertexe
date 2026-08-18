@@ -16,32 +16,43 @@ export default function PlatformPage() {
   return (
     <PlatformChrome active="platform">
       <PlatformViewTracker event="platform_view" />
-      <div className="max-w-4xl mx-auto px-6 md:px-8 py-20 md:py-28">
-        <p className="text-[11px] tracking-[0.25em] text-[#9c7b8b] mb-8">INTERTEXE PLATFORM</p>
-        <h1 className="text-4xl md:text-5xl font-light mb-8 leading-[1.15]" style={{ fontFamily: "Georgia, serif" }}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-20 md:py-28">
+        <p className="text-[10px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.25em] text-[#9c7b8b] mb-6 sm:mb-8">
+          INTERTEXE PLATFORM
+        </p>
+        <h1
+          className="text-[2rem] sm:text-4xl md:text-5xl font-light mb-6 sm:mb-8 leading-[1.15]"
+          style={{ fontFamily: "Georgia, serif" }}
+        >
           Material intelligence for fashion product data.
         </h1>
-        <p className="text-lg text-[#5c5854] font-light leading-relaxed mb-6 max-w-2xl">
+        <p className="text-base sm:text-lg text-[#5c5854] font-light leading-relaxed mb-5 sm:mb-6 max-w-2xl">
           Turn GTINs and product catalogs into normalized fibre composition, evidence-backed material records
           and structured outputs for commerce and emerging EU Digital Product Passport requirements.
         </p>
-        <p className="text-sm text-[#8a847c] mb-12 max-w-2xl">
+        <p className="text-sm text-[#8a847c] mb-8 sm:mb-12 max-w-2xl">
           Built to connect with existing PIM, PLM, ecommerce and DPP infrastructure. INTERTEXE does not
           provide legal certification.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/platform/demo" className="text-[11px] tracking-[0.2em] uppercase bg-black text-white px-10 py-4 text-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <Link
+            href="/platform/demo"
+            className="text-[11px] tracking-[0.14em] sm:tracking-[0.2em] uppercase bg-black text-white px-6 sm:px-10 py-4 text-center"
+          >
             Try the API demo
           </Link>
-          <Link href="/platform/request?intent=snapshot&cta=hero" className="text-[11px] tracking-[0.2em] uppercase border border-black px-10 py-4 text-center">
+          <Link
+            href="/platform/request?intent=snapshot&cta=hero"
+            className="text-[11px] tracking-[0.14em] sm:tracking-[0.2em] uppercase border border-black px-6 sm:px-10 py-4 text-center"
+          >
             Request a 10-product snapshot
           </Link>
         </div>
       </div>
 
-      <section className="border-y border-[#ddd5cb] py-16">
-        <div className="max-w-4xl mx-auto px-6 md:px-8">
-          <h2 className="text-3xl font-light mb-6" style={{ fontFamily: "Georgia, serif" }}>
+      <section className="border-y border-[#ddd5cb] py-12 sm:py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
+          <h2 className="text-2xl sm:text-3xl font-light mb-6" style={{ fontFamily: "Georgia, serif" }}>
             Your material data already exists. It just is not ready to move.
           </h2>
           <p className="text-sm text-[#5c5854] leading-relaxed max-w-2xl">
@@ -52,7 +63,7 @@ export default function PlatformPage() {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 md:px-8 py-16 space-y-12">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 space-y-10 sm:space-y-12">
         <h2 className="text-2xl font-light" style={{ fontFamily: "Georgia, serif" }}>How it works</h2>
         <ol className="space-y-8 text-sm text-[#5c5854] leading-relaxed">
           <li>
@@ -70,7 +81,7 @@ export default function PlatformPage() {
         </ol>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 md:px-8 py-8 text-sm text-[#5c5854] leading-relaxed">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-8 text-sm text-[#5c5854] leading-relaxed">
         <h2 className="text-2xl font-light text-[#1a1a1a] mb-4" style={{ fontFamily: "Georgia, serif" }}>
           What a record contains
         </h2>
@@ -85,7 +96,7 @@ export default function PlatformPage() {
         </ul>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 md:px-8 py-16">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16">
         <h2 className="text-2xl font-light mb-4" style={{ fontFamily: "Georgia, serif" }}>
           A material claim is only as useful as its source.
         </h2>
@@ -113,8 +124,8 @@ export default function PlatformPage() {
         </dl>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 md:px-8 py-8">
-        <h2 className="text-2xl font-light mb-4" style={{ fontFamily: "Georgia, serif" }}>
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-8">
+        <h2 className="text-2xl font-light mb-4 leading-snug" style={{ fontFamily: "Georgia, serif" }}>
           Prepare the material-data layer now. Connect it to the infrastructure you choose later.
         </h2>
         <p className="text-sm text-[#5c5854] leading-relaxed mb-4 max-w-2xl">
@@ -126,20 +137,22 @@ export default function PlatformPage() {
           INTERTEXE helps brands structure and assess material data against the emerging framework. It does
           not provide legal certification or a guarantee of future compliance.
         </p>
-        <p className="text-sm">
-          <a href={EU_TEXTILE} className="underline underline-offset-4" target="_blank" rel="noreferrer">
+        <p className="text-sm flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-0">
+          <a href={EU_TEXTILE} className="underline underline-offset-4 break-words" target="_blank" rel="noreferrer">
             EU textile and apparel DPP
           </a>
-          {" · "}
-          <a href={EU_REGISTRY} className="underline underline-offset-4" target="_blank" rel="noreferrer">
+          <span className="hidden sm:inline">{" · "}</span>
+          <a href={EU_REGISTRY} className="underline underline-offset-4 break-words" target="_blank" rel="noreferrer">
             DPP Registry announcement
           </a>
         </p>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 md:px-8 py-16">
-        <div className="border border-[#ddd5cb] bg-white p-8 md:p-12">
-          <p className="text-[11px] tracking-[0.2em] uppercase text-[#9c7b8b] mb-3">Founding Material Data Pilot</p>
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16">
+        <div className="border border-[#ddd5cb] bg-white p-5 sm:p-8 md:p-12">
+          <p className="text-[10px] sm:text-[11px] tracking-[0.14em] sm:tracking-[0.2em] uppercase text-[#9c7b8b] mb-3">
+            Founding Material Data Pilot
+          </p>
           <p className="text-4xl font-light mb-6" style={{ fontFamily: "Georgia, serif" }}>
             $5,000
           </p>
@@ -157,7 +170,7 @@ export default function PlatformPage() {
           </ul>
           <Link
             href="/platform/request?intent=founding_pilot&cta=pilot_card"
-            className="inline-block text-[11px] tracking-[0.2em] uppercase bg-black text-white px-10 py-4"
+            className="inline-block w-full sm:w-auto text-center text-[11px] tracking-[0.14em] sm:tracking-[0.2em] uppercase bg-black text-white px-6 sm:px-10 py-4"
           >
             Request the founding pilot
           </Link>
@@ -168,7 +181,7 @@ export default function PlatformPage() {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 md:px-8 py-16 space-y-6 text-sm text-[#5c5854] leading-relaxed">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 space-y-6 text-sm text-[#5c5854] leading-relaxed">
         <h2 className="text-2xl font-light text-[#1a1a1a]" style={{ fontFamily: "Georgia, serif" }}>FAQ</h2>
         <div>
           <h3 className="text-[#1a1a1a] mb-2">Is INTERTEXE a DPP Registry or certification body?</h3>

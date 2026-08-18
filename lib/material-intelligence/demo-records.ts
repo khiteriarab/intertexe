@@ -109,8 +109,8 @@ function missingSample(): MaterialLookupData {
 export const DEMO_EXAMPLES = [
   {
     id: "verified" as const,
-    label: "Illustrative verified-label",
-    subtitle: "Exact GTIN · sample review protocol",
+    label: "Verified sample",
+    subtitle: "Illustrative label example",
     query: DEMO_GTIN_VERIFIED,
   },
   {

@@ -19,9 +19,9 @@ export default function PlatformDocsPage() {
   return (
     <PlatformChrome active="docs">
       <PlatformViewTracker event="platform_docs_view" />
-      <div className="max-w-3xl mx-auto px-6 md:px-8 py-16 md:py-24 text-sm text-[#5c5854] leading-relaxed">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-24 text-sm text-[#5c5854] leading-relaxed">
         <p className="text-[11px] tracking-[0.25em] text-[#9c7b8b] mb-6">DOCUMENTATION</p>
-        <h1 className="text-4xl font-light text-[#1a1a1a] mb-6" style={{ fontFamily: "Georgia, serif" }}>
+        <h1 className="text-[2rem] sm:text-4xl font-light text-[#1a1a1a] mb-6" style={{ fontFamily: "Georgia, serif" }}>
           INTERTEXE Material Intelligence API
         </h1>
         <h2 className="text-2xl font-light text-[#1a1a1a] mb-3" style={{ fontFamily: "Georgia, serif" }}>
@@ -43,9 +43,9 @@ export default function PlatformDocsPage() {
         </p>
 
         <h2 className="text-2xl font-light text-[#1a1a1a] mt-12 mb-3" style={{ fontFamily: "Georgia, serif" }}>Quickstart</h2>
-        <pre className="bg-white border border-[#ddd5cb] p-4 text-xs overflow-x-auto mb-4">{`curl -sS https://www.intertexe.com/api/v1/demo/composition/${DEMO_GTIN_VERIFIED}`}</pre>
+        <pre className="bg-white border border-[#ddd5cb] p-3 sm:p-4 text-[11px] sm:text-xs overflow-x-auto mb-4 max-w-full">{`curl -sS https://www.intertexe.com/api/v1/demo/composition/${DEMO_GTIN_VERIFIED}`}</pre>
         <p>Production (authenticated):</p>
-        <pre className="bg-white border border-[#ddd5cb] p-4 text-xs overflow-x-auto">{`curl -sS https://www.intertexe.com/api/v1/composition/${DEMO_GTIN_VERIFIED} \\
+        <pre className="bg-white border border-[#ddd5cb] p-3 sm:p-4 text-[11px] sm:text-xs overflow-x-auto max-w-full">{`curl -sS https://www.intertexe.com/api/v1/composition/${DEMO_GTIN_VERIFIED} \\
   -H "Authorization: Bearer itx_live_…"`}</pre>
 
         <h2 className="text-2xl font-light text-[#1a1a1a] mt-12 mb-3" style={{ fontFamily: "Georgia, serif" }}>Authentication</h2>
@@ -120,18 +120,18 @@ export default function PlatformDocsPage() {
         </p>
 
         <h2 className="text-2xl font-light text-[#1a1a1a] mt-12 mb-3" style={{ fontFamily: "Georgia, serif" }}>cURL</h2>
-        <pre className="bg-white border border-[#ddd5cb] p-4 text-xs overflow-x-auto">{`curl -sS https://www.intertexe.com/api/v1/demo/composition/${DEMO_GTIN_VERIFIED}
+        <pre className="bg-white border border-[#ddd5cb] p-3 sm:p-4 text-[11px] sm:text-xs overflow-x-auto max-w-full">{`curl -sS https://www.intertexe.com/api/v1/demo/composition/${DEMO_GTIN_VERIFIED}
 curl -sS https://www.intertexe.com/api/v1/composition/${DEMO_GTIN_VERIFIED} \\
   -H "Authorization: Bearer itx_live_YOUR_KEY"`}</pre>
 
         <h2 className="text-2xl font-light text-[#1a1a1a] mt-12 mb-3" style={{ fontFamily: "Georgia, serif" }}>JavaScript</h2>
-        <pre className="bg-white border border-[#ddd5cb] p-4 text-xs overflow-x-auto">{`const res = await fetch(
+        <pre className="bg-white border border-[#ddd5cb] p-3 sm:p-4 text-[11px] sm:text-xs overflow-x-auto max-w-full">{`const res = await fetch(
   "https://www.intertexe.com/api/v1/demo/composition/${DEMO_GTIN_VERIFIED}"
 );
 const json = await res.json();`}</pre>
 
         <h2 className="text-2xl font-light text-[#1a1a1a] mt-12 mb-3" style={{ fontFamily: "Georgia, serif" }}>Python</h2>
-        <pre className="bg-white border border-[#ddd5cb] p-4 text-xs overflow-x-auto">{`import urllib.request, json
+        <pre className="bg-white border border-[#ddd5cb] p-3 sm:p-4 text-[11px] sm:text-xs overflow-x-auto max-w-full">{`import urllib.request, json
 url = "https://www.intertexe.com/api/v1/demo/composition/${DEMO_GTIN_VERIFIED}"
 print(json.load(urllib.request.urlopen(url)))`}</pre>
 

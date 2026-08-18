@@ -25,9 +25,9 @@ export default async function PlatformRequestPage({
   return (
     <PlatformChrome active="request">
       <PlatformViewTracker event={startedEvent} />
-      <div className="max-w-3xl mx-auto px-6 md:px-8 py-16 md:py-24">
-        <p className="text-[11px] tracking-[0.25em] text-[#9c7b8b] mb-6">MATERIAL INTELLIGENCE API</p>
-        <h1 className="text-4xl font-light mb-4" style={{ fontFamily: "Georgia, serif" }}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-24">
+        <p className="text-[10px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.25em] text-[#9c7b8b] mb-6">MATERIAL INTELLIGENCE API</p>
+        <h1 className="text-[2rem] sm:text-4xl font-light mb-4" style={{ fontFamily: "Georgia, serif" }}>
           Request a 10-product snapshot
         </h1>
         <p className="text-[#5c5854] leading-relaxed mb-10 max-w-xl">

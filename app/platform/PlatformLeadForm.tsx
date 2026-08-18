@@ -66,36 +66,36 @@ export function PlatformLeadForm({
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
           First name
-          <input required name="first_name" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]" />
+        <input required name="first_name" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:text-sm text-[#1a1a1a]" />
         </label>
         <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
           Last name
-          <input required name="last_name" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]" />
+          <input required name="last_name" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]" />
         </label>
       </div>
       <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
         Work email
-        <input required type="email" name="email" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]" />
+        <input required type="email" name="email" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]" />
       </label>
       <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
         Company
-        <input required name="company" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]" />
+        <input required name="company" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]" />
       </label>
       <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
         Role
-        <input name="role" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]" />
+        <input name="role" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]" />
       </label>
       <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
         Company website
-        <input name="company_website" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]" />
+        <input name="company_website" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]" />
       </label>
       <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
         Approximate product count
-        <input name="product_count" placeholder="e.g. 400" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]" />
+        <input name="product_count" placeholder="e.g. 400" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]" />
       </label>
       <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
         Sell or plan to sell into the EU?
-        <select name="sells_into_eu" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]">
+        <select name="sells_into_eu" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]">
           <option value="">Select</option>
           <option value="yes">Yes</option>
           <option value="planning">Planning to</option>
@@ -104,14 +104,14 @@ export function PlatformLeadForm({
       </label>
       <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
         Current catalog system or file format (optional)
-        <input name="catalog_system" placeholder="PIM, CSV, Shopify…" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]" />
+        <input name="catalog_system" placeholder="PIM, CSV, Shopify…" className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]" />
       </label>
       <label className="text-[11px] tracking-[0.14em] uppercase text-[#8a847c]">
         What they want to evaluate
         <select
           value={selectedIntent}
           onChange={(e) => setSelectedIntent(e.target.value)}
-          className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-2 text-sm text-[#1a1a1a]"
+          className="mt-2 w-full bg-white border border-[#ddd5cb] px-3 py-3 text-base sm:py-2 sm:text-sm text-[#1a1a1a]"
         >
           {INTENTS.map((i) => (
             <option key={i.value} value={i.value}>

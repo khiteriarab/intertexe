@@ -91,13 +91,20 @@ export function PlatformDemoClient() {
   const coverage = mapped + missing ? Math.round((mapped / (mapped + missing)) * 100) : 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 md:px-8 py-16 md:py-24">
-      <p className="text-[11px] tracking-[0.25em] text-[#9c7b8b] mb-3">INTERTEXE MATERIAL INTELLIGENCE API</p>
-      <p className="text-[11px] tracking-[0.2em] uppercase text-[#8a847c] mb-6">The Material Standard</p>
-      <h1 className="text-4xl md:text-5xl font-light mb-6 leading-[1.15]" style={{ fontFamily: "Georgia, serif" }}>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-24">
+      <p className="text-[10px] sm:text-[11px] tracking-[0.12em] sm:tracking-[0.25em] text-[#9c7b8b] mb-3 break-words">
+        INTERTEXE MATERIAL INTELLIGENCE API
+      </p>
+      <p className="text-[10px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.2em] uppercase text-[#8a847c] mb-5 sm:mb-6">
+        The Material Standard
+      </p>
+      <h1
+        className="text-[2rem] sm:text-4xl md:text-5xl font-light mb-5 sm:mb-6 leading-[1.15]"
+        style={{ fontFamily: "Georgia, serif" }}
+      >
         See what one product record can become.
       </h1>
-      <p className="text-lg text-[#5c5854] font-light leading-relaxed max-w-2xl mb-12">
+      <p className="text-base sm:text-lg text-[#5c5854] font-light leading-relaxed max-w-2xl mb-8 sm:mb-12">
         Enter a sample GTIN to see normalized fibre composition, evidence status and an emerging DPP-readiness
         map in one structured response.
       </p>
@@ -115,17 +122,23 @@ export function PlatformDemoClient() {
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             id="gtin"
+            inputMode="numeric"
+            autoComplete="off"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-white border border-[#ddd5cb] px-4 py-3 text-[15px] outline-none focus:border-black"
+            className="flex-1 min-w-0 w-full bg-white border border-[#ddd5cb] px-4 py-3 text-base sm:text-[15px] outline-none focus:border-black"
           />
-          <button type="submit" disabled={busy} className="text-[11px] tracking-[0.2em] uppercase bg-black text-white px-8 py-3 disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={busy}
+            className="text-[11px] tracking-[0.16em] sm:tracking-[0.2em] uppercase bg-black text-white px-8 py-3 disabled:opacity-50"
+          >
             {busy ? "Looking up…" : "Look up"}
           </button>
         </div>
       </form>
 
-      <div className="grid sm:grid-cols-3 gap-3 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
         {DEMO_EXAMPLES.map((ex) => (
           <button
             key={ex.id}
@@ -136,11 +149,11 @@ export function PlatformDemoClient() {
               trackPlatform("platform_demo_example_selected", { example: ex.id });
               lookup(ex.query, ex.id);
             }}
-            className={`text-left border px-4 py-4 ${active === ex.id && record ? "border-black bg-white" : "border-[#ddd5cb] hover:border-black"}`}
+            className={`text-left border px-4 py-4 min-h-[5.5rem] ${active === ex.id && record ? "border-black bg-white" : "border-[#ddd5cb] hover:border-black"}`}
           >
-            <p className="text-[11px] tracking-[0.14em] uppercase mb-1">{ex.label}</p>
+            <p className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase mb-1">{ex.label}</p>
             <p className="text-sm text-[#5c5854]">{ex.subtitle}</p>
-            <p className="text-xs font-mono text-[#8a847c] mt-2">{ex.query}</p>
+            <p className="text-xs font-mono text-[#8a847c] mt-2 break-all">{ex.query}</p>
           </button>
         ))}
       </div>
@@ -148,8 +161,8 @@ export function PlatformDemoClient() {
       {error ? <p className="text-sm text-[#8b2e2e] mb-8">{error}</p> : null}
 
       {record ? (
-        <article className="bg-white border border-[#ddd5cb] p-6 md:p-10 mb-14">
-          <div className="flex gap-4 mb-8 text-[11px] tracking-[0.16em] uppercase">
+        <article className="bg-white border border-[#ddd5cb] p-4 sm:p-6 md:p-10 mb-10 sm:mb-14 overflow-hidden">
+          <div className="flex gap-5 mb-8 text-[11px] tracking-[0.14em] sm:tracking-[0.16em] uppercase">
             <button type="button" onClick={() => setTab("result")} className={tab === "result" ? "text-black" : "text-[#8a847c]"}>
               Result
             </button>
@@ -166,17 +179,19 @@ export function PlatformDemoClient() {
           </div>
 
           {tab === "json" ? (
-            <pre className="overflow-x-auto bg-[#f7f3ee] p-4 text-xs leading-relaxed mb-6">{jsonText}</pre>
+            <pre className="overflow-x-auto bg-[#f7f3ee] p-3 sm:p-4 text-[11px] sm:text-xs leading-relaxed mb-6 max-w-full">
+              {jsonText}
+            </pre>
           ) : (
             <>
               <p className="text-[11px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">{record.match_type.replace(/_/g, " ")}</p>
-              <h2 className="text-3xl font-light mb-2" style={{ fontFamily: "Georgia, serif" }}>
+              <h2 className="text-2xl sm:text-3xl font-light mb-2 break-words" style={{ fontFamily: "Georgia, serif" }}>
                 {record.product.name || "No product-level match"}
               </h2>
-              <p className="text-sm text-[#5c5854] mb-6">
+              <p className="text-sm text-[#5c5854] mb-6 break-all">
                 {[record.product.brand, record.product.gtin].filter(Boolean).join(" · ")}
               </p>
-              <p className="text-[11px] tracking-[0.14em] uppercase border border-[#ddd5cb] inline-block px-3 py-2 mb-8">
+              <p className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-[#ddd5cb] inline-block px-3 py-2 mb-8 max-w-full">
                 {evidenceLabel(record.evidence.status)}
               </p>
               <p className="text-sm text-[#5c5854] mb-8 max-w-xl">{record.message}</p>
@@ -203,7 +218,7 @@ export function PlatformDemoClient() {
                     ))}
                   </ul>
                   {nfp != null ? (
-                    <p className="text-2xl font-light mb-8" style={{ fontFamily: "Georgia, serif" }}>
+                    <p className="text-xl sm:text-2xl font-light mb-8" style={{ fontFamily: "Georgia, serif" }}>
                       {nfp}% natural fiber{record.composition.primary_fiber ? ` · ${record.composition.primary_fiber}` : ""}
                     </p>
                   ) : null}
@@ -241,35 +256,50 @@ export function PlatformDemoClient() {
             </>
           )}
 
-          <div className="flex flex-wrap gap-3 mt-8">
-            <button type="button" onClick={() => copy("json", jsonText)} className="text-[11px] tracking-[0.14em] uppercase border border-black px-4 py-3">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-8">
+            <button
+              type="button"
+              onClick={() => copy("json", jsonText)}
+              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-black px-4 py-3 text-center"
+            >
               {copied === "json" ? "Copied" : "Copy JSON"}
             </button>
-            <button type="button" onClick={() => copy("curl", curl)} className="text-[11px] tracking-[0.14em] uppercase border border-[#ddd5cb] px-4 py-3">
+            <button
+              type="button"
+              onClick={() => copy("curl", curl)}
+              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-[#ddd5cb] px-4 py-3 text-center"
+            >
               {copied === "curl" ? "Copied" : "Copy cURL"}
             </button>
-            <button type="button" onClick={download} className="text-[11px] tracking-[0.14em] uppercase border border-[#ddd5cb] px-4 py-3">
+            <button
+              type="button"
+              onClick={download}
+              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-[#ddd5cb] px-4 py-3 text-center"
+            >
               Download sample JSON
             </button>
-            <Link href="/platform/docs" className="text-[11px] tracking-[0.14em] uppercase px-4 py-3 underline underline-offset-4">
+            <Link
+              href="/platform/docs"
+              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase px-4 py-3 underline underline-offset-4 text-center"
+            >
               Documentation
             </Link>
           </div>
         </article>
       ) : null}
 
-      <section className="border-t border-[#ddd5cb] pt-12 flex flex-col sm:flex-row gap-4">
+      <section className="border-t border-[#ddd5cb] pt-10 sm:pt-12 flex flex-col sm:flex-row gap-3 sm:gap-4">
         <Link
           href="/platform/request?intent=snapshot&cta=demo_primary"
           onClick={() => trackPlatform("platform_snapshot_started")}
-          className="text-[11px] tracking-[0.18em] uppercase bg-black text-white px-8 py-4 text-center"
+          className="text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase bg-black text-white px-5 sm:px-8 py-4 text-center leading-relaxed"
         >
           Submit 10 products for a Material Data Snapshot
         </Link>
         <Link
           href="/platform/request?intent=api_access&cta=demo_secondary"
           onClick={() => trackPlatform("platform_api_access_started")}
-          className="text-[11px] tracking-[0.18em] uppercase border border-black px-8 py-4 text-center"
+          className="text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase border border-black px-5 sm:px-8 py-4 text-center"
         >
           Discuss API access
         </Link>
