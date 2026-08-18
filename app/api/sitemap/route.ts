@@ -110,7 +110,6 @@ export async function GET(request: Request) {
       xml += urlEntry("/contact", { priority: "0.4", freq: "monthly" });
       xml += urlEntry("/privacy", { priority: "0.2", freq: "yearly" });
       xml += urlEntry("/terms", { priority: "0.2", freq: "yearly" });
-      xml += urlEntry("/returns", { priority: "0.2", freq: "yearly" });
 
       xml += '</urlset>';
       return new NextResponse(xml, {

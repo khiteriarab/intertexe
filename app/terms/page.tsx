@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -13,7 +12,7 @@ export default function TermsPage() {
       <header className="flex flex-col gap-4 md:gap-6">
         <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">Legal</span>
         <h1 className="text-3xl md:text-6xl font-serif" data-testid="text-terms-title">Terms of Service</h1>
-        <p className="text-sm text-muted-foreground">Last updated: February 2026</p>
+        <p className="text-sm text-muted-foreground">Last updated: August 2026</p>
       </header>
 
       <div className="flex flex-col gap-8 md:gap-10 text-sm md:text-base text-foreground/80 leading-relaxed">
@@ -57,17 +56,6 @@ export default function TermsPage() {
           <h2 className="text-xl md:text-2xl font-serif text-foreground">5. Affiliate disclosure</h2>
           <p>
             Intertexe earns a commission when you purchase through links on our platform. This supports our free catalog, scanner, and editorial work. Affiliate relationships do not change how we verify fiber composition data.
-          </p>
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">5a. Orders, shipping, and returns</h2>
-          <p>
-            INTERTEXE does not sell, ship, or refund garments. Purchases are completed with partner retailers. Their return, exchange, and refund policies apply. Read the full policy at{" "}
-            <Link href="/returns" className="border-b border-foreground hover:text-muted-foreground transition-colors">
-              intertexe.com/returns
-            </Link>
-            .
           </p>
         </section>
 
@@ -133,6 +121,19 @@ export default function TermsPage() {
           <p>
             For questions about these terms, please contact us at{" "}
             <a href="mailto:info@intertexe.com" className="border-b border-foreground hover:text-muted-foreground transition-colors">info@intertexe.com</a>.
+          </p>
+        </section>
+
+        <section id="returns" className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">12. Returns &amp; refunds</h2>
+          <p>
+            INTERTEXE does not sell, ship, or process payment for garments. When you click through to buy, your contract is with that retailer. Orders, shipping, exchanges, refunds, and customer service are handled only by the retailer, under their return policy.
+          </p>
+          <p>
+            Before you purchase, read the retailer&apos;s return window, condition requirements, and any return-shipping or restocking fees for your country. INTERTEXE cannot approve a return, issue a refund, or print a retailer return label.
+          </p>
+          <p>
+            If you buy as a consumer in the UK, EU, or another jurisdiction with statutory cooling-off or faulty-goods rights, those rights are against the retailer that sold you the item. For problems with the INTERTEXE website, app, or a broken link — not a garment you already purchased — email info@intertexe.com.
           </p>
         </section>
       </div>
