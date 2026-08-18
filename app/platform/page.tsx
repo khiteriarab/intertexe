@@ -1,336 +1,255 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CATALOG_STATS } from "../../lib/catalog-stats";
+import { PILOT_MAILTO, SNAPSHOT_MAILTO } from "../../lib/platform-demo";
+import { PlatformChrome } from "./PlatformChrome";
 
 export const metadata: Metadata = {
-  title: "INTERTEXE Platform — Digital Product Passport Infrastructure",
+  title: "INTERTEXE Platform — Material Intelligence",
   description:
-    "Verified fiber composition data and API for EU Digital Product Passport compliance. Built for fashion brands and retailers.",
+    "The material-intelligence layer for fashion. Composition lookup, structured material records, catalog enrichment and API access — useful today for commerce, and mapped toward emerging DPP requirements.",
 };
 
 export default function PlatformPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="border-b border-gray-100 px-8 py-5 flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-sm tracking-widest font-light"
-          style={{ letterSpacing: "0.3em" }}
-        >
-          INTER<span className="font-semibold">TEXE</span>
-        </Link>
-        <div className="flex items-center gap-8">
-          <Link
-            href="/platform/docs"
-            className="text-xs text-gray-500 tracking-widest uppercase hover:text-black transition-colors"
-            style={{ letterSpacing: "0.15em" }}
-          >
-            Documentation
-          </Link>
-          <Link
-            href="/platform/login"
-            className="text-xs text-gray-500 tracking-widest uppercase hover:text-black transition-colors"
-            style={{ letterSpacing: "0.15em" }}
-          >
-            Log in
-          </Link>
-          <a
-            href="mailto:info@intertexe.com"
-            className="text-xs tracking-widest uppercase bg-black text-white px-6 py-3 hover:bg-gray-800 transition-colors"
-            style={{ letterSpacing: "0.15em" }}
-          >
-            Request access
-          </a>
-        </div>
-      </nav>
-
-      <div className="max-w-4xl mx-auto px-8 py-28">
-        <p className="text-xs tracking-widest text-gray-400 mb-8" style={{ letterSpacing: "0.25em" }}>
-          INTERTEXE PLATFORM
-        </p>
+    <PlatformChrome active="platform">
+      <div className="max-w-4xl mx-auto px-6 md:px-8 py-20 md:py-28">
+        <p className="text-[11px] tracking-[0.25em] text-[#9c7b8b] mb-8">INTERTEXE PLATFORM</p>
 
         <h1
-          className="text-5xl font-light text-gray-900 mb-8 leading-tight"
-          style={{ fontFamily: "Georgia, serif", lineHeight: 1.15 }}
+          className="text-4xl md:text-5xl font-light text-[#1a1a1a] mb-8 leading-[1.15]"
+          style={{ fontFamily: "Georgia, 'Iowan Old Style', serif" }}
         >
-          Fiber composition data infrastructure for the EU Digital Product Passport.
+          The material-intelligence layer for fashion.
         </h1>
 
-        <p className="text-lg text-gray-500 font-light leading-relaxed mb-6 max-w-2xl">
-          The EU Digital Product Passport requires verified composition data for every textile product sold in
-          Europe. Intertexe has built that database — scan by scan, label by label.
+        <p className="text-lg text-[#5c5854] font-light leading-relaxed mb-6 max-w-2xl">
+          Brands upload their catalogs. INTERTEXE reconciles fibre composition, attaches provenance,
+          identifies gaps and returns structured records for commerce — and for future Digital Product
+          Passport systems.
         </p>
 
-        <p className="text-lg text-gray-500 font-light leading-relaxed mb-12 max-w-2xl">
-          Access our verified fiber composition database via API. Generate DPP-ready product records. Verify what
-          your garments are actually made of.
+        <p className="text-lg text-[#5c5854] font-light leading-relaxed mb-12 max-w-2xl">
+          DPP creates the urgency. The product is useful today for search, filtering, retailer consistency,
+          product pages and consumer trust.
         </p>
 
-        <div className="flex items-center gap-6">
-          <a
-            href="mailto:info@intertexe.com"
-            className="text-xs tracking-widest uppercase bg-black text-white px-10 py-4 hover:bg-gray-800 transition-colors"
-            style={{ letterSpacing: "0.2em" }}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <Link
+            href="/platform/demo"
+            className="text-[11px] tracking-[0.2em] uppercase bg-black text-white px-10 py-4 hover:bg-[#2a2a2a]"
           >
-            Contact us
-          </a>
+            Try the two-minute demo
+          </Link>
           <a
-            href="mailto:info@intertexe.com"
-            className="text-xs tracking-widest uppercase text-gray-900 underline underline-offset-4"
-            style={{ letterSpacing: "0.15em" }}
+            href={SNAPSHOT_MAILTO}
+            className="text-[11px] tracking-[0.15em] uppercase text-[#1a1a1a] underline underline-offset-4"
           >
-            Talk to the team →
+            Submit 10 products →
           </a>
         </div>
       </div>
 
-      <div className="border-t border-b border-gray-100 py-10">
-        <div className="max-w-4xl mx-auto px-8">
-          <div
-            className="flex flex-wrap gap-x-12 gap-y-4 text-xs tracking-widest text-gray-400 uppercase"
-            style={{ letterSpacing: "0.2em" }}
-          >
-            <span>330,000+ products with UPC data</span>
+      <div className="border-y border-[#ddd5cb] py-10">
+        <div className="max-w-4xl mx-auto px-6 md:px-8">
+          <div className="flex flex-wrap gap-x-10 gap-y-3 text-[11px] tracking-[0.18em] text-[#8a847c] uppercase">
+            <span>Composition lookup by GTIN</span>
             <span>·</span>
-            <span>28,509 brand prefixes indexed</span>
+            <span>Structured material records</span>
             <span>·</span>
-            <span>{CATALOG_STATS.brandCountFormatted} brands verified</span>
+            <span>Catalog enrichment</span>
             <span>·</span>
-            <span>Growing with every scan</span>
+            <span>API access</span>
+            <span>·</span>
+            <span>Consumer scan loop</span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-8 py-24">
-        <div className="border-t border-gray-100 py-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+      <div className="max-w-4xl mx-auto px-6 md:px-8 py-20">
+        <div className="border-t border-[#ddd5cb] py-14 grid grid-cols-1 md:grid-cols-2 gap-16">
           <div>
-            <p className="text-xs tracking-widest text-gray-400 uppercase mb-4" style={{ letterSpacing: "0.2em" }}>
-              01
-            </p>
-            <h2 className="text-2xl font-light text-gray-900" style={{ fontFamily: "Georgia, serif" }}>
-              Composition lookup by barcode
+            <p className="text-[11px] tracking-[0.2em] text-[#8a847c] uppercase mb-4">01</p>
+            <h2 className="text-2xl font-light" style={{ fontFamily: "Georgia, serif" }}>
+              Composition lookup
             </h2>
           </div>
           <div>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              Send us any UPC or EAN barcode and receive the verified fiber composition for that product — natural
-              fiber percentage, fiber breakdown, primary fiber type, and DPP-ready metadata.
+            <p className="text-sm text-[#5c5854] leading-relaxed mb-4">
+              Send a GTIN, EAN or SKU. Receive normalized fibre composition, natural-fiber percentage,
+              primary fiber, and a DPP-readiness map — not a legal certificate.
             </p>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              Our database is built from real label scans. Every time a user scans a garment label with the
-              Intertexe app the composition is verified and stored. The database grows continuously and cannot be
-              replicated from any other source.
-            </p>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              For products not yet in the database we fall back to our 28,509 brand prefix table to identify the
-              manufacturer and return brand-level composition data.
+            <p className="text-sm text-[#5c5854] leading-relaxed">
+              A company prefix can identify a manufacturer. It never returns assumed composition as verified
+              product-level data.
             </p>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 py-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+        <div className="border-t border-[#ddd5cb] py-14 grid grid-cols-1 md:grid-cols-2 gap-16">
           <div>
-            <p className="text-xs tracking-widest text-gray-400 uppercase mb-4" style={{ letterSpacing: "0.2em" }}>
-              02
-            </p>
-            <h2 className="text-2xl font-light text-gray-900" style={{ fontFamily: "Georgia, serif" }}>
-              DPP record generation
+            <p className="text-[11px] tracking-[0.2em] text-[#8a847c] uppercase mb-4">02</p>
+            <h2 className="text-2xl font-light" style={{ fontFamily: "Georgia, serif" }}>
+              Structured material records
             </h2>
           </div>
           <div>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              The EU Digital Product Passport for textiles requires a structured digital record for every garment
-              sold in Europe — fiber composition, care instructions, country of origin, and material traceability.
+            <p className="text-sm text-[#5c5854] leading-relaxed mb-4">
+              Each record carries composition, provenance (source, capture date, review status) and a field
+              map toward an emerging DPP schema. Gaps stay visible.
             </p>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              Intertexe generates DPP-ready records from our verified composition database. Upload your product
-              catalog and receive structured DPP data for every item we have composition data for.
-            </p>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Compliance deadlines begin in 2026. Brands that start building their composition data infrastructure
-              now will be ready. Brands that wait will not.
+            <p className="text-sm text-[#5c5854] leading-relaxed">
+              OCR from a label scan is evidence. INTERTEXE only calls a record{" "}
+              <span className="text-[#1a1a1a]">verified</span> when the image, extraction and review status
+              are retained.
             </p>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 py-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+        <div className="border-t border-[#ddd5cb] py-14 grid grid-cols-1 md:grid-cols-2 gap-16">
           <div>
-            <p className="text-xs tracking-widest text-gray-400 uppercase mb-4" style={{ letterSpacing: "0.2em" }}>
-              03
-            </p>
-            <h2 className="text-2xl font-light text-gray-900" style={{ fontFamily: "Georgia, serif" }}>
+            <p className="text-[11px] tracking-[0.2em] text-[#8a847c] uppercase mb-4">03</p>
+            <h2 className="text-2xl font-light" style={{ fontFamily: "Georgia, serif" }}>
               Catalog enrichment
             </h2>
           </div>
           <div>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              Many fashion brands and retailers have product catalogs with incomplete or unverified composition
-              data. Our API enriches your existing catalog — send us your product list and receive verified
-              composition data, natural fiber percentages, and fiber classification for every item we can match.
+            <p className="text-sm text-[#5c5854] leading-relaxed mb-4">
+              Upload a product list. We match identifiers, attach composition where evidence exists, flag
+              conflicts, and return structured rows for PIM, search, PDPs and retailer feeds.
             </p>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              Match rate depends on catalog overlap with our database. For major fashion brands our current match
-              rate exceeds 60% and grows monthly as the database expands.
+            <p className="text-sm text-[#5c5854] leading-relaxed mb-4">
+              Match rate is catalog-specific. We do not publish a guaranteed percentage. Coverage method is
+              documented; a 10-product snapshot shows your exact matches before a paid pilot.
             </p>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Verified composition data improves search discoverability, builds consumer trust, and prepares your
-              catalog for DPP compliance requirements.
+            <p className="text-sm text-[#5c5854] leading-relaxed">
+              Consumer listing counts ({CATALOG_STATS.productCountFormatted} shoppable pieces,{" "}
+              {CATALOG_STATS.brandCountFormatted} vetted brands) describe the INTERTEXE shop, not
+              barcode-verified DPP coverage.
             </p>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 py-16">
-          <p className="text-xs tracking-widest text-gray-400 uppercase mb-12" style={{ letterSpacing: "0.2em" }}>
-            THE REGULATORY CONTEXT
-          </p>
+        <div className="border-t border-[#ddd5cb] py-14 grid grid-cols-1 md:grid-cols-2 gap-16">
+          <div>
+            <p className="text-[11px] tracking-[0.2em] text-[#8a847c] uppercase mb-4">04</p>
+            <h2 className="text-2xl font-light" style={{ fontFamily: "Georgia, serif" }}>
+              API access
+            </h2>
+          </div>
+          <div>
+            <p className="text-sm text-[#5c5854] leading-relaxed mb-4">
+              License lookup and enrichment over HTTPS. The public demonstration is{" "}
+              <Link href="/platform/demo" className="underline underline-offset-4 text-[#1a1a1a]">
+                /platform/demo
+              </Link>
+              . Partner keys are issued after a snapshot or pilot.
+            </p>
+            <p className="text-sm text-[#5c5854] leading-relaxed">
+              Consumer scans continue to grow the evidence loop. Catalog architecture also uses brand,
+              retailer and affiliate-feed information — those sources are labelled, never presented as
+              reviewed label evidence.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-[#ddd5cb] py-16">
+          <p className="text-[11px] tracking-[0.2em] text-[#8a847c] uppercase mb-12">THE REGULATORY CONTEXT</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
-              <p className="text-3xl font-light text-gray-900 mb-3">2026</p>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                EU Digital Product Passport requirements begin for textiles. Every garment sold in Europe needs a
-                verified digital record of its composition.
+              <p className="text-3xl font-light mb-3">2026</p>
+              <p className="text-xs text-[#5c5854] leading-relaxed">
+                The EU DPP Registry launched. It is infrastructure for the Ecodesign system — not the start
+                of textile product obligations.
               </p>
             </div>
             <div>
-              <p className="text-3xl font-light text-gray-900 mb-3">60%</p>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                of fibres used in clothing come from plastic-based materials. Microplastic regulation is
-                accelerating globally alongside DPP requirements.
+              <p className="text-3xl font-light mb-3">Q4 2027</p>
+              <p className="text-xs text-[#5c5854] leading-relaxed">
+                Planned adoption of the ESPR delegated act for textiles. Specific DPP data fields are not
+                final until that act.{" "}
+                <a
+                  href="https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en"
+                  className="underline underline-offset-2"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  European Commission
+                </a>
               </p>
             </div>
             <div>
-              <p className="text-3xl font-light text-gray-900 mb-3">∞</p>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Our database grows with every user scan. The composition data we have today is a fraction of what we
-                will have in 12 months. Early API partners benefit from the full growth of the database.
+              <p className="text-3xl font-light mb-3">Today</p>
+              <p className="text-xs text-[#5c5854] leading-relaxed">
+                Material records already improve search, filtering, PDPs and trust. INTERTEXE maps to an
+                emerging schema (DPP-readiness), not a completed legal requirement.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 py-16">
-          <p className="text-xs tracking-widest text-gray-400 uppercase mb-12" style={{ letterSpacing: "0.2em" }}>
-            HOW THE DATABASE IS BUILT
-          </p>
-          <p className="text-sm text-gray-600 leading-relaxed mb-4 max-w-2xl">
-            Every time a user scans a clothing label with the Intertexe app the system reads the fiber composition
-            from the physical label using computer vision. That composition is linked to the product barcode and
-            stored permanently in our database.
-          </p>
-          <p className="text-sm text-gray-600 leading-relaxed mb-4 max-w-2xl">
-            The next user who scans the same barcode gets the result instantly — no AI call, no external API, just
-            our database responding in milliseconds. The database is self-compounding. Every scan makes the next scan
-            faster and more accurate.
-          </p>
-          <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">
-            This data does not exist anywhere else. It cannot be purchased from GS1. It cannot be downloaded from
-            any government registry. It is built exclusively from real label scans by real users in real stores
-            around the world. After one million scans it becomes the most comprehensive fashion fiber composition
-            database ever created.
-          </p>
-        </div>
-
-        <div className="border-t border-gray-100 py-16">
-          <p className="text-xs tracking-widest text-gray-400 uppercase mb-12" style={{ letterSpacing: "0.2em" }}>
-            THREE LAYERS
-          </p>
+        <div className="border-t border-[#ddd5cb] py-16">
+          <p className="text-[11px] tracking-[0.2em] text-[#8a847c] uppercase mb-6">THREE LAYERS</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
-              <p className="text-xs tracking-widest text-gray-400 uppercase mb-3">01 · Consumer</p>
-              <h3 className="text-xl font-light text-gray-900 mb-3" style={{ fontFamily: "Georgia, serif" }}>
-                Fabric composition first
+              <p className="text-[11px] tracking-[0.16em] text-[#8a847c] uppercase mb-3">01 · Consumer</p>
+              <h3 className="text-xl font-light mb-3" style={{ fontFamily: "Georgia, serif" }}>
+                Scan loop
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                The INTERTEXE app and shop make verified fiber content the decision layer for shoppers — scan a label,
-                see natural fiber percentage, discover better alternatives.
+              <p className="text-sm text-[#5c5854] leading-relaxed">
+                Shoppers scan labels and save pieces. That feedback loop adds evidence; it is not the sole
+                source of the catalog.
               </p>
             </div>
             <div>
-              <p className="text-xs tracking-widest text-gray-400 uppercase mb-3">02 · Data</p>
-              <h3 className="text-xl font-light text-gray-900 mb-3" style={{ fontFamily: "Georgia, serif" }}>
+              <p className="text-[11px] tracking-[0.16em] text-[#8a847c] uppercase mb-3">02 · Data</p>
+              <h3 className="text-xl font-light mb-3" style={{ fontFamily: "Georgia, serif" }}>
                 Composition intelligence
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Every scan compounds a proprietary fiber database. Brands and retailers can license verified
-                composition, barcode matches, and catalog enrichment — especially US companies selling into the EU.
+              <p className="text-sm text-[#5c5854] leading-relaxed">
+                Normalized fibre records, provenance, and gap reports brands can plug into commerce systems.
               </p>
             </div>
             <div>
-              <p className="text-xs tracking-widest text-gray-400 uppercase mb-3">03 · Compliance</p>
-              <h3 className="text-xl font-light text-gray-900 mb-3" style={{ fontFamily: "Georgia, serif" }}>
-                Digital Product Passport
+              <p className="text-[11px] tracking-[0.16em] text-[#8a847c] uppercase mb-3">03 · Readiness</p>
+              <h3 className="text-xl font-light mb-3" style={{ fontFamily: "Georgia, serif" }}>
+                DPP-readiness
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                EU DPP for textiles requires structured material records. INTERTEXE helps companies generate
-                DPP-ready composition fields from real labels — not guessed marketing copy.
+              <p className="text-sm text-[#5c5854] leading-relaxed">
+                Field coverage against an emerging schema. The entry product into the API — not the identity
+                of the company.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <div>
-              <h2
-                className="text-3xl font-light text-gray-900"
-                style={{ fontFamily: "Georgia, serif", lineHeight: 1.3 }}
+        <div className="border-t border-[#ddd5cb] py-16 grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+          <h2 className="text-3xl font-light leading-snug" style={{ fontFamily: "Georgia, serif" }}>
+            Start with 10 products. Then a 500-product pilot.
+          </h2>
+          <div>
+            <p className="text-sm text-[#5c5854] leading-relaxed mb-6">
+              The first transaction is a Material Data Snapshot on 10 GTINs, then the $5,000 Catalog
+              Enrichment Pilot covering 500 products. Early partners get API credentials, coverage priority
+              and a written data-processing note before any file is transferred.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/platform/demo"
+                className="inline-block text-[11px] tracking-[0.2em] uppercase bg-black text-white px-10 py-4 text-center hover:bg-[#2a2a2a]"
               >
-                The composition data your compliance team needs. Built from the ground up.
-              </h2>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 leading-relaxed mb-6">
-                We are onboarding a small number of early API partners now. Early partners get priority database
-                coverage, dedicated support, and input into the product roadmap.
-              </p>
-              <p className="text-sm text-gray-600 leading-relaxed mb-8 space-y-1">
-                <span className="block">
-                  Platform / API:{" "}
-                  <a href="mailto:info@intertexe.com" className="underline underline-offset-4 text-gray-900">
-                    info@intertexe.com
-                  </a>
-                </span>
-                <span className="block">
-                  General:{" "}
-                  <a href="mailto:hello@intertexe.com" className="underline underline-offset-4 text-gray-900">
-                    hello@intertexe.com
-                  </a>
-                </span>
-              </p>
+                Open the API demo
+              </Link>
               <a
-                href="mailto:info@intertexe.com"
-                className="inline-block text-xs tracking-widest uppercase bg-black text-white px-10 py-4 hover:bg-gray-800 transition-colors mb-4 w-full text-center"
-                style={{ letterSpacing: "0.2em" }}
+                href={PILOT_MAILTO}
+                className="inline-block text-[11px] tracking-[0.2em] uppercase border border-black px-10 py-4 text-center hover:bg-black hover:text-white transition-colors"
               >
-                Contact us
+                $5,000 Catalog Enrichment Pilot
               </a>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="border-t border-gray-100 px-8 py-8">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <p className="text-xs text-gray-400">© 2026 Intertexe. All rights reserved.</p>
-          <div className="flex flex-wrap items-center gap-6">
-            <Link href="/" className="text-xs text-gray-400 hover:text-black transition-colors">
-              Consumer platform
-            </Link>
-            <Link href="/about" className="text-xs text-gray-400 hover:text-black transition-colors">
-              About
-            </Link>
-            <Link href="/press" className="text-xs text-gray-400 hover:text-black transition-colors">
-              Press
-            </Link>
-            <Link href="/privacy" className="text-xs text-gray-400 hover:text-black transition-colors">
-              Privacy
-            </Link>
-            <a href="mailto:info@intertexe.com" className="text-xs text-gray-400 hover:text-black transition-colors">
-              info@intertexe.com
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
+    </PlatformChrome>
   );
 }

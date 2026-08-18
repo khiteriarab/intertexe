@@ -196,10 +196,10 @@ export default function PressKitPage() {
           <div>
             <p className="press-eyebrow">THE SCANNER DATABASE</p>
             <p className="press-body">
-              The scanner uses computer vision to read clothing labels in real time. Results come from a
-              proprietary barcode composition database built from real label scans by real users in real
-              stores. Over 63,000 barcodes are already indexed. The database is self-compounding — every scan
-              makes the next scan faster and more accurate. This data does not exist anywhere else.
+              The scanner uses computer vision to read clothing labels in real time. INTERTEXE is a
+              material-intelligence layer: barcode lookup, catalog enrichment, and a consumer scan loop.
+              Label scans are one evidence source, alongside brand, retailer and affiliate-feed records —
+              each labelled, never mixed together as if they were the same.
             </p>
           </div>
           <div>
@@ -213,11 +213,10 @@ export default function PressKitPage() {
           <div>
             <p className="press-eyebrow">THE DIGITAL PRODUCT PASSPORT</p>
             <p className="press-body">
-              The EU Digital Product Passport for textiles arrives in 2026 requiring verified composition
-              data for every garment sold in Europe. Intertexe is building the composition data
-              infrastructure brands and retailers will need to comply. Our API gives enterprise partners
-              access to verified fiber composition data, DPP-ready product records, and catalog enrichment
-              services.
+              The EU DPP Registry launched in 2026. Textile-specific DPP requirements are planned for a Q4
+              2027 delegated act and are not yet legally in force for every garment. INTERTEXE maps fibre
+              composition and provenance toward that emerging schema (DPP-readiness) while returning records
+              brands can use today for search, product pages and catalog consistency.
             </p>
           </div>
         </div>
@@ -240,8 +239,8 @@ export default function PressKitPage() {
               — one scan at a time.
             </li>
             <li>
-              The EU Digital Product Passport arrives in 2026. This startup is already building the
-              infrastructure brands will need to comply.
+              The EU DPP Registry is live. Textile rules are still being written. INTERTEXE already returns
+              structured material records brands can use in commerce systems today.
             </li>
             <li>
               Why natural fiber fashion is having a moment — and the platform that saw it coming.

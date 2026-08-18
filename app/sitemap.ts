@@ -15,6 +15,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/materials`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${BASE}/scanner`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/platform`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE}/platform/demo`, lastModified: now, changeFrequency: "weekly", priority: 0.55 },
+    { url: `${BASE}/platform/docs`, lastModified: now, changeFrequency: "monthly", priority: 0.45 },
   ];
 
   const collectionPages: MetadataRoute.Sitemap = COLLECTION_SLUGS.map((slug) => ({
