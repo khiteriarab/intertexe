@@ -61,6 +61,7 @@ async function main() {
     { path: "/contact", priority: "0.3", changefreq: "monthly" },
     { path: "/privacy", priority: "0.2", changefreq: "yearly" },
     { path: "/terms", priority: "0.2", changefreq: "yearly" },
+    { path: "/returns", priority: "0.2", changefreq: "yearly" },
   ];
 
   const materialPages = [

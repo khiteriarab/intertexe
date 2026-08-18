@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -56,6 +57,17 @@ export default function TermsPage() {
           <h2 className="text-xl md:text-2xl font-serif text-foreground">5. Affiliate disclosure</h2>
           <p>
             Intertexe earns a commission when you purchase through links on our platform. This supports our free catalog, scanner, and editorial work. Affiliate relationships do not change how we verify fiber composition data.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">5a. Orders, shipping, and returns</h2>
+          <p>
+            INTERTEXE does not sell, ship, or refund garments. Purchases are completed with partner retailers. Their return, exchange, and refund policies apply. Read the full policy at{" "}
+            <Link href="/returns" className="border-b border-foreground hover:text-muted-foreground transition-colors">
+              intertexe.com/returns
+            </Link>
+            .
           </p>
         </section>
 
