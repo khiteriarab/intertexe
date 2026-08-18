@@ -10,6 +10,15 @@ import {
   extractWithSelectors,
 } from "./scanner/retailer-extraction";
 import { detectGarmentType } from "./scanner/detect-garment-type";
+import {
+  countryFromPage,
+  extractLabeledMaterial,
+  extractVisibleOffer,
+  looksLikeListedMaterial,
+  looksLikePercentageComposition,
+  normalizeListedMaterial,
+  preferRetailerFacingOffer,
+} from "./capture-page-signals";
 
 export type ProvenanceEntry = {
   source:
@@ -44,6 +53,8 @@ export type CaptureEnrichment = {
   imageUrl: string | null;
   description: string | null;
   compositionText: string | null;
+  /** ISO 3166-1 alpha-2 when the page locale or TLD is unambiguous. */
+  country: string | null;
   category: string | null;
   subcategory: string | null;
   color: string | null;
@@ -441,29 +452,14 @@ export function buildMatchBrief(input: {
   };
 }
 
-const FIBER_NAME_RE =
-  /\b(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/i;
-
-const PROMO_COMPOSITION_RE =
-  /\b(off|order|shipping|sale|discount|promo|code|subscribe|newsletter|members?)\b/i;
-
 function looksLikeComposition(text: string): boolean {
-  if (!text || text.length > 180) return false;
-  if (PROMO_COMPOSITION_RE.test(text)) return false;
-  if (!/\d+(?:\.\d+)?%/.test(text)) return false;
-  return FIBER_NAME_RE.test(text);
+  return looksLikePercentageComposition(text) || looksLikeListedMaterial(text);
 }
 
 function cleanComposition(text: string): string {
-  const trimmed = text.replace(/\s+/g, " ").trim();
-  // Keep only the fiber-percentage clause — never append care/fit marketing copy.
-  const m = trimmed.match(
-    /^(\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*(?:,\s*\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*){0,6})/
-  );
-  const core = (m?.[1] || trimmed)
+  return normalizeListedMaterial(text)
     .replace(/\s*(hand wash|machine wash|dry clean|do not|wash cold|wash warm|straight cut|flowing hem|washable)[\s\S]*$/i, "")
     .trim();
-  return core;
 }
 
 function extractCompositionHeuristics(html: string): string | null {
@@ -478,9 +474,10 @@ function extractCompositionHeuristics(html: string): string | null {
   let m: RegExpExecArray | null;
   while ((m = re.exec(plain))) {
     const candidate = cleanComposition(m[1]?.trim() || "");
-    if (candidate && looksLikeComposition(candidate)) return candidate;
+    if (candidate && looksLikePercentageComposition(candidate)) return candidate;
   }
-  return null;
+  const labeled = extractLabeledMaterial(html);
+  return labeled ? cleanComposition(labeled) : null;
 }
 
 /**
@@ -522,6 +519,7 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
   let description: string | null = null;
   let compositionText: string | null = null;
   let categoryHint: string | null = null;
+  let country: string | null = null;
 
   // 1) Product JSON-LD
   const products = html ? extractJsonLdProducts(html) : [];
@@ -551,7 +549,7 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
     }
     const material = firstString(node.material, node.composition);
     if (material && looksLikeComposition(material)) {
-      compositionText = material;
+      compositionText = cleanComposition(material);
       setProv(provenance, "compositionText", "json_ld", 0.9);
     }
     const offers = offersOf(node);
@@ -653,8 +651,8 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
           title = extracted.productName;
           setProv(provenance, "title", "retailer", 0.75);
         }
-        if (!compositionText && extracted.composition) {
-          compositionText = extracted.composition;
+        if (!compositionText && extracted.composition && looksLikeComposition(extracted.composition)) {
+          compositionText = cleanComposition(extracted.composition);
           setProv(provenance, "compositionText", "retailer", 0.8);
         }
         if (price == null && extracted.price) {
@@ -675,8 +673,33 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
       const heur = extractCompositionHeuristics(html);
       if (heur) {
         compositionText = heur;
-        setProv(provenance, "compositionText", "heuristics", 0.55);
+        setProv(
+          provenance,
+          "compositionText",
+          looksLikePercentageComposition(heur) ? "heuristics" : "retailer",
+          looksLikePercentageComposition(heur) ? 0.55 : 0.75
+        );
       }
+    }
+
+    const visibleOffer = extractVisibleOffer(html);
+    const preferred = preferRetailerFacingOffer(
+      { price, currency },
+      visibleOffer
+    );
+    if (preferred.price != null && preferred.currency && preferred.currency !== currency) {
+      price = preferred.price;
+      currency = preferred.currency;
+      setProv(provenance, "price", "retailer", 0.85, false);
+      setProv(provenance, "currency", "retailer", 0.85, false);
+    } else if (price != null && !currency && preferred.currency) {
+      currency = preferred.currency;
+      setProv(provenance, "currency", "retailer", 0.7);
+    } else if (price == null && preferred.price != null) {
+      price = preferred.price;
+      currency = preferred.currency;
+      setProv(provenance, "price", "retailer", 0.65);
+      if (currency) setProv(provenance, "currency", "retailer", 0.65);
     }
     // Leset / generic brand from hostname when missing
     if (!brand && retailer) {
@@ -686,6 +709,11 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
         setProv(provenance, "brand", "heuristics", 0.4);
       }
     }
+  }
+
+  if (html) {
+    country = countryFromPage(html, retailer);
+    if (country) setProv(provenance, "country", "meta", 0.7);
   }
 
   if (retailer) setProv(provenance, "retailer", "url", 1);
@@ -736,10 +764,11 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
     brand,
     retailer,
     price,
-    currency: currency || (price != null ? "USD" : null),
+    currency: currency || null,
     imageUrl,
     description,
     compositionText,
+    country,
     category: apparel.category,
     subcategory: apparel.subcategory,
     color: apparel.color,
@@ -765,6 +794,7 @@ export function enrichmentToAttributes(e: CaptureEnrichment): Record<string, unk
     imageUrl: e.imageUrl,
     description: e.description,
     compositionText: e.compositionText,
+    country: e.country,
     category: e.category,
     subcategory: e.subcategory,
     color: e.color,
@@ -845,6 +875,7 @@ export function mergeEnrichment(
   fill("imageUrl");
   fill("description");
   fill("compositionText");
+  fill("country");
   fill("category");
   fill("subcategory");
   fill("color");

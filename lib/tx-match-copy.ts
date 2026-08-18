@@ -1,11 +1,20 @@
 import { SITE_URL } from "./seo-international";
 import { getUniversalOpenUrl } from "./app-store";
+import { hasPercentages } from "./capture-page-signals";
+
+export const TX_MATCH_TAGLINE = "Know the material before you buy.";
+export const AFFILIATE_DISCLOSURE =
+  "INTERTEXE may earn a commission from qualifying purchases.";
 
 export type TxMatchCopy = {
   decodeAction: string;
   decodeSupporting: string;
   alternativesTitle: string;
   compositionNote: string | null;
+  compositionHeadline: string | null;
+  compositionDetail: string | null;
+  tagline: string;
+  affiliateDisclosure: string;
   viewAllMatchesUrl?: string;
   openInIntertexeUrl?: string;
 };
@@ -62,6 +71,8 @@ export function buildTxMatchCopy(opts: {
   garment?: string | null;
   altCount?: number;
   compositionListed?: boolean;
+  listedWithoutPercentages?: boolean;
+  listedMaterial?: string | null;
   inferredFiber?: string | null;
   captureId?: string | null;
 }): TxMatchCopy {
@@ -70,6 +81,7 @@ export function buildTxMatchCopy(opts: {
   const look = [fiber, garment].filter(Boolean).join(" ");
   const count = opts.altCount && opts.altCount > 0 ? opts.altCount : null;
   const links = buildTxMatchLinks(opts.captureId);
+  const listedName = prettyFiberName(opts.listedMaterial || fiber);
 
   const decodeAction = look
     ? count
@@ -79,12 +91,22 @@ export function buildTxMatchCopy(opts: {
 
   const alternativesTitle = fiber ? `More ${fiber} options` : "Your TX Matches";
 
+  let compositionHeadline: string | null = null;
+  let compositionDetail: string | null = null;
   let compositionNote: string | null = null;
-  if (!opts.compositionListed && fiber) {
-    compositionNote = `This page does not list a fabric label. We matched it as ${fiber} from the look of the piece — not from a care tag.`;
+
+  if (opts.compositionListed && opts.listedWithoutPercentages && listedName) {
+    compositionHeadline = `Retailer lists: ${listedName}`;
+    compositionDetail = "Exact percentages were not provided.";
+    compositionNote = `${compositionHeadline}\n${compositionDetail}`;
+  } else if (opts.compositionListed && opts.listedMaterial) {
+    compositionHeadline = opts.listedMaterial;
+    compositionDetail = null;
+    compositionNote = null;
   } else if (!opts.compositionListed) {
-    compositionNote =
-      "This page does not list a fabric label. Matches below follow the same style and price point.";
+    compositionHeadline = "Material details unavailable";
+    compositionDetail = "Let TX Match find similar pieces with verified compositions.";
+    compositionNote = `${compositionHeadline}\n${compositionDetail}`;
   }
 
   return {
@@ -92,6 +114,10 @@ export function buildTxMatchCopy(opts: {
     decodeSupporting: "Tap to open more pieces in this fabric, style, and price — not a random mix.",
     alternativesTitle,
     compositionNote,
+    compositionHeadline,
+    compositionDetail,
+    tagline: TX_MATCH_TAGLINE,
+    affiliateDisclosure: AFFILIATE_DISCLOSURE,
     ...(links || {}),
   };
 }
@@ -103,7 +129,8 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
       ? (row.attributes as Record<string, unknown>)
       : {};
   const alts = Array.isArray(row.alternatives) ? row.alternatives : [];
-  const composition = String(row.composition_text || "").trim();
+  const composition = String(row.composition_text || attrs.compositionText || "").trim();
+  const listed = composition.length > 0 && !/estimated|looks like/i.test(composition);
   let inferred =
     (typeof attrs.inferred_fiber === "string" && attrs.inferred_fiber) ||
     fiberFromText(`${composition} ${row.title || ""}`);
@@ -120,9 +147,21 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
     inferredFiber: inferred,
     garment: String(row.category || row.subcategory || row.title || ""),
     altCount: alts.length,
-    compositionListed: composition.length > 0 && !/estimated/i.test(composition),
+    compositionListed: listed,
+    listedWithoutPercentages: listed && !hasPercentages(composition),
+    listedMaterial: listed ? composition : null,
     captureId: row.id != null ? String(row.id) : null,
   });
+}
+
+function prettyFiberName(raw: string | null | undefined): string | null {
+  const t = String(raw || "").trim();
+  if (!t) return null;
+  const fiber = fiberFromText(t);
+  if (fiber && t.split(/\s+/).length <= 3 && !hasPercentages(t)) {
+    return fiber.charAt(0).toUpperCase() + fiber.slice(1);
+  }
+  return t;
 }
 
 function fiberFromText(text: string): string | null {

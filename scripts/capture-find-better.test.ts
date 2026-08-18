@@ -102,14 +102,29 @@ describe("TX Match copy", () => {
     assert.match(copy.decodeAction, /silk/i);
     assert.doesNotMatch(copy.decodeAction, /^TX MATCH$/i);
     assert.equal(copy.alternativesTitle, "More silk options");
-    assert.match(copy.compositionNote || "", /does not list a fabric label/i);
-    assert.match(copy.compositionNote || "", /silk/i);
+    assert.match(copy.compositionNote || "", /Material details unavailable/);
+    assert.equal(copy.tagline, "Know the material before you buy.");
+  });
+
+  it("treats Material: silk without percentages as a retailer listing", () => {
+    const copy = buildTxMatchCopy({
+      inferredFiber: "silk",
+      garment: "skirt",
+      altCount: 12,
+      compositionListed: true,
+      listedWithoutPercentages: true,
+      listedMaterial: "Silk",
+    });
+    assert.equal(copy.compositionHeadline, "Retailer lists: Silk");
+    assert.match(copy.compositionNote || "", /percentages were not provided/i);
   });
 
   it("does not claim a fabric when none was inferred", () => {
     const copy = buildTxMatchCopy({ compositionListed: false, altCount: 8 });
     assert.equal(copy.decodeAction, "See more like this");
     assert.doesNotMatch(copy.alternativesTitle, /silk/i);
+    assert.match(copy.compositionNote || "", /Material details unavailable/);
+    assert.match(copy.compositionNote || "", /verified compositions/i);
   });
 
   it("sends View all matches and Open in INTERTEXE to different URLs", () => {

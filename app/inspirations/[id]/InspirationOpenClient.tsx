@@ -3,6 +3,15 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
+import {
+  formatCapturePrice,
+  formatCheckedAt,
+  formatCountryName,
+  shopAtLabel,
+  titleCaseName,
+  uniqueTitleCaseNames,
+} from "@/lib/capture-page-signals";
+import { AFFILIATE_DISCLOSURE, TX_MATCH_TAGLINE } from "@/lib/tx-match-copy";
 
 const TOKEN_KEY = "intertexe_auth_token";
 
@@ -35,7 +44,9 @@ type Capture = {
   enrichment_status?: string | null;
   resolution_status?: string | null;
   alternatives?: CaptureAlt[] | null;
-  attributes?: { inferred_fiber?: string | null } | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  attributes?: { inferred_fiber?: string | null; country?: string | null } | null;
 };
 
 type TxCopy = {
@@ -43,6 +54,10 @@ type TxCopy = {
   decodeSupporting?: string;
   alternativesTitle?: string;
   compositionNote?: string | null;
+  compositionHeadline?: string | null;
+  compositionDetail?: string | null;
+  tagline?: string;
+  affiliateDisclosure?: string;
 };
 
 export default function InspirationOpenClient({ captureId }: { captureId: string }) {
@@ -93,31 +108,43 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
       String(capture.enrichment_status || "")
     );
 
+  const brandLine = capture
+    ? uniqueTitleCaseNames(capture.brand_name, capture.retailer).join(" · ")
+    : "";
+  const priceLabel = capture ? formatCapturePrice(capture.price, capture.currency) : null;
+  const countryLabel = formatCountryName(capture?.attributes?.country);
+  const checkedLabel = formatCheckedAt(capture?.updated_at || capture?.created_at);
+  const metaBits = [brandLine, priceLabel].filter(Boolean);
+  const trustBits = [countryLabel, checkedLabel].filter(Boolean);
+
   return (
     <main
       style={{
         minHeight: "100vh",
-        padding: 24,
+        padding: 28,
         background: "linear-gradient(160deg, #f7f3ee 0%, #ebe4da 100%)",
-        color: "#1a1a1a",
+        color: "#161412",
         fontFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif',
       }}
     >
-      <div style={{ maxWidth: 520, margin: "40px auto 0" }}>
+      <div style={{ maxWidth: 520, margin: "36px auto 0" }}>
         <p
           style={{
             margin: 0,
-            letterSpacing: "0.12em",
-            fontSize: 12,
+            letterSpacing: "0.14em",
+            fontSize: 13,
             textTransform: "uppercase",
-            color: "#6b6560",
+            color: "#2b2724",
           }}
         >
-          INTERTEXE · Inspiration
+          INTERTEXE
+        </p>
+        <p style={{ margin: "6px 0 0", fontSize: 14, color: "#3f3a36", lineHeight: 1.4 }}>
+          {copy?.tagline || TX_MATCH_TAGLINE}
         </p>
 
         {needsAuth ? (
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: 22 }}>
             <h1 style={{ fontSize: 26 }}>Sign in to view this Inspiration</h1>
             <Link href={`/account?mode=login&next=/inspirations/${captureId}`} style={linkStyle}>
               Sign in to INTERTEXE
@@ -125,10 +152,10 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
           </div>
         ) : null}
 
-        {error ? <p style={{ color: "#8b2e2e" }}>{error}</p> : null}
+        {error ? <p style={{ color: "#8b2e2e", fontSize: 15 }}>{error}</p> : null}
 
         {capture ? (
-          <article style={{ marginTop: 16 }}>
+          <article style={{ marginTop: 22, animation: "txFade 180ms ease-out" }}>
             {capture.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -143,29 +170,54 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
                 }}
               />
             ) : null}
-            <h1 style={{ fontSize: 24, margin: "14px 0 6px" }}>
-              {capture.title || "Saved Inspiration"}
+            <h1 style={{ fontSize: 26, margin: "18px 0 8px", lineHeight: 1.25 }}>
+              {titleCaseName(capture.title) || "Saved Inspiration"}
             </h1>
-            <p style={{ margin: 0, color: "#6b6560", fontSize: 14 }}>
-              {[capture.brand_name, capture.retailer, formatPrice(capture.price, capture.currency)]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            <p style={{ margin: "14px 0 0", fontSize: 15 }}>
-              {alts.length
-                ? copy?.decodeAction || `See ${alts.length} matches like this`
-                : processing
-                  ? "Finding more options like this…"
-                  : "Saved to Inspirations"}
-            </p>
-            {copy?.compositionNote ? (
-              <p style={{ margin: "8px 0 0", color: "#6b6560", fontSize: 13, lineHeight: 1.45 }}>
-                {copy.compositionNote}
+            {metaBits.length ? (
+              <p style={{ margin: 0, color: "#2b2724", fontSize: 16 }}>
+                {metaBits.join(" · ")}
               </p>
             ) : null}
-            <p style={{ margin: "6px 0 0", color: "#6b6560", fontSize: 13 }}>
-              {copy?.decodeSupporting || "More pieces in this fabric, style, and price."}
+            {trustBits.length ? (
+              <p style={{ margin: "6px 0 0", color: "#4a4541", fontSize: 14 }}>
+                {trustBits.join(" · ")}
+              </p>
+            ) : null}
+
+            <section style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid #d4cbc0" }}>
+              <p
+                style={{
+                  margin: "0 0 8px",
+                  fontSize: 12,
+                  letterSpacing: "0.12em",
+                  fontWeight: 600,
+                  color: "#2b2724",
+                }}
+              >
+                MATERIAL DETAILS
+              </p>
+              <p style={{ margin: 0, fontSize: 16, lineHeight: 1.45, color: "#161412" }}>
+                {copy?.compositionHeadline || capture.composition_text || "Material details unavailable"}
+              </p>
+              {copy?.compositionDetail ? (
+                <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: "#3f3a36" }}>
+                  {copy.compositionDetail}
+                </p>
+              ) : null}
+            </section>
+
+            <p style={{ margin: "20px 0 0", fontSize: 16 }}>
+              {alts.length
+                ? `${alts.length} matches found`
+                : processing
+                  ? "Finding better-material matches…"
+                  : "Saved to Inspirations"}
             </p>
+            {alts.length ? (
+              <p style={{ margin: "6px 0 0", color: "#3f3a36", fontSize: 14 }}>
+                {copy?.decodeSupporting || "More pieces in this fabric, style, and price."}
+              </p>
+            ) : null}
             {capture.original_url ? (
               <p style={{ marginTop: 18 }}>
                 <a href={capture.original_url} target="_blank" rel="noreferrer" style={linkStyle}>
@@ -174,40 +226,113 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
               </p>
             ) : null}
 
+            {processing ? <MatchSkeleton /> : null}
+
             {alts.length > 0 ? (
-              <section style={{ marginTop: 28 }}>
+              <section style={{ marginTop: 32 }}>
                 <p
                   style={{
-                    margin: "0 0 12px",
-                    fontSize: 11,
-                    letterSpacing: "0.14em",
+                    margin: "0 0 16px",
+                    fontSize: 12,
+                    letterSpacing: "0.12em",
                     fontWeight: 600,
+                    color: "#2b2724",
                   }}
                 >
-                  {copy?.alternativesTitle || "YOUR TX MATCHES"}
+                  {(copy?.alternativesTitle || "YOUR TX MATCHES").toUpperCase()}
                 </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                   {alts.map((alt, idx) => (
-                    <MatchCard key={String(alt.id || idx)} alt={alt} />
+                    <MatchCard
+                      key={String(alt.id || idx)}
+                      alt={alt}
+                      originalPrice={capture.price}
+                      originalCurrency={capture.currency}
+                    />
                   ))}
                 </div>
               </section>
             ) : null}
+
+            <p
+              style={{
+                margin: "32px 0 0",
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: "#5a5550",
+              }}
+            >
+              {copy?.affiliateDisclosure || AFFILIATE_DISCLOSURE}
+            </p>
           </article>
         ) : !needsAuth && !error ? (
-          <p style={{ marginTop: 16, color: "#6b6560" }}>Loading inspiration…</p>
+          <div style={{ marginTop: 22 }}>
+            <MatchSkeleton />
+          </div>
         ) : null}
       </div>
+      <style>{`@keyframes txFade { from { opacity: 0; } to { opacity: 1; } }`}</style>
     </main>
   );
 }
 
-function MatchCard({ alt }: { alt: CaptureAlt }) {
+function MatchSkeleton() {
+  return (
+    <div aria-hidden="true" style={{ marginTop: 24 }}>
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "96px 1fr",
+            gap: 16,
+            padding: "16px 0",
+            borderTop: "1px solid #ddd5cb",
+          }}
+        >
+          <div style={{ width: 96, height: 120, background: "#e4ddd4" }} />
+          <div>
+            <div style={{ height: 12, width: "40%", background: "#e4ddd4", marginBottom: 10 }} />
+            <div style={{ height: 16, width: "78%", background: "#e4ddd4", marginBottom: 10 }} />
+            <div style={{ height: 12, width: "55%", background: "#e4ddd4" }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MatchCard({
+  alt,
+  originalPrice,
+  originalCurrency,
+}: {
+  alt: CaptureAlt;
+  originalPrice?: number | null;
+  originalCurrency?: string | null;
+}) {
   const href = affiliateHref(alt);
-  const price = formatPrice(
+  const price = formatCapturePrice(
     typeof alt.price === "string" ? parseFloat(alt.price) : alt.price,
     alt.currency
   );
+  const brand = titleCaseName(alt.brand_name);
+  const name = titleCaseName(alt.name) || "TX Match";
+  const composition = alt.composition
+    ? alt.composition
+    : alt.natural_fiber_percent != null
+      ? `${Math.round(alt.natural_fiber_percent)}% natural`
+      : null;
+  const savings =
+    originalPrice != null &&
+    alt.price != null &&
+    originalCurrency &&
+    alt.currency &&
+    String(originalCurrency).toUpperCase() === String(alt.currency).toUpperCase() &&
+    Number(alt.price) < Number(originalPrice)
+      ? formatCapturePrice(Number(originalPrice) - Number(alt.price), originalCurrency)
+      : null;
+
   const body = (
     <>
       {alt.image_url ? (
@@ -215,30 +340,26 @@ function MatchCard({ alt }: { alt: CaptureAlt }) {
         <img
           src={alt.image_url}
           alt=""
-          style={{ width: 64, height: 80, objectFit: "cover", background: "#ddd5cb" }}
+          style={{ width: 96, height: 120, objectFit: "cover", background: "#ddd5cb" }}
         />
       ) : (
-        <div style={{ width: 64, height: 80, background: "#ddd5cb" }} />
+        <div style={{ width: 96, height: 120, background: "#ddd5cb" }} />
       )}
       <div>
-        {alt.brand_name ? (
-          <p style={{ margin: "0 0 2px", fontSize: 11, color: "#6b6560" }}>{alt.brand_name}</p>
+        {brand ? (
+          <p style={{ margin: "0 0 4px", fontSize: 13, color: "#3f3a36", letterSpacing: "0.04em" }}>
+            {brand}
+          </p>
         ) : null}
-        <p style={{ margin: "0 0 4px", fontSize: 15, lineHeight: 1.3 }}>
-          {alt.name || "TX Match"}
+        <p style={{ margin: "0 0 8px", fontSize: 17, lineHeight: 1.3, color: "#161412" }}>{name}</p>
+        <p style={{ margin: "0 0 4px", fontSize: 14, color: "#2b2724" }}>
+          {[composition, price].filter(Boolean).join(" · ")}
         </p>
-        <p style={{ margin: "0 0 4px", fontSize: 12 }}>
-          {[price, alt.composition || (alt.natural_fiber_percent != null ? `${Math.round(alt.natural_fiber_percent)}% natural` : null)]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-        {alt.why ? (
-          <p style={{ margin: 0, fontSize: 11, color: "#8a837c", lineHeight: 1.4 }}>{alt.why}</p>
+        {savings ? (
+          <p style={{ margin: "0 0 8px", fontSize: 14, color: "#1f3d2b" }}>{savings} less</p>
         ) : null}
         {href ? (
-          <p style={{ margin: "6px 0 0", fontSize: 11, letterSpacing: "0.08em", color: "#1f3d2b" }}>
-            SHOP VIA AFFILIATE →
-          </p>
+          <p style={{ margin: "10px 0 0", fontSize: 14, color: "#1f3d2b" }}>{shopAtLabel(alt.brand_name)}</p>
         ) : null}
       </div>
     </>
@@ -268,25 +389,17 @@ function affiliateHref(alt: CaptureAlt): string | null {
   return null;
 }
 
-function formatPrice(price?: number | null, currency?: string | null) {
-  if (price == null || !Number.isFinite(Number(price))) return null;
-  const cur = currency || "USD";
-  try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: cur }).format(Number(price));
-  } catch {
-    return `$${price}`;
-  }
-}
-
 const linkStyle: CSSProperties = {
   color: "#1f3d2b",
   textDecoration: "underline",
+  fontSize: 15,
 };
 
 const cardStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "64px 1fr",
-  gap: 12,
-  padding: "10px 0",
-  borderTop: "1px solid #ddd5cb",
+  gridTemplateColumns: "96px 1fr",
+  gap: 16,
+  padding: "16px 0",
+  borderTop: "1px solid #d4cbc0",
+  animation: "txFade 180ms ease-out",
 };

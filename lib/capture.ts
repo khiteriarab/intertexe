@@ -22,6 +22,7 @@ import {
 } from "./capture-find-better";
 import { fetchPageHTML } from "./scanner/retailer-extraction";
 import { getServerSupabase } from "./supabase-service-client";
+import { looksLikeListedMaterial, looksLikePercentageComposition, preferRetailerFacingOffer } from "./capture-page-signals";
 
 const MAX_ENRICHMENT_ATTEMPTS = 4;
 const ENRICHMENT_LOCK_MS = 3 * 60 * 1000;
@@ -331,12 +332,10 @@ function isPlaceholderTitle(title: unknown, retailer: unknown): boolean {
 function isJunkComposition(text: unknown): boolean {
   const t = String(text || "").trim();
   if (!t) return true;
-  if (t.length < 8) return true;
   if (/%\s*(off|off your|shipping|discount)/i.test(t)) return true;
-  if (!/\d+\s*%/.test(t) && !/\b(cotton|linen|silk|wool|cashmere|viscose|polyester|elastane|nylon|polyamide)\b/i.test(t)) {
-    return true;
-  }
-  return false;
+  if (looksLikePercentageComposition(t) || looksLikeListedMaterial(t)) return false;
+  if (t.length < 8) return true;
+  return !/\b(cotton|linen|silk|wool|cashmere|viscose|polyester|elastane|nylon|polyamide)\b/i.test(t);
 }
 
 function enrichmentPatch(
@@ -366,6 +365,14 @@ function enrichmentPatch(
       ? enrichment.brand || (existing.brand_name as string)
       : (existing.brand_name as string) || enrichment.brand;
 
+  const offer = preferRetailerFacingOffer(
+    {
+      price: existing.price != null ? Number(existing.price) : null,
+      currency: (existing.currency as string) || null,
+    },
+    { price: enrichment.price, currency: enrichment.currency }
+  );
+
   const pageUrl =
     (existing.canonical_url as string) ||
     (existing.original_url as string) ||
@@ -380,8 +387,8 @@ function enrichmentPatch(
     title: preferTitle,
     brand_name: preferBrand,
     retailer: (existing.retailer as string) || enrichment.retailer,
-    price: existing.price ?? enrichment.price,
-    currency: (existing.currency as string) || enrichment.currency,
+    price: offer.price,
+    currency: offer.currency,
     description: (existing.description as string) || enrichment.description,
     composition_text: preferComposition,
     image_url: preferImage,
@@ -1062,7 +1069,7 @@ export async function decodeCapture(
           brand_slug: (a.brand_slug as string) || null,
           image_url: (a.image_url as string) || null,
           price: (a.price as number | string) ?? null,
-          currency: (a.currency as string) || "USD",
+          currency: (a.currency as string) || null,
           composition: (a.composition as string) || null,
           natural_fiber_percent:
             a.natural_fiber_percent != null ? Number(a.natural_fiber_percent) : null,
@@ -1098,6 +1105,7 @@ export async function decodeCapture(
     const attributes = {
       ...existingAttrs,
       inferred_fiber: inferredFiber,
+      ...(enrichment?.country ? { country: enrichment.country } : {}),
     };
 
     const patch: Record<string, unknown> = {

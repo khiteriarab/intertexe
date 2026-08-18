@@ -1,3 +1,10 @@
+import {
+  extractLabeledMaterial,
+  looksLikeListedMaterial,
+  looksLikePercentageComposition,
+  normalizeListedMaterial,
+} from "../capture-page-signals";
+
 export type RetailerPattern = {
   compositionSelectors: string[];
   priceSelectors: string[];
@@ -114,7 +121,15 @@ function extractCompositionFromText(text: string): string {
   const match = text.match(
     /(\d+(?:\.\d+)?%\s*[a-zA-ZÀ-ÿ][a-zA-ZÀ-ÿ\s/]*?(?:,\s*\d+(?:\.\d+)?%\s*[a-zA-ZÀ-ÿ][a-zA-ZÀ-ÿ\s/]*?)*)/i
   );
-  return match?.[1]?.trim() || "";
+  const pct = match?.[1]?.trim() || "";
+  if (pct && looksLikePercentageComposition(pct)) return pct;
+  const labeled = extractLabeledMaterial(text);
+  if (labeled) return labeled;
+  const normalized = normalizeListedMaterial(text);
+  if (looksLikeListedMaterial(normalized) || looksLikePercentageComposition(normalized)) {
+    return normalized;
+  }
+  return "";
 }
 
 /** Universal image extraction — works for any retailer product page HTML. */

@@ -122,6 +122,7 @@ Rules:
 - Prefer English fashion retail terms.
 - category should be one of: tops, dresses, skirts, trousers, pants, outerwear, knitwear, shoes, bags, jumpsuits, shorts, other.
 - compositionText ONLY if clearly stated on the page/context — never invent fiber percentages.
+- If the page lists a fiber without percentages (e.g. "Material: silk"), return that fiber name (e.g. "Silk"). Do not treat it as missing.
 - If composition is uncertain, return null (do not guess 100%).
 - Do not claim the original brand is inferior.
 - distinctiveDetails: short concrete cues (print, hardware, neckline, hem).`;

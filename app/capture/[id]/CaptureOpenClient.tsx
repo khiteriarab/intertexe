@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getUniversalOpenUrl } from "../../../lib/app-store";
+import { titleCaseName, uniqueTitleCaseNames } from "../../../lib/capture-page-signals";
+import { TX_MATCH_TAGLINE } from "../../../lib/tx-match-copy";
 
 const TOKEN_KEY = "intertexe_auth_token";
 
@@ -76,7 +78,10 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
         >
           INTERTEXE
         </p>
-        <h1 style={{ fontSize: 28, margin: "10px 0 8px" }}>Saved in INTERTEXE</h1>
+        <p style={{ margin: "6px 0 0", fontSize: 14, color: "#3f3a36", lineHeight: 1.4 }}>
+          {TX_MATCH_TAGLINE}
+        </p>
+        <h1 style={{ fontSize: 28, margin: "14px 0 8px" }}>Saved in INTERTEXE</h1>
         <p style={{ margin: "0 0 20px", color: "#6b6560", fontSize: 14, lineHeight: 1.45 }}>
           This is your saved piece — not the TX Match list. Open the app to keep shopping it there,
           or view matches on the web.
@@ -106,11 +111,11 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
           />
         ) : null}
         {capture?.title ? (
-          <p style={{ fontSize: 18, margin: "0 0 4px" }}>{capture.title}</p>
+          <p style={{ fontSize: 18, margin: "0 0 4px" }}>{titleCaseName(capture.title)}</p>
         ) : null}
         {capture?.brand_name || capture?.retailer ? (
-          <p style={{ margin: "0 0 20px", color: "#6b6560", fontSize: 13 }}>
-            {[capture.brand_name, capture.retailer].filter(Boolean).join(" · ")}
+          <p style={{ margin: "0 0 20px", color: "#3f3a36", fontSize: 15 }}>
+            {uniqueTitleCaseNames(capture.brand_name, capture.retailer).join(" · ")}
           </p>
         ) : null}
 
