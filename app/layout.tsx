@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   ],
   metadataBase: new URL(SITE_URL),
   verification: {
-    google: "qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRW1PBo0kStg",
+    google: "qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRWlPBoOkStg",
   },
   alternates: pageAlternates(),
   robots: GLOBAL_ROBOTS,
@@ -145,7 +145,7 @@ export default function RootLayout({
       <head>
         <meta
           name="google-site-verification"
-          content="qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRW1PBo0kStg"
+          content="qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRWlPBoOkStg"
         />
         <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
         <script
