@@ -1,5 +1,5 @@
 import { getAppStoreOpenUrl, getAppStoreUrl } from "./app-store";
-import { LIFECYCLE_BRANCHES, type LifecycleBranch } from "./email-constants";
+import { EMAIL_REPLY_TO, LIFECYCLE_BRANCHES, type LifecycleBranch } from "./email-constants";
 
 export type LifecycleCopy = {
   branch: LifecycleBranch;
@@ -95,7 +95,6 @@ export function copyForLifecycleBranch(
         body: "If it’s helping you shop differently, a quick App Store review would mean a lot. It helps other people who care about what their clothes are made of find us.",
         ctaLabel: "Leave a review",
         ctaUrl: reviewUrl(),
-        closing: "Thank you — Khiteri",
       };
     case LIFECYCLE_BRANCHES.DAY25_INACTIVE_WINBACK:
       return {
@@ -103,21 +102,19 @@ export function copyForLifecycleBranch(
         subject: "What got in the way?",
         preview: "No pressure — just a reason to come back.",
         hook: `${hi}\n\nWhat got in the way?`,
-        body: "If INTERTEXE didn’t click yet, that’s useful to know. The simplest next step is one scan — or reply to this email and tell me what would make it useful.",
+        body: "If INTERTEXE didn’t click yet, that’s useful to know. The simplest next step is one scan — or reply to this email and tell us what would make it useful.",
         ctaLabel: "Open INTERTEXE",
         ctaUrl: lifecycleOpenUrl("/scanner", branch),
-        closing: "I read the replies. — Khiteri",
       };
     case LIFECYCLE_BRANCHES.DAY25_FEEDBACK:
       return {
         branch,
         subject: "We want scanning to work better for you",
-        preview: "Reply anytime — I read every response.",
+        preview: "Reply anytime — we read every response.",
         hook: `${hi}\n\nIt looks like a scan didn’t go as expected.`,
-        body: "I’d genuinely like to know what happened. Just reply to this email with a photo or a short note — I read the responses and use them to improve INTERTEXE.",
-        ctaLabel: "Reply to Khiteri",
-        ctaUrl: "mailto:khiteri@intertexe.com?subject=Scan%20feedback",
-        closing: "Thank you — Khiteri, Founder",
+        body: "We’d genuinely like to know what happened. Just reply to this email with a photo or a short note — we read the responses and use them to improve INTERTEXE.",
+        ctaLabel: "Reply to INTERTEXE",
+        ctaUrl: `mailto:${EMAIL_REPLY_TO}?subject=Scan%20feedback`,
       };
     default: {
       const _exhaustive: never = branch;
