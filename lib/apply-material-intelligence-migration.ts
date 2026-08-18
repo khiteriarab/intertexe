@@ -135,11 +135,11 @@ async function applyViaDerivedPostgres(sql: string): Promise<{ ok: boolean; mess
   }
   const enc = encodeURIComponent(password);
   const urls = [
-    `postgresql://postgres:${enc}@db.${ref}.supabase.co:5432/postgres?sslmode=require`,
-    `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require`,
-    `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require`,
-    `postgresql://postgres.${ref}:${enc}@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require`,
-    `postgresql://postgres.${ref}:${enc}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require`,
+    `postgresql://postgres:${enc}@db.${ref}.supabase.co:5432/postgres?sslmode=no-verify`,
+    `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
+    `postgresql://postgres.${ref}:${enc}@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=no-verify`,
+    `postgresql://postgres.${ref}:${enc}@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
+    `postgresql://postgres.${ref}:${enc}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
   ];
   let last = "no connection";
   for (const url of urls) {
