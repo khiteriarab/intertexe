@@ -1154,23 +1154,131 @@ export type PlanPulse = {
   setupAction: string | null;
 };
 
+/**
+ * Deliberately narrower than fetchRevenueCommandCenter: the "This week" page
+ * needs the headline only, so it skips API readiness and consumer distribution.
+ * The math comes from the same pure helpers, so the two pages cannot disagree.
+ */
 export async function fetchPlanPulse(workspaceId: string, opts?: { now?: Date }): Promise<PlanPulse> {
-  const bundle = await fetchRevenueCommandCenter(workspaceId, opts);
-  const totals = bundle.totals.combined;
+  const now = opts?.now || new Date();
+  const supabase = getServerSupabase();
+  const milestonesFallback = DEFAULT_MILESTONES;
+
+  const unavailable = (): PlanPulse => {
+    const next = nextMilestone(milestonesFallback, now);
+    return {
+      available: false,
+      scope: "combined",
+      booked: 0,
+      targetToday: interpolateTarget(milestonesFallback, now),
+      nextMilestoneName: next?.name ?? null,
+      nextMilestoneDate: next?.targetDate ?? null,
+      nextMilestoneTarget: next?.cumulative ?? 0,
+      gap: computeGap(next?.cumulative ?? 0, 0),
+      pace: "no_data",
+      weakestStage: null,
+      openActions: 0,
+      setupAction: "Apply 20260820_hq_revenue_command_center.sql to record deals and payments",
+    };
+  };
+
+  if (!supabase) return unavailable();
+
+  const [stageRows, targetRows, dealRows, affiliate] = await Promise.all([
+    safeRows<{ key: string; label: string; probability: number | string; sort_order: number; is_open: boolean; is_won: boolean }>(
+      supabase,
+      "hq_deal_stages",
+      (q) => q.select("key, label, probability, sort_order, is_open, is_won").order("sort_order")
+    ),
+    safeRows<TargetRow>(supabase, "hq_revenue_targets", (q) =>
+      q
+        .select("metric, scope, target_value, target_date, revenue_stream, unit_target, name, notes")
+        .eq("workspace_id", workspaceId)
+        .eq("is_active", true)
+        .limit(400)
+    ),
+    safeRows<Record<string, unknown>>(supabase, "hq_deals", (q) =>
+      q
+        .select(
+          "id, company_name, opportunity, revenue_stream, scope, amount, stage, probability_override, expected_close_date, booked_at, next_action, next_action_at, entry_mode"
+        )
+        .eq("workspace_id", workspaceId)
+        .limit(500)
+    ),
+    fetchAffiliateBooked(supabase, workspaceId),
+  ]);
+
+  if (!dealRows.available) return unavailable();
+
+  const stages: StageMeta[] = stageRows.rows.length
+    ? stageRows.rows.map((r) => ({
+        key: r.key as StageMeta["key"],
+        label: r.label,
+        probability: num(r.probability),
+        sortOrder: r.sort_order,
+        isOpen: Boolean(r.is_open),
+        isWon: Boolean(r.is_won),
+      }))
+    : DEFAULT_STAGES;
+
+  const deals: DealRow[] = dealRows.rows.map((row) => ({
+    id: String(row.id),
+    companyName: String(row.company_name || "—"),
+    opportunity: (row.opportunity as string) || null,
+    revenueStream: String(row.revenue_stream || "api_pilot"),
+    scope: (row.scope === "personal" ? "personal" : "company") as EntryScope,
+    amount: num(row.amount),
+    stage: String(row.stage || "prospect"),
+    probabilityOverride: row.probability_override == null ? null : num(row.probability_override),
+    expectedCloseDate: (row.expected_close_date as string) || null,
+    bookedAt: (row.booked_at as string) || null,
+    nextAction: (row.next_action as string) || null,
+    nextActionAt: (row.next_action_at as string) || null,
+    entryMode: String(row.entry_mode || "manual"),
+  }));
+
+  const milestones = milestonesFromTargets(targetRows.rows);
+  const booked = composeBooked(computeBookedRevenue(deals, stages, "combined"), affiliate.commission, "combined");
+  const targetToday = interpolateTarget(milestones, now);
+  const next = nextMilestone(milestones, now);
+
+  const wonStreams = new Set(
+    deals.filter((d) => stages.find((s) => s.key === d.stage)?.isWon).map((d) => d.revenueStream)
+  );
+  const stageIndex = new Map<string, number>(stages.map((s) => [String(s.key), s.sortOrder]));
+  const reached = (minStage: string) => {
+    const floor = stageIndex.get(minStage) ?? 0;
+    return deals.filter((d) => d.stage !== "lost" && (stageIndex.get(d.stage) ?? 0) >= floor).length;
+  };
+  const septemberTargets = funnelTargetsFor(targetRows.rows, SEPTEMBER_MILESTONE_ISO);
+  const weakest = weakestFunnelStage(
+    buildFunnel(
+      {
+        qualified_account: reached("qualified"),
+        snapshot_sent: reached("snapshot_sent"),
+        meeting: reached("meeting"),
+        proposal: reached("proposal"),
+        won: deals.filter(
+          (d) => stages.find((s) => s.key === d.stage)?.isWon && d.revenueStream !== "api_integration"
+        ).length,
+        api_integration: wonStreams.has("api_integration") ? 1 : 0,
+      },
+      septemberTargets
+    )
+  );
+
   return {
-    available: bundle.planTablesReady,
+    available: true,
     scope: "combined",
-    booked: totals.booked,
-    targetToday: totals.targetToday,
-    nextMilestoneName: bundle.nextMilestone?.name ?? null,
-    nextMilestoneDate: bundle.nextMilestone?.targetDate ?? null,
-    nextMilestoneTarget: bundle.nextMilestone?.cumulative ?? 0,
-    gap: totals.gapToNextMilestone,
-    pace: totals.pace,
-    weakestStage: bundle.funnel.weakest?.label ?? null,
-    openActions: bundle.nextActions.length,
-    setupAction: bundle.planTablesReady
-      ? null
-      : "Apply 20260820_hq_revenue_command_center.sql to record deals and payments",
+    booked,
+    targetToday,
+    nextMilestoneName: next?.name ?? null,
+    nextMilestoneDate: next?.targetDate ?? null,
+    nextMilestoneTarget: next?.cumulative ?? 0,
+    gap: computeGap(next?.cumulative ?? 0, booked),
+    pace: paceStatus(booked, targetToday),
+    weakestStage: weakest?.label ?? null,
+    openActions: buildNextActions(deals, stages, now).length,
+    setupAction: null,
   };
 }

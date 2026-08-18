@@ -90,10 +90,10 @@ function Funnel({
 
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
-  const isFounder = session.roles.includes("founder");
   // The $50K plan is founder-only; other HQ roles never see it on this page.
-  const planPulse = isFounder ? await fetchPlanPulse(session.workspaceId) : null;
+  const isFounder = session.roles.includes("founder");
   const [
+    planPulse,
     founder,
     revenue,
     google,
@@ -108,6 +108,7 @@ export default async function HqOverviewPage() {
     freshness,
     appDownloadClicks,
   ] = await Promise.all([
+    isFounder ? fetchPlanPulse(session.workspaceId) : Promise.resolve(null),
     fetchFounderToday(session.workspaceId),
     fetchRevenueSnapshot(session.workspaceId),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
