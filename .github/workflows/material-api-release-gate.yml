@@ -40,5 +40,4 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           HQ_PASSWORD: ${{ secrets.HQ_PASSWORD }}
           MATERIAL_API_SITE: https://www.intertexe.com
-          NODE_TLS_REJECT_UNAUTHORIZED: "0"
         run: node --import tsx scripts/live-material-api-gate.ts

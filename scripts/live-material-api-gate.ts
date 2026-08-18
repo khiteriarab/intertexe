@@ -254,6 +254,12 @@ async function main() {
     return;
   }
   record("supabase", true, "service client ready");
+  const { count: productCount, error: productCountError } = await supabase
+    .from("products")
+    .select("id", { count: "exact", head: true });
+  console.log(
+    `supabase products count=${productCount ?? "null"} err=${productCountError?.message || "none"}`
+  );
 
   const applied = await applyMigration(supabase);
   if (!applied) {

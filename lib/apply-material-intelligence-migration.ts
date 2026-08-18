@@ -141,13 +141,14 @@ async function applyViaDerivedPostgres(sql: string): Promise<{ ok: boolean; mess
     `postgresql://postgres.${ref}:${enc}@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
     `postgresql://postgres.${ref}:${enc}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`,
   ];
-  let last = "no connection";
-  for (const url of urls) {
-    const result = await applySqlWithPg(sql, url);
+  const labels = ["direct", "pooler_east_tx", "pooler_east_session", "pooler_euwest", "pooler_eucentral"];
+  const notes: string[] = [];
+  for (let i = 0; i < urls.length; i++) {
+    const result = await applySqlWithPg(sql, urls[i]);
     if (result.ok) return { ok: true, message: result.message, via: "derived_postgres" };
-    last = result.message;
+    notes.push(`${labels[i]}: ${result.message.split("\n")[0]}`);
   }
-  return { ok: false, message: last, via: "derived_postgres" };
+  return { ok: false, message: notes.join("; "), via: "derived_postgres" };
 }
 
 async function applyViaManagementApi(sql: string): Promise<{ ok: boolean; message: string; via: string }> {
