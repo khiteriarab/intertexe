@@ -108,14 +108,12 @@ function extractProductFromPage() {
     attr('meta[property="og:url"]') ||
     location.href;
 
-  let jsonLd = "";
   let brandName = null;
   let sku = null;
   let price = null;
   let currency = null;
   let compositionText = null;
   for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
-    jsonLd += ` ${script.textContent || ""}`;
     try {
       const data = JSON.parse(script.textContent || "null");
       const nodes = Array.isArray(data) ? data : data?.["@graph"] ? data["@graph"] : [data];
@@ -147,6 +145,8 @@ function extractProductFromPage() {
     const listed = hits.slice(0, 8).join(", ");
     if (listed.length < 180) compositionText = listed;
   }
+  // Visible page text is read locally to find a composition line. It is not
+  // transmitted as a raw page dump — only the short compositionText above.
 
   let retailer = null;
   try {
@@ -166,10 +166,6 @@ function extractProductFromPage() {
     currency,
     compositionText,
     retailer,
-    pageSignals: {
-      visibleText: bodyText.slice(0, 4000),
-      jsonLd: jsonLd.slice(0, 4000),
-    },
   };
 }
 
