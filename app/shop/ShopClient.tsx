@@ -32,6 +32,10 @@ import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
+import {
+  CATEGORY_SUBCATEGORY_OPTIONS,
+  productMatchesSubcategory,
+} from "../../lib/catalog-subcategories";
 import { cfProductCard } from "../../lib/cloudflare-images";
 import {
   constructionOptionsForFamily,
@@ -99,6 +103,12 @@ function parseColorParam(raw: string | null): string | null {
   if (!raw) return null;
   const normalized = raw.trim().toLowerCase();
   return SHOP_COLOR_OPTIONS.some((c) => c.value === normalized) ? normalized : null;
+}
+
+function parseSubcategoryParam(raw: string | null): string | null {
+  if (!raw) return null;
+  const decoded = decodeURIComponent(raw).trim();
+  return decoded || null;
 }
 
 const SHOP_PAGE_SIZE = 24;
@@ -239,6 +249,7 @@ export default function ShopClient({
     .filter(Boolean);
   const initialMarketFilter = (searchParams.get("market") as MarketFilter) || "all";
   const initialSearch = searchParams.get("q") || "";
+  const initialSubcategory = parseSubcategoryParam(searchParams.get("subcategory"));
   const { market: marketFilter, setMarket: setMarketFilter, catalogRegion } = useShoppingMarket(
     initialMarketFilter === "us-ca" || initialMarketFilter === "eu-uk-me" ? initialMarketFilter : "all"
   );
@@ -248,6 +259,7 @@ export default function ShopClient({
   const [priceTier, setPriceTier] = useState<ShopPriceTierId>(initialPriceTier);
   const [selectedColor, setSelectedColor] = useState<string | null>(initialColor);
   const [selectedBrandSlugs, setSelectedBrandSlugs] = useState<string[]>(initialBrands);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
   const [selectedFabricConstructions, setSelectedFabricConstructions] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
@@ -277,6 +289,11 @@ export default function ShopClient({
   };
 
   const categoryList = [...selectedCategories];
+  const primaryCategory = categoryList[0] || null;
+  const subcategoryOptions = primaryCategory
+    ? CATEGORY_SUBCATEGORY_OPTIONS[primaryCategory] || []
+    : [];
+  const subcategorySearch = selectedSubcategory?.trim().toLowerCase() || "";
   const priceBounds = priceBoundsFromTier(priceTier);
 
   const syncUrl = useCallback(
@@ -287,7 +304,8 @@ export default function ShopClient({
       market: string,
       search: string,
       tier: ShopPriceTierId,
-      brands: string[]
+      brands: string[],
+      subcategory: string | null
     ) => {
       const params = new URLSearchParams();
       if (fiber !== "all") params.set("fiber", fiber);
@@ -297,6 +315,7 @@ export default function ShopClient({
       if (search) params.set("q", search);
       if (tier !== "any") params.set("price", tier === "2500plus" ? "2500plus" : tier);
       if (brands.length) params.set("brands", brands.join(","));
+      if (subcategory) params.set("subcategory", subcategory);
       const qs = params.toString();
       const newUrl = qs ? `/shop?${qs}` : "/shop";
       window.history.replaceState(null, "", newUrl);
@@ -305,8 +324,27 @@ export default function ShopClient({
   );
 
   useEffect(() => {
-    syncUrl(fiberTab, categoryList, sortBy, marketFilter, debouncedSearch, priceTier, selectedBrandSlugs);
-  }, [fiberTab, categoryList.join(","), sortBy, marketFilter, debouncedSearch, priceTier, selectedBrandSlugs.join(","), syncUrl]);
+    syncUrl(
+      fiberTab,
+      categoryList,
+      sortBy,
+      marketFilter,
+      debouncedSearch,
+      priceTier,
+      selectedBrandSlugs,
+      selectedSubcategory
+    );
+  }, [
+    fiberTab,
+    categoryList.join(","),
+    sortBy,
+    marketFilter,
+    debouncedSearch,
+    priceTier,
+    selectedBrandSlugs.join(","),
+    selectedSubcategory,
+    syncUrl,
+  ]);
 
   const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>(
     prefetchedBrands?.map((b) => ({ slug: b.slug, name: b.name, count: b.count })) ?? []
@@ -325,10 +363,25 @@ export default function ShopClient({
   const [isLoading, setIsLoading] = useState(false);
   const [countLoading, setCountLoading] = useState(!initialMeta);
   const initialFetchDone = useRef(initialProducts?.length > 0);
+  const subcategoryFilteredProducts = useMemo(() => {
+    if (!selectedSubcategory) return products;
+    return products.filter((product) =>
+      productMatchesSubcategory(
+        {
+          category: product.category,
+          name: product.name,
+          materialSubtype: product.materialSubtype,
+          fabricConstruction: product.fabricConstruction,
+          composition: product.composition,
+        },
+        selectedSubcategory
+      )
+    );
+  }, [products, selectedSubcategory]);
   const { favorites } = useProductFavorites();
   const rankedProducts = useMemo(
-    () => prioritizeFavoritedProducts(products, favorites),
-    [products, favorites]
+    () => prioritizeFavoritedProducts(subcategoryFilteredProducts, favorites),
+    [subcategoryFilteredProducts, favorites]
   );
 
   const scrollRestored = useRef(false);
@@ -389,6 +442,7 @@ export default function ShopClient({
       priceTier === "any" &&
       !selectedColor &&
       selectedBrandSlugs.length === 0 &&
+      !selectedSubcategory &&
       selectedFiberSubtypes.length === 0 &&
       selectedFabricConstructions.length === 0 &&
       listOffset === 0;
@@ -420,7 +474,7 @@ export default function ShopClient({
             catalogRegion,
             limit: SHOP_PAGE_SIZE,
             offset: listOffset,
-            search: debouncedSearch || undefined,
+            search: debouncedSearch || subcategorySearch || undefined,
             skipTotal: false,
           });
           if (listOffset === 0) {
@@ -465,6 +519,7 @@ export default function ShopClient({
     marketFilter,
     listOffset,
     debouncedSearch,
+    subcategorySearch,
     priceTier,
     selectedColor,
     catalogRegion,
@@ -491,7 +546,7 @@ export default function ShopClient({
       price600Plus: priceTier === "2500plus",
       market: marketFilter,
       catalogRegion,
-      search: debouncedSearch || undefined,
+      search: debouncedSearch || subcategorySearch || undefined,
     })
       .then(({ total }) => {
         setResultTotal(total);
@@ -503,6 +558,7 @@ export default function ShopClient({
     categoryList.join(","),
     marketFilter,
     debouncedSearch,
+    subcategorySearch,
     priceTier,
     selectedColor,
     catalogRegion,
@@ -532,6 +588,7 @@ export default function ShopClient({
     priceTier === "any" &&
     !selectedColor &&
     selectedBrandSlugs.length === 0 &&
+    !selectedSubcategory &&
     selectedFiberSubtypes.length === 0 &&
     selectedFabricConstructions.length === 0;
 
@@ -547,6 +604,7 @@ export default function ShopClient({
           : null);
 
   const displayTotal = displayResultTotal ?? (useGlobalCountHint ? catalogKnownTotal : products.length);
+  const displayedResultCount = selectedSubcategory ? rankedProducts.length : displayTotal;
   const pagingTotal = displayTotal > 0 ? displayTotal : catalogKnownTotal;
   const canLoadMore = products.length > 0 && products.length < pagingTotal;
 
@@ -571,6 +629,7 @@ export default function ShopClient({
       else next.add(key);
       return next;
     });
+    setSelectedSubcategory(null);
     setListOffset(0);
   };
 
@@ -587,6 +646,7 @@ export default function ShopClient({
           next.delete(cat as CategoryFilterKey);
           return next;
         });
+        setSelectedSubcategory(null);
         setListOffset(0);
       },
     })),
@@ -612,6 +672,13 @@ export default function ShopClient({
         setListOffset(0);
       },
     })),
+    ...(selectedSubcategory
+      ? [{
+          id: "subcategory",
+          label: selectedSubcategory,
+          onRemove: () => { setSelectedSubcategory(null); setListOffset(0); },
+        }]
+      : []),
     ...selectedFiberSubtypes.map((st) => ({
       id: `subtype-${st}`,
       label: st,
@@ -644,6 +711,7 @@ export default function ShopClient({
     priceTier === "any" &&
     !selectedColor &&
     selectedBrandSlugs.length === 0 &&
+    !selectedSubcategory &&
     selectedFiberSubtypes.length === 0 &&
     selectedFabricConstructions.length === 0 &&
     marketFilter === "all";
@@ -691,7 +759,7 @@ export default function ShopClient({
 
         <CatalogMobileToolbar
           className="mb-4"
-          resultCount={displayTotal}
+          resultCount={displayedResultCount}
           countLoading={countLoading && resultTotal == null}
           sortLabel={currentSort.label}
           onOpenFilter={() => { setShowFilterSheet(true); setShowSortSheet(false); }}
@@ -705,7 +773,7 @@ export default function ShopClient({
 
         <div className="lg:flex lg:gap-10 lg:items-start">
           <CatalogFilterSidebar
-            resultCount={displayTotal}
+            resultCount={displayedResultCount}
             isLoading={countLoading && displayResultTotal == null}
             fiberTab={fiberTab}
             categoryFilter={categoryList[0] ?? "all"}
@@ -716,11 +784,19 @@ export default function ShopClient({
               setSelectedFiberSubtypes([]);
               setSelectedFabricConstructions([]);
               setSelectedCategories(new Set());
+              setSelectedSubcategory(null);
               setListOffset(0);
             }}
             onCategoryChange={(key) => {
               if (key === "all") setSelectedCategories(new Set());
               else setSelectedCategories(new Set([key as CategoryFilterKey]));
+              setSelectedSubcategory(null);
+              setListOffset(0);
+            }}
+            subcategoryOptions={subcategoryOptions}
+            selectedSubcategory={selectedSubcategory}
+            onSubcategoryChange={(subcategory) => {
+              setSelectedSubcategory(subcategory);
               setListOffset(0);
             }}
             designers={shopBrands}
@@ -792,8 +868,8 @@ export default function ShopClient({
           <p className="text-[11px] md:text-xs text-muted-foreground" data-testid="text-result-count-desktop">
             {countLoading && displayResultTotal == null ? (
               <span className="animate-pulse">Loading…</span>
-            ) : displayTotal > 0 ? (
-              <><span className="text-foreground">{displayTotal.toLocaleString()}</span> verified pieces</>
+            ) : displayedResultCount > 0 ? (
+              <><span className="text-foreground">{displayedResultCount.toLocaleString()}</span> verified pieces</>
             ) : null}
           </p>
           <div className="relative">
@@ -981,6 +1057,32 @@ export default function ShopClient({
                   </button>
                 ))}
               </div>
+              {subcategoryOptions.length > 0 && (
+                <>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Style</p>
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {subcategoryOptions.map((subcategory) => (
+                      <button
+                        key={subcategory}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSubcategory(
+                            selectedSubcategory === subcategory ? null : subcategory
+                          );
+                          setListOffset(0);
+                        }}
+                        className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                          selectedSubcategory === subcategory
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border/40"
+                        }`}
+                      >
+                        {subcategory}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Color</p>
               <div className="flex flex-wrap gap-2 mb-8">
                 {SHOP_COLOR_OPTIONS.map((color) => (
@@ -1082,6 +1184,7 @@ export default function ShopClient({
                 setPriceTier("any");
                 setSelectedColor(null);
                 setSelectedBrandSlugs([]);
+                setSelectedSubcategory(null);
                 setSelectedFiberSubtypes([]);
                 setSelectedFabricConstructions([]);
                 setSortBy("new");

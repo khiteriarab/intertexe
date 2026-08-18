@@ -11,6 +11,10 @@ const ALLOWED_EVENTS = new Set([
   "first_scan",
   "affiliate_click",
   "product_saved",
+  "filter_applied",
+  "filter_zero_results",
+  "filtered_product_view",
+  "filtered_retailer_click",
 ]);
 
 /**

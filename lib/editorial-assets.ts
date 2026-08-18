@@ -65,11 +65,14 @@ export function editorialHeroForSlug(slug: string): string {
  * Homepage hero — v8 portrait (woman in grotto) + studio JPG.
  * Edit HOMEPAGE_HERO_SLIDES below; iOS/web pull from /api/editorial-config.
  */
-export const HOMEPAGE_HERO_IMAGE_MOBILE = `${BASE}/hero-editorial-v8.png`;
+export const HOMEPAGE_HERO_IMAGE_MOBILE = `${BASE}/hero-editorial-v8-mobile.png`;
 export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial.jpg`;
+export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP = `${BASE}/hero-editorial-v8-desktop.png`;
 
 export type HomepageHeroSlide = {
   url: string;
+  /** Optional desktop-specific source with same crop intent but higher resolution. */
+  desktopUrl?: string;
   /** CSS object-position on mobile, e.g. "center 75%" */
   objectPosition: string;
   /** CSS object-position on desktop (lg+) only */
@@ -78,7 +81,12 @@ export type HomepageHeroSlide = {
 
 /** Rotating homepage hero — change URLs here, redeploy website only. */
 export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
-  { url: HOMEPAGE_HERO_IMAGE_MOBILE, objectPosition: "center 75%", objectPositionDesktop: "center 50%" },
+  {
+    url: HOMEPAGE_HERO_IMAGE_MOBILE,
+    desktopUrl: HOMEPAGE_HERO_IMAGE_V8_DESKTOP,
+    objectPosition: "center 75%",
+    objectPositionDesktop: "center 50%",
+  },
   { url: HOMEPAGE_HERO_IMAGE_DESKTOP, objectPosition: "center 25%" },
 ];
 

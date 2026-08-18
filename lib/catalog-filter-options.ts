@@ -30,6 +30,7 @@ export const SHOP_COLOR_OPTIONS = [
 ] as const;
 
 export type ShopCategoryKey =
+  | "shoes"
   | "dresses"
   | "tops"
   | "knitwear"
@@ -41,6 +42,7 @@ export type ShopCategoryKey =
   | "swimwear";
 
 export const SHOP_CATEGORY_OPTIONS: { key: ShopCategoryKey; label: string }[] = [
+  { key: "shoes", label: "Shoes" },
   { key: "dresses", label: "Dresses" },
   { key: "tops", label: "Tops" },
   { key: "knitwear", label: "Knitwear" },

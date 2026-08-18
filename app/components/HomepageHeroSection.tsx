@@ -36,12 +36,13 @@ export function HomepageHeroSection({
 
   const renderHeroImages = (variant: "mobile" | "desktop") =>
     heroSlides.map((slide, index) => {
-      const isJpg = slide.url.includes("hero-editorial.jpg");
+      const src = variant === "desktop" ? slide.desktopUrl ?? slide.url : slide.url;
+      const isJpg = src.includes("hero-editorial.jpg");
       if (variant === "mobile") {
         return (
           <Image
             key={slide.url}
-            src={slide.url}
+            src={src}
             alt={index === 0 ? "INTERTEXE editorial" : ""}
             fill
             priority={index === 0}
@@ -60,8 +61,8 @@ export function HomepageHeroSection({
       const objectPosition = slide.objectPositionDesktop ?? slide.objectPosition;
       return (
         <Image
-          key={`desktop-${slide.url}`}
-          src={slide.url}
+          key={`desktop-${src}`}
+          src={src}
           alt={index === 0 ? "INTERTEXE editorial" : ""}
           fill
           priority={index === 0}

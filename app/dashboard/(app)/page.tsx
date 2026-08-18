@@ -305,20 +305,21 @@ export default async function HqOverviewPage() {
       <HqCard className="mb-6" title="Outreach">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">This week</p>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">This week (Mon–Sun)</p>
             <p className="text-2xl font-medium tabular-nums tracking-tight mt-1">
               {founder.tableReady ? founder.bd.weekContacted : "—"}
               <span className="text-sm font-normal text-black/40"> contacted</span>
             </p>
-            <p className="text-sm text-black/50 mt-1 tabular-nums">
-              {founder.bd.weekReplies} replies
-              {founder.bd.weekContacted >= 8 ? ` · ${pct(founder.bd.weekReplies, founder.bd.weekContacted)}` : ""}
+            <p className="text-xs text-black/50 mt-1 tabular-nums">
+              {founder.bd.weekIntros} intros · {founder.bd.weekFollowUps} follow-ups
+            </p>
+            <p className="text-xs text-black/50 mt-0.5 tabular-nums">
+              {founder.bd.weekReplies} replied
+              {founder.bd.weekContacted >= 4 ? ` (${founder.bd.weekReplyRate}%)` : ""}
               {" · "}
               {founder.bd.weekAccounts} accounts
-              {founder.bd.weekContacted >= 8 ? ` · ${pct(founder.bd.weekAccounts, founder.bd.weekContacted)}` : ""}
               {" · "}
               {founder.bd.weekActivated} activated
-              {founder.bd.weekContacted >= 8 ? ` · ${pct(founder.bd.weekActivated, founder.bd.weekContacted)}` : ""}
             </p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mt-3">
               {[

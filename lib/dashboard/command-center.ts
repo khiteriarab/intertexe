@@ -58,6 +58,9 @@ export type BdToday = {
   weekReplies: number;
   weekAccounts: number;
   weekActivated: number;
+  weekIntros: number;
+  weekFollowUps: number;
+  weekReplyRate: number;
   weekByType: { influencer: number; customer: number; brand: number; organization: number };
   yesterdaySent: number;
   yesterdayReplies: number;
@@ -102,6 +105,9 @@ const EMPTY_BD: BdToday = {
   weekReplies: 0,
   weekAccounts: 0,
   weekActivated: 0,
+  weekIntros: 0,
+  weekFollowUps: 0,
+  weekReplyRate: 0,
   weekByType: { influencer: 0, customer: 0, brand: 0, organization: 0 },
   yesterdaySent: 0,
   yesterdayReplies: 0,
@@ -155,6 +161,9 @@ function parseBd(raw: unknown): BdToday {
     weekReplies: num(row.week_replies),
     weekAccounts: num(row.week_accounts),
     weekActivated: num(row.week_activated),
+    weekIntros: num(row.week_intros),
+    weekFollowUps: num(row.week_follow_ups),
+    weekReplyRate: num(row.week_reply_rate),
     weekByType: {
       influencer: num((row.week_by_type as Record<string, unknown> | undefined)?.influencer),
       customer: num((row.week_by_type as Record<string, unknown> | undefined)?.customer),
@@ -413,7 +422,11 @@ async function deriveBdFromContacts(workspaceId: string, founder: FounderToday):
   const dayStart = founder.dayStart ? Date.parse(founder.dayStart) : Date.now();
   const dayEnd = founder.dayEnd ? Date.parse(founder.dayEnd) : dayStart + 86400000;
   const yStart = dayStart - 86400000;
-  const d7 = dayStart - 7 * 86400000;
+  // Monday 00:00 of the current ISO week
+  const todayDate = new Date(dayStart);
+  const dayOfWeek = todayDate.getUTCDay(); // 0=Sun,1=Mon,...
+  const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const weekStart = dayStart - mondayOffset * 86400000;
   const follow1Ms = 4 * 86400000;
   const now = Date.now();
 
@@ -465,13 +478,13 @@ async function deriveBdFromContacts(workspaceId: string, founder: FounderToday):
     if (scans >= 1) bd.canonicalFunnel.activated += 1;
     if (scans >= 2) bd.canonicalFunnel.engagedUser += 1;
 
-    if (inWindow(c.last_contacted_at, d7, dayEnd)) {
+    if (inWindow(c.last_contacted_at, weekStart, dayEnd)) {
       bd.weekContacted += 1;
       const weekType = canonicalOutreachType(type);
       if (weekType) bd.weekByType[weekType] += 1;
     }
-    if (inWindow(c.last_replied_at, d7, dayEnd)) bd.weekReplies += 1;
-    if (inWindow(c.account_created_at, d7, dayEnd)) bd.weekAccounts += 1;
+    if (inWindow(c.last_replied_at, weekStart, dayEnd)) bd.weekReplies += 1;
+    if (inWindow(c.account_created_at, weekStart, dayEnd)) bd.weekAccounts += 1;
     if (inWindow(c.account_created_at, yStart, dayStart)) bd.yesterdayRegistrations += 1;
 
     if (inactive) continue;
@@ -511,15 +524,23 @@ async function deriveBdFromContacts(workspaceId: string, founder: FounderToday):
   const { data: events } = await supabase
     .from("hq_contact_outreach")
     .select("event_type, sent_at, received_at, created_at, channel")
-    .gte("created_at", new Date(yStart).toISOString())
-    .limit(200);
+    .gte("created_at", new Date(Math.min(yStart, weekStart)).toISOString())
+    .limit(500);
   for (const e of events || []) {
     const sent = e.sent_at ? Date.parse(String(e.sent_at)) : NaN;
     const rec = Date.parse(String(e.received_at || e.created_at || ""));
     if (e.event_type === "email_sent" || e.event_type === "follow_up_sent") {
       if (e.channel === "gmail" && sent >= yStart && sent < dayStart) bd.yesterdaySent += 1;
+      if (e.channel === "gmail" && sent >= weekStart && sent < dayEnd) {
+        if (e.event_type === "email_sent") bd.weekIntros += 1;
+        if (e.event_type === "follow_up_sent") bd.weekFollowUps += 1;
+      }
     }
     if (e.event_type === "email_reply_received" && rec >= yStart && rec < dayStart) bd.yesterdayReplies += 1;
+  }
+
+  if (bd.weekContacted > 0) {
+    bd.weekReplyRate = Math.round((bd.weekReplies / bd.weekContacted) * 1000) / 10;
   }
 
   return bd;

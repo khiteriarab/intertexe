@@ -24,6 +24,10 @@ import {
 } from "../components/CatalogMobileToolbar";
 import { CatalogFilterSidebar } from "../components/CatalogFilterSidebar";
 import { CatalogProductImage } from "../components/CatalogProductImage";
+import {
+  CATEGORY_SUBCATEGORY_OPTIONS,
+  productMatchesSubcategory,
+} from "../../lib/catalog-subcategories";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather" | "shoes";
 type SaleSort = "discount" | "new" | "price-low" | "price-high" | "natural-high";
@@ -41,7 +45,10 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "shoes", label: "Shoes" },
 ];
 
-const SALE_CATEGORIES = [{ key: "all" as const, label: "All" }, ...SHOP_CATEGORY_OPTIONS];
+const SALE_CATEGORIES = [
+  { key: "all" as const, label: "All" },
+  ...SHOP_CATEGORY_OPTIONS.filter((category) => category.key !== "shoes"),
+];
 
 const SORT_OPTIONS: { key: SaleSort; label: string }[] = [
   { key: "discount", label: "Best discount" },
@@ -80,8 +87,23 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
   const originalShown = formatDisplayOriginalPrice(priceHints);
   const stockBadge = stockCardBadgeLabel(product.stock_status ?? product.stockStatus);
 
+  const saveSaleState = () => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem("sale_return_url", window.location.pathname + window.location.search);
+    sessionStorage.setItem("sale_return_product", String(product.id));
+    sessionStorage.setItem(
+      "sale_visible_count",
+      String(document.querySelectorAll('[data-testid^="sale-product-"]').length)
+    );
+  };
+
   return (
-    <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer relative" data-testid={`sale-product-${product.id}`}>
+    <Link
+      href={`/product/${product.id}`}
+      onClick={saveSaleState}
+      className="group flex flex-col cursor-pointer relative"
+      data-testid={`sale-product-${product.id}`}
+    >
       {imageUrl ? (
         <div className="relative">
           <CatalogProductImage
@@ -178,6 +200,7 @@ export default function SaleClient({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedFiberSubtypes, setSelectedFiberSubtypes] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SaleSort>("discount");
   const [shopBrands, setShopBrands] = useState<{ slug: string; name: string; count: number }[]>([]);
@@ -190,10 +213,26 @@ export default function SaleClient({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [restoreTargetProductId, setRestoreTargetProductId] = useState<string | null>(null);
+  const subcategoryFilteredProducts = useMemo(() => {
+    if (!selectedSubcategory) return products;
+    return products.filter((product) =>
+      productMatchesSubcategory(
+        {
+          category: product.category,
+          name: product.name,
+          materialSubtype: product.materialSubtype,
+          fabricConstruction: product.fabricConstruction,
+          composition: product.composition,
+        },
+        selectedSubcategory
+      )
+    );
+  }, [products, selectedSubcategory]);
   const { favorites } = useProductFavorites();
   const rankedProducts = useMemo(
-    () => prioritizeFavoritedProducts(products, favorites),
-    [products, favorites]
+    () => prioritizeFavoritedProducts(subcategoryFilteredProducts, favorites),
+    [subcategoryFilteredProducts, favorites]
   );
 
   useEffect(() => {
@@ -201,6 +240,29 @@ export default function SaleClient({
       .then((brands) => setShopBrands(brands.map((b) => ({ slug: b.slug, name: b.name, count: b.count }))))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedProduct = sessionStorage.getItem("sale_return_product");
+    if (savedProduct) {
+      setRestoreTargetProductId(savedProduct);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!restoreTargetProductId || products.length === 0 || isLoading) return;
+    const target = restoreTargetProductId;
+    setRestoreTargetProductId(null);
+    sessionStorage.removeItem("sale_return_product");
+    sessionStorage.removeItem("sale_return_url");
+    sessionStorage.removeItem("sale_visible_count");
+    setTimeout(() => {
+      const el = document.querySelector(`[data-testid="sale-product-${target}"]`);
+      if (el) {
+        el.scrollIntoView({ block: "center" });
+      }
+    }, 120);
+  }, [restoreTargetProductId, products, isLoading]);
 
   const hasActiveFilters =
     fiberTab !== "all" ||
@@ -210,6 +272,14 @@ export default function SaleClient({
     selectedColor != null ||
     priceTier !== "any" ||
     sortBy !== "discount";
+
+  const effectiveCategory = fiberTab === "shoes" ? "shoes" : categoryFilter;
+  const saleCategoryOptionsForUI =
+    fiberTab === "shoes" ? SALE_CATEGORIES.filter((c) => c.key === "all") : SALE_CATEGORIES;
+  const subcategoryOptions =
+    effectiveCategory !== "all"
+      ? CATEGORY_SUBCATEGORY_OPTIONS[effectiveCategory] || []
+      : [];
 
   const fetchPage = useCallback(
     async (nextOffset: number, append: boolean) => {
@@ -290,10 +360,11 @@ export default function SaleClient({
   );
 
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
+  const displayedCount = selectedSubcategory ? rankedProducts.length : total;
 
   const activeFilters = [
     ...(fiberTab !== "all"
-      ? [{ id: "fiber", label: FIBER_TABS.find((t) => t.key === fiberTab)?.label || fiberTab, onRemove: () => { setFiberTab("all"); setSelectedFiberSubtypes([]); } }]
+      ? [{ id: "fiber", label: FIBER_TABS.find((t) => t.key === fiberTab)?.label || fiberTab, onRemove: () => { setFiberTab("all"); setSelectedSubcategory(null); setSelectedFiberSubtypes([]); } }]
       : []),
     ...selectedFiberSubtypes.map((st) => ({
       id: `subtype-${st}`,
@@ -301,7 +372,10 @@ export default function SaleClient({
       onRemove: () => setSelectedFiberSubtypes((prev) => prev.filter((s) => s !== st)),
     })),
     ...(categoryFilter !== "all"
-      ? [{ id: "cat", label: SALE_CATEGORIES.find((c) => c.key === categoryFilter)?.label || categoryFilter, onRemove: () => setCategoryFilter("all") }]
+      ? [{ id: "cat", label: SALE_CATEGORIES.find((c) => c.key === categoryFilter)?.label || categoryFilter, onRemove: () => { setCategoryFilter("all"); setSelectedSubcategory(null); } }]
+      : []),
+    ...(selectedSubcategory
+      ? [{ id: "subcategory", label: selectedSubcategory, onRemove: () => setSelectedSubcategory(null) }]
       : []),
     ...(selectedColor
       ? [{ id: "color", label: SHOP_COLOR_OPTIONS.find((c) => c.value === selectedColor)?.label || selectedColor, onRemove: () => setSelectedColor(null) }]
@@ -320,11 +394,14 @@ export default function SaleClient({
     <>
       <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
       <div className="flex flex-wrap gap-2 mb-8">
-        {SALE_CATEGORIES.map((cat) => (
+        {saleCategoryOptionsForUI.map((cat) => (
           <button
             key={cat.key}
             type="button"
-            onClick={() => setCategoryFilter(cat.key)}
+            onClick={() => {
+              setCategoryFilter(cat.key);
+              setSelectedSubcategory(null);
+            }}
             className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
               categoryFilter === cat.key ? "border-foreground bg-foreground text-background" : "border-border/40"
             }`}
@@ -333,6 +410,31 @@ export default function SaleClient({
           </button>
         ))}
       </div>
+      {subcategoryOptions.length > 0 && (
+        <>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Style</p>
+          <div className="flex flex-wrap gap-2 mb-8">
+            {subcategoryOptions.map((subcategory) => (
+              <button
+                key={subcategory}
+                type="button"
+                onClick={() =>
+                  setSelectedSubcategory(
+                    selectedSubcategory === subcategory ? null : subcategory
+                  )
+                }
+                className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                  selectedSubcategory === subcategory
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/40"
+                }`}
+              >
+                {subcategory}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
       <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
       <div className="flex flex-wrap gap-2 mb-4">
         {FIBER_TABS.filter((t) => t.key !== "all").map((tab) => (
@@ -342,6 +444,10 @@ export default function SaleClient({
             onClick={() => {
               setFiberTab(tab.key);
               setSelectedFiberSubtypes([]);
+              setSelectedSubcategory(null);
+              if (tab.key === "shoes") {
+                setCategoryFilter("all");
+              }
             }}
             className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
               fiberTab === tab.key ? "border-foreground bg-foreground text-background" : "border-border/40"
@@ -426,8 +532,8 @@ export default function SaleClient({
           <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground">Verified Natural Fabrics</span>
           <h1 className="text-3xl md:text-5xl font-serif" data-testid="text-sale-title">The Edit — On Sale</h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            {total > 0
-              ? `${total.toLocaleString()} verified products on sale`
+            {displayedCount > 0
+              ? `${displayedCount.toLocaleString()} verified products on sale`
               : products.length > 0
                 ? `${products.length.toLocaleString()} verified products on sale`
                 : "Sale items will appear here as prices drop"}
@@ -437,7 +543,7 @@ export default function SaleClient({
         <div className="max-w-7xl mx-auto px-4 md:px-8 w-full">
           <CatalogMobileToolbar
             className="mb-6 lg:hidden"
-            resultCount={total > 0 ? total : null}
+            resultCount={displayedCount > 0 ? displayedCount : null}
             countLoading={isLoading && total === 0}
             sortLabel={currentSort.label}
             onOpenFilter={() => setShowFilterSheet(true)}
@@ -447,17 +553,27 @@ export default function SaleClient({
 
           <div className="lg:flex lg:gap-10 lg:items-start">
             <CatalogFilterSidebar
-              resultCount={total > 0 ? total : null}
+              resultCount={displayedCount > 0 ? displayedCount : null}
               isLoading={isLoading && total === 0}
               fiberTab={fiberTab}
               categoryFilter={categoryFilter}
               fiberOptions={FIBER_TABS}
-              categoryOptions={[...SALE_CATEGORIES]}
+              categoryOptions={[...saleCategoryOptionsForUI]}
               onFiberChange={(key) => {
                 setFiberTab(key);
                 setSelectedFiberSubtypes([]);
+                setSelectedSubcategory(null);
+                if (key === "shoes") {
+                  setCategoryFilter("all");
+                }
               }}
-              onCategoryChange={(key) => setCategoryFilter(key)}
+              onCategoryChange={(key) => {
+                setCategoryFilter(key);
+                setSelectedSubcategory(null);
+              }}
+              subcategoryOptions={subcategoryOptions}
+              selectedSubcategory={selectedSubcategory}
+              onSubcategoryChange={setSelectedSubcategory}
               designers={shopBrands}
               selectedDesigners={selectedBrands}
               onDesignersChange={setSelectedBrands}
@@ -481,7 +597,7 @@ export default function SaleClient({
                     <span className="animate-pulse">Loading…</span>
                   ) : (
                     <>
-                      <span className="text-foreground font-medium">{total.toLocaleString()}</span> results
+                      <span className="text-foreground font-medium">{displayedCount.toLocaleString()}</span> results
                     </>
                   )}
                 </p>
@@ -547,7 +663,7 @@ export default function SaleClient({
                 open={showFilterSheet}
                 onClose={() => setShowFilterSheet(false)}
                 title="Filter"
-                subtitle={total > 0 ? `${total.toLocaleString()} on sale` : undefined}
+                subtitle={displayedCount > 0 ? `${displayedCount.toLocaleString()} on sale` : undefined}
                 footer={
                   <button
                     type="button"

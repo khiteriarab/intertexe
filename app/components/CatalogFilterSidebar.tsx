@@ -124,6 +124,9 @@ type CatalogFilterSidebarProps<TFiber extends string, TCategory extends string> 
   categoryOptions: FilterOption<TCategory>[];
   onFiberChange: (key: TFiber) => void;
   onCategoryChange: (key: TCategory) => void;
+  subcategoryOptions?: string[];
+  selectedSubcategory?: string | null;
+  onSubcategoryChange?: (subcategory: string | null) => void;
   className?: string;
   designers?: DesignerOption[];
   selectedDesigners?: string[];
@@ -152,6 +155,9 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
   categoryOptions,
   onFiberChange,
   onCategoryChange,
+  subcategoryOptions = [],
+  selectedSubcategory = null,
+  onSubcategoryChange,
   className = "",
   designers = [],
   selectedDesigners = [],
@@ -171,11 +177,11 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
   onMoodChange,
 }: CatalogFilterSidebarProps<TFiber, TCategory>) {
   const [openSection, setOpenSection] = useState<
-    "category" | "material" | "construction" | "color" | "price" | "designer" | "mood" | null
+    "category" | "subcategory" | "material" | "construction" | "color" | "price" | "designer" | "mood" | null
   >("category");
 
   const toggle = (
-    section: "category" | "material" | "construction" | "color" | "price" | "designer" | "mood"
+    section: "category" | "subcategory" | "material" | "construction" | "color" | "price" | "designer" | "mood"
   ) => {
     setOpenSection((prev) => (prev === section ? null : section));
   };
@@ -248,6 +254,34 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
         open={openSection === "category"}
         onToggle={() => toggle("category")}
       />
+      {onSubcategoryChange && subcategoryOptions.length > 0 && (
+        <CollapsiblePanel
+          title="Style"
+          summary={selectedSubcategory || undefined}
+          open={openSection === "subcategory"}
+          onToggle={() => toggle("subcategory")}
+        >
+          <ul className="space-y-0.5">
+            {subcategoryOptions.map((subcategory) => (
+              <li key={subcategory}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onSubcategoryChange(selectedSubcategory === subcategory ? null : subcategory)
+                  }
+                  className={`w-full text-left py-2 text-[12px] transition-colors ${
+                    selectedSubcategory === subcategory
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {subcategory}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </CollapsiblePanel>
+      )}
       <FilterSection
         title="Material"
         options={fiberOptions}
