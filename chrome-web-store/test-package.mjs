@@ -44,10 +44,15 @@ record("popup.listing_name", popupHtml.includes(NAME));
 record("popup.sign_in_cta", /Sign in to INTERTEXE/i.test(popupHtml));
 record("popup.tx_match_cta", /TX MATCH/.test(popupHtml));
 record("popup.save_secondary", /Save to Inspirations/.test(popupHtml));
+record("popup.material_standard", /THE MATERIAL STANDARD/.test(popupHtml));
+record("popup.processing_copy", /Finding your TX Matches/.test(popupHtml));
+record("popup.no_save_this_page", !/Save this page/i.test(popupHtml));
 record("popup.no_token_paste", !/Paste Supabase/i.test(popupHtml));
 
 const bg = fs.readFileSync(path.join(folder, "background.js"), "utf8");
 record("bg.save_inject_only", bg.includes('msg?.type === "SAVE_TAB"') && bg.includes("executeScript"));
+record("bg.save_inspiration_fast", bg.includes('msg?.type === "SAVE_INSPIRATION"') && bg.includes("waitForMatches: false"));
+record("bg.tx_match_waits", /TX_MATCH/.test(bg) && bg.includes("waitForMatches: true"));
 record("bg.no_pageSignals_transmit", !bg.includes("pageSignals"));
 record("bg.intertexe_only", !/fetch\(\s*`https:\/\/(?!www\.intertexe\.com)/.test(bg));
 record("bg.no_secrets", !/service_role|SUPABASE_SERVICE|sk-/.test(bg));

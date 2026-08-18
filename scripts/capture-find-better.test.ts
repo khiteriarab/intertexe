@@ -159,6 +159,8 @@ describe("TX Match same-color lead and honest cards", () => {
     for (const alt of ranked.slice(0, 3)) {
       assert.match(String(alt.name), /brown/i);
     }
+    assert.match(ranked[0].why, /Same fabric/);
+    assert.match(ranked[0].why, /Chocolate/i);
   });
 
   it("drops a cotton-named card that claims silk composition", () => {

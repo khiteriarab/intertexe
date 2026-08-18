@@ -7,6 +7,7 @@ import {
   formatCapturePrice,
   formatCheckedAt,
   formatCountryName,
+  formatMaterialVerdict,
   shopAtLabel,
   titleCaseName,
   uniqueTitleCaseNames,
@@ -99,7 +100,10 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
   }, [captureId]);
 
   const alts = useMemo(
-    () => (Array.isArray(capture?.alternatives) ? capture!.alternatives! : []),
+    () =>
+      (Array.isArray(capture?.alternatives) ? capture!.alternatives! : []).filter((a) =>
+        /^https?:\/\//i.test(String(a.image_url || ""))
+      ),
     [capture]
   );
   const processing =
@@ -162,6 +166,9 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
               <img
                 src={capture.image_url}
                 alt=""
+                onError={(e) => {
+                  e.currentTarget.remove();
+                }}
                 style={{
                   width: "100%",
                   maxHeight: 420,
@@ -198,7 +205,9 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
                 MATERIAL DETAILS
               </p>
               <p style={{ margin: 0, fontSize: 16, lineHeight: 1.45, color: "#161412" }}>
-                {copy?.compositionHeadline || capture.composition_text || "Material details unavailable"}
+                {copy?.compositionHeadline ||
+                  formatMaterialVerdict(capture.composition_text) ||
+                  "Material details unavailable"}
               </p>
               {copy?.compositionDetail ? (
                 <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: "#3f3a36" }}>
@@ -318,6 +327,7 @@ function MatchCard({
   sourceApp?: string | null;
   captureId?: string;
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
   const href = affiliateHref(alt);
   const price = formatCapturePrice(
     typeof alt.price === "string" ? parseFloat(alt.price) : alt.price,
@@ -326,7 +336,7 @@ function MatchCard({
   const brand = titleCaseName(alt.brand_name);
   const name = titleCaseName(alt.name) || "TX Match";
   const composition = alt.composition
-    ? alt.composition
+    ? formatMaterialVerdict(alt.composition)
     : alt.natural_fiber_percent != null
       ? `${Math.round(alt.natural_fiber_percent)}% natural`
       : null;
@@ -342,11 +352,12 @@ function MatchCard({
 
   const body = (
     <>
-      {alt.image_url ? (
+      {alt.image_url && !imgFailed ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={alt.image_url}
           alt=""
+          onError={() => setImgFailed(true)}
           style={{ width: 96, height: 120, objectFit: "cover", background: "#ddd5cb" }}
         />
       ) : (
@@ -362,6 +373,9 @@ function MatchCard({
         <p style={{ margin: "0 0 4px", fontSize: 14, color: "#2b2724" }}>
           {[composition, price].filter(Boolean).join(" · ")}
         </p>
+        {alt.why ? (
+          <p style={{ margin: "0 0 8px", fontSize: 13, lineHeight: 1.4, color: "#5a5550" }}>{alt.why}</p>
+        ) : null}
         {savings ? (
           <p style={{ margin: "0 0 8px", fontSize: 14, color: "#1f3d2b" }}>{savings} less</p>
         ) : null}

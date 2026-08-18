@@ -531,6 +531,7 @@ const TITLE_COLORS = [
   "ivory",
   "cream",
   "beige",
+  "chocolate",
   "brown",
   "tan",
   "camel",

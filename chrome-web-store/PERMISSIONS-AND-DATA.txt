@@ -23,7 +23,7 @@ When product-page data is read
   If they were signed out, that extracted payload is stored locally as
   pendingCapture and sent after sign-in finishes.
 
-Product-page fields read from the active tab (on Save this page)
+Product-page fields read from the active tab (on popup preview, TX MATCH, or Save)
   Page URL (canonical / og:url / location.href)
   Title (og:title / h1 / document.title)
   Image URL (og:image / twitter:image / first img)
