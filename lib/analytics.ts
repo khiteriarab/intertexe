@@ -5,7 +5,7 @@ declare global {
   }
 }
 
-const GA_MEASUREMENT_ID = "G-EVKFJLK9BP";
+export const GA_MEASUREMENT_ID = "G-EVKFJLK9BP";
 
 /** Parse GA4 client_id from the _ga cookie. */
 export function getGaClientId(): string | null {

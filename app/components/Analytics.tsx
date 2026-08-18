@@ -1,22 +1,27 @@
 "use client";
 
-import Script from "next/script";
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { GA_MEASUREMENT_ID } from "../../lib/analytics";
 
+/**
+ * SPA page views after the first load. The official gtag snippet lives in
+ * app/layout.tsx <head> so Google can verify the store from static HTML.
+ */
 export function Analytics() {
-  return (
-    <>
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-EVKFJLK9BP"
-        strategy="afterInteractive"
-      />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-EVKFJLK9BP');
-        `}
-      </Script>
-    </>
-  );
+  const pathname = usePathname();
+  const isFirstLoad = useRef(true);
+
+  useEffect(() => {
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      return;
+    }
+    window.gtag?.("event", "page_view", {
+      page_path: pathname,
+      send_to: GA_MEASUREMENT_ID,
+    });
+  }, [pathname]);
+
+  return null;
 }
