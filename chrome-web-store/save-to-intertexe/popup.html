@@ -6,26 +6,72 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <header>
-      <p class="eyebrow">INTERTEXE</p>
-      <h1>INTERTEXE: Fabric Scanner</h1>
-      <p class="tagline">Know the material before you buy.</p>
-    </header>
+    <div class="shell">
+      <header>
+        <div class="brand">
+          <img class="tx-mark" src="icons/icon32.png" width="28" height="28" alt="" />
+          <span class="brand-name">INTERTEXE</span>
+        </div>
+        <div class="header-end">
+          <button
+            id="accountBtn"
+            type="button"
+            class="account-btn hidden"
+            aria-label="Account"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <svg class="avatar" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path d="M6.5 18.2c1.4-2.6 3.3-3.7 5.5-3.7s4.1 1.1 5.5 3.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </button>
+          <div id="accountMenu" class="account-menu hidden" role="menu">
+            <button id="signOut" type="button" class="menu-item" role="menuitem">Sign out</button>
+          </div>
+        </div>
+      </header>
 
-    <p id="status" class="status" hidden></p>
+      <p id="status" class="status" hidden></p>
 
-    <section id="signedOut" class="hidden">
-      <p class="lede">Sign in so this page can be saved to your Inspirations — the same list as iOS.</p>
-      <button id="signIn" type="button">Sign in to INTERTEXE</button>
-    </section>
+      <section id="source" class="source hidden"></section>
 
-    <section id="signedIn" class="hidden">
-      <button id="save" type="button">Save this page</button>
-      <button id="signOut" type="button" class="ghost">Sign out</button>
-    </section>
+      <div class="scroll">
+        <section id="emptyState" class="empty-state">
+          <svg class="garment" viewBox="0 0 64 64" aria-hidden="true">
+            <path
+              d="M20 18c2.2-6 7-9 12-9s9.8 3 12 9l6 3-4 8h-4v22H22V29h-4l-4-8 6-3z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <h1>Open a clothing product</h1>
+          <p class="empty-hint">Then click TX to check what it’s made of.</p>
+        </section>
 
-    <section id="result" class="hidden"></section>
+        <section id="result" class="hidden"></section>
 
+        <section id="signedOut" class="hidden">
+          <button id="signIn" type="button" class="quiet-link">Sign in to INTERTEXE</button>
+        </section>
+
+        <section id="signedIn" class="hidden">
+          <button id="save" type="button" class="save-btn">
+            <span class="sr-only">Save this page</span>
+            <svg class="bookmark-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 4.75A1.75 1.75 0 0 1 8.75 3h6.5A1.75 1.75 0 0 1 17 4.75v15.1a.75.75 0 0 1-1.2.6L12 17.25l-3.8 3.2a.75.75 0 0 1-1.2-.6V4.75z" />
+            </svg>
+            <span class="save-label">Saved ✓</span>
+          </button>
+        </section>
+      </div>
+
+      <footer id="dock" class="dock hidden"></footer>
+    </div>
+
+    <script src="capture-result.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

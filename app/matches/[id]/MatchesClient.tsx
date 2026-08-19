@@ -4,10 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
-import { shopAtLabel } from "@/lib/capture-page-signals";
 import { buildCaptureResultView, type CaptureResultAltView } from "@/lib/capture-result";
-import { savingsPercent } from "@/lib/material-insight";
 import { AFFILIATE_DISCLOSURE } from "@/lib/tx-match-copy";
+import {
+  TX_MATCH_SORTS,
+  matchHeroCopy,
+  originalPieceLabel,
+  sortTxMatches,
+  type TxMatchSort,
+} from "@/lib/tx-match-display";
 
 const TOKEN_KEY = "intertexe_auth_token";
 
@@ -23,19 +28,12 @@ type Capture = Record<string, unknown> & {
   brand_name?: string | null;
   retailer?: string | null;
   composition_text?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
   alternatives?: unknown[] | null;
 };
 
 type LoadState = "loading" | "ready" | "missing" | "malformed" | "failed" | "expired";
-
-function retailerFromAlt(alt: CaptureResultAltView): string {
-  try {
-    if (alt.url) return new URL(alt.url).hostname.replace(/^www\./, "");
-  } catch {
-    /* ignore */
-  }
-  return shopAtLabel(alt.brandName).replace(/^Shop at\s+/i, "");
-}
 
 export default function MatchesClient({ captureId }: { captureId: string }) {
   const searchParams = useSearchParams();
@@ -44,6 +42,7 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [sort, setSort] = useState<TxMatchSort>("best");
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +98,20 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
   }, [captureId]);
 
   const view = useMemo(() => (capture ? buildCaptureResultView(capture) : null), [capture]);
+  const hero = useMemo(
+    () =>
+      matchHeroCopy({
+        title: view?.title || (capture?.title ? String(capture.title) : null),
+        brandName: capture?.brand_name ? String(capture.brand_name) : view?.brandLine || null,
+        category: String(capture?.subcategory || capture?.category || ""),
+        altCount: view?.alternatives.length || 0,
+      }),
+    [capture, view]
+  );
+  const sorted = useMemo(() => {
+    const alts = view?.alternatives || [];
+    return sortTxMatches(alts, sort, typeof capture?.price === "number" ? capture.price : null);
+  }, [view, sort, capture?.price]);
   const processing =
     state === "ready" &&
     Boolean(capture) &&
@@ -164,12 +177,15 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capture, searchParams]);
 
-  return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12">
-      <p className="text-[11px] font-semibold tracking-[0.16em] text-[#191816]">INTERTEXE</p>
+  const originalName = originalPieceLabel(
+    capture?.brand_name ? String(capture.brand_name) : null,
+    view?.title || null
+  );
 
+  return (
+    <div className="bg-[#FAFAF8] text-[#111111]">
       {state === "loading" ? (
-        <StatusBlock title="Loading matches…" body="Finding better-material alternatives for this piece." />
+        <StatusBlock title="Finding matches…" body="Keeping the original piece in context." />
       ) : null}
       {state === "malformed" ? (
         <StatusBlock
@@ -182,7 +198,7 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
       {state === "missing" ? (
         <StatusBlock
           title="These matches are no longer available"
-          body={message || "This match set was not found. Open the extension on the product page to create a new one."}
+          body={message || "Open the extension on the product page to create a new set."}
           actionHref="/"
           actionLabel="Back to INTERTEXE"
         />
@@ -205,114 +221,126 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
       ) : null}
 
       {capture && view && state === "ready" ? (
-        <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(260px,340px)_1fr]">
-          <article className="overflow-hidden rounded-[14px] border border-[#E6E0D7] bg-white">
+        <main className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-10 md:px-8 md:pt-14">
+          <header className="max-w-3xl">
+            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#111111]/55">
+              TX Match · {hero.eyebrow}
+            </p>
+            <h1 className="font-serif mt-4 text-[2.15rem] leading-[1.12] tracking-[-0.02em] text-[#111111] md:text-5xl">
+              {hero.heading}
+            </h1>
+            <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-[#111111]/65">{hero.supporting}</p>
+          </header>
+
+          <aside className="mt-10 flex max-w-2xl items-center gap-4 border-y border-[#111111]/10 py-4">
             {capture.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={String(capture.image_url)}
                 alt=""
-                className="aspect-[3/4] w-full bg-[#eee8e0] object-cover object-top"
+                className="h-[88px] w-[70px] shrink-0 object-cover object-top"
               />
             ) : (
-              <div className="aspect-[3/4] w-full bg-[#eee8e0]" />
+              <div className="h-[88px] w-[70px] shrink-0 bg-[#EEEAE3]" />
             )}
-            <div className="p-5 md:p-6">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#746F68]">This piece</p>
-              <h1 className="font-serif mt-2 text-3xl leading-tight text-[#191816]">{view.title}</h1>
-              <p className="mt-2 text-sm text-[#191816]">
-                {[view.brandLine, view.priceLabel].filter(Boolean).join(" · ")}
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#111111]/45">
+                Your original find
               </p>
-              <p className="font-serif mt-4 text-xl text-[#191816]">{view.materialHeadline}</p>
-              {view.materialDetail ? (
-                <p className="mt-2 text-sm text-[#746F68]">{view.materialDetail}</p>
-              ) : null}
-              {view.materialSupporting ? (
-                <p className="mt-2 text-sm text-[#746F68]">{view.materialSupporting}</p>
-              ) : null}
-              {view.liningNote ? (
-                <p className="mt-2 text-sm text-[#746F68]">{view.liningNote}</p>
-              ) : null}
-              {capture.original_url ? (
-                <p className="mt-5 text-sm">
-                  <a
-                    href={String(capture.original_url)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[#1D4734] underline-offset-4 hover:underline"
-                  >
-                    View original source
-                  </a>
-                </p>
-              ) : null}
+              <p className="mt-1 truncate text-[11px] font-medium uppercase tracking-[0.12em] text-[#111111]">
+                {capture.brand_name ? String(capture.brand_name) : "Original"}
+              </p>
+              <p className="mt-0.5 truncate text-sm text-[#111111]/80">{view.title}</p>
+              <p className="mt-1 text-[13px] text-[#111111]/55">
+                {view.compositionEditorial || view.materialHeadline}
+              </p>
             </div>
-          </article>
+          </aside>
 
-          <section>
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#746F68]">
-              Better-material matches
-            </p>
-            <h2 className="font-serif mt-2 text-2xl text-[#191816] md:text-3xl">
-              {processing
-                ? "Finding other options…"
-                : view.alternatives.length
-                  ? `${view.alternatives.length} better-material matches`
-                  : "Better-material matches"}
-            </h2>
-            {view.alternatives.length > 0 ? (
-              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {view.alternatives.map((alt) => (
-                  <MatchCard
-                    key={alt.id}
-                    alt={alt}
-                    originalPrice={typeof capture.price === "number" ? capture.price : null}
-                    originalCurrency={capture.currency ? String(capture.currency) : null}
-                    sourceApp={capture.source_app ? String(capture.source_app) : null}
-                    captureId={capture.id}
-                  />
-                ))}
-              </div>
-            ) : processing ? (
-              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-64 animate-pulse rounded-[14px] bg-[#eee8e0]" />
-                ))}
-              </div>
-            ) : (
-              <p className="mt-4 text-sm text-[#746F68]">
-                No substitutes were ready for this piece. Keep the original open, or try the extension again.
-              </p>
-            )}
-            <p className="mt-8 text-xs leading-relaxed text-[#746F68]">
-              {view.affiliateDisclosure || AFFILIATE_DISCLOSURE}
-            </p>
-
-            <div className="mt-10 border-t border-[#E6E0D7] pt-8">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#746F68]">
-                Take your material profile with you
-              </p>
-              <p className="mt-2 max-w-md text-sm text-[#746F68]">
-                Save these matches to INTERTEXE to keep shopping them in the app.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-3">
+          <nav
+            className="-mx-4 mt-8 flex gap-6 overflow-x-auto px-4 md:mx-0 md:px-0"
+            aria-label="Match controls"
+          >
+            {TX_MATCH_SORTS.map((item) => {
+              const active = sort === item.id;
+              return (
                 <button
+                  key={item.id}
                   type="button"
-                  onClick={() => void saveToAccount()}
-                  disabled={saving || saved}
-                  className="inline-flex h-11 items-center justify-center rounded-[12px] bg-[#1D4734] px-5 text-sm font-semibold text-white disabled:opacity-60"
+                  onClick={() => setSort(item.id)}
+                  className={`shrink-0 border-b pb-2 text-[11px] font-medium uppercase tracking-[0.16em] transition-colors ${
+                    active
+                      ? "border-[#111111] text-[#111111]"
+                      : "border-transparent text-[#111111]/40 hover:text-[#111111]/70"
+                  }`}
                 >
-                  {saved ? "Saved to INTERTEXE" : saving ? "Saving…" : "Save these matches to INTERTEXE"}
+                  {item.label}
                 </button>
-                <Link
-                  href={`/open?next=${encodeURIComponent(`/matches/${captureId}`)}&itx_cta=matches_app`}
-                  className="inline-flex h-11 items-center justify-center rounded-[12px] border border-[#E6E0D7] px-5 text-sm font-medium text-[#191816]"
-                >
-                  Open in INTERTEXE app
-                </Link>
-              </div>
+              );
+            })}
+          </nav>
+
+          {sorted.length > 0 ? (
+            <section className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
+              {sorted.map((alt) => (
+                <MatchCard
+                  key={alt.id}
+                  alt={alt}
+                  sourceApp={capture.source_app ? String(capture.source_app) : null}
+                  captureId={capture.id}
+                />
+              ))}
+            </section>
+          ) : processing ? (
+            <section className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="aspect-[3/4] animate-pulse bg-[#EEEAE3]" />
+              ))}
+            </section>
+          ) : (
+            <p className="mt-10 max-w-md text-sm leading-relaxed text-[#111111]/55">
+              {sort === "pure"
+                ? "No fully natural substitutes in this set. Try More Natural, or keep Best Match."
+                : "No substitutes were ready for this piece. Keep the original open, or try the extension again."}
+            </p>
+          )}
+
+          <p className="mt-14 max-w-lg text-[11px] leading-relaxed text-[#111111]/40">
+            {view.affiliateDisclosure || AFFILIATE_DISCLOSURE}
+          </p>
+
+          <section className="mt-20 max-w-xl border-t border-[#111111]/10 pt-10">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#111111]/45">TX Match</p>
+            <h2 className="font-serif mt-3 text-3xl tracking-[-0.02em] text-[#111111]">
+              Your wardrobe. Better materials.
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-[#111111]/60">
+              Set your preferred fibers and synthetic tolerance to make future INTERTEXE matches even more personal.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/quiz"
+                className="inline-flex h-11 items-center justify-center bg-[#1D4734] px-5 text-[12px] font-medium uppercase tracking-[0.14em] text-white"
+              >
+                Personalize my matches
+              </Link>
+              <Link
+                href={`/open?next=${encodeURIComponent(`/matches/${captureId}`)}&itx_cta=matches_app`}
+                className="inline-flex h-11 items-center justify-center border border-[#111111]/20 px-5 text-[12px] font-medium uppercase tracking-[0.14em] text-[#111111]"
+              >
+                Open in INTERTEXE
+              </Link>
+              <button
+                type="button"
+                onClick={() => void saveToAccount()}
+                disabled={saving || saved}
+                className="inline-flex h-11 items-center justify-center px-2 text-[12px] font-medium uppercase tracking-[0.14em] text-[#111111]/55 underline-offset-4 hover:underline disabled:opacity-60"
+              >
+                {saved ? "Saved" : saving ? "Saving…" : `Save ${originalName ? "this find" : "these matches"}`}
+              </button>
             </div>
           </section>
-        </div>
+        </main>
       ) : null}
     </div>
   );
@@ -330,12 +358,13 @@ function StatusBlock({
   actionLabel?: string;
 }) {
   return (
-    <div className="mt-8 max-w-xl">
-      <h1 className="font-serif text-3xl text-[#191816]">{title}</h1>
-      <p className="mt-3 text-sm leading-relaxed text-[#746F68]">{body}</p>
+    <div className="mx-auto max-w-[1280px] px-4 py-20 md:px-8">
+      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#111111]/45">TX Match</p>
+      <h1 className="font-serif mt-4 text-3xl tracking-[-0.02em] text-[#111111]">{title}</h1>
+      <p className="mt-3 max-w-md text-sm leading-relaxed text-[#111111]/60">{body}</p>
       {actionHref && actionLabel ? (
-        <p className="mt-5">
-          <Link href={actionHref} className="text-sm font-semibold text-[#1D4734] underline-offset-4 hover:underline">
+        <p className="mt-6">
+          <Link href={actionHref} className="text-sm text-[#1D4734] underline-offset-4 hover:underline">
             {actionLabel}
           </Link>
         </p>
@@ -346,55 +375,63 @@ function StatusBlock({
 
 function MatchCard({
   alt,
-  originalPrice,
-  originalCurrency,
   sourceApp,
   captureId,
 }: {
   alt: CaptureResultAltView;
-  originalPrice?: number | null;
-  originalCurrency?: string | null;
   sourceApp?: string | null;
   captureId?: string;
 }) {
   const href = affiliateHref(alt);
-  const save =
-    !alt.mixedCurrency && originalPrice != null
-      ? savingsPercent(originalPrice, parseFloat(String(alt.priceLabel).replace(/[^0-9.]/g, "")) || null)
-      : null;
-  const retailer = retailerFromAlt(alt);
-
+  const reasons = alt.whyReasons.filter(Boolean).slice(0, 3);
   const body = (
     <>
-      {alt.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={alt.imageUrl} alt="" className="aspect-[3/4] w-full bg-[#eee8e0] object-cover object-top" />
-      ) : (
-        <div className="aspect-[3/4] w-full bg-[#eee8e0]" />
-      )}
-      <div className="p-3">
-        <p className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-[#746F68]">
+      <div className="relative aspect-[3/4] overflow-hidden bg-[#EEEAE3]">
+        {alt.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={alt.imageUrl} alt="" className="h-full w-full object-cover object-top" />
+        ) : null}
+        {reasons.length ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black/70 via-black/25 to-transparent p-3 pt-12 text-left text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:block">
+            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/70">Why this match</p>
+            <ul className="mt-1.5 space-y-0.5 text-[12px] leading-snug">
+              {reasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+      <div className="pt-3">
+        <p className="truncate text-[10px] font-medium uppercase tracking-[0.12em] text-[#111111]">
           {alt.brandName || "TX Match"}
         </p>
-        <p className="mt-0.5 line-clamp-2 text-sm font-medium leading-snug text-[#191816]">{alt.name}</p>
+        <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-[#111111]/70">{alt.name}</p>
+        <p className="mt-1.5 text-[13px] text-[#111111]">{alt.priceLabel}</p>
         {alt.compositionLine ? (
-          <p className="mt-1 text-xs leading-relaxed text-[#746F68]">{alt.compositionLine}</p>
+          <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-[#111111]/50">{alt.compositionLine}</p>
         ) : null}
-        <p className="mt-2 text-sm font-semibold text-[#191816]">
-          {alt.priceLabel}
-          {alt.mixedCurrency ? (
-            <span className="ml-1 text-[11px] font-medium text-[#746F68]">mixed currency</span>
-          ) : null}
-        </p>
-        {retailer ? <p className="mt-1 text-xs text-[#746F68]">{retailer}</p> : null}
-        {save != null ? <p className="mt-0.5 text-xs font-semibold text-[#1D4734]">{save}% less</p> : null}
-        <p className="mt-2 text-xs font-semibold text-[#1D4734]">{href ? "Shop" : shopAtLabel(alt.brandName)}</p>
+        {alt.cardSignal ? (
+          <p className="mt-2 text-[11px] font-medium tracking-[0.01em] text-[#1D4734]">{alt.cardSignal}</p>
+        ) : null}
+        {reasons.length ? (
+          <details className="mt-2 md:hidden">
+            <summary className="cursor-pointer text-[11px] uppercase tracking-[0.12em] text-[#111111]/40">
+              Why this match
+            </summary>
+            <ul className="mt-2 space-y-1 text-[12px] leading-relaxed text-[#111111]/60">
+              {reasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
       </div>
     </>
   );
 
   if (!href) {
-    return <div className="overflow-hidden rounded-[14px] border border-[#E6E0D7] bg-white">{body}</div>;
+    return <div className="group text-left">{body}</div>;
   }
 
   return (
@@ -403,7 +440,7 @@ function MatchCard({
       target="_blank"
       rel="noreferrer"
       onClick={() => logClick({ alt, sourceApp, captureId })}
-      className="overflow-hidden rounded-[14px] border border-[#E6E0D7] bg-white text-inherit no-underline"
+      className="group text-left text-inherit no-underline"
     >
       {body}
     </a>

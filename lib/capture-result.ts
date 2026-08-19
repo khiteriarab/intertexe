@@ -12,6 +12,12 @@ import { formatCompositionDisplay } from "./composition-display";
 import { unpublishedMaterialCopy } from "./unpublished-material";
 import { materialInsightFromText, type MaterialInsight } from "./material-insight";
 import {
+  editorialCompositionLine,
+  fashionWhyReasons,
+  materialCardSignal,
+  materialClassification,
+} from "./tx-match-display";
+import {
   AFFILIATE_DISCLOSURE,
   TX_MATCH_TAGLINE,
   buildTxMatchCopyFromCapture,
@@ -27,10 +33,12 @@ export type CaptureResultAltView = {
   url: string | null;
   brandSlug: string | null;
   compositionLine: string;
+  cardSignal: string;
   priceLabel: string;
   currency: string | null;
   mixedCurrency: boolean;
   why: string | null;
+  whyReasons: string[];
   naturalFiberPercent: number | null;
 };
 
@@ -43,6 +51,8 @@ export type CaptureResultView = {
   materialHeadline: string;
   materialDetail: string | null;
   materialSupporting: string | null;
+  compositionEditorial: string;
+  classification: string;
   liningNote: string | null;
   insight: MaterialInsight;
   alternativesTitle: string;
@@ -72,10 +82,7 @@ export function formatAltPriceLabel(
       currency &&
       String(sourceCurrency).toUpperCase() !== String(currency).toUpperCase()
   );
-  return {
-    label: mixed ? `${label} · ${String(currency).toUpperCase()}` : label,
-    mixed,
-  };
+  return { label, mixed };
 }
 
 export function buildCaptureResultView(
@@ -104,6 +111,7 @@ export function buildCaptureResultView(
     currency
   );
   const alts = Array.isArray(row.alternatives) ? row.alternatives : [];
+  const compositionText = String(row.composition_text || attrs.compositionText || "");
   const alternatives: CaptureResultAltView[] = alts.slice(0, 12).map((raw, idx) => {
     const alt = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
     const composed = formatCompositionDisplay(String(alt.composition || ""));
@@ -112,6 +120,10 @@ export function buildCaptureResultView(
       alt.currency != null ? String(alt.currency) : null,
       currency
     );
+    const compositionLine = editorialCompositionLine(String(alt.composition || "")) ||
+      (composed.headline === "Material details unavailable" ? "" : composed.headline);
+    const nfp = alt.natural_fiber_percent != null ? Number(alt.natural_fiber_percent) : null;
+    const priceNum = typeof alt.price === "number" ? alt.price : null;
     return {
       id: String(alt.id || idx),
       name: titleCaseName(String(alt.name || alt.brand_name || "TX Match")),
@@ -119,14 +131,25 @@ export function buildCaptureResultView(
       imageUrl: alt.image_url ? String(alt.image_url) : null,
       url: alt.url ? String(alt.url) : null,
       brandSlug: alt.brand_slug ? String(alt.brand_slug) : null,
-      compositionLine:
-        composed.headline === "Material details unavailable" ? "" : composed.headline,
+      compositionLine,
+      cardSignal: materialCardSignal({
+        composition: String(alt.composition || ""),
+        naturalFiberPercent: nfp,
+      }),
       priceLabel: priced.label,
       currency: alt.currency != null ? String(alt.currency) : null,
       mixedCurrency: priced.mixed,
       why: alt.why != null ? String(alt.why) : null,
-      naturalFiberPercent:
-        alt.natural_fiber_percent != null ? Number(alt.natural_fiber_percent) : null,
+      whyReasons: fashionWhyReasons({
+        why: alt.why != null ? String(alt.why) : null,
+        composition: String(alt.composition || ""),
+        name: String(alt.name || ""),
+        originalTitle: String(row.title || ""),
+        originalPrice: typeof row.price === "number" ? row.price : null,
+        price: priceNum,
+        naturalFiberPercent: nfp,
+      }),
+      naturalFiberPercent: nfp,
     };
   });
   const links = buildTxMatchLinks(row.id != null ? String(row.id) : null);
@@ -139,6 +162,8 @@ export function buildCaptureResultView(
     materialHeadline: material.headline,
     materialDetail: material.detail,
     materialSupporting: material.supporting,
+    compositionEditorial: editorialCompositionLine(compositionText),
+    classification: materialClassification(compositionText),
     liningNote: /lining/i.test(String(material.detail || ""))
       ? material.detail
       : formatCompositionDisplay(String(row.composition_text || "")).hasSyntheticLining
