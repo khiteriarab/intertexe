@@ -688,6 +688,14 @@ describe("Existing dashboard is complemented, not replaced", () => {
       assert.ok(constants.includes(`label: "${label}"`), `nav lost ${label}`);
     }
     assert.match(constants, /label: "\$50K Command Center"/);
+    assert.match(constants, /href: "\/dashboard\/command-center"[\s\S]{0,80}founderOnly:\s*true/);
+    assert.match(constants, /info@intertexe\.com/);
+  });
+
+  it("hides the command center nav item from non-founders", () => {
+    const shell = fs.readFileSync(path.join(process.cwd(), "app/dashboard/components/HqShell.tsx"), "utf8");
+    assert.match(shell, /founderOnly/);
+    assert.match(shell, /roles\.includes\("founder"\)/);
   });
 
   it("shows the plan pulse on the existing This week page for founders only", () => {

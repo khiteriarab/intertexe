@@ -54,7 +54,7 @@ export function HqShell({ children, email, fullName, roles, workspaceName }: Pro
             <p className="text-xs text-black/50 mt-1">Private operating system</p>
           </div>
           <nav className="px-3 py-4 space-y-0.5">
-            {HQ_NAV.map((item) => {
+            {HQ_NAV.filter((item) => !("founderOnly" in item && item.founderOnly) || roles.includes("founder")).map((item) => {
               const exact = "exact" in item && item.exact;
               const active = exact
                 ? pathname === item.href
