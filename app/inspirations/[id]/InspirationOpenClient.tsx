@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
 import {
+  collapseRepeatedMaterials,
   formatCapturePrice,
   formatCheckedAt,
   formatCountryName,
@@ -198,7 +199,9 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
                 MATERIAL DETAILS
               </p>
               <p style={{ margin: 0, fontSize: 16, lineHeight: 1.45, color: "#161412" }}>
-                {copy?.compositionHeadline || capture.composition_text || "Material details unavailable"}
+                {collapseRepeatedMaterials(
+                  copy?.compositionHeadline || capture.composition_text || "Material details unavailable"
+                )}
               </p>
               {copy?.compositionDetail ? (
                 <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: "#3f3a36" }}>

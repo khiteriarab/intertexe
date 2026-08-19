@@ -4,6 +4,7 @@ const signedOut = $("signedOut");
 const signedIn = $("signedIn");
 const statusEl = $("status");
 const resultEl = $("result");
+const dockEl = $("dock");
 const saveBtn = $("save");
 const signInBtn = $("signIn");
 const signOutBtn = $("signOut");
@@ -35,9 +36,29 @@ function setStatus(text, isError) {
   statusEl.classList.toggle("error", Boolean(isError));
 }
 
-function showAuth(signed) {
+function collapseRepeatedMaterials(raw) {
+  const t = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const prefixMatch = t.match(/^(retailer lists:\s*)/i);
+  const prefix = prefixMatch ? t.slice(0, prefixMatch[0].length) : "";
+  const body = prefix ? t.slice(prefix.length) : t;
+  if (/\d+(?:\.\d+)?%/.test(body)) return t;
+  const parts = body.split(/[,;/|]+/).map((part) => part.trim()).filter(Boolean);
+  const seen = new Set();
+  const out = [];
+  for (const part of parts) {
+    const key = part.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
+  }
+  return prefix + out.join(", ");
+}
+
+function showAuth(signed, hasResult) {
   signedOut.classList.toggle("hidden", signed);
-  signedIn.classList.toggle("hidden", !signed);
+  signedIn.classList.toggle("hidden", !signed || Boolean(hasResult));
+  signOutBtn.classList.toggle("hidden", !signed);
 }
 
 function shopLabel(alt) {
@@ -47,7 +68,7 @@ function shopLabel(alt) {
 
 function formatPrice(price, currency) {
   const num = typeof price === "string" ? parseFloat(price) : Number(price);
-  if (!Number.isFinite(num)) return "";
+  if (!Number.isFinite(num) || num <= 0) return "";
   const cur = String(currency || "").trim().toUpperCase();
   try {
     return new Intl.NumberFormat(cur === "EUR" ? "en-IE" : cur === "GBP" ? "en-GB" : "en-US", {
@@ -111,14 +132,18 @@ function thumb(src) {
 function renderResult(payload) {
   resultEl.classList.remove("hidden");
   resultEl.innerHTML = "";
+  dockEl.classList.add("hidden");
+  dockEl.innerHTML = "";
   if (!payload) return;
 
   const capture = payload.capture || {};
   const copy = payload.copy || {};
   const links = payload.links || {};
   const alts = Array.isArray(capture.alternatives) ? capture.alternatives.slice(0, 12) : [];
-  const composition = copy.compositionHeadline || capture.composition_text || "";
-  const insight = insightFromText(composition, copy.compositionHeadline);
+  const composition = collapseRepeatedMaterials(
+    copy.compositionHeadline || capture.composition_text || ""
+  );
+  const insight = insightFromText(composition, composition || copy.compositionHeadline);
 
   const toast = el("div", "toast");
   toast.appendChild(thumb(capture.image_url));
@@ -145,8 +170,9 @@ function renderResult(payload) {
     bar.appendChild(dot);
     insightBox.appendChild(bar);
   }
-  if (copy.compositionDetail || composition) {
-    insightBox.appendChild(el("p", "detail", copy.compositionDetail || composition));
+  const detail = collapseRepeatedMaterials(copy.compositionDetail || composition);
+  if (detail) {
+    insightBox.appendChild(el("p", "detail", detail));
   }
   resultEl.appendChild(insightBox);
 
@@ -164,7 +190,7 @@ function renderResult(payload) {
       card.appendChild(img);
       const info = document.createElement("div");
       info.appendChild(el("strong", "", alt.name || alt.brand_name || "TX Match"));
-      info.appendChild(el("span", "", alt.composition || alt.why || shopLabel(alt)));
+      info.appendChild(el("span", "", collapseRepeatedMaterials(alt.composition || alt.why || shopLabel(alt))));
       card.appendChild(info);
       const badge = el("div", "badge");
       const price = formatPrice(alt.price, alt.currency);
@@ -188,7 +214,6 @@ function renderResult(payload) {
     resultEl.appendChild(list);
   }
 
-  const actions = el("div", "actions");
   const openUrl = links.openInIntertexeUrl || copy.openInIntertexeUrl;
   if (openUrl) {
     const a = el("a", "primary");
@@ -196,18 +221,9 @@ function renderResult(payload) {
     a.target = "_blank";
     a.rel = "noreferrer";
     a.textContent = "Open in INTERTEXE";
-    actions.appendChild(a);
+    dockEl.appendChild(a);
+    dockEl.classList.remove("hidden");
   }
-  const matchesUrl = links.viewAllMatchesUrl || copy.viewAllMatchesUrl;
-  if (copy.decodeAction && matchesUrl) {
-    const a = el("a", "secondary");
-    a.href = matchesUrl;
-    a.target = "_blank";
-    a.rel = "noreferrer";
-    a.textContent = copy.decodeAction;
-    actions.appendChild(a);
-  }
-  resultEl.appendChild(actions);
 
   if (copy.affiliateDisclosure) {
     resultEl.appendChild(el("p", "disclosure", copy.affiliateDisclosure));
@@ -244,7 +260,8 @@ function renderPeek(peek) {
 
 async function refreshUi() {
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-  showAuth(Boolean(state?.signedIn));
+  const hasResult = Boolean(state?.result || state?.peek);
+  showAuth(Boolean(state?.signedIn), hasResult);
   if (state?.status) setStatus(state.status, Boolean(state.error));
   else setStatus("");
   if (state?.result) renderResult(state.result);
@@ -267,7 +284,7 @@ async function scanOpenTab() {
   }
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
   if (!state?.signedIn) {
-    setStatus(peeked?.peek?.compositionText ? "Sign in to see TX Matches." : "");
+    showAuth(false, Boolean(peeked?.peek));
     return;
   }
   saveBtn.disabled = true;
@@ -294,6 +311,8 @@ signOutBtn.addEventListener("click", async () => {
   await chrome.runtime.sendMessage({ type: "SIGN_OUT" });
   resultEl.classList.add("hidden");
   resultEl.innerHTML = "";
+  dockEl.classList.add("hidden");
+  dockEl.innerHTML = "";
   await refreshUi();
 });
 
@@ -317,6 +336,6 @@ chrome.runtime.onMessage.addListener((msg) => {
 refreshUi()
   .then(() => scanOpenTab())
   .catch(() => {
-    showAuth(false);
+    showAuth(false, false);
     setStatus("Could not reach the extension. Close and reopen the popup.", true);
   });

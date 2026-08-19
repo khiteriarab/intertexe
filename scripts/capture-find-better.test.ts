@@ -120,6 +120,18 @@ describe("TX Match copy", () => {
     assert.match(copy.compositionNote || "", /percentages were not provided/i);
   });
 
+  it("collapses a repeated retailer fiber list to one name", () => {
+    const copy = buildTxMatchCopy({
+      inferredFiber: "silk",
+      garment: "dress",
+      altCount: 12,
+      compositionListed: true,
+      listedWithoutPercentages: true,
+      listedMaterial: "SILK, SILK, silk, silk, silk, SILK, SILK, SILK",
+    });
+    assert.equal(copy.compositionHeadline, "Retailer lists: Silk");
+  });
+
   it("does not claim a fabric when none was inferred", () => {
     const copy = buildTxMatchCopy({ compositionListed: false, altCount: 8 });
     assert.equal(copy.decodeAction, "See more like this");
@@ -128,14 +140,15 @@ describe("TX Match copy", () => {
     assert.match(copy.compositionNote || "", /verified compositions/i);
   });
 
-  it("sends View all matches and Open in INTERTEXE to different URLs", () => {
+  it("opens the saved piece and TX Matches on the same /capture page", () => {
     const id = "cap-123";
     const links = buildTxMatchLinks(id);
     assert.ok(links);
-    assert.match(links.viewAllMatchesUrl, /\/inspirations\/cap-123$/);
-    assert.match(links.openInIntertexeUrl, /\/open\?/);
-    assert.match(links.openInIntertexeUrl, /capture/);
-    assert.notEqual(links.viewAllMatchesUrl, links.openInIntertexeUrl);
+    assert.match(links.viewAllMatchesUrl, /\/capture\/cap-123$/);
+    assert.match(links.openInIntertexeUrl, /\/capture\/cap-123$/);
+    assert.equal(links.viewAllMatchesUrl, links.openInIntertexeUrl);
+    assert.doesNotMatch(links.openInIntertexeUrl, /\/open\?/);
+    assert.doesNotMatch(links.openInIntertexeUrl, /\/inspirations\//);
     const copy = buildTxMatchCopy({ captureId: id, altCount: 12, inferredFiber: "silk", garment: "skirt" });
     assert.equal(copy.viewAllMatchesUrl, links.viewAllMatchesUrl);
     assert.equal(copy.openInIntertexeUrl, links.openInIntertexeUrl);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
 import { getUniversalOpenUrl } from "@/lib/app-store";
 import {
+  collapseRepeatedMaterials,
   formatCapturePrice,
   shopAtLabel,
   titleCaseName,
@@ -65,11 +66,12 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
   const appHref = getUniversalOpenUrl(`/capture/${captureId}`, {
     cta: "chrome_extension_open",
   });
-  const matchesHref = `/inspirations/${encodeURIComponent(captureId)}`;
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const load = async () => {
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
         setNeedsAuth(true);
@@ -84,16 +86,28 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
           return;
         }
         const data = await res.json().catch(() => ({}));
-        if (!cancelled) {
-          setCapture(data.capture || data);
-          if (data.copy) setCopy(data.copy);
+        if (cancelled) return;
+        const next = (data.capture || data) as Capture;
+        setCapture(next);
+        if (data.copy) setCopy(data.copy);
+        const nextAlts = Array.isArray(next?.alternatives) ? next.alternatives : [];
+        const stillProcessing = ["pending", "enriching", "running", "enrichment_retry"].includes(
+          String(next?.enrichment_status || "")
+        );
+        if (!nextAlts.length && stillProcessing && attempts < 15) {
+          attempts += 1;
+          timer = window.setTimeout(() => {
+            void load();
+          }, 2000);
         }
       } catch {
         if (!cancelled) setCapture({ id: captureId });
       }
-    })();
+    };
+    void load();
     return () => {
       cancelled = true;
+      if (timer) window.clearTimeout(timer);
     };
   }, [captureId]);
 
@@ -102,12 +116,21 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
     [capture]
   );
   const insight = materialInsightFromText(
-    copy?.compositionHeadline || capture?.composition_text || ""
+    collapseRepeatedMaterials(copy?.compositionHeadline || capture?.composition_text || "")
   );
   const brandLine = capture
     ? uniqueTitleCaseNames(capture.brand_name, capture.retailer).join(" · ")
     : "";
   const priceLabel = capture ? formatCapturePrice(capture.price, capture.currency) : null;
+  const materialLine = collapseRepeatedMaterials(
+    copy?.compositionHeadline || capture?.composition_text || ""
+  );
+  const processing =
+    Boolean(capture) &&
+    alts.length === 0 &&
+    ["pending", "enriching", "running", "enrichment_retry"].includes(
+      String(capture?.enrichment_status || "")
+    );
 
   return (
     <div className="w-full max-w-xl mx-auto py-8 md:py-12">
@@ -172,38 +195,25 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
                 </div>
               ) : null}
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {copy?.compositionDetail ||
-                  copy?.compositionHeadline ||
-                  capture.composition_text ||
+                {materialLine ||
                   "TX Match can still find similar pieces with verified compositions."}
               </p>
+              {copy?.compositionDetail ? (
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{copy.compositionDetail}</p>
+              ) : null}
             </div>
 
-            <div className="mt-5 flex flex-col gap-3">
-              <a
-                href={appHref}
-                className="flex h-12 items-center justify-center rounded-full bg-[#1f3d2b] text-sm font-semibold text-white"
-              >
-                Continue in the INTERTEXE app
-              </a>
-              <Link
-                href={matchesHref}
-                className="flex h-12 items-center justify-center rounded-full border border-[#e6dfd6] text-sm font-semibold text-[#1f3d2b]"
-              >
-                {copy?.decodeAction || "See TX Matches on the web"}
-              </Link>
-              <Link
-                href="/shop"
-                className="text-center text-sm text-[#1f3d2b] underline-offset-4 hover:underline"
-              >
-                Browse INTERTEXE
-              </Link>
-            </div>
+            {processing ? (
+              <p className="mt-6 text-sm text-muted-foreground">Finding other options in this fabric…</p>
+            ) : null}
 
             {alts.length > 0 ? (
-              <section className="mt-8">
+              <section className="mt-6">
                 <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  {(copy?.alternativesTitle || "Top matches").toUpperCase()}
+                  {(copy?.alternativesTitle || "More options").toUpperCase()}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {alts.length} matches found — more pieces in this fabric, style, and price.
                 </p>
                 <div className="mt-3 divide-y divide-[#e6dfd6]">
                   {alts.map((alt, idx) => (
@@ -219,7 +229,26 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
                   ))}
                 </div>
               </section>
+            ) : !processing && capture.id ? (
+              <p className="mt-6 text-sm text-muted-foreground">
+                Other options will appear here as soon as TX Match finishes reading this piece.
+              </p>
             ) : null}
+
+            <div className="mt-6 flex flex-col gap-3">
+              <a
+                href={appHref}
+                className="flex h-12 items-center justify-center rounded-full bg-[#1f3d2b] text-sm font-semibold text-white"
+              >
+                Continue in the INTERTEXE app
+              </a>
+              <Link
+                href="/shop"
+                className="text-center text-sm text-[#1f3d2b] underline-offset-4 hover:underline"
+              >
+                Browse INTERTEXE
+              </Link>
+            </div>
 
             {capture.original_url ? (
               <p className="mt-6 text-sm">
@@ -295,7 +324,7 @@ function MatchRow({
           {titleCaseName(alt.name) || "Natural-fiber match"}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          {alt.composition || shopAtLabel(alt.brand_name)}
+          {collapseRepeatedMaterials(alt.composition) || shopAtLabel(alt.brand_name)}
         </p>
       </div>
       <div className="text-right">

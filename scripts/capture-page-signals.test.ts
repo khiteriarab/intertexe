@@ -11,6 +11,8 @@ import {
   shopAtLabel,
   titleCaseName,
   uniqueTitleCaseNames,
+  collapseRepeatedMaterials,
+  normalizeListedMaterial,
 } from "../lib/capture-page-signals.ts";
 import {
   normalizeRetailerClickSource,
@@ -38,6 +40,13 @@ describe("retailer material capture", () => {
     assert.equal(looksLikePercentageComposition("20% off silk dresses"), false);
     assert.equal(extractLabeledMaterial("Spring sale, silk-like drape, 20% off"), null);
   });
+
+  it("collapses repeated silk from a retailer dump", () => {
+    assert.equal(collapseRepeatedMaterials("SILK, SILK, silk, silk, silk, SILK, SILK, SILK"), "Silk");
+    assert.equal(normalizeListedMaterial("SILK, SILK, silk, silk"), "Silk");
+    assert.equal(collapseRepeatedMaterials("Retailer lists: SILK, SILK, silk, silk"), "Retailer lists: Silk");
+    assert.equal(collapseRepeatedMaterials("70% cotton, 30% silk"), "70% Cotton, 30% Silk");
+  });
 });
 
 describe("price and currency trust", () => {
@@ -63,6 +72,8 @@ describe("price and currency trust", () => {
     assert.equal(preferred.price, 465);
     assert.equal(formatCapturePrice(465, null), "465");
     assert.equal(formatCapturePrice(465, "EUR"), "€465");
+    assert.equal(formatCapturePrice(0, "USD"), null);
+    assert.equal(formatCapturePrice("0", "EUR"), null);
   });
 
   it("reads country from og:locale, not from a generic .com host", () => {

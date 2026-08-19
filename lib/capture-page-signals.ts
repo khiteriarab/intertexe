@@ -54,6 +54,31 @@ export function hasPercentages(text: string | null | undefined): boolean {
   return /\d+(?:\.\d+)?%/.test(String(text || ""));
 }
 
+/**
+ * Retailer pages often repeat the same fiber ("SILK, SILK, silk, silk").
+ * Show each distinct material once, title-cased.
+ */
+export function collapseRepeatedMaterials(raw: string | null | undefined): string {
+  const t = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const prefixMatch = t.match(/^(retailer lists:\s*)/i);
+  const prefix = prefixMatch ? t.slice(0, prefixMatch[0].length) : "";
+  const body = prefix ? t.slice(prefix.length) : t;
+  if (hasPercentages(body)) {
+    return prefix + body.replace(new RegExp(FIBER_NAME_RE.source, "gi"), (fiber) => titleCaseName(fiber));
+  }
+  const parts = body.split(/[,;/|]+/).map((part) => part.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of parts) {
+    const key = part.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(titleCaseName(part));
+  }
+  return prefix + out.join(", ");
+}
+
 export function looksLikePercentageComposition(text: string): boolean {
   if (!text || text.length > 180) return false;
   if (PROMO_RE.test(text)) return false;
@@ -80,9 +105,9 @@ export function normalizeListedMaterial(raw: string): string {
     const m = t.match(
       /(\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*(?:,\s*\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*){0,6})/
     );
-    return (m?.[1] || t).trim();
+    return collapseRepeatedMaterials((m?.[1] || t).trim());
   }
-  return t.replace(FIBER_NAME_RE, (fiber) => titleCaseName(fiber));
+  return collapseRepeatedMaterials(t);
 }
 
 /**
@@ -202,7 +227,7 @@ export function formatCapturePrice(
 ): string | null {
   if (price == null || price === "") return null;
   const num = typeof price === "string" ? parseFloat(price.replace(/[^0-9.,-]/g, "").replace(",", ".")) : Number(price);
-  if (!Number.isFinite(num)) return null;
+  if (!Number.isFinite(num) || num <= 0) return null;
   const cur = String(currency || "").trim().toUpperCase();
   if (!cur) return new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 }).format(num);
   const locale = cur === "EUR" ? "en-IE" : cur === "GBP" ? "en-GB" : "en-US";

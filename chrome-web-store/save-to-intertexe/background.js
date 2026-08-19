@@ -92,6 +92,22 @@ async function authedFetch(path, opts = {}, attempt = 0) {
 }
 
 function extractProductFromPage() {
+  function collapseRepeatedMaterials(raw) {
+    const t = String(raw || "").replace(/\s+/g, " ").trim();
+    if (!t) return "";
+    if (/\d+(?:\.\d+)?%/.test(t)) return t;
+    const parts = t.split(/[,;/|]+/).map((part) => part.trim()).filter(Boolean);
+    const seen = new Set();
+    const out = [];
+    for (const part of parts) {
+      const key = part.toLowerCase().replace(/[^a-z0-9]+/g, "");
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
+    }
+    return out.join(", ");
+  }
+
   const attr = (sel) => document.querySelector(sel)?.getAttribute("content")?.trim() || "";
   const text = (sel) => document.querySelector(sel)?.textContent?.trim() || "";
   const ogTitle = attr('meta[property="og:title"]') || attr('meta[name="twitter:title"]');
@@ -132,7 +148,11 @@ function extractProductFromPage() {
           currency = currency || offer.priceCurrency || null;
         }
         const extra = node.material || node.pattern || "";
-        if (extra) compositionText = String(extra);
+        if (Array.isArray(extra)) {
+          compositionText = extra.filter(Boolean).map(String).join(", ");
+        } else if (extra) {
+          compositionText = String(extra);
+        }
       }
     } catch {
       /* ignore invalid JSON-LD */
@@ -140,12 +160,28 @@ function extractProductFromPage() {
   }
 
   const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 12000);
+  const labeledRe =
+    /(?:material|composition|fabric|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
+  let labeled = null;
+  let labeledMatch;
+  while ((labeledMatch = labeledRe.exec(bodyText))) {
+    const candidate = collapseRepeatedMaterials(labeledMatch[1] || "");
+    if (candidate) {
+      labeled = candidate;
+      break;
+    }
+  }
   const fiberRe =
     /\b(\d{1,3}(?:\.\d+)?%\s*)?(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
-  const hits = bodyText.match(fiberRe);
-  if (!compositionText && hits?.length) {
-    const listed = hits.slice(0, 8).join(", ");
-    if (listed.length < 180) compositionText = listed;
+  const hits = bodyText.match(fiberRe) || [];
+  if (labeled) {
+    compositionText = labeled;
+  } else if (compositionText) {
+    compositionText = collapseRepeatedMaterials(compositionText);
+  } else if (hits.length) {
+    const withPct = hits.filter((h) => /\d/.test(h));
+    const listed = collapseRepeatedMaterials((withPct.length ? withPct : hits).join(", "));
+    if (listed && listed.length < 180) compositionText = listed;
   }
   // Visible page text is read locally to find a composition line. It is not
   // transmitted as a raw page dump — only the short compositionText above.
@@ -164,7 +200,7 @@ function extractProductFromPage() {
     description: description ? description.slice(0, 500) : null,
     brandName,
     sku,
-    price: Number.isFinite(price) ? price : null,
+    price: Number.isFinite(price) && price > 0 ? price : null,
     currency,
     compositionText,
     retailer,

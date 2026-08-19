@@ -1,6 +1,5 @@
 import { SITE_URL } from "./seo-international";
-import { getUniversalOpenUrl } from "./app-store";
-import { hasPercentages } from "./capture-page-signals";
+import { collapseRepeatedMaterials, hasPercentages } from "./capture-page-signals";
 
 export const TX_MATCH_TAGLINE = "Know the material before you buy.";
 export const AFFILIATE_DISCLOSURE =
@@ -24,15 +23,13 @@ export type TxMatchLinks = {
   openInIntertexeUrl: string;
 };
 
-/** View all = web TX Match list. Open in INTERTEXE = app (or /capture on desktop). */
+/** Open in INTERTEXE = saved piece + TX Matches on one /capture page. */
 export function buildTxMatchLinks(captureId: string | null | undefined): TxMatchLinks | null {
   const id = String(captureId || "").trim();
   if (!id) return null;
   return {
-    viewAllMatchesUrl: `${SITE_URL}/inspirations/${encodeURIComponent(id)}`,
-    openInIntertexeUrl: getUniversalOpenUrl(`/capture/${id}`, {
-      cta: "chrome_extension_open",
-    }),
+    viewAllMatchesUrl: `${SITE_URL}/capture/${encodeURIComponent(id)}`,
+    openInIntertexeUrl: `${SITE_URL}/capture/${encodeURIComponent(id)}`,
   };
 }
 
@@ -100,7 +97,7 @@ export function buildTxMatchCopy(opts: {
     compositionDetail = "Exact percentages were not provided.";
     compositionNote = `${compositionHeadline}\n${compositionDetail}`;
   } else if (opts.compositionListed && opts.listedMaterial) {
-    compositionHeadline = opts.listedMaterial;
+    compositionHeadline = collapseRepeatedMaterials(opts.listedMaterial) || opts.listedMaterial;
     compositionDetail = null;
     compositionNote = null;
   } else if (!opts.compositionListed) {
@@ -155,10 +152,10 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
 }
 
 function prettyFiberName(raw: string | null | undefined): string | null {
-  const t = String(raw || "").trim();
+  const t = collapseRepeatedMaterials(raw);
   if (!t) return null;
   const fiber = fiberFromText(t);
-  if (fiber && t.split(/\s+/).length <= 3 && !hasPercentages(t)) {
+  if (fiber && t.split(/[,]+/).length <= 2 && !hasPercentages(t)) {
     return fiber.charAt(0).toUpperCase() + fiber.slice(1);
   }
   return t;
