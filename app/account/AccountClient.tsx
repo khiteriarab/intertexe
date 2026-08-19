@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2, TrendingDown, Settings, Pencil, KeyRound, Trash2, ArrowLeft, Check } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
@@ -12,7 +12,7 @@ import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { RecentlyViewedRail } from "./RecentlyViewedRail";
 import { shareMessage } from "../../lib/referral-share-message";
 import { affiliateUrlWithClientU1 } from "../../lib/affiliate-url";
-import { safeInternalPath } from "../../lib/public-match-set";
+import { safeLoginReturnPath } from "../../lib/auth-return-path";
 import {
   AUTH_REFRESH_KEY,
   clearWebAuthTokens,
@@ -81,8 +81,7 @@ export default function AccountClient({
   initialMode?: "login" | "signup" | "forgot";
 }) {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const nextPath = safeInternalPath(searchParams.get("next"));
+  const nextPath = safeLoginReturnPath(searchParams.get("next"));
   const [user, setUser] = useState<UserData | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [mode, setMode] = useState<"login" | "signup" | "forgot">(initialMode);
@@ -130,9 +129,9 @@ export default function AccountClient({
 
   useEffect(() => {
     if (!authLoading && user && nextPath) {
-      router.replace(nextPath);
+      window.location.assign(nextPath);
     }
-  }, [authLoading, user, nextPath, router]);
+  }, [authLoading, user, nextPath]);
 
   useEffect(() => {
     const urlMode = searchParams.get("mode");
@@ -220,7 +219,7 @@ export default function AccountClient({
       }
       await fetchMe();
       if (nextPath) {
-        router.replace(nextPath);
+        window.location.assign(nextPath);
         return;
       }
     } catch (err: any) {
@@ -262,7 +261,7 @@ export default function AccountClient({
     if (nextPath) {
       return (
         <div className="flex min-h-[60vh] items-center justify-center px-6">
-          <p className="text-sm text-muted-foreground">Taking you back to your matches…</p>
+          <p className="text-sm text-muted-foreground">Taking you back…</p>
         </div>
       );
     }

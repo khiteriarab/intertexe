@@ -12,6 +12,7 @@ import { CountrySelector } from "./CountrySelector";
 import { MobileBottomDock } from "./MobileBottomDock";
 import { MobileNavMenu } from "./MobileNavMenu";
 import { DesignersMenuPanel } from "./DesignersMenuPanel";
+import { accountAuthHref } from "../../lib/auth-return-path";
 
 type DesignerSearchHit = {
   id?: string;
@@ -140,7 +141,11 @@ export function Navbar() {
             >
               {searchOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Search className="w-5 h-5" strokeWidth={1.5} />}
             </button>
-            <Link href="/account" className="hidden md:block p-2 text-foreground hover:text-foreground/70 transition-colors" data-testid="link-account">
+            <Link
+              href={hasMounted && isAuthenticated ? "/account" : accountAuthHref("login", pathname)}
+              className="hidden md:block p-2 text-foreground hover:text-foreground/70 transition-colors"
+              data-testid="link-account"
+            >
               {hasMounted && isAuthenticated ? (
                 <UserCheck className="w-5 h-5" strokeWidth={1.5} />
               ) : (

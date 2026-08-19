@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { accountAuthHref } from "../../lib/auth-return-path";
 
 const DISMISS_KEY = "intertexe_signin_banner_dismissed";
 const TOKEN_KEY = "intertexe_auth_token";
 
 /** Slim strip below navbar — dismissible, does not cover hero content. */
 export function SignInBenefitsBanner() {
+  const pathname = usePathname();
   const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
@@ -50,13 +53,13 @@ export function SignInBenefitsBanner() {
           </p>
           <div className="flex items-center gap-4">
             <Link
-              href="/account"
+              href={accountAuthHref("login", pathname)}
               className="text-[10px] uppercase tracking-[0.14em] text-[#1C1C1E] hover:opacity-70"
             >
               Sign in
             </Link>
             <Link
-              href="/account?mode=signup"
+              href={accountAuthHref("signup", pathname)}
               className="text-[10px] uppercase tracking-[0.14em] text-[#1C1C1E] hover:opacity-70"
             >
               Create account
