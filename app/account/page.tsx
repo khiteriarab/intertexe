@@ -11,7 +11,16 @@ export const metadata: Metadata = {
 
 export default function AccountPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <main className="flex min-h-[60vh] items-center justify-center px-6">
+          <div className="text-center">
+            <p className="text-[11px] font-semibold tracking-[0.16em]">INTERTEXE</p>
+            <p className="mt-3 text-sm text-muted-foreground">Loading your account…</p>
+          </div>
+        </main>
+      }
+    >
       <AuthConfirmBridge />
       <AccountClient />
     </Suspense>

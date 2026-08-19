@@ -312,11 +312,34 @@ function enrichmentDone(capture) {
   return false;
 }
 
+function captureIdOf(json) {
+  return (json?.capture || json)?.id || null;
+}
+
+function priorCaptureUrl(result) {
+  const prior = result?.capture || result || {};
+  return String(prior.original_url || prior.originalUrl || "");
+}
+
 async function pollCapture(id, timeoutMs = 25000) {
   const t0 = Date.now();
   let last = null;
   while (Date.now() - t0 < timeoutMs) {
     const { res, json } = await authedFetch(`/api/capture/${id}`);
+    if (res.ok) {
+      last = json;
+      if (enrichmentDone(json.capture || json)) return json;
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  return last;
+}
+
+async function pollPublicCapture(id, timeoutMs = 25000) {
+  const t0 = Date.now();
+  let last = null;
+  while (Date.now() - t0 < timeoutMs) {
+    const { res, json } = await api(`/api/matches/${id}`);
     if (res.ok) {
       last = json;
       if (enrichmentDone(json.capture || json)) return json;
@@ -334,13 +357,26 @@ async function savePayload(payload) {
   if (res.status === 401) {
     return { needsSignIn: true, payload };
   }
-  if (!res.ok || !(json.capture || json).id) {
+  if (!res.ok || !captureIdOf(json)) {
     throw new Error(json.error || json.message || "Could not save this page");
   }
-  const captureId = (json.capture || json).id;
-  const polled = await pollCapture(captureId);
+  const polled = await pollCapture(captureIdOf(json));
   const result = polled || json;
   await chrome.storage.local.set({ lastResult: result, pendingCapture: null });
+  return { result };
+}
+
+async function createPublicMatches(payload) {
+  const { res, json } = await api("/api/matches", {
+    method: "POST",
+    body: payload,
+  });
+  if (!res.ok || !captureIdOf(json)) {
+    throw new Error(json.error || json.message || "Could not find matches");
+  }
+  const polled = await pollPublicCapture(captureIdOf(json));
+  const result = polled || json;
+  await chrome.storage.local.set({ lastResult: result });
   return { result };
 }
 
@@ -473,24 +509,30 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       try {
         const payload = msg.payload || (await extractActiveTab());
         const store = await getStore();
-        if (!store.accessToken) {
-          await chrome.storage.local.set({ pendingCapture: payload, lastPeek: payload });
-          if (!msg.quiet) await startSignIn();
-          sendResponse({ needsSignIn: true, peek: payload });
-          return;
-        }
         const currentUrl = String(payload.originalUrl || "");
-        const prior = store.lastResult?.capture || {};
-        const priorUrl = String(prior.original_url || prior.originalUrl || "");
+        const priorUrl = priorCaptureUrl(store.lastResult);
+        const priorAlts = store.lastResult?.capture?.alternatives || store.lastResult?.view?.alternatives;
         if (
           !msg.force &&
           currentUrl &&
           priorUrl &&
           currentUrl === priorUrl &&
-          Array.isArray(prior.alternatives) &&
-          prior.alternatives.length
+          Array.isArray(priorAlts) &&
+          priorAlts.length
         ) {
           sendResponse({ result: store.lastResult, peek: payload, reused: true });
+          return;
+        }
+        if (!store.accessToken) {
+          if (msg.force) {
+            await chrome.storage.local.set({ pendingCapture: payload, lastPeek: payload });
+            await startSignIn();
+            sendResponse({ needsSignIn: true, peek: payload });
+            return;
+          }
+          const created = await createPublicMatches(payload);
+          await chrome.storage.local.set({ lastPeek: payload });
+          sendResponse({ ...created, peek: payload });
           return;
         }
         const saved = await savePayload(payload);

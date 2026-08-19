@@ -33,6 +33,12 @@ const ITX = globalThis.ITXCaptureResult || {
   }),
   formatPriceLabel: () => "Price unavailable",
   formatAltPriceLabel: () => ({ label: "Price unavailable", mixed: false }),
+  unpublishedMaterialCopy: () => ({
+    headline: "Exact composition not published",
+    detail: null,
+    supporting: null,
+    hasSyntheticLining: false,
+  }),
 };
 
 function isEmptyPageCopy(text) {
@@ -40,7 +46,7 @@ function isEmptyPageCopy(text) {
 }
 
 function popupMaterial(headline) {
-  return String(headline || "Material details unavailable").replace(
+  return String(headline || "Exact composition not published").replace(
     /percentage not provided/gi,
     "exact percentage not provided"
   );
@@ -80,12 +86,12 @@ function showAuth(signed, saved, hasProduct) {
   accountBtn.classList.toggle("hidden", !signed);
   if (!signed) closeAccountMenu();
 
-  saveBtn.classList.toggle("hidden", !signed);
+  saveBtn.classList.remove("hidden");
 
   if (hasProduct) {
-    signInBtn.textContent = "Sign in to save and see TX Matches";
-    signInBtn.classList.remove("quiet-link");
-    signInBtn.classList.add("primary");
+    signInBtn.textContent = "Sign in";
+    signInBtn.classList.add("quiet-link");
+    signInBtn.classList.remove("primary");
   } else {
     signInBtn.textContent = "Sign in";
     signInBtn.classList.add("quiet-link");
@@ -110,7 +116,17 @@ function capturePageUrl(raw) {
     const u = new URL(text, "https://www.intertexe.com");
     if (u.pathname === "/open" || u.pathname === "/open/") {
       const next = u.searchParams.get("next") || "";
-      if (next.startsWith("/capture/")) return `${u.origin}${next}`;
+      if (next.startsWith("/capture/")) return `${u.origin}${next.replace(/^\/capture\//, "/matches/")}`;
+      if (next.startsWith("/matches/")) return `${u.origin}${next}`;
+      if (next.startsWith("/inspirations/")) return `${u.origin}${next.replace(/^\/inspirations\//, "/matches/")}`;
+    }
+    if (u.pathname.startsWith("/capture/")) {
+      u.pathname = u.pathname.replace(/^\/capture\//, "/matches/");
+      return u.href;
+    }
+    if (u.pathname.startsWith("/inspirations/")) {
+      u.pathname = u.pathname.replace(/^\/inspirations\//, "/matches/");
+      return u.href;
     }
     return u.href;
   } catch {
@@ -184,9 +200,20 @@ function renderResult(payload, opts = {}) {
     : Array.isArray(capture.alternatives)
       ? capture.alternatives.slice(0, 12)
       : [];
-  const material = ITX.formatCompositionDisplay(
-    view.materialHeadline || copy.compositionHeadline || capture.composition_text || ""
-  );
+  const material = ITX.unpublishedMaterialCopy({
+    compositionText: capture.composition_text || "",
+    title: view.title || capture.title || "",
+    category: String(capture.category || capture.subcategory || ""),
+    altCount: alts.length,
+  });
+  if (
+    view.materialHeadline &&
+    !/material details unavailable/i.test(String(view.materialHeadline))
+  ) {
+    material.headline = view.materialHeadline;
+    if (view.materialDetail) material.detail = view.materialDetail;
+    if (view.materialSupporting) material.supporting = view.materialSupporting;
+  }
   const priceLabel = view.priceLabel || ITX.formatPriceLabel(capture.price, capture.currency);
   const brand = String(capture.brand_name || view.brandLine || "")
     .split(" · ")[0]
@@ -207,14 +234,10 @@ function renderResult(payload, opts = {}) {
   if (brand) titles.appendChild(el("p", "product-brand", brand));
   titles.appendChild(el("h2", "product-title", title));
   head.appendChild(titles);
-  if (document.body.classList.contains("is-signed-in")) {
-    const saveSlot = el("div", "product-save");
-    saveBtn.classList.remove("hidden");
-    saveSlot.appendChild(saveBtn);
-    head.appendChild(saveSlot);
-  } else {
-    restoreSaveBtn();
-  }
+  const saveSlot = el("div", "product-save");
+  saveBtn.classList.remove("hidden");
+  saveSlot.appendChild(saveBtn);
+  head.appendChild(saveSlot);
   meta.appendChild(head);
   meta.appendChild(el("p", "product-price", priceLabel || "Price unavailable"));
   product.appendChild(meta);
@@ -222,8 +245,12 @@ function renderResult(payload, opts = {}) {
 
   const materialBlock = el("div", "material-block");
   materialBlock.appendChild(el("p", "material-result", popupMaterial(material.headline)));
-  const verdict = constructionVerdict(view, material.headline);
-  if (verdict) materialBlock.appendChild(el("p", "material-verdict", verdict));
+  if (material.detail) materialBlock.appendChild(el("p", "material-verdict", material.detail));
+  if (material.supporting) materialBlock.appendChild(el("p", "material-verdict", material.supporting));
+  if (!material.detail && !material.supporting) {
+    const verdict = constructionVerdict(view, material.headline);
+    if (verdict) materialBlock.appendChild(el("p", "material-verdict", verdict));
+  }
   sourceEl.appendChild(materialBlock);
 
   if (material.hasSyntheticLining || view.liningNote) {
@@ -350,10 +377,6 @@ async function scanOpenTab() {
     renderPeek(peeked.peek);
   }
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-  if (!state?.signedIn) {
-    showAuth(false, false, Boolean(peeked?.peek));
-    return;
-  }
   saveBtn.disabled = true;
   setStatus("Finding TX Matches…");
   const res = await chrome.runtime.sendMessage({
@@ -367,7 +390,8 @@ async function scanOpenTab() {
   } else setStatus("");
   if (res?.result) {
     renderResult(res.result);
-    showAuth(true, Boolean(res.result?.capture?.id), true);
+    const signed = Boolean((await chrome.runtime.sendMessage({ type: "GET_STATE" }))?.signedIn);
+    showAuth(signed, Boolean(signed && res.result?.capture?.id), true);
   }
   if (res?.error) saveBtn.disabled = false;
   else saveBtn.disabled = Boolean(res?.result);

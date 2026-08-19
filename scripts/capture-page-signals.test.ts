@@ -83,7 +83,7 @@ describe("retailer material capture", () => {
       composition_text: "SILK, SILK, silk",
     });
     assert.equal(view.priceLabel, "Price unavailable");
-    assert.equal(view.materialLine, "Material: Silk — percentage not provided");
+    assert.equal(view.materialLine, "Material: Silk — exact percentage not provided");
   });
 });
 

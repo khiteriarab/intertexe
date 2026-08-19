@@ -13,7 +13,9 @@ export function webPathFromOpenNext(next?: string | null): string {
   const raw = String(next || "/").trim() || "/";
   const path = raw.startsWith("/") ? raw : `/${raw}`;
   const inspiration = path.match(/^\/inspirations\/([^/?#]+)/);
-  if (inspiration) return `/capture/${inspiration[1]}`;
+  if (inspiration) return `/matches/${inspiration[1]}`;
+  const capture = path.match(/^\/capture\/([^/?#]+)/);
+  if (capture) return `/matches/${capture[1]}`;
   return path;
 }
 
@@ -25,5 +27,5 @@ export function shouldSkipAppOpenLanding(input: OpenLandingInput): boolean {
   if (isMobileAppUserAgent(input.userAgent)) return false;
   const path = webPathFromOpenNext(input.next);
   const cta = String(input.cta || "");
-  return cta === "chrome_extension_open" || path.startsWith("/capture/");
+  return cta === "chrome_extension_open" || path.startsWith("/capture/") || path.startsWith("/matches/");
 }

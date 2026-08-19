@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validate the 1.0.9 Chrome package. Does not submit or publish.
+ * Validate the 1.0.10 Chrome package. Does not submit or publish.
  */
 import fs from "fs";
 import os from "os";
@@ -12,7 +12,7 @@ import { createHash } from "crypto";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const folder = path.join(__dirname, "save-to-intertexe");
-const zipPath = path.join(__dirname, "save-to-intertexe-1.0.9.zip");
+const zipPath = path.join(__dirname, "save-to-intertexe-1.0.10.zip");
 const NAME = "INTERTEXE: Fabric Scanner";
 const DESC =
   "Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.";
@@ -26,7 +26,7 @@ function record(id, pass, detail = {}) {
 const manifest = JSON.parse(fs.readFileSync(path.join(folder, "manifest.json"), "utf8"));
 record("manifest.name", manifest.name === NAME, { actual: manifest.name });
 record("manifest.description", manifest.description === DESC);
-record("manifest.version", manifest.version === "1.0.9");
+record("manifest.version", manifest.version === "1.0.10");
 record("manifest.mv3", manifest.manifest_version === 3);
 record("manifest.permissions", JSON.stringify(manifest.permissions) === JSON.stringify(["activeTab", "storage", "scripting", "tabs"]));
 record(
@@ -73,12 +73,19 @@ record("popup.sticky_dock", /id="dock"/.test(popupHtml) && /flex-shrink:\s*0/.te
 record("popup.shared_formula", fs.existsSync(path.join(folder, "capture-result.js")) && popupHtml.includes("capture-result.js"));
 record("popup.twelve_matches", /slice\(0,\s*12\)/.test(fs.readFileSync(path.join(folder, "popup.js"), "utf8")));
 record("popup.skips_open_gate", /function capturePageUrl/.test(fs.readFileSync(path.join(folder, "popup.js"), "utf8")));
+record(
+  "popup.unpublished_copy",
+  fs.readFileSync(path.join(folder, "capture-result.js"), "utf8").includes("unpublishedMaterialCopy") &&
+    fs.readFileSync(path.join(folder, "capture-result.js"), "utf8").includes("Denim detected") &&
+    fs.readFileSync(path.join(folder, "popup.js"), "utf8").includes("/matches/")
+);
 record("popup.no_token_paste", !/Paste Supabase/i.test(popupHtml));
 
 const bg = fs.readFileSync(path.join(folder, "background.js"), "utf8");
 record("bg.peek_on_open", bg.includes('msg?.type === "PEEK_TAB"') && bg.includes("executeScript"));
 record("bg.unique_fibers", bg.includes("uniqueFibers") && bg.includes("visibleOffer"));
 record("bg.save_tab", bg.includes('msg?.type === "SAVE_TAB"'));
+record("bg.public_matches", bg.includes("/api/matches") && bg.includes("createPublicMatches"));
 record("bg.no_pageSignals_transmit", !bg.includes("pageSignals"));
 record("bg.intertexe_only", !/fetch\(\s*`https:\/\/(?!www\.intertexe\.com)/.test(bg));
 record("bg.no_secrets", !/service_role|SUPABASE_SERVICE|sk-/.test(bg));

@@ -1,6 +1,7 @@
 import { SITE_URL } from "./seo-international";
 import { formatCompositionDisplay } from "./composition-display";
 import { hasPercentages } from "./capture-page-signals";
+import { unpublishedMaterialCopy } from "./unpublished-material";
 
 export const TX_MATCH_TAGLINE = "Know the material before you buy.";
 export const AFFILIATE_DISCLOSURE =
@@ -24,13 +25,13 @@ export type TxMatchLinks = {
   openInIntertexeUrl: string;
 };
 
-/** Open in INTERTEXE = saved piece + TX Matches on one /capture page. */
+/** Open in INTERTEXE = original piece + TX Matches on a public /matches page. */
 export function buildTxMatchLinks(captureId: string | null | undefined): TxMatchLinks | null {
   const id = String(captureId || "").trim();
   if (!id) return null;
   return {
-    viewAllMatchesUrl: `${SITE_URL}/capture/${encodeURIComponent(id)}`,
-    openInIntertexeUrl: `${SITE_URL}/capture/${encodeURIComponent(id)}`,
+    viewAllMatchesUrl: `${SITE_URL}/matches/${encodeURIComponent(id)}`,
+    openInIntertexeUrl: `${SITE_URL}/matches/${encodeURIComponent(id)}`,
   };
 }
 
@@ -88,11 +89,7 @@ export function buildTxMatchCopy(opts: {
       : `See more ${look} options`
     : "See more like this";
 
-  const alternativesTitle = look
-    ? `More ${look}`
-    : count
-      ? `${count} better-material matches`
-      : "Your TX Matches";
+  const alternativesTitle = "Better-material matches";
 
   let compositionHeadline: string | null = null;
   let compositionDetail: string | null = null;
@@ -105,9 +102,14 @@ export function buildTxMatchCopy(opts: {
       : null;
     compositionNote = [compositionHeadline, compositionDetail].filter(Boolean).join("\n");
   } else if (!opts.compositionListed) {
-    compositionHeadline = "Material details unavailable";
-    compositionDetail = "Let TX Match find similar pieces with verified compositions.";
-    compositionNote = `${compositionHeadline}\n${compositionDetail}`;
+    const unpublished = unpublishedMaterialCopy({
+      title: opts.garment,
+      inferredFiber: fiber,
+      altCount: count || 0,
+    });
+    compositionHeadline = unpublished.headline;
+    compositionDetail = [unpublished.detail, unpublished.supporting].filter(Boolean).join("\n");
+    compositionNote = [compositionHeadline, compositionDetail].filter(Boolean).join("\n");
   }
 
   return {

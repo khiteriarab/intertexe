@@ -1,5 +1,4 @@
-import { Suspense } from "react";
-import InspirationOpenClient from "./InspirationOpenClient";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Inspiration · INTERTEXE",
@@ -12,15 +11,5 @@ export default async function InspirationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return (
-    <Suspense
-      fallback={
-        <main style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-          <p>Loading…</p>
-        </main>
-      }
-    >
-      <InspirationOpenClient captureId={id} />
-    </Suspense>
-  );
+  redirect(`/matches/${encodeURIComponent(id)}`);
 }

@@ -92,11 +92,11 @@ function savedCapture(withAlts) {
       insight: { tone: "natural", label: "This mix is mostly natural" },
       alternativesTitle: `${alts.length} better-material matches`,
       alternatives: withAlts ? alts : [],
-      openInIntertexeUrl: "https://www.intertexe.com/capture/cap_demo",
+      openInIntertexeUrl: "https://www.intertexe.com/matches/cap_demo",
       affiliateDisclosure: "We may earn a commission if you buy from a TX Match.",
     },
     copy: {},
-    links: { openInIntertexeUrl: "https://www.intertexe.com/capture/cap_demo" },
+    links: { openInIntertexeUrl: "https://www.intertexe.com/matches/cap_demo" },
   };
 }
 

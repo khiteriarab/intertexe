@@ -167,9 +167,61 @@
     return { label: mixed ? `${label} · ${String(currency).toUpperCase()}` : label, mixed };
   }
 
+  function unpublishedMaterialCopy(opts) {
+    const listed = formatCompositionDisplay(opts?.compositionText || "");
+    if (listed.headline !== "Material details unavailable") {
+      return {
+        headline: listed.headline.replace(/percentage not provided/gi, "exact percentage not provided"),
+        detail: listed.hasSyntheticLining
+          ? "Synthetic lining — not the same as a fully natural construction."
+          : null,
+        supporting: null,
+        hasSyntheticLining: listed.hasSyntheticLining,
+      };
+    }
+    const hay = `${opts?.title || ""} ${opts?.category || ""} ${opts?.compositionText || ""}`;
+    const alts = Number(opts?.altCount) || 0;
+    if (/\b(jeans?|denim|vaquero)\b/i.test(hay)) {
+      return {
+        headline: "Denim detected",
+        detail: "Exact composition not published",
+        supporting:
+          alts > 0
+            ? "We found better-material alternatives in cotton."
+            : "We'll look for better-material alternatives in cotton.",
+        hasSyntheticLining: false,
+      };
+    }
+    const fiberHit = hay.toLowerCase().match(
+      /\b(silk|seda|cotton|wool|linen|cashmere|leather|suede|charmeuse|chiffon|satin)\b/
+    );
+    if (fiberHit) {
+      let fiber = fiberHit[1].toLowerCase();
+      if (fiber === "seda" || fiber === "charmeuse" || fiber === "chiffon" || fiber === "satin") fiber = "silk";
+      if (fiber === "suede") fiber = "leather";
+      const label = fiber.charAt(0).toUpperCase() + fiber.slice(1);
+      return {
+        headline: `${label} detected`,
+        detail: "Exact composition not published",
+        supporting:
+          alts > 0
+            ? `We found better-material alternatives in ${fiber}.`
+            : `We'll look for better-material alternatives in ${fiber}.`,
+        hasSyntheticLining: false,
+      };
+    }
+    return {
+      headline: "Exact composition not published",
+      detail: "We'll still look for better-material alternatives from the product on this page.",
+      supporting: null,
+      hasSyntheticLining: false,
+    };
+  }
+
   root.ITXCaptureResult = {
     formatCompositionDisplay,
     formatPriceLabel,
     formatAltPriceLabel,
+    unpublishedMaterialCopy,
   };
 })(typeof globalThis !== "undefined" ? globalThis : window);

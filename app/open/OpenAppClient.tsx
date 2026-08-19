@@ -15,8 +15,13 @@ function resolveOpenDest(next: string): { appNext: string; webNext: string } {
   const path = raw.startsWith("/") ? raw : `/${raw}`;
   const inspiration = path.match(/^\/inspirations\/([^/?#]+)/);
   if (inspiration) {
-    const capturePath = `/capture/${inspiration[1]}`;
-    return { appNext: capturePath, webNext: capturePath };
+    const matchesPath = `/matches/${inspiration[1]}`;
+    return { appNext: matchesPath, webNext: matchesPath };
+  }
+  const capture = path.match(/^\/capture\/([^/?#]+)/);
+  if (capture) {
+    const matchesPath = `/matches/${capture[1]}`;
+    return { appNext: matchesPath, webNext: matchesPath };
   }
   return { appNext: path, webNext: path };
 }
@@ -42,7 +47,9 @@ export default function OpenAppPage() {
       dest.appNext.startsWith("/reset-password") ||
       dest.appNext.startsWith("/account");
     const isExtensionOpen =
-      cta === "chrome_extension_open" || dest.appNext.startsWith("/capture/");
+      cta === "chrome_extension_open" ||
+      dest.appNext.startsWith("/capture/") ||
+      dest.appNext.startsWith("/matches/");
     const skipToWeb =
       typeof navigator !== "undefined" &&
       shouldSkipAppOpenLanding({

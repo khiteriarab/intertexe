@@ -9,6 +9,7 @@ import {
   uniqueTitleCaseNames,
 } from "./capture-page-signals";
 import { formatCompositionDisplay } from "./composition-display";
+import { unpublishedMaterialCopy } from "./unpublished-material";
 import { materialInsightFromText, type MaterialInsight } from "./material-insight";
 import {
   AFFILIATE_DISCLOSURE,
@@ -40,6 +41,8 @@ export type CaptureResultView = {
   currency: string | null;
   materialLine: string;
   materialHeadline: string;
+  materialDetail: string | null;
+  materialSupporting: string | null;
   liningNote: string | null;
   insight: MaterialInsight;
   alternativesTitle: string;
@@ -80,9 +83,17 @@ export function buildCaptureResultView(
 ): CaptureResultView {
   const row = capture || {};
   const copy = buildTxMatchCopyFromCapture(row);
-  const display = formatCompositionDisplay(
-    String(copy.compositionHeadline || row.composition_text || "")
-  );
+  const attrs =
+    row.attributes && typeof row.attributes === "object"
+      ? (row.attributes as Record<string, unknown>)
+      : {};
+  const material = unpublishedMaterialCopy({
+    compositionText: String(row.composition_text || attrs.compositionText || ""),
+    title: String(row.title || ""),
+    category: String(row.subcategory || row.category || ""),
+    inferredFiber: typeof attrs.inferred_fiber === "string" ? attrs.inferred_fiber : null,
+    altCount: Array.isArray(row.alternatives) ? row.alternatives.length : 0,
+  });
   const brandLine = uniqueTitleCaseNames(
     row.brand_name as string,
     row.retailer as string
@@ -124,12 +135,16 @@ export function buildCaptureResultView(
     brandLine,
     priceLabel,
     currency,
-    materialLine: display.materialLine,
-    materialHeadline: display.headline,
-    liningNote: display.hasSyntheticLining
-      ? "Synthetic lining — not the same as a fully natural construction."
-      : null,
-    insight: materialInsightFromText(String(row.composition_text || copy.compositionHeadline || "")),
+    materialLine: material.materialLine,
+    materialHeadline: material.headline,
+    materialDetail: material.detail,
+    materialSupporting: material.supporting,
+    liningNote: /lining/i.test(String(material.detail || ""))
+      ? material.detail
+      : formatCompositionDisplay(String(row.composition_text || "")).hasSyntheticLining
+        ? "Synthetic lining — not the same as a fully natural construction."
+        : null,
+    insight: materialInsightFromText(String(row.composition_text || "")),
     alternativesTitle: copy.alternativesTitle,
     alternatives,
     tagline: copy.tagline || TX_MATCH_TAGLINE,

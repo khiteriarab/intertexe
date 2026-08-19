@@ -1,5 +1,4 @@
-import { Suspense } from "react";
-import CaptureOpenClient from "./CaptureOpenClient";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "TX Matches",
@@ -12,17 +11,5 @@ export default async function CaptureOpenPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return (
-    <div className="min-h-screen bg-[#f7f3ee]">
-      <Suspense
-        fallback={
-          <main className="grid min-h-screen place-items-center">
-            <p>Loading…</p>
-          </main>
-        }
-      >
-        <CaptureOpenClient captureId={id} />
-      </Suspense>
-    </div>
-  );
+  redirect(`/matches/${encodeURIComponent(id)}`);
 }

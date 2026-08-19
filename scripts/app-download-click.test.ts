@@ -28,7 +28,9 @@ test("classifyAppDownloadChannel maps paid + email + qr tags", () => {
 });
 
 test("desktop capture links skip the /open waiting page", () => {
-  assert.equal(webPathFromOpenNext("/capture/abc"), "/capture/abc");
+  assert.equal(webPathFromOpenNext("/capture/abc"), "/matches/abc");
+  assert.equal(webPathFromOpenNext("/inspirations/abc"), "/matches/abc");
+  assert.equal(webPathFromOpenNext("/matches/abc"), "/matches/abc");
   assert.equal(
     shouldSkipAppOpenLanding({
       userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120",

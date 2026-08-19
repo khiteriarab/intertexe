@@ -7,6 +7,8 @@ import {
   rankTxMatchAlternatives,
 } from "../lib/capture-find-better.ts";
 import { buildTxMatchCopy, buildTxMatchLinks } from "../lib/tx-match-copy.ts";
+import { unpublishedMaterialCopy } from "../lib/unpublished-material.ts";
+import { safeInternalPath } from "../lib/public-match-set.ts";
 import { materialInsightFromText, savingsPercent } from "../lib/material-insight.ts";
 
 function skirt(id: string, fiber: string, price: number, color = "lilac") {
@@ -256,6 +258,82 @@ describe("TX Match fabric-first ranking", () => {
     );
     assert.ok(!firstFive.some((row) => ["sweat", "beige-pant", "black-pant"].includes(row.id)));
   });
+
+  it("ranks wide-leg blue jeans ahead of slim cotton trousers", () => {
+    const products = [
+      {
+        id: "slim-cotton-pant",
+        name: "Dede Pleated Cotton Slim Pants",
+        brand_name: "Max Mara",
+        price: 780,
+        currency: "USD",
+        url: "https://www.maxmara.com/dede",
+        composition: "100% Cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "pants",
+        color: "tan",
+      },
+      {
+        id: "straight-jean",
+        name: "Playback Horizon Mid Rise Straight Jeans in Denim",
+        brand_name: "Ksubi",
+        price: 240,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "blue",
+        fabric_construction: "denim",
+      },
+      {
+        id: "wide-jean",
+        name: "Super High Rise Wide Leg Denim Jeans in Light Blue",
+        brand_name: "Bayeas",
+        price: 138,
+        currency: "USD",
+        composition: "92% Cotton; 5% Polyester; 3% Elastane",
+        natural_fiber_percent: 92,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "light blue",
+        fabric_construction: "denim",
+      },
+      {
+        id: "wide-jean-2",
+        name: "Light Blue Mid Rise Wide Leg Jeans",
+        brand_name: "Agolde",
+        price: 188,
+        currency: "USD",
+        composition: "99% cotton; 1% elastane",
+        natural_fiber_percent: 99,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "blue",
+        fabric_construction: "denim",
+      },
+    ];
+    const ranked = rankTxMatchAlternatives(products, {
+      title: "Mid-waist wide-leg jeans",
+      garmentType: "jeans",
+      category: "pants",
+      subcategory: "jeans",
+      silhouette: "wide-leg",
+      color: "light blue",
+    });
+    const ids = ranked.map((row) => row.id);
+    assert.ok(ranked.length >= 3);
+    assert.match(String(ranked[0]?.name), /jean/i);
+    assert.match(String(ranked[0]?.name), /wide leg/i);
+    assert.doesNotMatch(String(ranked[0]?.name), /slim pants/i);
+    for (const jeanId of ["wide-jean", "wide-jean-2", "straight-jean"]) {
+      assert.ok(
+        ids.indexOf(jeanId) >= 0 && ids.indexOf(jeanId) < ids.indexOf("slim-cotton-pant"),
+        `${jeanId} should outrank slim cotton trousers`
+      );
+    }
+  });
 });
 
 describe("TX Match copy", () => {
@@ -269,8 +347,10 @@ describe("TX Match copy", () => {
     assert.match(copy.decodeAction, /see/i);
     assert.match(copy.decodeAction, /silk/i);
     assert.doesNotMatch(copy.decodeAction, /^TX MATCH$/i);
-    assert.equal(copy.alternativesTitle, "More silk skirt");
-    assert.match(copy.compositionNote || "", /Material details unavailable/);
+    assert.equal(copy.alternativesTitle, "Better-material matches");
+    assert.match(copy.compositionNote || "", /Silk detected/);
+    assert.match(copy.compositionNote || "", /Exact composition not published/);
+    assert.doesNotMatch(copy.compositionNote || "", /Material details unavailable/);
     assert.equal(copy.tagline, "Know the material before you buy.");
   });
 
@@ -303,19 +383,20 @@ describe("TX Match copy", () => {
     const copy = buildTxMatchCopy({ compositionListed: false, altCount: 8 });
     assert.equal(copy.decodeAction, "See more like this");
     assert.doesNotMatch(copy.alternativesTitle, /silk/i);
-    assert.match(copy.compositionNote || "", /Material details unavailable/);
-    assert.match(copy.compositionNote || "", /verified compositions/i);
+    assert.match(copy.compositionNote || "", /Exact composition not published/);
+    assert.doesNotMatch(copy.compositionNote || "", /Material details unavailable/);
   });
 
-  it("opens the saved piece and TX Matches on the same /capture page", () => {
+  it("opens the original piece and TX Matches on a public /matches page", () => {
     const id = "cap-123";
     const links = buildTxMatchLinks(id);
     assert.ok(links);
-    assert.match(links.viewAllMatchesUrl, /\/capture\/cap-123$/);
-    assert.match(links.openInIntertexeUrl, /\/capture\/cap-123$/);
+    assert.match(links.viewAllMatchesUrl, /\/matches\/cap-123$/);
+    assert.match(links.openInIntertexeUrl, /\/matches\/cap-123$/);
     assert.equal(links.viewAllMatchesUrl, links.openInIntertexeUrl);
     assert.doesNotMatch(links.openInIntertexeUrl, /\/open\?/);
     assert.doesNotMatch(links.openInIntertexeUrl, /\/inspirations\//);
+    assert.doesNotMatch(links.openInIntertexeUrl, /\/capture\//);
     const copy = buildTxMatchCopy({ captureId: id, altCount: 12, inferredFiber: "silk", garment: "skirt" });
     assert.equal(copy.viewAllMatchesUrl, links.viewAllMatchesUrl);
     assert.equal(copy.openInIntertexeUrl, links.openInIntertexeUrl);
@@ -352,5 +433,33 @@ describe("Material insight", () => {
     assert.equal(savingsPercent(890, 473), 47);
     assert.equal(savingsPercent(200, 250), null);
     assert.equal(savingsPercent(null, 100), null);
+  });
+});
+
+describe("Unpublished material copy", () => {
+  it("says denim detected when jeans are recognized without a formula", () => {
+    const copy = unpublishedMaterialCopy({
+      title: "Mid-waist wide-leg jeans",
+      category: "trousers",
+      altCount: 12,
+    });
+    assert.equal(copy.headline, "Denim detected");
+    assert.equal(copy.detail, "Exact composition not published");
+    assert.equal(copy.supporting, "We found better-material alternatives in cotton.");
+  });
+
+  it("does not invent percentages when the retailer listed none", () => {
+    const copy = unpublishedMaterialCopy({ title: "Silk slip dress", altCount: 8 });
+    assert.equal(copy.headline, "Silk detected");
+    assert.doesNotMatch(copy.headline, /\d+%/);
+    assert.match(copy.detail || "", /Exact composition not published/);
+  });
+});
+
+describe("Public match return paths", () => {
+  it("keeps internal next URLs and rejects off-site redirects", () => {
+    assert.equal(safeInternalPath("/matches/abc?save=1"), "/matches/abc?save=1");
+    assert.equal(safeInternalPath("https://evil.example/matches/abc"), null);
+    assert.equal(safeInternalPath("//evil.example"), null);
   });
 });

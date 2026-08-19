@@ -108,6 +108,24 @@ const GARMENT_TO_BROWSE_CATEGORY: Record<string, string> = {
   footwear: "shoes",
 };
 
+export function silhouetteFamily(text: string | null | undefined): "wide" | "slim" | "straight" | "flare" | "relaxed" | null {
+  const t = String(text || "").toLowerCase();
+  if (!t.trim()) return null;
+  if (/wide[-\s]?leg|palazzo|baggy|full\s*leg/.test(t)) return "wide";
+  if (/slim|skinny|cigarette|taper(?:ed)?/.test(t)) return "slim";
+  if (/bootcut|flare|flared/.test(t)) return "flare";
+  if (/straight/.test(t)) return "straight";
+  if (/boyfriend|relaxed|loose|barrel/.test(t)) return "relaxed";
+  return null;
+}
+
+export function silhouettesConflict(source: string | null, product: string | null): boolean {
+  if (!source || !product) return false;
+  if (source === product) return false;
+  // Straight jeans remain a close substitute for wide-leg. Slim pants are not.
+  return (source === "wide" && product === "slim") || (source === "slim" && product === "wide");
+}
+
 export function lookFamilyFromText(text: string | null | undefined): LookFamily | null {
   const t = String(text || "").toLowerCase();
   if (!t.trim()) return null;
@@ -526,6 +544,9 @@ function rankAlternatives(
   const preferredFiber = preferredFiberFromInput(input);
   const preferredColor = preferredColorFromInput(input);
   const sourceLook = lookFamilyFromInput(input);
+  const sourceSilhouette =
+    silhouetteFamily(input.silhouette) ||
+    silhouetteFamily(`${input.title || ""} ${input.subcategory || ""} ${input.fit || ""}`);
   const targetPrice =
     input.price ??
     (input.matchBrief?.targetPriceRange
@@ -543,15 +564,32 @@ function rankAlternatives(
     const productLook = lookFamilyFromProduct(p);
     const sameLook = Boolean(sourceLook && productLook === sourceLook);
     const sameColor = productMatchesColor(p, preferredColor);
+    const productSilhouette = silhouetteFamily(`${p.name || ""} ${p.garment_type || ""}`);
+    const sameSilhouette = Boolean(sourceSilhouette && productSilhouette === sourceSilhouette);
+    const clashSilhouette = silhouettesConflict(sourceSilhouette, productSilhouette);
     // Fabric of the saved piece leads. Do not let cheaper cotton outrank silk.
     if (sameFiber) score += 120;
     else if (preferredFiber) score -= 25;
-    if (sameLook) score += 90;
+    if (sameLook) score += 140;
     else if (sourceLook === "jeans" && (productLook === "sweat" || productLook === "leggings")) {
-      score -= 80;
+      score -= 120;
+    } else if (sourceLook === "jeans" && productLook === "trousers") {
+      score -= 95;
     } else if (sourceLook && productLook && productLook !== sourceLook) {
-      score -= 12;
+      score -= 28;
     }
+    if (sameSilhouette) score += 55;
+    else if (
+      sourceSilhouette &&
+      productSilhouette &&
+      ((sourceSilhouette === "wide" && productSilhouette === "straight") ||
+        (sourceSilhouette === "straight" && productSilhouette === "wide") ||
+        (sourceSilhouette === "wide" && productSilhouette === "relaxed") ||
+        (sourceSilhouette === "relaxed" && productSilhouette === "wide"))
+    ) {
+      score += 18;
+    }
+    if (clashSilhouette) score -= 90;
     if (compositionHasSyntheticLining(String(p.composition || ""))) score -= 22;
 
     const userFibers = (input.preferredFibers || []).map((f) => extractFiberFromText(f)).filter(Boolean);
@@ -594,16 +632,18 @@ function rankAlternatives(
     for (const d of input.distinctiveDetails || []) {
       if (d && hay.includes(d.toLowerCase())) score += 12;
     }
-    return { p, score, sameColor, sameFiber, sameLook, productLook, commission };
+    return { p, score, sameColor, sameFiber, sameLook, productLook, commission, sameSilhouette, clashSilhouette };
   });
 
   scored.sort(
     (a, b) =>
       Number(b.sameLook) - Number(a.sameLook) ||
-      Number(b.sameFiber) - Number(a.sameFiber) ||
+      Number(b.sameSilhouette) - Number(a.sameSilhouette) ||
+      Number(a.clashSilhouette) - Number(b.clashSilhouette) ||
       Number(b.sameColor) - Number(a.sameColor) ||
-      b.commission - a.commission ||
+      Number(b.sameFiber) - Number(a.sameFiber) ||
       b.score - a.score ||
+      b.commission - a.commission ||
       (Number(b.p.natural_fiber_percent) || 0) - (Number(a.p.natural_fiber_percent) || 0)
   );
 
@@ -614,17 +654,25 @@ function rankAlternatives(
   const take = (pred: (row: (typeof scored)[number]) => boolean, n: number) => {
     const pool = scored
       .filter((row) => !used.has(String(row.p.id)) && pred(row))
-      .sort((a, b) => b.commission - a.commission || b.score - a.score);
+      .sort((a, b) =>
+        sourceLook === "jeans"
+          ? b.score - a.score || b.commission - a.commission
+          : b.commission - a.commission || b.score - a.score
+      );
     for (const row of pool) {
       if (lead.length >= n) break;
       used.add(String(row.p.id));
       lead.push(row);
     }
   };
-  take((s) => s.sameLook && s.sameFiber && s.sameColor, 5);
-  take((s) => s.sameLook && s.sameFiber, 5);
-  take((s) => s.sameLook, 5);
-  take((s) => s.sameFiber, 5);
+  take((s) => s.sameLook && s.sameFiber && s.sameColor && !s.clashSilhouette, 8);
+  take((s) => s.sameLook && s.sameFiber && !s.clashSilhouette, 10);
+  take((s) => s.sameLook && !s.clashSilhouette, 12);
+  if (sourceLook !== "jeans") {
+    take((s) => s.sameFiber, 5);
+  } else {
+    take((s) => s.sameLook, 12);
+  }
 
   const rest = scored
     .filter((s) => !used.has(String(s.p.id)))
@@ -637,7 +685,7 @@ function rankAlternatives(
         }
         return 0;
       };
-      return adj(b) - adj(a) || b.commission - a.commission || b.score - a.score;
+      return adj(b) - adj(a) || b.score - a.score || b.commission - a.commission;
     });
 
   const ordered = [...lead, ...rest];
@@ -859,7 +907,8 @@ export async function findBetterAlternatives(
   }
 
   // Retry without denim construction when the first pass is thin (still price-bounded).
-  if (rows.length < 4 && browseCat) {
+  // Jeans scans stay in denim — widening to all trousers pulls in slim cotton pants.
+  if (rows.length < 4 && browseCat && !denimLead) {
     const wide = await withTimeout(
       (async () => {
         const { data, error } = await supabase.rpc(
