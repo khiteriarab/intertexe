@@ -30,6 +30,7 @@ const ITX = globalThis.ITXCaptureResult || {
     materialLine: String(raw || "Material details unavailable"),
     headline: String(raw || "Material details unavailable"),
     hasSyntheticLining: false,
+    hasSyntheticLace: false,
   }),
   formatPriceLabel: () => "Price unavailable",
   formatAltPriceLabel: () => ({ label: "Price unavailable", mixed: false }),
@@ -38,6 +39,7 @@ const ITX = globalThis.ITXCaptureResult || {
     detail: null,
     supporting: null,
     hasSyntheticLining: false,
+    hasSyntheticLace: false,
   }),
 };
 
@@ -108,6 +110,10 @@ function classificationLabel(view, composition, headline) {
   const hasCellulosic = /\b(lyocell|tencel|cupro|modal)\b/i.test(text);
   const hasNatural = named.length > 0;
   const tone = view?.insight?.tone;
+
+  if (/\blace\b/i.test(text) && /\bnylon\b/i.test(text) && /\bsilk\b/i.test(text)) {
+    return "Silk with Nylon Lace";
+  }
 
   if (majoritySynthetic(text, share)) {
     const fiber = named[0] ? titleCaseFiber(named[0]) : "";
@@ -331,9 +337,16 @@ function renderResult(payload, opts = {}) {
   if (klass) materialBlock.appendChild(el("p", "material-class", klass));
   sourceEl.appendChild(materialBlock);
 
-  if (material.hasSyntheticLining || view.liningNote) {
+  if (material.hasSyntheticLining || material.hasSyntheticLace || listedDisplay.hasSyntheticLace || view.liningNote) {
     sourceEl.appendChild(
-      el("p", "detail", view.liningNote || "Synthetic lining — not the same as a fully natural construction.")
+      el(
+        "p",
+        "detail",
+        view.liningNote ||
+          (material.hasSyntheticLace || listedDisplay.hasSyntheticLace
+            ? "Synthetic lace — not the same as a fully natural construction."
+            : "Synthetic lining — not the same as a fully natural construction.")
+      )
     );
   }
 

@@ -76,11 +76,13 @@ export function unpublishedMaterialCopy(opts: {
     return {
       headline: listed.headline.replace(/percentage not provided/gi, "exact percentage not provided"),
       materialLine: listed.materialLine.replace(/percentage not provided/gi, "exact percentage not provided"),
-      detail: listed.hasSyntheticLining
-        ? "Synthetic lining — not the same as a fully natural construction."
-        : listed.hasPercentages
-          ? null
-          : null,
+      detail: listed.hasSyntheticLace
+        ? "Synthetic lace — not the same as a fully natural construction."
+        : listed.hasSyntheticLining
+          ? "Synthetic lining — not the same as a fully natural construction."
+          : listed.hasPercentages
+            ? null
+            : null,
       supporting: null,
       detected: true,
     };

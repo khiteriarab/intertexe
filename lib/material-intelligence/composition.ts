@@ -1,3 +1,5 @@
+import { formatCompositionDisplay } from "../composition-display";
+
 const NATURAL = new Set([
   "cotton",
   "linen",
@@ -108,8 +110,11 @@ export function parseCompositionText(
   const text = String(raw || "").replace(/\s+/g, " ").trim();
   if (!text) return emptyComposition();
 
+  const display = formatCompositionDisplay(text);
+  const shellText = display.shellLine || text;
+
   const pctHits = [
-    ...text.matchAll(
+    ...shellText.matchAll(
       /(\d{1,3}(?:[.,]\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([a-z][a-z\s-]{1,40})/gi
     ),
   ];
@@ -124,7 +129,7 @@ export function parseCompositionText(
         raw_value: m[0].trim(),
       };
     });
-    return finalize(components, text);
+    return finalize(components, text, constructionWarnings(display));
   }
 
   const named = text.match(
@@ -149,6 +154,17 @@ export function parseCompositionText(
   return emptyComposition("Composition text could not be normalized.");
 }
 
+function constructionWarnings(display: { laceLine: string | null; liningLine: string | null }): string[] {
+  const notes: string[] = [];
+  if (display.laceLine) {
+    notes.push("Lace was listed as a separate construction; it was not added into the shell total.");
+  }
+  if (display.liningLine) {
+    notes.push("Lining was listed as a separate construction; it was not added into the shell total.");
+  }
+  return notes;
+}
+
 function finalize(
   components: ParsedComposition["components"],
   raw?: string | null,
@@ -164,7 +180,12 @@ function finalize(
   const natural = withPct
     .filter((c) => isNaturalFiber(c.fiber_code))
     .reduce((sum, c) => sum + (c.percentage || 0), 0);
-  const natural_fiber_percentage = withPct.length ? Math.round(natural * 10) / 10 : null;
+  let natural_fiber_percentage = withPct.length ? Math.round(natural * 10) / 10 : null;
+  if (natural_fiber_percentage != null && natural_fiber_percentage > 100) {
+    warnings.push("Natural-fiber share over 100 was not shown; garment parts were not added together.");
+    const hundred = withPct.filter((c) => (c.percentage || 0) >= 98);
+    natural_fiber_percentage = hundred.some((c) => isNaturalFiber(c.fiber_code)) ? 100 : null;
+  }
   const primary =
     [...components].sort((a, b) => (b.percentage || 0) - (a.percentage || 0))[0]?.fiber_code || null;
   return {

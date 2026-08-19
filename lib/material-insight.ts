@@ -14,6 +14,13 @@ export function materialInsightFromText(text: string | null | undefined): Materi
   const display = formatCompositionDisplay(text);
   const parsed = parseCompositionText(text);
   const share = parsed.natural_fiber_percentage;
+  if (display.hasSyntheticLace) {
+    return {
+      share: share != null ? share : null,
+      tone: "mixed",
+      label: "Natural shell with synthetic lace",
+    };
+  }
   if (display.hasSyntheticLining) {
     return {
       share: share != null ? share : null,

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { formatCompositionDisplay } from "../lib/composition-display.ts";
+import { parseCompositionText } from "../lib/material-intelligence/composition.ts";
 import {
+  collectPercentClauses,
   countryFromPage,
   extractLabeledMaterial,
   extractCompositionFromPageText,
@@ -81,6 +83,44 @@ describe("retailer material capture", () => {
     const html = `<p>100% premium stretch silk dress</p><p>breathable silk</p>`;
     assert.equal(extractCompositionFromPageText(html), "100% Silk");
     assert.equal(looksLikePercentageComposition("100% Silk"), true);
+  });
+
+  it("keeps lace nylon/cotton separate from 100% silk satin", () => {
+    const html = `
+      <h2>Material & laundrycare</h2>
+      <p>Materials: Lace, silk satin, eyelash lace</p>
+      <p>Lace composition: 65% Nylon, 35% Cotton</p>
+      <p>Satin silk composition: 100% Silk</p>
+      <p>Laundry care: Hand wash</p>
+    `;
+    assert.equal(
+      extractCompositionFromPageText(html),
+      "100% Silk; lace: 65% Nylon; 35% Cotton"
+    );
+    const display = formatCompositionDisplay("100% Silk; lace: 65% Nylon; 35% Cotton");
+    assert.equal(display.shellLine, "100% Silk");
+    assert.equal(display.laceLine, "65% Nylon; 35% Cotton");
+    assert.equal(display.hasSyntheticLace, true);
+    assert.match(display.headline, /100%\s*Silk/i);
+    assert.doesNotMatch(display.headline, /65%\s*Nylon\s*[·;].*35%\s*Silk/i);
+    const parsed = parseCompositionText("100% Silk; lace: 65% Nylon; 35% Cotton");
+    assert.equal(parsed.natural_fiber_percentage, 100);
+    assert.ok(parsed.natural_fiber_percentage !== 35);
+    assert.ok(parsed.natural_fiber_percentage !== 145);
+  });
+
+  it("does not pair 35% cotton with the following satin silk label", () => {
+    const mashed =
+      "Lace composition: 65% Nylon, 35% Cotton Satin silk composition: 100% Silk";
+    assert.deepEqual(collectPercentClauses(mashed), [
+      "65% Nylon",
+      "35% Cotton",
+      "100% Silk",
+    ]);
+    assert.equal(
+      extractCompositionFromPageText(mashed),
+      "100% Silk; lace: 65% Nylon; 35% Cotton"
+    );
   });
 
   it("shows the listed mix instead of unpublished/unknown", () => {
