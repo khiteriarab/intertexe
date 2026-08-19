@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validate the 1.0.4 Chrome package. Does not submit or publish.
+ * Validate the 1.0.5 Chrome package. Does not submit or publish.
  */
 import fs from "fs";
 import os from "os";
@@ -12,7 +12,7 @@ import { createHash } from "crypto";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const folder = path.join(__dirname, "save-to-intertexe");
-const zipPath = path.join(__dirname, "save-to-intertexe-1.0.4.zip");
+const zipPath = path.join(__dirname, "save-to-intertexe-1.0.5.zip");
 const NAME = "INTERTEXE: Fabric Scanner";
 const DESC =
   "Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.";
@@ -26,7 +26,7 @@ function record(id, pass, detail = {}) {
 const manifest = JSON.parse(fs.readFileSync(path.join(folder, "manifest.json"), "utf8"));
 record("manifest.name", manifest.name === NAME, { actual: manifest.name });
 record("manifest.description", manifest.description === DESC);
-record("manifest.version", manifest.version === "1.0.4");
+record("manifest.version", manifest.version === "1.0.5");
 record("manifest.mv3", manifest.manifest_version === 3);
 record("manifest.permissions", JSON.stringify(manifest.permissions) === JSON.stringify(["activeTab", "storage", "scripting", "tabs"]));
 record(
@@ -44,6 +44,7 @@ record("popup.listing_name", popupHtml.includes(NAME));
   record("popup.sign_in_cta", /Sign in to INTERTEXE/i.test(popupHtml));
   record("popup.save_cta", /Save this page/.test(popupHtml));
 record("popup.floating_card", /border-radius:\s*22px/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")));
+record("popup.spacing", /gap:\s*14px/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")) && /max-height:\s*580px/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")));
 record("popup.sticky_dock", /id="dock"/.test(popupHtml) && /flex-shrink:\s*0/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")));
 record("popup.shared_formula", fs.existsSync(path.join(folder, "capture-result.js")) && popupHtml.includes("capture-result.js"));
 record("popup.twelve_matches", /slice\(0,\s*12\)/.test(fs.readFileSync(path.join(folder, "popup.js"), "utf8")));
