@@ -146,7 +146,12 @@ async function applyMigration(supabase: ReturnType<typeof serviceClient>) {
   return false;
 }
 
-async function founderAccessToken(supabase: NonNullable<ReturnType<typeof serviceClient>>): Promise<string | null> {
+async function founderAccessToken(): Promise<string | null> {
+  // Dedicated client: verifyOtp/signInWithPassword would replace the
+  // service-role session on the shared client and make later table reads
+  // run as authenticated (permission denied on material_* tables).
+  const supabase = serviceClient();
+  if (!supabase) return null;
   const password = process.env.HQ_PASSWORD || "";
   if (password) maskSecret(password);
 
@@ -275,7 +280,7 @@ async function main() {
     return;
   }
 
-  const token = await founderAccessToken(supabase);
+  const token = await founderAccessToken();
   if (!token) {
     record("hq_session", false, "could not create an HQ session for a founder email");
     finish(false);
