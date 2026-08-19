@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validate the 1.0.8 Chrome package. Does not submit or publish.
+ * Validate the 1.0.9 Chrome package. Does not submit or publish.
  */
 import fs from "fs";
 import os from "os";
@@ -12,7 +12,7 @@ import { createHash } from "crypto";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const folder = path.join(__dirname, "save-to-intertexe");
-const zipPath = path.join(__dirname, "save-to-intertexe-1.0.8.zip");
+const zipPath = path.join(__dirname, "save-to-intertexe-1.0.9.zip");
 const NAME = "INTERTEXE: Fabric Scanner";
 const DESC =
   "Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.";
@@ -26,7 +26,7 @@ function record(id, pass, detail = {}) {
 const manifest = JSON.parse(fs.readFileSync(path.join(folder, "manifest.json"), "utf8"));
 record("manifest.name", manifest.name === NAME, { actual: manifest.name });
 record("manifest.description", manifest.description === DESC);
-record("manifest.version", manifest.version === "1.0.8");
+record("manifest.version", manifest.version === "1.0.9");
 record("manifest.mv3", manifest.manifest_version === 3);
 record("manifest.permissions", JSON.stringify(manifest.permissions) === JSON.stringify(["activeTab", "storage", "scripting", "tabs"]));
 record(
@@ -40,18 +40,36 @@ record("description.length_le_132", String(manifest.description).length <= 132, 
 });
 
 const popupHtml = fs.readFileSync(path.join(folder, "popup.html"), "utf8");
+const popupCss = fs.readFileSync(path.join(folder, "popup.css"), "utf8");
 record("popup.listing_name", popupHtml.includes(NAME));
 record(
-  "popup.single_wordmark",
-  /class="wordmark">INTERTEXE<\/span>/.test(popupHtml) &&
-    /class="product-name">Fabric Scanner<\/span>/.test(popupHtml) &&
-    !/<h1>\s*INTERTEXE:\s*Fabric Scanner\s*<\/h1>/.test(popupHtml)
+  "popup.brand_lockup",
+  popupHtml.includes("icons/icon32.png") &&
+    /class="brand-name">INTERTEXE<\/span>/.test(popupHtml) &&
+    /Open a clothing product/.test(popupHtml) &&
+    !/class="wordmark"/.test(popupHtml) &&
+    !/Fabric Scanner/.test(popupHtml.replace(/<title>[\s\S]*?<\/title>/, ""))
 );
-  record("popup.sign_in_cta", /Sign in to INTERTEXE/i.test(popupHtml));
-  record("popup.save_cta", /Save this page/.test(popupHtml));
-record("popup.floating_card", /border-radius:\s*22px/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")));
-record("popup.spacing", /gap:\s*14px/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")) && /max-height:\s*580px/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")));
-record("popup.sticky_dock", /id="dock"/.test(popupHtml) && /flex-shrink:\s*0/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")));
+record("popup.sign_in_cta", /Sign in to INTERTEXE/i.test(popupHtml));
+record("popup.save_cta", /Save this page/.test(popupHtml));
+record(
+  "popup.ivory_shell",
+  /#f8f6f1/i.test(popupCss) &&
+    /#191816/i.test(popupCss) &&
+    /#1d4734/i.test(popupCss) &&
+    /#e6e0d7/i.test(popupCss) &&
+    !/#2a2622/i.test(popupCss) &&
+    !/border-radius:\s*22px/.test(popupCss) &&
+    !/border-radius:\s*999px/.test(popupCss)
+);
+record(
+  "popup.spacing",
+  /max-height:\s*620px/.test(popupCss) &&
+    /height:\s*52px/.test(popupCss) &&
+    /width:\s*380px/.test(popupCss) &&
+    !/max-height:\s*580px/.test(popupCss)
+);
+record("popup.sticky_dock", /id="dock"/.test(popupHtml) && /flex-shrink:\s*0/.test(popupCss));
 record("popup.shared_formula", fs.existsSync(path.join(folder, "capture-result.js")) && popupHtml.includes("capture-result.js"));
 record("popup.twelve_matches", /slice\(0,\s*12\)/.test(fs.readFileSync(path.join(folder, "popup.js"), "utf8")));
 record("popup.skips_open_gate", /function capturePageUrl/.test(fs.readFileSync(path.join(folder, "popup.js"), "utf8")));
@@ -126,26 +144,29 @@ try {
       () => {
         const section = document.getElementById("signedOut");
         const btn = document.getElementById("signIn");
+        const brand = document.querySelector(".brand-name")?.textContent || "";
         return (
           section &&
           !section.classList.contains("hidden") &&
-          /Sign in to INTERTEXE/i.test(btn?.textContent || "")
+          /INTERTEXE/.test(brand) &&
+          /^Sign in$/i.test((btn?.textContent || "").trim())
         );
       },
       { timeout: 8000 }
     ).catch(() => null);
     const ui = await page.evaluate(() => ({
-      name: (document.querySelector("h1")?.textContent || "").replace(/\s+/g, " ").trim(),
-      cta: document.getElementById("signIn")?.textContent || "",
+      h1: (document.querySelector("h1")?.textContent || "").replace(/\s+/g, " ").trim(),
+      brand: (document.querySelector(".brand-name")?.textContent || "").trim(),
+      cta: (document.getElementById("signIn")?.textContent || "").trim(),
       signedOutHidden: document.getElementById("signedOut")?.classList.contains("hidden"),
+      emptyHidden: document.getElementById("emptyState")?.classList.contains("hidden"),
     }));
-    const intertexeHits = (ui.name.match(/INTERTEXE/gi) || []).length;
     record(
       "chrome.popup_name",
-      intertexeHits === 1 && /Fabric Scanner/i.test(ui.name),
+      ui.brand === "INTERTEXE" && /Open a clothing product/i.test(ui.h1) && !/Fabric Scanner/i.test(ui.h1),
       ui
     );
-    record("chrome.popup_cta", /Sign in to INTERTEXE/i.test(ui.cta) && ui.signedOutHidden === false, ui);
+    record("chrome.popup_cta", /^Sign in$/i.test(ui.cta) && ui.signedOutHidden === false && ui.emptyHidden === false, ui);
 
     const samplePage = await browser.newPage();
     await samplePage.setContent(`<!doctype html>

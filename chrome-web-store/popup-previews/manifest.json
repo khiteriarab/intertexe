@@ -1,0 +1,82 @@
+[
+  {
+    "state": "signed-out-no-product",
+    "zoom": 1,
+    "filename": "signed-out-no-product-100.png",
+    "width": 380,
+    "height": 288,
+    "text": "INTERTEXE Open a clothing product Then click TX to check what it’s made of. Sign in"
+  },
+  {
+    "state": "signed-out-no-product",
+    "zoom": 1.25,
+    "filename": "signed-out-no-product-125.png",
+    "width": 475,
+    "height": 360,
+    "text": "INTERTEXE Open a clothing product Then click TX to check what it’s made of. Sign in"
+  },
+  {
+    "state": "signed-out-product",
+    "zoom": 1,
+    "filename": "signed-out-product-100.png",
+    "width": 380,
+    "height": 288,
+    "text": "INTERTEXE HANAMER Rose Silk Slip Dress €333 Silk — exact percentage not provided Natural-fiber construction Sign in to save and see TX Matches"
+  },
+  {
+    "state": "signed-out-product",
+    "zoom": 1.25,
+    "filename": "signed-out-product-125.png",
+    "width": 475,
+    "height": 360,
+    "text": "INTERTEXE HANAMER Rose Silk Slip Dress €333 Silk — exact percentage not provided Natural-fiber construction Sign in to save and see TX Matches"
+  },
+  {
+    "state": "signed-in-product",
+    "zoom": 1,
+    "filename": "signed-in-product-100.png",
+    "width": 380,
+    "height": 228,
+    "text": "INTERTEXE HANAMER Rose Silk Slip Dress Save this page €333 Silk — exact percentage not provided Natural-fiber construction"
+  },
+  {
+    "state": "signed-in-product",
+    "zoom": 1.25,
+    "filename": "signed-in-product-125.png",
+    "width": 475,
+    "height": 285,
+    "text": "INTERTEXE HANAMER Rose Silk Slip Dress Save this page €333 Silk — exact percentage not provided Natural-fiber construction"
+  },
+  {
+    "state": "saved",
+    "zoom": 1,
+    "filename": "saved-100.png",
+    "width": 380,
+    "height": 228,
+    "text": "INTERTEXE HANAMER Rose Silk Slip Dress Save this page Saved ✓ €333 Silk — exact percentage not provided Natural-fiber construction"
+  },
+  {
+    "state": "saved",
+    "zoom": 1.25,
+    "filename": "saved-125.png",
+    "width": 475,
+    "height": 285,
+    "text": "INTERTEXE HANAMER Rose Silk Slip Dress Save this page Saved ✓ €333 Silk — exact percentage not provided Natural-fiber construction"
+  },
+  {
+    "state": "results",
+    "zoom": 1,
+    "filename": "results-100.png",
+    "width": 380,
+    "height": 620,
+    "text": "INTERTEXE HANAMER Rose Silk Slip Dress Save this page Saved ✓ €333 Silk — exact percentage not provided Natural-fiber construction See 12 better-material matches BETTER-MATERIAL MATCHES THE ROW Silk Bias Slip 100% Silk net-a-porter.com €290"
+  },
+  {
+    "state": "results",
+    "zoom": 1.25,
+    "filename": "results-125.png",
+    "width": 475,
+    "height": 775,
+    "text": "INTERTEXE HANAMER Rose Silk Slip Dress Save this page Saved ✓ €333 Silk — exact percentage not provided Natural-fiber construction See 12 better-material matches BETTER-MATERIAL MATCHES THE ROW Silk Bias Slip 100% Silk net-a-porter.com €290"
+  }
+]
