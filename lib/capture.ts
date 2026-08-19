@@ -22,7 +22,12 @@ import {
 } from "./capture-find-better";
 import { fetchPageHTML } from "./scanner/retailer-extraction";
 import { getServerSupabase } from "./supabase-service-client";
-import { looksLikeListedMaterial, looksLikePercentageComposition, preferRetailerFacingOffer } from "./capture-page-signals";
+import {
+  looksLikeListedMaterial,
+  looksLikePercentageComposition,
+  preferPercentageComposition,
+  preferRetailerFacingOffer,
+} from "./capture-page-signals";
 
 const MAX_ENRICHMENT_ATTEMPTS = 4;
 const ENRICHMENT_LOCK_MS = 3 * 60 * 1000;
@@ -355,9 +360,13 @@ function enrichmentPatch(
     enrichment.title && isPlaceholderTitle(existing.title, existing.retailer)
       ? enrichment.title
       : (existing.title as string) || enrichment.title;
-  const preferComposition = isJunkComposition(existing.composition_text)
-    ? enrichment.compositionText
-    : (existing.composition_text as string) || enrichment.compositionText;
+  const existingComposition = isJunkComposition(existing.composition_text)
+    ? null
+    : String(existing.composition_text || "").trim() || null;
+  const preferComposition =
+    preferPercentageComposition(existingComposition, enrichment.compositionText) ||
+    existingComposition ||
+    enrichment.compositionText;
   const preferBrand =
     !existing.brand_name ||
     String(existing.brand_name).toLowerCase() === "core" ||

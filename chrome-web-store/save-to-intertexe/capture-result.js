@@ -69,18 +69,36 @@
   }
 
   function uniquePercentClauses(text) {
-    const hits = [
-      ...String(text || "").matchAll(
-        /(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s-]{1,30})/gi
-      ),
-    ];
+    const t = String(text || "").replace(/\s+/g, " ");
+    if (!t) return [];
+    const fiberAlt =
+      "cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate";
     const seen = new Set();
     const out = [];
-    for (const m of hits) {
-      const key = fiberKey(m[2] || "");
-      if (!key || seen.has(key)) continue;
+    const push = (pctRaw, fiberRaw) => {
+      const pct = String(pctRaw || "").replace(",", ".");
+      const n = Number(pct);
+      if (!Number.isFinite(n) || n <= 0 || n > 100) return;
+      const name = titleFiber(fiberRaw);
+      const key = fiberKey(name);
+      if (!name || !key || seen.has(key)) return;
       seen.add(key);
-      out.push(`${m[1]}% ${titleFiber(m[2] || "")}`);
+      out.push(`${n}% ${name}`);
+    };
+    const pctFirst = new RegExp(
+      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:organic\\s+|recycled\\s+)?(${fiberAlt})`,
+      "gi"
+    );
+    const fiberFirst = new RegExp(
+      `\\b(${fiberAlt})\\s*[:\\-–]?\\s*(\\d{1,3}(?:[.,]\\d+)?)\\s*%`,
+      "gi"
+    );
+    const pctFirstHits = [...t.matchAll(pctFirst)];
+    const fiberFirstHits = [...t.matchAll(fiberFirst)];
+    if (fiberFirstHits.length > pctFirstHits.length) {
+      for (const m of fiberFirstHits) push(m[2], m[1]);
+    } else {
+      for (const m of pctFirstHits) push(m[1], m[2]);
     }
     return out;
   }

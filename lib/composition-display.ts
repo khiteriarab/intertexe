@@ -1,3 +1,5 @@
+import { collectPercentClauses } from "./capture-page-signals";
+
 /**
  * One composition formula for every INTERTEXE surface.
  * Join clauses with "; ". Never print a raw extraction array.
@@ -83,18 +85,7 @@ export function splitShellAndLining(raw: string): { shell: string; lining: strin
 }
 
 function uniquePercentClauses(text: string): string[] {
-  const hits = [...String(text || "").matchAll(/(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s-]{1,30})/gi)];
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const m of hits) {
-    const pct = m[1];
-    const name = titleFiber(m[2] || "");
-    const key = fiberKey(m[2] || "");
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push(`${pct}% ${name}`);
-  }
-  return out;
+  return collectPercentClauses(text);
 }
 
 function uniqueNamedFibers(text: string): string[] {

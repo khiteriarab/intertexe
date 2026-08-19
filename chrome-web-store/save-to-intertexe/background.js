@@ -92,13 +92,12 @@ async function authedFetch(path, opts = {}, attempt = 0) {
 }
 
 function extractProductFromPage() {
-  function uniqueFibers(raw) {
-    const t = String(raw || "").replace(/\s+/g, " ").trim();
-    if (!t) return "";
-    const re =
-      /\b(organic\s+|recycled\s+)?(cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
-    const seen = new Set();
-    const out = [];
+  function fiberCanon(raw) {
+    const key = String(raw || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z]/g, "");
     const canon = {
       algodon: "cotton",
       denim: "cotton",
@@ -111,30 +110,60 @@ function extractProductFromPage() {
       poliester: "polyester",
       poliamida: "polyamide",
       spandex: "elastane",
+      tencel: "lyocell",
     };
+    return canon[key] || key;
+  }
+
+  function collectPercentClauses(raw) {
+    const t = String(raw || "").replace(/\s+/g, " ");
+    if (!t) return [];
+    const fiberAlt =
+      "cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate";
+    const seen = new Set();
+    const out = [];
+    const push = (pctRaw, fiberRaw) => {
+      const pct = String(pctRaw || "").replace(",", ".");
+      const n = Number(pct);
+      if (!Number.isFinite(n) || n <= 0 || n > 100) return;
+      const name = fiberCanon(fiberRaw);
+      if (!name || seen.has(name)) return;
+      seen.add(name);
+      out.push(`${n}% ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
+    };
+    const pctFirst = new RegExp(
+      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:organic\\s+|recycled\\s+)?(${fiberAlt})`,
+      "gi"
+    );
+    const fiberFirst = new RegExp(
+      `\\b(${fiberAlt})\\s*[:\\-–]?\\s*(\\d{1,3}(?:[.,]\\d+)?)\\s*%`,
+      "gi"
+    );
+    const pctFirstHits = [...t.matchAll(pctFirst)];
+    const fiberFirstHits = [...t.matchAll(fiberFirst)];
+    if (fiberFirstHits.length > pctFirstHits.length) {
+      for (const m of fiberFirstHits) push(m[2], m[1]);
+    } else {
+      for (const m of pctFirstHits) push(m[1], m[2]);
+    }
+    return out;
+  }
+
+  function uniqueFibers(raw) {
+    const clauses = collectPercentClauses(raw);
+    if (clauses.length) return clauses.join("; ");
+    const t = String(raw || "").replace(/\s+/g, " ").trim();
+    if (!t) return "";
+    const re =
+      /\b(organic\s+|recycled\s+)?(cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
+    const seen = new Set();
+    const out = [];
     let m;
     while ((m = re.exec(t))) {
-      const rawName = String(m[2] || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const name = canon[rawName] || rawName;
+      const name = fiberCanon(m[2] || "");
       if (!name || seen.has(name)) continue;
       seen.add(name);
       out.push(name.charAt(0).toUpperCase() + name.slice(1));
-    }
-    const percents = [
-      ...t.matchAll(/(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s-]{1,30})/gi),
-    ];
-    if (percents.length) {
-      const seenPct = new Set();
-      const clauses = [];
-      for (const hit of percents) {
-        const rawFiber = String(hit[2] || "").trim();
-        const key = rawFiber.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
-        const name = canon[key] || key;
-        if (!name || seenPct.has(name)) continue;
-        seenPct.add(name);
-        clauses.push(`${hit[1]}% ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
-      }
-      return clauses.join("; ");
     }
     return out.join("; ");
   }
@@ -186,6 +215,7 @@ function extractProductFromPage() {
   let price = null;
   let currency = null;
   let compositionText = null;
+  const jsonLdChunks = [];
   for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
     try {
       const data = JSON.parse(script.textContent || "null");
@@ -203,11 +233,15 @@ function extractProductFromPage() {
           if (Number.isFinite(n) && n > 0) price = n;
           currency = currency || offer.priceCurrency || null;
         }
-        const extra = node.material || node.pattern || "";
-        if (Array.isArray(extra)) {
-          compositionText = extra.filter(Boolean).map(String).join("; ");
-        } else if (extra) {
-          compositionText = String(extra);
+        const extra = node.material || node.pattern || node.composition || "";
+        if (Array.isArray(extra)) jsonLdChunks.push(extra.filter(Boolean).map(String).join("; "));
+        else if (extra) jsonLdChunks.push(String(extra));
+        const props = node.additionalProperty || node.additionalProperties || [];
+        for (const prop of Array.isArray(props) ? props : [props]) {
+          if (!prop || typeof prop !== "object") continue;
+          const pname = String(prop.name || prop.propertyID || "");
+          if (!/material|composition|fabric|tejido|composici/i.test(pname)) continue;
+          if (typeof prop.value === "string") jsonLdChunks.push(prop.value);
         }
       }
     } catch {
@@ -215,25 +249,34 @@ function extractProductFromPage() {
     }
   }
 
-  const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 12000);
-  const labeledRe =
-    /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
-  let labeled = null;
-  let labeledMatch;
-  while ((labeledMatch = labeledRe.exec(bodyText))) {
-    const candidate = uniqueFibers(labeledMatch[1] || "");
-    if (candidate) {
-      labeled = candidate;
-      break;
+  const domChunks = [];
+  document
+    .querySelectorAll(
+      '[itemprop="material"], [class*="composition" i], [id*="composition" i], [data-testid*="composition" i], [class*="material" i], [class*="fabric" i]'
+    )
+    .forEach((el) => {
+      const t = (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
+      if (t.length > 8 && t.length < 800) domChunks.push(t);
+    });
+
+  const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 16000);
+  const hay = `${domChunks.join(" \n ")} \n ${jsonLdChunks.join(" \n ")} \n ${bodyText}`;
+  const percentLine = collectPercentClauses(hay);
+  if (percentLine.length) {
+    compositionText = percentLine.join("; ");
+  } else {
+    const labeledRe =
+      /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]?\s*([^\n]{1,220})/gi;
+    let labeled = null;
+    let labeledMatch;
+    while ((labeledMatch = labeledRe.exec(hay))) {
+      const candidate = uniqueFibers(labeledMatch[1] || "");
+      if (candidate) {
+        labeled = candidate;
+        break;
+      }
     }
-  }
-  if (labeled) compositionText = labeled;
-  else if (compositionText) compositionText = uniqueFibers(compositionText) || compositionText;
-  else {
-    const pctLine = bodyText.match(
-      /\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)(?:\s*[;,/]\s*\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)){0,6}/i
-    );
-    compositionText = pctLine ? uniqueFibers(pctLine[0]) : null;
+    compositionText = labeled || uniqueFibers(jsonLdChunks.join("; ")) || null;
   }
 
   const visible = visibleOffer(bodyText);
