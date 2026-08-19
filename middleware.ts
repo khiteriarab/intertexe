@@ -8,7 +8,7 @@ const API_CACHE_HEADERS: Record<string, string> = {
   "Vercel-CDN-Cache-Control": "public, s-maxage=30",
 };
 
-const NO_CACHE_PREFIXES = ["/api/auth/", "/api/cron/", "/api/dashboard/"];
+const NO_CACHE_PREFIXES = ["/api/auth/", "/api/cron/", "/api/dashboard/", "/api/matches"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

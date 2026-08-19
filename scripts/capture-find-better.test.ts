@@ -6,6 +6,9 @@ import {
   rankTxMatchAlternatives,
 } from "../lib/capture-find-better.ts";
 import { buildTxMatchCopy, buildTxMatchLinks } from "../lib/tx-match-copy.ts";
+import { unpublishedMaterialCopy } from "../lib/unpublished-material.ts";
+import { safeInternalPath } from "../lib/public-match-set.ts";
+import { materialInsightFromText, savingsPercent } from "../lib/material-insight.ts";
 
 function skirt(id: string, fiber: string, price: number, color = "lilac") {
   return {
@@ -101,8 +104,10 @@ describe("TX Match copy", () => {
     assert.match(copy.decodeAction, /see/i);
     assert.match(copy.decodeAction, /silk/i);
     assert.doesNotMatch(copy.decodeAction, /^TX MATCH$/i);
-    assert.equal(copy.alternativesTitle, "More silk options");
-    assert.match(copy.compositionNote || "", /Material details unavailable/);
+    assert.equal(copy.alternativesTitle, "Better-material matches");
+    assert.match(copy.compositionNote || "", /Silk detected/);
+    assert.match(copy.compositionNote || "", /Exact composition not published/);
+    assert.doesNotMatch(copy.compositionNote || "", /Material details unavailable/);
     assert.equal(copy.tagline, "Know the material before you buy.");
   });
 
@@ -115,28 +120,103 @@ describe("TX Match copy", () => {
       listedWithoutPercentages: true,
       listedMaterial: "Silk",
     });
-    assert.equal(copy.compositionHeadline, "Retailer lists: Silk");
-    assert.match(copy.compositionNote || "", /percentages were not provided/i);
+    assert.equal(copy.compositionHeadline, "Material: Silk — percentage not provided");
+    assert.match(copy.compositionNote || "", /percentage not provided/i);
+  });
+
+  it("collapses a repeated retailer fiber list to one name", () => {
+    const copy = buildTxMatchCopy({
+      inferredFiber: "silk",
+      garment: "dress",
+      altCount: 12,
+      compositionListed: true,
+      listedWithoutPercentages: true,
+      listedMaterial: "SILK, SILK, silk, silk, silk, SILK, SILK, SILK",
+    });
+    assert.equal(copy.compositionHeadline, "Material: Silk — percentage not provided");
   });
 
   it("does not claim a fabric when none was inferred", () => {
     const copy = buildTxMatchCopy({ compositionListed: false, altCount: 8 });
     assert.equal(copy.decodeAction, "See more like this");
     assert.doesNotMatch(copy.alternativesTitle, /silk/i);
-    assert.match(copy.compositionNote || "", /Material details unavailable/);
-    assert.match(copy.compositionNote || "", /verified compositions/i);
+    assert.match(copy.compositionNote || "", /Exact composition not published/);
+    assert.doesNotMatch(copy.compositionNote || "", /Material details unavailable/);
   });
 
-  it("sends View all matches and Open in INTERTEXE to different URLs", () => {
+  it("opens the original piece and TX Matches on a public /matches page", () => {
     const id = "cap-123";
     const links = buildTxMatchLinks(id);
     assert.ok(links);
-    assert.match(links.viewAllMatchesUrl, /\/inspirations\/cap-123$/);
-    assert.match(links.openInIntertexeUrl, /\/open\?/);
-    assert.match(links.openInIntertexeUrl, /capture/);
-    assert.notEqual(links.viewAllMatchesUrl, links.openInIntertexeUrl);
+    assert.match(links.viewAllMatchesUrl, /\/matches\/cap-123$/);
+    assert.match(links.openInIntertexeUrl, /\/matches\/cap-123$/);
+    assert.equal(links.viewAllMatchesUrl, links.openInIntertexeUrl);
+    assert.doesNotMatch(links.openInIntertexeUrl, /\/open\?/);
+    assert.doesNotMatch(links.openInIntertexeUrl, /\/inspirations\//);
+    assert.doesNotMatch(links.openInIntertexeUrl, /\/capture\//);
     const copy = buildTxMatchCopy({ captureId: id, altCount: 12, inferredFiber: "silk", garment: "skirt" });
     assert.equal(copy.viewAllMatchesUrl, links.viewAllMatchesUrl);
     assert.equal(copy.openInIntertexeUrl, links.openInIntertexeUrl);
+  });
+});
+
+describe("Material insight", () => {
+  it("labels a mostly synthetic listed mix without inventing percentages", () => {
+    const insight = materialInsightFromText("20% cotton, 80% polyester");
+    assert.equal(insight.share, 20);
+    assert.equal(insight.tone, "synthetic");
+    assert.match(insight.label, /mostly synthetic/i);
+  });
+
+  it("labels a mostly natural mix", () => {
+    const insight = materialInsightFromText("96% silk, 4% elastane");
+    assert.equal(insight.share, 96);
+    assert.equal(insight.tone, "natural");
+  });
+
+  it("does not invent a share when percentages are missing", () => {
+    const insight = materialInsightFromText("Silk");
+    assert.equal(insight.share, null);
+    assert.equal(insight.tone, "unknown");
+  });
+
+  it("does not treat a silk shell plus polyester lining as fully natural", () => {
+    const insight = materialInsightFromText("100% silk; lining: 100% polyester");
+    assert.equal(insight.tone, "mixed");
+    assert.match(insight.label, /lining/i);
+  });
+
+  it("computes a savings percent only when the alternative is cheaper", () => {
+    assert.equal(savingsPercent(890, 473), 47);
+    assert.equal(savingsPercent(200, 250), null);
+    assert.equal(savingsPercent(null, 100), null);
+  });
+});
+
+describe("Unpublished material copy", () => {
+  it("says denim detected when jeans are recognized without a formula", () => {
+    const copy = unpublishedMaterialCopy({
+      title: "Mid-waist wide-leg jeans",
+      category: "trousers",
+      altCount: 12,
+    });
+    assert.equal(copy.headline, "Denim detected");
+    assert.equal(copy.detail, "Exact composition not published");
+    assert.equal(copy.supporting, "We found better-material alternatives in cotton.");
+  });
+
+  it("does not invent percentages when the retailer listed none", () => {
+    const copy = unpublishedMaterialCopy({ title: "Silk slip dress", altCount: 8 });
+    assert.equal(copy.headline, "Silk detected");
+    assert.doesNotMatch(copy.headline, /\d+%/);
+    assert.match(copy.detail || "", /Exact composition not published/);
+  });
+});
+
+describe("Public match return paths", () => {
+  it("keeps internal next URLs and rejects off-site redirects", () => {
+    assert.equal(safeInternalPath("/matches/abc?save=1"), "/matches/abc?save=1");
+    assert.equal(safeInternalPath("https://evil.example/matches/abc"), null);
+    assert.equal(safeInternalPath("//evil.example"), null);
   });
 });

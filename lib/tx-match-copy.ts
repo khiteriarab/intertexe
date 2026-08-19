@@ -1,6 +1,7 @@
 import { SITE_URL } from "./seo-international";
-import { getUniversalOpenUrl } from "./app-store";
+import { formatCompositionDisplay } from "./composition-display";
 import { hasPercentages } from "./capture-page-signals";
+import { unpublishedMaterialCopy } from "./unpublished-material";
 
 export const TX_MATCH_TAGLINE = "Know the material before you buy.";
 export const AFFILIATE_DISCLOSURE =
@@ -24,15 +25,13 @@ export type TxMatchLinks = {
   openInIntertexeUrl: string;
 };
 
-/** View all = web TX Match list. Open in INTERTEXE = app (or /capture on desktop). */
+/** Open in INTERTEXE = original piece + TX Matches on a public /matches page. */
 export function buildTxMatchLinks(captureId: string | null | undefined): TxMatchLinks | null {
   const id = String(captureId || "").trim();
   if (!id) return null;
   return {
-    viewAllMatchesUrl: `${SITE_URL}/inspirations/${encodeURIComponent(id)}`,
-    openInIntertexeUrl: getUniversalOpenUrl(`/capture/${id}`, {
-      cta: "chrome_extension_open",
-    }),
+    viewAllMatchesUrl: `${SITE_URL}/matches/${encodeURIComponent(id)}`,
+    openInIntertexeUrl: `${SITE_URL}/matches/${encodeURIComponent(id)}`,
   };
 }
 
@@ -59,7 +58,8 @@ export function garmentLabel(raw: string | null | undefined): string | null {
   if (!t) return null;
   if (/\bskirt/.test(t)) return "skirt";
   if (/\bdress/.test(t)) return "dress";
-  if (/\b(pant|trouser|jean)/.test(t)) return "pant";
+  if (/\b(jeans?|denim|vaquero)/.test(t)) return "jeans";
+  if (/\b(pant|trouser)/.test(t)) return "pant";
   if (/\b(coat|jacket|blazer)/.test(t)) return "jacket";
   if (/\b(sweater|knit|cardigan)/.test(t)) return "knit";
   if (/\b(top|blouse|shirt)/.test(t)) return "top";
@@ -81,7 +81,7 @@ export function buildTxMatchCopy(opts: {
   const look = [fiber, garment].filter(Boolean).join(" ");
   const count = opts.altCount && opts.altCount > 0 ? opts.altCount : null;
   const links = buildTxMatchLinks(opts.captureId);
-  const listedName = prettyFiberName(opts.listedMaterial || fiber);
+  const display = formatCompositionDisplay(opts.listedMaterial || opts.inferredFiber || opts.fiber || "");
 
   const decodeAction = look
     ? count
@@ -89,24 +89,27 @@ export function buildTxMatchCopy(opts: {
       : `See more ${look} options`
     : "See more like this";
 
-  const alternativesTitle = fiber ? `More ${fiber} options` : "Your TX Matches";
+  const alternativesTitle = "Better-material matches";
 
   let compositionHeadline: string | null = null;
   let compositionDetail: string | null = null;
   let compositionNote: string | null = null;
 
-  if (opts.compositionListed && opts.listedWithoutPercentages && listedName) {
-    compositionHeadline = `Retailer lists: ${listedName}`;
-    compositionDetail = "Exact percentages were not provided.";
-    compositionNote = `${compositionHeadline}\n${compositionDetail}`;
-  } else if (opts.compositionListed && opts.listedMaterial) {
-    compositionHeadline = opts.listedMaterial;
-    compositionDetail = null;
-    compositionNote = null;
+  if (opts.compositionListed && display.headline !== "Material details unavailable") {
+    compositionHeadline = display.materialLine;
+    compositionDetail = display.hasSyntheticLining
+      ? "Synthetic lining — not the same as a fully natural construction."
+      : null;
+    compositionNote = [compositionHeadline, compositionDetail].filter(Boolean).join("\n");
   } else if (!opts.compositionListed) {
-    compositionHeadline = "Material details unavailable";
-    compositionDetail = "Let TX Match find similar pieces with verified compositions.";
-    compositionNote = `${compositionHeadline}\n${compositionDetail}`;
+    const unpublished = unpublishedMaterialCopy({
+      title: opts.garment,
+      inferredFiber: fiber,
+      altCount: count || 0,
+    });
+    compositionHeadline = unpublished.headline;
+    compositionDetail = [unpublished.detail, unpublished.supporting].filter(Boolean).join("\n");
+    compositionNote = [compositionHeadline, compositionDetail].filter(Boolean).join("\n");
   }
 
   return {
@@ -145,7 +148,7 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
   return buildTxMatchCopy({
     fiber: inferred,
     inferredFiber: inferred,
-    garment: String(row.category || row.subcategory || row.title || ""),
+    garment: String(row.title || row.subcategory || row.category || ""),
     altCount: alts.length,
     compositionListed: listed,
     listedWithoutPercentages: listed && !hasPercentages(composition),
@@ -154,22 +157,12 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
   });
 }
 
-function prettyFiberName(raw: string | null | undefined): string | null {
-  const t = String(raw || "").trim();
-  if (!t) return null;
-  const fiber = fiberFromText(t);
-  if (fiber && t.split(/\s+/).length <= 3 && !hasPercentages(t)) {
-    return fiber.charAt(0).toUpperCase() + fiber.slice(1);
-  }
-  return t;
-}
-
 function fiberFromText(text: string): string | null {
   const lower = text.toLowerCase();
   for (const f of FIBERS) {
     if (new RegExp(`\\b${f}\\b`).test(lower)) return f === "merino" ? "wool" : f;
   }
   if (/\b(charmeuse|chiffon|satin)\b/.test(lower)) return "silk";
-  if (/\bdenim\b/.test(lower)) return "cotton";
+  if (/\b(denim|jeans?|vaquero|algod[oó]n)\b/.test(lower)) return "cotton";
   return null;
 }
