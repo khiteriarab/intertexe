@@ -110,12 +110,12 @@ export function parseCompositionText(
 
   const pctHits = [
     ...text.matchAll(
-      /(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([a-z][a-z\s-]{1,40})/gi
+      /(\d{1,3}(?:[.,]\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([a-z][a-z\s-]{1,40})/gi
     ),
   ];
   if (pctHits.length) {
     const components = pctHits.map((m) => {
-      const percentage = Number(m[1]);
+      const percentage = Number(String(m[1] || "").replace(",", "."));
       const code = fiberCode(m[2]);
       return {
         fiber_code: code,

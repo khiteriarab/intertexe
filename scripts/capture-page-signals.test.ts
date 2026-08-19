@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { formatCompositionDisplay } from "../lib/composition-display.ts";
 import {
   countryFromPage,
   extractLabeledMaterial,
+  extractCompositionFromPageText,
   extractVisibleOffer,
   formatCapturePrice,
   looksLikeListedMaterial,
   looksLikePercentageComposition,
+  preferPercentageComposition,
   preferRetailerFacingOffer,
   shopAtLabel,
   titleCaseName,
@@ -37,6 +40,54 @@ describe("retailer material capture", () => {
   it("does not treat a sale banner as composition", () => {
     assert.equal(looksLikePercentageComposition("20% off silk dresses"), false);
     assert.equal(extractLabeledMaterial("Spring sale, silk-like drape, 20% off"), null);
+    assert.equal(extractCompositionFromPageText("20% off silk dresses"), null);
+  });
+
+  it("reads a semicolon mix that is already on the product page", () => {
+    const html = `<h1>Mid Rise Flared Jeans</h1><p>Composition: 55.7% Lyocell; 22.6% Cotton; 21.7% Cupro</p>`;
+    assert.equal(
+      extractCompositionFromPageText(html),
+      "55.7% Lyocell; 22.6% Cotton; 21.7% Cupro"
+    );
+  });
+
+  it("reads European comma decimals and space-separated clauses", () => {
+    const html = `<div>Composición 55,7% lyocell 22,6% cotton 21,7% cupro</div>`;
+    assert.equal(
+      extractCompositionFromPageText(html),
+      "55.7% Lyocell; 22.6% Cotton; 21.7% Cupro"
+    );
+  });
+
+  it("reads fiber-then-percent tables", () => {
+    const html = `<table><tr><td>Lyocell</td><td>55.7%</td></tr><tr><td>Cotton</td><td>22.6%</td></tr></table>`;
+    assert.match(extractCompositionFromPageText(html) || "", /55\.7%\s*Lyocell/i);
+    assert.match(extractCompositionFromPageText(html) || "", /22\.6%\s*Cotton/i);
+  });
+
+  it("does not let a JSON-LD Denim label hide a listed formula", () => {
+    const html = `Denim. Composition 55.7% Lyocell; 22.6% Cotton; 21.7% Cupro`;
+    assert.equal(
+      extractCompositionFromPageText(html),
+      "55.7% Lyocell; 22.6% Cotton; 21.7% Cupro"
+    );
+    assert.equal(
+      preferPercentageComposition("Denim", extractCompositionFromPageText(html)),
+      "55.7% Lyocell; 22.6% Cotton; 21.7% Cupro"
+    );
+  });
+
+  it("reads 100% premium stretch silk as silk, not a silk-cotton mix", () => {
+    const html = `<p>100% premium stretch silk dress</p><p>breathable silk</p>`;
+    assert.equal(extractCompositionFromPageText(html), "100% Silk");
+    assert.equal(looksLikePercentageComposition("100% Silk"), true);
+  });
+
+  it("shows the listed mix instead of unpublished/unknown", () => {
+    const display = formatCompositionDisplay("55.7% Lyocell; 22.6% Cotton; 21.7% Cupro");
+    assert.equal(display.hasPercentages, true);
+    assert.equal(display.headline, "55.7% Lyocell; 22.6% Cotton; 21.7% Cupro");
+    assert.notEqual(display.headline, "Material details unavailable");
   });
 });
 

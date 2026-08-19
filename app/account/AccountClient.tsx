@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, Heart, List, LogOut, Eye, EyeOff, ChevronRight, Sparkles, Leaf, ExternalLink, ShoppingBag, CheckCircle2, TrendingDown, Settings, Pencil, KeyRound, Trash2, ArrowLeft, Check } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
@@ -12,18 +12,26 @@ import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { RecentlyViewedRail } from "./RecentlyViewedRail";
 import { shareMessage } from "../../lib/referral-share-message";
 import { affiliateUrlWithClientU1 } from "../../lib/affiliate-url";
-
-const TOKEN_KEY = "intertexe_auth_token";
-const REFRESH_KEY = "intertexe_refresh_token";
+import { safeInternalPath } from "../../lib/public-match-set";
+import {
+  AUTH_REFRESH_KEY,
+  clearWebAuthTokens,
+  getWebAuthToken,
+  hydrateWebAuthToken,
+  refreshWebAuthToken,
+  setWebAuthTokens,
+} from "../../lib/web-auth-token";
 
 function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+  return getWebAuthToken();
 }
 
 function setTokenValue(token: string, refreshToken?: string | null) {
-  localStorage.setItem(TOKEN_KEY, token);
-  if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+  setWebAuthTokens(token, refreshToken);
+}
+
+function clearToken() {
+  clearWebAuthTokens();
 }
 
 function recordSavedProductClick(product: {
@@ -73,6 +81,8 @@ export default function AccountClient({
   initialMode?: "login" | "signup" | "forgot";
 }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const nextPath = safeInternalPath(searchParams.get("next"));
   const [user, setUser] = useState<UserData | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [mode, setMode] = useState<"login" | "signup" | "forgot">(initialMode);
@@ -83,16 +93,24 @@ export default function AccountClient({
   const [forgotSent, setForgotSent] = useState(false);
 
   const fetchMe = useCallback(async () => {
-    const token = getToken();
+    let token = await hydrateWebAuthToken();
     if (!token) {
       setUser(null);
       setAuthLoading(false);
       return;
     }
     try {
-      const res = await fetch("/api/auth/me", {
+      let res = await fetch("/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        token = await refreshWebAuthToken();
+        if (token) {
+          res = await fetch("/api/auth/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      }
       if (res.status === 401) {
         clearToken();
         setUser(null);
@@ -101,7 +119,6 @@ export default function AccountClient({
         setUser(data);
       }
     } catch {
-      clearToken();
       setUser(null);
     }
     setAuthLoading(false);
@@ -110,6 +127,12 @@ export default function AccountClient({
   useEffect(() => {
     fetchMe();
   }, [fetchMe]);
+
+  useEffect(() => {
+    if (!authLoading && user && nextPath) {
+      router.replace(nextPath);
+    }
+  }, [authLoading, user, nextPath, router]);
 
   useEffect(() => {
     const urlMode = searchParams.get("mode");
@@ -196,6 +219,10 @@ export default function AccountClient({
         });
       }
       await fetchMe();
+      if (nextPath) {
+        router.replace(nextPath);
+        return;
+      }
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -206,7 +233,7 @@ export default function AccountClient({
   const handleLogout = async () => {
     try {
       const token = getToken();
-      const refreshToken = typeof window !== "undefined" ? localStorage.getItem(REFRESH_KEY) : null;
+      const refreshToken = typeof window !== "undefined" ? localStorage.getItem(AUTH_REFRESH_KEY) : null;
       await fetch("/api/auth/logout", {
         method: "POST",
         headers: {
@@ -232,6 +259,13 @@ export default function AccountClient({
   }
 
   if (user) {
+    if (nextPath) {
+      return (
+        <div className="flex min-h-[60vh] items-center justify-center px-6">
+          <p className="text-sm text-muted-foreground">Taking you back to your matches…</p>
+        </div>
+      );
+    }
     return <AccountDashboard user={user} onLogout={handleLogout} />;
   }
 

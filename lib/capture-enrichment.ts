@@ -12,11 +12,12 @@ import {
 import { detectGarmentType } from "./scanner/detect-garment-type";
 import {
   countryFromPage,
-  extractLabeledMaterial,
+  extractCompositionFromPageText,
   extractVisibleOffer,
   looksLikeListedMaterial,
   looksLikePercentageComposition,
   normalizeListedMaterial,
+  preferPercentageComposition,
   preferRetailerFacingOffer,
 } from "./capture-page-signals";
 
@@ -176,6 +177,29 @@ function extractJsonLdProducts(html: string): Record<string, unknown>[] {
     }
   }
   return out;
+}
+
+function compositionFromJsonLd(node: Record<string, unknown>): string | null {
+  const chunks: string[] = [];
+  const material = firstString(node.material, node.composition);
+  if (material) chunks.push(material);
+  const props = node.additionalProperty || node.additionalProperties;
+  const list = Array.isArray(props) ? props : props ? [props] : [];
+  for (const raw of list) {
+    if (!raw || typeof raw !== "object") continue;
+    const prop = raw as { name?: unknown; propertyID?: unknown; value?: unknown };
+    const name = String(prop.name || prop.propertyID || "");
+    if (!/material|composition|fabric|tejido|composici/i.test(name)) continue;
+    const value = prop.value;
+    if (typeof value === "string" && value.trim()) chunks.push(value.trim());
+    else if (Array.isArray(value)) {
+      chunks.push(value.filter((v) => typeof v === "string").join("; "));
+    }
+  }
+  const fromText = extractCompositionFromPageText(chunks.join(" \n "));
+  if (fromText) return fromText;
+  if (material && looksLikeComposition(material)) return cleanComposition(material);
+  return null;
 }
 
 function firstString(...vals: unknown[]): string | null {
@@ -452,6 +476,10 @@ export function buildMatchBrief(input: {
   };
 }
 
+function preferComposition(existing: string | null, candidate: string | null): string | null {
+  return preferPercentageComposition(existing, candidate);
+}
+
 function looksLikeComposition(text: string): boolean {
   return looksLikePercentageComposition(text) || looksLikeListedMaterial(text);
 }
@@ -463,21 +491,8 @@ function cleanComposition(text: string): string {
 }
 
 function extractCompositionHeuristics(html: string): string | null {
-  const plain = html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .slice(0, 40000);
-  const re =
-    /(\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*(?:,\s*\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*){0,6})/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(plain))) {
-    const candidate = cleanComposition(m[1]?.trim() || "");
-    if (candidate && looksLikePercentageComposition(candidate)) return candidate;
-  }
-  const labeled = extractLabeledMaterial(html);
-  return labeled ? cleanComposition(labeled) : null;
+  const found = extractCompositionFromPageText(html);
+  return found ? cleanComposition(found) : null;
 }
 
 /**
@@ -547,9 +562,13 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
     if (!categoryHint) {
       categoryHint = firstString(node.category, node.productType);
     }
-    const material = firstString(node.material, node.composition);
-    if (material && looksLikeComposition(material)) {
-      compositionText = cleanComposition(material);
+    const fromLd = compositionFromJsonLd(node);
+    if (
+      fromLd &&
+      (!compositionText ||
+        (looksLikePercentageComposition(fromLd) && !looksLikePercentageComposition(compositionText)))
+    ) {
+      compositionText = cleanComposition(fromLd);
       setProv(provenance, "compositionText", "json_ld", 0.9);
     }
     const offers = offersOf(node);
@@ -651,9 +670,12 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
           title = extracted.productName;
           setProv(provenance, "title", "retailer", 0.75);
         }
-        if (!compositionText && extracted.composition && looksLikeComposition(extracted.composition)) {
-          compositionText = cleanComposition(extracted.composition);
-          setProv(provenance, "compositionText", "retailer", 0.8);
+        if (extracted.composition && looksLikeComposition(extracted.composition)) {
+          const next = preferComposition(compositionText, cleanComposition(extracted.composition));
+          if (next && next !== compositionText) {
+            compositionText = next;
+            setProv(provenance, "compositionText", "retailer", 0.8);
+          }
         }
         if (price == null && extracted.price) {
           const parsed = parsePriceValue(extracted.price);
@@ -669,10 +691,11 @@ export async function enrichFromUrl(url: string): Promise<CaptureEnrichment> {
         }
       }
     }
-    if (!compositionText) {
-      const heur = extractCompositionHeuristics(html);
-      if (heur) {
-        compositionText = heur;
+    const heur = extractCompositionHeuristics(html);
+    if (heur) {
+      const next = preferComposition(compositionText, heur);
+      if (next && next !== compositionText) {
+        compositionText = next;
         setProv(
           provenance,
           "compositionText",

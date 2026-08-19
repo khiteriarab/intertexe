@@ -6,6 +6,89 @@
 export const FIBER_NAME_RE =
   /\b(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/i;
 
+const FIBER_ALT =
+  "cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate";
+
+const FIBER_CANON: Record<string, string> = {
+  algodon: "cotton",
+  denim: "cotton",
+  vaquero: "cotton",
+  seda: "silk",
+  lana: "wool",
+  lino: "linen",
+  elastano: "elastane",
+  viscosa: "viscose",
+  poliester: "polyester",
+  poliamida: "polyamide",
+  spandex: "elastane",
+  tencel: "lyocell",
+};
+
+function fiberCanonKey(raw: string): string {
+  return String(raw || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z]/g, "");
+}
+
+function titleFiberToken(raw: string): string {
+  const key = fiberCanonKey(raw);
+  const name = FIBER_CANON[key] || key;
+  if (!name) return "";
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+/** Collect "55.7% Lyocell" and "Lyocell 55,7%" clauses. Keeps percentages. */
+export function collectPercentClauses(raw: string | null | undefined): string[] {
+  const t = String(raw || "").replace(/\s+/g, " ");
+  if (!t) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const push = (pctRaw: string, fiberRaw: string) => {
+    const pct = String(pctRaw || "").replace(",", ".");
+    const n = Number(pct);
+    if (!Number.isFinite(n) || n <= 0 || n > 100) return;
+    const name = titleFiberToken(fiberRaw);
+    const key = fiberCanonKey(name);
+    if (!name || !key || seen.has(key)) return;
+    seen.add(key);
+    out.push(`${n}% ${name}`);
+  };
+  const pctFirst = new RegExp(
+    `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*((?:[a-z][a-z-]*\\s+){0,3})(?:organic\\s+|recycled\\s+)?(${FIBER_ALT})`,
+    "gi"
+  );
+  const fiberFirst = new RegExp(
+    `\\b(${FIBER_ALT})\\s*[:\\-–]?\\s*(\\d{1,3}(?:[.,]\\d+)?)\\s*%`,
+    "gi"
+  );
+  const pctFirstHits = [...t.matchAll(pctFirst)];
+  const fiberFirstHits = [...t.matchAll(fiberFirst)];
+  const useFiberFirst = fiberFirstHits.length > pctFirstHits.length;
+  if (useFiberFirst) {
+    for (const m of fiberFirstHits) push(m[2], m[1]);
+  } else {
+    for (const m of pctFirstHits) {
+      const filler = String(m[2] || "");
+      if (/\b(off|sale|discount|shipping|promo)\b/i.test(filler)) continue;
+      push(m[1], m[3]);
+    }
+  }
+  return out;
+}
+
+/**
+ * Read a composition formula from visible page text / JSON-LD snippets.
+ * Prefers percentage clauses over a name-only "Denim" label.
+ */
+export function extractCompositionFromPageText(htmlOrText: string | null | undefined): string | null {
+  const plain = stripToText(String(htmlOrText || "")).slice(0, 40000);
+  const clauses = collectPercentClauses(plain);
+  if (clauses.length) return clauses.join("; ");
+  return extractLabeledMaterial(plain);
+}
+
 const PROMO_RE =
   /\b(off|order|shipping|sale|discount|promo|code|subscribe|newsletter|members?)\b/i;
 
@@ -51,25 +134,40 @@ const TLD_COUNTRY: Record<string, string> = {
 export type MoneyOffer = { price: number | null; currency: string | null };
 
 export function hasPercentages(text: string | null | undefined): boolean {
-  return /\d+(?:\.\d+)?%/.test(String(text || ""));
+  return /\d+(?:[.,]\d+)?\s*%/.test(String(text || ""));
 }
 
 export function looksLikePercentageComposition(text: string): boolean {
   if (!text || text.length > 180) return false;
   if (PROMO_RE.test(text)) return false;
   if (!hasPercentages(text)) return false;
-  return FIBER_NAME_RE.test(text);
+  return FIBER_NAME_RE.test(text) || collectPercentClauses(text).length > 0;
+}
+
+/** Prefer a listed percentage formula over a name-only label such as JSON-LD "Denim". */
+export function preferPercentageComposition(
+  existing: string | null | undefined,
+  candidate: string | null | undefined
+): string | null {
+  const current = String(existing || "").trim() || null;
+  const next = String(candidate || "").trim() || null;
+  if (!next) return current;
+  if (!current) return next;
+  if (looksLikePercentageComposition(next) && !looksLikePercentageComposition(current)) {
+    return next;
+  }
+  return current;
 }
 
 /** Short retailer material line such as "Silk" or "Silk, elastane" — no % required. */
 export function looksLikeListedMaterial(text: string): boolean {
   const t = String(text || "").replace(/\s+/g, " ").trim();
-  if (!t || t.length > 80) return false;
+  if (!t || t.length > 180) return false;
   if (PROMO_RE.test(t)) return false;
   if (/\b(looks like|estimated|similar to|inspired)\b/i.test(t)) return false;
   if (!FIBER_NAME_RE.test(t)) return false;
   const words = t.split(/\s+/).filter(Boolean);
-  if (words.length > 8) return false;
+  if (words.length > 16) return false;
   return true;
 }
 
@@ -77,8 +175,10 @@ export function normalizeListedMaterial(raw: string): string {
   const t = String(raw || "").replace(/\s+/g, " ").trim();
   if (!t) return t;
   if (looksLikePercentageComposition(t)) {
+    const clauses = collectPercentClauses(t);
+    if (clauses.length) return clauses.join("; ");
     const m = t.match(
-      /(\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*(?:,\s*\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*){0,6})/
+      /(\d+(?:[.,]\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*(?:[,;/]\s*\d+(?:[.,]\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*){0,6})/
     );
     return (m?.[1] || t).trim();
   }
@@ -91,10 +191,13 @@ export function normalizeListedMaterial(raw: string): string {
 export function extractLabeledMaterial(htmlOrText: string): string | null {
   const plain = stripToText(htmlOrText).slice(0, 40000);
   const re =
-    /(?:material|composition|fabric|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
+    /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]?\s*([^\n]{1,220})/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(plain))) {
-    const candidate = normalizeListedMaterial(m[1] || "");
+    const chunk = m[1] || "";
+    const clauses = collectPercentClauses(chunk);
+    if (clauses.length) return clauses.join("; ");
+    const candidate = normalizeListedMaterial(chunk);
     if (looksLikePercentageComposition(candidate) || looksLikeListedMaterial(candidate)) {
       return candidate;
     }

@@ -14,6 +14,7 @@ async function getStore() {
     "authTabId",
     "extSession",
     "lastResult",
+    "lastPeek",
     "uiStatus",
     "uiError",
   ]);
@@ -29,6 +30,7 @@ async function publicState() {
     signedIn: Boolean(store.accessToken),
     busy: Boolean(store.extSession),
     result: store.lastResult || null,
+    peek: store.lastPeek || null,
     status: store.uiStatus || "",
     error: Boolean(store.uiError),
   };
@@ -90,6 +92,110 @@ async function authedFetch(path, opts = {}, attempt = 0) {
 }
 
 function extractProductFromPage() {
+  function fiberCanon(raw) {
+    const key = String(raw || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z]/g, "");
+    const canon = {
+      algodon: "cotton",
+      denim: "cotton",
+      vaquero: "cotton",
+      seda: "silk",
+      lana: "wool",
+      lino: "linen",
+      elastano: "elastane",
+      viscosa: "viscose",
+      poliester: "polyester",
+      poliamida: "polyamide",
+      spandex: "elastane",
+      tencel: "lyocell",
+    };
+    return canon[key] || key;
+  }
+
+  function collectPercentClauses(raw) {
+    const t = String(raw || "").replace(/\s+/g, " ");
+    if (!t) return [];
+    const fiberAlt =
+      "cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate";
+    const seen = new Set();
+    const out = [];
+    const push = (pctRaw, fiberRaw) => {
+      const pct = String(pctRaw || "").replace(",", ".");
+      const n = Number(pct);
+      if (!Number.isFinite(n) || n <= 0 || n > 100) return;
+      const name = fiberCanon(fiberRaw);
+      if (!name || seen.has(name)) return;
+      seen.add(name);
+      out.push(`${n}% ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
+    };
+    const pctFirst = new RegExp(
+      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*((?:[a-z][a-z-]*\\s+){0,3})(?:organic\\s+|recycled\\s+)?(${fiberAlt})`,
+      "gi"
+    );
+    const fiberFirst = new RegExp(
+      `\\b(${fiberAlt})\\s*[:\\-–]?\\s*(\\d{1,3}(?:[.,]\\d+)?)\\s*%`,
+      "gi"
+    );
+    const pctFirstHits = [...t.matchAll(pctFirst)];
+    const fiberFirstHits = [...t.matchAll(fiberFirst)];
+    if (fiberFirstHits.length > pctFirstHits.length) {
+      for (const m of fiberFirstHits) push(m[2], m[1]);
+    } else {
+      for (const m of pctFirstHits) {
+        const filler = String(m[2] || "");
+        if (/\b(off|sale|discount|shipping|promo)\b/i.test(filler)) continue;
+        push(m[1], m[3]);
+      }
+    }
+    return out;
+  }
+
+  function uniqueFibers(raw) {
+    const clauses = collectPercentClauses(raw);
+    if (clauses.length) return clauses.join("; ");
+    const t = String(raw || "").replace(/\s+/g, " ").trim();
+    if (!t) return "";
+    const re =
+      /\b(organic\s+|recycled\s+)?(cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
+    const seen = new Set();
+    const out = [];
+    let m;
+    while ((m = re.exec(t))) {
+      const name = fiberCanon(m[2] || "");
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      out.push(name.charAt(0).toUpperCase() + name.slice(1));
+    }
+    return out.join("; ");
+  }
+
+  function visibleOffer(text) {
+    const found = [];
+    const re =
+      /(?:(€|£|\$|EUR|GBP|USD)\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?))|(?:(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)\s*(€|EUR))/gi;
+    let m;
+    while ((m = re.exec(text))) {
+      const symbol = m[1] || m[4] || "";
+      const amountRaw = String(m[2] || m[3] || "").replace(/[.,](?=\d{3}\b)/g, "").replace(",", ".");
+      const price = parseFloat(amountRaw);
+      let currency = null;
+      const s = symbol.toUpperCase();
+      if (s === "€" || s === "EUR") currency = "EUR";
+      else if (s === "£" || s === "GBP") currency = "GBP";
+      else if (s === "$" || s === "USD") currency = "USD";
+      if (currency && Number.isFinite(price) && price >= 10 && price <= 50000) {
+        found.push({ price, currency });
+      }
+    }
+    if (!found.length) return { price: null, currency: null };
+    const rank = { EUR: 3, GBP: 3, USD: 1 };
+    found.sort((a, b) => (rank[b.currency] || 0) - (rank[a.currency] || 0));
+    return found[0];
+  }
+
   const attr = (sel) => document.querySelector(sel)?.getAttribute("content")?.trim() || "";
   const text = (sel) => document.querySelector(sel)?.textContent?.trim() || "";
   const ogTitle = attr('meta[property="og:title"]') || attr('meta[name="twitter:title"]');
@@ -113,6 +219,7 @@ function extractProductFromPage() {
   let price = null;
   let currency = null;
   let compositionText = null;
+  const jsonLdChunks = [];
   for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
     try {
       const data = JSON.parse(script.textContent || "null");
@@ -126,24 +233,66 @@ function extractProductFromPage() {
         const offer = Array.isArray(node.offers) ? node.offers[0] : node.offers;
         if (offer) {
           const raw = offer.price ?? offer.lowPrice;
-          if (raw != null && raw !== "") price = Number(raw);
+          const n = Number(raw);
+          if (Number.isFinite(n) && n > 0) price = n;
           currency = currency || offer.priceCurrency || null;
         }
-        const extra = node.material || node.pattern || "";
-        if (extra) compositionText = String(extra);
+        const extra = node.material || node.pattern || node.composition || "";
+        if (Array.isArray(extra)) jsonLdChunks.push(extra.filter(Boolean).map(String).join("; "));
+        else if (extra) jsonLdChunks.push(String(extra));
+        const props = node.additionalProperty || node.additionalProperties || [];
+        for (const prop of Array.isArray(props) ? props : [props]) {
+          if (!prop || typeof prop !== "object") continue;
+          const pname = String(prop.name || prop.propertyID || "");
+          if (!/material|composition|fabric|tejido|composici/i.test(pname)) continue;
+          if (typeof prop.value === "string") jsonLdChunks.push(prop.value);
+        }
       }
     } catch {
       /* ignore invalid JSON-LD */
     }
   }
 
-  const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 12000);
-  const fiberRe =
-    /\b(\d{1,3}(?:\.\d+)?%\s*)?(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
-  const hits = bodyText.match(fiberRe);
-  if (!compositionText && hits?.length) {
-    const listed = hits.slice(0, 8).join(", ");
-    if (listed.length < 180) compositionText = listed;
+  const domChunks = [];
+  document
+    .querySelectorAll(
+      '[itemprop="material"], [class*="composition" i], [id*="composition" i], [data-testid*="composition" i], [class*="material" i], [class*="fabric" i]'
+    )
+    .forEach((el) => {
+      const t = (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
+      if (t.length > 8 && t.length < 800) domChunks.push(t);
+    });
+
+  const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 16000);
+  const hay = `${domChunks.join(" \n ")} \n ${jsonLdChunks.join(" \n ")} \n ${bodyText}`;
+  const percentLine = collectPercentClauses(hay);
+  if (percentLine.length) {
+    compositionText = percentLine.join("; ");
+  } else {
+    const labeledRe =
+      /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]?\s*([^\n]{1,220})/gi;
+    let labeled = null;
+    let labeledMatch;
+    while ((labeledMatch = labeledRe.exec(hay))) {
+      const candidate = uniqueFibers(labeledMatch[1] || "");
+      if (candidate) {
+        labeled = candidate;
+        break;
+      }
+    }
+    compositionText = labeled || uniqueFibers(jsonLdChunks.join("; ")) || null;
+  }
+
+  const visible = visibleOffer(bodyText);
+  if ((!price || price <= 0) && visible.price) {
+    price = visible.price;
+    currency = visible.currency || currency;
+  } else if (price > 0 && visible.price && visible.currency && currency && visible.currency !== currency) {
+    const rank = { EUR: 3, GBP: 3, USD: 1 };
+    if ((rank[visible.currency] || 0) >= (rank[String(currency).toUpperCase()] || 0)) {
+      price = visible.price;
+      currency = visible.currency;
+    }
   }
   // Visible page text is read locally to find a composition line. It is not
   // transmitted as a raw page dump — only the short compositionText above.
@@ -162,7 +311,7 @@ function extractProductFromPage() {
     description: description ? description.slice(0, 500) : null,
     brandName,
     sku,
-    price: Number.isFinite(price) ? price : null,
+    price: Number.isFinite(price) && price > 0 ? price : null,
     currency,
     compositionText,
     retailer,
@@ -210,6 +359,15 @@ function enrichmentDone(capture) {
   return false;
 }
 
+function captureIdOf(json) {
+  return (json?.capture || json)?.id || null;
+}
+
+function priorCaptureUrl(result) {
+  const prior = result?.capture || result || {};
+  return String(prior.original_url || prior.originalUrl || "");
+}
+
 async function pollCapture(id, timeoutMs = 25000) {
   const t0 = Date.now();
   let last = null;
@@ -224,6 +382,119 @@ async function pollCapture(id, timeoutMs = 25000) {
   return last;
 }
 
+async function pollPublicCapture(id, timeoutMs = 25000) {
+  const t0 = Date.now();
+  let last = null;
+  while (Date.now() - t0 < timeoutMs) {
+    const { res, json } = await api(`/api/matches/${id}`);
+    if (res.ok) {
+      last = json;
+      if (enrichmentDone(json.capture || json)) return json;
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  return last;
+}
+
+async function pageIsLive(url) {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return false;
+    const html = await res.text();
+    if (/Page Not Found|text-not-found-title/i.test(html)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Only return a site URL that actually exists. Never send shoppers to a 404. */
+async function liveTxMatchUrl(id, signedIn) {
+  if (!id) return "";
+  const matches = `${APP}/matches/${encodeURIComponent(id)}`;
+  if (await pageIsLive(matches)) return matches;
+  if (signedIn) {
+    const inspirations = `${APP}/inspirations/${encodeURIComponent(id)}`;
+    if (await pageIsLive(inspirations)) return inspirations;
+  }
+  return "";
+}
+
+async function attachLiveLinks(result, signedIn) {
+  const id = captureIdOf(result);
+  const live = await liveTxMatchUrl(id, signedIn);
+  const links = { ...(result?.links || {}) };
+  if (live) {
+    links.openInIntertexeUrl = live;
+    links.viewAllMatchesUrl = live;
+  } else {
+    links.openInIntertexeUrl = "";
+    links.viewAllMatchesUrl = "";
+  }
+  const view = { ...(result?.view || {}) };
+  if (live) view.openInIntertexeUrl = live;
+  else view.openInIntertexeUrl = "";
+  return { ...result, links, view };
+}
+
+function altsFromAnalyze(json) {
+  const rows = Array.isArray(json?.alternatives) ? json.alternatives : [];
+  return rows.slice(0, 12).map((row, idx) => ({
+    id: row.id || String(idx),
+    name: row.name || row.title || "TX Match",
+    brand_name: row.brand_name || row.brand || "",
+    image_url: row.image_url || row.imageUrl || null,
+    url: row.url || row.product_url || null,
+    price: row.price ?? null,
+    currency: row.currency || null,
+    composition: row.composition || "",
+    natural_fiber_percent: row.natural_fiber_percent ?? null,
+  }));
+}
+
+function resultFromPayload(payload, alts, extra = {}) {
+  const capture = {
+    id: extra.id || null,
+    title: payload.title || null,
+    brand_name: payload.brandName || null,
+    retailer: payload.retailer || null,
+    image_url: payload.imageUrl || null,
+    price: payload.price ?? null,
+    currency: payload.currency || null,
+    composition_text: payload.compositionText || null,
+    original_url: payload.originalUrl || null,
+    alternatives: alts,
+    source_app: "chrome_extension",
+  };
+  return {
+    capture,
+    view: {
+      title: payload.title || null,
+      alternatives: alts,
+      openInIntertexeUrl: extra.liveUrl || "",
+    },
+    links: {
+      openInIntertexeUrl: extra.liveUrl || "",
+      viewAllMatchesUrl: extra.liveUrl || "",
+    },
+    copy: {},
+  };
+}
+
+async function fallbackAnalyze(payload) {
+  const { res, json } = await api("/api/extension/analyze", {
+    method: "POST",
+    body: {
+      composition: payload.compositionText || "",
+      product_name: payload.title || "",
+      price: payload.price ?? null,
+      currency: payload.currency || null,
+    },
+  });
+  if (!res.ok) return resultFromPayload(payload, []);
+  return resultFromPayload(payload, altsFromAnalyze(json));
+}
+
 async function savePayload(payload) {
   const { res, json } = await authedFetch("/api/capture", {
     method: "POST",
@@ -232,13 +503,28 @@ async function savePayload(payload) {
   if (res.status === 401) {
     return { needsSignIn: true, payload };
   }
-  if (!res.ok || !(json.capture || json).id) {
+  if (!res.ok || !captureIdOf(json)) {
     throw new Error(json.error || json.message || "Could not save this page");
   }
-  const captureId = (json.capture || json).id;
-  const polled = await pollCapture(captureId);
-  const result = polled || json;
+  const polled = await pollCapture(captureIdOf(json));
+  const result = await attachLiveLinks(polled || json, true);
   await chrome.storage.local.set({ lastResult: result, pendingCapture: null });
+  return { result };
+}
+
+async function createPublicMatches(payload) {
+  const { res, json } = await api("/api/matches", {
+    method: "POST",
+    body: payload,
+  });
+  if (res.ok && captureIdOf(json)) {
+    const polled = await pollPublicCapture(captureIdOf(json));
+    const result = await attachLiveLinks(polled || json, false);
+    await chrome.storage.local.set({ lastResult: result });
+    return { result };
+  }
+  const result = await fallbackAnalyze(payload);
+  await chrome.storage.local.set({ lastResult: result });
   return { result };
 }
 
@@ -299,6 +585,7 @@ async function signOut() {
     "refreshToken",
     "pendingCapture",
     "lastResult",
+    "lastPeek",
     "extSession",
     "authTabId",
     "uiStatus",
@@ -309,9 +596,12 @@ async function signOut() {
 
 function matchHref(alt) {
   const raw = String(alt?.url || "").trim();
-  if (/^https?:/i.test(raw)) return raw;
+  if (/^https?:/i.test(raw)) {
+    const brand = encodeURIComponent(alt?.brand_name || alt?.brandName || "partner");
+    return `${APP}/leaving?brand=${brand}&url=${encodeURIComponent(raw)}`;
+  }
   if (alt?.id) return `${APP}/product/${encodeURIComponent(alt.id)}`;
-  return `${APP}/inspirations`;
+  return `${APP}/capture`;
 }
 
 async function openMatch(alt, captureId) {
@@ -351,18 +641,50 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       sendResponse({ ok: true });
       return;
     }
+    if (msg?.type === "PEEK_TAB") {
+      try {
+        const peek = await extractActiveTab();
+        await chrome.storage.local.set({ lastPeek: peek, uiStatus: "", uiError: false });
+        sendResponse({ peek });
+      } catch (e) {
+        const error = e instanceof Error ? e.message : "Could not read this page";
+        await setUi(error, true);
+        sendResponse({ error });
+      }
+      return;
+    }
     if (msg?.type === "SAVE_TAB") {
       try {
-        const payload = await extractActiveTab();
+        const payload = msg.payload || (await extractActiveTab());
         const store = await getStore();
+        const currentUrl = String(payload.originalUrl || "");
+        const priorUrl = priorCaptureUrl(store.lastResult);
+        const priorAlts = store.lastResult?.capture?.alternatives || store.lastResult?.view?.alternatives;
+        if (
+          !msg.force &&
+          currentUrl &&
+          priorUrl &&
+          currentUrl === priorUrl &&
+          Array.isArray(priorAlts) &&
+          priorAlts.length
+        ) {
+          sendResponse({ result: store.lastResult, peek: payload, reused: true });
+          return;
+        }
         if (!store.accessToken) {
-          await chrome.storage.local.set({ pendingCapture: payload });
-          await startSignIn();
-          sendResponse({ needsSignIn: true });
+          if (msg.force) {
+            await chrome.storage.local.set({ pendingCapture: payload, lastPeek: payload });
+            await startSignIn();
+            sendResponse({ needsSignIn: true, peek: payload });
+            return;
+          }
+          const created = await createPublicMatches(payload);
+          await chrome.storage.local.set({ lastPeek: payload });
+          sendResponse({ ...created, peek: payload });
           return;
         }
         const saved = await savePayload(payload);
-        sendResponse(saved);
+        sendResponse({ ...saved, peek: payload });
       } catch (e) {
         const error = e instanceof Error ? e.message : "Save failed";
         await setUi(error, true);
