@@ -218,6 +218,57 @@ export function formatCapturePrice(
   }
 }
 
+const VERDICT_FIBERS = [
+  "cotton",
+  "wool",
+  "linen",
+  "silk",
+  "cashmere",
+  "viscose",
+  "polyester",
+  "polyamide",
+  "nylon",
+  "elastane",
+  "spandex",
+  "modal",
+  "lyocell",
+  "tencel",
+  "acrylic",
+  "rayon",
+  "hemp",
+  "alpaca",
+  "merino",
+  "leather",
+  "suede",
+  "cupro",
+];
+
+/** One clean material line for shopper UI — never "Silk, silk, Silk". */
+export function formatMaterialVerdict(raw: string | null | undefined): string | null {
+  const t = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!t) return null;
+  const pct = t.match(
+    /(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|hemp|alpaca|merino|leather|suede|cupro|viscose|polyester|nylon|elastane)\b/i
+  );
+  if (pct) {
+    return `${pct[1]}% ${pct[2].toUpperCase()}`;
+  }
+  const found: string[] = [];
+  const lower = t.toLowerCase();
+  for (const f of VERDICT_FIBERS) {
+    if (new RegExp(`\\b${f}\\b`, "i").test(lower) && !found.includes(f)) {
+      found.push(f === "merino" ? "wool" : f);
+    }
+  }
+  const unique = [...new Set(found)];
+  if (unique.length === 1) return unique[0].toUpperCase();
+  if (unique.length > 1) return unique.slice(0, 3).map((f) => f.toUpperCase()).join(" · ");
+  if (looksLikeListedMaterial(t) || looksLikePercentageComposition(t)) {
+    return normalizeListedMaterial(t).toUpperCase();
+  }
+  return null;
+}
+
 export function formatCountryName(code: string | null | undefined): string | null {
   const cc = String(code || "").trim().toUpperCase();
   if (!cc || cc.length !== 2) return null;

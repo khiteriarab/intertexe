@@ -5,6 +5,7 @@ import {
   extractLabeledMaterial,
   extractVisibleOffer,
   formatCapturePrice,
+  formatMaterialVerdict,
   looksLikeListedMaterial,
   looksLikePercentageComposition,
   preferRetailerFacingOffer,
@@ -79,6 +80,12 @@ describe("display consistency", () => {
     assert.equal(titleCaseName("VERBENA SKIRT LILAC"), "Verbena Skirt Lilac");
     assert.equal(titleCaseName("Rag & Bone"), "Rag & Bone");
     assert.equal(shopAtLabel("go by go silk"), "Shop at Go By Go Silk →");
+  });
+
+  it("collapses repeated fiber names into one verdict", () => {
+    assert.equal(formatMaterialVerdict("Silk, silk, Silk, silk"), "SILK");
+    assert.equal(formatMaterialVerdict("100% silk"), "100% SILK");
+    assert.equal(formatMaterialVerdict("96% Silk 4% elastane"), "96% SILK");
   });
 });
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validate the 1.0.1 Chrome package. Does not submit or publish.
+ * Validate the 1.0.2 Chrome package. Does not submit or publish.
  */
 import fs from "fs";
 import os from "os";
@@ -12,7 +12,7 @@ import { createHash } from "crypto";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const folder = path.join(__dirname, "save-to-intertexe");
-const zipPath = path.join(__dirname, "save-to-intertexe-1.0.1.zip");
+const zipPath = path.join(__dirname, "save-to-intertexe-1.0.2.zip");
 const NAME = "INTERTEXE: Fabric Scanner";
 const DESC =
   "Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.";
@@ -26,7 +26,7 @@ function record(id, pass, detail = {}) {
 const manifest = JSON.parse(fs.readFileSync(path.join(folder, "manifest.json"), "utf8"));
 record("manifest.name", manifest.name === NAME, { actual: manifest.name });
 record("manifest.description", manifest.description === DESC);
-record("manifest.version", manifest.version === "1.0.1");
+record("manifest.version", manifest.version === "1.0.2");
 record("manifest.mv3", manifest.manifest_version === 3);
 record("manifest.permissions", JSON.stringify(manifest.permissions) === JSON.stringify(["activeTab", "storage", "scripting", "tabs"]));
 record(
@@ -42,10 +42,17 @@ record("description.length_le_132", String(manifest.description).length <= 132, 
 const popupHtml = fs.readFileSync(path.join(folder, "popup.html"), "utf8");
 record("popup.listing_name", popupHtml.includes(NAME));
 record("popup.sign_in_cta", /Sign in to INTERTEXE/i.test(popupHtml));
+record("popup.tx_match_cta", /TX MATCH/.test(popupHtml));
+record("popup.save_secondary", /Save to Inspirations/.test(popupHtml));
+record("popup.material_standard", /THE MATERIAL STANDARD/.test(popupHtml));
+record("popup.processing_copy", /Finding your TX Matches/.test(popupHtml));
+record("popup.no_save_this_page", !/Save this page/i.test(popupHtml));
 record("popup.no_token_paste", !/Paste Supabase/i.test(popupHtml));
 
 const bg = fs.readFileSync(path.join(folder, "background.js"), "utf8");
 record("bg.save_inject_only", bg.includes('msg?.type === "SAVE_TAB"') && bg.includes("executeScript"));
+record("bg.save_inspiration_fast", bg.includes('msg?.type === "SAVE_INSPIRATION"') && bg.includes("waitForMatches: false"));
+record("bg.tx_match_waits", /TX_MATCH/.test(bg) && bg.includes("waitForMatches: true"));
 record("bg.no_pageSignals_transmit", !bg.includes("pageSignals"));
 record("bg.intertexe_only", !/fetch\(\s*`https:\/\/(?!www\.intertexe\.com)/.test(bg));
 record("bg.no_secrets", !/service_role|SUPABASE_SERVICE|sk-/.test(bg));
@@ -57,7 +64,7 @@ record("zip.no_upload_notes", !unzipList.includes("GOOGLE-UPLOAD") && !unzipList
 record("zip.sha256", true, { sha256: createHash("sha256").update(zipBuf).digest("hex"), bytes: zipBuf.length });
 
 const privacy = fs.readFileSync(path.join(__dirname, "../app/privacy/page.tsx"), "utf8");
-record("privacy.chrome_section", /INTERTEXE: Fabric Scanner/.test(privacy) && /Save this page/.test(privacy));
+record("privacy.chrome_section", /INTERTEXE: Fabric Scanner/.test(privacy) && /TX MATCH/.test(privacy));
 record("privacy.auth", /access token|refresh token/i.test(privacy));
 record("privacy.clickout", /click-out|click out|retailer click/i.test(privacy));
 record("privacy.retention_deletion", /delete your account/i.test(privacy) && /chrome\.storage/i.test(privacy));
@@ -120,11 +127,13 @@ try {
       { timeout: 8000 }
     ).catch(() => null);
     const ui = await page.evaluate(() => ({
+      title: document.title || "",
+      brand: document.querySelector(".brand")?.textContent || "",
       name: document.querySelector("h1")?.textContent || "",
       cta: document.getElementById("signIn")?.textContent || "",
       signedOutHidden: document.getElementById("signedOut")?.classList.contains("hidden"),
     }));
-    record("chrome.popup_name", ui.name === NAME, ui);
+    record("chrome.popup_name", ui.brand === "INTERTEXE" && /INTERTEXE: Fabric Scanner/.test(ui.title), ui);
     record("chrome.popup_cta", /Sign in to INTERTEXE/i.test(ui.cta) && ui.signedOutHidden === false, ui);
 
     const samplePage = await browser.newPage();

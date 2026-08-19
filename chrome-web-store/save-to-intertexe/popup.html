@@ -6,25 +6,39 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <header>
-      <p class="eyebrow">INTERTEXE</p>
-      <h1>INTERTEXE: Fabric Scanner</h1>
-      <p class="tagline">Know the material before you buy.</p>
+    <header class="masthead">
+      <img class="tx-mark" src="icons/icon48.png" alt="" />
+      <p class="brand">INTERTEXE</p>
+      <p class="standard">THE MATERIAL STANDARD</p>
     </header>
 
     <p id="status" class="status" hidden></p>
 
     <section id="signedOut" class="hidden">
-      <p class="lede">Sign in so this page can be saved to your Inspirations — the same list as iOS.</p>
+      <p class="lede">Sign in to read this piece and find your TX MATCH.</p>
       <button id="signIn" type="button">Sign in to INTERTEXE</button>
     </section>
 
     <section id="signedIn" class="hidden">
-      <button id="save" type="button">Save this page</button>
-      <button id="signOut" type="button" class="ghost">Sign out</button>
-    </section>
+      <article id="product" class="product hidden"></article>
 
-    <section id="result" class="hidden"></section>
+      <p id="verdict" class="verdict hidden"></p>
+
+      <button id="txMatch" type="button">TX MATCH</button>
+      <p class="supporting">More like this, made for you.</p>
+
+      <p id="processing" class="processing hidden">Finding your TX Matches…</p>
+
+      <section id="winner" class="hidden"></section>
+      <section id="grid" class="grid hidden"></section>
+
+      <p id="seeAll" class="see-all hidden"></p>
+
+      <button id="save" type="button" class="secondary">Save to Inspirations</button>
+      <p id="saved" class="saved hidden">Saved to Inspirations</p>
+
+      <button id="signOut" type="button" class="signout">Sign out</button>
+    </section>
 
     <script src="popup.js"></script>
   </body>

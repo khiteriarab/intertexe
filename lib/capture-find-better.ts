@@ -149,6 +149,34 @@ function parsePrice(raw: unknown): number | null {
   return null;
 }
 
+function prettyColorReason(raw: string | null | undefined): string | null {
+  const t = normalizeColorToken(raw || "");
+  if (!t) return null;
+  return t
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function hasUsableMatchImage(product: Record<string, unknown>): boolean {
+  const url = String(product.image_url || "").trim();
+  return /^https?:\/\//i.test(url);
+}
+
+function nameConflictsComposition(product: Record<string, unknown>): boolean {
+  const nameFiber = extractFiberFromText(String(product.name || ""));
+  const compFiber = extractFiberFromText(String(product.composition || ""));
+  const naturals = new Set(["cotton", "silk", "linen", "wool", "cashmere", "leather"]);
+  return Boolean(
+    nameFiber &&
+      compFiber &&
+      nameFiber !== compFiber &&
+      naturals.has(nameFiber) &&
+      naturals.has(compFiber)
+  );
+}
+
 function whyFor(
   product: Record<string, unknown>,
   input: FindBetterInput,
@@ -158,46 +186,28 @@ function whyFor(
   const nfp = Number(product.natural_fiber_percent) || 0;
   const price = parsePrice(product.price);
   const target = input.price;
-
   const fiber = preferredFiberFromInput(input);
+
   if (fiber && productMatchesFiber(product, fiber)) {
-    parts.push(`Same fabric (${fiber})`);
+    parts.push("Same fabric");
   }
-
-  // Visual / product affinity first — TX Match is not only material conversion.
-  if (isPantsInspiration(input)) parts.push("Same garment type (trousers/pants)");
-  else if (browseCategoryFor(input)) parts.push(`Same category (${browseCategoryFor(input)})`);
-
-  if (productMatchesColor(product, input.color)) {
-    parts.push(`Same color (${normalizeColorToken(input.color!)})`);
+  if (isPantsInspiration(input) || browseCategoryFor(input) || input.silhouette || input.garmentType) {
+    parts.push("Same silhouette");
   }
-
-  const sil = input.silhouette || input.subcategory;
-  if (
-    sil &&
-    String(product.name || "")
-      .toLowerCase()
-      .includes(String(sil).toLowerCase().split(" ")[0])
-  ) {
-    parts.push("Similar silhouette");
-  }
-
   if (price != null && target != null && target > 0) {
-    const savings = target - price;
-    if (savings >= 50) parts.push(`$${Math.round(savings)} less`);
-    else {
-      const diff = Math.abs(price - target) / target;
-      if (diff <= 0.4) parts.push("Similar price band");
-    }
+    const diff = Math.abs(price - target) / target;
+    if (diff <= 0.4) parts.push("Similar price");
   }
-
-  if (nfp >= 90) parts.push(`${Math.round(nfp)}% natural fiber`);
-  else if (scannedNfp > 0 && nfp > scannedNfp + 5) {
-    parts.push("Higher natural fiber than original");
-  } else if (nfp >= 80) parts.push("Verified natural fiber");
-
+  if (productMatchesColor(product, input.color)) {
+    parts.push(prettyColorReason(input.color) || "Same color");
+  }
+  if (parts.length < 3) {
+    if (nfp >= 90) parts.push(`${Math.round(nfp)}% natural fiber`);
+    else if (scannedNfp > 0 && nfp > scannedNfp + 5) parts.push("Higher natural fiber than original");
+    else if (nfp >= 80) parts.push("Verified natural fiber");
+  }
   if (parts.length === 0) parts.push("Strong INTERTEXE match for this look");
-  return parts.slice(0, 3).join(" · ");
+  return parts.slice(0, 4).join(" · ");
 }
 
 function toAlternative(
@@ -261,6 +271,7 @@ function productMatchesColor(
     "cream",
     "beige",
     "brown",
+    "chocolate",
     "tan",
     "camel",
     "navy",
@@ -399,7 +410,9 @@ function rankAlternatives(
       ? (input.matchBrief.targetPriceRange.min + input.matchBrief.targetPriceRange.max) / 2
       : null);
 
-  const filtered = products.filter((p) => matchesHardCategory(p, input));
+  const filtered = products.filter(
+    (p) => matchesHardCategory(p, input) && hasUsableMatchImage(p) && !nameConflictsComposition(p)
+  );
 
   const scored = filtered.map((p) => {
     let score = 0;
@@ -459,6 +472,14 @@ function rankAlternatives(
     ordered = [...fiberHits.slice(0, 5), ...others, ...fiberHits.slice(5)];
   }
 
+  // First three stay the same color when three valid same-color matches exist.
+  const colorHits = ordered.filter((s) => s.sameColor);
+  if (colorHits.length >= 3) {
+    const lead = colorHits.slice(0, 3);
+    const leadIds = new Set(lead.map((s) => String(s.p.id)));
+    ordered = [...lead, ...ordered.filter((s) => !leadIds.has(String(s.p.id)))];
+  }
+
   const seen = new Set<string>();
   const out: FindBetterAlternative[] = [];
   for (const { p } of ordered) {
@@ -510,6 +531,7 @@ const TITLE_COLORS = [
   "ivory",
   "cream",
   "beige",
+  "chocolate",
   "brown",
   "tan",
   "camel",
