@@ -25,6 +25,13 @@ describe("TX Match editorial display", () => {
     );
   });
 
+  it("does not call a nylon-majority silk mix a natural-fiber blend", () => {
+    assert.equal(
+      materialClassification("65% Nylon; 35% Silk"),
+      "Contains Silk · 35% natural fiber"
+    );
+  });
+
   it("uses 100% cotton as the card signal when that is true", () => {
     assert.equal(materialCardSignal({ composition: "100% cotton" }), "100% Cotton");
   });

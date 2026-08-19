@@ -49,9 +49,7 @@ function isNoiseStatus(text) {
   return /could not find matches|not signed in/i.test(String(text || ""));
 }
 
-let showAllMatches = false;
-let matchQuery = "";
-let lastMatchKey = "";
+const NATURAL_FIBERS = ["silk", "linen", "wool", "cotton", "cashmere", "alpaca", "hemp", "lyocell", "tencel", "cupro"];
 
 function popupMaterial(headline) {
   return String(headline || "Exact composition not published")
@@ -68,19 +66,80 @@ function editorialLine(raw) {
     .trim();
 }
 
+function namedNaturalFibers(text) {
+  const named = [];
+  const lower = String(text || "").toLowerCase();
+  for (const fiber of NATURAL_FIBERS) {
+    if (lower.includes(fiber) && !named.includes(fiber)) named.push(fiber === "tencel" ? "lyocell" : fiber);
+  }
+  return named;
+}
+
+function titleCaseFiber(value) {
+  return String(value || "").replaceAll(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function percentBeside(text, fiber) {
+  const match = String(text || "").match(
+    new RegExp(`(\\d+(?:\\.\\d+)?)\\s*%[^.;%]*(?:${fiber})`, "i")
+  );
+  if (!match) return null;
+  const n = Number(match[1]);
+  return Number.isFinite(n) ? n : null;
+}
+
+function majoritySynthetic(text, share) {
+  const hasAvoid = /\b(polyester|nylon|polyamide|acrylic)\b/i.test(text);
+  if (!hasAvoid) return false;
+  if (share != null) return share < 50;
+  const syn = percentBeside(text, "nylon|polyester|polyamide|acrylic");
+  const named = namedNaturalFibers(text);
+  const nat = named.length ? percentBeside(text, named.join("|")) : null;
+  if (syn != null && syn >= 50) return true;
+  if (syn != null && nat != null) return syn > nat;
+  return false;
+}
+
 function classificationLabel(view, composition, headline) {
-  if (view?.classification) return String(view.classification);
   const text = String(composition || headline || "");
-  const tone = view?.insight?.tone;
+  const share = view?.insight?.share;
+  const named = namedNaturalFibers(text);
   const hasAvoid = /\b(polyester|nylon|polyamide|acrylic)\b/i.test(text);
   const hasCellulosic = /\b(lyocell|tencel|cupro|modal)\b/i.test(text);
-  const hasNatural = /\b(silk|cotton|wool|linen|cashmere|hemp|alpaca|leather|suede|merino)\b/i.test(text);
-  if (tone === "natural") return "Natural Fiber";
+  const hasNatural = named.length > 0;
+  const tone = view?.insight?.tone;
+
+  if (majoritySynthetic(text, share)) {
+    const fiber = named[0] ? titleCaseFiber(named[0]) : "";
+    const pct = share != null ? Math.round(share) : named[0] ? percentBeside(text, named[0]) : null;
+    if (fiber && pct != null) return `Contains ${fiber} · ${Math.round(pct)}% natural fiber`;
+    if (fiber) return `Contains ${fiber}`;
+    if (pct != null) return `${Math.round(pct)}% natural fiber`;
+    return "Mostly synthetic";
+  }
+
+  const fromView = String(view?.classification || "");
+  if (fromView && !(hasAvoid && /natural-fiber blend/i.test(fromView))) return fromView;
+
+  if (tone === "natural") return named[0] ? titleCaseFiber(named[0]) : "Natural Fiber";
   if (!hasAvoid && (hasCellulosic || (hasNatural && /%/.test(text)))) return "Natural-Fiber Blend";
-  if (tone === "mixed") return "Natural-Fiber Blend";
+  if (tone === "mixed") return named[0] && share != null ? `${Math.round(share)}% natural fiber` : "Natural-Fiber Blend";
   if (tone === "synthetic") return "Mostly Synthetic";
-  if (hasNatural && hasAvoid) return "Natural-Fiber Blend";
-  if (hasNatural) return "Natural Fiber";
+  if (hasNatural) return titleCaseFiber(named[0]);
+  return "";
+}
+
+function whyTag(alt, compositionLine) {
+  const reasons = Array.isArray(alt.whyReasons) ? alt.whyReasons : [];
+  const composition = String(compositionLine || "").toLowerCase();
+  for (const reason of reasons) {
+    const text = String(reason || "").trim();
+    if (!text) continue;
+    const lower = text.toLowerCase();
+    if (composition && (lower === composition || composition.includes(lower) || lower.includes(composition))) continue;
+    if (/^better material$/i.test(text)) continue;
+    return text;
+  }
   return "";
 }
 
@@ -207,24 +266,11 @@ function renderResult(payload, opts = {}) {
   const view = payload.view || {};
   const links = payload.links || {};
   const alts = Array.isArray(view.alternatives)
-    ? view.alternatives
+    ? view.alternatives.slice(0, 12)
     : Array.isArray(capture.alternatives)
       ? capture.alternatives.slice(0, 12)
       : [];
-  const matchKey = String(capture.id || capture.original_url || capture.originalUrl || view.title || capture.title || "");
-  if (matchKey !== lastMatchKey) {
-    lastMatchKey = matchKey;
-    showAllMatches = false;
-    matchQuery = "";
-  }
-  const filtered = alts.filter((alt) => {
-    const q = matchQuery.trim().toLowerCase();
-    if (!q) return true;
-    const hay = `${alt.brandName || alt.brand_name || ""} ${alt.name || ""} ${alt.composition || alt.compositionLine || ""}`.toLowerCase();
-    return hay.includes(q);
-  });
-  const previewCount = showAllMatches ? 12 : 6;
-  const preview = filtered.slice(0, previewCount);
+  const preview = alts;
   const material = ITX.unpublishedMaterialCopy({
     compositionText: capture.composition_text || "",
     title: view.title || capture.title || "",
@@ -297,64 +343,32 @@ function renderResult(payload, opts = {}) {
   const openUrl = capturePageUrl(
     view.openInIntertexeUrl || links.openInIntertexeUrl || copy.openInIntertexeUrl
   );
-  if (showMatches && (openUrl || alts.length > 6)) {
-    const a = el(openUrl ? "a" : "button", "primary");
-    if (openUrl) {
-      a.href = openUrl;
-      a.target = "_blank";
-      a.rel = "noreferrer";
-    } else {
-      a.type = "button";
-      a.addEventListener("click", () => {
-        showAllMatches = true;
-        renderResult(payload, opts);
-      });
-    }
-    a.textContent = `See ${alts.length} better-material matches`;
+  if (showMatches) {
     const action = el("div", "primary-action");
-    action.appendChild(a);
+    const cta = el("button", "primary");
+    cta.type = "button";
+    cta.textContent =
+      alts.length === 1 ? "View 1 better-material match" : `View ${alts.length} better-material matches`;
+    cta.addEventListener("click", () => {
+      resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    action.appendChild(cta);
+    if (openUrl) {
+      const quiet = el("a", "quiet-page");
+      quiet.href = openUrl;
+      quiet.target = "_blank";
+      quiet.rel = "noreferrer";
+      quiet.textContent = "Open on INTERTEXE";
+      action.appendChild(quiet);
+    }
     sourceEl.appendChild(action);
   }
 
   if (showMatches) {
     resultEl.classList.remove("hidden");
     const heading = el("div", "alts-head");
-    heading.appendChild(el("p", "section-title", "TX Match"));
-    if (alts.length > 6 && !showAllMatches) {
-      const more = el(openUrl ? "a" : "button", "see-all");
-      if (openUrl) {
-        more.href = openUrl;
-        more.target = "_blank";
-        more.rel = "noreferrer";
-      } else {
-        more.type = "button";
-        more.addEventListener("click", () => {
-          showAllMatches = true;
-          renderResult(payload, opts);
-        });
-      }
-      more.textContent = `See all ${alts.length}`;
-      heading.appendChild(more);
-    }
+    heading.appendChild(el("p", "section-title", "Better-material matches"));
     resultEl.appendChild(heading);
-    if (showAllMatches && alts.length > 3) {
-      const search = document.createElement("input");
-      search.type = "search";
-      search.className = "alt-search";
-      search.placeholder = "Search these matches";
-      search.value = matchQuery;
-      search.addEventListener("input", () => {
-        matchQuery = search.value;
-        renderResult(payload, opts);
-        const next = resultEl.querySelector(".alt-search");
-        if (next) {
-          next.focus();
-          const end = matchQuery.length;
-          next.setSelectionRange(end, end);
-        }
-      });
-      resultEl.appendChild(search);
-    }
     const list = el("div", "alts");
     for (const alt of preview) {
       const card = el("a", "alt");
@@ -368,7 +382,7 @@ function renderResult(payload, opts = {}) {
       info.className = "alt-info";
       const altBrand = String(alt.brandName || alt.brand_name || "").trim();
       if (altBrand) info.appendChild(el("span", "alt-brand", altBrand));
-      info.appendChild(el("strong", "", alt.name || altBrand || "TX Match"));
+      info.appendChild(el("strong", "", alt.name || altBrand || "Better-material match"));
       const priced = alt.priceLabel
         ? { label: alt.priceLabel }
         : ITX.formatAltPriceLabel(alt.price, alt.currency, capture.currency);
@@ -382,6 +396,8 @@ function renderResult(payload, opts = {}) {
       if (composed && !/unavailable/i.test(composed)) {
         info.appendChild(el("span", "alt-comp", composed));
       }
+      const why = whyTag(alt, composed);
+      if (why) info.appendChild(el("span", "alt-why", why));
       card.appendChild(info);
       list.appendChild(card);
     }
@@ -430,7 +446,7 @@ async function refreshUi() {
 }
 
 async function scanOpenTab() {
-  setStatus("Reading material…");
+  setStatus("Reading this piece…");
   const peeked = await chrome.runtime.sendMessage({ type: "PEEK_TAB" });
   if (peeked?.error) {
     if (isEmptyPageCopy(peeked.error)) {
@@ -449,7 +465,7 @@ async function scanOpenTab() {
   }
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
   saveBtn.disabled = true;
-  setStatus("Finding TX Matches…");
+  setStatus("Finding better-material matches…");
   const res = await chrome.runtime.sendMessage({
     type: "SAVE_TAB",
     payload: peeked?.peek,

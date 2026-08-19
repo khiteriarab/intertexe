@@ -34,6 +34,12 @@ export function editorialCompositionLine(raw: string | null | undefined): string
   return line.replace(/\s*—\s*percentage not provided/gi, "").trim();
 }
 
+const AVOID_FIBER_RE = /polyester|nylon|polyamide|acrylic|elastane|spandex|viscose|rayon|acetate|triacetate/i;
+
+function namedNaturalFibers(fibers: string[]): string[] {
+  return fibers.filter((fiber) => !AVOID_FIBER_RE.test(fiber));
+}
+
 export function materialClassification(raw: string | null | undefined): string {
   const text = String(raw || "");
   const display = formatCompositionDisplay(text);
@@ -41,16 +47,30 @@ export function materialClassification(raw: string | null | undefined): string {
   const hasAvoid = AVOID_RE.test(text);
   const hasCellulosic = CELLULOSIC_RE.test(text);
   const fibers = display.fibers;
+  const namedNatural = namedNaturalFibers(fibers);
 
   if (insight.share != null && insight.share >= 98 && fibers.length === 1) {
     return `Pure ${fibers[0]}`;
   }
-  if (insight.share != null && insight.share >= 80) return "Natural Fiber";
+  if (insight.share != null && insight.share >= 80) {
+    return namedNatural[0] || "Natural Fiber";
+  }
   if (!hasAvoid && (hasCellulosic || (insight.share != null && insight.share >= 20) || fibers.length >= 2)) {
     return "Natural-Fiber Blend";
   }
   if (display.hasSyntheticLining) return "Natural Shell";
-  if (insight.tone === "mixed") return "Natural-Fiber Blend";
+  if (hasAvoid && insight.share != null && insight.share < 50) {
+    if (namedNatural[0]) {
+      return `Contains ${namedNatural[0]} · ${Math.round(insight.share)}% natural fiber`;
+    }
+    return `${Math.round(insight.share)}% natural fiber`;
+  }
+  if (insight.tone === "mixed") {
+    if (hasAvoid && insight.share != null) {
+      return `${Math.round(insight.share)}% natural fiber`;
+    }
+    return "Natural-Fiber Blend";
+  }
   if (insight.tone === "synthetic") return "Mostly Synthetic";
   return "";
 }
