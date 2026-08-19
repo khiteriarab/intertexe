@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { PlatformChrome } from "./PlatformChrome";
 import { PlatformViewTracker } from "./PlatformViewTracker";
@@ -11,6 +12,61 @@ export const metadata: Metadata = {
 
 const EU_TEXTILE = "https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en";
 const EU_REGISTRY = "https://single-market-economy.ec.europa.eu/news/digital-product-passport-registry-now-live-2026-07-20_en";
+
+const FAQ: { q: string; a: ReactNode }[] = [
+  {
+    q: "Is INTERTEXE a DPP Registry or certification body?",
+    a: "No. The EU Registry registers passport identifiers. INTERTEXE is a material-data layer.",
+  },
+  {
+    q: "What does “verified” mean?",
+    a: "verified_label means a physical label passed INTERTEXE’s review protocol. It is not regulatory certification. Historical records without lineage are unknown_legacy.",
+  },
+  {
+    q: "What happens when you cannot find a product?",
+    a: "The API returns match_status not_found and an empty composition array. Nothing is guessed.",
+  },
+  {
+    q: "Can INTERTEXE work with our current PIM, PLM or DPP provider?",
+    a: "Yes. Output is JSON or CSV for the systems you already run.",
+  },
+  {
+    q: "What information do we need to submit?",
+    a: "Start with 10 GTINs. Do not upload confidential catalogs on the public form.",
+  },
+  {
+    q: "Who owns the catalog data and derived records?",
+    a: "You retain ownership of the catalog you submit. INTERTEXE does not publicly expose confidential client data without written permission. Derived matching methods remain INTERTEXE’s.",
+  },
+  {
+    q: "How is confidential data handled?",
+    a: (
+      <>
+        Secure transfer is arranged after qualification. See{" "}
+        <Link href="/privacy" className="underline underline-offset-4">
+          Privacy
+        </Link>{" "}
+        and{" "}
+        <Link href="/terms" className="underline underline-offset-4">
+          Terms
+        </Link>
+        .
+      </>
+    ),
+  },
+  {
+    q: "What is included in the $5,000 pilot?",
+    a: "The card above is the public scope. Ongoing licensing is custom after the pilot.",
+  },
+  {
+    q: "What happens after the pilot?",
+    a: "Ongoing API access and systems integration are scoped after the pilot based on catalog volume, data complexity, refresh frequency and support requirements. There is no published monthly grid yet.",
+  },
+  {
+    q: "When will textile DPP requirements apply?",
+    a: "The Registry is live. The textile delegated act is planned for Q4 2027. Application follows that act and a transition period.",
+  },
+];
 
 export default function PlatformPage() {
   return (
@@ -181,60 +237,29 @@ export default function PlatformPage() {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 space-y-6 text-sm text-[#5c5854] leading-relaxed">
-        <h2 className="text-2xl font-light text-[#1a1a1a]" style={{ fontFamily: "Georgia, serif" }}>FAQ</h2>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">Is INTERTEXE a DPP Registry or certification body?</h3>
-          <p>No. The EU Registry registers passport identifiers. INTERTEXE is a material-data layer.</p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">What does “verified” mean?</h3>
-          <p>
-            verified_label means a physical label passed INTERTEXE’s review protocol. It is not regulatory
-            certification. Historical records without lineage are unknown_legacy.
-          </p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">What happens when you cannot find a product?</h3>
-          <p>The API returns match_status not_found and an empty composition array. Nothing is guessed.</p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">Can INTERTEXE work with our current PIM, PLM or DPP provider?</h3>
-          <p>Yes. Output is JSON or CSV for the systems you already run.</p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">What information do we need to submit?</h3>
-          <p>Start with 10 GTINs. Do not upload confidential catalogs on the public form.</p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">Who owns the catalog data and derived records?</h3>
-          <p>
-            You retain ownership of the catalog you submit. INTERTEXE does not publicly expose confidential
-            client data without written permission. Derived matching methods remain INTERTEXE’s.
-          </p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">How is confidential data handled?</h3>
-          <p>Secure transfer is arranged after qualification. See Privacy and Terms.</p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">What is included in the $5,000 pilot?</h3>
-          <p>The card above is the public scope. Ongoing licensing is custom after the pilot.</p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">What happens after the pilot?</h3>
-          <p>
-            Ongoing API access and systems integration are scoped after the pilot based on catalog volume,
-            data complexity, refresh frequency and support requirements. There is no published monthly grid
-            yet.
-          </p>
-        </div>
-        <div>
-          <h3 className="text-[#1a1a1a] mb-2">When will textile DPP requirements apply?</h3>
-          <p>
-            The Registry is live. The textile delegated act is planned for Q4 2027. Application follows that
-            act and a transition period.
-          </p>
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16">
+        <h2 className="text-2xl font-light text-[#1a1a1a] mb-2" style={{ fontFamily: "Georgia, serif" }}>
+          FAQ
+        </h2>
+        <div className="border-t border-[#ddd5cb]">
+          {FAQ.map((item) => (
+            <details key={item.q} name="platform-faq" className="group border-b border-[#ddd5cb]">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[#1a1a1a] [&::-webkit-details-marker]:hidden">
+                <span className="text-base sm:text-lg font-normal leading-snug" style={{ fontFamily: "Georgia, serif" }}>
+                  {item.q}
+                </span>
+                <svg
+                  className="h-4 w-4 shrink-0 text-[#8a847c] transition-transform duration-200 group-open:rotate-180"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path d="M3 5.5 8 10.5 13 5.5" stroke="currentColor" strokeWidth="1.2" />
+                </svg>
+              </summary>
+              <p className="pb-5 pr-8 text-sm text-[#5c5854] leading-relaxed">{item.a}</p>
+            </details>
+          ))}
         </div>
       </section>
     </PlatformChrome>
