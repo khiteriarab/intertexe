@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validate the 1.0.5 Chrome package. Does not submit or publish.
+ * Validate the 1.0.6 Chrome package. Does not submit or publish.
  */
 import fs from "fs";
 import os from "os";
@@ -12,7 +12,7 @@ import { createHash } from "crypto";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const folder = path.join(__dirname, "save-to-intertexe");
-const zipPath = path.join(__dirname, "save-to-intertexe-1.0.5.zip");
+const zipPath = path.join(__dirname, "save-to-intertexe-1.0.6.zip");
 const NAME = "INTERTEXE: Fabric Scanner";
 const DESC =
   "Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.";
@@ -26,7 +26,7 @@ function record(id, pass, detail = {}) {
 const manifest = JSON.parse(fs.readFileSync(path.join(folder, "manifest.json"), "utf8"));
 record("manifest.name", manifest.name === NAME, { actual: manifest.name });
 record("manifest.description", manifest.description === DESC);
-record("manifest.version", manifest.version === "1.0.5");
+record("manifest.version", manifest.version === "1.0.6");
 record("manifest.mv3", manifest.manifest_version === 3);
 record("manifest.permissions", JSON.stringify(manifest.permissions) === JSON.stringify(["activeTab", "storage", "scripting", "tabs"]));
 record(
@@ -41,6 +41,12 @@ record("description.length_le_132", String(manifest.description).length <= 132, 
 
 const popupHtml = fs.readFileSync(path.join(folder, "popup.html"), "utf8");
 record("popup.listing_name", popupHtml.includes(NAME));
+record(
+  "popup.single_wordmark",
+  /class="wordmark">INTERTEXE<\/span>/.test(popupHtml) &&
+    /class="product-name">Fabric Scanner<\/span>/.test(popupHtml) &&
+    !/<h1>\s*INTERTEXE:\s*Fabric Scanner\s*<\/h1>/.test(popupHtml)
+);
   record("popup.sign_in_cta", /Sign in to INTERTEXE/i.test(popupHtml));
   record("popup.save_cta", /Save this page/.test(popupHtml));
 record("popup.floating_card", /border-radius:\s*22px/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")));
@@ -128,11 +134,16 @@ try {
       { timeout: 8000 }
     ).catch(() => null);
     const ui = await page.evaluate(() => ({
-      name: document.querySelector("h1")?.textContent || "",
+      name: (document.querySelector("h1")?.textContent || "").replace(/\s+/g, " ").trim(),
       cta: document.getElementById("signIn")?.textContent || "",
       signedOutHidden: document.getElementById("signedOut")?.classList.contains("hidden"),
     }));
-    record("chrome.popup_name", ui.name === NAME, ui);
+    const intertexeHits = (ui.name.match(/INTERTEXE/gi) || []).length;
+    record(
+      "chrome.popup_name",
+      intertexeHits === 1 && /Fabric Scanner/i.test(ui.name),
+      ui
+    );
     record("chrome.popup_cta", /Sign in to INTERTEXE/i.test(ui.cta) && ui.signedOutHidden === false, ui);
 
     const samplePage = await browser.newPage();

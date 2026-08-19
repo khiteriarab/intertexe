@@ -88,17 +88,16 @@ function renderResult(payload, opts = {}) {
   const brandBits = [capture.brand_name, capture.retailer].filter(Boolean);
   const metaLine = [...brandBits, priceLabel].filter(Boolean).join(" · ");
 
-  if (!opts.peek) {
+  if (opts.peek) {
     const toast = el("div", "toast");
     toast.appendChild(thumb(capture.image_url));
     toast.appendChild(
-      el("span", "", payload.duplicate || payload.reused ? "Already in Inspirations" : "Saved to Inspirations")
+      el(
+        "span",
+        "",
+        material.headline === "Material details unavailable" ? "Looking for material…" : "Material from this page"
+      )
     );
-    resultEl.appendChild(toast);
-  } else {
-    const toast = el("div", "toast");
-    toast.appendChild(thumb(capture.image_url));
-    toast.appendChild(el("span", "", material.headline === "Material details unavailable" ? "Looking for material…" : "Material from this page"));
     resultEl.appendChild(toast);
   }
 

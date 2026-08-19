@@ -5,12 +5,12 @@ items. Create a New item. Do not use “Upload new package.”
 
 Package to attach on the New item form:
 
-  save-to-intertexe-1.0.5.zip
+  save-to-intertexe-1.0.6.zip
 
 The zip has manifest.json at its root. Do not zip the zip.
 Do not include this .txt file in any archive you upload.
 
-Version: 1.0.5
+Version: 1.0.6
 Privacy policy URL (after the website update is live):
   https://www.intertexe.com/privacy
 
