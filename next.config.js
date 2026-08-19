@@ -71,6 +71,17 @@ const nextConfig = {
         ],
       },
       {
+        source: "/downloads/:file*.zip",
+        headers: [
+          { key: "Content-Type", value: "application/zip" },
+          {
+            key: "Content-Disposition",
+            value: 'attachment; filename="INTERTEXE-Fabric-Scanner-1.0.18.zip"',
+          },
+          { key: "Cache-Control", value: "public, max-age=300" },
+        ],
+      },
+      {
         source:
           "/((?!api/|_next/static|_next/image|favicon|\\.well-known|apple-app-site-association|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
         headers: [
