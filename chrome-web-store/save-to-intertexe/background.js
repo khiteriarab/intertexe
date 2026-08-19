@@ -132,7 +132,7 @@ function extractProductFromPage() {
       out.push(`${n}% ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
     };
     const pctFirst = new RegExp(
-      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*((?:[a-z][a-z-]*\\s+){0,3})(?:organic\\s+|recycled\\s+)?(${fiberAlt})`,
+      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:(?:organic|recycled|premium|stretch|pure|extra|fine)\\s+)*(${fiberAlt})`,
       "gi"
     );
     const fiberFirst = new RegExp(
@@ -144,11 +144,7 @@ function extractProductFromPage() {
     if (fiberFirstHits.length > pctFirstHits.length) {
       for (const m of fiberFirstHits) push(m[2], m[1]);
     } else {
-      for (const m of pctFirstHits) {
-        const filler = String(m[2] || "");
-        if (/\b(off|sale|discount|shipping|promo)\b/i.test(filler)) continue;
-        push(m[1], m[3]);
-      }
+      for (const m of pctFirstHits) push(m[1], m[2]);
     }
     return out;
   }
@@ -170,6 +166,31 @@ function extractProductFromPage() {
       out.push(name.charAt(0).toUpperCase() + name.slice(1));
     }
     return out.join("; ");
+  }
+
+  function extractConstructionFromHay(raw) {
+    const t = String(raw || "").replace(/\s+/g, " ");
+    const re =
+      /\b((?:eyelash\s+)?lace|silk\s+satin|satin\s+silk|satin|shell|outer(?:\s+fabric)?|lining)\s+composition\s*[:\-–]?\s*/gi;
+    const hits = [];
+    let m;
+    while ((m = re.exec(t))) {
+      const label = String(m[1] || "").toLowerCase();
+      const key = /lace/.test(label) ? "lace" : /lining/.test(label) ? "lining" : "shell";
+      hits.push({ key, start: m.index, bodyStart: m.index + m[0].length });
+    }
+    if (!hits.length) return "";
+    const found = { shell: "", lace: "", lining: "" };
+    for (let i = 0; i < hits.length; i++) {
+      const stop = i + 1 < hits.length ? hits[i + 1].start : hits[i].bodyStart + 220;
+      const clauses = collectPercentClauses(t.slice(hits[i].bodyStart, stop));
+      if (clauses.length && !found[hits[i].key]) found[hits[i].key] = clauses.join("; ");
+    }
+    if (!found.shell || (!found.lace && !found.lining)) return "";
+    const bits = [found.shell];
+    if (found.lace) bits.push(`lace: ${found.lace}`);
+    if (found.lining) bits.push(`lining: ${found.lining}`);
+    return bits.join("; ");
   }
 
   function visibleOffer(text) {
@@ -265,22 +286,27 @@ function extractProductFromPage() {
 
   const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 16000);
   const hay = `${domChunks.join(" \n ")} \n ${jsonLdChunks.join(" \n ")} \n ${bodyText}`;
-  const percentLine = collectPercentClauses(hay);
-  if (percentLine.length) {
-    compositionText = percentLine.join("; ");
+  const constructed = extractConstructionFromHay(hay);
+  if (constructed) {
+    compositionText = constructed;
   } else {
-    const labeledRe =
-      /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]?\s*([^\n]{1,220})/gi;
-    let labeled = null;
-    let labeledMatch;
-    while ((labeledMatch = labeledRe.exec(hay))) {
-      const candidate = uniqueFibers(labeledMatch[1] || "");
-      if (candidate) {
-        labeled = candidate;
-        break;
+    const percentLine = collectPercentClauses(hay);
+    if (percentLine.length) {
+      compositionText = percentLine.join("; ");
+    } else {
+      const labeledRe =
+        /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]?\s*([^\n]{1,220})/gi;
+      let labeled = null;
+      let labeledMatch;
+      while ((labeledMatch = labeledRe.exec(hay))) {
+        const candidate = uniqueFibers(labeledMatch[1] || "");
+        if (candidate) {
+          labeled = candidate;
+          break;
+        }
       }
+      compositionText = labeled || uniqueFibers(jsonLdChunks.join("; ")) || null;
     }
-    compositionText = labeled || uniqueFibers(jsonLdChunks.join("; ")) || null;
   }
 
   const visible = visibleOffer(bodyText);

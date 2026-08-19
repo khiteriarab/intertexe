@@ -71,6 +71,9 @@ function editorialLine(raw) {
 function classificationLabel(view, composition, headline) {
   if (view?.classification) return String(view.classification);
   const text = String(composition || headline || "");
+  if (/\blace\b/i.test(text) && /\bnylon\b/i.test(text) && /\bsilk\b/i.test(text)) {
+    return "Silk with Nylon Lace";
+  }
   const tone = view?.insight?.tone;
   const hasAvoid = /\b(polyester|nylon|polyamide|acrylic)\b/i.test(text);
   const hasCellulosic = /\b(lyocell|tencel|cupro|modal)\b/i.test(text);
@@ -285,9 +288,16 @@ function renderResult(payload, opts = {}) {
   if (klass) materialBlock.appendChild(el("p", "material-class", klass));
   sourceEl.appendChild(materialBlock);
 
-  if (material.hasSyntheticLining || view.liningNote) {
+  if (material.hasSyntheticLining || material.hasSyntheticLace || view.liningNote) {
     sourceEl.appendChild(
-      el("p", "detail", view.liningNote || "Synthetic lining — not the same as a fully natural construction.")
+      el(
+        "p",
+        "detail",
+        view.liningNote ||
+          (material.hasSyntheticLace
+            ? "Synthetic lace — not the same as a fully natural construction."
+            : "Synthetic lining — not the same as a fully natural construction.")
+      )
     );
   }
 

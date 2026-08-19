@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "INTERTEXE: Fabric Scanner",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.",
   "homepage_url": "https://www.intertexe.com",
   "icons": {

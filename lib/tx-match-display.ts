@@ -28,6 +28,9 @@ export function editorialCompositionLine(raw: string | null | undefined): string
   const display = formatCompositionDisplay(raw);
   if (!display.shellLine || display.headline === "Material details unavailable") return "";
   let line = display.shellLine.replace(/;\s+/g, COMPOSITION_EDITORIAL_JOIN);
+  if (display.laceLine) {
+    line = `${line}${COMPOSITION_EDITORIAL_JOIN}lace ${display.laceLine.replace(/;\s+/g, COMPOSITION_EDITORIAL_JOIN)}`;
+  }
   if (display.liningLine) {
     line = `${line}${COMPOSITION_EDITORIAL_JOIN}lining ${display.liningLine.replace(/;\s+/g, COMPOSITION_EDITORIAL_JOIN)}`;
   }
@@ -42,6 +45,11 @@ export function materialClassification(raw: string | null | undefined): string {
   const hasCellulosic = CELLULOSIC_RE.test(text);
   const fibers = display.fibers;
 
+  if (display.hasSyntheticLace) {
+    const shell = fibers[0] || "Natural shell";
+    if (/\bnylon\b/i.test(display.laceLine || text)) return `${shell} with Nylon Lace`;
+    return `${shell} with synthetic lace`;
+  }
   if (insight.share != null && insight.share >= 98 && fibers.length === 1) {
     return `Pure ${fibers[0]}`;
   }

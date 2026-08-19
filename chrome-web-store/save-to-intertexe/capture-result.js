@@ -53,19 +53,23 @@
 
   function splitShellAndLining(raw) {
     const t = String(raw || "").replace(/\s+/g, " ").trim();
-    if (!t) return { shell: "", lining: null };
-    const labeled = t.match(/^(.*?)(?:\s*[;,/|]\s*|\s+)\blining\b\s*[:–-]?\s*(.+)$/i);
-    if (labeled && labeled[1].trim() && labeled[2].trim()) {
-      return {
-        shell: labeled[1].replace(/[;,/|]+$/g, "").trim(),
-        lining: labeled[2].replace(/\blining\b/gi, "").trim(),
-      };
+    if (!t) return { shell: "", lining: null, lace: null };
+    let rest = t;
+    let lining = null;
+    let lace = null;
+    const laceHit = rest.match(/^(.*?)\s*[;,]\s*lace\s*[:–-]?\s*(.+)$/i);
+    if (laceHit && laceHit[1].trim() && laceHit[2].trim()) {
+      rest = laceHit[1].replace(/[;,/|]+$/g, "").trim();
+      lace = laceHit[2].replace(/\blace\b/gi, "").replace(/^[:–-]\s*/, "").trim();
     }
-    const trailing = t.match(/^(.*?)\s*[;,/]\s*(.+?)\s+lining\b/i);
-    if (trailing && trailing[1].trim() && trailing[2].trim()) {
-      return { shell: trailing[1].trim(), lining: trailing[2].trim() };
+    if (!lining) {
+      const labeled = rest.match(/^(.*?)(?:\s*[;,/|]\s*|\s+)\blining\b\s*[:–-]?\s*(.+)$/i);
+      if (labeled && labeled[1].trim() && labeled[2].trim()) {
+        rest = labeled[1].replace(/[;,/|]+$/g, "").trim();
+        lining = labeled[2].replace(/\blining\b/gi, "").trim();
+      }
     }
-    return { shell: t, lining: null };
+    return { shell: rest, lining, lace };
   }
 
   function uniquePercentClauses(text) {
@@ -86,7 +90,7 @@
       out.push(`${n}% ${name}`);
     };
     const pctFirst = new RegExp(
-      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:organic\\s+|recycled\\s+)?(${fiberAlt})`,
+      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:(?:organic|recycled|premium|stretch|pure|extra|fine)\\s+)*(${fiberAlt})`,
       "gi"
     );
     const fiberFirst = new RegExp(
@@ -137,6 +141,7 @@
       materialLine: "Material details unavailable",
       hasPercentages: false,
       hasSyntheticLining: false,
+      hasSyntheticLace: false,
     };
     const stripped = String(raw || "")
       .replace(/^\s*retailer lists:\s*/i, "")
@@ -147,9 +152,13 @@
     const split = splitShellAndLining(stripped);
     const shellFmt = formatPart(split.shell);
     const liningFmt = split.lining ? formatPart(split.lining) : { line: "", hasPercentages: false };
+    const laceFmt = split.lace ? formatPart(split.lace) : { line: "", hasPercentages: false };
     let core = shellFmt.line;
     if (core && !shellFmt.hasPercentages) core = `${core} — ${PCT_NOTE}`;
     if (!core) return empty;
+    if (laceFmt.line) {
+      core = `${core.replace(/ — percentage not provided$/, "")}${JOIN}lace: ${laceFmt.line}`;
+    }
     if (liningFmt.line) {
       core = `${core.replace(/ — percentage not provided$/, "")}${JOIN}lining: ${liningFmt.line}`;
     }
@@ -158,6 +167,7 @@
       materialLine: `Material: ${core}`,
       hasPercentages: shellFmt.hasPercentages,
       hasSyntheticLining: Boolean(split.lining && partHasSynthetic(split.lining)),
+      hasSyntheticLace: Boolean(split.lace && partHasSynthetic(split.lace)),
     };
   }
 
@@ -190,7 +200,9 @@
     if (listed.headline !== "Material details unavailable") {
       return {
         headline: listed.headline.replace(/percentage not provided/gi, "exact percentage not provided"),
-        detail: listed.hasSyntheticLining
+        detail: listed.hasSyntheticLace
+          ? "Synthetic lace — not the same as a fully natural construction."
+          : listed.hasSyntheticLining
           ? "Synthetic lining — not the same as a fully natural construction."
           : null,
         supporting: null,
