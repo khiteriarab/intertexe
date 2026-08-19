@@ -43,6 +43,7 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [sort, setSort] = useState<TxMatchSort>("best");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +113,14 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
     const alts = view?.alternatives || [];
     return sortTxMatches(alts, sort, typeof capture?.price === "number" ? capture.price : null);
   }, [view, sort, capture?.price]);
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return sorted;
+    return sorted.filter((alt) => {
+      const hay = `${alt.brandName || ""} ${alt.name || ""} ${alt.compositionLine || ""}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [sorted, query]);
   const processing =
     state === "ready" &&
     Boolean(capture) &&
@@ -280,9 +289,20 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
             })}
           </nav>
 
-          {sorted.length > 0 ? (
+          <label className="mt-6 block max-w-md">
+            <span className="sr-only">Search these matches</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search these matches"
+              className="h-11 w-full border border-[#111111]/15 bg-white px-3 text-sm text-[#111111] placeholder:text-[#111111]/35"
+            />
+          </label>
+
+          {visible.length > 0 ? (
             <section className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
-              {sorted.map((alt) => (
+              {visible.map((alt) => (
                 <MatchCard
                   key={alt.id}
                   alt={alt}
@@ -299,7 +319,9 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
             </section>
           ) : (
             <p className="mt-10 max-w-md text-sm leading-relaxed text-[#111111]/55">
-              {sort === "pure"
+              {query.trim()
+                ? "No matches in this set for that search. Clear search to see the full list."
+                : sort === "pure"
                 ? "No fully natural substitutes in this set. Try More Natural, or keep Best Match."
                 : "No substitutes were ready for this piece. Keep the original open, or try the extension again."}
             </p>

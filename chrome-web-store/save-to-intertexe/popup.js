@@ -45,6 +45,14 @@ function isEmptyPageCopy(text) {
   return /open a product page/i.test(String(text || ""));
 }
 
+function isNoiseStatus(text) {
+  return /could not find matches|not signed in/i.test(String(text || ""));
+}
+
+let showAllMatches = false;
+let matchQuery = "";
+let lastMatchKey = "";
+
 function popupMaterial(headline) {
   return String(headline || "Exact composition not published")
     .replace(/percentage not provided/gi, "exact percentage not provided")
@@ -126,16 +134,9 @@ function capturePageUrl(raw) {
     const u = new URL(text, "https://www.intertexe.com");
     if (u.pathname === "/open" || u.pathname === "/open/") {
       const next = u.searchParams.get("next") || "";
-      if (next.startsWith("/capture/")) return `${u.origin}${next.replace(/^\/capture\//, "/matches/")}`;
-      if (next.startsWith("/matches/")) return `${u.origin}${next}`;
-      if (next.startsWith("/inspirations/")) return `${u.origin}${next.replace(/^\/inspirations\//, "/matches/")}`;
+      if (next.startsWith("/") && !next.startsWith("//")) return `${u.origin}${next}`;
     }
-    if (u.pathname.startsWith("/capture/")) {
-      u.pathname = u.pathname.replace(/^\/capture\//, "/matches/");
-      return u.href;
-    }
-    if (u.pathname.startsWith("/inspirations/")) {
-      u.pathname = u.pathname.replace(/^\/inspirations\//, "/matches/");
+    if (/\/matches\//.test(u.pathname) || /\/inspirations\//.test(u.pathname) || /\/capture\//.test(u.pathname)) {
       return u.href;
     }
     return u.href;
@@ -210,7 +211,20 @@ function renderResult(payload, opts = {}) {
     : Array.isArray(capture.alternatives)
       ? capture.alternatives.slice(0, 12)
       : [];
-  const preview = alts.slice(0, 3);
+  const matchKey = String(capture.id || capture.original_url || capture.originalUrl || view.title || capture.title || "");
+  if (matchKey !== lastMatchKey) {
+    lastMatchKey = matchKey;
+    showAllMatches = false;
+    matchQuery = "";
+  }
+  const filtered = alts.filter((alt) => {
+    const q = matchQuery.trim().toLowerCase();
+    if (!q) return true;
+    const hay = `${alt.brandName || alt.brand_name || ""} ${alt.name || ""} ${alt.composition || alt.compositionLine || ""}`.toLowerCase();
+    return hay.includes(q);
+  });
+  const previewCount = showAllMatches ? 12 : 6;
+  const preview = filtered.slice(0, previewCount);
   const material = ITX.unpublishedMaterialCopy({
     compositionText: capture.composition_text || "",
     title: view.title || capture.title || "",
@@ -283,11 +297,19 @@ function renderResult(payload, opts = {}) {
   const openUrl = capturePageUrl(
     view.openInIntertexeUrl || links.openInIntertexeUrl || copy.openInIntertexeUrl
   );
-  if (openUrl && showMatches) {
-    const a = el("a", "primary");
-    a.href = openUrl;
-    a.target = "_blank";
-    a.rel = "noreferrer";
+  if (showMatches && (openUrl || alts.length > 6)) {
+    const a = el(openUrl ? "a" : "button", "primary");
+    if (openUrl) {
+      a.href = openUrl;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+    } else {
+      a.type = "button";
+      a.addEventListener("click", () => {
+        showAllMatches = true;
+        renderResult(payload, opts);
+      });
+    }
     a.textContent = `See ${alts.length} better-material matches`;
     const action = el("div", "primary-action");
     action.appendChild(a);
@@ -296,7 +318,43 @@ function renderResult(payload, opts = {}) {
 
   if (showMatches) {
     resultEl.classList.remove("hidden");
-    resultEl.appendChild(el("p", "section-title", "TX Match"));
+    const heading = el("div", "alts-head");
+    heading.appendChild(el("p", "section-title", "TX Match"));
+    if (alts.length > 6 && !showAllMatches) {
+      const more = el(openUrl ? "a" : "button", "see-all");
+      if (openUrl) {
+        more.href = openUrl;
+        more.target = "_blank";
+        more.rel = "noreferrer";
+      } else {
+        more.type = "button";
+        more.addEventListener("click", () => {
+          showAllMatches = true;
+          renderResult(payload, opts);
+        });
+      }
+      more.textContent = `See all ${alts.length}`;
+      heading.appendChild(more);
+    }
+    resultEl.appendChild(heading);
+    if (showAllMatches && alts.length > 3) {
+      const search = document.createElement("input");
+      search.type = "search";
+      search.className = "alt-search";
+      search.placeholder = "Search these matches";
+      search.value = matchQuery;
+      search.addEventListener("input", () => {
+        matchQuery = search.value;
+        renderResult(payload, opts);
+        const next = resultEl.querySelector(".alt-search");
+        if (next) {
+          next.focus();
+          const end = matchQuery.length;
+          next.setSelectionRange(end, end);
+        }
+      });
+      resultEl.appendChild(search);
+    }
     const list = el("div", "alts");
     for (const alt of preview) {
       const card = el("a", "alt");
@@ -360,8 +418,9 @@ async function refreshUi() {
   const hasSaved = Boolean(state?.result?.capture?.id);
   const hasProduct = Boolean(state?.result || state?.peek);
   showAuth(Boolean(state?.signedIn), hasSaved, hasProduct);
-  if (state?.status && !isEmptyPageCopy(state.status)) setStatus(state.status, Boolean(state.error));
-  else setStatus("");
+  if (state?.status && !isEmptyPageCopy(state.status) && !isNoiseStatus(state.status)) {
+    setStatus(state.status, Boolean(state.error));
+  } else setStatus("");
   if (state?.result) renderResult(state.result);
   else if (state?.peek) renderPeek(state.peek);
   else clearResult();
@@ -397,7 +456,7 @@ async function scanOpenTab() {
     quiet: true,
   });
   if (res?.error) {
-    if (isEmptyPageCopy(res.error)) setStatus("");
+    if (isEmptyPageCopy(res.error) || isNoiseStatus(res.error)) setStatus("");
     else setStatus(res.error, true);
   } else setStatus("");
   if (res?.result) {

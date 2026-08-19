@@ -132,7 +132,7 @@ function extractProductFromPage() {
       out.push(`${n}% ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
     };
     const pctFirst = new RegExp(
-      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:organic\\s+|recycled\\s+)?(${fiberAlt})`,
+      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*((?:[a-z][a-z-]*\\s+){0,3})(?:organic\\s+|recycled\\s+)?(${fiberAlt})`,
       "gi"
     );
     const fiberFirst = new RegExp(
@@ -144,7 +144,11 @@ function extractProductFromPage() {
     if (fiberFirstHits.length > pctFirstHits.length) {
       for (const m of fiberFirstHits) push(m[2], m[1]);
     } else {
-      for (const m of pctFirstHits) push(m[1], m[2]);
+      for (const m of pctFirstHits) {
+        const filler = String(m[2] || "");
+        if (/\b(off|sale|discount|shipping|promo)\b/i.test(filler)) continue;
+        push(m[1], m[3]);
+      }
     }
     return out;
   }
@@ -392,6 +396,105 @@ async function pollPublicCapture(id, timeoutMs = 25000) {
   return last;
 }
 
+async function pageIsLive(url) {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return false;
+    const html = await res.text();
+    if (/Page Not Found|text-not-found-title/i.test(html)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Only return a site URL that actually exists. Never send shoppers to a 404. */
+async function liveTxMatchUrl(id, signedIn) {
+  if (!id) return "";
+  const matches = `${APP}/matches/${encodeURIComponent(id)}`;
+  if (await pageIsLive(matches)) return matches;
+  if (signedIn) {
+    const inspirations = `${APP}/inspirations/${encodeURIComponent(id)}`;
+    if (await pageIsLive(inspirations)) return inspirations;
+  }
+  return "";
+}
+
+async function attachLiveLinks(result, signedIn) {
+  const id = captureIdOf(result);
+  const live = await liveTxMatchUrl(id, signedIn);
+  const links = { ...(result?.links || {}) };
+  if (live) {
+    links.openInIntertexeUrl = live;
+    links.viewAllMatchesUrl = live;
+  } else {
+    links.openInIntertexeUrl = "";
+    links.viewAllMatchesUrl = "";
+  }
+  const view = { ...(result?.view || {}) };
+  if (live) view.openInIntertexeUrl = live;
+  else view.openInIntertexeUrl = "";
+  return { ...result, links, view };
+}
+
+function altsFromAnalyze(json) {
+  const rows = Array.isArray(json?.alternatives) ? json.alternatives : [];
+  return rows.slice(0, 12).map((row, idx) => ({
+    id: row.id || String(idx),
+    name: row.name || row.title || "TX Match",
+    brand_name: row.brand_name || row.brand || "",
+    image_url: row.image_url || row.imageUrl || null,
+    url: row.url || row.product_url || null,
+    price: row.price ?? null,
+    currency: row.currency || null,
+    composition: row.composition || "",
+    natural_fiber_percent: row.natural_fiber_percent ?? null,
+  }));
+}
+
+function resultFromPayload(payload, alts, extra = {}) {
+  const capture = {
+    id: extra.id || null,
+    title: payload.title || null,
+    brand_name: payload.brandName || null,
+    retailer: payload.retailer || null,
+    image_url: payload.imageUrl || null,
+    price: payload.price ?? null,
+    currency: payload.currency || null,
+    composition_text: payload.compositionText || null,
+    original_url: payload.originalUrl || null,
+    alternatives: alts,
+    source_app: "chrome_extension",
+  };
+  return {
+    capture,
+    view: {
+      title: payload.title || null,
+      alternatives: alts,
+      openInIntertexeUrl: extra.liveUrl || "",
+    },
+    links: {
+      openInIntertexeUrl: extra.liveUrl || "",
+      viewAllMatchesUrl: extra.liveUrl || "",
+    },
+    copy: {},
+  };
+}
+
+async function fallbackAnalyze(payload) {
+  const { res, json } = await api("/api/extension/analyze", {
+    method: "POST",
+    body: {
+      composition: payload.compositionText || "",
+      product_name: payload.title || "",
+      price: payload.price ?? null,
+      currency: payload.currency || null,
+    },
+  });
+  if (!res.ok) return resultFromPayload(payload, []);
+  return resultFromPayload(payload, altsFromAnalyze(json));
+}
+
 async function savePayload(payload) {
   const { res, json } = await authedFetch("/api/capture", {
     method: "POST",
@@ -404,7 +507,7 @@ async function savePayload(payload) {
     throw new Error(json.error || json.message || "Could not save this page");
   }
   const polled = await pollCapture(captureIdOf(json));
-  const result = polled || json;
+  const result = await attachLiveLinks(polled || json, true);
   await chrome.storage.local.set({ lastResult: result, pendingCapture: null });
   return { result };
 }
@@ -414,11 +517,13 @@ async function createPublicMatches(payload) {
     method: "POST",
     body: payload,
   });
-  if (!res.ok || !captureIdOf(json)) {
-    throw new Error(json.error || json.message || "Could not find matches");
+  if (res.ok && captureIdOf(json)) {
+    const polled = await pollPublicCapture(captureIdOf(json));
+    const result = await attachLiveLinks(polled || json, false);
+    await chrome.storage.local.set({ lastResult: result });
+    return { result };
   }
-  const polled = await pollPublicCapture(captureIdOf(json));
-  const result = polled || json;
+  const result = await fallbackAnalyze(payload);
   await chrome.storage.local.set({ lastResult: result });
   return { result };
 }

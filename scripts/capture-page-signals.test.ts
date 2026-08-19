@@ -40,6 +40,7 @@ describe("retailer material capture", () => {
   it("does not treat a sale banner as composition", () => {
     assert.equal(looksLikePercentageComposition("20% off silk dresses"), false);
     assert.equal(extractLabeledMaterial("Spring sale, silk-like drape, 20% off"), null);
+    assert.equal(extractCompositionFromPageText("20% off silk dresses"), null);
   });
 
   it("reads a semicolon mix that is already on the product page", () => {
@@ -74,6 +75,12 @@ describe("retailer material capture", () => {
       preferPercentageComposition("Denim", extractCompositionFromPageText(html)),
       "55.7% Lyocell; 22.6% Cotton; 21.7% Cupro"
     );
+  });
+
+  it("reads 100% premium stretch silk as silk, not a silk-cotton mix", () => {
+    const html = `<p>100% premium stretch silk dress</p><p>breathable silk</p>`;
+    assert.equal(extractCompositionFromPageText(html), "100% Silk");
+    assert.equal(looksLikePercentageComposition("100% Silk"), true);
   });
 
   it("shows the listed mix instead of unpublished/unknown", () => {

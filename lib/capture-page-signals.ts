@@ -56,7 +56,7 @@ export function collectPercentClauses(raw: string | null | undefined): string[] 
     out.push(`${n}% ${name}`);
   };
   const pctFirst = new RegExp(
-    `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:organic\\s+|recycled\\s+)?(${FIBER_ALT})`,
+    `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*((?:[a-z][a-z-]*\\s+){0,3})(?:organic\\s+|recycled\\s+)?(${FIBER_ALT})`,
     "gi"
   );
   const fiberFirst = new RegExp(
@@ -69,7 +69,11 @@ export function collectPercentClauses(raw: string | null | undefined): string[] 
   if (useFiberFirst) {
     for (const m of fiberFirstHits) push(m[2], m[1]);
   } else {
-    for (const m of pctFirstHits) push(m[1], m[2]);
+    for (const m of pctFirstHits) {
+      const filler = String(m[2] || "");
+      if (/\b(off|sale|discount|shipping|promo)\b/i.test(filler)) continue;
+      push(m[1], m[3]);
+    }
   }
   return out;
 }
