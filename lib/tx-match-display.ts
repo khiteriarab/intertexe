@@ -79,6 +79,16 @@ export function materialCardSignal(opts: {
         : null;
   const hasAvoid = AVOID_RE.test(text);
 
+  if (display.hasSyntheticLace) {
+    const shell = display.fibers[0];
+    if (/\bnylon\b/i.test(display.laceLine || text)) {
+      return shell ? `${shell} with Nylon Lace` : "Nylon lace";
+    }
+    return shell ? `${shell} with synthetic lace` : "Synthetic lace";
+  }
+  if (share != null && share > 100) {
+    return editorialCompositionLine(text);
+  }
   if (display.hasPercentages && display.fibers.length === 1 && (share == null || share >= 98)) {
     return `100% ${display.fibers[0]}`;
   }

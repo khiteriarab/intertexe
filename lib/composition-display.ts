@@ -99,6 +99,44 @@ function uniquePercentClauses(text: string): string[] {
   return collectPercentClauses(text);
 }
 
+function inferOverflowParts(raw: string): { shell: string; lace: string | null; lining: string | null } | null {
+  const clauses = uniquePercentClauses(raw);
+  if (clauses.length < 2) return null;
+  const parsed = clauses
+    .map((line) => {
+      const m = line.match(/^(\d+(?:\.\d+)?)%\s+(.+)$/);
+      return m ? { pct: Number(m[1]), fiber: m[2], line } : null;
+    })
+    .filter((row): row is { pct: number; fiber: string; line: string } => Boolean(row && Number.isFinite(row.pct)));
+  const total = parsed.reduce((sum, row) => sum + row.pct, 0);
+  if (total <= 105) return null;
+
+  const hundreds = parsed.filter((row) => row.pct >= 98);
+  if (hundreds.length >= 2) {
+    const naturalHundred = hundreds.find((row) => !partHasSynthetic(row.fiber));
+    const synthHundred = hundreds.find((row) => partHasSynthetic(row.fiber));
+    if (naturalHundred && synthHundred) {
+      return { shell: naturalHundred.line, lace: null, lining: synthHundred.line };
+    }
+  }
+
+  const shellParts = parsed.filter((row) => row.pct >= 98);
+  const rest = parsed.filter((row) => row.pct < 98);
+  if (!shellParts.length || !rest.length) return null;
+  const restTotal = rest.reduce((sum, row) => sum + row.pct, 0);
+  if (restTotal < 85 || restTotal > 115) return null;
+  const shell = shellParts.map((row) => row.line).join(COMPOSITION_JOIN);
+  const restLine = rest.map((row) => row.line).join(COMPOSITION_JOIN);
+  const restText = rest.map((row) => row.fiber).join(" ");
+  if (partHasSynthetic(restText) && rest.length >= 2) {
+    return { shell, lace: restLine, lining: null };
+  }
+  if (partHasSynthetic(restText)) {
+    return { shell, lace: null, lining: restLine };
+  }
+  return { shell, lace: restLine, lining: null };
+}
+
 function uniqueNamedFibers(text: string): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -161,7 +199,15 @@ export function formatCompositionDisplay(raw: string | null | undefined): Compos
     .trim();
   if (!stripped) return empty;
 
-  const { shell, lining, lace } = splitShellAndLining(stripped);
+  let { shell, lining, lace } = splitShellAndLining(stripped);
+  if (!lace && !lining) {
+    const inferred = inferOverflowParts(stripped);
+    if (inferred) {
+      shell = inferred.shell;
+      lace = inferred.lace;
+      lining = inferred.lining;
+    }
+  }
   const shellFmt = formatPart(shell);
   const liningFmt = lining ? formatPart(lining) : { line: "", fibers: [], hasPercentages: false };
   const laceFmt = lace ? formatPart(lace) : { line: "", fibers: [], hasPercentages: false };
