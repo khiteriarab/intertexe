@@ -550,19 +550,29 @@ async function fetchFunnelActuals(
   const activityCount = (type: ActivityType) =>
     activities.rows.filter((row) => row.activity_type === type).length;
 
-  const qualifiedContacts = await safeCount(supabase, "hq_contacts", (q) =>
-    q.eq("workspace_id", workspaceId).eq("relationship_status", "engaged")
-  );
+  const [qualifiedContacts, platformLeads] = await Promise.all([
+    safeCount(supabase, "hq_contacts", (q) =>
+      q.eq("workspace_id", workspaceId).eq("relationship_status", "engaged")
+    ),
+    safeRows<{ intent: string }>(supabase, "material_snapshot_leads", (q) => q.select("intent").limit(2000)),
+  ]);
 
   const wonDeals = deals.filter((d) => stages.find((s) => s.key === d.stage)?.isWon);
+  const snapshotRequests = platformLeads.rows.filter((row) => row.intent === "snapshot").length;
+  const pilotRequests = platformLeads.rows.filter((row) => row.intent === "founding_pilot").length;
 
   const actuals: Record<FunnelStageKey, number> = {
-    // A scored account is either an engaged contact or a deal past prospect.
-    qualified_account: Math.max(qualifiedContacts.value ?? 0, reached("qualified"), activityCount("qualified_account")),
-    snapshot_sent: Math.max(reached("snapshot_sent"), activityCount("snapshot_sent")),
+    // A scored account is an engaged contact, a deal past prospect, or a /platform request.
+    qualified_account: Math.max(
+      qualifiedContacts.value ?? 0,
+      reached("qualified"),
+      activityCount("qualified_account"),
+      snapshotRequests + pilotRequests
+    ),
+    snapshot_sent: Math.max(reached("snapshot_sent"), activityCount("snapshot_sent"), snapshotRequests),
     meeting: Math.max(reached("meeting"), activityCount("meeting")),
     proposal: Math.max(reached("proposal"), activityCount("proposal")),
-    won: wonDeals.filter((d) => d.revenueStream !== "api_integration").length,
+    won: wonDeals.filter((d) => d.revenueStream === "api_pilot").length,
     api_integration: wonDeals.filter((d) => d.revenueStream === "api_integration").length,
   };
 

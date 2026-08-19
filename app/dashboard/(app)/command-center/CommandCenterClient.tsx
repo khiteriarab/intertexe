@@ -10,14 +10,20 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { HqCard } from "../../components/HqUi";
 import {
+  BookingLegend,
+  CumulativeMixBar,
   FunnelChart,
   LegendItem,
+  ScaledBookingPlan,
   StreamMixChart,
   TrajectoryChart,
   WeeklyActivityChart,
 } from "./PlanCharts";
 import {
+  PLAN_BOOKING_SUBTITLE,
   PLAN_COLORS,
+  PLAN_DECISION_GATE,
+  PLAN_MUST_HAPPEN_NEXT,
   REVENUE_STREAMS,
   formatPercent,
   formatPlanDate,
@@ -30,7 +36,7 @@ import type { CommandCenterBundle, DataAvailability } from "../../../../lib/dash
 
 const SCOPES: Array<{ key: RevenueScope; label: string; hint: string }> = [
   { key: "combined", label: "Combined plan", hint: "Company plus personal revenue for the $50,000 founder objective" },
-  { key: "company", label: "INTERTEXE company", hint: "API pilots, integrations, affiliate and INTERTEXE partnerships" },
+  { key: "company", label: "INTERTEXE company", hint: "Founding Material Data Pilots sold on /platform, integrations, affiliate and INTERTEXE partnerships" },
   { key: "personal", label: "@khiteri personal", hint: "Creator partnerships contracted personally" },
 ];
 
@@ -182,6 +188,21 @@ function RevenueView({
 
   return (
     <div className="space-y-6">
+      <HqCard>
+        <h2 className="text-xl font-semibold tracking-tight">Scaled booking plan</h2>
+        <p className="text-sm text-black/50 mt-1">{PLAN_BOOKING_SUBTITLE}</p>
+        <p className="text-[12px] text-black/45 mt-2 leading-relaxed max-w-2xl">
+          Pilot is the $5,000 Founding Material Data Pilot sold on{" "}
+          <a href="/platform" className="underline decoration-black/20 hover:decoration-black">
+            /platform
+          </a>
+          . Five paid pilots, one integration, then creator and affiliate buffer to $50K.
+        </p>
+        <div className="mt-5">
+          <ScaledBookingPlan />
+        </div>
+      </HqCard>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <Metric
           label="Booked toward next milestone"
@@ -235,24 +256,34 @@ function RevenueView({
       </HqCard>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <HqCard title="B2B funnel — actual versus target">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] text-black/45">
-              {bundle.funnel.availability === "live"
-                ? "Deals and recorded activity"
-                : "Awaiting deal and activity records"}
-            </span>
+        <HqCard>
+          <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-medium">Commercial funnel</h2>
+              <p className="text-[11px] text-black/45 mt-1">
+                December shape: 150 accounts · 60 snapshots · 30 meetings · 15 proposals · 5 paid pilots · 1
+                integration.
+              </p>
+            </div>
             <Availability availability={bundle.funnel.availability} />
           </div>
+          <CumulativeMixBar rows={streamMix} />
+          <div className="mt-3 mb-5">
+            <BookingLegend />
+          </div>
           <FunnelChart
-            rows={bundle.funnel.september}
-            deadlineLabel="Sep 30"
+            rows={bundle.funnel.december}
+            deadlineLabel="Dec 31"
             weakestKey={bundle.funnel.weakest?.key}
           />
           <details className="mt-5">
-            <summary className="text-xs text-black/55 cursor-pointer">December targets</summary>
+            <summary className="text-xs text-black/55 cursor-pointer">September leading targets</summary>
             <div className="mt-3">
-              <FunnelChart rows={bundle.funnel.december} deadlineLabel="Dec 31" />
+              <FunnelChart
+                rows={bundle.funnel.september}
+                deadlineLabel="Sep 30"
+                weakestKey={bundle.funnel.weakest?.key}
+              />
             </div>
           </details>
         </HqCard>
@@ -264,6 +295,29 @@ function RevenueView({
               Filtered to {scope === "company" ? "INTERTEXE company" : "@khiteri personal"} streams.
             </p>
           ) : null}
+        </HqCard>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <HqCard>
+          <span
+            className="inline-flex items-center rounded-full px-3 py-1 text-[12px] font-medium"
+            style={{ backgroundColor: "#E4EEFF", color: PLAN_COLORS.pilot }}
+          >
+            {PLAN_DECISION_GATE.label}
+          </span>
+          <p className="text-sm text-black/65 mt-3 leading-relaxed">{PLAN_DECISION_GATE.text}</p>
+        </HqCard>
+        <HqCard>
+          <h2 className="text-sm font-medium mb-3">What must happen next</h2>
+          <ol className="space-y-2.5">
+            {PLAN_MUST_HAPPEN_NEXT.map((item, i) => (
+              <li key={item} className="flex gap-3 text-[13px] leading-relaxed text-black/70">
+                <span className="tabular-nums text-black/35 shrink-0 w-4">{i + 1}.</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ol>
         </HqCard>
       </div>
 

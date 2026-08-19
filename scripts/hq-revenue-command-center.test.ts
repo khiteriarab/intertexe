@@ -9,6 +9,11 @@ import {
   DEFAULT_STREAM_TARGETS,
   DECEMBER_MILESTONE_ISO,
   FUNNEL_STAGES,
+  MONTHLY_BOOKING_MIX,
+  PLAN_BOOKING_SUBTITLE,
+  PLAN_COLORS,
+  PLAN_DECISION_GATE,
+  PLAN_MUST_HAPPEN_NEXT,
   PLAN_START_ISO,
   REVENUE_STREAMS,
   SEPTEMBER_MILESTONE_ISO,
@@ -20,6 +25,7 @@ import {
   computeGap,
   computeOutstandingInvoiced,
   computeWeightedPipeline,
+  formatPlanCompact,
   interpolateTarget,
   nextMilestone,
   paceStatus,
@@ -99,11 +105,50 @@ describe("Plan targets", () => {
     assert.equal(DEFAULT_FUNNEL_TARGETS.meeting.september, 12);
     assert.equal(DEFAULT_FUNNEL_TARGETS.proposal.september, 3);
     assert.equal(DEFAULT_FUNNEL_TARGETS.won.september, 1);
-    assert.equal(DEFAULT_FUNNEL_TARGETS.snapshot_sent.december, 40);
-    assert.equal(DEFAULT_FUNNEL_TARGETS.meeting.december, 20);
-    assert.equal(DEFAULT_FUNNEL_TARGETS.proposal.december, 10);
+    assert.equal(DEFAULT_FUNNEL_TARGETS.snapshot_sent.december, 60);
+    assert.equal(DEFAULT_FUNNEL_TARGETS.meeting.december, 30);
+    assert.equal(DEFAULT_FUNNEL_TARGETS.proposal.december, 15);
+    assert.equal(DEFAULT_FUNNEL_TARGETS.qualified_account.december, 150);
     assert.equal(DEFAULT_FUNNEL_TARGETS.won.december, 5);
     assert.equal(DEFAULT_FUNNEL_TARGETS.api_integration.december, 1);
+  });
+
+  it("treats Pilot as the $5,000 Founding Material Data Pilot sold on /platform", () => {
+    const pilot = REVENUE_STREAMS.find((s) => s.key === "api_pilot");
+    assert.equal(pilot?.label, "Pilot");
+    const target = DEFAULT_STREAM_TARGETS.find((t) => t.stream === "api_pilot");
+    assert.equal(target?.unitTarget, 5);
+    assert.equal(target?.target, 25000);
+    assert.match(target?.unitPlan || "", /\/platform/);
+    assert.match(target?.unitPlan || "", /5,000/);
+    assert.match(PLAN_BOOKING_SUBTITLE, /5 pilots/);
+    assert.equal(PLAN_DECISION_GATE.label, "Decision gate");
+    assert.match(PLAN_DECISION_GATE.text, /Nov 1/);
+    assert.ok(PLAN_MUST_HAPPEN_NEXT.some((item) => /\$5K pilot SOW/.test(item)));
+  });
+
+  it("stacks the visible monthly booking mix to $50,000", () => {
+    const totalNew = MONTHLY_BOOKING_MIX.reduce((sum, month) => sum + month.newTarget, 0);
+    assert.equal(totalNew, 50000);
+    assert.equal(MONTHLY_BOOKING_MIX[MONTHLY_BOOKING_MIX.length - 1]?.cumulative, 50000);
+    const byStream: Record<string, number> = {};
+    for (const month of MONTHLY_BOOKING_MIX) {
+      const monthSum = month.segments.reduce((sum, seg) => sum + seg.amount, 0);
+      assert.equal(monthSum, month.newTarget, `${month.month} segments must equal new target`);
+      for (const seg of month.segments) {
+        byStream[seg.stream] = (byStream[seg.stream] || 0) + seg.amount;
+      }
+    }
+    assert.equal(byStream.api_pilot, 25000);
+    assert.equal(byStream.api_integration, 12500);
+    assert.equal(byStream.creator_partnership, 9000);
+    assert.equal(byStream.affiliate, 3500);
+  });
+
+  it("formats compact bar labels as $5K and $12.5K", () => {
+    assert.equal(formatPlanCompact(5000), "$5K");
+    assert.equal(formatPlanCompact(12500), "$12.5K");
+    assert.equal(formatPlanCompact(10000), "$10K");
   });
 
   it("does not assign app or extension revenue to a stream", () => {
@@ -440,6 +485,8 @@ describe("Missing integration versus legitimate zero", () => {
     assert.match(source, /looksMissing/);
     // Chrome installs must never be inferred from website clicks.
     assert.match(source, /chrome_installs[\s\S]{0,400}availability: "unavailable"/);
+    assert.match(source, /material_snapshot_leads/);
+    assert.match(source, /founding_pilot/);
   });
 
   it("does not seed fake historical revenue, installs or usage", () => {
@@ -603,6 +650,18 @@ describe("Migration is additive with founder-only RLS", () => {
     assert.match(charts, /milestones[\s\S]{0,40}\.filter\(\(m\) => m\.cumulative > 0\)/);
     assert.doesNotMatch(charts, /d="M0,\d+ ?L\d+/);
   });
+
+  it("updates already-seeded December funnel counts and Pilot labels additively", () => {
+    const followUp = fs.readFileSync(
+      path.join(process.cwd(), "supabase/migrations/20260821_hq_booking_plan_funnel_targets.sql"),
+      "utf8"
+    );
+    assert.match(followUp, /UPDATE public\.hq_revenue_targets/);
+    assert.match(followUp, /target_value = 150/);
+    assert.match(followUp, /Founding Material Data Pilots sold on \/platform/);
+    assert.doesNotMatch(followUp, /CREATE TABLE/);
+    assert.doesNotMatch(followUp, /DROP TABLE/);
+  });
 });
 
 describe("Existing dashboard is complemented, not replaced", () => {
@@ -703,14 +762,31 @@ describe("Responsive and accessible rendering", () => {
     assert.match(client, /Personal|Company/);
   });
 
-  it("uses the restrained plan palette and no rainbow charts", () => {
+  it("uses the booking-plan palette: Pilot blue, Integration green, Creator orange, Affiliate yellow", () => {
     const plan = fs.readFileSync(path.join(process.cwd(), "lib/dashboard/revenue-plan.ts"), "utf8");
-    assert.match(plan, /mauve: "#7c5468"/);
-    assert.match(plan, /sage: "#4f6b56"/);
-    assert.match(plan, /gold: "#8a6d2f"/);
-    assert.match(plan, /terracotta: "#9c4a30"/);
+    assert.match(plan, /pilot: "#3B7BFF"/);
+    assert.match(plan, /integration: "#22A06B"/);
+    assert.match(plan, /creator: "#E86A3C"/);
+    assert.match(plan, /affiliate: "#E8C547"/);
+    const byKey = Object.fromEntries(REVENUE_STREAMS.map((s) => [s.key, s]));
+    assert.equal(byKey.api_pilot.label, "Pilot");
+    assert.equal(byKey.api_pilot.color, PLAN_COLORS.pilot);
+    assert.equal(byKey.api_integration.color, PLAN_COLORS.integration);
+    assert.equal(byKey.creator_partnership.color, PLAN_COLORS.creator);
+    assert.equal(byKey.affiliate.color, PLAN_COLORS.affiliate);
     const streamColors = new Set(REVENUE_STREAMS.map((s) => s.color));
     assert.equal(streamColors.size, REVENUE_STREAMS.length, "each stream needs one stable color");
     assert.doesNotMatch(charts, /#(ff0000|00ff00|0000ff)/i);
+  });
+
+  it("renders the scaled booking plan, commercial funnel and decision gate", () => {
+    assert.match(charts, /export function ScaledBookingPlan/);
+    assert.match(charts, /export function ColorSwatch/);
+    assert.match(client, /Scaled booking plan/);
+    assert.match(client, /Commercial funnel/);
+    assert.match(client, /What must happen next/);
+    assert.match(client, /Decision gate/);
+    assert.match(client, /Founding Material Data Pilot/);
+    assert.match(client, /\/platform/);
   });
 });

@@ -9,12 +9,17 @@
  */
 import { useId, useState } from "react";
 import {
+  BOOKING_LEGEND_STREAMS,
+  MONTHLY_BOOKING_MIX,
+  PLAN_BOOKING_SUBTITLE,
   PLAN_COLORS,
   formatPercent,
+  formatPlanCompact,
   formatPlanDate,
   formatPlanMoney,
   streamMeta,
   type FunnelRow,
+  type MonthlyBookingMix,
 } from "../../../../lib/dashboard/revenue-plan";
 
 type TrajectoryPoint = {
@@ -263,6 +268,168 @@ export function LegendItem({
   );
 }
 
+export function ColorSwatch({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2 text-[12px] text-black/70">
+      <span
+        aria-hidden="true"
+        className="inline-block w-2.5 h-2.5 rounded-[3px] shrink-0"
+        style={{ backgroundColor: color }}
+      />
+      {label}
+    </span>
+  );
+}
+
+function segmentLabelColor(color: string): string {
+  return color === PLAN_COLORS.affiliate ? PLAN_COLORS.ink : "#ffffff";
+}
+
+export function BookingLegend({
+  cumulativeLabel = "$50K cumulative",
+}: {
+  cumulativeLabel?: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      {BOOKING_LEGEND_STREAMS.map((key) => {
+        const meta = streamMeta(key);
+        return <ColorSwatch key={key} color={meta?.color || PLAN_COLORS.ink} label={meta?.shortLabel || key} />;
+      })}
+      <span className="sm:ml-auto text-[12px] tabular-nums text-black/45">{cumulativeLabel}</span>
+    </div>
+  );
+}
+
+export function CumulativeMixBar({
+  rows,
+}: {
+  rows: Array<{ stream: string; booked: number; target: number }>;
+}) {
+  const legendStreams = BOOKING_LEGEND_STREAMS.map((key) => {
+    const row = rows.find((r) => r.stream === key);
+    const meta = streamMeta(key);
+    return {
+      key,
+      label: meta?.shortLabel || key,
+      color: meta?.color || PLAN_COLORS.ink,
+      value: row?.target || 0,
+    };
+  }).filter((s) => s.value > 0);
+  const total = legendStreams.reduce((sum, s) => sum + s.value, 0) || 1;
+
+  return (
+    <div
+      className="flex h-8 rounded-full overflow-hidden"
+      style={{ backgroundColor: PLAN_COLORS.track }}
+      role="img"
+      aria-label={`December mix ${legendStreams.map((s) => `${s.label} ${formatPlanCompact(s.value)}`).join(", ")}.`}
+    >
+      {legendStreams.map((s) => (
+        <div
+          key={s.key}
+          className="h-full"
+          style={{ width: `${(s.value / total) * 100}%`, backgroundColor: s.color }}
+          title={`${s.label} · ${formatPlanMoney(s.value)}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Monthly stacked booking bars. Each month's filled width is scaled to the
+ * largest monthly new-booking target so September is a short $5K bar and
+ * December fills the track.
+ */
+export function ScaledBookingPlan({ mix = MONTHLY_BOOKING_MIX }: { mix?: MonthlyBookingMix[] }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const maxNew = Math.max(...mix.map((m) => m.newTarget), 1);
+  const active = activeIndex == null ? null : mix[activeIndex];
+
+  return (
+    <div>
+      <BookingLegend />
+      <ul className="mt-5 space-y-5">
+        {mix.map((month, i) => {
+          const filled = (month.newTarget / maxNew) * 100;
+          const label = `${month.month}. ${formatPlanCompact(month.newTarget)} new, ${formatPlanCompact(
+            month.cumulative
+          )} cumulative. ${month.segments
+            .map((seg) => `${streamMeta(seg.stream)?.shortLabel || seg.stream} ${formatPlanCompact(seg.amount)}`)
+            .join(", ")}.`;
+          return (
+            <li key={month.month}>
+              <button
+                type="button"
+                className="w-full text-left rounded-xl p-1 -mx-1 focus:outline-none focus-visible:bg-black/[0.04]"
+                onMouseEnter={() => setActiveIndex(i)}
+                onMouseLeave={() => setActiveIndex(null)}
+                onFocus={() => setActiveIndex(i)}
+                onBlur={() => setActiveIndex(null)}
+                aria-pressed={activeIndex === i}
+                aria-label={label}
+              >
+                <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                  <span className="text-[15px] font-medium tracking-tight">{month.month}</span>
+                  <span className="text-[12px] tabular-nums text-black/45 shrink-0">
+                    {formatPlanCompact(month.newTarget)} new
+                    <span className="text-black/30"> / {formatPlanCompact(month.cumulative)} cumulative</span>
+                  </span>
+                </div>
+                <div
+                  className="h-9 rounded-full overflow-hidden"
+                  style={{ backgroundColor: PLAN_COLORS.track }}
+                  role="img"
+                  aria-hidden="true"
+                >
+                  <div className="h-full flex" style={{ width: `${filled}%` }}>
+                    {month.segments.map((seg) => {
+                      const meta = streamMeta(seg.stream);
+                      const color = meta?.color || PLAN_COLORS.ink;
+                      const share = month.newTarget > 0 ? (seg.amount / month.newTarget) * 100 : 0;
+                      const showLabel = share >= 14 || seg.amount >= 2500;
+                      return (
+                        <div
+                          key={`${month.month}-${seg.stream}`}
+                          className="h-full flex items-center justify-center min-w-0"
+                          style={{
+                            width: `${share}%`,
+                            backgroundColor: color,
+                            color: segmentLabelColor(color),
+                          }}
+                          title={`${meta?.shortLabel || seg.stream} · ${formatPlanMoney(seg.amount)}`}
+                        >
+                          {showLabel ? (
+                            <span className="text-[11px] font-medium px-1 truncate">
+                              {formatPlanCompact(seg.amount)}
+                            </span>
+                          ) : (
+                            <span className="sr-only">{formatPlanCompact(seg.amount)}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="text-[11px] text-black/55 mt-4 leading-relaxed min-h-[16px]" role="status" aria-live="polite">
+        {active
+          ? `${active.month} · ${formatPlanCompact(active.newTarget)} new · ${formatPlanCompact(
+              active.cumulative
+            )} cumulative · ${active.segments
+              .map((seg) => `${streamMeta(seg.stream)?.shortLabel || seg.stream} ${formatPlanMoney(seg.amount)}`)
+              .join(" · ")}`
+          : `Hover or tab a month for the mix. Pilot is the $5,000 Founding Material Data Pilot sold on /platform. ${PLAN_BOOKING_SUBTITLE}`}
+      </p>
+    </div>
+  );
+}
+
 export function FunnelChart({
   rows,
   deadlineLabel,
@@ -272,57 +439,73 @@ export function FunnelChart({
   deadlineLabel: string;
   weakestKey?: string | null;
 }) {
-  const scale = Math.max(...rows.map((r) => Math.max(r.actual, r.target)), 1);
+  const maxTarget = Math.max(...rows.map((r) => r.target), 1);
+  const hasActuals = rows.some((r) => r.actual > 0);
 
   return (
     <div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-4">
-        <LegendItem color={PLAN_COLORS.mauve} label="Actual" />
-        <LegendItem color={PLAN_COLORS.plan} label={`Target by ${deadlineLabel}`} style="dashed" />
+        <LegendItem color={PLAN_COLORS.pilot} label={`Target by ${deadlineLabel}`} />
+        {hasActuals ? <LegendItem color={PLAN_COLORS.pilot} label="Live actual" style="hatch" /> : null}
       </div>
       <ul className="space-y-3">
         {rows.map((row) => {
-          const behind = row.target > 0 && row.actual < row.target;
+          const barPct = Math.max(2, (row.target / maxTarget) * 100);
+          const fillPct = row.target > 0 ? Math.min(100, (row.actual / row.target) * 100) : 0;
           const isWeakest = weakestKey === row.key;
           return (
-            <li key={row.key}>
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[12px] text-black/70">
-                  {row.label}
-                  {isWeakest ? (
-                    <span
-                      className="ml-2 text-[10px] tracking-[0.1em] uppercase"
-                      style={{ color: PLAN_COLORS.terracotta }}
-                    >
-                      Furthest behind
-                    </span>
-                  ) : null}
-                </span>
-                <span className="text-[12px] tabular-nums text-black/70 shrink-0">
-                  {row.actual}
-                  <span className="text-black/35"> / {row.target}</span>
-                  {row.conversionFromPrevious != null ? (
-                    <span className="text-black/35"> · {formatPercent(row.conversionFromPrevious)} conv.</span>
-                  ) : null}
-                </span>
-              </div>
-              <div className="relative h-3 mt-1.5 bg-black/[0.04] rounded-sm overflow-hidden">
+            <li key={row.key} className="flex items-center gap-3">
+              <span className="w-[7.75rem] sm:w-[9rem] shrink-0 text-[13px] text-black/80 leading-tight">
+                {row.label}
+                {isWeakest ? (
+                  <span
+                    className="block text-[10px] tracking-[0.1em] uppercase mt-0.5"
+                    style={{ color: PLAN_COLORS.terracotta }}
+                  >
+                    Furthest behind
+                  </span>
+                ) : null}
+              </span>
+              <div className="flex-1 min-w-0">
                 <div
-                  className="absolute inset-y-0 left-0 rounded-sm"
-                  style={{
-                    width: `${(row.actual / scale) * 100}%`,
-                    backgroundColor: behind ? PLAN_COLORS.mauve : PLAN_COLORS.sage,
-                  }}
-                />
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-y-0 border-l-2 border-dashed"
-                  style={{
-                    left: `${Math.min(100, (row.target / scale) * 100)}%`,
-                    borderColor: PLAN_COLORS.plan,
-                  }}
-                />
+                  className="h-7 rounded-full overflow-hidden"
+                  style={{ backgroundColor: PLAN_COLORS.track }}
+                  role="img"
+                  aria-label={`${row.label}: ${row.actual} of ${row.target} by ${deadlineLabel}${
+                    row.conversionFromPrevious != null
+                      ? `, ${formatPercent(row.conversionFromPrevious)} from previous stage`
+                      : ""
+                  }.`}
+                >
+                  <div
+                    className="h-full rounded-full relative"
+                    style={{
+                      width: `${barPct}%`,
+                      backgroundColor: hasActuals ? "rgba(59,123,255,0.28)" : PLAN_COLORS.pilot,
+                    }}
+                  >
+                    {hasActuals ? (
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full"
+                        style={{
+                          width: `${fillPct}%`,
+                          backgroundColor: PLAN_COLORS.pilot,
+                        }}
+                      />
+                    ) : null}
+                  </div>
+                </div>
               </div>
+              <span className="w-12 shrink-0 text-right text-[13px] tabular-nums text-black/75">
+                {hasActuals ? (
+                  <>
+                    <span className="text-black/40">{row.actual}/</span>
+                    {row.target}
+                  </>
+                ) : (
+                  row.target
+                )}
+              </span>
             </li>
           );
         })}

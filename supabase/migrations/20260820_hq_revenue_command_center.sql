@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS public.hq_revenue_streams (
 );
 
 INSERT INTO public.hq_revenue_streams (key, label, scope, sort_order) VALUES
-  ('api_pilot', 'API pilot', 'company', 10),
-  ('api_integration', 'API integration', 'company', 20),
+  ('api_pilot', 'Pilot', 'company', 10),
+  ('api_integration', 'Integration', 'company', 20),
   ('affiliate', 'Affiliate', 'company', 30),
   ('intertexe_partnership', 'INTERTEXE partnership', 'company', 40),
   ('creator_partnership', '@khiteri creator partnership', 'personal', 50)
@@ -225,8 +225,8 @@ SELECT
 FROM public.hq_workspaces w
 CROSS JOIN (
   VALUES
-    ('API pilots', 'company', 25000, 'api_pilot', 5, 'Five pilots at $5,000.'),
-    ('API integration', 'company', 12500, 'api_integration', 1, 'One early integration at the expected $12,500 deal size.'),
+    ('Pilots', 'company', 25000, 'api_pilot', 5, 'Five $5,000 Founding Material Data Pilots sold on /platform.'),
+    ('Integration', 'company', 12500, 'api_integration', 1, 'One early integration at the expected $12,500 deal size.'),
     ('@khiteri creator partnerships', 'personal', 9000, 'creator_partnership', 3, 'Three partnerships at $3,000, contracted personally.'),
     ('Affiliate commissions', 'company', 3500, 'affiliate', NULL, 'Confirmed commission revenue.')
 ) AS seed(name, scope, target_value, revenue_stream, unit_target, notes)
@@ -251,10 +251,10 @@ CROSS JOIN (
     ('Proposals by September 30', 'funnel_proposal', 3, '2026-09-30', 'Pilot proposals sent.'),
     ('Paid pilots by September 30', 'funnel_won', 1, '2026-09-30', 'One paid pilot signed.'),
     ('API integrations by September 30', 'funnel_api_integration', 0, '2026-09-30', 'Not expected before the first pilot closes.'),
-    ('Qualified accounts by December 31', 'funnel_qualified_account', 100, '2026-12-31', 'Qualified B2B accounts scored.'),
-    ('Snapshots by December 31', 'funnel_snapshot_sent', 40, '2026-12-31', 'Personalized snapshots sent.'),
-    ('Meetings by December 31', 'funnel_meeting', 20, '2026-12-31', 'Discovery meetings.'),
-    ('Proposals by December 31', 'funnel_proposal', 10, '2026-12-31', 'Pilot proposals sent.'),
+    ('Qualified accounts by December 31', 'funnel_qualified_account', 150, '2026-12-31', 'Qualified B2B accounts scored.'),
+    ('Snapshots by December 31', 'funnel_snapshot_sent', 60, '2026-12-31', 'Personalized snapshots sent.'),
+    ('Meetings by December 31', 'funnel_meeting', 30, '2026-12-31', 'Discovery meetings.'),
+    ('Proposals by December 31', 'funnel_proposal', 15, '2026-12-31', 'Pilot proposals sent.'),
     ('Paid pilots by December 31', 'funnel_won', 5, '2026-12-31', 'Five paid pilots.'),
     ('API integrations by December 31', 'funnel_api_integration', 1, '2026-12-31', 'One early integration.')
 ) AS seed(name, metric, target_value, target_date, notes)

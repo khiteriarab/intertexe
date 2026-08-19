@@ -42,16 +42,22 @@ export const PLAN_START_ISO = "2026-08-18";
 export const SEPTEMBER_MILESTONE_ISO = "2026-09-30";
 export const DECEMBER_MILESTONE_ISO = "2026-12-31";
 
-/** Chart-only tokens. Cream canvas and ink text already come from HqShell. */
+/** Chart tokens for the scaled booking plan. */
 export const PLAN_COLORS = {
   ink: "#1a1a1a",
   canvas: "#f6f5f3",
-  mauve: "#7c5468",
-  mauveDeep: "#563a49",
-  sage: "#4f6b56",
-  gold: "#8a6d2f",
-  terracotta: "#9c4a30",
-  plan: "#8d8781",
+  track: "#E8E4DC",
+  pilot: "#3B7BFF",
+  integration: "#22A06B",
+  creator: "#E86A3C",
+  affiliate: "#E8C547",
+  partnership: "#5C6B8A",
+  mauve: "#3B7BFF",
+  mauveDeep: "#22A06B",
+  sage: "#22A06B",
+  gold: "#E8C547",
+  terracotta: "#E86A3C",
+  plan: "#C4BFB6",
 } as const;
 
 export type StreamMeta = {
@@ -67,18 +73,18 @@ export type StreamMeta = {
 export const REVENUE_STREAMS: StreamMeta[] = [
   {
     key: "api_pilot",
-    label: "API pilot",
-    shortLabel: "Pilots",
+    label: "Pilot",
+    shortLabel: "Pilot",
     scope: "company",
-    color: PLAN_COLORS.mauve,
+    color: PLAN_COLORS.pilot,
     pattern: "solid",
   },
   {
     key: "api_integration",
-    label: "API integration",
+    label: "Integration",
     shortLabel: "Integration",
     scope: "company",
-    color: PLAN_COLORS.mauveDeep,
+    color: PLAN_COLORS.integration,
     pattern: "hatch",
   },
   {
@@ -86,7 +92,7 @@ export const REVENUE_STREAMS: StreamMeta[] = [
     label: "Affiliate",
     shortLabel: "Affiliate",
     scope: "company",
-    color: PLAN_COLORS.gold,
+    color: PLAN_COLORS.affiliate,
     pattern: "dots",
   },
   {
@@ -94,15 +100,15 @@ export const REVENUE_STREAMS: StreamMeta[] = [
     label: "INTERTEXE partnership",
     shortLabel: "Partnership",
     scope: "company",
-    color: PLAN_COLORS.sage,
+    color: PLAN_COLORS.partnership,
     pattern: "solid",
   },
   {
     key: "creator_partnership",
-    label: "@khiteri creator partnership",
+    label: "Creator",
     shortLabel: "Creator",
     scope: "personal",
-    color: PLAN_COLORS.terracotta,
+    color: PLAN_COLORS.creator,
     pattern: "hatch",
   },
 ];
@@ -170,14 +176,14 @@ export const DEFAULT_MILESTONES: Milestone[] = [
     targetDate: "2026-11-30",
     cumulative: 30000,
     increment: 15000,
-    logic: "Add another pilot plus creator, affiliate or partnership revenue.",
+    logic: "Book the $12,500 integration and the first affiliate buffer.",
   },
   {
     name: "December goal",
     targetDate: DECEMBER_MILESTONE_ISO,
     cumulative: 50000,
     increment: 20000,
-    logic: "Close the final pilot, an API integration and remaining channel revenue.",
+    logic: "Close two more $5,000 pilots plus creator and remaining affiliate buffer.",
   },
 ];
 
@@ -187,10 +193,83 @@ export const DEFAULT_STREAM_TARGETS: Array<{
   unitTarget: number | null;
   unitPlan: string;
 }> = [
-  { stream: "api_pilot", target: 25000, unitTarget: 5, unitPlan: "Five pilots at $5,000" },
-  { stream: "api_integration", target: 12500, unitTarget: 1, unitPlan: "One early integration" },
+  { stream: "api_pilot", target: 25000, unitTarget: 5, unitPlan: "Five $5,000 Founding Material Data Pilots sold on /platform" },
+  { stream: "api_integration", target: 12500, unitTarget: 1, unitPlan: "One early integration after a paid pilot" },
   { stream: "creator_partnership", target: 9000, unitTarget: 3, unitPlan: "Three partnerships at $3,000" },
   { stream: "affiliate", target: 3500, unitTarget: null, unitPlan: "Confirmed commission revenue" },
+];
+
+export type MonthlyBookingMix = {
+  month: string;
+  endDate: string;
+  newTarget: number;
+  cumulative: number;
+  segments: Array<{ stream: RevenueStreamKey; amount: number }>;
+};
+
+export const PLAN_BOOKING_SUBTITLE = "5 pilots · 1 integration · creator and affiliate buffer.";
+
+/** Streams shown as colored squares on the scaled booking plan. */
+export const BOOKING_LEGEND_STREAMS: RevenueStreamKey[] = [
+  "api_pilot",
+  "api_integration",
+  "creator_partnership",
+  "affiliate",
+];
+
+/** Visible monthly stack: 5 pilots · 1 integration · creator and affiliate buffer. */
+export const MONTHLY_BOOKING_MIX: MonthlyBookingMix[] = [
+  {
+    month: "September",
+    endDate: SEPTEMBER_MILESTONE_ISO,
+    newTarget: 5000,
+    cumulative: 5000,
+    segments: [{ stream: "api_pilot", amount: 5000 }],
+  },
+  {
+    month: "October",
+    endDate: "2026-10-31",
+    newTarget: 10000,
+    cumulative: 15000,
+    segments: [{ stream: "api_pilot", amount: 10000 }],
+  },
+  {
+    month: "November",
+    endDate: "2026-11-30",
+    newTarget: 15000,
+    cumulative: 30000,
+    segments: [
+      { stream: "api_integration", amount: 12500 },
+      { stream: "affiliate", amount: 2500 },
+    ],
+  },
+  {
+    month: "December",
+    endDate: DECEMBER_MILESTONE_ISO,
+    newTarget: 20000,
+    cumulative: 50000,
+    segments: [
+      { stream: "api_pilot", amount: 10000 },
+      { stream: "creator_partnership", amount: 9000 },
+      { stream: "affiliate", amount: 1000 },
+    ],
+  },
+];
+
+export const PLAN_DECISION_GATE = {
+  label: "Decision gate",
+  text: "If no creator contracts by Nov 1, switch to B2B-heavy.",
+};
+
+export const PLAN_MUST_HAPPEN_NEXT = [
+  "Correct /platform, /about, /press and repeated verified claims.",
+  "Finish the Material Intelligence migration and production smoke tests.",
+  "Make /platform/demo, /platform/docs, /platform/request and OpenAPI publicly functional.",
+  "Benchmark ten catalogs before promising coverage, turnaround or margin.",
+  "Finalize the $5K pilot SOW, sample deliverable, invoice path and data-handling one-pager.",
+  "Select the first 30 high-fit retailers, marketplaces, resale platforms and EU-selling brands.",
+  "Produce five personalized snapshots and start meetings immediately.",
+  "Restore the Chrome extension’s branded TX Match experience — do not let extension approval block B2B sales.",
 ];
 
 export type FunnelStageKey =
@@ -203,18 +282,18 @@ export type FunnelStageKey =
 
 export const FUNNEL_STAGES: Array<{ key: FunnelStageKey; label: string }> = [
   { key: "qualified_account", label: "Qualified accounts" },
-  { key: "snapshot_sent", label: "Snapshots sent" },
+  { key: "snapshot_sent", label: "Snapshots" },
   { key: "meeting", label: "Meetings" },
   { key: "proposal", label: "Proposals" },
   { key: "won", label: "Paid pilots" },
-  { key: "api_integration", label: "API integrations" },
+  { key: "api_integration", label: "Integrations" },
 ];
 
 export const DEFAULT_FUNNEL_TARGETS: Record<FunnelStageKey, { september: number; december: number }> = {
-  qualified_account: { september: 100, december: 100 },
-  snapshot_sent: { september: 20, december: 40 },
-  meeting: { september: 12, december: 20 },
-  proposal: { september: 3, december: 10 },
+  qualified_account: { september: 100, december: 150 },
+  snapshot_sent: { september: 20, december: 60 },
+  meeting: { september: 12, december: 30 },
+  proposal: { september: 3, december: 15 },
   won: { september: 1, december: 5 },
   api_integration: { september: 0, december: 1 },
 };
@@ -502,6 +581,16 @@ export function formatPlanMoney(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return "—";
   const rounded = Math.round(n);
   return `$${rounded.toLocaleString("en-US")}`;
+}
+
+export function formatPlanCompact(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  if (Math.abs(n) >= 1000) {
+    const k = n / 1000;
+    const digits = Number.isInteger(k) ? 0 : 1;
+    return `$${k.toFixed(digits)}K`;
+  }
+  return formatPlanMoney(n);
 }
 
 export function formatPercent(ratio: number | null | undefined, digits = 0): string {

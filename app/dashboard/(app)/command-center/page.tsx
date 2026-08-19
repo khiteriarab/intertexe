@@ -22,7 +22,7 @@ export default async function CommandCenterPage() {
     <div>
       <HqPageHeader
         title="$50K Command Center"
-        description="Booked toward the September 30 milestone and the December 31 goal, the stage that is behind plan, and the actions most likely to move revenue this week. Founder-only."
+        description="Interactive $50K booking plan: five $5,000 Founding Material Data Pilots sold on /platform, one integration, and creator plus affiliate buffer. Founder-only."
       />
       <CommandCenterClient bundle={bundle} />
     </div>
