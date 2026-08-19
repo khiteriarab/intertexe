@@ -3,8 +3,10 @@
  * No network, no schema changes — used to keep retailer-facing material and price honest.
  */
 
+import { normalizeCompositionStorage } from "./composition-display";
+
 export const FIBER_NAME_RE =
-  /\b(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/i;
+  /\b(cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/i;
 
 const PROMO_RE =
   /\b(off|order|shipping|sale|discount|promo|code|subscribe|newsletter|members?)\b/i;
@@ -54,6 +56,15 @@ export function hasPercentages(text: string | null | undefined): boolean {
   return /\d+(?:\.\d+)?%/.test(String(text || ""));
 }
 
+/**
+ * Retailer pages often repeat the same fiber ("SILK, SILK, silk, silk").
+ * Show each distinct material once, title-cased, joined with "; ".
+ */
+export function collapseRepeatedMaterials(raw: string | null | undefined): string {
+  const stored = normalizeCompositionStorage(raw);
+  return stored || String(raw || "").replace(/\s+/g, " ").trim();
+}
+
 export function looksLikePercentageComposition(text: string): boolean {
   if (!text || text.length > 180) return false;
   if (PROMO_RE.test(text)) return false;
@@ -80,9 +91,9 @@ export function normalizeListedMaterial(raw: string): string {
     const m = t.match(
       /(\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*(?:,\s*\d+(?:\.\d+)?%\s*[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s/-]*){0,6})/
     );
-    return (m?.[1] || t).trim();
+    return collapseRepeatedMaterials((m?.[1] || t).trim());
   }
-  return t.replace(FIBER_NAME_RE, (fiber) => titleCaseName(fiber));
+  return collapseRepeatedMaterials(t);
 }
 
 /**
@@ -91,7 +102,7 @@ export function normalizeListedMaterial(raw: string): string {
 export function extractLabeledMaterial(htmlOrText: string): string | null {
   const plain = stripToText(htmlOrText).slice(0, 40000);
   const re =
-    /(?:material|composition|fabric|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
+    /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(plain))) {
     const candidate = normalizeListedMaterial(m[1] || "");
@@ -128,8 +139,8 @@ export function extractVisibleOffer(htmlOrText: string): MoneyOffer {
 
 /** When JSON-LD is USD and the page shows €, keep the shopper-facing offer. */
 export function preferRetailerFacingOffer(structured: MoneyOffer, visible: MoneyOffer): MoneyOffer {
-  const visOk = visible.price != null && Boolean(visible.currency);
-  const strOk = structured.price != null;
+  const visOk = visible.price != null && visible.price > 0 && Boolean(visible.currency);
+  const strOk = structured.price != null && structured.price > 0;
   if (visOk && strOk && visible.currency && structured.currency && visible.currency !== structured.currency) {
     const visRank = LOCAL_CURRENCY_RANK[visible.currency] || 0;
     const strRank = LOCAL_CURRENCY_RANK[structured.currency] || 0;
@@ -137,7 +148,7 @@ export function preferRetailerFacingOffer(structured: MoneyOffer, visible: Money
   }
   if (visOk && (!strOk || !structured.currency)) return visible;
   return {
-    price: structured.price ?? visible.price,
+    price: structured.price && structured.price > 0 ? structured.price : visible.price,
     currency: structured.currency || visible.currency || null,
   };
 }
@@ -202,7 +213,7 @@ export function formatCapturePrice(
 ): string | null {
   if (price == null || price === "") return null;
   const num = typeof price === "string" ? parseFloat(price.replace(/[^0-9.,-]/g, "").replace(",", ".")) : Number(price);
-  if (!Number.isFinite(num)) return null;
+  if (!Number.isFinite(num) || num <= 0) return null;
   const cur = String(currency || "").trim().toUpperCase();
   if (!cur) return new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 }).format(num);
   const locale = cur === "EUR" ? "en-IE" : cur === "GBP" ? "en-GB" : "en-US";

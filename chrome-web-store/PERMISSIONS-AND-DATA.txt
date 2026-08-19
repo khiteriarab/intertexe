@@ -1,4 +1,4 @@
-INTERTEXE: Fabric Scanner 1.0.1 — permissions and data (from the code)
+INTERTEXE: Fabric Scanner 1.0.10 — permissions and data (from the code)
 
 Manifest permissions
   activeTab   Temporary access to the tab the user is on when they use the
@@ -16,10 +16,19 @@ Host permission
               logout). The extension does not fetch retailer origins.
 
 When product-page data is read
-  Not on every page visit. Not when the popup merely opens.
-  chrome.scripting.executeScript runs when the user clicks “Save this page.”
-  If they were signed out, that extracted payload is stored locally as
-  pendingCapture and sent after sign-in finishes.
+  Not on every page visit. Not via always-on content scripts.
+  chrome.scripting.executeScript runs when the popup opens (PEEK_TAB)
+  and when the user clicks “Save this page.”
+  Opening the popup on a product page generates a public match set
+  without signing in (POST /api/matches). Sign-in is required only to
+  save the piece to an INTERTEXE account.
+
+Transmitted to https://www.intertexe.com (signed out)
+  POST /api/matches                 — originalUrl, title, imageUrl,
+                                      description, brandName, sku, price,
+                                      currency, compositionText, retailer,
+                                      sourceApp=chrome_extension, decodeNow
+  GET  /api/matches/{id}            — wait for TX Match copy
 
 Product-page fields read from the active tab (on Save this page)
   Page URL (canonical / og:url / location.href)

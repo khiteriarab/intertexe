@@ -220,6 +220,8 @@ function offersOf(node: Record<string, unknown>): Record<string, unknown> | null
 }
 
 const COLOR_WORDS = [
+  "indigo",
+  "denim",
   "black",
   "white",
   "ivory",
@@ -342,11 +344,15 @@ export function inferApparelAttributes(input: {
     }
   }
 
-  if (/\b(wide.?leg|flare|flared|straight|skinny|cigarette|bootcut|tapered|barrel)\b/.test(text)) {
+  if (/\b(wide.?leg|flare|flared|straight|skinny|cigarette|bootcut|tapered|barrel|slip|boy(?:friend)?)\b/.test(text)) {
     const sil = text.match(
-      /\b(wide.?leg|flare|flared|straight|skinny|cigarette|bootcut|tapered|barrel)\b/
+      /\b(wide.?leg|flare|flared|straight|skinny|cigarette|bootcut|tapered|barrel|slip|boy(?:friend)?)\b/
     );
     if (sil) silhouette = silhouette || sil[1].replace(/\s+/g, " ");
+  }
+  if (/\b(high\s*boy|boy(?:friend)?\s*fit)\b/.test(text)) {
+    distinctiveDetails.push("boy fit");
+    fit = fit || "boy fit";
   }
   if (/\b(slim|relaxed|oversized|tailored|regular|fitted|loose)\s*fit\b/.test(text)) {
     const f = text.match(/\b(slim|relaxed|oversized|tailored|regular|fitted|loose)\s*fit\b/);
@@ -363,7 +369,7 @@ export function inferApparelAttributes(input: {
   let color: string | null = null;
   for (const c of COLOR_WORDS) {
     if (new RegExp(`\\b${c}\\b`, "i").test(text)) {
-      color = c;
+      color = c === "indigo" || c === "denim" ? "blue" : c;
       break;
     }
   }

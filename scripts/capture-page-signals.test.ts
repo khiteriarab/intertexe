@@ -11,7 +11,11 @@ import {
   shopAtLabel,
   titleCaseName,
   uniqueTitleCaseNames,
+  collapseRepeatedMaterials,
+  normalizeListedMaterial,
 } from "../lib/capture-page-signals.ts";
+import { formatCompositionDisplay } from "../lib/composition-display.ts";
+import { buildCaptureResultView } from "../lib/capture-result.ts";
 import {
   normalizeRetailerClickSource,
   resolveAuthenticatedUserId,
@@ -29,6 +33,18 @@ describe("retailer material capture", () => {
     assert.equal(looksLikePercentageComposition("Silk"), false);
   });
 
+  it("reads Spanish composition labels as cotton", () => {
+    const html = `
+      <h1>Jeans Drayton High Boy Fit</h1>
+      <p>Composición: 99% algodón, 1% elastano</p>
+    `;
+    assert.match(extractLabeledMaterial(html) || "", /cotton/i);
+    assert.equal(
+      formatCompositionDisplay("99% algodón; 1% elastano").materialLine,
+      "Material: 99% Cotton; 1% Elastane"
+    );
+  });
+
   it("still prefers percentage compositions when they exist", () => {
     const html = `<p>Composition: 100% silk</p><p>Material: silk</p>`;
     assert.match(extractLabeledMaterial(html) || "", /100%\s*silk/i);
@@ -37,6 +53,37 @@ describe("retailer material capture", () => {
   it("does not treat a sale banner as composition", () => {
     assert.equal(looksLikePercentageComposition("20% off silk dresses"), false);
     assert.equal(extractLabeledMaterial("Spring sale, silk-like drape, 20% off"), null);
+  });
+
+  it("collapses repeated silk from a retailer dump", () => {
+    assert.equal(collapseRepeatedMaterials("SILK, SILK, silk, silk, silk, SILK, SILK, SILK"), "Silk");
+    assert.equal(normalizeListedMaterial("SILK, SILK, silk, silk"), "Silk");
+    assert.equal(collapseRepeatedMaterials("Retailer lists: SILK, SILK, silk, silk"), "Silk");
+    assert.equal(collapseRepeatedMaterials("70% cotton, 30% silk"), "70% Cotton; 30% Silk");
+  });
+
+  it("uses one material formula with semicolons", () => {
+    assert.equal(
+      formatCompositionDisplay("SILK, SILK, silk, silk, silk, SILK, SILK, SILK").materialLine,
+      "Material: Silk — percentage not provided"
+    );
+    assert.equal(
+      formatCompositionDisplay("100% silk / 100% polyester lining").materialLine,
+      "Material: 100% Silk; lining: 100% Polyester"
+    );
+    assert.equal(
+      formatCompositionDisplay("70% cotton / 30% silk").materialLine,
+      "Material: 70% Cotton; 30% Silk"
+    );
+    const view = buildCaptureResultView({
+      title: "Rose Silk Slip Dress Sage",
+      brand_name: "Hanamer",
+      price: 0,
+      currency: "EUR",
+      composition_text: "SILK, SILK, silk",
+    });
+    assert.equal(view.priceLabel, "Price unavailable");
+    assert.equal(view.materialLine, "Material: Silk — exact percentage not provided");
   });
 });
 
@@ -63,6 +110,8 @@ describe("price and currency trust", () => {
     assert.equal(preferred.price, 465);
     assert.equal(formatCapturePrice(465, null), "465");
     assert.equal(formatCapturePrice(465, "EUR"), "€465");
+    assert.equal(formatCapturePrice(0, "USD"), null);
+    assert.equal(formatCapturePrice("0", "EUR"), null);
   });
 
   it("reads country from og:locale, not from a generic .com host", () => {

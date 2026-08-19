@@ -108,14 +108,14 @@ export default function PrivacyPage() {
 
           <h3 className="text-lg font-serif text-foreground pt-2">When the extension reads a retailer page</h3>
           <p>
-            The extension does not run on every page you visit. It does not use always-on content scripts. Opening the toolbar icon does not scrape the page. When you click <strong className="text-foreground">Save this page</strong>, the extension injects a script into the active tab and reads product information from that tab only.
+            The extension does not run on every page you visit. It does not use always-on content scripts. When you open the toolbar icon, the extension injects a script into the active tab only and reads product information from that tab so it can show the listed material immediately. Clicking <strong className="text-foreground">Save this page</strong> reads the same fields again and saves the piece to your Inspirations.
           </p>
           <p>
-            If you click Save this page while signed out, the extracted product fields are stored on your computer until you finish signing in, then they are sent to INTERTEXE.
+            If you are signed out, the extracted product fields stay on your computer until you finish signing in, then they are sent to INTERTEXE. If you are signed in, opening the toolbar also saves that piece (or refreshes a duplicate) so TX Matches can appear in the popup.
           </p>
 
           <h3 className="text-lg font-serif text-foreground pt-2">Product-page data</h3>
-          <p>From the tab you asked to save, the extension may read:</p>
+          <p>From the active product tab, the extension may read:</p>
           <ul className="flex flex-col gap-2 pl-6 list-disc marker:text-muted-foreground">
             <li>The page URL (including canonical or Open Graph URL)</li>
             <li>Title, image URL, and meta description</li>

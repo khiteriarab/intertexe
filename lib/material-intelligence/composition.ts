@@ -1,3 +1,5 @@
+import { splitShellAndLining } from "../composition-display";
+
 const NATURAL = new Set([
   "cotton",
   "linen",
@@ -107,9 +109,11 @@ export function parseCompositionText(
 
   const text = String(raw || "").replace(/\s+/g, " ").trim();
   if (!text) return emptyComposition();
+  const { shell, lining } = splitShellAndLining(text);
+  const parseText = shell || text;
 
   const pctHits = [
-    ...text.matchAll(
+    ...parseText.matchAll(
       /(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([a-z][a-z\s-]{1,40})/gi
     ),
   ];
@@ -124,10 +128,13 @@ export function parseCompositionText(
         raw_value: m[0].trim(),
       };
     });
-    return finalize(components, text);
+    const extra = lining
+      ? ["Lining is listed separately; it is not counted as the shell mix."]
+      : [];
+    return finalize(components, parseText, extra);
   }
 
-  const named = text.match(
+  const named = parseText.match(
     /\b(cotton|linen|silk|wool|cashmere|hemp|leather|elastane|polyester|nylon|viscose|rayon)\b/i
   );
   if (named) {

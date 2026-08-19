@@ -39,12 +39,27 @@ export function Navbar() {
   const designersTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     setHasMounted(true);
-    const token = typeof window !== "undefined" ? localStorage.getItem("intertexe_auth_token") : null;
-    if (!token) return;
-    fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.ok ? r.json() : null)
-      .then((user) => setIsAuthenticated(!!user))
-      .catch(() => setIsAuthenticated(false));
+    let cancelled = false;
+    (async () => {
+      const { hydrateWebAuthToken, refreshWebAuthToken, getWebAuthToken } = await import(
+        "../../lib/web-auth-token"
+      );
+      let token = (await hydrateWebAuthToken()) || getWebAuthToken();
+      if (!token || cancelled) return;
+      let res = await fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 401) {
+        token = await refreshWebAuthToken();
+        if (token) {
+          res = await fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+        }
+      }
+      if (!cancelled) setIsAuthenticated(res.ok);
+    })().catch(() => {
+      if (!cancelled) setIsAuthenticated(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const { data: results = [] } = useQuery<DesignerSearchHit[]>({

@@ -3,9 +3,13 @@
 import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-
-const TOKEN_KEY = "intertexe_auth_token";
-const REFRESH_KEY = "intertexe_refresh_token";
+import {
+  AUTH_REFRESH_KEY,
+  clearWebAuthTokens,
+  hydrateWebAuthToken,
+  refreshWebAuthToken,
+  setWebAuthTokens,
+} from "../../../lib/web-auth-token";
 
 type Phase = "loading" | "login" | "parking" | "done" | "error";
 
@@ -53,20 +57,28 @@ export default function ExtensionAuthClient() {
         setPhase("error");
         return;
       }
-      const existing = localStorage.getItem(TOKEN_KEY);
-      const existingRefresh = localStorage.getItem(REFRESH_KEY);
+      let existing = await hydrateWebAuthToken();
+      let existingRefresh = localStorage.getItem(AUTH_REFRESH_KEY);
       if (!existing) {
         setPhase("login");
         return;
       }
       try {
-        const me = await fetch("/api/auth/me", {
+        let me = await fetch("/api/auth/me", {
           headers: { Authorization: `Bearer ${existing}` },
         });
         if (cancelled) return;
         if (!me.ok) {
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(REFRESH_KEY);
+          existing = await refreshWebAuthToken();
+          existingRefresh = localStorage.getItem(AUTH_REFRESH_KEY);
+          if (existing) {
+            me = await fetch("/api/auth/me", {
+              headers: { Authorization: `Bearer ${existing}` },
+            });
+          }
+        }
+        if (!me.ok || !existing) {
+          clearWebAuthTokens();
           setPhase("login");
           return;
         }
@@ -98,10 +110,7 @@ export default function ExtensionAuthClient() {
       if (!res.ok || !data.token) {
         throw new Error(data.message || "Invalid email or password");
       }
-      localStorage.setItem(TOKEN_KEY, data.token);
-      if (data.refreshToken) {
-        localStorage.setItem(REFRESH_KEY, data.refreshToken);
-      }
+      setWebAuthTokens(data.token, data.refreshToken || null);
       await parkSession(data.token, data.refreshToken || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");

@@ -14,6 +14,7 @@ async function getStore() {
     "authTabId",
     "extSession",
     "lastResult",
+    "lastPeek",
     "uiStatus",
     "uiError",
   ]);
@@ -29,6 +30,7 @@ async function publicState() {
     signedIn: Boolean(store.accessToken),
     busy: Boolean(store.extSession),
     result: store.lastResult || null,
+    peek: store.lastPeek || null,
     status: store.uiStatus || "",
     error: Boolean(store.uiError),
   };
@@ -90,6 +92,77 @@ async function authedFetch(path, opts = {}, attempt = 0) {
 }
 
 function extractProductFromPage() {
+  function uniqueFibers(raw) {
+    const t = String(raw || "").replace(/\s+/g, " ").trim();
+    if (!t) return "";
+    const re =
+      /\b(organic\s+|recycled\s+)?(cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
+    const seen = new Set();
+    const out = [];
+    const canon = {
+      algodon: "cotton",
+      denim: "cotton",
+      vaquero: "cotton",
+      seda: "silk",
+      lana: "wool",
+      lino: "linen",
+      elastano: "elastane",
+      viscosa: "viscose",
+      poliester: "polyester",
+      poliamida: "polyamide",
+      spandex: "elastane",
+    };
+    let m;
+    while ((m = re.exec(t))) {
+      const rawName = String(m[2] || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const name = canon[rawName] || rawName;
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      out.push(name.charAt(0).toUpperCase() + name.slice(1));
+    }
+    const percents = [
+      ...t.matchAll(/(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s-]{1,30})/gi),
+    ];
+    if (percents.length) {
+      const seenPct = new Set();
+      const clauses = [];
+      for (const hit of percents) {
+        const rawFiber = String(hit[2] || "").trim();
+        const key = rawFiber.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+        const name = canon[key] || key;
+        if (!name || seenPct.has(name)) continue;
+        seenPct.add(name);
+        clauses.push(`${hit[1]}% ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
+      }
+      return clauses.join("; ");
+    }
+    return out.join("; ");
+  }
+
+  function visibleOffer(text) {
+    const found = [];
+    const re =
+      /(?:(€|£|\$|EUR|GBP|USD)\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?))|(?:(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)\s*(€|EUR))/gi;
+    let m;
+    while ((m = re.exec(text))) {
+      const symbol = m[1] || m[4] || "";
+      const amountRaw = String(m[2] || m[3] || "").replace(/[.,](?=\d{3}\b)/g, "").replace(",", ".");
+      const price = parseFloat(amountRaw);
+      let currency = null;
+      const s = symbol.toUpperCase();
+      if (s === "€" || s === "EUR") currency = "EUR";
+      else if (s === "£" || s === "GBP") currency = "GBP";
+      else if (s === "$" || s === "USD") currency = "USD";
+      if (currency && Number.isFinite(price) && price >= 10 && price <= 50000) {
+        found.push({ price, currency });
+      }
+    }
+    if (!found.length) return { price: null, currency: null };
+    const rank = { EUR: 3, GBP: 3, USD: 1 };
+    found.sort((a, b) => (rank[b.currency] || 0) - (rank[a.currency] || 0));
+    return found[0];
+  }
+
   const attr = (sel) => document.querySelector(sel)?.getAttribute("content")?.trim() || "";
   const text = (sel) => document.querySelector(sel)?.textContent?.trim() || "";
   const ogTitle = attr('meta[property="og:title"]') || attr('meta[name="twitter:title"]');
@@ -126,11 +199,16 @@ function extractProductFromPage() {
         const offer = Array.isArray(node.offers) ? node.offers[0] : node.offers;
         if (offer) {
           const raw = offer.price ?? offer.lowPrice;
-          if (raw != null && raw !== "") price = Number(raw);
+          const n = Number(raw);
+          if (Number.isFinite(n) && n > 0) price = n;
           currency = currency || offer.priceCurrency || null;
         }
         const extra = node.material || node.pattern || "";
-        if (extra) compositionText = String(extra);
+        if (Array.isArray(extra)) {
+          compositionText = extra.filter(Boolean).map(String).join("; ");
+        } else if (extra) {
+          compositionText = String(extra);
+        }
       }
     } catch {
       /* ignore invalid JSON-LD */
@@ -138,12 +216,36 @@ function extractProductFromPage() {
   }
 
   const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 12000);
-  const fiberRe =
-    /\b(\d{1,3}(?:\.\d+)?%\s*)?(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
-  const hits = bodyText.match(fiberRe);
-  if (!compositionText && hits?.length) {
-    const listed = hits.slice(0, 8).join(", ");
-    if (listed.length < 180) compositionText = listed;
+  const labeledRe =
+    /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
+  let labeled = null;
+  let labeledMatch;
+  while ((labeledMatch = labeledRe.exec(bodyText))) {
+    const candidate = uniqueFibers(labeledMatch[1] || "");
+    if (candidate) {
+      labeled = candidate;
+      break;
+    }
+  }
+  if (labeled) compositionText = labeled;
+  else if (compositionText) compositionText = uniqueFibers(compositionText) || compositionText;
+  else {
+    const pctLine = bodyText.match(
+      /\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)(?:\s*[;,/]\s*\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)){0,6}/i
+    );
+    compositionText = pctLine ? uniqueFibers(pctLine[0]) : null;
+  }
+
+  const visible = visibleOffer(bodyText);
+  if ((!price || price <= 0) && visible.price) {
+    price = visible.price;
+    currency = visible.currency || currency;
+  } else if (price > 0 && visible.price && visible.currency && currency && visible.currency !== currency) {
+    const rank = { EUR: 3, GBP: 3, USD: 1 };
+    if ((rank[visible.currency] || 0) >= (rank[String(currency).toUpperCase()] || 0)) {
+      price = visible.price;
+      currency = visible.currency;
+    }
   }
   // Visible page text is read locally to find a composition line. It is not
   // transmitted as a raw page dump — only the short compositionText above.
@@ -162,7 +264,7 @@ function extractProductFromPage() {
     description: description ? description.slice(0, 500) : null,
     brandName,
     sku,
-    price: Number.isFinite(price) ? price : null,
+    price: Number.isFinite(price) && price > 0 ? price : null,
     currency,
     compositionText,
     retailer,
@@ -210,11 +312,34 @@ function enrichmentDone(capture) {
   return false;
 }
 
+function captureIdOf(json) {
+  return (json?.capture || json)?.id || null;
+}
+
+function priorCaptureUrl(result) {
+  const prior = result?.capture || result || {};
+  return String(prior.original_url || prior.originalUrl || "");
+}
+
 async function pollCapture(id, timeoutMs = 25000) {
   const t0 = Date.now();
   let last = null;
   while (Date.now() - t0 < timeoutMs) {
     const { res, json } = await authedFetch(`/api/capture/${id}`);
+    if (res.ok) {
+      last = json;
+      if (enrichmentDone(json.capture || json)) return json;
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  return last;
+}
+
+async function pollPublicCapture(id, timeoutMs = 25000) {
+  const t0 = Date.now();
+  let last = null;
+  while (Date.now() - t0 < timeoutMs) {
+    const { res, json } = await api(`/api/matches/${id}`);
     if (res.ok) {
       last = json;
       if (enrichmentDone(json.capture || json)) return json;
@@ -232,13 +357,26 @@ async function savePayload(payload) {
   if (res.status === 401) {
     return { needsSignIn: true, payload };
   }
-  if (!res.ok || !(json.capture || json).id) {
+  if (!res.ok || !captureIdOf(json)) {
     throw new Error(json.error || json.message || "Could not save this page");
   }
-  const captureId = (json.capture || json).id;
-  const polled = await pollCapture(captureId);
+  const polled = await pollCapture(captureIdOf(json));
   const result = polled || json;
   await chrome.storage.local.set({ lastResult: result, pendingCapture: null });
+  return { result };
+}
+
+async function createPublicMatches(payload) {
+  const { res, json } = await api("/api/matches", {
+    method: "POST",
+    body: payload,
+  });
+  if (!res.ok || !captureIdOf(json)) {
+    throw new Error(json.error || json.message || "Could not find matches");
+  }
+  const polled = await pollPublicCapture(captureIdOf(json));
+  const result = polled || json;
+  await chrome.storage.local.set({ lastResult: result });
   return { result };
 }
 
@@ -299,6 +437,7 @@ async function signOut() {
     "refreshToken",
     "pendingCapture",
     "lastResult",
+    "lastPeek",
     "extSession",
     "authTabId",
     "uiStatus",
@@ -309,9 +448,12 @@ async function signOut() {
 
 function matchHref(alt) {
   const raw = String(alt?.url || "").trim();
-  if (/^https?:/i.test(raw)) return raw;
+  if (/^https?:/i.test(raw)) {
+    const brand = encodeURIComponent(alt?.brand_name || alt?.brandName || "partner");
+    return `${APP}/leaving?brand=${brand}&url=${encodeURIComponent(raw)}`;
+  }
   if (alt?.id) return `${APP}/product/${encodeURIComponent(alt.id)}`;
-  return `${APP}/inspirations`;
+  return `${APP}/capture`;
 }
 
 async function openMatch(alt, captureId) {
@@ -351,18 +493,50 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       sendResponse({ ok: true });
       return;
     }
+    if (msg?.type === "PEEK_TAB") {
+      try {
+        const peek = await extractActiveTab();
+        await chrome.storage.local.set({ lastPeek: peek, uiStatus: "", uiError: false });
+        sendResponse({ peek });
+      } catch (e) {
+        const error = e instanceof Error ? e.message : "Could not read this page";
+        await setUi(error, true);
+        sendResponse({ error });
+      }
+      return;
+    }
     if (msg?.type === "SAVE_TAB") {
       try {
-        const payload = await extractActiveTab();
+        const payload = msg.payload || (await extractActiveTab());
         const store = await getStore();
+        const currentUrl = String(payload.originalUrl || "");
+        const priorUrl = priorCaptureUrl(store.lastResult);
+        const priorAlts = store.lastResult?.capture?.alternatives || store.lastResult?.view?.alternatives;
+        if (
+          !msg.force &&
+          currentUrl &&
+          priorUrl &&
+          currentUrl === priorUrl &&
+          Array.isArray(priorAlts) &&
+          priorAlts.length
+        ) {
+          sendResponse({ result: store.lastResult, peek: payload, reused: true });
+          return;
+        }
         if (!store.accessToken) {
-          await chrome.storage.local.set({ pendingCapture: payload });
-          await startSignIn();
-          sendResponse({ needsSignIn: true });
+          if (msg.force) {
+            await chrome.storage.local.set({ pendingCapture: payload, lastPeek: payload });
+            await startSignIn();
+            sendResponse({ needsSignIn: true, peek: payload });
+            return;
+          }
+          const created = await createPublicMatches(payload);
+          await chrome.storage.local.set({ lastPeek: payload });
+          sendResponse({ ...created, peek: payload });
           return;
         }
         const saved = await savePayload(payload);
-        sendResponse(saved);
+        sendResponse({ ...saved, peek: payload });
       } catch (e) {
         const error = e instanceof Error ? e.message : "Save failed";
         await setUi(error, true);

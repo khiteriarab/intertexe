@@ -13,6 +13,7 @@ import {
   integritySpecFromBrowseOpts,
   type FilterIntegrityProduct,
 } from "./catalog-filter-integrity";
+import { compositionHasSyntheticLining, normalizeCompositionStorage } from "./composition-display";
 import { fetchTastePreferences } from "./taste-preferences";
 
 export type FindBetterAlternative = {
@@ -21,6 +22,7 @@ export type FindBetterAlternative = {
   brand_name: string | null;
   brand_slug: string | null;
   image_url: string | null;
+  url?: string | null;
   price: number | string | null;
   currency: string | null;
   composition: string | null;
@@ -48,9 +50,26 @@ export type FindBetterInput = {
   region?: string | null;
   userId?: string | null;
   preferredFibers?: string[];
+  preferredDesigners?: string[];
+  preferredSilhouettes?: string[];
   userPriceMin?: number | null;
   userPriceMax?: number | null;
 };
+
+export type LookFamily =
+  | "jeans"
+  | "sweat"
+  | "leggings"
+  | "shorts"
+  | "trousers"
+  | "dress"
+  | "skirt"
+  | "top"
+  | "knitwear"
+  | "outerwear"
+  | "jumpsuit"
+  | "shoes"
+  | "other";
 
 const SHOE_RE =
   /\b(shoe|shoes|boot|boots|sneaker|sneakers|heel|heels|sandal|sandals|loafer|footwear)\b/i;
@@ -89,6 +108,76 @@ const GARMENT_TO_BROWSE_CATEGORY: Record<string, string> = {
   footwear: "shoes",
 };
 
+export function silhouetteFamily(text: string | null | undefined): "wide" | "slim" | "straight" | "flare" | "relaxed" | null {
+  const t = String(text || "").toLowerCase();
+  if (!t.trim()) return null;
+  if (/wide[-\s]?leg|palazzo|baggy|full\s*leg/.test(t)) return "wide";
+  if (/slim|skinny|cigarette|taper(?:ed)?/.test(t)) return "slim";
+  if (/bootcut|flare|flared/.test(t)) return "flare";
+  if (/straight/.test(t)) return "straight";
+  if (/boyfriend|relaxed|loose|barrel/.test(t)) return "relaxed";
+  return null;
+}
+
+export function silhouettesConflict(source: string | null, product: string | null): boolean {
+  if (!source || !product) return false;
+  if (source === product) return false;
+  // Straight jeans remain a close substitute for wide-leg. Slim pants are not.
+  return (source === "wide" && product === "slim") || (source === "slim" && product === "wide");
+}
+
+export function lookFamilyFromText(text: string | null | undefined): LookFamily | null {
+  const t = String(text || "").toLowerCase();
+  if (!t.trim()) return null;
+  if (/\b(sweatpants?|sweat\s*pants?|joggers?|track\s*pants?)\b/.test(t)) return "sweat";
+  if (/\bleggings?\b/.test(t)) return "leggings";
+  if (/\bshorts?\b/.test(t) && !/\bjean/.test(t)) return "shorts";
+  if (/\b(jeans?|denim|vaqueros?|tejanos?)\b/.test(t) || /\bfabric_construction:\s*denim\b/.test(t)) {
+    return "jeans";
+  }
+  if (/\b(chino|slacks?|trousers?|\bpants?\b)\b/.test(t)) return "trousers";
+  if (/\b(dress|gown)\b/.test(t)) return "dress";
+  if (/\bskirt\b/.test(t)) return "skirt";
+  if (/\b(coat|jacket|blazer|outerwear)\b/.test(t)) return "outerwear";
+  if (/\b(sweater|cardigan|knitwear|pullover)\b/.test(t)) return "knitwear";
+  if (/\b(jumpsuit|romper|playsuit)\b/.test(t)) return "jumpsuit";
+  if (/\b(blouse|t-?shirt|tee|tank|camisole|top|shirt)\b/.test(t)) return "top";
+  if (SHOE_RE.test(t)) return "shoes";
+  return null;
+}
+
+export function lookFamilyFromInput(input: FindBetterInput): LookFamily | null {
+  return (
+    lookFamilyFromText(
+      [
+        input.subcategory,
+        input.title,
+        input.garmentType,
+        input.category,
+        ...(input.matchBrief?.mustMatch || []),
+        ...(input.matchBrief?.preferred || []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+    ) || (isPantsInspiration(input) ? "trousers" : null)
+  );
+}
+
+export function lookFamilyFromProduct(product: Record<string, unknown>): LookFamily | null {
+  const construction = String(product.fabric_construction || "").toLowerCase();
+  if (construction === "denim") return "jeans";
+  const named = lookFamilyFromText(
+    `${product.name || ""} ${product.category || ""} ${product.garment_type || ""} ${construction}`
+  );
+  if (named) return named;
+  const gt = `${product.garment_type || ""} ${product.category || ""}`.toLowerCase();
+  if (/\b(jean|denim)\b/.test(gt) || /jean|denim/.test(gt)) return "jeans";
+  if (/pant|trouser/.test(gt)) return "trousers";
+  if (/dress/.test(gt)) return "dress";
+  if (/skirt/.test(gt)) return "skirt";
+  return null;
+}
+
 function isPantsInspiration(input: FindBetterInput): boolean {
   const cat = `${input.category || ""} ${input.subcategory || ""} ${input.garmentType || ""}`.toLowerCase();
   const must = (input.matchBrief?.mustMatch || []).join(" ").toLowerCase();
@@ -107,6 +196,7 @@ function browseCategoryFor(input: FindBetterInput): string | null {
     input.garmentType,
     input.subcategory,
     input.category,
+    input.title,
     ...(input.matchBrief?.mustMatch || []),
   ]
     .filter(Boolean)
@@ -149,6 +239,96 @@ function parsePrice(raw: unknown): number | null {
   return null;
 }
 
+/** Ranking FX only — catalog prices are USD. Not a live market quote. */
+const USD_PER: Record<string, number> = {
+  USD: 1,
+  EUR: 1.08,
+  GBP: 1.27,
+  CAD: 0.73,
+  AUD: 0.66,
+};
+
+const BUDGET_MIN_RATIO = 0.55;
+const BUDGET_MAX_RATIO = 1.25;
+const SPLURGE_MAX_RATIO = 2.5;
+const MAX_SPLURGE_MATCHES = 2;
+
+export function comparableUsdPrice(
+  price: number | null | undefined,
+  currency?: string | null
+): number | null {
+  if (price == null || price <= 0) return null;
+  const fx = USD_PER[String(currency || "USD").trim().toUpperCase()] ?? 1;
+  return price * fx;
+}
+
+export type TxMatchPriceBands = {
+  budgetMin: number | null;
+  budgetMax: number | null;
+  splurgeMax: number | null;
+};
+
+/**
+ * Shopper budget for TX Match.
+ * In-budget: near the scanned ticket (after a simple FX to USD).
+ * Splurge: modestly above, capped — a €60 jean must not pull $780 trousers.
+ */
+export function txMatchPriceBands(input: FindBetterInput): TxMatchPriceBands {
+  const sourceUsd = comparableUsdPrice(input.price ?? null, input.currency);
+  let budgetMin = sourceUsd != null ? sourceUsd * BUDGET_MIN_RATIO : input.userPriceMin ?? null;
+  let budgetMax = sourceUsd != null ? sourceUsd * BUDGET_MAX_RATIO : input.userPriceMax ?? null;
+  let splurgeMax = sourceUsd != null ? sourceUsd * SPLURGE_MAX_RATIO : input.userPriceMax ?? null;
+  if (input.userPriceMin != null && input.userPriceMin > 0) {
+    budgetMin = budgetMin == null ? input.userPriceMin : Math.max(budgetMin, input.userPriceMin);
+  }
+  if (input.userPriceMax != null && input.userPriceMax > 0) {
+    budgetMax = budgetMax == null ? input.userPriceMax : Math.min(budgetMax, input.userPriceMax);
+    splurgeMax =
+      splurgeMax == null
+        ? input.userPriceMax * (SPLURGE_MAX_RATIO / BUDGET_MAX_RATIO)
+        : Math.min(splurgeMax, input.userPriceMax * (SPLURGE_MAX_RATIO / BUDGET_MAX_RATIO));
+  }
+  return { budgetMin, budgetMax, splurgeMax };
+}
+
+/** Browse window: in-budget through splurge cap (USD). */
+export function txMatchPriceBounds(input: FindBetterInput): { min: number | null; max: number | null } {
+  const bands = txMatchPriceBands(input);
+  return {
+    min: bands.budgetMin != null ? Math.round(bands.budgetMin) : null,
+    max: bands.splurgeMax != null ? Math.round(bands.splurgeMax) : null,
+  };
+}
+
+export function inTxMatchPriceRange(product: Record<string, unknown>, input: FindBetterInput): boolean {
+  const bands = txMatchPriceBands(input);
+  if (bands.budgetMin == null && bands.splurgeMax == null) return true;
+  const usd = comparableUsdPrice(parsePrice(product.price), String(product.currency || "USD"));
+  if (usd == null) return false;
+  if (bands.budgetMin != null && usd < bands.budgetMin) return false;
+  if (bands.splurgeMax != null && usd > bands.splurgeMax) return false;
+  return true;
+}
+
+export function isTxMatchSplurge(product: Record<string, unknown>, input: FindBetterInput): boolean {
+  const bands = txMatchPriceBands(input);
+  if (bands.budgetMax == null) return false;
+  const usd = comparableUsdPrice(parsePrice(product.price), String(product.currency || "USD"));
+  return usd != null && usd > bands.budgetMax && (bands.splurgeMax == null || usd <= bands.splurgeMax);
+}
+
+const AFFILIATE_URL_RE =
+  /linksynergy|rakuten|awin1|impact\.com|shareasale|anrdoezrs|dpbolvw|jdoqocy|tkqlhce|pjtra|partnerize/i;
+
+/** Expected INTERTEXE commission — affiliate URLs earn; price is the $ proxy inside the band. */
+export function estimatedCommission(product: Record<string, unknown>): number {
+  const price = parsePrice(product.price);
+  if (price == null) return 0;
+  const url = String(product.url || "");
+  const rate = AFFILIATE_URL_RE.test(url) ? 0.1 : url.startsWith("http") ? 0.06 : 0.03;
+  return price * rate;
+}
+
 function whyFor(
   product: Record<string, unknown>,
   input: FindBetterInput,
@@ -164,8 +344,11 @@ function whyFor(
     parts.push(`Same fabric (${fiber})`);
   }
 
-  // Visual / product affinity first — TX Match is not only material conversion.
-  if (isPantsInspiration(input)) parts.push("Same garment type (trousers/pants)");
+  const look = lookFamilyFromInput(input);
+  const productLook = lookFamilyFromProduct(product);
+  if (look && productLook === look) {
+    parts.push(look === "jeans" ? "Same garment type (jeans)" : `Same garment type (${look})`);
+  } else if (isPantsInspiration(input)) parts.push("Same garment type (trousers/pants)");
   else if (browseCategoryFor(input)) parts.push(`Same category (${browseCategoryFor(input)})`);
 
   if (productMatchesColor(product, input.color)) {
@@ -191,8 +374,11 @@ function whyFor(
     }
   }
 
-  if (nfp >= 90) parts.push(`${Math.round(nfp)}% natural fiber`);
-  else if (scannedNfp > 0 && nfp > scannedNfp + 5) {
+  if (nfp >= 90 && !compositionHasSyntheticLining(String(product.composition || ""))) {
+    parts.push(`${Math.round(nfp)}% natural fiber`);
+  } else if (compositionHasSyntheticLining(String(product.composition || ""))) {
+    parts.push("Synthetic lining disclosed");
+  } else if (scannedNfp > 0 && nfp > scannedNfp + 5) {
     parts.push("Higher natural fiber than original");
   } else if (nfp >= 80) parts.push("Verified natural fiber");
 
@@ -211,9 +397,10 @@ function toAlternative(
     brand_name: (product.brand_name as string) || null,
     brand_slug: (product.brand_slug as string) || null,
     image_url: (product.image_url as string) || null,
+    url: (product.url as string) || null,
     price: (product.price as number | string) ?? null,
     currency: (product.currency as string) || "USD",
-    composition: (product.composition as string) || null,
+    composition: normalizeCompositionStorage(String(product.composition || "")) || (product.composition as string) || null,
     natural_fiber_percent:
       product.natural_fiber_percent != null ? Number(product.natural_fiber_percent) : null,
     category: (product.category as string) || null,
@@ -328,6 +515,9 @@ const TITLE_FIBER_HINTS: Array<[RegExp, string]> = [
   [/\bmerino\b/, "wool"],
   [/\bcotton\b/, "cotton"],
   [/\bdenim\b/, "cotton"],
+  [/\bjeans?\b/, "cotton"],
+  [/\bvaqueros?\b/, "cotton"],
+  [/\balgod[oó]n\b/, "cotton"],
   [/\bleather\b/, "leather"],
   [/\bsuede\b/, "leather"],
 ];
@@ -375,9 +565,22 @@ export function productMatchesFiber(
 ): boolean {
   if (!fiber) return false;
   const f = fiber.toLowerCase();
-  const hay = `${product.composition || ""} ${product.material_primary || ""} ${product.shop_material_family || ""} ${product.name || ""}`.toLowerCase();
+  const hay = `${product.composition || ""} ${product.material_primary || ""} ${product.shop_material_family || ""} ${product.name || ""} ${product.fabric_construction || ""}`.toLowerCase();
   if (f === "wool") return /\b(wool|merino)\b/.test(hay);
+  if (f === "cotton") return /\b(cotton|algod[oó]n|denim|jeans?|vaqueros?)\b/.test(hay);
   return new RegExp(`\\b${f}\\b`).test(hay);
+}
+
+export function preferredColorFromInput(input: FindBetterInput): string | null {
+  const explicit = normalizeColorToken(input.color || "");
+  if (explicit === "denim" || explicit === "indigo") return "blue";
+  if (explicit.length >= 3 && productMatchesColor({ name: explicit, color: explicit }, explicit)) {
+    return explicit;
+  }
+  const fromTitle = colorHintFromTitle(`${input.title || ""} ${(input.distinctiveDetails || []).join(" ")}`);
+  if (fromTitle) return fromTitle;
+  if (lookFamilyFromInput(input) === "jeans") return "blue";
+  return null;
 }
 
 export function rankTxMatchAlternatives(
@@ -393,45 +596,92 @@ function rankAlternatives(
 ): FindBetterAlternative[] {
   const scannedNfp = input.naturalFiberPercent ?? 0;
   const preferredFiber = preferredFiberFromInput(input);
-  const targetPrice =
-    input.price ??
+  const preferredColor = preferredColorFromInput(input);
+  const sourceLook = lookFamilyFromInput(input);
+  const sourceSilhouette =
+    silhouetteFamily(input.silhouette) ||
+    silhouetteFamily(`${input.title || ""} ${input.subcategory || ""} ${input.fit || ""}`);
+  const sourceUsd = comparableUsdPrice(input.price ?? null, input.currency);
+  const targetPriceUsd =
+    sourceUsd ??
     (input.matchBrief?.targetPriceRange
       ? (input.matchBrief.targetPriceRange.min + input.matchBrief.targetPriceRange.max) / 2
       : null);
 
-  const filtered = products.filter((p) => matchesHardCategory(p, input));
+  const filtered = products.filter(
+    (p) => matchesHardCategory(p, input) && inTxMatchPriceRange(p, input)
+  );
 
   const scored = filtered.map((p) => {
     let score = 0;
     const nfp = Number(p.natural_fiber_percent) || 0;
     const sameFiber = productMatchesFiber(p, preferredFiber);
+    const productLook = lookFamilyFromProduct(p);
+    const sameLook = Boolean(sourceLook && productLook === sourceLook);
+    const sameColor = productMatchesColor(p, preferredColor);
+    const productSilhouette = silhouetteFamily(`${p.name || ""} ${p.garment_type || ""}`);
+    const sameSilhouette = Boolean(sourceSilhouette && productSilhouette === sourceSilhouette);
+    const clashSilhouette = silhouettesConflict(sourceSilhouette, productSilhouette);
+    const inBudget = !isTxMatchSplurge(p, input);
     // Fabric of the saved piece leads. Do not let cheaper cotton outrank silk.
     if (sameFiber) score += 120;
     else if (preferredFiber) score -= 25;
+    if (sameLook) score += 140;
+    else if (sourceLook === "jeans" && (productLook === "sweat" || productLook === "leggings")) {
+      score -= 120;
+    } else if (sourceLook === "jeans" && productLook === "trousers") {
+      score -= 95;
+    } else if (sourceLook && productLook && productLook !== sourceLook) {
+      score -= 28;
+    }
+    if (sameSilhouette) score += 55;
+    else if (
+      sourceSilhouette &&
+      productSilhouette &&
+      ((sourceSilhouette === "wide" && productSilhouette === "straight") ||
+        (sourceSilhouette === "straight" && productSilhouette === "wide") ||
+        (sourceSilhouette === "wide" && productSilhouette === "relaxed") ||
+        (sourceSilhouette === "relaxed" && productSilhouette === "wide"))
+    ) {
+      score += 18;
+    }
+    if (clashSilhouette) score -= 90;
+    if (compositionHasSyntheticLining(String(p.composition || ""))) score -= 22;
+    if (inBudget) score += 42;
+    else score -= 18;
 
     const userFibers = (input.preferredFibers || []).map((f) => extractFiberFromText(f)).filter(Boolean);
     if (userFibers.some((f) => productMatchesFiber(p, f))) score += 18;
+    const brand = String(p.brand_name || "").toLowerCase();
+    if (
+      (input.preferredDesigners || []).some((d) => {
+        const token = String(d || "").toLowerCase().trim();
+        return token && (brand.includes(token) || token.includes(brand));
+      })
+    ) {
+      score += 16;
+    }
 
     score += Math.min(nfp, 100) * 0.2;
     const price = parsePrice(p.price);
-    if (targetPrice != null && price != null && targetPrice > 0) {
-      const diff = Math.abs(price - targetPrice) / targetPrice;
+    const commission = estimatedCommission(p);
+    score += Math.min(commission, 80);
+    const productUsd = comparableUsdPrice(price, String(p.currency || "USD"));
+    if (targetPriceUsd != null && productUsd != null && targetPriceUsd > 0) {
+      const diff = Math.abs(productUsd - targetPriceUsd) / targetPriceUsd;
       if (diff <= 0.25) score += 36;
       else if (diff <= 0.45) score += 22;
       else if (diff <= 0.7) score += 8;
-      else score -= 10;
-      // Cheaper is a bonus only inside the same fabric — never a reason to switch fiber.
-      if (sameFiber && targetPrice - price >= 50) score += 10;
     }
-    if (input.userPriceMax != null && price != null && price > input.userPriceMax) score -= 20;
-    const sameColor = productMatchesColor(p, input.color);
-    if (sameColor) score += 28;
+    if (sameColor) score += 50;
+    const hay = `${p.name || ""} ${p.category || ""} ${p.color || ""}`.toLowerCase();
     if (input.silhouette) {
       const sil = String(input.silhouette).toLowerCase().split(/\s+/)[0];
-      const hay = `${p.name || ""} ${p.category || ""}`.toLowerCase();
       if (sil && hay.includes(sil)) score += 24;
     }
-    const hay = `${p.name || ""} ${p.category || ""} ${p.color || ""}`.toLowerCase();
+    for (const sil of input.preferredSilhouettes || []) {
+      if (sil && hay.includes(String(sil).toLowerCase())) score += 14;
+    }
     for (const pref of input.matchBrief?.preferred || []) {
       if (pref && hay.includes(pref.toLowerCase())) score += 8;
     }
@@ -441,26 +691,71 @@ function rankAlternatives(
     for (const d of input.distinctiveDetails || []) {
       if (d && hay.includes(d.toLowerCase())) score += 12;
     }
-    return { p, score, sameColor, sameFiber };
+    return { p, score, sameColor, sameFiber, sameLook, productLook, commission, sameSilhouette, clashSilhouette, inBudget };
   });
 
   scored.sort(
     (a, b) =>
+      Number(b.inBudget) - Number(a.inBudget) ||
+      Number(b.sameLook) - Number(a.sameLook) ||
+      Number(b.sameSilhouette) - Number(a.sameSilhouette) ||
+      Number(a.clashSilhouette) - Number(b.clashSilhouette) ||
+      Number(b.sameColor) - Number(a.sameColor) ||
       Number(b.sameFiber) - Number(a.sameFiber) ||
       b.score - a.score ||
+      b.commission - a.commission ||
       (Number(b.p.natural_fiber_percent) || 0) - (Number(a.p.natural_fiber_percent) || 0)
   );
 
-  // First 5 must be the same fabric when we have enough catalog hits.
-  let ordered = scored;
-  if (preferredFiber) {
-    const fiberHits = scored.filter((s) => s.sameFiber);
-    const others = scored.filter((s) => !s.sameFiber);
-    ordered = [...fiberHits.slice(0, 5), ...others, ...fiberHits.slice(5)];
+  // In-budget first. At most two splurges after the shopper's price band.
+  const used = new Set<string>();
+  const lead: typeof scored = [];
+  const take = (pred: (row: (typeof scored)[number]) => boolean, n: number, budgetOnly = false) => {
+    const pool = scored
+      .filter((row) => !used.has(String(row.p.id)) && pred(row) && (!budgetOnly || row.inBudget))
+      .sort((a, b) =>
+        Number(b.inBudget) - Number(a.inBudget) ||
+        (sourceLook === "jeans"
+          ? b.score - a.score || b.commission - a.commission
+          : b.commission - a.commission || b.score - a.score)
+      );
+    for (const row of pool) {
+      if (lead.length >= n) break;
+      used.add(String(row.p.id));
+      lead.push(row);
+    }
+  };
+  take((s) => s.sameLook && s.sameFiber && s.sameColor && !s.clashSilhouette, 8, true);
+  take((s) => s.sameLook && s.sameFiber && !s.clashSilhouette, 10, true);
+  take((s) => s.sameLook && !s.clashSilhouette, 10, true);
+  if (sourceLook !== "jeans") {
+    take((s) => s.sameFiber, 5, true);
+  } else {
+    take((s) => s.sameLook, 10, true);
   }
+  take((s) => s.sameLook && !s.clashSilhouette, 12);
+  take((s) => s.sameLook, 12);
+
+  const rest = scored
+    .filter((s) => !used.has(String(s.p.id)))
+    .sort((a, b) => {
+      const adj = (row: (typeof scored)[number]) => {
+        if (row.inBudget && row.sameLook) return 4;
+        if (row.sameLook) return 2;
+        if (sourceLook === "jeans" && row.productLook === "trousers") return 1;
+        if (sourceLook === "jeans" && (row.productLook === "sweat" || row.productLook === "leggings")) {
+          return -1;
+        }
+        return 0;
+      };
+      return Number(b.inBudget) - Number(a.inBudget) || adj(b) - adj(a) || b.score - a.score || b.commission - a.commission;
+    });
+
+  const ordered = [...lead, ...rest];
 
   const seen = new Set<string>();
   const out: FindBetterAlternative[] = [];
+  let splurges = 0;
   for (const { p } of ordered) {
     const id = String(p.id);
     const brandKey = String(p.brand_name || "")
@@ -472,8 +767,11 @@ function rankAlternatives(
       .trim();
     const dedupeKey = `${brandKey}::${nameKey}`;
     if (seen.has(id) || (nameKey && seen.has(dedupeKey))) continue;
+    const splurge = isTxMatchSplurge(p, input);
+    if (splurge && splurges >= MAX_SPLURGE_MATCHES) continue;
     seen.add(id);
     if (nameKey) seen.add(dedupeKey);
+    if (splurge) splurges += 1;
     out.push(toAlternative(p, input, scannedNfp));
     if (out.length >= 12) break;
   }
@@ -496,7 +794,7 @@ export function findBetterInputFromEnrichment(
     naturalFiberPercent: extras?.naturalFiberPercent ?? null,
     matchBrief: enrichment.matchBrief,
     distinctiveDetails: enrichment.distinctiveDetails,
-    color: enrichment.color || colorHintFromTitle(enrichment.title),
+    color: enrichment.color || colorHintFromTitle(enrichment.title) || (lookFamilyFromText(`${enrichment.subcategory || ""} ${enrichment.title || ""}`) === "jeans" ? "blue" : null),
     silhouette: enrichment.silhouette,
     fit: enrichment.fit,
     length: enrichment.length,
@@ -573,6 +871,8 @@ export async function findBetterAlternatives(
         resolved = {
           ...resolved,
           preferredFibers: taste.preferredFibers || [],
+          preferredDesigners: taste.preferredDesigners || [],
+          preferredSilhouettes: taste.preferredSilhouettes || [],
           userPriceMin: taste.priceMin ?? resolved.userPriceMin,
           userPriceMax: taste.priceMax ?? resolved.userPriceMax,
         };
@@ -583,25 +883,29 @@ export async function findBetterAlternatives(
   }
 
   const region = (resolved.region || resolved.matchBrief?.region || "us").toLowerCase();
-  const price = resolved.price ?? null;
   const browseCat = browseCategoryFor(resolved);
   const preferredFiber = preferredFiberFromInput(resolved);
+  const sourceLook = lookFamilyFromInput(resolved);
+  const denimLead = sourceLook === "jeans";
+  const priceBounds = txMatchPriceBounds(resolved);
 
   let rows: Record<string, unknown>[] = [];
 
   // Primary: authoritative catalog_browse_page_v2 via caller client (never products writes)
   if (browseCat) {
-    const minPrice = price != null && price > 0 ? Math.round(price * 0.5) : resolved.userPriceMin ?? null;
-    let maxPrice = price != null && price > 0 ? Math.round(price * 1.6) : resolved.userPriceMax ?? null;
-    if (resolved.userPriceMax != null && resolved.userPriceMax > 0) {
-      maxPrice = maxPrice == null ? resolved.userPriceMax : Math.min(maxPrice, resolved.userPriceMax);
-    }
+    const minPrice = priceBounds.min;
+    const maxPrice = priceBounds.max;
     // Prefer newest for the first pass — most_natural category browses can exceed
     // serverless budgets; rankAlternatives already elevates natural-fiber quality.
     const rpcParams = buildCatalogBrowseV2Params({
       region,
       category: browseCat,
-      fiber: preferredFiber && !SYNTHETIC_FIBERS.has(preferredFiber) ? preferredFiber : undefined,
+      fiber: denimLead
+        ? undefined
+        : preferredFiber && !SYNTHETIC_FIBERS.has(preferredFiber)
+          ? preferredFiber
+          : undefined,
+      fabricConstruction: denimLead ? "denim" : undefined,
       limit: 48,
       offset: 0,
       sort: "newest",
@@ -641,6 +945,7 @@ export async function findBetterAlternatives(
         shop_material_family:
           p.shop_material_family != null ? String(p.shop_material_family) : null,
         material_primary: p.material_primary != null ? String(p.material_primary) : null,
+        fabric_construction: p.fabric_construction != null ? String(p.fabric_construction) : null,
       }));
       const keptIds = new Set(
         filterProductsForIntegrity(integrityRows, integritySpec).map((r) => String(r.id))
@@ -653,6 +958,7 @@ export async function findBetterAlternatives(
           brand_name: p.brand_name || p.brandName,
           brand_slug: p.brand_slug || p.brandSlug,
           image_url: p.image_url || p.imageUrl,
+          url: p.url || p.productUrl || null,
           price: p.price,
           currency: p.currency || "USD",
           composition: p.composition,
@@ -662,12 +968,14 @@ export async function findBetterAlternatives(
           color: p.color ?? null,
           shop_material_family: p.shop_material_family ?? null,
           material_primary: p.material_primary ?? null,
+          fabric_construction: p.fabric_construction ?? null,
         }));
     }
   }
 
-  // Retry without price band when the first pass is thin (still category-hard).
-  if (rows.length < 4 && browseCat) {
+  // Retry without denim construction when the first pass is thin (still price-bounded).
+  // Jeans scans stay in denim — widening to all trousers pulls in slim cotton pants.
+  if (rows.length < 4 && browseCat && !denimLead) {
     const wide = await withTimeout(
       (async () => {
         const { data, error } = await supabase.rpc(
@@ -678,6 +986,8 @@ export async function findBetterAlternatives(
             limit: 48,
             offset: 0,
             sort: "newest",
+            minPrice: priceBounds.min ?? undefined,
+            maxPrice: priceBounds.max ?? undefined,
             includeUnverified: false,
             apparelOnly: browseCat !== "shoes",
           })
@@ -691,6 +1001,8 @@ export async function findBetterAlternatives(
     if (products.length) {
       const integritySpec = integritySpecFromBrowseOpts({
         category: browseCat,
+        minPrice: priceBounds.min,
+        maxPrice: priceBounds.max,
         apparelOnly: browseCat !== "shoes",
       });
       const integrityRows: FilterIntegrityProduct[] = products.map((p) => ({
@@ -705,6 +1017,7 @@ export async function findBetterAlternatives(
         shop_material_family:
           p.shop_material_family != null ? String(p.shop_material_family) : null,
         material_primary: p.material_primary != null ? String(p.material_primary) : null,
+        fabric_construction: p.fabric_construction != null ? String(p.fabric_construction) : null,
       }));
       const keptIds = new Set(
         filterProductsForIntegrity(integrityRows, integritySpec).map((r) => String(r.id))
@@ -717,6 +1030,7 @@ export async function findBetterAlternatives(
           brand_name: p.brand_name || p.brandName,
           brand_slug: p.brand_slug || p.brandSlug,
           image_url: p.image_url || p.imageUrl,
+          url: p.url || p.productUrl || null,
           price: p.price,
           currency: p.currency || "USD",
           composition: p.composition,
@@ -726,6 +1040,7 @@ export async function findBetterAlternatives(
           color: p.color ?? null,
           shop_material_family: p.shop_material_family ?? null,
           material_primary: p.material_primary ?? null,
+          fabric_construction: p.fabric_construction ?? null,
         }));
       rows = [...rows, ...extra];
     }

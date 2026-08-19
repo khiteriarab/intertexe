@@ -641,7 +641,7 @@ async function loadUnpackedExtension() {
               section &&
               !section.classList.contains("hidden") &&
               getComputedStyle(section).display !== "none";
-            return visible && /Sign in to INTERTEXE/i.test(btn.textContent || "");
+            return visible && /Sign in/i.test(btn.textContent || "");
           },
           { timeout: 8000 }
         );
@@ -655,7 +655,7 @@ async function loadUnpackedExtension() {
         return { html, text, btn };
       });
       const hasCta =
-        /Sign in to INTERTEXE/i.test(signInCheck.btn) ||
+        /Sign in/i.test(signInCheck.btn) ||
         /Sign in to INTERTEXE/i.test(signInCheck.text) ||
         /Sign in to INTERTEXE/i.test(signInCheck.html);
       const hasPaste = /Paste Supabase/i.test(signInCheck.html);

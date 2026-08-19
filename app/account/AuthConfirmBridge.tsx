@@ -43,6 +43,8 @@ export function AuthConfirmBridge() {
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       if (token) {
+        const { setWebAuthTokens } = await import("../../lib/web-auth-token");
+        setWebAuthTokens(token, data.session?.refresh_token || null);
         try {
           await fetch("/api/auth/send-welcome", {
             method: "POST",

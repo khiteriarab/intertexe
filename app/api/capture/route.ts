@@ -17,6 +17,7 @@ import {
   isUsableCaptureImageUrl,
 } from "../../../lib/capture-enrichment";
 import { buildTxMatchCopyFromCapture, buildTxMatchLinks } from "../../../lib/tx-match-copy";
+import { buildCaptureResultView } from "../../../lib/capture-result";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
 
 function userClient(accessToken: string) {
@@ -122,6 +123,7 @@ export async function POST(req: NextRequest) {
       duplicate,
       capture,
       copy: buildTxMatchCopyFromCapture(capture as Record<string, unknown>),
+      view: buildCaptureResultView(capture as Record<string, unknown>),
       links: buildTxMatchLinks((capture as { id?: string }).id),
     });
   } catch (e) {
