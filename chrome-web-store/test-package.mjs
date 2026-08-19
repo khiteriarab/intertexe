@@ -41,7 +41,9 @@ record("description.length_le_132", String(manifest.description).length <= 132, 
 
 const popupHtml = fs.readFileSync(path.join(folder, "popup.html"), "utf8");
 record("popup.listing_name", popupHtml.includes(NAME));
-record("popup.sign_in_cta", /Sign in to INTERTEXE/i.test(popupHtml));
+  record("popup.sign_in_cta", /Sign in to INTERTEXE/i.test(popupHtml));
+  record("popup.save_cta", /Save this page/.test(popupHtml));
+  record("popup.floating_card", /border-radius:\s*22px/.test(fs.readFileSync(path.join(folder, "popup.css"), "utf8")));
 record("popup.no_token_paste", !/Paste Supabase/i.test(popupHtml));
 
 const bg = fs.readFileSync(path.join(folder, "background.js"), "utf8");

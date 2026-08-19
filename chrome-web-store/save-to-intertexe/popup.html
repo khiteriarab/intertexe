@@ -6,25 +6,31 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <header>
-      <p class="eyebrow">INTERTEXE</p>
-      <h1>INTERTEXE: Fabric Scanner</h1>
-      <p class="tagline">Know the material before you buy.</p>
-    </header>
+    <div class="shell">
+      <header>
+        <div class="brand-row">
+          <div>
+            <p class="eyebrow">INTERTEXE</p>
+            <h1>INTERTEXE: Fabric Scanner</h1>
+          </div>
+          <p class="tagline">Know the material before you buy.</p>
+        </div>
+      </header>
 
-    <p id="status" class="status" hidden></p>
+      <p id="status" class="status" hidden></p>
 
-    <section id="signedOut" class="hidden">
-      <p class="lede">Sign in so this page can be saved to your Inspirations — the same list as iOS.</p>
-      <button id="signIn" type="button">Sign in to INTERTEXE</button>
-    </section>
+      <section id="signedOut" class="hidden">
+        <p class="lede">Sign in so this page can be saved to your Inspirations — the same list as iOS.</p>
+        <button id="signIn" type="button">Sign in to INTERTEXE</button>
+      </section>
 
-    <section id="signedIn" class="hidden">
-      <button id="save" type="button">Save this page</button>
-      <button id="signOut" type="button" class="ghost">Sign out</button>
-    </section>
+      <section id="signedIn" class="hidden">
+        <button id="save" type="button">Save this page</button>
+        <button id="signOut" type="button" class="ghost">Sign out</button>
+      </section>
 
-    <section id="result" class="hidden"></section>
+      <section id="result" class="hidden"></section>
+    </div>
 
     <script src="popup.js"></script>
   </body>

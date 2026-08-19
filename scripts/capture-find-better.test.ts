@@ -6,6 +6,7 @@ import {
   rankTxMatchAlternatives,
 } from "../lib/capture-find-better.ts";
 import { buildTxMatchCopy, buildTxMatchLinks } from "../lib/tx-match-copy.ts";
+import { materialInsightFromText, savingsPercent } from "../lib/material-insight.ts";
 
 function skirt(id: string, fiber: string, price: number, color = "lilac") {
   return {
@@ -138,5 +139,32 @@ describe("TX Match copy", () => {
     const copy = buildTxMatchCopy({ captureId: id, altCount: 12, inferredFiber: "silk", garment: "skirt" });
     assert.equal(copy.viewAllMatchesUrl, links.viewAllMatchesUrl);
     assert.equal(copy.openInIntertexeUrl, links.openInIntertexeUrl);
+  });
+});
+
+describe("Material insight", () => {
+  it("labels a mostly synthetic listed mix without inventing percentages", () => {
+    const insight = materialInsightFromText("20% cotton, 80% polyester");
+    assert.equal(insight.share, 20);
+    assert.equal(insight.tone, "synthetic");
+    assert.match(insight.label, /mostly synthetic/i);
+  });
+
+  it("labels a mostly natural mix", () => {
+    const insight = materialInsightFromText("96% silk, 4% elastane");
+    assert.equal(insight.share, 96);
+    assert.equal(insight.tone, "natural");
+  });
+
+  it("does not invent a share when percentages are missing", () => {
+    const insight = materialInsightFromText("Silk");
+    assert.equal(insight.share, null);
+    assert.equal(insight.tone, "unknown");
+  });
+
+  it("computes a savings percent only when the alternative is cheaper", () => {
+    assert.equal(savingsPercent(890, 473), 47);
+    assert.equal(savingsPercent(200, 250), null);
+    assert.equal(savingsPercent(null, 100), null);
   });
 });
