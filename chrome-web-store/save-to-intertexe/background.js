@@ -14,6 +14,7 @@ async function getStore() {
     "authTabId",
     "extSession",
     "lastResult",
+    "lastPeek",
     "uiStatus",
     "uiError",
   ]);
@@ -29,6 +30,7 @@ async function publicState() {
     signedIn: Boolean(store.accessToken),
     busy: Boolean(store.extSession),
     result: store.lastResult || null,
+    peek: store.lastPeek || null,
     status: store.uiStatus || "",
     error: Boolean(store.uiError),
   };
@@ -299,6 +301,7 @@ async function signOut() {
     "refreshToken",
     "pendingCapture",
     "lastResult",
+    "lastPeek",
     "extSession",
     "authTabId",
     "uiStatus",
@@ -351,18 +354,44 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       sendResponse({ ok: true });
       return;
     }
+    if (msg?.type === "PEEK_TAB") {
+      try {
+        const peek = await extractActiveTab();
+        await chrome.storage.local.set({ lastPeek: peek, uiStatus: "", uiError: false });
+        sendResponse({ peek });
+      } catch (e) {
+        const error = e instanceof Error ? e.message : "Could not read this page";
+        await setUi(error, true);
+        sendResponse({ error });
+      }
+      return;
+    }
     if (msg?.type === "SAVE_TAB") {
       try {
-        const payload = await extractActiveTab();
+        const payload = msg.payload || (await extractActiveTab());
         const store = await getStore();
         if (!store.accessToken) {
-          await chrome.storage.local.set({ pendingCapture: payload });
-          await startSignIn();
-          sendResponse({ needsSignIn: true });
+          await chrome.storage.local.set({ pendingCapture: payload, lastPeek: payload });
+          if (!msg.quiet) await startSignIn();
+          sendResponse({ needsSignIn: true, peek: payload });
+          return;
+        }
+        const currentUrl = String(payload.originalUrl || "");
+        const prior = store.lastResult?.capture || {};
+        const priorUrl = String(prior.original_url || prior.originalUrl || "");
+        if (
+          !msg.force &&
+          currentUrl &&
+          priorUrl &&
+          currentUrl === priorUrl &&
+          Array.isArray(prior.alternatives) &&
+          prior.alternatives.length
+        ) {
+          sendResponse({ result: store.lastResult, peek: payload, reused: true });
           return;
         }
         const saved = await savePayload(payload);
-        sendResponse(saved);
+        sendResponse({ ...saved, peek: payload });
       } catch (e) {
         const error = e instanceof Error ? e.message : "Save failed";
         await setUi(error, true);

@@ -23,6 +23,7 @@ body {
 
 body {
   width: 380px;
+  max-height: 600px;
   min-height: 240px;
   padding: 10px;
   background: #2a2622;
@@ -36,6 +37,20 @@ body {
   box-shadow: var(--shadow);
   padding: 16px 16px 14px;
   overflow: hidden;
+  max-height: 580px;
+  display: flex;
+  flex-direction: column;
+}
+
+#result {
+  margin-top: 14px;
+  padding-top: 4px;
+  overflow: auto;
+}
+
+.alts {
+  max-height: 320px;
+  overflow-y: auto;
 }
 
 header {
@@ -112,11 +127,6 @@ button.ghost {
 
 .hidden {
   display: none !important;
-}
-
-#result {
-  margin-top: 14px;
-  padding-top: 4px;
 }
 
 .toast {

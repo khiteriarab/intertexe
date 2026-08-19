@@ -116,7 +116,7 @@ function renderResult(payload) {
   const capture = payload.capture || {};
   const copy = payload.copy || {};
   const links = payload.links || {};
-  const alts = Array.isArray(capture.alternatives) ? capture.alternatives.slice(0, 3) : [];
+  const alts = Array.isArray(capture.alternatives) ? capture.alternatives.slice(0, 12) : [];
   const composition = copy.compositionHeadline || capture.composition_text || "";
   const insight = insightFromText(composition, copy.compositionHeadline);
 
@@ -151,7 +151,8 @@ function renderResult(payload) {
   resultEl.appendChild(insightBox);
 
   if (alts.length) {
-    resultEl.appendChild(el("p", "section-title", copy.alternativesTitle || "Top matches"));
+    resultEl.appendChild(el("p", "section-title", `${copy.alternativesTitle || "Top matches"} · ${alts.length}`));
+    const list = el("div", "alts");
     for (const alt of alts) {
       const card = el("a", "alt");
       card.href = "#";
@@ -160,7 +161,6 @@ function renderResult(payload) {
         chrome.runtime.sendMessage({ type: "OPEN_MATCH", alt, captureId: capture.id });
       });
       const img = thumb(alt.image_url);
-      img.className = img.className || "";
       card.appendChild(img);
       const info = document.createElement("div");
       info.appendChild(el("strong", "", alt.name || alt.brand_name || "TX Match"));
@@ -183,8 +183,9 @@ function renderResult(payload) {
         badge.appendChild(el("span", "save", "more natural"));
       }
       card.appendChild(badge);
-      resultEl.appendChild(card);
+      list.appendChild(card);
     }
+    resultEl.appendChild(list);
   }
 
   const actions = el("div", "actions");
@@ -213,14 +214,74 @@ function renderResult(payload) {
   }
 }
 
+function renderPeek(peek) {
+  if (!peek) return;
+  resultEl.classList.remove("hidden");
+  const capture = {
+    title: peek.title,
+    brand_name: peek.brandName,
+    retailer: peek.retailer,
+    image_url: peek.imageUrl,
+    price: peek.price,
+    currency: peek.currency,
+    composition_text: peek.compositionText,
+  };
+  renderResult({
+    capture,
+    copy: {
+      compositionHeadline: peek.compositionText || "Reading material…",
+      compositionDetail: peek.compositionText
+        ? null
+        : "Listed composition is still being read from this page.",
+      alternativesTitle: "Top matches",
+    },
+    links: {},
+    duplicate: false,
+  });
+  const toast = resultEl.querySelector(".toast span");
+  if (toast) toast.textContent = peek.compositionText ? "Material from this page" : "Looking for material…";
+}
+
 async function refreshUi() {
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
   showAuth(Boolean(state?.signedIn));
   if (state?.status) setStatus(state.status, Boolean(state.error));
   else setStatus("");
   if (state?.result) renderResult(state.result);
+  else if (state?.peek) renderPeek(state.peek);
   saveBtn.disabled = Boolean(state?.busy);
   signInBtn.disabled = Boolean(state?.busy);
+  return state;
+}
+
+async function scanOpenTab() {
+  setStatus("Reading material…");
+  const peeked = await chrome.runtime.sendMessage({ type: "PEEK_TAB" });
+  if (peeked?.error) {
+    setStatus(peeked.error, true);
+    return;
+  }
+  if (peeked?.peek) {
+    setStatus("");
+    renderPeek(peeked.peek);
+  }
+  const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
+  if (!state?.signedIn) {
+    setStatus(peeked?.peek?.compositionText ? "Sign in to see TX Matches." : "");
+    return;
+  }
+  saveBtn.disabled = true;
+  setStatus("Finding TX Matches…");
+  const res = await chrome.runtime.sendMessage({
+    type: "SAVE_TAB",
+    payload: peeked?.peek,
+    quiet: true,
+  });
+  if (res?.error) setStatus(res.error, true);
+  else setStatus("");
+  if (res?.result) renderResult(res.result);
+  saveBtn.disabled = false;
+  await refreshUi();
 }
 
 signInBtn.addEventListener("click", async () => {
@@ -239,11 +300,12 @@ signOutBtn.addEventListener("click", async () => {
 saveBtn.addEventListener("click", async () => {
   saveBtn.disabled = true;
   setStatus("Saving…");
-  const res = await chrome.runtime.sendMessage({ type: "SAVE_TAB" });
+  const res = await chrome.runtime.sendMessage({ type: "SAVE_TAB", force: true });
   if (res?.error) setStatus(res.error, true);
   else if (res?.needsSignIn) setStatus("Sign in to finish saving.");
   else setStatus("");
   if (res?.result) renderResult(res.result);
+  else if (res?.peek) renderPeek(res.peek);
   saveBtn.disabled = false;
   await refreshUi();
 });
@@ -252,7 +314,9 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (msg?.type === "STATE_CHANGED") refreshUi();
 });
 
-refreshUi().catch(() => {
-  showAuth(false);
-  setStatus("Could not reach the extension. Close and reopen the popup.", true);
-});
+refreshUi()
+  .then(() => scanOpenTab())
+  .catch(() => {
+    showAuth(false);
+    setStatus("Could not reach the extension. Close and reopen the popup.", true);
+  });

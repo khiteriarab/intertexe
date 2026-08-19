@@ -98,7 +98,7 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
   }, [captureId]);
 
   const alts = useMemo(
-    () => (Array.isArray(capture?.alternatives) ? capture!.alternatives!.slice(0, 4) : []),
+    () => (Array.isArray(capture?.alternatives) ? capture!.alternatives!.slice(0, 12) : []),
     [capture]
   );
   const insight = materialInsightFromText(
