@@ -43,6 +43,21 @@ function showAuth(signed, saved) {
   }
 }
 
+function capturePageUrl(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return "";
+  try {
+    const u = new URL(text, "https://www.intertexe.com");
+    if (u.pathname === "/open" || u.pathname === "/open/") {
+      const next = u.searchParams.get("next") || "";
+      if (next.startsWith("/capture/")) return `${u.origin}${next}`;
+    }
+    return u.href;
+  } catch {
+    return text;
+  }
+}
+
 function shopLabel(alt) {
   const brand = String(alt.brand_name || "").trim();
   return brand ? `Shop at ${brand}` : "Shop";
@@ -150,7 +165,9 @@ function renderResult(payload, opts = {}) {
     resultEl.appendChild(list);
   }
 
-  const openUrl = view.openInIntertexeUrl || links.openInIntertexeUrl || copy.openInIntertexeUrl;
+  const openUrl = capturePageUrl(
+    view.openInIntertexeUrl || links.openInIntertexeUrl || copy.openInIntertexeUrl
+  );
   if (openUrl) {
     const a = el("a", "primary");
     a.href = openUrl;

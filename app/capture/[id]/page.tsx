@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import CaptureOpenClient from "./CaptureOpenClient";
 
 export const metadata = {
-  title: "Open in INTERTEXE",
+  title: "TX Matches",
   robots: { index: false, follow: false },
 };
 

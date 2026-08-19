@@ -8,6 +8,7 @@ import {
   getAppStoreUrl,
   openAppStore,
 } from "../../lib/app-store";
+import { shouldSkipAppOpenLanding, webPathFromOpenNext } from "../../lib/app-open-landing";
 
 function resolveOpenDest(next: string): { appNext: string; webNext: string } {
   const raw = (next || "/").trim() || "/";
@@ -42,10 +43,24 @@ export default function OpenAppPage() {
       dest.appNext.startsWith("/account");
     const isExtensionOpen =
       cta === "chrome_extension_open" || dest.appNext.startsWith("/capture/");
+    const skipToWeb =
+      typeof navigator !== "undefined" &&
+      shouldSkipAppOpenLanding({
+        userAgent: navigator.userAgent,
+        next,
+        cta,
+      });
 
   useEffect(() => {
     let cancelled = false;
     let leftPage = false;
+
+    if (skipToWeb) {
+      window.location.replace(webPathFromOpenNext(next));
+      return () => {
+        cancelled = true;
+      };
+    }
 
     if (!isAuthHandoff) {
       trackAppDownloadClick({
@@ -84,10 +99,13 @@ export default function OpenAppPage() {
       window.removeEventListener("pagehide", markLeft);
       window.removeEventListener("blur", markLeft);
     };
-  }, [schemeUrl, storeUrl, cta, isAuthHandoff, isExtensionOpen, dest.webNext]);
+  }, [schemeUrl, storeUrl, cta, isAuthHandoff, isExtensionOpen, dest.webNext, skipToWeb, next]);
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 py-12">
+      {skipToWeb ? (
+        <p className="text-sm text-muted-foreground">Opening TX Matches…</p>
+      ) : (
       <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-[0_18px_40px_rgba(22,20,18,0.08)]">
         <p className="font-serif italic text-2xl">INTERTEXE</p>
         <h1 className="font-serif text-3xl mt-3 mb-3">
@@ -151,6 +169,7 @@ export default function OpenAppPage() {
           </>
         )}
       </div>
+      )}
     </div>
   );
 }

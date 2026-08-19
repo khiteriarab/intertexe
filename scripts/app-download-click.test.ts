@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { classifyAppDownloadChannel } from "../lib/app-download-channel.ts";
 import { getUniversalOpenUrl } from "../lib/app-store.ts";
+import { shouldSkipAppOpenLanding, webPathFromOpenNext } from "../lib/app-open-landing.ts";
 
 test("classifyAppDownloadChannel maps paid + email + qr tags", () => {
   assert.equal(classifyAppDownloadChannel({ utm_source: "facebook", utm_medium: "paid" }), "meta");
@@ -24,6 +25,25 @@ test("classifyAppDownloadChannel maps paid + email + qr tags", () => {
   assert.equal(classifyAppDownloadChannel({}), "website");
   assert.equal(classifyAppDownloadChannel({ utm_source: "newsletter_partner" }), "email");
   assert.equal(classifyAppDownloadChannel({ utm_source: "reddit", utm_medium: "social" }), "other");
+});
+
+test("desktop capture links skip the /open waiting page", () => {
+  assert.equal(webPathFromOpenNext("/capture/abc"), "/capture/abc");
+  assert.equal(
+    shouldSkipAppOpenLanding({
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120",
+      next: "/capture/abc",
+      cta: "chrome_extension_open",
+    }),
+    true
+  );
+  assert.equal(
+    shouldSkipAppOpenLanding({
+      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+      next: "/capture/abc",
+    }),
+    false
+  );
 });
 
 test("getUniversalOpenUrl preserves itx_cta and utm params", () => {

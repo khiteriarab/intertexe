@@ -22,6 +22,7 @@ export type FindBetterAlternative = {
   brand_name: string | null;
   brand_slug: string | null;
   image_url: string | null;
+  url?: string | null;
   price: number | string | null;
   currency: string | null;
   composition: string | null;
@@ -220,6 +221,42 @@ function parsePrice(raw: unknown): number | null {
   return null;
 }
 
+const AFFILIATE_URL_RE =
+  /linksynergy|rakuten|awin1|impact\.com|shareasale|anrdoezrs|dpbolvw|jdoqocy|tkqlhce|pjtra|partnerize/i;
+
+/** Shopper price band for TX Match. Hard gate — never lead with a $84 jean for a €350 scan. */
+export function txMatchPriceBounds(input: FindBetterInput): { min: number | null; max: number | null } {
+  const source = input.price != null && input.price > 0 ? input.price : null;
+  let min = source != null ? Math.round(source * 0.7) : input.userPriceMin ?? null;
+  let max = source != null ? Math.round(source * 1.35) : input.userPriceMax ?? null;
+  if (input.userPriceMin != null && input.userPriceMin > 0) {
+    min = min == null ? input.userPriceMin : Math.max(min, input.userPriceMin);
+  }
+  if (input.userPriceMax != null && input.userPriceMax > 0) {
+    max = max == null ? input.userPriceMax : Math.min(max, input.userPriceMax);
+  }
+  return { min, max };
+}
+
+export function inTxMatchPriceRange(product: Record<string, unknown>, input: FindBetterInput): boolean {
+  const bounds = txMatchPriceBounds(input);
+  if (bounds.min == null && bounds.max == null) return true;
+  const price = parsePrice(product.price);
+  if (price == null) return false;
+  if (bounds.min != null && price < bounds.min) return false;
+  if (bounds.max != null && price > bounds.max) return false;
+  return true;
+}
+
+/** Expected INTERTEXE commission — affiliate URLs earn; price is the $ proxy inside the band. */
+export function estimatedCommission(product: Record<string, unknown>): number {
+  const price = parsePrice(product.price);
+  if (price == null) return 0;
+  const url = String(product.url || "");
+  const rate = AFFILIATE_URL_RE.test(url) ? 0.1 : url.startsWith("http") ? 0.06 : 0.03;
+  return price * rate;
+}
+
 function whyFor(
   product: Record<string, unknown>,
   input: FindBetterInput,
@@ -288,6 +325,7 @@ function toAlternative(
     brand_name: (product.brand_name as string) || null,
     brand_slug: (product.brand_slug as string) || null,
     image_url: (product.image_url as string) || null,
+    url: (product.url as string) || null,
     price: (product.price as number | string) ?? null,
     currency: (product.currency as string) || "USD",
     composition: normalizeCompositionStorage(String(product.composition || "")) || (product.composition as string) || null,
@@ -494,7 +532,9 @@ function rankAlternatives(
       ? (input.matchBrief.targetPriceRange.min + input.matchBrief.targetPriceRange.max) / 2
       : null);
 
-  const filtered = products.filter((p) => matchesHardCategory(p, input));
+  const filtered = products.filter(
+    (p) => matchesHardCategory(p, input) && inTxMatchPriceRange(p, input)
+  );
 
   const scored = filtered.map((p) => {
     let score = 0;
@@ -528,16 +568,14 @@ function rankAlternatives(
 
     score += Math.min(nfp, 100) * 0.2;
     const price = parsePrice(p.price);
+    const commission = estimatedCommission(p);
+    score += Math.min(commission, 80);
     if (targetPrice != null && price != null && targetPrice > 0) {
       const diff = Math.abs(price - targetPrice) / targetPrice;
       if (diff <= 0.25) score += 36;
       else if (diff <= 0.45) score += 22;
       else if (diff <= 0.7) score += 8;
-      else score -= 10;
-      // Cheaper is a bonus only inside the same fabric — never a reason to switch fiber.
-      if (sameFiber && targetPrice - price >= 50) score += 10;
     }
-    if (input.userPriceMax != null && price != null && price > input.userPriceMax) score -= 20;
     if (sameColor) score += 50;
     const hay = `${p.name || ""} ${p.category || ""} ${p.color || ""}`.toLowerCase();
     if (input.silhouette) {
@@ -556,7 +594,7 @@ function rankAlternatives(
     for (const d of input.distinctiveDetails || []) {
       if (d && hay.includes(d.toLowerCase())) score += 12;
     }
-    return { p, score, sameColor, sameFiber, sameLook, productLook };
+    return { p, score, sameColor, sameFiber, sameLook, productLook, commission };
   });
 
   scored.sort(
@@ -564,20 +602,22 @@ function rankAlternatives(
       Number(b.sameLook) - Number(a.sameLook) ||
       Number(b.sameFiber) - Number(a.sameFiber) ||
       Number(b.sameColor) - Number(a.sameColor) ||
+      b.commission - a.commission ||
       b.score - a.score ||
       (Number(b.p.natural_fiber_percent) || 0) - (Number(a.p.natural_fiber_percent) || 0)
   );
 
   // First 5: what the shopper is looking at (same garment + fabric + color).
-  // Remaining slots: other same-look pieces, then adjacent taste-aware picks.
+  // Inside that set, the highest-commission piece in their price range leads.
   const used = new Set<string>();
   const lead: typeof scored = [];
   const take = (pred: (row: (typeof scored)[number]) => boolean, n: number) => {
-    for (const row of scored) {
+    const pool = scored
+      .filter((row) => !used.has(String(row.p.id)) && pred(row))
+      .sort((a, b) => b.commission - a.commission || b.score - a.score);
+    for (const row of pool) {
       if (lead.length >= n) break;
-      const id = String(row.p.id);
-      if (used.has(id) || !pred(row)) continue;
-      used.add(id);
+      used.add(String(row.p.id));
       lead.push(row);
     }
   };
@@ -597,7 +637,7 @@ function rankAlternatives(
         }
         return 0;
       };
-      return adj(b) - adj(a) || b.score - a.score;
+      return adj(b) - adj(a) || b.commission - a.commission || b.score - a.score;
     });
 
   const ordered = [...lead, ...rest];
@@ -728,21 +768,18 @@ export async function findBetterAlternatives(
   }
 
   const region = (resolved.region || resolved.matchBrief?.region || "us").toLowerCase();
-  const price = resolved.price ?? null;
   const browseCat = browseCategoryFor(resolved);
   const preferredFiber = preferredFiberFromInput(resolved);
   const sourceLook = lookFamilyFromInput(resolved);
   const denimLead = sourceLook === "jeans";
+  const priceBounds = txMatchPriceBounds(resolved);
 
   let rows: Record<string, unknown>[] = [];
 
   // Primary: authoritative catalog_browse_page_v2 via caller client (never products writes)
   if (browseCat) {
-    const minPrice = price != null && price > 0 ? Math.round(price * 0.5) : resolved.userPriceMin ?? null;
-    let maxPrice = price != null && price > 0 ? Math.round(price * 1.6) : resolved.userPriceMax ?? null;
-    if (resolved.userPriceMax != null && resolved.userPriceMax > 0) {
-      maxPrice = maxPrice == null ? resolved.userPriceMax : Math.min(maxPrice, resolved.userPriceMax);
-    }
+    const minPrice = priceBounds.min;
+    const maxPrice = priceBounds.max;
     // Prefer newest for the first pass — most_natural category browses can exceed
     // serverless budgets; rankAlternatives already elevates natural-fiber quality.
     const rpcParams = buildCatalogBrowseV2Params({
@@ -806,6 +843,7 @@ export async function findBetterAlternatives(
           brand_name: p.brand_name || p.brandName,
           brand_slug: p.brand_slug || p.brandSlug,
           image_url: p.image_url || p.imageUrl,
+          url: p.url || p.productUrl || null,
           price: p.price,
           currency: p.currency || "USD",
           composition: p.composition,
@@ -820,7 +858,7 @@ export async function findBetterAlternatives(
     }
   }
 
-  // Retry without price band when the first pass is thin (still category-hard).
+  // Retry without denim construction when the first pass is thin (still price-bounded).
   if (rows.length < 4 && browseCat) {
     const wide = await withTimeout(
       (async () => {
@@ -832,6 +870,8 @@ export async function findBetterAlternatives(
             limit: 48,
             offset: 0,
             sort: "newest",
+            minPrice: priceBounds.min ?? undefined,
+            maxPrice: priceBounds.max ?? undefined,
             includeUnverified: false,
             apparelOnly: browseCat !== "shoes",
           })
@@ -845,6 +885,8 @@ export async function findBetterAlternatives(
     if (products.length) {
       const integritySpec = integritySpecFromBrowseOpts({
         category: browseCat,
+        minPrice: priceBounds.min,
+        maxPrice: priceBounds.max,
         apparelOnly: browseCat !== "shoes",
       });
       const integrityRows: FilterIntegrityProduct[] = products.map((p) => ({
@@ -872,6 +914,7 @@ export async function findBetterAlternatives(
           brand_name: p.brand_name || p.brandName,
           brand_slug: p.brand_slug || p.brandSlug,
           image_url: p.image_url || p.imageUrl,
+          url: p.url || p.productUrl || null,
           price: p.price,
           currency: p.currency || "USD",
           composition: p.composition,

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
-import { getUniversalOpenUrl } from "@/lib/app-store";
 import { shopAtLabel } from "@/lib/capture-page-signals";
 import { buildCaptureResultView, type CaptureResultAltView } from "@/lib/capture-result";
 import { savingsPercent } from "@/lib/material-insight";
@@ -29,9 +28,6 @@ type Capture = Record<string, unknown> & {
 export default function CaptureOpenClient({ captureId }: { captureId: string }) {
   const [capture, setCapture] = useState<Capture | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
-  const appHref = getUniversalOpenUrl(`/capture/${captureId}`, {
-    cta: "chrome_extension_open",
-  });
 
   useEffect(() => {
     let cancelled = false;
@@ -119,7 +115,7 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
             )}
             <div className="p-5 md:p-6">
               <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                Saved in INTERTEXE
+                This piece
               </p>
               <h1 className="font-serif mt-2 text-3xl leading-tight">{view.title}</h1>
               <p className="mt-2 text-sm text-[#3f3a36]">
@@ -142,12 +138,6 @@ export default function CaptureOpenClient({ captureId }: { captureId: string }) 
                   </a>
                 </p>
               ) : null}
-              <a
-                href={appHref}
-                className="mt-5 flex h-12 items-center justify-center rounded-full bg-[#1f3d2b] text-sm font-semibold text-white"
-              >
-                Continue in the INTERTEXE app
-              </a>
             </div>
           </article>
 

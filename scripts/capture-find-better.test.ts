@@ -151,12 +151,27 @@ describe("TX Match fabric-first ranking", () => {
   });
 
   it("puts cotton blue jeans in the first 5, then related bottoms", () => {
+    const affiliate = "https://click.linksynergy.com/deeplink?id=test";
     const products = [
+      {
+        id: "cheap",
+        name: "Mid Rise Button Fly Boyfriend Jeans in Medium Blue cheap",
+        brand_name: "Test",
+        price: 84,
+        currency: "USD",
+        url: affiliate,
+        composition: "93% cotton",
+        natural_fiber_percent: 93,
+        category: "pants_trousers",
+        garment_type: "pants_trousers",
+        color: "blue",
+        fabric_construction: "denim",
+      },
       {
         id: "sweat",
         name: "Weekend Park Loved Sweatpant",
         brand_name: "Test",
-        price: 180,
+        price: 280,
         currency: "USD",
         composition: "100% cotton",
         natural_fiber_percent: 100,
@@ -168,7 +183,7 @@ describe("TX Match fabric-first ranking", () => {
         id: "beige-pant",
         name: "Askk Ny Juniper Wide Leg",
         brand_name: "Test",
-        price: 255,
+        price: 260,
         currency: "USD",
         composition: "100% cotton",
         natural_fiber_percent: 100,
@@ -192,7 +207,7 @@ describe("TX Match fabric-first ranking", () => {
         id: "black-jean",
         name: "Black High Rise Jeans",
         brand_name: "Test",
-        price: 220,
+        price: 280,
         currency: "USD",
         composition: "100% cotton",
         natural_fiber_percent: 100,
@@ -207,8 +222,9 @@ describe("TX Match fabric-first ranking", () => {
         id: `blue-jean-${i}`,
         name: `Mid Rise Button Fly Boyfriend Jeans in Medium Blue ${i}`,
         brand_name: "Test",
-        price: 84 + i,
+        price: 260 + i * 20,
         currency: "USD",
+        url: affiliate,
         composition: "93% cotton",
         natural_fiber_percent: 93,
         category: "pants_trousers",
@@ -227,13 +243,13 @@ describe("TX Match fabric-first ranking", () => {
     });
     const firstFive = ranked.slice(0, 5);
     assert.equal(firstFive.length, 5);
+    assert.equal(ranked.some((row) => row.id === "cheap"), false);
+    assert.equal(firstFive[0]?.id, "blue-jean-6");
     for (const alt of firstFive) {
       assert.match(String(alt.name), /jeans/i);
       assert.match(String(alt.name), /blue/i);
       assert.doesNotMatch(String(alt.name), /sweatpant|eyelet|wide leg/i);
     }
-    const rest = ranked.slice(5);
-    assert.ok(rest.some((row) => row.id === "black-jean"));
     assert.ok(
       ranked.findIndex((row) => row.id === "black-jean") <
         ranked.findIndex((row) => row.id === "sweat")
