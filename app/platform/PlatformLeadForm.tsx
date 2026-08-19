@@ -4,9 +4,9 @@ import { FormEvent, useState } from "react";
 import { trackPlatform } from "../../lib/platform-analytics";
 
 const INTENTS = [
-  { value: "snapshot", label: "10-product Material Data Snapshot" },
-  { value: "founding_pilot", label: "Founding Material Data Pilot ($5,000)" },
-  { value: "api_access", label: "Discuss API access" },
+  { value: "snapshot", label: "10-product snapshot" },
+  { value: "founding_pilot", label: "Founding DPP Pilot ($5,000)" },
+  { value: "api_access", label: "Discuss platform access" },
 ] as const;
 
 export function PlatformLeadForm({
@@ -54,7 +54,7 @@ export function PlatformLeadForm({
     return (
       <p className="text-sm text-[#5c5854] leading-relaxed">
         We received your request. The INTERTEXE team will review your catalog profile and reply with the
-        next step for a 10-product Material Data Snapshot.
+        next step for a 10-product snapshot.
         {state === "dup" ? " This email was already received in the last 24 hours." : ""}
       </p>
     );
