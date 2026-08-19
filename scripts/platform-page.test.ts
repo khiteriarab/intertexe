@@ -6,6 +6,8 @@ import path from "path";
 describe("Platform DPP operating-system page", () => {
   const home = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHome.tsx"), "utf8");
   const chrome = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformChrome.tsx"), "utf8");
+  const nav = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformNav.tsx"), "utf8");
+  const comparison = fs.readFileSync(path.join(process.cwd(), "app/platform/ComparisonView.tsx"), "utf8");
   const login = fs.readFileSync(path.join(process.cwd(), "app/platform/login/page.tsx"), "utf8");
   const page = fs.readFileSync(path.join(process.cwd(), "app/platform/page.tsx"), "utf8");
 
@@ -23,6 +25,7 @@ describe("Platform DPP operating-system page", () => {
     assert.match(home, /href="\/platform\/demo"/);
     assert.match(home, /See the live demo/);
     assert.match(chrome, /href="\/dashboard\/login"/);
+    assert.match(nav, /"\/dashboard\/login"/);
     assert.match(home, /Go to dashboard login/);
     assert.match(login, /redirect\("\/dashboard\/login"\)/);
     assert.match(page, /PlatformHome/);
@@ -40,8 +43,8 @@ describe("Platform DPP operating-system page", () => {
   it("compares emphasis without unverified competitor gaps", () => {
     assert.match(home, /Built differently for fashion/);
     assert.match(home, /Not publicly confirmed/);
-    assert.match(home, /TrusTrace/);
-    assert.match(home, /EON/);
+    assert.match(comparison, /TrusTrace/);
+    assert.match(comparison, /EON/);
     assert.match(home, /19 August 2026/);
     assert.doesNotMatch(home, /can't do DPPs/i);
     assert.match(home, /Material Intelligence → DPP operations → Market \/ consumer intelligence/);
@@ -52,5 +55,15 @@ describe("Platform DPP operating-system page", () => {
   it("keeps the FAQ foldable", () => {
     assert.match(home, /<details key=\{item\.q\} name="platform-faq"/);
     assert.match(home, /Does INTERTEXE generate the Digital Product Passport/);
+  });
+
+  it("recomposes the page for small screens without dropping the desktop spread", () => {
+    assert.match(nav, /\{open \? "Close" : "Menu"\}/);
+    assert.match(nav, /Snapshot/);
+    assert.match(home, /WorkspaceGallery/);
+    assert.match(home, /ComparisonView/);
+    assert.match(home, /Prepare → Generate → Publish → Maintain → Understand/);
+    assert.match(comparison, /Compare INTERTEXE with/);
+    assert.match(comparison, /hidden lg:block/);
   });
 });
