@@ -785,7 +785,7 @@ describe("Responsive and accessible rendering", () => {
     assert.match(client, /Scaled booking plan/);
     assert.match(client, /Commercial funnel/);
     assert.match(client, /What must happen next/);
-    assert.match(client, /Decision gate/);
+    assert.match(client, /PLAN_DECISION_GATE/);
     assert.match(client, /Founding Material Data Pilot/);
     assert.match(client, /\/platform/);
   });
