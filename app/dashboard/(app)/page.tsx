@@ -446,8 +446,10 @@ export default async function HqOverviewPage() {
         </div>
         <div className="mt-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <p className="text-[11px] text-black/40 leading-relaxed max-w-xl">
-            Gmail templates exist for influencers and customers only. Brands and organizations
-            stay on the list until those drafts exist. HQ never auto-sends relationship email.
+            Gmail templates exist for influencers, customers and brands. Keep a draft whose subject
+            contains “founding material data pilot” for brand intros. HQ never auto-sends relationship
+            email — you review and press Send in Gmail. A send or reply to a brand opens a $5,000 Pilot
+            opportunity on the command center; booked revenue still waits until you mark it won.
           </p>
           <div className="flex flex-col items-end gap-2 shrink-0">
             <PrepareDraftsButton connected={founder.gmailConnected} />

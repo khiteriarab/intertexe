@@ -788,5 +788,6 @@ describe("Responsive and accessible rendering", () => {
     assert.match(client, /PLAN_DECISION_GATE/);
     assert.match(client, /Founding Material Data Pilot/);
     assert.match(client, /\/platform/);
+    assert.match(client, /Open \$5K Pilot opportunities/);
   });
 });

@@ -92,6 +92,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not store this request." }, { status: 500 });
   }
 
+  const { syncPlatformLeadToPilotPipeline } = await import("../../../../lib/dashboard/pilot-motherboard");
+  await syncPlatformLeadToPilotPipeline(supabase, {
+    firstName,
+    lastName,
+    email,
+    company,
+    intent,
+  }).catch(() => {});
+
   const salesTo = process.env.PLATFORM_SALES_EMAIL || EMAIL_REPLY_TO;
   const intentLabel =
     intent === "founding_pilot"

@@ -1000,9 +1000,9 @@ function buildSourceAudit(input: {
     {
       id: "deals",
       label: "Deals, payments and activities",
-      availability: planTablesReady ? "manual" : "unavailable",
+      availability: planTablesReady ? "live" : "unavailable",
       detail: planTablesReady
-        ? "Founder-entered in HQ. Booked, collected and pipeline all read from these tables."
+        ? "Brand Gmail and /platform founding-pilot or snapshot requests open $5,000 Pilot opportunities automatically. Booked revenue still requires a won deal; cash still requires a cleared payment."
         : "hq_deals / hq_deal_payments / hq_revenue_activities are not in the database yet.",
       action: planTablesReady ? undefined : "Apply 20260820_hq_revenue_command_center.sql",
     },

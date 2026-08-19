@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizeEmail } from "../email-constants";
 import { recordOutreachEvent } from "./outreach";
+import { syncGmailEventToPilotPipeline } from "./pilot-motherboard";
 
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
 /** Cap per query; paginate so a big send batch (e.g. 80) is fully ingested. */
@@ -136,17 +137,27 @@ export async function ingestGmailOutreach(args: {
 
   const { data: contacts, error } = await args.supabase
     .from("hq_contacts")
-    .select("id, email, normalized_email")
+    .select("id, email, normalized_email, contact_type, company_name")
     .eq("workspace_id", args.workspaceId);
   if (error) {
     result.errors.push(error.message);
     return result;
   }
 
-  const byEmail = new Map<string, { id: string; email: string }>();
+  const byEmail = new Map<
+    string,
+    { id: string; email: string; contactType: string | null; companyName: string | null }
+  >();
   for (const c of contacts || []) {
     const key = normalizeEmail(String(c.normalized_email || c.email || ""));
-    if (key) byEmail.set(key, { id: String(c.id), email: String(c.email) });
+    if (key) {
+      byEmail.set(key, {
+        id: String(c.id),
+        email: String(c.email),
+        contactType: (c.contact_type as string) || null,
+        companyName: (c.company_name as string) || null,
+      });
+    }
   }
   if (byEmail.size === 0) return result;
 
@@ -242,6 +253,8 @@ export async function ingestGmailOutreach(args: {
       const matched = recipients.map((e) => byEmail.get(e)).filter(Boolean) as Array<{
         id: string;
         email: string;
+        contactType: string | null;
+        companyName: string | null;
       }>;
       if (!matched.length) {
         result.skippedUnmatched += 1;
@@ -261,8 +274,18 @@ export async function ingestGmailOutreach(args: {
           sentAt: at,
           metadata: { gmail_id: msg.id, connected_account: self || null },
         });
-        if (out.inserted) result.sentLogged += 1;
-        else if (out.skipped === "duplicate") result.duplicates += 1;
+        if (out.inserted) {
+          result.sentLogged += 1;
+          await syncGmailEventToPilotPipeline(args.supabase, {
+            workspaceId: args.workspaceId,
+            contactId: contact.id,
+            contactType: contact.contactType,
+            companyName: contact.companyName,
+            email: contact.email,
+            eventType: "email_sent",
+            at,
+          }).catch(() => {});
+        } else if (out.skipped === "duplicate") result.duplicates += 1;
       }
       continue;
     }
@@ -285,8 +308,18 @@ export async function ingestGmailOutreach(args: {
       receivedAt: at,
       metadata: { gmail_id: msg.id },
     });
-    if (out.inserted) result.repliesLogged += 1;
-    else if (out.skipped === "duplicate") result.duplicates += 1;
+    if (out.inserted) {
+      result.repliesLogged += 1;
+      await syncGmailEventToPilotPipeline(args.supabase, {
+        workspaceId: args.workspaceId,
+        contactId: fromContact.id,
+        contactType: fromContact.contactType,
+        companyName: fromContact.companyName,
+        email: fromContact.email,
+        eventType: "email_reply_received",
+        at,
+      }).catch(() => {});
+    } else if (out.skipped === "duplicate") result.duplicates += 1;
   }
 
   return result;

@@ -238,6 +238,48 @@ function RevenueView({
         />
       </div>
 
+      <HqCard title="Open $5K Pilot opportunities">
+        <p className="text-[12px] text-black/50 leading-relaxed mb-4 max-w-2xl">
+          A brand Gmail send/reply or a `/platform` request now opens a $5,000 Founding Material Data Pilot
+          here. Weighted pipeline moves. Booked revenue still only counts when you mark the deal won —
+          HQ never auto-closes a sale.
+        </p>
+        {bundle.deals.filter((d) => d.revenueStream === "api_pilot" && d.stage !== "won" && d.stage !== "lost")
+          .length === 0 ? (
+          <p className="text-sm text-black/55">
+            No open pilots yet. Email a brand from Gmail or take a founding-pilot request on /platform.
+          </p>
+        ) : (
+          <ul className="divide-y divide-black/[0.06]">
+            {bundle.deals
+              .filter((d) => d.revenueStream === "api_pilot" && d.stage !== "won" && d.stage !== "lost")
+              .map((deal) => {
+                const stageLabel = bundle.stages.find((s) => s.key === deal.stage)?.label || deal.stage;
+                return (
+                  <li key={deal.id} className="py-3 first:pt-0 last:pb-0">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="text-sm font-medium">{deal.companyName}</span>
+                      <span className="text-[12px] tabular-nums text-black/60">
+                        {formatPlanMoney(deal.amount)} · {stageLabel}
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-black/55 mt-1">{deal.opportunity || "Founding Material Data Pilot"}</p>
+                    {deal.nextAction ? (
+                      <p className="text-[12px] mt-1">
+                        <span className="text-black/45">Next: </span>
+                        {deal.nextAction}
+                      </p>
+                    ) : null}
+                    <p className="text-[11px] text-black/40 mt-1">
+                      {deal.entryMode === "system" ? "Opened automatically" : "Logged in HQ"}
+                    </p>
+                  </li>
+                );
+              })}
+          </ul>
+        )}
+      </HqCard>
+
       <HqCard title="Target trajectory versus actual">
         <TrajectoryChart points={bundle.trajectory} milestones={bundle.milestones} />
         <ul className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
