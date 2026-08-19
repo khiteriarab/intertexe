@@ -29,8 +29,8 @@ export default function PlatformDocsPage() {
         </h2>
         <p className="mb-4">
           Send a GTIN, UPC or EAN. Receive normalized fibre composition, evidence status and a DPP-readiness
-          map that can feed a PIM, PLM, ecommerce stack or DPP provider. INTERTEXE is not a
-          legal-certification company and does not replace the EU DPP Registry.
+          map that can feed a PIM, PLM, ecommerce stack or INTERTEXE Digital Product Passport workflows.
+          INTERTEXE is not a legal-certification company and does not replace the EU DPP Registry.
         </p>
         <p className="mb-10">
           <a href="/api/openapi.json" className="underline underline-offset-4 text-[#1a1a1a]">
