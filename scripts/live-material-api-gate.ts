@@ -7,7 +7,7 @@
  * HQ session: HQ_PASSWORD or admin generateLink for info@intertexe.com
  */
 import { createClient } from "@supabase/supabase-js";
-import { appendGtinCheckDigit } from "../lib/gtin.ts";
+import { appendGtinCheckDigit, parseGtin } from "../lib/gtin.ts";
 import {
   applyMaterialIntelligenceMigration,
   materialIntelligenceTablesReady,
@@ -36,6 +36,15 @@ function record(name: string, ok: boolean, detail: string) {
 
 function redact(value: string): string {
   return value.replace(/itx_(?:live|test)_[A-Za-z0-9_-]{16,}/g, "itx_***");
+}
+
+function containsRawKey(value: string): boolean {
+  return /itx_(?:live|test)_[A-Za-z0-9_-]{16,}/.test(value);
+}
+
+function asChecksumGtin(raw: unknown): string {
+  const digits = String(raw || "").replace(/\D/g, "");
+  return parseGtin(digits).ok ? digits : "";
 }
 
 function jwtRole(token: string): string {
@@ -165,49 +174,48 @@ async function founderAccessToken(supabase: NonNullable<ReturnType<typeof servic
 }
 
 async function pickGtins(supabase: NonNullable<ReturnType<typeof serviceClient>>) {
-  const { data: approved } = await supabase
-    .from("products")
-    .select("upc, composition")
-    .eq("approved", "yes")
-    .eq("is_active", true)
-    .not("upc", "is", null)
-    .not("composition", "is", null)
-    .neq("composition", "")
-    .limit(20);
-
-  const approvedGtin = String(approved?.[0]?.upc || "").replace(/\D/g, "");
-
-  const { data: reportedRows } = await supabase
+  // Production lookup hits barcode_compositions first (indexed). Picking an
+  // approved products.upc that is missing from barcode_compositions used to
+  // time out on the products scan and fall through to manufacturer_only.
+  const { data: barcodeRows } = await supabase
     .from("barcode_compositions")
     .select("upc_code, source, composition")
     .not("composition", "is", null)
     .neq("composition", "")
     .limit(80);
 
-  const reportedGtin = String(
-    (reportedRows || []).find((row) => {
-      const source = String(row.source || "").toLowerCase();
-      const upc = String(row.upc_code || "").replace(/\D/g, "");
+  const usable = (barcodeRows || [])
+    .map((row) => ({
+      gtin: asChecksumGtin(row.upc_code),
+      source: String(row.source || "").toLowerCase(),
+      composition: String(row.composition || "").trim(),
+    }))
+    .filter((row) => row.gtin && row.composition);
+
+  const approvedGtin = usable[0]?.gtin || "";
+  const reportedGtin =
+    usable.find((row) => {
+      if (row.gtin === approvedGtin) return false;
       return (
-        upc &&
-        upc !== approvedGtin &&
-        (source.includes("retailer") ||
-          source.includes("affiliate") ||
-          source === "products_catalog" ||
-          source === "brand" ||
-          source === "brand_catalog")
+        row.source.includes("retailer") ||
+        row.source.includes("affiliate") ||
+        row.source === "products_catalog" ||
+        row.source === "brand" ||
+        row.source === "brand_catalog"
       );
-    })?.upc_code ||
-      reportedRows?.[0]?.upc_code ||
-      approvedGtin
-  ).replace(/\D/g, "");
+    })?.gtin ||
+    usable.find((row) => row.gtin !== approvedGtin)?.gtin ||
+    approvedGtin;
 
   let unknown = appendGtinCheckDigit("020999999999");
   for (let i = 0; i < 8; i++) {
     const candidate = appendGtinCheckDigit(`02088888${String(1000 + i).slice(-4)}`);
-    const { data } = await supabase.from("products").select("upc").eq("upc", candidate).limit(1);
-    const { data: bar } = await supabase.from("barcode_compositions").select("upc_code").eq("upc_code", candidate).limit(1);
-    if (!data?.length && !bar?.length) {
+    const { data: bar } = await supabase
+      .from("barcode_compositions")
+      .select("upc_code")
+      .eq("upc_code", candidate)
+      .limit(1);
+    if (!bar?.length) {
       unknown = candidate;
       break;
     }
@@ -293,23 +301,26 @@ async function main() {
   });
 
   const issuedText = await issuedRes.text();
-  const rawMatch = issuedText.match(/itx_test_[A-Za-z0-9_-]+/);
-  const rawKey = rawMatch?.[0] || "";
-  if (rawKey) maskSecret(rawKey);
-  if (containsRawKey(issuedText.replace(rawKey, ""))) {
-    record("issue_test_key", false, "HQ response contained an unexpected key-shaped value");
-    finish(false);
-    return;
-  }
-
   let issued: Record<string, unknown> = {};
   try {
-    issued = JSON.parse(issuedText.replace(rawKey, "REDACTED")) as Record<string, unknown>;
+    issued = JSON.parse(issuedText) as Record<string, unknown>;
   } catch {
     issued = {};
   }
 
-  if (!issuedRes.ok || !rawKey.startsWith("itx_test_")) {
+  // Read the documented field. A regex over the whole body would match
+  // key_prefix first and yield a truncated value.
+  const rawKey = String(issued.rawKey || "");
+  if (rawKey) maskSecret(rawKey);
+  delete issued.rawKey;
+
+  if (rawKey && containsRawKey(issuedText.split(rawKey).join(""))) {
+    record("issue_test_key", false, "HQ response contained a second key-shaped value");
+    finish(false);
+    return;
+  }
+
+  if (!issuedRes.ok || !rawKey.startsWith("itx_test_") || rawKey.length < 24) {
     record(
       "issue_test_key",
       false,
@@ -460,14 +471,19 @@ async function main() {
       : `first=${firstLead.status} second=${secondLead.status} duplicate=${String(secondJson.duplicate)} rows=${(leads || []).length} err=${String(firstJson.error || "")}`
   );
 
+  // Do not put plus-addressed emails in PostgREST `.or()` — `+` is an operator.
   const { data: deliveries } = await supabase
     .from("email_deliveries")
     .select("id, email, email_type, status")
     .eq("email_type", "platform_lead")
-    .or(`email.eq.${leadEmail},email.eq.info@intertexe.com`)
     .gte("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString())
-    .limit(10);
-  const oneEmail = (deliveries || []).some((row) => row.status === "sent" || row.status === "delivered" || row.status === "pending");
+    .limit(20);
+  const wanted = new Set([leadEmail.toLowerCase(), "info@intertexe.com"]);
+  const oneEmail = (deliveries || []).some((row) => {
+    const status = String(row.status || "");
+    const email = String(row.email || "").toLowerCase();
+    return wanted.has(email) && (status === "sent" || status === "delivered" || status === "pending");
+  });
   record(
     "snapshot_email",
     oneEmail,
