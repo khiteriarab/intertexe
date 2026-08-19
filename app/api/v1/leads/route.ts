@@ -95,10 +95,10 @@ export async function POST(req: NextRequest) {
   const salesTo = process.env.PLATFORM_SALES_EMAIL || EMAIL_REPLY_TO;
   const intentLabel =
     intent === "founding_pilot"
-      ? "Founding Material Data Pilot"
+      ? "Founding DPP Pilot"
       : intent === "api_access"
-        ? "API access"
-        : "10-product Material Data Snapshot";
+        ? "Platform access"
+        : "10-product snapshot";
 
   await sendCustomerEmail({
     to: salesTo,
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     to: email,
     subject: "We received your INTERTEXE request",
     emailType: EMAIL_TYPES.PLATFORM_LEAD,
-    html: `<p>We received your request. The INTERTEXE team will review your catalog profile and reply with the next step for a 10-product Material Data Snapshot.</p>
+    html: `<p>We received your request. The INTERTEXE team will review your catalog profile and reply with the next step for a 10-product snapshot.</p>
 <p>Do not send confidential catalogs in email until we arrange secure transfer.</p>`,
     metadata: { intent: "confirmation" },
   }).catch(() => {});

@@ -4,8 +4,8 @@ import { PlatformLeadForm } from "../PlatformLeadForm";
 import { PlatformViewTracker } from "../PlatformViewTracker";
 
 export const metadata: Metadata = {
-  title: "Request a Material Data Snapshot",
-  description: "Request a free 10-product Material Data Snapshot or the $5,000 Founding Material Data Pilot.",
+  title: "Request a 10-product snapshot",
+  description: "Request a free 10-product snapshot or the $5,000 Founding DPP Pilot.",
 };
 
 export default async function PlatformRequestPage({
@@ -26,7 +26,7 @@ export default async function PlatformRequestPage({
     <PlatformChrome active="request">
       <PlatformViewTracker event={startedEvent} />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-24">
-        <p className="text-[10px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.25em] text-[#9c7b8b] mb-6">MATERIAL INTELLIGENCE API</p>
+        <p className="text-[10px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.25em] text-[#9c7b8b] mb-6">INTERTEXE PLATFORM</p>
         <h1 className="text-[2rem] sm:text-4xl font-light mb-4" style={{ fontFamily: "Georgia, serif" }}>
           Request a 10-product snapshot
         </h1>
