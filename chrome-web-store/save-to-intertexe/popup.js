@@ -13,6 +13,20 @@ const signOutBtn = $("signOut");
 const accountBtn = $("accountBtn");
 const accountMenu = $("accountMenu");
 
+const SALE_ALERTS_KEY = "itxSaleAlerts";
+const PENDING_SALE_KEY = "pendingSaleAlert";
+const SORTS = [
+  { id: "best", label: "Best" },
+  { id: "natural", label: "More natural" },
+  { id: "style", label: "Similar style" },
+  { id: "price", label: "Similar price" },
+  { id: "pure", label: "100% natural" },
+];
+
+let matchSort = "best";
+let lastPayload = null;
+let lastRenderOpts = {};
+
 function setStatus(text, isError) {
   if (!text) {
     statusEl.hidden = true;
@@ -52,6 +66,8 @@ function isNoiseStatus(text) {
 }
 
 const NATURAL_FIBERS = ["silk", "linen", "wool", "cotton", "cashmere", "alpaca", "hemp", "lyocell", "tencel", "cupro"];
+const SILHOUETTE_RE =
+  /\b(flared?|wide-?leg|straight|bootcut|skinny|slim|cropped|relaxed|oversized|midi|maxi|mini|a-?line|wrap|slip|tailored|babydoll)\b/i;
 
 function popupMaterial(headline) {
   return String(headline || "Exact composition not published")
@@ -102,20 +118,35 @@ function majoritySynthetic(text, share) {
   return false;
 }
 
-function classificationLabel(view, composition, headline) {
+function localEditorial(listed) {
+  const shell = editorialLine(listed?.shellLine || "");
+  if (!shell) return "";
+  let line = shell;
+  if (listed.laceLine) {
+    line = `Body ${shell} · trim ${editorialLine(listed.laceLine)}`;
+  }
+  if (listed.liningLine) {
+    line = `${line} · lining ${editorialLine(listed.liningLine)}`;
+  }
+  return line;
+}
+
+function classificationLabel(view, composition, headline, listed) {
   const text = String(composition || headline || "");
   const share = view?.insight?.share;
-  const named = namedNaturalFibers(text);
-  const hasAvoid = /\b(polyester|nylon|polyamide|acrylic)\b/i.test(text);
-  const hasCellulosic = /\b(lyocell|tencel|cupro|modal)\b/i.test(text);
+  const named = namedNaturalFibers(listed?.shellLine || text);
+  const hasAvoid = /\b(polyester|nylon|polyamide|acrylic)\b/i.test(listed?.shellLine || text);
+  const hasCellulosic = /\b(lyocell|tencel|cupro|modal)\b/i.test(listed?.shellLine || text);
   const hasNatural = named.length > 0;
   const tone = view?.insight?.tone;
 
-  if (/\blace\b/i.test(text) && /\bnylon\b/i.test(text) && /\bsilk\b/i.test(text)) {
-    return "Silk with Nylon Lace";
+  if (listed?.hasSyntheticLace || listed?.laceLine) {
+    const shell = named[0] ? titleCaseFiber(named[0]) : "Natural shell";
+    if (/\bnylon\b/i.test(listed.laceLine || text)) return `${shell} with nylon lace trim`;
+    return `${shell} with synthetic lace trim`;
   }
 
-  if (majoritySynthetic(text, share)) {
+  if (majoritySynthetic(listed?.shellLine || text, share)) {
     const fiber = named[0] ? titleCaseFiber(named[0]) : "";
     const pct = share != null ? Math.round(share) : named[0] ? percentBeside(text, named[0]) : null;
     if (fiber && pct != null) return `Contains ${fiber} · ${Math.round(pct)}% natural fiber`;
@@ -125,7 +156,9 @@ function classificationLabel(view, composition, headline) {
   }
 
   const fromView = String(view?.classification || "");
-  if (fromView && !(hasAvoid && /natural-fiber blend/i.test(fromView))) return fromView;
+  if (fromView && !/nylon lace(?! trim)/i.test(fromView) && !(hasAvoid && /natural-fiber blend/i.test(fromView))) {
+    return fromView;
+  }
 
   if (tone === "natural") return named[0] ? titleCaseFiber(named[0]) : "Natural Fiber";
   if (!hasAvoid && (hasCellulosic || (hasNatural && /%/.test(text)))) return "Natural-Fiber Blend";
@@ -147,6 +180,71 @@ function whyTag(alt, compositionLine) {
     return text;
   }
   return "";
+}
+
+function parseListedPrice(raw) {
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) return raw;
+  const n = parseFloat(String(raw || "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function fabricPriceInsight(opts) {
+  const original = parseListedPrice(opts.originalPrice);
+  const fiber = String(opts.fiber || "").trim().toLowerCase();
+  if (!original || !fiber) return null;
+  const cur = String(opts.originalCurrency || "").trim().toUpperCase();
+  const prices = (opts.peers || [])
+    .map((peer) => {
+      if (cur && peer.currency && String(peer.currency).toUpperCase() !== cur) return null;
+      return parseListedPrice(peer.price);
+    })
+    .filter((n) => n != null);
+  if (prices.length < 3) return null;
+  prices.sort((a, b) => a - b);
+  const median = prices[Math.floor(prices.length / 2)];
+  if (!median) return null;
+  const ratio = original / median;
+  const fabric = fiber.replace(/^\w/, (c) => c.toUpperCase());
+  if (ratio >= 0.82 && ratio <= 1.22) {
+    return { tone: "typical", word: "typical", label: `This price is typical for ${fabric}.` };
+  }
+  if (ratio < 0.82) {
+    return { tone: "low", word: "below typical", label: `This price is below typical for ${fabric}.` };
+  }
+  return { tone: "high", word: "high", label: `This price is high for ${fabric}.` };
+}
+
+function sortMatches(items, mode, originalPrice) {
+  const copy = items.slice();
+  if (mode === "best") return copy;
+  if (mode === "pure") {
+    return copy.filter((item) => {
+      const share = item.naturalFiberPercent ?? item.natural_fiber_percent;
+      const composed = String(item.compositionLine || item.composition || "");
+      return (typeof share === "number" && share >= 99) || /^100%/.test(composed);
+    });
+  }
+  copy.sort((a, b) => {
+    if (mode === "natural") {
+      return (b.naturalFiberPercent || b.natural_fiber_percent || 0) - (a.naturalFiberPercent || a.natural_fiber_percent || 0);
+    }
+    if (mode === "price") {
+      const target = originalPrice || 0;
+      const pa = parseListedPrice(a.price) ?? parseListedPrice(a.priceLabel) ?? 0;
+      const pb = parseListedPrice(b.price) ?? parseListedPrice(b.priceLabel) ?? 0;
+      return Math.abs(pa - target) - Math.abs(pb - target);
+    }
+    const score = (item) => {
+      const hay = `${item.name || ""} ${item.why || ""}`.toLowerCase();
+      let n = 0;
+      if (SILHOUETTE_RE.test(hay)) n += 3;
+      if (/\b(jean|denim|trouser|pant|dress|skirt|babydoll|slip)\b/.test(hay)) n += 2;
+      if (/similar silhouette|same garment|same category/i.test(String(item.why || ""))) n += 2;
+      return n;
+    };
+    return score(b) - score(a);
+  });
+  return copy;
 }
 
 function restoreSaveBtn() {
@@ -210,21 +308,36 @@ function capturePageUrl(raw) {
   }
 }
 
-function shopLabel(alt) {
-  const brand = String(alt.brandName || alt.brand_name || "").trim();
-  return brand ? `Shop at ${brand}` : "Shop";
+function saleKey(capture) {
+  return String(capture.original_url || capture.originalUrl || "").trim();
 }
 
-function retailerLabel(alt) {
-  const brand = String(alt.brandName || alt.brand_name || "").trim();
-  if (alt.retailer) return String(alt.retailer).trim();
-  try {
-    const host = new URL(String(alt.url || "")).hostname.replace(/^www\./, "");
-    if (host && host.toLowerCase() !== brand.toLowerCase()) return host;
-  } catch {
-    /* keep brand-only */
+async function saleAlertsMap() {
+  const store = await chrome.storage.local.get(SALE_ALERTS_KEY);
+  return store[SALE_ALERTS_KEY] && typeof store[SALE_ALERTS_KEY] === "object" ? store[SALE_ALERTS_KEY] : {};
+}
+
+async function isSaleOn(url) {
+  if (!url) return false;
+  const map = await saleAlertsMap();
+  return Boolean(map[url]);
+}
+
+async function setSaleAlert(capture, on) {
+  const url = saleKey(capture);
+  if (!url) return;
+  const map = await saleAlertsMap();
+  if (on) {
+    map[url] = {
+      title: capture.title || null,
+      price: capture.price ?? null,
+      currency: capture.currency || null,
+      at: Date.now(),
+    };
+  } else {
+    delete map[url];
   }
-  return "";
+  await chrome.storage.local.set({ [SALE_ALERTS_KEY]: map });
 }
 
 function el(tag, className, text) {
@@ -255,7 +368,23 @@ function clearResult() {
   restoreSaveBtn();
 }
 
+function insightRow(insight) {
+  if (!insight) return null;
+  const p = el("p", "price-insight");
+  const idx = insight.label.indexOf(insight.word);
+  if (idx < 0) {
+    p.textContent = insight.label;
+    return p;
+  }
+  p.appendChild(document.createTextNode(insight.label.slice(0, idx)));
+  p.appendChild(el("span", "typical-word", insight.word));
+  p.appendChild(document.createTextNode(insight.label.slice(idx + insight.word.length)));
+  return p;
+}
+
 function renderResult(payload, opts = {}) {
+  lastPayload = payload;
+  lastRenderOpts = opts;
   sourceEl.classList.remove("hidden");
   sourceEl.innerHTML = "";
   resultEl.classList.add("hidden");
@@ -276,7 +405,6 @@ function renderResult(payload, opts = {}) {
     : Array.isArray(capture.alternatives)
       ? capture.alternatives.slice(0, 12)
       : [];
-  const preview = alts;
   const material = ITX.unpublishedMaterialCopy({
     compositionText: capture.composition_text || "",
     title: view.title || capture.title || "",
@@ -317,13 +445,24 @@ function renderResult(payload, opts = {}) {
   head.appendChild(saveSlot);
   meta.appendChild(head);
   meta.appendChild(el("p", "product-price", priceLabel || "Price unavailable"));
+
+  const listedDisplay = ITX.formatCompositionDisplay(capture.composition_text || "");
+  const shellFiber = namedNaturalFibers(listedDisplay.shellLine || capture.composition_text)[0] || "";
+  const insight = fabricPriceInsight({
+    originalPrice: capture.price,
+    originalCurrency: capture.currency,
+    fiber: shellFiber,
+    peers: alts,
+  });
+  const insightEl = insightRow(insight);
+  if (insightEl) meta.appendChild(insightEl);
+
   product.appendChild(meta);
   sourceEl.appendChild(product);
 
   const materialBlock = el("div", "material-block");
-  const listedDisplay = ITX.formatCompositionDisplay(capture.composition_text || "");
   const formula =
-    view.compositionEditorial ||
+    localEditorial(listedDisplay) ||
     editorialLine(listedDisplay.headline) ||
     editorialLine(material.headline);
   const unpublished = /detected|not published|unavailable/i.test(formula || material.headline || "");
@@ -333,22 +472,20 @@ function renderResult(payload, opts = {}) {
     materialBlock.appendChild(el("p", "material-formula", popupMaterial(material.headline)));
     if (material.detail) materialBlock.appendChild(el("p", "material-note", material.detail));
   }
-  const klass = classificationLabel(view, capture.composition_text, material.headline);
+  const klass = classificationLabel(view, capture.composition_text, material.headline, listedDisplay);
   if (klass) materialBlock.appendChild(el("p", "material-class", klass));
   sourceEl.appendChild(materialBlock);
 
-  if (material.hasSyntheticLining || material.hasSyntheticLace || listedDisplay.hasSyntheticLace || view.liningNote) {
-    sourceEl.appendChild(
-      el(
-        "p",
-        "detail",
-        view.liningNote ||
-          (material.hasSyntheticLace || listedDisplay.hasSyntheticLace
-            ? "Synthetic lace — not the same as a fully natural construction."
-            : "Synthetic lining — not the same as a fully natural construction.")
-      )
-    );
-  }
+  const trimNote =
+    listedDisplay.hasSyntheticLace || listedDisplay.laceLine
+      ? "Listed as trim — not mixed into the garment body."
+      : view.liningNote ||
+        (material.hasSyntheticLace
+          ? "Listed as trim — not mixed into the garment body."
+          : material.hasSyntheticLining
+            ? "Synthetic lining — not the same as a fully natural construction."
+            : "");
+  if (trimNote) sourceEl.appendChild(el("p", "detail", trimNote));
 
   const showMatches = Boolean(alts.length && !opts.peek);
   document.body.classList.toggle("has-matches", showMatches);
@@ -356,6 +493,43 @@ function renderResult(payload, opts = {}) {
   const openUrl = capturePageUrl(
     view.openInIntertexeUrl || links.openInIntertexeUrl || copy.openInIntertexeUrl
   );
+
+  const sale = el("div", "sale-row");
+  sale.appendChild(el("p", "", "Waiting for a sale?"));
+  const alertBtn = el("button", "alert-btn", "Alert me");
+  alertBtn.type = "button";
+  const urlKey = saleKey(capture);
+  isSaleOn(urlKey).then((on) => {
+    alertBtn.classList.toggle("is-on", on);
+    alertBtn.textContent = on ? "Alert on" : "Alert me";
+  });
+  alertBtn.addEventListener("click", async () => {
+    const currentlyOn = alertBtn.classList.contains("is-on");
+    if (currentlyOn) {
+      await setSaleAlert(capture, false);
+      alertBtn.classList.remove("is-on");
+      alertBtn.textContent = "Alert me";
+      setStatus("Sale alert off for this piece.");
+      return;
+    }
+    if (!document.body.classList.contains("is-signed-in")) {
+      await chrome.storage.local.set({ [PENDING_SALE_KEY]: urlKey });
+      setStatus("Sign in to turn on a sale alert.");
+      await chrome.runtime.sendMessage({ type: "SIGN_IN" });
+      return;
+    }
+    saveBtn.disabled = true;
+    const res = await chrome.runtime.sendMessage({ type: "SAVE_TAB", force: true });
+    saveBtn.disabled = false;
+    await setSaleAlert(capture, true);
+    alertBtn.classList.add("is-on");
+    alertBtn.textContent = "Alert on";
+    setStatus(res?.error ? res.error : "We’ll watch this piece for a sale.");
+    if (res?.result) renderResult(res.result, lastRenderOpts);
+  });
+  sale.appendChild(alertBtn);
+  sourceEl.appendChild(sale);
+
   if (showMatches) {
     const action = el("div", "primary-action");
     const cta = el("button", "primary");
@@ -382,7 +556,33 @@ function renderResult(payload, opts = {}) {
     const heading = el("div", "alts-head");
     heading.appendChild(el("p", "section-title", "Better-material matches"));
     resultEl.appendChild(heading);
+
+    const bar = el("div", "sort-bar");
+    bar.appendChild(el("span", "sort-label", "Sort"));
+    for (const item of SORTS) {
+      const chip = el("button", `sort-chip${matchSort === item.id ? " is-on" : ""}`, item.label);
+      chip.type = "button";
+      chip.addEventListener("click", () => {
+        matchSort = item.id;
+        renderResult(payload, opts);
+      });
+      bar.appendChild(chip);
+    }
+    resultEl.appendChild(bar);
+
+    const preview = sortMatches(alts, matchSort, parseListedPrice(capture.price));
     const list = el("div", "alts");
+    if (!preview.length) {
+      list.appendChild(
+        el(
+          "p",
+          "detail",
+          matchSort === "pure"
+            ? "No fully natural substitutes in this set. Try More natural, or keep Best."
+            : "No substitutes were ready for this sort."
+        )
+      );
+    }
     for (const alt of preview) {
       const card = el("a", "alt");
       card.href = "#";
@@ -402,9 +602,11 @@ function renderResult(payload, opts = {}) {
       if (priced.label && priced.label !== "Price unavailable") {
         info.appendChild(el("span", "alt-price", priced.label));
       }
+      const altListed = ITX.formatCompositionDisplay(alt.composition || "");
       const composed =
+        localEditorial(altListed) ||
         alt.compositionLine ||
-        editorialLine(ITX.formatCompositionDisplay(alt.composition || "").headline || "") ||
+        editorialLine(altListed.headline || "") ||
         "";
       if (composed && !/unavailable/i.test(composed)) {
         info.appendChild(el("span", "alt-comp", composed));
@@ -434,12 +636,22 @@ function renderPeek(peek) {
         price: peek.price,
         currency: peek.currency,
         composition_text: peek.compositionText,
+        original_url: peek.originalUrl,
       },
       copy: {},
       links: {},
     },
     { peek: true }
   );
+}
+
+async function activatePendingSaleAlert(capture) {
+  const store = await chrome.storage.local.get(PENDING_SALE_KEY);
+  const pending = String(store[PENDING_SALE_KEY] || "");
+  const url = saleKey(capture || {});
+  if (!pending || !url || pending !== url) return;
+  await setSaleAlert(capture, true);
+  await chrome.storage.local.remove(PENDING_SALE_KEY);
 }
 
 async function refreshUi() {
@@ -450,8 +662,10 @@ async function refreshUi() {
   if (state?.status && !isEmptyPageCopy(state.status) && !isNoiseStatus(state.status)) {
     setStatus(state.status, Boolean(state.error));
   } else setStatus("");
-  if (state?.result) renderResult(state.result);
-  else if (state?.peek) renderPeek(state.peek);
+  if (state?.result) {
+    if (state.signedIn) await activatePendingSaleAlert(state.result.capture);
+    renderResult(state.result);
+  } else if (state?.peek) renderPeek(state.peek);
   else clearResult();
   if (!(state?.signedIn && hasSaved)) saveBtn.disabled = Boolean(state?.busy);
   signInBtn.disabled = Boolean(state?.busy);

@@ -77,7 +77,7 @@ export function unpublishedMaterialCopy(opts: {
       headline: listed.headline.replace(/percentage not provided/gi, "exact percentage not provided"),
       materialLine: listed.materialLine.replace(/percentage not provided/gi, "exact percentage not provided"),
       detail: listed.hasSyntheticLace
-        ? "Synthetic lace — not the same as a fully natural construction."
+        ? "Listed as trim — not mixed into the garment body."
         : listed.hasSyntheticLining
           ? "Synthetic lining — not the same as a fully natural construction."
           : listed.hasPercentages

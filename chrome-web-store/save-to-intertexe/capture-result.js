@@ -57,7 +57,7 @@
     let rest = t;
     let lining = null;
     let lace = null;
-    const laceHit = rest.match(/^(.*?)\s*[;,]\s*lace\s*[:–-]?\s*(.+)$/i);
+    const laceHit = rest.match(/^(.*?)\s*[;,]\s*(?:lace|trim)\s*[:–-]?\s*(.+)$/i);
     if (laceHit && laceHit[1].trim() && laceHit[2].trim()) {
       rest = laceHit[1].replace(/[;,/|]+$/g, "").trim();
       lace = laceHit[2].replace(/\blace\b/gi, "").replace(/^[:–-]\s*/, "").trim();
@@ -135,6 +135,33 @@
     return Object.keys(SYNTHETIC).some((f) => new RegExp(`\\b${f}\\b`).test(lower));
   }
 
+  function inferOverflowParts(raw) {
+    const clauses = uniquePercentClauses(raw);
+    if (clauses.length < 2) return null;
+    const parsed = clauses
+      .map((line) => {
+        const m = line.match(/^(\d+(?:\.\d+)?)%\s+(.+)$/);
+        return m ? { pct: Number(m[1]), fiber: m[2], line } : null;
+      })
+      .filter(Boolean);
+    const total = parsed.reduce((sum, row) => sum + row.pct, 0);
+    if (total <= 105) return null;
+    const shellParts = parsed.filter((row) => row.pct >= 98);
+    const rest = parsed.filter((row) => row.pct < 98);
+    if (!shellParts.length || !rest.length) return null;
+    const restTotal = rest.reduce((sum, row) => sum + row.pct, 0);
+    if (restTotal < 85 || restTotal > 115) return null;
+    const restText = rest.map((row) => row.fiber).join(" ");
+    if (partHasSynthetic(restText) && rest.length >= 2) {
+      return {
+        shell: shellParts.map((row) => row.line).join(JOIN),
+        lace: rest.map((row) => row.line).join(JOIN),
+        lining: null,
+      };
+    }
+    return null;
+  }
+
   function formatCompositionDisplay(raw) {
     const empty = {
       headline: "Material details unavailable",
@@ -150,6 +177,14 @@
       .trim();
     if (!stripped) return empty;
     const split = splitShellAndLining(stripped);
+    if (!split.lace && !split.lining) {
+      const inferred = inferOverflowParts(stripped);
+      if (inferred) {
+        split.shell = inferred.shell;
+        split.lace = inferred.lace;
+        split.lining = inferred.lining;
+      }
+    }
     const shellFmt = formatPart(split.shell);
     const liningFmt = split.lining ? formatPart(split.lining) : { line: "", hasPercentages: false };
     const laceFmt = split.lace ? formatPart(split.lace) : { line: "", hasPercentages: false };
@@ -165,6 +200,9 @@
     return {
       headline: core,
       materialLine: `Material: ${core}`,
+      shellLine: shellFmt.line,
+      laceLine: laceFmt.line || null,
+      liningLine: liningFmt.line || null,
       hasPercentages: shellFmt.hasPercentages,
       hasSyntheticLining: Boolean(split.lining && partHasSynthetic(split.lining)),
       hasSyntheticLace: Boolean(split.lace && partHasSynthetic(split.lace)),
@@ -201,7 +239,7 @@
       return {
         headline: listed.headline.replace(/percentage not provided/gi, "exact percentage not provided"),
         detail: listed.hasSyntheticLace
-          ? "Synthetic lace — not the same as a fully natural construction."
+          ? "Listed as trim — not mixed into the garment body."
           : listed.hasSyntheticLining
           ? "Synthetic lining — not the same as a fully natural construction."
           : null,

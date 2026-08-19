@@ -172,26 +172,41 @@ function extractProductFromPage() {
   function extractConstructionFromHay(raw) {
     const t = String(raw || "").replace(/\s+/g, " ");
     const re =
-      /\b((?:eyelash\s+)?lace|silk\s+satin|satin\s+silk|satin|shell|outer(?:\s+fabric)?|lining)\s+composition\s*[:\-–]?\s*/gi;
+      /\b((?:eyelash\s+)?lace|trim|silk\s+satin|satin\s+silk|satin|body|shell|outer(?:\s+fabric)?|lining)\s+composition\s*[:\-–]?\s*/gi;
     const hits = [];
     let m;
     while ((m = re.exec(t))) {
       const label = String(m[1] || "").toLowerCase();
-      const key = /lace/.test(label) ? "lace" : /lining/.test(label) ? "lining" : "shell";
+      const key = /lace|trim/.test(label) ? "lace" : /lining/.test(label) ? "lining" : "shell";
       hits.push({ key, start: m.index, bodyStart: m.index + m[0].length });
     }
-    if (!hits.length) return "";
+    const laceRe = /\b((?:eyelash\s+)?lace|trim)\s*[:\-–]?\s*(?=\d{1,3}(?:[.,]\d+)?\s*%)/gi;
+    while ((m = laceRe.exec(t))) {
+      hits.push({ key: "lace", start: m.index, bodyStart: m.index + m[0].length });
+    }
+    hits.sort((a, b) => a.start - b.start);
     const found = { shell: "", lace: "", lining: "" };
     for (let i = 0; i < hits.length; i++) {
       const stop = i + 1 < hits.length ? hits[i + 1].start : hits[i].bodyStart + 220;
       const clauses = collectPercentClauses(t.slice(hits[i].bodyStart, stop));
       if (clauses.length && !found[hits[i].key]) found[hits[i].key] = clauses.join("; ");
     }
-    if (!found.shell || (!found.lace && !found.lining)) return "";
-    const bits = [found.shell];
-    if (found.lace) bits.push(`lace: ${found.lace}`);
-    if (found.lining) bits.push(`lining: ${found.lining}`);
-    return bits.join("; ");
+    if (found.shell && (found.lace || found.lining)) {
+      const bits = [found.shell];
+      if (found.lace) bits.push(`lace: ${found.lace}`);
+      if (found.lining) bits.push(`lining: ${found.lining}`);
+      return bits.join("; ");
+    }
+    const listsTrim =
+      /\beyelash\s+lace\b/i.test(t) ||
+      /\bmaterials?\s*[:\-–]\s*[^.]{0,160}\b(lace|trim)\b/i.test(t) ||
+      /\b(lace|trim)\s+composition\b/i.test(t);
+    if (!listsTrim) return "";
+    const clauses = collectPercentClauses(t);
+    const shell = clauses.filter((line) => /^9[8-9](?:\.\d+)?%|^100(?:\.0+)?%/.test(line));
+    const rest = clauses.filter((line) => !shell.includes(line));
+    if (!shell.length || !rest.length) return "";
+    return `${shell.join("; ")}; lace: ${rest.join("; ")}`;
   }
 
   function visibleOffer(text) {

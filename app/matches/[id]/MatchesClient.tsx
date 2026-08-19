@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
 import { buildCaptureResultView, type CaptureResultAltView } from "@/lib/capture-result";
+import { formatCompositionDisplay } from "@/lib/composition-display";
 import { AFFILIATE_DISCLOSURE } from "@/lib/tx-match-copy";
 import {
   TX_MATCH_SORTS,
+  fabricPriceInsight,
   matchHeroCopy,
   originalPieceLabel,
   sortTxMatches,
@@ -186,6 +188,15 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capture, searchParams]);
 
+  const priceInsight = useMemo(() => {
+    const fiber = formatCompositionDisplay(String(capture?.composition_text || "")).fibers[0] || "";
+    return fabricPriceInsight({
+      originalPrice: capture?.price ?? null,
+      originalCurrency: capture?.currency ?? null,
+      fiber,
+      peers: view?.alternatives || [],
+    });
+  }, [capture, view]);
   const originalName = originalPieceLabel(
     capture?.brand_name ? String(capture.brand_name) : null,
     view?.title || null
@@ -247,10 +258,10 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
               <img
                 src={String(capture.image_url)}
                 alt=""
-                className="h-[88px] w-[70px] shrink-0 object-cover object-top"
+                className="h-[88px] w-[70px] shrink-0 rounded-[10px] object-cover object-top"
               />
             ) : (
-              <div className="h-[88px] w-[70px] shrink-0 bg-[#EEEAE3]" />
+              <div className="h-[88px] w-[70px] shrink-0 rounded-[10px] bg-[#EEEAE3]" />
             )}
             <div className="min-w-0">
               <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#111111]/45">
@@ -263,11 +274,23 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
               <p className="mt-1 text-[13px] text-[#111111]/55">
                 {view.compositionEditorial || view.materialHeadline}
               </p>
+              {priceInsight ? (
+                <p className="mt-1 text-[13px] text-[#111111]/80">
+                  {priceInsight.label.slice(0, priceInsight.label.indexOf(priceInsight.word))}
+                  <em className="text-[#8c3b3b]">{priceInsight.word}</em>
+                  {priceInsight.label.slice(
+                    priceInsight.label.indexOf(priceInsight.word) + priceInsight.word.length
+                  )}
+                </p>
+              ) : null}
+              {view.liningNote ? (
+                <p className="mt-1 text-[12px] text-[#111111]/45">{view.liningNote}</p>
+              ) : null}
             </div>
           </aside>
 
           <nav
-            className="-mx-4 mt-8 flex gap-6 overflow-x-auto px-4 md:mx-0 md:px-0"
+            className="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0"
             aria-label="Match controls"
           >
             {TX_MATCH_SORTS.map((item) => {
@@ -277,10 +300,10 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
                   key={item.id}
                   type="button"
                   onClick={() => setSort(item.id)}
-                  className={`shrink-0 border-b pb-2 text-[11px] font-medium uppercase tracking-[0.16em] transition-colors ${
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.04em] transition-colors ${
                     active
-                      ? "border-[#111111] text-[#111111]"
-                      : "border-transparent text-[#111111]/40 hover:text-[#111111]/70"
+                      ? "border-[#111111] bg-white text-[#111111]"
+                      : "border-[#111111]/15 text-[#111111]/45 hover:text-[#111111]/70"
                   }`}
                 >
                   {item.label}
@@ -408,7 +431,7 @@ function MatchCard({
   const reasons = alt.whyReasons.filter(Boolean).slice(0, 3);
   const body = (
     <>
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#EEEAE3]">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-[10px] bg-[#EEEAE3]">
         {alt.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={alt.imageUrl} alt="" className="h-full w-full object-cover object-top" />

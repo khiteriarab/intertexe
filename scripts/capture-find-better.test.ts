@@ -39,6 +39,17 @@ describe("TX Match fabric-first ranking", () => {
     );
   });
 
+  it("reads silk from the body, not cotton in the lace trim", () => {
+    assert.equal(
+      preferredFiberFromInput({
+        title: "Silk And Lace Long Babydoll",
+        compositionText: "100% Silk; lace: 65% Nylon; 35% Cotton",
+        garmentType: "dress",
+      }),
+      "silk"
+    );
+  });
+
   it("reads silk from charmeuse/satin title hints", () => {
     assert.equal(
       preferredFiberFromInput({ title: "Printed Silk Charmeuse Maxi Skirt" }),
@@ -70,6 +81,46 @@ describe("TX Match fabric-first ranking", () => {
     for (const alt of firstFive) {
       assert.match(String(alt.composition), /silk/i);
     }
+  });
+
+  it("does not let cotton in lace trim beat a silk body", () => {
+    const ranked = rankTxMatchAlternatives(
+      [
+        {
+          id: "cotton-lace",
+          name: "Cotton eyelash lace midi",
+          brand_name: "Test",
+          image_url: "https://example.com/x.jpg",
+          price: 200,
+          currency: "EUR",
+          composition: "100% Cotton",
+          natural_fiber_percent: 100,
+          category: "dresses",
+          garment_type: "dress",
+        },
+        {
+          id: "silk-body",
+          name: "Silk slip dress",
+          brand_name: "Test",
+          image_url: "https://example.com/x.jpg",
+          price: 420,
+          currency: "EUR",
+          composition: "100% Silk",
+          natural_fiber_percent: 100,
+          category: "dresses",
+          garment_type: "dress",
+        },
+      ],
+      {
+        title: "Silk And Lace Long Babydoll",
+        compositionText: "100% Silk; lace: 65% Nylon; 35% Cotton",
+        garmentType: "dress",
+        category: "dresses",
+        price: 430,
+        distinctiveDetails: ["lace", "eyelash lace"],
+      }
+    );
+    assert.equal(ranked[0].id, "silk-body");
   });
 
   it("does not let a cheaper cotton skirt outrank silk", () => {

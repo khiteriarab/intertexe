@@ -164,10 +164,10 @@ export function buildCaptureResultView(
     materialSupporting: material.supporting,
     compositionEditorial: editorialCompositionLine(compositionText),
     classification: materialClassification(compositionText),
-    liningNote: /lace|lining/i.test(String(material.detail || ""))
+    liningNote: /lace|trim|lining/i.test(String(material.detail || ""))
       ? material.detail
       : formatCompositionDisplay(String(row.composition_text || "")).hasSyntheticLace
-        ? "Synthetic lace — not the same as a fully natural construction."
+        ? "Listed as trim — not mixed into the garment body."
         : formatCompositionDisplay(String(row.composition_text || "")).hasSyntheticLining
           ? "Synthetic lining — not the same as a fully natural construction."
           : null,

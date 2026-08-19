@@ -75,13 +75,25 @@ export function collectPercentClauses(raw: string | null | undefined): string[] 
 }
 
 const CONSTRUCTION_LABEL_RE =
-  /\b((?:eyelash\s+)?lace|silk\s+satin|satin\s+silk|satin|shell|outer(?:\s+fabric)?|lining)\s+composition\s*[:\-–]?\s*/gi;
+  /\b((?:eyelash\s+)?lace|trim|silk\s+satin|satin\s+silk|satin|body|shell|outer(?:\s+fabric)?|lining)\s+composition\s*[:\-–]?\s*/gi;
+
+const LACE_TRIM_PERCENT_RE =
+  /\b((?:eyelash\s+)?lace|trim)\s*[:\-–]?\s*(?=\d{1,3}(?:[.,]\d+)?\s*%)/gi;
 
 function constructionKey(label: string): "shell" | "lace" | "lining" {
   const t = String(label || "").toLowerCase();
-  if (/\blace\b/.test(t)) return "lace";
+  if (/\b(lace|trim)\b/.test(t)) return "lace";
   if (/\blining\b/.test(t)) return "lining";
   return "shell";
+}
+
+/** Retailer listed lace / eyelash lace / trim as a part, not a blended mix. */
+export function pageListsLaceOrTrim(htmlOrText: string | null | undefined): boolean {
+  const plain = stripToText(String(htmlOrText || ""));
+  if (/\beyelash\s+lace\b/i.test(plain)) return true;
+  if (/\bmaterials?\s*[:\-–]\s*[^.]{0,160}\b(lace|trim)\b/i.test(plain)) return true;
+  if (/\b(lace|trim)\s+composition\b/i.test(plain)) return true;
+  return false;
 }
 
 /** Keep lace / satin / lining as separate retailer-listed parts. */
@@ -103,6 +115,15 @@ export function extractConstructionParts(htmlOrText: string | null | undefined):
       bodyStart: m.index + m[0].length,
     });
   }
+  const laceRe = new RegExp(LACE_TRIM_PERCENT_RE.source, "gi");
+  while ((m = laceRe.exec(plain))) {
+    hits.push({
+      key: "lace",
+      start: m.index,
+      bodyStart: m.index + m[0].length,
+    });
+  }
+  hits.sort((a, b) => a.start - b.start);
   if (!hits.length) return empty;
   const found = { ...empty };
   for (let i = 0; i < hits.length; i++) {
@@ -133,12 +154,25 @@ export function formatConstructionStorage(parts: {
  * Prefers percentage clauses over a name-only "Denim" label.
  * Keeps lace vs satin as listed parts instead of mashing them into one mix.
  */
+function formatOverflowAsLace(clauses: string[]): string | null {
+  if (clauses.length < 2) return null;
+  const shell = clauses.filter((line) => /^9[8-9](?:\.\d+)?%|^100(?:\.0+)?%/.test(line));
+  const rest = clauses.filter((line) => !shell.includes(line));
+  if (!shell.length || !rest.length) return null;
+  return `${shell.join("; ")}; lace: ${rest.join("; ")}`;
+}
+
 export function extractCompositionFromPageText(htmlOrText: string | null | undefined): string | null {
   const plain = stripToText(String(htmlOrText || "")).slice(0, 40000);
   const constructed = formatConstructionStorage(extractConstructionParts(plain));
   if (constructed) return constructed;
   const clauses = collectPercentClauses(plain);
-  if (clauses.length) return clauses.join("; ");
+  if (clauses.length) {
+    if (pageListsLaceOrTrim(plain)) {
+      return formatOverflowAsLace(clauses) || clauses.join("; ");
+    }
+    return clauses.join("; ");
+  }
   return extractLabeledMaterial(plain);
 }
 
@@ -206,6 +240,10 @@ export function preferPercentageComposition(
   const next = String(candidate || "").trim() || null;
   if (!next) return current;
   if (!current) return next;
+  const currentParts = /\b(?:lace|trim|lining)\s*:/i.test(current);
+  const nextParts = /\b(?:lace|trim|lining)\s*:/i.test(next);
+  if (currentParts && !nextParts) return current;
+  if (nextParts && !currentParts && looksLikePercentageComposition(next)) return next;
   if (looksLikePercentageComposition(next) && !looksLikePercentageComposition(current)) {
     return next;
   }
@@ -227,6 +265,9 @@ export function looksLikeListedMaterial(text: string): boolean {
 export function normalizeListedMaterial(raw: string): string {
   const t = String(raw || "").replace(/\s+/g, " ").trim();
   if (!t) return t;
+  // Keep retailer-listed lace/trim/lining labels. Flattening percents would
+  // mash a silk body with nylon lace trim into one impossible 200% mix.
+  if (/\b(?:lace|trim|lining)\s*:/i.test(t)) return t;
   if (looksLikePercentageComposition(t)) {
     const clauses = collectPercentClauses(t);
     if (clauses.length) return clauses.join("; ");

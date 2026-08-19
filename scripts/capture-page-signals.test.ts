@@ -11,6 +11,7 @@ import {
   formatCapturePrice,
   looksLikeListedMaterial,
   looksLikePercentageComposition,
+  pageListsLaceOrTrim,
   preferPercentageComposition,
   preferRetailerFacingOffer,
   shopAtLabel,
@@ -107,6 +108,29 @@ describe("retailer material capture", () => {
     assert.equal(parsed.natural_fiber_percentage, 100);
     assert.ok(parsed.natural_fiber_percentage !== 35);
     assert.ok(parsed.natural_fiber_percentage !== 145);
+  });
+
+  it("keeps a labeled silk body when a mashed percent dump also exists", () => {
+    assert.equal(
+      preferPercentageComposition(
+        "100% Silk; lace: 65% Nylon; 35% Cotton",
+        "100% Silk; 65% Nylon; 35% Cotton"
+      ),
+      "100% Silk; lace: 65% Nylon; 35% Cotton"
+    );
+  });
+
+  it("treats eyelash lace on the materials list as trim", () => {
+    const html = `
+      <p>Materials: Lace, silk satin, eyelash lace</p>
+      <p>65% Nylon, 35% Cotton</p>
+      <p>100% Silk</p>
+    `;
+    assert.equal(pageListsLaceOrTrim(html), true);
+    assert.equal(
+      extractCompositionFromPageText(html),
+      "100% Silk; lace: 65% Nylon; 35% Cotton"
+    );
   });
 
   it("does not pair 35% cotton with the following satin silk label", () => {

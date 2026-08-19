@@ -75,7 +75,7 @@ export function splitShellAndLining(raw: string): { shell: string; lining: strin
   let rest = t;
   let lining: string | null = null;
   let lace: string | null = null;
-  const laceHit = rest.match(/^(.*?)\s*[;,]\s*lace\s*[:–-]?\s*(.+)$/i);
+  const laceHit = rest.match(/^(.*?)\s*[;,]\s*(?:lace|trim)\s*[:–-]?\s*(.+)$/i);
   if (laceHit?.[1].trim() && laceHit[2].trim()) {
     rest = laceHit[1].replace(/[;,/|]+$/g, "").trim();
     lace = laceHit[2].replace(/\blace\b/gi, "").replace(/^[:–-]\s*/, "").trim();

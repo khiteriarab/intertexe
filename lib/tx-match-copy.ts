@@ -98,7 +98,7 @@ export function buildTxMatchCopy(opts: {
   if (opts.compositionListed && display.headline !== "Material details unavailable") {
     compositionHeadline = display.materialLine;
     compositionDetail = display.hasSyntheticLace
-      ? "Synthetic lace — not the same as a fully natural construction."
+      ? "Listed as trim — not mixed into the garment body."
       : display.hasSyntheticLining
         ? "Synthetic lining — not the same as a fully natural construction."
         : null;
