@@ -14,6 +14,8 @@ import {
   collapseRepeatedMaterials,
   normalizeListedMaterial,
 } from "../lib/capture-page-signals.ts";
+import { formatCompositionDisplay } from "../lib/composition-display.ts";
+import { buildCaptureResultView } from "../lib/capture-result.ts";
 import {
   normalizeRetailerClickSource,
   resolveAuthenticatedUserId,
@@ -44,8 +46,32 @@ describe("retailer material capture", () => {
   it("collapses repeated silk from a retailer dump", () => {
     assert.equal(collapseRepeatedMaterials("SILK, SILK, silk, silk, silk, SILK, SILK, SILK"), "Silk");
     assert.equal(normalizeListedMaterial("SILK, SILK, silk, silk"), "Silk");
-    assert.equal(collapseRepeatedMaterials("Retailer lists: SILK, SILK, silk, silk"), "Retailer lists: Silk");
-    assert.equal(collapseRepeatedMaterials("70% cotton, 30% silk"), "70% Cotton, 30% Silk");
+    assert.equal(collapseRepeatedMaterials("Retailer lists: SILK, SILK, silk, silk"), "Silk");
+    assert.equal(collapseRepeatedMaterials("70% cotton, 30% silk"), "70% Cotton; 30% Silk");
+  });
+
+  it("uses one material formula with semicolons", () => {
+    assert.equal(
+      formatCompositionDisplay("SILK, SILK, silk, silk, silk, SILK, SILK, SILK").materialLine,
+      "Material: Silk — percentage not provided"
+    );
+    assert.equal(
+      formatCompositionDisplay("100% silk / 100% polyester lining").materialLine,
+      "Material: 100% Silk; lining: 100% Polyester"
+    );
+    assert.equal(
+      formatCompositionDisplay("70% cotton / 30% silk").materialLine,
+      "Material: 70% Cotton; 30% Silk"
+    );
+    const view = buildCaptureResultView({
+      title: "Rose Silk Slip Dress Sage",
+      brand_name: "Hanamer",
+      price: 0,
+      currency: "EUR",
+      composition_text: "SILK, SILK, silk",
+    });
+    assert.equal(view.priceLabel, "Price unavailable");
+    assert.equal(view.materialLine, "Material: Silk — percentage not provided");
   });
 });
 

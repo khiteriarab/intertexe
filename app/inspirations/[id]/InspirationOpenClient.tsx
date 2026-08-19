@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
 import {
-  collapseRepeatedMaterials,
   formatCapturePrice,
   formatCheckedAt,
   formatCountryName,
@@ -12,6 +11,7 @@ import {
   titleCaseName,
   uniqueTitleCaseNames,
 } from "@/lib/capture-page-signals";
+import { formatCompositionDisplay } from "@/lib/composition-display";
 import { AFFILIATE_DISCLOSURE, TX_MATCH_TAGLINE } from "@/lib/tx-match-copy";
 
 const TOKEN_KEY = "intertexe_auth_token";
@@ -199,9 +199,9 @@ export default function InspirationOpenClient({ captureId }: { captureId: string
                 MATERIAL DETAILS
               </p>
               <p style={{ margin: 0, fontSize: 16, lineHeight: 1.45, color: "#161412" }}>
-                {collapseRepeatedMaterials(
-                  copy?.compositionHeadline || capture.composition_text || "Material details unavailable"
-                )}
+                {formatCompositionDisplay(
+                  copy?.compositionHeadline || capture.composition_text || ""
+                ).materialLine}
               </p>
               {copy?.compositionDetail ? (
                 <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: "#3f3a36" }}>
@@ -328,11 +328,13 @@ function MatchCard({
   );
   const brand = titleCaseName(alt.brand_name);
   const name = titleCaseName(alt.name) || "TX Match";
-  const composition = alt.composition
-    ? alt.composition
-    : alt.natural_fiber_percent != null
-      ? `${Math.round(alt.natural_fiber_percent)}% natural`
-      : null;
+  const composed = alt.composition ? formatCompositionDisplay(alt.composition) : null;
+  const composition =
+    composed && composed.headline !== "Material details unavailable"
+      ? composed.headline
+      : alt.natural_fiber_percent != null
+        ? `${Math.round(alt.natural_fiber_percent)}% natural`
+        : null;
   const savings =
     originalPrice != null &&
     alt.price != null &&

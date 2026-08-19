@@ -9,21 +9,6 @@ const saveBtn = $("save");
 const signInBtn = $("signIn");
 const signOutBtn = $("signOut");
 
-const NATURAL = new Set([
-  "cotton",
-  "linen",
-  "flax",
-  "silk",
-  "wool",
-  "merino",
-  "cashmere",
-  "hemp",
-  "alpaca",
-  "mohair",
-  "leather",
-  "suede",
-]);
-
 function setStatus(text, isError) {
   if (!text) {
     statusEl.hidden = true;
@@ -36,80 +21,31 @@ function setStatus(text, isError) {
   statusEl.classList.toggle("error", Boolean(isError));
 }
 
-function collapseRepeatedMaterials(raw) {
-  const t = String(raw || "").replace(/\s+/g, " ").trim();
-  if (!t) return "";
-  const prefixMatch = t.match(/^(retailer lists:\s*)/i);
-  const prefix = prefixMatch ? t.slice(0, prefixMatch[0].length) : "";
-  const body = prefix ? t.slice(prefix.length) : t;
-  if (/\d+(?:\.\d+)?%/.test(body)) return t;
-  const parts = body.split(/[,;/|]+/).map((part) => part.trim()).filter(Boolean);
-  const seen = new Set();
-  const out = [];
-  for (const part of parts) {
-    const key = part.toLowerCase().replace(/[^a-z0-9]+/g, "");
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push(part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
-  }
-  return prefix + out.join(", ");
-}
+const ITX = globalThis.ITXCaptureResult || {
+  formatCompositionDisplay: (raw) => ({
+    materialLine: String(raw || "Material details unavailable"),
+    headline: String(raw || "Material details unavailable"),
+    hasSyntheticLining: false,
+  }),
+  formatPriceLabel: () => "Price unavailable",
+  formatAltPriceLabel: () => ({ label: "Price unavailable", mixed: false }),
+};
 
-function showAuth(signed, hasResult) {
+function showAuth(signed, saved) {
   signedOut.classList.toggle("hidden", signed);
-  signedIn.classList.toggle("hidden", !signed || Boolean(hasResult));
+  signedIn.classList.toggle("hidden", !signed);
   signOutBtn.classList.toggle("hidden", !signed);
+  if (signed && saved) {
+    saveBtn.textContent = "Saved ✓";
+    saveBtn.disabled = true;
+  } else {
+    saveBtn.textContent = "Save this page";
+  }
 }
 
 function shopLabel(alt) {
   const brand = String(alt.brand_name || "").trim();
   return brand ? `Shop at ${brand}` : "Shop";
-}
-
-function formatPrice(price, currency) {
-  const num = typeof price === "string" ? parseFloat(price) : Number(price);
-  if (!Number.isFinite(num) || num <= 0) return "";
-  const cur = String(currency || "").trim().toUpperCase();
-  try {
-    return new Intl.NumberFormat(cur === "EUR" ? "en-IE" : cur === "GBP" ? "en-GB" : "en-US", {
-      style: cur ? "currency" : "decimal",
-      currency: cur || "USD",
-      maximumFractionDigits: num % 1 === 0 ? 0 : 2,
-    }).format(num);
-  } catch {
-    return String(num);
-  }
-}
-
-function naturalShare(text) {
-  const raw = String(text || "");
-  const hits = [...raw.matchAll(/(\d{1,3}(?:\.\d+)?)\s*%\s*([a-z][a-z\s-]{1,30})/gi)];
-  if (!hits.length) return null;
-  let natural = 0;
-  let total = 0;
-  for (const m of hits) {
-    const pct = Number(m[1]);
-    if (!Number.isFinite(pct)) continue;
-    total += pct;
-    const fiber = String(m[2] || "")
-      .toLowerCase()
-      .replace(/[^a-z]+/g, " ")
-      .trim()
-      .split(" ")[0];
-    if (NATURAL.has(fiber)) natural += pct;
-  }
-  if (!total) return null;
-  return Math.round(natural);
-}
-
-function insightFromText(text, headline) {
-  const share = naturalShare(text || headline);
-  if (share == null) {
-    return { share: null, tone: "unknown", label: headline || "Material details unavailable" };
-  }
-  if (share >= 80) return { share, tone: "natural", label: "This mix is mostly natural" };
-  if (share >= 50) return { share, tone: "mixed", label: "Natural fiber is typical here" };
-  return { share, tone: "synthetic", label: "This mix is mostly synthetic" };
 }
 
 function el(tag, className, text) {
@@ -129,7 +65,7 @@ function thumb(src) {
   return el("div", "ph");
 }
 
-function renderResult(payload) {
+function renderResult(payload, opts = {}) {
   resultEl.classList.remove("hidden");
   resultEl.innerHTML = "";
   dockEl.classList.add("hidden");
@@ -138,46 +74,53 @@ function renderResult(payload) {
 
   const capture = payload.capture || {};
   const copy = payload.copy || {};
+  const view = payload.view || {};
   const links = payload.links || {};
-  const alts = Array.isArray(capture.alternatives) ? capture.alternatives.slice(0, 12) : [];
-  const composition = collapseRepeatedMaterials(
-    copy.compositionHeadline || capture.composition_text || ""
+  const alts = Array.isArray(view.alternatives)
+    ? view.alternatives
+    : Array.isArray(capture.alternatives)
+      ? capture.alternatives.slice(0, 12)
+      : [];
+  const material = ITX.formatCompositionDisplay(
+    view.materialHeadline || copy.compositionHeadline || capture.composition_text || ""
   );
-  const insight = insightFromText(composition, composition || copy.compositionHeadline);
+  const priceLabel = view.priceLabel || ITX.formatPriceLabel(capture.price, capture.currency);
+  const brandBits = [capture.brand_name, capture.retailer].filter(Boolean);
+  const metaLine = [...brandBits, priceLabel].filter(Boolean).join(" · ");
 
-  const toast = el("div", "toast");
-  toast.appendChild(thumb(capture.image_url));
-  toast.appendChild(
-    el("span", "", payload.duplicate ? "Already in Inspirations" : "Saved to Inspirations")
-  );
-  resultEl.appendChild(toast);
+  if (!opts.peek) {
+    const toast = el("div", "toast");
+    toast.appendChild(thumb(capture.image_url));
+    toast.appendChild(
+      el("span", "", payload.duplicate || payload.reused ? "Already in Inspirations" : "Saved to Inspirations")
+    );
+    resultEl.appendChild(toast);
+  } else {
+    const toast = el("div", "toast");
+    toast.appendChild(thumb(capture.image_url));
+    toast.appendChild(el("span", "", material.headline === "Material details unavailable" ? "Looking for material…" : "Material from this page"));
+    resultEl.appendChild(toast);
+  }
 
   const product = el("div", "product");
   product.appendChild(thumb(capture.image_url));
   const meta = document.createElement("div");
-  meta.appendChild(el("strong", "", capture.title || capture.brand_name || "Saved piece"));
-  const bits = [capture.brand_name, capture.retailer, formatPrice(capture.price, capture.currency)].filter(Boolean);
-  if (bits.length) meta.appendChild(el("span", "", bits.join(" · ")));
+  meta.appendChild(el("strong", "", view.title || capture.title || capture.brand_name || "This piece"));
+  if (metaLine) meta.appendChild(el("span", "", metaLine));
+  meta.appendChild(el("span", "", material.materialLine));
   product.appendChild(meta);
   resultEl.appendChild(product);
 
-  const insightBox = el("div", "insight");
-  insightBox.appendChild(el("p", `label ${insight.tone}`, insight.label));
-  if (insight.share != null) {
-    const bar = el("div", "bar");
-    const dot = el("div", "dot");
-    dot.style.left = `${Math.max(4, Math.min(96, insight.share))}%`;
-    bar.appendChild(dot);
-    insightBox.appendChild(bar);
+  if (material.hasSyntheticLining || view.liningNote) {
+    resultEl.appendChild(
+      el("p", "detail", view.liningNote || "Synthetic lining — not the same as a fully natural construction.")
+    );
   }
-  const detail = collapseRepeatedMaterials(copy.compositionDetail || composition);
-  if (detail) {
-    insightBox.appendChild(el("p", "detail", detail));
-  }
-  resultEl.appendChild(insightBox);
 
   if (alts.length) {
-    resultEl.appendChild(el("p", "section-title", `${copy.alternativesTitle || "Top matches"} · ${alts.length}`));
+    resultEl.appendChild(
+      el("p", "section-title", view.alternativesTitle || copy.alternativesTitle || `${alts.length} better-material matches`)
+    );
     const list = el("div", "alts");
     for (const alt of alts) {
       const card = el("a", "alt");
@@ -186,35 +129,29 @@ function renderResult(payload) {
         e.preventDefault();
         chrome.runtime.sendMessage({ type: "OPEN_MATCH", alt, captureId: capture.id });
       });
-      const img = thumb(alt.image_url);
-      card.appendChild(img);
+      card.appendChild(thumb(alt.imageUrl || alt.image_url));
       const info = document.createElement("div");
-      info.appendChild(el("strong", "", alt.name || alt.brand_name || "TX Match"));
-      info.appendChild(el("span", "", collapseRepeatedMaterials(alt.composition || alt.why || shopLabel(alt))));
+      info.appendChild(el("strong", "", alt.name || alt.brandName || alt.brand_name || "TX Match"));
+      const composed =
+        alt.compositionLine ||
+        ITX.formatCompositionDisplay(alt.composition || "").headline ||
+        alt.why ||
+        shopLabel(alt);
+      info.appendChild(el("span", "", composed === "Material details unavailable" ? shopLabel(alt) : composed));
       card.appendChild(info);
       const badge = el("div", "badge");
-      const price = formatPrice(alt.price, alt.currency);
-      if (price) badge.appendChild(el("span", "price", price));
-      const orig = Number(capture.price);
-      const next = Number(alt.price);
-      const sameCurrency =
-        capture.currency && alt.currency && String(capture.currency).toUpperCase() === String(alt.currency).toUpperCase();
-      if (sameCurrency && orig > 0 && next < orig) {
-        badge.appendChild(el("span", "save", `${Math.round(((orig - next) / orig) * 100)}% less`));
-      } else if (
-        alt.natural_fiber_percent != null &&
-        insight.share != null &&
-        Number(alt.natural_fiber_percent) > insight.share
-      ) {
-        badge.appendChild(el("span", "save", "more natural"));
-      }
+      const priced = alt.priceLabel
+        ? { label: alt.priceLabel, mixed: Boolean(alt.mixedCurrency) }
+        : ITX.formatAltPriceLabel(alt.price, alt.currency, capture.currency);
+      if (priced.label) badge.appendChild(el("span", "price", priced.label));
+      if (priced.mixed) badge.appendChild(el("span", "save", "mixed currency"));
       card.appendChild(badge);
       list.appendChild(card);
     }
     resultEl.appendChild(list);
   }
 
-  const openUrl = links.openInIntertexeUrl || copy.openInIntertexeUrl;
+  const openUrl = view.openInIntertexeUrl || links.openInIntertexeUrl || copy.openInIntertexeUrl;
   if (openUrl) {
     const a = el("a", "primary");
     a.href = openUrl;
@@ -225,48 +162,40 @@ function renderResult(payload) {
     dockEl.classList.remove("hidden");
   }
 
-  if (copy.affiliateDisclosure) {
-    resultEl.appendChild(el("p", "disclosure", copy.affiliateDisclosure));
+  if (copy.affiliateDisclosure || view.affiliateDisclosure) {
+    resultEl.appendChild(el("p", "disclosure", view.affiliateDisclosure || copy.affiliateDisclosure));
   }
 }
 
 function renderPeek(peek) {
   if (!peek) return;
-  resultEl.classList.remove("hidden");
-  const capture = {
-    title: peek.title,
-    brand_name: peek.brandName,
-    retailer: peek.retailer,
-    image_url: peek.imageUrl,
-    price: peek.price,
-    currency: peek.currency,
-    composition_text: peek.compositionText,
-  };
-  renderResult({
-    capture,
-    copy: {
-      compositionHeadline: peek.compositionText || "Reading material…",
-      compositionDetail: peek.compositionText
-        ? null
-        : "Listed composition is still being read from this page.",
-      alternativesTitle: "Top matches",
+  renderResult(
+    {
+      capture: {
+        title: peek.title,
+        brand_name: peek.brandName,
+        retailer: peek.retailer,
+        image_url: peek.imageUrl,
+        price: peek.price,
+        currency: peek.currency,
+        composition_text: peek.compositionText,
+      },
+      copy: {},
+      links: {},
     },
-    links: {},
-    duplicate: false,
-  });
-  const toast = resultEl.querySelector(".toast span");
-  if (toast) toast.textContent = peek.compositionText ? "Material from this page" : "Looking for material…";
+    { peek: true }
+  );
 }
 
 async function refreshUi() {
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-  const hasResult = Boolean(state?.result || state?.peek);
-  showAuth(Boolean(state?.signedIn), hasResult);
+  const hasSaved = Boolean(state?.result?.capture?.id);
+  showAuth(Boolean(state?.signedIn), hasSaved);
   if (state?.status) setStatus(state.status, Boolean(state.error));
   else setStatus("");
   if (state?.result) renderResult(state.result);
   else if (state?.peek) renderPeek(state.peek);
-  saveBtn.disabled = Boolean(state?.busy);
+  if (!(state?.signedIn && hasSaved)) saveBtn.disabled = Boolean(state?.busy);
   signInBtn.disabled = Boolean(state?.busy);
   return state;
 }
@@ -296,8 +225,13 @@ async function scanOpenTab() {
   });
   if (res?.error) setStatus(res.error, true);
   else setStatus("");
-  if (res?.result) renderResult(res.result);
-  saveBtn.disabled = false;
+  if (res?.result) {
+    renderResult(res.result);
+    saveBtn.textContent = "Saved ✓";
+    saveBtn.disabled = true;
+  }
+  if (res?.error) saveBtn.disabled = false;
+  else saveBtn.disabled = Boolean(res?.result);
   await refreshUi();
 }
 

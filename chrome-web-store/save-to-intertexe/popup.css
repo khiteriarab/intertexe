@@ -334,3 +334,10 @@ button.text-link {
   color: var(--muted);
   line-height: 1.4;
 }
+
+.detail {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--clay);
+}

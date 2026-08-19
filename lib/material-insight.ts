@@ -1,4 +1,5 @@
 import { parseCompositionText } from "./material-intelligence/composition";
+import { formatCompositionDisplay } from "./composition-display";
 
 export type MaterialInsightTone = "natural" | "mixed" | "synthetic" | "unknown";
 
@@ -10,10 +11,18 @@ export type MaterialInsight = {
 
 /** Natural-fiber share and a shopper-facing label. Never invents percentages. */
 export function materialInsightFromText(text: string | null | undefined): MaterialInsight {
+  const display = formatCompositionDisplay(text);
   const parsed = parseCompositionText(text);
   const share = parsed.natural_fiber_percentage;
+  if (display.hasSyntheticLining) {
+    return {
+      share: share != null ? share : null,
+      tone: "mixed",
+      label: "Natural shell with a synthetic lining",
+    };
+  }
   if (share == null) {
-    if (parsed.components.length) {
+    if (parsed.components.length || display.fibers.length) {
       return { share: null, tone: "unknown", label: "Percentages were not listed." };
     }
     return { share: null, tone: "unknown", label: "Material details unavailable" };

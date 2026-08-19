@@ -85,6 +85,46 @@ describe("TX Match fabric-first ranking", () => {
     assert.equal(ranked[0].id, "silk");
   });
 
+  it("does not let a cotton shirt match a silk slip dress", () => {
+    const ranked = rankTxMatchAlternatives(
+      [
+        {
+          id: "shirt",
+          name: "Cotton Poplin Shirt",
+          brand_name: "Test",
+          price: 198,
+          currency: "USD",
+          composition: "70% cotton; 30% silk",
+          natural_fiber_percent: 70,
+          category: "tops",
+          garment_type: "shirts",
+        },
+        {
+          id: "dress",
+          name: "Eden Silk Dress",
+          brand_name: "Test",
+          price: 248,
+          currency: "USD",
+          composition: "100% silk",
+          natural_fiber_percent: 100,
+          category: "dresses",
+          garment_type: "dresses",
+        },
+      ],
+      {
+        title: "Rose Silk Slip Dress Sage",
+        compositionText: "silk",
+        price: 333,
+        currency: "EUR",
+      }
+    );
+    assert.equal(
+      ranked.some((row) => row.id === "shirt"),
+      false
+    );
+    assert.equal(ranked[0]?.id, "dress");
+  });
+
   it("matches catalog composition against the preferred fiber", () => {
     assert.equal(productMatchesFiber({ composition: "100% silk" }, "silk"), true);
     assert.equal(productMatchesFiber({ composition: "100% cotton" }, "silk"), false);
@@ -102,7 +142,7 @@ describe("TX Match copy", () => {
     assert.match(copy.decodeAction, /see/i);
     assert.match(copy.decodeAction, /silk/i);
     assert.doesNotMatch(copy.decodeAction, /^TX MATCH$/i);
-    assert.equal(copy.alternativesTitle, "More silk options");
+    assert.equal(copy.alternativesTitle, "12 better-material matches");
     assert.match(copy.compositionNote || "", /Material details unavailable/);
     assert.equal(copy.tagline, "Know the material before you buy.");
   });
@@ -116,8 +156,8 @@ describe("TX Match copy", () => {
       listedWithoutPercentages: true,
       listedMaterial: "Silk",
     });
-    assert.equal(copy.compositionHeadline, "Retailer lists: Silk");
-    assert.match(copy.compositionNote || "", /percentages were not provided/i);
+    assert.equal(copy.compositionHeadline, "Material: Silk — percentage not provided");
+    assert.match(copy.compositionNote || "", /percentage not provided/i);
   });
 
   it("collapses a repeated retailer fiber list to one name", () => {
@@ -129,7 +169,7 @@ describe("TX Match copy", () => {
       listedWithoutPercentages: true,
       listedMaterial: "SILK, SILK, silk, silk, silk, SILK, SILK, SILK",
     });
-    assert.equal(copy.compositionHeadline, "Retailer lists: Silk");
+    assert.equal(copy.compositionHeadline, "Material: Silk — percentage not provided");
   });
 
   it("does not claim a fabric when none was inferred", () => {
@@ -173,6 +213,12 @@ describe("Material insight", () => {
     const insight = materialInsightFromText("Silk");
     assert.equal(insight.share, null);
     assert.equal(insight.tone, "unknown");
+  });
+
+  it("does not treat a silk shell plus polyester lining as fully natural", () => {
+    const insight = materialInsightFromText("100% silk; lining: 100% polyester");
+    assert.equal(insight.tone, "mixed");
+    assert.match(insight.label, /lining/i);
   });
 
   it("computes a savings percent only when the alternative is cheaper", () => {

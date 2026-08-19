@@ -5,13 +5,13 @@ export function detectGarmentType(
 ): string | null {
   const text = `${productName || ''} ${category || ''}`.toLowerCase();
 
-  if (/dress|gown|midi dress|maxi dress|mini dress/.test(text)) return 'dress';
-  if (/skirt|midi skirt|maxi skirt|mini skirt/.test(text)) return 'skirt';
-  if (/trouser|pant|jean|legging|culotte/.test(text)) return 'trouser';
-  if (/knit|sweater|pullover|cardigan|jumper/.test(text)) return 'knitwear';
-  if (/coat|jacket|blazer|outerwear|vest|cape/.test(text)) return 'outerwear';
-  if (/jumpsuit|playsuit|romper|overall/.test(text)) return 'jumpsuit';
-  if (/top|blouse|shirt|tee|tank|camisole/.test(text)) return 'top';
+  if (/dress|gown/.test(text) && /\bdress\b|\bgown\b|\bkaftan\b|\bcaftan\b/.test(text)) return "dress";
+  if (/\bskirt\b/.test(text)) return "skirt";
+  if (/\b(trouser|pant|jean|legging|culotte)s?\b/.test(text)) return "trouser";
+  if (/\b(knit|sweater|pullover|cardigan|jumper)\b/.test(text)) return "knitwear";
+  if (/\b(coat|jacket|blazer|outerwear|cape)\b/.test(text)) return "outerwear";
+  if (/\b(jumpsuit|playsuit|romper|overall)\b/.test(text)) return "jumpsuit";
+  if (/\b(blouse|t-?shirt|tee|tank|camisole|top|shirt)\b/.test(text) && !/\bdress\b/.test(text)) return "top";
 
   return null;
 }

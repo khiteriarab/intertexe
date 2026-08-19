@@ -3,6 +3,8 @@
  * No network, no schema changes — used to keep retailer-facing material and price honest.
  */
 
+import { normalizeCompositionStorage } from "./composition-display";
+
 export const FIBER_NAME_RE =
   /\b(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/i;
 
@@ -56,27 +58,11 @@ export function hasPercentages(text: string | null | undefined): boolean {
 
 /**
  * Retailer pages often repeat the same fiber ("SILK, SILK, silk, silk").
- * Show each distinct material once, title-cased.
+ * Show each distinct material once, title-cased, joined with "; ".
  */
 export function collapseRepeatedMaterials(raw: string | null | undefined): string {
-  const t = String(raw || "").replace(/\s+/g, " ").trim();
-  if (!t) return "";
-  const prefixMatch = t.match(/^(retailer lists:\s*)/i);
-  const prefix = prefixMatch ? t.slice(0, prefixMatch[0].length) : "";
-  const body = prefix ? t.slice(prefix.length) : t;
-  if (hasPercentages(body)) {
-    return prefix + body.replace(new RegExp(FIBER_NAME_RE.source, "gi"), (fiber) => titleCaseName(fiber));
-  }
-  const parts = body.split(/[,;/|]+/).map((part) => part.trim()).filter(Boolean);
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const part of parts) {
-    const key = part.toLowerCase().replace(/[^a-z0-9]+/g, "");
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push(titleCaseName(part));
-  }
-  return prefix + out.join(", ");
+  const stored = normalizeCompositionStorage(raw);
+  return stored || String(raw || "").replace(/\s+/g, " ").trim();
 }
 
 export function looksLikePercentageComposition(text: string): boolean {
@@ -153,8 +139,8 @@ export function extractVisibleOffer(htmlOrText: string): MoneyOffer {
 
 /** When JSON-LD is USD and the page shows €, keep the shopper-facing offer. */
 export function preferRetailerFacingOffer(structured: MoneyOffer, visible: MoneyOffer): MoneyOffer {
-  const visOk = visible.price != null && Boolean(visible.currency);
-  const strOk = structured.price != null;
+  const visOk = visible.price != null && visible.price > 0 && Boolean(visible.currency);
+  const strOk = structured.price != null && structured.price > 0;
   if (visOk && strOk && visible.currency && structured.currency && visible.currency !== structured.currency) {
     const visRank = LOCAL_CURRENCY_RANK[visible.currency] || 0;
     const strRank = LOCAL_CURRENCY_RANK[structured.currency] || 0;
@@ -162,7 +148,7 @@ export function preferRetailerFacingOffer(structured: MoneyOffer, visible: Money
   }
   if (visOk && (!strOk || !structured.currency)) return visible;
   return {
-    price: structured.price ?? visible.price,
+    price: structured.price && structured.price > 0 ? structured.price : visible.price,
     currency: structured.currency || visible.currency || null,
   };
 }

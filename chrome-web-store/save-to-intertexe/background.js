@@ -92,20 +92,60 @@ async function authedFetch(path, opts = {}, attempt = 0) {
 }
 
 function extractProductFromPage() {
-  function collapseRepeatedMaterials(raw) {
+  function uniqueFibers(raw) {
     const t = String(raw || "").replace(/\s+/g, " ").trim();
     if (!t) return "";
-    if (/\d+(?:\.\d+)?%/.test(t)) return t;
-    const parts = t.split(/[,;/|]+/).map((part) => part.trim()).filter(Boolean);
+    const re =
+      /\b(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
     const seen = new Set();
     const out = [];
-    for (const part of parts) {
-      const key = part.toLowerCase().replace(/[^a-z0-9]+/g, "");
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      out.push(part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
+    let m;
+    while ((m = re.exec(t))) {
+      const name = String(m[2] || "").toLowerCase();
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      out.push(name.charAt(0).toUpperCase() + name.slice(1));
     }
-    return out.join(", ");
+    const percents = [
+      ...t.matchAll(/(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([a-z][a-z\s-]{1,30})/gi),
+    ];
+    if (percents.length) {
+      const seenPct = new Set();
+      const clauses = [];
+      for (const hit of percents) {
+        const key = String(hit[2] || "").toLowerCase().replace(/[^a-z]/g, "");
+        if (!key || seenPct.has(key)) continue;
+        seenPct.add(key);
+        const fiber = String(hit[2] || "").trim();
+        clauses.push(`${hit[1]}% ${fiber.charAt(0).toUpperCase()}${fiber.slice(1).toLowerCase()}`);
+      }
+      return clauses.join("; ");
+    }
+    return out.join("; ");
+  }
+
+  function visibleOffer(text) {
+    const found = [];
+    const re =
+      /(?:(€|£|\$|EUR|GBP|USD)\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?))|(?:(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)\s*(€|EUR))/gi;
+    let m;
+    while ((m = re.exec(text))) {
+      const symbol = m[1] || m[4] || "";
+      const amountRaw = String(m[2] || m[3] || "").replace(/[.,](?=\d{3}\b)/g, "").replace(",", ".");
+      const price = parseFloat(amountRaw);
+      let currency = null;
+      const s = symbol.toUpperCase();
+      if (s === "€" || s === "EUR") currency = "EUR";
+      else if (s === "£" || s === "GBP") currency = "GBP";
+      else if (s === "$" || s === "USD") currency = "USD";
+      if (currency && Number.isFinite(price) && price >= 10 && price <= 50000) {
+        found.push({ price, currency });
+      }
+    }
+    if (!found.length) return { price: null, currency: null };
+    const rank = { EUR: 3, GBP: 3, USD: 1 };
+    found.sort((a, b) => (rank[b.currency] || 0) - (rank[a.currency] || 0));
+    return found[0];
   }
 
   const attr = (sel) => document.querySelector(sel)?.getAttribute("content")?.trim() || "";
@@ -144,12 +184,13 @@ function extractProductFromPage() {
         const offer = Array.isArray(node.offers) ? node.offers[0] : node.offers;
         if (offer) {
           const raw = offer.price ?? offer.lowPrice;
-          if (raw != null && raw !== "") price = Number(raw);
+          const n = Number(raw);
+          if (Number.isFinite(n) && n > 0) price = n;
           currency = currency || offer.priceCurrency || null;
         }
         const extra = node.material || node.pattern || "";
         if (Array.isArray(extra)) {
-          compositionText = extra.filter(Boolean).map(String).join(", ");
+          compositionText = extra.filter(Boolean).map(String).join("; ");
         } else if (extra) {
           compositionText = String(extra);
         }
@@ -165,23 +206,31 @@ function extractProductFromPage() {
   let labeled = null;
   let labeledMatch;
   while ((labeledMatch = labeledRe.exec(bodyText))) {
-    const candidate = collapseRepeatedMaterials(labeledMatch[1] || "");
+    const candidate = uniqueFibers(labeledMatch[1] || "");
     if (candidate) {
       labeled = candidate;
       break;
     }
   }
-  const fiberRe =
-    /\b(\d{1,3}(?:\.\d+)?%\s*)?(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
-  const hits = bodyText.match(fiberRe) || [];
-  if (labeled) {
-    compositionText = labeled;
-  } else if (compositionText) {
-    compositionText = collapseRepeatedMaterials(compositionText);
-  } else if (hits.length) {
-    const withPct = hits.filter((h) => /\d/.test(h));
-    const listed = collapseRepeatedMaterials((withPct.length ? withPct : hits).join(", "));
-    if (listed && listed.length < 180) compositionText = listed;
+  if (labeled) compositionText = labeled;
+  else if (compositionText) compositionText = uniqueFibers(compositionText) || compositionText;
+  else {
+    const pctLine = bodyText.match(
+      /\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)(?:\s*[;,/]\s*\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)){0,6}/i
+    );
+    compositionText = pctLine ? uniqueFibers(pctLine[0]) : null;
+  }
+
+  const visible = visibleOffer(bodyText);
+  if ((!price || price <= 0) && visible.price) {
+    price = visible.price;
+    currency = visible.currency || currency;
+  } else if (price > 0 && visible.price && visible.currency && currency && visible.currency !== currency) {
+    const rank = { EUR: 3, GBP: 3, USD: 1 };
+    if ((rank[visible.currency] || 0) >= (rank[String(currency).toUpperCase()] || 0)) {
+      price = visible.price;
+      currency = visible.currency;
+    }
   }
   // Visible page text is read locally to find a composition line. It is not
   // transmitted as a raw page dump — only the short compositionText above.
@@ -348,9 +397,12 @@ async function signOut() {
 
 function matchHref(alt) {
   const raw = String(alt?.url || "").trim();
-  if (/^https?:/i.test(raw)) return raw;
+  if (/^https?:/i.test(raw)) {
+    const brand = encodeURIComponent(alt?.brand_name || alt?.brandName || "partner");
+    return `${APP}/leaving?brand=${brand}&url=${encodeURIComponent(raw)}`;
+  }
   if (alt?.id) return `${APP}/product/${encodeURIComponent(alt.id)}`;
-  return `${APP}/inspirations`;
+  return `${APP}/capture`;
 }
 
 async function openMatch(alt, captureId) {

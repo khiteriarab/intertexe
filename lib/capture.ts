@@ -23,6 +23,7 @@ import {
 import { fetchPageHTML } from "./scanner/retailer-extraction";
 import { getServerSupabase } from "./supabase-service-client";
 import { looksLikeListedMaterial, looksLikePercentageComposition, preferRetailerFacingOffer } from "./capture-page-signals";
+import { isRepeatedFiberDump, normalizeCompositionStorage } from "./composition-display";
 
 const MAX_ENRICHMENT_ATTEMPTS = 4;
 const ENRICHMENT_LOCK_MS = 3 * 60 * 1000;
@@ -217,10 +218,10 @@ export async function insertCapture(
     title: input.title?.trim() || hostRetailer,
     retailer: input.retailer?.trim() || hostRetailer,
     brand_name: input.brandName?.trim() || null,
-    price: input.price ?? null,
+    price: typeof input.price === "number" && input.price > 0 ? input.price : null,
     currency: input.currency?.trim() || null,
     description: input.description?.trim() || null,
-    composition_text: input.compositionText?.trim() || null,
+    composition_text: normalizeCompositionStorage(input.compositionText) || null,
     sku: input.sku?.trim() || null,
     external_product_id: input.externalProductId?.trim() || null,
     collection_id: input.collectionId || null,
@@ -333,6 +334,7 @@ function isJunkComposition(text: unknown): boolean {
   const t = String(text || "").trim();
   if (!t) return true;
   if (/%\s*(off|off your|shipping|discount)/i.test(t)) return true;
+  if (isRepeatedFiberDump(t)) return true;
   if (looksLikePercentageComposition(t) || looksLikeListedMaterial(t)) return false;
   if (t.length < 8) return true;
   return !/\b(cotton|linen|silk|wool|cashmere|viscose|polyester|elastane|nylon|polyamide)\b/i.test(t);
@@ -390,7 +392,8 @@ function enrichmentPatch(
     price: offer.price,
     currency: offer.currency,
     description: (existing.description as string) || enrichment.description,
-    composition_text: preferComposition,
+    composition_text:
+      normalizeCompositionStorage(preferComposition) || preferComposition || null,
     image_url: preferImage,
     category: enrichment.category,
     subcategory: enrichment.subcategory,

@@ -342,9 +342,9 @@ export function inferApparelAttributes(input: {
     }
   }
 
-  if (/\b(wide.?leg|flare|flared|straight|skinny|cigarette|bootcut|tapered|barrel)\b/.test(text)) {
+  if (/\b(wide.?leg|flare|flared|straight|skinny|cigarette|bootcut|tapered|barrel|slip)\b/.test(text)) {
     const sil = text.match(
-      /\b(wide.?leg|flare|flared|straight|skinny|cigarette|bootcut|tapered|barrel)\b/
+      /\b(wide.?leg|flare|flared|straight|skinny|cigarette|bootcut|tapered|barrel|slip)\b/
     );
     if (sil) silhouette = silhouette || sil[1].replace(/\s+/g, " ");
   }

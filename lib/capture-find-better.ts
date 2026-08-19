@@ -13,7 +13,7 @@ import {
   integritySpecFromBrowseOpts,
   type FilterIntegrityProduct,
 } from "./catalog-filter-integrity";
-import { fetchTastePreferences } from "./taste-preferences";
+import { compositionHasSyntheticLining, normalizeCompositionStorage } from "./composition-display";
 
 export type FindBetterAlternative = {
   id: string;
@@ -107,6 +107,7 @@ function browseCategoryFor(input: FindBetterInput): string | null {
     input.garmentType,
     input.subcategory,
     input.category,
+    input.title,
     ...(input.matchBrief?.mustMatch || []),
   ]
     .filter(Boolean)
@@ -191,8 +192,11 @@ function whyFor(
     }
   }
 
-  if (nfp >= 90) parts.push(`${Math.round(nfp)}% natural fiber`);
-  else if (scannedNfp > 0 && nfp > scannedNfp + 5) {
+  if (nfp >= 90 && !compositionHasSyntheticLining(String(product.composition || ""))) {
+    parts.push(`${Math.round(nfp)}% natural fiber`);
+  } else if (compositionHasSyntheticLining(String(product.composition || ""))) {
+    parts.push("Synthetic lining disclosed");
+  } else if (scannedNfp > 0 && nfp > scannedNfp + 5) {
     parts.push("Higher natural fiber than original");
   } else if (nfp >= 80) parts.push("Verified natural fiber");
 
@@ -213,7 +217,7 @@ function toAlternative(
     image_url: (product.image_url as string) || null,
     price: (product.price as number | string) ?? null,
     currency: (product.currency as string) || "USD",
-    composition: (product.composition as string) || null,
+    composition: normalizeCompositionStorage(String(product.composition || "")) || (product.composition as string) || null,
     natural_fiber_percent:
       product.natural_fiber_percent != null ? Number(product.natural_fiber_percent) : null,
     category: (product.category as string) || null,
@@ -408,6 +412,7 @@ function rankAlternatives(
     // Fabric of the saved piece leads. Do not let cheaper cotton outrank silk.
     if (sameFiber) score += 120;
     else if (preferredFiber) score -= 25;
+    if (compositionHasSyntheticLining(String(p.composition || ""))) score -= 22;
 
     const userFibers = (input.preferredFibers || []).map((f) => extractFiberFromText(f)).filter(Boolean);
     if (userFibers.some((f) => productMatchesFiber(p, f))) score += 18;

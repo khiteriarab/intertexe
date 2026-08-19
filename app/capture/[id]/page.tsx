@@ -13,14 +13,16 @@ export default async function CaptureOpenPage({
 }) {
   const { id } = await params;
   return (
-    <Suspense
-      fallback={
-        <main style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-          <p>Loading…</p>
-        </main>
-      }
-    >
-      <CaptureOpenClient captureId={id} />
-    </Suspense>
+    <div className="min-h-screen bg-[#f7f3ee]">
+      <Suspense
+        fallback={
+          <main className="grid min-h-screen place-items-center">
+            <p>Loading…</p>
+          </main>
+        }
+      >
+        <CaptureOpenClient captureId={id} />
+      </Suspense>
+    </div>
   );
 }

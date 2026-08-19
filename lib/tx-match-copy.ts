@@ -1,5 +1,6 @@
 import { SITE_URL } from "./seo-international";
-import { collapseRepeatedMaterials, hasPercentages } from "./capture-page-signals";
+import { formatCompositionDisplay } from "./composition-display";
+import { hasPercentages } from "./capture-page-signals";
 
 export const TX_MATCH_TAGLINE = "Know the material before you buy.";
 export const AFFILIATE_DISCLOSURE =
@@ -78,7 +79,7 @@ export function buildTxMatchCopy(opts: {
   const look = [fiber, garment].filter(Boolean).join(" ");
   const count = opts.altCount && opts.altCount > 0 ? opts.altCount : null;
   const links = buildTxMatchLinks(opts.captureId);
-  const listedName = prettyFiberName(opts.listedMaterial || fiber);
+  const display = formatCompositionDisplay(opts.listedMaterial || opts.inferredFiber || opts.fiber || "");
 
   const decodeAction = look
     ? count
@@ -86,20 +87,22 @@ export function buildTxMatchCopy(opts: {
       : `See more ${look} options`
     : "See more like this";
 
-  const alternativesTitle = fiber ? `More ${fiber} options` : "Your TX Matches";
+  const alternativesTitle = count
+    ? `${count} better-material matches`
+    : fiber
+      ? `More ${fiber} options`
+      : "Your TX Matches";
 
   let compositionHeadline: string | null = null;
   let compositionDetail: string | null = null;
   let compositionNote: string | null = null;
 
-  if (opts.compositionListed && opts.listedWithoutPercentages && listedName) {
-    compositionHeadline = `Retailer lists: ${listedName}`;
-    compositionDetail = "Exact percentages were not provided.";
-    compositionNote = `${compositionHeadline}\n${compositionDetail}`;
-  } else if (opts.compositionListed && opts.listedMaterial) {
-    compositionHeadline = collapseRepeatedMaterials(opts.listedMaterial) || opts.listedMaterial;
-    compositionDetail = null;
-    compositionNote = null;
+  if (opts.compositionListed && display.headline !== "Material details unavailable") {
+    compositionHeadline = display.materialLine;
+    compositionDetail = display.hasSyntheticLining
+      ? "Synthetic lining — not the same as a fully natural construction."
+      : null;
+    compositionNote = [compositionHeadline, compositionDetail].filter(Boolean).join("\n");
   } else if (!opts.compositionListed) {
     compositionHeadline = "Material details unavailable";
     compositionDetail = "Let TX Match find similar pieces with verified compositions.";
@@ -149,16 +152,6 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
     listedMaterial: listed ? composition : null,
     captureId: row.id != null ? String(row.id) : null,
   });
-}
-
-function prettyFiberName(raw: string | null | undefined): string | null {
-  const t = collapseRepeatedMaterials(raw);
-  if (!t) return null;
-  const fiber = fiberFromText(t);
-  if (fiber && t.split(/[,]+/).length <= 2 && !hasPercentages(t)) {
-    return fiber.charAt(0).toUpperCase() + fiber.slice(1);
-  }
-  return t;
 }
 
 function fiberFromText(text: string): string | null {

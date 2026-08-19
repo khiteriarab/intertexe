@@ -1,0 +1,164 @@
+/**
+ * Display formula shared with lib/composition-display.ts.
+ * Popup and peek must not invent a second parser.
+ */
+(function (root) {
+  const JOIN = "; ";
+  const PCT_NOTE = "percentage not provided";
+  const FIBER_RE =
+    /\b(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/gi;
+  const SYNTHETIC = {
+    viscose: 1,
+    polyester: 1,
+    polyamide: 1,
+    nylon: 1,
+    elastane: 1,
+    spandex: 1,
+    acrylic: 1,
+    rayon: 1,
+    acetate: 1,
+    triacetate: 1,
+  };
+
+  function fiberKey(raw) {
+    return String(raw || "")
+      .toLowerCase()
+      .replace(/spandex/g, "elastane")
+      .replace(/flax/g, "linen")
+      .replace(/merino/g, "wool")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  function titleFiber(raw) {
+    const t = String(raw || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\bspandex\b/i, "elastane")
+      .replace(/\bflax\b/i, "linen");
+    if (!t) return "";
+    const source = t === t.toUpperCase() || t === t.toLowerCase() ? t.toLowerCase() : t;
+    return source.replace(/(^|[\s/-])([a-z])/g, (_, prefix, ch) => prefix + ch.toUpperCase());
+  }
+
+  function splitShellAndLining(raw) {
+    const t = String(raw || "").replace(/\s+/g, " ").trim();
+    if (!t) return { shell: "", lining: null };
+    const labeled = t.match(/^(.*?)(?:\s*[;,/|]\s*|\s+)\blining\b\s*[:–-]?\s*(.+)$/i);
+    if (labeled && labeled[1].trim() && labeled[2].trim()) {
+      return {
+        shell: labeled[1].replace(/[;,/|]+$/g, "").trim(),
+        lining: labeled[2].replace(/\blining\b/gi, "").trim(),
+      };
+    }
+    const trailing = t.match(/^(.*?)\s*[;,/]\s*(.+?)\s+lining\b/i);
+    if (trailing && trailing[1].trim() && trailing[2].trim()) {
+      return { shell: trailing[1].trim(), lining: trailing[2].trim() };
+    }
+    return { shell: t, lining: null };
+  }
+
+  function uniquePercentClauses(text) {
+    const hits = [
+      ...String(text || "").matchAll(
+        /(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([a-z][a-z\s-]{1,30})/gi
+      ),
+    ];
+    const seen = new Set();
+    const out = [];
+    for (const m of hits) {
+      const key = fiberKey(m[2] || "");
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(`${m[1]}% ${titleFiber(m[2] || "")}`);
+    }
+    return out;
+  }
+
+  function uniqueNamedFibers(text) {
+    const seen = new Set();
+    const out = [];
+    const re = new RegExp(FIBER_RE.source, "gi");
+    let m;
+    while ((m = re.exec(String(text || "")))) {
+      const key = fiberKey(m[2] || m[0] || "");
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(titleFiber(m[2] || m[0] || ""));
+    }
+    return out;
+  }
+
+  function formatPart(text) {
+    const percents = uniquePercentClauses(text);
+    if (percents.length) {
+      return { line: percents.join(JOIN), hasPercentages: true };
+    }
+    const fibers = uniqueNamedFibers(text);
+    return { line: fibers.join(JOIN), hasPercentages: false };
+  }
+
+  function partHasSynthetic(text) {
+    const lower = String(text || "").toLowerCase();
+    return Object.keys(SYNTHETIC).some((f) => new RegExp(`\\b${f}\\b`).test(lower));
+  }
+
+  function formatCompositionDisplay(raw) {
+    const empty = {
+      headline: "Material details unavailable",
+      materialLine: "Material details unavailable",
+      hasPercentages: false,
+      hasSyntheticLining: false,
+    };
+    const stripped = String(raw || "")
+      .replace(/^\s*retailer lists:\s*/i, "")
+      .replace(/^\s*material:\s*/i, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!stripped) return empty;
+    const split = splitShellAndLining(stripped);
+    const shellFmt = formatPart(split.shell);
+    const liningFmt = split.lining ? formatPart(split.lining) : { line: "", hasPercentages: false };
+    let core = shellFmt.line;
+    if (core && !shellFmt.hasPercentages) core = `${core} — ${PCT_NOTE}`;
+    if (!core) return empty;
+    if (liningFmt.line) {
+      core = `${core.replace(/ — percentage not provided$/, "")}${JOIN}lining: ${liningFmt.line}`;
+    }
+    return {
+      headline: core,
+      materialLine: `Material: ${core}`,
+      hasPercentages: shellFmt.hasPercentages,
+      hasSyntheticLining: Boolean(split.lining && partHasSynthetic(split.lining)),
+    };
+  }
+
+  function formatPriceLabel(price, currency) {
+    const num = typeof price === "string" ? parseFloat(price) : Number(price);
+    if (!Number.isFinite(num) || num <= 0) return "Price unavailable";
+    const cur = String(currency || "").trim().toUpperCase();
+    try {
+      return new Intl.NumberFormat(cur === "EUR" ? "en-IE" : cur === "GBP" ? "en-GB" : "en-US", {
+        style: cur ? "currency" : "decimal",
+        currency: cur || "USD",
+        maximumFractionDigits: num % 1 === 0 ? 0 : 2,
+      }).format(num);
+    } catch {
+      return String(num);
+    }
+  }
+
+  function formatAltPriceLabel(price, currency, sourceCurrency) {
+    const label = formatPriceLabel(price, currency);
+    if (label === "Price unavailable") return { label, mixed: false };
+    const mixed = Boolean(
+      sourceCurrency && currency && String(sourceCurrency).toUpperCase() !== String(currency).toUpperCase()
+    );
+    return { label: mixed ? `${label} · ${String(currency).toUpperCase()}` : label, mixed };
+  }
+
+  root.ITXCaptureResult = {
+    formatCompositionDisplay,
+    formatPriceLabel,
+    formatAltPriceLabel,
+  };
+})(typeof globalThis !== "undefined" ? globalThis : window);
