@@ -33,6 +33,18 @@ describe("retailer material capture", () => {
     assert.equal(looksLikePercentageComposition("Silk"), false);
   });
 
+  it("reads Spanish composition labels as cotton", () => {
+    const html = `
+      <h1>Jeans Drayton High Boy Fit</h1>
+      <p>Composición: 99% algodón, 1% elastano</p>
+    `;
+    assert.match(extractLabeledMaterial(html) || "", /cotton/i);
+    assert.equal(
+      formatCompositionDisplay("99% algodón; 1% elastano").materialLine,
+      "Material: 99% Cotton; 1% Elastane"
+    );
+  });
+
   it("still prefers percentage compositions when they exist", () => {
     const html = `<p>Composition: 100% silk</p><p>Material: silk</p>`;
     assert.match(extractLabeledMaterial(html) || "", /100%\s*silk/i);

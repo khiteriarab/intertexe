@@ -6,7 +6,7 @@
   const JOIN = "; ";
   const PCT_NOTE = "percentage not provided";
   const FIBER_RE =
-    /\b(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/gi;
+    /\b(organic\s+|recycled\s+)?(cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/gi;
   const SYNTHETIC = {
     viscose: 1,
     polyester: 1,
@@ -34,7 +34,18 @@
       .replace(/\s+/g, " ")
       .trim()
       .replace(/\bspandex\b/i, "elastane")
-      .replace(/\bflax\b/i, "linen");
+      .replace(/\bflax\b/i, "linen")
+      .replace(/\balgod[oó]n\b/gi, "cotton")
+      .replace(/\balgodon\b/gi, "cotton")
+      .replace(/\bvaquero\b/gi, "cotton")
+      .replace(/\bdenim\b/gi, "cotton")
+      .replace(/\bseda\b/gi, "silk")
+      .replace(/\blana\b/gi, "wool")
+      .replace(/\blino\b/gi, "linen")
+      .replace(/\belastano\b/gi, "elastane")
+      .replace(/\bviscosa\b/gi, "viscose")
+      .replace(/\bpoli[eé]ster\b/gi, "polyester")
+      .replace(/\bpoliamida\b/gi, "polyamide");
     if (!t) return "";
     const source = t === t.toUpperCase() || t === t.toLowerCase() ? t.toLowerCase() : t;
     return source.replace(/(^|[\s/-])([a-z])/g, (_, prefix, ch) => prefix + ch.toUpperCase());
@@ -60,7 +71,7 @@
   function uniquePercentClauses(text) {
     const hits = [
       ...String(text || "").matchAll(
-        /(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([a-z][a-z\s-]{1,30})/gi
+        /(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s-]{1,30})/gi
       ),
     ];
     const seen = new Set();

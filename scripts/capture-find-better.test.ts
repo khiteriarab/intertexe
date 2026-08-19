@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  preferredColorFromInput,
   preferredFiberFromInput,
   productMatchesFiber,
   rankTxMatchAlternatives,
@@ -129,6 +130,116 @@ describe("TX Match fabric-first ranking", () => {
     assert.equal(productMatchesFiber({ composition: "100% silk" }, "silk"), true);
     assert.equal(productMatchesFiber({ composition: "100% cotton" }, "silk"), false);
   });
+
+  it("reads cotton from a jeans title when the page hid the formula", () => {
+    assert.equal(
+      preferredFiberFromInput({
+        title: "Jeans Drayton High Boy Fit para mujer | Ralph Lauren® ES",
+        garmentType: "trouser",
+        category: "pants",
+        subcategory: "jeans",
+      }),
+      "cotton"
+    );
+    assert.equal(
+      preferredColorFromInput({
+        title: "Jeans Drayton High Boy Fit para mujer | Ralph Lauren® ES",
+        subcategory: "jeans",
+      }),
+      "blue"
+    );
+  });
+
+  it("puts cotton blue jeans in the first 5, then related bottoms", () => {
+    const products = [
+      {
+        id: "sweat",
+        name: "Weekend Park Loved Sweatpant",
+        brand_name: "Test",
+        price: 180,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "pants_trousers",
+        color: "grey",
+      },
+      {
+        id: "beige-pant",
+        name: "Askk Ny Juniper Wide Leg",
+        brand_name: "Test",
+        price: 255,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "pants_trousers",
+        color: "beige",
+      },
+      {
+        id: "black-pant",
+        name: "Theory Eyelet Pant",
+        brand_name: "Test",
+        price: 375,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "pants_trousers",
+        color: "black",
+      },
+      {
+        id: "black-jean",
+        name: "Black High Rise Jeans",
+        brand_name: "Test",
+        price: 220,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "pants_trousers",
+        color: "black",
+        fabric_construction: "denim",
+      },
+    ];
+    for (let i = 1; i <= 6; i++) {
+      products.push({
+        id: `blue-jean-${i}`,
+        name: `Mid Rise Button Fly Boyfriend Jeans in Medium Blue ${i}`,
+        brand_name: "Test",
+        price: 84 + i,
+        currency: "USD",
+        composition: "93% cotton",
+        natural_fiber_percent: 93,
+        category: "pants_trousers",
+        garment_type: "pants_trousers",
+        color: "blue",
+        fabric_construction: "denim",
+      });
+    }
+    const ranked = rankTxMatchAlternatives(products, {
+      title: "Jeans Drayton High Boy Fit para mujer | Ralph Lauren® ES",
+      subcategory: "jeans",
+      garmentType: "trouser",
+      category: "pants",
+      price: 350,
+      currency: "EUR",
+    });
+    const firstFive = ranked.slice(0, 5);
+    assert.equal(firstFive.length, 5);
+    for (const alt of firstFive) {
+      assert.match(String(alt.name), /jeans/i);
+      assert.match(String(alt.name), /blue/i);
+      assert.doesNotMatch(String(alt.name), /sweatpant|eyelet|wide leg/i);
+    }
+    const rest = ranked.slice(5);
+    assert.ok(rest.some((row) => row.id === "black-jean"));
+    assert.ok(
+      ranked.findIndex((row) => row.id === "black-jean") <
+        ranked.findIndex((row) => row.id === "sweat")
+    );
+    assert.ok(!firstFive.some((row) => ["sweat", "beige-pant", "black-pant"].includes(row.id)));
+  });
 });
 
 describe("TX Match copy", () => {
@@ -142,7 +253,7 @@ describe("TX Match copy", () => {
     assert.match(copy.decodeAction, /see/i);
     assert.match(copy.decodeAction, /silk/i);
     assert.doesNotMatch(copy.decodeAction, /^TX MATCH$/i);
-    assert.equal(copy.alternativesTitle, "12 better-material matches");
+    assert.equal(copy.alternativesTitle, "More silk skirt");
     assert.match(copy.compositionNote || "", /Material details unavailable/);
     assert.equal(copy.tagline, "Know the material before you buy.");
   });

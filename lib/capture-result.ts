@@ -119,7 +119,6 @@ export function buildCaptureResultView(
     };
   });
   const links = buildTxMatchLinks(row.id != null ? String(row.id) : null);
-  const count = alternatives.length;
   return {
     title: titleCaseName(String(row.title || row.brand_name || "Saved piece")),
     brandLine,
@@ -131,8 +130,7 @@ export function buildCaptureResultView(
       ? "Synthetic lining — not the same as a fully natural construction."
       : null,
     insight: materialInsightFromText(String(row.composition_text || copy.compositionHeadline || "")),
-    alternativesTitle:
-      count > 0 ? `${count} better-material matches` : copy.alternativesTitle,
+    alternativesTitle: copy.alternativesTitle,
     alternatives,
     tagline: copy.tagline || TX_MATCH_TAGLINE,
     affiliateDisclosure: copy.affiliateDisclosure || AFFILIATE_DISCLOSURE,

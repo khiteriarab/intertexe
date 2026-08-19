@@ -96,28 +96,43 @@ function extractProductFromPage() {
     const t = String(raw || "").replace(/\s+/g, " ").trim();
     if (!t) return "";
     const re =
-      /\b(organic\s+|recycled\s+)?(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
+      /\b(organic\s+|recycled\s+)?(cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)\b/gi;
     const seen = new Set();
     const out = [];
+    const canon = {
+      algodon: "cotton",
+      denim: "cotton",
+      vaquero: "cotton",
+      seda: "silk",
+      lana: "wool",
+      lino: "linen",
+      elastano: "elastane",
+      viscosa: "viscose",
+      poliester: "polyester",
+      poliamida: "polyamide",
+      spandex: "elastane",
+    };
     let m;
     while ((m = re.exec(t))) {
-      const name = String(m[2] || "").toLowerCase();
+      const rawName = String(m[2] || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const name = canon[rawName] || rawName;
       if (!name || seen.has(name)) continue;
       seen.add(name);
       out.push(name.charAt(0).toUpperCase() + name.slice(1));
     }
     const percents = [
-      ...t.matchAll(/(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([a-z][a-z\s-]{1,30})/gi),
+      ...t.matchAll(/(\d{1,3}(?:\.\d+)?)\s*%\s*(?:organic\s+|recycled\s+)?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\s-]{1,30})/gi),
     ];
     if (percents.length) {
       const seenPct = new Set();
       const clauses = [];
       for (const hit of percents) {
-        const key = String(hit[2] || "").toLowerCase().replace(/[^a-z]/g, "");
-        if (!key || seenPct.has(key)) continue;
-        seenPct.add(key);
-        const fiber = String(hit[2] || "").trim();
-        clauses.push(`${hit[1]}% ${fiber.charAt(0).toUpperCase()}${fiber.slice(1).toLowerCase()}`);
+        const rawFiber = String(hit[2] || "").trim();
+        const key = rawFiber.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+        const name = canon[key] || key;
+        if (!name || seenPct.has(name)) continue;
+        seenPct.add(name);
+        clauses.push(`${hit[1]}% ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
       }
       return clauses.join("; ");
     }
@@ -202,7 +217,7 @@ function extractProductFromPage() {
 
   const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 12000);
   const labeledRe =
-    /(?:material|composition|fabric|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
+    /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
   let labeled = null;
   let labeledMatch;
   while ((labeledMatch = labeledRe.exec(bodyText))) {
@@ -216,7 +231,7 @@ function extractProductFromPage() {
   else if (compositionText) compositionText = uniqueFibers(compositionText) || compositionText;
   else {
     const pctLine = bodyText.match(
-      /\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)(?:\s*[;,/]\s*\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)){0,6}/i
+      /\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)(?:\s*[;,/]\s*\d{1,3}(?:\.\d+)?%\s*(?:organic\s+|recycled\s+)?(?:cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro)){0,6}/i
     );
     compositionText = pctLine ? uniqueFibers(pctLine[0]) : null;
   }

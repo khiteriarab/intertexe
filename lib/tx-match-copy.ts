@@ -57,7 +57,8 @@ export function garmentLabel(raw: string | null | undefined): string | null {
   if (!t) return null;
   if (/\bskirt/.test(t)) return "skirt";
   if (/\bdress/.test(t)) return "dress";
-  if (/\b(pant|trouser|jean)/.test(t)) return "pant";
+  if (/\b(jeans?|denim|vaquero)/.test(t)) return "jeans";
+  if (/\b(pant|trouser)/.test(t)) return "pant";
   if (/\b(coat|jacket|blazer)/.test(t)) return "jacket";
   if (/\b(sweater|knit|cardigan)/.test(t)) return "knit";
   if (/\b(top|blouse|shirt)/.test(t)) return "top";
@@ -87,10 +88,10 @@ export function buildTxMatchCopy(opts: {
       : `See more ${look} options`
     : "See more like this";
 
-  const alternativesTitle = count
-    ? `${count} better-material matches`
-    : fiber
-      ? `More ${fiber} options`
+  const alternativesTitle = look
+    ? `More ${look}`
+    : count
+      ? `${count} better-material matches`
       : "Your TX Matches";
 
   let compositionHeadline: string | null = null;
@@ -145,7 +146,7 @@ export function buildTxMatchCopyFromCapture(capture: Record<string, unknown> | n
   return buildTxMatchCopy({
     fiber: inferred,
     inferredFiber: inferred,
-    garment: String(row.category || row.subcategory || row.title || ""),
+    garment: String(row.title || row.subcategory || row.category || ""),
     altCount: alts.length,
     compositionListed: listed,
     listedWithoutPercentages: listed && !hasPercentages(composition),
@@ -160,6 +161,6 @@ function fiberFromText(text: string): string | null {
     if (new RegExp(`\\b${f}\\b`).test(lower)) return f === "merino" ? "wool" : f;
   }
   if (/\b(charmeuse|chiffon|satin)\b/.test(lower)) return "silk";
-  if (/\bdenim\b/.test(lower)) return "cotton";
+  if (/\b(denim|jeans?|vaquero|algod[oó]n)\b/.test(lower)) return "cotton";
   return null;
 }

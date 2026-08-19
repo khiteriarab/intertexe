@@ -6,7 +6,7 @@
 import { normalizeCompositionStorage } from "./composition-display";
 
 export const FIBER_NAME_RE =
-  /\b(cotton|wool|linen|silk|cashmere|viscose|polyester|polyamide|nylon|elastane|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/i;
+  /\b(cotton|algod[oó]n|algodon|denim|vaquero|wool|lana|linen|lino|silk|seda|cashmere|viscose|viscosa|polyester|poli[eé]ster|polyamide|poliamida|nylon|elastane|elastano|spandex|modal|lyocell|tencel|acrylic|rayon|hemp|alpaca|merino|leather|suede|cupro|triacetate|acetate)\b/i;
 
 const PROMO_RE =
   /\b(off|order|shipping|sale|discount|promo|code|subscribe|newsletter|members?)\b/i;
@@ -102,7 +102,7 @@ export function normalizeListedMaterial(raw: string): string {
 export function extractLabeledMaterial(htmlOrText: string): string | null {
   const plain = stripToText(htmlOrText).slice(0, 40000);
   const re =
-    /(?:material|composition|fabric|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
+    /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]\s*([^.;|\n]{1,80})/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(plain))) {
     const candidate = normalizeListedMaterial(m[1] || "");

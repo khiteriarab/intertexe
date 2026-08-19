@@ -511,6 +511,7 @@ export async function enrichCaptureMetadata(
               ? capture.natural_fiber_percent
               : null,
         });
+        fbInput.userId = userId;
         alternatives = await findBetterAlternatives(supabase, fbInput);
         resolutionStatus = alternatives.length ? "alternatives_ready" : "analyzed";
       } catch (e) {

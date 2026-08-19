@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validate the 1.0.6 Chrome package. Does not submit or publish.
+ * Validate the 1.0.7 Chrome package. Does not submit or publish.
  */
 import fs from "fs";
 import os from "os";
@@ -12,7 +12,7 @@ import { createHash } from "crypto";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const folder = path.join(__dirname, "save-to-intertexe");
-const zipPath = path.join(__dirname, "save-to-intertexe-1.0.6.zip");
+const zipPath = path.join(__dirname, "save-to-intertexe-1.0.7.zip");
 const NAME = "INTERTEXE: Fabric Scanner";
 const DESC =
   "Scan fabric composition as you shop, understand the material mix, find natural-fiber alternatives, and save pieces to INTERTEXE.";
@@ -26,7 +26,7 @@ function record(id, pass, detail = {}) {
 const manifest = JSON.parse(fs.readFileSync(path.join(folder, "manifest.json"), "utf8"));
 record("manifest.name", manifest.name === NAME, { actual: manifest.name });
 record("manifest.description", manifest.description === DESC);
-record("manifest.version", manifest.version === "1.0.6");
+record("manifest.version", manifest.version === "1.0.7");
 record("manifest.mv3", manifest.manifest_version === 3);
 record("manifest.permissions", JSON.stringify(manifest.permissions) === JSON.stringify(["activeTab", "storage", "scripting", "tabs"]));
 record(
@@ -201,6 +201,30 @@ try {
       { silkProduct }
     );
     await silkDump.close();
+
+    const jeansEs = await browser.newPage();
+    await jeansEs.setContent(`<!doctype html>
+      <html><head>
+        <meta property="og:title" content="Jeans Drayton High Boy Fit para mujer">
+        <link rel="canonical" href="https://www.ralphlauren.es/es/jeans-drayton">
+      </head>
+      <body>
+        <h1>Jeans Drayton High Boy Fit para mujer</h1>
+        <p>€350</p>
+        <p>Composición: 99% algodón, 1% elastano</p>
+      </body></html>`);
+    const jeansProduct = await jeansEs.evaluate((src) => {
+      const extract = new Function(`${src}; return extractProductFromPage();`);
+      return extract();
+    }, fn);
+    record(
+      "extract.spanish_cotton_jeans",
+      /cotton/i.test(String(jeansProduct?.compositionText || "")) &&
+        jeansProduct?.price === 350 &&
+        jeansProduct?.currency === "EUR",
+      { jeansProduct }
+    );
+    await jeansEs.close();
 
     const blog = await browser.newPage();
     await blog.setContent(`<!doctype html>

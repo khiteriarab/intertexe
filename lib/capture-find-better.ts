@@ -14,6 +14,7 @@ import {
   type FilterIntegrityProduct,
 } from "./catalog-filter-integrity";
 import { compositionHasSyntheticLining, normalizeCompositionStorage } from "./composition-display";
+import { fetchTastePreferences } from "./taste-preferences";
 
 export type FindBetterAlternative = {
   id: string;
@@ -48,9 +49,26 @@ export type FindBetterInput = {
   region?: string | null;
   userId?: string | null;
   preferredFibers?: string[];
+  preferredDesigners?: string[];
+  preferredSilhouettes?: string[];
   userPriceMin?: number | null;
   userPriceMax?: number | null;
 };
+
+export type LookFamily =
+  | "jeans"
+  | "sweat"
+  | "leggings"
+  | "shorts"
+  | "trousers"
+  | "dress"
+  | "skirt"
+  | "top"
+  | "knitwear"
+  | "outerwear"
+  | "jumpsuit"
+  | "shoes"
+  | "other";
 
 const SHOE_RE =
   /\b(shoe|shoes|boot|boots|sneaker|sneakers|heel|heels|sandal|sandals|loafer|footwear)\b/i;
@@ -88,6 +106,58 @@ const GARMENT_TO_BROWSE_CATEGORY: Record<string, string> = {
   shoes: "shoes",
   footwear: "shoes",
 };
+
+export function lookFamilyFromText(text: string | null | undefined): LookFamily | null {
+  const t = String(text || "").toLowerCase();
+  if (!t.trim()) return null;
+  if (/\b(sweatpants?|sweat\s*pants?|joggers?|track\s*pants?)\b/.test(t)) return "sweat";
+  if (/\bleggings?\b/.test(t)) return "leggings";
+  if (/\bshorts?\b/.test(t) && !/\bjean/.test(t)) return "shorts";
+  if (/\b(jeans?|denim|vaqueros?|tejanos?)\b/.test(t) || /\bfabric_construction:\s*denim\b/.test(t)) {
+    return "jeans";
+  }
+  if (/\b(chino|slacks?|trousers?|\bpants?\b)\b/.test(t)) return "trousers";
+  if (/\b(dress|gown)\b/.test(t)) return "dress";
+  if (/\bskirt\b/.test(t)) return "skirt";
+  if (/\b(coat|jacket|blazer|outerwear)\b/.test(t)) return "outerwear";
+  if (/\b(sweater|cardigan|knitwear|pullover)\b/.test(t)) return "knitwear";
+  if (/\b(jumpsuit|romper|playsuit)\b/.test(t)) return "jumpsuit";
+  if (/\b(blouse|t-?shirt|tee|tank|camisole|top|shirt)\b/.test(t)) return "top";
+  if (SHOE_RE.test(t)) return "shoes";
+  return null;
+}
+
+export function lookFamilyFromInput(input: FindBetterInput): LookFamily | null {
+  return (
+    lookFamilyFromText(
+      [
+        input.subcategory,
+        input.title,
+        input.garmentType,
+        input.category,
+        ...(input.matchBrief?.mustMatch || []),
+        ...(input.matchBrief?.preferred || []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+    ) || (isPantsInspiration(input) ? "trousers" : null)
+  );
+}
+
+export function lookFamilyFromProduct(product: Record<string, unknown>): LookFamily | null {
+  const construction = String(product.fabric_construction || "").toLowerCase();
+  if (construction === "denim") return "jeans";
+  const named = lookFamilyFromText(
+    `${product.name || ""} ${product.category || ""} ${product.garment_type || ""} ${construction}`
+  );
+  if (named) return named;
+  const gt = `${product.garment_type || ""} ${product.category || ""}`.toLowerCase();
+  if (/\b(jean|denim)\b/.test(gt) || /jean|denim/.test(gt)) return "jeans";
+  if (/pant|trouser/.test(gt)) return "trousers";
+  if (/dress/.test(gt)) return "dress";
+  if (/skirt/.test(gt)) return "skirt";
+  return null;
+}
 
 function isPantsInspiration(input: FindBetterInput): boolean {
   const cat = `${input.category || ""} ${input.subcategory || ""} ${input.garmentType || ""}`.toLowerCase();
@@ -165,8 +235,11 @@ function whyFor(
     parts.push(`Same fabric (${fiber})`);
   }
 
-  // Visual / product affinity first — TX Match is not only material conversion.
-  if (isPantsInspiration(input)) parts.push("Same garment type (trousers/pants)");
+  const look = lookFamilyFromInput(input);
+  const productLook = lookFamilyFromProduct(product);
+  if (look && productLook === look) {
+    parts.push(look === "jeans" ? "Same garment type (jeans)" : `Same garment type (${look})`);
+  } else if (isPantsInspiration(input)) parts.push("Same garment type (trousers/pants)");
   else if (browseCategoryFor(input)) parts.push(`Same category (${browseCategoryFor(input)})`);
 
   if (productMatchesColor(product, input.color)) {
@@ -332,6 +405,9 @@ const TITLE_FIBER_HINTS: Array<[RegExp, string]> = [
   [/\bmerino\b/, "wool"],
   [/\bcotton\b/, "cotton"],
   [/\bdenim\b/, "cotton"],
+  [/\bjeans?\b/, "cotton"],
+  [/\bvaqueros?\b/, "cotton"],
+  [/\balgod[oó]n\b/, "cotton"],
   [/\bleather\b/, "leather"],
   [/\bsuede\b/, "leather"],
 ];
@@ -379,9 +455,22 @@ export function productMatchesFiber(
 ): boolean {
   if (!fiber) return false;
   const f = fiber.toLowerCase();
-  const hay = `${product.composition || ""} ${product.material_primary || ""} ${product.shop_material_family || ""} ${product.name || ""}`.toLowerCase();
+  const hay = `${product.composition || ""} ${product.material_primary || ""} ${product.shop_material_family || ""} ${product.name || ""} ${product.fabric_construction || ""}`.toLowerCase();
   if (f === "wool") return /\b(wool|merino)\b/.test(hay);
+  if (f === "cotton") return /\b(cotton|algod[oó]n|denim|jeans?|vaqueros?)\b/.test(hay);
   return new RegExp(`\\b${f}\\b`).test(hay);
+}
+
+export function preferredColorFromInput(input: FindBetterInput): string | null {
+  const explicit = normalizeColorToken(input.color || "");
+  if (explicit === "denim" || explicit === "indigo") return "blue";
+  if (explicit.length >= 3 && productMatchesColor({ name: explicit, color: explicit }, explicit)) {
+    return explicit;
+  }
+  const fromTitle = colorHintFromTitle(`${input.title || ""} ${(input.distinctiveDetails || []).join(" ")}`);
+  if (fromTitle) return fromTitle;
+  if (lookFamilyFromInput(input) === "jeans") return "blue";
+  return null;
 }
 
 export function rankTxMatchAlternatives(
@@ -397,6 +486,8 @@ function rankAlternatives(
 ): FindBetterAlternative[] {
   const scannedNfp = input.naturalFiberPercent ?? 0;
   const preferredFiber = preferredFiberFromInput(input);
+  const preferredColor = preferredColorFromInput(input);
+  const sourceLook = lookFamilyFromInput(input);
   const targetPrice =
     input.price ??
     (input.matchBrief?.targetPriceRange
@@ -409,13 +500,31 @@ function rankAlternatives(
     let score = 0;
     const nfp = Number(p.natural_fiber_percent) || 0;
     const sameFiber = productMatchesFiber(p, preferredFiber);
+    const productLook = lookFamilyFromProduct(p);
+    const sameLook = Boolean(sourceLook && productLook === sourceLook);
+    const sameColor = productMatchesColor(p, preferredColor);
     // Fabric of the saved piece leads. Do not let cheaper cotton outrank silk.
     if (sameFiber) score += 120;
     else if (preferredFiber) score -= 25;
+    if (sameLook) score += 90;
+    else if (sourceLook === "jeans" && (productLook === "sweat" || productLook === "leggings")) {
+      score -= 80;
+    } else if (sourceLook && productLook && productLook !== sourceLook) {
+      score -= 12;
+    }
     if (compositionHasSyntheticLining(String(p.composition || ""))) score -= 22;
 
     const userFibers = (input.preferredFibers || []).map((f) => extractFiberFromText(f)).filter(Boolean);
     if (userFibers.some((f) => productMatchesFiber(p, f))) score += 18;
+    const brand = String(p.brand_name || "").toLowerCase();
+    if (
+      (input.preferredDesigners || []).some((d) => {
+        const token = String(d || "").toLowerCase().trim();
+        return token && (brand.includes(token) || token.includes(brand));
+      })
+    ) {
+      score += 16;
+    }
 
     score += Math.min(nfp, 100) * 0.2;
     const price = parsePrice(p.price);
@@ -429,14 +538,15 @@ function rankAlternatives(
       if (sameFiber && targetPrice - price >= 50) score += 10;
     }
     if (input.userPriceMax != null && price != null && price > input.userPriceMax) score -= 20;
-    const sameColor = productMatchesColor(p, input.color);
-    if (sameColor) score += 28;
+    if (sameColor) score += 50;
+    const hay = `${p.name || ""} ${p.category || ""} ${p.color || ""}`.toLowerCase();
     if (input.silhouette) {
       const sil = String(input.silhouette).toLowerCase().split(/\s+/)[0];
-      const hay = `${p.name || ""} ${p.category || ""}`.toLowerCase();
       if (sil && hay.includes(sil)) score += 24;
     }
-    const hay = `${p.name || ""} ${p.category || ""} ${p.color || ""}`.toLowerCase();
+    for (const sil of input.preferredSilhouettes || []) {
+      if (sil && hay.includes(String(sil).toLowerCase())) score += 14;
+    }
     for (const pref of input.matchBrief?.preferred || []) {
       if (pref && hay.includes(pref.toLowerCase())) score += 8;
     }
@@ -446,23 +556,51 @@ function rankAlternatives(
     for (const d of input.distinctiveDetails || []) {
       if (d && hay.includes(d.toLowerCase())) score += 12;
     }
-    return { p, score, sameColor, sameFiber };
+    return { p, score, sameColor, sameFiber, sameLook, productLook };
   });
 
   scored.sort(
     (a, b) =>
+      Number(b.sameLook) - Number(a.sameLook) ||
       Number(b.sameFiber) - Number(a.sameFiber) ||
+      Number(b.sameColor) - Number(a.sameColor) ||
       b.score - a.score ||
       (Number(b.p.natural_fiber_percent) || 0) - (Number(a.p.natural_fiber_percent) || 0)
   );
 
-  // First 5 must be the same fabric when we have enough catalog hits.
-  let ordered = scored;
-  if (preferredFiber) {
-    const fiberHits = scored.filter((s) => s.sameFiber);
-    const others = scored.filter((s) => !s.sameFiber);
-    ordered = [...fiberHits.slice(0, 5), ...others, ...fiberHits.slice(5)];
-  }
+  // First 5: what the shopper is looking at (same garment + fabric + color).
+  // Remaining slots: other same-look pieces, then adjacent taste-aware picks.
+  const used = new Set<string>();
+  const lead: typeof scored = [];
+  const take = (pred: (row: (typeof scored)[number]) => boolean, n: number) => {
+    for (const row of scored) {
+      if (lead.length >= n) break;
+      const id = String(row.p.id);
+      if (used.has(id) || !pred(row)) continue;
+      used.add(id);
+      lead.push(row);
+    }
+  };
+  take((s) => s.sameLook && s.sameFiber && s.sameColor, 5);
+  take((s) => s.sameLook && s.sameFiber, 5);
+  take((s) => s.sameLook, 5);
+  take((s) => s.sameFiber, 5);
+
+  const rest = scored
+    .filter((s) => !used.has(String(s.p.id)))
+    .sort((a, b) => {
+      const adj = (row: (typeof scored)[number]) => {
+        if (row.sameLook) return 2;
+        if (sourceLook === "jeans" && row.productLook === "trousers") return 1;
+        if (sourceLook === "jeans" && (row.productLook === "sweat" || row.productLook === "leggings")) {
+          return -1;
+        }
+        return 0;
+      };
+      return adj(b) - adj(a) || b.score - a.score;
+    });
+
+  const ordered = [...lead, ...rest];
 
   const seen = new Set<string>();
   const out: FindBetterAlternative[] = [];
@@ -501,7 +639,7 @@ export function findBetterInputFromEnrichment(
     naturalFiberPercent: extras?.naturalFiberPercent ?? null,
     matchBrief: enrichment.matchBrief,
     distinctiveDetails: enrichment.distinctiveDetails,
-    color: enrichment.color || colorHintFromTitle(enrichment.title),
+    color: enrichment.color || colorHintFromTitle(enrichment.title) || (lookFamilyFromText(`${enrichment.subcategory || ""} ${enrichment.title || ""}`) === "jeans" ? "blue" : null),
     silhouette: enrichment.silhouette,
     fit: enrichment.fit,
     length: enrichment.length,
@@ -578,6 +716,8 @@ export async function findBetterAlternatives(
         resolved = {
           ...resolved,
           preferredFibers: taste.preferredFibers || [],
+          preferredDesigners: taste.preferredDesigners || [],
+          preferredSilhouettes: taste.preferredSilhouettes || [],
           userPriceMin: taste.priceMin ?? resolved.userPriceMin,
           userPriceMax: taste.priceMax ?? resolved.userPriceMax,
         };
@@ -591,6 +731,8 @@ export async function findBetterAlternatives(
   const price = resolved.price ?? null;
   const browseCat = browseCategoryFor(resolved);
   const preferredFiber = preferredFiberFromInput(resolved);
+  const sourceLook = lookFamilyFromInput(resolved);
+  const denimLead = sourceLook === "jeans";
 
   let rows: Record<string, unknown>[] = [];
 
@@ -606,7 +748,12 @@ export async function findBetterAlternatives(
     const rpcParams = buildCatalogBrowseV2Params({
       region,
       category: browseCat,
-      fiber: preferredFiber && !SYNTHETIC_FIBERS.has(preferredFiber) ? preferredFiber : undefined,
+      fiber: denimLead
+        ? undefined
+        : preferredFiber && !SYNTHETIC_FIBERS.has(preferredFiber)
+          ? preferredFiber
+          : undefined,
+      fabricConstruction: denimLead ? "denim" : undefined,
       limit: 48,
       offset: 0,
       sort: "newest",
@@ -646,6 +793,7 @@ export async function findBetterAlternatives(
         shop_material_family:
           p.shop_material_family != null ? String(p.shop_material_family) : null,
         material_primary: p.material_primary != null ? String(p.material_primary) : null,
+        fabric_construction: p.fabric_construction != null ? String(p.fabric_construction) : null,
       }));
       const keptIds = new Set(
         filterProductsForIntegrity(integrityRows, integritySpec).map((r) => String(r.id))
@@ -667,6 +815,7 @@ export async function findBetterAlternatives(
           color: p.color ?? null,
           shop_material_family: p.shop_material_family ?? null,
           material_primary: p.material_primary ?? null,
+          fabric_construction: p.fabric_construction ?? null,
         }));
     }
   }
@@ -710,6 +859,7 @@ export async function findBetterAlternatives(
         shop_material_family:
           p.shop_material_family != null ? String(p.shop_material_family) : null,
         material_primary: p.material_primary != null ? String(p.material_primary) : null,
+        fabric_construction: p.fabric_construction != null ? String(p.fabric_construction) : null,
       }));
       const keptIds = new Set(
         filterProductsForIntegrity(integrityRows, integritySpec).map((r) => String(r.id))
@@ -731,6 +881,7 @@ export async function findBetterAlternatives(
           color: p.color ?? null,
           shop_material_family: p.shop_material_family ?? null,
           material_primary: p.material_primary ?? null,
+          fabric_construction: p.fabric_construction ?? null,
         }));
       rows = [...rows, ...extra];
     }
