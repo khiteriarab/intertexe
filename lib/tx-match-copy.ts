@@ -97,9 +97,11 @@ export function buildTxMatchCopy(opts: {
 
   if (opts.compositionListed && display.headline !== "Material details unavailable") {
     compositionHeadline = display.materialLine;
-    compositionDetail = display.hasSyntheticLining
-      ? "Synthetic lining — not the same as a fully natural construction."
-      : null;
+    compositionDetail = display.hasSyntheticLace
+      ? "Synthetic lace — not the same as a fully natural construction."
+      : display.hasSyntheticLining
+        ? "Synthetic lining — not the same as a fully natural construction."
+        : null;
     compositionNote = [compositionHeadline, compositionDetail].filter(Boolean).join("\n");
   } else if (!opts.compositionListed) {
     const unpublished = unpublishedMaterialCopy({

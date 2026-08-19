@@ -32,6 +32,28 @@ describe("TX Match editorial display", () => {
     );
   });
 
+  it("keeps silk satin and nylon lace as separate parts", () => {
+    const listed = "100% Silk; lace: 65% Nylon; 35% Cotton";
+    assert.equal(materialClassification(listed), "Silk with Nylon Lace");
+    assert.equal(
+      editorialCompositionLine(listed),
+      "100% Silk · lace 65% Nylon · 35% Cotton"
+    );
+    assert.equal(materialCardSignal({ composition: listed }), "Silk with Nylon Lace");
+    assert.doesNotMatch(editorialCompositionLine(listed), /65%\s*Nylon\s*·\s*35%\s*Silk/i);
+    assert.doesNotMatch(materialClassification(listed), /35%\s*natural fiber/i);
+  });
+
+  it("does not print 145% natural fibers for silk plus nylon/cotton lace", () => {
+    const mashed = "100% Silk · 55% Nylon · 45% Cotton";
+    assert.equal(materialCardSignal({ composition: mashed }), "Silk with Nylon Lace");
+    assert.doesNotMatch(materialCardSignal({ composition: mashed }), /145/);
+    assert.equal(
+      editorialCompositionLine(mashed),
+      "100% Silk · lace 55% Nylon · 45% Cotton"
+    );
+  });
+
   it("uses 100% cotton as the card signal when that is true", () => {
     assert.equal(materialCardSignal({ composition: "100% cotton" }), "100% Cotton");
   });
