@@ -147,8 +147,8 @@ export default function ExtensionAuthClient() {
           Sign in to INTERTEXE
         </h1>
         <p style={{ margin: "0 0 20px", color: "#6b6560", fontSize: 14, lineHeight: 1.45 }}>
-          Authorize the browser extension to save products to your Inspirations. You can close this
-          tab when you see confirmation.
+          Authorize the browser extension to save pieces. When you finish, we take you back to the
+          product page you were comparing.
         </p>
 
         {phase === "loading" || phase === "parking" ? (
@@ -161,7 +161,7 @@ export default function ExtensionAuthClient() {
           <div>
             <p style={{ fontSize: 16, margin: "0 0 8px" }}>You&apos;re signed in.</p>
             <p style={{ color: "#6b6560", margin: 0, fontSize: 14 }}>
-              Return to the product tab — your extension will finish saving automatically.
+              Taking you back to the piece you were comparing. You can close this tab if it stays open.
             </p>
           </div>
         ) : null}
@@ -200,10 +200,13 @@ export default function ExtensionAuthClient() {
             </button>
             <p style={{ marginTop: 14, fontSize: 13, color: "#6b6560" }}>
               New here?{" "}
-              <Link href="/account?mode=signup" style={{ color: "#1f3d2b" }}>
+              <Link
+                href={`/account?mode=signup&next=${encodeURIComponent(`/extension/auth?ext_session=${extSession}`)}`}
+                style={{ color: "#1f3d2b" }}
+              >
                 Create an account
               </Link>
-              , then return to this page.
+              , then we will send you back here to finish.
             </p>
           </form>
         ) : null}

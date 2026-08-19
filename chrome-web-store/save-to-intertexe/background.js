@@ -12,6 +12,7 @@ async function getStore() {
     "refreshToken",
     "pendingCapture",
     "authTabId",
+    "returnTabId",
     "extSession",
     "lastResult",
     "lastPeek",
@@ -528,6 +529,22 @@ async function createPublicMatches(payload) {
   return { result };
 }
 
+async function returnToOpenerTab() {
+  const store = await getStore();
+  const tabId = store.returnTabId;
+  await chrome.storage.local.remove(["returnTabId"]);
+  if (!tabId) return;
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab?.windowId) {
+      await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+    }
+    await chrome.tabs.update(tabId, { active: true });
+  } catch {
+    /* product tab was closed */
+  }
+}
+
 async function pollAuthSession(extSession, tabId) {
   const t0 = Date.now();
   while (Date.now() - t0 < 5 * 60 * 1000) {
@@ -539,7 +556,13 @@ async function pollAuthSession(extSession, tabId) {
         extSession: null,
         authTabId: null,
       });
+      await returnToOpenerTab();
       if (tabId) chrome.tabs.remove(tabId).catch(() => {});
+      try {
+        if (chrome.action?.openPopup) await chrome.action.openPopup();
+      } catch {
+        /* some Chrome builds only open the popup from a user gesture */
+      }
       const store = await getStore();
       if (store.pendingCapture) {
         await setUi("Signed in — saving…");
@@ -550,7 +573,7 @@ async function pollAuthSession(extSession, tabId) {
           await setUi(e instanceof Error ? e.message : "Save failed", true);
         }
       } else {
-        await setUi("Signed in.");
+        await setUi("Signed in. You are back on this piece.");
       }
       return;
     }
@@ -561,11 +584,16 @@ async function pollAuthSession(extSession, tabId) {
 }
 
 async function startSignIn() {
+  const [opener] = await chrome.tabs.query({ active: true, currentWindow: true });
   const extSession = randomNonce();
   const url = `${APP}/extension/auth?ext_session=${encodeURIComponent(extSession)}`;
   const tab = await chrome.tabs.create({ url, active: true });
-  await chrome.storage.local.set({ extSession, authTabId: tab.id || null });
-  await setUi("Finish signing in on the INTERTEXE tab…");
+  await chrome.storage.local.set({
+    extSession,
+    authTabId: tab.id || null,
+    returnTabId: opener?.id && opener.id !== tab.id ? opener.id : null,
+  });
+  await setUi("Finish signing in — we will bring you back to this piece.");
   pollAuthSession(extSession, tab.id).catch((e) =>
     setUi(e instanceof Error ? e.message : "Sign-in failed", true)
   );
@@ -588,6 +616,7 @@ async function signOut() {
     "lastPeek",
     "extSession",
     "authTabId",
+    "returnTabId",
     "uiStatus",
     "uiError",
   ]);
