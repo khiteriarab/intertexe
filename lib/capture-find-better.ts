@@ -239,32 +239,86 @@ function parsePrice(raw: unknown): number | null {
   return null;
 }
 
-const AFFILIATE_URL_RE =
-  /linksynergy|rakuten|awin1|impact\.com|shareasale|anrdoezrs|dpbolvw|jdoqocy|tkqlhce|pjtra|partnerize/i;
+/** Ranking FX only — catalog prices are USD. Not a live market quote. */
+const USD_PER: Record<string, number> = {
+  USD: 1,
+  EUR: 1.08,
+  GBP: 1.27,
+  CAD: 0.73,
+  AUD: 0.66,
+};
 
-/** Shopper price band for TX Match. Hard gate — never lead with a $84 jean for a €350 scan. */
-export function txMatchPriceBounds(input: FindBetterInput): { min: number | null; max: number | null } {
-  const source = input.price != null && input.price > 0 ? input.price : null;
-  let min = source != null ? Math.round(source * 0.7) : input.userPriceMin ?? null;
-  let max = source != null ? Math.round(source * 1.35) : input.userPriceMax ?? null;
+const BUDGET_MIN_RATIO = 0.55;
+const BUDGET_MAX_RATIO = 1.25;
+const SPLURGE_MAX_RATIO = 2.5;
+const MAX_SPLURGE_MATCHES = 2;
+
+export function comparableUsdPrice(
+  price: number | null | undefined,
+  currency?: string | null
+): number | null {
+  if (price == null || price <= 0) return null;
+  const fx = USD_PER[String(currency || "USD").trim().toUpperCase()] ?? 1;
+  return price * fx;
+}
+
+export type TxMatchPriceBands = {
+  budgetMin: number | null;
+  budgetMax: number | null;
+  splurgeMax: number | null;
+};
+
+/**
+ * Shopper budget for TX Match.
+ * In-budget: near the scanned ticket (after a simple FX to USD).
+ * Splurge: modestly above, capped — a €60 jean must not pull $780 trousers.
+ */
+export function txMatchPriceBands(input: FindBetterInput): TxMatchPriceBands {
+  const sourceUsd = comparableUsdPrice(input.price ?? null, input.currency);
+  let budgetMin = sourceUsd != null ? sourceUsd * BUDGET_MIN_RATIO : input.userPriceMin ?? null;
+  let budgetMax = sourceUsd != null ? sourceUsd * BUDGET_MAX_RATIO : input.userPriceMax ?? null;
+  let splurgeMax = sourceUsd != null ? sourceUsd * SPLURGE_MAX_RATIO : input.userPriceMax ?? null;
   if (input.userPriceMin != null && input.userPriceMin > 0) {
-    min = min == null ? input.userPriceMin : Math.max(min, input.userPriceMin);
+    budgetMin = budgetMin == null ? input.userPriceMin : Math.max(budgetMin, input.userPriceMin);
   }
   if (input.userPriceMax != null && input.userPriceMax > 0) {
-    max = max == null ? input.userPriceMax : Math.min(max, input.userPriceMax);
+    budgetMax = budgetMax == null ? input.userPriceMax : Math.min(budgetMax, input.userPriceMax);
+    splurgeMax =
+      splurgeMax == null
+        ? input.userPriceMax * (SPLURGE_MAX_RATIO / BUDGET_MAX_RATIO)
+        : Math.min(splurgeMax, input.userPriceMax * (SPLURGE_MAX_RATIO / BUDGET_MAX_RATIO));
   }
-  return { min, max };
+  return { budgetMin, budgetMax, splurgeMax };
+}
+
+/** Browse window: in-budget through splurge cap (USD). */
+export function txMatchPriceBounds(input: FindBetterInput): { min: number | null; max: number | null } {
+  const bands = txMatchPriceBands(input);
+  return {
+    min: bands.budgetMin != null ? Math.round(bands.budgetMin) : null,
+    max: bands.splurgeMax != null ? Math.round(bands.splurgeMax) : null,
+  };
 }
 
 export function inTxMatchPriceRange(product: Record<string, unknown>, input: FindBetterInput): boolean {
-  const bounds = txMatchPriceBounds(input);
-  if (bounds.min == null && bounds.max == null) return true;
-  const price = parsePrice(product.price);
-  if (price == null) return false;
-  if (bounds.min != null && price < bounds.min) return false;
-  if (bounds.max != null && price > bounds.max) return false;
+  const bands = txMatchPriceBands(input);
+  if (bands.budgetMin == null && bands.splurgeMax == null) return true;
+  const usd = comparableUsdPrice(parsePrice(product.price), String(product.currency || "USD"));
+  if (usd == null) return false;
+  if (bands.budgetMin != null && usd < bands.budgetMin) return false;
+  if (bands.splurgeMax != null && usd > bands.splurgeMax) return false;
   return true;
 }
+
+export function isTxMatchSplurge(product: Record<string, unknown>, input: FindBetterInput): boolean {
+  const bands = txMatchPriceBands(input);
+  if (bands.budgetMax == null) return false;
+  const usd = comparableUsdPrice(parsePrice(product.price), String(product.currency || "USD"));
+  return usd != null && usd > bands.budgetMax && (bands.splurgeMax == null || usd <= bands.splurgeMax);
+}
+
+const AFFILIATE_URL_RE =
+  /linksynergy|rakuten|awin1|impact\.com|shareasale|anrdoezrs|dpbolvw|jdoqocy|tkqlhce|pjtra|partnerize/i;
 
 /** Expected INTERTEXE commission — affiliate URLs earn; price is the $ proxy inside the band. */
 export function estimatedCommission(product: Record<string, unknown>): number {
@@ -547,8 +601,9 @@ function rankAlternatives(
   const sourceSilhouette =
     silhouetteFamily(input.silhouette) ||
     silhouetteFamily(`${input.title || ""} ${input.subcategory || ""} ${input.fit || ""}`);
-  const targetPrice =
-    input.price ??
+  const sourceUsd = comparableUsdPrice(input.price ?? null, input.currency);
+  const targetPriceUsd =
+    sourceUsd ??
     (input.matchBrief?.targetPriceRange
       ? (input.matchBrief.targetPriceRange.min + input.matchBrief.targetPriceRange.max) / 2
       : null);
@@ -567,6 +622,7 @@ function rankAlternatives(
     const productSilhouette = silhouetteFamily(`${p.name || ""} ${p.garment_type || ""}`);
     const sameSilhouette = Boolean(sourceSilhouette && productSilhouette === sourceSilhouette);
     const clashSilhouette = silhouettesConflict(sourceSilhouette, productSilhouette);
+    const inBudget = !isTxMatchSplurge(p, input);
     // Fabric of the saved piece leads. Do not let cheaper cotton outrank silk.
     if (sameFiber) score += 120;
     else if (preferredFiber) score -= 25;
@@ -591,6 +647,8 @@ function rankAlternatives(
     }
     if (clashSilhouette) score -= 90;
     if (compositionHasSyntheticLining(String(p.composition || ""))) score -= 22;
+    if (inBudget) score += 42;
+    else score -= 18;
 
     const userFibers = (input.preferredFibers || []).map((f) => extractFiberFromText(f)).filter(Boolean);
     if (userFibers.some((f) => productMatchesFiber(p, f))) score += 18;
@@ -608,8 +666,9 @@ function rankAlternatives(
     const price = parsePrice(p.price);
     const commission = estimatedCommission(p);
     score += Math.min(commission, 80);
-    if (targetPrice != null && price != null && targetPrice > 0) {
-      const diff = Math.abs(price - targetPrice) / targetPrice;
+    const productUsd = comparableUsdPrice(price, String(p.currency || "USD"));
+    if (targetPriceUsd != null && productUsd != null && targetPriceUsd > 0) {
+      const diff = Math.abs(productUsd - targetPriceUsd) / targetPriceUsd;
       if (diff <= 0.25) score += 36;
       else if (diff <= 0.45) score += 22;
       else if (diff <= 0.7) score += 8;
@@ -632,11 +691,12 @@ function rankAlternatives(
     for (const d of input.distinctiveDetails || []) {
       if (d && hay.includes(d.toLowerCase())) score += 12;
     }
-    return { p, score, sameColor, sameFiber, sameLook, productLook, commission, sameSilhouette, clashSilhouette };
+    return { p, score, sameColor, sameFiber, sameLook, productLook, commission, sameSilhouette, clashSilhouette, inBudget };
   });
 
   scored.sort(
     (a, b) =>
+      Number(b.inBudget) - Number(a.inBudget) ||
       Number(b.sameLook) - Number(a.sameLook) ||
       Number(b.sameSilhouette) - Number(a.sameSilhouette) ||
       Number(a.clashSilhouette) - Number(b.clashSilhouette) ||
@@ -647,17 +707,17 @@ function rankAlternatives(
       (Number(b.p.natural_fiber_percent) || 0) - (Number(a.p.natural_fiber_percent) || 0)
   );
 
-  // First 5: what the shopper is looking at (same garment + fabric + color).
-  // Inside that set, the highest-commission piece in their price range leads.
+  // In-budget first. At most two splurges after the shopper's price band.
   const used = new Set<string>();
   const lead: typeof scored = [];
-  const take = (pred: (row: (typeof scored)[number]) => boolean, n: number) => {
+  const take = (pred: (row: (typeof scored)[number]) => boolean, n: number, budgetOnly = false) => {
     const pool = scored
-      .filter((row) => !used.has(String(row.p.id)) && pred(row))
+      .filter((row) => !used.has(String(row.p.id)) && pred(row) && (!budgetOnly || row.inBudget))
       .sort((a, b) =>
-        sourceLook === "jeans"
+        Number(b.inBudget) - Number(a.inBudget) ||
+        (sourceLook === "jeans"
           ? b.score - a.score || b.commission - a.commission
-          : b.commission - a.commission || b.score - a.score
+          : b.commission - a.commission || b.score - a.score)
       );
     for (const row of pool) {
       if (lead.length >= n) break;
@@ -665,19 +725,22 @@ function rankAlternatives(
       lead.push(row);
     }
   };
-  take((s) => s.sameLook && s.sameFiber && s.sameColor && !s.clashSilhouette, 8);
-  take((s) => s.sameLook && s.sameFiber && !s.clashSilhouette, 10);
-  take((s) => s.sameLook && !s.clashSilhouette, 12);
+  take((s) => s.sameLook && s.sameFiber && s.sameColor && !s.clashSilhouette, 8, true);
+  take((s) => s.sameLook && s.sameFiber && !s.clashSilhouette, 10, true);
+  take((s) => s.sameLook && !s.clashSilhouette, 10, true);
   if (sourceLook !== "jeans") {
-    take((s) => s.sameFiber, 5);
+    take((s) => s.sameFiber, 5, true);
   } else {
-    take((s) => s.sameLook, 12);
+    take((s) => s.sameLook, 10, true);
   }
+  take((s) => s.sameLook && !s.clashSilhouette, 12);
+  take((s) => s.sameLook, 12);
 
   const rest = scored
     .filter((s) => !used.has(String(s.p.id)))
     .sort((a, b) => {
       const adj = (row: (typeof scored)[number]) => {
+        if (row.inBudget && row.sameLook) return 4;
         if (row.sameLook) return 2;
         if (sourceLook === "jeans" && row.productLook === "trousers") return 1;
         if (sourceLook === "jeans" && (row.productLook === "sweat" || row.productLook === "leggings")) {
@@ -685,13 +748,14 @@ function rankAlternatives(
         }
         return 0;
       };
-      return adj(b) - adj(a) || b.score - a.score || b.commission - a.commission;
+      return Number(b.inBudget) - Number(a.inBudget) || adj(b) - adj(a) || b.score - a.score || b.commission - a.commission;
     });
 
   const ordered = [...lead, ...rest];
 
   const seen = new Set<string>();
   const out: FindBetterAlternative[] = [];
+  let splurges = 0;
   for (const { p } of ordered) {
     const id = String(p.id);
     const brandKey = String(p.brand_name || "")
@@ -703,8 +767,11 @@ function rankAlternatives(
       .trim();
     const dedupeKey = `${brandKey}::${nameKey}`;
     if (seen.has(id) || (nameKey && seen.has(dedupeKey))) continue;
+    const splurge = isTxMatchSplurge(p, input);
+    if (splurge && splurges >= MAX_SPLURGE_MATCHES) continue;
     seen.add(id);
     if (nameKey) seen.add(dedupeKey);
+    if (splurge) splurges += 1;
     out.push(toAlternative(p, input, scannedNfp));
     if (out.length >= 12) break;
   }

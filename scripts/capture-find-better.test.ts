@@ -5,6 +5,7 @@ import {
   preferredFiberFromInput,
   productMatchesFiber,
   rankTxMatchAlternatives,
+  txMatchPriceBands,
 } from "../lib/capture-find-better.ts";
 import { buildTxMatchCopy, buildTxMatchLinks } from "../lib/tx-match-copy.ts";
 import { unpublishedMaterialCopy } from "../lib/unpublished-material.ts";
@@ -333,6 +334,140 @@ describe("TX Match fabric-first ranking", () => {
         `${jeanId} should outrank slim cotton trousers`
       );
     }
+  });
+
+  it("keeps matches in the shopper budget and allows at most two splurges", () => {
+    const source = { title: "Mid-waist wide-leg jeans", price: 59.95, currency: "EUR" };
+    const bands = txMatchPriceBands({ ...source, garmentType: "jeans", subcategory: "jeans" });
+    assert.ok(bands.budgetMax != null && bands.splurgeMax != null);
+    assert.ok(bands.budgetMax < 90);
+    assert.ok(bands.splurgeMax < 170);
+
+    const products = [
+      {
+        id: "budget-wide",
+        name: "Light Blue Mid Rise Wide Leg Jeans",
+        brand_name: "Weekday",
+        price: 68,
+        currency: "USD",
+        composition: "99% cotton; 1% elastane",
+        natural_fiber_percent: 99,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "light blue",
+        fabric_construction: "denim",
+      },
+      {
+        id: "budget-wide-2",
+        name: "Wide Leg Denim Jeans in Light Blue",
+        brand_name: "Mango",
+        price: 74,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "blue",
+        fabric_construction: "denim",
+      },
+      {
+        id: "budget-straight",
+        name: "Mid Rise Straight Jeans in Denim",
+        brand_name: "Uniqlo",
+        price: 62,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "blue",
+        fabric_construction: "denim",
+      },
+      {
+        id: "splurge-1",
+        name: "Super High Rise Wide Leg Denim Jeans in Light Blue",
+        brand_name: "Bayeas",
+        price: 138,
+        currency: "USD",
+        composition: "92% Cotton; 5% Polyester; 3% Elastane",
+        natural_fiber_percent: 92,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "light blue",
+        fabric_construction: "denim",
+      },
+      {
+        id: "splurge-2",
+        name: "Wide Leg Cotton Jeans",
+        brand_name: "Re/Done",
+        price: 148,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "blue",
+        fabric_construction: "denim",
+      },
+      {
+        id: "luxury-pant",
+        name: "Dede Pleated Cotton Slim Pants",
+        brand_name: "Max Mara",
+        price: 780,
+        currency: "USD",
+        composition: "100% Cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "pants",
+        color: "tan",
+      },
+      {
+        id: "expensive-jean",
+        name: "Ariel Mid Rise Wedgie Jeans in Luca",
+        brand_name: "Eb Denim",
+        price: 285,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "jeans",
+        color: "blue",
+        fabric_construction: "denim",
+      },
+      {
+        id: "sweat",
+        name: "Nash Sweatpants",
+        brand_name: "Beach Riot",
+        price: 138,
+        currency: "USD",
+        composition: "100% cotton",
+        natural_fiber_percent: 100,
+        category: "pants_trousers",
+        garment_type: "sweatpants",
+        color: "green",
+      },
+    ];
+    const ranked = rankTxMatchAlternatives(products, {
+      ...source,
+      garmentType: "jeans",
+      category: "pants",
+      subcategory: "jeans",
+      silhouette: "wide-leg",
+      color: "light blue",
+    });
+    const ids = ranked.map((row) => row.id);
+    assert.equal(ids.includes("luxury-pant"), false);
+    assert.equal(ids.includes("expensive-jean"), false);
+    const budgetIds = ["budget-wide", "budget-wide-2", "budget-straight"];
+    for (const id of budgetIds) {
+      assert.ok(ids.includes(id), `${id} should stay in the set`);
+    }
+    assert.ok(budgetIds.includes(String(ranked[0]?.id)));
+    const splurgeIds = ranked
+      .filter((row) => Number(row.price) > (bands.budgetMax || 0))
+      .map((row) => row.id);
+    assert.ok(splurgeIds.length <= 2);
+    assert.ok(!splurgeIds.includes("sweat"));
   });
 });
 
