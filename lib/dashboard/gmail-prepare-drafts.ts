@@ -15,6 +15,11 @@ export const DRAFT_TEMPLATES = {
     subjectNeedle: "i think you'd love the intertexe clothing",
     label: "Potential customers",
   },
+  brand: {
+    contactType: "brand" as const,
+    subjectNeedle: "founding material data pilot",
+    label: "Brands",
+  },
 } as const;
 
 export type DraftTemplateKey = keyof typeof DRAFT_TEMPLATES;
@@ -229,6 +234,7 @@ export type PrepareDraftsResult = {
   byType: {
     influencer: { created: number; skipped: number; templateSubject: string | null };
     customer: { created: number; skipped: number; templateSubject: string | null };
+    brand: { created: number; skipped: number; templateSubject: string | null };
   };
   samples: Array<{ type: string; email: string; firstName: string; subject: string }>;
   errors: string[];
@@ -258,7 +264,7 @@ type ContactRow = {
 async function pickContacts(
   supabase: SupabaseClient,
   workspaceId: string,
-  contactType: "influencer" | "customer",
+  contactType: "influencer" | "customer" | "brand",
   limit: number
 ): Promise<ContactRow[]> {
   let q = supabase
@@ -267,10 +273,15 @@ async function pickContacts(
       "id, email, first_name, full_name, name, contact_type, priority_score, next_action_type, outreach_status, last_contacted_at"
     )
     .eq("workspace_id", workspaceId)
-    .eq("contact_type", contactType)
     .not("email", "is", null)
     .order("priority_score", { ascending: false })
     .limit(Math.max(limit * 3, limit));
+
+  if (contactType === "brand") {
+    q = q.in("contact_type", ["brand", "business", "organization"]);
+  } else {
+    q = q.eq("contact_type", contactType);
+  }
 
   const { data, error } = await q;
   if (error) throw new Error(error.message);
@@ -321,6 +332,7 @@ export async function prepareOutreachDrafts(args: {
     byType: {
       influencer: { created: 0, skipped: 0, templateSubject: null },
       customer: { created: 0, skipped: 0, templateSubject: null },
+      brand: { created: 0, skipped: 0, templateSubject: null },
     },
     samples: [],
     errors: [],
@@ -369,13 +381,18 @@ export async function prepareOutreachDrafts(args: {
 
   for (const key of Object.keys(DRAFT_TEMPLATES) as DraftTemplateKey[]) {
     if (!templates[key]) {
+      const missing = `Could not find a Gmail draft whose subject contains “${DRAFT_TEMPLATES[key].subjectNeedle}”. Keep that draft in Drafts and try again.`;
+      if (key === "brand") {
+        result.errors.push(
+          "No brand template yet — keep a Gmail draft whose subject contains “founding material data pilot”. Nothing is sent automatically."
+        );
+        continue;
+      }
       result.ok = false;
-      result.errors.push(
-        `Could not find a Gmail draft whose subject contains “${DRAFT_TEMPLATES[key].subjectNeedle}”. Keep that draft in Drafts and try again.`
-      );
+      result.errors.push(missing);
     }
   }
-  if (!templates.influencer && !templates.customer) {
+  if (!templates.influencer && !templates.customer && !templates.brand) {
     return { ...result, ok: false, message: result.errors[0] };
   }
 

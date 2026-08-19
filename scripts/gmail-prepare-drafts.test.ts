@@ -20,6 +20,10 @@ test("subjectMatchesTemplate is case/punctuation tolerant", () => {
     subjectMatchesTemplate("I think you’d love the INTERTEXE clothing app", "i think you'd love the intertexe clothing"),
     true
   );
+  assert.equal(
+    subjectMatchesTemplate("Founding Material Data Pilot — {firstname}", "founding material data pilot"),
+    true
+  );
   assert.equal(subjectMatchesTemplate("Something else", "you might love what we built"), false);
 });
 

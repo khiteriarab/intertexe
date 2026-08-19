@@ -11,6 +11,7 @@ type PrepareResult = {
   byType?: {
     influencer?: { created: number; templateSubject: string | null };
     customer?: { created: number; templateSubject: string | null };
+    brand?: { created: number; templateSubject: string | null };
   };
   samples?: Array<{ type: string; email: string; firstName: string; subject: string }>;
   errors?: string[];
@@ -35,11 +36,11 @@ export function PrepareDraftsButton({ connected }: { connected: boolean }) {
 
   async function prepare() {
     const confirmed = window.confirm(
-        "Create Gmail drafts from your two templates?\n\n" +
+        "Create Gmail drafts from your templates?\n\n" +
         "• Influencers ← “you might love what we built…”\n" +
-        "• Customers ← “i think you'd love the intertexe clothing app…”\n\n" +
+        "• Customers ← “i think you'd love the intertexe clothing app…”\n" +
+        "• Brands ← “founding material data pilot…”\n\n" +
         "Up to 40 of each, from uncontacted hq_contacts.\n" +
-        "Brands and organizations are not included — those templates are not set up.\n" +
         "Nothing is sent — you review and press Send in Gmail."
     );
     if (!confirmed) return;
@@ -93,7 +94,7 @@ export function PrepareDraftsButton({ connected }: { connected: boolean }) {
             <>
               {" "}
               Influencers {result.byType.influencer?.created ?? 0} · Customers{" "}
-              {result.byType.customer?.created ?? 0}.
+              {result.byType.customer?.created ?? 0} · Brands {result.byType.brand?.created ?? 0}.
             </>
           ) : null}
         </p>
@@ -104,7 +105,7 @@ export function PrepareDraftsButton({ connected }: { connected: boolean }) {
         disabled={busy}
         className="text-[11px] tracking-widest uppercase underline underline-offset-4 disabled:opacity-40"
       >
-        {busy ? "Preparing drafts…" : "Prepare influencer + customer drafts"}
+        {busy ? "Preparing drafts…" : "Prepare Gmail drafts"}
       </button>
     </div>
   );

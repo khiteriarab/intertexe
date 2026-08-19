@@ -27,6 +27,14 @@ import { PrepareDraftsButton } from "./PrepareDraftsButton";
 import { AppStoreSyncButton } from "./AppStoreSyncButton";
 import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
+import { fetchPlanPulse } from "../../../lib/dashboard/revenue-command-center";
+import {
+  PLAN_COLORS,
+  formatPlanDate,
+  formatPlanMoney,
+  paceColor,
+  paceLabel,
+} from "../../../lib/dashboard/revenue-plan";
 import { HqCard, HqPageHeader } from "../components/HqUi";
 
 export const metadata = { title: "This week" };
@@ -82,7 +90,10 @@ function Funnel({
 
 export default async function HqOverviewPage() {
   const session = await requireHqSession();
+  // The $50K plan is founder-only; other HQ roles never see it on this page.
+  const isFounder = session.roles.includes("founder");
   const [
+    planPulse,
     founder,
     revenue,
     google,
@@ -97,6 +108,7 @@ export default async function HqOverviewPage() {
     freshness,
     appDownloadClicks,
   ] = await Promise.all([
+    isFounder ? fetchPlanPulse(session.workspaceId) : Promise.resolve(null),
     fetchFounderToday(session.workspaceId),
     fetchRevenueSnapshot(session.workspaceId),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
@@ -209,6 +221,61 @@ export default async function HqOverviewPage() {
           </p>
         </HqCard>
       </div>
+
+      {planPulse ? (
+        <HqCard className="mb-6" title="$50K plan">
+          <div className="flex flex-col md:flex-row md:items-start gap-5">
+            <div className="md:flex-1">
+              <p className="text-2xl font-medium tabular-nums">
+                {formatPlanMoney(planPulse.booked)}
+                <span className="text-sm text-black/40 font-normal">
+                  {" "}
+                  / {formatPlanMoney(planPulse.nextMilestoneTarget)}
+                </span>
+              </p>
+              <p className="text-[11px] text-black/45 mt-1">
+                Booked toward {planPulse.nextMilestoneName || "the next milestone"}
+                {planPulse.nextMilestoneDate ? ` · ${formatPlanDate(planPulse.nextMilestoneDate)}` : ""} · combined
+                company and personal plan
+              </p>
+              <div className="h-2 rounded-full bg-black/5 overflow-hidden mt-3">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      planPulse.nextMilestoneTarget > 0
+                        ? (planPulse.booked / planPulse.nextMilestoneTarget) * 100
+                        : 0
+                    )}%`,
+                    backgroundColor: PLAN_COLORS.mauve,
+                  }}
+                />
+              </div>
+            </div>
+            <div className="md:w-72 text-[11px] leading-relaxed">
+              <p style={{ color: paceColor(planPulse.pace) }}>
+                {paceLabel(planPulse.pace)} · plan expects {formatPlanMoney(planPulse.targetToday)} today
+              </p>
+              <p className="text-black/45 mt-1">
+                {formatPlanMoney(planPulse.gap)} still required
+                {planPulse.weakestStage ? ` · ${planPulse.weakestStage} is furthest behind` : ""}
+              </p>
+              <p className="text-black/45 mt-1">
+                {planPulse.openActions > 0
+                  ? `${planPulse.openActions} revenue action${planPulse.openActions === 1 ? "" : "s"} queued`
+                  : planPulse.setupAction || "No revenue actions queued"}
+              </p>
+              <Link
+                href="/dashboard/command-center"
+                className="inline-block mt-2 text-[11px] tracking-widest uppercase underline decoration-black/20 hover:decoration-black"
+              >
+                Open command center
+              </Link>
+            </div>
+          </div>
+        </HqCard>
+      ) : null}
 
       <HqCard className="mb-6" title="Company funnel">
         <Funnel
@@ -379,8 +446,10 @@ export default async function HqOverviewPage() {
         </div>
         <div className="mt-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <p className="text-[11px] text-black/40 leading-relaxed max-w-xl">
-            Gmail templates exist for influencers and customers only. Brands and organizations
-            stay on the list until those drafts exist. HQ never auto-sends relationship email.
+            Gmail templates exist for influencers, customers and brands. Keep a draft whose subject
+            contains “founding material data pilot” for brand intros. HQ never auto-sends relationship
+            email — you review and press Send in Gmail. A send or reply to a brand opens a $5,000 Pilot
+            opportunity on the command center; booked revenue still waits until you mark it won.
           </p>
           <div className="flex flex-col items-end gap-2 shrink-0">
             <PrepareDraftsButton connected={founder.gmailConnected} />
