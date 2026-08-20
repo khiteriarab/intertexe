@@ -84,10 +84,23 @@ describe("Platform material-intelligence page", () => {
   it("recomposes the page for small screens without dropping the desktop spread", () => {
     assert.match(nav, /\{open \? "Close" : "Menu"\}/);
     assert.match(nav, /Snapshot/);
+    assert.match(home, /WorkspaceHeroPreview/);
     assert.match(home, /WorkspaceGallery/);
     assert.match(home, /ComparisonView/);
     assert.match(home, /Understand → Compare → Act/);
     assert.match(comparison, /Compare INTERTEXE with/);
     assert.match(comparison, /hidden lg:block/);
+  });
+
+  it("wires named product-graphic slots without publishing unfinished screenshots", () => {
+    const graphics = fs.readFileSync(path.join(process.cwd(), "lib/platform-graphics.ts"), "utf8");
+    const preview = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceHeroPreview.tsx"), "utf8");
+    assert.match(graphics, /hero-workspace\.png/);
+    assert.match(graphics, /demo-source\.png/);
+    assert.match(graphics, /ready: false/);
+    assert.match(preview, /Illustrative workspace/);
+    assert.match(preview, /Sample workspace/);
+    assert.doesNotMatch(preview, /The Kooples/);
+    assert.doesNotMatch(preview, /Official DPP Score/);
   });
 });

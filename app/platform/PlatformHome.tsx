@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ComparisonView, type ComparisonRow } from "./ComparisonView";
+import { PlatformGraphic } from "./PlatformGraphic";
 import { WorkspaceGallery } from "./WorkspaceGallery";
+import { WorkspaceHeroPreview } from "./WorkspaceHeroPreview";
 import {
   Body,
   Eyebrow,
@@ -12,6 +14,7 @@ import {
   SecondaryLink,
   SERIF,
 } from "./platform-ui";
+import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
 
 const EU_TEXTILE =
   "https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en";
@@ -266,6 +269,8 @@ export function PlatformHome() {
           </PrimaryLink>
           <SecondaryLink href="/platform/demo">See the live demo</SecondaryLink>
         </div>
+        <PlatformGraphic slot="heroWorkspace" className="mt-12 sm:mt-16" />
+        {PLATFORM_GRAPHICS.heroWorkspace.ready ? null : <WorkspaceHeroPreview />}
       </section>
 
       <section className="border-y border-[#e8e3da] py-10 sm:py-16">
@@ -286,6 +291,8 @@ export function PlatformHome() {
         <Body className="max-w-2xl mb-10">
           Say a fashion company gives us 10,000 products. The information might look like this.
         </Body>
+        <PlatformGraphic slot="understandNormalize" className="mb-10" />
+        {PLATFORM_GRAPHICS.understandNormalize.ready ? null : (
         <div className="grid md:grid-cols-2 gap-6 mb-12">
           <div className="border border-[#e8e3da] p-6 bg-white">
             <p className="text-[10px] tracking-[0.16em] uppercase text-[#8a847c] mb-4">Submitted</p>
@@ -308,6 +315,7 @@ export function PlatformHome() {
             </p>
           </div>
         </div>
+        )}
         <ol className="grid md:grid-cols-3 gap-x-10 gap-y-10 mb-12">
           {UNDERSTAND_STEPS.map((step) => (
             <li key={step.n} className="border-t border-[#e8e3da] pt-5">
@@ -334,6 +342,7 @@ export function PlatformHome() {
             </div>
           ))}
         </div>
+        <PlatformGraphic slot="understandIssues" className="mb-8" />
         <p className="text-xs text-[#8a847c] mb-8">
           Illustrative example. Counts are not a live customer catalog. Teams click from each issue into the product
           and fix it.
@@ -471,6 +480,7 @@ export function PlatformHome() {
           can ask: are competitors using more linen than us? How synthetic is our assortment? Where is the catalog
           weaker?
         </Body>
+        <PlatformGraphic slot="compareBenchmark" className="mb-8" />
         <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">
           Illustrative example · Filters: market segment, category, geography, price band, material, peer group
         </p>
@@ -517,6 +527,7 @@ export function PlatformHome() {
             record and product identity, and hosts the QR experience — or serves it through an API. It is not legal
             advice or official certification.
           </p>
+          <PlatformGraphic slot="actPassport" className="mb-10" />
           <div className="flex flex-col items-center md:grid md:grid-cols-3 md:items-start gap-8 md:gap-6 mb-12">
             <div className="w-full order-1">
               <Frame label="Brand workspace">

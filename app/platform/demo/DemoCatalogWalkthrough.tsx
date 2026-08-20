@@ -12,6 +12,7 @@ import {
   type DemoWorkflowId,
 } from "../../../lib/material-intelligence/demo-catalog";
 import { Frame, SERIF } from "../platform-ui";
+import { PlatformGraphic } from "../PlatformGraphic";
 
 const PEER: Record<string, string> = {
   catalogNatural: "48%",
@@ -70,6 +71,13 @@ export function DemoCatalogWalkthrough() {
           );
         })}
       </div>
+
+      {step === "source" ? <PlatformGraphic slot="demoSource" className="mb-6" /> : null}
+      {step === "normalized" ? <PlatformGraphic slot="demoNormalized" className="mb-6" /> : null}
+      {step === "issues" ? <PlatformGraphic slot="understandIssues" className="mb-6" /> : null}
+      {step === "intelligence" ? <PlatformGraphic slot="demoIntelligence" className="mb-6" /> : null}
+      {step === "benchmark" ? <PlatformGraphic slot="compareBenchmark" className="mb-6" /> : null}
+      {step === "passports" ? <PlatformGraphic slot="actPassport" className="mb-6" /> : null}
 
       {step === "source" || step === "normalized" ? (
         <div className="grid lg:grid-cols-[1fr_0.9fr] gap-6">
