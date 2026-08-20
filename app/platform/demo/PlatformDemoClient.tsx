@@ -7,6 +7,7 @@ import {
 } from "../../../lib/material-intelligence/demo-records";
 import type { MaterialApiSuccess, MaterialLookupData } from "../../../lib/material-intelligence/types";
 import { trackPlatform } from "../../../lib/platform-analytics";
+import { DemoCatalogWalkthrough } from "./DemoCatalogWalkthrough";
 
 const FIBER_TONE: Record<string, string> = {
   silk: "#c4a574",
@@ -91,22 +92,21 @@ export function PlatformDemoClient() {
   const coverage = mapped + missing ? Math.round((mapped / (mapped + missing)) * 100) : 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-24">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:pt-20 md:pb-24">
+      <DemoCatalogWalkthrough />
+
       <p className="text-[10px] sm:text-[11px] tracking-[0.12em] sm:tracking-[0.25em] text-[#9c7b8b] mb-3 break-words">
         INTERTEXE MATERIAL INTELLIGENCE API
       </p>
-      <p className="text-[10px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.2em] uppercase text-[#8a847c] mb-5 sm:mb-6">
-        The Material Standard
-      </p>
-      <h1
-        className="text-[2rem] sm:text-4xl md:text-5xl font-light mb-5 sm:mb-6 leading-[1.15]"
+      <h2
+        className="text-[1.75rem] sm:text-3xl font-light mb-5 sm:mb-6 leading-[1.15]"
         style={{ fontFamily: "Georgia, serif" }}
       >
-        See what one product record can become.
-      </h1>
+        Look up a sample identifier.
+      </h2>
       <p className="text-base sm:text-lg text-[#5c5854] font-light leading-relaxed max-w-2xl mb-8 sm:mb-12">
-        Enter a sample GTIN to see normalized fibre composition, evidence status and an emerging DPP-readiness
-        map in one structured response.
+        The same Material Intelligence output is available as an API. Enter a sample GTIN to see normalized fibre
+        composition, evidence status and a DPP-readiness map in one structured response.
       </p>
 
       <form

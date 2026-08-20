@@ -15,7 +15,7 @@ export function PlatformChrome({
       {children}
       <footer className="border-t border-[#e8e3da] px-4 sm:px-6 md:px-8 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-4">
-          <p className="text-xs text-[#8a847c]">INTERTEXE · Digital Product Passports for fashion</p>
+          <p className="text-xs text-[#8a847c]">INTERTEXE · Material intelligence for fashion</p>
           <div className="flex flex-wrap gap-x-5 gap-y-3">
             <Link href="/" className="text-xs text-[#8a847c] hover:text-black">
               Consumer

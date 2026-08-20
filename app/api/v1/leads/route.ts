@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   const salesTo = process.env.PLATFORM_SALES_EMAIL || EMAIL_REPLY_TO;
   const intentLabel =
     intent === "founding_pilot"
-      ? "Founding DPP Pilot"
+      ? "Founding Pilot"
       : intent === "api_access"
         ? "Platform access"
         : "10-product snapshot";

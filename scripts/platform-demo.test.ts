@@ -9,6 +9,12 @@ import {
   DEMO_ILLUSTRATIVE_NOTICE,
   lookupDemoRecord,
 } from "../lib/material-intelligence/demo-records.ts";
+import {
+  DEMO_CATALOG,
+  DEMO_WORKFLOW,
+  demoCatalogStats,
+  demoIssueSummary,
+} from "../lib/material-intelligence/demo-catalog.ts";
 import { parseGtin, isValidGtinCheckDigit, appendGtinCheckDigit } from "../lib/gtin.ts";
 import { parseCompositionText } from "../lib/material-intelligence/composition.ts";
 import { evidenceStatusFromSource } from "../lib/material-intelligence/evidence.ts";
@@ -195,5 +201,41 @@ describe("Public demo and docs source safety", () => {
     assert.doesNotMatch(docs, /0198765432104/);
     assert.match(docs, /unknown_legacy/);
     assert.match(docs, /Authorization: Bearer/);
+  });
+});
+
+describe("Permanent 10-product demonstration catalog", () => {
+  it("walks ten INTERTEXE sample products through the full workflow", () => {
+    assert.equal(DEMO_CATALOG.length, 10);
+    assert.equal(
+      DEMO_WORKFLOW.map((step) => step.id).join("→"),
+      "source→normalized→issues→intelligence→benchmark→passports"
+    );
+    assert.ok(DEMO_CATALOG.some((product) => product.name === "Dress 8721"));
+    assert.ok(DEMO_CATALOG.some((product) => product.issues.includes("conflict")));
+    assert.ok(DEMO_CATALOG.some((product) => product.issues.includes("invalid_total")));
+    const stats = demoCatalogStats();
+    assert.equal(stats.products, 10);
+    assert.ok(stats.issueCount > 0);
+    assert.ok(stats.readyCount > 0);
+    assert.ok(demoIssueSummary().length > 0);
+    const conflict = DEMO_CATALOG.find((product) => product.id === "dress-8721");
+    assert.equal(conflict?.naturalFiberShare, null);
+    assert.match(conflict?.normalized.shell || "", /Conflict/);
+  });
+
+  it("keeps the catalog walkthrough on /platform/demo without inventing missing fields", () => {
+    const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
+    const walkthrough = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/demo/DemoCatalogWalkthrough.tsx"),
+      "utf8"
+    );
+    assert.match(demo, /DemoCatalogWalkthrough/);
+    assert.match(walkthrough, /messy source data/i);
+    assert.match(walkthrough, /does not overwrite the original string/i);
+    assert.match(walkthrough, /Coming \/ developing/);
+    assert.match(walkthrough, /INTERTEXE consumer signal/i);
+    assert.doesNotMatch(walkthrough, /EU Certified/);
+    assert.doesNotMatch(walkthrough, /Guaranteed Compliant/);
   });
 });

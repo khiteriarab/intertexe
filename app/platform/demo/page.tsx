@@ -3,9 +3,9 @@ import { PlatformChrome } from "../PlatformChrome";
 import { PlatformDemoClient } from "./PlatformDemoClient";
 
 export const metadata: Metadata = {
-  title: "Material Intelligence API demo",
+  title: "INTERTEXE 10-product demonstration",
   description:
-    "Send a GTIN, EAN or SKU. Receive normalized fibre composition, evidence provenance and a DPP-readiness map. Demonstration data only.",
+    "See INTERTEXE turn a 10-product catalog from messy source data into normalized material intelligence, issues, benchmarking, DPP readiness and passports.",
   alternates: { canonical: "https://www.intertexe.com/platform/demo" },
 };
 

@@ -4,9 +4,9 @@ import { FormEvent, useState } from "react";
 import { trackPlatform } from "../../lib/platform-analytics";
 
 const INTENTS = [
-  { value: "snapshot", label: "10-product snapshot" },
-  { value: "founding_pilot", label: "Founding DPP Pilot ($5,000)" },
-  { value: "api_access", label: "Discuss platform access" },
+  { value: "snapshot", label: "Free 10-product Material Snapshot" },
+  { value: "founding_pilot", label: "Founding Pilot ($5,000)" },
+  { value: "api_access", label: "Ongoing platform / API access" },
 ] as const;
 
 export function PlatformLeadForm({

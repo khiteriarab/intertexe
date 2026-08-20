@@ -16,51 +16,54 @@ import {
 const EU_TEXTILE =
   "https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en";
 export const COMPARISON_REVIEWED = "19 August 2026";
-const FLOW = ["Prepare", "Generate", "Publish", "Maintain", "Understand"] as const;
+const FLOW = ["Understand", "Compare", "Act"] as const;
+const VALUE_CHAIN = "PRODUCT DATA → MATERIAL INTELLIGENCE → BUSINESS INSIGHTS → DIGITAL PRODUCT PASSPORT";
 
-const STEPS = [
+const UNDERSTAND_STEPS = [
   {
     n: "01",
-    title: "Import",
-    lead: "Start with the data you already have.",
-    copy: "CSV, Excel, JSON, product feeds or connected systems. Brands do not need to clean the catalog before bringing it to INTERTEXE.",
+    title: "Ingest",
+    lead: "Start with the files you already have.",
+    copy: "Excel, CSV, PLM/PIM exports, supplier sheets. Brands do not need a clean catalog before INTERTEXE can work.",
   },
   {
     n: "02",
-    title: "Understand",
-    lead: "Material Intelligence structures the catalog.",
-    copy: "Normalize materials, compositions, components, categories, terminology and identifiers. Original values and source provenance stay with the record.",
+    title: "Structure",
+    lead: "Normalize without overwriting the original.",
+    copy: "CO becomes cotton. PA and nylon become the same polyamide. Shell and lining stay separate components. Two sources that disagree stay visible. Original values and provenance remain on the record.",
   },
   {
     n: "03",
-    title: "Resolve",
-    lead: "Know exactly what needs attention.",
-    copy: "Missing information, conflicts, invalid percentages, evidence gaps, identifier problems and discrepancies between sources become an Issues Inbox.",
+    title: "Diagnose",
+    lead: "Know exactly what is wrong or missing.",
+    copy: "Conflicts, invalid percentage totals, missing identifiers, incomplete supplier data and evidence gaps become an Issues Inbox — not another spreadsheet audit.",
+  },
+];
+
+const RETAIN = [
+  {
+    title: "Manage",
+    copy: "Your material and product information stays organized and continuously updated in one workspace.",
   },
   {
-    n: "04",
-    title: "Generate",
-    lead: "Turn approved records into Digital Product Passports.",
-    copy: "Create the structured passport record and a persistent product identity when the underlying data is ready.",
+    title: "Improve",
+    copy: "INTERTEXE keeps identifying gaps, conflicts and missing information as the catalog changes.",
   },
   {
-    n: "05",
+    title: "Compare",
+    copy: "Understand your material strategy relative to peers and, over time, observed consumer demand.",
+  },
+  {
     title: "Publish",
-    lead: "Connect every product to its passport.",
-    copy: "Generate QR and data-carrier assets. Host with INTERTEXE, embed in a brand experience, or serve through INTERTEXE APIs. Consumers do not need the INTERTEXE app.",
-  },
-  {
-    n: "06",
-    title: "Maintain",
-    lead: "Keep the catalog current as requirements evolve.",
-    copy: "When a tracked requirement changes, INTERTEXE evaluates the catalog: unaffected, already complete, needs action, or missing information.",
+    copy: "Generate, host and update Digital Product Passports from the same underlying data — when you are ready.",
   },
 ];
 
 const COMPARISON: ComparisonRow[] = [
   {
     capability: "Connected stack",
-    intertexe: "Material Intelligence → DPP operations → Market / consumer intelligence",
+    intertexe:
+      "Material Intelligence + Competitive Benchmarking + Data Quality + Supplier Data + Regulatory Intelligence + DPP creation/hosting",
     fabacus: "Authenticated catalogues powering DPP implementations",
     retraced: "Traceability-first DPP solution",
     trustrace: "Traceability-first end-to-end DPP offering",
@@ -69,7 +72,7 @@ const COMPARISON: ComparisonRow[] = [
   },
   {
     capability: "Digital Product Passport infrastructure",
-    intertexe: "Building through the Founding DPP Pilot and SaaS",
+    intertexe: "Built on structured catalog data through the Founding Pilot and platform",
     fabacus: "Xelacore powers DPP implementations",
     retraced: "DPP solution on traceability data",
     trustrace: "End-to-end DPP offering",
@@ -105,7 +108,7 @@ const COMPARISON: ComparisonRow[] = [
   },
   {
     capability: "Persistent product identity / QR",
-    intertexe: "Pilot and SaaS build",
+    intertexe: "Pilot and platform",
     fabacus: "QR / data carriers",
     retraced: "QR and consumer widgets",
     trustrace: "Persistent IDs and QR",
@@ -152,8 +155,12 @@ const COMPARISON: ComparisonRow[] = [
 
 const FAQ: { q: string; a: ReactNode }[] = [
   {
+    q: "Is INTERTEXE a Digital Product Passport company?",
+    a: "DPP regulation is why many brands start. INTERTEXE is a material-intelligence system: it structures catalog data, shows what is wrong or missing, benchmarks material strategy, and then publishes passports from that same record. Passport generation is an outcome, not the whole product.",
+  },
+  {
     q: "Does INTERTEXE generate the Digital Product Passport?",
-    a: "INTERTEXE is being built to structure product information, manage review, generate and publish passport records, create product identities and QR assets, and maintain them in one platform. Material Intelligence is live in the public demo. Passport generation, identity/QR and publication are delivered through the Founding DPP Pilot and the SaaS now being built.",
+    a: "Yes — once the underlying record is structured and the required fields are present. INTERTEXE determines what is still missing for the applicable passport requirements, the brand or supplier supplies those fields, and INTERTEXE generates the passport record, persistent product identity and QR. Material Intelligence is live in the public demo. Passport generation, identity/QR and publication are delivered through the Founding Pilot and the platform now being built.",
   },
   {
     q: "Do consumers need the INTERTEXE app?",
@@ -161,7 +168,7 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
   {
     q: "What data do we need to start?",
-    a: "Existing data. CSV, Excel, JSON or a supported export. INTERTEXE identifies what can be used and what remains missing.",
+    a: "Existing data. CSV, Excel, JSON, a PLM/PIM export or a supplier file. INTERTEXE identifies what can be used and what remains missing.",
   },
   {
     q: "What happens if our data is incomplete?",
@@ -193,25 +200,49 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
   {
     q: "What happens as DPP requirements evolve?",
-    a: "A regulatory monitor evaluates tracked requirement changes against the catalog and shows preparation status: unaffected, already complete, missing data, or review needed. That is operational software, not legal advice.",
+    a: "A regulatory monitor evaluates tracked requirement changes against the catalog and shows preparation status: unaffected, already complete, missing data, or review needed. Brands do not start over. That is operational software, not legal advice.",
   },
 ];
+
+const POSITION_ROWS = [
+  ["Natural fiber share", "64%", "48%"],
+  ["Synthetic share", "36%", "52%"],
+  ["Silk assortment", "14%", "9%"],
+  ["Complete material data", "87%", "73%"],
+  ["Evidence coverage", "71%", "58%"],
+  ["Passport ready", "62%", "41%"],
+] as const;
+
+const CONSUMER_SIGNAL = [
+  ["Silk demand", "↑ 18%"],
+  ["Linen demand", "↑ 11%"],
+  ["Polyester engagement", "↓ 7%"],
+] as const;
+
+const AUDIT = [
+  ["8,420", "products analyzed"],
+  ["1,271", "missing required fields"],
+  ["384", "conflicting compositions"],
+  ["217", "invalid percentage totals"],
+  ["94", "missing identifiers"],
+  ["736", "require supplier information"],
+] as const;
 
 export function PlatformHome() {
   return (
     <div>
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-20 md:pt-28 pb-10 sm:pb-16">
-        <Eyebrow>The Digital Product Passport platform built for fashion</Eyebrow>
+        <Eyebrow>Material intelligence for fashion</Eyebrow>
         <h1
           className="text-[2.15rem] sm:text-5xl md:text-[3.4rem] font-light leading-[1.12] max-w-4xl mb-6"
           style={SERIF}
         >
-          Digital Product Passports, from product data to publication.
+          Turn messy product and material data into usable material intelligence.
         </h1>
         <Body className="max-w-2xl mb-6 sm:mb-4">
-          INTERTEXE transforms fragmented fashion product data into structured material intelligence, identifies
-          what&apos;s missing, generates Digital Product Passports and product identities, and helps brands keep
-          their catalog current as requirements evolve.
+          A brand gives INTERTEXE the product information it already has — Excel, CSV, PLM/PIM exports, supplier
+          files. INTERTEXE returns one workspace to understand, improve, compare and use that data. When you are
+          ready, the same records become Digital Product Passports.
         </Body>
         <ol className="sm:hidden mb-8 space-y-2">
           {FLOW.map((step, index) => (
@@ -223,42 +254,62 @@ export function PlatformHome() {
             </li>
           ))}
         </ol>
-        <p className="hidden sm:block text-[13px] tracking-[0.12em] uppercase text-[#8a847c] mb-10">
-          Prepare → Generate → Publish → Maintain → Understand
+        <p className="hidden sm:block text-[13px] tracking-[0.12em] uppercase text-[#8a847c] mb-4">
+          Understand → Compare → Act
+        </p>
+        <p className="text-[11px] tracking-[0.08em] sm:tracking-[0.1em] uppercase text-[#8a847c] mb-10 leading-relaxed">
+          {VALUE_CHAIN}
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
-          <PrimaryLink href="/platform/demo">See the live demo</PrimaryLink>
-          <SecondaryLink href="/platform/request?intent=snapshot&cta=hero">
-            Request a 10-product snapshot
-          </SecondaryLink>
+          <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">
+            See INTERTEXE with your own products
+          </PrimaryLink>
+          <SecondaryLink href="/platform/demo">See the live demo</SecondaryLink>
         </div>
       </section>
 
       <section className="border-y border-[#e8e3da] py-10 sm:py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
-          <Heading className="mb-4">Product passports need a system, not a one-off file.</Heading>
+          <Heading className="mb-4">Not another DPP generator with nicer branding.</Heading>
           <Body>
-            Textile apparel is a priority product group under the EU Ecodesign for Sustainable Products Regulation.
-            INTERTEXE is the operating system for preparing, generating, publishing and maintaining Digital Product
-            Passports — starting from the product data brands already have. It is not legal advice or official
-            certification.
+            Regulation gets a brand in the door: product data has to be organized. INTERTEXE is the living material
+            intelligence system that remains useful after the first passports are published — because merchandising,
+            sustainability and product teams still need to know what is in the catalog, what is wrong, and how the
+            material strategy compares with the market.
           </Body>
-          <p className="mt-5 text-sm">
-            <a href={EU_TEXTILE} className="underline underline-offset-4" target="_blank" rel="noreferrer">
-              EU textile and apparel DPP
-            </a>
-          </p>
         </div>
       </section>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>One system, beginning to end</Eyebrow>
-        <Heading className="mb-3 max-w-3xl">Import. Understand. Resolve. Generate. Publish. Maintain.</Heading>
-        <Body className="max-w-2xl mb-12">
-          Prepare now. Publish when you&apos;re ready. Maintain everything in one system.
+        <Eyebrow>Understand</Eyebrow>
+        <Heading className="mb-3 max-w-3xl">What happens when a brand uploads its catalog.</Heading>
+        <Body className="max-w-2xl mb-10">
+          Say a fashion company gives us 10,000 products. The information might look like this.
         </Body>
-        <ol className="grid md:grid-cols-2 gap-x-12 gap-y-10">
-          {STEPS.map((step) => (
+        <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="border border-[#e8e3da] p-6 bg-white">
+            <p className="text-[10px] tracking-[0.16em] uppercase text-[#8a847c] mb-4">Submitted</p>
+            <p className="text-sm mb-1">Dress 8721</p>
+            <p className="font-mono text-[13px] text-[#161513] mb-2">Main: 70 CO / 30 PA</p>
+            <p className="font-mono text-[13px] text-[#161513] mb-2">Lining: viscose</p>
+            <p className="text-sm text-[#5c5854] mb-2">Supplier file: 65 cotton / 35 nylon</p>
+            <p className="text-sm text-[#5c5854]">Country of origin: blank · Certification: another spreadsheet</p>
+          </div>
+          <div className="border border-[#e8e3da] p-6 bg-[#f7f5f1]">
+            <p className="text-[10px] tracking-[0.16em] uppercase text-[#1d4734] mb-4">INTERTEXE</p>
+            <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Shell</p>
+            <p className="text-sm mb-3">Conflict · 70% Cotton / 30% Polyamide vs 65% Cotton / 35% Nylon</p>
+            <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Lining</p>
+            <p className="text-sm mb-3">100% Viscose</p>
+            <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Country of origin</p>
+            <p className="text-sm mb-4">Missing</p>
+            <p className="text-xs text-[#8a847c]">
+              Original source strings retained · Nylon normalized to polyamide · Status: Review required
+            </p>
+          </div>
+        </div>
+        <ol className="grid md:grid-cols-3 gap-x-10 gap-y-10 mb-12">
+          {UNDERSTAND_STEPS.map((step) => (
             <li key={step.n} className="border-t border-[#e8e3da] pt-5">
               <p className="text-[11px] tracking-[0.18em] uppercase text-[#1d4734] mb-2">
                 {step.n} — {step.title}
@@ -270,318 +321,276 @@ export function PlatformHome() {
             </li>
           ))}
         </ol>
-      </section>
-
-      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>Material Intelligence</Eyebrow>
-          <Heading className="mb-4 max-w-3xl">DPP infrastructure starts with better product data.</Heading>
-          <Body className="max-w-2xl mb-8">
-            A passport is only as useful as the information underneath it. INTERTEXE preserves raw inputs, extracts
-            composition, separates components, standardizes terminology, detects contradictions, validates totals,
-            keeps provenance, surfaces uncertainty, and sends low-confidence results to review.
-          </Body>
-          <p className="text-sm text-[#161513] mb-10 max-w-2xl">
-            Missing information remains missing. INTERTEXE does not fabricate product data.
-          </p>
-          <div className="grid md:grid-cols-2 gap-6 mb-10">
-            <div className="border border-[#e8e3da] p-6 bg-[#f7f5f1]">
-              <p className="text-[10px] tracking-[0.16em] uppercase text-[#8a847c] mb-4">Submitted</p>
-              <p className="text-sm mb-1">Silk Evening Dress</p>
-              <p className="font-mono text-[13px] text-[#161513] mb-3">92 SE 8 EA / LINING 100 VI</p>
-              <p className="text-sm text-[#5c5854]">Supplier: Portugal</p>
-            </div>
-            <div className="border border-[#e8e3da] p-6 bg-white">
-              <p className="text-[10px] tracking-[0.16em] uppercase text-[#1d4734] mb-4">INTERTEXE</p>
-              <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Shell</p>
-              <p className="text-sm mb-3">92% Silk · 8% Elastane</p>
-              <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Lining</p>
-              <p className="text-sm mb-3">100% Viscose</p>
-              <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Manufacturing country</p>
-              <p className="text-sm mb-4">Portugal</p>
-              <p className="text-xs text-[#8a847c]">Source: Supplier file · Status: Normalized · Confidence: High</p>
-            </div>
-          </div>
-          <PrimaryLink href="/platform/demo">See INTERTEXE analyze a real catalog</PrimaryLink>
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Workspace</Eyebrow>
-        <Heading className="mb-4">One workspace for your DPP program</Heading>
-        <Body className="max-w-2xl mb-8 sm:mb-10">
-          Material Intelligence is live in the public demo. Overview, Issues, Passport Studio and Regulatory Monitor
-          are the workspace the Founding DPP Pilot delivers into, and the SaaS now being built. Previews below are
-          faithful to that product — not consulting slides.
-        </Body>
-        <WorkspaceGallery
-          frames={[
-            {
-              id: "overview",
-              label: "Overview",
-              caption: "Illustrative example. Counts are not a live customer catalog.",
-              children: (
-                <>
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    {[
-                      ["12,430", "Products"],
-                      ["9,814", "Passport ready"],
-                      ["8,762", "Published"],
-                      ["673", "Require attention"],
-                    ].map(([n, l]) => (
-                      <div key={l}>
-                        <p className="text-2xl font-light tabular-nums" style={SERIF}>
-                          {n}
-                        </p>
-                        <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mt-1">{l}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="border-t border-[#eeeae4] pt-4">
-                    <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Needs your attention</p>
-                    <p className="text-sm">Composition conflict · 8 products</p>
-                    <p className="text-sm">Evidence required · 11 products</p>
-                  </div>
-                </>
-              ),
-            },
-            {
-              id: "intelligence",
-              label: "Material Intelligence",
-              caption: "Normalization preserves the original source string.",
-              children: (
-                <>
-                  <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Original</p>
-                  <p className="font-mono text-[13px] mb-4">MAIN 92 WO 8 PA / LIN 100 VI</p>
-                  <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">INTERTEXE</p>
-                  <p className="text-sm mb-1">Shell · 92% Wool · 8% Polyamide</p>
-                  <p className="text-sm mb-4">Lining · 100% Viscose</p>
-                  <p className="text-xs text-[#8a847c]">Source retained · Normalized · Human review: not required</p>
-                </>
-              ),
-            },
-            {
-              id: "issues",
-              label: "Issues",
-              children: (
-                <>
-                  <p className="text-sm mb-1">Composition conflict</p>
-                  <p className="text-xs text-[#8a847c] mb-3">Review required</p>
-                  <p className="text-sm">PLM: 100% Cotton</p>
-                  <p className="text-sm mb-4">Supplier declaration: 97% Cotton / 3% Elastane</p>
-                  <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Open issue</span>
-                </>
-              ),
-            },
-            {
-              id: "studio",
-              label: "Passport Studio",
-              children: (
-                <>
-                  <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
-                  <p className="text-sm mb-4" style={SERIF}>
-                    Silk Evening Dress
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
-                      Preview passport
-                    </span>
-                    <span className="text-[10px] tracking-[0.1em] uppercase bg-[#1d4734] text-white px-3 py-2">
-                      Publish
-                    </span>
-                    <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
-                      Generate QR
-                    </span>
-                  </div>
-                </>
-              ),
-            },
-            {
-              id: "monitor",
-              label: "Regulatory Monitor",
-              caption: "Tracked requirements and preparation status — not certification.",
-              children: (
-                <>
-                  <p className="text-sm mb-1">Requirement update · EU / Textiles</p>
-                  <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
-                    417 products evaluated
-                  </p>
-                  <p className="text-sm">362 already satisfy the required fields</p>
-                  <p className="text-sm mb-4">55 need action</p>
-                  <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">
-                    Review affected products →
-                  </span>
-                </>
-              ),
-            },
-          ]}
-        />
-      </section>
-
-      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>Issues Inbox</Eyebrow>
-          <Heading className="mb-4 max-w-3xl">Stop searching through spreadsheets for what&apos;s missing.</Heading>
-          <Body className="max-w-2xl mb-10">
-            INTERTEXE turns product-data problems into an actionable workflow instead of another report.
-          </Body>
-          <ul className="divide-y divide-[#e8e3da] border-y border-[#e8e3da] max-w-xl mb-8">
-            {[
-              ["Missing manufacturing facility", "14 products"],
-              ["Composition conflict", "8 products"],
-              ["Identifier mismatch", "3 products"],
-              ["Evidence required", "11 products"],
-            ].map(([issue, count]) => (
-              <li key={issue} className="flex justify-between gap-4 py-4 text-sm">
-                <span>{issue}</span>
-                <span className="text-[#8a847c] tabular-nums">{count}</span>
-              </li>
-            ))}
-          </ul>
-          <SecondaryLink href="/platform/request?intent=snapshot&cta=issues">Resolve issues →</SecondaryLink>
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Passport Studio</Eyebrow>
-        <Heading className="mb-4">From structured data to a live passport.</Heading>
-        <Body className="max-w-2xl mb-8 sm:mb-10">
-          Use the INTERTEXE-hosted experience or serve passport information inside your own digital experience
-          through our API. The INTERTEXE scanner is not required.
-        </Body>
-        <div className="flex flex-col items-center md:grid md:grid-cols-3 md:items-start gap-8 md:gap-6">
-          <div className="w-full order-1">
-            <Frame label="Brand workspace">
-              <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
-              <p className="text-sm" style={SERIF}>
-                Silk Evening Dress
+        <p className="text-sm text-[#161513] mb-8 max-w-2xl">
+          Missing information remains missing. INTERTEXE does not fabricate product data.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-px bg-[#e8e3da] border border-[#e8e3da] mb-8">
+          {AUDIT.map(([n, label]) => (
+            <div key={label} className="bg-white p-5">
+              <p className="text-2xl font-light tabular-nums" style={SERIF}>
+                {n}
               </p>
-            </Frame>
-          </div>
-          <div className="flex flex-col items-center text-center gap-3 order-2 py-0 md:py-6">
-            <QrMark />
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">Product identity / QR</p>
-          </div>
-          <div className="order-3 mx-auto w-full max-w-[280px] md:max-w-[240px] rounded-[32px] md:rounded-[28px] border border-[#e8e3da] bg-white p-6 md:p-5 shadow-[0_24px_60px_rgba(22,21,19,0.08)]">
-            <p className="text-[10px] tracking-[0.2em] uppercase text-[#8a847c] mb-3">Passport</p>
-            <p className="text-xl md:text-lg mb-4" style={SERIF}>
-              Silk Evening Dress
-            </p>
-            <ul className="text-sm md:text-xs text-[#5c5854] space-y-2.5 md:space-y-2">
-              {["Materials", "Manufacturing", "Care", "Repair", "Certifications", "Circularity"].map((item) => (
-                <li key={item} className="border-t border-[#eeeae4] pt-2">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>Your experience, our infrastructure</Eyebrow>
-          <Heading className="mb-4">Your customer experience. Our product intelligence.</Heading>
-          <Body className="max-w-2xl mb-10">
-            Brands do not have to send customers into the INTERTEXE application. INTERTEXE can power QR experiences,
-            brand websites, brand applications, retailer interfaces, internal product systems, and future scanners
-            through INTERTEXE infrastructure. The product identity and structured record stay consistent.
-          </Body>
-          <div className="flex flex-col items-center text-center gap-4 text-sm">
-            <div className="border border-[#e8e3da] px-6 py-3 bg-[#f7f5f1]">Product / QR</div>
-            <span className="text-[#8a847c]">↓</span>
-            <div className="border border-[#1d4734] text-[#1d4734] px-6 py-3">INTERTEXE DPP Infrastructure</div>
-            <span className="text-[#8a847c]">↓</span>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <span className="border border-[#e8e3da] px-5 py-3">Brand App</span>
-              <span className="border border-[#e8e3da] px-5 py-3">Brand Website</span>
-              <span className="border border-[#e8e3da] px-5 py-3">INTERTEXE</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
-          <div>
-            <Eyebrow>Regulatory Monitor</Eyebrow>
-            <Heading className="mb-4">Requirements change. Your product catalog should know.</Heading>
-            <Body>
-              When a tracked requirement updates, INTERTEXE evaluates impact across the catalog. This is
-              preparation status and required-field completeness — not legal certification, an official DPP score, or
-              a guarantee of compliance.
-            </Body>
-          </div>
-          <Frame label="Requirement update" caption="Illustrative example.">
-            <p className="text-sm mb-1">EU / Textiles</p>
-            <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
-              1,247 products evaluated
-            </p>
-            <p className="text-sm">1,106 — no action</p>
-            <p className="text-sm">93 — missing data</p>
-            <p className="text-sm mb-4">48 — review required</p>
-            <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Review affected products</span>
-          </Frame>
-        </div>
-      </section>
-
-      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>Peer benchmarking</Eyebrow>
-          <Heading className="mb-4">Know how your material strategy compares.</Heading>
-          <Body className="max-w-2xl mb-8">
-            INTERTEXE can compare a brand&apos;s material mix, data quality and DPP program against appropriate peer
-            benchmarks. Individual customer data is never exposed. Enterprise information enters aggregates only where
-            contractually permitted and anonymized.
-          </Body>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">
-            Illustrative example · Filters: market segment, category, geography, price band, material, peer group
-          </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[#e8e3da] border border-[#e8e3da]">
-            {[
-              ["Natural-fiber share", "64%", "48%"],
-              ["Polyester share", "18%", "27%"],
-              ["Data completeness", "89%", "71%"],
-              ["Passport coverage", "72%", "54%"],
-            ].map(([label, you, peer]) => (
-              <div key={label} className="bg-white p-5">
-                <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-3">{label}</p>
-                <p className="text-2xl font-light tabular-nums" style={SERIF}>
-                  {you}
-                </p>
-                <p className="text-xs text-[#8a847c] mt-2">Your brand</p>
-                <p className="text-sm tabular-nums mt-3">{peer}</p>
-                <p className="text-xs text-[#8a847c]">Peer group median</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Coming / developing</Eyebrow>
-        <Heading className="mb-4">From compliance data to commercial intelligence.</Heading>
-        <Body className="max-w-2xl mb-8">
-          INTERTEXE already sits with shoppers at the point of material decision. Connecting catalog strategy to
-          observed consumer interest is on the roadmap. It is not a live statistical product yet.
-        </Body>
-        <div className="grid sm:grid-cols-3 gap-6 max-w-3xl mb-6">
-          {[
-            ["Your assortment", "17% linen"],
-            ["Peer assortment", "13% linen"],
-            ["INTERTEXE consumer interest", "29%"],
-          ].map(([k, v]) => (
-            <div key={k} className="border-t border-[#e8e3da] pt-4">
-              <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-2">{k}</p>
-              <p className="text-xl font-light" style={SERIF}>
-                {v}
-              </p>
+              <p className="text-[11px] tracking-[0.08em] uppercase text-[#8a847c] mt-2">{label}</p>
             </div>
           ))}
         </div>
-        <p className="text-sm text-[#5c5854]">
-          Illustrative: your linen assortment may under-index against observed consumer interest.
+        <p className="text-xs text-[#8a847c] mb-8">
+          Illustrative example. Counts are not a live customer catalog. Teams click from each issue into the product
+          and fix it.
         </p>
+        <PrimaryLink href="/platform/demo">See INTERTEXE analyze a real catalog</PrimaryLink>
+      </section>
+
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+          <Eyebrow>Workspace</Eyebrow>
+          <Heading className="mb-4">One workspace for material intelligence.</Heading>
+          <Body className="max-w-2xl mb-8 sm:mb-10">
+            Material Intelligence is live in the public demo. Overview, Issues, Benchmarking, Passport Studio and
+            Regulatory Monitor are the workspace the Founding Pilot delivers into, and the platform now being built.
+            Previews below are faithful to that product — not consulting slides.
+          </Body>
+          <WorkspaceGallery
+            frames={[
+              {
+                id: "overview",
+                label: "Overview",
+                caption: "Illustrative example. Counts are not a live customer catalog.",
+                children: (
+                  <>
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      {[
+                        ["12,430", "Products"],
+                        ["8,420", "Analyzed"],
+                        ["673", "Require attention"],
+                        ["9,814", "Passport-ready fields"],
+                      ].map(([n, l]) => (
+                        <div key={l}>
+                          <p className="text-2xl font-light tabular-nums" style={SERIF}>
+                            {n}
+                          </p>
+                          <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mt-1">{l}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t border-[#eeeae4] pt-4">
+                      <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Needs your attention</p>
+                      <p className="text-sm">Composition conflict · 384 products</p>
+                      <p className="text-sm">Missing supplier information · 736 products</p>
+                    </div>
+                  </>
+                ),
+              },
+              {
+                id: "intelligence",
+                label: "Material Intelligence",
+                caption: "Normalization preserves the original source string.",
+                children: (
+                  <>
+                    <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Original</p>
+                    <p className="font-mono text-[13px] mb-4">MAIN 70 CO 30 PA / LIN viscose</p>
+                    <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">INTERTEXE</p>
+                    <p className="text-sm mb-1">Shell · 70% Cotton · 30% Polyamide</p>
+                    <p className="text-sm mb-4">Lining · 100% Viscose</p>
+                    <p className="text-xs text-[#8a847c]">Source retained · Conflict with supplier file · Review required</p>
+                  </>
+                ),
+              },
+              {
+                id: "issues",
+                label: "Issues",
+                children: (
+                  <>
+                    <p className="text-sm mb-1">Composition conflict</p>
+                    <p className="text-xs text-[#8a847c] mb-3">Review required · Dress 8721</p>
+                    <p className="text-sm">PLM: 70% Cotton / 30% Polyamide</p>
+                    <p className="text-sm mb-4">Supplier declaration: 65% Cotton / 35% Nylon</p>
+                    <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Open issue</span>
+                  </>
+                ),
+              },
+              {
+                id: "benchmark",
+                label: "Benchmark",
+                caption: "Illustrative example · Individual customer data is never exposed.",
+                children: <MaterialPositionTable compact />,
+              },
+              {
+                id: "studio",
+                label: "Passport Studio",
+                children: (
+                  <>
+                    <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
+                    <p className="text-sm mb-4" style={SERIF}>
+                      Silk Evening Dress
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
+                        Preview passport
+                      </span>
+                      <span className="text-[10px] tracking-[0.1em] uppercase bg-[#1d4734] text-white px-3 py-2">
+                        Publish
+                      </span>
+                      <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
+                        Generate QR
+                      </span>
+                    </div>
+                  </>
+                ),
+              },
+              {
+                id: "monitor",
+                label: "Regulatory Monitor",
+                caption: "Tracked requirements and preparation status — not certification.",
+                children: (
+                  <>
+                    <p className="text-sm mb-1">Requirement update · EU / Textiles</p>
+                    <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
+                      10,000 products evaluated
+                    </p>
+                    <p className="text-sm">9,614 require no action</p>
+                    <p className="text-sm">311 need additional information</p>
+                    <p className="text-sm mb-4">75 require review</p>
+                    <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">
+                      Review affected products →
+                    </span>
+                  </>
+                ),
+              },
+            ]}
+          />
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
+        <Eyebrow>Compare</Eyebrow>
+        <Heading className="mb-4">Know how your material strategy compares.</Heading>
+        <Body className="max-w-2xl mb-8">
+          INTERTEXE does not only tell a brand about itself. It shows how the material mix, data quality and
+          passport readiness sit against an appropriate peer group. Merchandising, sustainability and product teams
+          can ask: are competitors using more linen than us? How synthetic is our assortment? Where is the catalog
+          weaker?
+        </Body>
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">
+          Illustrative example · Filters: market segment, category, geography, price band, material, peer group
+        </p>
+        <div className="grid lg:grid-cols-[1.4fr_0.8fr] gap-8 items-start">
+          <div>
+            <p className="text-[11px] tracking-[0.16em] uppercase text-[#1d4734] mb-4">Your material position</p>
+            <MaterialPositionTable />
+          </div>
+          <div>
+            <p className="text-[11px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Coming / developing</p>
+            <p className="text-[11px] tracking-[0.16em] uppercase text-[#8a847c] mb-4">INTERTEXE consumer signal</p>
+            <ul className="border border-[#e8e3da] bg-white divide-y divide-[#e8e3da] mb-4">
+              {CONSUMER_SIGNAL.map(([label, delta]) => (
+                <li key={label} className="flex justify-between gap-4 px-5 py-4 text-sm">
+                  <span>{label}</span>
+                  <span className="tabular-nums text-[#1d4734]">{delta}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-sm text-[#5c5854] leading-relaxed">
+              Observed consumer demand is on the roadmap. It is not a live statistical product yet. That last piece
+              is something a pure B2B DPP provider cannot simply manufacture — it comes from building the consumer
+              side of INTERTEXE.
+            </p>
+          </div>
+        </div>
+        <p className="text-xs text-[#8a847c] mt-6 max-w-3xl">
+          Individual customer data is never exposed. Enterprise information enters aggregates only where
+          contractually permitted and anonymized.
+        </p>
+      </section>
+
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+          <Eyebrow>Act</Eyebrow>
+          <Heading className="mb-4">Then Digital Product Passports become almost obvious.</Heading>
+          <Body className="max-w-2xl mb-8">
+            Once the catalog is structured and validated, the brand should not have to send it somewhere else to
+            create a Digital Product Passport. INTERTEXE says: you already have the data here. Publish it.
+          </Body>
+          <p className="text-sm text-[#5c5854] mb-10 max-w-2xl leading-relaxed">
+            Textile apparel is a priority product group under the EU Ecodesign for Sustainable Products Regulation.
+            INTERTEXE determines what is still missing for the applicable requirements, generates the passport
+            record and product identity, and hosts the QR experience — or serves it through an API. It is not legal
+            advice or official certification.
+          </p>
+          <div className="flex flex-col items-center md:grid md:grid-cols-3 md:items-start gap-8 md:gap-6 mb-12">
+            <div className="w-full order-1">
+              <Frame label="Brand workspace">
+                <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
+                <p className="text-sm" style={SERIF}>
+                  Silk Evening Dress
+                </p>
+              </Frame>
+            </div>
+            <div className="flex flex-col items-center text-center gap-3 order-2 py-0 md:py-6">
+              <QrMark />
+              <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">Product identity / QR</p>
+            </div>
+            <div className="order-3 mx-auto w-full max-w-[280px] md:max-w-[240px] rounded-[32px] md:rounded-[28px] border border-[#e8e3da] bg-white p-6 md:p-5 shadow-[0_24px_60px_rgba(22,21,19,0.08)]">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-[#8a847c] mb-3">Passport</p>
+              <p className="text-xl md:text-lg mb-4" style={SERIF}>
+                Silk Evening Dress
+              </p>
+              <ul className="text-sm md:text-xs text-[#5c5854] space-y-2.5 md:space-y-2">
+                {["Materials", "Manufacturing", "Care", "Repair", "Certifications", "Circularity"].map((item) => (
+                  <li key={item} className="border-t border-[#eeeae4] pt-2">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            <div>
+              <h3 className="text-2xl mb-4" style={SERIF}>
+                Requirements change. The catalog should know.
+              </h3>
+              <Body>
+                When a tracked requirement updates, INTERTEXE evaluates impact across the catalog. This is
+                preparation status and required-field completeness — not legal certification, an official DPP score,
+                or a guarantee of compliance. Brands do not start over.
+              </Body>
+              <p className="mt-5 text-sm">
+                <a href={EU_TEXTILE} className="underline underline-offset-4" target="_blank" rel="noreferrer">
+                  EU textile and apparel DPP
+                </a>
+              </p>
+            </div>
+            <Frame label="Requirement update" caption="Illustrative example.">
+              <p className="text-sm mb-1">EU / Textiles</p>
+              <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
+                10,000 products evaluated
+              </p>
+              <p className="text-sm">9,614 — no action</p>
+              <p className="text-sm">311 — missing data</p>
+              <p className="text-sm mb-4">75 — review required</p>
+              <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Review affected products</span>
+            </Frame>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
+        <Eyebrow>Why brands keep INTERTEXE</Eyebrow>
+        <Heading className="mb-4">A living system, not a one-off passport file.</Heading>
+        <Body className="max-w-2xl mb-10">
+          After the first passports, the question should not be “why are we still paying INTERTEXE?” The catalog
+          stays in a material intelligence system that merchandising and sustainability teams use every week.
+        </Body>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {RETAIN.map((item) => (
+            <div key={item.title} className="border-t border-[#e8e3da] pt-5">
+              <h3 className="mb-2" style={SERIF}>
+                {item.title}
+              </h3>
+              <p className="text-sm text-[#5c5854] leading-relaxed">{item.copy}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
@@ -589,20 +598,21 @@ export function PlatformHome() {
           <Eyebrow>How INTERTEXE is built</Eyebrow>
           <Heading className="mb-4">Built differently for fashion.</Heading>
           <Body className="max-w-2xl mb-8">
-            DPP platforms approach the problem from different starting points. INTERTEXE begins with product and
-            material intelligence and connects that foundation to passport infrastructure and consumer insight. The
+            Basic DPP tools start at the passport. INTERTEXE sits between those tools and enterprise traceability
+            platforms, with a proposition those generators do not have: material intelligence, competitive
+            benchmarking, data quality, supplier data, regulatory intelligence, and DPP creation/hosting. The
             difference is not that others lack passports or QR codes.
           </Body>
           <ComparisonView rows={COMPARISON} reviewed={COMPARISON_REVIEWED} />
-          <Heading className="text-2xl sm:text-3xl mb-6">INTERTEXE connects three layers.</Heading>
+          <Heading className="text-2xl sm:text-3xl mb-6">Understand. Compare. Act.</Heading>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              ["Material Intelligence", "Understand and improve the product data underneath the passport."],
-              ["DPP Infrastructure", "Generate, publish and maintain the passport and its product identity."],
+              ["Understand", "See what products are actually made from, what is wrong, and what is missing."],
               [
-                "Market Intelligence",
-                "Understand how your material strategy compares with peers and, over time, observed consumer demand.",
+                "Compare",
+                "See how the material strategy sits against comparable brands — and, over time, observed consumer demand.",
               ],
+              ["Act", "Publish Digital Product Passports from the approved records and keep them current."],
             ].map(([title, copy]) => (
               <div key={title} className="border-t border-[#e8e3da] pt-5">
                 <h3 className="mb-2" style={SERIF}>
@@ -617,72 +627,114 @@ export function PlatformHome() {
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20">
         <Eyebrow>Live demo</Eyebrow>
-        <Heading className="mb-4">See INTERTEXE analyze a real catalog record.</Heading>
+        <Heading className="mb-4">See the INTERTEXE workflow on a 10-product catalog.</Heading>
         <Body className="max-w-2xl mb-8">
-          The public demo uses actual INTERTEXE Material Intelligence output — normalized composition, evidence
-          status and a DPP-readiness map. No invented metrics.
+          /platform/demo is the permanent INTERTEXE demonstration: messy source data → normalization → issues →
+          material intelligence → benchmarking → DPP readiness → passport. It uses INTERTEXE sample products and
+          live Material Intelligence output — no invented metrics.
         </Body>
         <PrimaryLink href="/platform/demo">Explore the live demo</PrimaryLink>
       </section>
 
-      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
+      <section
+        id="pricing"
+        className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>10-product snapshot</Eyebrow>
-          <Heading className="mb-4">See your own product data inside INTERTEXE.</Heading>
-          <Body className="max-w-2xl mb-8">Start with 10 products. Continue into the Founding DPP Pilot when you are ready.</Body>
-          <p className="text-sm tracking-[0.04em] text-[#5c5854] mb-8">
-            Upload → INTERTEXE analyzes → Normalized records → Conflicts → Missing information → Review snapshot →
-            Founding DPP Pilot
+          <Eyebrow>How to start</Eyebrow>
+          <Heading className="mb-4">Try it. Prove it. Run it.</Heading>
+          <Body className="max-w-2xl mb-8">
+            See INTERTEXE with your own products. Do not sit through a generic software demo first. Send 10 product
+            records — INTERTEXE shows what it finds, what is missing, how the material data compares, and what it
+            would take to make those products passport-ready.
+          </Body>
+          <p className="text-[13px] tracking-[0.1em] uppercase text-[#8a847c] mb-10">
+            Try it → Prove it → Run it → Enterprise
           </p>
-          <PrimaryLink href="/platform/request?intent=snapshot&cta=snapshot_section">
-            Request my 10-product snapshot
-          </PrimaryLink>
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Managed implementation</Eyebrow>
-        <Heading className="mb-4">Start with a controlled catalog.</Heading>
-        <div className="border border-[#e8e3da] bg-white p-6 sm:p-10 md:p-12 max-w-3xl">
-          <p className="text-[11px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Founding DPP Pilot</p>
-          <p className="text-5xl font-light mb-2" style={SERIF}>
-            $5,000
-          </p>
-          <p className="text-sm text-[#5c5854] mb-8">
-            $2,500 at signing · $2,500 at agreed pilot completion. A managed implementation into the INTERTEXE
-            workspace — not a subscription.
-          </p>
-          <p className="text-sm mb-6">Scope: 100 complex products or 500 structured rows. Target 10-business-day delivery.</p>
-          <ul className="text-sm text-[#5c5854] space-y-2 mb-8 leading-relaxed columns-1 sm:columns-2 gap-8">
-            {[
-              "Product-data ingestion",
-              "Material normalization",
-              "Immutable source preservation",
-              "Provenance",
-              "Deterministic validation",
-              "Conflict detection",
-              "Missing-data register",
-              "Human review workflow",
-              "DPP field preparation",
-              "DPP generation for eligible pilot records",
-              "Product identity / QR generation",
-              "Passport preview",
-              "Structured CSV/JSON outputs",
-              "Private INTERTEXE workspace",
-              "Implementation findings",
-              "One revision",
-            ].map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <PrimaryLink href="/platform/request?intent=founding_pilot&cta=pilot_card">
-              Request the Founding DPP Pilot
-            </PrimaryLink>
-            <SecondaryLink href="/platform/request?intent=snapshot&cta=pilot_secondary">
-              Try a free 10-product snapshot
-            </SecondaryLink>
+          <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+            <article className="border border-[#e8e3da] bg-[#f7f5f1] p-6 flex flex-col">
+              <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Try it</p>
+              <h3 className="text-xl mb-2" style={SERIF}>
+                Free 10-Product Material Snapshot
+              </h3>
+              <p className="text-3xl font-light mb-3" style={SERIF}>
+                €0
+              </p>
+              <p className="text-sm text-[#5c5854] leading-relaxed mb-6 flex-1">
+                See what INTERTEXE finds in your own catalog. Normalized materials, conflicts, missing information,
+                data completeness, DPP gaps and a limited peer benchmark — inside a real INTERTEXE workspace.
+              </p>
+              <PrimaryLink href="/platform/request?intent=snapshot&cta=pricing_snapshot">
+                Request my snapshot
+              </PrimaryLink>
+            </article>
+            <article className="border border-[#1d4734] bg-white p-6 flex flex-col">
+              <p className="text-[10px] tracking-[0.16em] uppercase text-[#1d4734] mb-2">Prove it</p>
+              <h3 className="text-xl mb-2" style={SERIF}>
+                Founding Pilot
+              </h3>
+              <p className="text-3xl font-light mb-3" style={SERIF}>
+                $5,000
+              </p>
+              <p className="text-sm text-[#5c5854] leading-relaxed mb-4">
+                100 complex products or 500 structured rows. 50% to start / 50% on completion. Target 10-business-day
+                delivery and one revision.
+              </p>
+              <ul className="text-sm text-[#5c5854] space-y-1.5 mb-6 flex-1 leading-relaxed">
+                {[
+                  "Material Intelligence analysis",
+                  "Data normalization and conflict detection",
+                  "Missing-data register and provenance",
+                  "Human review",
+                  "Benchmarking snapshot",
+                  "DPP data preparation and initial passport generation",
+                  "QR identities and downloadable structured data",
+                ].map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <PrimaryLink href="/platform/request?intent=founding_pilot&cta=pricing_pilot">
+                Request the Founding Pilot
+              </PrimaryLink>
+            </article>
+            <article className="border border-[#e8e3da] bg-white p-6 flex flex-col">
+              <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Run it</p>
+              <h3 className="text-xl mb-2" style={SERIF}>
+                Ongoing INTERTEXE Platform
+              </h3>
+              <p className="text-3xl font-light mb-3" style={SERIF}>
+                From $499/month
+              </p>
+              <p className="text-sm text-[#5c5854] leading-relaxed mb-6 flex-1">
+                Material intelligence, benchmarking, DPP management and ongoing catalog monitoring. Talk to us about
+                your catalog — we will not lock a public three-tier grid before we know what actually drives cost.
+              </p>
+              <SecondaryLink href="/platform/request?intent=api_access&cta=pricing_platform">
+                Talk to us about your catalog
+              </SecondaryLink>
+            </article>
+            <article className="border border-[#e8e3da] bg-white p-6 flex flex-col">
+              <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Enterprise</p>
+              <h3 className="text-xl mb-2" style={SERIF}>
+                Custom
+              </h3>
+              <p className="text-3xl font-light mb-3" style={SERIF}>
+                Annual
+              </p>
+              <p className="text-sm text-[#5c5854] leading-relaxed mb-6 flex-1">
+                Large catalogs, custom integrations, custom benchmark cohorts, API volume, SSO, supplier networks and
+                dedicated support.
+              </p>
+              <SecondaryLink href="/platform/request?intent=api_access&cta=pricing_enterprise">
+                Talk to us about enterprise
+              </SecondaryLink>
+            </article>
           </div>
+          <p className="text-xs text-[#8a847c] max-w-3xl leading-relaxed">
+            The Founding Pilot is implementation, analysis, software and a finished material-data project — not a
+            €29/month DPP-tool subscription. Ongoing platform pricing starts from $499/month; detailed SaaS tiers
+            will follow once the first customers show what the catalog actually uses.
+          </p>
         </div>
       </section>
 
@@ -691,7 +743,7 @@ export function PlatformHome() {
           <div>
             <Eyebrow>Workspace login</Eyebrow>
             <Heading className="text-2xl sm:text-3xl mb-2">Already in an INTERTEXE workspace?</Heading>
-            <Body>Sign in to the dashboard. Prospects start with a snapshot or the Founding DPP Pilot.</Body>
+            <Body>Sign in to the dashboard. Prospects start with a snapshot or the Founding Pilot.</Body>
           </div>
           <PrimaryLink href="/dashboard/login">Go to dashboard login</PrimaryLink>
         </div>
@@ -723,7 +775,10 @@ export function PlatformHome() {
 
       <section className="border-t border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Heading className="mb-6">Build your DPP foundation now.</Heading>
+          <Heading className="mb-6">See INTERTEXE with your own products.</Heading>
+          <Body className="max-w-2xl mb-8">
+            Free. No commitment. Ten product records. Then you are already inside the workspace.
+          </Body>
           <div className="flex flex-col sm:flex-row gap-3">
             <PrimaryLink href="/platform/request?intent=snapshot&cta=final">
               Request a 10-product snapshot
@@ -732,6 +787,33 @@ export function PlatformHome() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function MaterialPositionTable({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className="overflow-x-auto border border-[#e8e3da] bg-white">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-[#e8e3da] text-[10px] tracking-[0.12em] uppercase text-[#8a847c]">
+            <th className="py-3 px-4 font-medium">Metric</th>
+            <th className="py-3 px-4 font-medium">Your brand</th>
+            <th className="py-3 px-4 font-medium">Peer group</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(compact ? POSITION_ROWS.slice(0, 4) : POSITION_ROWS).map(([metric, you, peer]) => (
+            <tr key={metric} className="border-b border-[#eeeae4] last:border-0">
+              <td className="py-3 px-4">{metric}</td>
+              <td className="py-3 px-4 tabular-nums" style={SERIF}>
+                {you}
+              </td>
+              <td className="py-3 px-4 tabular-nums text-[#5c5854]">{peer}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -4,9 +4,9 @@ import { PlatformHome } from "./PlatformHome";
 import { PlatformViewTracker } from "./PlatformViewTracker";
 
 export const metadata: Metadata = {
-  title: "Digital Product Passports for fashion",
+  title: "Material intelligence for fashion",
   description:
-    "INTERTEXE transforms fragmented fashion product data into structured material intelligence, generates Digital Product Passports and product identities, and helps brands keep their catalog current as requirements evolve.",
+    "Give INTERTEXE your product catalog. We'll turn your material data into an intelligent, structured system that shows you what's in your products, what's wrong or missing, how your material strategy compares with the market, and what you need to do next. When you're ready, that same data becomes your Digital Product Passports.",
 };
 
 export default function PlatformPage() {
