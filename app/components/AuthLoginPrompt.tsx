@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { X, Heart } from "lucide-react";
+import { accountAuthHref } from "../../lib/auth-return-path";
 
 export function AuthLoginPrompt({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const pathname = usePathname();
   if (!open) return null;
 
   return (
@@ -39,14 +42,14 @@ export function AuthLoginPrompt({ open, onClose }: { open: boolean; onClose: () 
 
         <div className="flex flex-col gap-3">
           <Link
-            href="/account"
+            href={accountAuthHref("login", pathname)}
             onClick={onClose}
             className="w-full text-center border border-foreground px-6 py-3.5 uppercase tracking-[0.15em] text-[10px] md:text-xs hover:bg-foreground hover:text-background transition-colors"
           >
             Sign in
           </Link>
           <Link
-            href="/account"
+            href={accountAuthHref("signup", pathname)}
             onClick={onClose}
             className="w-full text-center border border-border/60 px-6 py-3.5 uppercase tracking-[0.15em] text-[10px] md:text-xs hover:border-foreground transition-colors"
           >
