@@ -17,7 +17,7 @@
     "test:contacts-sheet": "node --import tsx --test scripts/hq-contacts-sheet-sync.test.ts",
     "test:email-lifecycle": "node --import tsx --test scripts/email-lifecycle.test.ts",
     "test:founder-welcome": "node --import tsx --test scripts/founder-welcome.test.ts",
-    "test:tx-match": "node --import tsx --test scripts/capture-find-better.test.ts scripts/capture-page-signals.test.ts scripts/tx-match-display.test.ts",
+    "test:tx-match": "node --import tsx --test scripts/capture-find-better.test.ts scripts/capture-page-signals.test.ts scripts/tx-match-display.test.ts scripts/og-image.test.ts",
     "test:meta-pixel": "node --import tsx --test scripts/meta-pixel.test.ts",
     "test:paid-acquisition": "node --import tsx --test scripts/paid-acquisition.test.ts",
     "test:platform-demo": "node --import tsx --test scripts/platform-demo.test.ts scripts/material-intelligence.test.ts scripts/platform-page.test.ts",

@@ -1,5 +1,14 @@
 const APP = "https://www.intertexe.com";
 
+function isIntertexeUrl(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+    return host === "intertexe.com" || host.endsWith(".intertexe.com");
+  } catch {
+    return false;
+  }
+}
+
 function randomNonce() {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
@@ -322,6 +331,9 @@ async function extractActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) throw new Error("No active tab");
   if (!tab.url || !/^https?:/i.test(tab.url)) {
+    throw new Error("Open a product page, then save.");
+  }
+  if (isIntertexeUrl(tab.url)) {
     throw new Error("Open a product page, then save.");
   }
   const injected = await chrome.scripting.executeScript({
@@ -648,7 +660,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         sendResponse({ peek });
       } catch (e) {
         const error = e instanceof Error ? e.message : "Could not read this page";
-        await setUi(error, true);
+        const empty = /open a product page/i.test(error);
+        await chrome.storage.local.set({
+          lastPeek: null,
+          ...(empty ? { lastResult: null } : {}),
+          uiStatus: empty ? "" : error,
+          uiError: !empty,
+        });
         sendResponse({ error });
       }
       return;

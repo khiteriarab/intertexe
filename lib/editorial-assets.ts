@@ -61,9 +61,9 @@ export function editorialHeroForSlug(slug: string): string {
   return EDITORIAL_HERO[key] ?? SILK_EDITORIAL_HERO;
 }
 
-/**
- * Homepage hero — v8 portrait (woman in grotto) + studio JPG.
- * Edit HOMEPAGE_HERO_SLIDES below; iOS/web pull from /api/editorial-config.
+/** Homepage hero — v8 portrait (woman in grotto) + studio silk JPG.
+ * Share/OG image is cropped from hero-editorial.jpg (public/og-image.jpg).
+ * Do not use homepage screenshots (old Versace bag crop) as brand art.
  */
 export const HOMEPAGE_HERO_IMAGE_MOBILE = `${BASE}/hero-editorial-v8-mobile.png`;
 export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial.jpg`;
