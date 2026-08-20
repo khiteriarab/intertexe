@@ -762,6 +762,55 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
       return;
     }
+    if (msg?.type === "SALE_ALERT") {
+      try {
+        const store = await getStore();
+        const capture = msg.capture || {};
+        if (!store.accessToken) {
+          if (msg.enabled !== false) await startSignIn();
+          sendResponse({ needsSignIn: true });
+          return;
+        }
+        const { res, json } = await authedFetch("/api/sale-alerts", {
+          method: "POST",
+          body: {
+            enabled: msg.enabled !== false,
+            source: msg.source || "chrome_extension",
+            captureId: capture.id || null,
+            category: capture.category || capture.subcategory || null,
+            productType: capture.subcategory || capture.category || null,
+            brand: capture.brand_name || capture.brandName || null,
+            price: capture.price ?? null,
+            currency: capture.currency || null,
+            materials: capture.composition_text || capture.compositionText || null,
+            retailer: capture.retailer || null,
+            naturalFiberPercent: capture.natural_fiber_percent ?? null,
+          },
+        });
+        sendResponse({
+          ok: res.ok,
+          enabled: Boolean(json?.enabled),
+          error: res.ok ? null : json?.error || "Could not update the sale alert.",
+        });
+      } catch (e) {
+        sendResponse({ error: e instanceof Error ? e.message : "Could not update the sale alert." });
+      }
+      return;
+    }
+    if (msg?.type === "SALE_ALERT_STATUS") {
+      try {
+        const store = await getStore();
+        if (!store.accessToken) {
+          sendResponse({ enabled: false });
+          return;
+        }
+        const { res, json } = await authedFetch("/api/sale-alerts");
+        sendResponse({ enabled: Boolean(res.ok && json?.enabled) });
+      } catch {
+        sendResponse({ enabled: false });
+      }
+      return;
+    }
     if (msg?.type === "OPEN_MATCH") {
       await openMatch(msg.alt, msg.captureId);
       sendResponse({ ok: true });

@@ -24,6 +24,7 @@ export const EMAIL_PROGRAMS: EmailProgramDef[] = [
   { emailType: EMAIL_TYPES.LIFECYCLE_DAY25, label: "Day 25", status: "ACTIVE" },
   { emailType: EMAIL_TYPES.WEEKLY_EDIT, label: "Weekly Edit", status: "ACTIVE" },
   { emailType: EMAIL_TYPES.PRICE_DROP, label: "Price Drop", status: "ACTIVE" },
+  { emailType: EMAIL_TYPES.SALE_ALERT, label: "Sale alerts", status: "ACTIVE" },
   { emailType: EMAIL_TYPES.SCAN_FOLLOWUP, label: "Scan Follow-up", status: "ACTIVE" },
 ];
 
@@ -289,6 +290,7 @@ export async function fetchEmailEngineBundle(): Promise<EmailEngineBundle> {
           EMAIL_TYPES.LIFECYCLE_DAY25,
           EMAIL_TYPES.WEEKLY_EDIT,
           EMAIL_TYPES.PRICE_DROP,
+          EMAIL_TYPES.SALE_ALERT,
         ].includes(p.emailType as (typeof EMAIL_TYPES)[keyof typeof EMAIL_TYPES])
       )
       .map((p) => ({

@@ -543,6 +543,8 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
   const [settingsSubmitting, setSettingsSubmitting] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
+  const [saleAlertsEnabled, setSaleAlertsEnabled] = useState(false);
+  const [saleAlertsSaving, setSaleAlertsSaving] = useState(false);
   const [showSettingsPassword, setShowSettingsPassword] = useState(false);
 
   useEffect(() => {
@@ -583,6 +585,11 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
       .then(r => r.ok ? r.json() : [])
       .then(data => setQuizResults(Array.isArray(data) ? data : []))
       .catch(() => {});
+
+    fetch("/api/sale-alerts", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : { enabled: false }))
+      .then((data) => setSaleAlertsEnabled(Boolean(data.enabled)))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -606,6 +613,24 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
       });
       setFavorites(prev => prev.filter((f: any) => String(f.designerId) !== String(designerId)));
     } catch {}
+  };
+
+  const toggleSaleAlerts = async () => {
+    const token = getToken();
+    if (!token || saleAlertsSaving) return;
+    const next = !saleAlertsEnabled;
+    setSaleAlertsSaving(true);
+    try {
+      const res = await fetch("/api/sale-alerts", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next, source: "account_settings" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setSaleAlertsEnabled(Boolean(data.enabled));
+    } finally {
+      setSaleAlertsSaving(false);
+    }
   };
 
   const handleTabChange = (tab: "account" | "wishlist" | "quiz" | "settings") => {
@@ -1018,6 +1043,24 @@ function AccountDashboard({ user: initialUser, onLogout }: { user: UserData; onL
                     <span className="text-xs text-muted-foreground">Update your account password</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void toggleSaleAlerts()}
+                  disabled={saleAlertsSaving}
+                  className="flex items-center gap-4 py-5 border-b border-border/20 hover:bg-secondary/30 transition-colors text-left px-1 active:scale-[0.99]"
+                  data-testid="button-sale-alerts"
+                >
+                  <Sparkles className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <div className="flex flex-col gap-0.5 flex-1">
+                    <span className="text-sm font-medium">Sale alerts</span>
+                    <span className="text-xs text-muted-foreground">
+                      {saleAlertsEnabled ? "On" : "Off"}
+                    </span>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                    {saleAlertsSaving ? "Saving" : saleAlertsEnabled ? "On" : "Off"}
+                  </span>
                 </button>
                 <button onClick={() => { setSettingsView("delete"); setSettingsError(null); setSettingsSuccess(null); setDeletePassword(""); }}
                   className="flex items-center gap-4 py-5 border-b border-border/20 hover:bg-secondary/30 transition-colors text-left px-1 active:scale-[0.99]"

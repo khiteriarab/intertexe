@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { affiliateUrlWithClientU1 } from "@/lib/affiliate-url";
@@ -44,6 +44,10 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [alertOn, setAlertOn] = useState(false);
+  const [alerting, setAlerting] = useState(false);
+  const [alertNote, setAlertNote] = useState("");
+  const alertQueryUsed = useRef(false);
   const [sort, setSort] = useState<TxMatchSort>("best");
   const [query, setQuery] = useState("");
 
@@ -131,9 +135,19 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
       String(capture?.enrichment_status || "")
     );
 
-  async function saveToAccount() {
+  async function authHeaders(): Promise<{ token: string | null; headers: Record<string, string> }> {
     const { hydrateWebAuthToken, getWebAuthToken } = await import("@/lib/web-auth-token");
     const token = (await hydrateWebAuthToken()) || getWebAuthToken();
+    return {
+      token,
+      headers: token
+        ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+        : { "Content-Type": "application/json" },
+    };
+  }
+
+  async function saveToAccount() {
+    const { token } = await authHeaders();
     const next = `/matches/${captureId}?save=1`;
     if (!token) {
       window.location.assign(`/account?mode=login&next=${encodeURIComponent(next)}`);
@@ -185,6 +199,72 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capture, searchParams]);
+
+  async function setSaleAlert(enabled: boolean) {
+    const next = `/matches/${captureId}?alert=1`;
+    const { token, headers } = await authHeaders();
+    if (!token) {
+      window.location.assign(`/account?mode=login&next=${encodeURIComponent(next)}`);
+      return;
+    }
+    if (!capture) return;
+    setAlerting(true);
+    setAlertNote("");
+    try {
+      const res = await fetch("/api/sale-alerts", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          enabled,
+          source: "tx_match",
+          captureId,
+          category: capture.category,
+          productType: capture.subcategory || capture.category,
+          brand: capture.brand_name,
+          price: capture.price,
+          currency: capture.currency,
+          materials: capture.composition_text,
+          retailer: capture.retailer,
+        }),
+      });
+      if (res.status === 401) {
+        window.location.assign(`/account?mode=login&next=${encodeURIComponent(next)}`);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAlertNote(data.error || "Could not update the sale alert.");
+        return;
+      }
+      setAlertOn(Boolean(data.enabled));
+      setAlertNote(data.enabled ? "We’ll watch this piece for a sale." : "Sale alert off for this piece.");
+    } finally {
+      setAlerting(false);
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { token, headers } = await authHeaders();
+      if (!token || cancelled) return;
+      const res = await fetch("/api/sale-alerts", { headers });
+      const data = await res.json().catch(() => ({}));
+      if (!cancelled && res.ok) setAlertOn(Boolean(data.enabled));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [captureId]);
+
+  useEffect(() => {
+    if (searchParams.get("alert") !== "1" || !capture || alerting || alertQueryUsed.current) return;
+    if (!localStorage.getItem(TOKEN_KEY)) return;
+    alertQueryUsed.current = true;
+    void setSaleAlert(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capture, searchParams]);
 
@@ -286,6 +366,20 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
               {view.liningNote ? (
                 <p className="mt-1 text-[12px] text-[#111111]/45">{view.liningNote}</p>
               ) : null}
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-full border border-[#111111]/10 bg-white px-3 py-2">
+                <p className="text-[13px] text-[#111111]">Waiting for a sale?</p>
+                <button
+                  type="button"
+                  onClick={() => void setSaleAlert(!alertOn)}
+                  disabled={alerting}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium ${
+                    alertOn ? "border border-[#1D4734] bg-white text-[#1D4734]" : "bg-[#1D4734] text-white"
+                  } disabled:opacity-60`}
+                >
+                  {alerting ? "Saving…" : alertOn ? "Alert on" : "Alert me"}
+                </button>
+              </div>
+              {alertNote ? <p className="mt-2 text-[12px] text-[#111111]/50">{alertNote}</p> : null}
             </div>
           </aside>
 

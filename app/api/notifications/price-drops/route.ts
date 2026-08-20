@@ -5,6 +5,7 @@ import { render } from "@react-email/render";
 import PriceDropEmail from "@/emails/PriceDropEmail";
 import { authorizeCron } from "@/lib/cron-auth";
 import { EMAIL_FROM, EMAIL_REPLY_TO, EMAIL_TYPES } from "@/lib/email-constants";
+import { dispatchCatalogSaleAlerts } from "@/lib/sale-alert-dispatch";
 import { sendCustomerEmail } from "@/lib/resend-customer";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
@@ -38,7 +39,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const favRows = (favorites || []) as FavoritePriceRow[];
+  const seen = new Set<string>();
+  const favRows: FavoritePriceRow[] = [];
+  for (const row of (favorites || []) as FavoritePriceRow[]) {
+    const key = `${row.user_id}:${row.product_id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    favRows.push(row);
+  }
   const productsByKey = await loadFavoriteProductsForPriceCheck(supabase, favRows);
 
   const eligible = favRows.filter((fav) => {
@@ -52,6 +60,7 @@ export async function GET(request: NextRequest) {
   let skippedNoProduct = 0;
   let skippedDuplicate = 0;
   let skippedOptOut = 0;
+  const emailedUserIds = new Set<string>();
 
   const userIds = [...new Set(eligible.map((n) => n.user_id))];
   const emailByUser = new Map<string, string>();
@@ -158,6 +167,7 @@ export async function GET(request: NextRequest) {
       }
 
       emailed++;
+      emailedUserIds.add(notif.user_id);
 
       if (notif.id) {
         await supabase
@@ -178,6 +188,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const saleAlerts = await dispatchCatalogSaleAlerts(supabase, emailedUserIds);
+
   return NextResponse.json({
     checked: favRows.length,
     matchedProducts: productsByKey.size,
@@ -187,5 +199,6 @@ export async function GET(request: NextRequest) {
     skippedNoProduct,
     skippedOptOut,
     skippedDuplicate,
+    saleAlerts,
   });
 }
