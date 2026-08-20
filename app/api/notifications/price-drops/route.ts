@@ -9,6 +9,7 @@ import { sendCustomerEmail } from "@/lib/resend-customer";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   isPriceDrop,
+  loadCaptureSaleWatchFavorites,
   loadFavoriteProductsForPriceCheck,
   parsePrice,
   type FavoritePriceRow,
@@ -38,7 +39,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const favRows = (favorites || []) as FavoritePriceRow[];
+  const seen = new Set<string>();
+  const favRows: FavoritePriceRow[] = [];
+  for (const row of [...((favorites || []) as FavoritePriceRow[]), ...(await loadCaptureSaleWatchFavorites(supabase))]) {
+    const key = `${row.user_id}:${row.product_id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    favRows.push(row);
+  }
   const productsByKey = await loadFavoriteProductsForPriceCheck(supabase, favRows);
 
   const eligible = favRows.filter((fav) => {

@@ -762,6 +762,57 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
       return;
     }
+    if (msg?.type === "SALE_ALERT") {
+      try {
+        const store = await getStore();
+        const capture = msg.capture || {};
+        const captureId = String(capture.id || msg.captureId || "");
+        if (!store.accessToken) {
+          if (msg.enabled !== false) await startSignIn();
+          sendResponse({ needsSignIn: true });
+          return;
+        }
+        if (!captureId) {
+          sendResponse({ error: "Save this piece first, then turn on the sale alert." });
+          return;
+        }
+        const { res, json } = await authedFetch("/api/sale-alerts", {
+          method: "POST",
+          body: {
+            captureId,
+            enabled: msg.enabled !== false,
+            price: capture.price ?? null,
+            currency: capture.currency || null,
+            originalUrl: capture.original_url || capture.originalUrl || "",
+          },
+        });
+        sendResponse({
+          ok: res.ok,
+          enabled: Boolean(json?.enabled),
+          error: res.ok ? null : json?.error || "Could not update the sale alert.",
+        });
+      } catch (e) {
+        sendResponse({ error: e instanceof Error ? e.message : "Could not update the sale alert." });
+      }
+      return;
+    }
+    if (msg?.type === "SALE_ALERT_STATUS") {
+      try {
+        const store = await getStore();
+        const captureId = String(msg.captureId || "");
+        if (!store.accessToken || !captureId) {
+          sendResponse({ enabled: false });
+          return;
+        }
+        const { res, json } = await authedFetch(
+          `/api/sale-alerts?captureId=${encodeURIComponent(captureId)}`
+        );
+        sendResponse({ enabled: Boolean(res.ok && json?.enabled) });
+      } catch {
+        sendResponse({ enabled: false });
+      }
+      return;
+    }
     if (msg?.type === "OPEN_MATCH") {
       await openMatch(msg.alt, msg.captureId);
       sendResponse({ ok: true });

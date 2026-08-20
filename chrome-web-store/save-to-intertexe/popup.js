@@ -503,10 +503,21 @@ function renderResult(payload, opts = {}) {
     alertBtn.classList.toggle("is-on", on);
     alertBtn.textContent = on ? "Alert on" : "Alert me";
   });
+  const captureId = String(capture.id || "");
+  if (signed && captureId) {
+    chrome.runtime.sendMessage({ type: "SALE_ALERT_STATUS", captureId }).then((res) => {
+      if (!res || typeof res.enabled !== "boolean") return;
+      alertBtn.classList.toggle("is-on", res.enabled);
+      alertBtn.textContent = res.enabled ? "Alert on" : "Alert me";
+    });
+  }
   alertBtn.addEventListener("click", async () => {
     const currentlyOn = alertBtn.classList.contains("is-on");
     if (currentlyOn) {
       await setSaleAlert(capture, false);
+      if (captureId) {
+        await chrome.runtime.sendMessage({ type: "SALE_ALERT", capture, enabled: false });
+      }
       alertBtn.classList.remove("is-on");
       alertBtn.textContent = "Alert me";
       setStatus("Sale alert off for this piece.");
@@ -521,10 +532,16 @@ function renderResult(payload, opts = {}) {
     saveBtn.disabled = true;
     const res = await chrome.runtime.sendMessage({ type: "SAVE_TAB", force: true });
     saveBtn.disabled = false;
-    await setSaleAlert(capture, true);
+    const savedCapture = res?.result?.capture || capture;
+    await setSaleAlert(savedCapture, true);
+    const synced = await chrome.runtime.sendMessage({
+      type: "SALE_ALERT",
+      capture: savedCapture,
+      enabled: true,
+    });
     alertBtn.classList.add("is-on");
     alertBtn.textContent = "Alert on";
-    setStatus(res?.error ? res.error : "We’ll watch this piece for a sale.");
+    setStatus(synced?.error || res?.error ? synced?.error || res.error : "We’ll watch this piece for a sale.");
     if (res?.result) renderResult(res.result, lastRenderOpts);
   });
   sale.appendChild(alertBtn);
@@ -652,6 +669,7 @@ async function activatePendingSaleAlert(capture) {
   if (!pending || !url || pending !== url) return;
   await setSaleAlert(capture, true);
   await chrome.storage.local.remove(PENDING_SALE_KEY);
+  await chrome.runtime.sendMessage({ type: "SALE_ALERT", capture, enabled: true });
 }
 
 async function refreshUi() {
