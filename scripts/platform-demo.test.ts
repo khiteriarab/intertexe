@@ -230,12 +230,16 @@ describe("Permanent 10-product demonstration catalog", () => {
       path.join(process.cwd(), "app/platform/demo/DemoCatalogWalkthrough.tsx"),
       "utf8"
     );
+    const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
     assert.match(demo, /DemoCatalogWalkthrough/);
+    assert.match(walkthrough, /CatalogPreview/);
+    assert.match(walkthrough, /IssuesPreview/);
     assert.match(walkthrough, /messy source data/i);
     assert.match(walkthrough, /does not overwrite the original string/i);
-    assert.match(walkthrough, /Coming \/ developing/);
-    assert.match(walkthrough, /INTERTEXE consumer signal/i);
+    assert.match(previews, /Coming \/ developing/);
+    assert.match(previews, /INTERTEXE consumer signal/i);
     assert.doesNotMatch(walkthrough, /EU Certified/);
     assert.doesNotMatch(walkthrough, /Guaranteed Compliant/);
+    assert.doesNotMatch(previews, /Official DPP Score/);
   });
 });

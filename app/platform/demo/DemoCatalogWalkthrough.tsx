@@ -13,6 +13,13 @@ import {
 } from "../../../lib/material-intelligence/demo-catalog";
 import { Frame, SERIF } from "../platform-ui";
 import { PlatformGraphic } from "../PlatformGraphic";
+import {
+  BenchmarkPreview,
+  CatalogPreview,
+  IssuesPreview,
+  PassportPreview,
+} from "../workspace-previews";
+import { PLATFORM_GRAPHICS } from "../../../lib/platform-graphics";
 
 const PEER: Record<string, string> = {
   catalogNatural: "48%",
@@ -72,12 +79,42 @@ export function DemoCatalogWalkthrough() {
         })}
       </div>
 
-      {step === "source" ? <PlatformGraphic slot="demoSource" className="mb-6" /> : null}
-      {step === "normalized" ? <PlatformGraphic slot="demoNormalized" className="mb-6" /> : null}
-      {step === "issues" ? <PlatformGraphic slot="understandIssues" className="mb-6" /> : null}
+      {step === "source" ? (
+        PLATFORM_GRAPHICS.demoSource.ready ? (
+          <PlatformGraphic slot="demoSource" className="mb-6" />
+        ) : (
+          <CatalogPreview mode="source" />
+        )
+      ) : null}
+      {step === "normalized" ? (
+        PLATFORM_GRAPHICS.demoNormalized.ready ? (
+          <PlatformGraphic slot="demoNormalized" className="mb-6" />
+        ) : (
+          <CatalogPreview mode="both" />
+        )
+      ) : null}
+      {step === "issues" ? (
+        PLATFORM_GRAPHICS.understandIssues.ready ? (
+          <PlatformGraphic slot="understandIssues" className="mb-6" />
+        ) : (
+          <IssuesPreview />
+        )
+      ) : null}
       {step === "intelligence" ? <PlatformGraphic slot="demoIntelligence" className="mb-6" /> : null}
-      {step === "benchmark" ? <PlatformGraphic slot="compareBenchmark" className="mb-6" /> : null}
-      {step === "passports" ? <PlatformGraphic slot="actPassport" className="mb-6" /> : null}
+      {step === "benchmark" ? (
+        PLATFORM_GRAPHICS.compareBenchmark.ready ? (
+          <PlatformGraphic slot="compareBenchmark" className="mb-6" />
+        ) : (
+          <BenchmarkPreview />
+        )
+      ) : null}
+      {step === "passports" ? (
+        PLATFORM_GRAPHICS.actPassport.ready ? (
+          <PlatformGraphic slot="actPassport" className="mb-6" />
+        ) : (
+          <PassportPreview />
+        )
+      ) : null}
 
       {step === "source" || step === "normalized" ? (
         <div className="grid lg:grid-cols-[1fr_0.9fr] gap-6">

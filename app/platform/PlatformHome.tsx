@@ -5,12 +5,17 @@ import { PlatformGraphic } from "./PlatformGraphic";
 import { WorkspaceGallery } from "./WorkspaceGallery";
 import { WorkspaceHeroPreview } from "./WorkspaceHeroPreview";
 import {
+  BenchmarkPreview,
+  IssuesPreview,
+  NormalizePreview,
+  PassportPreview,
+} from "./workspace-previews";
+import {
   Body,
   Eyebrow,
   Frame,
   Heading,
   PrimaryLink,
-  QrMark,
   SecondaryLink,
   SERIF,
 } from "./platform-ui";
@@ -216,12 +221,6 @@ const POSITION_ROWS = [
   ["Passport ready", "62%", "41%"],
 ] as const;
 
-const CONSUMER_SIGNAL = [
-  ["Silk demand", "↑ 18%"],
-  ["Linen demand", "↑ 11%"],
-  ["Polyester engagement", "↓ 7%"],
-] as const;
-
 const AUDIT = [
   ["8,420", "products analyzed"],
   ["1,271", "missing required fields"],
@@ -292,30 +291,7 @@ export function PlatformHome() {
           Say a fashion company gives us 10,000 products. The information might look like this.
         </Body>
         <PlatformGraphic slot="understandNormalize" className="mb-10" />
-        {PLATFORM_GRAPHICS.understandNormalize.ready ? null : (
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <div className="border border-[#e8e3da] p-6 bg-white">
-            <p className="text-[10px] tracking-[0.16em] uppercase text-[#8a847c] mb-4">Submitted</p>
-            <p className="text-sm mb-1">Dress 8721</p>
-            <p className="font-mono text-[13px] text-[#161513] mb-2">Main: 70 CO / 30 PA</p>
-            <p className="font-mono text-[13px] text-[#161513] mb-2">Lining: viscose</p>
-            <p className="text-sm text-[#5c5854] mb-2">Supplier file: 65 cotton / 35 nylon</p>
-            <p className="text-sm text-[#5c5854]">Country of origin: blank · Certification: another spreadsheet</p>
-          </div>
-          <div className="border border-[#e8e3da] p-6 bg-[#f7f5f1]">
-            <p className="text-[10px] tracking-[0.16em] uppercase text-[#1d4734] mb-4">INTERTEXE</p>
-            <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Shell</p>
-            <p className="text-sm mb-3">Conflict · 70% Cotton / 30% Polyamide vs 65% Cotton / 35% Nylon</p>
-            <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Lining</p>
-            <p className="text-sm mb-3">100% Viscose</p>
-            <p className="text-[11px] tracking-[0.12em] uppercase text-[#8a847c]">Country of origin</p>
-            <p className="text-sm mb-4">Missing</p>
-            <p className="text-xs text-[#8a847c]">
-              Original source strings retained · Nylon normalized to polyamide · Status: Review required
-            </p>
-          </div>
-        </div>
-        )}
+        {PLATFORM_GRAPHICS.understandNormalize.ready ? null : <NormalizePreview />}
         <ol className="grid md:grid-cols-3 gap-x-10 gap-y-10 mb-12">
           {UNDERSTAND_STEPS.map((step) => (
             <li key={step.n} className="border-t border-[#e8e3da] pt-5">
@@ -343,6 +319,7 @@ export function PlatformHome() {
           ))}
         </div>
         <PlatformGraphic slot="understandIssues" className="mb-8" />
+        {PLATFORM_GRAPHICS.understandIssues.ready ? null : <IssuesPreview />}
         <p className="text-xs text-[#8a847c] mb-8">
           Illustrative example. Counts are not a live customer catalog. Teams click from each issue into the product
           and fix it.
@@ -481,33 +458,16 @@ export function PlatformHome() {
           weaker?
         </Body>
         <PlatformGraphic slot="compareBenchmark" className="mb-8" />
+        {PLATFORM_GRAPHICS.compareBenchmark.ready ? null : <BenchmarkPreview />}
         <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">
           Illustrative example · Filters: market segment, category, geography, price band, material, peer group
         </p>
-        <div className="grid lg:grid-cols-[1.4fr_0.8fr] gap-8 items-start">
-          <div>
-            <p className="text-[11px] tracking-[0.16em] uppercase text-[#1d4734] mb-4">Your material position</p>
-            <MaterialPositionTable />
-          </div>
-          <div>
-            <p className="text-[11px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Coming / developing</p>
-            <p className="text-[11px] tracking-[0.16em] uppercase text-[#8a847c] mb-4">INTERTEXE consumer signal</p>
-            <ul className="border border-[#e8e3da] bg-white divide-y divide-[#e8e3da] mb-4">
-              {CONSUMER_SIGNAL.map(([label, delta]) => (
-                <li key={label} className="flex justify-between gap-4 px-5 py-4 text-sm">
-                  <span>{label}</span>
-                  <span className="tabular-nums text-[#1d4734]">{delta}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-sm text-[#5c5854] leading-relaxed">
-              Observed consumer demand is on the roadmap. It is not a live statistical product yet. That last piece
-              is something a pure B2B DPP provider cannot simply manufacture — it comes from building the consumer
-              side of INTERTEXE.
-            </p>
-          </div>
-        </div>
-        <p className="text-xs text-[#8a847c] mt-6 max-w-3xl">
+        <p className="text-sm text-[#5c5854] leading-relaxed max-w-2xl mb-4">
+          Observed consumer demand is on the roadmap. It is not a live statistical product yet. That last piece is
+          something a pure B2B DPP provider cannot simply manufacture — it comes from building the consumer side of
+          INTERTEXE.
+        </p>
+        <p className="text-xs text-[#8a847c] max-w-3xl">
           Individual customer data is never exposed. Enterprise information enters aggregates only where
           contractually permitted and anonymized.
         </p>
@@ -528,33 +488,7 @@ export function PlatformHome() {
             advice or official certification.
           </p>
           <PlatformGraphic slot="actPassport" className="mb-10" />
-          <div className="flex flex-col items-center md:grid md:grid-cols-3 md:items-start gap-8 md:gap-6 mb-12">
-            <div className="w-full order-1">
-              <Frame label="Brand workspace">
-                <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
-                <p className="text-sm" style={SERIF}>
-                  Silk Evening Dress
-                </p>
-              </Frame>
-            </div>
-            <div className="flex flex-col items-center text-center gap-3 order-2 py-0 md:py-6">
-              <QrMark />
-              <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">Product identity / QR</p>
-            </div>
-            <div className="order-3 mx-auto w-full max-w-[280px] md:max-w-[240px] rounded-[32px] md:rounded-[28px] border border-[#e8e3da] bg-white p-6 md:p-5 shadow-[0_24px_60px_rgba(22,21,19,0.08)]">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[#8a847c] mb-3">Passport</p>
-              <p className="text-xl md:text-lg mb-4" style={SERIF}>
-                Silk Evening Dress
-              </p>
-              <ul className="text-sm md:text-xs text-[#5c5854] space-y-2.5 md:space-y-2">
-                {["Materials", "Manufacturing", "Care", "Repair", "Certifications", "Circularity"].map((item) => (
-                  <li key={item} className="border-t border-[#eeeae4] pt-2">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          {PLATFORM_GRAPHICS.actPassport.ready ? null : <PassportPreview />}
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div>
               <h3 className="text-2xl mb-4" style={SERIF}>

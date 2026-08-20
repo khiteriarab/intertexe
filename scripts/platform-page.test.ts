@@ -60,6 +60,7 @@ describe("Platform material-intelligence page", () => {
   });
 
   it("compares emphasis without unverified competitor gaps", () => {
+    const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
     assert.match(home, /Built differently for fashion/);
     assert.match(home, /Not publicly confirmed/);
     assert.match(comparison, /TrusTrace/);
@@ -70,9 +71,9 @@ describe("Platform material-intelligence page", () => {
       home,
       /Material Intelligence \+ Competitive Benchmarking \+ Data Quality \+ Supplier Data \+ Regulatory Intelligence \+ DPP creation\/hosting/
     );
-    assert.match(home, /Coming \/ developing/);
+    assert.match(previews, /Coming \/ developing/);
     assert.match(home, /Illustrative example/);
-    assert.match(home, /INTERTEXE consumer signal/i);
+    assert.match(previews, /INTERTEXE consumer signal/i);
   });
 
   it("keeps the FAQ foldable", () => {
@@ -94,13 +95,18 @@ describe("Platform material-intelligence page", () => {
 
   it("wires named product-graphic slots without publishing unfinished screenshots", () => {
     const graphics = fs.readFileSync(path.join(process.cwd(), "lib/platform-graphics.ts"), "utf8");
-    const preview = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceHeroPreview.tsx"), "utf8");
+    const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
     assert.match(graphics, /hero-workspace\.png/);
     assert.match(graphics, /demo-source\.png/);
     assert.match(graphics, /ready: false/);
-    assert.match(preview, /Illustrative workspace/);
-    assert.match(preview, /Sample workspace/);
-    assert.doesNotMatch(preview, /The Kooples/);
-    assert.doesNotMatch(preview, /Official DPP Score/);
+    assert.match(home, /NormalizePreview/);
+    assert.match(home, /IssuesPreview/);
+    assert.match(home, /BenchmarkPreview/);
+    assert.match(home, /PassportPreview/);
+    assert.match(previews, /Illustrative workspace/);
+    assert.match(previews, /Sample workspace/);
+    assert.doesNotMatch(previews, /The Kooples/);
+    assert.doesNotMatch(previews, /Official DPP Score/);
+    assert.doesNotMatch(previews, /EU Certified/);
   });
 });
