@@ -83,6 +83,25 @@ describe("retailer material capture", () => {
     assert.equal(looksLikePercentageComposition("100% Silk"), true);
   });
 
+  it("keeps lace nylon/cotton separate from 100% silk satin", () => {
+    const html = `
+      <h2>Material & laundrycare</h2>
+      <p>Materials: Lace, silk satin, eyelash lace</p>
+      <p>Lace composition: 65% Nylon, 35% Cotton</p>
+      <p>Satin silk composition: 100% Silk</p>
+    `;
+    assert.equal(
+      extractCompositionFromPageText(html),
+      "100% Silk; lace: 65% Nylon; 35% Cotton"
+    );
+    const display = formatCompositionDisplay("100% Silk; lace: 65% Nylon; 35% Cotton");
+    assert.equal(display.shellLine, "100% Silk");
+    assert.equal(display.laceLine, "65% Nylon; 35% Cotton");
+    assert.equal(display.hasSyntheticLace, true);
+    assert.match(display.headline, /100%\s*Silk/i);
+    assert.doesNotMatch(display.headline, /65%\s*Nylon\s*[·;].*35%\s*Silk/i);
+  });
+
   it("shows the listed mix instead of unpublished/unknown", () => {
     const display = formatCompositionDisplay("55.7% Lyocell; 22.6% Cotton; 21.7% Cupro");
     assert.equal(display.hasPercentages, true);
