@@ -164,11 +164,13 @@ export function buildCaptureResultView(
     materialSupporting: material.supporting,
     compositionEditorial: editorialCompositionLine(compositionText),
     classification: materialClassification(compositionText),
-    liningNote: /lining/i.test(String(material.detail || ""))
+    liningNote: /lace|trim|lining/i.test(String(material.detail || ""))
       ? material.detail
-      : formatCompositionDisplay(String(row.composition_text || "")).hasSyntheticLining
-        ? "Synthetic lining — not the same as a fully natural construction."
-        : null,
+      : formatCompositionDisplay(String(row.composition_text || "")).hasSyntheticLace
+        ? "Listed as trim — not mixed into the garment body."
+        : formatCompositionDisplay(String(row.composition_text || "")).hasSyntheticLining
+          ? "Synthetic lining — not the same as a fully natural construction."
+          : null,
     insight: materialInsightFromText(String(row.composition_text || "")),
     alternativesTitle: copy.alternativesTitle,
     alternatives,

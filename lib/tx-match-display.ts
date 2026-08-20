@@ -28,10 +28,19 @@ export function editorialCompositionLine(raw: string | null | undefined): string
   const display = formatCompositionDisplay(raw);
   if (!display.shellLine || display.headline === "Material details unavailable") return "";
   let line = display.shellLine.replace(/;\s+/g, COMPOSITION_EDITORIAL_JOIN);
+  if (display.laceLine) {
+    line = `Body ${line}${COMPOSITION_EDITORIAL_JOIN}trim ${display.laceLine.replace(/;\s+/g, COMPOSITION_EDITORIAL_JOIN)}`;
+  }
   if (display.liningLine) {
     line = `${line}${COMPOSITION_EDITORIAL_JOIN}lining ${display.liningLine.replace(/;\s+/g, COMPOSITION_EDITORIAL_JOIN)}`;
   }
   return line.replace(/\s*—\s*percentage not provided/gi, "").trim();
+}
+
+const AVOID_FIBER_RE = /polyester|nylon|polyamide|acrylic|elastane|spandex|viscose|rayon|acetate|triacetate/i;
+
+function namedNaturalFibers(fibers: string[]): string[] {
+  return fibers.filter((fiber) => !AVOID_FIBER_RE.test(fiber));
 }
 
 export function materialClassification(raw: string | null | undefined): string {
@@ -41,16 +50,35 @@ export function materialClassification(raw: string | null | undefined): string {
   const hasAvoid = AVOID_RE.test(text);
   const hasCellulosic = CELLULOSIC_RE.test(text);
   const fibers = display.fibers;
+  const namedNatural = namedNaturalFibers(fibers);
 
+  if (display.hasSyntheticLace) {
+    const shell = fibers[0] || "Natural shell";
+    if (/\bnylon\b/i.test(display.laceLine || text)) return `${shell} with nylon lace trim`;
+    return `${shell} with synthetic lace trim`;
+  }
   if (insight.share != null && insight.share >= 98 && fibers.length === 1) {
     return `Pure ${fibers[0]}`;
   }
-  if (insight.share != null && insight.share >= 80) return "Natural Fiber";
+  if (insight.share != null && insight.share >= 80) {
+    return namedNatural[0] || "Natural Fiber";
+  }
   if (!hasAvoid && (hasCellulosic || (insight.share != null && insight.share >= 20) || fibers.length >= 2)) {
     return "Natural-Fiber Blend";
   }
   if (display.hasSyntheticLining) return "Natural Shell";
-  if (insight.tone === "mixed") return "Natural-Fiber Blend";
+  if (hasAvoid && insight.share != null && insight.share < 50) {
+    if (namedNatural[0]) {
+      return `Contains ${namedNatural[0]} · ${Math.round(insight.share)}% natural fiber`;
+    }
+    return `${Math.round(insight.share)}% natural fiber`;
+  }
+  if (insight.tone === "mixed") {
+    if (hasAvoid && insight.share != null) {
+      return `${Math.round(insight.share)}% natural fiber`;
+    }
+    return "Natural-Fiber Blend";
+  }
   if (insight.tone === "synthetic") return "Mostly Synthetic";
   return "";
 }
@@ -71,6 +99,16 @@ export function materialCardSignal(opts: {
         : null;
   const hasAvoid = AVOID_RE.test(text);
 
+  if (display.hasSyntheticLace) {
+    const shell = display.fibers[0];
+    if (/\bnylon\b/i.test(display.laceLine || text)) {
+      return shell ? `${shell} with nylon lace trim` : "Nylon lace trim";
+    }
+    return shell ? `${shell} with synthetic lace trim` : "Synthetic lace trim";
+  }
+  if (share != null && share > 100) {
+    return editorialCompositionLine(text);
+  }
   if (display.hasPercentages && display.fibers.length === 1 && (share == null || share >= 98)) {
     return `100% ${display.fibers[0]}`;
   }
@@ -165,6 +203,38 @@ export function parseListedPrice(raw: number | string | null | undefined): numbe
   if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) return raw;
   const n = parseFloat(String(raw || "").replace(/[^0-9.]/g, ""));
   return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** Compare this piece to same-currency match prices. Never invents a market if peers are thin. */
+export function fabricPriceInsight(opts: {
+  originalPrice?: number | string | null;
+  originalCurrency?: string | null;
+  fiber?: string | null;
+  peers?: Array<{ price?: number | string | null; currency?: string | null }>;
+}): { tone: "typical" | "high" | "low"; word: string; label: string } | null {
+  const original = parseListedPrice(opts.originalPrice);
+  const fiber = String(opts.fiber || "").trim().toLowerCase();
+  if (!original || !fiber) return null;
+  const cur = String(opts.originalCurrency || "").trim().toUpperCase();
+  const prices = (opts.peers || [])
+    .map((peer) => {
+      if (cur && peer.currency && String(peer.currency).toUpperCase() !== cur) return null;
+      return parseListedPrice(peer.price);
+    })
+    .filter((n): n is number => n != null);
+  if (prices.length < 3) return null;
+  prices.sort((a, b) => a - b);
+  const median = prices[Math.floor(prices.length / 2)];
+  if (!median) return null;
+  const ratio = original / median;
+  const fabric = fiber.replace(/^\w/, (c) => c.toUpperCase());
+  if (ratio >= 0.82 && ratio <= 1.22) {
+    return { tone: "typical", word: "typical", label: `This price is typical for ${fabric}.` };
+  }
+  if (ratio < 0.82) {
+    return { tone: "low", word: "below typical", label: `This price is below typical for ${fabric}.` };
+  }
+  return { tone: "high", word: "high", label: `This price is high for ${fabric}.` };
 }
 
 export type SortableTxMatch = {

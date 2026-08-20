@@ -12,6 +12,7 @@ async function getStore() {
     "refreshToken",
     "pendingCapture",
     "authTabId",
+    "returnTabId",
     "extSession",
     "lastResult",
     "lastPeek",
@@ -132,7 +133,7 @@ function extractProductFromPage() {
       out.push(`${n}% ${name.charAt(0).toUpperCase()}${name.slice(1)}`);
     };
     const pctFirst = new RegExp(
-      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*((?:[a-z][a-z-]*\\s+){0,3})(?:organic\\s+|recycled\\s+)?(${fiberAlt})`,
+      `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:(?:organic|recycled|premium|stretch|pure|extra|fine)\\s+)*(${fiberAlt})`,
       "gi"
     );
     const fiberFirst = new RegExp(
@@ -144,11 +145,7 @@ function extractProductFromPage() {
     if (fiberFirstHits.length > pctFirstHits.length) {
       for (const m of fiberFirstHits) push(m[2], m[1]);
     } else {
-      for (const m of pctFirstHits) {
-        const filler = String(m[2] || "");
-        if (/\b(off|sale|discount|shipping|promo)\b/i.test(filler)) continue;
-        push(m[1], m[3]);
-      }
+      for (const m of pctFirstHits) push(m[1], m[2]);
     }
     return out;
   }
@@ -170,6 +167,46 @@ function extractProductFromPage() {
       out.push(name.charAt(0).toUpperCase() + name.slice(1));
     }
     return out.join("; ");
+  }
+
+  function extractConstructionFromHay(raw) {
+    const t = String(raw || "").replace(/\s+/g, " ");
+    const re =
+      /\b((?:eyelash\s+)?lace|trim|silk\s+satin|satin\s+silk|satin|body|shell|outer(?:\s+fabric)?|lining)\s+composition\s*[:\-–]?\s*/gi;
+    const hits = [];
+    let m;
+    while ((m = re.exec(t))) {
+      const label = String(m[1] || "").toLowerCase();
+      const key = /lace|trim/.test(label) ? "lace" : /lining/.test(label) ? "lining" : "shell";
+      hits.push({ key, start: m.index, bodyStart: m.index + m[0].length });
+    }
+    const laceRe = /\b((?:eyelash\s+)?lace|trim)\s*[:\-–]?\s*(?=\d{1,3}(?:[.,]\d+)?\s*%)/gi;
+    while ((m = laceRe.exec(t))) {
+      hits.push({ key: "lace", start: m.index, bodyStart: m.index + m[0].length });
+    }
+    hits.sort((a, b) => a.start - b.start);
+    const found = { shell: "", lace: "", lining: "" };
+    for (let i = 0; i < hits.length; i++) {
+      const stop = i + 1 < hits.length ? hits[i + 1].start : hits[i].bodyStart + 220;
+      const clauses = collectPercentClauses(t.slice(hits[i].bodyStart, stop));
+      if (clauses.length && !found[hits[i].key]) found[hits[i].key] = clauses.join("; ");
+    }
+    if (found.shell && (found.lace || found.lining)) {
+      const bits = [found.shell];
+      if (found.lace) bits.push(`lace: ${found.lace}`);
+      if (found.lining) bits.push(`lining: ${found.lining}`);
+      return bits.join("; ");
+    }
+    const listsTrim =
+      /\beyelash\s+lace\b/i.test(t) ||
+      /\bmaterials?\s*[:\-–]\s*[^.]{0,160}\b(lace|trim)\b/i.test(t) ||
+      /\b(lace|trim)\s+composition\b/i.test(t);
+    if (!listsTrim) return "";
+    const clauses = collectPercentClauses(t);
+    const shell = clauses.filter((line) => /^9[8-9](?:\.\d+)?%|^100(?:\.0+)?%/.test(line));
+    const rest = clauses.filter((line) => !shell.includes(line));
+    if (!shell.length || !rest.length) return "";
+    return `${shell.join("; ")}; lace: ${rest.join("; ")}`;
   }
 
   function visibleOffer(text) {
@@ -265,22 +302,27 @@ function extractProductFromPage() {
 
   const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").slice(0, 16000);
   const hay = `${domChunks.join(" \n ")} \n ${jsonLdChunks.join(" \n ")} \n ${bodyText}`;
-  const percentLine = collectPercentClauses(hay);
-  if (percentLine.length) {
-    compositionText = percentLine.join("; ");
+  const constructed = extractConstructionFromHay(hay);
+  if (constructed) {
+    compositionText = constructed;
   } else {
-    const labeledRe =
-      /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]?\s*([^\n]{1,220})/gi;
-    let labeled = null;
-    let labeledMatch;
-    while ((labeledMatch = labeledRe.exec(hay))) {
-      const candidate = uniqueFibers(labeledMatch[1] || "");
-      if (candidate) {
-        labeled = candidate;
-        break;
+    const percentLine = collectPercentClauses(hay);
+    if (percentLine.length) {
+      compositionText = percentLine.join("; ");
+    } else {
+      const labeledRe =
+        /(?:material|composition|fabric|composici[oó]n|tejido|materiales|made\s+from|made\s+of|outer(?:\s+fabric)?|shell|main\s+fabric)\s*[:\-–]?\s*([^\n]{1,220})/gi;
+      let labeled = null;
+      let labeledMatch;
+      while ((labeledMatch = labeledRe.exec(hay))) {
+        const candidate = uniqueFibers(labeledMatch[1] || "");
+        if (candidate) {
+          labeled = candidate;
+          break;
+        }
       }
+      compositionText = labeled || uniqueFibers(jsonLdChunks.join("; ")) || null;
     }
-    compositionText = labeled || uniqueFibers(jsonLdChunks.join("; ")) || null;
   }
 
   const visible = visibleOffer(bodyText);
@@ -528,6 +570,22 @@ async function createPublicMatches(payload) {
   return { result };
 }
 
+async function returnToOpenerTab() {
+  const store = await getStore();
+  const tabId = store.returnTabId;
+  await chrome.storage.local.remove(["returnTabId"]);
+  if (!tabId) return;
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab?.windowId) {
+      await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+    }
+    await chrome.tabs.update(tabId, { active: true });
+  } catch {
+    /* product tab was closed */
+  }
+}
+
 async function pollAuthSession(extSession, tabId) {
   const t0 = Date.now();
   while (Date.now() - t0 < 5 * 60 * 1000) {
@@ -539,7 +597,13 @@ async function pollAuthSession(extSession, tabId) {
         extSession: null,
         authTabId: null,
       });
+      await returnToOpenerTab();
       if (tabId) chrome.tabs.remove(tabId).catch(() => {});
+      try {
+        if (chrome.action?.openPopup) await chrome.action.openPopup();
+      } catch {
+        /* some Chrome builds only open the popup from a user gesture */
+      }
       const store = await getStore();
       if (store.pendingCapture) {
         await setUi("Signed in — saving…");
@@ -550,7 +614,7 @@ async function pollAuthSession(extSession, tabId) {
           await setUi(e instanceof Error ? e.message : "Save failed", true);
         }
       } else {
-        await setUi("Signed in.");
+        await setUi("Signed in. You are back on this piece.");
       }
       return;
     }
@@ -561,11 +625,16 @@ async function pollAuthSession(extSession, tabId) {
 }
 
 async function startSignIn() {
+  const [opener] = await chrome.tabs.query({ active: true, currentWindow: true });
   const extSession = randomNonce();
   const url = `${APP}/extension/auth?ext_session=${encodeURIComponent(extSession)}`;
   const tab = await chrome.tabs.create({ url, active: true });
-  await chrome.storage.local.set({ extSession, authTabId: tab.id || null });
-  await setUi("Finish signing in on the INTERTEXE tab…");
+  await chrome.storage.local.set({
+    extSession,
+    authTabId: tab.id || null,
+    returnTabId: opener?.id && opener.id !== tab.id ? opener.id : null,
+  });
+  await setUi("Finish signing in — we will bring you back to this piece.");
   pollAuthSession(extSession, tab.id).catch((e) =>
     setUi(e instanceof Error ? e.message : "Sign-in failed", true)
   );
@@ -588,6 +657,7 @@ async function signOut() {
     "lastPeek",
     "extSession",
     "authTabId",
+    "returnTabId",
     "uiStatus",
     "uiError",
   ]);

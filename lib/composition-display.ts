@@ -28,9 +28,11 @@ export type CompositionDisplay = {
   fibers: string[];
   shellLine: string;
   liningLine: string | null;
+  laceLine: string | null;
   hasPercentages: boolean;
   hasSyntheticLining: boolean;
-  /** "Silk — percentage not provided" or "100% Silk; lining: 100% Polyester" */
+  hasSyntheticLace: boolean;
+  /** "Silk — percentage not provided" or "100% Silk; lace: 65% Nylon; 35% Cotton" */
   headline: string;
   /** "Material: …" */
   materialLine: string;
@@ -67,25 +69,72 @@ function titleFiber(raw: string): string {
   return source.replace(/(^|[\s/-])([a-z])/g, (_, prefix: string, ch: string) => prefix + ch.toUpperCase());
 }
 
-export function splitShellAndLining(raw: string): { shell: string; lining: string | null } {
+export function splitShellAndLining(raw: string): { shell: string; lining: string | null; lace: string | null } {
   const t = String(raw || "").replace(/\s+/g, " ").trim();
-  if (!t) return { shell: "", lining: null };
-  const labeled = t.match(/^(.*?)(?:\s*[;,/|]\s*|\s+)\blining\b\s*[:–-]?\s*(.+)$/i);
-  if (labeled && labeled[1].trim() && labeled[2].trim()) {
-    return {
-      shell: labeled[1].replace(/[;,/|]+$/g, "").trim(),
-      lining: labeled[2].replace(/\blining\b/gi, "").trim(),
-    };
+  if (!t) return { shell: "", lining: null, lace: null };
+  let rest = t;
+  let lining: string | null = null;
+  let lace: string | null = null;
+  const laceHit = rest.match(/^(.*?)\s*[;,]\s*(?:lace|trim)\s*[:–-]?\s*(.+)$/i);
+  if (laceHit?.[1].trim() && laceHit[2].trim()) {
+    rest = laceHit[1].replace(/[;,/|]+$/g, "").trim();
+    lace = laceHit[2].replace(/\blace\b/gi, "").replace(/^[:–-]\s*/, "").trim();
+    const liningInLace = lace.match(/^(.*?)\s*[;,]\s*lining\s*[:–-]?\s*(.+)$/i);
+    if (liningInLace?.[1].trim() && liningInLace[2].trim()) {
+      lace = liningInLace[1].trim();
+      lining = liningInLace[2].replace(/\blining\b/gi, "").trim();
+    }
   }
-  const trailing = t.match(/^(.*?)\s*[;,/]\s*(.+?)\s+lining\b/i);
-  if (trailing && trailing[1].trim() && trailing[2].trim()) {
-    return { shell: trailing[1].trim(), lining: trailing[2].trim() };
+  if (!lining) {
+    const labeled = rest.match(/^(.*?)(?:\s*[;,/|]\s*|\s+)\blining\b\s*[:–-]?\s*(.+)$/i);
+    if (labeled && labeled[1].trim() && labeled[2].trim()) {
+      rest = labeled[1].replace(/[;,/|]+$/g, "").trim();
+      lining = labeled[2].replace(/\blining\b/gi, "").trim();
+    }
   }
-  return { shell: t, lining: null };
+  return { shell: rest, lining, lace };
 }
 
 function uniquePercentClauses(text: string): string[] {
   return collectPercentClauses(text);
+}
+
+function inferOverflowParts(raw: string): { shell: string; lace: string | null; lining: string | null } | null {
+  const clauses = uniquePercentClauses(raw);
+  if (clauses.length < 2) return null;
+  const parsed = clauses
+    .map((line) => {
+      const m = line.match(/^(\d+(?:\.\d+)?)%\s+(.+)$/);
+      return m ? { pct: Number(m[1]), fiber: m[2], line } : null;
+    })
+    .filter((row): row is { pct: number; fiber: string; line: string } => Boolean(row && Number.isFinite(row.pct)));
+  const total = parsed.reduce((sum, row) => sum + row.pct, 0);
+  if (total <= 105) return null;
+
+  const hundreds = parsed.filter((row) => row.pct >= 98);
+  if (hundreds.length >= 2) {
+    const naturalHundred = hundreds.find((row) => !partHasSynthetic(row.fiber));
+    const synthHundred = hundreds.find((row) => partHasSynthetic(row.fiber));
+    if (naturalHundred && synthHundred) {
+      return { shell: naturalHundred.line, lace: null, lining: synthHundred.line };
+    }
+  }
+
+  const shellParts = parsed.filter((row) => row.pct >= 98);
+  const rest = parsed.filter((row) => row.pct < 98);
+  if (!shellParts.length || !rest.length) return null;
+  const restTotal = rest.reduce((sum, row) => sum + row.pct, 0);
+  if (restTotal < 85 || restTotal > 115) return null;
+  const shell = shellParts.map((row) => row.line).join(COMPOSITION_JOIN);
+  const restLine = rest.map((row) => row.line).join(COMPOSITION_JOIN);
+  const restText = rest.map((row) => row.fiber).join(" ");
+  if (partHasSynthetic(restText) && rest.length >= 2) {
+    return { shell, lace: restLine, lining: null };
+  }
+  if (partHasSynthetic(restText)) {
+    return { shell, lace: null, lining: restLine };
+  }
+  return { shell, lace: restLine, lining: null };
 }
 
 function uniqueNamedFibers(text: string): string[] {
@@ -136,8 +185,10 @@ export function formatCompositionDisplay(raw: string | null | undefined): Compos
     fibers: [],
     shellLine: "",
     liningLine: null,
+    laceLine: null,
     hasPercentages: false,
     hasSyntheticLining: false,
+    hasSyntheticLace: false,
     headline: "Material details unavailable",
     materialLine: "Material details unavailable",
   };
@@ -148,16 +199,29 @@ export function formatCompositionDisplay(raw: string | null | undefined): Compos
     .trim();
   if (!stripped) return empty;
 
-  const { shell, lining } = splitShellAndLining(stripped);
+  let { shell, lining, lace } = splitShellAndLining(stripped);
+  if (!lace && !lining) {
+    const inferred = inferOverflowParts(stripped);
+    if (inferred) {
+      shell = inferred.shell;
+      lace = inferred.lace;
+      lining = inferred.lining;
+    }
+  }
   const shellFmt = formatPart(shell);
   const liningFmt = lining ? formatPart(lining) : { line: "", fibers: [], hasPercentages: false };
+  const laceFmt = lace ? formatPart(lace) : { line: "", fibers: [], hasPercentages: false };
   const hasSyntheticLining = Boolean(lining && partHasSynthetic(lining));
+  const hasSyntheticLace = Boolean(lace && partHasSynthetic(lace));
 
   let core = shellFmt.line;
   if (core && !shellFmt.hasPercentages) {
     core = `${core} — ${PERCENTAGE_NOT_PROVIDED}`;
   }
   if (!core) return empty;
+  if (laceFmt.line) {
+    core = `${core.replace(/ — percentage not provided$/, "")}${COMPOSITION_JOIN}lace: ${laceFmt.line}`;
+  }
   if (liningFmt.line) {
     core = `${core.replace(/ — percentage not provided$/, "")}${COMPOSITION_JOIN}lining: ${liningFmt.line}`;
   }
@@ -166,8 +230,10 @@ export function formatCompositionDisplay(raw: string | null | undefined): Compos
     fibers: shellFmt.fibers,
     shellLine: shellFmt.line,
     liningLine: liningFmt.line || null,
+    laceLine: laceFmt.line || null,
     hasPercentages: shellFmt.hasPercentages,
     hasSyntheticLining,
+    hasSyntheticLace,
     headline: core,
     materialLine: `Material: ${core}`,
   };
@@ -178,7 +244,10 @@ export function normalizeCompositionStorage(raw: string | null | undefined): str
   const display = formatCompositionDisplay(raw);
   if (!display.shellLine || display.headline === "Material details unavailable") return "";
   if (display.liningLine) {
-    return `${display.shellLine}${COMPOSITION_JOIN}lining: ${display.liningLine}`;
+    return `${display.shellLine}${COMPOSITION_JOIN}${display.laceLine ? `lace: ${display.laceLine}${COMPOSITION_JOIN}` : ""}lining: ${display.liningLine}`;
+  }
+  if (display.laceLine) {
+    return `${display.shellLine}${COMPOSITION_JOIN}lace: ${display.laceLine}`;
   }
   return display.shellLine;
 }

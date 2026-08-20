@@ -56,7 +56,7 @@ export function collectPercentClauses(raw: string | null | undefined): string[] 
     out.push(`${n}% ${name}`);
   };
   const pctFirst = new RegExp(
-    `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*((?:[a-z][a-z-]*\\s+){0,3})(?:organic\\s+|recycled\\s+)?(${FIBER_ALT})`,
+    `(\\d{1,3}(?:[.,]\\d+)?)\\s*%\\s*(?:(?:organic|recycled|premium|stretch|pure|extra|fine)\\s+)*(${FIBER_ALT})`,
     "gi"
   );
   const fiberFirst = new RegExp(
@@ -69,23 +69,110 @@ export function collectPercentClauses(raw: string | null | undefined): string[] 
   if (useFiberFirst) {
     for (const m of fiberFirstHits) push(m[2], m[1]);
   } else {
-    for (const m of pctFirstHits) {
-      const filler = String(m[2] || "");
-      if (/\b(off|sale|discount|shipping|promo)\b/i.test(filler)) continue;
-      push(m[1], m[3]);
-    }
+    for (const m of pctFirstHits) push(m[1], m[2]);
   }
   return out;
+}
+
+const CONSTRUCTION_LABEL_RE =
+  /\b((?:eyelash\s+)?lace|trim|silk\s+satin|satin\s+silk|satin|body|shell|outer(?:\s+fabric)?|lining)\s+composition\s*[:\-–]?\s*/gi;
+
+const LACE_TRIM_PERCENT_RE =
+  /\b((?:eyelash\s+)?lace|trim)\s*[:\-–]?\s*(?=\d{1,3}(?:[.,]\d+)?\s*%)/gi;
+
+function constructionKey(label: string): "shell" | "lace" | "lining" {
+  const t = String(label || "").toLowerCase();
+  if (/\b(lace|trim)\b/.test(t)) return "lace";
+  if (/\blining\b/.test(t)) return "lining";
+  return "shell";
+}
+
+/** Retailer listed lace / eyelash lace / trim as a part, not a blended mix. */
+export function pageListsLaceOrTrim(htmlOrText: string | null | undefined): boolean {
+  const plain = stripToText(String(htmlOrText || ""));
+  if (/\beyelash\s+lace\b/i.test(plain)) return true;
+  if (/\bmaterials?\s*[:\-–]\s*[^.]{0,160}\b(lace|trim)\b/i.test(plain)) return true;
+  if (/\b(lace|trim)\s+composition\b/i.test(plain)) return true;
+  return false;
+}
+
+/** Keep lace / satin / lining as separate retailer-listed parts. */
+export function extractConstructionParts(htmlOrText: string | null | undefined): {
+  shell: string | null;
+  lace: string | null;
+  lining: string | null;
+} {
+  const plain = stripToText(String(htmlOrText || "")).slice(0, 40000);
+  const empty = { shell: null as string | null, lace: null as string | null, lining: null as string | null };
+  if (!plain) return empty;
+  const hits: { key: "shell" | "lace" | "lining"; start: number; bodyStart: number }[] = [];
+  const re = new RegExp(CONSTRUCTION_LABEL_RE.source, "gi");
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(plain))) {
+    hits.push({
+      key: constructionKey(m[1] || ""),
+      start: m.index,
+      bodyStart: m.index + m[0].length,
+    });
+  }
+  const laceRe = new RegExp(LACE_TRIM_PERCENT_RE.source, "gi");
+  while ((m = laceRe.exec(plain))) {
+    hits.push({
+      key: "lace",
+      start: m.index,
+      bodyStart: m.index + m[0].length,
+    });
+  }
+  hits.sort((a, b) => a.start - b.start);
+  if (!hits.length) return empty;
+  const found = { ...empty };
+  for (let i = 0; i < hits.length; i++) {
+    const stop = i + 1 < hits.length ? hits[i + 1].start : hits[i].bodyStart + 220;
+    const chunk = plain.slice(hits[i].bodyStart, stop);
+    const clauses = collectPercentClauses(chunk);
+    if (!clauses.length) continue;
+    const line = clauses.join("; ");
+    if (!found[hits[i].key]) found[hits[i].key] = line;
+  }
+  return found;
+}
+
+export function formatConstructionStorage(parts: {
+  shell: string | null;
+  lace: string | null;
+  lining: string | null;
+}): string | null {
+  if (!parts.shell || (!parts.lace && !parts.lining)) return null;
+  const bits = [parts.shell];
+  if (parts.lace) bits.push(`lace: ${parts.lace}`);
+  if (parts.lining) bits.push(`lining: ${parts.lining}`);
+  return bits.join("; ");
 }
 
 /**
  * Read a composition formula from visible page text / JSON-LD snippets.
  * Prefers percentage clauses over a name-only "Denim" label.
+ * Keeps lace vs satin as listed parts instead of mashing them into one mix.
  */
+function formatOverflowAsLace(clauses: string[]): string | null {
+  if (clauses.length < 2) return null;
+  const shell = clauses.filter((line) => /^9[8-9](?:\.\d+)?%|^100(?:\.0+)?%/.test(line));
+  const rest = clauses.filter((line) => !shell.includes(line));
+  if (!shell.length || !rest.length) return null;
+  return `${shell.join("; ")}; lace: ${rest.join("; ")}`;
+}
+
 export function extractCompositionFromPageText(htmlOrText: string | null | undefined): string | null {
   const plain = stripToText(String(htmlOrText || "")).slice(0, 40000);
+  const constructed = formatConstructionStorage(extractConstructionParts(plain));
+  if (constructed) return constructed;
   const clauses = collectPercentClauses(plain);
-  if (clauses.length) return clauses.join("; ");
+  if (clauses.length) {
+    if (pageListsLaceOrTrim(plain)) {
+      return formatOverflowAsLace(clauses) || clauses.join("; ");
+    }
+    return clauses.join("; ");
+  }
   return extractLabeledMaterial(plain);
 }
 
@@ -153,6 +240,10 @@ export function preferPercentageComposition(
   const next = String(candidate || "").trim() || null;
   if (!next) return current;
   if (!current) return next;
+  const currentParts = /\b(?:lace|trim|lining)\s*:/i.test(current);
+  const nextParts = /\b(?:lace|trim|lining)\s*:/i.test(next);
+  if (currentParts && !nextParts) return current;
+  if (nextParts && !currentParts && looksLikePercentageComposition(next)) return next;
   if (looksLikePercentageComposition(next) && !looksLikePercentageComposition(current)) {
     return next;
   }
@@ -174,6 +265,9 @@ export function looksLikeListedMaterial(text: string): boolean {
 export function normalizeListedMaterial(raw: string): string {
   const t = String(raw || "").replace(/\s+/g, " ").trim();
   if (!t) return t;
+  // Keep retailer-listed lace/trim/lining labels. Flattening percents would
+  // mash a silk body with nylon lace trim into one impossible 200% mix.
+  if (/\b(?:lace|trim|lining)\s*:/i.test(t)) return t;
   if (looksLikePercentageComposition(t)) {
     const clauses = collectPercentClauses(t);
     if (clauses.length) return clauses.join("; ");

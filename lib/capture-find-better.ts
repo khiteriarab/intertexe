@@ -4,6 +4,8 @@
  * Never writes to products / live_products.
  */
 
+import { formatCompositionDisplay } from "./composition-display";
+import { parseCompositionText } from "./material-intelligence/composition";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CaptureEnrichment, MatchBrief } from "./capture-enrichment";
 import { buildCatalogBrowseV2Params } from "./catalog-browse-v2";
@@ -347,9 +349,17 @@ export function extractFiberFromText(text: string | null | undefined): string | 
   return null;
 }
 
+/** Lace / trim listed on the page is not a competing garment fiber. */
+function constructionTrimCues(compositionText: string | null | undefined): string[] {
+  const display = formatCompositionDisplay(compositionText);
+  if (!display.laceLine && !display.hasSyntheticLace) return [];
+  return ["lace", "eyelash", "trim"];
+}
+
 /** Fabric the shopper is looking at — same-fiber matches must lead the list. */
 export function preferredFiberFromInput(input: FindBetterInput): string | null {
-  const fromComposition = extractFiberFromText(input.compositionText);
+  const shell = formatCompositionDisplay(input.compositionText).shellLine || input.compositionText;
+  const fromComposition = extractFiberFromText(shell);
   if (fromComposition && !SYNTHETIC_FIBERS.has(fromComposition)) return fromComposition;
   for (const token of [...(input.matchBrief?.mustMatch || []), ...(input.matchBrief?.preferred || [])]) {
     const f = extractFiberFromText(token);
@@ -357,7 +367,9 @@ export function preferredFiberFromInput(input: FindBetterInput): string | null {
   }
   const fromTitle = extractFiberFromText(input.title);
   if (fromTitle && !SYNTHETIC_FIBERS.has(fromTitle)) return fromTitle;
+  const trimCues = constructionTrimCues(input.compositionText);
   for (const d of input.distinctiveDetails || []) {
+    if (trimCues.some((cue) => String(d || "").toLowerCase().includes(cue))) continue;
     const f = extractFiberFromText(d);
     if (f && !SYNTHETIC_FIBERS.has(f)) return f;
   }
@@ -391,8 +403,12 @@ function rankAlternatives(
   products: Record<string, unknown>[],
   input: FindBetterInput
 ): FindBetterAlternative[] {
-  const scannedNfp = input.naturalFiberPercent ?? 0;
+  const scannedNfp =
+    parseCompositionText(input.compositionText).natural_fiber_percentage ??
+    input.naturalFiberPercent ??
+    0;
   const preferredFiber = preferredFiberFromInput(input);
+  const trimCues = constructionTrimCues(input.compositionText);
   const targetPrice =
     input.price ??
     (input.matchBrief?.targetPriceRange
@@ -432,14 +448,22 @@ function rankAlternatives(
       if (sil && hay.includes(sil)) score += 24;
     }
     const hay = `${p.name || ""} ${p.category || ""} ${p.color || ""}`.toLowerCase();
+    const skipTrimCue = (token: string) => {
+      if (!trimCues.length) return false;
+      const t = String(token || "").toLowerCase();
+      return trimCues.some((cue) => t.includes(cue));
+    };
     for (const pref of input.matchBrief?.preferred || []) {
-      if (pref && hay.includes(pref.toLowerCase())) score += 8;
+      if (!pref || skipTrimCue(pref)) continue;
+      if (hay.includes(pref.toLowerCase())) score += 8;
     }
     for (const must of input.matchBrief?.mustMatch || []) {
-      if (must && hay.includes(must.toLowerCase())) score += 15;
+      if (!must || skipTrimCue(must)) continue;
+      if (hay.includes(must.toLowerCase())) score += 15;
     }
     for (const d of input.distinctiveDetails || []) {
-      if (d && hay.includes(d.toLowerCase())) score += 12;
+      if (!d || skipTrimCue(d)) continue;
+      if (hay.includes(d.toLowerCase())) score += 12;
     }
     return { p, score, sameColor, sameFiber };
   });

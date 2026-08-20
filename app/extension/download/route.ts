@@ -3,7 +3,7 @@ import path from "node:path";
 
 export const dynamic = "force-dynamic";
 
-const FILE_NAME = "INTERTEXE-Fabric-Scanner-1.0.18.zip";
+const FILE_NAME = "INTERTEXE-Fabric-Scanner-1.0.19.zip";
 
 /** Chrome Web Store zip with Content-Disposition so the browser actually downloads it. */
 export async function GET() {
