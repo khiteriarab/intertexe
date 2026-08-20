@@ -1,99 +1,22 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ComparisonView, type ComparisonRow } from "./ComparisonView";
+import { WorkspaceGallery } from "./WorkspaceGallery";
+import {
+  Body,
+  Eyebrow,
+  Frame,
+  Heading,
+  PrimaryLink,
+  QrMark,
+  SecondaryLink,
+  SERIF,
+} from "./platform-ui";
 
 const EU_TEXTILE =
   "https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en";
-const SERIF = { fontFamily: "Georgia, 'Iowan Old Style', Palatino, serif" } as const;
 export const COMPARISON_REVIEWED = "19 August 2026";
-
-function Eyebrow({ children }: { children: ReactNode }) {
-  return (
-    <p className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-5">
-      {children}
-    </p>
-  );
-}
-
-function Heading({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <h2
-      className={`text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#161513] ${className}`}
-      style={SERIF}
-    >
-      {children}
-    </h2>
-  );
-}
-
-function Body({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <p className={`text-[15px] sm:text-base text-[#5c5854] font-light leading-relaxed ${className}`}>{children}</p>;
-}
-
-function PrimaryLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#1d4734] text-white px-7 py-3.5 hover:bg-[#163828]"
-    >
-      {children}
-    </Link>
-  );
-}
-
-function SecondaryLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center text-[11px] tracking-[0.14em] uppercase border border-[#161513] px-7 py-3.5 hover:bg-white"
-    >
-      {children}
-    </Link>
-  );
-}
-
-function Frame({
-  label,
-  children,
-  caption,
-}: {
-  label: string;
-  children: ReactNode;
-  caption?: string;
-}) {
-  return (
-    <figure className="m-0">
-      <div className="rounded-xl border border-[#e8e3da] bg-white overflow-hidden shadow-[0_20px_50px_rgba(22,21,19,0.04)]">
-        <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#eeeae4] bg-[#faf8f5]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
-          <span className="ml-2 text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">{label}</span>
-        </div>
-        <div className="p-5 sm:p-6">{children}</div>
-      </div>
-      {caption ? <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">{caption}</figcaption> : null}
-    </figure>
-  );
-}
-
-function QrMark() {
-  const cells = [
-    1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1,
-    0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0,
-    1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
-  ];
-  return (
-    <div
-      className="grid w-[108px] h-[108px] gap-[2px] bg-white p-1.5 border border-[#e8e3da]"
-      style={{ gridTemplateColumns: "repeat(7, 1fr)" }}
-      aria-hidden="true"
-    >
-      {cells.map((on, i) => (
-        <span key={i} className={on ? "bg-[#161513]" : "bg-transparent"} />
-      ))}
-    </div>
-  );
-}
+const FLOW = ["Prepare", "Generate", "Publish", "Maintain", "Understand"] as const;
 
 const STEPS = [
   {
@@ -134,7 +57,7 @@ const STEPS = [
   },
 ];
 
-const COMPARISON = [
+const COMPARISON: ComparisonRow[] = [
   {
     capability: "Connected stack",
     intertexe: "Material Intelligence → DPP operations → Market / consumer intelligence",
@@ -277,7 +200,7 @@ const FAQ: { q: string; a: ReactNode }[] = [
 export function PlatformHome() {
   return (
     <div>
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-14 sm:pt-20 md:pt-28 pb-12 sm:pb-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-20 md:pt-28 pb-10 sm:pb-16">
         <Eyebrow>The Digital Product Passport platform built for fashion</Eyebrow>
         <h1
           className="text-[2.15rem] sm:text-5xl md:text-[3.4rem] font-light leading-[1.12] max-w-4xl mb-6"
@@ -285,12 +208,22 @@ export function PlatformHome() {
         >
           Digital Product Passports, from product data to publication.
         </h1>
-        <Body className="max-w-2xl mb-4">
+        <Body className="max-w-2xl mb-6 sm:mb-4">
           INTERTEXE transforms fragmented fashion product data into structured material intelligence, identifies
           what&apos;s missing, generates Digital Product Passports and product identities, and helps brands keep
           their catalog current as requirements evolve.
         </Body>
-        <p className="text-[13px] tracking-[0.12em] uppercase text-[#8a847c] mb-10">
+        <ol className="sm:hidden mb-8 space-y-2">
+          {FLOW.map((step, index) => (
+            <li key={step} className="flex items-baseline gap-3">
+              <span className="text-[10px] tracking-[0.16em] uppercase text-[#1d4734] tabular-nums">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="text-[13px] tracking-[0.12em] uppercase text-[#8a847c]">{step}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="hidden sm:block text-[13px] tracking-[0.12em] uppercase text-[#8a847c] mb-10">
           Prepare → Generate → Publish → Maintain → Understand
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
@@ -301,7 +234,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="border-y border-[#e8e3da] py-12 sm:py-16">
+      <section className="border-y border-[#e8e3da] py-10 sm:py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
           <Heading className="mb-4">Product passports need a system, not a one-off file.</Heading>
           <Body>
@@ -318,7 +251,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>One system, beginning to end</Eyebrow>
         <Heading className="mb-3 max-w-3xl">Import. Understand. Resolve. Generate. Publish. Maintain.</Heading>
         <Body className="max-w-2xl mb-12">
@@ -339,7 +272,7 @@ export function PlatformHome() {
         </ol>
       </section>
 
-      <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-24">
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           <Eyebrow>Material Intelligence</Eyebrow>
           <Heading className="mb-4 max-w-3xl">DPP infrastructure starts with better product data.</Heading>
@@ -373,83 +306,119 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Workspace</Eyebrow>
         <Heading className="mb-4">One workspace for your DPP program</Heading>
-        <Body className="max-w-2xl mb-10">
+        <Body className="max-w-2xl mb-8 sm:mb-10">
           Material Intelligence is live in the public demo. Overview, Issues, Passport Studio and Regulatory Monitor
           are the workspace the Founding DPP Pilot delivers into, and the SaaS now being built. Previews below are
           faithful to that product — not consulting slides.
         </Body>
-        <div className="grid lg:grid-cols-2 gap-6">
-          <Frame
-            label="Overview"
-            caption="Illustrative example. Counts are not a live customer catalog."
-          >
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {[
-                ["12,430", "Products"],
-                ["9,814", "Passport ready"],
-                ["8,762", "Published"],
-                ["673", "Require attention"],
-              ].map(([n, l]) => (
-                <div key={l}>
-                  <p className="text-2xl font-light tabular-nums" style={SERIF}>
-                    {n}
+        <WorkspaceGallery
+          frames={[
+            {
+              id: "overview",
+              label: "Overview",
+              caption: "Illustrative example. Counts are not a live customer catalog.",
+              children: (
+                <>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    {[
+                      ["12,430", "Products"],
+                      ["9,814", "Passport ready"],
+                      ["8,762", "Published"],
+                      ["673", "Require attention"],
+                    ].map(([n, l]) => (
+                      <div key={l}>
+                        <p className="text-2xl font-light tabular-nums" style={SERIF}>
+                          {n}
+                        </p>
+                        <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mt-1">{l}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-[#eeeae4] pt-4">
+                    <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Needs your attention</p>
+                    <p className="text-sm">Composition conflict · 8 products</p>
+                    <p className="text-sm">Evidence required · 11 products</p>
+                  </div>
+                </>
+              ),
+            },
+            {
+              id: "intelligence",
+              label: "Material Intelligence",
+              caption: "Normalization preserves the original source string.",
+              children: (
+                <>
+                  <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Original</p>
+                  <p className="font-mono text-[13px] mb-4">MAIN 92 WO 8 PA / LIN 100 VI</p>
+                  <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">INTERTEXE</p>
+                  <p className="text-sm mb-1">Shell · 92% Wool · 8% Polyamide</p>
+                  <p className="text-sm mb-4">Lining · 100% Viscose</p>
+                  <p className="text-xs text-[#8a847c]">Source retained · Normalized · Human review: not required</p>
+                </>
+              ),
+            },
+            {
+              id: "issues",
+              label: "Issues",
+              children: (
+                <>
+                  <p className="text-sm mb-1">Composition conflict</p>
+                  <p className="text-xs text-[#8a847c] mb-3">Review required</p>
+                  <p className="text-sm">PLM: 100% Cotton</p>
+                  <p className="text-sm mb-4">Supplier declaration: 97% Cotton / 3% Elastane</p>
+                  <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Open issue</span>
+                </>
+              ),
+            },
+            {
+              id: "studio",
+              label: "Passport Studio",
+              children: (
+                <>
+                  <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
+                  <p className="text-sm mb-4" style={SERIF}>
+                    Silk Evening Dress
                   </p>
-                  <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mt-1">{l}</p>
-                </div>
-              ))}
-            </div>
-            <div className="border-t border-[#eeeae4] pt-4">
-              <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Needs your attention</p>
-              <p className="text-sm">Composition conflict · 8 products</p>
-              <p className="text-sm">Evidence required · 11 products</p>
-            </div>
-          </Frame>
-          <Frame label="Material Intelligence" caption="Normalization preserves the original source string.">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Original</p>
-            <p className="font-mono text-[13px] mb-4">MAIN 92 WO 8 PA / LIN 100 VI</p>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">INTERTEXE</p>
-            <p className="text-sm mb-1">Shell · 92% Wool · 8% Polyamide</p>
-            <p className="text-sm mb-4">Lining · 100% Viscose</p>
-            <p className="text-xs text-[#8a847c]">Source retained · Normalized · Human review: not required</p>
-          </Frame>
-          <Frame label="Issues">
-            <p className="text-sm mb-1">Composition conflict</p>
-            <p className="text-xs text-[#8a847c] mb-3">Review required</p>
-            <p className="text-sm">PLM: 100% Cotton</p>
-            <p className="text-sm mb-4">Supplier declaration: 97% Cotton / 3% Elastane</p>
-            <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Open issue</span>
-          </Frame>
-          <Frame label="Passport Studio">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
-            <p className="text-sm mb-4" style={SERIF}>
-              Silk Evening Dress
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
-                Preview passport
-              </span>
-              <span className="text-[10px] tracking-[0.1em] uppercase bg-[#1d4734] text-white px-3 py-2">Publish</span>
-              <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
-                Generate QR
-              </span>
-            </div>
-          </Frame>
-          <Frame label="Regulatory Monitor" caption="Tracked requirements and preparation status — not certification.">
-            <p className="text-sm mb-1">Requirement update · EU / Textiles</p>
-            <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
-              417 products evaluated
-            </p>
-            <p className="text-sm">362 already satisfy the required fields</p>
-            <p className="text-sm mb-4">55 need action</p>
-            <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Review affected products →</span>
-          </Frame>
-        </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
+                      Preview passport
+                    </span>
+                    <span className="text-[10px] tracking-[0.1em] uppercase bg-[#1d4734] text-white px-3 py-2">
+                      Publish
+                    </span>
+                    <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
+                      Generate QR
+                    </span>
+                  </div>
+                </>
+              ),
+            },
+            {
+              id: "monitor",
+              label: "Regulatory Monitor",
+              caption: "Tracked requirements and preparation status — not certification.",
+              children: (
+                <>
+                  <p className="text-sm mb-1">Requirement update · EU / Textiles</p>
+                  <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
+                    417 products evaluated
+                  </p>
+                  <p className="text-sm">362 already satisfy the required fields</p>
+                  <p className="text-sm mb-4">55 need action</p>
+                  <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">
+                    Review affected products →
+                  </span>
+                </>
+              ),
+            },
+          ]}
+        />
       </section>
 
-      <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-24">
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           <Eyebrow>Issues Inbox</Eyebrow>
           <Heading className="mb-4 max-w-3xl">Stop searching through spreadsheets for what&apos;s missing.</Heading>
@@ -473,30 +442,32 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Passport Studio</Eyebrow>
         <Heading className="mb-4">From structured data to a live passport.</Heading>
-        <Body className="max-w-2xl mb-10">
+        <Body className="max-w-2xl mb-8 sm:mb-10">
           Use the INTERTEXE-hosted experience or serve passport information inside your own digital experience
           through our API. The INTERTEXE scanner is not required.
         </Body>
-        <div className="grid md:grid-cols-3 gap-6 items-start">
-          <Frame label="Brand workspace">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
-            <p className="text-sm" style={SERIF}>
-              Silk Evening Dress
-            </p>
-          </Frame>
-          <div className="flex flex-col items-center text-center gap-3 py-6">
+        <div className="flex flex-col items-center md:grid md:grid-cols-3 md:items-start gap-8 md:gap-6">
+          <div className="w-full order-1">
+            <Frame label="Brand workspace">
+              <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
+              <p className="text-sm" style={SERIF}>
+                Silk Evening Dress
+              </p>
+            </Frame>
+          </div>
+          <div className="flex flex-col items-center text-center gap-3 order-2 py-0 md:py-6">
             <QrMark />
             <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">Product identity / QR</p>
           </div>
-          <div className="mx-auto w-full max-w-[240px] rounded-[28px] border border-[#e8e3da] bg-white p-5 shadow-[0_20px_50px_rgba(22,21,19,0.06)]">
+          <div className="order-3 mx-auto w-full max-w-[280px] md:max-w-[240px] rounded-[32px] md:rounded-[28px] border border-[#e8e3da] bg-white p-6 md:p-5 shadow-[0_24px_60px_rgba(22,21,19,0.08)]">
             <p className="text-[10px] tracking-[0.2em] uppercase text-[#8a847c] mb-3">Passport</p>
-            <p className="text-lg mb-4" style={SERIF}>
+            <p className="text-xl md:text-lg mb-4" style={SERIF}>
               Silk Evening Dress
             </p>
-            <ul className="text-xs text-[#5c5854] space-y-2">
+            <ul className="text-sm md:text-xs text-[#5c5854] space-y-2.5 md:space-y-2">
               {["Materials", "Manufacturing", "Care", "Repair", "Certifications", "Circularity"].map((item) => (
                 <li key={item} className="border-t border-[#eeeae4] pt-2">
                   {item}
@@ -507,7 +478,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-24">
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           <Eyebrow>Your experience, our infrastructure</Eyebrow>
           <Heading className="mb-4">Your customer experience. Our product intelligence.</Heading>
@@ -530,7 +501,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           <div>
             <Eyebrow>Regulatory Monitor</Eyebrow>
@@ -554,7 +525,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-24">
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           <Eyebrow>Peer benchmarking</Eyebrow>
           <Heading className="mb-4">Know how your material strategy compares.</Heading>
@@ -587,7 +558,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Coming / developing</Eyebrow>
         <Heading className="mb-4">From compliance data to commercial intelligence.</Heading>
         <Body className="max-w-2xl mb-8">
@@ -613,7 +584,7 @@ export function PlatformHome() {
         </p>
       </section>
 
-      <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-24">
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           <Eyebrow>How INTERTEXE is built</Eyebrow>
           <Heading className="mb-4">Built differently for fashion.</Heading>
@@ -622,37 +593,7 @@ export function PlatformHome() {
             material intelligence and connects that foundation to passport infrastructure and consumer insight. The
             difference is not that others lack passports or QR codes.
           </Body>
-          <div className="overflow-x-auto mb-10 -mx-4 px-4">
-            <table className="w-full min-w-[860px] text-left text-[13px] border-collapse">
-              <thead>
-                <tr className="border-b border-[#161513]">
-                  {["Capability", "INTERTEXE", "Fabacus", "Retraced", "TrusTrace", "Kezzler", "EON"].map((h) => (
-                    <th key={h} className="py-3 pr-4 font-medium align-bottom">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON.map((row) => (
-                  <tr key={row.capability} className="border-b border-[#e8e3da] align-top">
-                    <th className="py-3 pr-4 font-medium text-[#161513]">{row.capability}</th>
-                    <td className="py-3 pr-4 text-[#1d4734]">{row.intertexe}</td>
-                    <td className="py-3 pr-4 text-[#5c5854]">{row.fabacus}</td>
-                    <td className="py-3 pr-4 text-[#5c5854]">{row.retraced}</td>
-                    <td className="py-3 pr-4 text-[#5c5854]">{row.trustrace}</td>
-                    <td className="py-3 pr-4 text-[#5c5854]">{row.kezzler}</td>
-                    <td className="py-3 pr-4 text-[#5c5854]">{row.eon}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="text-xs text-[#8a847c] mb-12 leading-relaxed max-w-3xl">
-            Comparison based on publicly available product information from each company&apos;s official site. Features
-            may vary by deployment. Last reviewed {COMPARISON_REVIEWED}. Cells that cannot be verified are marked
-            &quot;Not publicly confirmed.&quot;
-          </p>
+          <ComparisonView rows={COMPARISON} reviewed={COMPARISON_REVIEWED} />
           <Heading className="text-2xl sm:text-3xl mb-6">INTERTEXE connects three layers.</Heading>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -674,7 +615,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20">
         <Eyebrow>Live demo</Eyebrow>
         <Heading className="mb-4">See INTERTEXE analyze a real catalog record.</Heading>
         <Body className="max-w-2xl mb-8">
@@ -684,7 +625,7 @@ export function PlatformHome() {
         <PrimaryLink href="/platform/demo">Explore the live demo</PrimaryLink>
       </section>
 
-      <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-24">
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           <Eyebrow>10-product snapshot</Eyebrow>
           <Heading className="mb-4">See your own product data inside INTERTEXE.</Heading>
@@ -699,7 +640,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Managed implementation</Eyebrow>
         <Heading className="mb-4">Start with a controlled catalog.</Heading>
         <div className="border border-[#e8e3da] bg-white p-6 sm:p-10 md:p-12 max-w-3xl">
@@ -756,7 +697,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Heading className="mb-2">FAQ</Heading>
         <div className="border-t border-[#e8e3da]">
           {FAQ.map((item) => (
@@ -780,7 +721,7 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="border-t border-[#e8e3da] py-16 sm:py-24">
+      <section className="border-t border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           <Heading className="mb-6">Build your DPP foundation now.</Heading>
           <div className="flex flex-col sm:flex-row gap-3">
