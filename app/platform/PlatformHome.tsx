@@ -774,8 +774,7 @@ export function PlatformHome() {
           </div>
           <p className="text-xs text-[#8a847c] max-w-3xl leading-relaxed">
             The Founding Pilot is implementation, analysis, software and a finished material-data project — not a
-            €29/month DPP-tool subscription. Ongoing platform pricing starts from $499/month; detailed SaaS tiers
-            will follow once the first customers show what the catalog actually uses.
+            €29/month DPP-tool subscription.
           </p>
         </div>
       </section>
