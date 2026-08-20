@@ -12,6 +12,7 @@ import { CountrySelector } from "./CountrySelector";
 import { MobileBottomDock } from "./MobileBottomDock";
 import { MobileNavMenu } from "./MobileNavMenu";
 import { DesignersMenuPanel } from "./DesignersMenuPanel";
+import { InstallCtas } from "./InstallCtas";
 
 type DesignerSearchHit = {
   id?: string;
@@ -132,7 +133,8 @@ export function Navbar() {
             )}
           </nav>
 
-          <div className="flex items-center space-x-4 ml-auto flex-shrink-0">
+          <div className="flex items-center gap-2 md:gap-3 ml-auto flex-shrink-0">
+            <InstallCtas />
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="p-2 text-foreground hover:text-foreground/70 transition-colors"
