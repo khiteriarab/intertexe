@@ -24,6 +24,7 @@ export const EMAIL_TYPES = {
   FOUNDER_WELCOME: "founder_welcome",
   SCAN_FOLLOWUP: "scan_followup",
   PRICE_DROP: "price_drop",
+  SALE_ALERT: "sale_alert",
   WEEKLY_EDIT: "weekly_edit",
   WEEKLY_EDIT_PREVIEW: "weekly_edit_preview",
   LIFECYCLE_DAY4: "lifecycle_day4",

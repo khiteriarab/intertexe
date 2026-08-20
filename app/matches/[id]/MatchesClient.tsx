@@ -210,10 +210,6 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
       return;
     }
     if (!capture) return;
-    if (enabled && (capture.price == null || Number(capture.price) <= 0)) {
-      setAlertNote("A listed price is needed to watch this piece for a sale.");
-      return;
-    }
     setAlerting(true);
     setAlertNote("");
     try {
@@ -221,11 +217,16 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
         method: "POST",
         headers,
         body: JSON.stringify({
-          captureId,
           enabled,
+          source: "tx_match",
+          captureId,
+          category: capture.category,
+          productType: capture.subcategory || capture.category,
+          brand: capture.brand_name,
           price: capture.price,
           currency: capture.currency,
-          originalUrl: capture.original_url,
+          materials: capture.composition_text,
+          retailer: capture.retailer,
         }),
       });
       if (res.status === 401) {
@@ -247,10 +248,9 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!capture) return;
       const { token, headers } = await authHeaders();
       if (!token || cancelled) return;
-      const res = await fetch(`/api/sale-alerts?captureId=${encodeURIComponent(captureId)}`, { headers });
+      const res = await fetch("/api/sale-alerts", { headers });
       const data = await res.json().catch(() => ({}));
       if (!cancelled && res.ok) setAlertOn(Boolean(data.enabled));
     })();
@@ -258,7 +258,7 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capture, captureId]);
+  }, [captureId]);
 
   useEffect(() => {
     if (searchParams.get("alert") !== "1" || !capture || alerting || alertQueryUsed.current) return;

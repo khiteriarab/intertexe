@@ -13,7 +13,7 @@ const signOutBtn = $("signOut");
 const accountBtn = $("accountBtn");
 const accountMenu = $("accountMenu");
 
-const SALE_ALERTS_KEY = "itxSaleAlerts";
+const SALE_ENABLED_KEY = "itxSaleAlertsEnabled";
 const PENDING_SALE_KEY = "pendingSaleAlert";
 const SORTS = [
   { id: "best", label: "Best" },
@@ -312,32 +312,13 @@ function saleKey(capture) {
   return String(capture.original_url || capture.originalUrl || "").trim();
 }
 
-async function saleAlertsMap() {
-  const store = await chrome.storage.local.get(SALE_ALERTS_KEY);
-  return store[SALE_ALERTS_KEY] && typeof store[SALE_ALERTS_KEY] === "object" ? store[SALE_ALERTS_KEY] : {};
+async function saleAlertEnabled() {
+  const store = await chrome.storage.local.get(SALE_ENABLED_KEY);
+  return Boolean(store[SALE_ENABLED_KEY]);
 }
 
-async function isSaleOn(url) {
-  if (!url) return false;
-  const map = await saleAlertsMap();
-  return Boolean(map[url]);
-}
-
-async function setSaleAlert(capture, on) {
-  const url = saleKey(capture);
-  if (!url) return;
-  const map = await saleAlertsMap();
-  if (on) {
-    map[url] = {
-      title: capture.title || null,
-      price: capture.price ?? null,
-      currency: capture.currency || null,
-      at: Date.now(),
-    };
-  } else {
-    delete map[url];
-  }
-  await chrome.storage.local.set({ [SALE_ALERTS_KEY]: map });
+async function setSaleAlertEnabled(on) {
+  await chrome.storage.local.set({ [SALE_ENABLED_KEY]: Boolean(on) });
 }
 
 function el(tag, className, text) {
@@ -499,25 +480,23 @@ function renderResult(payload, opts = {}) {
   const alertBtn = el("button", "alert-btn", "Alert me");
   alertBtn.type = "button";
   const urlKey = saleKey(capture);
-  isSaleOn(urlKey).then((on) => {
+  saleAlertEnabled().then((on) => {
     alertBtn.classList.toggle("is-on", on);
     alertBtn.textContent = on ? "Alert on" : "Alert me";
   });
-  const captureId = String(capture.id || "");
-  if (signed && captureId) {
-    chrome.runtime.sendMessage({ type: "SALE_ALERT_STATUS", captureId }).then((res) => {
+  if (signed) {
+    chrome.runtime.sendMessage({ type: "SALE_ALERT_STATUS" }).then((res) => {
       if (!res || typeof res.enabled !== "boolean") return;
       alertBtn.classList.toggle("is-on", res.enabled);
       alertBtn.textContent = res.enabled ? "Alert on" : "Alert me";
+      void setSaleAlertEnabled(res.enabled);
     });
   }
   alertBtn.addEventListener("click", async () => {
     const currentlyOn = alertBtn.classList.contains("is-on");
     if (currentlyOn) {
-      await setSaleAlert(capture, false);
-      if (captureId) {
-        await chrome.runtime.sendMessage({ type: "SALE_ALERT", capture, enabled: false });
-      }
+      await setSaleAlertEnabled(false);
+      await chrome.runtime.sendMessage({ type: "SALE_ALERT", capture, enabled: false, source: "chrome_extension" });
       alertBtn.classList.remove("is-on");
       alertBtn.textContent = "Alert me";
       setStatus("Sale alert off for this piece.");
@@ -533,11 +512,12 @@ function renderResult(payload, opts = {}) {
     const res = await chrome.runtime.sendMessage({ type: "SAVE_TAB", force: true });
     saveBtn.disabled = false;
     const savedCapture = res?.result?.capture || capture;
-    await setSaleAlert(savedCapture, true);
+    await setSaleAlertEnabled(true);
     const synced = await chrome.runtime.sendMessage({
       type: "SALE_ALERT",
       capture: savedCapture,
       enabled: true,
+      source: "chrome_extension",
     });
     alertBtn.classList.add("is-on");
     alertBtn.textContent = "Alert on";
@@ -667,9 +647,14 @@ async function activatePendingSaleAlert(capture) {
   const pending = String(store[PENDING_SALE_KEY] || "");
   const url = saleKey(capture || {});
   if (!pending || !url || pending !== url) return;
-  await setSaleAlert(capture, true);
+  await setSaleAlertEnabled(true);
   await chrome.storage.local.remove(PENDING_SALE_KEY);
-  await chrome.runtime.sendMessage({ type: "SALE_ALERT", capture, enabled: true });
+  await chrome.runtime.sendMessage({
+    type: "SALE_ALERT",
+    capture,
+    enabled: true,
+    source: "chrome_extension",
+  });
 }
 
 async function refreshUi() {
