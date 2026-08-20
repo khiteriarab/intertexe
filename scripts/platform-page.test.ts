@@ -109,4 +109,35 @@ describe("Platform material-intelligence page", () => {
     assert.doesNotMatch(previews, /Official DPP Score/);
     assert.doesNotMatch(previews, /EU Certified/);
   });
+
+  it("uses interactive product stages without inventing enterprise customers", () => {
+    const marquee = fs.readFileSync(path.join(process.cwd(), "app/platform/CatalogMarquee.tsx"), "utf8");
+    const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
+    const tabs = fs.readFileSync(path.join(process.cwd(), "app/platform/StoryTabs.tsx"), "utf8");
+    const carousel = fs.readFileSync(path.join(process.cwd(), "app/platform/ResourceCarousel.tsx"), "utf8");
+    const css = fs.readFileSync(path.join(process.cwd(), "app/globals.css"), "utf8");
+    assert.match(home, /CatalogMarquee/);
+    assert.match(home, /HeroProductStage/);
+    assert.match(home, /ChromeExtensionStage/);
+    assert.match(home, /IphoneAppStage/);
+    assert.match(home, /StoryTabs/);
+    assert.match(home, /ResourceCarousel/);
+    assert.match(home, /coming \/ developing/i);
+    assert.doesNotMatch(home, /150 companies trust us/i);
+    assert.doesNotMatch(home, /KARL LAGERFELD/);
+    assert.match(marquee, /not a list of enterprise customers/i);
+    assert.match(marquee, /itx-marquee-track/);
+    assert.match(css, /@keyframes itx-marquee/);
+    assert.match(stages, /Fabric Scanner/);
+    assert.match(stages, /Download on iPhone/);
+    assert.match(stages, /Better-material matches/);
+    assert.match(stages, /Shop by material/);
+    assert.match(tabs, /Understand, compare, act, engage/);
+    assert.match(carousel, /Latest product surfaces/);
+    assert.match(previewsFromHome(), /onClick/);
+  });
 });
+
+function previewsFromHome() {
+  return fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
+}

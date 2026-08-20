@@ -20,6 +20,10 @@ import {
   SERIF,
 } from "./platform-ui";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
+import { CatalogMarquee } from "./CatalogMarquee";
+import { ResourceCarousel } from "./ResourceCarousel";
+import { StoryTabs, type StoryTab } from "./StoryTabs";
+import { ChromeExtensionStage, HeroProductStage, IphoneAppStage } from "./product-stages";
 
 const EU_TEXTILE =
   "https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en";
@@ -230,10 +234,53 @@ const AUDIT = [
   ["736", "require supplier information"],
 ] as const;
 
+const STORY_TABS: StoryTab[] = [
+  {
+    id: "understand",
+    label: "Understand",
+    eyebrow: "Understand",
+    title: "See what is actually in the catalog",
+    copy: "Give INTERTEXE the files you already have. It structures materials, keeps the original source, and opens an Issues Inbox for conflicts, missing fields and invalid totals.",
+    points: ["Original source strings are retained", "Conflicts stay visible — nothing is overwritten"],
+    href: "/platform/demo",
+    cta: "See INTERTEXE analyze a real catalog",
+  },
+  {
+    id: "compare",
+    label: "Compare",
+    eyebrow: "Compare",
+    title: "Know how your material strategy compares",
+    copy: "See natural vs synthetic share, completeness and passport readiness against an appropriate peer group. Observed consumer demand is coming / developing.",
+    points: ["Peer group, never a named competitor dump", "INTERTEXE consumer signal is coming / developing"],
+    href: "/platform/demo",
+    cta: "Open the benchmark in the live demo",
+  },
+  {
+    id: "act",
+    label: "Act",
+    eyebrow: "Act",
+    title: "Then Digital Product Passports become almost obvious",
+    copy: "Once the record is structured, publish it. Consumers do not need the INTERTEXE app. This is not legal certification.",
+    points: ["The INTERTEXE scanner is not required", "Hosted or brand-owned passport experiences"],
+    href: "/platform/request?intent=snapshot&cta=story_act",
+    cta: "See INTERTEXE with your own products",
+  },
+  {
+    id: "engage",
+    label: "Engage",
+    eyebrow: "Consumer loop",
+    title: "Direct from consumer to the same material record",
+    copy: "Shoppers already use the Chrome extension and iPhone app. That demand signal is on the roadmap for brand workspaces — it is not a live statistical product yet.",
+    points: ["Chrome Fabric Scanner + iPhone shop-by-material", "Same material intelligence, two surfaces"],
+    href: "/shop",
+    cta: "Open the consumer catalog",
+  },
+];
+
 export function PlatformHome() {
   return (
     <div>
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-20 md:pt-28 pb-10 sm:pb-16">
+      <section className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-20 md:pt-28 pb-10 sm:pb-16">
         <Eyebrow>Material intelligence for fashion</Eyebrow>
         <h1
           className="text-[2.15rem] sm:text-5xl md:text-[3.4rem] font-light leading-[1.12] max-w-4xl mb-6"
@@ -268,8 +315,65 @@ export function PlatformHome() {
           </PrimaryLink>
           <SecondaryLink href="/platform/demo">See the live demo</SecondaryLink>
         </div>
+        <HeroProductStage />
         <PlatformGraphic slot="heroWorkspace" className="mt-12 sm:mt-16" />
         {PLATFORM_GRAPHICS.heroWorkspace.ready ? null : <WorkspaceHeroPreview />}
+      </section>
+
+      <CatalogMarquee />
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
+        <Eyebrow>Platform story</Eyebrow>
+        <Heading className="mb-4">Graphs, tabs and the live product — not a manifesto first.</Heading>
+        <Body className="max-w-2xl mb-10">
+          Switch Understand → Compare → Act, then Engage to see the Chrome extension, iPhone app and brand workspace
+          on the same material record.
+        </Body>
+        <StoryTabs
+          tabs={STORY_TABS}
+          panels={{
+            understand: (
+              <>
+                <PlatformGraphic slot="understandNormalize" className="mb-6" />
+                {PLATFORM_GRAPHICS.understandNormalize.ready ? null : <NormalizePreview className="mb-6" />}
+                <PlatformGraphic slot="understandIssues" className="mb-6" />
+                {PLATFORM_GRAPHICS.understandIssues.ready ? null : <IssuesPreview className="mb-0" />}
+              </>
+            ),
+            compare: (
+              <>
+                <PlatformGraphic slot="compareBenchmark" className="mb-6" />
+                {PLATFORM_GRAPHICS.compareBenchmark.ready ? null : <BenchmarkPreview className="mb-0" />}
+              </>
+            ),
+            act: (
+              <>
+                <PlatformGraphic slot="actPassport" className="mb-6" />
+                {PLATFORM_GRAPHICS.actPassport.ready ? null : <PassportPreview className="mb-0" />}
+              </>
+            ),
+            engage: (
+              <div className="space-y-8">
+                <ChromeExtensionStage />
+              </div>
+            ),
+          }}
+        />
+      </section>
+
+      <ResourceCarousel />
+
+      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+          <Eyebrow>Online, iPhone, and the brand workspace</Eyebrow>
+          <Heading className="mb-4">Dual images of the same system.</Heading>
+          <Body className="max-w-2xl mb-10">
+            The consumer catalog, Chrome extension and iPhone app already exist. The brand SaaS workspace reads the
+            same kind of material record. Observed demand from shoppers is coming / developing — not a live
+            statistical product yet.
+          </Body>
+          <IphoneAppStage />
+        </div>
       </section>
 
       <section className="border-y border-[#e8e3da] py-10 sm:py-16">
@@ -288,10 +392,9 @@ export function PlatformHome() {
         <Eyebrow>Understand</Eyebrow>
         <Heading className="mb-3 max-w-3xl">What happens when a brand uploads its catalog.</Heading>
         <Body className="max-w-2xl mb-10">
-          Say a fashion company gives us 10,000 products. The information might look like this.
+          Say a fashion company gives us 10,000 products. The information might look like this. The Understand tab
+          above is the interactive normalize and issues view.
         </Body>
-        <PlatformGraphic slot="understandNormalize" className="mb-10" />
-        {PLATFORM_GRAPHICS.understandNormalize.ready ? null : <NormalizePreview />}
         <ol className="grid md:grid-cols-3 gap-x-10 gap-y-10 mb-12">
           {UNDERSTAND_STEPS.map((step) => (
             <li key={step.n} className="border-t border-[#e8e3da] pt-5">
@@ -318,8 +421,6 @@ export function PlatformHome() {
             </div>
           ))}
         </div>
-        <PlatformGraphic slot="understandIssues" className="mb-8" />
-        {PLATFORM_GRAPHICS.understandIssues.ready ? null : <IssuesPreview />}
         <p className="text-xs text-[#8a847c] mb-8">
           Illustrative example. Counts are not a live customer catalog. Teams click from each issue into the product
           and fix it.
@@ -457,8 +558,6 @@ export function PlatformHome() {
           can ask: are competitors using more linen than us? How synthetic is our assortment? Where is the catalog
           weaker?
         </Body>
-        <PlatformGraphic slot="compareBenchmark" className="mb-8" />
-        {PLATFORM_GRAPHICS.compareBenchmark.ready ? null : <BenchmarkPreview />}
         <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">
           Illustrative example · Filters: market segment, category, geography, price band, material, peer group
         </p>
@@ -487,8 +586,6 @@ export function PlatformHome() {
             record and product identity, and hosts the QR experience — or serves it through an API. It is not legal
             advice or official certification.
           </p>
-          <PlatformGraphic slot="actPassport" className="mb-10" />
-          {PLATFORM_GRAPHICS.actPassport.ready ? null : <PassportPreview />}
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div>
               <h3 className="text-2xl mb-4" style={SERIF}>

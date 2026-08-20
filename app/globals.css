@@ -997,3 +997,27 @@
   }
 }
 
+@keyframes itx-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.itx-marquee-track {
+  animation: itx-marquee 42s linear infinite;
+}
+
+.itx-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .itx-marquee-track {
+    animation: none;
+    transform: none;
+  }
+}
+

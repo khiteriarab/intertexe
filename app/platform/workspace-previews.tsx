@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { DEMO_CATALOG, DEMO_ISSUE_LABEL } from "../../lib/material-intelligence/demo-catalog";
 import { QrMark, SERIF } from "./platform-ui";
 
@@ -289,21 +289,39 @@ export function NormalizePreview({ className = "mb-10" }: { className?: string }
 }
 
 export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
+  const [filter, setFilter] = useState<(typeof ISSUE_FILTERS)[number][0]>("All");
+  const rows =
+    filter === "All"
+      ? ISSUE_ROWS
+      : ISSUE_ROWS.filter((row) =>
+          filter === "Composition conflict"
+            ? row.issue.startsWith("Composition conflict")
+            : filter === "Invalid percentages"
+              ? row.issue.startsWith("Invalid percentages")
+              : filter === "Missing identifier"
+                ? row.issue.startsWith("Missing identifier")
+                : filter === "Missing supplier"
+                  ? row.issue.startsWith("Missing supplier")
+                  : row.issue.startsWith("Missing information")
+        );
+
   return (
     <WorkspaceChrome active="Issues" className={className}>
       <p className="text-sm mb-4" style={SERIF}>
         Issues inbox
       </p>
       <div className="flex gap-2 overflow-x-auto pb-3 mb-3 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {ISSUE_FILTERS.map(([label, count], index) => (
-          <span
+        {ISSUE_FILTERS.map(([label, count]) => (
+          <button
             key={label}
-            className={`shrink-0 text-[10px] tracking-[0.1em] uppercase px-3 py-2 border ${
-              index === 0 ? "bg-[#9c7b8b] text-white border-[#9c7b8b]" : "bg-white border-[#e8e3da] text-[#6f6a63]"
+            type="button"
+            onClick={() => setFilter(label)}
+            className={`shrink-0 text-[10px] tracking-[0.1em] uppercase px-3 py-2 border min-h-[36px] ${
+              filter === label ? "bg-[#9c7b8b] text-white border-[#9c7b8b]" : "bg-white border-[#e8e3da] text-[#6f6a63]"
             }`}
           >
             {label} {count}
-          </span>
+          </button>
         ))}
       </div>
       <div className="bg-white border border-[#e8e3da] overflow-x-auto">
@@ -317,7 +335,7 @@ export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
             </tr>
           </thead>
           <tbody>
-            {ISSUE_ROWS.map((row) => (
+            {rows.map((row) => (
               <tr key={row.product} className={`border-b border-[#eeeae4] ${row.expanded ? "bg-[#f7f1f3]" : ""}`}>
                 <td className="py-3 px-3 align-top">
                   <span className={row.severity === "High" ? "text-[#8b2e2e]" : "text-[#8a847c]"}>{row.severity}</span>
@@ -336,6 +354,13 @@ export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
                 <td className="py-3 px-3 align-top text-[#8a847c]">{row.category}</td>
               </tr>
             ))}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="py-6 px-3 text-sm text-[#8a847c]">
+                  No sample rows in this filter. Illustrative inbox — counts are not a live catalog.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
