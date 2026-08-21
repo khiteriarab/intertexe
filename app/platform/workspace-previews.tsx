@@ -258,7 +258,7 @@ function NormalizeBody() {
       <p className="text-sm mb-4" style={SERIF}>
         Dress 8721
       </p>
-      <div className="grid grid-cols-1 gap-3 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
         <Card>
           <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-3">Source data · raw</p>
           <dl className="text-sm space-y-2">
@@ -280,15 +280,6 @@ function NormalizeBody() {
             ))}
           </dl>
         </Card>
-        <div className="flex items-center justify-center py-1">
-          <span
-            className="w-8 h-8 rounded-full bg-[#9c7b8b] text-white text-sm flex items-center justify-center"
-            aria-hidden="true"
-          >
-            →
-          </span>
-          <span className="sr-only">Normalized INTERTEXE record</span>
-        </div>
         <Card>
           <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-3">INTERTEXE record</p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Composition · normalized</p>
@@ -554,6 +545,52 @@ export function NormalizePreview({ className = "mb-10", caption }: { className?:
       caption={caption ?? `${CAPTION} Original source strings are retained.`}
     >
       <NormalizeBody />
+    </WorkspaceChrome>
+  );
+}
+
+function CompactIssues() {
+  const rows = ISSUE_ROWS.slice(0, 3);
+  return (
+    <Card className="mt-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">Issues inbox</p>
+        <p className="text-[10px] tracking-[0.1em] uppercase text-[#9c7b8b]">487 open</p>
+      </div>
+      <ul>
+        {rows.map((row) => {
+          const open = row.product === "Dress 8721";
+          return (
+            <li key={row.product} className="py-3 min-w-0 border-t border-[#eeeae4] first:border-0 first:pt-0">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <span className={`text-sm ${row.severity === "High" ? "text-[#8b2e2e]" : "text-[#8a847c]"}`}>
+                  {row.severity}
+                </span>
+                <span className="text-xs text-[#8a847c]">{row.product}</span>
+              </div>
+              <p className="text-sm break-words mt-1">{row.issue}</p>
+              {open ? (
+                <p className="mt-2 text-xs text-[#5c5854] leading-relaxed break-words">{row.detail[0]}</p>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
+  );
+}
+
+export function UnderstandPreview({ className = "mb-0", caption }: { className?: string; caption?: string }) {
+  return (
+    <WorkspaceChrome
+      active="Products"
+      className={className}
+      caption={
+        caption ?? `${CAPTION} Original source strings are retained. Conflicts stay visible — nothing is overwritten.`
+      }
+    >
+      <NormalizeBody />
+      <CompactIssues />
     </WorkspaceChrome>
   );
 }

@@ -113,8 +113,9 @@ describe("Platform material-intelligence page", () => {
     assert.match(graphics, /hero-workspace\.png/);
     assert.match(graphics, /demo-source\.png/);
     assert.match(graphics, /ready: false/);
-    assert.match(home, /NormalizePreview/);
-    assert.match(home, /IssuesPreview/);
+    assert.match(home, /UnderstandPreview/);
+    assert.doesNotMatch(home, /NormalizePreview/);
+    assert.doesNotMatch(home, /IssuesPreview/);
     assert.match(home, /BenchmarkPreview/);
     assert.match(home, /PassportPreview/);
     assert.doesNotMatch(home, /InteractiveWorkspace/);
@@ -163,8 +164,13 @@ describe("Platform material-intelligence page", () => {
     assert.match(stages, /Better-material matches/);
     assert.match(stages, /Shop by material/);
     assert.match(tabs, /Understand, compare, act, engage/);
+    assert.match(tabs, /minmax\(20rem,28rem\)/);
     assert.match(tabs, /minmax\(0,1fr\)/);
+    assert.doesNotMatch(tabs, /minmax\(16rem,20rem\)/);
     assert.doesNotMatch(tabs, /SoftwareStage/);
+    assert.match(previewsFromHome(), /export function UnderstandPreview/);
+    assert.match(previewsFromHome(), /sm:grid-cols-2/);
+    assert.match(previewsFromHome(), /Issues inbox/);
     assert.match(home, /Know how your material strategy compares/);
     assert.match(home, /Then Digital Product Passports become almost obvious/);
     assert.match(home, /MaterialPositionTable/);
