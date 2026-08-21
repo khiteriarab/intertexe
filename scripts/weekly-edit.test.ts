@@ -11,6 +11,7 @@ import {
   WEEKLY_EDIT_MIX,
   type WeeklyEditPickInput,
 } from "../lib/weekly-edit.ts";
+import { jwtRoleClaim, presentedOpsSecret } from "../lib/cron-auth.ts";
 
 function pick(partial: Partial<WeeklyEditPickInput> & Pick<WeeklyEditPickInput, "id" | "name">): WeeklyEditPickInput {
   return {
@@ -123,12 +124,30 @@ describe("Weekly Edit email", () => {
     assert.match(send, /editor's picks/);
   });
 
-  it("lets the service role trigger the internal preview send", () => {
+  it("lets a live service role trigger the internal preview via x-intertexe-ops", () => {
     const preview = fs.readFileSync(
       path.join(process.cwd(), "app/api/cron/weekly-edit-preview/route.ts"),
       "utf8"
     );
-    assert.match(preview, /SUPABASE_SERVICE_ROLE_KEY/);
+    const auth = fs.readFileSync(path.join(process.cwd(), "lib/cron-auth.ts"), "utf8");
     assert.match(preview, /authorizeWeeklyEditPreview/);
+    assert.match(auth, /x-intertexe-ops/);
+    assert.match(auth, /isLiveSupabaseServiceRole/);
+    assert.match(auth, /service_role/);
+    assert.doesNotMatch(auth, /authHeader === `Bearer \$\{serviceKey\}`/);
+  });
+});
+
+describe("Weekly Edit preview ops auth", () => {
+  it("reads x-intertexe-ops and only treats service_role JWTs as ops keys", () => {
+    const req = new Request("https://www.intertexe.com/api/cron/weekly-edit-preview", {
+      headers: { "x-intertexe-ops": "secret-token" },
+    });
+    assert.equal(presentedOpsSecret(req), "secret-token");
+    const payload = Buffer.from(JSON.stringify({ role: "service_role" })).toString("base64url");
+    const anon = Buffer.from(JSON.stringify({ role: "anon" })).toString("base64url");
+    assert.equal(jwtRoleClaim(`header.${payload}.sig`), "service_role");
+    assert.equal(jwtRoleClaim(`header.${anon}.sig`), "anon");
+    assert.equal(jwtRoleClaim("not-a-jwt"), null);
   });
 });
