@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+export type PlatformNavKey = "demo" | "docs" | "request" | "platform" | "login" | "discover";
+
 const NAV = [
+  { href: "/platform/discover", label: "Discover" },
   { href: "/platform/demo", label: "Demo" },
   { href: "/platform/docs", label: "Documentation" },
 ];
@@ -20,7 +23,7 @@ export function PlatformNav({
   active,
   tone = "light",
 }: {
-  active?: "demo" | "docs" | "request" | "platform" | "login";
+  active?: PlatformNavKey;
   tone?: "light" | "dark";
 }) {
   const [open, setOpen] = useState(false);
@@ -37,7 +40,9 @@ export function PlatformNav({
 
   const linkTone = (href: string) => {
     const isActive =
-      (active === "demo" && href === "/platform/demo") || (active === "docs" && href === "/platform/docs");
+      (active === "discover" && href === "/platform/discover") ||
+      (active === "demo" && href === "/platform/demo") ||
+      (active === "docs" && href === "/platform/docs");
     if (dark) return isActive ? "text-white" : "text-white/70 hover:text-white";
     return isActive ? "text-black" : "text-[#6f6a63] hover:text-black";
   };

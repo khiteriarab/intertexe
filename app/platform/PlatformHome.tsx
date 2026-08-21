@@ -2,17 +2,15 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ComparisonView, type ComparisonRow } from "./ComparisonView";
 import { PlatformGraphic } from "./PlatformGraphic";
-import { WorkspaceGallery } from "./WorkspaceGallery";
-import { WorkspaceHeroPreview } from "./WorkspaceHeroPreview";
 import {
   BenchmarkPreview,
   IssuesPreview,
   NormalizePreview,
   PassportPreview,
-  RegulatoryPreview,
 } from "./workspace-previews";
 import {
   Body,
+  DiscoverLink,
   Eyebrow,
   Frame,
   Heading,
@@ -243,8 +241,8 @@ const STORY_TABS: StoryTab[] = [
     title: "See what is actually in the catalog",
     copy: "Give INTERTEXE the files you already have. It structures materials, keeps the original source, and opens an Issues Inbox for conflicts, missing fields and invalid totals.",
     points: ["Original source strings are retained", "Conflicts stay visible — nothing is overwritten"],
-    href: "/platform/demo",
-    cta: "See INTERTEXE analyze a real catalog",
+    href: "/platform/discover",
+    cta: "Discover",
   },
   {
     id: "compare",
@@ -338,70 +336,11 @@ export function PlatformHome() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Workspace</Eyebrow>
         <Heading className="mb-4">One workspace for material intelligence.</Heading>
-        <Body className="max-w-2xl mb-8 sm:mb-10">
-          Material Intelligence is live in the public demo. Overview, Issues, Benchmarking, Passport Studio and
-          Regulatory Monitor are the workspace the Founding Pilot delivers into, and the platform now being built.
-          Click a surface — a new INTERTEXE workspace mockup opens. Previews are illustrative, not a live customer
-          catalog.
+        <Body className="max-w-2xl mb-8">
+          Overview, Issues, Benchmarking, Passport Studio and Regulatory Monitor live in one INTERTEXE workspace.
+          The full mockups are on Discover — this page stays a story, not a product tour.
         </Body>
-        <WorkspaceGallery
-          frames={[
-            {
-              id: "overview",
-              label: "Overview",
-              caption: "Illustrative example. Counts are not a live customer catalog.",
-              children: PLATFORM_GRAPHICS.heroWorkspace.ready ? (
-                <PlatformGraphic slot="heroWorkspace" />
-              ) : (
-                <WorkspaceHeroPreview className="mt-0" />
-              ),
-            },
-            {
-              id: "intelligence",
-              label: "Material intelligence",
-              caption: "Normalization preserves the original source string.",
-              children: PLATFORM_GRAPHICS.understandNormalize.ready ? (
-                <PlatformGraphic slot="understandNormalize" />
-              ) : (
-                <NormalizePreview className="mb-0" />
-              ),
-            },
-            {
-              id: "issues",
-              label: "Issues",
-              children: PLATFORM_GRAPHICS.understandIssues.ready ? (
-                <PlatformGraphic slot="understandIssues" />
-              ) : (
-                <IssuesPreview className="mb-0" />
-              ),
-            },
-            {
-              id: "benchmark",
-              label: "Benchmark",
-              caption: "Illustrative example · Individual customer data is never exposed.",
-              children: PLATFORM_GRAPHICS.compareBenchmark.ready ? (
-                <PlatformGraphic slot="compareBenchmark" />
-              ) : (
-                <BenchmarkPreview className="mb-0" />
-              ),
-            },
-            {
-              id: "studio",
-              label: "Passport studio",
-              children: PLATFORM_GRAPHICS.actPassport.ready ? (
-                <PlatformGraphic slot="actPassport" />
-              ) : (
-                <PassportPreview className="mb-0" />
-              ),
-            },
-            {
-              id: "monitor",
-              label: "Regulatory monitor",
-              caption: "Tracked requirements and preparation status — not certification.",
-              children: <RegulatoryPreview className="mb-0" />,
-            },
-          ]}
-        />
+        <DiscoverLink href="/platform/discover">Discover</DiscoverLink>
       </section>
 
       <CatalogMarquee />
@@ -509,7 +448,7 @@ export function PlatformHome() {
           Illustrative example. Counts are not a live customer catalog. Teams click from each issue into the product
           and fix it.
         </p>
-        <PrimaryLink href="/platform/demo">See INTERTEXE analyze a real catalog</PrimaryLink>
+        <DiscoverLink href="/platform/discover">Discover</DiscoverLink>
       </section>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">

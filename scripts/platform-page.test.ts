@@ -88,8 +88,6 @@ describe("Platform material-intelligence page", () => {
     assert.match(nav, /Log in/);
     assert.match(nav, /border-white/);
     assert.match(nav, /href="\/dashboard\/login"/);
-    assert.match(home, /WorkspaceHeroPreview/);
-    assert.match(home, /WorkspaceGallery/);
     assert.match(home, /ComparisonView/);
     assert.match(home, /Understand → Compare → Act/);
     assert.match(comparison, /Compare INTERTEXE with/);
@@ -153,15 +151,21 @@ describe("Platform material-intelligence page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-product-window.png")));
   });
 
-  it("places Log in and Book a demo as a top-right pair and swaps workspace mockups before the catalog strip", () => {
+  it("places Log in and Book a demo as a top-right pair and sends workspace mockups to Discover", () => {
     const gallery = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
+    const discover = fs.readFileSync(path.join(process.cwd(), "app/platform/discover/page.tsx"), "utf8");
     assert.match(nav, /Book a demo/);
     assert.match(nav, /Log in/);
+    assert.match(nav, /Discover/);
     assert.match(home, /One workspace for material intelligence/);
-    assert.match(home, /Regulatory monitor/);
-    assert.match(home, /WorkspaceHeroPreview/);
-    assert.match(home, /RegulatoryPreview/);
+    assert.match(home, /href="\/platform\/discover"/);
+    assert.match(home, />Discover</);
+    assert.doesNotMatch(home, /See INTERTEXE analyze a real catalog/);
+    assert.match(discover, /DiscoverWorkspace/);
+    assert.match(gallery, /WorkspaceHeroPreview/);
+    assert.match(gallery, /RegulatoryPreview/);
     assert.match(gallery, /onClick=\{\(\) => setActiveId\(frame\.id\)\}/);
+    assert.match(gallery, /Functionalities/);
     const catalogAt = home.indexOf("<CatalogMarquee");
     const workspaceAt = home.indexOf("One workspace for material intelligence");
     assert.ok(workspaceAt >= 0 && catalogAt > workspaceAt);

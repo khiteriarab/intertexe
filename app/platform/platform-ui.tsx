@@ -74,6 +74,38 @@ export function SecondaryLink({
   );
 }
 
+export function SoftwareStage({
+  children,
+  title,
+  copy,
+}: {
+  children: ReactNode;
+  title?: string;
+  copy?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[#d5dee8] bg-white p-5 sm:p-8 shadow-[0_24px_60px_rgba(21,34,56,0.08)]">
+      {title ? (
+        <p className="text-[15px] sm:text-[17px] font-medium text-[#152238] mb-1">{title}</p>
+      ) : null}
+      {copy ? <p className="text-sm text-[#5c5854] font-light mb-5">{copy}</p> : null}
+      <div className="rounded-xl bg-[#d4e0ee] p-3 sm:p-6">{children}</div>
+    </div>
+  );
+}
+
+export function DiscoverLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-2 rounded-md bg-[#152238] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c]"
+    >
+      {children}
+      <span aria-hidden="true">→</span>
+    </Link>
+  );
+}
+
 export function Frame({
   label,
   children,

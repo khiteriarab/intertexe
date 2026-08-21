@@ -24,7 +24,7 @@ export function WorkspaceChrome({
 }) {
   return (
     <figure className={`m-0 ${className}`}>
-      <div className="rounded-xl border border-[#e8e3da] bg-white overflow-hidden shadow-[0_20px_50px_rgba(22,21,19,0.06)]">
+      <div className="rounded-2xl border border-[#d5dee8] bg-white overflow-hidden shadow-[0_28px_70px_rgba(21,34,56,0.12)]">
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#eeeae4] bg-[#faf8f5]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
@@ -58,7 +58,9 @@ export function WorkspaceChrome({
           <div className="p-4 sm:p-5 bg-[#f7f5f1]">{children}</div>
         </div>
       </div>
-      <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">{caption}</figcaption>
+      {caption ? (
+        <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">{caption}</figcaption>
+      ) : null}
     </figure>
   );
 }
@@ -158,9 +160,9 @@ function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: "neu
   return <span className={`inline-block text-[11px] px-2 py-1 mr-1 mb-1 ${cls}`}>{children}</span>;
 }
 
-export function OverviewPreview({ className = "mt-12 sm:mt-16" }: { className?: string }) {
+export function OverviewPreview({ className = "mt-12 sm:mt-16", caption }: { className?: string; caption?: string }) {
   return (
-    <WorkspaceChrome active="Overview" className={className}>
+    <WorkspaceChrome active="Overview" className={className} caption={caption}>
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
         {METRICS.map(([n, label, delta]) => (
           <Card key={label}>
@@ -228,9 +230,9 @@ export function OverviewPreview({ className = "mt-12 sm:mt-16" }: { className?: 
   );
 }
 
-export function NormalizePreview({ className = "mb-10" }: { className?: string }) {
+export function NormalizePreview({ className = "mb-10", caption }: { className?: string; caption?: string }) {
   return (
-    <WorkspaceChrome active="Products" className={className} caption={`${CAPTION} Original source strings are retained.`}>
+    <WorkspaceChrome active="Products" className={className} caption={caption ?? `${CAPTION} Original source strings are retained.`}>
       <p className="text-sm mb-4" style={SERIF}>
         Dress 8721
       </p>
@@ -288,7 +290,7 @@ export function NormalizePreview({ className = "mb-10" }: { className?: string }
   );
 }
 
-export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
+export function IssuesPreview({ className = "mb-8", caption }: { className?: string; caption?: string }) {
   const [filter, setFilter] = useState<(typeof ISSUE_FILTERS)[number][0]>("All");
   const rows =
     filter === "All"
@@ -306,7 +308,7 @@ export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
         );
 
   return (
-    <WorkspaceChrome active="Issues" className={className}>
+    <WorkspaceChrome active="Issues" className={className} caption={caption}>
       <p className="text-sm mb-4" style={SERIF}>
         Issues inbox
       </p>
@@ -368,12 +370,12 @@ export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
   );
 }
 
-export function BenchmarkPreview({ className = "mb-8" }: { className?: string }) {
+export function BenchmarkPreview({ className = "mb-8", caption }: { className?: string; caption?: string }) {
   return (
     <WorkspaceChrome
       active="Benchmark"
       className={className}
-      caption={`${CAPTION} Individual customer data is never exposed. Consumer signal is coming / developing.`}
+      caption={caption ?? `${CAPTION} Individual customer data is never exposed. Consumer signal is coming / developing.`}
     >
       <div className="grid lg:grid-cols-2 gap-3">
         <Card>
@@ -432,12 +434,12 @@ export function BenchmarkPreview({ className = "mb-8" }: { className?: string })
   );
 }
 
-export function PassportPreview({ className = "mb-10" }: { className?: string }) {
+export function PassportPreview({ className = "mb-10", caption }: { className?: string; caption?: string }) {
   return (
     <WorkspaceChrome
       active="Passports"
       className={className}
-      caption="Illustrative passport workflow. Not a regulatory certification. The INTERTEXE scanner is not required."
+      caption={caption ?? "Illustrative passport workflow. Not a regulatory certification. The INTERTEXE scanner is not required."}
     >
       <div className="grid md:grid-cols-3 gap-3">
         <Card>
@@ -486,12 +488,12 @@ export function PassportPreview({ className = "mb-10" }: { className?: string })
   );
 }
 
-export function RegulatoryPreview({ className = "mb-0" }: { className?: string }) {
+export function RegulatoryPreview({ className = "mb-0", caption }: { className?: string; caption?: string }) {
   return (
     <WorkspaceChrome
       active="Monitor"
       className={className}
-      caption="Tracked requirements and preparation status — not certification."
+      caption={caption ?? "Tracked requirements and preparation status — not certification."}
     >
       <div className="grid md:grid-cols-2 gap-3">
         <Card>
