@@ -2,6 +2,8 @@
  * Apple App Site Association.
  *
  * LIVE App Store 1.0.1 includes Universal Link routing for the paths below.
+ * Do NOT claim /p or /p/* — Weekly Edit email hops through /p/{id} so Gmail
+ * cannot send /open or a broken /product Universal Link to the Shop tab.
  * Do NOT claim /inspirations* — iOS 1.0.1 has no handler (falls through to home).
  * Do NOT claim /khiteri* — previously caused Safari "Action can't be completed".
  * Do NOT claim /download — explicit App Store-only hop.

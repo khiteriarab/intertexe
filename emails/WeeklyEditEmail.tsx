@@ -18,8 +18,10 @@ import {
   INTERTEXE_INSTAGRAM_URL,
   INTERTEXE_TIKTOK_URL,
   weeklyEditOpenHref,
+  weeklyEditProductHref,
   type WeeklyEditSection,
 } from "../lib/weekly-edit";
+import { cfWeeklyEditCard, cfWeeklyEditHero } from "../lib/cloudflare-images";
 import {
   collectionEditTitle,
   compactFiberCopy,
@@ -306,7 +308,7 @@ function openAppHref(): string {
 }
 
 function productOpenHref(product: WeeklyEditEmailProduct): string {
-  return weeklyEditOpenHref(product.url || `/product/${product.id}`);
+  return weeklyEditProductHref(product.id);
 }
 
 function ProductCopy({
@@ -349,15 +351,16 @@ function HeroProduct({ product }: { product: WeeklyEditEmailProduct }) {
     <Section style={{ margin: "0 0 28px", backgroundColor: CANVAS }} className="we-hero we-cell">
       <Link href={productOpenHref(product)}>
         <Img
-          src={product.imageUrl}
+          src={cfWeeklyEditHero(product.imageUrl) || product.imageUrl}
           alt={`${product.brand} ${name}`}
           width="560"
           height="300"
           className="we-hero-img"
           style={{
             width: "100%",
-            height: "auto",
+            height: "300px",
             objectFit: "cover",
+            objectPosition: "center 20%",
             backgroundColor: WELL,
             display: "block",
           }}
@@ -390,15 +393,17 @@ function ProductCell({
     >
       <Link href={productOpenHref(product)}>
         <Img
-          src={product.imageUrl}
+          src={cfWeeklyEditCard(product.imageUrl) || product.imageUrl}
           alt={`${product.brand} ${name}`}
           width="250"
-          height="320"
+          height="280"
           className="we-grid-img"
           style={{
             width: "100%",
-            height: "auto",
+            height: "280px",
+            maxHeight: "280px",
             objectFit: "cover",
+            objectPosition: "center 20%",
             backgroundColor: WELL,
             display: "block",
           }}
@@ -470,9 +475,17 @@ export default function WeeklyEditEmail({
             background-color: ${OUTER} !important;
             color-scheme: light only;
           }
-          .we-grid-img, .we-hero-img, .we-collection-img {
+          .we-hero-img, .we-collection-img {
             width: 100% !important;
             height: auto !important;
+            background-color: ${WELL} !important;
+          }
+          .we-grid-img {
+            width: 100% !important;
+            height: 280px !important;
+            max-height: 280px !important;
+            object-fit: cover !important;
+            object-position: center 20% !important;
             background-color: ${WELL} !important;
           }
           .we-grid-col {
@@ -491,6 +504,11 @@ export default function WeeklyEditEmail({
             }
             .we-grid-img, .we-hero-img, .we-collection-img {
               background-color: ${WELL} !important;
+            }
+            .we-grid-img {
+              height: 280px !important;
+              max-height: 280px !important;
+              object-fit: cover !important;
             }
           }
         `}</style>
