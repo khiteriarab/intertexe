@@ -26,9 +26,9 @@ export const fiberFacts: FiberFact[] = [
   },
   {
     fiber: "Wool",
-    headline: "Why wool regulates temperature",
+    headline: "Why wool works year-round",
     fact: "Wool fiber has a natural crimp that creates millions of tiny air pockets — which is why wool insulates in cold and regulates in heat. A wool garment can absorb up to 30% of its weight in moisture before feeling damp.",
-    traits: ["THERMOREGULATING", "MOISTURE ABSORBING", "BREATHABLE"],
+    traits: ["THERMOREGULATING", "BREATHABLE", "MOISTURE ABSORBING"],
   },
   {
     fiber: "Cotton",

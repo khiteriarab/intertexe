@@ -73,3 +73,35 @@ export function weeklyEditMaterialSpec(opts: {
   if (fiberName) return { label: fiberName, verified };
   return { label: "", verified: false };
 }
+
+export function pairProducts<T>(items: T[]): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += 2) {
+    rows.push(items.slice(i, i + 2));
+  }
+  return rows;
+}
+
+export function saleSectionHeading(products: { price: number }[]): string {
+  if (products.length > 0 && products.every((product) => product.price < 500)) {
+    return "Under $500";
+  }
+  return "On sale";
+}
+
+export function compactFiberCopy(fact: string): string {
+  const parts = String(fact || "")
+    .split(/(?<=\.)\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.slice(0, 2).join(" ");
+}
+
+export function fiberDiscoverHref(fiber: string): string {
+  const key = String(fiber || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+  const param = key === "leather" ? "leather" : key;
+  return `https://www.intertexe.com/shop?fiber=${encodeURIComponent(param || "natural")}`;
+}
