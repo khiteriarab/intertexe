@@ -96,9 +96,10 @@ describe("Weekly Edit editor's picks", () => {
   it("points follow CTAs at @intertexe, not @Khiteri", () => {
     assert.equal(INTERTEXE_SOCIAL_HANDLE, "@intertexe");
     assert.equal(INTERTEXE_INSTAGRAM_URL, "https://www.instagram.com/intertexe");
-    assert.equal(INTERTEXE_TIKTOK_URL, "https://www.tiktok.com/@shopintertexe");
+    assert.equal(INTERTEXE_TIKTOK_URL, "https://www.tiktok.com/@intertexe");
     assert.equal(INTERTEXE_INSTAGRAM_URL.includes("khiteri"), false);
     assert.equal(INTERTEXE_TIKTOK_URL.includes("khiteri"), false);
+    assert.equal(INTERTEXE_TIKTOK_URL.includes("shopintertexe"), false);
   });
 });
 

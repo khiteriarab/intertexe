@@ -6,7 +6,7 @@ import { getFiberFactForWeek } from "./fiber-facts";
 /** INTERTEXE brand socials — Weekly Edit follow CTA (not @Khiteri). */
 export const INTERTEXE_SOCIAL_HANDLE = "@intertexe";
 export const INTERTEXE_INSTAGRAM_URL = "https://www.instagram.com/intertexe";
-export const INTERTEXE_TIKTOK_URL = "https://www.tiktok.com/@shopintertexe";
+export const INTERTEXE_TIKTOK_URL = "https://www.tiktok.com/@intertexe";
 
 export const WEEKLY_EDIT_MIX = {
   shoes: 2,
