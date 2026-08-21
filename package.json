@@ -16,6 +16,7 @@
     "test:background-jobs": "node --import tsx --test scripts/background-jobs.test.ts",
     "test:contacts-sheet": "node --import tsx --test scripts/hq-contacts-sheet-sync.test.ts",
     "test:email-lifecycle": "node --import tsx --test scripts/email-lifecycle.test.ts",
+    "test:weekly-edit": "node --import tsx --test scripts/weekly-edit.test.ts",
     "test:founder-welcome": "node --import tsx --test scripts/founder-welcome.test.ts",
     "test:tx-match": "node --import tsx --test scripts/capture-find-better.test.ts scripts/capture-page-signals.test.ts scripts/tx-match-display.test.ts scripts/sale-alerts.test.ts",
     "test:meta-pixel": "node --import tsx --test scripts/meta-pixel.test.ts",
