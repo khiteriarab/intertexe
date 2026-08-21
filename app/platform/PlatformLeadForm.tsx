@@ -187,7 +187,7 @@ export function PlatformLeadForm({
       <button
         type="submit"
         disabled={state === "submitting"}
-        className="text-[11px] tracking-[0.2em] uppercase bg-[#152238] text-white px-8 py-4 min-h-[44px] disabled:opacity-50 hover:bg-[#0f1a2c]"
+        className="text-[11px] tracking-[0.2em] uppercase bg-[#152238] text-white px-8 py-4 min-h-[44px] w-full sm:w-auto disabled:opacity-50 hover:bg-[#0f1a2c]"
       >
         {state === "submitting" ? "Sending…" : demo ? "Book a conversation" : "Submit request"}
       </button>

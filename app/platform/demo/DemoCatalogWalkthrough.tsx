@@ -37,16 +37,16 @@ export function DemoCatalogWalkthrough() {
   const issues = useMemo(() => demoIssueSummary(), []);
 
   return (
-    <section id="walkthrough" className="mb-16 sm:mb-24">
+    <section className="mb-16 sm:mb-24">
       <p className="text-[10px] sm:text-[11px] tracking-[0.12em] sm:tracking-[0.25em] text-[#9c7b8b] mb-3">
         INTERTEXE DEMONSTRATION
       </p>
-      <h2
-        className="text-[1.75rem] sm:text-3xl md:text-4xl font-light mb-5 sm:mb-6 leading-[1.15]"
+      <h1
+        className="text-[2rem] sm:text-4xl md:text-5xl font-light mb-5 sm:mb-6 leading-[1.15]"
         style={SERIF}
       >
-        Ten INTERTEXE sample products.
-      </h2>
+        See INTERTEXE with a 10-product catalog.
+      </h1>
       <p className="text-base sm:text-lg text-[#5c5854] font-light leading-relaxed max-w-2xl mb-4">
         Messy source data → normalization → issues → material intelligence → benchmarking → DPP readiness →
         passport.
@@ -67,7 +67,7 @@ export function DemoCatalogWalkthrough() {
               role="tab"
               aria-selected={active}
               onClick={() => setStep(item.id)}
-              className={`snap-start shrink-0 text-[10px] tracking-[0.12em] uppercase px-3 py-2 min-h-[40px] border ${
+              className={`snap-start shrink-0 text-[10px] tracking-[0.08em] sm:tracking-[0.12em] uppercase px-2.5 sm:px-3 py-2 min-h-[44px] border ${
                 active
                   ? "bg-[#152238] text-white border-[#152238]"
                   : "bg-transparent text-[#6f6a63] border-[#e8e3da]"
@@ -130,9 +130,9 @@ export function DemoCatalogWalkthrough() {
           <Frame label="Issues Inbox">
             <ul className="divide-y divide-[#eeeae4]">
               {issues.map((row) => (
-                <li key={row.kind} className="flex justify-between gap-4 py-3 text-sm">
-                  <span>{row.label}</span>
-                  <span className="text-[#8a847c] tabular-nums">
+                <li key={row.kind} className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 py-3 text-sm min-w-0">
+                  <span className="break-words">{row.label}</span>
+                  <span className="text-[#8a847c] tabular-nums break-words">
                     {row.count} · {row.skus.join(", ")}
                   </span>
                 </li>

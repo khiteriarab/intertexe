@@ -96,15 +96,26 @@ describe("Platform material-intelligence page", () => {
   });
 
   it("recomposes the page for small screens without dropping the desktop spread", () => {
+    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/docs/page.tsx"), "utf8");
+    const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
+    const ecosystem = fs.readFileSync(path.join(process.cwd(), "app/platform/EcosystemStage.tsx"), "utf8");
     assert.match(nav, /\{open \? "Close" : "Menu"\}/);
     assert.match(nav, /Book a demo/);
     assert.match(nav, /Log in/);
     assert.match(nav, /border-white/);
     assert.match(nav, /href="\/dashboard\/login"/);
+    assert.match(nav, /hidden md:inline-flex/);
+    assert.match(nav, /min-h-\[44px\]/);
+    assert.match(nav, /platform-mobile-menu/);
+    assert.match(chrome, /overflow-x-hidden/);
     assert.match(home, /ComparisonView/);
     assert.match(home, /Understand → Compare → Act/);
     assert.match(comparison, /Compare INTERTEXE with/);
     assert.match(comparison, /hidden lg:block/);
+    assert.match(docs, /break-words/);
+    assert.match(docs, /whitespace-pre-wrap/);
+    assert.match(ecosystem, /md:min-h-\[6.5rem\]/);
+    assert.match(stages, /min-h-0 sm:min-h-\[480px\]/);
   });
 
   it("wires named product-graphic slots without publishing unfinished screenshots", () => {
@@ -113,8 +124,9 @@ describe("Platform material-intelligence page", () => {
     assert.match(graphics, /hero-workspace\.png/);
     assert.match(graphics, /demo-source\.png/);
     assert.match(graphics, /ready: false/);
-    assert.match(home, /NormalizePreview/);
-    assert.match(home, /IssuesPreview/);
+    assert.match(home, /UnderstandPreview/);
+    assert.doesNotMatch(home, /NormalizePreview/);
+    assert.doesNotMatch(home, /IssuesPreview/);
     assert.match(home, /BenchmarkPreview/);
     assert.match(home, /PassportPreview/);
     assert.doesNotMatch(home, /InteractiveWorkspace/);
@@ -163,8 +175,13 @@ describe("Platform material-intelligence page", () => {
     assert.match(stages, /Better-material matches/);
     assert.match(stages, /Shop by material/);
     assert.match(tabs, /Understand, compare, act, engage/);
+    assert.match(tabs, /minmax\(20rem,28rem\)/);
     assert.match(tabs, /minmax\(0,1fr\)/);
+    assert.doesNotMatch(tabs, /minmax\(16rem,20rem\)/);
     assert.doesNotMatch(tabs, /SoftwareStage/);
+    assert.match(previewsFromHome(), /export function UnderstandPreview/);
+    assert.match(previewsFromHome(), /sm:grid-cols-2/);
+    assert.match(previewsFromHome(), /Issues inbox/);
     assert.match(home, /Know how your material strategy compares/);
     assert.match(home, /Then Digital Product Passports become almost obvious/);
     assert.match(home, /MaterialPositionTable/);

@@ -2,9 +2,8 @@ import { ComparisonView, type ComparisonRow } from "./ComparisonView";
 import { PlatformGraphic } from "./PlatformGraphic";
 import {
   BenchmarkPreview,
-  IssuesPreview,
-  NormalizePreview,
   PassportPreview,
+  UnderstandPreview,
 } from "./workspace-previews";
 import {
   Body,
@@ -219,7 +218,7 @@ export function PlatformHome() {
             Material intelligence for fashion
           </p>
           <h1
-            className="text-[2.15rem] sm:text-5xl md:text-[3.35rem] font-light leading-[1.12] mb-6 text-white"
+          className="text-[1.85rem] sm:text-5xl md:text-[3.35rem] font-light leading-[1.12] mb-6 text-white break-words"
             style={SERIF}
           >
             Turn messy product and material data into usable material intelligence.
@@ -270,11 +269,9 @@ export function PlatformHome() {
           tabs={STORY_TABS}
           panels={{
             understand: (
-              <div className="space-y-6 min-w-0">
+              <div className="min-w-0">
                 <PlatformGraphic slot="understandNormalize" className="mb-0" />
-                {PLATFORM_GRAPHICS.understandNormalize.ready ? null : <NormalizePreview className="mb-0" />}
-                <PlatformGraphic slot="understandIssues" className="mb-0" />
-                {PLATFORM_GRAPHICS.understandIssues.ready ? null : <IssuesPreview className="mb-0" />}
+                {PLATFORM_GRAPHICS.understandNormalize.ready ? null : <UnderstandPreview className="mb-0" />}
               </div>
             ),
             compare: (

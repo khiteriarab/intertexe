@@ -232,6 +232,14 @@ describe("Permanent 10-product demonstration catalog", () => {
     );
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
     assert.match(demo, /DemoCatalogWalkthrough/);
+    assert.match(demo, /Submit 10 products for a Material Data Snapshot/);
+    assert.match(demo, /Discuss API access/);
+    assert.match(demo, /cta=demo_primary/);
+    assert.match(demo, /cta=demo_secondary/);
+    assert.match(demo, /Look up a sample identifier/);
+    assert.match(demo, /w-full sm:w-auto/);
+    assert.match(walkthrough, /See INTERTEXE with a 10-product catalog/);
+    assert.match(walkthrough, /<h1/);
     assert.match(walkthrough, /CatalogPreview/);
     assert.match(walkthrough, /IssuesPreview/);
     assert.match(walkthrough, /messy source data/i);
@@ -240,10 +248,11 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(previews, /INTERTEXE consumer signal/i);
     assert.doesNotMatch(walkthrough, /EU Certified/);
     assert.doesNotMatch(walkthrough, /Guaranteed Compliant/);
+    assert.doesNotMatch(walkthrough, /Ten INTERTEXE sample products/);
     assert.doesNotMatch(previews, /Official DPP Score/);
   });
 
-  it("puts a Barcelona office and a demo form on /platform/demo", () => {
+  it("puts a Barcelona office and a demo form on /platform/demo after the original catalog", () => {
     const page = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
     const book = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoBookSection.tsx"), "utf8");
     const office = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoOfficeSection.tsx"), "utf8");
@@ -252,9 +261,16 @@ describe("Permanent 10-product demonstration catalog", () => {
     const constants = fs.readFileSync(path.join(process.cwd(), "lib/email-constants.ts"), "utf8");
     const chrome = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformChrome.tsx"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
+    assert.match(page, /PlatformDemoClient/);
     assert.match(page, /DemoBookSection/);
     assert.match(page, /DemoOfficeSection/);
-    assert.match(page, /bg-\[#152238\]/);
+    assert.ok(
+      page.indexOf("PlatformDemoClient") < page.indexOf("DemoBookSection") &&
+        page.indexOf("DemoBookSection") < page.indexOf("DemoOfficeSection")
+    );
+    assert.doesNotMatch(page, /bg-\[#152238\]/);
+    assert.doesNotMatch(page, /Open the catalog/);
+    assert.doesNotMatch(page, /PrimaryLink/);
     assert.match(book, /sourceCta="demo_page"/);
     assert.match(book, /variant="demo"/);
     assert.match(form, /Do not attach confidential catalogs/);

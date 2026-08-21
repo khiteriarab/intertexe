@@ -131,7 +131,7 @@ export function WorkspaceGallery({
       <div
         role="tablist"
         aria-label="Workspace preview"
-        className="flex gap-2 overflow-x-auto pb-4 mb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-2 overflow-x-auto pb-4 mb-4 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {frames.map((frame) => {
           const selected = frame.id === current.id;
@@ -144,7 +144,7 @@ export function WorkspaceGallery({
               id={`workspace-tab-${frame.id}`}
               aria-controls={`workspace-panel-${current.id}`}
               onClick={() => select(frame.id)}
-              className={`shrink-0 text-[12px] sm:text-[13px] px-3 py-2 min-h-[40px] rounded-md ${
+              className={`shrink-0 text-[12px] sm:text-[13px] px-3 py-2 min-h-[44px] rounded-md ${
                 selected ? "bg-[#152238] text-white" : "bg-white/70 text-[#152238] hover:bg-white"
               }`}
             >
@@ -229,7 +229,7 @@ export function DiscoverWorkspace() {
           Discover · /platform/discover
         </p>
         <h1
-          className="text-[2.15rem] sm:text-5xl md:text-[3.2rem] font-light leading-[1.12] text-[#152238] max-w-3xl mb-5"
+          className="text-[1.85rem] sm:text-5xl md:text-[3.2rem] font-light leading-[1.12] text-[#152238] max-w-3xl mb-5 break-words"
           style={SERIF}
         >
           One workspace for <em className="italic">material intelligence</em>.
@@ -241,16 +241,16 @@ export function DiscoverWorkspace() {
           catalog.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
-          <a
-            href="/platform/request?intent=snapshot&cta=discover"
-            className="inline-flex items-center gap-2 rounded-md bg-[#152238] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c] w-fit"
-          >
+        <a
+          href="/platform/request?intent=snapshot&cta=discover"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-[#152238] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c] w-full sm:w-fit"
+        >
             Book a demo
             <span aria-hidden="true">→</span>
           </a>
           <a
             href="/platform/demo"
-            className="inline-flex items-center gap-2 text-[13px] font-medium text-[#152238] min-h-[44px]"
+            className="inline-flex items-center justify-center gap-2 text-[13px] font-medium text-[#152238] min-h-[44px] w-full sm:w-fit"
           >
             See the live demo
             <span aria-hidden="true">→</span>
@@ -265,11 +265,11 @@ export function DiscoverWorkspace() {
         </h2>
         <p className="max-w-2xl text-[15px] text-[#5c5854] font-light leading-relaxed mb-8">{LIVING_SYSTEM.body}</p>
 
-        <div className="rounded-2xl border border-[#d5dee8] bg-white px-5 py-8 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(21,34,56,0.08)] mb-10">
+        <div className="rounded-2xl border border-[#d5dee8] bg-white px-4 py-6 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(21,34,56,0.08)] mb-10">
           <div
             role="tablist"
             aria-label="Compare, act, engage"
-            className="flex justify-center gap-2 sm:gap-10 overflow-x-auto mb-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex justify-start sm:justify-center gap-2 sm:gap-10 overflow-x-auto mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {DISCOVER_STORY.map((item) => {
               const selected = item.id === story.id;
@@ -325,7 +325,7 @@ export function DiscoverWorkspace() {
           </div>
           <a
             href="/platform/request?intent=snapshot&cta=discover_needs"
-            className="inline-flex items-center gap-2 rounded-md bg-[#152238] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c] w-fit"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#152238] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c] w-full sm:w-fit"
           >
             Book a demo
             <span aria-hidden="true">→</span>

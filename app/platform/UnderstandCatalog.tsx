@@ -55,11 +55,11 @@ export function UnderstandCatalog() {
         or Diagnose — the workspace mockup changes with the step.
       </Body>
 
-      <div className="rounded-2xl border border-[#d5dee8] bg-white px-5 py-8 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(21,34,56,0.08)]">
+      <div className="rounded-2xl border border-[#d5dee8] bg-white px-4 py-6 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(21,34,56,0.08)]">
         <div
           role="tablist"
           aria-label="Ingest, structure, diagnose"
-          className="flex justify-center gap-2 sm:gap-10 overflow-x-auto mb-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex justify-start sm:justify-center gap-2 sm:gap-10 overflow-x-auto mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {STEPS.map((step) => {
             const selected = step.id === current.id;

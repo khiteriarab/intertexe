@@ -84,7 +84,7 @@ export function SoftwareStage({
   copy?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[#d5dee8] bg-white p-5 sm:p-8 shadow-[0_24px_60px_rgba(21,34,56,0.08)]">
+    <div className="rounded-2xl border border-[#d5dee8] bg-white p-4 sm:p-8 shadow-[0_24px_60px_rgba(21,34,56,0.08)] min-w-0 overflow-hidden">
       {title ? (
         <p className="text-[15px] sm:text-[17px] font-medium text-[#152238] mb-1">{title}</p>
       ) : null}
@@ -116,7 +116,7 @@ export function Frame({
   caption?: string;
 }) {
   return (
-    <figure className="m-0">
+    <figure className="m-0 min-w-0">
       <div className="rounded-xl border border-[#e8e3da] bg-white overflow-hidden shadow-[0_20px_50px_rgba(22,21,19,0.04)]">
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#eeeae4] bg-[#faf8f5]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
