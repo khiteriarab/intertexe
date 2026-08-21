@@ -280,43 +280,62 @@ const STORY_TABS: StoryTab[] = [
 export function PlatformHome() {
   return (
     <div>
-      <section className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-20 md:pt-28 pb-10 sm:pb-16">
-        <Eyebrow>Material intelligence for fashion</Eyebrow>
-        <h1
-          className="text-[2.15rem] sm:text-5xl md:text-[3.4rem] font-light leading-[1.12] max-w-4xl mb-6"
-          style={SERIF}
-        >
-          Turn messy product and material data into usable material intelligence.
-        </h1>
-        <Body className="max-w-2xl mb-6 sm:mb-4">
-          A brand gives INTERTEXE the product information it already has — Excel, CSV, PLM/PIM exports, supplier
-          files. INTERTEXE returns one workspace to understand, improve, compare and use that data. When you are
-          ready, the same records become Digital Product Passports.
-        </Body>
-        <ol className="sm:hidden mb-8 space-y-2">
-          {FLOW.map((step, index) => (
-            <li key={step} className="flex items-baseline gap-3">
-              <span className="text-[10px] tracking-[0.16em] uppercase text-[#1d4734] tabular-nums">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="text-[13px] tracking-[0.12em] uppercase text-[#8a847c]">{step}</span>
-            </li>
-          ))}
-        </ol>
-        <p className="hidden sm:block text-[13px] tracking-[0.12em] uppercase text-[#8a847c] mb-4">
-          Understand → Compare → Act
-        </p>
-        <p className="text-[11px] tracking-[0.08em] sm:tracking-[0.1em] uppercase text-[#8a847c] mb-10 leading-relaxed">
-          {VALUE_CHAIN}
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">
-            See INTERTEXE with your own products
-          </PrimaryLink>
-          <SecondaryLink href="/platform/demo">See the live demo</SecondaryLink>
+      <section className="relative overflow-hidden bg-[#152238] text-[#f7f5f1]">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.22]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(-32deg, transparent, transparent 18px, rgba(255,255,255,0.045) 18px, rgba(255,255,255,0.045) 19px)",
+          }}
+        />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 md:pt-20 text-center">
+          <p className="text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-[#9bb4c9] mb-5">
+            Material intelligence for fashion
+          </p>
+          <h1
+            className="text-[2.15rem] sm:text-5xl md:text-[3.35rem] font-light leading-[1.12] mb-6 text-white"
+            style={SERIF}
+          >
+            Turn messy product and material data into usable material intelligence.
+          </h1>
+          <p className="mx-auto max-w-2xl mb-6 sm:mb-4 text-[15px] sm:text-base font-light leading-relaxed text-white/78">
+            A brand gives INTERTEXE the product information it already has — Excel, CSV, PLM/PIM exports, supplier
+            files. INTERTEXE returns one workspace to understand, improve, compare and use that data. When you are
+            ready, the same records become Digital Product Passports.
+          </p>
+          <ol className="sm:hidden mb-8 space-y-2">
+            {FLOW.map((step, index) => (
+              <li key={step} className="flex items-baseline justify-center gap-3">
+                <span className="text-[10px] tracking-[0.16em] uppercase text-white/55 tabular-nums">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="text-[13px] tracking-[0.12em] uppercase text-white/70">{step}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="hidden sm:block text-[13px] tracking-[0.12em] uppercase text-white/65 mb-4">
+            Understand → Compare → Act
+          </p>
+          <p className="text-[11px] tracking-[0.08em] sm:tracking-[0.1em] uppercase text-white/45 mb-10 leading-relaxed">
+            {VALUE_CHAIN}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <PrimaryLink href="/platform/request?intent=snapshot&cta=hero" tone="dark">
+              See INTERTEXE with your own products
+            </PrimaryLink>
+            <SecondaryLink href="/platform/demo" tone="dark">
+              See the live demo
+            </SecondaryLink>
+          </div>
         </div>
-        <HeroProductStage />
-        <PlatformGraphic slot="heroWorkspace" className="mt-12 sm:mt-16" />
+        <div className="relative px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
+          <HeroProductStage />
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-16">
+        <PlatformGraphic slot="heroWorkspace" className="mt-0" />
         {PLATFORM_GRAPHICS.heroWorkspace.ready ? null : <WorkspaceHeroPreview />}
       </section>
 

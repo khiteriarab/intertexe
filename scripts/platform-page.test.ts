@@ -84,7 +84,8 @@ describe("Platform material-intelligence page", () => {
 
   it("recomposes the page for small screens without dropping the desktop spread", () => {
     assert.match(nav, /\{open \? "Close" : "Menu"\}/);
-    assert.match(nav, /Snapshot/);
+    assert.match(nav, /Book a demo/);
+    assert.match(nav, /Log in/);
     assert.match(home, /WorkspaceHeroPreview/);
     assert.match(home, /WorkspaceGallery/);
     assert.match(home, /ComparisonView/);
@@ -135,6 +136,18 @@ describe("Platform material-intelligence page", () => {
     assert.match(tabs, /Understand, compare, act, engage/);
     assert.match(carousel, /Latest product surfaces/);
     assert.match(previewsFromHome(), /onClick/);
+  });
+
+  it("opens /platform with a navy INTERTEXE hero, silk dress, and desktop workspace mock", () => {
+    const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
+    assert.match(home, /bg-\[#152238\]/);
+    assert.match(nav, /bg-\[#152238\]/);
+    assert.match(stages, /hero-silk-dress\.png/);
+    assert.match(stages, /hero-workspace-desktop\.png/);
+    assert.match(stages, /hero-product-window\.png/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-silk-dress.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-workspace-desktop.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-product-window.png")));
   });
 });
 

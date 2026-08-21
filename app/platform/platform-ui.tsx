@@ -26,22 +26,48 @@ export function Body({ children, className = "" }: { children: ReactNode; classN
   return <p className={`text-[15px] sm:text-base text-[#5c5854] font-light leading-relaxed ${className}`}>{children}</p>;
 }
 
-export function PrimaryLink({ href, children }: { href: string; children: ReactNode }) {
+export function PrimaryLink({
+  href,
+  children,
+  tone = "light",
+}: {
+  href: string;
+  children: ReactNode;
+  tone?: "light" | "dark";
+}) {
+  const onDark = tone === "dark";
   return (
     <Link
       href={href}
-      className="inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#1d4734] text-white px-7 py-3.5 hover:bg-[#163828] min-h-[44px]"
+      className={
+        onDark
+          ? "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-white text-[#152238] px-7 py-3.5 hover:bg-[#f7f5f1] min-h-[44px]"
+          : "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#1d4734] text-white px-7 py-3.5 hover:bg-[#163828] min-h-[44px]"
+      }
     >
       {children}
     </Link>
   );
 }
 
-export function SecondaryLink({ href, children }: { href: string; children: ReactNode }) {
+export function SecondaryLink({
+  href,
+  children,
+  tone = "light",
+}: {
+  href: string;
+  children: ReactNode;
+  tone?: "light" | "dark";
+}) {
+  const onDark = tone === "dark";
   return (
     <Link
       href={href}
-      className="inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase border border-[#161513] px-7 py-3.5 hover:bg-white min-h-[44px]"
+      className={
+        onDark
+          ? "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase border border-white/70 text-white px-7 py-3.5 hover:bg-white/10 min-h-[44px]"
+          : "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase border border-[#161513] px-7 py-3.5 hover:bg-white min-h-[44px]"
+      }
     >
       {children}
     </Link>
