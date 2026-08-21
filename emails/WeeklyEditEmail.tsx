@@ -285,7 +285,7 @@ function formatPrice(price: number, currency: string): string {
 }
 
 function openAppHref(): string {
-  return getAppStoreOpenUrl("/shop", {
+  return getAppStoreOpenUrl("/shop", undefined, {
     cta: "email_weekly_edit",
     params: {
       utm_source: "resend",
@@ -481,8 +481,8 @@ export default function WeeklyEditEmail({
         `}</style>
       </Head>
       <Preview>{preview}</Preview>
-      <Body className="we-outer" style={main} bgcolor={OUTER}>
-        <Container className="we-canvas" style={container} bgcolor={CANVAS}>
+      <Body className="we-outer" style={main}>
+        <Container className="we-canvas" style={container}>
           {isPreview ? (
             <Section style={{ margin: "0 0 24px", backgroundColor: CANVAS }} className="we-cell">
               <Text
