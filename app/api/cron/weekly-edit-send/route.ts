@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     // Gate on Thursday preview, but rebuild products + copy so Friday
     // does not send a stale random catalog (e.g. the Loewe poplin shirt).
     const emailProducts = await selectWeeklyEditProducts(supabase, weekNumber);
-    const { fiberFact, collection } = getWeeklyEditMeta(weekNumber);
+    const { fiberFact, collection } = getWeeklyEditMeta(weekNumber, emailProducts);
 
     const emailHtml = await render(
       WeeklyEditEmail({

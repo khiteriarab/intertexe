@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const supabase = createServiceClient();
     const weekNumber = getWeekNumber();
     const emailProducts = await selectWeeklyEditProducts(supabase, weekNumber);
-    const { fiberFact, collection } = getWeeklyEditMeta(weekNumber);
+    const { fiberFact, collection } = getWeeklyEditMeta(weekNumber, emailProducts);
 
     const previewHtml = await render(
       WeeklyEditEmail({

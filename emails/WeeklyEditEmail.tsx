@@ -509,7 +509,7 @@ export default function WeeklyEditEmail({
             The Weekly Edit
           </Heading>
           <Text style={introText}>
-            Pieces worth knowing, selected through a material-first lens.
+            Pieces worth buying now, selected through a material-first lens.
           </Text>
           </Section>
 

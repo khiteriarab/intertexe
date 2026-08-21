@@ -94,7 +94,7 @@ export function compactFiberCopy(fact: string): string {
     .split(/(?<=\.)\s+/)
     .map((part) => part.trim())
     .filter(Boolean);
-  return parts.slice(0, 2).join(" ");
+  return parts.slice(0, 3).join(" ");
 }
 
 export function fiberDiscoverHref(fiber: string): string {

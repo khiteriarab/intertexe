@@ -1,3 +1,5 @@
+import { resolveWeeklyEditEditorial } from "./weekly-edit-season";
+
 export const collectionRotation = [
   {
     name: "Vacation",
@@ -28,5 +30,10 @@ export const collectionRotation = [
 ];
 
 export function getCollectionForWeek(weekNumber: number) {
-  return collectionRotation[weekNumber % collectionRotation.length];
+  const { collection } = resolveWeeklyEditEditorial(weekNumber);
+  return {
+    name: collection.name,
+    url: collection.url,
+    subline: collection.subline,
+  };
 }
