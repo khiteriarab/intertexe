@@ -118,7 +118,11 @@ describe("Weekly Edit email", () => {
     const email = fs.readFileSync(path.join(process.cwd(), "emails/WeeklyEditEmail.tsx"), "utf8");
     const send = fs.readFileSync(path.join(process.cwd(), "app/api/cron/weekly-edit-send/route.ts"), "utf8");
     assert.match(email, />INTERTEXE</);
-    assert.match(email, /The Material Standard/);
+    assert.doesNotMatch(email, /The Material Standard/);
+    assert.match(email, /#F1F1EF/);
+    assert.match(email, /#FAFAF8/);
+    assert.match(email, /#F4F4F2/);
+    assert.match(email, /color-scheme: light only/);
     assert.match(email, /Pieces worth knowing, selected through a material-first lens/);
     assert.match(email, /The Edit/);
     assert.match(email, /New to the edit/);

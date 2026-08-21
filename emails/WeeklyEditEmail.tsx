@@ -63,21 +63,27 @@ export interface WeeklyEditEmailProps {
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 
-const INK = "#161616";
-const SLATE = "#5C6570";
-const IVORY = "#F6F3EE";
-const RULE = "#E4DFD6";
-const GROUND = "#EEEBE5";
+const OUTER = "#F1F1EF";
+const CANVAS = "#FAFAF8";
+const WELL = "#F4F4F2";
+const INK = "#151515";
+const SLATE = "#687078";
+const RULE = "#DDDDDA";
+const ACCENT = "#3D7A78";
 
 const main = {
-  backgroundColor: IVORY,
+  backgroundColor: OUTER,
   fontFamily: SANS,
+  margin: "0",
+  padding: "0",
+  width: "100%",
 };
 
 const container = {
   margin: "0 auto",
-  padding: "36px 20px 44px",
+  padding: "40px 24px 48px",
   maxWidth: "600px",
+  backgroundColor: CANVAS,
 };
 
 const wordmark = {
@@ -85,18 +91,9 @@ const wordmark = {
   fontSize: "13px",
   letterSpacing: "0.08em",
   color: INK,
-  margin: "0",
+  margin: "0 0 28px",
   textTransform: "uppercase" as const,
   fontWeight: 600,
-};
-
-const standardLine = {
-  fontFamily: SANS,
-  fontSize: "9px",
-  letterSpacing: "0.18em",
-  color: SLATE,
-  margin: "6px 0 0",
-  textTransform: "uppercase" as const,
 };
 
 const heading = {
@@ -124,6 +121,11 @@ const kicker = {
   color: INK,
   textTransform: "uppercase" as const,
   margin: "0 0 10px",
+};
+
+const intelligenceKicker = {
+  ...kicker,
+  color: ACCENT,
 };
 
 const sectionNav = {
@@ -183,7 +185,7 @@ const priceText = {
 
 const wasPrice = {
   textDecoration: "line-through",
-  color: "#9AA1A9",
+  color: SLATE,
 };
 
 const button = {
@@ -201,7 +203,7 @@ const button = {
 
 const ghostButton = {
   ...button,
-  backgroundColor: "transparent",
+  backgroundColor: CANVAS,
   color: INK,
   padding: "12px 0",
   borderBottom: `1px solid ${INK}`,
@@ -330,7 +332,7 @@ function ProductCopy({
 function HeroProduct({ product }: { product: WeeklyEditEmailProduct }) {
   const name = displayProductName(product.name, product.brand);
   return (
-    <Section style={{ margin: "0 0 28px" }} className="we-hero">
+    <Section style={{ margin: "0 0 28px", backgroundColor: CANVAS }} className="we-hero we-cell">
       <Link href={product.url}>
         <Img
           src={product.imageUrl}
@@ -342,7 +344,7 @@ function HeroProduct({ product }: { product: WeeklyEditEmailProduct }) {
             width: "100%",
             height: "auto",
             objectFit: "cover",
-            backgroundColor: GROUND,
+            backgroundColor: WELL,
             display: "block",
           }}
         />
@@ -369,6 +371,7 @@ function ProductCell({
         paddingRight: padRight ? "10px" : "0px",
         paddingLeft: padRight ? "0px" : "10px",
         paddingBottom: "24px",
+        backgroundColor: CANVAS,
       }}
     >
       <Link href={product.url}>
@@ -382,7 +385,7 @@ function ProductCell({
             width: "100%",
             height: "auto",
             objectFit: "cover",
-            backgroundColor: GROUND,
+            backgroundColor: WELL,
             display: "block",
           }}
         />
@@ -394,13 +397,15 @@ function ProductCell({
 
 function ProductGrid({ products }: { products: WeeklyEditEmailProduct[] }) {
   return (
-    <Section className="we-product-grid">
+    <Section className="we-product-grid we-cell" style={{ backgroundColor: CANVAS }}>
       {pairProducts(products).map((row) => (
         <Row key={row.map((product) => product.id).join("-")}>
           {row.map((product, index) => (
             <ProductCell key={product.id} product={product} padRight={index === 0} />
           ))}
-          {row.length === 1 ? <Column style={{ width: "50%" }} /> : null}
+          {row.length === 1 ? (
+            <Column style={{ width: "50%", backgroundColor: CANVAS }} />
+          ) : null}
         </Row>
       ))}
     </Section>
@@ -442,22 +447,44 @@ export default function WeeklyEditEmail({
   return (
     <Html lang="en">
       <Head>
+        <meta name="color-scheme" content="light only" />
+        <meta name="supported-color-schemes" content="light" />
         <style>{`
+          :root { color-scheme: light only; }
+          html, body {
+            background-color: ${OUTER} !important;
+            color-scheme: light only;
+          }
           .we-grid-img, .we-hero-img, .we-collection-img {
             width: 100% !important;
             height: auto !important;
+            background-color: ${WELL} !important;
           }
           .we-grid-col {
             width: 50% !important;
             max-width: 50% !important;
+            background-color: ${CANVAS} !important;
+          }
+          .we-outer { background-color: ${OUTER} !important; }
+          .we-canvas, .we-cell { background-color: ${CANVAS} !important; }
+          @media (prefers-color-scheme: dark) {
+            html, body, .we-outer {
+              background-color: ${OUTER} !important;
+            }
+            .we-canvas, .we-cell, .we-grid-col {
+              background-color: ${CANVAS} !important;
+            }
+            .we-grid-img, .we-hero-img, .we-collection-img {
+              background-color: ${WELL} !important;
+            }
           }
         `}</style>
       </Head>
       <Preview>{preview}</Preview>
-      <Body style={main}>
-        <Container style={container}>
+      <Body className="we-outer" style={main} bgcolor={OUTER}>
+        <Container className="we-canvas" style={container} bgcolor={CANVAS}>
           {isPreview ? (
-            <Section style={{ margin: "0 0 24px" }}>
+            <Section style={{ margin: "0 0 24px", backgroundColor: CANVAS }} className="we-cell">
               <Text
                 style={{
                   fontFamily: SANS,
@@ -474,17 +501,18 @@ export default function WeeklyEditEmail({
             </Section>
           ) : null}
 
-          <Section style={{ margin: "0 0 28px" }}>
+          <Section className="we-cell" style={{ margin: "0 0 28px", backgroundColor: CANVAS }}>
             <Text style={wordmark}>INTERTEXE</Text>
-            <Text style={standardLine}>The Material Standard</Text>
           </Section>
 
+          <Section className="we-cell" style={{ backgroundColor: CANVAS }}>
           <Heading as="h1" style={heading}>
             The Weekly Edit
           </Heading>
           <Text style={introText}>
             Pieces worth knowing, selected through a material-first lens.
           </Text>
+          </Section>
 
           <Hr style={{ ...hr, margin: "24px 0 28px" }} />
 
@@ -500,7 +528,7 @@ export default function WeeklyEditEmail({
 
           <Hr style={hr} />
 
-          <Section style={{ margin: "0 0 4px" }}>
+          <Section style={{ margin: "0 0 4px", backgroundColor: CANVAS }} className="we-cell">
             <Text style={collectionTitle}>{editTitle}</Text>
             {collectionImageUrl ? (
               <Link href={collectionUrl}>
@@ -515,7 +543,7 @@ export default function WeeklyEditEmail({
                     height: "auto",
                     display: "block",
                     objectFit: "cover",
-                    backgroundColor: GROUND,
+                    backgroundColor: WELL,
                   }}
                 />
               </Link>
@@ -536,8 +564,8 @@ export default function WeeklyEditEmail({
 
           <Hr style={hr} />
 
-          <Section>
-            <Text style={kicker}>Material intelligence</Text>
+          <Section className="we-cell" style={{ backgroundColor: CANVAS }}>
+            <Text style={intelligenceKicker}>Material intelligence</Text>
             <Text style={intelligenceHeadline}>{intelligenceTitle.replace(/\.$/, "")}.</Text>
             <Text style={traitLine}>{traits.join(" · ")}</Text>
             <Text style={factText}>{compactFiberCopy(fiberFact)}</Text>
@@ -548,7 +576,7 @@ export default function WeeklyEditEmail({
 
           <Hr style={hr} />
 
-          <Section style={{ margin: "0 0 24px" }}>
+          <Section className="we-cell" style={{ margin: "0 0 24px", backgroundColor: CANVAS }}>
             <Text style={socialLink}>Follow {INTERTEXE_SOCIAL_HANDLE}</Text>
             <Text style={{ margin: "10px 0 0" }}>
               <Link href={INTERTEXE_INSTAGRAM_URL} style={socialLink}>
@@ -561,7 +589,7 @@ export default function WeeklyEditEmail({
             </Text>
           </Section>
 
-          <Section>
+          <Section className="we-cell" style={{ backgroundColor: CANVAS }}>
             <Button href={appHref} style={button}>
               Explore the edit →
             </Button>
@@ -569,6 +597,7 @@ export default function WeeklyEditEmail({
 
           <Hr style={hr} />
 
+          <Section className="we-cell" style={{ backgroundColor: CANVAS }}>
           <Text style={footer}>
             You are receiving The Weekly Edit because you joined Intertexe.{" "}
             <Link href="https://www.intertexe.com/account" style={footerLink}>
@@ -583,6 +612,7 @@ export default function WeeklyEditEmail({
               info@intertexe.com
             </Link>
           </Text>
+          </Section>
         </Container>
       </Body>
     </Html>
