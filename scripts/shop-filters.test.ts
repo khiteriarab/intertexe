@@ -91,6 +91,7 @@ describe("Shoe filter sheet", () => {
     assert.match(home, /fiberOptionsForCategory/);
     assert.match(home, /Shoe type/);
     assert.match(home, /shopDisplayedCount/);
+    assert.match(home, /shoesCatalogHref/);
     assert.match(options, /Color is above Price/);
     assert.match(actions, /total: result.total == null \? null : result.total/);
     assert.doesNotMatch(

@@ -74,7 +74,7 @@ export async function fetchFootwearCatalogPage(opts?: {
 }): Promise<{ products: Product[]; hasMore: boolean }> {
   const supabase = getServerSupabase();
   const region = (opts?.region || "us").toLowerCase();
-  const limit = Math.min(Math.max(opts?.limit ?? 24, 1), 48);
+  const limit = Math.min(Math.max(opts?.limit ?? 24, 1), 100);
   const offset = Math.max(opts?.offset ?? 0, 0);
   const type = parseShoeType(opts?.type);
   const material = parseShoeMaterial(opts?.material);

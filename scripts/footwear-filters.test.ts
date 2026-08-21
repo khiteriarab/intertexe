@@ -6,11 +6,13 @@ import { SHOP_SHOE_FIBER_OPTIONS, SHOP_SHOE_TYPES } from "../lib/catalog-filter-
 import {
   parseShoeMaterial,
   parseShoeType,
+  resolveFootwearBrowseFilters,
   SHOE_MATERIAL_OPTIONS,
   SHOE_TYPE_OPTIONS,
   shoeMatchesMaterial,
   shoeMatchesType,
   shoeMaterialSearchTokens,
+  shoesCatalogHref,
   shoeTypeSearchTokens,
 } from "../lib/footwear-filters.ts";
 
@@ -112,5 +114,37 @@ describe("Shoes PLP wiring", () => {
     assert.match(catalog, /live_products_footwear/);
     assert.match(catalog, /applyFootwearFilters/);
     assert.doesNotMatch(catalog, /\.from\(["']products["']\)/);
+  });
+
+  it("maps iOS filter aliases onto type + material", () => {
+    assert.deepEqual(
+      resolveFootwearBrowseFilters({ subcategory: "sandals", fiber: "suede" }),
+      { type: "Sandals", material: "suede" }
+    );
+    assert.deepEqual(
+      resolveFootwearBrowseFilters({ shoeType: "Boots", materialSubtype: "leather" }),
+      { type: "Boots", material: "leather" }
+    );
+    assert.deepEqual(
+      resolveFootwearBrowseFilters({ search: "heels", material: "nubuck" }),
+      { type: "Heels", material: "nubuck" }
+    );
+    assert.equal(shoesCatalogHref({ type: "sandals", material: "suede" }), "/shop/shoes?type=Sandals&material=suede");
+  });
+
+  it("sends iOS /api/shop and clothing shop onto the footwear catalog", () => {
+    const shopApi = fs.readFileSync(path.join(process.cwd(), "app/api/shop/route.ts"), "utf8");
+    const filters = fs.readFileSync(path.join(process.cwd(), "app/api/shop/filters/route.ts"), "utf8");
+    const clothing = fs.readFileSync(path.join(process.cwd(), "app/shop/page.tsx"), "utf8");
+    const client = fs.readFileSync(path.join(process.cwd(), "app/shop/ShopClient.tsx"), "utf8");
+    const direct = fs.readFileSync(path.join(process.cwd(), "lib/catalog-direct-query.ts"), "utf8");
+    assert.match(shopApi, /searchParams\.get\("type"\)/);
+    assert.match(shopApi, /searchParams\.get\("material"\)/);
+    assert.match(filters, /\/shop\/shoes/);
+    assert.match(clothing, /shoesCatalogHref/);
+    assert.match(clothing, /redirect\(/);
+    assert.match(client, /shoesCatalogHref\(\)/);
+    assert.match(direct, /fetchFootwearCatalogPage/);
+    assert.match(direct, /shoesBrowse/);
   });
 });

@@ -82,3 +82,40 @@ export function footwearOrClause(field: "name" | "category" | "composition", tok
     .map((token) => `${field}.ilike.%${token}%`)
     .join(",");
 }
+
+/** Map iOS UnifiedFilterSheet + /api/shop aliases onto the footwear catalog. */
+export function resolveFootwearBrowseFilters(opts: {
+  type?: string | null;
+  shoeType?: string | null;
+  subcategory?: string | null;
+  search?: string | null;
+  q?: string | null;
+  material?: string | null;
+  fiber?: string | null;
+  materialSubtype?: string | null;
+}): { type: string | null; material: ShoeMaterialKey | null } {
+  const type =
+    parseShoeType(opts.type) ||
+    parseShoeType(opts.shoeType) ||
+    parseShoeType(opts.subcategory) ||
+    parseShoeType(opts.search) ||
+    parseShoeType(opts.q);
+  const material =
+    parseShoeMaterial(opts.material) ||
+    parseShoeMaterial(opts.fiber) ||
+    parseShoeMaterial(opts.materialSubtype);
+  return { type, material };
+}
+
+export function shoesCatalogHref(opts?: {
+  type?: string | null;
+  material?: string | null;
+}): string {
+  const params = new URLSearchParams();
+  const type = parseShoeType(opts?.type);
+  const material = parseShoeMaterial(opts?.material);
+  if (type) params.set("type", type);
+  if (material) params.set("material", material);
+  const qs = params.toString();
+  return qs ? `/shop/shoes?${qs}` : "/shop/shoes";
+}

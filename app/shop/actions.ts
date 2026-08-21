@@ -4,6 +4,7 @@ import { fetchFiberCounts } from "../../lib/supabase-server";
 import { CATALOG_PAGE_SIZE } from "../../lib/catalog-rules";
 import { getCachedCatalogStatsMemo, getShopCatalogKnownTotal } from "../../lib/cached-catalog-stats";
 import { queryLiveCatalog } from "../../lib/catalog-direct-query";
+import { isShoesCategory } from "../../lib/catalog-filter-options";
 import {
   loadEditorPickShopLead,
   mergeShopWithEditorPicks,
@@ -87,6 +88,7 @@ export async function getShopProducts(options: {
     const needKnownTotal =
       !options.skipTotal && isUnfilteredShopQuery(options) && offset === 0;
 
+    const shoes = options.categories?.some((c) => isShoesCategory(c));
     const [result, knownTotal, editorPicks] = await Promise.all([
       queryLiveCatalog({
         region: options.catalogRegion || "us",
@@ -103,6 +105,13 @@ export async function getShopProducts(options: {
         minPrice: options.minPrice != null && options.minPrice > 0 ? options.minPrice : undefined,
         maxPrice: options.maxPrice ?? undefined,
         skipCount: options.skipTotal,
+        type: shoes ? options.search : undefined,
+        subcategory: shoes ? options.search : undefined,
+        material: shoes
+          ? options.fiber && options.fiber !== "all"
+            ? options.fiber
+            : subtype
+          : undefined,
       }),
       needKnownTotal ? getShopCatalogKnownTotal() : Promise.resolve(null),
       leadPicks ? loadEditorPickShopLead(limit) : Promise.resolve([]),

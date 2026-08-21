@@ -43,6 +43,16 @@ export async function GET(request: NextRequest) {
   const minPriceRaw = searchParams.get("minPrice");
   const maxPrice = maxPriceRaw ? Number(maxPriceRaw) : undefined;
   const minPrice = minPriceRaw ? Number(minPriceRaw) : undefined;
+  const type =
+    searchParams.get("type") ||
+    searchParams.get("shoeType") ||
+    searchParams.get("subcategory") ||
+    undefined;
+  const material =
+    searchParams.get("material") ||
+    (fiber && ["leather", "suede", "nubuck", "canvas"].includes(fiber) ? fiber : undefined) ||
+    materialSubtype ||
+    undefined;
 
   try {
     const result = await queryLiveCatalog({
@@ -60,6 +70,10 @@ export async function GET(request: NextRequest) {
       maxPrice: Number.isFinite(maxPrice) ? maxPrice : undefined,
       minPrice: Number.isFinite(minPrice) ? minPrice : undefined,
       skipCount: false,
+      type,
+      shoeType: searchParams.get("shoeType") || undefined,
+      subcategory: searchParams.get("subcategory") || undefined,
+      material,
     });
     return NextResponse.json(
       {

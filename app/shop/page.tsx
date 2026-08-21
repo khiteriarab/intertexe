@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { CATALOG_INITIAL_PAGE } from "../../lib/catalog-rules";
 import { CATALOG_STATS } from "../../lib/catalog-stats";
 import ShopClient from "./ShopClient";
@@ -9,6 +10,8 @@ import { formatListingPrice } from "../../lib/format-display-price";
 import { getShopBrands, getShopMeta } from "./actions";
 import { getCachedCatalogStatsMemo, getShopCatalogKnownTotal } from "../../lib/cached-catalog-stats";
 import { queryLiveCatalog } from "../../lib/catalog-direct-query";
+import { isShoesCategory } from "../../lib/catalog-filter-options";
+import { shoesCatalogHref } from "../../lib/footwear-filters";
 import {
   loadEditorPickShopLead,
   mergeShopWithEditorPicks,
@@ -146,6 +149,9 @@ export default async function ShopPage({
     fabricConstruction?: string;
     price?: string;
     brands?: string;
+    subcategory?: string;
+    type?: string;
+    material?: string;
   }>;
 }) {
   try {
@@ -157,6 +163,14 @@ export default async function ShopPage({
         : undefined;
     const category =
       params?.category && SHOP_CATEGORIES.has(params.category) ? params.category : undefined;
+    if (isShoesCategory(category) || isShoesCategory(params?.category)) {
+      redirect(
+        shoesCatalogHref({
+          type: params?.type || params?.subcategory || params?.q,
+          material: params?.material || params?.fiber || params?.materialSubtype,
+        })
+      );
+    }
     const sort =
       params?.sort === "new" || params?.sort === "price-high" || params?.sort === "price-low"
         ? params.sort
