@@ -505,12 +505,14 @@ export default function WeeklyEditEmail({
             <Text style={wordmark}>INTERTEXE</Text>
           </Section>
 
+          <Section className="we-cell" style={{ backgroundColor: CANVAS }}>
           <Heading as="h1" style={heading}>
             The Weekly Edit
           </Heading>
           <Text style={introText}>
             Pieces worth knowing, selected through a material-first lens.
           </Text>
+          </Section>
 
           <Hr style={{ ...hr, margin: "24px 0 28px" }} />
 
