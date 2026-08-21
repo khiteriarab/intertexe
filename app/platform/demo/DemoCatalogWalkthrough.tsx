@@ -130,9 +130,9 @@ export function DemoCatalogWalkthrough() {
           <Frame label="Issues Inbox">
             <ul className="divide-y divide-[#eeeae4]">
               {issues.map((row) => (
-                <li key={row.kind} className="flex justify-between gap-4 py-3 text-sm">
-                  <span>{row.label}</span>
-                  <span className="text-[#8a847c] tabular-nums">
+                <li key={row.kind} className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 py-3 text-sm min-w-0">
+                  <span className="break-words">{row.label}</span>
+                  <span className="text-[#8a847c] tabular-nums break-words">
                     {row.count} · {row.skus.join(", ")}
                   </span>
                 </li>

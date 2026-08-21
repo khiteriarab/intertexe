@@ -92,7 +92,7 @@ export function PlatformDemoClient() {
   const coverage = mapped + missing ? Math.round((mapped / (mapped + missing)) * 100) : 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:pt-20 md:pb-24">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:pt-20 md:pb-24 min-w-0 overflow-x-hidden">
       <DemoCatalogWalkthrough />
 
       <p className="text-[10px] sm:text-[11px] tracking-[0.12em] sm:tracking-[0.25em] text-[#9c7b8b] mb-3 break-words">
@@ -131,7 +131,7 @@ export function PlatformDemoClient() {
           <button
             type="submit"
             disabled={busy}
-            className="text-[11px] tracking-[0.16em] sm:tracking-[0.2em] uppercase bg-black text-white px-8 py-3 disabled:opacity-50"
+            className="text-[11px] tracking-[0.16em] sm:tracking-[0.2em] uppercase bg-black text-white px-8 py-3 disabled:opacity-50 min-h-[44px] w-full sm:w-auto"
           >
             {busy ? "Looking up…" : "Look up"}
           </button>
@@ -179,7 +179,7 @@ export function PlatformDemoClient() {
           </div>
 
           {tab === "json" ? (
-            <pre className="overflow-x-auto bg-[#f7f3ee] p-3 sm:p-4 text-[11px] sm:text-xs leading-relaxed mb-6 max-w-full">
+            <pre className="overflow-x-auto bg-[#f7f3ee] p-3 sm:p-4 text-[11px] sm:text-xs leading-relaxed mb-6 max-w-full whitespace-pre-wrap sm:whitespace-pre break-all sm:break-normal">
               {jsonText}
             </pre>
           ) : (
@@ -260,27 +260,27 @@ export function PlatformDemoClient() {
             <button
               type="button"
               onClick={() => copy("json", jsonText)}
-              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-black px-4 py-3 text-center"
+              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-black px-4 py-3 text-center min-h-[44px] w-full sm:w-auto"
             >
               {copied === "json" ? "Copied" : "Copy JSON"}
             </button>
             <button
               type="button"
               onClick={() => copy("curl", curl)}
-              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-[#ddd5cb] px-4 py-3 text-center"
+              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-[#ddd5cb] px-4 py-3 text-center min-h-[44px] w-full sm:w-auto"
             >
               {copied === "curl" ? "Copied" : "Copy cURL"}
             </button>
             <button
               type="button"
               onClick={download}
-              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-[#ddd5cb] px-4 py-3 text-center"
+              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase border border-[#ddd5cb] px-4 py-3 text-center min-h-[44px] w-full sm:w-auto"
             >
               Download sample JSON
             </button>
             <Link
               href="/platform/docs"
-              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase px-4 py-3 underline underline-offset-4 text-center"
+              className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase px-4 py-3 underline underline-offset-4 text-center min-h-[44px] inline-flex items-center justify-center w-full sm:w-auto"
             >
               Documentation
             </Link>
@@ -292,14 +292,14 @@ export function PlatformDemoClient() {
         <Link
           href="/platform/request?intent=snapshot&cta=demo_primary"
           onClick={() => trackPlatform("platform_snapshot_started")}
-          className="text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase bg-black text-white px-5 sm:px-8 py-4 text-center leading-relaxed"
+          className="text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase bg-black text-white px-5 sm:px-8 py-4 text-center leading-relaxed min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center"
         >
           Submit 10 products for a Material Data Snapshot
         </Link>
         <Link
           href="/platform/request?intent=api_access&cta=demo_secondary"
           onClick={() => trackPlatform("platform_api_access_started")}
-          className="text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase border border-black px-5 sm:px-8 py-4 text-center"
+          className="text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase border border-black px-5 sm:px-8 py-4 text-center min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center"
         >
           Discuss API access
         </Link>

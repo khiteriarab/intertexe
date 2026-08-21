@@ -13,7 +13,7 @@ const NAV = [
 
 function Arrow() {
   return (
-    <span aria-hidden="true" className="text-[14px] leading-none">
+    <span aria-hidden="true" className="hidden sm:inline text-[14px] leading-none">
       →
     </span>
   );
@@ -49,11 +49,11 @@ export function PlatformNav({
 
   return (
     <nav className={dark ? "border-b border-white/10 bg-[#152238] text-[#f7f5f1]" : "border-b border-[#e8e3da]"}>
-      <div className="px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 flex items-center justify-between gap-3">
+      <div className="px-4 sm:px-6 md:px-8 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3.5 sm:py-4 flex items-center justify-between gap-2 sm:gap-3 min-w-0">
         <div className="flex items-center gap-8 min-w-0">
           <Link
             href="/platform"
-            className={`text-[12px] sm:text-sm tracking-[0.16em] sm:tracking-[0.28em] font-light shrink-0 ${
+            className={`text-[12px] sm:text-sm tracking-[0.14em] sm:tracking-[0.28em] font-light shrink-0 min-h-[44px] inline-flex items-center ${
               dark ? "text-white" : ""
             }`}
           >
@@ -64,20 +64,20 @@ export function PlatformNav({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-[11px] tracking-[0.15em] uppercase whitespace-nowrap transition-colors ${linkTone(item.href)}`}
+                className={`text-[11px] tracking-[0.15em] uppercase whitespace-nowrap transition-colors min-h-[44px] inline-flex items-center ${linkTone(item.href)}`}
               >
                 {item.label}
               </Link>
             ))}
           </div>
         </div>
-        <div className="flex items-center justify-end gap-2 shrink-0">
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
           <Link
             href="/dashboard/login"
             className={
               dark
-                ? "inline-flex items-center gap-2 rounded-md border border-white px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-white min-h-[40px] hover:bg-white/10"
-                : "inline-flex items-center gap-2 rounded-md border border-[#152238] px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-[#152238] min-h-[40px] hover:bg-[#152238]/5"
+                ? "hidden md:inline-flex items-center gap-2 rounded-md border border-white px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-white min-h-[44px] hover:bg-white/10"
+                : "hidden md:inline-flex items-center gap-2 rounded-md border border-[#152238] px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-[#152238] min-h-[44px] hover:bg-[#152238]/5"
             }
           >
             Log in
@@ -87,8 +87,8 @@ export function PlatformNav({
             href="/platform/request?intent=snapshot&cta=nav"
             className={
               dark
-                ? "inline-flex items-center gap-2 rounded-md bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-[#152238] min-h-[40px] hover:bg-[#f7f5f1]"
-                : "inline-flex items-center gap-2 rounded-md bg-[#152238] px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-white min-h-[40px] hover:bg-[#0f1a2c]"
+                ? "inline-flex items-center gap-2 rounded-md bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-[#152238] min-h-[44px] hover:bg-[#f7f5f1]"
+                : "inline-flex items-center gap-2 rounded-md bg-[#152238] px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c]"
             }
           >
             Book a demo
@@ -96,8 +96,8 @@ export function PlatformNav({
           </Link>
           <button
             type="button"
-            className={`md:hidden text-[10px] tracking-[0.12em] uppercase min-h-[40px] px-1 ${
-              dark ? "text-white/70" : "text-[#6f6a63]"
+            className={`md:hidden inline-flex items-center justify-center text-[11px] tracking-[0.12em] uppercase min-h-[44px] min-w-[44px] px-2 ${
+              dark ? "text-white/80" : "text-[#6f6a63]"
             }`}
             aria-expanded={open}
             aria-controls="platform-mobile-menu"
@@ -110,7 +110,7 @@ export function PlatformNav({
       {open ? (
         <div
           id="platform-mobile-menu"
-          className={`md:hidden border-t px-4 pb-4 pt-2 ${
+          className={`md:hidden border-t px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 ${
             dark ? "border-white/10 bg-[#152238]" : "border-[#e8e3da] bg-[#f7f5f1]"
           }`}
         >
@@ -119,11 +119,20 @@ export function PlatformNav({
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className={`block py-3 text-[13px] tracking-[0.14em] uppercase ${linkTone(item.href)}`}
+              className={`flex items-center min-h-[44px] py-3 text-[13px] tracking-[0.14em] uppercase ${linkTone(item.href)}`}
             >
               {item.label}
             </Link>
           ))}
+          <Link
+            href="/dashboard/login"
+            onClick={() => setOpen(false)}
+            className={`flex items-center min-h-[44px] py-3 text-[13px] tracking-[0.14em] uppercase ${
+              dark ? "text-white/70 hover:text-white" : "text-[#6f6a63] hover:text-black"
+            }`}
+          >
+            Log in
+          </Link>
         </div>
       ) : null}
     </nav>

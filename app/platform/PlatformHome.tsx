@@ -218,7 +218,7 @@ export function PlatformHome() {
             Material intelligence for fashion
           </p>
           <h1
-            className="text-[2.15rem] sm:text-5xl md:text-[3.35rem] font-light leading-[1.12] mb-6 text-white"
+          className="text-[1.85rem] sm:text-5xl md:text-[3.35rem] font-light leading-[1.12] mb-6 text-white break-words"
             style={SERIF}
           >
             Turn messy product and material data into usable material intelligence.

@@ -7,7 +7,7 @@ import { SERIF } from "./platform-ui";
 export function HeroProductStage() {
   return (
     <figure className="relative mt-12 sm:mt-16 m-0">
-      <div className="relative mx-auto max-w-6xl min-h-[340px] sm:min-h-[480px] lg:min-h-[620px]">
+      <div className="relative mx-auto max-w-6xl min-h-0 sm:min-h-[480px] lg:min-h-[620px] overflow-hidden">
         <svg
           className="pointer-events-none absolute inset-0 hidden lg:block z-30"
           viewBox="0 0 1100 640"
@@ -203,8 +203,8 @@ export function IphoneAppStage() {
   const products = PHONE_PRODUCTS[material];
 
   return (
-    <figure className="m-0">
-      <div className="flex items-end justify-center gap-3 sm:gap-6">
+    <figure className="m-0 overflow-x-hidden">
+      <div className="flex items-end justify-center gap-3 sm:gap-6 px-2">
         <PhoneShell className="hidden sm:block w-[132px] opacity-90 -rotate-6 mb-8">
           <div className="px-2 pb-3">
             <p className="text-[8px] tracking-[0.14em] uppercase text-[#8a847c] mb-1">Material</p>

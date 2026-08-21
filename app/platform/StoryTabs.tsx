@@ -35,7 +35,7 @@ export function StoryTabs({
       <div
         role="tablist"
         aria-label="Understand, compare, act, engage"
-        className="flex justify-center gap-2 sm:gap-8 overflow-x-auto pb-6 mb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex justify-center gap-2 sm:gap-8 overflow-x-auto pb-6 mb-2 -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((tab) => {
           const selected = tab.id === current.id;
@@ -66,7 +66,7 @@ export function StoryTabs({
       >
         <div className="min-w-0 itx-understand-copy">
           <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{current.eyebrow}</p>
-          <h3 className="text-2xl sm:text-3xl font-light mb-4" style={SERIF}>
+          <h3 className="text-2xl sm:text-3xl font-light mb-4 break-words" style={SERIF}>
             {current.title}
           </h3>
           <Body className="mb-4">{current.copy}</Body>

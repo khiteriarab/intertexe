@@ -161,7 +161,7 @@ export function ResourceCarousel() {
             <p className="text-[15px] text-[#5c5854] font-light leading-relaxed mb-6">{surface.copy}</p>
             <Link
               href={surface.primary.href}
-              className="inline-flex items-center justify-center rounded-md bg-[#152238] text-white text-[12px] tracking-[0.04em] px-6 py-3.5 min-h-[44px] hover:bg-[#0f1a2c]"
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-md bg-[#152238] text-white text-[12px] tracking-[0.04em] px-6 py-3.5 min-h-[44px] hover:bg-[#0f1a2c]"
             >
               {surface.primary.label} →
             </Link>

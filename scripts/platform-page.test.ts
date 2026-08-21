@@ -96,15 +96,26 @@ describe("Platform material-intelligence page", () => {
   });
 
   it("recomposes the page for small screens without dropping the desktop spread", () => {
+    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/docs/page.tsx"), "utf8");
+    const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
+    const ecosystem = fs.readFileSync(path.join(process.cwd(), "app/platform/EcosystemStage.tsx"), "utf8");
     assert.match(nav, /\{open \? "Close" : "Menu"\}/);
     assert.match(nav, /Book a demo/);
     assert.match(nav, /Log in/);
     assert.match(nav, /border-white/);
     assert.match(nav, /href="\/dashboard\/login"/);
+    assert.match(nav, /hidden md:inline-flex/);
+    assert.match(nav, /min-h-\[44px\]/);
+    assert.match(nav, /platform-mobile-menu/);
+    assert.match(chrome, /overflow-x-hidden/);
     assert.match(home, /ComparisonView/);
     assert.match(home, /Understand → Compare → Act/);
     assert.match(comparison, /Compare INTERTEXE with/);
     assert.match(comparison, /hidden lg:block/);
+    assert.match(docs, /break-words/);
+    assert.match(docs, /whitespace-pre-wrap/);
+    assert.match(ecosystem, /md:min-h-\[6.5rem\]/);
+    assert.match(stages, /min-h-0 sm:min-h-\[480px\]/);
   });
 
   it("wires named product-graphic slots without publishing unfinished screenshots", () => {

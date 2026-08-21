@@ -32,7 +32,7 @@ export function DemoBookSection() {
             ))}
           </ul>
         </div>
-        <div className="min-w-0 border border-[#e8e3da] bg-[#f7f5f1] p-5 sm:p-8">
+        <div className="min-w-0 border border-[#e8e3da] bg-[#f7f5f1] p-4 sm:p-8">
           <PlatformLeadForm intent="snapshot" sourceCta="demo_page" variant="demo" />
         </div>
       </div>

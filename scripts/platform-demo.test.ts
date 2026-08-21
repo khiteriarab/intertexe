@@ -237,6 +237,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(demo, /cta=demo_primary/);
     assert.match(demo, /cta=demo_secondary/);
     assert.match(demo, /Look up a sample identifier/);
+    assert.match(demo, /w-full sm:w-auto/);
     assert.match(walkthrough, /See INTERTEXE with a 10-product catalog/);
     assert.match(walkthrough, /<h1/);
     assert.match(walkthrough, /CatalogPreview/);

@@ -23,7 +23,7 @@ export function WorkspaceChrome({
   className?: string;
 }) {
   return (
-    <figure className={`m-0 ${className}`}>
+    <figure className={`m-0 max-w-full min-w-0 ${className}`}>
       <div className="overflow-hidden rounded-2xl border border-[#d5dee8] bg-white shadow-[0_28px_70px_rgba(21,34,56,0.12)]">
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#eeeae4] bg-[#faf8f5]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
