@@ -69,7 +69,7 @@ export function DemoCatalogWalkthrough() {
               onClick={() => setStep(item.id)}
               className={`snap-start shrink-0 text-[10px] tracking-[0.12em] uppercase px-3 py-2 min-h-[40px] border ${
                 active
-                  ? "bg-[#1d4734] text-white border-[#1d4734]"
+                  ? "bg-[#152238] text-white border-[#152238]"
                   : "bg-transparent text-[#6f6a63] border-[#e8e3da]"
               }`}
             >
@@ -181,7 +181,7 @@ export function DemoCatalogWalkthrough() {
       {step === "benchmark" ? (
         <div className="grid lg:grid-cols-[1.3fr_0.7fr] gap-8">
           <div>
-            <p className="text-[11px] tracking-[0.16em] uppercase text-[#1d4734] mb-4">Your material position</p>
+            <p className="text-[11px] tracking-[0.16em] uppercase text-[#152238] mb-4">Your material position</p>
             <div className="overflow-x-auto border border-[#e8e3da] bg-white">
               <table className="w-full text-left text-sm">
                 <thead>
@@ -230,7 +230,7 @@ export function DemoCatalogWalkthrough() {
               ].map(([label, delta]) => (
                 <li key={label} className="flex justify-between gap-4 px-5 py-4 text-sm">
                   <span>{label}</span>
-                  <span className="tabular-nums text-[#1d4734]">{delta}</span>
+                  <span className="tabular-nums text-[#152238]">{delta}</span>
                 </li>
               ))}
             </ul>
@@ -249,7 +249,7 @@ export function DemoCatalogWalkthrough() {
             emphasize={(product) => product.passport.status !== "ready"}
           />
           <Frame label="Passport readiness">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-2">
               {selected.passport.status === "ready"
                 ? "Ready to publish"
                 : selected.passport.status === "review"
@@ -347,7 +347,7 @@ function SourcePanel({ product }: { product: DemoCatalogProduct }) {
 function NormalizedPanel({ product }: { product: DemoCatalogProduct }) {
   return (
     <>
-      <p className="text-[10px] tracking-[0.16em] uppercase text-[#1d4734] mb-3">INTERTEXE</p>
+      <p className="text-[10px] tracking-[0.16em] uppercase text-[#152238] mb-3">INTERTEXE</p>
       <p className="text-lg mb-3" style={SERIF}>
         {product.name}
       </p>

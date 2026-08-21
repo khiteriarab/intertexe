@@ -1,17 +1,17 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { PlatformNav } from "./PlatformNav";
+import { PlatformNav, type PlatformNavKey } from "./PlatformNav";
 
 export function PlatformChrome({
   children,
   active,
 }: {
   children: ReactNode;
-  active?: "demo" | "docs" | "request" | "platform" | "login";
+  active?: PlatformNavKey;
 }) {
   return (
     <div className="min-h-screen bg-[#f7f5f1] text-[#161513] overflow-x-hidden">
-      <PlatformNav active={active} />
+      <PlatformNav active={active} tone={active === "platform" ? "dark" : "light"} />
       {children}
       <footer className="border-t border-[#e8e3da] px-4 sm:px-6 md:px-8 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-4">
@@ -22,6 +22,9 @@ export function PlatformChrome({
             </Link>
             <Link href="/platform" className="text-xs text-[#8a847c] hover:text-black">
               Platform
+            </Link>
+            <Link href="/platform/discover" className="text-xs text-[#8a847c] hover:text-black">
+              Discover
             </Link>
             <Link href="/platform/demo" className="text-xs text-[#8a847c] hover:text-black">
               Demo

@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { DEMO_CATALOG, DEMO_ISSUE_LABEL } from "../../lib/material-intelligence/demo-catalog";
 import { QrMark, SERIF } from "./platform-ui";
 
-const NAV = ["Overview", "Products", "Materials", "Issues", "Benchmark", "Passports"] as const;
+const NAV = ["Overview", "Products", "Materials", "Issues", "Benchmark", "Passports", "Monitor"] as const;
 export type WorkspaceNav = (typeof NAV)[number];
 
 const CAPTION = "Illustrative workspace. Not a live customer catalog.";
@@ -24,7 +24,7 @@ export function WorkspaceChrome({
 }) {
   return (
     <figure className={`m-0 ${className}`}>
-      <div className="rounded-xl border border-[#e8e3da] bg-white overflow-hidden shadow-[0_20px_50px_rgba(22,21,19,0.06)]">
+      <div className="rounded-2xl border border-[#d5dee8] bg-white overflow-hidden shadow-[0_28px_70px_rgba(21,34,56,0.12)]">
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#eeeae4] bg-[#faf8f5]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
@@ -32,7 +32,7 @@ export function WorkspaceChrome({
           <span className="ml-2 text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">INTERTEXE workspace</span>
         </div>
         <div className="lg:grid lg:grid-cols-[168px_1fr]">
-          <aside className="hidden lg:flex flex-col justify-between bg-[#1d4734] text-white px-3 py-5">
+          <aside className="hidden lg:flex flex-col justify-between bg-[#152238] text-white px-3 py-5">
             <div>
               <p className="text-[10px] tracking-[0.2em] uppercase text-white/55 mb-5 px-2">INTERTEXE</p>
               <ul className="space-y-0.5">
@@ -58,7 +58,9 @@ export function WorkspaceChrome({
           <div className="p-4 sm:p-5 bg-[#f7f5f1]">{children}</div>
         </div>
       </div>
-      <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">{caption}</figcaption>
+      {caption ? (
+        <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">{caption}</figcaption>
+      ) : null}
     </figure>
   );
 }
@@ -153,14 +155,14 @@ function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: "neu
     tone === "alert"
       ? "bg-[#f3e6e6] text-[#8b2e2e]"
       : tone === "ok"
-        ? "bg-[#e7efe9] text-[#1d4734]"
+        ? "bg-[#e8eef4] text-[#152238]"
         : "bg-[#f0ebe4] text-[#5c5854]";
   return <span className={`inline-block text-[11px] px-2 py-1 mr-1 mb-1 ${cls}`}>{children}</span>;
 }
 
-export function OverviewPreview({ className = "mt-12 sm:mt-16" }: { className?: string }) {
+export function OverviewPreview({ className = "mt-12 sm:mt-16", caption }: { className?: string; caption?: string }) {
   return (
-    <WorkspaceChrome active="Overview" className={className}>
+    <WorkspaceChrome active="Overview" className={className} caption={caption}>
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
         {METRICS.map(([n, label, delta]) => (
           <Card key={label}>
@@ -228,9 +230,9 @@ export function OverviewPreview({ className = "mt-12 sm:mt-16" }: { className?: 
   );
 }
 
-export function NormalizePreview({ className = "mb-10" }: { className?: string }) {
+export function NormalizePreview({ className = "mb-10", caption }: { className?: string; caption?: string }) {
   return (
-    <WorkspaceChrome active="Products" className={className} caption={`${CAPTION} Original source strings are retained.`}>
+    <WorkspaceChrome active="Products" className={className} caption={caption ?? `${CAPTION} Original source strings are retained.`}>
       <p className="text-sm mb-4" style={SERIF}>
         Dress 8721
       </p>
@@ -259,7 +261,7 @@ export function NormalizePreview({ className = "mb-10" }: { className?: string }
           </span>
         </div>
         <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-3">INTERTEXE record</p>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-3">INTERTEXE record</p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Composition · normalized</p>
           <p className="mb-2">
             <Pill>70% Cotton</Pill>
@@ -288,7 +290,7 @@ export function NormalizePreview({ className = "mb-10" }: { className?: string }
   );
 }
 
-export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
+export function IssuesPreview({ className = "mb-8", caption }: { className?: string; caption?: string }) {
   const [filter, setFilter] = useState<(typeof ISSUE_FILTERS)[number][0]>("All");
   const rows =
     filter === "All"
@@ -306,7 +308,7 @@ export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
         );
 
   return (
-    <WorkspaceChrome active="Issues" className={className}>
+    <WorkspaceChrome active="Issues" className={className} caption={caption}>
       <p className="text-sm mb-4" style={SERIF}>
         Issues inbox
       </p>
@@ -368,12 +370,12 @@ export function IssuesPreview({ className = "mb-8" }: { className?: string }) {
   );
 }
 
-export function BenchmarkPreview({ className = "mb-8" }: { className?: string }) {
+export function BenchmarkPreview({ className = "mb-8", caption }: { className?: string; caption?: string }) {
   return (
     <WorkspaceChrome
       active="Benchmark"
       className={className}
-      caption={`${CAPTION} Individual customer data is never exposed. Consumer signal is coming / developing.`}
+      caption={caption ?? `${CAPTION} Individual customer data is never exposed. Consumer signal is coming / developing.`}
     >
       <div className="grid lg:grid-cols-2 gap-3">
         <Card>
@@ -396,7 +398,7 @@ export function BenchmarkPreview({ className = "mb-8" }: { className?: string })
                       style={{ width: `${Math.min(peerN, 100)}%` }}
                     />
                     <span
-                      className="absolute inset-y-0 left-0 bg-[#1d4734]"
+                      className="absolute inset-y-0 left-0 bg-[#152238]"
                       style={{ width: `${Math.min(youN, 100)}%` }}
                     />
                   </div>
@@ -419,7 +421,7 @@ export function BenchmarkPreview({ className = "mb-8" }: { className?: string })
             {SIGNAL.map(([label, delta, up]) => (
               <li key={label} className="flex justify-between gap-3 py-3 text-sm">
                 <span>{label}</span>
-                <span className={`tabular-nums ${up ? "text-[#1d4734]" : "text-[#8b2e2e]"}`}>{delta}</span>
+                <span className={`tabular-nums ${up ? "text-[#152238]" : "text-[#8b2e2e]"}`}>{delta}</span>
               </li>
             ))}
           </ul>
@@ -432,16 +434,16 @@ export function BenchmarkPreview({ className = "mb-8" }: { className?: string })
   );
 }
 
-export function PassportPreview({ className = "mb-10" }: { className?: string }) {
+export function PassportPreview({ className = "mb-10", caption }: { className?: string; caption?: string }) {
   return (
     <WorkspaceChrome
       active="Passports"
       className={className}
-      caption="Illustrative passport workflow. Not a regulatory certification. The INTERTEXE scanner is not required."
+      caption={caption ?? "Illustrative passport workflow. Not a regulatory certification. The INTERTEXE scanner is not required."}
     >
       <div className="grid md:grid-cols-3 gap-3">
         <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">01 · Ready to publish</p>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-2">01 · Ready to publish</p>
           <p className="text-base mb-1" style={SERIF}>
             Silk Evening Dress
           </p>
@@ -481,6 +483,57 @@ export function PassportPreview({ className = "mb-10" }: { className?: string })
             Illustrative passport. Not a regulatory certification.
           </p>
         </div>
+      </div>
+    </WorkspaceChrome>
+  );
+}
+
+export function RegulatoryPreview({ className = "mb-0", caption }: { className?: string; caption?: string }) {
+  return (
+    <WorkspaceChrome
+      active="Monitor"
+      className={className}
+      caption={caption ?? "Tracked requirements and preparation status — not certification."}
+    >
+      <div className="grid md:grid-cols-2 gap-3">
+        <Card>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Requirement update · EU / Textiles</p>
+          <p className="text-2xl font-light tabular-nums mb-3" style={SERIF}>
+            10,000 products evaluated
+          </p>
+          <ul className="text-sm space-y-2">
+            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+              <span>No action required</span>
+              <span className="tabular-nums">9,614</span>
+            </li>
+            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+              <span>Need additional information</span>
+              <span className="tabular-nums">311</span>
+            </li>
+            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+              <span>Require review</span>
+              <span className="tabular-nums">75</span>
+            </li>
+          </ul>
+        </Card>
+        <Card>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-3">Preparation status</p>
+          <ul className="text-sm space-y-2">
+            {[
+              ["French AGEC", "Review"],
+              ["EU ESPR textiles", "Missing information"],
+              ["Digital Product Passport", "In progress"],
+            ].map(([name, status]) => (
+              <li key={name} className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+                <span>{name}</span>
+                <span className="text-[#8a847c]">{status}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-[#8a847c] mt-4 leading-relaxed">
+            Illustrative example. INTERTEXE does not provide legal certification.
+          </p>
+        </Card>
       </div>
     </WorkspaceChrome>
   );
@@ -532,7 +585,7 @@ export function CatalogPreview({
         ) : null}
         {showNormalized ? (
           <div className="overflow-x-auto bg-white border border-[#e8e3da]">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] px-3 py-2 border-b border-[#e8e3da]">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] px-3 py-2 border-b border-[#e8e3da]">
               INTERTEXE record
             </p>
             <table className="w-full text-left text-xs min-w-[520px]">

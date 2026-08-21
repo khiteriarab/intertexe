@@ -4,167 +4,50 @@ import { useState, type ReactNode } from "react";
 import { DEFAULT_APP_STORE_URL } from "../../lib/app-store";
 import { SERIF } from "./platform-ui";
 
-const FIBERS = [
-  { name: "Cotton", pct: 36, color: "#c5d4c8" },
-  { name: "Polyester", pct: 28, color: "#7d9bb8" },
-  { name: "Viscose", pct: 13, color: "#9c7b8b" },
-  { name: "Wool", pct: 8, color: "#c4a574" },
-  { name: "Linen", pct: 6, color: "#b08968" },
-  { name: "Silk", pct: 4, color: "#c9b8d4" },
-  { name: "Other", pct: 5, color: "#d4cdc4" },
-] as const;
-
-function JacketMark() {
-  return (
-    <svg viewBox="0 0 220 280" className="w-full h-auto" role="img" aria-label="Illustrative garment beside the workspace">
-      <rect width="220" height="280" fill="#f7f5f1" />
-      <path
-        d="M42 78c8-32 28-52 68-52s60 20 68 52l18 10-12 22h-12v128H48V110H36L24 88l18-10z"
-        fill="#f4f1ea"
-        stroke="#1d4734"
-        strokeWidth="1.4"
-      />
-      <path d="M70 78c6-18 16-28 40-28s34 10 40 28" fill="none" stroke="#1d4734" strokeWidth="1.2" />
-      <path d="M110 86v132M86 118h48M86 154h48" fill="none" stroke="#1d4734" strokeWidth="1" opacity="0.45" />
-      <circle cx="156" cy="92" r="28" fill="none" stroke="#9c7b8b" strokeWidth="1.6" />
-      <circle cx="156" cy="92" r="18" fill="#f7f5f1" stroke="#9c7b8b" strokeWidth="1" />
-      <path d="M176 112l16 16" stroke="#9c7b8b" strokeWidth="2" />
-    </svg>
-  );
-}
-
-const PRODUCT_TABS = ["Overview", "Traceability", "Impact"] as const;
-
-function ProductWorkspaceWindow() {
-  const [tab, setTab] = useState<(typeof PRODUCT_TABS)[number]>("Overview");
-  const [fiber, setFiber] = useState<string | null>(null);
-
-  return (
-    <div className="rounded-lg border border-[#e8e3da] bg-white overflow-hidden shadow-[0_24px_60px_rgba(22,21,19,0.14)]">
-      <div className="flex items-center justify-between gap-3 bg-[#1d4734] text-white px-3 py-2.5">
-        <p className="text-[11px] tracking-[0.08em] truncate">Dress 8721 · sample workspace</p>
-        <span className="hidden sm:inline text-[10px] tracking-[0.1em] uppercase text-white/60">Consultation</span>
-      </div>
-      <div className="flex gap-1 px-3 pt-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {PRODUCT_TABS.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setTab(item)}
-            className={`shrink-0 text-[10px] tracking-[0.12em] uppercase px-3 py-2 min-h-[36px] ${
-              tab === item ? "bg-[#1d4734] text-white" : "text-[#6f6a63] border border-[#e8e3da]"
-            }`}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-      <div className="p-4">
-        {tab === "Overview" ? (
-          <>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Material mix</p>
-            <div className="flex h-3 overflow-hidden bg-[#ebe4da] mb-3">
-              {FIBERS.map((item) => (
-                <button
-                  key={item.name}
-                  type="button"
-                  onClick={() => setFiber(item.name)}
-                  className="h-full p-0 border-0 min-w-0"
-                  style={{
-                    flex: item.pct,
-                    background: item.color,
-                    opacity: fiber && fiber !== item.name ? 0.35 : 1,
-                  }}
-                  aria-label={`${item.name} ${item.pct} percent`}
-                />
-              ))}
-            </div>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[#5c5854]">
-              {FIBERS.map((item) => (
-                <li key={item.name}>
-                  <button
-                    type="button"
-                    onClick={() => setFiber(item.name)}
-                    className={`flex w-full justify-between gap-2 text-left ${
-                      fiber === item.name ? "text-[#1d4734]" : ""
-                    }`}
-                  >
-                    <span>{item.name}</span>
-                    <span className="tabular-nums">{item.pct}%</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            {fiber ? (
-              <p className="text-xs text-[#8a847c] mt-3">
-                {fiber} share in this illustrative catalog. Click another fiber to compare.
-              </p>
-            ) : (
-              <p className="text-xs text-[#8a847c] mt-3">Click a fiber to highlight it. Illustrative example.</p>
-            )}
-          </>
-        ) : null}
-        {tab === "Traceability" ? (
-          <ol className="text-sm text-[#5c5854] space-y-2">
-            <li className="border-t border-[#eeeae4] pt-2">Label · 70 CO / 30 PA</li>
-            <li className="border-t border-[#eeeae4] pt-2">INTERTEXE · 70% Cotton · 30% Polyamide</li>
-            <li className="border-t border-[#eeeae4] pt-2 text-[#8b2e2e]">Supplier file disagrees · 65 / 35</li>
-            <li className="border-t border-[#eeeae4] pt-2">Country of origin · missing</li>
-          </ol>
-        ) : null}
-        {tab === "Impact" ? (
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {[
-              ["81%", "Complete records"],
-              ["487", "Issues"],
-              ["62%", "Passport-ready"],
-            ].map(([n, l]) => (
-              <div key={l} className="border border-[#e8e3da] p-3">
-                <p className="text-lg font-light tabular-nums" style={SERIF}>
-                  {n}
-                </p>
-                <p className="text-[10px] tracking-[0.08em] uppercase text-[#8a847c] mt-1">{l}</p>
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
 export function HeroProductStage() {
   return (
-    <div className="relative mt-12 sm:mt-16">
-      <div className="pointer-events-none absolute inset-0 flex justify-center" aria-hidden="true">
-        <div className="w-px bg-[#e8e3da]" />
+    <figure className="relative mt-12 sm:mt-16 m-0">
+      <div className="relative mx-auto max-w-6xl min-h-[340px] sm:min-h-[480px] lg:min-h-[620px]">
+        <svg
+          className="pointer-events-none absolute inset-0 hidden lg:block z-30"
+          viewBox="0 0 1100 640"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path d="M520 28 L210 250" stroke="white" strokeWidth="1" opacity="0.28" />
+          <path d="M560 28 L820 160" stroke="white" strokeWidth="1" opacity="0.28" />
+        </svg>
+        <img
+          src="/platform/hero-silk-dress.png"
+          alt="Illustrative silk midi dress — sample product record"
+          width={1200}
+          height={1600}
+          className="relative z-10 mx-auto w-[58%] max-w-[280px] sm:max-w-[340px] lg:absolute lg:left-0 lg:bottom-0 lg:mx-0 lg:w-[38%] lg:max-w-[400px] object-contain drop-shadow-[0_30px_60px_rgba(8,16,32,0.45)]"
+          style={{
+            WebkitMaskImage: "radial-gradient(ellipse 72% 86% at 50% 52%, #000 46%, transparent 78%)",
+            maskImage: "radial-gradient(ellipse 72% 86% at 50% 52%, #000 46%, transparent 78%)",
+          }}
+        />
+        <img
+          src="/platform/hero-product-window.png"
+          alt="Illustrative INTERTEXE product information window for the silk dress"
+          width={1600}
+          height={1200}
+          className="hidden md:block absolute right-[2%] top-0 z-[5] w-[48%] lg:w-[42%] rotate-[6deg] rounded-xl border border-white/20 shadow-[0_24px_60px_rgba(8,16,32,0.4)]"
+        />
+        <img
+          src="/platform/hero-workspace-desktop.png"
+          alt="Illustrative INTERTEXE Enterprise workspace — Dress 8721 sample catalog, not a live customer"
+          width={1920}
+          height={1080}
+          className="relative z-20 mt-6 w-full md:absolute md:right-0 md:top-[22%] md:mt-0 md:w-[72%] lg:w-[66%] md:-rotate-2 rounded-xl border border-white/25 shadow-[0_32px_80px_rgba(8,16,32,0.5)]"
+        />
       </div>
-      <div className="relative grid md:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] gap-6 items-center">
-        <div className="relative max-w-[240px] mx-auto md:mx-0">
-          <JacketMark />
-          <p className="mt-3 text-[10px] tracking-[0.14em] uppercase text-[#8a847c] text-center md:text-left">
-            Product + material record
-          </p>
-        </div>
-        <div className="relative">
-          <div className="hidden sm:block absolute -right-2 -top-6 w-[58%] rotate-[6deg] opacity-70 -z-0">
-            <div className="rounded-lg border border-[#e8e3da] bg-white p-4 shadow-[0_16px_40px_rgba(22,21,19,0.08)]">
-              <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Key indicators</p>
-              <p className="text-sm mb-1">Traceability 3/5</p>
-              <p className="text-sm mb-1">Data completeness 4/5</p>
-              <p className="text-sm">Passport-ready 2/5</p>
-            </div>
-          </div>
-          <div className="relative z-10 md:-rotate-2">
-            <ProductWorkspaceWindow />
-          </div>
-        </div>
-      </div>
-      <p className="mt-4 text-xs text-[#8a847c]">
-        Dual view: the garment and the INTERTEXE workspace on the same record. Illustrative sample — not a live
-        customer catalog.
-      </p>
-    </div>
+      <figcaption className="mt-8 text-center text-xs text-white/60 leading-relaxed max-w-2xl mx-auto">
+        Dual view: the silk dress and the INTERTEXE desktop workspace on the same record. Illustrative sample — not a
+        live customer catalog.
+      </figcaption>
+    </figure>
   );
 }
 
@@ -226,7 +109,7 @@ export function ChromeExtensionStage() {
                       onClick={() => setFilter(item)}
                       className={`shrink-0 text-[10px] tracking-[0.06em] px-2.5 py-1.5 rounded-full border min-h-[32px] ${
                         filter === item
-                          ? "bg-[#1d4734] text-white border-[#1d4734]"
+                          ? "bg-[#152238] text-white border-[#152238]"
                           : "border-[#e8e3da] text-[#6f6a63]"
                       }`}
                     >
@@ -250,7 +133,7 @@ export function ChromeExtensionStage() {
                   ))}
                 </ul>
                 <div className="p-3 border-t border-[#eeeae4] space-y-2">
-                  <p className="text-[11px] tracking-[0.08em] uppercase bg-[#1d4734] text-white text-center py-2">
+                  <p className="text-[11px] tracking-[0.08em] uppercase bg-[#152238] text-white text-center py-2">
                     View {visible.length} better-material matches
                   </p>
                   <p className="text-[11px] text-center text-[#6f6a63] border border-[#e8e3da] py-2">
@@ -335,7 +218,7 @@ export function IphoneAppStage() {
           </div>
         </PhoneShell>
         <PhoneShell className="w-[210px] sm:w-[240px] z-10">
-          <div className="bg-[#1d4734] text-white text-[9px] tracking-[0.08em] text-center py-1.5 px-2">
+          <div className="bg-[#152238] text-white text-[9px] tracking-[0.08em] text-center py-1.5 px-2">
             Linen is the fabric of summer — shop the edit.
           </div>
           <div className="px-3 py-3">
@@ -351,7 +234,7 @@ export function IphoneAppStage() {
                 >
                   <span
                     className={`mx-auto mb-1 block w-10 h-10 rounded-full border ${
-                      material === item.id ? "border-[#1d4734]" : "border-[#e8e3da]"
+                      material === item.id ? "border-[#152238]" : "border-[#e8e3da]"
                     }`}
                     style={{ background: item.swatch }}
                   />
@@ -371,7 +254,7 @@ export function IphoneAppStage() {
               {products.map((item) => (
                 <div key={item.name}>
                   <div className="aspect-[3/4] bg-[#e8e0d4] mb-1.5" />
-                  <p className="text-[8px] tracking-[0.12em] uppercase text-[#1d4734]">{item.fiber}</p>
+                  <p className="text-[8px] tracking-[0.12em] uppercase text-[#152238]">{item.fiber}</p>
                   <p className="text-[9px] tracking-[0.1em] uppercase text-[#8a847c]">{item.brand}</p>
                   <p className="text-[10px] truncate">{item.name}</p>
                 </div>

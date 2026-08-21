@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Body, PrimaryLink, SERIF } from "./platform-ui";
+import { Body, DiscoverLink, PrimaryLink, SERIF, SoftwareStage } from "./platform-ui";
 
 export type StoryTabId = "understand" | "compare" | "act" | "engage";
 
@@ -11,6 +11,8 @@ export type StoryTab = {
   eyebrow: string;
   title: string;
   copy: string;
+  more?: string[];
+  caption?: string;
   points: string[];
   href: string;
   cta: string;
@@ -47,7 +49,7 @@ export function StoryTabs({
               aria-controls={`story-panel-${tab.id}`}
               onClick={() => setActive(tab.id)}
               className={`shrink-0 text-[12px] sm:text-sm tracking-[0.08em] uppercase px-2 py-2 min-h-[44px] border-b ${
-                selected ? "border-[#1d4734] text-[#1d4734]" : "border-transparent text-[#8a847c]"
+                selected ? "border-[#152238] text-[#152238]" : "border-transparent text-[#8a847c]"
               }`}
             >
               {tab.label}
@@ -59,27 +61,40 @@ export function StoryTabs({
         role="tabpanel"
         id={`story-panel-${current.id}`}
         aria-labelledby={`story-tab-${current.id}`}
-        className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 items-start"
+        className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-10 items-start itx-understand-copy"
+        key={current.id}
       >
         <div>
           <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{current.eyebrow}</p>
           <h3 className="text-2xl sm:text-3xl font-light mb-4" style={SERIF}>
             {current.title}
           </h3>
-          <Body className="mb-6">{current.copy}</Body>
-          <ul className="space-y-2 mb-8">
+          <Body className="mb-4">{current.copy}</Body>
+          {current.more?.map((paragraph) => (
+            <p key={paragraph} className="text-[15px] text-[#5c5854] font-light leading-relaxed mb-4">
+              {paragraph}
+            </p>
+          ))}
+          {current.caption ? (
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">{current.caption}</p>
+          ) : null}
+          <ul className="space-y-3 mb-8">
             {current.points.map((point) => (
               <li key={point} className="flex items-start gap-2 text-sm text-[#161513]">
-                <span className="text-[#1d4734]" aria-hidden="true">
-                  ✓
+                <span className="text-[#152238] mt-0.5 shrink-0" aria-hidden="true">
+                  →
                 </span>
                 <span>{point}</span>
               </li>
             ))}
           </ul>
-          <PrimaryLink href={current.href}>{current.cta}</PrimaryLink>
+          {current.cta === "Discover" ? (
+            <DiscoverLink href={current.href}>Discover</DiscoverLink>
+          ) : (
+            <PrimaryLink href={current.href}>{current.cta}</PrimaryLink>
+          )}
         </div>
-        <div>{panels[current.id]}</div>
+        <SoftwareStage title={current.title}>{panels[current.id]}</SoftwareStage>
       </div>
     </div>
   );
