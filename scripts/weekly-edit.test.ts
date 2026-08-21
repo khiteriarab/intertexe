@@ -128,7 +128,11 @@ describe("Weekly Edit email", () => {
     assert.match(email, /New to the edit/);
     assert.match(email, /we-product-grid/);
     assert.match(email, /Shop the edit/);
-    assert.match(email, /Explore the edit/);
+    assert.doesNotMatch(email, /Explore the edit/);
+    assert.match(email, /TikTok →/);
+    assert.match(email, /Instagram →/);
+    assert.match(email, /App →/);
+    assert.doesNotMatch(email, /Follow \{INTERTEXE_SOCIAL_HANDLE\}/);
     assert.match(email, /Material intelligence/);
     assert.match(email, /Discover /);
     assert.match(email, /weeklyEditMaterialSpec/);
