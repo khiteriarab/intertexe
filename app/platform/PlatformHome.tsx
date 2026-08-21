@@ -557,21 +557,6 @@ export function PlatformHome() {
           ))}
         </div>
       </section>
-
-      <section className="border-t border-[#e8e3da] py-10 sm:py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Heading className="mb-6">See INTERTEXE with your own products.</Heading>
-          <Body className="max-w-2xl mb-8">
-            Free. No commitment. Ten product records. Then you are already inside the workspace.
-          </Body>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <PrimaryLink href="/platform/request?intent=snapshot&cta=final">
-              Request a 10-product snapshot
-            </PrimaryLink>
-            <SecondaryLink href="/platform/demo">Explore the live demo</SecondaryLink>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
