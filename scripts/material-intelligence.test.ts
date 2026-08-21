@@ -163,6 +163,30 @@ describe("Production lookup", () => {
     assert.equal(data.composition.total_percentage, null);
   });
 
+  it("uses an approved product composition even when a GS1 prefix also matches", async () => {
+    const gtin = "199045190095";
+    const supabase = createMockSupabase({
+      material_evidence: [],
+      barcode_compositions: [],
+      products: [
+        {
+          upc: gtin,
+          brand_name: "Theory",
+          name: "Tee",
+          composition: "100% cotton",
+          approved: "yes",
+          is_active: true,
+        },
+      ],
+      upc_brand_prefixes: [{ prefix: "199045", brand_name: "Theory" }],
+    });
+    const data = await lookupProductionComposition(supabase as never, gtin);
+    assert.equal(data.match_status, "matched");
+    assert.equal(data.match_type, "exact_gtin");
+    assert.ok(data.composition.components.length > 0);
+    assert.equal(data.composition.components.some((c) => c.fiber_code === "cotton"), true);
+  });
+
   it("returns not_found with no guessed composition", async () => {
     const gtin = appendGtinCheckDigit("888888888888");
     const supabase = createMockSupabase({
