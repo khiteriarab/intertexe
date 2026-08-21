@@ -85,6 +85,36 @@ export function getUniversalOpenUrl(nextPath?: string, extra?: OpenUrlExtra): st
   return `${APP_UNIVERSAL_ORIGIN}${APP_UNIVERSAL_OPEN_PATH}${qs ? `?${qs}` : ""}`;
 }
 
+/** Path + search from a site URL or path. Leaves /open wrappers untouched. */
+export function hrefToSitePath(href: string): string {
+  const trimmed = String(href || "").trim();
+  if (!trimmed) return "/";
+  try {
+    if (/^https?:\/\//i.test(trimmed)) {
+      const url = new URL(trimmed);
+      const host = url.hostname.replace(/^www\./, "");
+      if (host === "intertexe.com") {
+        return `${url.pathname}${url.search}` || "/";
+      }
+    }
+  } catch {
+    /* fall through */
+  }
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+/**
+ * After the custom-scheme hop, send shoppers to the web item — not the App Store —
+ * when the destination is a catalog page. Download/open-app CTAs still go to the store.
+ */
+export function shouldOpenFallbackToWeb(nextPath: string, cta?: string | null): boolean {
+  const path = (nextPath || "/").split("?")[0] || "/";
+  const ctaKey = String(cta || "");
+  if (ctaKey === "chrome_extension_open" || path.startsWith("/capture")) return true;
+  if (ctaKey.endsWith("_app") || ctaKey.includes("download")) return false;
+  return /^(?:\/product\/|\/shop|\/collections|\/designers|\/sale|\/materials|\/edits)/.test(path);
+}
+
 /**
  * CTA href for “open / download app”.
  * When Universal Links are ready → HTTPS /open smart link; else direct App Store.

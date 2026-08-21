@@ -10,8 +10,10 @@ import {
   INTERTEXE_SOCIAL_HANDLE,
   INTERTEXE_TIKTOK_URL,
   WEEKLY_EDIT_MIX,
+  weeklyEditOpenHref,
   type WeeklyEditPickInput,
 } from "../lib/weekly-edit.ts";
+import { hrefToSitePath, shouldOpenFallbackToWeb } from "../lib/app-store.ts";
 import {
   dateFromWeekNumber,
   resolveWeeklyEditEditorial,
@@ -150,7 +152,10 @@ describe("Weekly Edit email", () => {
     assert.match(email, /weeklyEditMaterialSpec/);
     assert.doesNotMatch(email, /Intertexe verified/);
     assert.doesNotMatch(email, /INTERTEXE VERIFIED/);
-    assert.match(email, /getAppStoreOpenUrl/);
+    assert.match(email, /weeklyEditOpenHref/);
+    assert.match(email, /productOpenHref/);
+    assert.doesNotMatch(email, /href=\{product\.url\}/);
+    assert.match(email, /email_weekly_edit_app/);
     assert.match(email, /10:00 AM Eastern \/ 4:00 PM Barcelona/);
     assert.doesNotMatch(email, /Friday at 9am/);
     assert.match(email, /INTERTEXE_INSTAGRAM_URL/);
@@ -296,6 +301,31 @@ describe("Weekly Edit seasonal editorial", () => {
     assert.doesNotMatch(facts, /weekNumber % /);
     assert.doesNotMatch(weekly, /getFiberFactForWeek/);
     assert.match(weekly, /preferFibers/);
+  });
+});
+
+describe("Weekly Edit app / web product links", () => {
+  it("wraps product URLs as Universal Links that still point at the item", () => {
+    const href = weeklyEditOpenHref("https://www.intertexe.com/product/staud-greta");
+    assert.equal(hrefToSitePath("https://www.intertexe.com/product/staud-greta"), "/product/staud-greta");
+    assert.match(href, /^https:\/\/www\.intertexe\.com\/open\?/);
+    assert.match(href, /next=%2Fproduct%2Fstaud-greta/);
+    assert.match(href, /itx_cta=email_weekly_edit/);
+    assert.match(href, /utm_campaign=weekly_edit/);
+    assert.equal(
+      weeklyEditOpenHref("/shop?fiber=cashmere").includes("next=%2Fshop%3Ffiber%3Dcashmere"),
+      true
+    );
+  });
+
+  it("falls back to the web item when the app is not installed, not the App Store", () => {
+    assert.equal(shouldOpenFallbackToWeb("/product/staud-greta", "email_weekly_edit"), true);
+    assert.equal(shouldOpenFallbackToWeb("/shop?fiber=cashmere", "email_weekly_edit"), true);
+    assert.equal(shouldOpenFallbackToWeb("/shop", "email_weekly_edit_app"), false);
+    assert.equal(shouldOpenFallbackToWeb("/scanner", "email_day4_no_scan"), false);
+    const open = fs.readFileSync(path.join(process.cwd(), "app/open/OpenAppClient.tsx"), "utf8");
+    assert.match(open, /shouldOpenFallbackToWeb/);
+    assert.match(open, /continue to the piece on the web/);
   });
 });
 

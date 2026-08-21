@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getAppStoreOpenUrl, hrefToSitePath } from "./app-store";
 import { isFootwearListing } from "./catalog-product-filters";
 import { resolveWeeklyEditEditorial, seasonalProductScore, weekNumberFromDate } from "./weekly-edit-season";
 
@@ -6,6 +7,25 @@ import { resolveWeeklyEditEditorial, seasonalProductScore, weekNumberFromDate } 
 export const INTERTEXE_SOCIAL_HANDLE = "@intertexe";
 export const INTERTEXE_INSTAGRAM_URL = "https://www.instagram.com/intertexe";
 export const INTERTEXE_TIKTOK_URL = "https://www.tiktok.com/@intertexe";
+
+const WEEKLY_EDIT_OPEN_PARAMS = {
+  utm_source: "resend",
+  utm_medium: "email",
+  utm_campaign: "weekly_edit",
+} as const;
+
+/** App if installed, the same item/page on the web if not. */
+export function weeklyEditOpenHref(
+  href: string,
+  cta: string = "email_weekly_edit"
+): string {
+  const path = hrefToSitePath(href);
+  if (path === "/open" || path.startsWith("/open?")) return href;
+  return getAppStoreOpenUrl(path, undefined, {
+    cta,
+    params: WEEKLY_EDIT_OPEN_PARAMS,
+  });
+}
 
 export const WEEKLY_EDIT_MIX = {
   shoes: 2,

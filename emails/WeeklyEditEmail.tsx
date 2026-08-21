@@ -14,10 +14,10 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import { getAppStoreOpenUrl } from "../lib/app-store";
 import {
   INTERTEXE_INSTAGRAM_URL,
   INTERTEXE_TIKTOK_URL,
+  weeklyEditOpenHref,
   type WeeklyEditSection,
 } from "../lib/weekly-edit";
 import {
@@ -302,14 +302,11 @@ function formatPrice(price: number, currency: string): string {
 }
 
 function openAppHref(): string {
-  return getAppStoreOpenUrl("/shop", undefined, {
-    cta: "email_weekly_edit",
-    params: {
-      utm_source: "resend",
-      utm_medium: "email",
-      utm_campaign: "weekly_edit",
-    },
-  });
+  return weeklyEditOpenHref("/shop", "email_weekly_edit_app");
+}
+
+function productOpenHref(product: WeeklyEditEmailProduct): string {
+  return weeklyEditOpenHref(product.url || `/product/${product.id}`);
 }
 
 function ProductCopy({
@@ -329,7 +326,7 @@ function ProductCopy({
   return (
     <>
       <Text style={brandText}>{product.brand}</Text>
-      <Link href={product.url} style={productLink}>
+      <Link href={productOpenHref(product)} style={productLink}>
         <Text style={nameStyle}>{name}</Text>
       </Link>
       {spec.label ? <Text style={materialLabel}>{spec.label}</Text> : null}
@@ -350,7 +347,7 @@ function HeroProduct({ product }: { product: WeeklyEditEmailProduct }) {
   const name = displayProductName(product.name, product.brand);
   return (
     <Section style={{ margin: "0 0 28px", backgroundColor: CANVAS }} className="we-hero we-cell">
-      <Link href={product.url}>
+      <Link href={productOpenHref(product)}>
         <Img
           src={product.imageUrl}
           alt={`${product.brand} ${name}`}
@@ -391,7 +388,7 @@ function ProductCell({
         backgroundColor: CANVAS,
       }}
     >
-      <Link href={product.url}>
+      <Link href={productOpenHref(product)}>
         <Img
           src={product.imageUrl}
           alt={`${product.brand} ${name}`}
@@ -452,13 +449,14 @@ export default function WeeklyEditEmail({
   const gridItems = newItems.slice(1);
   const appHref = openAppHref();
   const editTitle = collectionEditTitle(collectionName);
+  const shopEditHref = weeklyEditOpenHref(collectionUrl);
   const traits =
     fiberFactTraits && fiberFactTraits.length > 0
       ? fiberFactTraits
       : ["NATURAL FIBER", "MATERIAL-FIRST", "VERIFIED"];
   const intelligenceTitle =
     fiberFactHeadline || `Why ${String(fiberFactFiber || "this fiber").toLowerCase()} matters`;
-  const discoverHref = fiberDiscoverHref(fiberFactFiber);
+  const discoverHref = weeklyEditOpenHref(fiberDiscoverHref(fiberFactFiber));
   const discoverLabel = `Discover ${fiberFactFiber || "the fiber"} →`;
 
   return (
@@ -548,7 +546,7 @@ export default function WeeklyEditEmail({
           <Section style={{ margin: "0 0 4px", backgroundColor: CANVAS }} className="we-cell">
             <Text style={collectionTitle}>{editTitle}</Text>
             {collectionImageUrl ? (
-              <Link href={collectionUrl}>
+              <Link href={shopEditHref}>
                 <Img
                   src={collectionImageUrl}
                   alt={editTitle}
@@ -566,7 +564,7 @@ export default function WeeklyEditEmail({
               </Link>
             ) : null}
             <Text style={collectionSublineText}>{collectionSubline}</Text>
-            <Button href={collectionUrl} style={ghostButton}>
+            <Button href={shopEditHref} style={ghostButton}>
               Shop the edit →
             </Button>
           </Section>
