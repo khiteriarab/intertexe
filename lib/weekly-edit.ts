@@ -3,10 +3,10 @@ import { isFootwearListing } from "./catalog-product-filters";
 import { getCollectionForWeek } from "./collection-rotation";
 import { getFiberFactForWeek } from "./fiber-facts";
 
-/** Khiteri's personal socials — Weekly Edit follow CTA. */
-export const KHITERI_SOCIAL_HANDLE = "@Khiteri";
-export const KHITERI_INSTAGRAM_URL = "https://www.instagram.com/khiteri";
-export const KHITERI_TIKTOK_URL = "https://www.tiktok.com/@khiteri";
+/** INTERTEXE brand socials — Weekly Edit follow CTA (not @Khiteri). */
+export const INTERTEXE_SOCIAL_HANDLE = "@intertexe";
+export const INTERTEXE_INSTAGRAM_URL = "https://www.instagram.com/intertexe";
+export const INTERTEXE_TIKTOK_URL = "https://www.tiktok.com/@shopintertexe";
 
 export const WEEKLY_EDIT_MIX = {
   shoes: 2,

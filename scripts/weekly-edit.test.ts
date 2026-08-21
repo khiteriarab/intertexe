@@ -5,9 +5,9 @@ import path from "node:path";
 import { collectionRotation } from "../lib/collection-rotation.ts";
 import {
   assembleWeeklyEditPicks,
-  KHITERI_INSTAGRAM_URL,
-  KHITERI_SOCIAL_HANDLE,
-  KHITERI_TIKTOK_URL,
+  INTERTEXE_INSTAGRAM_URL,
+  INTERTEXE_SOCIAL_HANDLE,
+  INTERTEXE_TIKTOK_URL,
   WEEKLY_EDIT_MIX,
   type WeeklyEditPickInput,
 } from "../lib/weekly-edit.ts";
@@ -93,25 +93,29 @@ describe("Weekly Edit editor's picks", () => {
     assert.match(vacation!.subline, /before the cold/i);
   });
 
-  it("points follow CTAs at @Khiteri", () => {
-    assert.equal(KHITERI_SOCIAL_HANDLE, "@Khiteri");
-    assert.equal(KHITERI_INSTAGRAM_URL, "https://www.instagram.com/khiteri");
-    assert.equal(KHITERI_TIKTOK_URL, "https://www.tiktok.com/@khiteri");
+  it("points follow CTAs at @intertexe, not @Khiteri", () => {
+    assert.equal(INTERTEXE_SOCIAL_HANDLE, "@intertexe");
+    assert.equal(INTERTEXE_INSTAGRAM_URL, "https://www.instagram.com/intertexe");
+    assert.equal(INTERTEXE_TIKTOK_URL, "https://www.tiktok.com/@shopintertexe");
+    assert.equal(INTERTEXE_INSTAGRAM_URL.includes("khiteri"), false);
+    assert.equal(INTERTEXE_TIKTOK_URL.includes("khiteri"), false);
   });
 });
 
 describe("Weekly Edit email", () => {
-  it("uses a black masthead, open-the-app button, and Khiteri socials", () => {
+  it("uses a black masthead, open-the-app button, and INTERTEXE socials", () => {
     const email = fs.readFileSync(path.join(process.cwd(), "emails/WeeklyEditEmail.tsx"), "utf8");
     const send = fs.readFileSync(path.join(process.cwd(), "app/api/cron/weekly-edit-send/route.ts"), "utf8");
     assert.match(email, /const kicker = \{[\s\S]*?color: "#1C2B2A"/);
     assert.match(email, /INTERTEXE · THE MATERIAL STANDARD/);
     assert.match(email, /OPEN THE APP/);
     assert.match(email, /getAppStoreOpenUrl/);
-    assert.match(email, /KHITERI_INSTAGRAM_URL/);
-    assert.match(email, /KHITERI_TIKTOK_URL/);
+    assert.match(email, /INTERTEXE_INSTAGRAM_URL/);
+    assert.match(email, /INTERTEXE_TIKTOK_URL/);
     assert.match(email, /Editor&apos;s favorites/);
     assert.doesNotMatch(email, /SHOP ALL VERIFIED PIECES/);
+    assert.doesNotMatch(email, /KHITERI_INSTAGRAM_URL/);
+    assert.doesNotMatch(email, /instagram\.com\/khiteri/);
     assert.match(send, /selectWeeklyEditProducts/);
     assert.match(send, /editor's picks/);
   });

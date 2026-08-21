@@ -16,9 +16,9 @@ import {
 } from "@react-email/components";
 import { getAppStoreOpenUrl } from "../lib/app-store";
 import {
-  KHITERI_INSTAGRAM_URL,
-  KHITERI_SOCIAL_HANDLE,
-  KHITERI_TIKTOK_URL,
+  INTERTEXE_INSTAGRAM_URL,
+  INTERTEXE_SOCIAL_HANDLE,
+  INTERTEXE_TIKTOK_URL,
   type WeeklyEditSection,
 } from "../lib/weekly-edit";
 
@@ -363,15 +363,15 @@ export default function WeeklyEditEmail({
           <Section style={{ margin: "24px 0 16px" }}>
             <Text style={sectionLabel}>Follow the edit</Text>
             <Text style={socialText}>
-              See what we&apos;re adding next — follow {KHITERI_SOCIAL_HANDLE} on Instagram and
+              See what we&apos;re adding next — follow {INTERTEXE_SOCIAL_HANDLE} on Instagram and
               TikTok.
             </Text>
             <Text style={{ margin: "0 0 24px" }}>
-              <Link href={KHITERI_INSTAGRAM_URL} style={socialLink}>
+              <Link href={INTERTEXE_INSTAGRAM_URL} style={socialLink}>
                 Instagram
               </Link>
               {"  ·  "}
-              <Link href={KHITERI_TIKTOK_URL} style={socialLink}>
+              <Link href={INTERTEXE_TIKTOK_URL} style={socialLink}>
                 TikTok
               </Link>
             </Text>
