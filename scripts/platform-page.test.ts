@@ -113,12 +113,12 @@ describe("Platform material-intelligence page", () => {
     assert.match(graphics, /hero-workspace\.png/);
     assert.match(graphics, /demo-source\.png/);
     assert.match(graphics, /ready: false/);
-    assert.match(home, /InteractiveWorkspace/);
-    assert.match(home, /initialScreen="Products"/);
-    assert.match(home, /initialScreen="Benchmark"/);
-    assert.match(home, /initialScreen="Passports"/);
-    assert.match(previews, /export function InteractiveWorkspace/);
-    assert.match(previews, /onNavigate/);
+    assert.match(home, /NormalizePreview/);
+    assert.match(home, /IssuesPreview/);
+    assert.match(home, /BenchmarkPreview/);
+    assert.match(home, /PassportPreview/);
+    assert.doesNotMatch(home, /InteractiveWorkspace/);
+    assert.doesNotMatch(previews, /onNavigate/);
     assert.doesNotMatch(previews, /min-w-\[640px\]/);
     assert.match(previews, /Illustrative workspace/);
     assert.match(previews, /Sample workspace/);

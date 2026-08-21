@@ -15,77 +15,13 @@ export function WorkspaceChrome({
   children,
   caption = CAPTION,
   className = "",
-  onNavigate,
 }: {
   active: WorkspaceNav;
   issueCount?: string;
   children: ReactNode;
   caption?: string;
   className?: string;
-  onNavigate?: (item: WorkspaceNav) => void;
 }) {
-  const navButton = (item: WorkspaceNav, compact = false) => {
-    const selected = item === active;
-    const label = (
-      <>
-        {item}
-        {item === "Issues" ? (
-          <span
-            className={`ml-2 tracking-normal normal-case ${
-              compact
-                ? "text-[9px] bg-[#9c7b8b] text-white px-1.5 py-0.5"
-                : "text-[9px] bg-[#9c7b8b] px-1.5 py-0.5"
-            }`}
-          >
-            {issueCount}
-          </span>
-        ) : null}
-      </>
-    );
-
-    const className = compact
-      ? `shrink-0 text-[10px] tracking-[0.1em] uppercase px-3 py-2 min-h-[40px] border-b-2 ${
-          selected ? "border-[#152238] text-[#152238]" : "border-transparent text-[#8a847c]"
-        }`
-      : `w-full text-left text-[11px] tracking-[0.12em] uppercase px-2 py-2 rounded-sm min-h-[36px] ${
-          selected ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"
-        }`;
-
-    if (!onNavigate) {
-      return compact ? (
-        <span key={item} className={className}>
-          {label}
-        </span>
-      ) : (
-        <li
-          key={item}
-          className={`text-[11px] tracking-[0.12em] uppercase px-2 py-2 rounded-sm ${
-            selected ? "bg-white/15" : "text-white/65"
-          }`}
-        >
-          {label}
-        </li>
-      );
-    }
-
-    const button = (
-      <button
-        type="button"
-        onClick={() => onNavigate(item)}
-        aria-current={selected ? "page" : undefined}
-        className={className}
-      >
-        {label}
-      </button>
-    );
-
-    return compact ? (
-      <span key={item}>{button}</span>
-    ) : (
-      <li key={item}>{button}</li>
-    );
-  };
-
   return (
     <figure className={`m-0 ${className}`}>
       <div className="overflow-hidden rounded-2xl border border-[#d5dee8] bg-white shadow-[0_28px_70px_rgba(21,34,56,0.12)]">
@@ -99,22 +35,27 @@ export function WorkspaceChrome({
           <aside className="hidden sm:flex flex-col justify-between bg-[#152238] text-white px-3 py-5 min-h-0">
             <div>
               <p className="text-[10px] tracking-[0.2em] uppercase text-white/55 mb-5 px-2">INTERTEXE</p>
-              <ul className="space-y-0.5">{NAV.map((item) => navButton(item))}</ul>
+              <ul className="space-y-0.5">
+                {NAV.map((item) => (
+                  <li
+                    key={item}
+                    className={`text-[11px] tracking-[0.12em] uppercase px-2 py-2 rounded-sm ${
+                      item === active ? "bg-white/15" : "text-white/65"
+                    }`}
+                  >
+                    {item}
+                    {item === "Issues" ? (
+                      <span className="ml-2 text-[9px] tracking-normal normal-case bg-[#9c7b8b] px-1.5 py-0.5">
+                        {issueCount}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
             </div>
             <p className="text-[10px] tracking-[0.12em] uppercase text-white/45 px-2 mt-8">Sample workspace</p>
           </aside>
-          <div className="min-w-0 bg-[#f7f5f1]">
-            {onNavigate ? (
-              <div
-                role="navigation"
-                aria-label="Sample workspace screens"
-                className="sm:hidden flex gap-1 overflow-x-auto px-2 pt-2 border-b border-[#e8e3da] bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
-                {NAV.map((item) => navButton(item, true))}
-              </div>
-            ) : null}
-            <div className="min-w-0 p-4 sm:p-5">{children}</div>
-          </div>
+          <div className="min-w-0 p-4 sm:p-5 bg-[#f7f5f1]">{children}</div>
         </div>
       </div>
       {caption ? (
@@ -212,30 +153,6 @@ const SIGNAL = [
   ["Polyester engagement", "↓ 7%", false],
 ] as const;
 
-const MATERIAL_ROWS = [
-  {
-    fiber: "Cotton",
-    role: "Shell",
-    product: "Dress 8721",
-    source: "70 CO / 30 PA",
-    note: "70% on the label · 65% from the supplier. Both strings stay on the record.",
-  },
-  {
-    fiber: "Polyamide (nylon)",
-    role: "Shell",
-    product: "Dress 8721",
-    source: "70 CO / 30 PA",
-    note: "30% on the label · 35% from the supplier. Conflict is visible, not overwritten.",
-  },
-  {
-    fiber: "Viscose",
-    role: "Lining",
-    product: "Dress 8721",
-    source: "viscose",
-    note: "Normalized to 100% Viscose. Original lining string is retained.",
-  },
-] as const;
-
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`min-w-0 bg-white border border-[#e8e3da] p-4 ${className}`}>{children}</div>;
 }
@@ -265,34 +182,19 @@ function filterIssueRows(filter: (typeof ISSUE_FILTERS)[number][0]) {
   return ISSUE_ROWS.filter((row) => row.issue.startsWith(prefix));
 }
 
-function OverviewBody({ onOpenIssues }: { onOpenIssues?: () => void }) {
+function OverviewBody() {
   return (
     <div>
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 mb-4">
-        {METRICS.map(([n, label, delta]) => {
-          const issues = label === "Issues to resolve" && onOpenIssues;
-          const inner = (
-            <>
-              <p className="text-xl sm:text-2xl font-light tabular-nums" style={SERIF}>
-                {n}
-              </p>
-              <p className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] mt-1 break-words">{label}</p>
-              <p className="text-[10px] text-[#8a847c] mt-1 hidden sm:block">{delta}</p>
-            </>
-          );
-          return issues ? (
-            <button
-              key={label}
-              type="button"
-              onClick={onOpenIssues}
-              className="min-w-0 bg-white border border-[#e8e3da] p-4 text-left hover:border-[#152238]"
-            >
-              {inner}
-            </button>
-          ) : (
-            <Card key={label}>{inner}</Card>
-          );
-        })}
+        {METRICS.map(([n, label, delta]) => (
+          <Card key={label}>
+            <p className="text-xl sm:text-2xl font-light tabular-nums" style={SERIF}>
+              {n}
+            </p>
+            <p className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] mt-1 break-words">{label}</p>
+            <p className="text-[10px] text-[#8a847c] mt-1 hidden sm:block">{delta}</p>
+          </Card>
+        ))}
       </div>
       <div className="grid lg:grid-cols-3 gap-3">
         <Card>
@@ -337,29 +239,12 @@ function OverviewBody({ onOpenIssues }: { onOpenIssues?: () => void }) {
         <Card>
           <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-3">Issues to resolve</p>
           <ul className="divide-y divide-[#eeeae4] text-sm">
-            {ISSUE_FILTERS.slice(1).map(([label, count]) => {
-              const row = (
-                <>
-                  <span className="min-w-0 break-words text-left">{label}</span>
-                  <span className="text-[#8a847c] tabular-nums shrink-0">{count}</span>
-                </>
-              );
-              return onOpenIssues ? (
-                <li key={label}>
-                  <button
-                    type="button"
-                    onClick={onOpenIssues}
-                    className="flex w-full justify-between gap-3 py-2 text-left hover:text-[#152238]"
-                  >
-                    {row}
-                  </button>
-                </li>
-              ) : (
-                <li key={label} className="flex justify-between gap-3 py-2">
-                  {row}
-                </li>
-              );
-            })}
+            {ISSUE_FILTERS.slice(1).map(([label, count]) => (
+              <li key={label} className="flex justify-between gap-3 py-2">
+                <span className="min-w-0 break-words">{label}</span>
+                <span className="text-[#8a847c] tabular-nums shrink-0">{count}</span>
+              </li>
+            ))}
           </ul>
         </Card>
       </div>
@@ -434,49 +319,9 @@ function NormalizeBody() {
   );
 }
 
-function MaterialsBody({ onOpenProduct }: { onOpenProduct?: () => void }) {
-  return (
-    <div>
-      <p className="text-sm mb-1" style={SERIF}>
-        Materials · Dress 8721
-      </p>
-      <p className="text-xs text-[#8a847c] mb-4 leading-relaxed">
-        Sample material records from the same product. Original source strings stay on the row.
-      </p>
-      <ul className="space-y-3">
-        {MATERIAL_ROWS.map((row) => (
-          <li key={`${row.fiber}-${row.role}`}>
-            <Card>
-              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-                <p className="text-sm min-w-0 break-words" style={SERIF}>
-                  {row.fiber}
-                </p>
-                <p className="text-[10px] tracking-[0.12em] uppercase text-[#8a847c]">{row.role}</p>
-              </div>
-              <p className="text-xs text-[#5c5854] mb-2 break-words">{row.product}</p>
-              <p className="font-mono text-[12px] mb-2 break-words">Source: {row.source}</p>
-              <p className="text-xs text-[#5c5854] leading-relaxed break-words">{row.note}</p>
-            </Card>
-          </li>
-        ))}
-      </ul>
-      {onOpenProduct ? (
-        <button
-          type="button"
-          onClick={onOpenProduct}
-          className="mt-4 text-[11px] tracking-[0.12em] uppercase text-[#152238] underline underline-offset-4"
-        >
-          Open product record
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
 function IssuesBody() {
   const [filter, setFilter] = useState<(typeof ISSUE_FILTERS)[number][0]>("All");
   const rows = filterIssueRows(filter);
-  const [openProduct, setOpenProduct] = useState<string | null>(ISSUE_ROWS[0].product);
 
   return (
     <div>
@@ -488,11 +333,7 @@ function IssuesBody() {
           <button
             key={label}
             type="button"
-            onClick={() => {
-              setFilter(label);
-              const next = filterIssueRows(label);
-              setOpenProduct(next[0]?.product ?? null);
-            }}
+            onClick={() => setFilter(label)}
             className={`shrink-0 text-[10px] tracking-[0.1em] uppercase px-3 py-2 border min-h-[36px] ${
               filter === label ? "bg-[#9c7b8b] text-white border-[#9c7b8b]" : "bg-white border-[#e8e3da] text-[#6f6a63]"
             }`}
@@ -509,38 +350,29 @@ function IssuesBody() {
         </div>
         <ul>
           {rows.map((row) => {
-            const open = openProduct === row.product;
+            const open = row.product === "Dress 8721";
             return (
-              <li key={row.product} className={`border-b border-[#eeeae4] last:border-0 ${open ? "bg-[#f7f1f3]" : ""}`}>
-                <button
-                  type="button"
-                  onClick={() => setOpenProduct(open ? null : row.product)}
-                  aria-expanded={open}
-                  className="w-full text-left px-3 py-3 min-w-0"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-[4.75rem_minmax(0,1fr)_7.5rem] gap-1 sm:gap-3 items-start">
-                    <span
-                      className={`text-sm ${row.severity === "High" ? "text-[#8b2e2e]" : "text-[#8a847c]"}`}
-                    >
-                      {row.severity}
-                    </span>
-                    <span className="text-sm break-words min-w-0">{row.issue}</span>
-                    <span className="text-xs sm:text-sm text-[#8a847c] break-words min-w-0">
-                      {row.product}
-                      <span className="sm:hidden"> · {row.category}</span>
-                    </span>
+              <li key={row.product} className={`px-3 py-3 min-w-0 border-b border-[#eeeae4] last:border-0 ${open ? "bg-[#f7f1f3]" : ""}`}>
+                <div className="grid grid-cols-1 sm:grid-cols-[4.75rem_minmax(0,1fr)_7.5rem] gap-1 sm:gap-3 items-start">
+                  <span className={`text-sm ${row.severity === "High" ? "text-[#8b2e2e]" : "text-[#8a847c]"}`}>
+                    {row.severity}
+                  </span>
+                  <span className="text-sm break-words min-w-0">{row.issue}</span>
+                  <span className="text-xs sm:text-sm text-[#8a847c] break-words min-w-0">
+                    {row.product}
+                    <span className="sm:hidden"> · {row.category}</span>
+                  </span>
+                </div>
+                {open ? (
+                  <div className="mt-3 text-xs text-[#5c5854] space-y-1 min-w-0">
+                    {row.detail.map((line) => (
+                      <p key={line} className="break-words">
+                        {line}
+                      </p>
+                    ))}
+                    <p className="text-[#8a847c]">{row.category}</p>
                   </div>
-                  {open ? (
-                    <div className="mt-3 text-xs text-[#5c5854] space-y-1 min-w-0">
-                      {row.detail.map((line) => (
-                        <p key={line} className="break-words">
-                          {line}
-                        </p>
-                      ))}
-                      <p className="text-[#8a847c]">{row.category}</p>
-                    </div>
-                  ) : null}
-                </button>
+                ) : null}
               </li>
             );
           })}
@@ -703,30 +535,6 @@ function MonitorBody() {
         </p>
       </Card>
     </div>
-  );
-}
-
-export function InteractiveWorkspace({
-  initialScreen = "Overview",
-  className = "mb-0",
-  caption,
-}: {
-  initialScreen?: WorkspaceNav;
-  className?: string;
-  caption?: string;
-}) {
-  const [active, setActive] = useState<WorkspaceNav>(initialScreen);
-
-  return (
-    <WorkspaceChrome active={active} onNavigate={setActive} className={className} caption={caption}>
-      {active === "Overview" ? <OverviewBody onOpenIssues={() => setActive("Issues")} /> : null}
-      {active === "Products" ? <NormalizeBody /> : null}
-      {active === "Materials" ? <MaterialsBody onOpenProduct={() => setActive("Products")} /> : null}
-      {active === "Issues" ? <IssuesBody /> : null}
-      {active === "Benchmark" ? <BenchmarkBody /> : null}
-      {active === "Passports" ? <PassportBody /> : null}
-      {active === "Monitor" ? <MonitorBody /> : null}
-    </WorkspaceChrome>
   );
 }
 
