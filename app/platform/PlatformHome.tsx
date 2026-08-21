@@ -8,7 +8,6 @@ import {
 } from "./workspace-previews";
 import {
   Body,
-  DiscoverLink,
   Eyebrow,
   Frame,
   Heading,
@@ -317,16 +316,6 @@ export function PlatformHome() {
             ),
           }}
         />
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Workspace</Eyebrow>
-        <Heading className="mb-4">One workspace for material intelligence.</Heading>
-        <Body className="max-w-2xl mb-8">
-          Overview, Issues, Benchmarking, Passport Studio and Regulatory Monitor live in one INTERTEXE workspace.
-          The full mockups are on Discover — this page stays a story, not a product tour.
-        </Body>
-        <DiscoverLink href="/platform/discover">Discover</DiscoverLink>
       </section>
 
       <EcosystemStage />
