@@ -76,6 +76,14 @@ describe("Shoe filter sheet", () => {
     assert.deepEqual(resolveShopMaterialQuery("leather"), { fiber: "leather" });
   });
 
+  it("exposes the same type and material chips on the dedicated shoes catalog", () => {
+    const shoes = fs.readFileSync(path.join(process.cwd(), "app/shop/shoes/ShoesClient.tsx"), "utf8");
+    assert.match(shoes, /Shoe type/);
+    assert.match(shoes, /Material/);
+    assert.match(shoes, /SHOE_TYPE_OPTIONS/);
+    assert.match(shoes, /SHOE_MATERIAL_OPTIONS/);
+  });
+
   it("keeps the shop page and iOS filter contract aligned", () => {
     const home = fs.readFileSync(path.join(process.cwd(), "app/shop/ShopClient.tsx"), "utf8");
     const options = fs.readFileSync(path.join(process.cwd(), "lib/catalog-filter-options.ts"), "utf8");
