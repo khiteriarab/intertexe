@@ -34,10 +34,39 @@ export function weeklyEditOpenHref(
   return `${APP_UNIVERSAL_ORIGIN}${normalized}`;
 }
 
-/** Email hop that is NOT an AASA path, so Gmail cannot dump /open onto Shop. */
+/** True when the catalog URL is the retailer/affiliate listing, not INTERTEXE. */
+export function isWeeklyEditRetailerUrl(raw: string | null | undefined): boolean {
+  try {
+    const parsed = new URL(String(raw || "").trim());
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    return host !== "intertexe.com";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Where a Weekly Edit photo tap should land: the retailer page for that SKU.
+ * Falls back to the INTERTEXE /p PDP when the catalog has no off-site URL.
+ */
+export function weeklyEditBuyDestination(
+  id: string,
+  catalogUrl?: string | null
+): string {
+  const slug = encodeURIComponent(String(id || "").trim());
+  const dest = String(catalogUrl || "").trim();
+  if (isWeeklyEditRetailerUrl(dest)) return dest;
+  return `${APP_UNIVERSAL_ORIGIN}/p/${slug}`;
+}
+
+/**
+ * Email hop that is NOT an AASA path. /go/{id} 302s to the retailer listing
+ * (the item for sale). Gmail cannot send this to the Shop tab.
+ */
 export function weeklyEditProductHref(id: string): string {
   const slug = encodeURIComponent(String(id || "").trim());
-  return `${APP_UNIVERSAL_ORIGIN}/p/${slug}`;
+  return `${APP_UNIVERSAL_ORIGIN}/go/${slug}`;
 }
 
 export const WEEKLY_EDIT_MIX = {
@@ -168,7 +197,7 @@ function mapEditorPickRow(row: Record<string, unknown>): WeeklyEditPickInput | n
     originalPrice,
     currency: String(row.currency || "USD"),
     imageUrl,
-    url: `https://www.intertexe.com/product/${encodeURIComponent(id)}`,
+    url: String(row.url || "").trim(),
     naturalFiberPercent: Math.round(Number(row.natural_fiber_percent) || 0),
     composition: String(row.composition || ""),
     category: String(row.category || ""),
