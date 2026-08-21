@@ -399,18 +399,6 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="border-y border-[#e8e3da] py-10 sm:py-16">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
-          <Heading className="mb-4">Not another DPP generator with nicer branding.</Heading>
-          <Body>
-            Regulation gets a brand in the door: product data has to be organized. INTERTEXE is the living material
-            intelligence system that remains useful after the first passports are published — because merchandising,
-            sustainability and product teams still need to know what is in the catalog, what is wrong, and how the
-            material strategy compares with the market.
-          </Body>
-        </div>
-      </section>
-
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Understand</Eyebrow>
         <Heading className="mb-3 max-w-3xl">What happens when a brand uploads its catalog.</Heading>
