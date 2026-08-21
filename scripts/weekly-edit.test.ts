@@ -10,8 +10,10 @@ import {
   INTERTEXE_SOCIAL_HANDLE,
   INTERTEXE_TIKTOK_URL,
   WEEKLY_EDIT_MIX,
+  weeklyEditBuyDestination,
   weeklyEditOpenHref,
   weeklyEditProductHref,
+  isWeeklyEditRetailerUrl,
   type WeeklyEditPickInput,
 } from "../lib/weekly-edit.ts";
 import { hrefToSitePath, shouldOpenFallbackToWeb } from "../lib/app-store.ts";
@@ -157,7 +159,7 @@ describe("Weekly Edit email", () => {
     assert.match(email, /weeklyEditProductHref/);
     assert.match(email, /productOpenHref/);
     assert.doesNotMatch(email, /href=\{product\.url\}/);
-    assert.match(email, /cfWeeklyEditCard/);
+    assert.match(email, /Shop this piece/);
     assert.match(email, /height: 280px/);
     assert.match(email, /email_weekly_edit_app/);
     assert.match(email, /10:00 AM Eastern \/ 4:00 PM Barcelona/);
@@ -309,9 +311,30 @@ describe("Weekly Edit seasonal editorial", () => {
 });
 
 describe("Weekly Edit app / web product links", () => {
-  it("hops through /p/{id} so Gmail cannot send the app to Shop", () => {
+  it("hops through /go/{id} to the retailer listing, not Shop", () => {
     assert.equal(
       weeklyEditProductHref("0fd5a9b1-6751-47ef-bfa4-78a46bb9e644"),
+      "https://www.intertexe.com/go/0fd5a9b1-6751-47ef-bfa4-78a46bb9e644"
+    );
+    assert.equal(
+      isWeeklyEditRetailerUrl(
+        "https://click.linksynergy.com/deeplink?id=x&mid=36145&murl=https%3A%2F%2F7forallmankind.com%2Fproducts%2Fwool-long-sleeve-polo-sweater-in-slate"
+      ),
+      true
+    );
+    assert.equal(
+      isWeeklyEditRetailerUrl("https://www.intertexe.com/product/0fd5a9b1-6751-47ef-bfa4-78a46bb9e644"),
+      false
+    );
+    assert.equal(
+      weeklyEditBuyDestination(
+        "0fd5a9b1-6751-47ef-bfa4-78a46bb9e644",
+        "https://click.linksynergy.com/deeplink?id=x&murl=https%3A%2F%2F7forallmankind.com%2Fproducts%2Fwool-long-sleeve-polo-sweater-in-slate"
+      ),
+      "https://click.linksynergy.com/deeplink?id=x&murl=https%3A%2F%2F7forallmankind.com%2Fproducts%2Fwool-long-sleeve-polo-sweater-in-slate"
+    );
+    assert.equal(
+      weeklyEditBuyDestination("0fd5a9b1-6751-47ef-bfa4-78a46bb9e644", "https://www.intertexe.com/product/abc"),
       "https://www.intertexe.com/p/0fd5a9b1-6751-47ef-bfa4-78a46bb9e644"
     );
     assert.equal(hrefToSitePath("https://www.intertexe.com/product/staud-greta"), "/product/staud-greta");
@@ -323,16 +346,22 @@ describe("Weekly Edit app / web product links", () => {
     assert.match(appIcon, /\/open\?/);
     const weekly = fs.readFileSync(path.join(process.cwd(), "lib/weekly-edit.ts"), "utf8");
     assert.match(weekly, /row\.id \|\| row\.product_id/);
+    assert.match(weekly, /row\.url/);
+    assert.doesNotMatch(weekly, /url: `https:\/\/www\.intertexe\.com\/product\/\$\{/);
     const aasa = fs.readFileSync(
       path.join(process.cwd(), "app/.well-known/apple-app-site-association/route.ts"),
       "utf8"
     );
     assert.doesNotMatch(aasa, /\"\/p\"/);
     assert.doesNotMatch(aasa, /\"\/p\/\*\"/);
+    assert.doesNotMatch(aasa, /\"\/go\"/);
+    assert.doesNotMatch(aasa, /\"\/go\/\*\"/);
     const hop = fs.readFileSync(path.join(process.cwd(), "app/p/[id]/page.tsx"), "utf8");
     assert.match(hop, /from \"\.\.\/\.\.\/product\/\[id\]\/page\"/);
     assert.doesNotMatch(hop, /getAppSchemeOpenUrl/);
-    assert.doesNotMatch(hop, /intertexe:\/\//);
+    const go = fs.readFileSync(path.join(process.cwd(), "app/go/[id]/route.ts"), "utf8");
+    assert.match(go, /weeklyEditBuyDestination/);
+    assert.match(go, /NextResponse\.redirect/);
   });
 
   it("falls back to the web item when the app is not installed, not the App Store", () => {

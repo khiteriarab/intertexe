@@ -167,6 +167,17 @@ const productLink = {
   textDecoration: "none",
 };
 
+const shopPiece = {
+  fontFamily: SANS,
+  fontSize: "11px",
+  letterSpacing: "0.12em",
+  color: INK,
+  textTransform: "uppercase" as const,
+  textDecoration: "underline",
+  textUnderlineOffset: "3px",
+  margin: "8px 0 0",
+};
+
 const materialLabel = {
   fontFamily: SANS,
   fontSize: "11px",
@@ -341,6 +352,9 @@ function ProductCopy({
           </>
         ) : null}
       </Text>
+      <Link href={productOpenHref(product)} style={productLink}>
+        <Text style={shopPiece}>Shop this piece →</Text>
+      </Link>
     </>
   );
 }
@@ -363,6 +377,9 @@ function HeroProduct({ product }: { product: WeeklyEditEmailProduct }) {
             objectPosition: "center 20%",
             backgroundColor: WELL,
             display: "block",
+            border: "0",
+            outline: "none",
+            textDecoration: "none",
           }}
         />
       </Link>
@@ -391,17 +408,7 @@ function ProductCell({
         backgroundColor: CANVAS,
       }}
     >
-      <Link
-        href={productOpenHref(product)}
-        style={{
-          display: "block",
-          height: "280px",
-          maxHeight: "280px",
-          overflow: "hidden",
-          lineHeight: "0",
-          backgroundColor: WELL,
-        }}
-      >
+      <Link href={productOpenHref(product)}>
         <Img
           src={cfWeeklyEditCard(product.imageUrl) || product.imageUrl}
           alt={`${product.brand} ${name}`}
@@ -416,6 +423,9 @@ function ProductCell({
             objectPosition: "center 20%",
             backgroundColor: WELL,
             display: "block",
+            border: "0",
+            outline: "none",
+            textDecoration: "none",
           }}
         />
       </Link>
