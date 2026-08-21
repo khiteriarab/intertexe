@@ -482,7 +482,7 @@ export function PlatformHome() {
         <ol className="grid md:grid-cols-3 gap-x-10 gap-y-10 mb-12">
           {UNDERSTAND_STEPS.map((step) => (
             <li key={step.n} className="border-t border-[#e8e3da] pt-5">
-              <p className="text-[11px] tracking-[0.18em] uppercase text-[#1d4734] mb-2">
+              <p className="text-[11px] tracking-[0.18em] uppercase text-[#152238] mb-2">
                 {step.n} — {step.title}
               </p>
               <h3 className="text-lg mb-2" style={SERIF}>
@@ -574,7 +574,7 @@ export function PlatformHome() {
               <p className="text-sm">9,614 — no action</p>
               <p className="text-sm">311 — missing data</p>
               <p className="text-sm mb-4">75 — review required</p>
-              <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Review affected products</span>
+              <span className="text-[10px] tracking-[0.12em] uppercase text-[#152238]">Review affected products</span>
             </Frame>
           </div>
         </div>
@@ -674,8 +674,8 @@ export function PlatformHome() {
                 Request my snapshot
               </PrimaryLink>
             </article>
-            <article className="border border-[#1d4734] bg-white p-6 flex flex-col">
-              <p className="text-[10px] tracking-[0.16em] uppercase text-[#1d4734] mb-2">Prove it</p>
+            <article className="border border-[#152238] bg-white p-6 flex flex-col">
+              <p className="text-[10px] tracking-[0.16em] uppercase text-[#152238] mb-2">Prove it</p>
               <h3 className="text-xl mb-2" style={SERIF}>
                 Founding Pilot
               </h3>

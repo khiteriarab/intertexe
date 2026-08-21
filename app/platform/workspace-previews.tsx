@@ -32,7 +32,7 @@ export function WorkspaceChrome({
           <span className="ml-2 text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">INTERTEXE workspace</span>
         </div>
         <div className="lg:grid lg:grid-cols-[168px_1fr]">
-          <aside className="hidden lg:flex flex-col justify-between bg-[#1d4734] text-white px-3 py-5">
+          <aside className="hidden lg:flex flex-col justify-between bg-[#152238] text-white px-3 py-5">
             <div>
               <p className="text-[10px] tracking-[0.2em] uppercase text-white/55 mb-5 px-2">INTERTEXE</p>
               <ul className="space-y-0.5">
@@ -153,7 +153,7 @@ function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: "neu
     tone === "alert"
       ? "bg-[#f3e6e6] text-[#8b2e2e]"
       : tone === "ok"
-        ? "bg-[#e7efe9] text-[#1d4734]"
+        ? "bg-[#e8eef4] text-[#152238]"
         : "bg-[#f0ebe4] text-[#5c5854]";
   return <span className={`inline-block text-[11px] px-2 py-1 mr-1 mb-1 ${cls}`}>{children}</span>;
 }
@@ -259,7 +259,7 @@ export function NormalizePreview({ className = "mb-10" }: { className?: string }
           </span>
         </div>
         <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-3">INTERTEXE record</p>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-3">INTERTEXE record</p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Composition · normalized</p>
           <p className="mb-2">
             <Pill>70% Cotton</Pill>
@@ -396,7 +396,7 @@ export function BenchmarkPreview({ className = "mb-8" }: { className?: string })
                       style={{ width: `${Math.min(peerN, 100)}%` }}
                     />
                     <span
-                      className="absolute inset-y-0 left-0 bg-[#1d4734]"
+                      className="absolute inset-y-0 left-0 bg-[#152238]"
                       style={{ width: `${Math.min(youN, 100)}%` }}
                     />
                   </div>
@@ -419,7 +419,7 @@ export function BenchmarkPreview({ className = "mb-8" }: { className?: string })
             {SIGNAL.map(([label, delta, up]) => (
               <li key={label} className="flex justify-between gap-3 py-3 text-sm">
                 <span>{label}</span>
-                <span className={`tabular-nums ${up ? "text-[#1d4734]" : "text-[#8b2e2e]"}`}>{delta}</span>
+                <span className={`tabular-nums ${up ? "text-[#152238]" : "text-[#8b2e2e]"}`}>{delta}</span>
               </li>
             ))}
           </ul>
@@ -441,7 +441,7 @@ export function PassportPreview({ className = "mb-10" }: { className?: string })
     >
       <div className="grid md:grid-cols-3 gap-3">
         <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">01 · Ready to publish</p>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-2">01 · Ready to publish</p>
           <p className="text-base mb-1" style={SERIF}>
             Silk Evening Dress
           </p>
@@ -583,7 +583,7 @@ export function CatalogPreview({
         ) : null}
         {showNormalized ? (
           <div className="overflow-x-auto bg-white border border-[#e8e3da]">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] px-3 py-2 border-b border-[#e8e3da]">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] px-3 py-2 border-b border-[#e8e3da]">
               INTERTEXE record
             </p>
             <table className="w-full text-left text-xs min-w-[520px]">

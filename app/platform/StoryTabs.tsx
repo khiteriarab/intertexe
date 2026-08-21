@@ -47,7 +47,7 @@ export function StoryTabs({
               aria-controls={`story-panel-${tab.id}`}
               onClick={() => setActive(tab.id)}
               className={`shrink-0 text-[12px] sm:text-sm tracking-[0.08em] uppercase px-2 py-2 min-h-[44px] border-b ${
-                selected ? "border-[#1d4734] text-[#1d4734]" : "border-transparent text-[#8a847c]"
+                selected ? "border-[#152238] text-[#152238]" : "border-transparent text-[#8a847c]"
               }`}
             >
               {tab.label}
@@ -70,7 +70,7 @@ export function StoryTabs({
           <ul className="space-y-2 mb-8">
             {current.points.map((point) => (
               <li key={point} className="flex items-start gap-2 text-sm text-[#161513]">
-                <span className="text-[#1d4734]" aria-hidden="true">
+                <span className="text-[#152238]" aria-hidden="true">
                   ✓
                 </span>
                 <span>{point}</span>

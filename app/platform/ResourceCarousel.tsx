@@ -45,7 +45,7 @@ const CARDS = [
     title: "Publish when the record is ready",
     copy: "QR and hosted passport from the same data. The INTERTEXE scanner is not required.",
     href: "/platform/demo",
-    tone: "#1d4734",
+    tone: "#152238",
   },
 ] as const;
 
@@ -69,7 +69,7 @@ export function ResourceCarousel() {
         </div>
         <Link
           href="/platform/demo"
-          className="inline-flex items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#1d4734] text-white px-7 py-3.5 min-h-[44px] shrink-0"
+          className="inline-flex items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#152238] text-white px-7 py-3.5 min-h-[44px] shrink-0"
         >
           View all →
         </Link>
@@ -93,7 +93,7 @@ export function ResourceCarousel() {
               {card.title}
             </h3>
             <p className="text-sm text-[#5c5854] leading-relaxed mb-4">{card.copy}</p>
-            <Link href={card.href} className="text-[12px] text-[#1d4734] inline-flex items-center gap-1">
+            <Link href={card.href} className="text-[12px] text-[#152238] inline-flex items-center gap-1">
               Read more <span aria-hidden="true">→</span>
             </Link>
           </article>
@@ -104,7 +104,7 @@ export function ResourceCarousel() {
           type="button"
           onClick={() => move(-1)}
           aria-label="Previous surfaces"
-          className="w-11 h-11 border border-[#1d4734] text-[#1d4734] inline-flex items-center justify-center"
+          className="w-11 h-11 border border-[#152238] text-[#152238] inline-flex items-center justify-center"
         >
           ←
         </button>
@@ -112,7 +112,7 @@ export function ResourceCarousel() {
           type="button"
           onClick={() => move(1)}
           aria-label="Next surfaces"
-          className="w-11 h-11 border border-[#1d4734] text-[#1d4734] inline-flex items-center justify-center"
+          className="w-11 h-11 border border-[#152238] text-[#152238] inline-flex items-center justify-center"
         >
           →
         </button>

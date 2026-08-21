@@ -42,7 +42,7 @@ export function PrimaryLink({
       className={
         onDark
           ? "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-white text-[#152238] px-7 py-3.5 hover:bg-[#f7f5f1] min-h-[44px]"
-          : "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#1d4734] text-white px-7 py-3.5 hover:bg-[#163828] min-h-[44px]"
+          : "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#152238] text-white px-7 py-3.5 hover:bg-[#0f1a2c] min-h-[44px]"
       }
     >
       {children}

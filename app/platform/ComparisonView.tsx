@@ -54,8 +54,8 @@ export function ComparisonView({
           {rows.map((row) => (
             <article key={row.capability} className="border-t border-[#e8e3da] pt-4">
               <h3 className="text-sm font-medium mb-3">{row.capability}</h3>
-              <p className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734] mb-1">INTERTEXE</p>
-              <p className="text-sm text-[#1d4734] mb-3 leading-relaxed">{row.intertexe}</p>
+              <p className="text-[10px] tracking-[0.12em] uppercase text-[#152238] mb-1">INTERTEXE</p>
+              <p className="text-sm text-[#152238] mb-3 leading-relaxed">{row.intertexe}</p>
               <p className="text-[10px] tracking-[0.12em] uppercase text-[#8a847c] mb-1">{selected.label}</p>
               <p className="text-sm text-[#5c5854] leading-relaxed">{row[selected.key]}</p>
             </article>
@@ -77,7 +77,7 @@ export function ComparisonView({
             {rows.map((row) => (
               <tr key={row.capability} className="border-b border-[#e8e3da] align-top">
                 <th className="py-3 pr-4 font-medium text-[#161513]">{row.capability}</th>
-                <td className="py-3 pr-4 text-[#1d4734]">{row.intertexe}</td>
+                <td className="py-3 pr-4 text-[#152238]">{row.intertexe}</td>
                 <td className="py-3 pr-4 text-[#5c5854]">{row.fabacus}</td>
                 <td className="py-3 pr-4 text-[#5c5854]">{row.retraced}</td>
                 <td className="py-3 pr-4 text-[#5c5854]">{row.trustrace}</td>

@@ -109,7 +109,7 @@ export function ChromeExtensionStage() {
                       onClick={() => setFilter(item)}
                       className={`shrink-0 text-[10px] tracking-[0.06em] px-2.5 py-1.5 rounded-full border min-h-[32px] ${
                         filter === item
-                          ? "bg-[#1d4734] text-white border-[#1d4734]"
+                          ? "bg-[#152238] text-white border-[#152238]"
                           : "border-[#e8e3da] text-[#6f6a63]"
                       }`}
                     >
@@ -133,7 +133,7 @@ export function ChromeExtensionStage() {
                   ))}
                 </ul>
                 <div className="p-3 border-t border-[#eeeae4] space-y-2">
-                  <p className="text-[11px] tracking-[0.08em] uppercase bg-[#1d4734] text-white text-center py-2">
+                  <p className="text-[11px] tracking-[0.08em] uppercase bg-[#152238] text-white text-center py-2">
                     View {visible.length} better-material matches
                   </p>
                   <p className="text-[11px] text-center text-[#6f6a63] border border-[#e8e3da] py-2">
@@ -218,7 +218,7 @@ export function IphoneAppStage() {
           </div>
         </PhoneShell>
         <PhoneShell className="w-[210px] sm:w-[240px] z-10">
-          <div className="bg-[#1d4734] text-white text-[9px] tracking-[0.08em] text-center py-1.5 px-2">
+          <div className="bg-[#152238] text-white text-[9px] tracking-[0.08em] text-center py-1.5 px-2">
             Linen is the fabric of summer — shop the edit.
           </div>
           <div className="px-3 py-3">
@@ -234,7 +234,7 @@ export function IphoneAppStage() {
                 >
                   <span
                     className={`mx-auto mb-1 block w-10 h-10 rounded-full border ${
-                      material === item.id ? "border-[#1d4734]" : "border-[#e8e3da]"
+                      material === item.id ? "border-[#152238]" : "border-[#e8e3da]"
                     }`}
                     style={{ background: item.swatch }}
                   />
@@ -254,7 +254,7 @@ export function IphoneAppStage() {
               {products.map((item) => (
                 <div key={item.name}>
                   <div className="aspect-[3/4] bg-[#e8e0d4] mb-1.5" />
-                  <p className="text-[8px] tracking-[0.12em] uppercase text-[#1d4734]">{item.fiber}</p>
+                  <p className="text-[8px] tracking-[0.12em] uppercase text-[#152238]">{item.fiber}</p>
                   <p className="text-[9px] tracking-[0.1em] uppercase text-[#8a847c]">{item.brand}</p>
                   <p className="text-[10px] truncate">{item.name}</p>
                 </div>

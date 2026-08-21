@@ -144,6 +144,7 @@ describe("Platform material-intelligence page", () => {
     const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
     assert.match(home, /bg-\[#152238\]/);
     assert.match(nav, /bg-\[#152238\]/);
+    assert.doesNotMatch(home, /Fairly Made/);
     assert.match(stages, /hero-silk-dress\.png/);
     assert.match(stages, /hero-workspace-desktop\.png/);
     assert.match(stages, /hero-product-window\.png/);

@@ -37,7 +37,7 @@ export function CatalogMarquee() {
   const loop = [...CATALOG_MARQUEE_BRANDS, ...CATALOG_MARQUEE_BRANDS];
 
   return (
-    <section className="bg-[#1d4734] text-white py-12 sm:py-16 overflow-hidden">
+    <section className="bg-[#152238] text-white py-12 sm:py-16 overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 mb-8">
         <p className="text-[10px] tracking-[0.18em] uppercase text-white/55 mb-4">Consumer catalog</p>
         <h2 className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] mb-3" style={SERIF}>
@@ -49,8 +49,8 @@ export function CatalogMarquee() {
         </p>
       </div>
       <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-16 bg-gradient-to-r from-[#1d4734] to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 sm:w-16 bg-gradient-to-l from-[#1d4734] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-16 bg-gradient-to-r from-[#152238] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 sm:w-16 bg-gradient-to-l from-[#152238] to-transparent z-10" />
         <div className="overflow-hidden">
           <div className="itx-marquee-track flex w-max gap-3 pr-3">
             {loop.map((name, index) => (
@@ -72,7 +72,7 @@ export function CatalogMarquee() {
         </ul>
         <a
           href="/"
-          className="inline-flex items-center justify-center text-[11px] tracking-[0.14em] uppercase border border-white/70 text-white px-7 py-3.5 hover:bg-white hover:text-[#1d4734] min-h-[44px]"
+          className="inline-flex items-center justify-center text-[11px] tracking-[0.14em] uppercase border border-white/70 text-white px-7 py-3.5 hover:bg-white hover:text-[#152238] min-h-[44px]"
         >
           Explore the consumer catalog →
         </a>
