@@ -22,7 +22,8 @@ import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
 import { CatalogMarquee } from "./CatalogMarquee";
 import { ResourceCarousel } from "./ResourceCarousel";
 import { StoryTabs, type StoryTab } from "./StoryTabs";
-import { ChromeExtensionStage, HeroProductStage, IphoneAppStage } from "./product-stages";
+import { ChromeExtensionStage, HeroProductStage } from "./product-stages";
+import { EcosystemStage } from "./EcosystemStage";
 
 const EU_TEXTILE =
   "https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en";
@@ -386,18 +387,7 @@ export function PlatformHome() {
 
       <ResourceCarousel />
 
-      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>Online, iPhone, and the brand workspace</Eyebrow>
-          <Heading className="mb-4">Dual images of the same system.</Heading>
-          <Body className="max-w-2xl mb-10">
-            The consumer catalog, Chrome extension and iPhone app already exist. The brand SaaS workspace reads the
-            same kind of material record. Observed demand from shoppers is coming / developing — not a live
-            statistical product yet.
-          </Body>
-          <IphoneAppStage />
-        </div>
-      </section>
+      <EcosystemStage />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Understand</Eyebrow>
