@@ -142,6 +142,7 @@ describe("Platform material-intelligence page", () => {
     assert.match(home, /ResourceCarousel/);
     assert.match(ecosystem, /Your product intelligence, wherever your customers shop/);
     assert.match(ecosystem, /md:grid-cols-3/);
+    assert.match(ecosystem, /aspect-\[3\/2\]/);
     assert.match(ecosystem, /ecosystem-brand-channels\.jpg/);
     assert.match(ecosystem, /Dress 8721/);
     assert.doesNotMatch(ecosystem, /Download on iPhone/);

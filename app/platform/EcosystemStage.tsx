@@ -42,7 +42,7 @@ export function EcosystemStage() {
           One intelligence layer. Your brand experience. Our consumer ecosystem.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-8 lg:gap-10 items-start">
+        <div className="grid md:grid-cols-3 gap-8 lg:gap-10 items-stretch">
           {STAGES.map((stage) => (
             <StageColumn key={stage.id} stage={stage} />
           ))}
@@ -64,19 +64,19 @@ export function EcosystemStage() {
 
 function StageColumn({ stage }: { stage: (typeof STAGES)[number] }) {
   return (
-    <figure className="m-0 min-w-0 flex flex-col">
+    <figure className="m-0 min-w-0 h-full flex flex-col">
       <p className="text-[10px] tracking-[0.16em] uppercase text-[#152238] mb-2">{stage.label}</p>
-      <p className="text-sm text-[#5c5854] leading-relaxed mb-5 min-h-[4.5rem]">{stage.copy}</p>
-      <div className="overflow-hidden border border-[#e8e3da] bg-white">
+      <p className="text-sm text-[#5c5854] leading-relaxed mb-5 min-h-[6.5rem]">{stage.copy}</p>
+      <div className="mt-auto overflow-hidden border border-[#e8e3da] bg-[#e8eef4] aspect-[3/2]">
         <img
           src={stage.image}
           alt={stage.alt}
           width={1400}
-          height={1050}
-          className="block w-full object-cover aspect-[4/3]"
+          height={933}
+          className="block h-full w-full object-cover object-center"
         />
       </div>
-      <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">{stage.caption}</figcaption>
+      <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed min-h-[2.75rem]">{stage.caption}</figcaption>
     </figure>
   );
 }
