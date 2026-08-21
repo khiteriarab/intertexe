@@ -7,6 +7,7 @@ import {
 import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchInstagramDiscoveryMetrics, fetchAppStoreDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
 import { fetchPaidAcquisitionReport } from "../../../../lib/dashboard/paid-acquisition";
 import { formatCount } from "../../../../lib/dashboard/metrics";
+import { PaidAcquisitionSection } from "../../components/PaidAcquisitionSection";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
 import { TikTokOrganicLogClient } from "./TikTokOrganicLogClient";
 
@@ -116,7 +117,7 @@ export default async function HqAcquisitionPage() {
     <div>
       <HqPageHeader
         title="Acquisition"
-        description="How are people discovering INTERTEXE — and which sources convert to revenue? Use this when Action Center points here."
+        description="Paid and organic discovery — which sources convert to revenue. The $50K September booking plan is a separate founder Command Center, not this page."
         action={
           <Link
             href="/dashboard"
