@@ -45,7 +45,7 @@ describe("Platform material-intelligence page", () => {
     assert.match(home, /href="\/platform\/demo"/);
     assert.match(chrome, /href="\/dashboard\/login"/);
     assert.match(nav, /"\/dashboard\/login"/);
-    assert.match(home, /Go to dashboard login/);
+    assert.match(nav, /Log in/);
     assert.match(login, /redirect\("\/dashboard\/login"\)/);
     assert.match(page, /PlatformHome/);
   });
@@ -197,10 +197,14 @@ describe("Platform material-intelligence page", () => {
     assert.match(discover, /DiscoverWorkspace/);
     assert.match(gallery, /WorkspaceHeroPreview/);
     assert.match(gallery, /RegulatoryPreview/);
+    const living = fs.readFileSync(path.join(process.cwd(), "app/platform/living-system.ts"), "utf8");
     assert.match(gallery, /onClick=\{\(\) => select\(frame\.id\)\}/);
     assert.match(gallery, /Functionalities/);
-    assert.match(gallery, /A living system, not a one-off passport file/);
     assert.match(gallery, /\/platform\/discover/);
+    assert.match(living, /A living system, not a one-off passport file/);
+    assert.match(living, /Why brands keep INTERTEXE/);
+    assert.match(home, /Understand your material strategy relative to peers/);
+    assert.doesNotMatch(home, /Why brands keep INTERTEXE/);
     const catalogAt = home.indexOf("<CatalogMarquee");
     const workspaceAt = home.indexOf("One workspace for material intelligence");
     assert.ok(workspaceAt >= 0 && catalogAt > workspaceAt);

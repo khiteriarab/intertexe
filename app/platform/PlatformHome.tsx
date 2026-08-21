@@ -534,17 +534,6 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="border-y border-[#e8e3da] bg-[#faf8f5] py-12 sm:py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <Eyebrow>Workspace login</Eyebrow>
-            <Heading className="text-2xl sm:text-3xl mb-2">Already in an INTERTEXE workspace?</Heading>
-            <Body>Sign in to the dashboard. Prospects start with a snapshot or the Founding Pilot.</Body>
-          </div>
-          <PrimaryLink href="/dashboard/login">Go to dashboard login</PrimaryLink>
-        </div>
-      </section>
-
       <section className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Heading className="mb-2">FAQ</Heading>
         <div className="border-t border-[#e8e3da]">
