@@ -10,7 +10,7 @@ export function PlatformChrome({
   active?: PlatformNavKey;
 }) {
   return (
-    <div className="min-h-screen bg-[#f7f5f1] text-[#161513] overflow-x-hidden">
+    <div className="min-h-screen bg-[#f7f5f1] text-[#161513]">
       <PlatformNav active={active} tone={active === "platform" ? "dark" : "light"} />
       {children}
       <footer className="border-t border-[#e8e3da] px-4 sm:px-6 md:px-8 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">

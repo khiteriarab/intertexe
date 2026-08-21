@@ -1,11 +1,6 @@
 import { ComparisonView, type ComparisonRow } from "./ComparisonView";
 import { PlatformGraphic } from "./PlatformGraphic";
-import {
-  BenchmarkPreview,
-  IssuesPreview,
-  NormalizePreview,
-  PassportPreview,
-} from "./workspace-previews";
+import { InteractiveWorkspace } from "./workspace-previews";
 import {
   Body,
   Eyebrow,
@@ -272,15 +267,18 @@ export function PlatformHome() {
             understand: (
               <>
                 <PlatformGraphic slot="understandNormalize" className="mb-6" />
-                {PLATFORM_GRAPHICS.understandNormalize.ready ? null : <NormalizePreview className="mb-6" />}
                 <PlatformGraphic slot="understandIssues" className="mb-6" />
-                {PLATFORM_GRAPHICS.understandIssues.ready ? null : <IssuesPreview className="mb-0" />}
+                {PLATFORM_GRAPHICS.understandNormalize.ready && PLATFORM_GRAPHICS.understandIssues.ready ? null : (
+                  <InteractiveWorkspace initialScreen="Products" />
+                )}
               </>
             ),
             compare: (
-              <div className="space-y-6">
+              <div className="space-y-6 min-w-0">
                 <PlatformGraphic slot="compareBenchmark" className="mb-0" />
-                {PLATFORM_GRAPHICS.compareBenchmark.ready ? null : <BenchmarkPreview className="mb-0" />}
+                {PLATFORM_GRAPHICS.compareBenchmark.ready ? null : (
+                  <InteractiveWorkspace initialScreen="Benchmark" />
+                )}
                 <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">
                   Illustrative example · Your brand vs peer group
                 </p>
@@ -288,9 +286,11 @@ export function PlatformHome() {
               </div>
             ),
             act: (
-              <div className="space-y-6">
+              <div className="space-y-6 min-w-0">
                 <PlatformGraphic slot="actPassport" className="mb-0" />
-                {PLATFORM_GRAPHICS.actPassport.ready ? null : <PassportPreview className="mb-0" />}
+                {PLATFORM_GRAPHICS.actPassport.ready ? null : (
+                  <InteractiveWorkspace initialScreen="Passports" />
+                )}
                 <Frame label="Requirement update" caption="Illustrative example. Preparation status — not certification.">
                   <p className="text-sm mb-1">EU / Textiles</p>
                   <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
@@ -311,7 +311,7 @@ export function PlatformHome() {
               </div>
             ),
             engage: (
-              <div className="space-y-8">
+              <div className="space-y-8 min-w-0">
                 <ChromeExtensionStage />
               </div>
             ),

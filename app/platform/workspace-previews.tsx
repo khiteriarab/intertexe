@@ -15,47 +15,106 @@ export function WorkspaceChrome({
   children,
   caption = CAPTION,
   className = "",
+  onNavigate,
 }: {
   active: WorkspaceNav;
   issueCount?: string;
   children: ReactNode;
   caption?: string;
   className?: string;
+  onNavigate?: (item: WorkspaceNav) => void;
 }) {
+  const navButton = (item: WorkspaceNav, compact = false) => {
+    const selected = item === active;
+    const label = (
+      <>
+        {item}
+        {item === "Issues" ? (
+          <span
+            className={`ml-2 tracking-normal normal-case ${
+              compact
+                ? "text-[9px] bg-[#9c7b8b] text-white px-1.5 py-0.5"
+                : "text-[9px] bg-[#9c7b8b] px-1.5 py-0.5"
+            }`}
+          >
+            {issueCount}
+          </span>
+        ) : null}
+      </>
+    );
+
+    const className = compact
+      ? `shrink-0 text-[10px] tracking-[0.1em] uppercase px-3 py-2 min-h-[40px] border-b-2 ${
+          selected ? "border-[#152238] text-[#152238]" : "border-transparent text-[#8a847c]"
+        }`
+      : `w-full text-left text-[11px] tracking-[0.12em] uppercase px-2 py-2 rounded-sm min-h-[36px] ${
+          selected ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"
+        }`;
+
+    if (!onNavigate) {
+      return compact ? (
+        <span key={item} className={className}>
+          {label}
+        </span>
+      ) : (
+        <li
+          key={item}
+          className={`text-[11px] tracking-[0.12em] uppercase px-2 py-2 rounded-sm ${
+            selected ? "bg-white/15" : "text-white/65"
+          }`}
+        >
+          {label}
+        </li>
+      );
+    }
+
+    const button = (
+      <button
+        type="button"
+        onClick={() => onNavigate(item)}
+        aria-current={selected ? "page" : undefined}
+        className={className}
+      >
+        {label}
+      </button>
+    );
+
+    return compact ? (
+      <span key={item}>{button}</span>
+    ) : (
+      <li key={item}>{button}</li>
+    );
+  };
+
   return (
     <figure className={`m-0 ${className}`}>
-      <div className="rounded-2xl border border-[#d5dee8] bg-white overflow-hidden shadow-[0_28px_70px_rgba(21,34,56,0.12)]">
+      <div className="overflow-hidden rounded-2xl border border-[#d5dee8] bg-white shadow-[0_28px_70px_rgba(21,34,56,0.12)]">
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#eeeae4] bg-[#faf8f5]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
           <span className="ml-2 text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">INTERTEXE workspace</span>
         </div>
-        <div className="lg:grid lg:grid-cols-[168px_1fr]">
-          <aside className="hidden lg:flex flex-col justify-between bg-[#152238] text-white px-3 py-5">
+        <div className="sm:grid sm:grid-cols-[9.5rem_minmax(0,1fr)]">
+          <aside className="hidden sm:flex flex-col justify-between bg-[#152238] text-white px-3 py-5 min-h-0">
             <div>
               <p className="text-[10px] tracking-[0.2em] uppercase text-white/55 mb-5 px-2">INTERTEXE</p>
-              <ul className="space-y-0.5">
-                {NAV.map((item) => (
-                  <li
-                    key={item}
-                    className={`text-[11px] tracking-[0.12em] uppercase px-2 py-2 rounded-sm ${
-                      item === active ? "bg-white/15" : "text-white/65"
-                    }`}
-                  >
-                    {item}
-                    {item === "Issues" ? (
-                      <span className="ml-2 text-[9px] tracking-normal normal-case bg-[#9c7b8b] px-1.5 py-0.5">
-                        {issueCount}
-                      </span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
+              <ul className="space-y-0.5">{NAV.map((item) => navButton(item))}</ul>
             </div>
-            <p className="text-[10px] tracking-[0.12em] uppercase text-white/45 px-2">Sample workspace</p>
+            <p className="text-[10px] tracking-[0.12em] uppercase text-white/45 px-2 mt-8">Sample workspace</p>
           </aside>
-          <div className="p-4 sm:p-5 bg-[#f7f5f1]">{children}</div>
+          <div className="min-w-0 bg-[#f7f5f1]">
+            {onNavigate ? (
+              <div
+                role="navigation"
+                aria-label="Sample workspace screens"
+                className="sm:hidden flex gap-1 overflow-x-auto px-2 pt-2 border-b border-[#e8e3da] bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {NAV.map((item) => navButton(item, true))}
+              </div>
+            ) : null}
+            <div className="min-w-0 p-4 sm:p-5">{children}</div>
+          </div>
         </div>
       </div>
       {caption ? (
@@ -107,35 +166,42 @@ const ISSUE_ROWS = [
     issue: "Composition conflict — supplier does not match label",
     product: "Dress 8721",
     category: "Dresses",
-    expanded: true,
+    detail: [
+      "Label: 70% Cotton / 30% Polyamide (nylon)",
+      "Supplier: 65% Cotton / 35% Polyamide (nylon)",
+      "Review supplier data. INTERTEXE does not overwrite either source.",
+    ],
   },
   {
     severity: "High",
     issue: "Invalid percentages — totals do not add to 100%",
     product: "Wool Trouser 331",
     category: "Trousers",
-    expanded: false,
+    detail: [
+      "Recorded fibers do not total 100%.",
+      "Original source string is retained. INTERTEXE does not invent a corrected mix.",
+    ],
   },
   {
     severity: "Medium",
     issue: "Missing identifier — GTIN or SKU is missing",
     product: "Silk Shirt 891",
     category: "Shirts",
-    expanded: false,
+    detail: ["GTIN or SKU is missing. Unknown stays unknown until a source provides it."],
   },
   {
     severity: "Medium",
     issue: "Missing supplier — supplier information is incomplete",
     product: "Linen Top 221",
     category: "Tops",
-    expanded: false,
+    detail: ["Supplier composition is incomplete. The label string is still on the record."],
   },
   {
     severity: "Low",
     issue: "Missing information — country of origin is missing",
     product: "Cashmere Knit 112",
     category: "Knitwear",
-    expanded: false,
+    detail: ["Country of origin is missing. INTERTEXE does not fabricate a country."],
   },
 ] as const;
 
@@ -146,8 +212,32 @@ const SIGNAL = [
   ["Polyester engagement", "↓ 7%", false],
 ] as const;
 
+const MATERIAL_ROWS = [
+  {
+    fiber: "Cotton",
+    role: "Shell",
+    product: "Dress 8721",
+    source: "70 CO / 30 PA",
+    note: "70% on the label · 65% from the supplier. Both strings stay on the record.",
+  },
+  {
+    fiber: "Polyamide (nylon)",
+    role: "Shell",
+    product: "Dress 8721",
+    source: "70 CO / 30 PA",
+    note: "30% on the label · 35% from the supplier. Conflict is visible, not overwritten.",
+  },
+  {
+    fiber: "Viscose",
+    role: "Lining",
+    product: "Dress 8721",
+    source: "viscose",
+    note: "Normalized to 100% Viscose. Original lining string is retained.",
+  },
+] as const;
+
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`bg-white border border-[#e8e3da] p-4 ${className}`}>{children}</div>;
+  return <div className={`min-w-0 bg-white border border-[#e8e3da] p-4 ${className}`}>{children}</div>;
 }
 
 function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "alert" | "ok" }) {
@@ -157,22 +247,52 @@ function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: "neu
       : tone === "ok"
         ? "bg-[#e8eef4] text-[#152238]"
         : "bg-[#f0ebe4] text-[#5c5854]";
-  return <span className={`inline-block text-[11px] px-2 py-1 mr-1 mb-1 ${cls}`}>{children}</span>;
+  return <span className={`inline-block max-w-full break-words text-[11px] px-2 py-1 ${cls}`}>{children}</span>;
 }
 
-export function OverviewPreview({ className = "mt-12 sm:mt-16", caption }: { className?: string; caption?: string }) {
+function filterIssueRows(filter: (typeof ISSUE_FILTERS)[number][0]) {
+  if (filter === "All") return ISSUE_ROWS;
+  const prefix =
+    filter === "Composition conflict"
+      ? "Composition conflict"
+      : filter === "Invalid percentages"
+        ? "Invalid percentages"
+        : filter === "Missing identifier"
+          ? "Missing identifier"
+          : filter === "Missing supplier"
+            ? "Missing supplier"
+            : "Missing information";
+  return ISSUE_ROWS.filter((row) => row.issue.startsWith(prefix));
+}
+
+function OverviewBody({ onOpenIssues }: { onOpenIssues?: () => void }) {
   return (
-    <WorkspaceChrome active="Overview" className={className} caption={caption}>
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
-        {METRICS.map(([n, label, delta]) => (
-          <Card key={label}>
-            <p className="text-xl sm:text-2xl font-light tabular-nums" style={SERIF}>
-              {n}
-            </p>
-            <p className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] mt-1">{label}</p>
-            <p className="text-[10px] text-[#8a847c] mt-1 hidden sm:block">{delta}</p>
-          </Card>
-        ))}
+    <div>
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 mb-4">
+        {METRICS.map(([n, label, delta]) => {
+          const issues = label === "Issues to resolve" && onOpenIssues;
+          const inner = (
+            <>
+              <p className="text-xl sm:text-2xl font-light tabular-nums" style={SERIF}>
+                {n}
+              </p>
+              <p className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] mt-1 break-words">{label}</p>
+              <p className="text-[10px] text-[#8a847c] mt-1 hidden sm:block">{delta}</p>
+            </>
+          );
+          return issues ? (
+            <button
+              key={label}
+              type="button"
+              onClick={onOpenIssues}
+              className="min-w-0 bg-white border border-[#e8e3da] p-4 text-left hover:border-[#152238]"
+            >
+              {inner}
+            </button>
+          ) : (
+            <Card key={label}>{inner}</Card>
+          );
+        })}
       </div>
       <div className="grid lg:grid-cols-3 gap-3">
         <Card>
@@ -185,8 +305,8 @@ export function OverviewPreview({ className = "mt-12 sm:mt-16", caption }: { cla
           <ul className="space-y-1.5 text-xs text-[#5c5854]">
             {FIBERS.map(([name, pct]) => (
               <li key={name} className="flex justify-between gap-2">
-                <span>{name}</span>
-                <span className="tabular-nums">{pct}%</span>
+                <span className="min-w-0 break-words">{name}</span>
+                <span className="tabular-nums shrink-0">{pct}%</span>
               </li>
             ))}
           </ul>
@@ -204,7 +324,7 @@ export function OverviewPreview({ className = "mt-12 sm:mt-16", caption }: { cla
             <tbody>
               {PEERS.map(([metric, you, peer]) => (
                 <tr key={metric} className="border-t border-[#eeeae4]">
-                  <td className="py-1.5 pr-2">{metric}</td>
+                  <td className="py-1.5 pr-2 break-words">{metric}</td>
                   <td className="py-1.5 tabular-nums" style={SERIF}>
                     {you}
                   </td>
@@ -217,26 +337,43 @@ export function OverviewPreview({ className = "mt-12 sm:mt-16", caption }: { cla
         <Card>
           <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-3">Issues to resolve</p>
           <ul className="divide-y divide-[#eeeae4] text-sm">
-            {ISSUE_FILTERS.slice(1).map(([label, count]) => (
-              <li key={label} className="flex justify-between gap-3 py-2">
-                <span>{label}</span>
-                <span className="text-[#8a847c] tabular-nums">{count}</span>
-              </li>
-            ))}
+            {ISSUE_FILTERS.slice(1).map(([label, count]) => {
+              const row = (
+                <>
+                  <span className="min-w-0 break-words text-left">{label}</span>
+                  <span className="text-[#8a847c] tabular-nums shrink-0">{count}</span>
+                </>
+              );
+              return onOpenIssues ? (
+                <li key={label}>
+                  <button
+                    type="button"
+                    onClick={onOpenIssues}
+                    className="flex w-full justify-between gap-3 py-2 text-left hover:text-[#152238]"
+                  >
+                    {row}
+                  </button>
+                </li>
+              ) : (
+                <li key={label} className="flex justify-between gap-3 py-2">
+                  {row}
+                </li>
+              );
+            })}
           </ul>
         </Card>
       </div>
-    </WorkspaceChrome>
+    </div>
   );
 }
 
-export function NormalizePreview({ className = "mb-10", caption }: { className?: string; caption?: string }) {
+function NormalizeBody() {
   return (
-    <WorkspaceChrome active="Products" className={className} caption={caption ?? `${CAPTION} Original source strings are retained.`}>
+    <div>
       <p className="text-sm mb-4" style={SERIF}>
         Dress 8721
       </p>
-      <div className="grid md:grid-cols-[1fr_auto_1fr] gap-3 items-start">
+      <div className="grid grid-cols-1 gap-3 min-w-0">
         <Card>
           <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-3">Source data · raw</p>
           <dl className="text-sm space-y-2">
@@ -248,67 +385,101 @@ export function NormalizePreview({ className = "mb-10", caption }: { className?:
               ["Country of origin", "—"],
               ["Care", "—"],
             ].map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2 first:border-0 first:pt-0">
-                <dt className="text-[#8a847c]">{k}</dt>
-                <dd className="font-mono text-[12px] text-right">{v}</dd>
+              <div
+                key={k}
+                className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2 first:border-0 first:pt-0"
+              >
+                <dt className="text-[#8a847c] shrink-0">{k}</dt>
+                <dd className="font-mono text-[12px] text-right break-words min-w-0">{v}</dd>
               </div>
             ))}
           </dl>
         </Card>
-        <div className="hidden md:flex items-center justify-center py-8">
-          <span className="w-8 h-8 rounded-full bg-[#9c7b8b] text-white text-sm flex items-center justify-center" aria-hidden="true">
+        <div className="flex items-center justify-center py-1">
+          <span
+            className="w-8 h-8 rounded-full bg-[#9c7b8b] text-white text-sm flex items-center justify-center"
+            aria-hidden="true"
+          >
             →
           </span>
+          <span className="sr-only">Normalized INTERTEXE record</span>
         </div>
         <Card>
           <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-3">INTERTEXE record</p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Composition · normalized</p>
-          <p className="mb-2">
+          <p className="mb-2 flex flex-wrap gap-1">
             <Pill>70% Cotton</Pill>
             <Pill>30% Polyamide (nylon)</Pill>
           </p>
-          <p className="text-xs text-[#8b2e2e] mb-3">Composition conflict with supplier data.</p>
+          <p className="text-xs text-[#8b2e2e] mb-3 break-words">Composition conflict with supplier data.</p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Original string</p>
-          <p className="font-mono text-[12px] mb-3">70 CO / 30 PA</p>
+          <p className="font-mono text-[12px] mb-3 break-words">70 CO / 30 PA</p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Lining</p>
-          <p className="mb-3">
+          <p className="mb-3 flex flex-wrap gap-1">
             <Pill>100% Viscose</Pill>
           </p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Supplier composition</p>
-          <p className="mb-2">
+          <p className="mb-2 flex flex-wrap gap-1">
             <Pill>65% Cotton</Pill>
             <Pill>35% Polyamide (nylon)</Pill>
           </p>
-          <p className="text-xs text-[#8b2e2e] mb-3">Composition conflict.</p>
+          <p className="text-xs text-[#8b2e2e] mb-3 break-words">Composition conflict.</p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Country of origin</p>
-          <p>
+          <p className="flex flex-wrap gap-1">
             <Pill tone="alert">Missing</Pill>
           </p>
         </Card>
       </div>
-    </WorkspaceChrome>
+    </div>
   );
 }
 
-export function IssuesPreview({ className = "mb-8", caption }: { className?: string; caption?: string }) {
+function MaterialsBody({ onOpenProduct }: { onOpenProduct?: () => void }) {
+  return (
+    <div>
+      <p className="text-sm mb-1" style={SERIF}>
+        Materials · Dress 8721
+      </p>
+      <p className="text-xs text-[#8a847c] mb-4 leading-relaxed">
+        Sample material records from the same product. Original source strings stay on the row.
+      </p>
+      <ul className="space-y-3">
+        {MATERIAL_ROWS.map((row) => (
+          <li key={`${row.fiber}-${row.role}`}>
+            <Card>
+              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+                <p className="text-sm min-w-0 break-words" style={SERIF}>
+                  {row.fiber}
+                </p>
+                <p className="text-[10px] tracking-[0.12em] uppercase text-[#8a847c]">{row.role}</p>
+              </div>
+              <p className="text-xs text-[#5c5854] mb-2 break-words">{row.product}</p>
+              <p className="font-mono text-[12px] mb-2 break-words">Source: {row.source}</p>
+              <p className="text-xs text-[#5c5854] leading-relaxed break-words">{row.note}</p>
+            </Card>
+          </li>
+        ))}
+      </ul>
+      {onOpenProduct ? (
+        <button
+          type="button"
+          onClick={onOpenProduct}
+          className="mt-4 text-[11px] tracking-[0.12em] uppercase text-[#152238] underline underline-offset-4"
+        >
+          Open product record
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function IssuesBody() {
   const [filter, setFilter] = useState<(typeof ISSUE_FILTERS)[number][0]>("All");
-  const rows =
-    filter === "All"
-      ? ISSUE_ROWS
-      : ISSUE_ROWS.filter((row) =>
-          filter === "Composition conflict"
-            ? row.issue.startsWith("Composition conflict")
-            : filter === "Invalid percentages"
-              ? row.issue.startsWith("Invalid percentages")
-              : filter === "Missing identifier"
-                ? row.issue.startsWith("Missing identifier")
-                : filter === "Missing supplier"
-                  ? row.issue.startsWith("Missing supplier")
-                  : row.issue.startsWith("Missing information")
-        );
+  const rows = filterIssueRows(filter);
+  const [openProduct, setOpenProduct] = useState<string | null>(ISSUE_ROWS[0].product);
 
   return (
-    <WorkspaceChrome active="Issues" className={className} caption={caption}>
+    <div>
       <p className="text-sm mb-4" style={SERIF}>
         Issues inbox
       </p>
@@ -317,7 +488,11 @@ export function IssuesPreview({ className = "mb-8", caption }: { className?: str
           <button
             key={label}
             type="button"
-            onClick={() => setFilter(label)}
+            onClick={() => {
+              setFilter(label);
+              const next = filterIssueRows(label);
+              setOpenProduct(next[0]?.product ?? null);
+            }}
             className={`shrink-0 text-[10px] tracking-[0.1em] uppercase px-3 py-2 border min-h-[36px] ${
               filter === label ? "bg-[#9c7b8b] text-white border-[#9c7b8b]" : "bg-white border-[#e8e3da] text-[#6f6a63]"
             }`}
@@ -326,46 +501,259 @@ export function IssuesPreview({ className = "mb-8", caption }: { className?: str
           </button>
         ))}
       </div>
-      <div className="bg-white border border-[#e8e3da] overflow-x-auto">
-        <table className="w-full text-left text-sm min-w-[640px]">
-          <thead>
-            <tr className="text-[10px] tracking-[0.12em] uppercase text-[#8a847c] border-b border-[#e8e3da]">
-              <th className="py-3 px-3 font-medium">Severity</th>
-              <th className="py-3 px-3 font-medium">Issue</th>
-              <th className="py-3 px-3 font-medium">Product</th>
-              <th className="py-3 px-3 font-medium">Category</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.product} className={`border-b border-[#eeeae4] ${row.expanded ? "bg-[#f7f1f3]" : ""}`}>
-                <td className="py-3 px-3 align-top">
-                  <span className={row.severity === "High" ? "text-[#8b2e2e]" : "text-[#8a847c]"}>{row.severity}</span>
-                </td>
-                <td className="py-3 px-3 align-top">
-                  {row.issue}
-                  {row.expanded ? (
-                    <div className="mt-3 text-xs text-[#5c5854] space-y-1">
-                      <p>Label: 70% Cotton / 30% Polyamide (nylon)</p>
-                      <p>Supplier: 65% Cotton / 35% Polyamide (nylon)</p>
-                      <p>Review supplier data. INTERTEXE does not overwrite either source.</p>
+      <div className="bg-white border border-[#e8e3da]">
+        <div className="hidden sm:grid grid-cols-[4.75rem_minmax(0,1fr)_7.5rem] gap-3 px-3 py-3 text-[10px] tracking-[0.12em] uppercase text-[#8a847c] border-b border-[#e8e3da]">
+          <span>Severity</span>
+          <span>Issue</span>
+          <span>Product</span>
+        </div>
+        <ul>
+          {rows.map((row) => {
+            const open = openProduct === row.product;
+            return (
+              <li key={row.product} className={`border-b border-[#eeeae4] last:border-0 ${open ? "bg-[#f7f1f3]" : ""}`}>
+                <button
+                  type="button"
+                  onClick={() => setOpenProduct(open ? null : row.product)}
+                  aria-expanded={open}
+                  className="w-full text-left px-3 py-3 min-w-0"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-[4.75rem_minmax(0,1fr)_7.5rem] gap-1 sm:gap-3 items-start">
+                    <span
+                      className={`text-sm ${row.severity === "High" ? "text-[#8b2e2e]" : "text-[#8a847c]"}`}
+                    >
+                      {row.severity}
+                    </span>
+                    <span className="text-sm break-words min-w-0">{row.issue}</span>
+                    <span className="text-xs sm:text-sm text-[#8a847c] break-words min-w-0">
+                      {row.product}
+                      <span className="sm:hidden"> · {row.category}</span>
+                    </span>
+                  </div>
+                  {open ? (
+                    <div className="mt-3 text-xs text-[#5c5854] space-y-1 min-w-0">
+                      {row.detail.map((line) => (
+                        <p key={line} className="break-words">
+                          {line}
+                        </p>
+                      ))}
+                      <p className="text-[#8a847c]">{row.category}</p>
                     </div>
                   ) : null}
-                </td>
-                <td className="py-3 px-3 align-top">{row.product}</td>
-                <td className="py-3 px-3 align-top text-[#8a847c]">{row.category}</td>
-              </tr>
-            ))}
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="py-6 px-3 text-sm text-[#8a847c]">
-                  No sample rows in this filter. Illustrative inbox — counts are not a live catalog.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+                </button>
+              </li>
+            );
+          })}
+          {rows.length === 0 ? (
+            <li className="py-6 px-3 text-sm text-[#8a847c]">
+              No sample rows in this filter. Illustrative inbox — counts are not a live catalog.
+            </li>
+          ) : null}
+        </ul>
       </div>
+    </div>
+  );
+}
+
+function BenchmarkBody() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 min-w-0">
+      <Card>
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">Your material position</p>
+        <ul className="space-y-4">
+          {PEERS.map(([metric, you, peer]) => {
+            const youN = parseFloat(you);
+            const peerN = parseFloat(peer);
+            return (
+              <li key={metric}>
+                <div className="flex justify-between gap-2 text-xs mb-1">
+                  <span className="min-w-0 break-words">{metric}</span>
+                  <span className="tabular-nums text-[#8a847c] shrink-0">
+                    {you} / {peer}
+                  </span>
+                </div>
+                <div className="relative h-2 bg-[#eeeae4]">
+                  <span
+                    className="absolute inset-y-0 left-0 bg-[#cfc9c0]"
+                    style={{ width: `${Math.min(peerN, 100)}%` }}
+                  />
+                  <span
+                    className="absolute inset-y-0 left-0 bg-[#152238]"
+                    style={{ width: `${Math.min(youN, 100)}%` }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] mt-4">
+          Navy = your brand · Grey = peer group
+        </p>
+      </Card>
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">INTERTEXE consumer signal</p>
+          <span className="text-[10px] tracking-[0.1em] uppercase bg-[#f3e6e6] text-[#8b2e2e] px-2 py-1">
+            Coming / developing
+          </span>
+        </div>
+        <ul className="divide-y divide-[#eeeae4]">
+          {SIGNAL.map(([label, delta, up]) => (
+            <li key={label} className="flex justify-between gap-3 py-3 text-sm">
+              <span className="min-w-0 break-words">{label}</span>
+              <span className={`tabular-nums shrink-0 ${up ? "text-[#152238]" : "text-[#8b2e2e]"}`}>{delta}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-[#5c5854] mt-4 leading-relaxed">
+          Not a live statistical product yet. Observed demand comes from the consumer side of INTERTEXE.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
+function PassportBody() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 min-w-0">
+      <Card>
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-2">01 · Ready to publish</p>
+        <p className="text-base mb-1 break-words" style={SERIF}>
+          Silk Evening Dress
+        </p>
+        <p className="text-xs text-[#8a847c] mb-4">ITX-4102</p>
+        <ul className="text-sm space-y-2 mb-4">
+          {["Materials", "Manufacturing", "Care", "Traceability", "Product identity"].map((item) => (
+            <li key={item} className="flex justify-between gap-2 border-t border-[#eeeae4] pt-2">
+              <span className="min-w-0 break-words">{item}</span>
+              <Pill tone="ok">Complete</Pill>
+            </li>
+          ))}
+        </ul>
+        <span className="inline-flex text-[10px] tracking-[0.12em] uppercase bg-[#9c7b8b] text-white px-4 py-2">
+          Publish passport
+        </span>
+      </Card>
+      <Card className="flex flex-col items-center text-center">
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4 w-full text-left">
+          02 · Product identity
+        </p>
+        <QrMark />
+        <p className="font-mono text-[11px] mt-4 mb-1 break-all">INTX-ITX-4102</p>
+        <p className="text-xs text-[#8a847c]">Ready to publish</p>
+      </Card>
+      <div className="mx-auto w-full max-w-[260px] rounded-[28px] border border-[#e8e3da] bg-white p-5 shadow-[0_16px_40px_rgba(22,21,19,0.06)]">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-[#8a847c] mb-2">03 · Passport</p>
+        <p className="text-lg mb-1 break-words" style={SERIF}>
+          Silk Evening Dress
+        </p>
+        <p className="text-[10px] tracking-[0.12em] uppercase text-[#9c7b8b] mb-4">Materials</p>
+        <ul className="text-sm text-[#5c5854] space-y-2">
+          <li className="border-t border-[#eeeae4] pt-2 break-words">92% Silk · 8% Elastane</li>
+          <li className="border-t border-[#eeeae4] pt-2 break-words">Lining · 100% Viscose</li>
+          <li className="border-t border-[#eeeae4] pt-2 break-words">Manufacturing · Portugal</li>
+        </ul>
+        <p className="text-[10px] text-[#8a847c] mt-4 leading-relaxed">
+          Illustrative passport. Not a regulatory certification.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function MonitorBody() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 min-w-0">
+      <Card>
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Requirement update · EU / Textiles</p>
+        <p className="text-2xl font-light tabular-nums mb-3" style={SERIF}>
+          10,000 products evaluated
+        </p>
+        <ul className="text-sm space-y-2">
+          <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+            <span className="min-w-0 break-words">No action required</span>
+            <span className="tabular-nums shrink-0">9,614</span>
+          </li>
+          <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+            <span className="min-w-0 break-words">Need additional information</span>
+            <span className="tabular-nums shrink-0">311</span>
+          </li>
+          <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+            <span className="min-w-0 break-words">Require review</span>
+            <span className="tabular-nums shrink-0">75</span>
+          </li>
+        </ul>
+      </Card>
+      <Card>
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-3">Preparation status</p>
+        <ul className="text-sm space-y-2">
+          {[
+            ["French AGEC", "Review"],
+            ["EU ESPR textiles", "Missing information"],
+            ["Digital Product Passport", "In progress"],
+          ].map(([name, status]) => (
+            <li key={name} className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+              <span className="min-w-0 break-words">{name}</span>
+              <span className="text-[#8a847c] text-right break-words">{status}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-[#8a847c] mt-4 leading-relaxed">
+          Illustrative example. INTERTEXE does not provide legal certification.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
+export function InteractiveWorkspace({
+  initialScreen = "Overview",
+  className = "mb-0",
+  caption,
+}: {
+  initialScreen?: WorkspaceNav;
+  className?: string;
+  caption?: string;
+}) {
+  const [active, setActive] = useState<WorkspaceNav>(initialScreen);
+
+  return (
+    <WorkspaceChrome active={active} onNavigate={setActive} className={className} caption={caption}>
+      {active === "Overview" ? <OverviewBody onOpenIssues={() => setActive("Issues")} /> : null}
+      {active === "Products" ? <NormalizeBody /> : null}
+      {active === "Materials" ? <MaterialsBody onOpenProduct={() => setActive("Products")} /> : null}
+      {active === "Issues" ? <IssuesBody /> : null}
+      {active === "Benchmark" ? <BenchmarkBody /> : null}
+      {active === "Passports" ? <PassportBody /> : null}
+      {active === "Monitor" ? <MonitorBody /> : null}
+    </WorkspaceChrome>
+  );
+}
+
+export function OverviewPreview({ className = "mt-12 sm:mt-16", caption }: { className?: string; caption?: string }) {
+  return (
+    <WorkspaceChrome active="Overview" className={className} caption={caption}>
+      <OverviewBody />
+    </WorkspaceChrome>
+  );
+}
+
+export function NormalizePreview({ className = "mb-10", caption }: { className?: string; caption?: string }) {
+  return (
+    <WorkspaceChrome
+      active="Products"
+      className={className}
+      caption={caption ?? `${CAPTION} Original source strings are retained.`}
+    >
+      <NormalizeBody />
+    </WorkspaceChrome>
+  );
+}
+
+export function IssuesPreview({ className = "mb-8", caption }: { className?: string; caption?: string }) {
+  return (
+    <WorkspaceChrome active="Issues" className={className} caption={caption}>
+      <IssuesBody />
     </WorkspaceChrome>
   );
 }
@@ -377,59 +765,7 @@ export function BenchmarkPreview({ className = "mb-8", caption }: { className?: 
       className={className}
       caption={caption ?? `${CAPTION} Individual customer data is never exposed. Consumer signal is coming / developing.`}
     >
-      <div className="grid lg:grid-cols-2 gap-3">
-        <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">Your material position</p>
-          <ul className="space-y-4">
-            {PEERS.map(([metric, you, peer]) => {
-              const youN = parseFloat(you);
-              const peerN = parseFloat(peer);
-              return (
-                <li key={metric}>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span>{metric}</span>
-                    <span className="tabular-nums text-[#8a847c]">
-                      {you} / {peer}
-                    </span>
-                  </div>
-                  <div className="relative h-2 bg-[#eeeae4]">
-                    <span
-                      className="absolute inset-y-0 left-0 bg-[#cfc9c0]"
-                      style={{ width: `${Math.min(peerN, 100)}%` }}
-                    />
-                    <span
-                      className="absolute inset-y-0 left-0 bg-[#152238]"
-                      style={{ width: `${Math.min(youN, 100)}%` }}
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          <p className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] mt-4">
-            Forest = your brand · Grey = peer group
-          </p>
-        </Card>
-        <Card>
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">INTERTEXE consumer signal</p>
-            <span className="text-[10px] tracking-[0.1em] uppercase bg-[#f3e6e6] text-[#8b2e2e] px-2 py-1">
-              Coming / developing
-            </span>
-          </div>
-          <ul className="divide-y divide-[#eeeae4]">
-            {SIGNAL.map(([label, delta, up]) => (
-              <li key={label} className="flex justify-between gap-3 py-3 text-sm">
-                <span>{label}</span>
-                <span className={`tabular-nums ${up ? "text-[#152238]" : "text-[#8b2e2e]"}`}>{delta}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-[#5c5854] mt-4 leading-relaxed">
-            Not a live statistical product yet. Observed demand comes from the consumer side of INTERTEXE.
-          </p>
-        </Card>
-      </div>
+      <BenchmarkBody />
     </WorkspaceChrome>
   );
 }
@@ -441,49 +777,7 @@ export function PassportPreview({ className = "mb-10", caption }: { className?: 
       className={className}
       caption={caption ?? "Illustrative passport workflow. Not a regulatory certification. The INTERTEXE scanner is not required."}
     >
-      <div className="grid md:grid-cols-3 gap-3">
-        <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-2">01 · Ready to publish</p>
-          <p className="text-base mb-1" style={SERIF}>
-            Silk Evening Dress
-          </p>
-          <p className="text-xs text-[#8a847c] mb-4">ITX-4102</p>
-          <ul className="text-sm space-y-2 mb-4">
-            {["Materials", "Manufacturing", "Care", "Traceability", "Product identity"].map((item) => (
-              <li key={item} className="flex justify-between gap-2 border-t border-[#eeeae4] pt-2">
-                <span>{item}</span>
-                <Pill tone="ok">Complete</Pill>
-              </li>
-            ))}
-          </ul>
-          <span className="inline-flex text-[10px] tracking-[0.12em] uppercase bg-[#9c7b8b] text-white px-4 py-2">
-            Publish passport
-          </span>
-        </Card>
-        <Card className="flex flex-col items-center text-center">
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4 w-full text-left">
-            02 · Product identity
-          </p>
-          <QrMark />
-          <p className="font-mono text-[11px] mt-4 mb-1">INTX-ITX-4102</p>
-          <p className="text-xs text-[#8a847c]">Ready to publish</p>
-        </Card>
-        <div className="mx-auto w-full max-w-[260px] rounded-[28px] border border-[#e8e3da] bg-white p-5 shadow-[0_16px_40px_rgba(22,21,19,0.06)]">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-[#8a847c] mb-2">03 · Passport</p>
-          <p className="text-lg mb-1" style={SERIF}>
-            Silk Evening Dress
-          </p>
-          <p className="text-[10px] tracking-[0.12em] uppercase text-[#9c7b8b] mb-4">Materials</p>
-          <ul className="text-sm text-[#5c5854] space-y-2">
-            <li className="border-t border-[#eeeae4] pt-2">92% Silk · 8% Elastane</li>
-            <li className="border-t border-[#eeeae4] pt-2">Lining · 100% Viscose</li>
-            <li className="border-t border-[#eeeae4] pt-2">Manufacturing · Portugal</li>
-          </ul>
-          <p className="text-[10px] text-[#8a847c] mt-4 leading-relaxed">
-            Illustrative passport. Not a regulatory certification.
-          </p>
-        </div>
-      </div>
+      <PassportBody />
     </WorkspaceChrome>
   );
 }
@@ -495,46 +789,7 @@ export function RegulatoryPreview({ className = "mb-0", caption }: { className?:
       className={className}
       caption={caption ?? "Tracked requirements and preparation status — not certification."}
     >
-      <div className="grid md:grid-cols-2 gap-3">
-        <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Requirement update · EU / Textiles</p>
-          <p className="text-2xl font-light tabular-nums mb-3" style={SERIF}>
-            10,000 products evaluated
-          </p>
-          <ul className="text-sm space-y-2">
-            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
-              <span>No action required</span>
-              <span className="tabular-nums">9,614</span>
-            </li>
-            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
-              <span>Need additional information</span>
-              <span className="tabular-nums">311</span>
-            </li>
-            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
-              <span>Require review</span>
-              <span className="tabular-nums">75</span>
-            </li>
-          </ul>
-        </Card>
-        <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-3">Preparation status</p>
-          <ul className="text-sm space-y-2">
-            {[
-              ["French AGEC", "Review"],
-              ["EU ESPR textiles", "Missing information"],
-              ["Digital Product Passport", "In progress"],
-            ].map(([name, status]) => (
-              <li key={name} className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
-                <span>{name}</span>
-                <span className="text-[#8a847c]">{status}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-[#8a847c] mt-4 leading-relaxed">
-            Illustrative example. INTERTEXE does not provide legal certification.
-          </p>
-        </Card>
-      </div>
+      <MonitorBody />
     </WorkspaceChrome>
   );
 }
@@ -555,13 +810,13 @@ export function CatalogPreview({
       className={className}
       caption={`${CAPTION} Ten INTERTEXE sample products. Missing fields stay missing.`}
     >
-      <div className={`grid gap-3 ${showSource && showNormalized ? "lg:grid-cols-2" : ""}`}>
+      <div className={`grid gap-3 min-w-0 ${showSource && showNormalized ? "lg:grid-cols-2" : ""}`}>
         {showSource ? (
-          <div className="overflow-x-auto bg-white border border-[#e8e3da]">
+          <div className="overflow-x-auto bg-white border border-[#e8e3da] min-w-0">
             <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] px-3 py-2 border-b border-[#e8e3da]">
               Source data · 10 products
             </p>
-            <table className="w-full text-left text-xs min-w-[520px]">
+            <table className="w-full text-left text-xs">
               <thead>
                 <tr className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] border-b border-[#eeeae4]">
                   <th className="py-2 px-3 font-medium">SKU</th>
@@ -573,9 +828,9 @@ export function CatalogPreview({
               <tbody>
                 {DEMO_CATALOG.map((product) => (
                   <tr key={product.id} className="border-b border-[#eeeae4] last:border-0">
-                    <td className="py-2 px-3 font-mono">{product.sku}</td>
-                    <td className="py-2 px-3">{product.name}</td>
-                    <td className="py-2 px-3 font-mono">{product.source.main}</td>
+                    <td className="py-2 px-3 font-mono whitespace-nowrap">{product.sku}</td>
+                    <td className="py-2 px-3 break-words">{product.name}</td>
+                    <td className="py-2 px-3 font-mono break-words">{product.source.main}</td>
                     <td className="py-2 px-3 text-[#8a847c]">{product.source.origin || "—"}</td>
                   </tr>
                 ))}
@@ -584,11 +839,11 @@ export function CatalogPreview({
           </div>
         ) : null}
         {showNormalized ? (
-          <div className="overflow-x-auto bg-white border border-[#e8e3da]">
+          <div className="overflow-x-auto bg-white border border-[#e8e3da] min-w-0">
             <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] px-3 py-2 border-b border-[#e8e3da]">
               INTERTEXE record
             </p>
-            <table className="w-full text-left text-xs min-w-[520px]">
+            <table className="w-full text-left text-xs">
               <thead>
                 <tr className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] border-b border-[#eeeae4]">
                   <th className="py-2 px-3 font-medium">SKU</th>
@@ -599,9 +854,9 @@ export function CatalogPreview({
               <tbody>
                 {DEMO_CATALOG.map((product) => (
                   <tr key={product.id} className="border-b border-[#eeeae4] last:border-0">
-                    <td className="py-2 px-3 font-mono">{product.sku}</td>
-                    <td className="py-2 px-3">{product.normalized.shell}</td>
-                    <td className="py-2 px-3 text-[#8b2e2e]">
+                    <td className="py-2 px-3 font-mono whitespace-nowrap">{product.sku}</td>
+                    <td className="py-2 px-3 break-words">{product.normalized.shell}</td>
+                    <td className="py-2 px-3 text-[#8b2e2e] break-words">
                       {product.issues[0] ? DEMO_ISSUE_LABEL[product.issues[0]] : "—"}
                     </td>
                   </tr>
