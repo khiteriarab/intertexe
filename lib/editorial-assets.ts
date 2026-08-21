@@ -51,6 +51,10 @@ export const EDITORIAL_HERO = {
   tailoring: TAILORING_EDITORIAL_HERO,
   "summer-in-the-city": ZIMMERMANN_SUMMER_CAMPAIGN,
   "white-edit": WHITE_EDIT_EDITORIAL_HERO,
+  "first-fall-edit": FABRIC_HERO.cashmere,
+  "coat-edit": FABRIC_HERO.wool,
+  "holiday-edit": EVENING_EDITORIAL_HERO,
+  "spring-edit": FABRIC_HERO.cotton,
   newIn: SILK_EDITORIAL_HERO,
 } as const;
 

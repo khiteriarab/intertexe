@@ -200,13 +200,31 @@ const button = {
   textTransform: "uppercase" as const,
 };
 
-const stackedButton = {
-  ...button,
-  display: "block",
-  width: "100%",
-  boxSizing: "border-box" as const,
+const EMAIL_ICONS = {
+  tiktok: "https://www.intertexe.com/email/icon-tiktok.png",
+  instagram: "https://www.intertexe.com/email/icon-instagram.png",
+  app: "https://www.intertexe.com/email/icon-app.png",
+} as const;
+
+const iconColumn = {
+  width: "33%",
   textAlign: "center" as const,
-  margin: "0 0 10px",
+  backgroundColor: CANVAS,
+  verticalAlign: "middle" as const,
+  padding: "4px 0",
+};
+
+const iconLink = {
+  display: "inline-block",
+  textDecoration: "none",
+  lineHeight: 0,
+};
+
+const iconImage = {
+  display: "block",
+  border: "0",
+  outline: "none",
+  margin: "0 auto",
 };
 
 const ghostButton = {
@@ -509,7 +527,7 @@ export default function WeeklyEditEmail({
             The Weekly Edit
           </Heading>
           <Text style={introText}>
-            Pieces worth knowing, selected through a material-first lens.
+            Pieces worth buying now, selected through a material-first lens.
           </Text>
           </Section>
 
@@ -575,16 +593,42 @@ export default function WeeklyEditEmail({
 
           <Hr style={hr} />
 
-          <Section className="we-cell" style={{ backgroundColor: CANVAS }}>
-            <Button href={INTERTEXE_TIKTOK_URL} style={stackedButton}>
-              TikTok →
-            </Button>
-            <Button href={INTERTEXE_INSTAGRAM_URL} style={stackedButton}>
-              Instagram →
-            </Button>
-            <Button href={appHref} style={{ ...stackedButton, margin: "0" }}>
-              App →
-            </Button>
+          <Section className="we-cell" style={{ backgroundColor: CANVAS, textAlign: "center" }}>
+            <Row>
+              <Column style={iconColumn}>
+                <Link href={INTERTEXE_TIKTOK_URL} style={iconLink}>
+                  <Img
+                    src={EMAIL_ICONS.tiktok}
+                    alt="TikTok"
+                    width="28"
+                    height="28"
+                    style={iconImage}
+                  />
+                </Link>
+              </Column>
+              <Column style={iconColumn}>
+                <Link href={INTERTEXE_INSTAGRAM_URL} style={iconLink}>
+                  <Img
+                    src={EMAIL_ICONS.instagram}
+                    alt="Instagram"
+                    width="28"
+                    height="28"
+                    style={iconImage}
+                  />
+                </Link>
+              </Column>
+              <Column style={iconColumn}>
+                <Link href={appHref} style={iconLink}>
+                  <Img
+                    src={EMAIL_ICONS.app}
+                    alt="App"
+                    width="28"
+                    height="28"
+                    style={iconImage}
+                  />
+                </Link>
+              </Column>
+            </Row>
           </Section>
 
           <Hr style={hr} />

@@ -1,8 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isFootwearListing } from "./catalog-product-filters";
-import { getCollectionForWeek } from "./collection-rotation";
-import { getFiberFactForWeek } from "./fiber-facts";
-import { collectionEditTitle, collectionImageUrl } from "./weekly-edit-presentation";
+import { resolveWeeklyEditEditorial, seasonalProductScore, weekNumberFromDate } from "./weekly-edit-season";
 
 /** INTERTEXE brand socials — Weekly Edit follow CTA (not @Khiteri). */
 export const INTERTEXE_SOCIAL_HANDLE = "@intertexe";
@@ -75,14 +73,22 @@ function takeUnused<T extends { id: string }>(pool: T[], count: number, seen: Se
  * Always 2 shoes + 3 clothing + 3 sale from curator `is_editor_pick` rows.
  * Never fills from the random apparel catalog (that path put the Loewe poplin shirt in the edit).
  */
-export function assembleWeeklyEditPicks(picks: WeeklyEditPickInput[]): WeeklyEditProduct[] {
-  const shoesPool = picks
-    .filter((p) => isFootwearListing(p))
-    .sort((a, b) => Number(isOnSale(a)) - Number(isOnSale(b)));
-  const clothingPool = picks
-    .filter((p) => !isFootwearListing(p))
-    .sort((a, b) => Number(isOnSale(a)) - Number(isOnSale(b)));
-  const salePool = picks.filter((p) => isOnSale(p));
+export function assembleWeeklyEditPicks(
+  picks: WeeklyEditPickInput[],
+  opts?: { preferFibers?: string[] }
+): WeeklyEditProduct[] {
+  const preferFibers = opts?.preferFibers || [];
+  const bySeasonThenFullPrice = (a: WeeklyEditPickInput, b: WeeklyEditPickInput) =>
+    Number(isOnSale(a)) - Number(isOnSale(b)) ||
+    seasonalProductScore(b, preferFibers) - seasonalProductScore(a, preferFibers);
+
+  const shoesPool = picks.filter((p) => isFootwearListing(p)).sort(bySeasonThenFullPrice);
+  const clothingPool = picks.filter((p) => !isFootwearListing(p)).sort(bySeasonThenFullPrice);
+  const salePool = picks
+    .filter((p) => isOnSale(p))
+    .sort(
+      (a, b) => seasonalProductScore(b, preferFibers) - seasonalProductScore(a, preferFibers)
+    );
 
   const seen = new Set<string>();
   const shoes = takeUnused(shoesPool, WEEKLY_EDIT_MIX.shoes, seen);
@@ -138,7 +144,7 @@ function mapEditorPickRow(row: Record<string, unknown>): WeeklyEditPickInput | n
 
 export async function selectWeeklyEditProducts(
   supabase: SupabaseClient,
-  _weekNumber?: number
+  weekNumber?: number
 ): Promise<WeeklyEditProduct[]> {
   const { data: products, error } = await supabase
     .from("products")
@@ -164,24 +170,21 @@ export async function selectWeeklyEditProducts(
     picks.push(mapped);
   }
 
-  const assembled = assembleWeeklyEditPicks(picks);
+  const assembled = assembleWeeklyEditPicks(picks, {
+    preferFibers: resolveWeeklyEditEditorial(weekNumber ?? weekNumberFromDate(new Date()))
+      .moment.preferredFibers,
+  });
   if (!assembled.length) {
     throw new Error("Not enough editor's picks for weekly edit");
   }
   return assembled;
 }
 
-export function getWeeklyEditMeta(weekNumber: number) {
-  const fiberFact = getFiberFactForWeek(weekNumber);
-  const collection = getCollectionForWeek(weekNumber);
-  return {
-    fiberFact,
-    collection: {
-      ...collection,
-      editTitle: collectionEditTitle(collection.name),
-      imageUrl: collectionImageUrl(collection.name),
-    },
-  };
+export function getWeeklyEditMeta(
+  weekNumber: number,
+  products?: Array<{ composition?: string; name?: string; category?: string }>
+) {
+  return resolveWeeklyEditEditorial(weekNumber, { products });
 }
 
 export async function listMarketingSubscriberEmails(

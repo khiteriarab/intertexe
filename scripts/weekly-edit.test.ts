@@ -5,12 +5,19 @@ import path from "node:path";
 import { collectionRotation } from "../lib/collection-rotation.ts";
 import {
   assembleWeeklyEditPicks,
+  getWeeklyEditMeta,
   INTERTEXE_INSTAGRAM_URL,
   INTERTEXE_SOCIAL_HANDLE,
   INTERTEXE_TIKTOK_URL,
   WEEKLY_EDIT_MIX,
   type WeeklyEditPickInput,
 } from "../lib/weekly-edit.ts";
+import {
+  dateFromWeekNumber,
+  resolveWeeklyEditEditorial,
+  shoppingMomentForDate,
+  weekNumberFromDate,
+} from "../lib/weekly-edit-season.ts";
 import {
   collectionEditTitle,
   collectionImageUrl,
@@ -123,15 +130,20 @@ describe("Weekly Edit email", () => {
     assert.match(email, /#FAFAF8/);
     assert.match(email, /#F4F4F2/);
     assert.match(email, /color-scheme: light only/);
-    assert.match(email, /Pieces worth knowing, selected through a material-first lens/);
+    assert.match(email, /Pieces worth buying now, selected through a material-first lens/);
     assert.match(email, /The Edit/);
     assert.match(email, /New to the edit/);
     assert.match(email, /we-product-grid/);
     assert.match(email, /Shop the edit/);
     assert.doesNotMatch(email, /Explore the edit/);
-    assert.match(email, /TikTok →/);
-    assert.match(email, /Instagram →/);
-    assert.match(email, /App →/);
+    assert.doesNotMatch(email, /TikTok →/);
+    assert.doesNotMatch(email, /stackedButton/);
+    assert.match(email, /email\/icon-tiktok\.png/);
+    assert.match(email, /email\/icon-instagram\.png/);
+    assert.match(email, /email\/icon-app\.png/);
+    assert.match(email, /alt="TikTok"/);
+    assert.match(email, /alt="Instagram"/);
+    assert.match(email, /alt="App"/);
     assert.doesNotMatch(email, /Follow \{INTERTEXE_SOCIAL_HANDLE\}/);
     assert.match(email, /Material intelligence/);
     assert.match(email, /Discover /);
@@ -191,7 +203,9 @@ describe("Weekly Edit presentation", () => {
   it("titles collections as shopping edits and uses hosted campaign art", () => {
     assert.equal(collectionEditTitle("Vacation"), "The Vacation Edit");
     assert.equal(collectionEditTitle("The White Edit"), "The White Edit");
+    assert.equal(collectionEditTitle("The First Fall Edit"), "The First Fall Edit");
     assert.match(collectionImageUrl("Vacation"), /editorial-vacation/);
+    assert.match(collectionImageUrl("The First Fall Edit"), /fabric-cashmere/);
     assert.equal(displayProductName("Staud Greta Silk Dress", "Staud"), "Greta Silk Dress");
   });
 
@@ -200,10 +214,88 @@ describe("Weekly Edit presentation", () => {
     assert.equal(saleSectionHeading([{ price: 36 }, { price: 85 }]), "Under $500");
     assert.equal(saleSectionHeading([{ price: 695 }]), "On sale");
     assert.equal(
-      compactFiberCopy("First sentence. Second sentence. Third stays out."),
-      "First sentence. Second sentence."
+      compactFiberCopy("First sentence. Second sentence. Third stays. Fourth drops."),
+      "First sentence. Second sentence. Third stays."
     );
     assert.equal(fiberDiscoverHref("Wool"), "https://www.intertexe.com/shop?fiber=wool");
+    assert.equal(fiberDiscoverHref("Cashmere"), "https://www.intertexe.com/shop?fiber=cashmere");
+  });
+});
+
+describe("Weekly Edit seasonal editorial", () => {
+  it("uses cashmere and The First Fall Edit in late August, not generic wool trivia", () => {
+    const august = new Date(Date.UTC(2026, 7, 21));
+    const week = weekNumberFromDate(august);
+    assert.equal(week, 2955);
+    assert.equal(dateFromWeekNumber(2955).toISOString().slice(0, 10), "2026-08-20");
+
+    const editorial = getWeeklyEditMeta(week, [
+      { name: "Greta Silk Dress", composition: "100% Silk", category: "Dresses" },
+    ]);
+    assert.equal(shoppingMomentForDate(august).id, "first-fall");
+    assert.equal(editorial.collection.name, "The First Fall Edit");
+    assert.equal(
+      editorial.collection.subline,
+      "Cashmere, lightweight knits and transitional pieces worth buying now."
+    );
+    assert.equal(editorial.fiberFact.fiber, "Cashmere");
+    assert.equal(editorial.fiberFact.headline, "Cashmere season starts now.");
+    assert.deepEqual(editorial.fiberFact.traits, ["SOFTNESS", "WARMTH", "FIBER QUALITY"]);
+    assert.match(editorial.fiberFact.fact, /Not all cashmere is created equal/);
+    assert.match(editorial.fiberFact.fact, /pills after a season/);
+    assert.equal(compactFiberCopy(editorial.fiberFact.fact), editorial.fiberFact.fact);
+    assert.doesNotMatch(editorial.fiberFact.headline, /year-round/i);
+    assert.doesNotMatch(editorial.fiberFact.fact, /year-round/i);
+    assert.match(editorial.collection.url, /fiber=cashmere/);
+    assert.match(editorial.collection.imageUrl, /fabric-cashmere/);
+  });
+
+  it("moves the merchandising theme with the calendar instead of week-modulo rotation", () => {
+    const coats = resolveWeeklyEditEditorial(weekNumberFromDate(new Date(Date.UTC(2026, 9, 15))));
+    assert.equal(coats.moment.id, "coats");
+    assert.equal(coats.collection.name, "The Coat Edit");
+    assert.equal(coats.fiberFact.fiber, "Wool");
+    assert.match(coats.fiberFact.headline, /Coat season/i);
+
+    const holiday = resolveWeeklyEditEditorial(weekNumberFromDate(new Date(Date.UTC(2026, 11, 10))));
+    assert.equal(holiday.moment.id, "holiday");
+    assert.equal(holiday.collection.name, "The Holiday Edit");
+    assert.equal(holiday.fiberFact.fiber, "Silk");
+
+    const spring = resolveWeeklyEditEditorial(weekNumberFromDate(new Date(Date.UTC(2026, 3, 10))));
+    assert.equal(spring.moment.id, "spring");
+    assert.equal(spring.collection.name, "The Spring Edit");
+    assert.equal(spring.fiberFact.fiber, "Cotton");
+
+    const summer = resolveWeeklyEditEditorial(weekNumberFromDate(new Date(Date.UTC(2026, 6, 8))));
+    assert.equal(summer.moment.id, "summer");
+    assert.equal(summer.collection.name, "Vacation");
+    assert.equal(summer.fiberFact.fiber, "Linen");
+    assert.match(summer.collection.subline, /linen, silk and cotton/i);
+  });
+
+  it("can follow a later-window fiber when the week's products have it and not the lead", () => {
+    const lateFirstFall = weekNumberFromDate(new Date(Date.UTC(2026, 8, 20)));
+    const editorial = resolveWeeklyEditEditorial(lateFirstFall, {
+      products: [{ name: "Silk Shirt", composition: "100% Silk", category: "Tops" }],
+    });
+    assert.equal(editorial.moment.id, "first-fall");
+    assert.equal(editorial.collection.name, "The First Fall Edit");
+    assert.equal(editorial.fiberFact.fiber, "Silk");
+    assert.match(editorial.fiberFact.headline, /Silk is how summer becomes fall/);
+  });
+
+  it("keeps seasonal copy in the engine, not a week-modulo trivia list", () => {
+    const season = fs.readFileSync(path.join(process.cwd(), "lib/weekly-edit-season.ts"), "utf8");
+    const weekly = fs.readFileSync(path.join(process.cwd(), "lib/weekly-edit.ts"), "utf8");
+    const facts = fs.readFileSync(path.join(process.cwd(), "lib/fiber-facts.ts"), "utf8");
+    assert.match(season, /shoppingMomentForDate/);
+    assert.match(season, /Cashmere season starts now/);
+    assert.doesNotMatch(season, /year-round/i);
+    assert.doesNotMatch(season, /Why wool works year-round/);
+    assert.doesNotMatch(facts, /weekNumber % /);
+    assert.doesNotMatch(weekly, /getFiberFactForWeek/);
+    assert.match(weekly, /preferFibers/);
   });
 });
 
