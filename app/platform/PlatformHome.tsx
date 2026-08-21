@@ -32,25 +32,6 @@ export const COMPARISON_REVIEWED = "19 August 2026";
 const FLOW = ["Understand", "Compare", "Act"] as const;
 const VALUE_CHAIN = "PRODUCT DATA → MATERIAL INTELLIGENCE → BUSINESS INSIGHTS → DIGITAL PRODUCT PASSPORT";
 
-const RETAIN = [
-  {
-    title: "Manage",
-    copy: "Your material and product information stays organized and continuously updated in one workspace.",
-  },
-  {
-    title: "Improve",
-    copy: "INTERTEXE keeps identifying gaps, conflicts and missing information as the catalog changes.",
-  },
-  {
-    title: "Compare",
-    copy: "Understand your material strategy relative to peers and, over time, observed consumer demand.",
-  },
-  {
-    title: "Publish",
-    copy: "Generate, host and update Digital Product Passports from the same underlying data — when you are ready.",
-  },
-];
-
 const COMPARISON: ComparisonRow[] = [
   {
     capability: "Connected stack",
@@ -228,6 +209,7 @@ const STORY_TABS: StoryTab[] = [
     ],
     caption: "Illustrative example · Filters: market segment, category, geography, price band, material, peer group",
     points: [
+      "Understand your material strategy relative to peers and, over time, observed consumer demand.",
       "Peer group, never a named competitor dump",
       "INTERTEXE consumer signal is coming / developing",
     ],
@@ -245,6 +227,8 @@ const STORY_TABS: StoryTab[] = [
       "When a tracked requirement updates, INTERTEXE evaluates impact across the catalog. This is preparation status and required-field completeness — not legal certification, an official DPP score, or a guarantee of compliance. Brands do not start over.",
     ],
     points: [
+      "INTERTEXE keeps identifying gaps, conflicts and missing information as the catalog changes.",
+      "Generate, host and update Digital Product Passports from the same underlying data — when you are ready.",
       "The INTERTEXE scanner is not required",
       "Hosted or brand-owned passport experiences",
       "Requirements change. The catalog should know.",
@@ -261,7 +245,11 @@ const STORY_TABS: StoryTab[] = [
     more: [
       "The same Dress 8721 material record can power a brand’s own site and passport, then appear in INTERTEXE consumer discovery. Consumers do not need the INTERTEXE app to open a passport.",
     ],
-    points: ["Chrome Fabric Scanner + iPhone shop-by-material", "Same material intelligence, two surfaces"],
+    points: [
+      "Your material and product information stays organized and continuously updated in one workspace.",
+      "Chrome Fabric Scanner + iPhone shop-by-material",
+      "Same material intelligence, two surfaces",
+    ],
     href: "/shop",
     cta: "Open the consumer catalog",
   },
@@ -401,25 +389,6 @@ export function PlatformHome() {
       <EcosystemStage />
 
       <UnderstandCatalog />
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Why brands keep INTERTEXE</Eyebrow>
-        <Heading className="mb-4">A living system, not a one-off passport file.</Heading>
-        <Body className="max-w-2xl mb-10">
-          After the first passports, the question should not be “why are we still paying INTERTEXE?” The catalog
-          stays in a material intelligence system that merchandising and sustainability teams use every week.
-        </Body>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {RETAIN.map((item) => (
-            <div key={item.title} className="border-t border-[#e8e3da] pt-5">
-              <h3 className="mb-2" style={SERIF}>
-                {item.title}
-              </h3>
-              <p className="text-sm text-[#5c5854] leading-relaxed">{item.copy}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">

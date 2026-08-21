@@ -11,7 +11,7 @@ import {
   RegulatoryPreview,
 } from "./workspace-previews";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
-import { SERIF, SoftwareStage } from "./platform-ui";
+import { LIVING_SYSTEM, RETAIN, DISCOVER_STORY } from "./living-system";
 
 export type WorkspaceFrame = {
   id: string;
@@ -105,11 +105,25 @@ export const WORKSPACE_NEEDS = [
   },
 ] as const;
 
-export function WorkspaceGallery({ frames }: { frames: WorkspaceFrame[] }) {
-  const [activeId, setActiveId] = useState(frames[0]?.id ?? "");
-  const current = frames.find((frame) => frame.id === activeId) ?? frames[0];
+export function WorkspaceGallery({
+  frames,
+  activeId,
+  onActiveIdChange,
+}: {
+  frames: WorkspaceFrame[];
+  activeId?: string;
+  onActiveIdChange?: (id: string) => void;
+}) {
+  const [internalId, setInternalId] = useState(frames[0]?.id ?? "");
+  const active = activeId ?? internalId;
+  const current = frames.find((frame) => frame.id === active) ?? frames[0];
 
   if (!current) return null;
+
+  const select = (id: string) => {
+    onActiveIdChange?.(id);
+    if (activeId === undefined) setInternalId(id);
+  };
 
   return (
     <SoftwareStage title={current.label} copy={current.lead}>
@@ -128,7 +142,7 @@ export function WorkspaceGallery({ frames }: { frames: WorkspaceFrame[] }) {
               aria-selected={selected}
               id={`workspace-tab-${frame.id}`}
               aria-controls={`workspace-panel-${current.id}`}
-              onClick={() => setActiveId(frame.id)}
+              onClick={() => select(frame.id)}
               className={`shrink-0 text-[12px] sm:text-[13px] px-3 py-2 min-h-[40px] rounded-md ${
                 selected ? "bg-[#152238] text-white" : "bg-white/70 text-[#152238] hover:bg-white"
               }`}
@@ -197,10 +211,22 @@ function NeedIcon({ index }: { index: number }) {
 
 export function DiscoverWorkspace() {
   const frames = workspaceFrames();
+  const [storyId, setStoryId] = useState<(typeof DISCOVER_STORY)[number]["id"]>("compare");
+  const [frameId, setFrameId] = useState(DISCOVER_STORY[0].frameId);
+  const story = DISCOVER_STORY.find((item) => item.id === storyId) ?? DISCOVER_STORY[0];
+
+  const selectStory = (id: (typeof DISCOVER_STORY)[number]["id"]) => {
+    const next = DISCOVER_STORY.find((item) => item.id === id) ?? DISCOVER_STORY[0];
+    setStoryId(next.id);
+    setFrameId(next.frameId);
+  };
+
   return (
     <div className="bg-gradient-to-br from-[#dce7f2] via-[#f7f5f1] to-[#e8eef4]">
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 md:pt-20 pb-10">
-        <p className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase text-[#6b8499] mb-5">Workspace</p>
+        <p className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase text-[#6b8499] mb-5">
+          Discover · /platform/discover
+        </p>
         <h1
           className="text-[2.15rem] sm:text-5xl md:text-[3.2rem] font-light leading-[1.12] text-[#152238] max-w-3xl mb-5"
           style={SERIF}
@@ -232,6 +258,63 @@ export function DiscoverWorkspace() {
       </section>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-10 sm:pb-16">
+        <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{LIVING_SYSTEM.eyebrow}</p>
+        <h2 className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#152238] max-w-3xl mb-4" style={SERIF}>
+          {LIVING_SYSTEM.title}
+        </h2>
+        <p className="max-w-2xl text-[15px] text-[#5c5854] font-light leading-relaxed mb-8">{LIVING_SYSTEM.body}</p>
+
+        <div className="rounded-2xl border border-[#d5dee8] bg-white px-5 py-8 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(21,34,56,0.08)] mb-10">
+          <div
+            role="tablist"
+            aria-label="Compare, act, engage"
+            className="flex justify-center gap-2 sm:gap-10 overflow-x-auto mb-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {DISCOVER_STORY.map((item) => {
+              const selected = item.id === story.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => selectStory(item.id)}
+                  className={`shrink-0 min-h-[44px] px-2 sm:px-3 text-[12px] sm:text-sm tracking-[0.14em] uppercase border-b-2 ${
+                    selected
+                      ? "border-[#152238] text-[#152238]"
+                      : "border-transparent text-[#8a847c] hover:text-[#152238]"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+          <h3 className="text-xl sm:text-2xl text-[#152238] mb-3" style={SERIF}>
+            {story.title}
+          </h3>
+          <p className="text-[15px] text-[#5c5854] font-light leading-relaxed max-w-3xl mb-3">{story.copy}</p>
+          <p className="text-xs text-[#8a847c] leading-relaxed mb-8">{story.note}</p>
+          <p className="text-[10px] tracking-[0.18em] uppercase text-[#6b8499] mb-2">Functionalities</p>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#6b8499] mb-4">
+            → The workspace mockup below follows this tab. Click a surface to change the INTERTEXE mockup.
+          </p>
+          <WorkspaceGallery frames={frames} activeId={frameId} onActiveIdChange={setFrameId} />
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {RETAIN.map((item) => (
+            <div key={item.id} className="border-t border-[#d5dee8] pt-5">
+              <h3 className="mb-2 text-[#152238]" style={SERIF}>
+                {item.title}
+              </h3>
+              <p className="text-sm text-[#5c5854] leading-relaxed">{item.copy}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-10 sm:pb-16">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
             <p className="text-[10px] tracking-[0.18em] uppercase text-[#6b8499] mb-3">Needs</p>
@@ -259,14 +342,6 @@ export function DiscoverWorkspace() {
             </article>
           ))}
         </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-16 sm:pb-24">
-        <p className="text-[10px] tracking-[0.18em] uppercase text-[#6b8499] mb-3 text-center">Functionalities</p>
-        <h2 className="text-[1.75rem] sm:text-3xl font-light text-[#152238] text-center mb-10" style={SERIF}>
-          Click a surface. The INTERTEXE mockup changes.
-        </h2>
-        <WorkspaceGallery frames={frames} />
       </section>
     </div>
   );

@@ -197,8 +197,10 @@ describe("Platform material-intelligence page", () => {
     assert.match(discover, /DiscoverWorkspace/);
     assert.match(gallery, /WorkspaceHeroPreview/);
     assert.match(gallery, /RegulatoryPreview/);
-    assert.match(gallery, /onClick=\{\(\) => setActiveId\(frame\.id\)\}/);
+    assert.match(gallery, /onClick=\{\(\) => select\(frame\.id\)\}/);
     assert.match(gallery, /Functionalities/);
+    assert.match(gallery, /A living system, not a one-off passport file/);
+    assert.match(gallery, /\/platform\/discover/);
     const catalogAt = home.indexOf("<CatalogMarquee");
     const workspaceAt = home.indexOf("One workspace for material intelligence");
     assert.ok(workspaceAt >= 0 && catalogAt > workspaceAt);
