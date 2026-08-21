@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendCustomerEmail } from "../../../../lib/resend-customer";
-import { EMAIL_REPLY_TO, EMAIL_TYPES } from "../../../../lib/email-constants";
+import { EMAIL_TYPES, PLATFORM_LEAD_CC, PLATFORM_LEAD_TO } from "../../../../lib/email-constants";
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
 import { clientIpFromHeaders, demoRateLimit } from "../../../../lib/platform-demo-rate-limit";
 
 export const dynamic = "force-dynamic";
 
 const INTENTS = new Set(["snapshot", "founding_pilot", "api_access"]);
+const COMPANY_TYPES = new Set(["brand", "retailer", "supplier", "other"]);
 
 export function cleanLeadField(v: unknown, max = 200) {
   return String(v || "").trim().slice(0, max);
@@ -25,6 +26,7 @@ export function parseLeadBody(body: Record<string, unknown>) {
   if (!INTENTS.has(intent)) {
     return { error: "Unknown request type." as const };
   }
+  const companyTypeRaw = cleanLeadField(body.company_type, 40);
   return {
     row: {
       first_name: firstName,
@@ -38,6 +40,11 @@ export function parseLeadBody(body: Record<string, unknown>) {
       catalog_system: cleanLeadField(body.catalog_system, 120) || null,
       intent,
       source_cta: cleanLeadField(body.source_cta, 80) || null,
+    },
+    extras: {
+      phone: cleanLeadField(body.phone, 40) || null,
+      country: cleanLeadField(body.country, 80) || null,
+      company_type: COMPANY_TYPES.has(companyTypeRaw) ? companyTypeRaw : null,
     },
   };
 }
@@ -67,6 +74,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
   const row = parsed.row;
+  const extras = parsed.extras;
   const { first_name: firstName, last_name: lastName, email, company, intent } = row;
 
   const supabase = getServerSupabase();
@@ -92,20 +100,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not store this request." }, { status: 500 });
   }
 
-  const salesTo = process.env.PLATFORM_SALES_EMAIL || EMAIL_REPLY_TO;
+  const salesTo = process.env.PLATFORM_SALES_EMAIL || PLATFORM_LEAD_TO;
+  const salesCc =
+    salesTo.toLowerCase() === PLATFORM_LEAD_CC.toLowerCase() ? undefined : PLATFORM_LEAD_CC;
   const intentLabel =
     intent === "founding_pilot"
       ? "Founding Pilot"
       : intent === "api_access"
         ? "Platform access"
         : "10-product snapshot";
+  const companyTypeLabel =
+    extras.company_type === "brand"
+      ? "Fashion or textile brand"
+      : extras.company_type === "retailer"
+        ? "Retailer / wholesaler"
+        : extras.company_type === "supplier"
+          ? "Manufacturer / supplier"
+          : extras.company_type === "other"
+            ? "Other"
+            : "—";
 
   await sendCustomerEmail({
     to: salesTo,
+    cc: salesCc,
+    replyTo: email,
     subject: `Platform lead: ${intentLabel} — ${company}`,
     emailType: EMAIL_TYPES.PLATFORM_LEAD,
     html: `<p>${firstName} ${lastName} (${email}) at ${company} requested ${intentLabel}.</p>
-<p>Role: ${row.role || "—"}<br/>Website: ${row.company_website || "—"}<br/>Products: ${row.product_count || "—"}<br/>Sells into EU: ${row.sells_into_eu || "—"}<br/>Catalog: ${row.catalog_system || "—"}<br/>CTA: ${row.source_cta || "—"}</p>
+<p>Role: ${row.role || "—"}<br/>Phone: ${extras.phone || "—"}<br/>Country / region: ${extras.country || "—"}<br/>Company type: ${companyTypeLabel}<br/>Website: ${row.company_website || "—"}<br/>Products: ${row.product_count || "—"}<br/>Sells into EU: ${row.sells_into_eu || "—"}<br/>Catalog: ${row.catalog_system || "—"}<br/>CTA: ${row.source_cta || "—"}</p>
 <p>No catalog file was accepted via the public form.</p>`,
     metadata: { intent, company },
   }).catch(() => {});
