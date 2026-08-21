@@ -51,12 +51,15 @@ describe("Platform material-intelligence page", () => {
   });
 
   it("does not overclaim certification or invent missing data", () => {
-    assert.match(home, /does not fabricate product data/i);
-    assert.match(home, /Do consumers need the INTERTEXE app/);
-    assert.match(home, /The INTERTEXE scanner is not required/);
+    const faq = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformFaq.tsx"), "utf8");
+    assert.match(faq, /does not fabricate product data/i);
+    assert.match(faq, /Do consumers need the INTERTEXE app/);
+    assert.match(faq, /The INTERTEXE scanner is not required/);
     assert.doesNotMatch(home, /EU Certified/);
     assert.doesNotMatch(home, /Guaranteed Compliant/);
     assert.doesNotMatch(home, /Official DPP Score/);
+    assert.doesNotMatch(faq, /EU Certified/);
+    assert.doesNotMatch(faq, /Official DPP Score/);
   });
 
   it("compares emphasis without unverified competitor gaps", () => {
@@ -81,10 +84,14 @@ describe("Platform material-intelligence page", () => {
     assert.match(previews, /INTERTEXE consumer signal/i);
   });
 
-  it("keeps the FAQ foldable", () => {
-    assert.match(home, /<details key=\{item\.q\} name="platform-faq"/);
-    assert.match(home, /Does INTERTEXE generate the Digital Product Passport/);
-    assert.match(home, /Is INTERTEXE a Digital Product Passport company/);
+  it("keeps the FAQ foldable on Discover", () => {
+    const faq = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformFaq.tsx"), "utf8");
+    const discover = fs.readFileSync(path.join(process.cwd(), "app/platform/discover/page.tsx"), "utf8");
+    assert.match(faq, /<details key=\{item\.q\} name="platform-faq"/);
+    assert.match(faq, /Does INTERTEXE generate the Digital Product Passport/);
+    assert.match(faq, /Is INTERTEXE a Digital Product Passport company/);
+    assert.match(discover, /PlatformFaq/);
+    assert.doesNotMatch(home, /name="platform-faq"/);
   });
 
   it("recomposes the page for small screens without dropping the desktop spread", () => {
