@@ -17,6 +17,7 @@ import {
 } from "./platform-ui";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
 import { CatalogMarquee } from "./CatalogMarquee";
+import { ResourceCarousel } from "./ResourceCarousel";
 import { StoryTabs, type StoryTab } from "./StoryTabs";
 import { ChromeExtensionStage, HeroProductStage } from "./product-stages";
 import { EcosystemStage } from "./EcosystemStage";
@@ -319,6 +320,8 @@ export function PlatformHome() {
       </section>
 
       <EcosystemStage />
+
+      <ResourceCarousel />
 
       <CatalogMarquee />
 

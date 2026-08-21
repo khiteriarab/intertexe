@@ -139,9 +139,9 @@ describe("Platform material-intelligence page", () => {
     assert.doesNotMatch(home, /Download on iPhone/);
     assert.match(home, /StoryTabs/);
     assert.match(home, /PricingPlans/);
-    assert.doesNotMatch(home, /ResourceCarousel/);
+    assert.match(home, /ResourceCarousel/);
     assert.match(ecosystem, /Your product intelligence, wherever your customers shop/);
-    assert.match(ecosystem, /See how the ecosystem connects/);
+    assert.match(ecosystem, /md:grid-cols-3/);
     assert.match(ecosystem, /ecosystem-brand-channels\.jpg/);
     assert.match(ecosystem, /Dress 8721/);
     assert.doesNotMatch(ecosystem, /Download on iPhone/);
@@ -173,6 +173,8 @@ describe("Platform material-intelligence page", () => {
     assert.match(carousel, /surface-chrome-laptop\.jpg/);
     assert.match(carousel, /surface-iphone-scanner\.jpg/);
     assert.match(carousel, /surface-platform-laptop\.jpg/);
+    assert.doesNotMatch(carousel, /210vh/);
+    assert.doesNotMatch(carousel, /lg:sticky/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/surface-chrome-laptop.jpg")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/surface-iphone-scanner.jpg")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/surface-platform-laptop.jpg")));
@@ -218,11 +220,13 @@ describe("Platform material-intelligence page", () => {
     const catalogAt = home.indexOf("<CatalogMarquee");
     const storyAt = home.indexOf("Platform story");
     const ecosystemAt = home.indexOf("<EcosystemStage");
+    const surfacesAt = home.indexOf("<ResourceCarousel");
     const understandAt = home.indexOf("<UnderstandCatalog");
     const demoAt = home.indexOf("Live demo");
     const pricingAt = home.indexOf("<PricingPlans");
     assert.ok(storyAt >= 0 && storyAt < ecosystemAt);
-    assert.ok(ecosystemAt >= 0 && ecosystemAt < catalogAt);
+    assert.ok(ecosystemAt >= 0 && ecosystemAt < surfacesAt);
+    assert.ok(surfacesAt >= 0 && surfacesAt < catalogAt);
     assert.ok(catalogAt >= 0 && catalogAt < understandAt);
     assert.ok(understandAt >= 0 && understandAt < demoAt);
     assert.ok(demoAt >= 0 && demoAt < pricingAt);
