@@ -74,7 +74,7 @@ const METRICS = [
 ] as const;
 
 const FIBERS = [
-  ["Cotton", 36, "#c5d4c8"],
+  ["Cotton", 36, "#d9cbb8"],
   ["Polyester", 28, "#7d9bb8"],
   ["Viscose", 13, "#9c7b8b"],
   ["Wool", 8, "#c4a574"],

@@ -242,4 +242,37 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(walkthrough, /Guaranteed Compliant/);
     assert.doesNotMatch(previews, /Official DPP Score/);
   });
+
+  it("puts a Barcelona office and a demo form on /platform/demo", () => {
+    const page = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
+    const book = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoBookSection.tsx"), "utf8");
+    const office = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoOfficeSection.tsx"), "utf8");
+    const form = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformLeadForm.tsx"), "utf8");
+    const leads = fs.readFileSync(path.join(process.cwd(), "app/api/v1/leads/route.ts"), "utf8");
+    const constants = fs.readFileSync(path.join(process.cwd(), "lib/email-constants.ts"), "utf8");
+    const chrome = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformChrome.tsx"), "utf8");
+    const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
+    assert.match(page, /DemoBookSection/);
+    assert.match(page, /DemoOfficeSection/);
+    assert.match(page, /bg-\[#152238\]/);
+    assert.match(book, /sourceCta="demo_page"/);
+    assert.match(book, /variant="demo"/);
+    assert.match(form, /Do not attach confidential catalogs/);
+    assert.doesNotMatch(form, /type=["']file["']/);
+    assert.match(office, /Barcelona, Spain/);
+    assert.match(office, /khiteri@intertexe\.com/);
+    assert.match(office, /info@intertexe\.com/);
+    assert.doesNotMatch(office, /Fairly Made/);
+    assert.doesNotMatch(office, /Boulevard|Calle |Carrer |Via /);
+    assert.doesNotMatch(page, /Fairly Made/);
+    assert.doesNotMatch(page, /#004037/);
+    assert.match(chrome, /active === "platform" \|\| active === "demo"/);
+    assert.match(previews, /Navy = your brand/);
+    assert.doesNotMatch(previews, /Forest = your brand/);
+    assert.match(constants, /PLATFORM_LEAD_TO = "khiteri@intertexe\.com"/);
+    assert.match(constants, /PLATFORM_LEAD_CC = "info@intertexe\.com"/);
+    assert.match(leads, /PLATFORM_LEAD_TO/);
+    assert.match(leads, /cc: salesCc/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/barcelona-platform-office.jpg")));
+  });
 });

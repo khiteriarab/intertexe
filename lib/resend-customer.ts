@@ -15,6 +15,7 @@ export type CustomerEmailSendInput = {
   userId?: string | null;
   from?: string;
   replyTo?: string;
+  cc?: string | string[];
   metadata?: Record<string, unknown>;
   /** When set, update this existing pending delivery instead of inserting. */
   deliveryId?: string;
@@ -66,6 +67,7 @@ export async function sendCustomerEmail(
       subject: input.subject,
       html: input.html,
       replyTo: input.replyTo || EMAIL_REPLY_TO,
+      ...(input.cc ? { cc: input.cc } : {}),
     });
 
     if (error) {

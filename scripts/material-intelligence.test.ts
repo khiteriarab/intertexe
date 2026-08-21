@@ -351,6 +351,22 @@ describe("Lead capture", () => {
     if ("row" in ok) {
       assert.equal(ok.row.email, "ada@brand.com");
       assert.equal(ok.row.intent, "snapshot");
+      assert.equal(ok.extras.phone, null);
+    }
+    const demoLead = parseLeadBody({
+      first_name: "Ada",
+      last_name: "Lovelace",
+      email: "ada@brand.com",
+      company: "Brand",
+      intent: "snapshot",
+      phone: "+34 600 000 000",
+      country: "Spain",
+      company_type: "brand",
+    });
+    assert.equal("row" in demoLead, true);
+    if ("row" in demoLead) {
+      assert.equal(demoLead.extras.company_type, "brand");
+      assert.equal(demoLead.extras.country, "Spain");
     }
   });
 });
