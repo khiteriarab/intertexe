@@ -202,6 +202,7 @@ describe("Platform material-intelligence page", () => {
     assert.match(home, />Discover</);
     assert.doesNotMatch(home, /See INTERTEXE analyze a real catalog/);
     assert.match(discover, /DiscoverWorkspace/);
+    assert.match(gallery, /import \{ SERIF, SoftwareStage \} from "\.\/platform-ui"/);
     assert.match(gallery, /WorkspaceHeroPreview/);
     assert.match(gallery, /RegulatoryPreview/);
     const living = fs.readFileSync(path.join(process.cwd(), "app/platform/living-system.ts"), "utf8");

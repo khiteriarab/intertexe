@@ -11,6 +11,7 @@ import {
   RegulatoryPreview,
 } from "./workspace-previews";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
+import { SERIF, SoftwareStage } from "./platform-ui";
 import { LIVING_SYSTEM, RETAIN, DISCOVER_STORY } from "./living-system";
 
 export type WorkspaceFrame = {
