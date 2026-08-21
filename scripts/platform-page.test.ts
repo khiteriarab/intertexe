@@ -150,6 +150,10 @@ describe("Platform material-intelligence page", () => {
     assert.match(stages, /Better-material matches/);
     assert.match(stages, /Shop by material/);
     assert.match(tabs, /Understand, compare, act, engage/);
+    assert.match(home, /Know how your material strategy compares/);
+    assert.match(home, /Then Digital Product Passports become almost obvious/);
+    assert.match(home, /MaterialPositionTable/);
+    assert.match(home, /Requirements change. The catalog should know/);
     assert.match(carousel, /Latest product surfaces/);
     assert.match(carousel, /Chrome extension/);
     assert.match(carousel, /iPhone app/);

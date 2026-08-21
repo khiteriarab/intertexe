@@ -11,6 +11,8 @@ export type StoryTab = {
   eyebrow: string;
   title: string;
   copy: string;
+  more?: string[];
+  caption?: string;
   points: string[];
   href: string;
   cta: string;
@@ -59,19 +61,28 @@ export function StoryTabs({
         role="tabpanel"
         id={`story-panel-${current.id}`}
         aria-labelledby={`story-tab-${current.id}`}
-        className="grid lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-10 items-start"
+        className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-10 items-start itx-understand-copy"
+        key={current.id}
       >
         <div>
           <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{current.eyebrow}</p>
           <h3 className="text-2xl sm:text-3xl font-light mb-4" style={SERIF}>
             {current.title}
           </h3>
-          <Body className="mb-6">{current.copy}</Body>
-          <ul className="space-y-2 mb-8">
+          <Body className="mb-4">{current.copy}</Body>
+          {current.more?.map((paragraph) => (
+            <p key={paragraph} className="text-[15px] text-[#5c5854] font-light leading-relaxed mb-4">
+              {paragraph}
+            </p>
+          ))}
+          {current.caption ? (
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">{current.caption}</p>
+          ) : null}
+          <ul className="space-y-3 mb-8">
             {current.points.map((point) => (
               <li key={point} className="flex items-start gap-2 text-sm text-[#161513]">
-                <span className="text-[#152238]" aria-hidden="true">
-                  ✓
+                <span className="text-[#152238] mt-0.5 shrink-0" aria-hidden="true">
+                  →
                 </span>
                 <span>{point}</span>
               </li>

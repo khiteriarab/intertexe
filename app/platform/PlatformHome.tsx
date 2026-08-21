@@ -221,8 +221,16 @@ const STORY_TABS: StoryTab[] = [
     label: "Compare",
     eyebrow: "Compare",
     title: "Know how your material strategy compares",
-    copy: "See natural vs synthetic share, completeness and passport readiness against an appropriate peer group. Observed consumer demand is coming / developing.",
-    points: ["Peer group, never a named competitor dump", "INTERTEXE consumer signal is coming / developing"],
+    copy: "INTERTEXE does not only tell a brand about itself. It shows how the material mix, data quality and passport readiness sit against an appropriate peer group. Merchandising, sustainability and product teams can ask: are competitors using more linen than us? How synthetic is our assortment? Where is the catalog weaker?",
+    more: [
+      "Observed consumer demand is on the roadmap. It is not a live statistical product yet. That last piece is something a pure B2B DPP provider cannot simply manufacture — it comes from building the consumer side of INTERTEXE.",
+      "Individual customer data is never exposed. Enterprise information enters aggregates only where contractually permitted and anonymized.",
+    ],
+    caption: "Illustrative example · Filters: market segment, category, geography, price band, material, peer group",
+    points: [
+      "Peer group, never a named competitor dump",
+      "INTERTEXE consumer signal is coming / developing",
+    ],
     href: "/platform/demo",
     cta: "Open the benchmark in the live demo",
   },
@@ -231,8 +239,16 @@ const STORY_TABS: StoryTab[] = [
     label: "Act",
     eyebrow: "Act",
     title: "Then Digital Product Passports become almost obvious",
-    copy: "Once the record is structured, publish it. Consumers do not need the INTERTEXE app. This is not legal certification.",
-    points: ["The INTERTEXE scanner is not required", "Hosted or brand-owned passport experiences"],
+    copy: "Once the catalog is structured and validated, the brand should not have to send it somewhere else to create a Digital Product Passport. INTERTEXE says: you already have the data here. Publish it.",
+    more: [
+      "Textile apparel is a priority product group under the EU Ecodesign for Sustainable Products Regulation. INTERTEXE determines what is still missing for the applicable requirements, generates the passport record and product identity, and hosts the QR experience — or serves it through an API. It is not legal advice or official certification.",
+      "When a tracked requirement updates, INTERTEXE evaluates impact across the catalog. This is preparation status and required-field completeness — not legal certification, an official DPP score, or a guarantee of compliance. Brands do not start over.",
+    ],
+    points: [
+      "The INTERTEXE scanner is not required",
+      "Hosted or brand-owned passport experiences",
+      "Requirements change. The catalog should know.",
+    ],
     href: "/platform/request?intent=snapshot&cta=story_act",
     cta: "See INTERTEXE with your own products",
   },
@@ -242,6 +258,9 @@ const STORY_TABS: StoryTab[] = [
     eyebrow: "Consumer loop",
     title: "Direct from consumer to the same material record",
     copy: "Shoppers already use the Chrome extension and iPhone app. That demand signal is on the roadmap for brand workspaces — it is not a live statistical product yet.",
+    more: [
+      "The same Dress 8721 material record can power a brand’s own site and passport, then appear in INTERTEXE consumer discovery. Consumers do not need the INTERTEXE app to open a passport.",
+    ],
     points: ["Chrome Fabric Scanner + iPhone shop-by-material", "Same material intelligence, two surfaces"],
     href: "/shop",
     cta: "Open the consumer catalog",
@@ -336,16 +355,37 @@ export function PlatformHome() {
               </>
             ),
             compare: (
-              <>
-                <PlatformGraphic slot="compareBenchmark" className="mb-6" />
+              <div className="space-y-6">
+                <PlatformGraphic slot="compareBenchmark" className="mb-0" />
                 {PLATFORM_GRAPHICS.compareBenchmark.ready ? null : <BenchmarkPreview className="mb-0" />}
-              </>
+                <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">
+                  Illustrative example · Your brand vs peer group
+                </p>
+                <MaterialPositionTable compact />
+              </div>
             ),
             act: (
-              <>
-                <PlatformGraphic slot="actPassport" className="mb-6" />
+              <div className="space-y-6">
+                <PlatformGraphic slot="actPassport" className="mb-0" />
                 {PLATFORM_GRAPHICS.actPassport.ready ? null : <PassportPreview className="mb-0" />}
-              </>
+                <Frame label="Requirement update" caption="Illustrative example. Preparation status — not certification.">
+                  <p className="text-sm mb-1">EU / Textiles</p>
+                  <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
+                    10,000 products evaluated
+                  </p>
+                  <p className="text-sm">9,614 — no action</p>
+                  <p className="text-sm">311 — missing data</p>
+                  <p className="text-sm mb-4">75 — review required</p>
+                  <a
+                    href={EU_TEXTILE}
+                    className="text-[10px] tracking-[0.12em] uppercase text-[#152238] underline underline-offset-4"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    EU textile and apparel DPP
+                  </a>
+                </Frame>
+              </div>
             ),
             engage: (
               <div className="space-y-8">
@@ -361,74 +401,6 @@ export function PlatformHome() {
       <EcosystemStage />
 
       <UnderstandCatalog />
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Compare</Eyebrow>
-        <Heading className="mb-4">Know how your material strategy compares.</Heading>
-        <Body className="max-w-2xl mb-8">
-          INTERTEXE does not only tell a brand about itself. It shows how the material mix, data quality and
-          passport readiness sit against an appropriate peer group. Merchandising, sustainability and product teams
-          can ask: are competitors using more linen than us? How synthetic is our assortment? Where is the catalog
-          weaker?
-        </Body>
-        <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-4">
-          Illustrative example · Filters: market segment, category, geography, price band, material, peer group
-        </p>
-        <p className="text-sm text-[#5c5854] leading-relaxed max-w-2xl mb-4">
-          Observed consumer demand is on the roadmap. It is not a live statistical product yet. That last piece is
-          something a pure B2B DPP provider cannot simply manufacture — it comes from building the consumer side of
-          INTERTEXE.
-        </p>
-        <p className="text-xs text-[#8a847c] max-w-3xl mb-8">
-          Individual customer data is never exposed. Enterprise information enters aggregates only where
-          contractually permitted and anonymized.
-        </p>
-        <MaterialPositionTable />
-      </section>
-
-      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>Act</Eyebrow>
-          <Heading className="mb-4">Then Digital Product Passports become almost obvious.</Heading>
-          <Body className="max-w-2xl mb-8">
-            Once the catalog is structured and validated, the brand should not have to send it somewhere else to
-            create a Digital Product Passport. INTERTEXE says: you already have the data here. Publish it.
-          </Body>
-          <p className="text-sm text-[#5c5854] mb-10 max-w-2xl leading-relaxed">
-            Textile apparel is a priority product group under the EU Ecodesign for Sustainable Products Regulation.
-            INTERTEXE determines what is still missing for the applicable requirements, generates the passport
-            record and product identity, and hosts the QR experience — or serves it through an API. It is not legal
-            advice or official certification.
-          </p>
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <h3 className="text-2xl mb-4" style={SERIF}>
-                Requirements change. The catalog should know.
-              </h3>
-              <Body>
-                When a tracked requirement updates, INTERTEXE evaluates impact across the catalog. This is
-                preparation status and required-field completeness — not legal certification, an official DPP score,
-                or a guarantee of compliance. Brands do not start over.
-              </Body>
-              <p className="mt-5 text-sm">
-                <a href={EU_TEXTILE} className="underline underline-offset-4" target="_blank" rel="noreferrer">
-                  EU textile and apparel DPP
-                </a>
-              </p>
-            </div>
-            <Frame label="Requirement update" caption="Illustrative example.">
-              <p className="text-sm mb-1">EU / Textiles</p>
-              <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
-                10,000 products evaluated
-              </p>
-              <p className="text-sm">9,614 — no action</p>
-              <p className="text-sm">311 — missing data</p>
-              <p className="text-sm mb-4">75 — review required</p>
-              <span className="text-[10px] tracking-[0.12em] uppercase text-[#152238]">Review affected products</span>
-            </Frame>
-          </div>
-        </div>
-      </section>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Why brands keep INTERTEXE</Eyebrow>
