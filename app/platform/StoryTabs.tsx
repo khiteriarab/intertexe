@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Body, DiscoverLink, PrimaryLink, SERIF, SoftwareStage } from "./platform-ui";
+import { Body, DiscoverLink, PrimaryLink, SERIF } from "./platform-ui";
 
 export type StoryTabId = "understand" | "compare" | "act" | "engage";
 
@@ -61,10 +61,10 @@ export function StoryTabs({
         role="tabpanel"
         id={`story-panel-${current.id}`}
         aria-labelledby={`story-tab-${current.id}`}
-        className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-10 items-start itx-understand-copy"
+        className="grid gap-10 items-start itx-understand-copy lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]"
         key={current.id}
       >
-        <div>
+        <div className="min-w-0">
           <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{current.eyebrow}</p>
           <h3 className="text-2xl sm:text-3xl font-light mb-4" style={SERIF}>
             {current.title}
@@ -94,7 +94,7 @@ export function StoryTabs({
             <PrimaryLink href={current.href}>{current.cta}</PrimaryLink>
           )}
         </div>
-        <SoftwareStage title={current.title}>{panels[current.id]}</SoftwareStage>
+        <div className="min-w-0 w-full">{panels[current.id]}</div>
       </div>
     </div>
   );
