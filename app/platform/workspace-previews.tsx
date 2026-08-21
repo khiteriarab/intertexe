@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { DEMO_CATALOG, DEMO_ISSUE_LABEL } from "../../lib/material-intelligence/demo-catalog";
 import { QrMark, SERIF } from "./platform-ui";
 
-const NAV = ["Overview", "Products", "Materials", "Issues", "Benchmark", "Passports"] as const;
+const NAV = ["Overview", "Products", "Materials", "Issues", "Benchmark", "Passports", "Monitor"] as const;
 export type WorkspaceNav = (typeof NAV)[number];
 
 const CAPTION = "Illustrative workspace. Not a live customer catalog.";
@@ -481,6 +481,57 @@ export function PassportPreview({ className = "mb-10" }: { className?: string })
             Illustrative passport. Not a regulatory certification.
           </p>
         </div>
+      </div>
+    </WorkspaceChrome>
+  );
+}
+
+export function RegulatoryPreview({ className = "mb-0" }: { className?: string }) {
+  return (
+    <WorkspaceChrome
+      active="Monitor"
+      className={className}
+      caption="Tracked requirements and preparation status — not certification."
+    >
+      <div className="grid md:grid-cols-2 gap-3">
+        <Card>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Requirement update · EU / Textiles</p>
+          <p className="text-2xl font-light tabular-nums mb-3" style={SERIF}>
+            10,000 products evaluated
+          </p>
+          <ul className="text-sm space-y-2">
+            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+              <span>No action required</span>
+              <span className="tabular-nums">9,614</span>
+            </li>
+            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+              <span>Need additional information</span>
+              <span className="tabular-nums">311</span>
+            </li>
+            <li className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+              <span>Require review</span>
+              <span className="tabular-nums">75</span>
+            </li>
+          </ul>
+        </Card>
+        <Card>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-3">Preparation status</p>
+          <ul className="text-sm space-y-2">
+            {[
+              ["French AGEC", "Review"],
+              ["EU ESPR textiles", "Missing information"],
+              ["Digital Product Passport", "In progress"],
+            ].map(([name, status]) => (
+              <li key={name} className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
+                <span>{name}</span>
+                <span className="text-[#8a847c]">{status}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-[#8a847c] mt-4 leading-relaxed">
+            Illustrative example. INTERTEXE does not provide legal certification.
+          </p>
+        </Card>
       </div>
     </WorkspaceChrome>
   );

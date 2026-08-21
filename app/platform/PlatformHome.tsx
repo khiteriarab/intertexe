@@ -9,6 +9,7 @@ import {
   IssuesPreview,
   NormalizePreview,
   PassportPreview,
+  RegulatoryPreview,
 } from "./workspace-previews";
 import {
   Body,
@@ -334,9 +335,73 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-16">
-        <PlatformGraphic slot="heroWorkspace" className="mt-0" />
-        {PLATFORM_GRAPHICS.heroWorkspace.ready ? null : <WorkspaceHeroPreview />}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
+        <Eyebrow>Workspace</Eyebrow>
+        <Heading className="mb-4">One workspace for material intelligence.</Heading>
+        <Body className="max-w-2xl mb-8 sm:mb-10">
+          Material Intelligence is live in the public demo. Overview, Issues, Benchmarking, Passport Studio and
+          Regulatory Monitor are the workspace the Founding Pilot delivers into, and the platform now being built.
+          Click a surface — a new INTERTEXE workspace mockup opens. Previews are illustrative, not a live customer
+          catalog.
+        </Body>
+        <WorkspaceGallery
+          frames={[
+            {
+              id: "overview",
+              label: "Overview",
+              caption: "Illustrative example. Counts are not a live customer catalog.",
+              children: PLATFORM_GRAPHICS.heroWorkspace.ready ? (
+                <PlatformGraphic slot="heroWorkspace" />
+              ) : (
+                <WorkspaceHeroPreview className="mt-0" />
+              ),
+            },
+            {
+              id: "intelligence",
+              label: "Material intelligence",
+              caption: "Normalization preserves the original source string.",
+              children: PLATFORM_GRAPHICS.understandNormalize.ready ? (
+                <PlatformGraphic slot="understandNormalize" />
+              ) : (
+                <NormalizePreview className="mb-0" />
+              ),
+            },
+            {
+              id: "issues",
+              label: "Issues",
+              children: PLATFORM_GRAPHICS.understandIssues.ready ? (
+                <PlatformGraphic slot="understandIssues" />
+              ) : (
+                <IssuesPreview className="mb-0" />
+              ),
+            },
+            {
+              id: "benchmark",
+              label: "Benchmark",
+              caption: "Illustrative example · Individual customer data is never exposed.",
+              children: PLATFORM_GRAPHICS.compareBenchmark.ready ? (
+                <PlatformGraphic slot="compareBenchmark" />
+              ) : (
+                <BenchmarkPreview className="mb-0" />
+              ),
+            },
+            {
+              id: "studio",
+              label: "Passport studio",
+              children: PLATFORM_GRAPHICS.actPassport.ready ? (
+                <PlatformGraphic slot="actPassport" />
+              ) : (
+                <PassportPreview className="mb-0" />
+              ),
+            },
+            {
+              id: "monitor",
+              label: "Regulatory monitor",
+              caption: "Tracked requirements and preparation status — not certification.",
+              children: <RegulatoryPreview className="mb-0" />,
+            },
+          ]}
+        />
       </section>
 
       <CatalogMarquee />
@@ -447,127 +512,6 @@ export function PlatformHome() {
         <PrimaryLink href="/platform/demo">See INTERTEXE analyze a real catalog</PrimaryLink>
       </section>
 
-      <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>Workspace</Eyebrow>
-          <Heading className="mb-4">One workspace for material intelligence.</Heading>
-          <Body className="max-w-2xl mb-8 sm:mb-10">
-            Material Intelligence is live in the public demo. Overview, Issues, Benchmarking, Passport Studio and
-            Regulatory Monitor are the workspace the Founding Pilot delivers into, and the platform now being built.
-            Previews below are faithful to that product — not consulting slides.
-          </Body>
-          <WorkspaceGallery
-            frames={[
-              {
-                id: "overview",
-                label: "Overview",
-                caption: "Illustrative example. Counts are not a live customer catalog.",
-                children: (
-                  <>
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      {[
-                        ["12,430", "Products"],
-                        ["8,420", "Analyzed"],
-                        ["673", "Require attention"],
-                        ["9,814", "Passport-ready fields"],
-                      ].map(([n, l]) => (
-                        <div key={l}>
-                          <p className="text-2xl font-light tabular-nums" style={SERIF}>
-                            {n}
-                          </p>
-                          <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mt-1">{l}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="border-t border-[#eeeae4] pt-4">
-                      <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Needs your attention</p>
-                      <p className="text-sm">Composition conflict · 384 products</p>
-                      <p className="text-sm">Missing supplier information · 736 products</p>
-                    </div>
-                  </>
-                ),
-              },
-              {
-                id: "intelligence",
-                label: "Material Intelligence",
-                caption: "Normalization preserves the original source string.",
-                children: (
-                  <>
-                    <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">Original</p>
-                    <p className="font-mono text-[13px] mb-4">MAIN 70 CO 30 PA / LIN viscose</p>
-                    <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">INTERTEXE</p>
-                    <p className="text-sm mb-1">Shell · 70% Cotton · 30% Polyamide</p>
-                    <p className="text-sm mb-4">Lining · 100% Viscose</p>
-                    <p className="text-xs text-[#8a847c]">Source retained · Conflict with supplier file · Review required</p>
-                  </>
-                ),
-              },
-              {
-                id: "issues",
-                label: "Issues",
-                children: (
-                  <>
-                    <p className="text-sm mb-1">Composition conflict</p>
-                    <p className="text-xs text-[#8a847c] mb-3">Review required · Dress 8721</p>
-                    <p className="text-sm">PLM: 70% Cotton / 30% Polyamide</p>
-                    <p className="text-sm mb-4">Supplier declaration: 65% Cotton / 35% Nylon</p>
-                    <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">Open issue</span>
-                  </>
-                ),
-              },
-              {
-                id: "benchmark",
-                label: "Benchmark",
-                caption: "Illustrative example · Individual customer data is never exposed.",
-                children: <MaterialPositionTable compact />,
-              },
-              {
-                id: "studio",
-                label: "Passport Studio",
-                children: (
-                  <>
-                    <p className="text-[10px] tracking-[0.14em] uppercase text-[#1d4734] mb-2">Ready to publish</p>
-                    <p className="text-sm mb-4" style={SERIF}>
-                      Silk Evening Dress
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
-                        Preview passport
-                      </span>
-                      <span className="text-[10px] tracking-[0.1em] uppercase bg-[#1d4734] text-white px-3 py-2">
-                        Publish
-                      </span>
-                      <span className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] px-3 py-2">
-                        Generate QR
-                      </span>
-                    </div>
-                  </>
-                ),
-              },
-              {
-                id: "monitor",
-                label: "Regulatory Monitor",
-                caption: "Tracked requirements and preparation status — not certification.",
-                children: (
-                  <>
-                    <p className="text-sm mb-1">Requirement update · EU / Textiles</p>
-                    <p className="text-2xl font-light tabular-nums my-3" style={SERIF}>
-                      10,000 products evaluated
-                    </p>
-                    <p className="text-sm">9,614 require no action</p>
-                    <p className="text-sm">311 need additional information</p>
-                    <p className="text-sm mb-4">75 require review</p>
-                    <span className="text-[10px] tracking-[0.12em] uppercase text-[#1d4734]">
-                      Review affected products →
-                    </span>
-                  </>
-                ),
-              },
-            ]}
-          />
-        </div>
-      </section>
-
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Compare</Eyebrow>
         <Heading className="mb-4">Know how your material strategy compares.</Heading>
@@ -585,10 +529,11 @@ export function PlatformHome() {
           something a pure B2B DPP provider cannot simply manufacture — it comes from building the consumer side of
           INTERTEXE.
         </p>
-        <p className="text-xs text-[#8a847c] max-w-3xl">
+        <p className="text-xs text-[#8a847c] max-w-3xl mb-8">
           Individual customer data is never exposed. Enterprise information enters aggregates only where
           contractually permitted and anonymized.
         </p>
+        <MaterialPositionTable />
       </section>
 
       <section className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24">

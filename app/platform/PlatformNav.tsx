@@ -8,6 +8,14 @@ const NAV = [
   { href: "/platform/docs", label: "Documentation" },
 ];
 
+function Arrow() {
+  return (
+    <span aria-hidden="true" className="text-[14px] leading-none">
+      →
+    </span>
+  );
+}
+
 export function PlatformNav({
   active,
   tone = "light",
@@ -36,16 +44,16 @@ export function PlatformNav({
 
   return (
     <nav className={dark ? "border-b border-white/10 bg-[#152238] text-[#f7f5f1]" : "border-b border-[#e8e3da]"}>
-      <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 flex items-center justify-between gap-3">
-        <Link
-          href="/platform"
-          className={`text-[12px] sm:text-sm tracking-[0.16em] sm:tracking-[0.28em] font-light shrink-0 ${
-            dark ? "text-white" : ""
-          }`}
-        >
-          INTER<span className="font-semibold">TEXE</span>
-        </Link>
-        <div className="flex items-center gap-3 sm:gap-5">
+      <div className="px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-8 min-w-0">
+          <Link
+            href="/platform"
+            className={`text-[12px] sm:text-sm tracking-[0.16em] sm:tracking-[0.28em] font-light shrink-0 ${
+              dark ? "text-white" : ""
+            }`}
+          >
+            INTER<span className="font-semibold">TEXE</span>
+          </Link>
           <div className="hidden md:flex items-center gap-6">
             {NAV.map((item) => (
               <Link
@@ -57,23 +65,29 @@ export function PlatformNav({
               </Link>
             ))}
           </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 shrink-0">
           <Link
             href="/dashboard/login"
-            className={`text-[10px] sm:text-[11px] tracking-[0.1em] sm:tracking-[0.15em] uppercase whitespace-nowrap min-h-[40px] inline-flex items-center ${
-              dark ? "text-white/80 hover:text-white" : "text-[#6f6a63] hover:text-black"
-            }`}
+            className={
+              dark
+                ? "inline-flex items-center gap-2 rounded-md border border-white px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-white min-h-[40px] hover:bg-white/10"
+                : "inline-flex items-center gap-2 rounded-md border border-[#152238] px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-[#152238] min-h-[40px] hover:bg-[#152238]/5"
+            }
           >
             Log in
+            <Arrow />
           </Link>
           <Link
             href="/platform/request?intent=snapshot&cta=nav"
             className={
               dark
-                ? "text-[10px] sm:text-[11px] tracking-[0.1em] sm:tracking-[0.15em] uppercase bg-white text-[#152238] px-3 sm:px-5 py-2 sm:py-2.5 hover:bg-[#f7f5f1] whitespace-nowrap min-h-[40px] inline-flex items-center"
-                : "text-[10px] sm:text-[11px] tracking-[0.1em] sm:tracking-[0.15em] uppercase bg-[#152238] text-white px-3 sm:px-5 py-2 sm:py-2.5 hover:bg-[#0f1a2c] whitespace-nowrap min-h-[40px] inline-flex items-center"
+                ? "inline-flex items-center gap-2 rounded-md bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-[#152238] min-h-[40px] hover:bg-[#f7f5f1]"
+                : "inline-flex items-center gap-2 rounded-md bg-[#152238] px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-white min-h-[40px] hover:bg-[#0f1a2c]"
             }
           >
             Book a demo
+            <Arrow />
           </Link>
           <button
             type="button"
@@ -105,22 +119,6 @@ export function PlatformNav({
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/dashboard/login"
-            onClick={() => setOpen(false)}
-            className={`block py-3 text-[13px] tracking-[0.14em] uppercase ${
-              dark ? "text-white/80" : "text-[#6f6a63]"
-            }`}
-          >
-            Log in
-          </Link>
-          <Link
-            href="/platform/request?intent=snapshot&cta=nav"
-            onClick={() => setOpen(false)}
-            className={`block py-3 text-[13px] tracking-[0.14em] uppercase ${dark ? "text-white" : "text-black"}`}
-          >
-            Book a demo
-          </Link>
         </div>
       ) : null}
     </nav>

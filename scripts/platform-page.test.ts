@@ -86,6 +86,8 @@ describe("Platform material-intelligence page", () => {
     assert.match(nav, /\{open \? "Close" : "Menu"\}/);
     assert.match(nav, /Book a demo/);
     assert.match(nav, /Log in/);
+    assert.match(nav, /border-white/);
+    assert.match(nav, /href="\/dashboard\/login"/);
     assert.match(home, /WorkspaceHeroPreview/);
     assert.match(home, /WorkspaceGallery/);
     assert.match(home, /ComparisonView/);
@@ -148,6 +150,20 @@ describe("Platform material-intelligence page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-silk-dress.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-workspace-desktop.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-product-window.png")));
+  });
+
+  it("places Log in and Book a demo as a top-right pair and swaps workspace mockups before the catalog strip", () => {
+    const gallery = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
+    assert.match(nav, /Book a demo/);
+    assert.match(nav, /Log in/);
+    assert.match(home, /One workspace for material intelligence/);
+    assert.match(home, /Regulatory monitor/);
+    assert.match(home, /WorkspaceHeroPreview/);
+    assert.match(home, /RegulatoryPreview/);
+    assert.match(gallery, /onClick=\{\(\) => setActiveId\(frame\.id\)\}/);
+    const catalogAt = home.indexOf("<CatalogMarquee");
+    const workspaceAt = home.indexOf("One workspace for material intelligence");
+    assert.ok(workspaceAt >= 0 && catalogAt > workspaceAt);
   });
 });
 
