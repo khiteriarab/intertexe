@@ -353,7 +353,7 @@ function ProductCopy({
         ) : null}
       </Text>
       <Link href={productOpenHref(product)} style={productLink}>
-        <Text style={shopPiece}>Shop this piece →</Text>
+        <Text style={shopPiece}>Open in INTERTEXE →</Text>
       </Link>
     </>
   );
