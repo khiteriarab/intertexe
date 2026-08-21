@@ -14,6 +14,13 @@ import {
   type CatalogFilterCoverage,
 } from "./catalog-browse-v2";
 import { isFootwearListing } from "./catalog-product-filters";
+import { isShoesCategory } from "./catalog-filter-options";
+import {
+  fetchFootwearCatalogCount,
+  fetchFootwearCatalogPage,
+} from "./footwear-catalog";
+import { resolveFootwearBrowseFilters } from "./footwear-filters";
+import type { Product } from "./supabase-server";
 import {
   filterProductsForIntegrity,
   integritySpecFromBrowseOpts,
@@ -97,6 +104,11 @@ export type CatalogDirectQueryOpts = {
   fabricConstruction?: string;
   isSale?: boolean;
   skipCount?: boolean;
+  /** iOS UnifiedFilterSheet / /shop/shoes aliases */
+  type?: string;
+  shoeType?: string;
+  subcategory?: string;
+  material?: string;
 };
 
 /** Shared post-query integrity gate for every catalog product list. */
@@ -176,6 +188,43 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
     : opts.category && opts.category !== "all" && opts.category !== "apparel" && opts.category !== "clothing"
       ? [opts.category]
       : [];
+
+  const shoesBrowse =
+    isShoesCategory(opts.category) || categories.some((c) => isShoesCategory(c));
+  if (shoesBrowse) {
+    const { type, material } = resolveFootwearBrowseFilters({
+      type: opts.type,
+      shoeType: opts.shoeType,
+      subcategory: opts.subcategory,
+      search: searchText,
+      material: opts.material,
+      fiber: opts.fiber,
+      materialSubtype: opts.materialSubtype || opts.fiberSubtype,
+    });
+    try {
+      const page = await fetchFootwearCatalogPage({
+        region,
+        limit: Math.min(limit, 100),
+        offset,
+        type,
+        material,
+      });
+      const products = page.products.map(footwearToDirect);
+      const total = opts.skipCount
+        ? null
+        : await fetchFootwearCatalogCount(region, { type, material });
+      return {
+        products,
+        total,
+        hasMore: page.hasMore,
+        productIds: products.map((p) => p.id).filter(Boolean),
+        rpcVersion: "live_products_footwear",
+      };
+    } catch (err) {
+      console.error("[queryLiveCatalog] footwear browse failed", err);
+      return { products: [], total: null, hasMore: false, error: "failed" };
+    }
+  }
 
   // Same RPC as iOS for all shop browse except collection/sale specialty paths.
   if (shouldUseAuthoritativeBrowse(opts)) {
@@ -483,6 +532,29 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
     console.error("[queryLiveCatalog]", err);
     return { products: [], total: null, hasMore: false, error: "failed" };
   }
+}
+
+function footwearToDirect(product: Product): DirectCatalogProduct {
+  return {
+    id: String(product.id ?? ""),
+    brandSlug: String(product.brandSlug ?? ""),
+    brandName: String(product.brandName ?? ""),
+    name: String(product.name ?? ""),
+    productId: String(product.productId ?? product.id ?? ""),
+    url: String(product.url ?? ""),
+    imageUrl: String(product.imageUrl ?? ""),
+    price: String(product.price ?? ""),
+    composition: String(product.composition ?? ""),
+    naturalFiberPercent: Number(product.naturalFiberPercent ?? 0),
+    category: String(product.category ?? "shoes"),
+    matchingSetId: product.matchingSetId != null ? String(product.matchingSetId) : null,
+    isSale: Boolean(product.isSale),
+    originalPrice: product.originalPrice != null ? String(product.originalPrice) : null,
+    listingRegion: product.listingRegion != null ? String(product.listingRegion) : null,
+    stockStatus: product.stockStatus != null ? String(product.stockStatus) : null,
+    isEditorPick: product.isEditorPick === true,
+    editorPickedAt: product.editorPickedAt != null ? String(product.editorPickedAt) : null,
+  };
 }
 
 function mapDirectRow(row: Record<string, unknown>): DirectCatalogProduct {

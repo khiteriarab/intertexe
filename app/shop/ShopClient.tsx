@@ -42,6 +42,7 @@ import {
   CATEGORY_SUBCATEGORY_OPTIONS,
   productMatchesSubcategory,
 } from "../../lib/catalog-subcategories";
+import { shoesCatalogHref } from "../../lib/footwear-filters";
 import { cfProductCard } from "../../lib/cloudflare-images";
 import {
   constructionOptionsForFamily,
@@ -638,6 +639,10 @@ export default function ShopClient({
   const currentSort = SORT_OPTIONS.find((s) => s.key === sortBy) ?? SORT_OPTIONS[0];
 
   const toggleCategory = (key: CategoryFilterKey) => {
+    if (key === "shoes") {
+      window.location.assign(shoesCatalogHref());
+      return;
+    }
     setSelectedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -801,6 +806,10 @@ export default function ShopClient({
               setListOffset(0);
             }}
             onCategoryChange={(key) => {
+              if (key === "shoes") {
+                window.location.assign(shoesCatalogHref());
+                return;
+              }
               if (key === "all") setSelectedCategories(new Set());
               else setSelectedCategories(new Set([key as CategoryFilterKey]));
               setSelectedSubcategory(null);
