@@ -2,8 +2,7 @@ export const collectionRotation = [
   {
     name: "Vacation",
     url: "https://www.intertexe.com/collections/vacation",
-    subline:
-      "Last-minute pieces for your late summer getaway — before the cold.",
+    subline: "Last-minute pieces in linen, silk and cotton.",
   },
   {
     name: "Evening",

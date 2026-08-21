@@ -52,14 +52,17 @@ export async function GET(req: NextRequest) {
         collectionName: collection.name,
         collectionUrl: collection.url,
         collectionSubline: collection.subline,
+        collectionImageUrl: collection.imageUrl,
         fiberFact: fiberFact.fact,
         fiberFactFiber: fiberFact.fiber,
+        fiberFactHeadline: fiberFact.headline,
+        fiberFactTraits: [...fiberFact.traits],
         products: emailProducts,
         isPreview: false,
       })
     );
 
-    const subject = `The Intertexe Edit — editor's picks and ${collection.name}`;
+    const subject = `The Weekly Edit — ${collection.name}`;
     const batchSize = 100;
     let sent = 0;
     let failed = 0;

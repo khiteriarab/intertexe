@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isFootwearListing } from "./catalog-product-filters";
 import { getCollectionForWeek } from "./collection-rotation";
 import { getFiberFactForWeek } from "./fiber-facts";
+import { collectionEditTitle, collectionImageUrl } from "./weekly-edit-presentation";
 
 /** INTERTEXE brand socials — Weekly Edit follow CTA (not @Khiteri). */
 export const INTERTEXE_SOCIAL_HANDLE = "@intertexe";
@@ -173,7 +174,14 @@ export async function selectWeeklyEditProducts(
 export function getWeeklyEditMeta(weekNumber: number) {
   const fiberFact = getFiberFactForWeek(weekNumber);
   const collection = getCollectionForWeek(weekNumber);
-  return { fiberFact, collection };
+  return {
+    fiberFact,
+    collection: {
+      ...collection,
+      editTitle: collectionEditTitle(collection.name),
+      imageUrl: collectionImageUrl(collection.name),
+    },
+  };
 }
 
 export async function listMarketingSubscriberEmails(
