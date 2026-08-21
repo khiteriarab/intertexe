@@ -14,16 +14,26 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import { getAppStoreOpenUrl } from "../lib/app-store";
+import {
+  KHITERI_INSTAGRAM_URL,
+  KHITERI_SOCIAL_HANDLE,
+  KHITERI_TIKTOK_URL,
+  type WeeklyEditSection,
+} from "../lib/weekly-edit";
 
 export type WeeklyEditEmailProduct = {
   id: string;
   name: string;
   brand: string;
   price: number;
+  originalPrice?: number | null;
   currency: string;
   imageUrl: string;
   url: string;
   naturalFiberPercent: number;
+  isSale?: boolean;
+  section?: WeeklyEditSection;
 };
 
 export interface WeeklyEditEmailProps {
@@ -51,7 +61,7 @@ const container = {
 const kicker = {
   fontSize: "11px",
   letterSpacing: "0.2em",
-  color: "#0D9488",
+  color: "#1C2B2A",
   margin: "0 0 32px",
   textTransform: "uppercase" as const,
 };
@@ -186,9 +196,41 @@ const hr = {
   margin: "32px 0",
 };
 
+const socialText = {
+  fontSize: "14px",
+  color: "#64748B",
+  lineHeight: "1.6",
+  margin: "0 0 10px",
+};
+
+const socialLink = {
+  color: "#1C2B2A",
+  fontSize: "13px",
+  letterSpacing: "0.08em",
+  textDecoration: "underline",
+  textTransform: "uppercase" as const,
+};
+
+const SECTION_LABELS: Record<WeeklyEditSection, string> = {
+  shoes: "Shoes",
+  clothing: "Clothing",
+  sale: "On sale",
+};
+
 function formatPrice(price: number, currency: string): string {
   const symbol = currency === "GBP" ? "£" : currency === "EUR" ? "€" : "$";
   return `${symbol}${price.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+}
+
+function openAppHref(): string {
+  return getAppStoreOpenUrl("/shop", {
+    cta: "email_weekly_edit",
+    params: {
+      utm_source: "resend",
+      utm_medium: "email",
+      utm_campaign: "weekly_edit",
+    },
+  });
 }
 
 export default function WeeklyEditEmail({
@@ -201,9 +243,17 @@ export default function WeeklyEditEmail({
   fiberFactFiber,
   isPreview = false,
 }: WeeklyEditEmailProps) {
-  const preview = `${isPreview ? "[PREVIEW — APPROVE BY MIDNIGHT] " : ""}The Intertexe Edit — ${collectionName} and ${products.length} verified pieces`;
+  const preview = `${isPreview ? "[PREVIEW — APPROVE BY MIDNIGHT] " : ""}The Intertexe Edit — editor's picks and ${collectionName}`;
   const editLabel =
     typeof weekNumber === "number" ? `Week ${weekNumber}` : "This week";
+  const sections = (["shoes", "clothing", "sale"] as const)
+    .map((section) => ({
+      section,
+      items: products.filter((product) => product.section === section),
+    }))
+    .filter((group) => group.items.length > 0);
+  const unsectioned = products.filter((product) => !product.section);
+  const appHref = openAppHref();
 
   return (
     <Html lang="en">
@@ -238,40 +288,63 @@ export default function WeeklyEditEmail({
           </Heading>
 
           <Text style={introText}>
-            {editLabel}: eight verified natural-fiber pieces we love right now —
-            new arrivals, buying context, and price drops worth your attention.
+            {editLabel}: editor&apos;s picks we love right now — two pairs of shoes,
+            clothing, and sale pieces, all from the edit.
           </Text>
 
-          <Text style={sectionLabel}>This week&apos;s picks</Text>
+          <Text style={sectionLabel}>Editor&apos;s favorites</Text>
 
-          {products.map((product) => (
-            <Section key={product.id} style={productRow}>
-              <Row>
-                <Column style={{ width: "100px", verticalAlign: "top" }}>
-                  <Link href={product.url}>
-                    <Img
-                      src={product.imageUrl}
-                      alt={`${product.brand} ${product.name}`}
-                      width="100"
-                      height="130"
-                      style={productImage}
-                    />
-                  </Link>
-                </Column>
-                <Column style={{ paddingLeft: "16px", verticalAlign: "top" }}>
-                  <Text style={brandText}>{product.brand}</Text>
-                  <Link href={product.url} style={productLink}>
-                    <Text style={productName}>{product.name}</Text>
-                  </Link>
-                  <Text style={productMeta}>
-                    {formatPrice(product.price, product.currency)}
-                    {" · "}
-                    {product.naturalFiberPercent}% natural fiber
+          {(sections.length ? sections : [{ section: "clothing" as const, items: unsectioned }]).map(
+            (group) => (
+              <Section key={group.section}>
+                {sections.length ? (
+                  <Text style={{ ...sectionLabel, margin: "8px 0 12px" }}>
+                    {SECTION_LABELS[group.section]}
                   </Text>
-                </Column>
-              </Row>
-            </Section>
-          ))}
+                ) : null}
+                {group.items.map((product) => (
+                  <Section key={product.id} style={productRow}>
+                    <Row>
+                      <Column style={{ width: "100px", verticalAlign: "top" }}>
+                        <Link href={product.url}>
+                          <Img
+                            src={product.imageUrl}
+                            alt={`${product.brand} ${product.name}`}
+                            width="100"
+                            height="130"
+                            style={productImage}
+                          />
+                        </Link>
+                      </Column>
+                      <Column style={{ paddingLeft: "16px", verticalAlign: "top" }}>
+                        <Text style={brandText}>{product.brand}</Text>
+                        <Link href={product.url} style={productLink}>
+                          <Text style={productName}>{product.name}</Text>
+                        </Link>
+                        <Text style={productMeta}>
+                          {formatPrice(product.price, product.currency)}
+                          {product.originalPrice && product.originalPrice > product.price ? (
+                            <>
+                              {"  "}
+                              <span style={{ textDecoration: "line-through", color: "#94A3B8" }}>
+                                {formatPrice(product.originalPrice, product.currency)}
+                              </span>
+                            </>
+                          ) : null}
+                          {product.naturalFiberPercent > 0 ? (
+                            <>
+                              {" · "}
+                              {product.naturalFiberPercent}% natural fiber
+                            </>
+                          ) : null}
+                        </Text>
+                      </Column>
+                    </Row>
+                  </Section>
+                ))}
+              </Section>
+            )
+          )}
 
           <Section style={collectionBox}>
             <Text style={sectionLabel}>Collection spotlight</Text>
@@ -287,9 +360,26 @@ export default function WeeklyEditEmail({
             <Text style={factText}>{fiberFact}</Text>
           </Section>
 
+          <Section style={{ margin: "24px 0 16px" }}>
+            <Text style={sectionLabel}>Follow the edit</Text>
+            <Text style={socialText}>
+              See what we&apos;re adding next — follow {KHITERI_SOCIAL_HANDLE} on Instagram and
+              TikTok.
+            </Text>
+            <Text style={{ margin: "0 0 24px" }}>
+              <Link href={KHITERI_INSTAGRAM_URL} style={socialLink}>
+                Instagram
+              </Link>
+              {"  ·  "}
+              <Link href={KHITERI_TIKTOK_URL} style={socialLink}>
+                TikTok
+              </Link>
+            </Text>
+          </Section>
+
           <Section style={{ margin: "0 0 8px" }}>
-            <Button href="https://www.intertexe.com/shop" style={button}>
-              SHOP ALL VERIFIED PIECES
+            <Button href={appHref} style={button}>
+              OPEN THE APP
             </Button>
           </Section>
 
