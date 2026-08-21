@@ -70,7 +70,6 @@ const nextConfig = {
           { key: "Cache-Control", value: "public, max-age=300" },
         ],
       },
-<<<<<<< Updated upstream
       {
         source: "/downloads/:file*.zip",
         headers: [
@@ -85,10 +84,6 @@ const nextConfig = {
       {
         source:
           "/((?!api/|_next/static|_next/image|favicon|\\.well-known|apple-app-site-association|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-=======
-      ...["/dashboard", "/dashboard/:path*", "/account", "/signup", "/leaving", "/reset-password", "/unsubscribe", "/extension/:path*", "/inspirations/:path*", "/open", "/khiteri", "/khiteri/:path*"].map((source) => ({
-        source,
->>>>>>> Stashed changes
         headers: [
           {
             key: "Cache-Control",
@@ -97,7 +92,7 @@ const nextConfig = {
           { key: "Pragma", value: "no-cache" },
           { key: "Expires", value: "0" },
         ],
-      })),
+      },
     ];
   },
   webpack: (config, { dev }) => {

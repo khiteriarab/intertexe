@@ -10,42 +10,6 @@ import {
 } from "../lib/seo-sitemaps";
 import { indexableGuides } from "../lib/seo-guides";
 
-<<<<<<< Updated upstream
-const BASE = "https://www.intertexe.com";
-
-export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-  const materials = ["silk", "cashmere", "linen", "wool", "cotton"] as const;
-
-  const staticPages: MetadataRoute.Sitemap = [
-    { url: BASE, lastModified: now, changeFrequency: "daily", priority: 1 },
-    { url: `${BASE}/shop`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
-    { url: `${BASE}/sale`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
-    { url: `${BASE}/designers`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${BASE}/materials`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${BASE}/scanner`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE}/platform`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE}/platform/demo`, lastModified: now, changeFrequency: "weekly", priority: 0.55 },
-    { url: `${BASE}/platform/docs`, lastModified: now, changeFrequency: "monthly", priority: 0.45 },
-    { url: `${BASE}/platform/request`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
-  ];
-
-  const collectionPages: MetadataRoute.Sitemap = COLLECTION_SLUGS.map((slug) => ({
-    url: `${BASE}/collections/${slug}`,
-    lastModified: now,
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
-
-  const materialPages: MetadataRoute.Sitemap = materials.map((fiber) => ({
-    url: `${BASE}/materials/${fiber}`,
-    lastModified: now,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
-
-  return [...staticPages, ...collectionPages, ...materialPages];
-=======
 function getSupabase(): SupabaseClient | null {
   const url =
     process.env.SUPABASE_URL ||
@@ -134,5 +98,4 @@ export default async function sitemap(props: { id: Promise<string> | string }): 
   }
 
   return [];
->>>>>>> Stashed changes
 }

@@ -19,11 +19,7 @@ export default function PrivacyPage() {
         <section className="flex flex-col gap-3">
           <h2 className="text-xl md:text-2xl font-serif text-foreground">1. Introduction</h2>
           <p>
-<<<<<<< Updated upstream
             Intertexe (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website, use the INTERTEXE iOS app, or use the Chrome extension INTERTEXE: Fabric Scanner.
-=======
-            Intertexe (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website, use the INTERTEXE iOS app, or use the INTERTEXE Chrome extension.
->>>>>>> Stashed changes
           </p>
         </section>
 
@@ -37,11 +33,7 @@ export default function PrivacyPage() {
             <li><strong className="text-foreground">Scan history:</strong> Fiber composition results, barcodes scanned, and label data you submit through the scanner.</li>
             <li><strong className="text-foreground">Usage Data:</strong> Pages visited, search queries, features used, and general browsing patterns.</li>
             <li><strong className="text-foreground">Device tokens:</strong> If you enable push notifications on iOS, we store your device token to send welcome, price-drop, and re-engagement alerts.</li>
-<<<<<<< Updated upstream
             <li><strong className="text-foreground">Chrome extension saves:</strong> Product-page data you ask INTERTEXE: Fabric Scanner to save (see section 9).</li>
-=======
-            <li><strong className="text-foreground">Chrome extension (active tab only):</strong> When you open Save to INTERTEXE on a page, the extension may read that tab&rsquo;s product title, image, price, brand, URL, and any material-composition text shown on the page. It does not run in the background on every site you visit and does not collect unrelated browsing history.</li>
->>>>>>> Stashed changes
           </ul>
         </section>
 
