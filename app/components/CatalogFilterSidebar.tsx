@@ -125,6 +125,7 @@ type CatalogFilterSidebarProps<TFiber extends string, TCategory extends string> 
   onFiberChange: (key: TFiber) => void;
   onCategoryChange: (key: TCategory) => void;
   subcategoryOptions?: string[];
+  subcategoryTitle?: string;
   selectedSubcategory?: string | null;
   onSubcategoryChange?: (subcategory: string | null) => void;
   className?: string;
@@ -156,6 +157,7 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
   onFiberChange,
   onCategoryChange,
   subcategoryOptions = [],
+  subcategoryTitle = "Style",
   selectedSubcategory = null,
   onSubcategoryChange,
   className = "",
@@ -256,7 +258,7 @@ export function CatalogFilterSidebar<TFiber extends string, TCategory extends st
       />
       {onSubcategoryChange && subcategoryOptions.length > 0 && (
         <CollapsiblePanel
-          title="Style"
+          title={subcategoryTitle}
           summary={selectedSubcategory || undefined}
           open={openSection === "subcategory"}
           onToggle={() => toggle("subcategory")}

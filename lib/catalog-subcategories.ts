@@ -1,7 +1,9 @@
+import { SHOP_SHOE_TYPES } from "./catalog-filter-options";
+
 export type CatalogSubcategoryMap = Record<string, string[]>;
 
 export const CATEGORY_SUBCATEGORY_OPTIONS: CatalogSubcategoryMap = {
-  shoes: ["Boots", "Sandals", "Heels", "Sneakers", "Loafers", "Flats", "Mules", "Espadrilles"],
+  shoes: [...SHOP_SHOE_TYPES],
   dresses: ["Midi Dresses", "Maxi Dresses", "Mini Dresses", "Shirt Dresses", "Wrap Dresses", "Gowns"],
   tops: ["Blouses", "T-Shirts", "Shirts", "Camisoles", "Bodysuits", "Tunics"],
   knitwear: ["Sweaters", "Cardigans", "Turtlenecks", "Hoodies"],

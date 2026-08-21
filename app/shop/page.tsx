@@ -52,7 +52,7 @@ function getDetectedCountry(headerList: Headers) {
 
 const SHOP_FIBERS = new Set(["cashmere", "silk", "wool", "cotton", "linen", "leather"]);
 const SHOP_CATEGORIES = new Set([
-  "knitwear", "tops", "dresses", "skirts", "trousers", "outerwear", "jumpsuits", "lingerie", "swimwear",
+  "knitwear", "tops", "dresses", "skirts", "trousers", "outerwear", "jumpsuits", "lingerie", "swimwear", "shoes",
 ]);
 
 const EMPTY_CATALOG = { products: [] as any[], total: 0, hasMore: false };

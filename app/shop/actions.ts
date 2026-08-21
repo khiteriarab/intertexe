@@ -150,7 +150,7 @@ export async function getShopCatalogCount(options: {
     offset: 0,
     skipTotal: false,
   });
-  return { total: result.total ?? 0 };
+  return { total: result.total == null ? null : result.total };
 }
 
 export async function getShopBrands() {

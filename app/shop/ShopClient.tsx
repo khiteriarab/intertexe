@@ -12,10 +12,17 @@ import {
   SHOP_COLOR_OPTIONS,
   SHOP_CATEGORY_OPTIONS,
   SHOP_PRICE_TIERS,
+  SHOP_APPAREL_FIBER_OPTIONS,
   priceBoundsFromTier,
+  fiberOptionsForCategory,
+  isFiberAllowedForCategory,
+  isShoesCategory,
+  resolveShopMaterialQuery,
   type ShopCategoryKey,
+  type ShopFiberKey,
   type ShopPriceTierId,
 } from "../../lib/catalog-filter-options";
+import { shopDisplayedCount } from "../../lib/shop-displayed-count";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
 import { US_CATALOG_KNOWN_TOTAL_FALLBACK } from "../../lib/catalog-constants";
 import { formatDisplayPrice } from "../../lib/format-display-price";
@@ -30,7 +37,6 @@ import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "../component
 import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { stockCardBadgeLabel } from "../../lib/stock-display";
-import { shopWearToWhereTextOptions } from "../../lib/wear-to-where";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
 import {
   CATEGORY_SUBCATEGORY_OPTIONS,
@@ -49,20 +55,10 @@ import {
   getRegionForMarket,
   type MarketFilter,
 } from "../../lib/shipping-regions";
-type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather";
+
+type FiberTab = ShopFiberKey;
 type CategoryFilterKey = ShopCategoryKey | "bottoms";
 type SortOption = "new" | "price-high" | "price-low" | "natural-high";
-const FIBER_TABS: { key: FiberTab; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "silk", label: "Silk" },
-  { key: "linen", label: "Linen" },
-  { key: "cashmere", label: "Cashmere" },
-  { key: "cotton", label: "Cotton" },
-  { key: "wool", label: "Wool" },
-  { key: "leather", label: "Leather" },
-];
-
-const MATERIAL_FILTER_OPTIONS = FIBER_TABS.filter((t) => t.key !== "all");
 
 const CATEGORY_FILTERS = SHOP_CATEGORY_OPTIONS;
 
@@ -112,7 +108,6 @@ function parseSubcategoryParam(raw: string | null): string | null {
 }
 
 const SHOP_PAGE_SIZE = 24;
-const WEAR_TO_WHERE_OPTIONS = shopWearToWhereTextOptions();
 
 const SHOP_EDIT_SLIDES = COLLECTION_SECTIONS.map((collection) => ({
   slug: collection.slug,
@@ -230,9 +225,11 @@ export default function ShopClient({
     !!searchParams.get("q") ||
     !!searchParams.get("brands");
   const initialFiber: FiberTab =
-    fiberParam && FIBER_TABS.some((t) => t.key === fiberParam)
+    fiberParam && isFiberAllowedForCategory(fiberParam, searchParams.get("category"))
       ? (fiberParam as FiberTab)
-      : "all";
+      : fiberParam && isFiberAllowedForCategory(fiberParam, null)
+        ? (fiberParam as FiberTab)
+        : "all";
   const initialCategories = parseCategoryParams(searchParams.get("category"));
   const sortParam = searchParams.get("sort");
   const initialSort: SortOption =
@@ -290,11 +287,23 @@ export default function ShopClient({
 
   const categoryList = [...selectedCategories];
   const primaryCategory = categoryList[0] || null;
+  const shoesSelected = isShoesCategory(primaryCategory);
+  const fiberOptions = fiberOptionsForCategory(primaryCategory);
+  const materialFilterOptions = fiberOptions.filter((t) => t.key !== "all");
+  const materialQuery = resolveShopMaterialQuery(fiberTab);
   const subcategoryOptions = primaryCategory
     ? CATEGORY_SUBCATEGORY_OPTIONS[primaryCategory] || []
     : [];
   const subcategorySearch = selectedSubcategory?.trim().toLowerCase() || "";
   const priceBounds = priceBoundsFromTier(priceTier);
+
+  useEffect(() => {
+    if (!isFiberAllowedForCategory(fiberTab, primaryCategory)) {
+      setFiberTab("all");
+      setSelectedFiberSubtypes([]);
+      setSelectedFabricConstructions([]);
+    }
+  }, [fiberTab, primaryCategory]);
 
   const syncUrl = useCallback(
     (
@@ -458,13 +467,15 @@ export default function ShopClient({
         else setLoadingMore(true);
         try {
           const result = await getShopProducts({
-            fiber: fiberTab !== "all" ? fiberTab : undefined,
+            fiber: materialQuery.fiber,
             categories: categoryList.length ? categoryList : undefined,
             brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
             fiberSubtypes: selectedFiberSubtypes.length ? selectedFiberSubtypes : undefined,
             fabricConstructions: selectedFabricConstructions.length
               ? selectedFabricConstructions
               : undefined,
+            materialSubtype: materialQuery.materialSubtype,
+            fabricConstruction: materialQuery.fabricConstruction,
             color: selectedColor || undefined,
             maxPrice: priceBounds.maxPrice ?? null,
             minPrice: priceBounds.minPrice ?? null,
@@ -494,9 +505,7 @@ export default function ShopClient({
             });
           }
           if (result.total != null) {
-            setResultTotal((prev) =>
-              prev != null && result.total != null && result.total < prev ? prev : result.total
-            );
+            setResultTotal(result.total);
           }
           setHasMore(result.hasMore);
         } catch {
@@ -531,15 +540,18 @@ export default function ShopClient({
   ]);
 
   useEffect(() => {
+    setResultTotal(null);
     setCountLoading(true);
     getShopCatalogCount({
-      fiber: fiberTab,
+      fiber: materialQuery.fiber,
       categories: categoryList.length ? categoryList : undefined,
       brandSlugs: selectedBrandSlugs.length ? selectedBrandSlugs : undefined,
       fiberSubtypes: selectedFiberSubtypes.length ? selectedFiberSubtypes : undefined,
       fabricConstructions: selectedFabricConstructions.length
         ? selectedFabricConstructions
         : undefined,
+      materialSubtype: materialQuery.materialSubtype,
+      fabricConstruction: materialQuery.fabricConstruction,
       color: selectedColor || undefined,
       maxPrice: priceBounds.maxPrice ?? null,
       minPrice: priceBounds.minPrice ?? null,
@@ -594,18 +606,21 @@ export default function ShopClient({
 
   const displayResultTotal =
     resultTotal ??
-    (initialTotal > 0 ? initialTotal : null) ??
+    (initialTotal > 0 && useGlobalCountHint ? initialTotal : null) ??
     (useGlobalCountHint && globalCount > 0
       ? globalCount
       : useGlobalCountHint && fiberTab !== "all" && fiberCountsState[fiberTab]
         ? fiberCountsState[fiberTab]
-        : useGlobalCountHint
-          ? catalogKnownTotal
-          : null);
+        : null);
 
-  const displayTotal = displayResultTotal ?? (useGlobalCountHint ? catalogKnownTotal : products.length);
+  const displayTotal = shopDisplayedCount({
+    resultTotal: displayResultTotal,
+    productsOnPage: rankedProducts.length,
+    filtersActive: !useGlobalCountHint,
+    unfilteredKnownTotal: useGlobalCountHint ? catalogKnownTotal : undefined,
+  });
   const displayedResultCount = selectedSubcategory ? rankedProducts.length : displayTotal;
-  const pagingTotal = displayTotal > 0 ? displayTotal : catalogKnownTotal;
+  const pagingTotal = (displayTotal ?? 0) > 0 ? displayTotal! : catalogKnownTotal;
   const canLoadMore = products.length > 0 && products.length < pagingTotal;
 
   const loadMoreProducts = useCallback(() => {
@@ -635,7 +650,7 @@ export default function ShopClient({
 
   const activeFilterChips = [
     ...(fiberTab !== "all"
-      ? [{ id: "fiber", label: FIBER_TABS.find((t) => t.key === fiberTab)?.label || fiberTab, onRemove: () => { setFiberTab("all"); setListOffset(0); } }]
+      ? [{ id: "fiber", label: fiberOptions.find((t) => t.key === fiberTab)?.label || fiberTab, onRemove: () => { setFiberTab("all"); setListOffset(0); } }]
       : []),
     ...categoryList.map((cat) => ({
       id: `cat-${cat}`,
@@ -777,14 +792,12 @@ export default function ShopClient({
             isLoading={countLoading && displayResultTotal == null}
             fiberTab={fiberTab}
             categoryFilter={categoryList[0] ?? "all"}
-            fiberOptions={FIBER_TABS}
+            fiberOptions={fiberOptions}
             categoryOptions={[{ key: "all" as const, label: "All" }, ...CATEGORY_FILTERS]}
             onFiberChange={(key) => {
               setFiberTab(key);
               setSelectedFiberSubtypes([]);
               setSelectedFabricConstructions([]);
-              setSelectedCategories(new Set());
-              setSelectedSubcategory(null);
               setListOffset(0);
             }}
             onCategoryChange={(key) => {
@@ -794,6 +807,7 @@ export default function ShopClient({
               setListOffset(0);
             }}
             subcategoryOptions={subcategoryOptions}
+            subcategoryTitle={shoesSelected ? "Shoe type" : "Style"}
             selectedSubcategory={selectedSubcategory}
             onSubcategoryChange={(subcategory) => {
               setSelectedSubcategory(subcategory);
@@ -868,7 +882,7 @@ export default function ShopClient({
           <p className="text-[11px] md:text-xs text-muted-foreground" data-testid="text-result-count-desktop">
             {countLoading && displayResultTotal == null ? (
               <span className="animate-pulse">Loading…</span>
-            ) : displayedResultCount > 0 ? (
+            ) : (displayedResultCount ?? 0) > 0 ? (
               <><span className="text-foreground">{displayedResultCount.toLocaleString()}</span> verified pieces</>
             ) : null}
           </p>
@@ -935,7 +949,7 @@ export default function ShopClient({
           onClose={() => setShowFilterSheet(false)}
           title="Filter"
           subtitle={
-            displayTotal > 0
+            (displayTotal ?? 0) > 0
               ? `${displayTotal.toLocaleString()} verified pieces`
               : countLoading && displayResultTotal == null
                 ? "Loading…"
@@ -951,27 +965,59 @@ export default function ShopClient({
             </button>
           }
         >
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Wear to where</p>
-              <div className="flex flex-wrap gap-2 mb-8 max-h-[140px] overflow-y-auto">
-                {WEAR_TO_WHERE_OPTIONS.map((opt) => (
-                  <Link
-                    key={opt.key}
-                    href={opt.href}
-                    onClick={() => setShowFilterSheet(false)}
-                    className="px-4 py-2 text-[10px] uppercase tracking-[0.12em] border border-border/40 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {CATEGORY_FILTERS.map(cat => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => toggleCategory(cat.key)}
+                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                      selectedCategories.has(cat.key) ? "border-foreground bg-foreground text-background" : "border-border/40"
+                    }`}
                   >
-                    {opt.label}
-                  </Link>
+                    {cat.label}
+                  </button>
                 ))}
               </div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Material</p>
+              {subcategoryOptions.length > 0 && (
+                <>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
+                    {shoesSelected ? "Shoe type" : "Style"}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {subcategoryOptions.map((subcategory) => (
+                      <button
+                        key={subcategory}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSubcategory(
+                            selectedSubcategory === subcategory ? null : subcategory
+                          );
+                          setListOffset(0);
+                        }}
+                        className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
+                          selectedSubcategory === subcategory
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border/40"
+                        }`}
+                      >
+                        {subcategory}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
+                {shoesSelected ? "Shoe fiber" : "Material"}
+              </p>
               <div className="flex flex-wrap gap-2 mb-4">
-                {MATERIAL_FILTER_OPTIONS.map(tab => (
+                {materialFilterOptions.map(tab => (
                   <button
                     key={tab.key}
                     type="button"
                     onClick={() => {
-                      setFiberTab(tab.key);
+                      setFiberTab(fiberTab === tab.key ? "all" : tab.key);
                       setSelectedFiberSubtypes([]);
                       setSelectedFabricConstructions([]);
                       setListOffset(0);
@@ -1041,47 +1087,6 @@ export default function ShopClient({
                     </button>
                   ))}
                 </div>
-              )}
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Category</p>
-              <div className="flex flex-wrap gap-2 mb-8">
-                {CATEGORY_FILTERS.map(cat => (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    onClick={() => toggleCategory(cat.key)}
-                    className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-                      selectedCategories.has(cat.key) ? "border-foreground bg-foreground text-background" : "border-border/40"
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-              {subcategoryOptions.length > 0 && (
-                <>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Style</p>
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {subcategoryOptions.map((subcategory) => (
-                      <button
-                        key={subcategory}
-                        type="button"
-                        onClick={() => {
-                          setSelectedSubcategory(
-                            selectedSubcategory === subcategory ? null : subcategory
-                          );
-                          setListOffset(0);
-                        }}
-                        className={`px-4 py-2 text-[10px] uppercase tracking-[0.12em] border ${
-                          selectedSubcategory === subcategory
-                            ? "border-foreground bg-foreground text-background"
-                            : "border-border/40"
-                        }`}
-                      >
-                        {subcategory}
-                      </button>
-                    ))}
-                  </div>
-                </>
               )}
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Color</p>
               <div className="flex flex-wrap gap-2 mb-8">
@@ -1159,7 +1164,7 @@ export default function ShopClient({
               </div>
         </CatalogMobileSheet>
 
-        {fiberTab !== "all" && (
+        {SHOP_APPAREL_FIBER_OPTIONS.some((opt) => opt.key === fiberTab) && (
           <div className="flex items-center justify-end mb-4 -mt-2">
             <Link
               href={`/materials/${fiberTab}`}
