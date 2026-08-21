@@ -61,10 +61,10 @@ export function StoryTabs({
         role="tabpanel"
         id={`story-panel-${current.id}`}
         aria-labelledby={`story-tab-${current.id}`}
-        className="grid gap-10 items-start itx-understand-copy lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]"
+        className="grid gap-8 lg:gap-12 items-start lg:grid-cols-[minmax(20rem,28rem)_minmax(0,1fr)]"
         key={current.id}
       >
-        <div className="min-w-0">
+        <div className="min-w-0 itx-understand-copy">
           <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{current.eyebrow}</p>
           <h3 className="text-2xl sm:text-3xl font-light mb-4" style={SERIF}>
             {current.title}
@@ -94,7 +94,7 @@ export function StoryTabs({
             <PrimaryLink href={current.href}>{current.cta}</PrimaryLink>
           )}
         </div>
-        <div className="min-w-0 w-full">{panels[current.id]}</div>
+        <div className="min-w-0 w-full overflow-hidden">{panels[current.id]}</div>
       </div>
     </div>
   );
