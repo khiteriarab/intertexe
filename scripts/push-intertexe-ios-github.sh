@@ -1,49 +1,80 @@
 #!/usr/bin/env bash
-# Publish the local INTERTEXE iOS Xcode project to GitHub.
+# Commit + push the Mac INTERTEXE iOS tree to the git remote Xcode Cloud already builds.
 #
-# Why this exists: khiteriarab/intertexe-ios does not exist. The iPhone app
-# lives on the founder Mac at ~/Desktop/intertexe-ios. Cloud agents attached
-# to khiteriarab/intertexe cannot see or push that tree.
+# Xcode Cloud builds 423 and 424 failed with 1 error on the same "Stop sending…"
+# commit that succeeded as 422. This Linux website clone cannot change that —
+# there is no .swift here. Run this on the founder Mac.
 #
-# Run on the Mac that has Xcode:
 #   bash scripts/push-intertexe-ios-github.sh
 #
 # Optional:
 #   INTERTEXE_IOS_ROOT=/path/to/intertexe-ios
-#   INTERTEXE_IOS_REPO=khiteriarab/intertexe-ios
 
 set -euo pipefail
 
-REPO="${INTERTEXE_IOS_REPO:-khiteriarab/intertexe-ios}"
-DEFAULT_ROOT="${HOME}/Desktop/intertexe-ios"
-ROOT="${INTERTEXE_IOS_ROOT:-$DEFAULT_ROOT}"
-BRANCH="main"
+DEFAULT_MAC_ROOT="/Users/khiteri/Desktop/intertexe-ios"
+ROOT="${INTERTEXE_IOS_ROOT:-$DEFAULT_MAC_ROOT}"
+FALLBACK_REPO="${INTERTEXE_IOS_REPO:-khiteriarab/intertexe-ios}"
 
 die() { echo "error: $*" >&2; exit 1; }
 info() { echo "==> $*"; }
 
+fix_scanner_auto() {
+  local f
+  f="$(find . -name 'ScannerView.swift' ! -path './intertexe-website/*' ! -path './browser-extension/*' | head -n 1 || true)"
+  [[ -n "$f" ]] || return 0
+  if ! grep -Eq '(textInputAutocapitalization|autocapitalization|keyboardType|focusMode|exposureMode)\(\.auto\)|\.auto\b' "$f"; then
+    info "ScannerView.swift has no .auto token to patch ($f)"
+    return 0
+  fi
+  info "Patching known invalid .auto uses in $f"
+  python3 - "$f" <<'PY'
+import pathlib, re, sys
+path = pathlib.Path(sys.argv[1])
+text = path.read_text()
+orig = text
+replacements = [
+    (r"textInputAutocapitalization\(\.auto\)", "textInputAutocapitalization(.sentences)"),
+    (r"autocapitalization\(\.auto\)", "textInputAutocapitalization(.sentences)"),
+    (r"keyboardType\(\.auto\)", "keyboardType(.default)"),
+    (r"focusMode\s*=\s*\.auto\b", "focusMode = .continuousAutoFocus"),
+    (r"exposureMode\s*=\s*\.auto\b", "exposureMode = .continuousAutoExposure"),
+    (r"AVCaptureDevice\.FocusMode\.auto\b", "AVCaptureDevice.FocusMode.continuousAutoFocus"),
+    (r"AVCaptureDevice\.ExposureMode\.auto\b", "AVCaptureDevice.ExposureMode.continuousAutoExposure"),
+]
+for pattern, repl in replacements:
+    text = re.sub(pattern, repl, text)
+if text == orig:
+    print("no conservative .auto replacement matched; open the Xcode Cloud error line", file=sys.stderr)
+else:
+    path.write_text(text)
+    print(f"updated {path}")
+PY
+}
+
 if [[ "$(uname -s)" != "Darwin" ]]; then
   cat <<EOF
-This is not the founder Mac (uname=$(uname -s)).
+This Cursor agent is on Linux, cloning khiteriarab/intertexe (website).
+It has no iOS source, so it cannot commit a fix for Xcode Cloud 423 / 424.
 
-GitHub has no khiteriarab/intertexe-ios repo. The Xcode project is only at
-  /Users/khiteri/Desktop/intertexe-ios
-on Khiteri's Mac. This Linux cloud workspace is khiteriarab/intertexe
-(website). It has zero .swift / .xcodeproj files, so it cannot commit or
-push an iOS build.
+Those builds failed with 1 error on the same "Stop sending…" commit that
+succeeded as 422 (17 Aug). Website pushes do not change that product.
+Xcode Cloud compiles the git remote of:
 
-On the Mac, from a clone of this website repo (or copy this script over):
+  ${DEFAULT_MAC_ROOT}
+
+On the Mac:
 
   bash scripts/push-intertexe-ios-github.sh
 
-That creates ${REPO}, commits local iOS work, and pushes ${BRANCH}.
-Then point Xcode Cloud / the next Cursor agent at ${REPO} — not this website.
+That commits local iOS work (including a ScannerView.swift .auto patch when
+present) and git pushes to the existing origin Xcode Cloud already watches,
+which is what can make build 425 succeed.
 EOF
   exit 2
 fi
 
 command -v git >/dev/null || die "git is required"
-command -v gh >/dev/null || die "GitHub CLI (gh) is required and must be logged in"
 
 [[ -d "$ROOT" ]] || die "iOS project not found at $ROOT
 Set INTERTEXE_IOS_ROOT to the folder that contains the .xcodeproj."
@@ -52,67 +83,20 @@ cd "$ROOT"
 info "iOS root: $ROOT"
 
 XCODE_PROJECT="$(find . -maxdepth 3 \( -name '*.xcodeproj' -o -name '*.xcworkspace' \) ! -path './intertexe-website/*' ! -path './browser-extension/*' ! -path './.git/*' | head -n 1 || true)"
-[[ -n "$XCODE_PROJECT" ]] || die "No .xcodeproj / .xcworkspace under $ROOT (excluding nested website/extension copies).
-This folder does not look like the INTERTEXE iOS app."
+[[ -n "$XCODE_PROJECT" ]] || die "No .xcodeproj / .xcworkspace under $ROOT (excluding nested website/extension copies)."
 
 info "Found Xcode project: $XCODE_PROJECT"
+[[ -d .git ]] || die "$ROOT is not a git repo. Xcode Cloud needs git. Open the real INTERTEXE iOS folder."
 
-GITIGNORE_FILE="$ROOT/.gitignore"
-if [[ ! -f "$GITIGNORE_FILE" ]]; then
-  info "Writing iOS .gitignore"
-  cat > "$GITIGNORE_FILE" <<'GITIGNORE'
-# Nested copies already published to other GitHub repos — do not upload here.
-/intertexe-website/
-/browser-extension/
-
-# Xcode / CocoaPods / SPM
-DerivedData/
-*.xcuserstate
-xcuserdata/
-*.xccheckout
-*.xcscmblueprint
-*.moved-aside
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
-build/
-Build/
-Pods/
-Podfile.lock
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-.sourcekit-lsp/
-
-# Secrets — never commit
-.env
-.env.*
-!.env.example
-*.p8
-*.p12
-*.mobileprovision
-AuthKey_*.p8
-GoogleService-Info.plist
-*Secret*.xcconfig
-*Secrets*.xcconfig
-
-# macOS
-.DS_Store
-GITIGNORE
+info "HEAD $(git rev-parse --short HEAD) on $(git rev-parse --abbrev-ref HEAD)"
+if git remote get-url origin >/dev/null 2>&1; then
+  info "origin $(git remote get-url origin)"
+else
+  info "no origin remote yet"
 fi
+git status --short | head -40 || true
 
-if [[ ! -d .git ]]; then
-  info "Initializing git repository"
-  git init -b "$BRANCH"
-fi
-
-if ! git rev-parse --abbrev-ref HEAD >/dev/null 2>&1; then
-  git checkout -B "$BRANCH"
-fi
-
-CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-if [[ "$CURRENT_BRANCH" != "$BRANCH" ]]; then
-  info "On $CURRENT_BRANCH — pushing that branch as well as creating $BRANCH if needed"
-fi
+fix_scanner_auto
 
 if git status --porcelain | grep -q .; then
   git add -A
@@ -120,36 +104,36 @@ if git status --porcelain | grep -q .; then
   if git diff --cached --quiet; then
     info "Nothing to commit after excluding nested website/extension copies"
   else
-    git commit -m "Publish INTERTEXE iOS source so GitHub / Xcode Cloud builds can run."
+    git commit -m "Fix ScannerView compile error so Xcode Cloud main can go green."
     info "Created commit $(git rev-parse --short HEAD)"
   fi
 else
-  info "Working tree already clean"
+  info "Working tree already clean — Xcode Cloud 423/424 already built this SHA"
+  info "If the 1 error is still present, it is on this commit; inspect build 424's red X."
 fi
 
-git rev-parse HEAD >/dev/null 2>&1 || die "No commits in $ROOT. Add the Xcode project first."
-
-if ! gh repo view "$REPO" >/dev/null 2>&1; then
-  info "Creating GitHub repo $REPO"
-  gh repo create "$REPO" --private --source=. --remote=origin --push --description "INTERTEXE iOS — Fabric Scanner"
+if git remote get-url origin >/dev/null 2>&1; then
+  git push -u origin HEAD
+  info "Pushed $(git rev-parse --short HEAD) to $(git remote get-url origin)"
 else
-  info "GitHub repo $REPO already exists"
-  if git remote get-url origin >/dev/null 2>&1; then
-    info "origin: $(git remote get-url origin)"
+  command -v gh >/dev/null || die "No git origin, and gh is not installed. Add the remote Xcode Cloud uses, then rerun."
+  if gh repo view "$FALLBACK_REPO" >/dev/null 2>&1; then
+    git remote add origin "https://github.com/${FALLBACK_REPO}.git"
   else
-    git remote add origin "https://github.com/${REPO}.git"
+    info "Creating $FALLBACK_REPO because this iOS tree has no origin"
+    gh repo create "$FALLBACK_REPO" --private --source=. --remote=origin --push --description "INTERTEXE iOS — Fabric Scanner"
   fi
   git push -u origin HEAD
+  info "Pushed $(git rev-parse --short HEAD) to $(git remote get-url origin)"
+  echo "Connect Xcode Cloud to this origin if it was watching a different remote."
 fi
 
-info "Pushed $(git rev-parse --short HEAD) to https://github.com/${REPO}"
 cat <<EOF
 
-Next:
-  1. Open Xcode → Settings → Accounts / Xcode Cloud and connect ${REPO}
-  2. Archive / TestFlight from this commit, after ScannerView.swift compiles
-     and the Share Extension App Group is enabled on the Apple team
-  3. Launch the next Cursor Cloud Agent against ${REPO}, not khiteriarab/intertexe
+Xcode Cloud next:
+  1. App Store Connect → Xcode Cloud → main → start a new build (425)
+  2. If it still fails, open 425's red X and fix that one compiler/signing line
+  3. Do not retry the old SHA without a new commit
 
-Do not put AuthKey_*.p8, .p12, or GoogleService-Info.plist on GitHub.
+Do not commit AuthKey_*.p8, .p12, or GoogleService-Info.plist.
 EOF
