@@ -18,11 +18,11 @@ import {
 } from "./platform-ui";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
 import { CatalogMarquee } from "./CatalogMarquee";
-import { ResourceCarousel } from "./ResourceCarousel";
 import { StoryTabs, type StoryTab } from "./StoryTabs";
 import { ChromeExtensionStage, HeroProductStage } from "./product-stages";
 import { EcosystemStage } from "./EcosystemStage";
 import { UnderstandCatalog } from "./UnderstandCatalog";
+import { PricingPlans } from "./PricingPlans";
 
 const EU_TEXTILE =
   "https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en";
@@ -260,18 +260,6 @@ export function PlatformHome() {
       </section>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Workspace</Eyebrow>
-        <Heading className="mb-4">One workspace for material intelligence.</Heading>
-        <Body className="max-w-2xl mb-8">
-          Overview, Issues, Benchmarking, Passport Studio and Regulatory Monitor live in one INTERTEXE workspace.
-          The full mockups are on Discover — this page stays a story, not a product tour.
-        </Body>
-        <DiscoverLink href="/platform/discover">Discover</DiscoverLink>
-      </section>
-
-      <CatalogMarquee />
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Platform story</Eyebrow>
         <Heading className="mb-4">Graphs, tabs and the live product — not a manifesto first.</Heading>
         <Body className="max-w-2xl mb-10">
@@ -331,9 +319,19 @@ export function PlatformHome() {
         />
       </section>
 
-      <ResourceCarousel />
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
+        <Eyebrow>Workspace</Eyebrow>
+        <Heading className="mb-4">One workspace for material intelligence.</Heading>
+        <Body className="max-w-2xl mb-8">
+          Overview, Issues, Benchmarking, Passport Studio and Regulatory Monitor live in one INTERTEXE workspace.
+          The full mockups are on Discover — this page stays a story, not a product tour.
+        </Body>
+        <DiscoverLink href="/platform/discover">Discover</DiscoverLink>
+      </section>
 
       <EcosystemStage />
+
+      <CatalogMarquee />
 
       <UnderstandCatalog />
 
@@ -380,106 +378,7 @@ export function PlatformHome() {
         <PrimaryLink href="/platform/demo">Explore the live demo</PrimaryLink>
       </section>
 
-      <section
-        id="pricing"
-        className="bg-white border-y border-[#e8e3da] py-10 sm:py-16 md:py-24"
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <Eyebrow>How to start</Eyebrow>
-          <Heading className="mb-4">Try it. Prove it. Run it.</Heading>
-          <Body className="max-w-2xl mb-8">
-            See INTERTEXE with your own products. Do not sit through a generic software demo first. Send 10 product
-            records — INTERTEXE shows what it finds, what is missing, how the material data compares, and what it
-            would take to make those products passport-ready.
-          </Body>
-          <p className="text-[13px] tracking-[0.1em] uppercase text-[#8a847c] mb-10">
-            Try it → Prove it → Run it → Enterprise
-          </p>
-          <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-            <article className="border border-[#e8e3da] bg-[#f7f5f1] p-6 flex flex-col">
-              <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Try it</p>
-              <h3 className="text-xl mb-2" style={SERIF}>
-                Free 10-Product Material Snapshot
-              </h3>
-              <p className="text-3xl font-light mb-3" style={SERIF}>
-                €0
-              </p>
-              <p className="text-sm text-[#5c5854] leading-relaxed mb-6 flex-1">
-                See what INTERTEXE finds in your own catalog. Normalized materials, conflicts, missing information,
-                data completeness, DPP gaps and a limited peer benchmark — inside a real INTERTEXE workspace.
-              </p>
-              <PrimaryLink href="/platform/request?intent=snapshot&cta=pricing_snapshot">
-                Request my snapshot
-              </PrimaryLink>
-            </article>
-            <article className="border border-[#152238] bg-white p-6 flex flex-col">
-              <p className="text-[10px] tracking-[0.16em] uppercase text-[#152238] mb-2">Prove it</p>
-              <h3 className="text-xl mb-2" style={SERIF}>
-                Founding Pilot
-              </h3>
-              <p className="text-3xl font-light mb-3" style={SERIF}>
-                $5,000
-              </p>
-              <p className="text-sm text-[#5c5854] leading-relaxed mb-4">
-                100 complex products or 500 structured rows. 50% to start / 50% on completion. Target 10-business-day
-                delivery and one revision.
-              </p>
-              <ul className="text-sm text-[#5c5854] space-y-1.5 mb-6 flex-1 leading-relaxed">
-                {[
-                  "Material Intelligence analysis",
-                  "Data normalization and conflict detection",
-                  "Missing-data register and provenance",
-                  "Human review",
-                  "Benchmarking snapshot",
-                  "DPP data preparation and initial passport generation",
-                  "QR identities and downloadable structured data",
-                ].map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              <PrimaryLink href="/platform/request?intent=founding_pilot&cta=pricing_pilot">
-                Request the Founding Pilot
-              </PrimaryLink>
-            </article>
-            <article className="border border-[#e8e3da] bg-white p-6 flex flex-col">
-              <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Run it</p>
-              <h3 className="text-xl mb-2" style={SERIF}>
-                Ongoing INTERTEXE Platform
-              </h3>
-              <p className="text-3xl font-light mb-3" style={SERIF}>
-                From $499/month
-              </p>
-              <p className="text-sm text-[#5c5854] leading-relaxed mb-6 flex-1">
-                Material intelligence, benchmarking, DPP management and ongoing catalog monitoring. Talk to us about
-                your catalog — we will not lock a public three-tier grid before we know what actually drives cost.
-              </p>
-              <SecondaryLink href="/platform/request?intent=api_access&cta=pricing_platform">
-                Talk to us about your catalog
-              </SecondaryLink>
-            </article>
-            <article className="border border-[#e8e3da] bg-white p-6 flex flex-col">
-              <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Enterprise</p>
-              <h3 className="text-xl mb-2" style={SERIF}>
-                Custom
-              </h3>
-              <p className="text-3xl font-light mb-3" style={SERIF}>
-                Annual
-              </p>
-              <p className="text-sm text-[#5c5854] leading-relaxed mb-6 flex-1">
-                Large catalogs, custom integrations, custom benchmark cohorts, API volume, SSO, supplier networks and
-                dedicated support.
-              </p>
-              <SecondaryLink href="/platform/request?intent=api_access&cta=pricing_enterprise">
-                Talk to us about enterprise
-              </SecondaryLink>
-            </article>
-          </div>
-          <p className="text-xs text-[#8a847c] max-w-3xl leading-relaxed">
-            The Founding Pilot is implementation, analysis, software and a finished material-data project — not a
-            €29/month DPP-tool subscription.
-          </p>
-        </div>
-      </section>
+      <PricingPlans />
     </div>
   );
 }
