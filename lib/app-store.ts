@@ -152,6 +152,17 @@ export function getAppSchemeOpenUrl(nextPath?: string): string {
   return `${scheme}://`;
 }
 
+/**
+ * Product deep link. `intertexe://open?next=/product/{id}` is the Shop tab and
+ * ignores `next`. The live binary routes `/product/:id`, so the complementary
+ * app URL is `intertexe://product/{id}`.
+ */
+export function getAppSchemeProductUrl(productId: string): string {
+  const scheme = getAppUrlScheme();
+  const id = encodeURIComponent(String(productId || "").trim());
+  return `${scheme}://product/${id}`;
+}
+
 export function openAppStore(explicit?: string): void {
   if (typeof window === "undefined") return;
   window.location.href = getAppStoreUrl(explicit);
