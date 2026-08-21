@@ -276,8 +276,8 @@ export default function WeeklyEditEmail({
                   textAlign: "center",
                 }}
               >
-                THURSDAY PREVIEW — This email sends Friday at 9am unless you flag an issue. Reply to
-                this email to request changes.
+                PREVIEW — Subscriber send is Friday at 10:00 AM Eastern / 4:00 PM Barcelona unless
+                you flag an issue. Reply to this email to request changes.
               </Text>
             </Section>
           ) : null}

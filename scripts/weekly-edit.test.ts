@@ -110,6 +110,8 @@ describe("Weekly Edit email", () => {
     assert.match(email, /const kicker = \{[\s\S]*?color: "#1C2B2A"/);
     assert.match(email, /INTERTEXE · THE MATERIAL STANDARD/);
     assert.match(email, /OPEN THE APP/);
+    assert.match(email, /10:00 AM Eastern \/ 4:00 PM Barcelona/);
+    assert.doesNotMatch(email, /Friday at 9am/);
     assert.match(email, /getAppStoreOpenUrl/);
     assert.match(email, /INTERTEXE_INSTAGRAM_URL/);
     assert.match(email, /INTERTEXE_TIKTOK_URL/);
@@ -119,5 +121,14 @@ describe("Weekly Edit email", () => {
     assert.doesNotMatch(email, /instagram\.com\/khiteri/);
     assert.match(send, /selectWeeklyEditProducts/);
     assert.match(send, /editor's picks/);
+  });
+
+  it("lets the service role trigger the internal preview send", () => {
+    const preview = fs.readFileSync(
+      path.join(process.cwd(), "app/api/cron/weekly-edit-preview/route.ts"),
+      "utf8"
+    );
+    assert.match(preview, /SUPABASE_SERVICE_ROLE_KEY/);
+    assert.match(preview, /authorizeWeeklyEditPreview/);
   });
 });
