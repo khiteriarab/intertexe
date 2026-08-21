@@ -65,6 +65,11 @@ describe("Platform material-intelligence page", () => {
     assert.match(home, /Not publicly confirmed/);
     assert.match(comparison, /TrusTrace/);
     assert.match(comparison, /EON/);
+    assert.match(comparison, /Material intelligence/);
+    assert.match(comparison, /DPP creation & hosting/);
+    assert.match(comparison, /Core strength/);
+    assert.match(comparison, /Partial \/ selective/);
+    assert.match(comparison, /View detailed comparison table/);
     assert.match(home, /19 August 2026/);
     assert.doesNotMatch(home, /can't do DPPs/i);
     assert.match(
@@ -135,6 +140,18 @@ describe("Platform material-intelligence page", () => {
     assert.match(stages, /Shop by material/);
     assert.match(tabs, /Understand, compare, act, engage/);
     assert.match(carousel, /Latest product surfaces/);
+    assert.match(carousel, /Chrome extension/);
+    assert.match(carousel, /iPhone app/);
+    assert.match(carousel, /tab: "Platform"/);
+    assert.doesNotMatch(carousel, /Issues inbox/);
+    assert.doesNotMatch(carousel, /Your mix against a peer group/);
+    assert.doesNotMatch(carousel, /Publish when the record is ready/);
+    assert.match(carousel, /surface-chrome-laptop\.jpg/);
+    assert.match(carousel, /surface-iphone-scanner\.jpg/);
+    assert.match(carousel, /surface-platform-laptop\.jpg/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/surface-chrome-laptop.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/surface-iphone-scanner.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/surface-platform-laptop.jpg")));
     assert.match(previewsFromHome(), /onClick/);
   });
 
