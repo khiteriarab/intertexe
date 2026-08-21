@@ -164,6 +164,22 @@ test("lifecycle copy has one CTA each", () => {
   }
 });
 
+test("system lifecycle emails are not signed by Khiteri", () => {
+  for (const branch of Object.values(LIFECYCLE_BRANCHES)) {
+    const copy = copyForLifecycleBranch(branch, "Alex");
+    const blob = [
+      copy.subject,
+      copy.preview,
+      copy.hook,
+      copy.body,
+      copy.ctaLabel,
+      copy.ctaUrl,
+      copy.closing || "",
+    ].join("\n");
+    assert.doesNotMatch(blob, /khiteri/i);
+  }
+});
+
 test("cohort window is [day, day+1) days ago", () => {
   const now = new Date("2026-08-12T15:00:00.000Z");
   const w = cohortWindowIso(4, now);
