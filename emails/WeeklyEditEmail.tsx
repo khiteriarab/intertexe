@@ -17,7 +17,6 @@ import {
 import { getAppStoreOpenUrl } from "../lib/app-store";
 import {
   INTERTEXE_INSTAGRAM_URL,
-  INTERTEXE_SOCIAL_HANDLE,
   INTERTEXE_TIKTOK_URL,
   type WeeklyEditSection,
 } from "../lib/weekly-edit";
@@ -201,6 +200,15 @@ const button = {
   textTransform: "uppercase" as const,
 };
 
+const stackedButton = {
+  ...button,
+  display: "block",
+  width: "100%",
+  boxSizing: "border-box" as const,
+  textAlign: "center" as const,
+  margin: "0 0 10px",
+};
+
 const ghostButton = {
   ...button,
   backgroundColor: CANVAS,
@@ -268,15 +276,6 @@ const footerLink = {
 const hr = {
   borderColor: RULE,
   margin: "28px 0",
-};
-
-const socialLink = {
-  fontFamily: SANS,
-  color: INK,
-  fontSize: "11px",
-  letterSpacing: "0.12em",
-  textDecoration: "none",
-  textTransform: "uppercase" as const,
 };
 
 function formatPrice(price: number, currency: string): string {
@@ -576,22 +575,15 @@ export default function WeeklyEditEmail({
 
           <Hr style={hr} />
 
-          <Section className="we-cell" style={{ margin: "0 0 24px", backgroundColor: CANVAS }}>
-            <Text style={socialLink}>Follow {INTERTEXE_SOCIAL_HANDLE}</Text>
-            <Text style={{ margin: "10px 0 0" }}>
-              <Link href={INTERTEXE_INSTAGRAM_URL} style={socialLink}>
-                Instagram
-              </Link>
-              {"  /  "}
-              <Link href={INTERTEXE_TIKTOK_URL} style={socialLink}>
-                TikTok
-              </Link>
-            </Text>
-          </Section>
-
           <Section className="we-cell" style={{ backgroundColor: CANVAS }}>
-            <Button href={appHref} style={button}>
-              Explore the edit →
+            <Button href={INTERTEXE_TIKTOK_URL} style={stackedButton}>
+              TikTok →
+            </Button>
+            <Button href={INTERTEXE_INSTAGRAM_URL} style={stackedButton}>
+              Instagram →
+            </Button>
+            <Button href={appHref} style={{ ...stackedButton, margin: "0" }}>
+              App →
             </Button>
           </Section>
 
