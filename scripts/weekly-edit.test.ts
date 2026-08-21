@@ -136,9 +136,14 @@ describe("Weekly Edit email", () => {
     assert.match(email, /we-product-grid/);
     assert.match(email, /Shop the edit/);
     assert.doesNotMatch(email, /Explore the edit/);
-    assert.match(email, /TikTok →/);
-    assert.match(email, /Instagram →/);
-    assert.match(email, /App →/);
+    assert.doesNotMatch(email, /TikTok →/);
+    assert.doesNotMatch(email, /stackedButton/);
+    assert.match(email, /email\/icon-tiktok\.png/);
+    assert.match(email, /email\/icon-instagram\.png/);
+    assert.match(email, /email\/icon-app\.png/);
+    assert.match(email, /alt="TikTok"/);
+    assert.match(email, /alt="Instagram"/);
+    assert.match(email, /alt="App"/);
     assert.doesNotMatch(email, /Follow \{INTERTEXE_SOCIAL_HANDLE\}/);
     assert.match(email, /Material intelligence/);
     assert.match(email, /Discover /);
