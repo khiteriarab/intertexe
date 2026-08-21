@@ -7,6 +7,7 @@ import {
   getAppSchemeOpenUrl,
   getAppStoreUrl,
   openAppStore,
+  shouldOpenFallbackToWeb,
 } from "../../lib/app-store";
 
 function resolveOpenDest(next: string): { appNext: string; webNext: string } {
@@ -24,7 +25,9 @@ function resolveOpenDest(next: string): { appNext: string; webNext: string } {
  * Fallback when a Universal Link is opened in a webview (Gmail, etc.)
  * instead of the installed app.
  *
- * Order: custom scheme `intertexe://` (opens installed app) → App Store.
+ * Order: custom scheme `intertexe://` (opens installed app) → web item or App Store.
+ * Catalog destinations fall back to the web page so Weekly Edit shoppers without
+ * the app land on the piece, not the store listing.
  * Chrome extension "Open in INTERTEXE" should not dump desktop users on the App Store.
  */
 export default function OpenAppPage() {
@@ -42,6 +45,7 @@ export default function OpenAppPage() {
       dest.appNext.startsWith("/account");
     const isExtensionOpen =
       cta === "chrome_extension_open" || dest.appNext.startsWith("/capture/");
+    const fallbackToWeb = shouldOpenFallbackToWeb(dest.webNext, cta);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,7 +74,7 @@ export default function OpenAppPage() {
     const t = window.setTimeout(() => {
       if (cancelled || leftPage || document.hidden) return;
       if (isAuthHandoff) return;
-      if (isExtensionOpen) {
+      if (isExtensionOpen || fallbackToWeb) {
         window.location.href = dest.webNext;
         return;
       }
@@ -84,7 +88,7 @@ export default function OpenAppPage() {
       window.removeEventListener("pagehide", markLeft);
       window.removeEventListener("blur", markLeft);
     };
-  }, [schemeUrl, storeUrl, cta, isAuthHandoff, isExtensionOpen, dest.webNext]);
+  }, [schemeUrl, storeUrl, cta, isAuthHandoff, isExtensionOpen, fallbackToWeb, dest.webNext]);
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 text-center">
@@ -93,7 +97,9 @@ export default function OpenAppPage() {
       </p>
       <h1 className="font-serif text-2xl mb-3">Opening INTERTEXE…</h1>
       <p className="text-sm text-muted-foreground max-w-sm mb-8">
-        If you have the app, tap Open INTERTEXE. If not, continue to the App Store.
+        {fallbackToWeb
+          ? "If you have the app, tap Open INTERTEXE. If not, continue to the piece on the web."
+          : "If you have the app, tap Open INTERTEXE. If not, continue to the App Store."}
       </p>
       <a
         href={schemeUrl}
