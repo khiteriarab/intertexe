@@ -234,8 +234,8 @@ describe("Platform material-intelligence page", () => {
     assert.ok(ecosystemAt >= 0 && ecosystemAt < surfacesAt);
     assert.ok(surfacesAt >= 0 && surfacesAt < catalogAt);
     assert.ok(catalogAt >= 0 && catalogAt < understandAt);
-    assert.ok(understandAt >= 0 && understandAt < demoAt);
-    assert.ok(demoAt >= 0 && demoAt < pricingAt);
+    assert.ok(understandAt >= 0 && understandAt < pricingAt);
+    assert.ok(pricingAt >= 0 && pricingAt < demoAt);
     assert.match(pricing, /Try it. Prove it. Run it/);
     assert.match(pricing, /See INTERTEXE with your own products/);
     assert.match(pricing, /Your data. Your insights/);

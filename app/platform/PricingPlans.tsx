@@ -81,7 +81,7 @@ const VALUES = [
 
 export function PricingPlans() {
   return (
-    <section id="pricing" className="bg-[#f7f5f1] border-t border-[#e8e3da] py-10 sm:py-16 md:py-24">
+    <section id="pricing" className="bg-[#f7f5f1] border-t border-[#e8e3da] pt-10 sm:pt-16 md:pt-24 pb-2">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)] gap-8 lg:gap-12 mb-12 sm:mb-16 items-start">
           <div>
@@ -157,7 +157,7 @@ export function PricingPlans() {
           not publish a three-tier grid before we know what drives cost.
         </p>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-10 border-t border-[#e8e3da]">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-10 border-t border-[#e8e3da] pb-10 sm:pb-12">
           {VALUES.map((item) => (
             <div key={item.title}>
               <span className="mb-3 flex h-8 items-center text-[#152238]" aria-hidden="true">

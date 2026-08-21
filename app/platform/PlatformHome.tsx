@@ -359,7 +359,9 @@ export function PlatformHome() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20">
+      <PricingPlans />
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20 border-t border-[#e8e3da]">
         <Eyebrow>Live demo</Eyebrow>
         <Heading className="mb-4">See the INTERTEXE workflow on a 10-product catalog.</Heading>
         <Body className="max-w-2xl mb-8">
@@ -369,8 +371,6 @@ export function PlatformHome() {
         </Body>
         <PrimaryLink href="/platform/demo">Explore the live demo</PrimaryLink>
       </section>
-
-      <PricingPlans />
     </div>
   );
 }
