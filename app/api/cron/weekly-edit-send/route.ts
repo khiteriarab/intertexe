@@ -7,7 +7,7 @@ import { authorizeCron, getWeekNumber } from "@/lib/cron-auth";
 import { EMAIL_FROM, EMAIL_REPLY_TO, EMAIL_TYPES } from "@/lib/email-constants";
 import { sendCustomerEmailBatch } from "@/lib/resend-customer";
 import { createServiceClient } from "@/lib/supabase/server";
-import { listMarketingSubscriberEmails } from "@/lib/weekly-edit";
+import { getWeeklyEditMeta, listMarketingSubscriberEmails, selectWeeklyEditProducts } from "@/lib/weekly-edit";
 
 export async function GET(req: NextRequest) {
   const denied = authorizeCron(req);
@@ -41,20 +41,28 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No subscribers found" }, { status: 500 });
     }
 
+    // Gate on Thursday preview, but rebuild products + copy so Friday
+    // does not send a stale random catalog (e.g. the Loewe poplin shirt).
+    const emailProducts = await selectWeeklyEditProducts(supabase, weekNumber);
+    const { fiberFact, collection } = getWeeklyEditMeta(weekNumber);
+
     const emailHtml = await render(
       WeeklyEditEmail({
         weekNumber,
-        collectionName: queuedEdit.collection_name,
-        collectionUrl: queuedEdit.collection_url,
-        collectionSubline: queuedEdit.collection_subline,
-        fiberFact: queuedEdit.fiber_fact,
-        fiberFactFiber: queuedEdit.fiber_fact_fiber,
-        products: queuedEdit.products,
+        collectionName: collection.name,
+        collectionUrl: collection.url,
+        collectionSubline: collection.subline,
+        collectionImageUrl: collection.imageUrl,
+        fiberFact: fiberFact.fact,
+        fiberFactFiber: fiberFact.fiber,
+        fiberFactHeadline: fiberFact.headline,
+        fiberFactTraits: [...fiberFact.traits],
+        products: emailProducts,
         isPreview: false,
       })
     );
 
-    const subject = `The Intertexe Edit — ${queuedEdit.collection_name} and eight verified pieces`;
+    const subject = `The Weekly Edit — ${collection.name}`;
     const batchSize = 100;
     let sent = 0;
     let failed = 0;
@@ -82,7 +90,17 @@ export async function GET(req: NextRequest) {
 
     await supabase
       .from("weekly_edit_queue")
-      .update({ status: "sent", sent_at: new Date().toISOString(), sent_count: sent })
+      .update({
+        status: "sent",
+        sent_at: new Date().toISOString(),
+        sent_count: sent,
+        products: emailProducts,
+        collection_name: collection.name,
+        collection_url: collection.url,
+        collection_subline: collection.subline,
+        fiber_fact: fiberFact.fact,
+        fiber_fact_fiber: fiberFact.fiber,
+      })
       .eq("week_number", weekNumber);
 
     return NextResponse.json({ success: true, sent, failed });

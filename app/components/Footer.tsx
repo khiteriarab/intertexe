@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandWordmark } from "./BrandWordmark";
 import { SITE_FOOTER_DISCLOSURE, SITE_FOOTER_TAGLINE } from "../../lib/site-copy";
+import { getChromeWebStoreUrl } from "../../lib/chrome-extension";
 
 export function Footer() {
   return (
@@ -34,6 +35,13 @@ export function Footer() {
           <div className="flex flex-col gap-3 md:gap-4">
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Company</h3>
             <Link href="/platform" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-platform">Platform</Link>
+            <a
+              href={getChromeWebStoreUrl()}
+              className="text-sm text-background/70 hover:text-background transition-colors"
+              data-testid="link-footer-chrome"
+            >
+              Chrome extension
+            </a>
             <Link href="/platform/demo" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-platform-demo">Live demo</Link>
             <Link href="/press" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-press">Press</Link>
           </div>
@@ -63,7 +71,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-4 md:gap-6">
               <a href="https://instagram.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-instagram">Instagram</a>
-              <a href="https://tiktok.com/@shopintertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-tiktok">TikTok</a>
+              <a href="https://tiktok.com/@intertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-tiktok">TikTok</a>
               <a href="https://pinterest.com/shopintertexe" target="_blank" rel="noopener noreferrer" className="text-[10px] md:text-xs text-background/40 uppercase tracking-widest hover:text-background transition-colors" data-testid="link-footer-pinterest">Pinterest</a>
             </div>
           </div>

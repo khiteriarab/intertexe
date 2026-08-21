@@ -25,7 +25,10 @@ export async function GET() {
     priceTiers: SHOP_PRICE_TIERS.map((tier) => ({ id: tier.id, label: tier.label })),
     notes: {
       colorAbovePrice: true,
-      shoes: "Selecting Shoes shows shoe type, then shoe fibers (leather, suede, nubuck, canvas).",
+      shoes:
+        "Selecting Shoes opens /shop/shoes (and /api/shop?category=shoes) with shoe type, then leather/suede/nubuck/canvas. Type aliases: type, shoeType, subcategory. Material aliases: material, fiber, materialSubtype.",
+      shoesPath: "/shop/shoes",
+      shoesApi: "/api/shop?category=shoes&type=Sandals&material=suede",
     },
   });
 }

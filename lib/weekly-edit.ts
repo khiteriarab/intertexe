@@ -1,18 +1,51 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { liveProductsApparelFrom } from "./global-catalog-scope";
+import { isFootwearListing } from "./catalog-product-filters";
 import { getCollectionForWeek } from "./collection-rotation";
 import { getFiberFactForWeek } from "./fiber-facts";
+import { collectionEditTitle, collectionImageUrl } from "./weekly-edit-presentation";
+
+/** INTERTEXE brand socials — Weekly Edit follow CTA (not @Khiteri). */
+export const INTERTEXE_SOCIAL_HANDLE = "@intertexe";
+export const INTERTEXE_INSTAGRAM_URL = "https://www.instagram.com/intertexe";
+export const INTERTEXE_TIKTOK_URL = "https://www.tiktok.com/@intertexe";
+
+export const WEEKLY_EDIT_MIX = {
+  shoes: 2,
+  clothing: 3,
+  sale: 3,
+} as const;
+
+export type WeeklyEditSection = "shoes" | "clothing" | "sale";
 
 export type WeeklyEditProduct = {
   id: string;
   name: string;
   brand: string;
   price: number;
+  originalPrice?: number | null;
   currency: string;
   imageUrl: string;
   url: string;
   naturalFiberPercent: number;
   composition: string;
+  category?: string;
+  isSale?: boolean;
+  section?: WeeklyEditSection;
+};
+
+export type WeeklyEditPickInput = {
+  id: string;
+  name: string;
+  brand: string;
+  price: number;
+  originalPrice: number;
+  currency: string;
+  imageUrl: string;
+  url: string;
+  naturalFiberPercent: number;
+  composition: string;
+  category: string;
+  isSale: boolean;
 };
 
 function parsePrice(val: unknown): number {
@@ -21,47 +54,134 @@ function parsePrice(val: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function isOnSale(product: { isSale?: boolean; price: number; originalPrice?: number | null }): boolean {
+  if (product.isSale) return true;
+  const original = Number(product.originalPrice || 0);
+  return original > product.price && product.price > 0;
+}
+
+function takeUnused<T extends { id: string }>(pool: T[], count: number, seen: Set<string>): T[] {
+  const out: T[] = [];
+  for (const item of pool) {
+    if (!item.id || seen.has(item.id)) continue;
+    seen.add(item.id);
+    out.push(item);
+    if (out.length >= count) break;
+  }
+  return out;
+}
+
+/**
+ * Always 2 shoes + 3 clothing + 3 sale from curator `is_editor_pick` rows.
+ * Never fills from the random apparel catalog (that path put the Loewe poplin shirt in the edit).
+ */
+export function assembleWeeklyEditPicks(picks: WeeklyEditPickInput[]): WeeklyEditProduct[] {
+  const shoesPool = picks
+    .filter((p) => isFootwearListing(p))
+    .sort((a, b) => Number(isOnSale(a)) - Number(isOnSale(b)));
+  const clothingPool = picks
+    .filter((p) => !isFootwearListing(p))
+    .sort((a, b) => Number(isOnSale(a)) - Number(isOnSale(b)));
+  const salePool = picks.filter((p) => isOnSale(p));
+
+  const seen = new Set<string>();
+  const shoes = takeUnused(shoesPool, WEEKLY_EDIT_MIX.shoes, seen);
+  const clothing = takeUnused(clothingPool, WEEKLY_EDIT_MIX.clothing, seen);
+  const sale = takeUnused(salePool, WEEKLY_EDIT_MIX.sale, seen);
+
+  const tagged = [
+    ...shoes.map((p) => ({ ...p, section: "shoes" as const, isSale: isOnSale(p) })),
+    ...clothing.map((p) => ({ ...p, section: "clothing" as const, isSale: isOnSale(p) })),
+    ...sale.map((p) => ({ ...p, section: "sale" as const, isSale: true })),
+  ];
+
+  return tagged.map((p) => ({
+    id: p.id,
+    name: p.name,
+    brand: p.brand,
+    price: p.price,
+    originalPrice: p.originalPrice > p.price ? p.originalPrice : null,
+    currency: p.currency,
+    imageUrl: p.imageUrl,
+    url: p.url,
+    naturalFiberPercent: p.naturalFiberPercent,
+    composition: p.composition,
+    category: p.category,
+    isSale: p.isSale,
+    section: p.section,
+  }));
+}
+
+function mapEditorPickRow(row: Record<string, unknown>): WeeklyEditPickInput | null {
+  const id = String(row.product_id || row.id || "").trim();
+  const imageUrl = String(row.image_url || "").trim();
+  const name = String(row.name || "").trim();
+  if (!id || !imageUrl || !name) return null;
+  const price = parsePrice(row.price);
+  if (!(price > 0)) return null;
+  const originalPrice = parsePrice(row.original_price);
+  return {
+    id,
+    name,
+    brand: String(row.brand_name || "").trim(),
+    price,
+    originalPrice,
+    currency: String(row.currency || "USD"),
+    imageUrl,
+    url: `https://www.intertexe.com/product/${id}`,
+    naturalFiberPercent: Math.round(Number(row.natural_fiber_percent) || 0),
+    composition: String(row.composition || ""),
+    category: String(row.category || ""),
+    isSale: row.is_sale === true || (originalPrice > price && price > 0),
+  };
+}
+
 export async function selectWeeklyEditProducts(
   supabase: SupabaseClient,
-  weekNumber: number
+  _weekNumber?: number
 ): Promise<WeeklyEditProduct[]> {
-  const { data: products, error } = await liveProductsApparelFrom(supabase)
-    
+  const { data: products, error } = await supabase
+    .from("products")
     .select(
-      "id, name, brand_name, price, currency, image_url, url, natural_fiber_percent, composition"
+      "id, product_id, name, brand_name, price, original_price, currency, image_url, url, natural_fiber_percent, composition, category, is_sale, is_editor_pick, editor_picked_at, region, is_displayable"
     )
-    .eq("currency", "USD")
-    .gte("natural_fiber_percent", 90)
-    .gte("price", 200)
+    .eq("is_editor_pick", true)
+    .eq("is_displayable", true)
+    .eq("region", "us")
     .not("image_url", "is", null)
-    .order("natural_fiber_percent", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(24);
+    .not("price", "is", null)
+    .order("editor_picked_at", { ascending: false })
+    .limit(72);
 
   if (error) throw new Error(error.message);
-  if (!products || products.length < 8) {
-    throw new Error("Not enough products for weekly edit");
+
+  const seen = new Set<string>();
+  const picks: WeeklyEditPickInput[] = [];
+  for (const row of products || []) {
+    const mapped = mapEditorPickRow(row as Record<string, unknown>);
+    if (!mapped || seen.has(mapped.id)) continue;
+    seen.add(mapped.id);
+    picks.push(mapped);
   }
 
-  const shuffled = [...products].sort(() => Math.random() - 0.5).slice(0, 8);
-
-  return shuffled.map((p) => ({
-    id: String(p.id),
-    name: p.name || "",
-    brand: p.brand_name || "",
-    price: parsePrice(p.price),
-    currency: p.currency || "USD",
-    imageUrl: p.image_url || "",
-    url: p.url || `https://www.intertexe.com/product/${p.id}`,
-    naturalFiberPercent: Math.round(Number(p.natural_fiber_percent) || 0),
-    composition: p.composition || "",
-  }));
+  const assembled = assembleWeeklyEditPicks(picks);
+  if (!assembled.length) {
+    throw new Error("Not enough editor's picks for weekly edit");
+  }
+  return assembled;
 }
 
 export function getWeeklyEditMeta(weekNumber: number) {
   const fiberFact = getFiberFactForWeek(weekNumber);
   const collection = getCollectionForWeek(weekNumber);
-  return { fiberFact, collection };
+  return {
+    fiberFact,
+    collection: {
+      ...collection,
+      editTitle: collectionEditTitle(collection.name),
+      imageUrl: collectionImageUrl(collection.name),
+    },
+  };
 }
 
 export async function listMarketingSubscriberEmails(

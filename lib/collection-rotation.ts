@@ -2,8 +2,7 @@ export const collectionRotation = [
   {
     name: "Vacation",
     url: "https://www.intertexe.com/collections/vacation",
-    subline:
-      "Resort dressing for warm water and warm light. Linen that moves. Silk at sunset. Composition verified.",
+    subline: "Last-minute pieces in linen, silk and cotton.",
   },
   {
     name: "Evening",

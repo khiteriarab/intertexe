@@ -4,13 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { render } from "@react-email/render";
 import { Resend } from "resend";
 import WeeklyEditEmail from "@/emails/WeeklyEditEmail";
-import { authorizeCron, getWeekNumber } from "@/lib/cron-auth";
+import { authorizeWeeklyEditPreview, getWeekNumber } from "@/lib/cron-auth";
 import { EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/email-constants";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getWeeklyEditMeta, selectWeeklyEditProducts } from "@/lib/weekly-edit";
 
 export async function GET(req: NextRequest) {
-  const denied = authorizeCron(req);
+  const denied = await authorizeWeeklyEditPreview(req);
   if (denied) return denied;
 
   const previewEmail = process.env.WEEKLY_EDIT_PREVIEW_EMAIL;
@@ -34,8 +34,11 @@ export async function GET(req: NextRequest) {
         collectionName: collection.name,
         collectionUrl: collection.url,
         collectionSubline: collection.subline,
+        collectionImageUrl: collection.imageUrl,
         fiberFact: fiberFact.fact,
         fiberFactFiber: fiberFact.fiber,
+        fiberFactHeadline: fiberFact.headline,
+        fiberFactTraits: [...fiberFact.traits],
         products: emailProducts,
         isPreview: true,
       })
