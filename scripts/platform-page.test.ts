@@ -186,6 +186,7 @@ describe("Platform material-intelligence page", () => {
     assert.match(nav, /Log in/);
     assert.match(nav, /Discover/);
     assert.match(home, /One workspace for material intelligence/);
+    assert.match(home, /UnderstandCatalog/);
     assert.match(home, /href="\/platform\/discover"/);
     assert.match(home, />Discover</);
     assert.doesNotMatch(home, /See INTERTEXE analyze a real catalog/);
@@ -197,6 +198,16 @@ describe("Platform material-intelligence page", () => {
     const catalogAt = home.indexOf("<CatalogMarquee");
     const workspaceAt = home.indexOf("One workspace for material intelligence");
     assert.ok(workspaceAt >= 0 && catalogAt > workspaceAt);
+    const understand = fs.readFileSync(path.join(process.cwd(), "app/platform/UnderstandCatalog.tsx"), "utf8");
+    assert.match(understand, /Ingest/);
+    assert.match(understand, /Structure/);
+    assert.match(understand, /Diagnose/);
+    assert.match(understand, /setActiveId/);
+    assert.match(understand, /understand-ingest-laptop\.jpg/);
+    assert.match(understand, /does not fabricate product data/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/understand-ingest-laptop.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/understand-structure-laptop.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/understand-diagnose-laptop.jpg")));
   });
 });
 

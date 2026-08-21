@@ -1014,10 +1014,29 @@
   animation-play-state: paused;
 }
 
+@keyframes itx-understand-copy {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.itx-understand-copy {
+  animation: itx-understand-copy 0.45s ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .itx-marquee-track {
     animation: none;
     transform: none;
+  }
+
+  .itx-understand-copy {
+    animation: none;
   }
 }
 

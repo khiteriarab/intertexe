@@ -24,33 +24,13 @@ import { ResourceCarousel } from "./ResourceCarousel";
 import { StoryTabs, type StoryTab } from "./StoryTabs";
 import { ChromeExtensionStage, HeroProductStage } from "./product-stages";
 import { EcosystemStage } from "./EcosystemStage";
+import { UnderstandCatalog } from "./UnderstandCatalog";
 
 const EU_TEXTILE =
   "https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/textile-apparel_en";
 export const COMPARISON_REVIEWED = "19 August 2026";
 const FLOW = ["Understand", "Compare", "Act"] as const;
 const VALUE_CHAIN = "PRODUCT DATA → MATERIAL INTELLIGENCE → BUSINESS INSIGHTS → DIGITAL PRODUCT PASSPORT";
-
-const UNDERSTAND_STEPS = [
-  {
-    n: "01",
-    title: "Ingest",
-    lead: "Start with the files you already have.",
-    copy: "Excel, CSV, PLM/PIM exports, supplier sheets. Brands do not need a clean catalog before INTERTEXE can work.",
-  },
-  {
-    n: "02",
-    title: "Structure",
-    lead: "Normalize without overwriting the original.",
-    copy: "CO becomes cotton. PA and nylon become the same polyamide. Shell and lining stay separate components. Two sources that disagree stay visible. Original values and provenance remain on the record.",
-  },
-  {
-    n: "03",
-    title: "Diagnose",
-    lead: "Know exactly what is wrong or missing.",
-    copy: "Conflicts, invalid percentage totals, missing identifiers, incomplete supplier data and evidence gaps become an Issues Inbox — not another spreadsheet audit.",
-  },
-];
 
 const RETAIN = [
   {
@@ -225,15 +205,6 @@ const POSITION_ROWS = [
   ["Passport ready", "62%", "41%"],
 ] as const;
 
-const AUDIT = [
-  ["8,420", "products analyzed"],
-  ["1,271", "missing required fields"],
-  ["384", "conflicting compositions"],
-  ["217", "invalid percentage totals"],
-  ["94", "missing identifiers"],
-  ["736", "require supplier information"],
-] as const;
-
 const STORY_TABS: StoryTab[] = [
   {
     id: "understand",
@@ -389,45 +360,7 @@ export function PlatformHome() {
 
       <EcosystemStage />
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <Eyebrow>Understand</Eyebrow>
-        <Heading className="mb-3 max-w-3xl">What happens when a brand uploads its catalog.</Heading>
-        <Body className="max-w-2xl mb-10">
-          Say a fashion company gives us 10,000 products. The information might look like this. The Understand tab
-          above is the interactive normalize and issues view.
-        </Body>
-        <ol className="grid md:grid-cols-3 gap-x-10 gap-y-10 mb-12">
-          {UNDERSTAND_STEPS.map((step) => (
-            <li key={step.n} className="border-t border-[#e8e3da] pt-5">
-              <p className="text-[11px] tracking-[0.18em] uppercase text-[#152238] mb-2">
-                {step.n} — {step.title}
-              </p>
-              <h3 className="text-lg mb-2" style={SERIF}>
-                {step.lead}
-              </h3>
-              <p className="text-sm text-[#5c5854] leading-relaxed">{step.copy}</p>
-            </li>
-          ))}
-        </ol>
-        <p className="text-sm text-[#161513] mb-8 max-w-2xl">
-          Missing information remains missing. INTERTEXE does not fabricate product data.
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-px bg-[#e8e3da] border border-[#e8e3da] mb-8">
-          {AUDIT.map(([n, label]) => (
-            <div key={label} className="bg-white p-5">
-              <p className="text-2xl font-light tabular-nums" style={SERIF}>
-                {n}
-              </p>
-              <p className="text-[11px] tracking-[0.08em] uppercase text-[#8a847c] mt-2">{label}</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-[#8a847c] mb-8">
-          Illustrative example. Counts are not a live customer catalog. Teams click from each issue into the product
-          and fix it.
-        </p>
-        <DiscoverLink href="/platform/discover">Discover</DiscoverLink>
-      </section>
+      <UnderstandCatalog />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <Eyebrow>Compare</Eyebrow>
