@@ -17,6 +17,18 @@ function shouldBypassCloudflareImageProxy(rawUrl: string): boolean {
   }
 }
 
+function shopifyCroppedUrl(rawUrl: string, width: number, height: number): string {
+  try {
+    const parsed = new URL(rawUrl);
+    parsed.searchParams.set("width", String(width));
+    parsed.searchParams.set("height", String(height));
+    parsed.searchParams.set("crop", "center");
+    return parsed.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
 export function cfImage(
   url: string | null | undefined,
   options: {
@@ -31,7 +43,6 @@ export function cfImage(
 
   if (url.includes("cdn-cgi/image")) return url;
   if (url.startsWith("/") || url.startsWith("data:")) return url;
-  if (shouldBypassCloudflareImageProxy(url)) return url;
 
   const {
     width = 800,
@@ -40,6 +51,11 @@ export function cfImage(
     format = "auto",
     fit = "cover",
   } = options;
+
+  if (shouldBypassCloudflareImageProxy(url)) {
+    if (width && height) return shopifyCroppedUrl(url, width, height);
+    return url;
+  }
 
   const params = [
     width ? `width=${width}` : "",
@@ -67,3 +83,10 @@ export const cfHomepageRail = (url: string | null | undefined) =>
 
 export const cfScanResult = (url: string | null | undefined) =>
   cfImage(url, { width: 600, quality: 85 });
+
+/** Same pixel box for every Weekly Edit grid card so packshots and model shots match. */
+export const cfWeeklyEditCard = (url: string | null | undefined) =>
+  cfImage(url, { width: 500, height: 640, fit: "cover", quality: 80 });
+
+export const cfWeeklyEditHero = (url: string | null | undefined) =>
+  cfImage(url, { width: 1120, height: 600, fit: "cover", quality: 85 });

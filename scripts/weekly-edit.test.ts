@@ -11,6 +11,7 @@ import {
   INTERTEXE_TIKTOK_URL,
   WEEKLY_EDIT_MIX,
   weeklyEditOpenHref,
+  weeklyEditProductHref,
   type WeeklyEditPickInput,
 } from "../lib/weekly-edit.ts";
 import { hrefToSitePath, shouldOpenFallbackToWeb } from "../lib/app-store.ts";
@@ -153,8 +154,11 @@ describe("Weekly Edit email", () => {
     assert.doesNotMatch(email, /Intertexe verified/);
     assert.doesNotMatch(email, /INTERTEXE VERIFIED/);
     assert.match(email, /weeklyEditOpenHref/);
+    assert.match(email, /weeklyEditProductHref/);
     assert.match(email, /productOpenHref/);
     assert.doesNotMatch(email, /href=\{product\.url\}/);
+    assert.match(email, /cfWeeklyEditCard/);
+    assert.match(email, /height: 280px/);
     assert.match(email, /email_weekly_edit_app/);
     assert.match(email, /10:00 AM Eastern \/ 4:00 PM Barcelona/);
     assert.doesNotMatch(email, /Friday at 9am/);
@@ -305,21 +309,30 @@ describe("Weekly Edit seasonal editorial", () => {
 });
 
 describe("Weekly Edit app / web product links", () => {
-  it("uses the product Universal Link, not /open, so iOS opens the item", () => {
-    const href = weeklyEditOpenHref("https://www.intertexe.com/product/staud-greta");
+  it("hops through /p/{id} so Gmail cannot send the app to Shop", () => {
+    assert.equal(
+      weeklyEditProductHref("0fd5a9b1-6751-47ef-bfa4-78a46bb9e644"),
+      "https://www.intertexe.com/p/0fd5a9b1-6751-47ef-bfa4-78a46bb9e644"
+    );
     assert.equal(hrefToSitePath("https://www.intertexe.com/product/staud-greta"), "/product/staud-greta");
-    assert.equal(href, "https://www.intertexe.com/product/staud-greta");
-    assert.doesNotMatch(href, /\/open\?/);
     assert.equal(
       weeklyEditOpenHref("/shop?fiber=cashmere"),
       "https://www.intertexe.com/shop?fiber=cashmere"
     );
     const appIcon = weeklyEditOpenHref("/shop", "email_weekly_edit_app");
     assert.match(appIcon, /\/open\?/);
-    assert.match(appIcon, /next=%2Fshop/);
     const weekly = fs.readFileSync(path.join(process.cwd(), "lib/weekly-edit.ts"), "utf8");
     assert.match(weekly, /row\.id \|\| row\.product_id/);
-    assert.doesNotMatch(weekly, /row\.product_id \|\| row\.id/);
+    const aasa = fs.readFileSync(
+      path.join(process.cwd(), "app/.well-known/apple-app-site-association/route.ts"),
+      "utf8"
+    );
+    assert.doesNotMatch(aasa, /\"\/p\"/);
+    assert.doesNotMatch(aasa, /\"\/p\/\*\"/);
+    const hop = fs.readFileSync(path.join(process.cwd(), "app/p/[id]/page.tsx"), "utf8");
+    assert.match(hop, /from \"\.\.\/\.\.\/product\/\[id\]\/page\"/);
+    assert.doesNotMatch(hop, /getAppSchemeOpenUrl/);
+    assert.doesNotMatch(hop, /intertexe:\/\//);
   });
 
   it("falls back to the web item when the app is not installed, not the App Store", () => {

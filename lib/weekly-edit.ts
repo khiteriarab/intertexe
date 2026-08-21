@@ -34,6 +34,12 @@ export function weeklyEditOpenHref(
   return `${APP_UNIVERSAL_ORIGIN}${normalized}`;
 }
 
+/** Email hop that is NOT an AASA path, so Gmail cannot dump /open onto Shop. */
+export function weeklyEditProductHref(id: string): string {
+  const slug = encodeURIComponent(String(id || "").trim());
+  return `${APP_UNIVERSAL_ORIGIN}/p/${slug}`;
+}
+
 export const WEEKLY_EDIT_MIX = {
   shoes: 2,
   clothing: 3,
