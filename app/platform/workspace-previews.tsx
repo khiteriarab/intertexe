@@ -74,7 +74,7 @@ const METRICS = [
 ] as const;
 
 const FIBERS = [
-  ["Cotton", 36, "#c5d4c8"],
+  ["Cotton", 36, "#d9cbb8"],
   ["Polyester", 28, "#7d9bb8"],
   ["Viscose", 13, "#9c7b8b"],
   ["Wool", 8, "#c4a574"],
@@ -407,7 +407,7 @@ export function BenchmarkPreview({ className = "mb-8", caption }: { className?: 
             })}
           </ul>
           <p className="text-[10px] tracking-[0.1em] uppercase text-[#8a847c] mt-4">
-            Forest = your brand · Grey = peer group
+            Navy = your brand · Grey = peer group
           </p>
         </Card>
         <Card>
