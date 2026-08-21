@@ -329,9 +329,10 @@ describe("Weekly Edit app / web product links", () => {
     );
     assert.doesNotMatch(aasa, /\"\/p\"/);
     assert.doesNotMatch(aasa, /\"\/p\/\*\"/);
-    const hop = fs.readFileSync(path.join(process.cwd(), "app/p/[id]/EmailProductOpenClient.tsx"), "utf8");
-    assert.match(hop, /getAppSchemeOpenUrl\(productPath\)/);
-    assert.match(hop, /\/product\/\$\{/);
+    const hop = fs.readFileSync(path.join(process.cwd(), "app/p/[id]/page.tsx"), "utf8");
+    assert.match(hop, /from \"\.\.\/\.\.\/product\/\[id\]\/page\"/);
+    assert.doesNotMatch(hop, /getAppSchemeOpenUrl/);
+    assert.doesNotMatch(hop, /intertexe:\/\//);
   });
 
   it("falls back to the web item when the app is not installed, not the App Store", () => {

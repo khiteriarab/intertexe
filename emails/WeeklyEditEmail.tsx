@@ -327,8 +327,8 @@ function ProductCopy({
 
   return (
     <>
-      <Text style={brandText}>{product.brand}</Text>
       <Link href={productOpenHref(product)} style={productLink}>
+        <Text style={brandText}>{product.brand}</Text>
         <Text style={nameStyle}>{name}</Text>
       </Link>
       {spec.label ? <Text style={materialLabel}>{spec.label}</Text> : null}
@@ -391,7 +391,17 @@ function ProductCell({
         backgroundColor: CANVAS,
       }}
     >
-      <Link href={productOpenHref(product)}>
+      <Link
+        href={productOpenHref(product)}
+        style={{
+          display: "block",
+          height: "280px",
+          maxHeight: "280px",
+          overflow: "hidden",
+          lineHeight: "0",
+          backgroundColor: WELL,
+        }}
+      >
         <Img
           src={cfWeeklyEditCard(product.imageUrl) || product.imageUrl}
           alt={`${product.brand} ${name}`}

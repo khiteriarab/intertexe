@@ -1,16 +1,27 @@
 import type { Metadata } from "next";
-import EmailProductOpenClient from "./EmailProductOpenClient";
+import ProductPage, {
+  generateMetadata as generateProductMetadata,
+  generateStaticParams,
+} from "../../product/[id]/page";
 
-export const metadata: Metadata = {
-  title: "Opening the piece",
-  robots: { index: false, follow: false },
-};
+export { generateStaticParams };
+export const revalidate = 0;
+export const dynamicParams = true;
 
-export default async function EmailProductOpenPage({
-  params,
-}: {
+/**
+ * Weekly Edit emails use /p/{id} instead of /product/{id}.
+ * AASA claims /product/* and /open, so Gmail hands those URLs to the native app,
+ * which lands on Shop instead of this piece. /p is not in AASA, so the browser
+ * loads this page — the same PDP as /product/{id}.
+ */
+export async function generateMetadata(args: {
   params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  return <EmailProductOpenClient productId={id} />;
+}): Promise<Metadata> {
+  const meta = await generateProductMetadata(args);
+  return {
+    ...meta,
+    robots: { index: false, follow: false },
+  };
 }
+
+export default ProductPage;
