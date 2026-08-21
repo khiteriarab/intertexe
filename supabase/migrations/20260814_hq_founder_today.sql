@@ -14,6 +14,7 @@ DECLARE
   day_end timestamptz;
   d7 timestamptz;
   d30 timestamptz;
+  week_start timestamptz;
   out jsonb;
 BEGIN
   SELECT COALESCE(definition->>'value', 'Europe/Paris')
@@ -32,6 +33,8 @@ BEGIN
   day_end := day_start + interval '1 day';
   d7 := day_start - interval '7 days';
   d30 := day_start - interval '30 days';
+  -- Monday 00:00 of the current ISO week
+  week_start := date_trunc('week', timezone(tz, now())) AT TIME ZONE tz;
 
   WITH first_scans AS (
     SELECT s.user_id::text AS uid, min(s.scanned_at) AS first_at
@@ -152,6 +155,94 @@ BEGIN
           AND c.contact_type IN ('customer','influencer','business','brand')
         GROUP BY c.contact_type
       ) t
+    ),
+    'bd', (
+      SELECT jsonb_build_object(
+        'week_contacted', count(*) FILTER (WHERE c.last_contacted_at >= week_start AND c.last_contacted_at < day_end)::int,
+        'week_replies', count(*) FILTER (WHERE c.last_replied_at >= week_start AND c.last_replied_at < day_end)::int,
+        'week_accounts', count(*) FILTER (WHERE c.account_created_at >= week_start AND c.account_created_at < day_end)::int,
+        'week_activated', count(*) FILTER (
+          WHERE c.user_id IS NOT NULL
+            AND c.account_created_at >= week_start AND c.account_created_at < day_end
+            AND EXISTS (SELECT 1 FROM first_scans f WHERE f.uid = c.user_id::text)
+        )::int,
+        'week_by_type', (
+          SELECT coalesce(jsonb_object_agg(sub.ct, sub.cnt), '{}'::jsonb)
+          FROM (
+            SELECT c2.contact_type AS ct, count(*)::int AS cnt
+            FROM public.hq_contacts c2
+            WHERE c2.workspace_id = p_workspace_id
+              AND c2.last_contacted_at >= week_start AND c2.last_contacted_at < day_end
+            GROUP BY c2.contact_type
+          ) sub
+        ),
+        'week_intros', (
+          SELECT count(*)::int FROM public.hq_contact_outreach o2
+          JOIN public.hq_contacts c2 ON c2.id = o2.contact_id
+          WHERE c2.workspace_id = p_workspace_id
+            AND o2.event_type = 'email_sent' AND o2.channel = 'gmail'
+            AND o2.sent_at >= week_start AND o2.sent_at < day_end
+        ),
+        'week_follow_ups', (
+          SELECT count(*)::int FROM public.hq_contact_outreach o2
+          JOIN public.hq_contacts c2 ON c2.id = o2.contact_id
+          WHERE c2.workspace_id = p_workspace_id
+            AND o2.event_type = 'follow_up_sent' AND o2.channel = 'gmail'
+            AND o2.sent_at >= week_start AND o2.sent_at < day_end
+        ),
+        'week_reply_rate', CASE
+          WHEN count(*) FILTER (WHERE c.last_contacted_at >= week_start AND c.last_contacted_at < day_end) > 0
+          THEN round(
+            count(*) FILTER (WHERE c.last_replied_at >= week_start AND c.last_replied_at < day_end)::numeric
+            / count(*) FILTER (WHERE c.last_contacted_at >= week_start AND c.last_contacted_at < day_end)::numeric * 100, 1
+          )
+          ELSE 0
+        END,
+        'introductions_due', count(*) FILTER (
+          WHERE c.outreach_status NOT IN ('converted','not_interested','dormant')
+            AND c.last_contacted_at IS NULL
+        )::int,
+        'follow_ups_due', count(*) FILTER (
+          WHERE c.next_follow_up_at IS NOT NULL
+            AND c.next_follow_up_at <= now()
+            AND c.outreach_status NOT IN ('converted','not_interested','dormant')
+        )::int,
+        'replies_need_attention', count(*) FILTER (
+          WHERE c.last_replied_at IS NOT NULL
+            AND c.user_id IS NULL
+            AND (c.last_contacted_at IS NULL OR c.last_replied_at >= c.last_contacted_at)
+            AND c.outreach_status NOT IN ('converted','not_interested','dormant')
+        )::int,
+        'intro_queue', (
+          SELECT coalesce(jsonb_object_agg(sub.ct, sub.cnt), '{}'::jsonb)
+          FROM (
+            SELECT c2.contact_type AS ct, count(*)::int AS cnt
+            FROM public.hq_contacts c2
+            WHERE c2.workspace_id = p_workspace_id
+              AND c2.last_contacted_at IS NULL
+              AND c2.outreach_status NOT IN ('converted','not_interested','dormant')
+            GROUP BY c2.contact_type
+          ) sub
+        ),
+        'canonical_funnel', jsonb_build_object(
+          'discovered', count(*)::int,
+          'targeted', count(*) FILTER (WHERE c.outreach_status NOT IN ('not_interested','dormant'))::int,
+          'contacted', count(*) FILTER (WHERE c.last_contacted_at IS NOT NULL)::int,
+          'engaged', count(*) FILTER (WHERE c.last_replied_at IS NOT NULL)::int,
+          'acquired', count(*) FILTER (WHERE c.user_id IS NOT NULL)::int,
+          'activated', count(*) FILTER (
+            WHERE c.user_id IS NOT NULL AND EXISTS (SELECT 1 FROM first_scans f WHERE f.uid = c.user_id::text)
+          )::int,
+          'engaged_user', count(*) FILTER (
+            WHERE c.user_id IS NOT NULL AND (SELECT count(*) FROM public.scan_history s WHERE s.user_id = c.user_id) >= 2
+          )::int,
+          'commercial', count(*) FILTER (
+            WHERE c.user_id IS NOT NULL AND EXISTS (SELECT 1 FROM click_users k WHERE k.uid = c.user_id::text)
+          )::int
+        )
+      )
+      FROM public.hq_contacts c
+      WHERE c.workspace_id = p_workspace_id
     )
   ) INTO out;
 
