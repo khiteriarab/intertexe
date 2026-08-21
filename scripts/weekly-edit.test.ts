@@ -305,17 +305,21 @@ describe("Weekly Edit seasonal editorial", () => {
 });
 
 describe("Weekly Edit app / web product links", () => {
-  it("wraps product URLs as Universal Links that still point at the item", () => {
+  it("uses the product Universal Link, not /open, so iOS opens the item", () => {
     const href = weeklyEditOpenHref("https://www.intertexe.com/product/staud-greta");
     assert.equal(hrefToSitePath("https://www.intertexe.com/product/staud-greta"), "/product/staud-greta");
-    assert.match(href, /^https:\/\/www\.intertexe\.com\/open\?/);
-    assert.match(href, /next=%2Fproduct%2Fstaud-greta/);
-    assert.match(href, /itx_cta=email_weekly_edit/);
-    assert.match(href, /utm_campaign=weekly_edit/);
+    assert.equal(href, "https://www.intertexe.com/product/staud-greta");
+    assert.doesNotMatch(href, /\/open\?/);
     assert.equal(
-      weeklyEditOpenHref("/shop?fiber=cashmere").includes("next=%2Fshop%3Ffiber%3Dcashmere"),
-      true
+      weeklyEditOpenHref("/shop?fiber=cashmere"),
+      "https://www.intertexe.com/shop?fiber=cashmere"
     );
+    const appIcon = weeklyEditOpenHref("/shop", "email_weekly_edit_app");
+    assert.match(appIcon, /\/open\?/);
+    assert.match(appIcon, /next=%2Fshop/);
+    const weekly = fs.readFileSync(path.join(process.cwd(), "lib/weekly-edit.ts"), "utf8");
+    assert.match(weekly, /row\.id \|\| row\.product_id/);
+    assert.doesNotMatch(weekly, /row\.product_id \|\| row\.id/);
   });
 
   it("falls back to the web item when the app is not installed, not the App Store", () => {

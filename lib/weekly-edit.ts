@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAppStoreOpenUrl, hrefToSitePath } from "./app-store";
+import { APP_UNIVERSAL_ORIGIN, getAppStoreOpenUrl, hrefToSitePath } from "./app-store";
 import { isFootwearListing } from "./catalog-product-filters";
 import { resolveWeeklyEditEditorial, seasonalProductScore, weekNumberFromDate } from "./weekly-edit-season";
 
@@ -21,10 +21,17 @@ export function weeklyEditOpenHref(
 ): string {
   const path = hrefToSitePath(href);
   if (path === "/open" || path.startsWith("/open?")) return href;
-  return getAppStoreOpenUrl(path, undefined, {
-    cta,
-    params: WEEKLY_EDIT_OPEN_PARAMS,
-  });
+  // App-icon CTA still uses /open so people without the app hit the App Store.
+  if (cta.endsWith("_app")) {
+    return getAppStoreOpenUrl(path, undefined, {
+      cta,
+      params: WEEKLY_EDIT_OPEN_PARAMS,
+    });
+  }
+  // Direct AASA path. Live iOS routes /product/* and /shop; /open is the shop tab
+  // and ignores `next`, which is why Weekly Edit taps were landing on Shop.
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${APP_UNIVERSAL_ORIGIN}${normalized}`;
 }
 
 export const WEEKLY_EDIT_MIX = {
@@ -139,7 +146,8 @@ export function assembleWeeklyEditPicks(
 }
 
 function mapEditorPickRow(row: Record<string, unknown>): WeeklyEditPickInput | null {
-  const id = String(row.product_id || row.id || "").trim();
+  // Shop + iOS Universal Links use the catalog UUID (`id`), not retailer product_id.
+  const id = String(row.id || row.product_id || "").trim();
   const imageUrl = String(row.image_url || "").trim();
   const name = String(row.name || "").trim();
   if (!id || !imageUrl || !name) return null;
@@ -154,7 +162,7 @@ function mapEditorPickRow(row: Record<string, unknown>): WeeklyEditPickInput | n
     originalPrice,
     currency: String(row.currency || "USD"),
     imageUrl,
-    url: `https://www.intertexe.com/product/${id}`,
+    url: `https://www.intertexe.com/product/${encodeURIComponent(id)}`,
     naturalFiberPercent: Math.round(Number(row.natural_fiber_percent) || 0),
     composition: String(row.composition || ""),
     category: String(row.category || ""),
