@@ -14,7 +14,11 @@ import {
 import {
   collectionEditTitle,
   collectionImageUrl,
+  compactFiberCopy,
   displayProductName,
+  fiberDiscoverHref,
+  pairProducts,
+  saleSectionHeading,
   weeklyEditMaterialSpec,
 } from "../lib/weekly-edit-presentation.ts";
 import { jwtRoleClaim, presentedOpsSecret } from "../lib/cron-auth.ts";
@@ -117,10 +121,15 @@ describe("Weekly Edit email", () => {
     assert.match(email, /The Material Standard/);
     assert.match(email, /Pieces worth knowing, selected through a material-first lens/);
     assert.match(email, /The Edit/);
+    assert.match(email, /New to the edit/);
+    assert.match(email, /we-product-grid/);
     assert.match(email, /Shop the edit/);
     assert.match(email, /Explore the edit/);
     assert.match(email, /Material intelligence/);
+    assert.match(email, /Discover /);
     assert.match(email, /weeklyEditMaterialSpec/);
+    assert.doesNotMatch(email, /Intertexe verified/);
+    assert.doesNotMatch(email, /INTERTEXE VERIFIED/);
     assert.match(email, /getAppStoreOpenUrl/);
     assert.match(email, /10:00 AM Eastern \/ 4:00 PM Barcelona/);
     assert.doesNotMatch(email, /Friday at 9am/);
@@ -176,6 +185,17 @@ describe("Weekly Edit presentation", () => {
     assert.equal(collectionEditTitle("The White Edit"), "The White Edit");
     assert.match(collectionImageUrl("Vacation"), /editorial-vacation/);
     assert.equal(displayProductName("Staud Greta Silk Dress", "Staud"), "Greta Silk Dress");
+  });
+
+  it("builds two-column rows and a compact fiber aside", () => {
+    assert.deepEqual(pairProducts([1, 2, 3]).map((row) => row.length), [2, 1]);
+    assert.equal(saleSectionHeading([{ price: 36 }, { price: 85 }]), "Under $500");
+    assert.equal(saleSectionHeading([{ price: 695 }]), "On sale");
+    assert.equal(
+      compactFiberCopy("First sentence. Second sentence. Third stays out."),
+      "First sentence. Second sentence."
+    );
+    assert.equal(fiberDiscoverHref("Wool"), "https://www.intertexe.com/shop?fiber=wool");
   });
 });
 

@@ -23,7 +23,11 @@ import {
 } from "../lib/weekly-edit";
 import {
   collectionEditTitle,
+  compactFiberCopy,
   displayProductName,
+  fiberDiscoverHref,
+  pairProducts,
+  saleSectionHeading,
   weeklyEditMaterialSpec,
 } from "../lib/weekly-edit-presentation";
 
@@ -63,7 +67,7 @@ const INK = "#161616";
 const SLATE = "#5C6570";
 const IVORY = "#F6F3EE";
 const RULE = "#E4DFD6";
-const TEAL = "#3D7A78";
+const GROUND = "#EEEBE5";
 
 const main = {
   backgroundColor: IVORY,
@@ -72,7 +76,7 @@ const main = {
 
 const container = {
   margin: "0 auto",
-  padding: "40px 24px 48px",
+  padding: "36px 20px 44px",
   maxWidth: "600px",
 };
 
@@ -97,7 +101,7 @@ const standardLine = {
 
 const heading = {
   fontFamily: SERIF,
-  fontSize: "32px",
+  fontSize: "30px",
   color: INK,
   fontWeight: "normal" as const,
   margin: "0 0 10px",
@@ -110,16 +114,16 @@ const introText = {
   color: SLATE,
   fontSize: "14px",
   lineHeight: "1.55",
-  margin: "0 0 8px",
+  margin: "0",
 };
 
-const navLabel = {
+const kicker = {
   fontFamily: SANS,
   fontSize: "10px",
   letterSpacing: "0.2em",
   color: INK,
   textTransform: "uppercase" as const,
-  margin: "0 0 28px",
+  margin: "0 0 10px",
 };
 
 const sectionNav = {
@@ -128,38 +132,31 @@ const sectionNav = {
   letterSpacing: "0.18em",
   color: SLATE,
   textTransform: "uppercase" as const,
-  margin: "0 0 20px",
-};
-
-const productBlock = {
-  marginBottom: "40px",
-};
-
-const productImage = {
-  width: "100%",
-  maxWidth: "280px",
-  height: "auto",
-  objectFit: "cover" as const,
-  backgroundColor: "#EEEBE5",
-  display: "block" as const,
+  margin: "0 0 18px",
 };
 
 const brandText = {
   fontFamily: SANS,
-  fontSize: "10px",
+  fontSize: "9px",
   letterSpacing: "0.16em",
   color: SLATE,
   textTransform: "uppercase" as const,
-  margin: "0 0 6px",
+  margin: "10px 0 4px",
 };
 
 const productName = {
   fontFamily: SERIF,
-  fontSize: "18px",
+  fontSize: "15px",
   color: INK,
-  margin: "0 0 12px",
+  margin: "0 0 8px",
   lineHeight: "1.3",
   fontWeight: "normal" as const,
+};
+
+const heroName = {
+  ...productName,
+  fontSize: "20px",
+  margin: "0 0 8px",
 };
 
 const productLink = {
@@ -173,29 +170,20 @@ const materialLabel = {
   letterSpacing: "0.12em",
   color: INK,
   textTransform: "uppercase" as const,
-  margin: "0 0 4px",
-};
-
-const verifiedLabel = {
-  fontFamily: SANS,
-  fontSize: "9px",
-  letterSpacing: "0.14em",
-  color: TEAL,
-  textTransform: "uppercase" as const,
-  margin: "0 0 10px",
+  margin: "0 0 6px",
 };
 
 const priceText = {
   fontFamily: SANS,
-  fontSize: "13px",
-  color: INK,
+  fontSize: "12px",
+  color: SLATE,
   margin: "0",
   letterSpacing: "0.02em",
 };
 
 const wasPrice = {
   textDecoration: "line-through",
-  color: SLATE,
+  color: "#9AA1A9",
 };
 
 const button = {
@@ -224,7 +212,7 @@ const collectionTitle = {
   fontSize: "26px",
   color: INK,
   fontWeight: "normal" as const,
-  margin: "0 0 8px",
+  margin: "0 0 14px",
   letterSpacing: "-0.01em",
 };
 
@@ -233,67 +221,40 @@ const collectionSublineText = {
   fontSize: "14px",
   color: SLATE,
   lineHeight: "1.5",
-  margin: "0 0 18px",
-};
-
-const intelligenceKicker = {
-  fontFamily: SANS,
-  fontSize: "10px",
-  letterSpacing: "0.2em",
-  color: INK,
-  textTransform: "uppercase" as const,
-  margin: "0 0 10px",
+  margin: "14px 0 16px",
 };
 
 const intelligenceHeadline = {
   fontFamily: SERIF,
-  fontSize: "22px",
+  fontSize: "18px",
   color: INK,
   fontWeight: "normal" as const,
-  margin: "0 0 20px",
-  lineHeight: "1.25",
+  margin: "0 0 8px",
+  lineHeight: "1.3",
 };
 
-const intelligenceFiber = {
-  fontFamily: SANS,
-  fontSize: "12px",
-  letterSpacing: "0.16em",
-  color: INK,
-  textTransform: "uppercase" as const,
-  margin: "0 0 4px",
-};
-
-const intelligenceMeta = {
+const traitLine = {
   fontFamily: SANS,
   fontSize: "10px",
-  letterSpacing: "0.14em",
-  color: TEAL,
-  textTransform: "uppercase" as const,
-  margin: "0 0 16px",
-};
-
-const traitText = {
-  fontFamily: SANS,
-  fontSize: "10px",
-  letterSpacing: "0.14em",
+  letterSpacing: "0.12em",
   color: SLATE,
   textTransform: "uppercase" as const,
-  margin: "0 0 4px",
+  margin: "0 0 10px",
 };
 
 const factText = {
   fontFamily: SANS,
   fontSize: "13px",
   color: INK,
-  lineHeight: "1.65",
-  margin: "16px 0 0",
+  lineHeight: "1.55",
+  margin: "0 0 16px",
 };
 
 const footer = {
   fontFamily: SANS,
   color: SLATE,
   fontSize: "11px",
-  margin: "40px 0 0",
+  margin: "36px 0 0",
   lineHeight: "1.6",
 };
 
@@ -304,7 +265,7 @@ const footerLink = {
 
 const hr = {
   borderColor: RULE,
-  margin: "36px 0",
+  margin: "28px 0",
 };
 
 const socialLink = {
@@ -314,12 +275,6 @@ const socialLink = {
   letterSpacing: "0.12em",
   textDecoration: "none",
   textTransform: "uppercase" as const,
-};
-
-const SECTION_LABELS: Record<WeeklyEditSection, string> = {
-  shoes: "Shoes",
-  clothing: "Clothing",
-  sale: "On sale",
 };
 
 function formatPrice(price: number, currency: string): string {
@@ -338,69 +293,116 @@ function openAppHref(): string {
   });
 }
 
-function ProductModule({ product }: { product: WeeklyEditEmailProduct }) {
+function ProductCopy({
+  product,
+  nameStyle = productName,
+}: {
+  product: WeeklyEditEmailProduct;
+  nameStyle?: typeof productName;
+}) {
   const spec = weeklyEditMaterialSpec({
     composition: product.composition,
     naturalFiberPercent: product.naturalFiberPercent,
   });
   const name = displayProductName(product.name, product.brand);
-  const onSale = Boolean(
-    product.originalPrice && product.originalPrice > product.price
-  );
+  const onSale = Boolean(product.originalPrice && product.originalPrice > product.price);
 
   return (
-    <Section style={productBlock} className="we-product">
-      <Row>
-        <Column
-          className="we-product-col"
+    <>
+      <Text style={brandText}>{product.brand}</Text>
+      <Link href={product.url} style={productLink}>
+        <Text style={nameStyle}>{name}</Text>
+      </Link>
+      {spec.label ? <Text style={materialLabel}>{spec.label}</Text> : null}
+      <Text style={priceText}>
+        {formatPrice(product.price, product.currency)}
+        {onSale ? (
+          <>
+            {"  "}
+            <span style={wasPrice}>{formatPrice(product.originalPrice as number, product.currency)}</span>
+          </>
+        ) : null}
+      </Text>
+    </>
+  );
+}
+
+function HeroProduct({ product }: { product: WeeklyEditEmailProduct }) {
+  const name = displayProductName(product.name, product.brand);
+  return (
+    <Section style={{ margin: "0 0 28px" }} className="we-hero">
+      <Link href={product.url}>
+        <Img
+          src={product.imageUrl}
+          alt={`${product.brand} ${name}`}
+          width="560"
+          height="300"
+          className="we-hero-img"
           style={{
-            display: "inline-block",
-            width: "280px",
-            maxWidth: "100%",
-            verticalAlign: "top",
+            width: "100%",
+            height: "auto",
+            objectFit: "cover",
+            backgroundColor: GROUND,
+            display: "block",
           }}
-        >
-          <Link href={product.url}>
-            <Img
-              src={product.imageUrl}
-              alt={`${product.brand} ${name}`}
-              width="280"
-              height="360"
-              className="we-product-img"
-              style={productImage}
-            />
-          </Link>
-        </Column>
-        <Column
-          className="we-product-copy"
+        />
+      </Link>
+      <ProductCopy product={product} nameStyle={heroName} />
+    </Section>
+  );
+}
+
+function ProductCell({
+  product,
+  padRight,
+}: {
+  product: WeeklyEditEmailProduct;
+  padRight: boolean;
+}) {
+  const name = displayProductName(product.name, product.brand);
+  return (
+    <Column
+      className="we-grid-col"
+      style={{
+        width: "50%",
+        verticalAlign: "top",
+        paddingRight: padRight ? "10px" : "0px",
+        paddingLeft: padRight ? "0px" : "10px",
+        paddingBottom: "24px",
+      }}
+    >
+      <Link href={product.url}>
+        <Img
+          src={product.imageUrl}
+          alt={`${product.brand} ${name}`}
+          width="250"
+          height="320"
+          className="we-grid-img"
           style={{
-            display: "inline-block",
-            width: "248px",
-            maxWidth: "100%",
-            paddingLeft: "0px",
-            paddingTop: "16px",
-            verticalAlign: "top",
+            width: "100%",
+            height: "auto",
+            objectFit: "cover",
+            backgroundColor: GROUND,
+            display: "block",
           }}
-        >
-          <Text style={brandText}>{product.brand}</Text>
-          <Link href={product.url} style={productLink}>
-            <Text style={productName}>{name}</Text>
-          </Link>
-          {spec.label ? <Text style={materialLabel}>{spec.label}</Text> : null}
-          {spec.verified ? <Text style={verifiedLabel}>Intertexe verified</Text> : null}
-          <Text style={{ ...priceText, marginTop: spec.verified || spec.label ? "10px" : "0" }}>
-            {formatPrice(product.price, product.currency)}
-            {onSale ? (
-              <>
-                {"  "}
-                <span style={wasPrice}>
-                  {formatPrice(product.originalPrice as number, product.currency)}
-                </span>
-              </>
-            ) : null}
-          </Text>
-        </Column>
-      </Row>
+        />
+      </Link>
+      <ProductCopy product={product} />
+    </Column>
+  );
+}
+
+function ProductGrid({ products }: { products: WeeklyEditEmailProduct[] }) {
+  return (
+    <Section className="we-product-grid">
+      {pairProducts(products).map((row) => (
+        <Row key={row.map((product) => product.id).join("-")}>
+          {row.map((product, index) => (
+            <ProductCell key={product.id} product={product} padRight={index === 0} />
+          ))}
+          {row.length === 1 ? <Column style={{ width: "50%" }} /> : null}
+        </Row>
+      ))}
     </Section>
   );
 }
@@ -418,13 +420,14 @@ export default function WeeklyEditEmail({
   isPreview = false,
 }: WeeklyEditEmailProps) {
   const preview = `${isPreview ? "[PREVIEW] " : ""}The Weekly Edit — pieces worth knowing`;
-  const sections = (["shoes", "clothing", "sale"] as const)
-    .map((section) => ({
-      section,
-      items: products.filter((product) => product.section === section),
-    }))
-    .filter((group) => group.items.length > 0);
+  const featured = products.filter(
+    (product) => product.section === "shoes" || product.section === "clothing"
+  );
+  const saleItems = products.filter((product) => product.section === "sale");
   const unsectioned = products.filter((product) => !product.section);
+  const newItems = featured.length ? featured : unsectioned;
+  const hero = newItems[0];
+  const gridItems = newItems.slice(1);
   const appHref = openAppHref();
   const editTitle = collectionEditTitle(collectionName);
   const traits =
@@ -433,38 +436,20 @@ export default function WeeklyEditEmail({
       : ["NATURAL FIBER", "MATERIAL-FIRST", "VERIFIED"];
   const intelligenceTitle =
     fiberFactHeadline || `Why ${String(fiberFactFiber || "this fiber").toLowerCase()} matters`;
+  const discoverHref = fiberDiscoverHref(fiberFactFiber);
+  const discoverLabel = `Discover ${fiberFactFiber || "the fiber"} →`;
 
   return (
     <Html lang="en">
       <Head>
         <style>{`
-          @media only screen and (min-width: 621px) {
-            .we-product-copy {
-              padding-left: 24px !important;
-              padding-top: 8px !important;
-              vertical-align: middle !important;
-            }
+          .we-grid-img, .we-hero-img, .we-collection-img {
+            width: 100% !important;
+            height: auto !important;
           }
-          @media only screen and (max-width: 620px) {
-            .we-product-col,
-            .we-product-copy {
-              display: block !important;
-              width: 100% !important;
-              max-width: 100% !important;
-            }
-            .we-product-copy {
-              padding-left: 0 !important;
-              padding-top: 16px !important;
-            }
-            .we-product-img {
-              width: 100% !important;
-              max-width: 100% !important;
-              height: auto !important;
-            }
-            .we-collection-img {
-              width: 100% !important;
-              height: auto !important;
-            }
+          .we-grid-col {
+            width: 50% !important;
+            max-width: 50% !important;
           }
         `}</style>
       </Head>
@@ -472,7 +457,7 @@ export default function WeeklyEditEmail({
       <Body style={main}>
         <Container style={container}>
           {isPreview ? (
-            <Section style={{ margin: "0 0 28px" }}>
+            <Section style={{ margin: "0 0 24px" }}>
               <Text
                 style={{
                   fontFamily: SANS,
@@ -489,7 +474,7 @@ export default function WeeklyEditEmail({
             </Section>
           ) : null}
 
-          <Section style={{ margin: "0 0 36px" }}>
+          <Section style={{ margin: "0 0 28px" }}>
             <Text style={wordmark}>INTERTEXE</Text>
             <Text style={standardLine}>The Material Standard</Text>
           </Section>
@@ -501,75 +486,70 @@ export default function WeeklyEditEmail({
             Pieces worth knowing, selected through a material-first lens.
           </Text>
 
-          <Hr style={{ ...hr, margin: "28px 0 32px" }} />
+          <Hr style={{ ...hr, margin: "24px 0 28px" }} />
 
-          <Text style={navLabel}>The Edit</Text>
+          <Text style={kicker}>The Edit</Text>
 
-          {(sections.length
-            ? sections
-            : [{ section: "clothing" as const, items: unsectioned }]
-          ).map((group) => (
-            <Section key={group.section} style={{ margin: "0 0 12px" }}>
-              {sections.length ? (
-                <Text style={sectionNav}>{SECTION_LABELS[group.section]}</Text>
-              ) : null}
-              {group.items.map((product) => (
-                <ProductModule key={product.id} product={product} />
-              ))}
-            </Section>
-          ))}
+          {hero ? (
+            <>
+              <Text style={sectionNav}>New to the edit</Text>
+              <HeroProduct product={hero} />
+              {gridItems.length ? <ProductGrid products={gridItems} /> : null}
+            </>
+          ) : null}
 
           <Hr style={hr} />
 
-          <Section style={{ margin: "0 0 8px" }}>
+          <Section style={{ margin: "0 0 4px" }}>
+            <Text style={collectionTitle}>{editTitle}</Text>
             {collectionImageUrl ? (
               <Link href={collectionUrl}>
                 <Img
                   src={collectionImageUrl}
                   alt={editTitle}
-                  width="552"
-                  height="320"
+                  width="560"
+                  height="300"
                   className="we-collection-img"
                   style={{
                     width: "100%",
                     height: "auto",
                     display: "block",
                     objectFit: "cover",
-                    backgroundColor: "#EEEBE5",
-                    marginBottom: "22px",
+                    backgroundColor: GROUND,
                   }}
                 />
               </Link>
             ) : null}
-            <Text style={collectionTitle}>{editTitle}</Text>
             <Text style={collectionSublineText}>{collectionSubline}</Text>
             <Button href={collectionUrl} style={ghostButton}>
               Shop the edit →
             </Button>
           </Section>
 
+          {saleItems.length ? (
+            <>
+              <Hr style={hr} />
+              <Text style={sectionNav}>{saleSectionHeading(saleItems)}</Text>
+              <ProductGrid products={saleItems} />
+            </>
+          ) : null}
+
           <Hr style={hr} />
 
           <Section>
-            <Text style={intelligenceKicker}>Material intelligence</Text>
-            <Text style={intelligenceHeadline}>{intelligenceTitle}</Text>
-            <Text style={intelligenceFiber}>{fiberFactFiber}</Text>
-            <Text style={intelligenceMeta}>100% natural</Text>
-            <Hr style={{ borderColor: RULE, margin: "0 0 14px", width: "72px" }} />
-            {traits.map((trait) => (
-              <Text key={trait} style={traitText}>
-                {trait}
-              </Text>
-            ))}
-            <Text style={factText}>{fiberFact}</Text>
+            <Text style={kicker}>Material intelligence</Text>
+            <Text style={intelligenceHeadline}>{intelligenceTitle.replace(/\.$/, "")}.</Text>
+            <Text style={traitLine}>{traits.join(" · ")}</Text>
+            <Text style={factText}>{compactFiberCopy(fiberFact)}</Text>
+            <Button href={discoverHref} style={ghostButton}>
+              {discoverLabel}
+            </Button>
           </Section>
 
           <Hr style={hr} />
 
-          <Section style={{ margin: "0 0 28px" }}>
-            <Text style={socialLink}>
-              Follow {INTERTEXE_SOCIAL_HANDLE}
-            </Text>
+          <Section style={{ margin: "0 0 24px" }}>
+            <Text style={socialLink}>Follow {INTERTEXE_SOCIAL_HANDLE}</Text>
             <Text style={{ margin: "10px 0 0" }}>
               <Link href={INTERTEXE_INSTAGRAM_URL} style={socialLink}>
                 Instagram
