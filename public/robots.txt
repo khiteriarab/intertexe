@@ -1,5 +1,21 @@
 User-agent: *
 Allow: /
 
+# Private / transactional surfaces. These also send noindex.
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /account
+Disallow: /signup
+Disallow: /leaving
+Disallow: /reset-password
+Disallow: /unsubscribe
+Disallow: /extension/
+Disallow: /inspirations/
+Disallow: /open
+Disallow: /khiteri
+Disallow: /api/
+
+Allow: /api/sitemap
+
+# Submit this index in Google Search Console:
 Sitemap: https://www.intertexe.com/sitemap.xml
-Sitemap: https://www.intertexe.com/api/sitemap

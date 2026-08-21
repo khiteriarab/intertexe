@@ -9,6 +9,9 @@ import { getCuratedScore } from "../../../lib/curated-quality-scores";
 import { getBrandProfile } from "../../../lib/brand-profiles";
 import { displayNaturalFiberPercent } from "../../../lib/display-natural-fiber";
 import { DesignerShopSection } from "./DesignerShopSection";
+import { brandTitle, NOINDEX_FOLLOW } from "../../../lib/seo-policy";
+import { pageAlternates } from "../../../lib/seo-international";
+import { notFound } from "next/navigation";
 
 // Catalog inventory can be a few minutes stale; serving the last generated page
 // avoids repeating a multi-second database scan for every designer visit.
@@ -26,10 +29,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const name = designer?.name || profile?.name || slug;
   const description =
     profile?.intro || `Shop verified natural-fiber pieces from ${name} on INTERTEXE.`;
+  const thin = !designer && !profile;
   return {
-    title: `Shop ${name} | INTERTEXE`,
+    title: brandTitle(name),
     description,
-    openGraph: { title: `Shop ${name}`, description },
+    alternates: pageAlternates(`/designers/${slug}`),
+    robots: thin ? NOINDEX_FOLLOW : undefined,
+    openGraph: { title: brandTitle(name), description },
   };
 }
 
@@ -46,14 +52,7 @@ export default async function DesignerDetailPage({ params }: { params: Promise<{
   const profile = getBrandProfile(slug);
 
   if (!dbDesigner && !profile) {
-    return (
-      <div className="py-20 text-center flex flex-col items-center gap-4 max-w-4xl mx-auto px-4">
-        <h1 className="text-2xl font-serif">Designer not found</h1>
-        <Link href="/designers" className="text-sm uppercase tracking-widest hover:text-muted-foreground">
-          Back to Directory
-        </Link>
-      </div>
-    );
+    notFound();
   }
 
   const designer = dbDesigner || {

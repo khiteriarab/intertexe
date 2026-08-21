@@ -8,11 +8,13 @@ import { ProductLink } from "../components/ProductLink";
 import { CatalogProductImage } from "../components/CatalogProductImage";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { cfProductCard } from "../../lib/cloudflare-images";
+import { NOINDEX_FOLLOW } from "../../lib/seo-policy";
 
 export const metadata: Metadata = {
   title: "Search",
   description: "Search verified natural-fiber fashion by brand, product, or composition.",
   alternates: { canonical: "https://www.intertexe.com/search" },
+  robots: NOINDEX_FOLLOW,
 };
 
 export const revalidate = 60;
@@ -145,7 +147,19 @@ export default async function SearchPage({
       )}
 
       {query.length >= 2 && resultCount === 0 && (
-        <p className="text-sm text-muted-foreground mt-8">No results found.</p>
+        <div className="mt-8 flex flex-col gap-3 max-w-lg">
+          <p className="text-sm text-foreground" data-testid="text-search-empty">
+            No products matched &ldquo;{query}&rdquo;. We did not change your search.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Try a brand name, a fiber such as silk or linen, or a category such as dresses.
+          </p>
+          <div className="flex flex-wrap gap-3 text-xs uppercase tracking-widest">
+            <Link href="/materials" className="border-b border-foreground pb-0.5">Shop by fabric</Link>
+            <Link href="/designers" className="border-b border-foreground pb-0.5">Designers</Link>
+            <Link href="/guides" className="border-b border-foreground pb-0.5">Material guides</Link>
+          </div>
+        </div>
       )}
     </div>
   );

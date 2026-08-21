@@ -17,31 +17,25 @@ import {
   mergeShopWithEditorPicks,
   shouldLeadShopWithEditorPicks,
 } from "../../lib/shop-editor-picks";
+import { NOINDEX_FOLLOW, searchParamsAreIndexable } from "../../lib/seo-policy";
+import { pageAlternates } from "../../lib/seo-international";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Shop Natural Fiber Clothing | Silk, Cashmere, Linen, Wool",
-  description:
-    `Shop ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces. Silk dresses, cashmere knitwear, linen tops, wool trousers and cotton basics from Zimmermann, Isabel Marant, Toteme and ${CATALOG_STATS.brandCountFormatted} luxury brands.`,
-  keywords:
-    "shop natural fabric clothing, silk clothing, linen clothing, cotton clothing, wool clothing, cashmere clothing, verified natural fibers, INTERTEXE shop",
-  alternates: {
-    canonical: "https://www.intertexe.com/shop",
-    languages: {
-      en: "https://www.intertexe.com/shop",
-      "en-US": "https://www.intertexe.com/shop",
-      "en-GB": "https://www.intertexe.com/shop",
-      "en-AU": "https://www.intertexe.com/shop",
-      es: "https://www.intertexe.com/shop",
-      "es-ES": "https://www.intertexe.com/shop",
-      fr: "https://www.intertexe.com/shop",
-      de: "https://www.intertexe.com/shop",
-      it: "https://www.intertexe.com/shop",
-      "x-default": "https://www.intertexe.com/shop",
-    },
-  },
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const params = searchParams ? await searchParams : {};
+  const indexable = searchParamsAreIndexable(params);
+  return {
+    title: "Shop Natural Fiber Clothing | Silk, Cashmere, Linen, Wool",
+    description: `Shop ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces. Silk dresses, cashmere knitwear, linen tops, wool trousers and cotton basics from Zimmermann, Isabel Marant, Toteme and ${CATALOG_STATS.brandCountFormatted} luxury brands.`,
+    alternates: pageAlternates("/shop"),
+    robots: indexable ? undefined : NOINDEX_FOLLOW,
+  };
+}
 
 function getDetectedCountry(headerList: Headers) {
   return (

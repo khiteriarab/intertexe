@@ -17,10 +17,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const mood = moodBySlug(slug);
-  if (!mood) return { title: "Mood" };
+  if (!mood) return { title: "Mood", robots: { index: false, follow: true } };
   return {
     title: `${mood.label} — Editorial Shopping`,
     description: mood.description,
+    alternates: { canonical: `https://www.intertexe.com/moods/${slug}` },
   };
 }
 

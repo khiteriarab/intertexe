@@ -27,6 +27,17 @@ import {
 } from "../../../lib/catalog-product-filters";
 import { isProductUnavailable } from "../../../lib/catalog-consumer-guard";
 import { schemaOrgAvailability, stockDetailLine } from "../../../lib/stock-display";
+import {
+  AFFILIATE_PAGE_DISCLOSURE,
+  absoluteUrl,
+  breadcrumbJsonLd,
+  isIndexableProduct,
+  NOINDEX_FOLLOW,
+  productCanonicalPath,
+  productDescription,
+  productJsonLd,
+  productTitle,
+} from "../../../lib/seo-policy";
 
 export const revalidate = 0;
 
@@ -43,19 +54,23 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const product = await fetchProductById(id);
-  if (!product) return { title: "Product Not Found" };
+  if (!product) return { title: "Product Not Found", robots: NOINDEX_FOLLOW };
 
-  const title = `${product.brandName} ${product.name}`;
-  const description = `Shop ${product.brandName} ${product.name}${product.composition ? `. Composition: ${product.composition}.` : ""}${product.naturalFiberPercent != null ? ` ${product.naturalFiberPercent}% natural fiber.` : ""} Verified by INTERTEXE.`;
+  const title = productTitle(product);
+  const description = productDescription(product);
+  const canonical = absoluteUrl(productCanonicalPath(id));
+  const indexable = isIndexableProduct(product);
 
   return {
     title,
     description,
-    alternates: { canonical: `https://www.intertexe.com/product/${id}` },
+    alternates: { canonical },
+    robots: indexable ? undefined : NOINDEX_FOLLOW,
     openGraph: {
       title,
       description,
-      url: `https://www.intertexe.com/product/${id}`,
+      url: canonical,
+      siteName: "INTERTEXE",
       images: product.imageUrl ? [product.imageUrl] : undefined,
     },
   };
@@ -193,42 +208,24 @@ export default async function ProductPage({
 
   const isSaleItem = Boolean(product.isSale);
 
-  const breadcrumbItems: any[] = [
-    { "@type": "ListItem", position: 1, name: "Home", item: "https://www.intertexe.com/" },
-    { "@type": "ListItem", position: 2, name: "Shop", item: "https://www.intertexe.com/shop" },
+  const breadcrumbItems = [
+    { name: "Home", path: "/" },
+    { name: "Shop", path: "/shop" },
   ];
   if (product.brandSlug && product.brandName) {
-    breadcrumbItems.push({ "@type": "ListItem", position: 3, name: product.brandName, item: `https://www.intertexe.com/designers/${product.brandSlug}` });
-    breadcrumbItems.push({ "@type": "ListItem", position: 4, name: product.name });
-  } else {
-    breadcrumbItems.push({ "@type": "ListItem", position: 3, name: product.name });
+    breadcrumbItems.push({ name: product.brandName, path: `/designers/${product.brandSlug}` });
   }
+  breadcrumbItems.push({ name: product.name });
 
-  const productJsonLd: any = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.composition ? `${product.name} by ${product.brandName}. Composition: ${product.composition}.` : `${product.name} by ${product.brandName}`,
-    brand: { "@type": "Brand", name: product.brandName },
-    category: product.category || "Clothing",
-    url: `https://www.intertexe.com/product/${product.id}`,
-  };
-  if (product.imageUrl) productJsonLd.image = cfProductDetail(product.imageUrl) || product.imageUrl;
-  if (product.composition) productJsonLd.material = product.composition;
-  if (product.price) {
-    const numericPrice = String(product.price).replace(/[^0-9.]/g, "");
-    if (numericPrice) {
-      const lr = (product.listingRegion || "").toLowerCase();
-      const priceCurrency =
-        lr.includes("uk") || lr.includes("gb") ? "GBP" : lr.includes("eu") || lr.includes("eur") ? "EUR" : "USD";
-      productJsonLd.offers = {
-        "@type": "Offer",
-        price: numericPrice,
-        priceCurrency,
-        availability: schemaOrgAvailability(product.stockStatus),
-        url: product.url,
-      };
-    }
+  const lr = (product.listingRegion || "").toLowerCase();
+  const priceCurrency =
+    lr.includes("uk") || lr.includes("gb") ? "GBP" : lr.includes("eu") || lr.includes("eur") ? "EUR" : "USD";
+  const productJson = productJsonLd(product, {
+    availability: schemaOrgAvailability(product.stockStatus),
+    priceCurrency,
+  });
+  if (product.imageUrl) {
+    productJson.image = cfProductDetail(product.imageUrl) || product.imageUrl;
   }
 
   return (
@@ -239,8 +236,8 @@ export default async function ProductPage({
         price={product.price}
         currency={product.currency || "USD"}
       />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: breadcrumbItems }) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(breadcrumbItems)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJson) }} />
 
       <div className="py-6 md:py-8 flex flex-col gap-8 md:gap-12">
         <nav className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="breadcrumb">
@@ -260,7 +257,7 @@ export default async function ProductPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
           <div className="aspect-[3/4] bg-[#f5f5f5] relative overflow-hidden" data-testid="product-image-container">
             {product.imageUrl ? (
-              <img src={cfProductDetail(product.imageUrl) || product.imageUrl} alt={`${product.brandName} ${product.name}`} className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" data-testid="img-product" />
+              <img src={cfProductDetail(product.imageUrl) || product.imageUrl} alt={`${product.brandName} ${product.name}`} width="900" height="1200" className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" data-testid="img-product" />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <ShoppingBag className="w-16 h-16 text-muted-foreground/20" />
@@ -375,7 +372,7 @@ export default async function ProductPage({
 
             <div className="flex flex-col gap-2">
               <p className="text-[10px] text-muted-foreground text-center">
-                Verified by INTERTEXE — composition data sourced directly from the brand.
+                {AFFILIATE_PAGE_DISCLOSURE}
               </p>
               {product.brandSlug && (
                 <Link href={`/designers/${product.brandSlug}`} className="text-[10px] uppercase tracking-[0.12em] text-center text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1" data-testid="link-more-from-brand">

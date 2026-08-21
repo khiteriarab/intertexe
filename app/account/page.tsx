@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Account | INTERTEXE",
   description: "Manage your INTERTEXE account, view your favorites, and access your quiz history.",
   alternates: { canonical: "https://www.intertexe.com/account" },
+  robots: { index: false, follow: false },
 };
 
 export default function AccountPage() {

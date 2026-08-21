@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
   fetchProductsByFiberAndCategory,
   fetchCatalogProductsByFiber,
@@ -705,7 +706,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: "Material",
-    alternates: { canonical: `https://www.intertexe.com/materials/${slug}` },
+    robots: { index: false, follow: true },
   };
 }
 
@@ -722,14 +723,7 @@ export default async function MaterialSlugPage({ params }: { params: Promise<{ s
     return <SubcategoryPage slug={slug} config={config} />;
   }
 
-  return (
-    <div className="py-20 text-center flex flex-col items-center gap-6">
-      <h1 className="text-3xl font-serif">Material Not Found</h1>
-      <Link href="/materials" className="text-xs uppercase tracking-widest border-b border-foreground pb-1">
-        Back to Materials
-      </Link>
-    </div>
-  );
+  notFound();
 }
 
 async function MainFiberPage({ slug }: { slug: string }) {
@@ -771,7 +765,7 @@ async function MainFiberPage({ slug }: { slug: string }) {
       "@type": "ListItem",
       position: index + 1,
       name: product.name,
-      url: product.url,
+      url: `https://www.intertexe.com/product/${product.id}`,
     })),
   };
 
@@ -1094,7 +1088,7 @@ async function SubcategoryPage({ slug, config }: { slug: string; config: PageCon
       "@type": "ListItem",
       position: index + 1,
       name: product.name,
-      url: product.url,
+      url: `https://www.intertexe.com/product/${product.id}`,
     })),
   };
 

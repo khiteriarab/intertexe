@@ -291,6 +291,35 @@ export default async function HqOverviewPage() {
         />
       </HqCard>
 
+      <HqCard className="mb-6" title="Organic search">
+        <p className="text-[11px] text-black/45 mb-3 leading-relaxed">
+          Google Search Console impressions are not pageviews and not sessions. Clicks are Search Console clicks.
+          Traffic is not revenue.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-sm mb-3">
+          {(
+            [
+              ["Impressions · 7d", google.connected ? formatCount(google.gscImpressions7d) : "Not connected"],
+              ["Clicks · 7d", google.connected ? formatCount(google.gscClicks7d) : "—"],
+              ["Organic CTR · 7d", google.gscCtr7d == null ? "—" : `${(google.gscCtr7d * 100).toFixed(1)}%`],
+              ["Avg. position · 7d", google.gscAvgPosition7d == null ? "—" : google.gscAvgPosition7d.toFixed(1)],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label} className="flex flex-col border-b border-black/5 py-1.5">
+              <span className="text-[10px] uppercase tracking-widest text-black/40">{label}</span>
+              <span className="tabular-nums font-medium mt-1">{value}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] text-black/40 leading-relaxed">
+          Full query and landing-page tables:{" "}
+          <Link href="/dashboard/acquisition" className="underline underline-offset-2">
+            Acquisition
+          </Link>
+          . Connect Search Console in Settings if these fields are empty.
+        </p>
+      </HqCard>
+
       <HqCard className="mb-6" title="App download clicks">
         <p className="text-[11px] text-black/45 mb-3 leading-relaxed">
           First-party CTA clicks only (website /open and App Store links). Not Apple App Units. Not accounts.

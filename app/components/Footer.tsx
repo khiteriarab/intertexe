@@ -21,6 +21,7 @@ export function Footer() {
             <Link href="/sale" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-sale">Sale</Link>
             <Link href="/designers" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-designers">Designers</Link>
             <Link href="/materials" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-materials">Fabrics</Link>
+            <Link href="/guides" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-guides">Guides</Link>
             <Link href="/quiz" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-quiz">Style Quiz</Link>
           </div>
 
@@ -49,6 +50,7 @@ export function Footer() {
           <div className="flex flex-col gap-3 md:gap-4">
             <h3 className="text-[10px] md:text-xs uppercase tracking-widest font-medium text-background/40 mb-1 md:mb-2">Info</h3>
             <Link href="/about" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-about">About Us</Link>
+            <Link href="/methodology" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-methodology">Methodology</Link>
             <Link href="/contact" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-contact">Contact</Link>
             <Link href="/privacy" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-privacy">Privacy Policy</Link>
             <Link href="/terms" className="text-sm text-background/70 hover:text-background transition-colors" data-testid="link-footer-terms">Terms of Service</Link>

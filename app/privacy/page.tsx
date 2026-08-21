@@ -19,7 +19,11 @@ export default function PrivacyPage() {
         <section className="flex flex-col gap-3">
           <h2 className="text-xl md:text-2xl font-serif text-foreground">1. Introduction</h2>
           <p>
+<<<<<<< Updated upstream
             Intertexe (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website, use the INTERTEXE iOS app, or use the Chrome extension INTERTEXE: Fabric Scanner.
+=======
+            Intertexe (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website, use the INTERTEXE iOS app, or use the INTERTEXE Chrome extension.
+>>>>>>> Stashed changes
           </p>
         </section>
 
@@ -33,7 +37,11 @@ export default function PrivacyPage() {
             <li><strong className="text-foreground">Scan history:</strong> Fiber composition results, barcodes scanned, and label data you submit through the scanner.</li>
             <li><strong className="text-foreground">Usage Data:</strong> Pages visited, search queries, features used, and general browsing patterns.</li>
             <li><strong className="text-foreground">Device tokens:</strong> If you enable push notifications on iOS, we store your device token to send welcome, price-drop, and re-engagement alerts.</li>
+<<<<<<< Updated upstream
             <li><strong className="text-foreground">Chrome extension saves:</strong> Product-page data you ask INTERTEXE: Fabric Scanner to save (see section 9).</li>
+=======
+            <li><strong className="text-foreground">Chrome extension (active tab only):</strong> When you open Save to INTERTEXE on a page, the extension may read that tab&rsquo;s product title, image, price, brand, URL, and any material-composition text shown on the page. It does not run in the background on every site you visit and does not collect unrelated browsing history.</li>
+>>>>>>> Stashed changes
           </ul>
         </section>
 
@@ -41,6 +49,19 @@ export default function PrivacyPage() {
           <h2 className="text-xl md:text-2xl font-serif text-foreground">Affiliate &amp; commission tracking</h2>
           <p>
             Intertexe participates in affiliate programs. When you click through to a retailer from our links, we may earn a commission on qualifying purchases at no extra cost to you. We log click-out events to improve recommendations and measure platform performance. We do not receive your payment card details.
+          </p>
+          <p>
+            The Chrome extension does not rewrite the retailer page you are already viewing, and it does not replace another creator&rsquo;s affiliate attribution just because you opened a product page. INTERTEXE affiliate links are used only after you deliberately click an INTERTEXE retailer or alternative link.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">Chrome extension</h2>
+          <p>
+            Save to INTERTEXE reads the active browser tab only after you open the extension. Product details needed to analyze composition and find alternatives are sent to INTERTEXE at www.intertexe.com. Sign-in happens on the INTERTEXE website; the extension may store session tokens in Chrome so you stay signed in. You can sign out from the popup.
+          </p>
+          <p>
+            The extension is not a shortcut whose only purpose is to open intertexe.com. Composition, interpretation, and TX Matches are shown in the extension itself. Retailer links open only when you click them.
           </p>
         </section>
 

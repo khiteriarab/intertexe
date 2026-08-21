@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
   canonicalDesignerProductSlug,
   fetchDesignerBySlug,
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${name} Quality Review | INTERTEXE`,
     description: profile?.intro || `Natural fiber score and material review for ${name}.`,
+    alternates: { canonical: `https://www.intertexe.com/designers/${slug}/about` },
   };
 }
 
@@ -33,11 +35,7 @@ export default async function DesignerAboutPage({ params }: { params: Promise<{ 
   const profile = getBrandProfile(slug);
 
   if (!dbDesigner && !profile) {
-    return (
-      <div className="py-20 text-center">
-        <Link href="/designers">Back to Directory</Link>
-      </div>
-    );
+    notFound();
   }
 
   const designer = dbDesigner || {

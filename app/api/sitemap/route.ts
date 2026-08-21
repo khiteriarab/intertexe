@@ -1,48 +1,22 @@
 import { NextResponse } from "next/server";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { COLLECTION_SLUGS } from "../../../lib/collection-pages";
+import { SITE_URL } from "../../../lib/seo-international";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
-function getSupabase(): SupabaseClient | null {
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
-
-const BASE = "https://www.intertexe.com";
-const TODAY = new Date().toISOString().split("T")[0];
-const CHUNK = 1000;
-
-function xmlHeader() {
-  return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-}
-
-function urlEntry(path: string, opts: { priority: string; freq: string; lastmod?: string }) {
-  const loc = path ? `${BASE}${path}` : BASE;
-  return `  <url><loc>${loc}</loc><lastmod>${opts.lastmod || TODAY}</lastmod><changefreq>${opts.freq}</changefreq><priority>${opts.priority}</priority></url>\n`;
-}
-
+/**
+ * Legacy sitemap endpoint. Google Search Console should use /sitemap.xml.
+ * Keep this alias so previously submitted /api/sitemap URLs still resolve.
+ */
 export async function GET(request: Request) {
-  const supabase = getSupabase();
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
-  const page = parseInt(searchParams.get("page") || "0", 10);
+  const page = searchParams.get("page") || "0";
 
-  if (!supabase) {
-    let xml = xmlHeader();
-    xml += urlEntry("", { priority: "1.0", freq: "daily" });
-    xml += urlEntry("/shop", { priority: "0.9", freq: "daily" });
-    xml += "</urlset>";
-    return new NextResponse(xml, {
-      headers: { "Content-Type": "application/xml", "Cache-Control": "public, s-maxage=3600" },
-    });
+  if (!type) {
+    return NextResponse.redirect(`${SITE_URL}/sitemap.xml`, 308);
   }
+<<<<<<< Updated upstream
 
   try {
     if (!type) {
@@ -166,5 +140,16 @@ export async function GET(request: Request) {
     return new NextResponse("Invalid sitemap type", { status: 400 });
   } catch (error) {
     return new NextResponse("Error generating sitemap", { status: 500 });
+=======
+  if (type === "pages") {
+    return NextResponse.redirect(`${SITE_URL}/sitemap/static.xml`, 308);
+>>>>>>> Stashed changes
   }
+  if (type === "designers") {
+    return NextResponse.redirect(`${SITE_URL}/sitemap/brands-${page}.xml`, 308);
+  }
+  if (type === "products") {
+    return NextResponse.redirect(`${SITE_URL}/sitemap/products-${page}.xml`, 308);
+  }
+  return new NextResponse("Invalid sitemap type", { status: 400 });
 }

@@ -117,6 +117,20 @@ export default async function AboutPage() {
         </section>
 
         <section className="flex flex-col gap-4">
+          <h2 className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">METHODOLOGY</h2>
+          <p>
+            INTERTEXE is a fashion discovery and material-intelligence platform. How we verify composition,
+            what qualifies a product, and how we treat synthetic fibers in context is documented here:
+          </p>
+          <Link
+            href="/methodology"
+            className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-foreground border-b border-foreground/30 pb-1 w-fit hover:text-muted-foreground transition-colors"
+          >
+            Material methodology
+          </Link>
+        </section>
+
+        <section className="flex flex-col gap-4">
           <h2 className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">THE STANDARD</h2>
           <p>
             Intertexe is the only fashion platform that verifies the fiber composition of every product

@@ -1,0 +1,101 @@
+{
+  "retrievedAt": "2026-08-18T15:46:55.911Z",
+  "property": {
+    "searchConsoleSiteUrl": "sc-domain:intertexe.com",
+    "ga4PropertyIdSet": true,
+    "workspaceSlug": "intertexe"
+  },
+  "comparisonRule": "Always compare matching 28-day windows (inclusive dates). Do not compare a partial August to a full month. GSC usually lags 2–3 days; latest28d ends today UTC minus 3 days.",
+  "commercialPath": "Google click → product view → retailer click → affiliate commission",
+  "nextTarget": "Qualified non-branded clicks and retailer-click revenue, not impressions alone.",
+  "googleOAuth": {
+    "connected": true,
+    "status": "connected",
+    "accountLabel": "info@intertexe.com",
+    "scopesPresent": 5,
+    "lastSyncAt": "2026-08-17T06:03:09.842+00:00",
+    "lastSyncStatus": "success",
+    "lastSyncError": null,
+    "connectionError": null,
+    "refreshError": "Unsupported state or unable to authenticate data"
+  },
+  "hqSnapshot": {
+    "metricDate": "2026-08-17",
+    "createdAt": "2026-08-17T06:03:09.799843+00:00",
+    "gscClicks7d": 7,
+    "gscImpressions7d": 26,
+    "gscCtr7d": 0.2692307692307692,
+    "gscAvgPosition7d": 13.955555555555554,
+    "note": "HQ currently sums top-10 query rows for 7d. That undercounts site totals. Do not use as the 28-day baseline."
+  },
+  "windows": {},
+  "ga4": null,
+  "commerce": {
+    "latest28d": {
+      "startDate": "2026-07-19",
+      "endDate": "2026-08-15",
+      "days": 28,
+      "productViews": {
+        "count": 134,
+        "error": null
+      },
+      "retailerClicks": {
+        "shop": 15,
+        "scanner": 0,
+        "editorial": 21,
+        "total": 36,
+        "errors": []
+      },
+      "retailerClicksByFirstTouch": {
+        "google_organic": 0,
+        "google_paid": 0,
+        "other_organic": 0,
+        "other_paid": 0,
+        "unknown": 15,
+        "anonymous": 21
+      },
+      "attributionNote": "First-touch on the account, not last-click session. Anonymous clickouts cannot be classified as organic Google. Do not treat all commission as SEO.",
+      "affiliate": {
+        "transactions": 0,
+        "salesAmount": 0,
+        "commissionAmount": 0,
+        "transactionsOnOrganicFirstTouchUsers": 0,
+        "commissionOnOrganicFirstTouchUsers": 0,
+        "queryError": null
+      }
+    },
+    "email28d": {
+      "startDate": "2026-07-17",
+      "endDate": "2026-08-13",
+      "days": 28,
+      "productViews": {
+        "count": 140,
+        "error": null
+      },
+      "retailerClicks": {
+        "shop": 15,
+        "scanner": 0,
+        "editorial": 21,
+        "total": 36,
+        "errors": []
+      },
+      "retailerClicksByFirstTouch": {
+        "google_organic": 0,
+        "google_paid": 0,
+        "other_organic": 0,
+        "other_paid": 0,
+        "unknown": 15,
+        "anonymous": 21
+      },
+      "attributionNote": "First-touch on the account, not last-click session. Anonymous clickouts cannot be classified as organic Google. Do not treat all commission as SEO.",
+      "affiliate": {
+        "transactions": 0,
+        "salesAmount": 0,
+        "commissionAmount": 0,
+        "transactionsOnOrganicFirstTouchUsers": 0,
+        "commissionOnOrganicFirstTouchUsers": 0,
+        "queryError": null
+      }
+    }
+  }
+}
