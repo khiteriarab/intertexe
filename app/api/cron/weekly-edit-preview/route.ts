@@ -34,8 +34,11 @@ export async function GET(req: NextRequest) {
         collectionName: collection.name,
         collectionUrl: collection.url,
         collectionSubline: collection.subline,
+        collectionImageUrl: collection.imageUrl,
         fiberFact: fiberFact.fact,
         fiberFactFiber: fiberFact.fiber,
+        fiberFactHeadline: fiberFact.headline,
+        fiberFactTraits: [...fiberFact.traits],
         products: emailProducts,
         isPreview: true,
       })

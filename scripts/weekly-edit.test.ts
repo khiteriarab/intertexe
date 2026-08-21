@@ -11,6 +11,12 @@ import {
   WEEKLY_EDIT_MIX,
   type WeeklyEditPickInput,
 } from "../lib/weekly-edit.ts";
+import {
+  collectionEditTitle,
+  collectionImageUrl,
+  displayProductName,
+  weeklyEditMaterialSpec,
+} from "../lib/weekly-edit-presentation.ts";
 import { jwtRoleClaim, presentedOpsSecret } from "../lib/cron-auth.ts";
 
 function pick(partial: Partial<WeeklyEditPickInput> & Pick<WeeklyEditPickInput, "id" | "name">): WeeklyEditPickInput {
@@ -87,11 +93,10 @@ describe("Weekly Edit editor's picks", () => {
     assert.doesNotMatch(source, /live_products_apparel/);
   });
 
-  it("uses the late-summer vacation prompt", () => {
+  it("uses the linen-silk-cotton vacation prompt", () => {
     const vacation = collectionRotation.find((c) => c.name === "Vacation");
     assert.ok(vacation);
-    assert.match(vacation!.subline, /late summer getaway/i);
-    assert.match(vacation!.subline, /before the cold/i);
+    assert.match(vacation!.subline, /linen, silk and cotton/i);
   });
 
   it("points follow CTAs at @intertexe, not @Khiteri", () => {
@@ -105,23 +110,31 @@ describe("Weekly Edit editor's picks", () => {
 });
 
 describe("Weekly Edit email", () => {
-  it("uses a black masthead, open-the-app button, and INTERTEXE socials", () => {
+  it("reads as a shopping product with material-first merchandising", () => {
     const email = fs.readFileSync(path.join(process.cwd(), "emails/WeeklyEditEmail.tsx"), "utf8");
     const send = fs.readFileSync(path.join(process.cwd(), "app/api/cron/weekly-edit-send/route.ts"), "utf8");
-    assert.match(email, /const kicker = \{[\s\S]*?color: "#1C2B2A"/);
-    assert.match(email, /INTERTEXE · THE MATERIAL STANDARD/);
-    assert.match(email, /OPEN THE APP/);
+    assert.match(email, />INTERTEXE</);
+    assert.match(email, /The Material Standard/);
+    assert.match(email, /Pieces worth knowing, selected through a material-first lens/);
+    assert.match(email, /The Edit/);
+    assert.match(email, /Shop the edit/);
+    assert.match(email, /Explore the edit/);
+    assert.match(email, /Material intelligence/);
+    assert.match(email, /weeklyEditMaterialSpec/);
+    assert.match(email, /getAppStoreOpenUrl/);
     assert.match(email, /10:00 AM Eastern \/ 4:00 PM Barcelona/);
     assert.doesNotMatch(email, /Friday at 9am/);
-    assert.match(email, /getAppStoreOpenUrl/);
     assert.match(email, /INTERTEXE_INSTAGRAM_URL/);
     assert.match(email, /INTERTEXE_TIKTOK_URL/);
-    assert.match(email, /Editor&apos;s favorites/);
+    assert.doesNotMatch(email, /Week \$\{/);
+    assert.doesNotMatch(email, /Editor&apos;s favorites/);
     assert.doesNotMatch(email, /SHOP ALL VERIFIED PIECES/);
+    assert.doesNotMatch(email, /VIEW COLLECTION/);
+    assert.doesNotMatch(email, /Fiber fact/);
     assert.doesNotMatch(email, /KHITERI_INSTAGRAM_URL/);
     assert.doesNotMatch(email, /instagram\.com\/khiteri/);
     assert.match(send, /selectWeeklyEditProducts/);
-    assert.match(send, /editor's picks/);
+    assert.match(send, /The Weekly Edit/);
   });
 
   it("lets a live service role trigger the internal preview via x-intertexe-ops", () => {
@@ -135,6 +148,34 @@ describe("Weekly Edit email", () => {
     assert.match(auth, /isLiveSupabaseServiceRole/);
     assert.match(auth, /service_role/);
     assert.doesNotMatch(auth, /authHeader === `Bearer \$\{serviceKey\}`/);
+  });
+});
+
+describe("Weekly Edit presentation", () => {
+  it("puts composition ahead of a generic natural-fiber percentage", () => {
+    assert.equal(
+      weeklyEditMaterialSpec({ composition: "100% Silk", naturalFiberPercent: 100 }).label,
+      "100% SILK"
+    );
+    assert.equal(
+      weeklyEditMaterialSpec({ composition: "93% Silk, 7% Elastane", naturalFiberPercent: 93 }).label,
+      "93% SILK"
+    );
+    assert.equal(
+      weeklyEditMaterialSpec({ composition: "", naturalFiberPercent: 95 }).label,
+      "95% NATURAL FIBER"
+    );
+    assert.equal(
+      weeklyEditMaterialSpec({ composition: "100% Silk", naturalFiberPercent: 100 }).verified,
+      true
+    );
+  });
+
+  it("titles collections as shopping edits and uses hosted campaign art", () => {
+    assert.equal(collectionEditTitle("Vacation"), "The Vacation Edit");
+    assert.equal(collectionEditTitle("The White Edit"), "The White Edit");
+    assert.match(collectionImageUrl("Vacation"), /editorial-vacation/);
+    assert.equal(displayProductName("Staud Greta Silk Dress", "Staud"), "Greta Silk Dress");
   });
 });
 
