@@ -8,7 +8,7 @@ const HINTS: Array<{ match: RegExp; field: string }> = [
   { match: /style|style_no|style no|model/i, field: "style_code" },
   { match: /sku/i, field: "sku" },
   { match: /gtin|ean|upc/i, field: "gtin" },
-  { match: /material_?1|fiber|composition|fabric/i, field: "composition" },
+  { match: /material|fiber|composition|fabric/i, field: "composition" },
   { match: /mat%|percent|%/i, field: "composition_percent" },
   { match: /factory|manufactur|cntry|country/i, field: "manufacturing_country" },
   { match: /category|cat/i, field: "category" },

@@ -107,6 +107,72 @@ describe("Live Enterprise JWT permissions", { skip: !live }, () => {
       }
     }
   });
+
+  it("JWT user A cannot read Org B products even when filtering by B's id", async () => {
+    const admin = getEnterpriseServiceClient();
+    assert.ok(admin);
+    const suffix = Date.now().toString(36);
+    const password = randomBytes(18).toString("base64url");
+    const createdUserIds: string[] = [];
+    const orgIds: string[] = [];
+
+    async function ownerFor(orgId: string, label: string) {
+      const email = `itx-${label}-${suffix}@example.invalid`;
+      const { data, error } = await admin!.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+      assert.equal(error, null, error?.message);
+      createdUserIds.push(data.user!.id);
+      const { data: profile } = await admin!
+        .from("profiles")
+        .insert({ email, auth_user_id: data.user!.id, full_name: label })
+        .select("id")
+        .maybeSingle();
+      await admin!.from("organization_memberships").insert({
+        organization_id: orgId,
+        user_id: profile!.id,
+        role: "owner",
+        status: "active",
+      });
+      const client = jwtClient();
+      assert.ok(client);
+      const session = await client.auth.signInWithPassword({ email, password });
+      assert.equal(session.error, null, session.error?.message);
+      return client;
+    }
+
+    try {
+      const { data: orgA } = await admin
+        .from("organizations")
+        .insert({ slug: `itx-jwt-a-${suffix}`, name: "JWT A", kind: "customer", plan: "saas" })
+        .select("id")
+        .maybeSingle();
+      const { data: orgB } = await admin
+        .from("organizations")
+        .insert({ slug: `itx-jwt-b-${suffix}`, name: "JWT B", kind: "customer", plan: "saas" })
+        .select("id")
+        .maybeSingle();
+      assert.ok(orgA?.id && orgB?.id);
+      orgIds.push(orgA.id, orgB.id);
+      const clientA = await ownerFor(orgA.id, "a");
+      const clientB = await ownerFor(orgB.id, "b");
+      await clientA.from("products").insert({ organization_id: orgA.id, name: "Secret A", sku: "SA-1" });
+      await clientB.from("products").insert({ organization_id: orgB.id, name: "Secret B", sku: "SB-1" });
+      const { data: aSees } = await clientA.from("products").select("name");
+      const { data: aFilterB } = await clientA.from("products").select("name").eq("organization_id", orgB.id);
+      const { data: bSees } = await clientB.from("products").select("name");
+      assert.equal((aSees || []).some((row) => row.name === "Secret A"), true);
+      assert.equal((aSees || []).some((row) => row.name === "Secret B"), false);
+      assert.equal((aFilterB || []).length, 0);
+      assert.equal((bSees || []).some((row) => row.name === "Secret B"), true);
+      assert.equal((bSees || []).some((row) => row.name === "Secret A"), false);
+    } finally {
+      for (const id of orgIds) await deleteOrganizationForTest(id);
+      for (const userId of createdUserIds) await admin.auth.admin.deleteUser(userId);
+    }
+  });
 });
 
 describe("Live Phase 1 publish journey on a disposable org", { skip: !live }, () => {

@@ -89,6 +89,7 @@ describe("Import mapping and CSV", () => {
     assert.equal(mapped.style_code, "ST-1");
     assert.equal(mapped.composition, "100% cotton");
     assert.equal(mapped.sku, "SKU-1");
+    assert.equal(suggestColumnMapping(["MATERIAL"])[0].canonicalField, "composition");
   });
 
   it("previews updates against existing catalog keys", () => {
