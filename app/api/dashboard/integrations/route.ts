@@ -98,6 +98,14 @@ export async function GET() {
       setupHints.push(`Register redirect URI: ${callbackUrl("pinterest")}`);
       setupHints.push("Request scopes: user_accounts:read, pins:read, boards:read (organic analytics).");
     }
+    if (def.id === "chrome_web_store") {
+      setupHints.push(
+        "Chrome Web Store has no public installs API. Connecting snapshots first-party extension saves and clickouts."
+      );
+      setupHints.push(
+        "Optional: paste Weekly users / Weekly installs from the Chrome Web Store developer dashboard. Website Add to Chrome clicks are not installs."
+      );
+    }
     if (!encryptionConfigured) {
       setupHints.push("Add HQ_TOKEN_ENCRYPTION_KEY in Vercel Production before connecting.");
     }
@@ -124,6 +132,9 @@ export async function GET() {
             lastSuccessfulSyncLabel: formatLastSyncUtc(lastSuccessfulSyncAt),
             lastSyncStatus: conn.last_sync_status,
             lastSyncError: conn.last_sync_error,
+            listingId: typeof meta.listingId === "string" ? meta.listingId : null,
+            weeklyUsers: typeof meta.weeklyUsers === "number" ? meta.weeklyUsers : null,
+            weeklyInstalls: typeof meta.weeklyInstalls === "number" ? meta.weeklyInstalls : null,
           }
         : null,
       displayStatus: !linked

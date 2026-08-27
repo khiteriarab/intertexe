@@ -696,6 +696,7 @@ export async function fetchDataFreshness(workspaceId: string): Promise<Freshness
 
   const rows: FreshnessRow[] = [
     { id: "apple", label: "Apple", at: connAt("app_store_connect") },
+    { id: "chrome", label: "Chrome", at: connAt("chrome_web_store") },
     { id: "supabase", label: "Supabase", at: new Date().toISOString(), note: "Live reads" },
     { id: "gmail", label: "Gmail", at: connAt("gmail") },
     { id: "meta", label: "Meta", at: connAt("meta") },

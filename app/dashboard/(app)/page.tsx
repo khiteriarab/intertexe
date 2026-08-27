@@ -6,6 +6,7 @@ import {
   fetchTikTokDiscoveryMetrics,
   fetchInstagramDiscoveryMetrics,
   fetchAppStoreDiscoveryMetrics,
+  fetchChromeWebStoreDiscoveryMetrics,
 } from "../../../lib/dashboard/integration-metrics";
 import { formatCount } from "../../../lib/dashboard/metrics";
 import { fetchEmailEngineBundle } from "../../../lib/dashboard/email-engine";
@@ -25,6 +26,7 @@ import {
 import { OutreachSyncButton } from "./OutreachSyncButton";
 import { PrepareDraftsButton } from "./PrepareDraftsButton";
 import { AppStoreSyncButton } from "./AppStoreSyncButton";
+import { ChromeStoreSyncButton } from "./ChromeStoreSyncButton";
 import { PaidAcquisitionSection } from "../components/PaidAcquisitionSection";
 import { formatMoneyUsd } from "../../../lib/dashboard/commerce-intelligence";
 import { fetchPlanPulse } from "../../../lib/dashboard/revenue-command-center";
@@ -101,6 +103,7 @@ export default async function HqOverviewPage() {
     instagram,
     pinterest,
     appStore,
+    chrome,
     emailEngine,
     paidAcquisition,
     contentToday,
@@ -116,6 +119,7 @@ export default async function HqOverviewPage() {
     fetchInstagramDiscoveryMetrics(session.workspaceId),
     fetchPinterestDiscoveryMetrics(session.workspaceId),
     fetchAppStoreDiscoveryMetrics(session.workspaceId),
+    fetchChromeWebStoreDiscoveryMetrics(session.workspaceId),
     fetchEmailEngineBundle(),
     fetchPaidAcquisitionReport(session.workspaceId),
     fetchContentToday(session.workspaceId),
@@ -130,6 +134,7 @@ export default async function HqOverviewPage() {
   const briefing = founder.tableReady ? buildBdBriefing(founder) : null;
   const moneyMove = buildMoneyMove({ founder, paid: paidAcquisition });
   const appleReady = appStore.connected && appStore.downloadsReady;
+  const chromeReady = chrome.connected && chrome.usageReady;
   const revenueOk = revenue.connected && !revenue.isDemo;
   const accountActivation =
     founder.accounts.total && founder.activated.total != null
@@ -141,6 +146,12 @@ export default async function HqOverviewPage() {
     appleFresh.note = appStore.reportLatestDate
       ? `Sales SUMMARY through ${throughDate(appStore.reportLatestDate)} · not real-time`
       : "Apple reports lag 1–2 days";
+  }
+  const chromeFresh = freshness.find((r) => r.id === "chrome");
+  if (chromeFresh) {
+    chromeFresh.note = chrome.listingId
+      ? `Listing ${chrome.listingId.slice(0, 8)}… · first-party saves`
+      : "First-party extension saves";
   }
 
   return (
@@ -179,6 +190,28 @@ export default async function HqOverviewPage() {
               connected={appStore.connected}
               downloadsReady={appStore.downloadsReady}
               syncedAt={appStore.syncedAt || appStore.lastSuccessfulSyncAt}
+            />
+          </div>
+        </HqCard>
+        <HqCard>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-black/40">Chrome extension saves</p>
+          <p className="text-2xl font-medium tabular-nums mt-1">
+            {chromeReady ? formatCount(chrome.saves7d) : "—"}
+          </p>
+          <p className="text-[11px] text-black/45 mt-1">
+            7-day first-party saves · not Chrome Web Store installs
+          </p>
+          <p className="text-[11px] text-black/40 mt-2 tabular-nums">
+            Today {chromeReady ? formatCount(chrome.savesToday) : "—"} · 30d{" "}
+            {chromeReady ? formatCount(chrome.saves30d) : "—"}
+            {chrome.installsReady ? ` · weekly installs ${formatCount(chrome.weeklyInstalls)}` : ""}
+            {chrome.deltas.saves7d.label ? ` · ${chrome.deltas.saves7d.label}` : ""}
+          </p>
+          <div className="mt-2">
+            <ChromeStoreSyncButton
+              connected={chrome.connected}
+              usageReady={chrome.usageReady}
+              syncedAt={chrome.syncedAt || chrome.lastSuccessfulSyncAt}
             />
           </div>
         </HqCard>

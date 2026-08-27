@@ -4,7 +4,8 @@ export type OAuthProviderId =
   | "meta"
   | "tiktok"
   | "pinterest"
-  | "app_store_connect";
+  | "app_store_connect"
+  | "chrome_web_store";
 
 export type IntegrationAuthMode = "oauth" | "api_key";
 

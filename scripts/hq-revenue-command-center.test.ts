@@ -484,7 +484,11 @@ describe("Missing integration versus legitimate zero", () => {
     assert.match(source, /Not connected/);
     assert.match(source, /looksMissing/);
     // Chrome installs must never be inferred from website clicks.
-    assert.match(source, /chrome_installs[\s\S]{0,400}availability: "unavailable"/);
+    assert.match(source, /Website clicks are not installs/);
+    assert.match(
+      source,
+      /chrome_installs[\s\S]{0,700}chrome\?\.connected \? \(chrome\.installsReady \? "live" : "pending"\) : "unavailable"/
+    );
     assert.match(source, /material_snapshot_leads/);
     assert.match(source, /founding_pilot/);
   });

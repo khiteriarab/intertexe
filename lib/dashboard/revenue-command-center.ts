@@ -10,7 +10,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerSupabase } from "../supabase-service-client";
-import { fetchAppStoreDiscoveryMetrics } from "./integration-metrics";
+import { fetchAppStoreDiscoveryMetrics, fetchChromeWebStoreDiscoveryMetrics } from "./integration-metrics";
 import {
   DEFAULT_FUNNEL_TARGETS,
   DEFAULT_MILESTONES,
@@ -895,8 +895,9 @@ async function fetchConsumerDistribution(
 ): Promise<ChannelMetric[]> {
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [appStore, scans, saves, clickouts, extensionSaves, affiliateOrders] = await Promise.all([
+  const [appStore, chrome, scans, saves, clickouts, extensionSaves, affiliateOrders] = await Promise.all([
     fetchAppStoreDiscoveryMetrics(workspaceId).catch(() => null),
+    fetchChromeWebStoreDiscoveryMetrics(workspaceId).catch(() => null),
     safeCount(supabase, "scan_history", (q) => q.gte("scanned_at", since30)),
     safeCount(supabase, "product_favorites", (q) => q.gte("created_at", since30)),
     safeCount(supabase, "user_product_clickouts", (q) => q.gte("clicked_at", since30)),
@@ -946,12 +947,16 @@ async function fetchConsumerDistribution(
     {
       id: "chrome_installs",
       label: "Chrome extension installs",
-      value: null,
+      value: chrome?.connected && chrome.installsReady ? chrome.weeklyInstalls ?? null : null,
       window: "30 days",
-      availability: "unavailable",
-      note: "Not connected",
-      // Website clicks are not installs, so this stays unavailable on purpose.
-      action: "Add a Chrome Web Store metrics source in Settings",
+      availability: chrome?.connected ? (chrome.installsReady ? "live" : "pending") : "unavailable",
+      note: chrome?.connected
+        ? chrome.installsReady
+          ? "Publisher weekly installs from the Chrome Web Store dashboard"
+          : "Connected — paste weekly installs from the Chrome Web Store dashboard"
+        : "Not connected",
+      // Website clicks are not installs. This stays unavailable until a publisher count is entered.
+      action: chrome?.connected ? undefined : "Connect Chrome Web Store in Settings",
     },
     metric("scans", "Product scans or captures", scans, "scan_history", "Verify scan logging"),
     metric("saves", "Saves to Inspirations", saves, "product_favorites", "Verify favorites logging"),

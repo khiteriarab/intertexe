@@ -3,6 +3,11 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HqCard } from "../../components/HqUi";
+import {
+  CHROME_WEB_STORE_DEV_CONSOLE_URL,
+  CHROME_WEB_STORE_ITEM_ID,
+  chromeWebStoreDetailUrl,
+} from "../../../../lib/chrome-extension";
 
 type ConnectionInfo = {
   status: string;
@@ -14,6 +19,9 @@ type ConnectionInfo = {
   lastSuccessfulSyncLabel?: string | null;
   lastSyncStatus: string | null;
   lastSyncError: string | null;
+  listingId?: string | null;
+  weeklyUsers?: number | null;
+  weeklyInstalls?: number | null;
 };
 
 type IntegrationCard = {
@@ -92,6 +100,10 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
   const [ascFile, setAscFile] = useState<File | null>(null);
   const [ascPem, setAscPem] = useState("");
   const [showAscForm, setShowAscForm] = useState(false);
+  const [showChromeForm, setShowChromeForm] = useState(false);
+  const [chromeListingId, setChromeListingId] = useState(CHROME_WEB_STORE_ITEM_ID);
+  const [chromeWeeklyUsers, setChromeWeeklyUsers] = useState("");
+  const [chromeWeeklyInstalls, setChromeWeeklyInstalls] = useState("");
   const ascFileRef = useRef<HTMLInputElement | null>(null);
 
   async function readJson(res: Response) {
@@ -114,7 +126,16 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
         throw new Error("Session expired — refresh and sign in again, then reopen Integrations.");
       }
       const data = await readJson(res);
-      setCards(data.cards || []);
+      const nextCards: IntegrationCard[] = data.cards || [];
+      setCards(nextCards);
+      const chrome = nextCards.find((card) => card.providerId === "chrome_web_store");
+      if (chrome?.connection?.listingId) setChromeListingId(chrome.connection.listingId);
+      if (chrome?.connection?.weeklyUsers != null) {
+        setChromeWeeklyUsers(String(chrome.connection.weeklyUsers));
+      }
+      if (chrome?.connection?.weeklyInstalls != null) {
+        setChromeWeeklyInstalls(String(chrome.connection.weeklyInstalls));
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Could not load integrations");
     } finally {
@@ -262,6 +283,39 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
     }
   }
 
+  async function saveChromeListing(e: FormEvent) {
+    e.preventDefault();
+    if (!canAdmin) return;
+    setBusy("chrome_web_store");
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/dashboard/integrations/chrome-web-store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listingId: chromeListingId.trim() || CHROME_WEB_STORE_ITEM_ID,
+          weeklyUsers: chromeWeeklyUsers.trim() || undefined,
+          weeklyInstalls: chromeWeeklyInstalls.trim() || undefined,
+        }),
+        redirect: "manual",
+      });
+      if (res.status >= 300 && res.status < 400) {
+        throw new Error("Session expired — sign in again, then retry.");
+      }
+      const data = await readJson(res);
+      if (!res.ok) throw new Error(data.message || "Could not save Chrome Web Store listing");
+      setMessage("Chrome Web Store listing connected. First-party saves will snapshot on Sync Now.");
+      setShowChromeForm(false);
+      await load();
+      router.refresh();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Could not save listing");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   // Deduplicate ASC form — only once under App Store Connect card.
   const renderedProviders = new Set<string>();
 
@@ -269,9 +323,9 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
     <div className="mb-6">
       <HqCard title="Integrations">
         <p className="text-sm text-black/55 mb-5 leading-relaxed">
-          Connect each provider with OAuth (or an App Store Connect API key). HQ encrypts tokens, refreshes them
-          automatically, and pulls data nightly at 06:00 UTC. Use <span className="font-medium">Sync Now</span> while
-          testing.
+          Connect each provider with OAuth, an App Store Connect API key, or a Chrome Web Store listing. HQ encrypts
+          tokens, refreshes them automatically, and pulls data nightly at 06:00 UTC. Use{" "}
+          <span className="font-medium">Sync Now</span> while testing.
         </p>
 
         {message ? <p className="text-sm text-emerald-800 mb-3">{message}</p> : null}
@@ -283,6 +337,8 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
             const linked = Boolean(card.connection);
             const showAscUpload =
               card.providerId === "app_store_connect" && (!linked || showAscForm);
+            const showChromeConnect =
+              card.providerId === "chrome_web_store" && (!linked || showChromeForm);
             const firstOfProvider = !renderedProviders.has(card.providerId);
             if (firstOfProvider) renderedProviders.add(card.providerId);
 
@@ -425,7 +481,11 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                           <button
                             type="button"
                             disabled={!canAdmin}
-                            onClick={() => setShowAscForm(true)}
+                            onClick={() =>
+                              card.providerId === "chrome_web_store"
+                                ? setShowChromeForm(true)
+                                : setShowAscForm(true)
+                            }
                             className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2 hover:bg-black hover:text-white disabled:opacity-50"
                           >
                             Reconnect
@@ -443,7 +503,11 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                         <button
                           type="button"
                           disabled={!canAdmin}
-                          onClick={() => setShowAscForm(true)}
+                          onClick={() =>
+                            card.providerId === "chrome_web_store"
+                              ? setShowChromeForm(true)
+                              : setShowAscForm(true)
+                          }
                           className="text-xs tracking-widest uppercase bg-black text-white px-3 py-2 disabled:opacity-50"
                         >
                           Connect
@@ -520,6 +584,66 @@ export function IntegrationsClient({ canAdmin }: { canAdmin: boolean }) {
                       className="bg-black text-white text-xs tracking-widest uppercase px-3 py-2 rounded-lg disabled:opacity-60"
                     >
                       Save key
+                    </button>
+                  </form>
+                ) : null}
+
+                {showChromeConnect && canAdmin ? (
+                  <form onSubmit={saveChromeListing} className="border-t border-black/10 pt-3 space-y-2">
+                    <p className="text-[10px] tracking-[0.14em] uppercase text-black/45">Connect listing</p>
+                    <input
+                      required
+                      value={chromeListingId}
+                      onChange={(e) => setChromeListingId(e.target.value)}
+                      placeholder="Chrome Web Store item ID"
+                      className="w-full border border-black/15 rounded-lg px-2 py-1.5 text-sm font-mono"
+                    />
+                    <p className="text-[11px] text-black/45 leading-relaxed">
+                      Live listing:{" "}
+                      <a
+                        href={chromeWebStoreDetailUrl(chromeListingId || CHROME_WEB_STORE_ITEM_ID)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline underline-offset-2"
+                      >
+                        Chrome Web Store
+                      </a>
+                      {" · "}
+                      <a
+                        href={CHROME_WEB_STORE_DEV_CONSOLE_URL}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline underline-offset-2"
+                      >
+                        Publisher dashboard
+                      </a>
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        value={chromeWeeklyUsers}
+                        onChange={(e) => setChromeWeeklyUsers(e.target.value)}
+                        placeholder="Weekly users (optional)"
+                        inputMode="numeric"
+                        className="border border-black/15 rounded-lg px-2 py-1.5 text-sm"
+                      />
+                      <input
+                        value={chromeWeeklyInstalls}
+                        onChange={(e) => setChromeWeeklyInstalls(e.target.value)}
+                        placeholder="Weekly installs (optional)"
+                        inputMode="numeric"
+                        className="border border-black/15 rounded-lg px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                    <p className="text-[11px] text-black/45 leading-relaxed">
+                      Google does not offer an installs API. First-party saves sync automatically. Weekly users and
+                      installs are copied from the publisher dashboard — not from website clicks.
+                    </p>
+                    <button
+                      type="submit"
+                      disabled={busy === "chrome_web_store"}
+                      className="bg-black text-white text-xs tracking-widest uppercase px-3 py-2 rounded-lg disabled:opacity-60"
+                    >
+                      {busy === "chrome_web_store" ? "Saving…" : "Save listing"}
                     </button>
                   </form>
                 ) : null}

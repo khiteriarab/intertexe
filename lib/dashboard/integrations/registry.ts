@@ -5,6 +5,7 @@ import { metaAdapter } from "./providers/meta";
 import { tiktokAdapter } from "./providers/tiktok";
 import { pinterestAdapter } from "./providers/pinterest";
 import { appStoreConnectAdapter } from "./providers/app-store-connect";
+import { chromeWebStoreAdapter } from "./providers/chrome-web-store";
 
 export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
   {
@@ -82,6 +83,16 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     description:
       "Apple does not offer user OAuth for App Store Connect Analytics API. Upload a team API key (.p8) once; HQ stores it encrypted and refreshes JWTs automatically.",
     docsUrl: "https://appstoreconnect.apple.com/access/integrations/api",
+    requiredEnv: ["HQ_TOKEN_ENCRYPTION_KEY"],
+  },
+  {
+    id: "chrome_web_store",
+    label: "Chrome Web Store",
+    dataSourceKeys: ["chrome_web_store"],
+    authMode: "api_key",
+    description:
+      "Chrome Web Store has no public installs API. Connect the live listing to snapshot first-party extension saves and clickouts. Optionally paste weekly users/installs from the publisher dashboard — website Add to Chrome clicks are not installs.",
+    docsUrl: "https://chrome.google.com/webstore/devconsole",
     requiredEnv: ["HQ_TOKEN_ENCRYPTION_KEY"],
   },
 ];
@@ -162,6 +173,20 @@ export const INTEGRATION_CARDS: IntegrationCardDef[] = [
     permissions: ["App Units (downloads)", "Sales SUMMARY daily reports", "Apps list"],
     blurb: "Upload a team .p8 API key + Vendor Number — downloads feed Acquisition and Today.",
   },
+  {
+    cardId: "chrome_web_store",
+    label: "Chrome Web Store",
+    providerId: "chrome_web_store",
+    permissions: [
+      "Listing URL",
+      "First-party extension saves",
+      "Extension clickouts",
+      "Weekly users (pasted)",
+      "Weekly installs (pasted)",
+    ],
+    blurb:
+      "Connect the INTERTEXE Fabric Scanner listing — first-party saves feed Acquisition, Today, and Command Center.",
+  },
 ];
 
 const ADAPTERS: Record<OAuthProviderId, ProviderAdapter> = {
@@ -171,6 +196,7 @@ const ADAPTERS: Record<OAuthProviderId, ProviderAdapter> = {
   tiktok: tiktokAdapter,
   pinterest: pinterestAdapter,
   app_store_connect: appStoreConnectAdapter,
+  chrome_web_store: chromeWebStoreAdapter,
 };
 
 export function getAdapter(provider: OAuthProviderId): ProviderAdapter {

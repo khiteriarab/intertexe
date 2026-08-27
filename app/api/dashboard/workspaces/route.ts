@@ -105,9 +105,12 @@ export async function POST(request: NextRequest) {
     ["supabase", "Supabase", "connected"],
     ["website", "INTERTEXE website", "connected"],
     ["ios_app", "iOS app", "not_connected"],
+    ["chrome_extension", "Chrome extension", "connected"],
     ["rakuten_feed", "Rakuten product feed", "not_connected"],
     ["rakuten_revenue", "Rakuten revenue reports", "not_connected"],
     ["resend", "Resend email", "not_connected"],
+    ["app_store_connect", "App Store Connect", "not_connected"],
+    ["chrome_web_store", "Chrome Web Store", "not_connected"],
   ] as const;
   await supabase.from("hq_data_sources").insert(
     sources.map(([key, label, status]) => ({

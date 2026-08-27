@@ -13,10 +13,12 @@ const FALLBACK_SOURCES = [
   { key: "supabase", label: "Supabase", status: "connected" },
   { key: "website", label: "INTERTEXE website", status: "connected" },
   { key: "ios_app", label: "iOS app", status: "connected" },
+  { key: "chrome_extension", label: "Chrome extension", status: "connected" },
   { key: "rakuten_feed", label: "Rakuten product feed", status: "connected" },
   { key: "rakuten_revenue", label: "Rakuten revenue reports", status: "not_connected" },
   { key: "resend", label: "Resend email", status: "connected" },
   { key: "app_store_connect", label: "App Store Connect", status: "not_connected" },
+  { key: "chrome_web_store", label: "Chrome Web Store", status: "not_connected" },
   { key: "tiktok", label: "TikTok", status: "not_connected" },
   { key: "instagram", label: "Instagram", status: "not_connected" },
   { key: "meta_pixel", label: "Meta Pixel (website)", status: "not_connected" },
@@ -45,7 +47,12 @@ export default async function HqSettingsPage() {
       .select("key, label, status")
       .eq("workspace_id", session.workspaceId)
       .order("label");
-    if (!error && data?.length) sources = data;
+    if (!error && data?.length) {
+      const overlay = new Map(data.map((row) => [row.key, row]));
+      const merged = FALLBACK_SOURCES.map((row) => overlay.get(row.key) || row);
+      const extra = data.filter((row) => !FALLBACK_SOURCES.some((fb) => fb.key === row.key));
+      sources = [...merged, ...extra];
+    }
   }
   sources = sources.map((s) =>
     s.key === "meta_pixel"
@@ -78,7 +85,8 @@ export default async function HqSettingsPage() {
             <div>
               <dt className="text-xs uppercase tracking-wider text-black/45">Product hierarchy</dt>
               <dd className="mt-1 text-black/70 leading-relaxed">
-                Website → acquisition · App → consumer product · Dashboard → internal OS · Platform → enterprise SaaS
+                Website → acquisition · App → consumer product · Chrome extension → browser product · Dashboard →
+                internal OS · Platform → enterprise SaaS
               </dd>
             </div>
           </dl>

@@ -4,11 +4,12 @@ import {
   fetchHqAcquisitionReport,
   type AcquisitionBucket,
 } from "../../../../lib/dashboard/acquisition";
-import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchInstagramDiscoveryMetrics, fetchAppStoreDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
+import { fetchGoogleDiscoveryMetrics, fetchPinterestDiscoveryMetrics, fetchTikTokDiscoveryMetrics, fetchInstagramDiscoveryMetrics, fetchAppStoreDiscoveryMetrics, fetchChromeWebStoreDiscoveryMetrics } from "../../../../lib/dashboard/integration-metrics";
 import { fetchPaidAcquisitionReport } from "../../../../lib/dashboard/paid-acquisition";
 import { formatCount } from "../../../../lib/dashboard/metrics";
 import { HqCard, HqEmptyState, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
 import { TikTokOrganicLogClient } from "./TikTokOrganicLogClient";
+import { PaidAcquisitionSection } from "../../components/PaidAcquisitionSection";
 
 export const metadata = { title: "Acquisition" };
 export const dynamic = "force-dynamic";
@@ -102,7 +103,7 @@ function ReportTable({
 export default async function HqAcquisitionPage() {
   const session = await requireHqSession();
   const canAdmin = session.roles.some((r) => ["founder", "admin"].includes(r));
-  const [report, paidAcquisition, google, tiktok, instagram, pinterest, appStore] = await Promise.all([
+  const [report, paidAcquisition, google, tiktok, instagram, pinterest, appStore, chrome] = await Promise.all([
     fetchHqAcquisitionReport(),
     fetchPaidAcquisitionReport(session.workspaceId),
     fetchGoogleDiscoveryMetrics(session.workspaceId),
@@ -110,6 +111,7 @@ export default async function HqAcquisitionPage() {
     fetchInstagramDiscoveryMetrics(session.workspaceId),
     fetchPinterestDiscoveryMetrics(session.workspaceId),
     fetchAppStoreDiscoveryMetrics(session.workspaceId),
+    fetchChromeWebStoreDiscoveryMetrics(session.workspaceId),
   ]);
 
   return (
@@ -201,6 +203,81 @@ export default async function HqAcquisitionPage() {
             <p>
               App Store Connect is not connected, so iOS downloads are dark. Upload a team .p8 API key and Vendor Number
               in Settings — this page will show App Units (downloads).
+            </p>
+            <Link
+              href="/dashboard/settings"
+              className="inline-block mt-4 text-xs tracking-widest uppercase underline underline-offset-4"
+            >
+              Open Settings → Integrations
+            </Link>
+          </div>
+        )}
+      </HqCard>
+
+      <HqCard className="mb-6" title="Chrome extension">
+        {chrome.connected ? (
+          <>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-black/40 mb-3">
+              First-party saves and clickouts · trailing 7d vs prior 7d
+            </p>
+            <HqMetricGrid
+              items={[
+                {
+                  label: "Saves (7d)",
+                  value: formatCount(chrome.saves7d),
+                  hint: chrome.deltas.saves7d.label || "external_captures",
+                },
+                {
+                  label: "Saves (30d)",
+                  value: formatCount(chrome.saves30d),
+                  hint: chrome.uniqueSavers30d != null
+                    ? `${formatCount(chrome.uniqueSavers30d)} unique savers`
+                    : "chrome_extension",
+                },
+                {
+                  label: "Clickouts (7d)",
+                  value: formatCount(chrome.clickouts7d),
+                  hint: "source chrome_extension",
+                },
+                {
+                  label: "Weekly installs",
+                  value: chrome.installsReady ? formatCount(chrome.weeklyInstalls) : "—",
+                  hint: chrome.installsReady
+                    ? "Pasted from Chrome Web Store dashboard"
+                    : "Not a website click count",
+                },
+              ]}
+            />
+            {chrome.weeklyUsers != null ? (
+              <p className="text-sm text-black/60 mt-4 tabular-nums">
+                Weekly users {formatCount(chrome.weeklyUsers)} from the publisher dashboard.
+              </p>
+            ) : null}
+            {chrome.setupWarnings.length ? (
+              <p className="text-sm text-amber-900 mt-4">{chrome.setupWarnings.join(" · ")}</p>
+            ) : null}
+            <p className="text-[11px] text-black/40 mt-4">
+              Synced {chrome.syncedAt ? new Date(chrome.syncedAt).toLocaleString() : "—"}
+              {chrome.lastSyncStatus ? ` · ${chrome.lastSyncStatus}` : ""}
+              {chrome.listingUrl ? (
+                <>
+                  {" · "}
+                  <a href={chrome.listingUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                    Open listing
+                  </a>
+                </>
+              ) : null}
+              {" · "}
+              <Link href="/dashboard/settings" className="underline underline-offset-2">
+                Manage connection
+              </Link>
+            </p>
+          </>
+        ) : (
+          <div className="text-sm text-black/60 leading-relaxed">
+            <p>
+              Chrome Web Store is not connected, so extension progress is dark here. Connect the listing in Settings
+              to snapshot first-party saves. Website Add to Chrome clicks are not installs.
             </p>
             <Link
               href="/dashboard/settings"

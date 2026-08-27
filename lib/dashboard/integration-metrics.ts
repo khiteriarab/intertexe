@@ -822,3 +822,132 @@ export async function fetchAppStoreDiscoveryMetrics(
     setupWarnings,
   };
 }
+
+export type ChromeWebStoreDiscoveryMetrics = {
+  connected: boolean;
+  metricDate: string | null;
+  syncedAt: string | null;
+  listingId: string | null;
+  listingUrl: string | null;
+  weeklyUsers: number | null;
+  weeklyInstalls: number | null;
+  installsReady: boolean;
+  usageReady: boolean;
+  savesToday: number | null;
+  saves7d: number | null;
+  savesPrev7d: number | null;
+  saves30d: number | null;
+  uniqueSavers30d: number | null;
+  clickouts7d: number | null;
+  clickouts30d: number | null;
+  deltas: {
+    saves7d: ReturnType<typeof computePeriodDelta>;
+  };
+  lastSyncStatus: string | null;
+  lastSyncError: string | null;
+  lastSuccessfulSyncAt: string | null;
+  setupWarnings: string[];
+};
+
+const EMPTY_CHROME_WEB_STORE: ChromeWebStoreDiscoveryMetrics = {
+  connected: false,
+  metricDate: null,
+  syncedAt: null,
+  listingId: null,
+  listingUrl: null,
+  weeklyUsers: null,
+  weeklyInstalls: null,
+  installsReady: false,
+  usageReady: false,
+  savesToday: null,
+  saves7d: null,
+  savesPrev7d: null,
+  saves30d: null,
+  uniqueSavers30d: null,
+  clickouts7d: null,
+  clickouts30d: null,
+  deltas: {
+    saves7d: computePeriodDelta(null, null),
+  },
+  lastSyncStatus: null,
+  lastSyncError: null,
+  lastSuccessfulSyncAt: null,
+  setupWarnings: [],
+};
+
+/** Latest Chrome extension first-party usage + optional publisher weekly counts. */
+export async function fetchChromeWebStoreDiscoveryMetrics(
+  workspaceId: string
+): Promise<ChromeWebStoreDiscoveryMetrics> {
+  const supabase = getServerSupabase();
+  if (!supabase || !workspaceId) return EMPTY_CHROME_WEB_STORE;
+
+  const [{ data: conn }, { data: snap }] = await Promise.all([
+    supabase
+      .from("hq_oauth_connections")
+      .select("status, last_sync_at, last_sync_status, last_sync_error, metadata")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "chrome_web_store")
+      .maybeSingle(),
+    supabase
+      .from("hq_integration_metric_snapshots")
+      .select("metric_date, metrics, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("provider", "chrome_web_store")
+      .order("metric_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const connected = Boolean(
+    conn && (conn.status === "connected" || conn.status === "degraded" || conn.status === "error")
+  );
+  const metrics = (snap?.metrics || {}) as Record<string, unknown>;
+  const meta = (conn?.metadata || {}) as Record<string, unknown>;
+  const saves7d = numOrNull(metrics.saves7d);
+  const savesPrev7d = numOrNull(metrics.savesPrev7d);
+  const setupWarnings = Array.isArray(metrics.setupWarnings)
+    ? (metrics.setupWarnings as string[]).filter((s) => typeof s === "string")
+    : [];
+  const weeklyInstalls = numOrNull(metrics.weeklyInstalls ?? meta.weeklyInstalls);
+  const weeklyUsers = numOrNull(metrics.weeklyUsers ?? meta.weeklyUsers);
+
+  return {
+    connected,
+    metricDate: snap?.metric_date || null,
+    syncedAt:
+      (typeof metrics.syncedAt === "string" && metrics.syncedAt) ||
+      conn?.last_sync_at ||
+      snap?.created_at ||
+      null,
+    listingId:
+      (typeof metrics.listingId === "string" && metrics.listingId) ||
+      (typeof meta.listingId === "string" && meta.listingId) ||
+      null,
+    listingUrl:
+      (typeof metrics.listingUrl === "string" && metrics.listingUrl) ||
+      (typeof meta.listingUrl === "string" && meta.listingUrl) ||
+      null,
+    weeklyUsers,
+    weeklyInstalls,
+    installsReady: Boolean(metrics.installsReady) || weeklyInstalls != null,
+    usageReady: Boolean(metrics.usageReady) || saves7d != null,
+    savesToday: numOrNull(metrics.savesToday),
+    saves7d,
+    savesPrev7d,
+    saves30d: numOrNull(metrics.saves30d),
+    uniqueSavers30d: numOrNull(metrics.uniqueSavers30d),
+    clickouts7d: numOrNull(metrics.clickouts7d),
+    clickouts30d: numOrNull(metrics.clickouts30d),
+    deltas: {
+      saves7d: computePeriodDelta(saves7d, savesPrev7d, {
+        periodLabel: "vs prior 7d",
+      }),
+    },
+    lastSyncStatus: conn?.last_sync_status || null,
+    lastSyncError: conn?.last_sync_error || null,
+    lastSuccessfulSyncAt:
+      typeof meta.lastSuccessfulSyncAt === "string" ? meta.lastSuccessfulSyncAt : null,
+    setupWarnings,
+  };
+}

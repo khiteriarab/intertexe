@@ -13,6 +13,7 @@ const PROVIDERS: OAuthProviderId[] = [
   "tiktok",
   "pinterest",
   "app_store_connect",
+  "chrome_web_store",
 ];
 
 /**

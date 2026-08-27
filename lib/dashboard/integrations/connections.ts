@@ -92,6 +92,7 @@ export async function markDataSources(
     tiktok: "TikTok",
     pinterest: "Pinterest",
     app_store_connect: "App Store Connect",
+    chrome_web_store: "Chrome Web Store",
   };
   for (const key of def.dataSourceKeys) {
     await supabase.from("hq_data_sources").upsert(
@@ -179,12 +180,19 @@ export async function getValidAccessToken(
   const row = await loadFullConnection(supabase, workspaceId, provider);
   if (!row || !row.access_token_enc) throw new Error("Integration not connected");
 
-  const metadata = { ...(row.metadata || {}), workspaceId, accountLabel: row.account_label };
+  const metadata: Record<string, unknown> = {
+    ...(row.metadata || {}),
+    workspaceId,
+    accountLabel: row.account_label,
+  };
   if (provider === "app_store_connect") {
     if (row.refresh_token_enc) {
       metadata.privateKeyPem = decryptSecret(row.refresh_token_enc);
     }
     return { accessToken: "asc-key-stored", metadata, connection: row };
+  }
+  if (provider === "chrome_web_store") {
+    return { accessToken: "cws-listing", metadata, connection: row };
   }
 
   let accessToken = decryptSecret(row.access_token_enc);
@@ -273,6 +281,7 @@ export async function syncProvider(
       result.metrics?.tiktokUserError,
       result.metrics?.pinterestError,
       result.metrics?.ascError,
+      result.metrics?.chromeError,
     ].filter((v): v is string => typeof v === "string" && v.length > 0);
     const softWarnings = setupWarnings.filter((w) => !hardErrors.includes(w));
     const hasHardError = hardErrors.length > 0;
@@ -292,6 +301,10 @@ export async function syncProvider(
         pinterestImpressions7d: result.metrics?.impressions7d ?? null,
         pinterestOutboundClicks7d: result.metrics?.outboundClicks7d ?? null,
         appStoreDownloads7d: result.metrics?.appUnits7d ?? result.metrics?.downloads7d ?? null,
+        chromeSaves7d: result.metrics?.saves7d ?? null,
+        chromeSaves30d: result.metrics?.saves30d ?? null,
+        chromeWeeklyInstalls: result.metrics?.weeklyInstalls ?? null,
+        chromeWeeklyUsers: result.metrics?.weeklyUsers ?? null,
       },
     };
     const detailText = (hasHardError ? hardErrors : softWarnings).join(" · ").slice(0, 500) || null;
