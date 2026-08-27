@@ -9,7 +9,7 @@ type Phase = "idle" | "signing_in" | "opening" | "forgot";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const [email, setEmail] = useState("info@intertexe.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(
@@ -39,10 +39,11 @@ function LoginForm() {
       }
 
       setPhase("signing_in");
+      const next = params.get("next");
       const res = await fetch("/api/dashboard/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, next }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -50,29 +51,39 @@ function LoginForm() {
         setPhase("idle");
         return;
       }
+      let destination = typeof data.redirectTo === "string" ? data.redirectTo : "/dashboard";
       if (inviteToken) {
         const acc = await fetch("/api/dashboard/invites/accept", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token: inviteToken }),
         });
-        const accData = await acc.json();
         if (!acc.ok) {
-          setError(accData.message || "Invite could not be accepted.");
-          setPhase("idle");
-          return;
-        }
-        if (accData.workspaceId) {
-          await fetch("/api/dashboard/workspaces", {
-            method: "PUT",
+          const ent = await fetch("/api/dashboard/enterprise/invitations/accept", {
+            method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ workspaceId: accData.workspaceId }),
+            body: JSON.stringify({ token: inviteToken }),
           });
+          if (!ent.ok) {
+            setInfo("Signed in. The invitation could not be applied automatically.");
+          } else {
+            const entData = await ent.json();
+            if (typeof entData.redirectTo === "string") destination = entData.redirectTo;
+          }
+        } else {
+          const accData = await acc.json();
+          if (accData.workspaceId) {
+            await fetch("/api/dashboard/workspaces", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ workspaceId: accData.workspaceId }),
+            });
+          }
         }
       }
       // Keep the loading state until navigation finishes — overview can take a while.
       setPhase("opening");
-      router.replace("/dashboard");
+      router.replace(destination);
       router.refresh();
     } catch {
       setError("Network error. Try again.");
@@ -94,11 +105,10 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-[#f6f5f3] flex items-center justify-center px-6">
       <div className="w-full max-w-md bg-white border border-black/10 rounded-2xl p-8 shadow-sm">
-        <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE Dashboard</p>
-        <h1 className="text-2xl font-medium mt-2">Secure sign-in</h1>
+        <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE</p>
+        <h1 className="text-2xl font-medium mt-2">Welcome to INTERTEXE</h1>
         <p className="text-sm text-black/55 mt-2">
-          INTERTEXE Dashboard — private operating system for material intelligence. Not linked from the consumer site or
-          app.
+          Manage your product intelligence and Digital Product Passports.
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4" aria-busy={busy}>
