@@ -325,7 +325,8 @@ describe("Weekly Edit app / web product links", () => {
       "https://www.intertexe.com/shop?fiber=cashmere"
     );
     const appIcon = weeklyEditOpenHref("/shop", "email_weekly_edit_app");
-    assert.match(appIcon, /\/open\?/);
+    assert.match(appIcon, /apps\.apple\.com\/app\/id6770476520/);
+    assert.doesNotMatch(appIcon, /\/open\?/);
     const weekly = fs.readFileSync(path.join(process.cwd(), "lib/weekly-edit.ts"), "utf8");
     assert.match(weekly, /row\.id \|\| row\.product_id/);
     const aasa = fs.readFileSync(

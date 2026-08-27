@@ -1,6 +1,6 @@
 "use client";
 
-import { getAppStoreOpenUrl } from "../../lib/app-store";
+import { getAppStoreUrl } from "../../lib/app-store";
 import { getChromeWebStoreUrl } from "../../lib/chrome-extension";
 
 function AppleMark({ className }: { className?: string }) {
@@ -27,7 +27,7 @@ function ChromeMark({ className }: { className?: string }) {
 
 /** Phone header: iOS App chip. Desktop header: iOS App + Add to Chrome. */
 export function InstallCtas() {
-  const iosHref = getAppStoreOpenUrl("/scanner", undefined, { cta: "nav_ios_app" });
+  const iosHref = getAppStoreUrl();
   const chromeHref = getChromeWebStoreUrl();
 
   return (

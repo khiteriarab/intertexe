@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { getAppCtaLabel, getAppStoreOpenUrl } from "../../lib/app-store";
+import { getAppCtaLabel, getAppStoreUrl } from "../../lib/app-store";
 import { useIsMobileWeb } from "../../lib/use-is-mobile-web";
 
 const DISMISS_KEY = "app-download-prompt-dismissed-at";
@@ -24,7 +24,7 @@ export function AppDownloadPrompt() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [iconSrc, setIconSrc] = useState(APP_ICON_SRC);
-  const href = getAppStoreOpenUrl("/scanner", undefined, { cta: "timed_prompt" });
+  const href = getAppStoreUrl();
 
   useEffect(() => {
     setMounted(true);

@@ -8,7 +8,7 @@ describe("Desktop install CTAs", () => {
   it("points Add to Chrome at the Chrome Web Store listing", () => {
     const url = getChromeWebStoreUrl();
     assert.match(url, /^https:\/\/chromewebstore\.google\.com\/detail\/intertexe-fabric-scanner\//);
-    assert.match(url, /kiifidnbenolnpcapedgjjjjmedbllba/);
+    assert.match(url, /kiifidnbenolnpcapedgjijjmedbllba/);
   });
 
   it("keeps the phone iOS prompt and adds desktop Chrome + iOS header CTAs", () => {
@@ -19,6 +19,8 @@ describe("Desktop install CTAs", () => {
     assert.match(client, /AppDownloadPrompt/);
     assert.match(ctas, /Add to Chrome/);
     assert.match(ctas, /iOS App/);
+    assert.match(ctas, /getAppStoreUrl/);
+    assert.doesNotMatch(ctas, /getAppStoreOpenUrl/);
     assert.match(ctas, /md:hidden/);
     assert.match(ctas, /hidden md:flex/);
     assert.doesNotMatch(ctas, /#0038A8|#1A2B88/);

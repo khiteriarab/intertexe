@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { DEFAULT_APP_STORE_URL } from "../../lib/app-store";
+import { getChromeWebStoreUrl } from "../../lib/chrome-extension";
 import { SERIF } from "./platform-ui";
 
 const SURFACES = [
@@ -14,7 +15,7 @@ const SURFACES = [
     copy: "The extension sits beside the retailer listing and finds better-material matches. It is not required to open a Digital Product Passport.",
     image: "/platform/surface-chrome-laptop.jpg",
     alt: "Laptop showing INTERTEXE Fabric Scanner on a sample product page. Illustrative — not a retailer partnership.",
-    primary: { href: "/extension/download", label: "Add to Chrome" },
+    primary: { href: getChromeWebStoreUrl(), label: "Add to Chrome" },
     secondary: { href: "/platform/demo", label: "See how it works" },
   },
   {

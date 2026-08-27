@@ -3,7 +3,7 @@
 export const APP_STORE_ID = "6770476520";
 
 /** Canonical live App Store listing. */
-export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/us/app/id${APP_STORE_ID}`;
+export const DEFAULT_APP_STORE_URL = `https://apps.apple.com/app/id${APP_STORE_ID}`;
 
 /** Explicit App Store-only hop (not claimed in AASA). */
 export const APP_DOWNLOAD_PATH = "/download";
@@ -40,7 +40,7 @@ export function normalizeAppStoreUrl(raw: string): string {
   if (!trimmed || isPlaceholderEnv(trimmed)) return DEFAULT_APP_STORE_URL;
   const idMatch =
     trimmed.match(/(?:id|\/app\/)(\d{8,12})\b/i) || trimmed.match(/\b(\d{8,12})\b/);
-  if (idMatch?.[1]) return `https://apps.apple.com/us/app/id${idMatch[1]}`;
+  if (idMatch?.[1]) return `https://apps.apple.com/app/id${idMatch[1]}`;
   if (/^https?:\/\/apps\.apple\.com\//i.test(trimmed)) return trimmed;
   return DEFAULT_APP_STORE_URL;
 }
@@ -116,17 +116,14 @@ export function shouldOpenFallbackToWeb(nextPath: string, cta?: string | null): 
 }
 
 /**
- * CTA href for “open / download app”.
- * When Universal Links are ready → HTTPS /open smart link; else direct App Store.
+ * App Store listing only. Download / “iOS App” CTAs must not hop through
+ * /open or intertexe:// (desktop browsers treat that as an unknown link).
  */
 export function getAppStoreOpenUrl(
-  nextPath?: string,
+  _nextPath?: string,
   explicitStoreUrl?: string,
-  extra?: OpenUrlExtra
+  _extra?: OpenUrlExtra
 ): string {
-  if (isAppDeepLinkReady()) {
-    return getUniversalOpenUrl(nextPath, extra);
-  }
   return getAppStoreUrl(explicitStoreUrl);
 }
 
@@ -173,5 +170,5 @@ export function readLikelyAppInstalled(): boolean {
 }
 
 export function getAppCtaLabel(_likelyInstalled?: boolean): string {
-  return isAppDeepLinkReady() ? "Open App" : "Download App";
+  return "Download App";
 }

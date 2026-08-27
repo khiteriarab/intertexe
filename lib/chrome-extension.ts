@@ -1,6 +1,6 @@
 /** Chrome Web Store listing for INTERTEXE: Fabric Scanner. */
 
-export const CHROME_WEB_STORE_ITEM_ID = "kiifidnbenolnpcapedgjjjjmedbllba";
+export const CHROME_WEB_STORE_ITEM_ID = "kiifidnbenolnpcapedgjijjmedbllba";
 export const CHROME_WEB_STORE_SLUG = "intertexe-fabric-scanner";
 
 export function getChromeWebStoreUrl(): string {

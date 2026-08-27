@@ -1,12 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { isAppDeepLinkReady } from "../../lib/app-store";
-import {
-  DEFAULT_APP_STORE_URL,
-  getAppStoreOpenUrl,
-  getAppStoreUrl,
-} from "../../lib/app-store";
+import { DEFAULT_APP_STORE_URL, getAppStoreUrl } from "../../lib/app-store";
 import { trackAppDownloadClick } from "../../lib/app-download-click";
 
 type Props = {
@@ -21,11 +16,11 @@ type Props = {
   onAfterClick?: () => void;
 };
 
-/** Smart Universal Link when ready; App Store when not. */
+/** Direct App Store listing — never /open or intertexe://. */
 export function AppStoreCtaLink({
   className,
   appStoreUrl,
-  path,
+  path: _path,
   label,
   children,
   testId = "link-app-store-cta",
@@ -33,10 +28,8 @@ export function AppStoreCtaLink({
   onAfterClick,
 }: Props) {
   const ctaName = cta || testId || "app_store_cta";
-  const href = isAppDeepLinkReady()
-    ? getAppStoreOpenUrl(path, undefined, { cta: ctaName })
-    : getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
-  const resolvedLabel = label || (isAppDeepLinkReady() ? "Open App" : "Download App");
+  const href = getAppStoreUrl(appStoreUrl) || DEFAULT_APP_STORE_URL;
+  const resolvedLabel = label || "Download App";
   const goesToOpen = href.includes("/open");
 
   return (

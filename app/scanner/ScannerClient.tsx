@@ -688,14 +688,14 @@ export default function ScannerClient() {
         <div className="flex flex-col items-center gap-6">
           <div className="border border-gray-100 p-4 inline-block" style={{ borderRadius: 0 }}>
             <QRCodeSVG
-              value="https://www.intertexe.com/open?next=%2Fscanner&itx_cta=scanner_desktop_qr&utm_source=desktop_qr&utm_medium=qr&utm_campaign=desktop_scanner"
+              value={appStoreUrl}
               size={180}
               fgColor="#1C2B2A"
               bgColor="#FFFFFF"
             />
           </div>
           <p className="text-xs text-gray-400" style={{ letterSpacing: "0.05em" }}>
-            Scan with your phone to open the scanner.
+            Scan with your phone to open the App Store.
           </p>
         </div>
         <p className="text-xs text-gray-400 mt-16">Already have the app? Open it and tap Scanner.</p>

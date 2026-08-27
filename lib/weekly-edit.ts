@@ -21,7 +21,7 @@ export function weeklyEditOpenHref(
 ): string {
   const path = hrefToSitePath(href);
   if (path === "/open" || path.startsWith("/open?")) return href;
-  // App-icon CTA still uses /open so people without the app hit the App Store.
+  // App-icon CTA goes to the App Store listing (not /open → intertexe://).
   if (cta.endsWith("_app")) {
     return getAppStoreOpenUrl(path, undefined, {
       cta,

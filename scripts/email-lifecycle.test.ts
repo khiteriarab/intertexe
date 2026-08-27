@@ -18,7 +18,6 @@ import {
 } from "../lib/email-constants.ts";
 import { BACKGROUND_JOBS, expectedVercelCrons } from "../lib/background-jobs/registry.ts";
 import {
-  isAppDeepLinkReady,
   getAppStoreUrl,
   getAppStoreOpenUrl,
 } from "../lib/app-store.ts";
@@ -55,10 +54,10 @@ test("founder From and Reply-To identities", () => {
   assert.equal(EMAIL_TYPES.FOUNDER_WELCOME, "founder_welcome");
 });
 
-test("welcome CTA uses Universal Link when deep links are ready", () => {
-  assert.equal(isAppDeepLinkReady(), true);
-  assert.match(getAppStoreOpenUrl("/scanner"), /intertexe\.com\/open/);
-  assert.match(getAppStoreUrl(), /apps\.apple\.com/);
+test("App Store CTAs go to the live listing, not /open", () => {
+  assert.match(getAppStoreOpenUrl("/scanner"), /apps\.apple\.com/);
+  assert.match(getAppStoreUrl(), /apps\.apple\.com\/app\/id6770476520/);
+  assert.doesNotMatch(getAppStoreOpenUrl("/scanner"), /intertexe\.com\/open/);
 });
 
 test("normalizeEmail lowercases and trims", () => {
