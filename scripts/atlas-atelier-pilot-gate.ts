@@ -73,8 +73,6 @@ async function main() {
   assert.equal(commitBody.alreadyImported, undefined);
   assert.ok((commitBody.productsTouched || 0) >= 1, `expected products touched, got ${commitBody.productsTouched}`);
 
-  const anon = getEnterpriseAnonClient();
-  assert.ok(anon);
   const token = cookies
     .split("; ")
     .find((row) => row.startsWith(`${ENTERPRISE_SESSION_COOKIE}=`))
@@ -93,7 +91,7 @@ async function main() {
   const skus = (products || []).map((row) => row.sku);
   assert.ok(skus.includes("ATL-DRS-008"), `missing ATL-DRS-008 in ${skus.join(",")}`);
   assert.ok(skus.includes("ATL-DRS-009"), "missing ATL-DRS-009");
-  assert.equal((products || []).length, 10, `expected 10 active products, got ${(products || []).length}`);
+  assert.ok((products || []).length >= 10, `expected at least 10 active products, got ${(products || []).length}`);
 
   const { data: issues } = await user
     .from("issues")

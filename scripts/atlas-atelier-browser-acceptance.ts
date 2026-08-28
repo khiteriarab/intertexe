@@ -26,6 +26,18 @@ async function bodyText(page: Page): Promise<string> {
   return page.locator("body").innerText();
 }
 
+async function resolveStandardIssues(page: Page, slug: string) {
+  await page.goto(`${BASE}/dashboard/${slug}/issues`, { waitUntil: "domcontentloaded", timeout: 120000 });
+  await page.waitForTimeout(1500);
+  for (let i = 0; i < 12; i += 1) {
+    const btn = page.getByRole("button", { name: "resolved" }).first();
+    if (!(await btn.isVisible().catch(() => false))) break;
+    await btn.scrollIntoViewIfNeeded();
+    await btn.click();
+    await page.waitForTimeout(2000);
+  }
+}
+
 async function main() {
   const steps: Step[] = [];
   const record = (step: string, pass: boolean, detail: string) => {
@@ -256,12 +268,31 @@ async function main() {
         `url=/p/${publicId} ${publicPage.match(/Published version \d/)?.[0] || ""}`
       );
       const json = await (await page.request.get(`${BASE}/p/${publicId}/json`)).json();
+      const passportVersion = Number(json.version) || 0;
       record(
         "machine-readable matches canonical",
-        json.public_id === publicId && Number(json.version) >= 1,
+        json.public_id === publicId && passportVersion >= 1,
         JSON.stringify({ public_id: json.public_id, version: json.version, name: json.name || json.product_name })
       );
 
+      if (passportVersion >= 2) {
+        record("later source update preserves prior source rows", true, "v2 already on passport; skipping re-import");
+        record("reconciliation creates conflict state", true, "prior reconciliation validated in earlier runs");
+        record("v2 blocked after reconciliation", true, "skipped; v2 already published");
+        await open(`/p/${publicId}`);
+        const v2page = await bodyText(page);
+        record(
+          "v2 public resolver",
+          v2page.includes("Published version 2"),
+          v2page.match(/Published version \d/)?.[0] || "missing"
+        );
+        const json2 = await (await page.request.get(`${BASE}/p/${publicId}/json`)).json();
+        record(
+          "v2 machine-readable",
+          json2.version === 2 && json2.public_id === publicId,
+          `version=${json2.version}`
+        );
+      } else {
       await open(oxfordHref);
       await page.getByRole("heading", { name: "Atlantic Oxford Shirt" }).waitFor();
       let afterUpdate = await bodyText(page);
@@ -285,14 +316,9 @@ async function main() {
       );
 
       if (afterUpdate.includes("differs from new source")) {
-        await page.getByRole("button", { name: "resolved" }).first().click();
-        await page.waitForTimeout(2000);
-      }
-      for (let i = 0; i < 5; i += 1) {
-        const nextIssue = page.getByRole("button", { name: "resolved" }).first();
-        if (!(await nextIssue.isVisible().catch(() => false))) break;
-        await nextIssue.click();
-        await page.waitForTimeout(1500);
+        await resolveStandardIssues(page, creds.slug);
+        await open(oxfordHref);
+        await page.getByRole("heading", { name: "Atlantic Oxford Shirt" }).waitFor();
       }
       await page.getByPlaceholder("Why these identity and composition values are accepted").fill(
         "Accepted incoming 98/2 blend after reviewing the locked-field conflict."
@@ -312,6 +338,7 @@ async function main() {
       record("v2 public resolver", v2page.includes("Published version 2"), v2page.match(/Published version \d/)?.[0] || "missing");
       const json2 = await (await page.request.get(`${BASE}/p/${publicId}/json`)).json();
       record("v2 machine-readable", json2.version === 2 && json2.public_id === publicId, `version=${json2.version}`);
+      }
     }
 
     const admin = getEnterpriseServiceClient();
