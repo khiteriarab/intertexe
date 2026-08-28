@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { canMutateEnterprise, getOrganizationAccess } from "./access";
 import type { DashboardActor } from "./access";
@@ -5,7 +6,12 @@ import type { EnterpriseMembership } from "./types";
 
 type OrgApiOk = {
   error: null;
-  access: { ok: true; actor: DashboardActor; membership: EnterpriseMembership };
+  access: {
+    ok: true;
+    actor: DashboardActor;
+    membership: EnterpriseMembership;
+    client: SupabaseClient;
+  };
 };
 type OrgApiErr = { error: NextResponse; access: null };
 

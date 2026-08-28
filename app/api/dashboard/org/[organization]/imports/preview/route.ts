@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrgApi } from "../../../../../../../lib/enterprise/api-auth";
 import { parseImportPayload } from "../../../../../../../lib/enterprise/csv";
-import { loadExistingMatchKeys } from "../../../../../../../lib/enterprise/pipeline";
-import { previewImportWithCatalog, suggestColumnMapping } from "../../../../../../../lib/enterprise/import-preview";
+import { mappingForPreview, previewImportWithCatalog } from "../../../../../../../lib/enterprise/import-preview";
+import { loadMappingTemplate } from "../../../../../../../lib/enterprise/mapping-templates";
+import { loadCatalogIdentities, loadExistingMatchKeys } from "../../../../../../../lib/enterprise/pipeline";
 
 export const dynamic = "force-dynamic";
 
@@ -22,16 +23,26 @@ export async function POST(
   if (parsed.rows.length > 500) {
     return NextResponse.json({ message: "Phase 1 imports are limited to 500 rows per file." }, { status: 400 });
   }
-  const suggested = suggestColumnMapping(parsed.columns);
-  const mapping = (body.mapping as Record<string, string> | undefined) ||
-    Object.fromEntries(suggested.filter((row) => row.canonicalField).map((row) => [row.sourceColumn, row.canonicalField!]));
-  const existing = await loadExistingMatchKeys(gate.access.membership.organizationId);
-  const preview = previewImportWithCatalog(parsed.rows, mapping, existing);
+  const saved = await loadMappingTemplate(
+    gate.access.client,
+    gate.access.membership.organizationId,
+    parsed.columns
+  );
+  const { suggested, mapping, mappingSource } = mappingForPreview(
+    parsed.columns,
+    body.mapping,
+    saved?.mapping || null
+  );
+  const existing = await loadExistingMatchKeys(gate.access.client, gate.access.membership.organizationId);
+  const catalog = await loadCatalogIdentities(gate.access.client, gate.access.membership.organizationId);
+  const preview = previewImportWithCatalog(parsed.rows, mapping, existing, catalog);
   return NextResponse.json({
     columns: parsed.columns,
     rowCount: parsed.rows.length,
     suggested,
     mapping,
+    mappingSource,
+    savedTemplateId: saved?.id || null,
     preview,
   });
 }

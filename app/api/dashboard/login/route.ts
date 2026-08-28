@@ -6,23 +6,23 @@ import {
   HQ_SESSION_COOKIE,
   writeAuthAudit,
 } from "../../../../lib/dashboard/auth";
-import { getEnterpriseAnonClient, isEnterpriseConfigured } from "../../../../lib/enterprise/client";
+import { getEnterpriseAnonClient, getEnterpriseUserClient } from "../../../../lib/enterprise/client";
 import { ENTERPRISE_SESSION_COOKIE } from "../../../../lib/enterprise/constants";
+import { isLinkedEnterprisePrincipal } from "../../../../lib/enterprise/identity-links";
 import {
-  ensureCustomerZeroMembership,
-  listEnterpriseMemberships,
+  listEnterpriseMembershipsForUser,
   resolvePostLoginPath,
 } from "../../../../lib/enterprise/memberships";
 
 export const dynamic = "force-dynamic";
 
-function cookieOptions() {
+function cookieOptions(maxAge = 60 * 60 * 12) {
   return {
     httpOnly: true as const,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
-    maxAge: 60 * 60 * 12,
+    maxAge,
   };
 }
 
@@ -70,15 +70,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (hqAllowed) {
-        if (isEnterpriseConfigured()) {
-          await ensureCustomerZeroMembership({
-            email,
-            fullName: (data.user.user_metadata?.name as string) || null,
-            superAdmin: HQ_FOUNDER_EMAILS.has(email),
-          });
-        }
-        const memberships = await listEnterpriseMemberships(email);
-        const redirectTo = resolvePostLoginPath({ next, hq: true, memberships });
+        const redirectTo = resolvePostLoginPath({ next, hq: true, memberships: [] });
         await writeAuthAudit({
           authUserId: data.user.id,
           email,
@@ -93,6 +85,7 @@ export async function POST(request: NextRequest) {
           redirectTo,
         });
         response.cookies.set(HQ_SESSION_COOKIE, data.session.access_token, cookieOptions());
+        response.cookies.set(ENTERPRISE_SESSION_COOKIE, "", { ...cookieOptions(0), maxAge: 0 });
         return response;
       }
     }
@@ -100,8 +93,16 @@ export async function POST(request: NextRequest) {
     const enterpriseAuth = getEnterpriseAnonClient();
     if (enterpriseAuth) {
       const enterprise = await enterpriseAuth.auth.signInWithPassword({ email, password });
-      if (enterprise.data.session?.access_token && enterprise.data.user?.email) {
-        const memberships = await listEnterpriseMemberships(email);
+      if (enterprise.data.session?.access_token && enterprise.data.user?.id) {
+        if (await isLinkedEnterprisePrincipal(enterprise.data.user.id)) {
+          return NextResponse.json(
+            { message: "This account is not authorized." },
+            { status: 403 }
+          );
+        }
+        const memberships = await listEnterpriseMembershipsForUser(
+          getEnterpriseUserClient(enterprise.data.session.access_token)
+        );
         if (!memberships.length) {
           return NextResponse.json(
             { message: "This account is not authorized." },
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
           enterprise.data.session.access_token,
           cookieOptions()
         );
+        response.cookies.set(HQ_SESSION_COOKIE, "", { ...cookieOptions(0), maxAge: 0 });
         return response;
       }
     }

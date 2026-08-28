@@ -1,24 +1,19 @@
-import { getEnterpriseServiceClient } from "./client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { newPublicId } from "./ids";
+import { ITX_RULESET_VERSION } from "./intelligence";
+import { ITX_ONTOLOGY_VERSION } from "./ontology";
 import { evaluatePublishability } from "./publishability";
 
 function siteOrigin(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com").replace(/\/$/, "");
 }
 
-export async function publishabilityForProduct(organizationId: string, productId: string) {
-  const supabase = getEnterpriseServiceClient();
-  if (!supabase) {
-    return evaluatePublishability({
-      identityPresent: false,
-      requiredFieldsPresent: false,
-      criticalConflicts: 1,
-      criticalValidations: 0,
-      requiredApprovalsComplete: false,
-      passportIdentifier: null,
-      resolverDestination: null,
-    });
-  }
+export async function publishabilityForProduct(
+  client: SupabaseClient,
+  organizationId: string,
+  productId: string
+) {
+  const supabase = client;
 
   const { data: product } = await supabase
     .from("products")
@@ -55,8 +50,16 @@ export async function publishabilityForProduct(organizationId: string, productId
   const composition = fieldMap.get("composition");
   const identityPresent = Boolean(product?.name && (product.sku || product.style_code || fieldMap.get("gtin")));
   const requiredFieldsPresent = Boolean(product?.name && composition?.normalized_value);
-  const criticalConflicts = (issues || []).filter((row) => row.issue_type === "conflict" && row.severity === "critical").length;
-  const criticalValidations = (issues || []).filter((row) => row.issue_type === "validation" && row.severity === "critical").length;
+  const criticalConflicts = (issues || []).filter((row) => row.issue_type === "conflict").length;
+  const criticalValidations = (issues || []).filter(
+    (row) => row.issue_type === "validation" && (row.severity === "critical" || row.severity === "high")
+  ).length;
+  const unresolvedMissingData = (issues || []).filter(
+    (row) => row.issue_type === "missing_data" && (row.severity === "critical" || row.severity === "high")
+  ).length;
+  const unresolvedIdentityIssues = (issues || []).filter(
+    (row) => row.issue_type === "identifier" && (row.severity === "critical" || row.severity === "high")
+  ).length;
   const requiredApprovalsComplete = Boolean(
     composition && (composition.state === "approved" || composition.locked)
   );
@@ -70,20 +73,21 @@ export async function publishabilityForProduct(organizationId: string, productId
     requiredApprovalsComplete,
     passportIdentifier: publicId || "pending",
     resolverDestination: publicId ? `${siteOrigin()}/p/${publicId}` : `${siteOrigin()}/p/pending`,
+    unresolvedMissingData,
+    unresolvedIdentityIssues,
   });
 }
 
 export async function publishProductPassport(input: {
+  client: SupabaseClient;
   organizationId: string;
   productId: string;
-  actorEmail: string;
 }): Promise<{ publicId: string; version: number; url: string }> {
-  const check = await publishabilityForProduct(input.organizationId, input.productId);
+  const check = await publishabilityForProduct(input.client, input.organizationId, input.productId);
   if (check.status === "blocked") {
     throw new Error(`Passport cannot be published: ${check.blockers.join("; ")}`);
   }
-  const supabase = getEnterpriseServiceClient();
-  if (!supabase) throw new Error("Enterprise database is not linked.");
+  const supabase = input.client;
 
   const { data: product } = await supabase
     .from("products")
@@ -96,11 +100,7 @@ export async function publishProductPassport(input: {
     .select("field_key, normalized_value, access_class, state")
     .eq("organization_id", input.organizationId)
     .eq("product_id", input.productId);
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", input.actorEmail.toLowerCase())
-    .maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("id").maybeSingle();
 
   let { data: identity } = await supabase
     .from("persistent_identities")
@@ -136,6 +136,8 @@ export async function publishProductPassport(input: {
     product_name: product?.name,
     public_id: identity.public_id,
     fields: publicFields,
+    ontology_version: ITX_ONTOLOGY_VERSION,
+    ruleset_version: ITX_RULESET_VERSION,
   };
 
   let { data: passport } = await supabase
@@ -164,21 +166,33 @@ export async function publishProductPassport(input: {
     .select("id", { count: "exact", head: true })
     .eq("passport_id", passport.id);
   const versionNumber = (count || 0) + 1;
-  const { data: version, error: versionError } = await supabase
+  const versionRow = {
+    organization_id: input.organizationId,
+    passport_id: passport.id,
+    version_number: versionNumber,
+    state: "published",
+    published_at: new Date().toISOString(),
+    ruleset_version: ITX_RULESET_VERSION,
+    ontology_version: ITX_ONTOLOGY_VERSION,
+    snapshot,
+    change_summary: versionNumber === 1 ? "Initial publication" : `Published v${versionNumber}`,
+    actor_id: profile?.id || null,
+  };
+  let { data: version, error: versionError } = await supabase
     .from("passport_versions")
-    .insert({
-      organization_id: input.organizationId,
-      passport_id: passport.id,
-      version_number: versionNumber,
-      state: "published",
-      published_at: new Date().toISOString(),
-      ruleset_version: "phase1.identity-composition",
-      snapshot,
-      change_summary: versionNumber === 1 ? "Initial publication" : `Published v${versionNumber}`,
-      actor_id: profile?.id || null,
-    })
+    .insert(versionRow)
     .select("id, version_number")
     .maybeSingle();
+  if (versionError) {
+    const { ontology_version: _ignored, ...withoutOntologyColumn } = versionRow;
+    const retry = await supabase
+      .from("passport_versions")
+      .insert(withoutOntologyColumn)
+      .select("id, version_number")
+      .maybeSingle();
+    version = retry.data;
+    versionError = retry.error;
+  }
   if (versionError || !version?.id) throw new Error(versionError?.message || "Version insert failed.");
 
   await supabase
@@ -219,9 +233,12 @@ export async function publishProductPassport(input: {
   return { publicId: identity.public_id, version: version.version_number, url: publicUrl };
 }
 
-export async function markPassportUpdateRequired(organizationId: string, productId: string) {
-  const supabase = getEnterpriseServiceClient();
-  if (!supabase) return;
+export async function markPassportUpdateRequired(
+  client: SupabaseClient,
+  organizationId: string,
+  productId: string
+) {
+  const supabase = client;
   const { data: passport } = await supabase
     .from("passports")
     .select("id, state")

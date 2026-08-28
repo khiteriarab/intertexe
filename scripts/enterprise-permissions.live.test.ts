@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getEnterpriseServiceClient } from "../lib/enterprise/client.ts";
 import { deleteOrganizationForTest } from "../lib/enterprise/deletion.ts";
 import { commitMappedImport } from "../lib/enterprise/pipeline.ts";
-import { approveProductFields } from "../lib/enterprise/review.ts";
+import { approveProductFields, resolveIssue } from "../lib/enterprise/review.ts";
 import { publishProductPassport } from "../lib/enterprise/publish.ts";
 import { resolvePublicPassport } from "../lib/enterprise/public-resolver.ts";
 
@@ -192,23 +192,48 @@ describe("Live Phase 1 publish journey on a disposable org", { skip: !live }, ()
       .maybeSingle();
     assert.equal(error, null, error?.message);
     const organizationId = org!.id;
+    const password = randomBytes(18).toString("base64url");
+    const ownerEmail = `itx-phase1-owner-${suffix}@example.invalid`;
+    const createdUserIds: string[] = [];
     try {
       await admin.from("workspaces").insert({
         organization_id: organizationId,
         slug: "default",
         name: "Default workspace",
       });
+      const { data: ownerAuth, error: ownerErr } = await admin.auth.admin.createUser({
+        email: ownerEmail,
+        password,
+        email_confirm: true,
+      });
+      assert.equal(ownerErr, null, ownerErr?.message);
+      createdUserIds.push(ownerAuth.user!.id);
+      const { data: profile } = await admin
+        .from("profiles")
+        .insert({ email: ownerEmail, auth_user_id: ownerAuth.user!.id, full_name: "Phase 1 owner" })
+        .select("id")
+        .maybeSingle();
+      await admin.from("organization_memberships").insert({
+        organization_id: organizationId,
+        user_id: profile!.id,
+        role: "owner",
+        status: "active",
+      });
+      const ownerClient = jwtClient();
+      assert.ok(ownerClient);
+      const session = await ownerClient.auth.signInWithPassword({ email: ownerEmail, password });
+      assert.equal(session.error, null, session.error?.message);
       const first = await commitMappedImport({
+        client: ownerClient,
         organizationId,
         organizationPlan: "saas",
         productAllowance: null,
-        actorEmail: "phase1@example.invalid",
         filename: "phase1.csv",
-        mapping: { SKU: "sku", NAME: "name", MATERIAL: "composition" },
-        rows: [{ SKU: "P1", NAME: "Oxford shirt", MATERIAL: "100% cotton" }],
+        mapping: { SKU: "sku", NAME: "name", MATERIAL: "composition", ORIGIN: "manufacturing_country" },
+        rows: [{ SKU: "P1", NAME: "Oxford shirt", MATERIAL: "100% cotton", ORIGIN: "PT" }],
       });
       assert.equal(first.productsTouched, 1);
-      const { data: product } = await admin
+      const { data: product } = await ownerClient
         .from("products")
         .select("id, name")
         .eq("organization_id", organizationId)
@@ -216,37 +241,54 @@ describe("Live Phase 1 publish journey on a disposable org", { skip: !live }, ()
         .maybeSingle();
       assert.ok(product?.id);
       await approveProductFields({
+        client: ownerClient,
         organizationId,
         productId: product.id,
-        actorEmail: "phase1@example.invalid",
+        reason: "Phase 1 identity and composition match the spec sheet.",
       });
       const published = await publishProductPassport({
+        client: ownerClient,
         organizationId,
         productId: product.id,
-        actorEmail: "phase1@example.invalid",
       });
       const view = await resolvePublicPassport(published.publicId);
       assert.equal(view.found, true);
       assert.equal(view.versionNumber, 1);
 
       await commitMappedImport({
+        client: ownerClient,
         organizationId,
         organizationPlan: "saas",
         productAllowance: null,
-        actorEmail: "phase1@example.invalid",
         filename: "phase1-update.csv",
-        mapping: { SKU: "sku", NAME: "name", MATERIAL: "composition" },
-        rows: [{ SKU: "P1", NAME: "Oxford shirt", MATERIAL: "98% cotton 2% elastane" }],
+        mapping: { SKU: "sku", NAME: "name", MATERIAL: "composition", ORIGIN: "manufacturing_country" },
+        rows: [{ SKU: "P1", NAME: "Oxford shirt", MATERIAL: "98% cotton 2% elastane", ORIGIN: "PT" }],
       });
+      const { data: conflicts } = await ownerClient
+        .from("issues")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("product_id", product.id)
+        .eq("status", "open")
+        .eq("issue_type", "conflict");
+      for (const issue of conflicts || []) {
+        await resolveIssue({
+          client: ownerClient,
+          organizationId,
+          issueId: issue.id,
+          status: "resolved",
+        });
+      }
       await approveProductFields({
+        client: ownerClient,
         organizationId,
         productId: product.id,
-        actorEmail: "phase1@example.invalid",
+        reason: "Accepted incoming blend after conflict review.",
       });
       const again = await publishProductPassport({
+        client: ownerClient,
         organizationId,
         productId: product.id,
-        actorEmail: "phase1@example.invalid",
       });
       assert.equal(again.version, 2);
       const { data: versions } = await admin
@@ -264,6 +306,9 @@ describe("Live Phase 1 publish journey on a disposable org", { skip: !live }, ()
       assert.ok(mutatePublished, "published versions must stay immutable");
     } finally {
       await deleteOrganizationForTest(organizationId);
+      for (const userId of createdUserIds) {
+        await admin.auth.admin.deleteUser(userId);
+      }
     }
   });
 });

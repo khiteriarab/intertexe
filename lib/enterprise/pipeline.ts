@@ -1,10 +1,25 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseCompositionText } from "../material-intelligence/composition";
-import { getEnterpriseServiceClient } from "./client";
+import { parseCompositionText, isKnownMaterialCode } from "../material-intelligence/composition";
 import { canAddProducts, entitlementsForPlan, type PlanKey } from "./entitlements";
 import { applyColumnMapping } from "./import-preview";
+import { ITX_RULESET_VERSION, type IntelligenceKind } from "./intelligence";
+import {
+  findApprovedCompositionRule,
+  loadApprovedOrgAliases,
+  recordNormalizationCandidate,
+} from "./learning-loop";
+import { rememberMappingTemplate } from "./mapping-templates";
+import { ITX_ONTOLOGY_VERSION } from "./ontology";
 import { markPassportUpdateRequired } from "./publish";
+import {
+  buildIdentifierIssueDetail,
+  identifierClassLabel,
+  planIdentifierRows,
+  snapshotFromMapped,
+  type IdentifierFate,
+  type IdentifierSnapshot,
+} from "./identity-reconciliation";
 
 export const PHASE1_REQUIRED_FIELDS = ["name", "composition"] as const;
 
@@ -16,13 +31,14 @@ function mappedValue(row: Record<string, string>, key: string): string {
   return String(row[key] || "").trim();
 }
 
-export async function loadExistingMatchKeys(organizationId: string): Promise<Set<string>> {
-  const supabase = getEnterpriseServiceClient();
+export async function loadExistingMatchKeys(
+  client: SupabaseClient,
+  organizationId: string
+): Promise<Set<string>> {
   const keys = new Set<string>();
-  if (!supabase) return keys;
   const [{ data: products }, { data: identifiers }] = await Promise.all([
-    supabase.from("products").select("sku, style_code").eq("organization_id", organizationId),
-    supabase
+    client.from("products").select("sku, style_code").eq("organization_id", organizationId),
+    client
       .from("product_identifiers")
       .select("identifier_value")
       .eq("organization_id", organizationId)
@@ -38,45 +54,37 @@ export async function loadExistingMatchKeys(organizationId: string): Promise<Set
   return keys;
 }
 
-async function findMatch(
-  supabase: SupabaseClient,
-  organizationId: string,
-  mapped: Record<string, string>
-): Promise<{ productId: string; ambiguous: boolean }> {
-  const gtin = mappedValue(mapped, "gtin");
-  const sku = mappedValue(mapped, "sku");
-  const style = mappedValue(mapped, "style_code");
-  if (gtin) {
-    const { data } = await supabase
+export async function loadCatalogIdentities(
+  client: SupabaseClient,
+  organizationId: string
+): Promise<IdentifierSnapshot[]> {
+  const [{ data: products }, { data: identifiers }] = await Promise.all([
+    client
+      .from("products")
+      .select("id, name, sku, style_code")
+      .eq("organization_id", organizationId)
+      .eq("lifecycle", "active"),
+    client
       .from("product_identifiers")
-      .select("product_id")
+      .select("product_id, identifier_value")
       .eq("organization_id", organizationId)
       .eq("identifier_type", "gtin")
-      .eq("identifier_value", gtin)
-      .eq("active", true);
-    const ids = Array.from(new Set((data || []).map((row) => row.product_id).filter(Boolean)));
-    if (ids.length === 1) return { productId: String(ids[0]), ambiguous: false };
-    if (ids.length > 1) return { productId: String(ids[0]), ambiguous: true };
+      .eq("active", true),
+  ]);
+  const gtinByProduct = new Map<string, string>();
+  for (const row of identifiers || []) {
+    if (row.product_id && !gtinByProduct.has(row.product_id)) {
+      gtinByProduct.set(row.product_id, String(row.identifier_value));
+    }
   }
-  if (sku) {
-    const { data } = await supabase
-      .from("products")
-      .select("id")
-      .eq("organization_id", organizationId)
-      .eq("sku", sku);
-    if (data?.length === 1) return { productId: data[0].id, ambiguous: false };
-    if ((data?.length || 0) > 1) return { productId: data![0].id, ambiguous: true };
-  }
-  if (style) {
-    const { data } = await supabase
-      .from("products")
-      .select("id")
-      .eq("organization_id", organizationId)
-      .eq("style_code", style);
-    if (data?.length === 1) return { productId: data[0].id, ambiguous: false };
-    if ((data?.length || 0) > 1) return { productId: data![0].id, ambiguous: true };
-  }
-  return { productId: "", ambiguous: false };
+  return (products || []).map((row) => ({
+    productId: String(row.id),
+    name: String(row.name || ""),
+    sku: String(row.sku || ""),
+    style: String(row.style_code || ""),
+    gtin: gtinByProduct.get(row.id) || "",
+    variant: "",
+  }));
 }
 
 async function upsertField(
@@ -91,8 +99,25 @@ async function upsertField(
     state: string;
     explanation: string;
     method: string;
+    intelligenceKind: IntelligenceKind;
+    ontologyVersion?: string | null;
+    ruleId?: string | null;
   }
 ) {
+  const extra = {
+    ontology_version: input.ontologyVersion || null,
+    rule_id: input.ruleId || null,
+    intelligence_kind: input.intelligenceKind,
+  };
+  const base = {
+    original_value: input.original,
+    normalized_value: input.normalized,
+    source_record_id: input.sourceRecordId,
+    state: input.state,
+    explanation: input.explanation,
+    transformation_method: input.method,
+    confidence: input.method === "deterministic" ? 1 : null,
+  };
   const { data: existing } = await supabase
     .from("normalized_fields")
     .select("id, locked, normalized_value")
@@ -105,7 +130,7 @@ async function upsertField(
       organization_id: input.organizationId,
       product_id: input.productId,
       issue_type: "conflict",
-      severity: "medium",
+      severity: "high",
       title: `Locked ${input.fieldKey} differs from new source`,
       original_value: existing.normalized_value,
       interpreted_value: input.normalized,
@@ -114,33 +139,35 @@ async function upsertField(
     return;
   }
   if (existing?.id && !existing.locked) {
-    await supabase
+    const updated = await supabase
       .from("normalized_fields")
-      .update({
-        original_value: input.original,
-        normalized_value: input.normalized,
-        source_record_id: input.sourceRecordId,
-        state: input.state,
-        explanation: input.explanation,
-        transformation_method: input.method,
-      })
+      .update({ ...base, ...extra })
       .eq("id", existing.id);
+    if (updated.error) {
+      await supabase.from("normalized_fields").update(base).eq("id", existing.id);
+    }
     return;
   }
   if (!existing?.id) {
-    await supabase.from("normalized_fields").insert({
+    const inserted = await supabase.from("normalized_fields").insert({
       organization_id: input.organizationId,
       product_id: input.productId,
       source_record_id: input.sourceRecordId,
       field_key: input.fieldKey,
-      original_value: input.original,
-      normalized_value: input.normalized,
-      state: input.state,
-      explanation: input.explanation,
-      transformation_method: input.method,
       access_class: input.fieldKey === "name" || input.fieldKey === "composition" ? "public" : "internal",
-      confidence: input.method === "deterministic" ? 1 : null,
+      ...base,
+      ...extra,
     });
+    if (inserted.error) {
+      await supabase.from("normalized_fields").insert({
+        organization_id: input.organizationId,
+        product_id: input.productId,
+        source_record_id: input.sourceRecordId,
+        field_key: input.fieldKey,
+        access_class: input.fieldKey === "name" || input.fieldKey === "composition" ? "public" : "internal",
+        ...base,
+      });
+    }
   }
 }
 
@@ -154,6 +181,7 @@ async function addIssue(
     original?: string;
     interpreted?: string;
     severity?: string;
+    detail?: string;
   }
 ) {
   await supabase.from("issues").insert({
@@ -164,21 +192,27 @@ async function addIssue(
     title: row.title,
     original_value: row.original || null,
     interpreted_value: row.interpreted || null,
+    detail: row.detail || null,
     status: "open",
   });
 }
 
 export async function commitMappedImport(input: {
+  client: SupabaseClient;
   organizationId: string;
   organizationPlan: string;
   productAllowance: number | null;
-  actorEmail: string;
   filename: string;
   mapping: Record<string, string>;
   rows: Array<Record<string, string>>;
-}): Promise<{ importId: string; productsTouched: number; issuesCreated: number }> {
-  const supabase = getEnterpriseServiceClient();
-  if (!supabase) throw new Error("Enterprise database is not linked.");
+}): Promise<{
+  importId: string;
+  productsTouched: number;
+  issuesCreated: number;
+  reconciliations: IdentifierFate[];
+  alreadyImported?: boolean;
+}> {
+  const supabase = input.client;
 
   const entitlement = entitlementsForPlan(input.organizationPlan as PlanKey, {
     productAllowance: input.productAllowance,
@@ -213,7 +247,7 @@ export async function commitMappedImport(input: {
   }
 
   const idempotencyKey = sha(
-    JSON.stringify({ mapping: input.mapping, hashes: mappedRows.map((row) => sha(JSON.stringify(row))) })
+    JSON.stringify({ mapping: input.mapping, hashes: input.rows.map((row) => sha(JSON.stringify(row))) })
   );
   const { data: existingImport } = await supabase
     .from("imports")
@@ -222,14 +256,16 @@ export async function commitMappedImport(input: {
     .eq("idempotency_key", idempotencyKey)
     .maybeSingle();
   if (existingImport?.status === "succeeded") {
-    return { importId: existingImport.id, productsTouched: 0, issuesCreated: 0 };
+    return {
+      importId: existingImport.id,
+      productsTouched: 0,
+      issuesCreated: 0,
+      reconciliations: [],
+      alreadyImported: true,
+    };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", input.actorEmail.toLowerCase())
-    .maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("id").maybeSingle();
 
   const { data: importRow, error: importError } = await supabase
     .from("imports")
@@ -257,6 +293,11 @@ export async function commitMappedImport(input: {
 
   let productsTouched = 0;
   let issuesCreated = 0;
+  const orgAliases = await loadApprovedOrgAliases(supabase, input.organizationId);
+  const unknownTokens = new Set<string>();
+  const workingIdentities = await loadCatalogIdentities(supabase, input.organizationId);
+  const reconciliations: IdentifierFate[] = [];
+  let rowIndex = -1;
 
   for (const raw of input.rows) {
     const mapped = applyColumnMapping(raw, input.mapping);
@@ -269,9 +310,35 @@ export async function commitMappedImport(input: {
     const country = mappedValue(mapped, "manufacturing_country");
     const variantName = mappedValue(mapped, "variant");
 
-    const match = await findMatch(supabase, input.organizationId, mapped);
-    let productId = match.productId;
-    if (!productId) {
+    const incoming = snapshotFromMapped(mapped, { rowIndex: ++rowIndex });
+    const fate = planIdentifierRows([incoming], workingIdentities)[0];
+    let productId = fate.matched?.productId || "";
+    if (fate.action === "update_same_product" && productId) {
+      await supabase
+        .from("products")
+        .update({
+          name,
+          sku: sku || undefined,
+          style_code: style || undefined,
+          category: category || undefined,
+          last_updated_at: new Date().toISOString(),
+        })
+        .eq("id", productId)
+        .eq("organization_id", input.organizationId);
+      await markPassportUpdateRequired(supabase, input.organizationId, productId);
+      const existingIdx = workingIdentities.findIndex((row) => row.productId === productId);
+      if (existingIdx >= 0) {
+        workingIdentities[existingIdx] = {
+          ...workingIdentities[existingIdx],
+          name,
+          sku: sku || workingIdentities[existingIdx].sku,
+          style: style || workingIdentities[existingIdx].style,
+          gtin: gtin || workingIdentities[existingIdx].gtin,
+          variant: variantName || workingIdentities[existingIdx].variant,
+        };
+      }
+      reconciliations.push(fate);
+    } else {
       if (entitlement.productAllowance != null && currentCount + productsTouched >= entitlement.productAllowance) {
         continue;
       }
@@ -289,19 +356,34 @@ export async function commitMappedImport(input: {
         .maybeSingle();
       if (error || !created?.id) continue;
       productId = created.id;
-    } else {
-      await supabase
-        .from("products")
-        .update({
-          name,
-          sku: sku || undefined,
-          style_code: style || undefined,
-          category: category || undefined,
-          last_updated_at: new Date().toISOString(),
-        })
-        .eq("id", productId)
-        .eq("organization_id", input.organizationId);
-      await markPassportUpdateRequired(input.organizationId, productId);
+      incoming.productId = productId;
+      const forWorking = {
+        ...incoming,
+        gtin: fate.action === "create_with_collision" && fate.matchOn === "gtin" ? "" : incoming.gtin,
+      };
+      workingIdentities.push(forWorking);
+      if (fate.action === "create_with_collision" && fate.classification) {
+        const detail = buildIdentifierIssueDetail({
+          classification: fate.classification,
+          matchOn: fate.matchOn,
+          identifierValue: fate.identifierValue,
+          matchedProductId: fate.matched?.productId || null,
+          incoming,
+          matched: fate.matched,
+        });
+        await addIssue(supabase, {
+          organizationId: input.organizationId,
+          productId,
+          type: "identifier",
+          title: identifierClassLabel(fate.classification),
+          original: fate.identifierValue || gtin || sku || style,
+          interpreted: fate.matchedLabel || "",
+          severity: fate.classification === "ambiguous_collision" ? "critical" : "medium",
+          detail: JSON.stringify(detail),
+        });
+        issuesCreated += 1;
+        reconciliations.push({ ...fate, incoming });
+      }
     }
     productsTouched += 1;
 
@@ -341,28 +423,16 @@ export async function commitMappedImport(input: {
       .maybeSingle();
     if (sourceError || !source?.id) continue;
 
-    if (match.ambiguous) {
-      await addIssue(supabase, {
-        organizationId: input.organizationId,
-        productId,
-        type: "identifier",
-        title: "Ambiguous identifier match; records were not silently merged",
-        original: gtin || sku || style,
-        severity: "high",
-      });
-      issuesCreated += 1;
-    }
-
-    if (gtin) {
-      const { error: idError } = await supabase.from("product_identifiers").insert({
-        organization_id: input.organizationId,
-        product_id: productId,
-        variant_id: variantId,
-        identifier_type: "gtin",
-        identifier_value: gtin,
-        issuing_system: "upload",
-      });
-      if (idError) {
+    if (gtin && !(fate.action === "create_with_collision" && fate.matchOn === "gtin")) {
+      const { data: existingGtin } = await supabase
+        .from("product_identifiers")
+        .select("product_id")
+        .eq("organization_id", input.organizationId)
+        .eq("identifier_type", "gtin")
+        .eq("identifier_value", gtin)
+        .eq("active", true)
+        .maybeSingle();
+      if (existingGtin && existingGtin.product_id !== productId) {
         await addIssue(supabase, {
           organizationId: input.organizationId,
           productId,
@@ -372,10 +442,48 @@ export async function commitMappedImport(input: {
           severity: "critical",
         });
         issuesCreated += 1;
+      } else if (!existingGtin) {
+        const { error: idError } = await supabase.from("product_identifiers").insert({
+          organization_id: input.organizationId,
+          product_id: productId,
+          variant_id: variantId,
+          identifier_type: "gtin",
+          identifier_value: gtin,
+          issuing_system: "upload",
+        });
+        if (idError) {
+          await addIssue(supabase, {
+            organizationId: input.organizationId,
+            productId,
+            type: "identifier",
+            title: "GTIN collided with another product",
+            original: gtin,
+            severity: "critical",
+          });
+          issuesCreated += 1;
+        }
       }
     }
 
-    const parsed = parseCompositionText(composition || null);
+    const approvedComposition = composition
+      ? await findApprovedCompositionRule(supabase, input.organizationId, composition)
+      : null;
+    const parsed = approvedComposition
+      ? {
+          components: [
+            {
+              fiber_code: "custom",
+              fiber_name: approvedComposition.canonical,
+              percentage: null as number | null,
+              raw_value: composition,
+            },
+          ],
+          primary_fiber: null,
+          natural_fiber_percentage: null,
+          total_percentage: null,
+          normalization_warnings: [] as string[],
+        }
+      : parseCompositionText(composition || null, null, orgAliases);
     const compositionState = !composition
       ? "missing"
       : parsed.normalization_warnings.length
@@ -383,11 +491,24 @@ export async function commitMappedImport(input: {
         : parsed.components.length
           ? "normalized"
           : "observed";
-    const compositionNormalized = parsed.components
-      .map((part) =>
-        part.percentage != null ? `${part.percentage}% ${part.fiber_name}` : part.fiber_name
-      )
-      .join(" / ");
+    const compositionNormalized = approvedComposition
+      ? approvedComposition.canonical
+      : parsed.components
+          .map((part) =>
+            part.percentage != null ? `${part.percentage}% ${part.fiber_name}` : part.fiber_name
+          )
+          .join(" / ");
+
+    for (const part of parsed.components) {
+      if (
+        !approvedComposition &&
+        part.fiber_code &&
+        part.fiber_code !== "unknown" &&
+        !isKnownMaterialCode(part.fiber_code)
+      ) {
+        unknownTokens.add(`${part.fiber_code}\t${part.raw_value || part.fiber_code}`);
+      }
+    }
 
     await upsertField(supabase, {
       organizationId: input.organizationId,
@@ -399,6 +520,7 @@ export async function commitMappedImport(input: {
       state: "observed",
       explanation: "Copied from source name/SKU.",
       method: "deterministic",
+      intelligenceKind: "observed",
     });
     if (composition) {
       await upsertField(supabase, {
@@ -409,8 +531,13 @@ export async function commitMappedImport(input: {
         original: composition,
         normalized: compositionNormalized || composition,
         state: compositionState,
-        explanation: parsed.normalization_warnings.join(" ") || "Deterministic composition parse.",
+        explanation:
+          parsed.normalization_warnings.join(" ") ||
+          `Deterministic composition parse. ontology=${ITX_ONTOLOGY_VERSION} ruleset=${ITX_RULESET_VERSION}`,
         method: "deterministic",
+        intelligenceKind: "normalized",
+        ontologyVersion: ITX_ONTOLOGY_VERSION,
+        ruleId: approvedComposition?.id || null,
       });
     } else {
       await addIssue(supabase, {
@@ -455,6 +582,24 @@ export async function commitMappedImport(input: {
         state: "observed",
         explanation: "Copied from source; not inferred.",
         method: "deterministic",
+        intelligenceKind: "normalized",
+      });
+    } else {
+      await addIssue(supabase, {
+        organizationId: input.organizationId,
+        productId,
+        type: "missing_data",
+        title: "Manufacturing country / origin missing",
+        severity: "high",
+      });
+      issuesCreated += 1;
+      await supabase.from("missing_data_register").insert({
+        organization_id: input.organizationId,
+        product_id: productId,
+        field_key: "manufacturing_country",
+        why_it_matters: "Origin is required before a Phase 1 passport can be represented as complete.",
+        suggested_source: "Supplier declaration or cutting ticket",
+        owner_role: "product_manager",
       });
     }
 
@@ -475,16 +620,41 @@ export async function commitMappedImport(input: {
       .eq("id", productId);
   }
 
+  for (const token of unknownTokens) {
+    const [code, raw] = token.split("\t");
+    await recordNormalizationCandidate({
+      client: supabase,
+      organizationId: input.organizationId,
+      fieldKey: "material_alias",
+      original: raw || code,
+      canonical: code,
+      source: "unknown_token",
+      status: "observed",
+    });
+  }
+
+  const columns = Array.from(new Set(input.rows.flatMap((row) => Object.keys(row))));
+  await rememberMappingTemplate({
+    client: supabase,
+    organizationId: input.organizationId,
+    columns,
+    mapping: input.mapping,
+    approvedBy: profile?.id || null,
+  });
+
   await supabase.from("imports").update({ status: "succeeded" }).eq("id", importRow.id);
   await supabase
     .from("processing_jobs")
     .update({ status: "succeeded", stage: "validation", finished_at: new Date().toISOString() })
     .eq("import_id", importRow.id);
+  const sameProductUpdates = reconciliations.filter((row) => row.action === "update_same_product").length;
+  const collisionsKept = reconciliations.filter((row) => row.action === "create_with_collision").length;
   await supabase.from("activity_events").insert({
     organization_id: input.organizationId,
     actor_id: profile?.id || null,
     title: `Imported ${productsTouched} products from ${input.filename}`,
+    detail: `${sameProductUpdates} same-product updates · ${collisionsKept} identifier collisions kept separate until confirmed`,
   });
 
-  return { importId: importRow.id, productsTouched, issuesCreated };
+  return { importId: importRow.id, productsTouched, issuesCreated, reconciliations };
 }

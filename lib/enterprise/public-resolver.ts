@@ -27,7 +27,9 @@ export async function resolvePublicPassport(
     .eq("public_id", id)
     .maybeSingle();
 
-  if (!passport || passport.state !== "published") return unknown;
+  if (!passport) return unknown;
+  if (passport.state !== "published" && passport.state !== "update_required") return unknown;
+  if (!passport.current_version_id) return unknown;
 
   const { data: org } = await supabase
     .from("organizations")

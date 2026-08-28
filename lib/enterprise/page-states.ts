@@ -7,10 +7,10 @@ export function implementationLabel(state: ImplementationState): string {
 }
 
 export const ORG_PAGE_STATES: Record<string, ImplementationState> = {
-  overview: "partial",
-  products: "partial",
-  issues: "partial",
-  passports: "partial",
+  overview: "implemented",
+  products: "implemented",
+  issues: "implemented",
+  passports: "implemented",
   suppliers: "placeholder",
   regulations: "placeholder",
   benchmarking: "partial",

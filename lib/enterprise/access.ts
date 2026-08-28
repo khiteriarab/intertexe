@@ -1,16 +1,17 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { notFound, redirect } from "next/navigation";
 import { getHqSession } from "../dashboard/auth";
-import { isEnterpriseConfigured } from "./client";
-import { DEMO_BRAND_SLUG, CUSTOMER_ZERO_SLUG, isReservedHqSlug, isValidOrgSlug } from "./constants";
+import { getEnterpriseUserClient, isEnterpriseConfigured } from "./client";
+import { DEMO_BRAND_SLUG, isReservedHqSlug, isValidOrgSlug } from "./constants";
+import { getActiveIdentityLinkByHqUserId } from "./identity-links";
 import {
   buildWorkspaceContexts,
-  ensureCustomerZeroMembership,
-  listEnterpriseMemberships,
+  listEnterpriseMembershipsForUser,
   type EnterpriseMembership,
   type WorkspaceContext,
 } from "./memberships";
-import { getEnterpriseAuthSession } from "./session";
 import { canMutateEnterprise } from "./roles";
+import { getEnterpriseAuthSession } from "./session";
 
 export { canMutateEnterprise } from "./roles";
 
@@ -21,33 +22,35 @@ export type DashboardActor = {
   hqRoles: string[];
   memberships: EnterpriseMembership[];
   contexts: WorkspaceContext[];
+  enterpriseAuthUserId: string | null;
+  enterpriseAccessToken: string | null;
+  sessionKind: "none" | "native" | "handoff";
 };
 
 export async function resolveDashboardActor(): Promise<DashboardActor | null> {
   const [hq, enterprise] = await Promise.all([getHqSession(), getEnterpriseAuthSession()]);
-  const email = hq?.email || enterprise?.email;
-  if (!email) return null;
+  if (!hq && !enterprise) return null;
 
-  let memberships = email ? await listEnterpriseMemberships(email) : [];
-  if (
-    hq?.roles.includes("founder") &&
-    isEnterpriseConfigured() &&
-    !memberships.some((item) => item.slug === CUSTOMER_ZERO_SLUG)
-  ) {
-    await ensureCustomerZeroMembership({
-      email: hq.email,
-      fullName: hq.fullName,
-      superAdmin: true,
-    });
-    memberships = await listEnterpriseMemberships(email);
-  }
+  const memberships =
+    enterprise && isEnterpriseConfigured()
+      ? await listEnterpriseMembershipsForUser(getEnterpriseUserClient(enterprise.accessToken))
+      : [];
+  const hasStaffDppLink = hq ? Boolean(await getActiveIdentityLinkByHqUserId(hq.authUserId)) : false;
+
   return {
-    email,
+    email: hq?.email || enterprise?.email || "",
     fullName: hq?.fullName || enterprise?.fullName || null,
     hq: Boolean(hq),
     hqRoles: hq?.roles || [],
     memberships,
-    contexts: buildWorkspaceContexts({ hq: Boolean(hq), memberships }),
+    contexts: buildWorkspaceContexts({
+      hq: Boolean(hq),
+      hasStaffDppLink,
+      memberships,
+    }),
+    enterpriseAuthUserId: enterprise?.authUserId || null,
+    enterpriseAccessToken: enterprise?.accessToken || null,
+    sessionKind: enterprise?.kind || "none",
   };
 }
 
@@ -58,7 +61,7 @@ export async function requireDashboardActor(): Promise<DashboardActor> {
 }
 
 export async function getOrganizationAccess(slug: string): Promise<
-  | { ok: true; actor: DashboardActor; membership: EnterpriseMembership }
+  | { ok: true; actor: DashboardActor; membership: EnterpriseMembership; client: SupabaseClient }
   | { ok: false; status: number; message: string }
 > {
   if (isReservedHqSlug(slug) || !isValidOrgSlug(slug)) {
@@ -66,21 +69,35 @@ export async function getOrganizationAccess(slug: string): Promise<
   }
   const actor = await resolveDashboardActor();
   if (!actor) return { ok: false, status: 401, message: "Sign in required." };
+  if (!actor.enterpriseAccessToken) {
+    return {
+      ok: false,
+      status: actor.hq ? 403 : 401,
+      message: actor.hq ? "Enterprise session required." : "Sign in required.",
+    };
+  }
   const membership = actor.memberships.find((item) => item.slug === slug);
   if (!membership) return { ok: false, status: 404, message: "Not found." };
   if (slug === DEMO_BRAND_SLUG && !actor.hq) {
     return { ok: false, status: 404, message: "Not found." };
   }
-  return { ok: true, actor, membership };
+  return {
+    ok: true,
+    actor,
+    membership,
+    client: getEnterpriseUserClient(actor.enterpriseAccessToken),
+  };
 }
 
 export async function requireOrganizationAccess(slug: string): Promise<{
   actor: DashboardActor;
   membership: EnterpriseMembership;
+  client: SupabaseClient;
 }> {
   const result = await getOrganizationAccess(slug);
   if (!result.ok) {
     if (result.status === 401) redirect("/dashboard/login");
+    if (result.status === 403) redirect("/dashboard");
     notFound();
   }
   return result;

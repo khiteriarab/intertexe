@@ -54,3 +54,33 @@ export function getEnterpriseAnonClient(): SupabaseClient | null {
   });
   return cachedAnon;
 }
+
+/**
+ * One-off anon client for server-side session mint. Never reuse the cached
+ * verifier — verifyOtp would otherwise leave another user's session in memory.
+ */
+export function createEphemeralEnterpriseAnonClient(): SupabaseClient {
+  const url = enterpriseUrl();
+  const key = enterpriseAnonKey();
+  if (!url || !key) {
+    throw new Error("Enterprise Auth is not configured.");
+  }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/** User-scoped obelisk-core client. RLS applies. Never use this with the service-role key. */
+export function getEnterpriseUserClient(accessToken: string): SupabaseClient {
+  const url = enterpriseUrl();
+  const key = enterpriseAnonKey();
+  if (!url || !key) {
+    throw new Error("Enterprise user client requires ENTERPRISE_SUPABASE_URL and ENTERPRISE_SUPABASE_ANON_KEY.");
+  }
+  const token = accessToken.trim();
+  if (!token) throw new Error("Enterprise user JWT is required.");
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+}

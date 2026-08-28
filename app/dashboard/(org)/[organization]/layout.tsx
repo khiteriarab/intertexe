@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { requireOrganizationAccess } from "../../../../lib/enterprise/access";
 import { isReservedHqSlug } from "../../../../lib/enterprise/constants";
@@ -12,6 +13,7 @@ export default async function OrganizationLayout({
   children: React.ReactNode;
   params: Promise<{ organization: string }>;
 }) {
+  await connection();
   const { organization } = await params;
   if (isReservedHqSlug(organization)) redirect("/dashboard");
   const { actor, membership } = await requireOrganizationAccess(organization);
@@ -28,6 +30,7 @@ export default async function OrganizationLayout({
       role={membership.role}
       plan={membership.plan}
       workspaceContexts={actor.contexts}
+      founderHq={actor.hq}
     >
       {children}
     </EnterpriseShell>

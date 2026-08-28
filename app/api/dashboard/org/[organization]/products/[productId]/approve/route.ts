@@ -5,17 +5,19 @@ import { approveProductFields } from "../../../../../../../../lib/enterprise/rev
 export const dynamic = "force-dynamic";
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ organization: string; productId: string }> }
 ) {
   const { organization, productId } = await context.params;
   const gate = await requireOrgApi(organization, { mutate: true });
   if (gate.error) return gate.error;
+  const body = await request.json().catch(() => ({}));
   try {
     await approveProductFields({
+      client: gate.access.client,
       organizationId: gate.access.membership.organizationId,
       productId,
-      actorEmail: gate.access.actor.email,
+      reason: String(body.reason || ""),
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

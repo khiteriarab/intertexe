@@ -1,4 +1,4 @@
-import { getEnterpriseServiceClient } from "./client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type BenchmarkQuery = {
   metricKey: string;
@@ -39,9 +39,11 @@ export function evaluateBenchmarkDataset(row: DatasetRow | null): BenchmarkResul
   };
 }
 
-export async function loadGovernedBenchmark(query: BenchmarkQuery): Promise<BenchmarkResult> {
-  const supabase = getEnterpriseServiceClient();
-  if (!supabase) return INSUFFICIENT;
+export async function loadGovernedBenchmark(
+  client: SupabaseClient,
+  query: BenchmarkQuery
+): Promise<BenchmarkResult> {
+  const supabase = client;
 
   let request = supabase
     .from("benchmark_datasets")

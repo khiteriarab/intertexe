@@ -14,13 +14,13 @@ export async function POST(
   const body = await request.json();
   const productId = String(body.productId || "");
   if (!productId) return NextResponse.json({ message: "productId required." }, { status: 400 });
-  const check = await publishabilityForProduct(gate.access.membership.organizationId, productId);
+  const check = await publishabilityForProduct(gate.access.client, gate.access.membership.organizationId, productId);
   if (body.previewOnly) return NextResponse.json(check);
   try {
     const published = await publishProductPassport({
+      client: gate.access.client,
       organizationId: gate.access.membership.organizationId,
       productId,
-      actorEmail: gate.access.actor.email,
     });
     return NextResponse.json({ ok: true, ...published });
   } catch (error) {

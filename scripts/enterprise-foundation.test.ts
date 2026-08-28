@@ -46,6 +46,9 @@ describe("Enterprise foundation files", () => {
         "011_tenant_hardening.sql",
         "012_source_delete_for_org_removal.sql",
         "013_environment_and_benchmarks.sql",
+        "014_authenticated_audit_insert.sql",
+        "015_intelligence_foundations.sql",
+        "016_org_member_directory.sql",
       ]
     );
   });
@@ -97,17 +100,8 @@ describe("Auth routing", () => {
     assert.equal(resolvePostLoginPath({ hq: false, memberships }), "/dashboard/acme-fashion");
     const contexts = buildWorkspaceContexts({
       hq: true,
-      memberships: [
-        {
-          organizationId: "0",
-          slug: "intertexe",
-          name: "INTERTEXE",
-          role: "owner",
-          kind: "customer_zero",
-          plan: "internal",
-          isDemo: false,
-        },
-      ],
+      hasStaffDppLink: true,
+      memberships: [],
     });
     assert.deepEqual(
       contexts.map((c) => c.label),
@@ -185,6 +179,17 @@ describe("SQL security invariants", () => {
     const rules = readMigration("008_regulatory_rules.sql");
     assert.match(rules, /interpretation_status/);
     assert.match(rules, /'draft', 'reviewed', 'active', 'superseded'/);
+  });
+
+  it("keeps intelligence foundations from auto-promoting customer rules or storing consumer identities", () => {
+    const sql = readMigration("015_intelligence_foundations.sql");
+    assert.match(sql, /itx-ontology\.v1/);
+    assert.match(sql, /scope = 'organization'/);
+    assert.match(sql, /status IN \('observed', 'candidate', 'reviewed', 'rejected'\)/);
+    assert.match(sql, /consumer_intelligence_aggregates/);
+    assert.doesNotMatch(sql, /consumer_user_id/);
+    assert.doesNotMatch(sql, /device_id/);
+    assert.match(sql, /Insufficient benchmark data|min_cohort_size/);
   });
 });
 

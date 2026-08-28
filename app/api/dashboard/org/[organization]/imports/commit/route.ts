@@ -20,10 +20,10 @@ export async function POST(
   }
   try {
     const result = await commitMappedImport({
+      client: gate.access.client,
       organizationId: gate.access.membership.organizationId,
       organizationPlan: gate.access.membership.plan,
       productAllowance: gate.access.membership.productAllowance ?? null,
-      actorEmail: gate.access.actor.email,
       filename: String(body.filename || "upload.csv"),
       mapping,
       rows: parsed.rows,

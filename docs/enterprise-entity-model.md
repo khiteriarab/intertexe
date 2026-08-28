@@ -69,3 +69,5 @@ Every organization has:
 ## Benchmarking (not on this chain)
 
 Peer benchmarking never queries identifiable customer tables. It reads `benchmark_datasets` that are **approved aggregates** with provenance, sample size, market/category/period, and permissions. Insufficient sample size returns “Insufficient benchmark data.”
+
+Intelligence assets (ontology, normalization rules, mapping templates, consumer aggregates) are specified in `docs/intelligence-architecture.md`. Shop merchandising taxonomy is not the DPP ontology.

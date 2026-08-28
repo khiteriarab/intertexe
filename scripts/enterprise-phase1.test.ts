@@ -10,6 +10,7 @@ import { demoRequestHasForbiddenOrgSelector } from "../lib/enterprise/demo-guard
 import { getDeploymentEnv } from "../lib/enterprise/environment.ts";
 import {
   applyColumnMapping,
+  mappingForPreview,
   previewImportWithCatalog,
   suggestColumnMapping,
 } from "../lib/enterprise/import-preview.ts";
@@ -92,6 +93,23 @@ describe("Import mapping and CSV", () => {
     assert.equal(suggestColumnMapping(["MATERIAL"])[0].canonicalField, "composition");
   });
 
+  it("auto-suggests high-confidence SKU name and composition without mapping ambiguous columns", () => {
+    const columns = ["SKU", "Product Name", "Composition", "Notes", "MATERIAL_1", "Season"];
+    const first = mappingForPreview(columns);
+    assert.equal(first.mapping.SKU, "sku");
+    assert.equal(first.mapping["Product Name"], "name");
+    assert.equal(first.mapping.Composition, "composition");
+    assert.equal(first.mapping.Notes, "");
+    assert.equal(first.mapping.MATERIAL_1, "");
+    assert.equal(first.mapping.Season, "");
+    assert.equal(first.suggested.find((row) => row.sourceColumn === "MATERIAL_1")?.confidence, "medium");
+    const emptyObject = mappingForPreview(columns, {});
+    assert.equal(emptyObject.mapping.SKU, "sku");
+    const operator = mappingForPreview(columns, { SKU: "sku", Notes: "name" });
+    assert.equal(operator.mapping.Notes, "name");
+    assert.equal(operator.mapping.Composition, "");
+  });
+
   it("previews updates against existing catalog keys", () => {
     const rows = [
       { SKU: "A-1", NAME: "Tee" },
@@ -153,6 +171,7 @@ describe("Benchmarks are governed aggregates", () => {
 
 describe("Phase 1 permissions and publishability", () => {
   it("blocks read-only and supplier mutation", () => {
+    assert.equal(canMutateEnterprise("product_manager"), true);
     assert.equal(canMutateEnterprise("owner"), true);
     assert.equal(canMutateEnterprise("read_only"), false);
     assert.equal(canMutateEnterprise("supplier_contributor"), false);

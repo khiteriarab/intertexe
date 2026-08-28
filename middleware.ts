@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { HQ_SESSION_COOKIE, isHqHost } from "./lib/dashboard/constants";
-import { ENTERPRISE_SESSION_COOKIE } from "./lib/enterprise/constants";
+import {
+  ENTERPRISE_SESSION_COOKIE,
+  dashboardPathRequiresEnterpriseSession,
+} from "./lib/enterprise/constants";
 import { demoRequestHasForbiddenOrgSelector } from "./lib/enterprise/demo-guard";
 
 const API_CACHE_HEADERS: Record<string, string> = {
@@ -72,6 +75,21 @@ export function middleware(request: NextRequest) {
       url.pathname = "/dashboard/login";
       url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
+    }
+    if (dashboardPathRequiresEnterpriseSession(pathname)) {
+      const enterprise = request.cookies.get(ENTERPRISE_SESSION_COOKIE)?.value?.trim();
+      if (!enterprise) {
+        const url = request.nextUrl.clone();
+        const hq = request.cookies.get(HQ_SESSION_COOKIE)?.value?.trim();
+        if (hq) {
+          url.pathname = "/dashboard";
+          url.search = "";
+          return NextResponse.redirect(url);
+        }
+        url.pathname = "/dashboard/login";
+        url.searchParams.set("next", pathname);
+        return NextResponse.redirect(url);
+      }
     }
   }
 

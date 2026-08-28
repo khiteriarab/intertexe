@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ENTERPRISE_NAV } from "../../../lib/enterprise/constants";
+import { enterpriseNavForActor } from "../../../lib/enterprise/constants";
 import type { WorkspaceContext } from "../../../lib/enterprise/types";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
@@ -16,6 +16,7 @@ type Props = {
   role: string;
   plan: string;
   workspaceContexts: WorkspaceContext[];
+  founderHq?: boolean;
 };
 
 export function EnterpriseShell({
@@ -27,6 +28,7 @@ export function EnterpriseShell({
   role,
   plan,
   workspaceContexts,
+  founderHq = false,
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
@@ -69,7 +71,7 @@ export function EnterpriseShell({
             <WorkspaceSwitcher contexts={workspaceContexts} currentHref={base} />
           </div>
           <nav className="px-3 py-4 space-y-0.5" aria-label="Organization">
-            {ENTERPRISE_NAV.map((item) => {
+            {enterpriseNavForActor(founderHq).map((item) => {
               const href = `${base}${item.href}`;
               const active = "exact" in item && item.exact
                 ? pathname === href || pathname === base
@@ -84,6 +86,11 @@ export function EnterpriseShell({
                   }`}
                 >
                   {item.label}
+                  {"later" in item && item.later ? (
+                    <span className={`ml-2 text-[10px] uppercase tracking-wide ${active ? "text-white/60" : "text-black/35"}`}>
+                      Later
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}

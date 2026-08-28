@@ -108,7 +108,8 @@ function LoginForm() {
         <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE</p>
         <h1 className="text-2xl font-medium mt-2">Welcome to INTERTEXE</h1>
         <p className="text-sm text-black/55 mt-2">
-          Manage your product intelligence and Digital Product Passports.
+          Brand workspace: after sign-in you upload a catalog, confirm mapping, resolve issues, then
+          publish Digital Product Passports.
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4" aria-busy={busy}>
