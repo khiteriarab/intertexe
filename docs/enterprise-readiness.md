@@ -150,13 +150,26 @@ Intelligence / moat audit: `docs/intelligence-architecture.md`. **015 is live** 
 
 **READY FOR CONTROLLED FIRST PILOT** for a single brand operator on the Products → Issues → Passports path.
 
-**Production (28 Aug 2026):** `https://www.intertexe.com` serves deployment `dpl_FKtXMv7NrzS3rjdjYFuZF1gimEaJ` from `main` @ **`4dc34ff`**. Enterprise env vars present on Vercel Production. Atlas pilot gate + browser acceptance pass on production. **Code freeze:** production changes limited to pilot-blocking bugs until first controlled brand completes onboarding.
+**Production (28 Aug 2026, verified):** `https://www.intertexe.com` serves deployment **`dpl_3z27fyp21Xh48jvWXZChbV12LFFL`** (created 28 Aug 2026 12:34 CEST). Git: **`9004616`** on `main` (includes EU DPP foundations **`e148959`** + Vercel build import-path fix). Enterprise env vars present on Vercel Production. obelisk-core migrations **`017`** + **`018`** applied.
 
-**Founder onboarding (in branch, deploy pending):** `/dashboard/enterprise` gains invite link copy/regenerate/revoke and **Provision operator** (Enterprise Auth + profile + membership). Requires obelisk-core migration **`017_invitation_revocation.sql`**. After deploy + `017`, standard first-operator onboarding should not require DevTools or Supabase Auth admin.
+| Gate | Result |
+|---|---|
+| Atlas pilot gate (production) | **Pass** |
+| Founder onboarding live test (production API) | **Pass** |
+| Browser acceptance (production) | **29/31 pass** — 2 flaky Playwright HTML-resolver timing checks; `/p/{id}` + `/json` verified independently (200, v3) |
+| Public resolver `/p/itx_66236d2s2p0j386v0a5m` | **Pass** (v3) |
+| Public JSON — public-class fields only | **Pass** |
+| DPP readiness panel (ESPR foundation readiness — espr-foundation.v1) | **Pass** |
+| Registry prepare (sandbox) | **Pass** — deterministic payload hash |
+| Post-018 publish (synthetic v3) | **Pass** — `integrity_hash`, `identifier_bundle`, `ontology_version`, backup package, version chain |
 
-All 14 pilot criteria are met in code and Atlas verification: Auth, tenant isolation, 10-row upload, understandable mapping/reconciliation, no silent GTIN collapse, visible provenance, resolvable issues, human-readable reviewer name (acting user), publish eligible / explain ineligible, QR + versions, unfinished modules hidden, no service-role dashboard data plane.
+**Code freeze:** production changes limited to pilot-blocking bugs until first controlled brand completes onboarding.
 
-Do **not** treat this as general availability or invite an unguided third-party brand yet.
+**Founder onboarding:** `/dashboard/enterprise` — invite link copy/regenerate/revoke + **Provision operator**. Migration **`017`** live.
+
+Compliance label: **ESPR foundation readiness — espr-foundation.v1** only. Not EU certified. Not fully textile-DPP compliant.
+
+All 14 pilot criteria remain met. Do **not** treat this as general availability or invite an unguided third-party brand yet.
 
 Before a second human in the same org, or before a real external brand:
 
