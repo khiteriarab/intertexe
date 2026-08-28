@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireHqSession } from "../../../../../../lib/dashboard/auth";
-import { getEnterpriseServiceClient, isEnterpriseConfigured } from "../../../../../../lib/enterprise/client";
-import { provisionBrandOperator } from "../../../../../../lib/enterprise/provision-brand-operator";
+import { requireHqSession } from "../../../../../../../lib/dashboard/auth";
+import { getEnterpriseServiceClient, isEnterpriseConfigured } from "../../../../../../../lib/enterprise/client";
+import { provisionBrandOperator } from "../../../../../../../lib/enterprise/provision-brand-operator";
 
 export const dynamic = "force-dynamic";
 

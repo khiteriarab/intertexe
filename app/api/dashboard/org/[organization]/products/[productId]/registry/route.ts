@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireOrgApi } from "../../../../../../../lib/enterprise/api-auth";
+import { requireOrgApi } from "../../../../../../../../lib/enterprise/api-auth";
 import {
   attachEuRegistrationIdentifier,
   loadRegistryRegistration,
   prepareRegistryRegistration,
   recordRegistrySubmission,
-} from "../../../../../../../lib/enterprise/registry/service";
+} from "../../../../../../../../lib/enterprise/registry/service";
 import type { RegistryEnvironment } from "../../../../../../../lib/enterprise/registry/types";
 
 export const dynamic = "force-dynamic";

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireHqSession } from "../../../../../../lib/dashboard/auth";
-import { getEnterpriseServiceClient, isEnterpriseConfigured } from "../../../../../../lib/enterprise/client";
+import { requireHqSession } from "../../../../../../../lib/dashboard/auth";
+import { getEnterpriseServiceClient, isEnterpriseConfigured } from "../../../../../../../lib/enterprise/client";
 import {
   listOrganizationInvitations,
   regenerateOrganizationInvitation,
   revokePendingInvitations,
-} from "../../../../../../lib/enterprise/founder-invitations";
+} from "../../../../../../../lib/enterprise/founder-invitations";
 
 export const dynamic = "force-dynamic";
 

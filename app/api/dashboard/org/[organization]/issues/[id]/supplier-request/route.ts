@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireOrgApi } from "../../../../../../../lib/enterprise/api-auth";
-import { createSupplierEvidenceRequest } from "../../../../../../../lib/enterprise/supplier-evidence";
+import { requireOrgApi } from "../../../../../../../../lib/enterprise/api-auth";
+import { createSupplierEvidenceRequest } from "../../../../../../../../lib/enterprise/supplier-evidence";
 
 export const dynamic = "force-dynamic";
 
