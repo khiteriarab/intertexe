@@ -26,11 +26,14 @@ export async function POST(request: Request) {
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const { data: invite } = await supabase
     .from("invitations")
-    .select("id, organization_id, email, role, expires_at, accepted_at")
+    .select("id, organization_id, email, role, expires_at, accepted_at, revoked_at")
     .eq("token_hash", tokenHash)
     .maybeSingle();
   if (!invite || invite.accepted_at) {
     return NextResponse.json({ message: "Invitation is not valid." }, { status: 400 });
+  }
+  if (invite.revoked_at) {
+    return NextResponse.json({ message: "Invitation has been revoked." }, { status: 400 });
   }
   if (new Date(invite.expires_at).getTime() < Date.now()) {
     return NextResponse.json({ message: "Invitation has expired." }, { status: 400 });
@@ -55,6 +58,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Could not create profile." }, { status: 500 });
     }
     profileId = created.id;
+  } else if (enterprise?.authUserId) {
+    await supabase.from("profiles").update({ auth_user_id: enterprise.authUserId }).eq("id", profileId);
   }
 
   await supabase.from("organization_memberships").upsert(
@@ -70,6 +75,14 @@ export async function POST(request: Request) {
     .from("invitations")
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invite.id);
+
+  await supabase.from("audit_logs").insert({
+    organization_id: invite.organization_id,
+    action: "invitation_accepted",
+    object_type: "invitation",
+    object_id: invite.id,
+    request_meta: { email, profile_id: profileId, role: invite.role },
+  });
 
   const { data: org } = await supabase
     .from("organizations")

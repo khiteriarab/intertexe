@@ -1,3 +1,4 @@
+import { filterFieldsForAccess } from "./access-classes";
 import { getEnterpriseServiceClient } from "./client";
 import { DEMO_BRAND_SLUG } from "./constants";
 
@@ -59,11 +60,12 @@ export async function resolvePublicPassport(
   const publicSnapshot = {
     product_name: snapshot.product_name || product?.name,
     public_id: id,
-    fields: fieldList.filter(
-      (field) =>
-        field &&
-        typeof field === "object" &&
-        (field as { access_class?: string }).access_class === "public"
+    resolver_note: "Public resolver ID is separate from any EU Registry registration identifier.",
+    identifier_bundle: snapshot.identifier_bundle || null,
+    fields: filterFieldsForAccess(
+      fieldList.filter((field) => field && typeof field === "object") as Array<{
+        access_class?: string | null;
+      }>
     ),
   };
 

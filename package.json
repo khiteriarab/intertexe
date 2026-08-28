@@ -26,7 +26,7 @@
     "gate:material-api": "node --import tsx scripts/live-material-api-gate.ts",
     "test:secret-scan": "node scripts/secret-scan.mjs",
     "test:install-ctas": "node --import tsx --test scripts/install-ctas.test.ts scripts/chrome-web-store-hq.test.ts",
-    "test:enterprise": "node --import tsx --test scripts/enterprise-foundation.test.ts scripts/enterprise-phase1.test.ts scripts/enterprise-identity.test.ts scripts/enterprise-intelligence.test.ts scripts/enterprise-pilot-ux.test.ts scripts/enterprise-isolation.live.test.ts scripts/enterprise-permissions.live.test.ts scripts/enterprise-identity.live.test.ts scripts/enterprise-intelligence.live.test.ts scripts/enterprise-org-member-directory.live.test.ts"
+    "test:enterprise": "node --import tsx --test scripts/enterprise-foundation.test.ts scripts/enterprise-phase1.test.ts scripts/enterprise-identity.test.ts scripts/enterprise-intelligence.test.ts scripts/enterprise-pilot-ux.test.ts scripts/enterprise-founder-onboarding.test.ts scripts/enterprise-eu-dpp.test.ts scripts/enterprise-isolation.live.test.ts scripts/enterprise-permissions.live.test.ts scripts/enterprise-identity.live.test.ts scripts/enterprise-intelligence.live.test.ts scripts/enterprise-org-member-directory.live.test.ts scripts/enterprise-founder-onboarding.live.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

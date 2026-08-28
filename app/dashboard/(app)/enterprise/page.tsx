@@ -11,8 +11,8 @@ export default async function EnterpriseAdminPage() {
   const { data } = supabase
     ? await supabase
         .from("organizations")
-        .select("id, slug, name, plan, snapshot_stage, product_allowance, hq_deal_id, created_at")
-        .eq("kind", "snapshot")
+        .select("id, slug, name, plan, kind, snapshot_stage, product_allowance, hq_deal_id, created_at")
+        .in("kind", ["snapshot", "pilot", "customer"])
         .order("created_at", { ascending: false })
         .limit(100)
     : { data: [] };

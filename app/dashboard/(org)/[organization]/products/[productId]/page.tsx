@@ -12,6 +12,7 @@ import {
   issueWhyItMatters,
   passportStateLabel,
 } from "../../../../../../lib/enterprise/issue-copy";
+import { loadDppReadiness } from "../../../../../../lib/enterprise/dpp-readiness";
 import { loadOrgProduct } from "../../../../../../lib/enterprise/queries";
 import { publishabilityForProduct } from "../../../../../../lib/enterprise/publish";
 import {
@@ -23,6 +24,8 @@ import { IssueActions } from "../../issues/IssueActions";
 import { PassportQr } from "../../passports/PassportQr";
 import { PublishPassportButton } from "../../passports/PublishPassportButton";
 import { ApproveFieldsButton } from "./ApproveFieldsButton";
+import { AccessClassLegend, DppReadinessPanel } from "./DppReadinessPanel";
+import { SupplierEvidenceRequestButton } from "./SupplierEvidenceRequestButton";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +49,12 @@ export default async function ProductRecordPage({
   if (!record) notFound();
   const canMutate = canMutateEnterprise(membership.role);
   const publishability = await publishabilityForProduct(client, membership.organizationId, productId);
+  let readiness = null;
+  try {
+    readiness = await loadDppReadiness(client, membership.organizationId, productId);
+  } catch {
+    readiness = null;
+  }
   const identifierIssues = [
     ...record.issues.filter((issue) => issue.issue_type === "identifier"),
     ...record.relatedIdentifierIssues,
@@ -233,13 +242,21 @@ export default async function ProductRecordPage({
                     {issueRecommendedAction(issue)}
                   </p>
                   {issue.status === "open" ? (
-                    <div className="mt-2">
+                    <div className="mt-2 space-y-2">
                       <IssueActions
                         slug={membership.slug}
                         issueId={issue.id}
                         canMutate={canMutate}
                         kind={parseIdentifierIssueDetail(issue.detail) ? "identifier" : "standard"}
                       />
+                      {issue.issue_type === "missing_data" ? (
+                        <SupplierEvidenceRequestButton
+                          slug={membership.slug}
+                          issueId={issue.id}
+                          issueTitle={issue.title}
+                          canMutate={canMutate}
+                        />
+                      ) : null}
                     </div>
                   ) : (
                     <p className="text-black/55 mt-1">{issue.status.replaceAll("_", " ")}</p>
@@ -248,6 +265,15 @@ export default async function ProductRecordPage({
               ))}
             </ul>
           )}
+        </HqCard>
+
+        <HqCard title="DPP readiness">
+          {readiness ? <DppReadinessPanel report={readiness} /> : (
+            <p className="text-sm text-black/55">Readiness unavailable until EU DPP foundations are migrated.</p>
+          )}
+          <div className="mt-3">
+            <AccessClassLegend />
+          </div>
         </HqCard>
 
         <HqCard title="Review and publish">

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { requireHqSession } from "../../../../../lib/dashboard/auth";
 import { getEnterpriseServiceClient, isEnterpriseConfigured } from "../../../../../lib/enterprise/client";
 import { isReservedHqSlug, isValidOrgSlug } from "../../../../../lib/enterprise/constants";
 import { slugifyOrganizationName } from "../../../../../lib/enterprise/ids";
 import { getDeploymentEnv } from "../../../../../lib/enterprise/environment";
 import { writeHqEnterprisePointers } from "../../../../../lib/enterprise/hq-refs";
+import {
+  createOrganizationInvitation,
+  listOrganizationInvitations,
+} from "../../../../../lib/enterprise/founder-invitations";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +26,14 @@ const SNAPSHOT_STAGES = [
   "declined",
 ] as const;
 
-function tokenHash(token: string) {
-  return createHash("sha256").update(token).digest("hex");
+async function invitationsForOrgs(supabase: NonNullable<ReturnType<typeof getEnterpriseServiceClient>>, orgIds: string[]) {
+  const map = new Map<string, Awaited<ReturnType<typeof listOrganizationInvitations>>>();
+  await Promise.all(
+    orgIds.map(async (orgId) => {
+      map.set(orgId, await listOrganizationInvitations(supabase, orgId));
+    })
+  );
+  return map;
 }
 
 export async function GET() {
@@ -35,11 +45,22 @@ export async function GET() {
   }
   const { data } = await supabase
     .from("organizations")
-    .select("id, slug, name, plan, snapshot_stage, product_allowance, hq_deal_id, created_at")
-    .eq("kind", "snapshot")
+    .select("id, slug, name, plan, kind, snapshot_stage, product_allowance, hq_deal_id, created_at")
+    .in("kind", ["snapshot", "pilot", "customer"])
     .order("created_at", { ascending: false })
     .limit(100);
-  return NextResponse.json({ configured: true, organizations: data || [] });
+  const orgs = data || [];
+  const inviteMap = await invitationsForOrgs(
+    supabase,
+    orgs.map((row) => row.id)
+  );
+  return NextResponse.json({
+    configured: true,
+    organizations: orgs.map((row) => ({
+      ...row,
+      invitations: inviteMap.get(row.id) || [],
+    })),
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -114,14 +135,13 @@ export async function POST(request: NextRequest) {
     name: "Main catalog",
   });
 
-  const token = randomBytes(32).toString("base64url");
-  await supabase.from("invitations").insert({
-    organization_id: org.id,
+  const invite = await createOrganizationInvitation({
+    client: supabase,
+    organizationId: org.id,
     email: contactEmail,
     role: "owner",
-    token_hash: tokenHash(token),
-    invited_by: null,
-    expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    actorEmail: session.email,
+    auditAction: "invitation_created_with_snapshot",
   });
 
   await supabase.from("audit_logs").insert({
@@ -140,10 +160,14 @@ export async function POST(request: NextRequest) {
     implementationStatus: "invited",
   });
 
+  const invitations = await listOrganizationInvitations(supabase, org.id);
+
   return NextResponse.json({
     ok: true,
     organization: org,
-    invitePath: `/dashboard/login?invite=${token}`,
+    invitePath: invite.invitePath,
+    inviteUrl: invite.inviteUrl,
+    invitations,
     emailDelivery: "not_sent",
   });
 }

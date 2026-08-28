@@ -49,6 +49,8 @@ describe("Enterprise foundation files", () => {
         "014_authenticated_audit_insert.sql",
         "015_intelligence_foundations.sql",
         "016_org_member_directory.sql",
+        "017_invitation_revocation.sql",
+        "018_eu_dpp_foundations.sql",
       ]
     );
   });

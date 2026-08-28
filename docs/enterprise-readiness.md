@@ -150,6 +150,10 @@ Intelligence / moat audit: `docs/intelligence-architecture.md`. **015 is live** 
 
 **READY FOR CONTROLLED FIRST PILOT** for a single brand operator on the Products → Issues → Passports path.
 
+**Production (28 Aug 2026):** `https://www.intertexe.com` serves deployment `dpl_FKtXMv7NrzS3rjdjYFuZF1gimEaJ` from `main` @ **`4dc34ff`**. Enterprise env vars present on Vercel Production. Atlas pilot gate + browser acceptance pass on production. **Code freeze:** production changes limited to pilot-blocking bugs until first controlled brand completes onboarding.
+
+**Founder onboarding (in branch, deploy pending):** `/dashboard/enterprise` gains invite link copy/regenerate/revoke and **Provision operator** (Enterprise Auth + profile + membership). Requires obelisk-core migration **`017_invitation_revocation.sql`**. After deploy + `017`, standard first-operator onboarding should not require DevTools or Supabase Auth admin.
+
 All 14 pilot criteria are met in code and Atlas verification: Auth, tenant isolation, 10-row upload, understandable mapping/reconciliation, no silent GTIN collapse, visible provenance, resolvable issues, human-readable reviewer name (acting user), publish eligible / explain ineligible, QR + versions, unfinished modules hidden, no service-role dashboard data plane.
 
 Do **not** treat this as general availability or invite an unguided third-party brand yet.

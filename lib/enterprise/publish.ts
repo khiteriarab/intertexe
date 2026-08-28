@@ -1,4 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createPassportBackupPackage } from "./backup-provider";
+import { buildIdentifierBundle } from "./identifiers";
+import { integrityHash } from "./integrity";
 import { newPublicId } from "./ids";
 import { ITX_RULESET_VERSION } from "./intelligence";
 import { ITX_ONTOLOGY_VERSION } from "./ontology";
@@ -91,7 +94,7 @@ export async function publishProductPassport(input: {
 
   const { data: product } = await supabase
     .from("products")
-    .select("name")
+    .select("id, name, sku, style_code")
     .eq("id", input.productId)
     .eq("organization_id", input.organizationId)
     .maybeSingle();
@@ -132,13 +135,26 @@ export async function publishProductPassport(input: {
       value: row.normalized_value,
       access_class: "public",
     }));
+  const gtin = (fields || []).find((row) => row.field_key === "gtin")?.normalized_value || null;
+  const identifierBundle = buildIdentifierBundle({
+    productId: input.productId,
+    sku: product?.sku,
+    styleCode: product?.style_code,
+    gtin,
+    publicResolverId: identity.public_id,
+    passportPublicId: identity.public_id,
+    dataCarrierUrl: publicUrl,
+  });
   const snapshot = {
     product_name: product?.name,
     public_id: identity.public_id,
     fields: publicFields,
+    identifier_bundle: identifierBundle,
     ontology_version: ITX_ONTOLOGY_VERSION,
     ruleset_version: ITX_RULESET_VERSION,
+    integrity_note: "Public snapshot excludes non-public fields by access_class.",
   };
+  const snapshotIntegrityHash = integrityHash(snapshot);
 
   let { data: passport } = await supabase
     .from("passports")
@@ -161,11 +177,14 @@ export async function publishProductPassport(input: {
   }
   if (!passport?.id) throw new Error("Could not create passport.");
 
-  const { count } = await supabase
+  const { data: priorVersions } = await supabase
     .from("passport_versions")
-    .select("id", { count: "exact", head: true })
-    .eq("passport_id", passport.id);
-  const versionNumber = (count || 0) + 1;
+    .select("id, version_number")
+    .eq("passport_id", passport.id)
+    .order("version_number", { ascending: false })
+    .limit(1);
+  const previousVersion = priorVersions?.[0] || null;
+  const versionNumber = (previousVersion?.version_number || 0) + 1;
   const versionRow = {
     organization_id: input.organizationId,
     passport_id: passport.id,
@@ -175,6 +194,13 @@ export async function publishProductPassport(input: {
     ruleset_version: ITX_RULESET_VERSION,
     ontology_version: ITX_ONTOLOGY_VERSION,
     snapshot,
+    integrity_hash: snapshotIntegrityHash,
+    previous_version_id: previousVersion?.id || null,
+    identifier_bundle: identifierBundle,
+    retention_metadata: {
+      policy: "immutable_published_versions",
+      recovery: "passport_backup_packages",
+    },
     change_summary: versionNumber === 1 ? "Initial publication" : `Published v${versionNumber}`,
     actor_id: profile?.id || null,
   };
@@ -184,16 +210,51 @@ export async function publishProductPassport(input: {
     .select("id, version_number")
     .maybeSingle();
   if (versionError) {
-    const { ontology_version: _ignored, ...withoutOntologyColumn } = versionRow;
+    const {
+      ontology_version: _o,
+      integrity_hash: _h,
+      previous_version_id: _p,
+      identifier_bundle: _i,
+      retention_metadata: _r,
+      ...legacyRow
+    } = versionRow;
     const retry = await supabase
       .from("passport_versions")
-      .insert(withoutOntologyColumn)
+      .insert(legacyRow)
       .select("id, version_number")
       .maybeSingle();
     version = retry.data;
     versionError = retry.error;
   }
   if (versionError || !version?.id) throw new Error(versionError?.message || "Version insert failed.");
+
+  try {
+    const { data: evidenceRows } = await supabase
+      .from("evidence_records")
+      .select("id, field_key, evidence_type, verification_status, document_reference, access_class")
+      .eq("organization_id", input.organizationId)
+      .eq("product_id", input.productId);
+    await createPassportBackupPackage({
+      client: supabase,
+      organizationId: input.organizationId,
+      passportId: passport.id,
+      passportVersionId: version.id,
+      versionNumber: version.version_number,
+      snapshot,
+      identifierBundle,
+      integrityHashValue: snapshotIntegrityHash,
+      evidenceManifest: (evidenceRows || []).map((row) => ({
+        evidence_id: row.id,
+        field_key: row.field_key,
+        evidence_type: row.evidence_type,
+        verification_status: row.verification_status,
+        document_reference: row.document_reference,
+        access_class: row.access_class,
+      })),
+    });
+  } catch {
+    // Backup tables may not be migrated yet; publication must still succeed for pilot path.
+  }
 
   await supabase
     .from("passports")
