@@ -3,6 +3,7 @@ import { parseGtin } from "../../../../../../lib/gtin";
 import { demoNotFound, lookupDemoRecord } from "../../../../../../lib/material-intelligence/demo-records";
 import { errorEnvelope, newRequestId, successEnvelope } from "../../../../../../lib/material-intelligence/envelope";
 import { clientIpFromHeaders, demoRateLimit } from "../../../../../../lib/platform-demo-rate-limit";
+import { demoRequestHasForbiddenOrgSelector } from "../../../../../../lib/enterprise/demo-guard";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -19,6 +20,12 @@ type Ctx = { params: Promise<{ gtin: string }> };
 
 export async function GET(req: NextRequest, ctx: Ctx) {
   const requestId = newRequestId();
+  if (demoRequestHasForbiddenOrgSelector(req.nextUrl.searchParams)) {
+    return NextResponse.json(
+      errorEnvelope(requestId, "invalid_request", "Demonstration does not accept organization selectors."),
+      { status: 400, headers: headers(requestId, { "Cache-Control": "no-store" }) }
+    );
+  }
   const limited = demoRateLimit(clientIpFromHeaders(req.headers));
   if (!limited.ok) {
     return NextResponse.json(errorEnvelope(requestId, "rate_limited", "Rate limit reached."), {

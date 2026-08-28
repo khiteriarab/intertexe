@@ -1,0 +1,11 @@
+Style No,SKU,Product Name,GTIN,Color,Category,Composition,Country of Origin,Season,Notes
+ATL-01,ATL-OXF-001,Atlantic Oxford Shirt,5601111111112,White,Shirts,100% Cotton,PT,SS26,Clean single-material
+ATL-02,ATL-TEE-002,Harbor Cotton Blend Tee,5601111111113,Navy,T-shirts,"80% Cotton, 20% Recycled polyester",PT,SS26,Blend
+ATL-03,ATL-JKT-003,Coastal Linen Jacket,5601111111114,Natural,Jackets,"Shell: 100% linen; Lining: 100% viscose",IT,AW26,Shell and lining construction
+ATL-04,ATL-TRS-004,Dock Trousers,5601111111115,Stone,Trousers,,PT,SS26,Incomplete composition
+ATL-05,ATL-KNT-005,Atlantic Knit Polo,5601111111116,Ecru,Knitwear,"70% wool 20% cashmere",UK,AW26,Composition total is not 100
+ATL-06,ATL-DEN-006,Shore Stretch Jean,5601111111117,Indigo,Denim,95% cotton 5% spandex,PT,SS26,Spandex should normalize to elastane
+ATL-07,ATL-SLK-007,Evening Silk Camisole,5601111111118,Ivory,Tops,100% silk,,SS26,Missing origin
+ATL-08,ATL-DRS-008,Market Day Dress,5601234567890,Black,Dresses,100% linen,PT,SS26,Shared GTIN A
+ATL-09,ATL-DRS-009,Market Day Dress — sample,5601234567890,Black,Dresses,100% linen,PT,SS26,Shared GTIN B identifier collision
+ATL-10,ATL-DRS-010-NVY,Harbor Day Dress,5601111111119,Navy,Dresses,100% linen,PT,SS26,Variant color on a distinct SKU

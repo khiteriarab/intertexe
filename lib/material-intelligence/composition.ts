@@ -1,61 +1,31 @@
-import { formatCompositionDisplay } from "../composition-display";
+import { formatCompositionDisplay, splitShellAndLining } from "../composition-display";
+import {
+  getMaterialTerm,
+  isKnownMaterialCode,
+  materialAliasPattern,
+  resolveMaterialToken,
+} from "../enterprise/ontology";
 
-const NATURAL = new Set([
-  "cotton",
-  "linen",
-  "flax",
-  "silk",
-  "wool",
-  "merino",
-  "cashmere",
-  "hemp",
-  "alpaca",
-  "mohair",
-  "leather",
-  "suede",
-]);
+const NAMED_ALIAS_RE = new RegExp(`\\b(${materialAliasPattern()})\\b`, "i");
 
-const FIBER_NAMES: Record<string, string> = {
-  cotton: "Cotton",
-  linen: "Linen",
-  flax: "Linen",
-  silk: "Silk",
-  wool: "Wool",
-  merino: "Wool",
-  cashmere: "Cashmere",
-  hemp: "Hemp",
-  alpaca: "Alpaca",
-  mohair: "Mohair",
-  leather: "Leather",
-  suede: "Suede",
-  elastane: "Elastane",
-  spandex: "Elastane",
-  polyester: "Polyester",
-  nylon: "Nylon",
-  polyamide: "Polyamide",
-  viscose: "Viscose",
-  rayon: "Rayon",
-  acrylic: "Acrylic",
-  lyocell: "Lyocell",
-  modal: "Modal",
-  cupro: "Cupro",
-};
-
-export function fiberCode(raw: string): string {
+export function fiberCode(raw: string, orgAliases?: Record<string, string> | null): string {
+  const term = resolveMaterialToken(raw, orgAliases);
+  if (term) return term.code;
   const t = raw.toLowerCase().trim();
-  if (t === "spandex") return "elastane";
-  if (t === "flax") return "linen";
-  if (t === "merino") return "wool";
-  return t.replace(/[^a-z]+/g, "_").replace(/^_|_$/g, "") || "unknown";
+  return t.replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "unknown";
 }
 
 export function fiberDisplayName(code: string): string {
-  return FIBER_NAMES[code] || code.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const term = getMaterialTerm(code);
+  if (term) return term.canonicalName;
+  return code.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function isNaturalFiber(code: string): boolean {
-  return NATURAL.has(code);
+  return getMaterialTerm(code)?.originClass === "natural";
 }
+
+export { isKnownMaterialCode };
 
 export type ParsedComposition = {
   components: Array<{
@@ -85,14 +55,15 @@ function emptyComposition(warning?: string): ParsedComposition {
  */
 export function parseCompositionText(
   raw: string | null | undefined,
-  breakdown?: Array<{ fiber?: string; name?: string; percent?: number; percentage?: number }> | null
+  breakdown?: Array<{ fiber?: string; name?: string; percent?: number; percentage?: number }> | null,
+  orgAliases?: Record<string, string> | null
 ): ParsedComposition {
   if (Array.isArray(breakdown) && breakdown.length) {
     const components = breakdown
       .map((row) => {
         const name = String(row.fiber || row.name || "").trim();
         if (!name) return null;
-        const code = fiberCode(name);
+        const code = fiberCode(name, orgAliases);
         const pctRaw = row.percent ?? row.percentage;
         const percentage =
           typeof pctRaw === "number" && Number.isFinite(pctRaw) ? Math.round(pctRaw * 10) / 10 : null;
@@ -111,7 +82,8 @@ export function parseCompositionText(
   if (!text) return emptyComposition();
 
   const display = formatCompositionDisplay(text);
-  const shellText = display.shellLine || text;
+  const split = splitShellAndLining(text);
+  const shellText = split.shell || text;
 
   const pctHits = [
     ...shellText.matchAll(
@@ -121,7 +93,7 @@ export function parseCompositionText(
   if (pctHits.length) {
     const components = pctHits.map((m) => {
       const percentage = Number(String(m[1] || "").replace(",", "."));
-      const code = fiberCode(m[2]);
+      const code = fiberCode(m[2], orgAliases);
       return {
         fiber_code: code,
         fiber_name: fiberDisplayName(code),
@@ -132,11 +104,32 @@ export function parseCompositionText(
     return finalize(components, text, constructionWarnings(display));
   }
 
-  const named = text.match(
-    /\b(cotton|linen|silk|wool|cashmere|hemp|leather|elastane|polyester|nylon|viscose|rayon)\b/i
-  );
+  const listed = text
+    .split(/[/;,]/)
+    .map((part) => part.replace(/\d{1,3}(?:[.,]\d+)?\s*%/g, "").trim())
+    .filter(Boolean);
+  const listedResolved = listed
+    .map((part) => {
+      const token = part.replace(/^(?:organic|recycled)\s+/i, "").trim();
+      const code = fiberCode(token, orgAliases);
+      if (!resolveMaterialToken(token, orgAliases) && !isKnownMaterialCode(code)) return null;
+      return {
+        fiber_code: code,
+        fiber_name: fiberDisplayName(code),
+        percentage: null as number | null,
+        raw_value: part,
+      };
+    })
+    .filter(Boolean) as ParsedComposition["components"];
+  if (listedResolved.length >= 2 || (listedResolved.length === 1 && listed.length === 1)) {
+    return finalize(listedResolved, text, [
+      "Percentage not listed on the source record; no percentage was inferred.",
+    ]);
+  }
+
+  const named = text.match(NAMED_ALIAS_RE);
   if (named) {
-    const code = fiberCode(named[1]);
+    const code = fiberCode(named[1], orgAliases);
     return finalize(
       [
         {

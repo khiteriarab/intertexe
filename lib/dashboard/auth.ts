@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSupabaseAnonAuthClient } from "../supabase-auth-server";
 import { getServerSupabase } from "../supabase-service-client";
+import { decodeJwtPayload } from "../enterprise/jwt-claims";
 import {
   HQ_FOUNDER_EMAILS,
   HQ_SESSION_COOKIE,
@@ -53,6 +54,14 @@ type MembershipRow = {
 const SESSION_TTL_MS = 20_000;
 const sessionMemo = new Map<string, { at: number; session: HqSession | null }>();
 
+export function clearHqSessionMemo(token?: string | null): void {
+  if (!token) {
+    sessionMemo.clear();
+    return;
+  }
+  sessionMemo.delete(token.slice(-48));
+}
+
 async function resolveHqSession(): Promise<HqSession | null> {
   const token = await readHqAccessToken();
   if (!token) return null;
@@ -72,6 +81,22 @@ async function resolveHqSession(): Promise<HqSession | null> {
 
   const supabase = getServerSupabase();
   if (!supabase) return null;
+
+  const issuedAt = Number(decodeJwtPayload(token)?.iat || 0) * 1000;
+  if (issuedAt) {
+    const { data: logoutEvent } = await supabase
+      .from("hq_auth_audit_events")
+      .select("created_at")
+      .eq("auth_user_id", data.user.id)
+      .eq("event_name", "logout")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (logoutEvent?.created_at && issuedAt < new Date(logoutEvent.created_at).getTime()) {
+      sessionMemo.set(memoKey, { at: Date.now(), session: null });
+      return null;
+    }
+  }
 
   const email = data.user.email.trim().toLowerCase();
   let { data: memberships } = await supabase

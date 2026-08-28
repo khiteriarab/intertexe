@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { HQ_SESSION_COOKIE, isHqHost } from "./lib/dashboard/constants";
+import {
+  ENTERPRISE_SESSION_COOKIE,
+  dashboardPathRequiresEnterpriseSession,
+} from "./lib/enterprise/constants";
+import { demoRequestHasForbiddenOrgSelector } from "./lib/enterprise/demo-guard";
 
 const API_CACHE_HEADERS: Record<string, string> = {
   "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
@@ -13,6 +18,18 @@ const NO_CACHE_PREFIXES = ["/api/auth/", "/api/cron/", "/api/dashboard/", "/api/
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host");
+
+  if (
+    pathname === "/platform/demo" ||
+    pathname.startsWith("/platform/demo/") ||
+    pathname.startsWith("/api/v1/demo")
+  ) {
+    if (demoRequestHasForbiddenOrgSelector(request.nextUrl.searchParams)) {
+      return new NextResponse("Demonstration does not accept organization selectors.", {
+        status: 400,
+      });
+    }
+  }
 
   // Legacy /hq → /dashboard
   if (pathname === "/hq" || pathname.startsWith("/hq/")) {
@@ -50,12 +67,29 @@ export function middleware(request: NextRequest) {
     pathname !== "/dashboard/login" &&
     !pathname.startsWith("/dashboard/login/")
   ) {
-    const token = request.cookies.get(HQ_SESSION_COOKIE)?.value;
+    const token =
+      request.cookies.get(HQ_SESSION_COOKIE)?.value ||
+      request.cookies.get(ENTERPRISE_SESSION_COOKIE)?.value;
     if (!token) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard/login";
       url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
+    }
+    if (dashboardPathRequiresEnterpriseSession(pathname)) {
+      const enterprise = request.cookies.get(ENTERPRISE_SESSION_COOKIE)?.value?.trim();
+      if (!enterprise) {
+        const url = request.nextUrl.clone();
+        const hq = request.cookies.get(HQ_SESSION_COOKIE)?.value?.trim();
+        if (hq) {
+          url.pathname = "/dashboard";
+          url.search = "";
+          return NextResponse.redirect(url);
+        }
+        url.pathname = "/dashboard/login";
+        url.searchParams.set("next", pathname);
+        return NextResponse.redirect(url);
+      }
     }
   }
 

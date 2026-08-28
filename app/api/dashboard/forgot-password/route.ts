@@ -4,6 +4,10 @@ import { writeAuthAudit } from "../../../../lib/dashboard/auth";
 
 export const dynamic = "force-dynamic";
 
+function isTechnicalPrincipalEmail(email: string): boolean {
+  return /^itx-principal\.[a-f0-9]+@identity\.intertexe\.com$/.test(email);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -17,15 +21,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Auth is not configured." }, { status: 503 });
     }
 
-    const origin = request.nextUrl.origin;
-    // Must land on a page that handles PASSWORD_RECOVERY and calls updateUser({ password }).
-    const redirectTo = `${origin}/reset-password?next=/dashboard`;
-    const { error } = await auth.auth.resetPasswordForEmail(email, { redirectTo });
-    await writeAuthAudit({
-      email,
-      eventName: error ? "password_reset_failed" : "password_reset_requested",
-      metadata: error ? { reason: error.message } : {},
-    });
+    // HQ Auth only. Never start obelisk-core recovery — linked staff principals
+    // must not become a second human password.
+    if (!isTechnicalPrincipalEmail(email)) {
+      const origin = request.nextUrl.origin;
+      const redirectTo = `${origin}/reset-password?next=/dashboard`;
+      const { error } = await auth.auth.resetPasswordForEmail(email, { redirectTo });
+      await writeAuthAudit({
+        email,
+        eventName: error ? "password_reset_failed" : "password_reset_requested",
+        metadata: error ? { reason: error.message } : {},
+      });
+    }
 
     // Always return success to avoid email enumeration.
     return NextResponse.json({

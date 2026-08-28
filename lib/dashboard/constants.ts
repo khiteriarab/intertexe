@@ -50,4 +50,5 @@ export const HQ_NAV = [
   { href: "/dashboard/insights", label: "Insights" },
   { href: "/dashboard/ai", label: "AI" },
   { href: "/dashboard/settings", label: "Settings" },
+  { href: "/dashboard/enterprise", label: "Enterprise", founderOnly: true },
 ] as const;

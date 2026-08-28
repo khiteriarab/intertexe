@@ -1,0 +1,20 @@
+# INTERTEXE Enterprise backend — Supabase project obelisk-core
+# Do not apply these migrations to the consumer/HQ project (burrylupizvggupsryuj).
+project_id = "dpiksashuqetyzrjogal"
+
+[api]
+enabled = true
+
+[db]
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "https://www.intertexe.com"
+additional_redirect_urls = ["https://www.intertexe.com/dashboard", "https://www.intertexe.com/dashboard/login"]
+jwt_expiry = 3600
+enable_signup = false
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"

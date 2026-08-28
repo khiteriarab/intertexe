@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { HQ_NAV } from "../../../lib/dashboard/constants";
+import type { WorkspaceContext } from "../../../lib/enterprise/types";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type Props = {
   children: React.ReactNode;
@@ -11,9 +13,17 @@ type Props = {
   fullName: string | null;
   roles: string[];
   workspaceName: string;
+  workspaceContexts?: WorkspaceContext[];
 };
 
-export function HqShell({ children, email, fullName, roles, workspaceName }: Props) {
+export function HqShell({
+  children,
+  email,
+  fullName,
+  roles,
+  workspaceName,
+  workspaceContexts = [],
+}: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -32,6 +42,7 @@ export function HqShell({ children, email, fullName, roles, workspaceName }: Pro
         <div>
           <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE Dashboard</p>
           <p className="text-sm font-medium">{workspaceName}</p>
+          <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" />
         </div>
         <button
           type="button"
@@ -52,6 +63,7 @@ export function HqShell({ children, email, fullName, roles, workspaceName }: Pro
             <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE Dashboard</p>
             <p className="text-lg font-medium mt-1">{workspaceName}</p>
             <p className="text-xs text-black/50 mt-1">Private operating system</p>
+            <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" />
           </div>
           <nav className="px-3 py-4 space-y-0.5">
             {HQ_NAV.filter((item) => !("founderOnly" in item && item.founderOnly) || roles.includes("founder")).map((item) => {
