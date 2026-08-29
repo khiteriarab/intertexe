@@ -134,6 +134,25 @@ export function productMatchesJeansListing(row: JeansListingRow): boolean {
   return nameHasJean || fabricIsDenim;
 }
 
+/** Lingerie PLP — exclude skirts misfiled via substring `slip` (e.g. slip skirt). */
+export function productMatchesLingerieListing(row: {
+  name?: string | null;
+  category?: string | null;
+}): boolean {
+  const cat = (row.category || "").toLowerCase();
+  const name = (row.name || "").toLowerCase();
+  if (/\bskirt\b/.test(name) || /\b(trouser|pants|jeans?)\b/.test(name)) return false;
+  if (/(lingerie|underwear|intimate)/.test(cat)) return true;
+  if (/\b(lingerie|underwear|bralette|thong|brief|panty|knicker|corset)\b/.test(name)) return true;
+  if (/\bbra\b/.test(name)) return true;
+  if (/\bbikini\b/.test(name)) {
+    if (/(lingerie|underwear|intimate)/.test(cat)) return true;
+    if (cat === "swimwear" && !/(swim|beach|resort|pool)/.test(name)) return true;
+  }
+  if (/\bslip\b/.test(name)) return true;
+  return false;
+}
+
 const FOOTWEAR_TEXT_RE =
   /\b(shoe|shoes|footwear|sandal|sandals|boot|boots|bootie|booties|sneaker|sneakers|heel|heels|pump|pumps|loafer|loafers|mule|mules|wedge|wedges|espadrille|espadrilles|trainer|trainers|slide|slides|flip[- ]?flop)\b/i;
 
@@ -204,6 +223,9 @@ export function productMatchesHardCategory(
   if (key === "jeans") {
     return productMatchesJeansListing(row);
   }
+  if (key === "lingerie") {
+    return productMatchesLingerieListing(row);
+  }
   const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
   if (keywords?.length) {
     if (key === "shirts" && /\b(blouse|t-shirt|tee|pajama|pyjama)\b/.test(text)) return false;
@@ -266,6 +288,9 @@ export function rowMatchesGarmentFilter(
   const key = String(category || "").toLowerCase();
   if (key === "jeans") {
     return productMatchesJeansListing(row);
+  }
+  if (key === "lingerie") {
+    return productMatchesLingerieListing(row);
   }
   if (!types?.length) return true;
   const gt = (row.garment_type || "").toLowerCase();
