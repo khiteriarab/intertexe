@@ -37,8 +37,22 @@ test("jeans category rejects linen and terry pants from broad departments", () =
   );
   assert.equal(
     productMatchesJeansListing({
+      name: "Acid Wash French Terry Wide Leg Pants",
+      category: "Jeans",
+    }),
+    false
+  );
+  assert.equal(
+    productMatchesJeansListing({
       name: "High Rise Wide Leg Trouser",
       category: "Bottoms",
+    }),
+    false
+  );
+  assert.equal(
+    productMatchesJeansListing({
+      name: "Wide Leg Pants",
+      category: "Jeans",
     }),
     false
   );

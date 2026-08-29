@@ -102,24 +102,11 @@ export type JeansListingRow = {
 
 const JEAN_NAME_RE = /\b(jeans?|denim)\b/i;
 const NON_DENIM_BOTTOM_RE =
-  /\b(linen|terry|chino|cargo|jogger|legging|culotte|palazzo|slack|sweatpant|track pant|trackpant)\b/i;
+  /\b(linen|terry|chino|cargo|jogger|legging|culotte|palazzo|slack|sweatpant|track pant|trackpant|fleece|lounge)\b/i;
 
-function isCompoundJeansDepartment(category: string): boolean {
-  return /\b(pants?\s*[&/|+]\s*jeans?|jeans?\s*[&/|+]\s*pants?|bottoms?\s*[&/|+]|denim\s*[&/|+])\b/i.test(
-    category
-  );
-}
-
-function narrowCategorySignalsJeans(category: string): boolean {
-  const c = category.toLowerCase().trim();
-  if (!c || isCompoundJeansDepartment(c)) return false;
-  return JEAN_NAME_RE.test(c);
-}
-
-/** Jeans PLP — require denim in the product itself, not a broad "Pants & Jeans" department. */
+/** Jeans PLP — require jean/denim in the product itself; never category breadcrumb alone. */
 export function productMatchesJeansListing(row: JeansListingRow): boolean {
   const name = (row.name || "").toLowerCase();
-  const category = (row.category || "").toLowerCase();
   const composition = (row.composition || "").toLowerCase();
   const fabricConstruction = (
     row.fabric_construction ||
@@ -128,19 +115,23 @@ export function productMatchesJeansListing(row: JeansListingRow): boolean {
   ).toLowerCase();
   const materialSubtype = (row.material_subtype || row.materialSubtype || "").toLowerCase();
 
+  if (NON_DENIM_BOTTOM_RE.test(name) || /\bfrench[\s-]?terry\b/.test(name)) {
+    return false;
+  }
+  if (/\b(trouser|sweat\s*pant|sweatpant|track\s*pant|lounge\s*pant)\b/.test(name)) {
+    return false;
+  }
+  if (/\bpants\b/.test(name) && !JEAN_NAME_RE.test(name) && !/\bdenim\b/.test(composition)) {
+    return false;
+  }
+
   const nameHasJean = JEAN_NAME_RE.test(name);
   const fabricIsDenim =
     fabricConstruction === "denim" ||
     materialSubtype.includes("denim") ||
     /\bdenim\b/.test(composition);
 
-  if (NON_DENIM_BOTTOM_RE.test(name) && !nameHasJean && !fabricIsDenim) return false;
-  if (/\btrouser\b/.test(name) && !nameHasJean && !fabricIsDenim) return false;
-
-  if (nameHasJean || fabricIsDenim) return true;
-  if (narrowCategorySignalsJeans(category)) return true;
-
-  return false;
+  return nameHasJean || fabricIsDenim;
 }
 
 const FOOTWEAR_TEXT_RE =
