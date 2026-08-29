@@ -353,6 +353,31 @@ export default function SaleClient({
       setTotal(nextTotal);
       setOffset(nextOffset + nextProducts.length);
       setHasMore(Boolean(data.hasMore));
+
+      // Page 1 skips exact count for speed — fetch total in background when unknown.
+      if (!append && nextProducts.length > 0 && nextTotal === 0 && data.hasMore) {
+        const countParams = buildSaleParams(
+          saleDepartment,
+          fiberTab,
+          priceTier,
+          categoryFilter,
+          selectedColor,
+          selectedBrands,
+          selectedFiberSubtypes,
+          serverSort,
+          1,
+          0
+        );
+        countParams.set("skipCount", "0");
+        void fetch(`/api/sale?${countParams}`)
+          .then((r) => r.json())
+          .then((countData) => {
+            if (typeof countData.total === "number" && countData.total > 0) {
+              setTotal(countData.total);
+            }
+          })
+          .catch(() => {});
+      }
     },
     [saleDepartment, fiberTab, priceTier, categoryFilter, selectedColor, selectedBrands, selectedFiberSubtypes, sortBy, total]
   );
@@ -411,10 +436,15 @@ export default function SaleClient({
   );
 
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
+  const saleCountPending =
+    (isLoading && products.length === 0) ||
+    (total === 0 && products.length > 0 && hasMore && !selectedSubcategory && !(shoesMode && categoryFilter !== "all"));
   const displayedCount =
     selectedSubcategory || (shoesMode && categoryFilter !== "all")
       ? rankedProducts.length
-      : total;
+      : total > 0
+        ? total
+        : null;
 
   const activeFilters = [
     ...(saleDepartment !== "clothing"
@@ -626,7 +656,7 @@ export default function SaleClient({
           <CatalogMobileToolbar
             className="mb-3 lg:hidden"
             resultCount={displayedCount > 0 ? displayedCount : null}
-            countLoading={isLoading && total === 0}
+            countLoading={saleCountPending}
             sortLabel={currentSort.label}
             onOpenFilter={() => setShowFilterSheet(true)}
             onOpenSort={() => setShowSortSheet(true)}
@@ -684,7 +714,7 @@ export default function SaleClient({
                   Filter
                 </span>
                 <p className="text-[11px] text-muted-foreground text-center flex-1 min-w-0">
-                  {isLoading && total === 0 ? (
+                  {saleCountPending ? (
                     <span className="animate-pulse">Loading…</span>
                   ) : (
                     <>
