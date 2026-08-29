@@ -134,22 +134,37 @@ export function productMatchesJeansListing(row: JeansListingRow): boolean {
   return nameHasJean || fabricIsDenim;
 }
 
-/** Lingerie PLP — exclude skirts misfiled via substring `slip` (e.g. slip skirt). */
+/** Lingerie PLP — trust garment_type + underwear names; exclude slip skirts misfiled via `slip`. */
 export function productMatchesLingerieListing(row: {
   name?: string | null;
   category?: string | null;
+  garment_type?: string | null;
+  garmentType?: string | null;
 }): boolean {
   const cat = (row.category || "").toLowerCase();
   const name = (row.name || "").toLowerCase();
-  if (/\bskirt\b/.test(name) || /\b(trouser|pants|jeans?)\b/.test(name)) return false;
+  const gt = String(row.garment_type || row.garmentType || "").toLowerCase();
+
+  if (/\b(slip\s+skirt|denim\s+skirt)\b/.test(name)) return false;
+  if (/\bskirt\b/.test(name) && !/\bgarter\b/.test(name) && gt !== "lingerie") return false;
+  if (/\b(trouser|jogger|chino)\b/.test(name) && gt !== "lingerie") return false;
+
+  if (gt === "lingerie") return true;
   if (/(lingerie|underwear|intimate)/.test(cat)) return true;
-  if (/\b(lingerie|underwear|bralette|thong|brief|panty|knicker|corset)\b/.test(name)) return true;
-  if (/\bbra\b/.test(name)) return true;
+
+  if (
+    /\b(lingerie|underwear|bralette|brassiere|thong|brief|panty|panties|knicker|knickers|corset|cheeky|hipster|boyshort|babydoll|bodysuit|teddy|g[\s-]?string|v[\s-]?string|balconette|underwire|bra)\b/.test(
+      name
+    )
+  ) {
+    return true;
+  }
+
   if (/\bbikini\b/.test(name)) {
     if (/(lingerie|underwear|intimate)/.test(cat)) return true;
     if (cat === "swimwear" && !/(swim|beach|resort|pool)/.test(name)) return true;
   }
-  if (/\bslip\b/.test(name)) return true;
+  if (/\bslip\b/.test(name) && !/\bslip\s+skirt\b/.test(name)) return true;
   return false;
 }
 
