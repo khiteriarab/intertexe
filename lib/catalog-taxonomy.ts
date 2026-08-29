@@ -3,6 +3,8 @@
  * Web + iOS consume /api/catalog/taxonomy (no duplicated category arrays).
  */
 import { getServerSupabase } from "./supabase-service-client";
+import { queryCatalogBrowsePageV2 } from "./catalog-browse-v2";
+import { fetchFootwearCatalogPage } from "./footwear-catalog";
 
 export type TaxonomyDepartment = "clothing" | "shoes";
 
@@ -244,6 +246,43 @@ export async function queryTaxonomyBrowse(opts: TaxonomyBrowseOpts): Promise<Tax
   const region = (opts.region || "us").toLowerCase();
   const limit = Math.min(Math.max(opts.limit ?? 24, 1), 100);
   const offset = Math.max(opts.offset ?? 0, 0);
+
+  // Department-all routes scan the full live catalog — use fast browse RPCs instead.
+  if (isDepartmentAllSlug(opts.taxonomySlug)) {
+    if (department === "shoes") {
+      const page = await fetchFootwearCatalogPage({ region, limit, offset });
+      return {
+        products: page.products as unknown as Record<string, unknown>[],
+        total: 0,
+        hasMore: page.hasMore,
+        totalStatus: "unavailable",
+        rpcVersion: "footwear_catalog_page",
+      };
+    }
+    const v2 = await queryCatalogBrowsePageV2({
+      region,
+      limit,
+      offset,
+      fiber: opts.fiber,
+      brand: opts.brand,
+      search: opts.search,
+      sort: opts.sort,
+      minPrice: opts.minPrice,
+      maxPrice: opts.maxPrice,
+      color: opts.color,
+      materialSubtype: opts.materialSubtype,
+      fabricConstruction: opts.fabricConstruction,
+      apparelOnly: true,
+    });
+    if (v2.error) return empty;
+    return {
+      products: v2.products as unknown as Record<string, unknown>[],
+      total: v2.total ?? 0,
+      hasMore: v2.hasMore,
+      totalStatus: v2.totalStatus === "exact" || v2.totalStatus === "cached" ? "exact" : "unavailable",
+      rpcVersion: v2.rpcVersion,
+    };
+  }
 
   const rpcName =
     department === "shoes"
