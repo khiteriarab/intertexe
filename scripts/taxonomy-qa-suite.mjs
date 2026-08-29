@@ -163,9 +163,12 @@ async function main() {
     ["pants_trousers", "Trousers", "Bootcut Jean", "clothing/jeans"],
     ["shirts", "Shirt", "Cotton Shirt", "clothing/shirts"],
     ["other_apparel", "bottoms", "Marcelle Cargo in Hematite", "clothing/bottoms"],
+    ["lingerie", "swimwear", "Top Stitch Bikini", "clothing/lingerie"],
+    ["sleepwear", "Shirt", "Asceno Striped Silk Satin Pajama Shirt", "clothing/sleepwear"],
+    ["swim_resortwear", "Swimwear", "Beach Bikini Top", "clothing/swimwear"],
     ["footwear", "Apparel & Accessories", "Ballet Runner Sneaker", "shoes/sneakers"],
     ["footwear", "Apparel & Accessories", "Leather Ballerina Flat", "shoes/ballet-flats"],
-    ["footwear", "Shoes", "Penny Loafer", "shoes/loafers"],
+    ["footwear", "Apparel & Accessories", "Tod's Suede Driving Shoes", "shoes/loafers"],
   ];
 
   for (const [gt, cat, name, expected] of ambiguities) {
@@ -186,7 +189,7 @@ async function main() {
     if (n && !n.is_active) pass(`${slug} withheld (inactive)`);
     else fail(`${slug} should remain inactive`);
   }
-  for (const slug of ["clothing/tops", "shoes/flat-shoes", "shoes/heels"]) {
+  for (const slug of ["clothing/tops", "shoes/flat-shoes", "shoes/heels", "clothing/lingerie", "clothing/sleepwear"]) {
     const n = nodes?.find((x) => x.slug === slug);
     if (n?.is_active) pass(`Parent nav active: ${slug}`);
     else fail(`Parent nav missing: ${slug}`);
@@ -202,6 +205,96 @@ async function main() {
     .eq("taxonomy_version", "retail-v1")
     .limit(1);
   if (idxRows) pass("product_taxonomy_assignments readable (idx_pta_taxonomy_offer expected on DB)");
+
+  // 7) Loafers production gates (deduped_card customer-facing basis)
+  const LOAFERS_EXPECTED = 278;
+  const MARY_JANES_EXPECTED = 16;
+  const FLAT_SHOES_EXPECTED = 294;
+
+  function isLoaferProductName(name) {
+    const n = String(name ?? "").toLowerCase();
+    if (/sneaker|bootcut|ankle boot|bootie|\bboot\b|sandal|pump|stiletto|\bmule\b|ballet|ballerina|mary[\s-]?jane|espadrille|trainer|heel\b|wedge/.test(n)) {
+      return false;
+    }
+    return /loafer|penny|horsebit|driving shoe|driving moccasin|slip-on|slip on/.test(n);
+  }
+
+  function isReferralUrl(url) {
+    const u = String(url ?? "");
+    return u.includes("linksynergy.com") || u.includes("click.linksynergy") || u.includes("rakuten");
+  }
+
+  const loafersBrowse = await browseShoes("shoes/loafers", { limit: 1 });
+  if (
+    loafersBrowse.total_status === "exact" &&
+    loafersBrowse.total === LOAFERS_EXPECTED &&
+    loafersBrowse.debug?.count_basis === "deduped_card"
+  ) {
+    pass(`Loafers VIEW N=${loafersBrowse.total} (deduped_card)`);
+  } else {
+    fail(
+      `Loafers VIEW N expected ${LOAFERS_EXPECTED} deduped_card, got total=${loafersBrowse.total} status=${loafersBrowse.total_status} basis=${loafersBrowse.debug?.count_basis}`
+    );
+  }
+
+  const loafersSeen = new Set();
+  let loafersDupes = 0;
+  let loafersFetched = 0;
+  let badLoaferNames = 0;
+  let missingReferral = 0;
+  for (let off = 0; off < LOAFERS_EXPECTED + 100; off += 100) {
+    const page = await browseShoes("shoes/loafers", { limit: 100, offset: off });
+    for (const row of page.products ?? []) {
+      loafersFetched++;
+      const key = row.card_key || row.canonical_id || row.product_id || row.id;
+      if (loafersSeen.has(key)) loafersDupes++;
+      loafersSeen.add(key);
+      if (!isLoaferProductName(row.name)) badLoaferNames++;
+      if (!isReferralUrl(row.url)) missingReferral++;
+    }
+    if ((page.products ?? []).length < 100) break;
+  }
+  if (loafersDupes === 0 && loafersSeen.size === LOAFERS_EXPECTED && loafersFetched === LOAFERS_EXPECTED) {
+    pass(`Loafers pagination: ${loafersSeen.size} unique cards, VIEW N match, no dupes`);
+  } else {
+    fail(
+      `Loafers pagination: fetched=${loafersFetched} unique=${loafersSeen.size} dupes=${loafersDupes} (expected ${LOAFERS_EXPECTED})`
+    );
+  }
+  if (badLoaferNames === 0) pass(`Loafers sample: all ${loafersFetched} card titles pass loafer heuristic`);
+  else fail(`Loafers sample: ${badLoaferNames}/${loafersFetched} titles fail loafer heuristic`);
+  if (missingReferral === 0) pass(`Loafers referral links intact (sample=${loafersFetched})`);
+  else fail(`Loafers missing referral links: ${missingReferral}/${loafersFetched}`);
+
+  const maryBrowse = await browseShoes("shoes/mary-janes", { limit: 1 });
+  const flatBrowse = await browseShoes("shoes/flat-shoes", { limit: 1 });
+  if (maryBrowse.total === MARY_JANES_EXPECTED && maryBrowse.total_status === "exact") {
+    pass(`Mary Janes VIEW N=${maryBrowse.total}`);
+  } else fail(`Mary Janes expected ${MARY_JANES_EXPECTED}, got ${maryBrowse.total}`);
+  if (
+    flatBrowse.total === FLAT_SHOES_EXPECTED &&
+    flatBrowse.total_status === "exact" &&
+    flatBrowse.debug?.count_basis === "deduped_card"
+  ) {
+    pass(`Flat Shoes parent VIEW N=${flatBrowse.total} (= ${LOAFERS_EXPECTED}+${MARY_JANES_EXPECTED} dedup union)`);
+  } else {
+    fail(`Flat Shoes expected ${FLAT_SHOES_EXPECTED} deduped union, got ${flatBrowse.total}`);
+  }
+
+  const loafersBrandPage = await browseShoes("shoes/loafers", { brand: "brunello-cucinelli", limit: 5 });
+  if (loafersBrandPage.total_status === "exact" && loafersBrandPage.total > 0) {
+    pass(`Loafers+brand filter total=${loafersBrandPage.total}`);
+  } else fail("Loafers+brand filter missing exact total");
+
+  const loafersPricePage = await browseShoes("shoes/loafers", { minPrice: 500, maxPrice: 5000, limit: 5 });
+  if (loafersPricePage.total_status === "exact" && loafersPricePage.total > 0) {
+    pass(`Loafers+price filter total=${loafersPricePage.total}`);
+  } else fail("Loafers+price filter missing exact total");
+
+  const loafersSorted = await browseShoes("shoes/loafers", { sort: "price_asc", limit: 5 });
+  const prices = (loafersSorted.products ?? []).map((p) => Number(p.price)).filter((x) => x > 0);
+  if (prices.length >= 2 && prices[0] <= prices[1]) pass("Loafers price_asc sort OK");
+  else fail("Loafers price_asc sort order invalid");
 
   console.log(`\n=== Summary: ${passes.length} passed, ${failures.length} failed ===`);
   if (failures.length) process.exit(1);

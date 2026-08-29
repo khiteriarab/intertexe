@@ -12,8 +12,9 @@ export const SHOP_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
     "jackets_blazers",
     "skirts",
     "swim_resortwear",
+    "lingerie",
+    "sleepwear",
     "other_apparel",
-    // Lingerie has its own shop tab — do not let underwear flood Clothing.
   ],
   clothing: [
     "dresses",
@@ -27,18 +28,28 @@ export const SHOP_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
     "jackets_blazers",
     "skirts",
     "swim_resortwear",
+    "lingerie",
+    "sleepwear",
     "other_apparel",
   ],
   dresses: ["dresses"],
   tops: ["tops_blouses", "shirts"],
+  shirts: ["shirts"],
+  blouses: ["tops_blouses"],
+  tanks: ["tops_blouses", "shirts"],
   knitwear: ["knitwear", "sweaters_cardigans"],
   trousers: ["pants_trousers"],
+  jeans: ["pants_trousers"],
   bottoms: ["pants_trousers"],
   pants: ["pants_trousers"],
   outerwear: ["coats", "jackets_blazers"],
+  coats: ["coats"],
+  jackets: ["jackets_blazers"],
   skirts: ["skirts"],
   // Hard category: never map to other_apparel (that bucket is polluted with Footwear).
   jumpsuits: ["jumpsuits"],
+  "matching-sets": ["matching_sets"],
+  sleepwear: ["sleepwear"],
   swimwear: ["swim_resortwear"],
   lingerie: ["lingerie"],
   shoes: ["shoes"],
@@ -52,8 +63,29 @@ export const CATEGORY_TO_GARMENT_TYPE = SHOP_CATEGORY_GARMENT_TYPES;
 /** Name/category keywords required for coarse buckets (hard AND, not preference). */
 export const SHOP_CATEGORY_TEXT_KEYWORDS: Record<string, string[]> = {
   jumpsuits: ["jumpsuit", "romper", "playsuit", "overall", "boilersuit"],
+  sleepwear: [
+    "pajama",
+    "pyjama",
+    "nightgown",
+    "nightdress",
+    "sleepshirt",
+    "sleep shirt",
+    "sleep set",
+    "nightwear",
+    "nightshirt",
+    "loungewear",
+  ],
   dresses: ["dress", "gown", "kaftan", "caftan"],
-  trousers: ["pant", "trouser", "slack", "chino", "jean", "denim", "legging", "culotte", "short"],
+  shirts: ["shirt"],
+  blouses: ["blouse"],
+  tanks: ["tank", "camisole", "cami"],
+  trousers: ["pant", "trouser", "slack", "chino", "legging", "culotte"],
+  jeans: ["jean", "denim"],
+  shorts: ["short"],
+  coats: ["coat", "trench", "parka", "overcoat"],
+  jackets: ["jacket", "blazer"],
+  "matching-sets": ["matching set", "co-ord", "coord", "two piece", "two-piece"],
+  lingerie: ["lingerie", "underwear", "bra", "bralette", "brief", "panty", "thong"],
   shoes: ["shoe", "sandal", "boot", "sneaker", "loafer", "heel", "pump", "mule", "espadrille"],
   bags: ["bag", "tote", "handbag", "clutch", "purse", "backpack"],
 };
@@ -81,6 +113,18 @@ export function applyCategoryFilter(query: any, category: string): any {
         "name.ilike.%jumpsuit%,category.ilike.%jumpsuit%,name.ilike.%romper%,category.ilike.%romper%,name.ilike.%playsuit%,category.ilike.%playsuit%,name.ilike.%overall%,category.ilike.%overall%,name.ilike.%boilersuit%,category.ilike.%boilersuit%"
       );
     }
+    if (key === "sleepwear") {
+      q = q.or(
+        "name.ilike.%pajama%,name.ilike.%pyjama%,name.ilike.%nightgown%,name.ilike.%nightdress%,name.ilike.%sleepshirt%,name.ilike.%sleep shirt%,name.ilike.%sleep set%,name.ilike.%nightwear%,category.ilike.%sleepwear%,category.ilike.%pajama%,category.ilike.%pyjama%"
+      );
+    }
+    const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
+    if (keywords?.length && !["jumpsuits", "sleepwear"].includes(key)) {
+      const orClause = keywords
+        .flatMap((k) => [`name.ilike.%${k}%`, `category.ilike.%${k}%`])
+        .join(",");
+      q = q.or(orClause);
+    }
     return q;
   }
   const needle = category.toLowerCase();
@@ -101,14 +145,15 @@ export function productMatchesHardCategory(
   if (key !== "shoes" && isFootwearText(text)) return false;
   const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
   if (keywords?.length) {
+    if (key === "shirts" && /\b(blouse|t-shirt|tee|pajama|pyjama)\b/.test(text)) return false;
     if (!keywords.some((k) => text.includes(k))) return false;
   }
   const types = garmentTypesForShopCategory(key);
   if (types?.length) {
     const gt = String(row.garment_type || "").toLowerCase();
-    if (gt && !types.includes(gt) && key === "jumpsuits") {
-      // Allow keyword-matched jumpsuits even if garment_type not yet backfilled.
-      return keywords!.some((k) => text.includes(k));
+    if (gt && !types.includes(gt) && keywords?.length) {
+      // Allow keyword-matched rows when garment_type is stale or coarse.
+      return keywords.some((k) => text.includes(k));
     }
   }
   return true;
@@ -143,9 +188,20 @@ export function materialPrimaryForShopFiber(fiber?: string | null): string | nul
   return SHOP_FIBER_TO_MATERIAL[f] ?? f;
 }
 
-export function rowMatchesGarmentFilter(row: { garment_type?: string | null }, category?: string | null): boolean {
+export function rowMatchesGarmentFilter(
+  row: { garment_type?: string | null; category?: string | null; name?: string | null },
+  category?: string | null
+): boolean {
   const types = garmentTypesForShopCategory(category);
   if (!types?.length) return true;
   const gt = (row.garment_type || "").toLowerCase();
-  return types.includes(gt);
+  if (types.includes(gt)) return true;
+  const key = String(category || "").toLowerCase();
+  const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
+  if (keywords?.length) {
+    const text = `${row.category || ""} ${row.name || ""}`.toLowerCase();
+    if (key === "shirts" && /\b(blouse|t-shirt|tee|pajama|pyjama)\b/.test(text)) return false;
+    return keywords.some((k) => text.includes(k));
+  }
+  return false;
 }

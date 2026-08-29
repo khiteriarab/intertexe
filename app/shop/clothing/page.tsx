@@ -16,6 +16,7 @@ export default async function ClothingCategoryMenuPage() {
   return (
     <CategoryMenuClient
       title="Clothing"
+      sectionLabel="Clothing"
       subtitle="Natural-fiber women's apparel — browse by category."
       rows={rows}
     />

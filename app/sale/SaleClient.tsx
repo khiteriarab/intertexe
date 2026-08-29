@@ -7,11 +7,14 @@ import { ShoppingBag, Heart, Tag, ChevronDown } from "lucide-react";
 import { useProductFavorites } from "../hooks/use-product-favorites";
 import { formatDisplayOriginalPrice, formatDisplayPrice } from "../../lib/format-display-price";
 import {
-  SHOP_CATEGORY_OPTIONS,
   SHOP_COLOR_OPTIONS,
   SHOP_PRICE_TIERS,
   type ShopPriceTierId,
 } from "../../lib/catalog-filter-options";
+import {
+  productMatchesSaleShoeCategory,
+  saleCategoryOptionsForDepartment,
+} from "../../lib/sale-category-options";
 import { getShopBrands } from "../shop/actions";
 import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
@@ -30,6 +33,7 @@ import {
 } from "../../lib/catalog-subcategories";
 
 type FiberTab = "all" | "cashmere" | "silk" | "wool" | "cotton" | "linen" | "leather" | "shoes";
+type SaleDepartment = "clothing" | "shoes";
 type SaleSort = "discount" | "new" | "price-low" | "price-high" | "natural-high";
 
 const PAGE_SIZE = 24;
@@ -43,11 +47,6 @@ const FIBER_TABS: { key: FiberTab; label: string }[] = [
   { key: "wool", label: "Wool" },
   { key: "leather", label: "Leather" },
   { key: "shoes", label: "Shoes" },
-];
-
-const SALE_CATEGORIES = [
-  { key: "all" as const, label: "All" },
-  ...SHOP_CATEGORY_OPTIONS.filter((category) => category.key !== "shoes"),
 ];
 
 const SORT_OPTIONS: { key: SaleSort; label: string }[] = [
@@ -157,6 +156,7 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
 }
 
 function buildSaleParams(
+  saleDepartment: SaleDepartment,
   fiberTab: FiberTab,
   priceTier: ShopPriceTierId,
   categoryFilter: string,
@@ -172,14 +172,15 @@ function buildSaleParams(
   params.set("limit", String(limit));
   params.set("offset", String(offset));
   params.set("skipCount", "0");
+  const shoesMode = saleDepartment === "shoes" || fiberTab === "shoes";
   // Shoes are a category (not a fiber) — apparel-only sale feed excludes footwear.
-  if (fiberTab === "shoes") {
+  if (shoesMode) {
     params.set("category", "shoes");
   } else if (fiberTab !== "all") {
     params.set("fiber", fiberTab);
   }
   if (priceTier !== "any") params.set("price", priceTier);
-  if (categoryFilter !== "all" && fiberTab !== "shoes") params.set("category", categoryFilter);
+  if (categoryFilter !== "all" && !shoesMode) params.set("category", categoryFilter);
   if (selectedColor) params.set("color", selectedColor);
   if (selectedBrands.length) params.set("brand", selectedBrands[0]);
   if (selectedFiberSubtypes.length) params.set("materialSubtype", selectedFiberSubtypes[0]);
@@ -196,6 +197,7 @@ export default function SaleClient({
   initialTotal: number;
   initialHasMore?: boolean;
 }) {
+  const [saleDepartment, setSaleDepartment] = useState<SaleDepartment>("clothing");
   const [fiberTab, setFiberTab] = useState<FiberTab>("all");
   const [priceTier, setPriceTier] = useState<ShopPriceTierId>("any");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -215,9 +217,24 @@ export default function SaleClient({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [restoreTargetProductId, setRestoreTargetProductId] = useState<string | null>(null);
-  const subcategoryFilteredProducts = useMemo(() => {
-    if (!selectedSubcategory) return products;
+  const shoesMode = saleDepartment === "shoes";
+  const saleCategoryOptionsForUI = saleCategoryOptionsForDepartment(saleDepartment);
+  const subcategoryOptions =
+    !shoesMode && categoryFilter !== "all"
+      ? CATEGORY_SUBCATEGORY_OPTIONS[categoryFilter] || []
+      : [];
+  const categoryFilteredProducts = useMemo(() => {
+    if (!shoesMode || categoryFilter === "all") return products;
     return products.filter((product) =>
+      productMatchesSaleShoeCategory(
+        { name: product.name, category: product.category },
+        categoryFilter
+      )
+    );
+  }, [products, shoesMode, categoryFilter]);
+  const subcategoryFilteredProducts = useMemo(() => {
+    if (!selectedSubcategory) return categoryFilteredProducts;
+    return categoryFilteredProducts.filter((product) =>
       productMatchesSubcategory(
         {
           category: product.category,
@@ -229,7 +246,7 @@ export default function SaleClient({
         selectedSubcategory
       )
     );
-  }, [products, selectedSubcategory]);
+  }, [categoryFilteredProducts, selectedSubcategory]);
   const { favorites } = useProductFavorites();
   const rankedProducts = useMemo(
     () => prioritizeFavoritedProducts(subcategoryFilteredProducts, favorites),
@@ -266,6 +283,7 @@ export default function SaleClient({
   }, [restoreTargetProductId, products, isLoading]);
 
   const hasActiveFilters =
+    saleDepartment !== "clothing" ||
     fiberTab !== "all" ||
     selectedFiberSubtypes.length > 0 ||
     categoryFilter !== "all" ||
@@ -274,17 +292,10 @@ export default function SaleClient({
     priceTier !== "any" ||
     sortBy !== "discount";
 
-  const effectiveCategory = fiberTab === "shoes" ? "shoes" : categoryFilter;
-  const saleCategoryOptionsForUI =
-    fiberTab === "shoes" ? SALE_CATEGORIES.filter((c) => c.key === "all") : SALE_CATEGORIES;
-  const subcategoryOptions =
-    effectiveCategory !== "all"
-      ? CATEGORY_SUBCATEGORY_OPTIONS[effectiveCategory] || []
-      : [];
-
   const fetchPage = useCallback(
     async (nextOffset: number, append: boolean) => {
       const params = buildSaleParams(
+        saleDepartment,
         fiberTab,
         priceTier,
         categoryFilter,
@@ -305,7 +316,7 @@ export default function SaleClient({
       setOffset(nextOffset + nextProducts.length);
       setHasMore(Boolean(data.hasMore));
     },
-    [fiberTab, priceTier, categoryFilter, selectedColor, selectedBrands, selectedFiberSubtypes, sortBy, total]
+    [saleDepartment, fiberTab, priceTier, categoryFilter, selectedColor, selectedBrands, selectedFiberSubtypes, sortBy, total]
   );
 
   useEffect(() => {
@@ -327,6 +338,7 @@ export default function SaleClient({
       })
       .finally(() => setIsLoading(false));
   }, [
+    saleDepartment,
     fiberTab,
     priceTier,
     categoryFilter,
@@ -362,9 +374,15 @@ export default function SaleClient({
   );
 
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
-  const displayedCount = selectedSubcategory ? rankedProducts.length : total;
+  const displayedCount =
+    selectedSubcategory || (shoesMode && categoryFilter !== "all")
+      ? rankedProducts.length
+      : total;
 
   const activeFilters = [
+    ...(saleDepartment !== "clothing"
+      ? [{ id: "dept", label: saleDepartment === "shoes" ? "Shoes" : "Clothing", onRemove: () => { setSaleDepartment("clothing"); setCategoryFilter("all"); } }]
+      : []),
     ...(fiberTab !== "all"
       ? [{ id: "fiber", label: FIBER_TABS.find((t) => t.key === fiberTab)?.label || fiberTab, onRemove: () => { setFiberTab("all"); setSelectedSubcategory(null); setSelectedFiberSubtypes([]); } }]
       : []),
@@ -374,7 +392,7 @@ export default function SaleClient({
       onRemove: () => setSelectedFiberSubtypes((prev) => prev.filter((s) => s !== st)),
     })),
     ...(categoryFilter !== "all"
-      ? [{ id: "cat", label: SALE_CATEGORIES.find((c) => c.key === categoryFilter)?.label || categoryFilter, onRemove: () => { setCategoryFilter("all"); setSelectedSubcategory(null); } }]
+      ? [{ id: "cat", label: saleCategoryOptionsForUI.find((c) => c.key === categoryFilter)?.label || categoryFilter, onRemove: () => { setCategoryFilter("all"); setSelectedSubcategory(null); } }]
       : []),
     ...(selectedSubcategory
       ? [{ id: "subcategory", label: selectedSubcategory, onRemove: () => setSelectedSubcategory(null) }]
@@ -532,12 +550,57 @@ export default function SaleClient({
       <div className="py-10 md:py-16 flex flex-col gap-8 md:gap-12">
         <div className="flex flex-col gap-3 text-center">
           <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground">Verified Natural Fabrics</span>
-          <h1 className="text-3xl md:text-5xl font-serif" data-testid="text-sale-title">The Edit — On Sale</h1>
+          <div className="flex justify-center gap-8 border-b border-border/30 max-w-md mx-auto w-full">
+            {(["clothing", "shoes"] as SaleDepartment[]).map((dept) => (
+              <button
+                key={dept}
+                type="button"
+                onClick={() => {
+                  setSaleDepartment(dept);
+                  setSelectedSubcategory(null);
+                  if (dept === "shoes") {
+                    setFiberTab("all");
+                    setCategoryFilter("all");
+                  }
+                }}
+                className={`pb-3 text-[10px] md:text-[11px] uppercase tracking-[0.2em] border-b -mb-px transition-colors ${
+                  saleDepartment === dept
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground"
+                }`}
+              >
+                {dept}
+              </button>
+            ))}
+          </div>
+          <div
+            className="flex gap-2 overflow-x-auto pb-1 max-w-3xl mx-auto w-full px-2 scrollbar-hide"
+            data-testid="sale-category-picker"
+          >
+            {saleCategoryOptionsForUI.map((cat) => (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => {
+                  setCategoryFilter(cat.key);
+                  setSelectedSubcategory(null);
+                }}
+                className={`shrink-0 px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] border whitespace-nowrap ${
+                  categoryFilter === cat.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <h1 className="text-3xl md:text-5xl font-serif" data-testid="text-sale-title">
+            {shoesMode ? "Shoes — On Sale" : "The Edit — On Sale"}
+          </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             {displayedCount > 0
-              ? `${displayedCount.toLocaleString()} verified products on sale`
-              : products.length > 0
-                ? `${products.length.toLocaleString()} verified products on sale`
+              ? `${displayedCount.toLocaleString()} ${shoesMode ? "shoes" : "verified products"} on sale`
+              : shoesMode
+                ? "Sale shoes appear as retailers mark them down"
                 : "Sale items will appear here as prices drop"}
           </p>
         </div>
@@ -559,7 +622,7 @@ export default function SaleClient({
               isLoading={isLoading && total === 0}
               fiberTab={fiberTab}
               categoryFilter={categoryFilter}
-              fiberOptions={FIBER_TABS}
+              fiberOptions={shoesMode ? FIBER_TABS.filter((t) => t.key === "all") : FIBER_TABS}
               categoryOptions={[...saleCategoryOptionsForUI]}
               onFiberChange={(key) => {
                 setFiberTab(key);

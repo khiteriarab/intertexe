@@ -32,8 +32,68 @@ export function taxonomyPathSegment(slug: string): string {
 
 export function taxonomyHref(department: TaxonomyDepartment, slug: string): string {
   const seg = taxonomyPathSegment(slug);
-  if (seg === "all") return `/shop/${department}`;
+  if (seg === "all") return `/shop/${department}/all`;
   return `/shop/${department}/${seg}`;
+}
+
+export function isDepartmentAllSlug(slug: string): boolean {
+  return slug === "clothing/all" || slug === "shoes/all";
+}
+
+/** Browse grids allow department-all slugs even when the node is menu-only (inactive in nav seed). */
+export function resolveTaxonomyBrowseNode(
+  nodes: CatalogTaxonomyNode[],
+  taxonomySlug: string
+): CatalogTaxonomyNode | null {
+  const node = nodes.find((n) => n.slug === taxonomySlug);
+  if (!node) {
+    if (taxonomySlug === "clothing/all") {
+      return {
+        slug: "clothing/all",
+        parentSlug: null,
+        department: "clothing",
+        label: "All Clothing",
+        sortOrder: 0,
+        isActive: true,
+        minCountThreshold: 0,
+      };
+    }
+    if (taxonomySlug === "shoes/all") {
+      return {
+        slug: "shoes/all",
+        parentSlug: null,
+        department: "shoes",
+        label: "All Shoes",
+        sortOrder: 0,
+        isActive: true,
+        minCountThreshold: 0,
+      };
+    }
+    return null;
+  }
+  if (isDepartmentAllSlug(taxonomySlug)) return { ...node, isActive: true };
+  if (!node.isActive) return null;
+  return node;
+}
+
+function prependDepartmentAllRow(
+  rows: TaxonomyMenuRow[],
+  department: TaxonomyDepartment
+): TaxonomyMenuRow[] {
+  const allSlug = `${department}/all`;
+  if (rows.some((r) => r.slug === allSlug)) return rows;
+  const allRow: TaxonomyMenuRow = {
+    slug: allSlug,
+    parentSlug: null,
+    department,
+    label: department === "shoes" ? "All Shoes" : "All Clothing",
+    sortOrder: -1,
+    isActive: true,
+    minCountThreshold: 0,
+    href: taxonomyHref(department, allSlug),
+    pathSegment: "all",
+  };
+  return [allRow, ...rows];
 }
 
 export function slugFromPath(department: TaxonomyDepartment, pathSegment: string): string {
@@ -118,7 +178,7 @@ export async function fetchTaxonomyMenu(opts: {
   const nodes = await fetchTaxonomyNodes({ department: opts.department, activeOnly: opts.activeOnly });
 
   if (opts.includeCounts === false || opts.includeCounts === undefined) {
-    return flattenTaxonomyMenu(nodes);
+    return prependDepartmentAllRow(flattenTaxonomyMenu(nodes), opts.department);
   }
 
   const counts = await fetchTaxonomyCounts(opts.department, opts.region ?? "us");
@@ -126,7 +186,7 @@ export async function fetchTaxonomyMenu(opts: {
     ...n,
     liveCount: counts[n.slug] ?? 0,
   }));
-  return flattenTaxonomyMenu(withCounts);
+  return prependDepartmentAllRow(flattenTaxonomyMenu(withCounts), opts.department);
 }
 
 export type TaxonomyBrowseOpts = {

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   fetchTaxonomyNodes,
   queryTaxonomyBrowse,
+  resolveTaxonomyBrowseNode,
   slugFromPath,
 } from "../../../../lib/catalog-taxonomy";
 import { TaxonomyCatalogClient } from "../../../components/TaxonomyCatalogClient";
@@ -18,7 +19,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const taxonomySlug = slugFromPath("shoes", slug);
   const nodes = await fetchTaxonomyNodes({ department: "shoes" });
-  const node = nodes.find((n) => n.slug === taxonomySlug);
+  const node = resolveTaxonomyBrowseNode(nodes, taxonomySlug);
   if (!node) return { title: "Shoes" };
   return {
     title: `${node.label} | Natural Footwear`,
@@ -34,8 +35,8 @@ export default async function ShoesTaxonomyGridPage({
   const { slug } = await params;
   const taxonomySlug = slugFromPath("shoes", slug);
   const nodes = await fetchTaxonomyNodes({ department: "shoes" });
-  const node = nodes.find((n) => n.slug === taxonomySlug);
-  if (!node || !node.isActive) notFound();
+  const node = resolveTaxonomyBrowseNode(nodes, taxonomySlug);
+  if (!node) notFound();
 
   const browse = await queryTaxonomyBrowse({
     taxonomySlug,

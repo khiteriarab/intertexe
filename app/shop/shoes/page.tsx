@@ -17,6 +17,7 @@ export default async function ShoesCategoryMenuPage() {
   return (
     <CategoryMenuClient
       title="Shoes"
+      sectionLabel="Shoes"
       subtitle="Natural leather, suede, and nubuck footwear."
       rows={rows}
     />

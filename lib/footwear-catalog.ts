@@ -13,7 +13,7 @@ import {
   type ShoeMaterialKey,
 } from "./footwear-filters";
 
-const FOOTWEAR_SELECT =
+export const FOOTWEAR_SELECT =
   "id, product_id, brand_slug, brand_name, name, url, image_url, price, original_price, composition, natural_fiber_percent, category, color, matching_set_id, is_sale, region, collection_slugs, stock_status, canonical_id, is_editor_pick, editor_picked_at";
 
 function hasImageAndPrice(p: Product): boolean {

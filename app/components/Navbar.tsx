@@ -12,6 +12,7 @@ import { CountrySelector } from "./CountrySelector";
 import { MobileBottomDock } from "./MobileBottomDock";
 import { MobileNavMenu } from "./MobileNavMenu";
 import { DesignersMenuPanel } from "./DesignersMenuPanel";
+import { ShopMenuPanel } from "./ShopMenuPanel";
 import { InstallCtas } from "./InstallCtas";
 
 type DesignerSearchHit = {
@@ -37,7 +38,9 @@ export function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const [designersOpen, setDesignersOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
   const designersTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     setHasMounted(true);
     const token = typeof window !== "undefined" ? localStorage.getItem("intertexe_auth_token") : null;
@@ -66,10 +69,24 @@ export function Navbar() {
   }, [pathname]);
 
   const navLinks = [
-    ...MERCH_NAV.map((item) => ({ name: item.name, href: item.href, isDesigners: item.name === "Designers" })),
-    { name: "Rewards", href: "/rewards", isDesigners: false },
-    { name: "Scanner", href: "/scanner", isDesigners: false },
+    ...MERCH_NAV.map((item) => ({
+      name: item.name,
+      href: item.href,
+      isDesigners: item.name === "Designers",
+      isShop: item.name === "Shop",
+    })),
+    { name: "Rewards", href: "/rewards", isDesigners: false, isShop: false },
+    { name: "Scanner", href: "/scanner", isDesigners: false, isShop: false },
   ];
+
+  const openShopMenu = () => {
+    if (shopTimer.current) clearTimeout(shopTimer.current);
+    setShopOpen(true);
+  };
+
+  const closeShopMenu = () => {
+    shopTimer.current = setTimeout(() => setShopOpen(false), 120);
+  };
 
   const openDesignersMenu = () => {
     if (designersTimer.current) clearTimeout(designersTimer.current);
@@ -116,6 +133,35 @@ export function Navbar() {
                     <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 z-[60]">
                       <div className="bg-background border border-border/40 shadow-xl px-6 py-6 max-h-[min(80vh,640px)] overflow-y-auto w-[min(92vw,380px)]">
                         <DesignersMenuPanel onNavigate={() => setDesignersOpen(false)} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : link.isShop ? (
+                <div
+                  key={link.name}
+                  className="relative"
+                  onMouseEnter={openShopMenu}
+                  onMouseLeave={closeShopMenu}
+                >
+                  <Link
+                    href={link.href}
+                    className={`text-sm tracking-wide uppercase transition-colors hover:text-foreground/70 whitespace-nowrap ${
+                      pathname === link.href ||
+                      pathname.startsWith("/shop/clothing") ||
+                      pathname.startsWith("/shop/shoes") ||
+                      pathname.startsWith("/shop/hub")
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground"
+                    }`}
+                    data-testid="link-nav-shop"
+                  >
+                    {link.name}
+                  </Link>
+                  {shopOpen && (
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 z-[60]">
+                      <div className="bg-background border border-border/40 shadow-xl px-6 py-6 max-h-[min(80vh,640px)] overflow-y-auto">
+                        <ShopMenuPanel onNavigate={() => setShopOpen(false)} />
                       </div>
                     </div>
                   )}

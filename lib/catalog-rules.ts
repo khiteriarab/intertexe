@@ -38,6 +38,8 @@ export function classifyGarment(category = "", name = ""): string {
   const nam = String(name || "").toLowerCase().trim();
   if (!cat && !nam) return "needs_review";
   if (/(dress|gown)/.test(cat) || /(dress|gown)/.test(nam)) return "dresses";
+  if (isLingerieGarment(cat, nam)) return "lingerie";
+  if (isSleepwearGarment(cat, nam)) return "sleepwear";
   if (/(blouse|bodysuit|tank|camisole)/.test(cat) || /(blouse|bodysuit)/.test(nam)) return "tops_blouses";
   if (/(^|[^a-z])top([^a-z]|$)/.test(cat) || /( tank top| camisole)/.test(nam)) return "tops_blouses";
   if (/shirt/.test(cat) && !/t-shirt/.test(cat)) return "shirts";
@@ -48,10 +50,44 @@ export function classifyGarment(category = "", name = ""): string {
   if (/short/.test(cat)) return "shorts";
   if (/(blazer|jacket)/.test(cat)) return "jackets_blazers";
   if (/(coat|outerwear|parka|trench|anorak)/.test(cat)) return "coats";
-  if (/(swim|bikini|resort)/.test(cat)) return "swim_resortwear";
+  if (isSwimGarment(cat, nam)) return "swim_resortwear";
   if (/(scarf|wrap|shawl)/.test(cat) || /(scarf|wrap|shawl)/.test(nam)) return "scarves_wraps";
   if (!cat) return "needs_review";
   return "other_apparel";
+}
+
+function isLingerieGarment(category = "", name = ""): boolean {
+  const cat = String(category || "").toLowerCase().trim();
+  const nam = String(name || "").toLowerCase().trim();
+  if (/(lingerie|underwear|intimate)/.test(cat)) return true;
+  if (/(lingerie|underwear|bralette|thong|brief|panty|knicker|corset)/.test(nam)) return true;
+  if (/(^|[^a-z])bra([^a-z]|$)/.test(nam)) return true;
+  if (/bikini/.test(nam)) {
+    if (/(lingerie|underwear|intimate)/.test(cat)) return true;
+    if (/^swimwear$/.test(cat) && !/(swim|beach|resort|pool)/.test(nam)) return true;
+  }
+  return false;
+}
+
+function isSleepwearGarment(category = "", name = ""): boolean {
+  const cat = String(category || "").toLowerCase().trim();
+  const nam = String(name || "").toLowerCase().trim();
+  if (/(sleepwear|nightwear|pyjama|pajama|loungewear)/.test(cat)) return true;
+  if (/pajama|pyjama|nightgown|nightdress|sleepshirt|sleep shirt|sleep set|nightwear/.test(nam)) return true;
+  if (/robe/.test(nam) && /dress/.test(nam)) return false;
+  if (/robe/.test(nam) && /(bath|dressing)/.test(`${cat} ${nam}`)) return true;
+  return false;
+}
+
+function isSwimGarment(category = "", name = ""): boolean {
+  if (isLingerieGarment(category, name)) return false;
+  const cat = String(category || "").toLowerCase().trim();
+  const nam = String(name || "").toLowerCase().trim();
+  if (/(swimwear|beachwear|swim wear|beach wear)/.test(cat)) return true;
+  if (/swimwear|swimsuit|one-piece swim/.test(nam)) return true;
+  if (/bikini/.test(nam) && /(swim|beach|resort|pool)/.test(`${cat} ${nam}`)) return true;
+  if (/swim/.test(cat) && !/lingerie/.test(cat)) return true;
+  return false;
 }
 
 import { consumerExclusionReason as consumerExclusionReasonShared } from "./catalog-consumer-rules.js";

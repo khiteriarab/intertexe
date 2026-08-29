@@ -39,6 +39,7 @@ export type ShopCategoryKey =
   | "outerwear"
   | "jumpsuits"
   | "lingerie"
+  | "sleepwear"
   | "swimwear";
 
 export const SHOP_CATEGORY_OPTIONS: { key: ShopCategoryKey; label: string }[] = [
@@ -51,6 +52,7 @@ export const SHOP_CATEGORY_OPTIONS: { key: ShopCategoryKey; label: string }[] = 
   { key: "outerwear", label: "Outerwear" },
   { key: "jumpsuits", label: "Jumpsuits" },
   { key: "lingerie", label: "Lingerie" },
+  { key: "sleepwear", label: "Sleepwear" },
   { key: "swimwear", label: "Swimwear" },
 ];
 

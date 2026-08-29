@@ -6,7 +6,7 @@ export function isCatalogTaxonomyNavEnabled(): boolean {
   const raw =
     process.env.NEXT_PUBLIC_CATALOG_TAXONOMY_NAV ??
     process.env.CATALOG_TAXONOMY_NAV ??
-    "0";
+    "1";
   const v = String(raw).trim().toLowerCase();
   return v === "1" || v === "true" || v === "yes";
 }

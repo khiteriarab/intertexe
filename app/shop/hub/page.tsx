@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 import { getShopHubMenu } from "../../../lib/shop-hub-menu";
+import { ShopDepartmentCards } from "../../components/ShopDepartmentCards";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -25,6 +26,8 @@ export default function ShopHubPage() {
             Search <span className="font-serif italic text-foreground/80">Intertexe</span>
           </span>
         </Link>
+
+        <ShopDepartmentCards />
 
         <nav className="flex flex-col" aria-label="Shop menu">
           {menu.map((item) => (

@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
+import { isCatalogTaxonomyNavEnabled } from "../../../../lib/catalog-taxonomy-flags";
 
 export const revalidate = 60;
 
-/** Remote kill switch for taxonomy Shop hub navigation. Default false — do not enable until QA sign-off. */
+/** Remote kill switch for taxonomy Shop hub navigation. */
 export async function GET() {
-  const navEnabled =
-    process.env.CATALOG_TAXONOMY_NAV === "1" ||
-    process.env.CATALOG_TAXONOMY_NAV === "true";
+  const navEnabled = isCatalogTaxonomyNavEnabled();
 
   return NextResponse.json(
     {

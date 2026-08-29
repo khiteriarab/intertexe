@@ -29,12 +29,14 @@ const MARKETS = {
     label: "US/CA",
     productPrefix: "mytheresa-us-ca",
     currencyFallback: "USD",
+    region: "us",
   },
   "eu-uk-me": {
     mid: "35663",
     label: "EU/UK/ME",
     productPrefix: "mytheresa-eu-uk-me",
     currencyFallback: "EUR",
+    region: "eu",
   },
 };
 
@@ -173,13 +175,49 @@ function extractComposition(desc) {
   return { composition, pct };
 }
 
-function isWomensClothing(item) {
+function isWomensGender(item) {
   const gender = (item.gender || "").toLowerCase();
   const text = `${item.name} ${item.googleCategory} ${item.category} ${item.merchantCategory}`.toLowerCase();
   if (gender && !["female", "women", "woman", "unisex"].includes(gender)) return false;
   if (/\b(men|mens|men's|boy|boys|kid|kids|baby)\b/.test(text) && !/\bboyfriend\b/.test(text)) return false;
-  if (/\b(shoe|sneaker|sandal|boot|bag|wallet|jewelry|jewellery|earring|necklace|bracelet|watch|sunglasses|perfume|fragrance|beauty|home)\b/.test(text)) return false;
+  return true;
+}
+
+function isFootwearItem(item) {
+  const text = `${item.name} ${item.googleCategory} ${item.category} ${item.merchantCategory}`.toLowerCase();
+  if (/\b(bag|wallet|jewelry|jewellery|earring|necklace|bracelet|watch|sunglasses|perfume|fragrance|beauty|home)\b/.test(text)) {
+    return false;
+  }
+  return /\b(shoe|shoes|sneaker|sandal|boot|bootie|heel|pump|loafer|mule|trainer|espadrille|ballerin|flat)\b/.test(text);
+}
+
+function isWomensClothing(item) {
+  if (!isWomensGender(item)) return false;
+  if (isFootwearItem(item)) return false;
+  const text = `${item.name} ${item.googleCategory} ${item.category} ${item.merchantCategory}`.toLowerCase();
   return /\b(clothing|apparel|dress|top|shirt|blouse|skirt|pant|trouser|jean|short|sweater|cardigan|knit|jacket|coat|blazer|vest|jumpsuit|romper)\b/.test(text);
+}
+
+function resolveFootwearComposition(desc, name) {
+  const extracted = extractComposition(desc);
+  const blob = `${extracted.composition || ""} ${name || ""} ${desc || ""}`.toLowerCase();
+  if (/(leather|suede|nubuck|lambskin|calfskin|shearling)/.test(blob)) {
+    const composition =
+      extracted.composition ||
+      (/\bsuede\b/.test(blob) ? "Leather upper" : "100% Leather");
+    const pct = extracted.pct != null ? extracted.pct : 100;
+    return { composition, pct };
+  }
+  if (extracted.composition && extracted.pct != null && extracted.pct >= 50) {
+    return extracted;
+  }
+  return { composition: null, pct: null };
+}
+
+function rakutenProductId(item, market) {
+  const raw = String(item.id || "").trim();
+  if (/^\d{5,}/.test(raw)) return raw;
+  return productKey(item, market);
 }
 
 function mapCategory(item) {
@@ -290,6 +328,7 @@ async function streamMarketFeed(marketKey, market, options) {
     const products = new Map();
     let totalLines = 0;
     let womensLines = 0;
+    let womensFootwearLines = 0;
     let noBrand = 0;
     let noComposition = 0;
     let belowThreshold = 0;
@@ -318,15 +357,27 @@ async function streamMarketFeed(marketKey, market, options) {
               const item = parseLine(line);
               if (!item) continue;
               if (!item.brand) { noBrand++; continue; }
-              if (!isWomensClothing(item)) continue;
-              womensLines++;
+              if (!isWomensGender(item)) continue;
+
+              const isShoe = isFootwearItem(item);
+              if (!isShoe && !isWomensClothing(item)) continue;
+              if (isShoe) womensFootwearLines++;
+              else womensLines++;
 
               const desc = item.longDesc || item.shortDesc;
-              const { composition, pct } = extractComposition(desc);
+              let composition;
+              let pct;
+              if (isShoe) {
+                const resolved = resolveFootwearComposition(desc, item.name);
+                composition = resolved.composition;
+                pct = resolved.pct;
+              } else {
+                ({ composition, pct } = extractComposition(desc));
+              }
               if (!composition || pct === null) { noComposition++; continue; }
-              if (pct < MIN_NATURAL_PERCENT) { belowThreshold++; continue; }
+              if (!isShoe && pct < MIN_NATURAL_PERCENT) { belowThreshold++; continue; }
 
-              const key = productKey(item, market);
+              const key = isShoe ? rakutenProductId(item, market) : productKey(item, market);
               if (products.has(key)) continue;
 
               const currentPrice = item.salePrice > 0 ? item.salePrice : item.retailPrice;
@@ -350,10 +401,16 @@ async function streamMarketFeed(marketKey, market, options) {
                 image_url: item.imageUrl,
                 composition: composition.substring(0, 300),
                 natural_fiber_percent: pct,
-                category: mapCategory(item),
+                category: isShoe ? "Footwear" : mapCategory(item),
                 is_sale: isSale,
                 approved: "yes",
+                feed_source: "mytheresa",
+                retailer: "Mytheresa",
+                region: market.region,
+                is_displayable: true,
+                is_active: true,
               };
+              if (isShoe) product.garment_type = "shoes";
 
               const originalPriceText = isSale && originalPrice > currentPrice ? formatPrice(originalPrice, currency) : "";
               if (originalPriceText) product.original_price = originalPriceText;
@@ -385,6 +442,7 @@ async function streamMarketFeed(marketKey, market, options) {
 
     console.log(`  Rows scanned: ${totalLines}`);
     console.log(`  Women's clothing rows: ${womensLines}`);
+    console.log(`  Women's footwear rows: ${womensFootwearLines}`);
     console.log(`  Missing brand: ${noBrand}`);
     console.log(`  No parseable composition: ${noComposition}`);
     console.log(`  Below ${MIN_NATURAL_PERCENT}% natural fiber: ${belowThreshold}`);

@@ -2409,20 +2409,15 @@ function buildSaleDirectQuery(
   columns = "*",
   selectOptions?: { count: "exact"; head: true }
 ) {
-  // Footwear lives on `products`, not apparel-only views — dedicated sale-shoes path.
+  // Footwear sale uses live_products_footwear + catalog_offer_is_on_sale (see fetchSaleFootwearPage).
   if (wantsSaleShoes(opts)) {
     let q = supabase
-      .from("products")
+      .from("live_products_footwear")
       .select(columns, selectOptions)
-      .eq("is_displayable", true)
-      .eq("is_sale", true)
       .eq("region", region)
-      .gte("natural_fiber_percent", 80)
       .not("image_url", "is", null)
       .not("price", "is", null)
-      .or(
-        "garment_type.eq.shoes,category.ilike.%Footwear%,category.ilike.%shoe%,name.ilike.%sandal%,name.ilike.%pump%,name.ilike.%mule%,name.ilike.%loafer%,name.ilike.%boot%,name.ilike.%sneaker%,name.ilike.%heel%"
-      );
+      .or("is_sale.eq.true,original_price.not.is.null");
     if (opts.color) q = q.eq("color", opts.color);
     if (opts.brand) q = q.eq("brand_slug", opts.brand.toLowerCase());
     return q;
@@ -2530,15 +2525,23 @@ async function fetchSaleProductsDirect(options: {
   const { preferred, fallback } = catalogRegionsFromMarket(market);
   const filterOpts = { fiber, fiberSubtype, category, color, brand };
 
-  let rawRows: Record<string, unknown>[] = [];
   if (wantsSaleShoes(filterOpts)) {
-    const { data, error } = await applySaleQuerySort(
-      buildSaleDirectQuery(supabase, preferred, filterOpts),
-      sort
-    ).range(offset, offset + limit - 1);
-    if (error) throw error;
-    rawRows = (data || []) as Record<string, unknown>[];
-  } else {
+    const { fetchSaleFootwearPage } = await import("./sale-footwear");
+    return fetchSaleFootwearPage({
+      region: preferred,
+      limit,
+      offset,
+      brand,
+      color,
+      maxPrice,
+      minPrice,
+      sort,
+      skipTotal: skipTotal,
+    });
+  }
+
+  let rawRows: Record<string, unknown>[] = [];
+  {
     const { data, error } = await supabase.rpc("sale_catalog_list", {
       p_preferred_region: preferred,
       p_fallback_region: fallback,
@@ -2578,17 +2581,7 @@ async function fetchSaleProductsDirect(options: {
   }
 
   let total: number;
-  if (wantsSaleShoes(filterOpts)) {
-    const { count, error: countErr } = await buildSaleDirectQuery(
-      supabase,
-      preferred,
-      filterOpts,
-      "id",
-      { count: "exact", head: true }
-    );
-    if (countErr) throw countErr;
-    total = count ?? products.length;
-  } else if (
+  if (
     !fiberSubtype &&
     !minPrice &&
     !category &&

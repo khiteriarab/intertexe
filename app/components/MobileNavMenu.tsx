@@ -9,11 +9,13 @@ import { MERCH_NAV } from "../../lib/merch-nav";
 import { WearToWhereRail } from "./WearToWhereRail";
 import { CountrySelector } from "./CountrySelector";
 import { DesignersMenuPanel } from "./DesignersMenuPanel";
+import { ShopMenuPanel } from "./ShopMenuPanel";
 
 /** Mobile hamburger menu — nav links + NAP-style “Wear to where?” image carousel. */
 export function MobileNavMenu() {
   const [open, setOpen] = useState(false);
   const [designersOpen, setDesignersOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -22,6 +24,7 @@ export function MobileNavMenu() {
   useEffect(() => {
     setOpen(false);
     setDesignersOpen(false);
+    setShopOpen(false);
     setExpanded({});
   }, [pathname]);
 
@@ -71,7 +74,18 @@ export function MobileNavMenu() {
             </div>
 
             <div className="flex-1 overflow-y-auto overscroll-contain">
-              {designersOpen ? (
+              {shopOpen ? (
+                <div className="px-4 py-4">
+                  <button
+                    type="button"
+                    onClick={() => setShopOpen(false)}
+                    className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6 touch-manipulation min-h-[44px]"
+                  >
+                    ← Menu
+                  </button>
+                  <ShopMenuPanel onNavigate={() => setOpen(false)} compact />
+                </div>
+              ) : designersOpen ? (
                 <div className="px-4 py-4">
                   <button
                     type="button"
@@ -96,6 +110,16 @@ export function MobileNavMenu() {
                         onClick={() => setDesignersOpen(true)}
                         className="flex w-full items-center justify-between py-4 min-h-[48px] text-sm uppercase tracking-[0.12em] text-foreground touch-manipulation"
                         data-testid="button-mobile-designers-menu"
+                      >
+                        <span>{item.name}</span>
+                        <span className="text-muted-foreground text-lg leading-none pointer-events-none" aria-hidden>›</span>
+                      </button>
+                    ) : item.name === "Shop" ? (
+                      <button
+                        type="button"
+                        onClick={() => setShopOpen(true)}
+                        className="flex w-full items-center justify-between py-4 min-h-[48px] text-sm uppercase tracking-[0.12em] text-foreground touch-manipulation"
+                        data-testid="button-mobile-shop-menu"
                       >
                         <span>{item.name}</span>
                         <span className="text-muted-foreground text-lg leading-none pointer-events-none" aria-hidden>›</span>
@@ -175,7 +199,7 @@ export function MobileNavMenu() {
               </nav>
               )}
 
-              {!designersOpen && (
+              {!designersOpen && !shopOpen && (
               <WearToWhereRail title="Wear to where?" className="border-t border-border/30 bg-[#FAFAF8] pb-8" />
               )}
             </div>
