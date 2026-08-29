@@ -22,6 +22,7 @@ const EXCLUDED_HOME_CATEGORY_PATTERNS = [
 ] as const;
 
 const EXCLUDED_HOME_NAME_PATTERNS = [
+  "%pillow%",
   "%sheet%",
   "%pillowcase%",
   "%duvet%",

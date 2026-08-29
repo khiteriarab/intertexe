@@ -16,14 +16,13 @@ import {
   HOMEPAGE_LIMITS,
   NEW_IN_BRAND_SLUGS,
 } from "./homepage-merchandising-manifest";
-import { isEditorialWomensApparel } from "./catalog-product-filters";
+import { isEditorialWomensApparel, isNewInApparelProduct } from "./catalog-product-filters";
 import { EDITORIAL_HERO } from "./editorial-assets";
 import { unstable_cache } from "next/cache";
 import { HOMEPAGE_REVALIDATE_SEC } from "./homepage-cache-config";
 import {
   MERCH_RAIL_KEYS,
   fetchMerchRailsBatch,
-  fetchMerchRailDisplayCount,
   fetchMerchRailProducts,
   isMerchFeedEnabled,
 } from "./merch-feed";
@@ -230,7 +229,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     MERCH_RAIL_KEYS.sale,
   ] as const;
 
-  const [curatedDesigners, platformStats, railsByKey, newInCount, saleRailPool, newInRailPool] =
+  const [curatedDesigners, platformStats, railsByKey, saleRailPool, newInRailPool] =
     await Promise.all([
     withHomepageRailTimeout(
       "rail:curated-designers",
@@ -251,12 +250,6 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       {} as Record<string, Product[]>
     ),
     withHomepageRailTimeout(
-      "rail:new-in-count",
-      2_500,
-      () => fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.newIn),
-      0
-    ),
-    withHomepageRailTimeout(
       "rail:sale-pool",
       RAIL_TIMEOUT_MS,
       () => fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: MERCH_HOME_SALE_FETCH_LIMIT }),
@@ -274,7 +267,9 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     newInRailPool.length > (railsByKey[MERCH_RAIL_KEYS.newIn]?.length ?? 0)
       ? newInRailPool
       : railsByKey[MERCH_RAIL_KEYS.newIn] || [];
-  const newInBase = postProcessHomepageMaterialRail(newInSource);
+  const newInBase = postProcessHomepageMaterialRail(
+    newInSource.filter((p) => isNewInApparelProduct(p))
+  );
   const newInProducts = await withHomepageRailTimeout(
     "rail:new-in-editor-picks",
     RAIL_TIMEOUT_MS,
@@ -311,7 +306,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     productCountByBrand: {},
     curatedDesigners,
     newInProducts,
-    newInCount,
+    newInCount: platformStats.productCount,
     vacationProducts,
     eveningProducts,
     tailoringProducts,
@@ -411,6 +406,7 @@ export async function getHomePageData(): Promise<HomePageData> {
       if (queue.length >= maxPerBrand) break;
       if (seenIds.has(p.id)) continue;
       if (isZeroPrice(p.price)) continue;
+      if (!isNewInApparelProduct(p)) continue;
       const price = parseFloat((p.price || "0").replace(/[^0-9.]/g, "")) || 0;
       if (price < minPrice) continue;
       if (basicPatterns.test(p.name) || basicNamePatterns.test(p.name)) continue;
@@ -457,7 +453,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     productCountByBrand: {},
     curatedDesigners,
     newInProducts: newInWithEditorPicks,
-    newInCount: newInWithEditorPicks.length,
+    newInCount: platformStats.productCount,
     vacationProducts,
     eveningProducts: [] as Product[],
     tailoringProducts: [] as Product[],
@@ -470,6 +466,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v14"],
+  ["homepage-payload-v15"],
   { revalidate: HOMEPAGE_REVALIDATE_SEC, tags: ["homepage"] }
 );

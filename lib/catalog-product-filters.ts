@@ -198,3 +198,29 @@ export function isFootwearListing(product: {
     text
   );
 }
+
+const HOME_GOODS_CATEGORY_RE =
+  /\b(bedding|home|kitchen|bath|linens|decor|furniture|bed\s*&\s*bath)\b/i;
+const HOME_GOODS_NAME_RE =
+  /\b(pillow|pillows|pillowcase|bedding|sheet|sheets|duvet|comforter|blanket|throw|sham|coverlet|bedskirt|mattress|towel|curtain|rug|tablecloth|napkin|dinnerware|mug|candle)\b/i;
+
+/** Bedding, kitchen, decor — not fashion New In. */
+export function isHomeGoodsListing(product: {
+  category?: string | null;
+  name?: string | null;
+}): boolean {
+  const cat = product.category || "";
+  const name = product.name || "";
+  return HOME_GOODS_CATEGORY_RE.test(cat) || HOME_GOODS_NAME_RE.test(name);
+}
+
+/** Clothing-only guard for homepage New In (excludes home, shoes, non-editorial accessories). */
+export function isNewInApparelProduct(product: {
+  category?: string | null;
+  name?: string | null;
+  composition?: string | null;
+}): boolean {
+  if (isHomeGoodsListing(product)) return false;
+  if (isFootwearListing(product)) return false;
+  return isEditorialWomensApparel(product);
+}

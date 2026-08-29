@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import { cfProductCard } from "../../lib/cloudflare-images";
 import { HORIZONTAL_RAIL_CLASS } from "../../lib/horizontal-rail";
+import { formatProductCountLabel } from "../../lib/catalog-stats-labels";
 
 function railImageSrc(url: string): string {
   const trimmed = url.trim();
@@ -67,7 +68,7 @@ export function NewInHomeRail({
   const hasItems = railProducts.length > 0;
   const countLabel =
     newInCount && newInCount > 0
-      ? `${newInCount.toLocaleString()} NEW ITEMS`
+      ? `${formatProductCountLabel(newInCount)} NEW ITEMS`
       : hasItems
         ? `${railProducts.length} NEW ITEMS`
         : "NEW ARRIVALS";
@@ -81,15 +82,29 @@ export function NewInHomeRail({
     <section className="pt-4 pb-10 md:py-14 lg:py-16" data-testid="section-new-in">
       <div className="lg:grid lg:grid-cols-[minmax(280px,360px)_1fr] lg:gap-12 xl:gap-16 lg:items-stretch px-4 md:px-8">
         <div className="flex flex-col justify-center gap-3 md:gap-4 mb-6 lg:mb-0 lg:py-6 xl:py-8 min-w-0">
-          <p className="text-[10px] md:text-[11px] uppercase tracking-[0.22em] text-neutral-500">
-            {countLabel}
-          </p>
+          <div className="flex items-end justify-between gap-4">
+            <p className="text-[10px] md:text-[11px] uppercase tracking-[0.22em] text-neutral-500">
+              {countLabel}
+            </p>
+            <Link
+              href="/shop?sort=new"
+              className="lg:hidden text-[10px] uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 flex items-center gap-2 shrink-0"
+            >
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
           <h2 className="text-[38px] sm:text-[44px] md:text-[48px] lg:text-[54px] xl:text-[60px] font-serif leading-[1.02] text-neutral-900">
             New In
           </h2>
           <p className="text-[14px] md:text-[16px] lg:text-[17px] leading-relaxed text-neutral-600 max-w-sm font-light">
             New arrivals across the brands we track — verified natural fibers, refreshed throughout the week.
           </p>
+          <Link
+            href="/shop?sort=new"
+            className="hidden lg:inline-flex text-[10px] md:text-xs uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-800 transition-colors duration-300 items-center gap-2 w-fit"
+          >
+            View all <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
 
         <div className="relative min-w-0 lg:layout-bleed-full lg:pr-0">

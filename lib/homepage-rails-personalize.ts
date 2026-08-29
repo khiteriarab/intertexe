@@ -8,6 +8,7 @@
  * - Sold-out can be flagged for UI; heart stays until the user removes it
  */
 import { canonicalProductId } from "./canonical-product-id";
+import { isNewInApparelProduct } from "./catalog-product-filters";
 import { HOMEPAGE_SECTION_ORDER } from "./homepage-merchandising-manifest";
 import { MERCH_RAIL_KEYS, fetchMerchRailProducts } from "./merch-feed";
 import { getServerSupabase, mapProductRow, type Product } from "./supabase-server";
@@ -357,10 +358,10 @@ export async function leadNewInWithEditorPicks(
 ): Promise<Product[]> {
   const editorPicks = await fetchEditorPickProducts(limit);
   const clothingEditorPicks = prioritizeJustLandedFavorites(
-    editorPicks.filter((p) => !isFootwearProduct(p))
+    editorPicks.filter((p) => isNewInApparelProduct(p))
   );
   const editorPickIds = new Set(editorPicks.flatMap((p) => productKeys(p)));
-  const clothingBase = baseRail.filter((p) => !isFootwearProduct(p));
+  const clothingBase = baseRail.filter((p) => isNewInApparelProduct(p));
   return mergeLeadingFavorites(
     clothingEditorPicks,
     clothingBase,
@@ -382,9 +383,9 @@ export async function buildPersonalizedHomepageRails(opts?: {
     fetchEditorPickProducts(limit),
   ]);
 
-  const clothingRail = newInBase.filter((p) => !isFootwearProduct(p));
+  const clothingRail = newInBase.filter((p) => isNewInApparelProduct(p));
   const clothingEditorPicks = prioritizeJustLandedFavorites(
-    editorPicks.filter((p) => !isFootwearProduct(p))
+    editorPicks.filter((p) => isNewInApparelProduct(p))
   );
   const shoeEditorPicks = editorPicks.filter((p) => isFootwearProduct(p));
   const editorPickIds = new Set(editorPicks.flatMap((p) => productKeys(p)));
@@ -422,7 +423,7 @@ export async function buildPersonalizedHomepageRails(opts?: {
   const { products: favoriteProducts, unavailableProductIds } =
     await resolveFavoriteProducts(favoriteIdsList);
 
-  const clothingFavorites = favoriteProducts.filter((p) => !isFootwearProduct(p));
+  const clothingFavorites = favoriteProducts.filter((p) => isNewInApparelProduct(p));
   const shoeFavorites = favoriteProducts.filter((p) => isFootwearProduct(p));
   const favoritedInNewIn = clothingRail.filter((p) => isSaved(p, favoriteIds));
   const isEditorPickKey = (product: Product) =>
