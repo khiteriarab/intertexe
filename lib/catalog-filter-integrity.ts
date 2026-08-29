@@ -204,7 +204,14 @@ export function productViolatesFilters(
 
   if (categoryKey) {
     const ok = productMatchesHardCategory(
-      { category, name, garment_type: garmentType || null },
+      {
+        category,
+        name,
+        garment_type: garmentType || null,
+        composition: field(product, "composition", "composition"),
+        fabric_construction: field(product, "fabricConstruction", "fabric_construction"),
+        material_subtype: field(product, "materialSubtype", "material_subtype"),
+      },
       categoryKey
     );
     if (!ok) return `category_mismatch:${categoryKey}`;

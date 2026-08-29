@@ -90,6 +90,59 @@ export const SHOP_CATEGORY_TEXT_KEYWORDS: Record<string, string[]> = {
   bags: ["bag", "tote", "handbag", "clutch", "purse", "backpack"],
 };
 
+export type JeansListingRow = {
+  name?: string | null;
+  category?: string | null;
+  composition?: string | null;
+  fabric_construction?: string | null;
+  fabricConstruction?: string | null;
+  material_subtype?: string | null;
+  materialSubtype?: string | null;
+};
+
+const JEAN_NAME_RE = /\b(jeans?|denim)\b/i;
+const NON_DENIM_BOTTOM_RE =
+  /\b(linen|terry|chino|cargo|jogger|legging|culotte|palazzo|slack|sweatpant|track pant|trackpant)\b/i;
+
+function isCompoundJeansDepartment(category: string): boolean {
+  return /\b(pants?\s*[&/|+]\s*jeans?|jeans?\s*[&/|+]\s*pants?|bottoms?\s*[&/|+]|denim\s*[&/|+])\b/i.test(
+    category
+  );
+}
+
+function narrowCategorySignalsJeans(category: string): boolean {
+  const c = category.toLowerCase().trim();
+  if (!c || isCompoundJeansDepartment(c)) return false;
+  return JEAN_NAME_RE.test(c);
+}
+
+/** Jeans PLP — require denim in the product itself, not a broad "Pants & Jeans" department. */
+export function productMatchesJeansListing(row: JeansListingRow): boolean {
+  const name = (row.name || "").toLowerCase();
+  const category = (row.category || "").toLowerCase();
+  const composition = (row.composition || "").toLowerCase();
+  const fabricConstruction = (
+    row.fabric_construction ||
+    row.fabricConstruction ||
+    ""
+  ).toLowerCase();
+  const materialSubtype = (row.material_subtype || row.materialSubtype || "").toLowerCase();
+
+  const nameHasJean = JEAN_NAME_RE.test(name);
+  const fabricIsDenim =
+    fabricConstruction === "denim" ||
+    materialSubtype.includes("denim") ||
+    /\bdenim\b/.test(composition);
+
+  if (NON_DENIM_BOTTOM_RE.test(name) && !nameHasJean && !fabricIsDenim) return false;
+  if (/\btrouser\b/.test(name) && !nameHasJean && !fabricIsDenim) return false;
+
+  if (nameHasJean || fabricIsDenim) return true;
+  if (narrowCategorySignalsJeans(category)) return true;
+
+  return false;
+}
+
 const FOOTWEAR_TEXT_RE =
   /\b(shoe|shoes|footwear|sandal|sandals|boot|boots|bootie|booties|sneaker|sneakers|heel|heels|pump|pumps|loafer|loafers|mule|mules|wedge|wedges|espadrille|espadrilles|trainer|trainers|slide|slides|flip[- ]?flop)\b/i;
 
@@ -118,6 +171,11 @@ export function applyCategoryFilter(query: any, category: string): any {
         "name.ilike.%pajama%,name.ilike.%pyjama%,name.ilike.%nightgown%,name.ilike.%nightdress%,name.ilike.%sleepshirt%,name.ilike.%sleep shirt%,name.ilike.%sleep set%,name.ilike.%nightwear%,category.ilike.%sleepwear%,category.ilike.%pajama%,category.ilike.%pyjama%"
       );
     }
+    if (key === "jeans") {
+      // Name / fabric only — category.ilike.%jean% leaks linen & terry from "Pants & Jeans" departments.
+      q = q.or("name.ilike.%jean%,name.ilike.%denim%,fabric_construction.eq.denim");
+      return q;
+    }
     const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
     if (keywords?.length && !["jumpsuits", "sleepwear"].includes(key)) {
       const orClause = keywords
@@ -133,7 +191,16 @@ export function applyCategoryFilter(query: any, category: string): any {
 
 /** Post-RPC integrity gate — never ship category-wrong rows. */
 export function productMatchesHardCategory(
-  row: { category?: string | null; name?: string | null; garment_type?: string | null },
+  row: {
+    category?: string | null;
+    name?: string | null;
+    garment_type?: string | null;
+    composition?: string | null;
+    fabric_construction?: string | null;
+    fabricConstruction?: string | null;
+    material_subtype?: string | null;
+    materialSubtype?: string | null;
+  },
   category?: string | null
 ): boolean {
   if (!category || category === "all" || category === "clothing" || category === "apparel") {
@@ -143,6 +210,9 @@ export function productMatchesHardCategory(
   const key = category.toLowerCase();
   const text = `${row.category || ""} ${row.name || ""}`.toLowerCase();
   if (key !== "shoes" && isFootwearText(text)) return false;
+  if (key === "jeans") {
+    return productMatchesJeansListing(row);
+  }
   const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
   if (keywords?.length) {
     if (key === "shirts" && /\b(blouse|t-shirt|tee|pajama|pyjama)\b/.test(text)) return false;
@@ -189,14 +259,26 @@ export function materialPrimaryForShopFiber(fiber?: string | null): string | nul
 }
 
 export function rowMatchesGarmentFilter(
-  row: { garment_type?: string | null; category?: string | null; name?: string | null },
+  row: {
+    garment_type?: string | null;
+    category?: string | null;
+    name?: string | null;
+    composition?: string | null;
+    fabric_construction?: string | null;
+    fabricConstruction?: string | null;
+    material_subtype?: string | null;
+    materialSubtype?: string | null;
+  },
   category?: string | null
 ): boolean {
   const types = garmentTypesForShopCategory(category);
+  const key = String(category || "").toLowerCase();
+  if (key === "jeans") {
+    return productMatchesJeansListing(row);
+  }
   if (!types?.length) return true;
   const gt = (row.garment_type || "").toLowerCase();
   if (types.includes(gt)) return true;
-  const key = String(category || "").toLowerCase();
   const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
   if (keywords?.length) {
     const text = `${row.category || ""} ${row.name || ""}`.toLowerCase();

@@ -1,4 +1,5 @@
 import { SHOP_SHOE_TYPES } from "./catalog-filter-options";
+import { productMatchesJeansListing } from "./catalog-shop-mappings";
 
 export type CatalogSubcategoryMap = Record<string, string[]>;
 
@@ -72,6 +73,15 @@ export function productMatchesSubcategory(
   },
   subcategory: string
 ): boolean {
+  if (subcategory.toLowerCase() === "jeans") {
+    return productMatchesJeansListing({
+      name: product.name,
+      category: product.category,
+      composition: product.composition,
+      fabricConstruction: product.fabricConstruction,
+      materialSubtype: product.materialSubtype,
+    });
+  }
   const keywords = subcategoryKeywords(subcategory);
   if (!keywords.length) return true;
   const text = [
