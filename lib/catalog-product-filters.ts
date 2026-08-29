@@ -7,7 +7,21 @@ const LINING_INDICATORS = [
   "body lining",
   "pocket lining",
   "shell lining",
+  "faux fur",
+  "fake fur",
+  "fur trim",
+  "contrasting fabric",
+  "elastic lace",
+  "embroidery fabric",
+  "embroidery",
   "lining",
+  "lace",
+  "trim",
+  "contrast",
+  "piping",
+  "collar",
+  "fur",
+  "rib",
 ];
 
 export function compositionBody(composition: string): string {

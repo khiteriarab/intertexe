@@ -11,6 +11,11 @@ export const LINING_INDICATORS = [
   'eptoincrustaciones',
   'incrustation', 'incrustations',
   'exclusif', 'ausgenommen',
+  'embroidery', 'bordados', 'bordado', 'broderies', 'broderie', 'ricamo',
+  'lace', 'dentelle', 'encaje', 'spitze', 'pizzo', 'renda', 'trim', 'trims',
+  'faux fur', 'fake fur', 'fur trim', 'fourrure', 'pelz', 'pelliccia', 'fur',
+  'contrast', 'contrasting fabric', 'contraste', 'kontrast',
+  'piping', 'collar', 'cuff', 'placket', 'yoke', 'rib', 'ribbing',
 ];
 
 export const CERTIFICATION_PREFIXES = [
