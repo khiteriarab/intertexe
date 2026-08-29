@@ -1,0 +1,67 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import {
+  fetchTaxonomyNodes,
+  queryTaxonomyBrowse,
+  slugFromPath,
+} from "../../../../lib/catalog-taxonomy";
+import { TaxonomyCatalogClient } from "../../../components/TaxonomyCatalogClient";
+import { mapProductRow } from "../../../../lib/supabase-server";
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const taxonomySlug = slugFromPath("clothing", slug);
+  const nodes = await fetchTaxonomyNodes({ department: "clothing" });
+  const node = nodes.find((n) => n.slug === taxonomySlug);
+  if (!node) return { title: "Clothing" };
+  return {
+    title: `${node.label} | Shop Clothing`,
+    alternates: { canonical: `https://www.intertexe.com/shop/clothing/${slug}` },
+  };
+}
+
+export default async function ClothingTaxonomyGridPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const { slug } = await params;
+  const sp = await searchParams;
+  const taxonomySlug = slugFromPath("clothing", slug);
+  const nodes = await fetchTaxonomyNodes({ department: "clothing" });
+  const node = nodes.find((n) => n.slug === taxonomySlug);
+  if (!node || !node.isActive) notFound();
+
+  const browse = await queryTaxonomyBrowse({
+    taxonomySlug,
+    region: "us",
+    limit: 24,
+    offset: 0,
+    fiber: sp.fiber,
+    color: sp.color,
+    brand: sp.brand,
+    sort: sp.sort,
+  });
+
+  const products = browse.products.map((row) => mapProductRow(row));
+
+  return (
+    <TaxonomyCatalogClient
+      department="clothing"
+      taxonomySlug={taxonomySlug}
+      categoryLabel={node.label}
+      initialProducts={products}
+      initialTotal={browse.total}
+      initialHasMore={browse.hasMore}
+      totalStatus={browse.totalStatus}
+    />
+  );
+}

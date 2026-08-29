@@ -1,9 +1,8 @@
 /**
- * Shared catalog stats for web + iOS parity — prefers weekly platform_stats_cache.
- * Product count = live_products_apparel (300k+ verified pieces).
+ * Shared catalog stats for web + iOS parity.
+ * Product count = live regional offers (not deduped cards, not 300k fallback).
  */
 import { getCachedCatalogStats } from "./cached-catalog-stats";
-import { US_CATALOG_KNOWN_TOTAL_FALLBACK } from "./catalog-constants";
 import { fetchShoppableBrandCount } from "./shoppable-brands";
 import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { getServerSupabase } from "./supabase-service-client";
@@ -29,19 +28,18 @@ async function fetchLiveProductCount(): Promise<number> {
 
 export async function fetchPlatformStats(): Promise<PlatformStats> {
   const cached = await getCachedCatalogStats();
-  let productCount = cached.catalogProductCount;
+  let productCount = cached.catalogProductCount ?? 0;
   let brandCount = cached.brandCount;
 
   if (productCount <= 0) {
-    productCount = (await fetchLiveProductCount()) ?? 0;
+    productCount = await fetchLiveProductCount();
   }
   if (brandCount <= 0) {
     brandCount = await fetchShoppableBrandCount();
   }
 
   return {
-    productCount:
-      productCount > 0 ? productCount : US_CATALOG_KNOWN_TOTAL_FALLBACK,
+    productCount,
     brandCount,
   };
 }

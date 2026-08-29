@@ -24,7 +24,6 @@ import {
 } from "../../lib/catalog-filter-options";
 import { shopDisplayedCount } from "../../lib/shop-displayed-count";
 import { CatalogMobileToolbar, CatalogMobileSheet } from "../components/CatalogMobileToolbar";
-import { US_CATALOG_KNOWN_TOTAL_FALLBACK } from "../../lib/catalog-constants";
 import { formatDisplayPrice } from "../../lib/format-display-price";
 import { canonicalProductId } from "../../lib/canonical-product-id";
 import { useShoppingMarket, SHOP_MARKET_INVALIDATE } from "../hooks/use-shopping-market";
@@ -208,7 +207,7 @@ export default function ShopClient({
   initialMeta,
   prefetchedBrands,
   detectedCountry,
-  catalogKnownTotal = US_CATALOG_KNOWN_TOTAL_FALLBACK,
+  catalogKnownTotal = null,
 }: {
   initialProducts: any[];
   initialTotal?: number;
@@ -216,7 +215,7 @@ export default function ShopClient({
   initialMeta?: { totalProductCount: number; fiberCounts: Record<string, number> };
   prefetchedBrands?: { slug: string; name: string; count: number }[];
   detectedCountry?: string;
-  catalogKnownTotal?: number;
+  catalogKnownTotal?: number | null;
 }) {
   const searchParams = useSearchParams();
 

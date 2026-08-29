@@ -1,0 +1,239 @@
+/**
+ * Shared retail taxonomy contract — Supabase is source of truth.
+ * Web + iOS consume /api/catalog/taxonomy (no duplicated category arrays).
+ */
+import { getServerSupabase } from "./supabase-service-client";
+
+export type TaxonomyDepartment = "clothing" | "shoes";
+
+export type CatalogTaxonomyNode = {
+  slug: string;
+  parentSlug: string | null;
+  department: TaxonomyDepartment;
+  label: string;
+  sortOrder: number;
+  isActive: boolean;
+  minCountThreshold: number;
+  /** Region-specific live offer count (when counts fetched). */
+  liveCount?: number;
+};
+
+export type TaxonomyMenuRow = CatalogTaxonomyNode & {
+  href: string;
+  pathSegment: string;
+};
+
+const TAXONOMY_VERSION = "retail-v1";
+
+export function taxonomyPathSegment(slug: string): string {
+  const parts = slug.split("/");
+  return parts.length > 1 ? parts.slice(1).join("/") : slug;
+}
+
+export function taxonomyHref(department: TaxonomyDepartment, slug: string): string {
+  const seg = taxonomyPathSegment(slug);
+  if (seg === "all") return `/shop/${department}`;
+  return `/shop/${department}/${seg}`;
+}
+
+export function slugFromPath(department: TaxonomyDepartment, pathSegment: string): string {
+  const seg = pathSegment.trim().toLowerCase();
+  if (!seg || seg === "all") return `${department}/all`;
+  return `${department}/${seg}`;
+}
+
+function mapNode(row: Record<string, unknown>): CatalogTaxonomyNode {
+  return {
+    slug: String(row.slug ?? ""),
+    parentSlug: row.parent_slug != null ? String(row.parent_slug) : null,
+    department: String(row.department ?? "") as TaxonomyDepartment,
+    label: String(row.label ?? ""),
+    sortOrder: Number(row.sort_order ?? 0),
+    isActive: row.is_active === true,
+    minCountThreshold: Number(row.min_count_threshold ?? 0),
+  };
+}
+
+/** Flat menu order: roots and children interleaved by sort_order (NAP-style flat list). */
+export function flattenTaxonomyMenu(nodes: CatalogTaxonomyNode[]): TaxonomyMenuRow[] {
+  const byDept = nodes
+    .filter((n) => !n.slug.endsWith("/all"))
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.slug.localeCompare(b.slug));
+  return byDept.map((n) => ({
+    ...n,
+    pathSegment: taxonomyPathSegment(n.slug),
+    href: taxonomyHref(n.department, n.slug),
+  }));
+}
+
+export async function fetchTaxonomyNodes(opts?: {
+  department?: TaxonomyDepartment;
+  activeOnly?: boolean;
+}): Promise<CatalogTaxonomyNode[]> {
+  const supabase = getServerSupabase();
+  if (!supabase) return [];
+
+  let q = supabase
+    .from("catalog_taxonomy_nodes")
+    .select("slug, parent_slug, department, label, sort_order, is_active, min_count_threshold")
+    .order("sort_order", { ascending: true })
+    .order("slug", { ascending: true });
+
+  if (opts?.department) q = q.eq("department", opts.department);
+  if (opts?.activeOnly) q = q.eq("is_active", true);
+
+  const { data, error } = await q;
+  if (error || !data) return [];
+  return data.map((row) => mapNode(row as Record<string, unknown>));
+}
+
+export async function fetchTaxonomyCounts(
+  department: TaxonomyDepartment,
+  region = "us"
+): Promise<Record<string, number>> {
+  const supabase = getServerSupabase();
+  if (!supabase) return {};
+
+  const { data, error } = await supabase.rpc("catalog_taxonomy_node_counts", {
+    p_department: department,
+    p_region: region.toLowerCase(),
+  });
+  if (error || !Array.isArray(data)) return {};
+
+  const out: Record<string, number> = {};
+  for (const row of data as { slug: string; live_count: number }[]) {
+    out[row.slug] = Number(row.live_count) || 0;
+  }
+  return out;
+}
+
+export async function fetchTaxonomyMenu(opts: {
+  department: TaxonomyDepartment;
+  region?: string;
+  activeOnly?: boolean;
+  /** Customer menus must not show counts at launch; grids use browse RPC totals. */
+  includeCounts?: boolean;
+}): Promise<TaxonomyMenuRow[]> {
+  const nodes = await fetchTaxonomyNodes({ department: opts.department, activeOnly: opts.activeOnly });
+
+  if (opts.includeCounts === false || opts.includeCounts === undefined) {
+    return flattenTaxonomyMenu(nodes);
+  }
+
+  const counts = await fetchTaxonomyCounts(opts.department, opts.region ?? "us");
+  const withCounts = nodes.map((n) => ({
+    ...n,
+    liveCount: counts[n.slug] ?? 0,
+  }));
+  return flattenTaxonomyMenu(withCounts);
+}
+
+export type TaxonomyBrowseOpts = {
+  region?: string;
+  taxonomySlug: string;
+  fiber?: string;
+  materialSubtype?: string;
+  fabricConstruction?: string;
+  color?: string;
+  brand?: string;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export type TaxonomyBrowseResult = {
+  products: Record<string, unknown>[];
+  total: number;
+  hasMore: boolean;
+  totalStatus: "exact" | "unavailable";
+  rpcVersion: string;
+};
+
+function mapSort(sort?: string): string {
+  switch (sort) {
+    case "price-low":
+    case "price_asc":
+      return "price_asc";
+    case "price-high":
+    case "price_desc":
+      return "price_desc";
+    case "natural-high":
+    case "most_natural":
+      return "most_natural";
+    default:
+      return "newest";
+  }
+}
+
+export async function queryTaxonomyBrowse(opts: TaxonomyBrowseOpts): Promise<TaxonomyBrowseResult> {
+  const supabase = getServerSupabase();
+  const empty: TaxonomyBrowseResult = {
+    products: [],
+    total: 0,
+    hasMore: false,
+    totalStatus: "unavailable",
+    rpcVersion: "catalog_taxonomy_browse_page",
+  };
+  if (!supabase) return empty;
+
+  const department = opts.taxonomySlug.split("/")[0] as TaxonomyDepartment;
+  const region = (opts.region || "us").toLowerCase();
+  const limit = Math.min(Math.max(opts.limit ?? 24, 1), 100);
+  const offset = Math.max(opts.offset ?? 0, 0);
+
+  const rpcName =
+    department === "shoes"
+      ? "catalog_footwear_taxonomy_browse_page"
+      : "catalog_taxonomy_browse_page";
+
+  const params: Record<string, unknown> =
+    department === "shoes"
+      ? {
+          p_region: region,
+          p_taxonomy_slug: opts.taxonomySlug,
+          p_color: opts.color ?? null,
+          p_brand_slug: opts.brand ?? null,
+          p_search: opts.search ?? null,
+          p_min_price: opts.minPrice ?? null,
+          p_max_price: opts.maxPrice ?? null,
+          p_sort: mapSort(opts.sort),
+          p_limit: limit,
+          p_offset: offset,
+        }
+      : {
+          p_region: region,
+          p_taxonomy_slug: opts.taxonomySlug,
+          p_material_family: opts.fiber ?? null,
+          p_material_subtype: opts.materialSubtype ?? null,
+          p_fabric_construction: opts.fabricConstruction ?? null,
+          p_min_nfp: opts.fiber ? 80 : null,
+          p_color: opts.color ?? null,
+          p_brand_slug: opts.brand ?? null,
+          p_search: opts.search ?? null,
+          p_min_price: opts.minPrice ?? null,
+          p_max_price: opts.maxPrice ?? null,
+          p_sort: mapSort(opts.sort),
+          p_limit: limit,
+          p_offset: offset,
+        };
+
+  const { data, error } = await supabase.rpc(rpcName, params);
+  if (error) return empty;
+
+  const payload = (data ?? {}) as Record<string, unknown>;
+  const products = Array.isArray(payload.products) ? (payload.products as Record<string, unknown>[]) : [];
+  return {
+    products,
+    total: Number(payload.total) || 0,
+    hasMore: payload.has_more === true,
+    totalStatus: payload.total_status === "exact" ? "exact" : "unavailable",
+    rpcVersion:
+      (payload.debug as { rpc_version?: string } | undefined)?.rpc_version ?? rpcName,
+  };
+}
+
+export { TAXONOMY_VERSION };

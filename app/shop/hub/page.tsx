@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
-import { SHOP_HUB_MENU } from "../../../lib/shop-hub-menu";
+import { getShopHubMenu } from "../../../lib/shop-hub-menu";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 
 /** Lightweight Shop hub — mirrors iOS Shop tab menu (not the full PLP). */
 export default function ShopHubPage() {
+  const menu = getShopHubMenu();
   return (
     <div className="min-h-[70vh] bg-background pb-28 md:pb-16" data-testid="shop-hub-page">
       <div className="max-w-lg mx-auto px-4 md:px-6 pt-4 md:pt-10">
@@ -26,7 +27,7 @@ export default function ShopHubPage() {
         </Link>
 
         <nav className="flex flex-col" aria-label="Shop menu">
-          {SHOP_HUB_MENU.map((item) => (
+          {menu.map((item) => (
             <Link
               key={item.name}
               href={item.href}

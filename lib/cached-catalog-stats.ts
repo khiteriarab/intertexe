@@ -1,22 +1,41 @@
 /**
- * Shared marketing + shop catalog totals — prefers weekly platform_stats_cache.
- * Count = all verified live_products_apparel rows (300k+), not catalog_list_count deduped cards (~84k).
+ * Shared marketing + shop catalog totals.
+ *
+ * Count definitions:
+ * - liveOfferCount: regional offers in live_products_apparel (not deduped cards)
+ * - PLP filter totals: exact from browse RPC total_status=exact (never use fallback here)
+ * - platform_stats_cache.product_count: legacy deduped card count when cache fresh (~24k)
+ *
+ * Do NOT use US_CATALOG_KNOWN_TOTAL_FALLBACK for filter-result or VIEW N counts.
  */
 import { unstable_cache } from "next/cache";
-import { US_CATALOG_KNOWN_TOTAL_FALLBACK } from "./catalog-constants";
 import { getServerSupabase } from "./supabase-service-client";
 
 export type CachedCatalogStats = {
-  /** Full verified catalog — homepage hero, shop header, SEO. */
-  catalogProductCount: number;
+  /** Live regional offers — marketing hero only when explicitly unfiltered. */
+  catalogProductCount: number | null;
   brandCount: number;
   updatedAt: string | null;
-  source: "cache" | "fallback";
+  source: "live_count" | "cache" | "unavailable";
 };
 
 const CACHE_MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
-/** Reject only obvious bad writes (e.g. single-digit placeholders). */
 const MIN_TRUSTED_PRODUCT_COUNT = 1_000;
+
+async function readLiveApparelCount(region = "us"): Promise<number | null> {
+  const supabase = getServerSupabase();
+  if (!supabase) return null;
+  try {
+    const { count, error } = await supabase
+      .from("live_products_apparel")
+      .select("id", { count: "exact", head: true })
+      .eq("region", region.toLowerCase());
+    if (error || count == null || count < MIN_TRUSTED_PRODUCT_COUNT) return null;
+    return count;
+  } catch {
+    return null;
+  }
+}
 
 async function readPlatformStatsCache(): Promise<CachedCatalogStats | null> {
   const supabase = getServerSupabase();
@@ -33,7 +52,7 @@ async function readPlatformStatsCache(): Promise<CachedCatalogStats | null> {
     const productCount = Number(data.product_count) || 0;
     const brandCount = Number(data.brand_count) || 0;
     const updatedAt = data.updated_at ? String(data.updated_at) : null;
-    if (productCount <= 0 || productCount < MIN_TRUSTED_PRODUCT_COUNT) return null;
+    if (productCount <= 0) return null;
 
     if (updatedAt) {
       const age = Date.now() - new Date(updatedAt).getTime();
@@ -51,27 +70,36 @@ async function readPlatformStatsCache(): Promise<CachedCatalogStats | null> {
   }
 }
 
-function fallbackStats(): CachedCatalogStats {
+function unavailableStats(): CachedCatalogStats {
   return {
-    catalogProductCount: US_CATALOG_KNOWN_TOTAL_FALLBACK,
+    catalogProductCount: null,
     brandCount: 0,
     updatedAt: null,
-    source: "fallback",
+    source: "unavailable",
   };
 }
 
-export async function getCachedCatalogStats(): Promise<CachedCatalogStats> {
-  return (await readPlatformStatsCache()) ?? fallbackStats();
+export async function getCachedCatalogStats(region = "us"): Promise<CachedCatalogStats> {
+  const live = await readLiveApparelCount(region);
+  if (live != null) {
+    return {
+      catalogProductCount: live,
+      brandCount: 0,
+      updatedAt: new Date().toISOString(),
+      source: "live_count",
+    };
+  }
+  return (await readPlatformStatsCache()) ?? unavailableStats();
 }
 
 export const getCachedCatalogStatsMemo = unstable_cache(
-  async () => getCachedCatalogStats(),
-  ["cached-catalog-stats-v2"],
+  async () => getCachedCatalogStats("us"),
+  ["cached-catalog-stats-v3-live-offers"],
   { revalidate: 3600, tags: ["platform-stats", "catalog-stats"] }
 );
 
-/** Shop + homepage fast-path total — full live catalog count. */
-export async function getShopCatalogKnownTotal(): Promise<number> {
+/** Marketing-only unfiltered hint — never substitute for filtered PLP totals. */
+export async function getShopCatalogKnownTotal(): Promise<number | null> {
   const stats = await getCachedCatalogStatsMemo();
   return stats.catalogProductCount;
 }
