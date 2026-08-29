@@ -134,7 +134,16 @@ export function productMatchesJeansListing(row: JeansListingRow): boolean {
   return nameHasJean || fabricIsDenim;
 }
 
-/** Lingerie PLP — trust garment_type + underwear names; exclude slip skirts misfiled via `slip`. */
+const LINGERIE_CATEGORY_RE =
+  /\b(lingerie|underwear|intimates?|bras?|panties|panty|thong|knickers?|briefs?)\b/i;
+const LINGERIE_NAME_RE =
+  /\b(lingerie|underwear|bralette|brassiere|thong|brief|briefs|panty|panties|knicker|knickers|corset|cheeky|hipster|boyshort|babydoll|bodysuit|teddy|g[\s-]?string|v[\s-]?string|balconette|underwire|bra|tanga|plunge|demi|wireless|unlined|longline|high[\s-]?waist|soft[\s-]?cup)\b/i;
+const SLIP_LINGERIE_RE =
+  /\b(slip[\s-]?skirt|half[\s-]?slip|petticoat|underskirt|\bslip\b)/i;
+const OUTERWEAR_SKIRT_RE =
+  /\b(denim[\s-]?skirt|midi[\s-]?skirt|maxi[\s-]?skirt|mini[\s-]?skirt|pleated[\s-]?skirt|a[\s-]?line[\s-]?skirt|wrap[\s-]?skirt)\b/i;
+
+/** Lingerie PLP — trust garment_type and intimates categories before keyword heuristics. */
 export function productMatchesLingerieListing(row: {
   name?: string | null;
   category?: string | null;
@@ -145,26 +154,23 @@ export function productMatchesLingerieListing(row: {
   const name = (row.name || "").toLowerCase();
   const gt = String(row.garment_type || row.garmentType || "").toLowerCase();
 
-  if (/\b(slip\s+skirt|denim\s+skirt)\b/.test(name)) return false;
-  if (/\bskirt\b/.test(name) && !/\bgarter\b/.test(name) && gt !== "lingerie") return false;
-  if (/\b(trouser|jogger|chino)\b/.test(name) && gt !== "lingerie") return false;
-
   if (gt === "lingerie") return true;
-  if (/(lingerie|underwear|intimate)/.test(cat)) return true;
-
-  if (
-    /\b(lingerie|underwear|bralette|brassiere|thong|brief|panty|panties|knicker|knickers|corset|cheeky|hipster|boyshort|babydoll|bodysuit|teddy|g[\s-]?string|v[\s-]?string|balconette|underwire|bra)\b/.test(
-      name
-    )
-  ) {
-    return true;
-  }
+  if (LINGERIE_CATEGORY_RE.test(cat)) return true;
+  if (LINGERIE_NAME_RE.test(name)) return true;
 
   if (/\bbikini\b/.test(name)) {
-    if (/(lingerie|underwear|intimate)/.test(cat)) return true;
+    if (LINGERIE_CATEGORY_RE.test(cat)) return true;
     if (cat === "swimwear" && !/(swim|beach|resort|pool)/.test(name)) return true;
   }
-  if (/\bslip\b/.test(name) && !/\bslip\s+skirt\b/.test(name)) return true;
+
+  if (/\bdenim\b/.test(name) && /\bskirt\b/.test(name)) return false;
+
+  if (SLIP_LINGERIE_RE.test(name)) return true;
+
+  if (OUTERWEAR_SKIRT_RE.test(name)) return false;
+  if (/\bskirt\b/.test(name) && !/\bgarter\b/.test(name)) return false;
+  if (/\b(trouser|jogger|chino)\b/.test(name)) return false;
+
   return false;
 }
 

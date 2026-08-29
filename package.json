@@ -25,7 +25,7 @@
     "test:material-api": "node --import tsx --test scripts/platform-demo.test.ts scripts/material-intelligence.test.ts scripts/platform-page.test.ts",
     "gate:material-api": "node --import tsx scripts/live-material-api-gate.ts",
     "test:secret-scan": "node scripts/secret-scan.mjs",
-    "test:catalog-taxonomy": "node --import tsx --test scripts/catalog-taxonomy-menu.test.ts scripts/catalog-garment-classify.test.ts scripts/sale-footwear.test.ts scripts/rakuten-offer-prices.test.ts",
+    "test:catalog-taxonomy": "node --import tsx --test scripts/catalog-taxonomy-menu.test.ts scripts/catalog-garment-classify.test.ts scripts/catalog-lingerie-listing.test.ts scripts/sale-footwear.test.ts scripts/rakuten-offer-prices.test.ts",
     "test:catalog-browse-speed": "node --test scripts/guard-catalog-browse-speed.test.mjs",
     "gate:catalog-browse-speed": "node scripts/guard-catalog-browse-speed.mjs",
     "gate:catalog-browse-speed:live": "node scripts/guard-catalog-browse-speed.mjs --live",
