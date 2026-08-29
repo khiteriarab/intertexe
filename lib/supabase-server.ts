@@ -2,7 +2,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeBrandName } from "./brand-display";
-import { displayNaturalFiberPercent } from "./display-natural-fiber";
+import { displayNaturalFiberPercent, naturalFiberPercentFromComposition } from "./display-natural-fiber";
 import {
   consumerExclusionForProduct,
   consumerExclusionForRow,
@@ -985,7 +985,7 @@ export function mapProductRow(row: any): Product {
     imageUrl: fixIsabelMarantImage(brandSlug, rawImageUrl),
     price: priceStr,
     composition: row.composition || "",
-    naturalFiberPercent: displayNaturalFiberPercent(row.natural_fiber_percent) ?? 0,
+    naturalFiberPercent: naturalFiberPercentFromComposition(row.composition, row.natural_fiber_percent) ?? 0,
     category: row.category || "",
     color: row.color != null && String(row.color).trim() ? String(row.color).trim() : null,
     matchingSetId: row.matching_set_id || null,

@@ -1,6 +1,7 @@
 "use server";
 
 import { queryTaxonomyBrowse, type TaxonomyDepartment } from "../../lib/catalog-taxonomy";
+import { filterConsumerCatalogProducts } from "../../lib/catalog-consumer-guard";
 import { mapProductRow, type Product } from "../../lib/supabase-server";
 
 export async function getTaxonomyProducts(opts: {
@@ -40,9 +41,19 @@ export async function getTaxonomyProducts(opts: {
     offset: opts.offset ?? 0,
   });
 
+  const mapped = filterConsumerCatalogProducts(
+    result.products.map((row) => mapProductRow(row))
+  );
+  const total =
+    !result.hasMore
+      ? mapped.length
+      : result.total > mapped.length && result.total < mapped.length * 50
+        ? result.total
+        : mapped.length;
+
   return {
-    products: result.products.map((row) => mapProductRow(row)),
-    total: result.total,
+    products: mapped,
+    total,
     hasMore: result.hasMore,
     totalStatus: result.totalStatus,
   };

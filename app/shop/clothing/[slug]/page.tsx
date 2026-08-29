@@ -8,6 +8,7 @@ import {
 } from "../../../../lib/catalog-taxonomy";
 import { TaxonomyCatalogClient } from "../../../components/TaxonomyCatalogClient";
 import { mapProductRow } from "../../../../lib/supabase-server";
+import { filterConsumerCatalogProducts } from "../../../../lib/catalog-consumer-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,14 @@ export default async function ClothingTaxonomyGridPage({
     sort: sp.sort,
   });
 
-  const products = browse.products.map((row) => mapProductRow(row));
+  const products = filterConsumerCatalogProducts(
+    browse.products.map((row) => mapProductRow(row))
+  );
+  const initialTotal = !browse.hasMore
+    ? products.length
+    : browse.total > products.length && browse.total < products.length * 50
+      ? browse.total
+      : products.length;
 
   return (
     <TaxonomyCatalogClient
@@ -60,7 +68,7 @@ export default async function ClothingTaxonomyGridPage({
       taxonomySlug={taxonomySlug}
       categoryLabel={node.label}
       initialProducts={products}
-      initialTotal={browse.total}
+      initialTotal={initialTotal}
       initialHasMore={browse.hasMore}
       totalStatus={browse.totalStatus}
     />

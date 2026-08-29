@@ -2,6 +2,7 @@
  * Consumer catalog guards — aligned with catalog-rules consumerExclusionReason.
  */
 import { consumerExclusionReason } from "./catalog-consumer-rules.js";
+import { isPrimarilySyntheticProduct } from "./display-natural-fiber";
 import { isSyntheticLeatherProduct } from "./synthetic-leather-guard";
 import { isMensCatalogRow } from "./womens-catalog-guard";
 import type { Product } from "./supabase-server";
@@ -35,6 +36,9 @@ export function consumerExclusionForProduct(p: {
   }
   if (isSyntheticLeatherProduct({ name: p.name, composition: p.composition })) {
     return "synthetic_leather";
+  }
+  if (isPrimarilySyntheticProduct(p)) {
+    return "synthetic";
   }
   if (
     isMensCatalogRow({

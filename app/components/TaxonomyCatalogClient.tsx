@@ -187,10 +187,10 @@ export function TaxonomyCatalogClient({
   }, [queryParams, refinements, offset, hasMore, loadingMore]);
 
   const countLabel =
-    totalStatus === "exact" && total > 0
-      ? `${total.toLocaleString()} pieces`
+    totalStatus === "exact" && total > 0 && (!hasMore || total <= products.length * 50)
+      ? `${(!hasMore ? products.length : total).toLocaleString()} pieces`
       : products.length > 0
-        ? `${products.length.toLocaleString()}+ pieces`
+        ? `${products.length.toLocaleString()}${hasMore ? "+" : ""} pieces`
         : "No pieces";
 
   const activeFilters = useMemo(() => {
