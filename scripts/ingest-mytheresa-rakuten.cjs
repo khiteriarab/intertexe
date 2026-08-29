@@ -632,6 +632,39 @@ async function refreshDesignerScores() {
   return { updated, inserted, total: designerStats.size };
 }
 
+async function refreshCatalogMaterializedViews() {
+  const token = process.env.SUPABASE_ACCESS_TOKEN;
+  const projectRef = process.env.SUPABASE_PROJECT_REF || "burrylupizvggupsryuj";
+  if (!token) {
+    console.warn("SUPABASE_ACCESS_TOKEN missing — skipping MV refresh");
+    return [];
+  }
+  const views = ["live_products_apparel_mat", "live_products_footwear"];
+  const refreshed = [];
+  for (const view of views) {
+    console.log(`Refreshing materialized view ${view}…`);
+    let res = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/database/query`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ query: `REFRESH MATERIALIZED VIEW CONCURRENTLY public.${view};` }),
+    });
+    if (!res.ok) {
+      res = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/database/query`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ query: `REFRESH MATERIALIZED VIEW public.${view};` }),
+      });
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`MV refresh failed for ${view}: ${text.slice(0, 300)}`);
+    }
+    refreshed.push(view);
+    console.log(`  OK ${view}`);
+  }
+  return refreshed;
+}
+
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
   const refreshScoresOnly = process.argv.includes("--refresh-designer-scores");
@@ -669,6 +702,12 @@ async function main() {
   }
   if (!dryRun) {
     await refreshDesignerScores();
+    try {
+      const refreshed = await refreshCatalogMaterializedViews();
+      console.log(`Materialized views refreshed: ${refreshed.join(", ") || "none"}`);
+    } catch (err) {
+      console.warn(`MV refresh failed (catalog still usable via coalesce view): ${err.message}`);
+    }
   }
   console.log(`Completed: ${new Date().toISOString()}`);
 }
