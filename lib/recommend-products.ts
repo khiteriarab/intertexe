@@ -2,9 +2,18 @@
  * Server-owned product recommendations for scanner + PDP rails.
  * Ranking can change without an App Store rebuild — iOS calls /api/recommend/products.
  */
+import { catalogDedupeKeyFromProduct } from "./catalog-rules";
+import { queryCatalogBrowsePageV2 } from "./catalog-browse-v2";
+import {
+  isEligibleRecommendation,
+  isScannerCatalogPick,
+  isScannerEligibleRecommendation,
+  matchesScanFiber,
+} from "./scanner-recommendation-eligibility";
 import { mapProductRow, type Product } from "./supabase-server";
 import { getServerSupabase } from "./supabase-service-client";
-import { queryCatalogBrowsePageV2 } from "./catalog-browse-v2";
+
+export { isEligibleRecommendation, isScannerEligibleRecommendation };
 
 export type RecommendProductsInput = {
   fiber?: string | null;
@@ -26,34 +35,6 @@ export type RecommendProductsResult = {
   source: "server";
   products: Product[];
 };
-
-const EXCLUDED_PHRASES = [
-  "napkin",
-  "table linen",
-  "tablecloth",
-  "placemat",
-  "tea towel",
-  "dish towel",
-  "bath towel",
-  "hand towel",
-  "bedding",
-  "bed linen",
-  "duvet",
-  "pillow",
-  "blanket",
-  "throw blanket",
-  "curtain",
-  "rug",
-  "bath mat",
-  "homeware",
-  "home ware",
-  "kitchen",
-  "upholstery",
-  "christmas stocking",
-  "boho stocking",
-  "ornament",
-  "hosiery",
-];
 
 const GARMENT_TO_CATEGORY: Record<string, string> = {
   dress: "dresses",
@@ -104,33 +85,6 @@ function productKeys(product: Product): string[] {
   return [String(product.productId || ""), String(product.id || "")].filter(Boolean);
 }
 
-export function isEligibleRecommendation(product: Product): boolean {
-  const category = String(product.category || "").toLowerCase();
-  const name = String(product.name || "").toLowerCase();
-  const brand = String(product.brandName || "").toLowerCase();
-  const text = `${category} ${name} ${brand}`;
-
-  if (category.includes("home") || category.includes("garden") || category.includes("decor")) {
-    return false;
-  }
-  if (EXCLUDED_PHRASES.some((phrase) => text.includes(phrase))) {
-    return false;
-  }
-
-  const looksLikeFootwearItem = /\b(sneaker|sneakers|shoe|shoes|boot|boots|sandal|sandals|loafer|loafers)\b/.test(
-    text
-  );
-  if (!looksLikeFootwearItem && /\b(socks?|stockings?|tights|pantyhose|anklets?)\b/.test(text)) {
-    return false;
-  }
-
-  const composition = String(product.composition || "").trim();
-  if (!composition) return false;
-  if (!product.imageUrl?.trim()) return false;
-  if (!product.price?.trim()) return false;
-  return true;
-}
-
 function classifyPriceTier(
   price: number,
   anchor: number
@@ -160,12 +114,27 @@ function scoreProduct(
   const keys = productKeys(product);
   const brand = String(product.brandName || "").toLowerCase();
   const price = parsePrice(product.price);
+  const fiberMatch = matchesScanFiber(product, opts.detectedFiber);
+  const tier = classifyPriceTier(price, opts.anchor);
 
   if (keys.some((key) => opts.savedIds.has(key))) value += 200;
-  if (product.isEditorPick) value += 100;
+
+  if (product.isEditorPick) {
+    if (fiberMatch && tier === "near") value += 320;
+    else if (fiberMatch && tier === "stretch") value += 260;
+    else if (fiberMatch) value += 200;
+    else if (tier === "near") value += 80;
+    else value += 40;
+  }
+
+  if (product.isSale && fiberMatch) {
+    if (tier === "near") value += 90;
+    else if (tier === "stretch") value += 60;
+    else value += 35;
+  }
+
   if (brand && opts.savedBrands.has(brand)) value += 40;
 
-  const tier = classifyPriceTier(price, opts.anchor);
   if (tier === "near") value += 35;
   else if (tier === "stretch") value += 22;
   else if (opts.anchor > 0 && price > 0) {
@@ -173,8 +142,8 @@ function scoreProduct(
     if (distance <= 0.5) value += 8;
   }
 
-  const fiber = opts.detectedFiber.toLowerCase();
-  if (fiber && haystack.includes(fiber)) value += 4;
+  if (fiberMatch) value += 45;
+
   for (const material of opts.personaMaterials) {
     if (material && haystack.includes(material)) {
       value += 5;
@@ -206,7 +175,7 @@ async function resolveFavoriteProducts(ids: string[]): Promise<Product[]> {
   const ingest = (rows: any[] | null | undefined) => {
     for (const row of rows || []) {
       const product = mapProductRow(row);
-      if (!isEligibleRecommendation(product)) continue;
+      if (!isScannerEligibleRecommendation(product)) continue;
       for (const key of productKeys(product)) byKey.set(key, product);
     }
   };
@@ -262,7 +231,7 @@ function rankMix(
   const append = (products: Product[], cap: number) => {
     for (const product of products) {
       if (mixed.length >= cap) break;
-      const key = productKeys(product)[0];
+      const key = catalogDedupeKeyFromProduct(product);
       if (!key || seen.has(key)) continue;
       seen.add(key);
       for (const k of productKeys(product)) seen.add(k);
@@ -336,14 +305,14 @@ async function fetchCatalogCandidates(input: {
     });
     for (const product of result.products) {
       const asProduct = product as unknown as Product;
-      if (!isEligibleRecommendation(asProduct)) continue;
+      if (!isScannerCatalogPick(asProduct, input.fiber)) continue;
       if (
         looksLikeFootwear(asProduct) &&
         !String(input.garmentType || "").toLowerCase().includes("shoe")
       ) {
         continue;
       }
-      const key = productKeys(asProduct)[0];
+      const key = catalogDedupeKeyFromProduct(asProduct);
       if (!key || seen.has(key)) continue;
       seen.add(key);
       out.push(asProduct);
