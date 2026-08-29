@@ -57,6 +57,7 @@ import { normalizeCatalogRegion } from "./shipping-regions";
 import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { rowMatchesTaxonomy } from "./unified-catalog-taxonomy";
 import { queryCatalogBrowsePageV2 } from "./catalog-browse-v2";
+import { normalizeSaleSort } from "./sale-sort";
 
 export { CATALOG_INITIAL_PAGE, CATALOG_PAGE_SIZE };
 
@@ -2524,6 +2525,7 @@ async function fetchSaleProductsDirect(options: {
   } = options;
   const { preferred, fallback } = catalogRegionsFromMarket(market);
   const filterOpts = { fiber, fiberSubtype, category, color, brand };
+  const normalizedSort = normalizeSaleSort(sort);
 
   if (wantsSaleShoes(filterOpts)) {
     const { fetchSaleFootwearPage } = await import("./sale-footwear");
@@ -2535,7 +2537,7 @@ async function fetchSaleProductsDirect(options: {
       color,
       maxPrice,
       minPrice,
-      sort,
+      sort: normalizedSort,
       skipTotal: skipTotal,
     });
   }
@@ -2552,6 +2554,7 @@ async function fetchSaleProductsDirect(options: {
       p_category: category && category !== "all" ? category : null,
       p_brand_slug: brand ? brand.toLowerCase() : null,
       p_color: color || null,
+      p_sort: normalizedSort,
     });
     if (error) throw error;
     rawRows = (data || []) as Record<string, unknown>[];
@@ -2568,9 +2571,6 @@ async function fetchSaleProductsDirect(options: {
     color,
     brand,
   });
-  if (sort === "discount" || sort === "price-low" || sort === "price-high" || sort === "natural-high" || sort === "new") {
-    products = sortSaleProducts(products, sort);
-  }
 
   if (skipTotal) {
     return {

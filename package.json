@@ -6,7 +6,7 @@
   "scripts": {
     "dev:client": "vite dev --port 5000",
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "npm run check:background-jobs && next build",
+    "build": "npm run check:background-jobs && npm run gate:catalog-browse-speed && next build",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
     "check:background-jobs": "node --import tsx scripts/check-background-jobs.ts",
@@ -26,6 +26,9 @@
     "gate:material-api": "node --import tsx scripts/live-material-api-gate.ts",
     "test:secret-scan": "node scripts/secret-scan.mjs",
     "test:catalog-taxonomy": "node --import tsx --test scripts/catalog-taxonomy-menu.test.ts scripts/catalog-garment-classify.test.ts scripts/sale-footwear.test.ts scripts/rakuten-offer-prices.test.ts",
+    "test:catalog-browse-speed": "node --test scripts/guard-catalog-browse-speed.test.mjs",
+    "gate:catalog-browse-speed": "node scripts/guard-catalog-browse-speed.mjs",
+    "gate:catalog-browse-speed:live": "node scripts/guard-catalog-browse-speed.mjs --live",
     "test:install-ctas": "node --import tsx --test scripts/install-ctas.test.ts scripts/chrome-web-store-hq.test.ts",
     "test:enterprise": "node --import tsx --test scripts/enterprise-foundation.test.ts scripts/enterprise-phase1.test.ts scripts/enterprise-identity.test.ts scripts/enterprise-intelligence.test.ts scripts/enterprise-pilot-ux.test.ts scripts/enterprise-founder-onboarding.test.ts scripts/enterprise-eu-dpp.test.ts scripts/enterprise-isolation.live.test.ts scripts/enterprise-permissions.live.test.ts scripts/enterprise-identity.live.test.ts scripts/enterprise-intelligence.live.test.ts scripts/enterprise-org-member-directory.live.test.ts scripts/enterprise-founder-onboarding.live.test.ts"
   },

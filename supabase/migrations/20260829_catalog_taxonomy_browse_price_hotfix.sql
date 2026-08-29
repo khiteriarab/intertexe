@@ -1,3 +1,4 @@
+-- ⚠️  SUPERSEDED — DO NOT RE-APPLY. Slow path (full filtered COUNT). Canonical: lib/sql/catalog_taxonomy_browse_page.sql
 -- Hotfix: live_products_* views have no price_numeric column.
 -- Use catalog_product_price_numeric(price::text) for filters and sort.
 

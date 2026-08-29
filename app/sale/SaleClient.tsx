@@ -11,6 +11,7 @@ import {
   SHOP_PRICE_TIERS,
   type ShopPriceTierId,
 } from "../../lib/catalog-filter-options";
+import { sortSaleProducts } from "../../lib/sale-sort";
 import {
   productMatchesSaleShoeCategory,
   saleCategoryOptionsForDepartment,
@@ -163,7 +164,7 @@ function buildSaleParams(
   selectedColor: string | null,
   selectedBrands: string[],
   selectedFiberSubtypes: string[],
-  sortBy: SaleSort,
+  sortBy: SaleSort | undefined,
   limit: number,
   offset: number
 ) {
@@ -171,7 +172,7 @@ function buildSaleParams(
   params.set("region", "us");
   params.set("limit", String(limit));
   params.set("offset", String(offset));
-  params.set("skipCount", "0");
+  params.set("skipCount", offset === 0 ? "1" : "0");
   const shoesMode = saleDepartment === "shoes" || fiberTab === "shoes";
   // Shoes are a category (not a fiber) — apparel-only sale feed excludes footwear.
   if (shoesMode) {
@@ -186,6 +187,38 @@ function buildSaleParams(
   if (selectedFiberSubtypes.length) params.set("materialSubtype", selectedFiberSubtypes[0]);
   if (sortBy) params.set("sort", sortBy);
   return params;
+}
+
+function SaleCategoryQuickNav({
+  options,
+  selectedKey,
+  onSelect,
+  className = "",
+}: {
+  options: { key: string; label: string }[];
+  selectedKey: string;
+  onSelect: (key: string) => void;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex gap-2 overflow-x-auto pb-1 scrollbar-hide ${className}`}
+      data-testid="sale-category-picker"
+    >
+      {options.map((cat) => (
+        <button
+          key={cat.key}
+          type="button"
+          onClick={() => onSelect(cat.key)}
+          className={`shrink-0 px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] border whitespace-nowrap ${
+            selectedKey === cat.key ? "border-foreground bg-foreground text-background" : "border-border/40"
+          }`}
+        >
+          {cat.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function SaleClient({
@@ -247,10 +280,14 @@ export default function SaleClient({
       )
     );
   }, [categoryFilteredProducts, selectedSubcategory]);
+  const sortedProducts = useMemo(
+    () => sortSaleProducts(subcategoryFilteredProducts, sortBy),
+    [subcategoryFilteredProducts, sortBy]
+  );
   const { favorites } = useProductFavorites();
   const rankedProducts = useMemo(
-    () => prioritizeFavoritedProducts(subcategoryFilteredProducts, favorites),
-    [subcategoryFilteredProducts, favorites]
+    () => prioritizeFavoritedProducts(sortedProducts, favorites),
+    [sortedProducts, favorites]
   );
 
   useEffect(() => {
@@ -289,11 +326,12 @@ export default function SaleClient({
     categoryFilter !== "all" ||
     selectedBrands.length > 0 ||
     selectedColor != null ||
-    priceTier !== "any" ||
-    sortBy !== "discount";
+    priceTier !== "any";
 
   const fetchPage = useCallback(
     async (nextOffset: number, append: boolean) => {
+      // Page 1: fast fetch (default server order). Sort is client-side; load-more uses server sort.
+      const serverSort = nextOffset > 0 ? sortBy : undefined;
       const params = buildSaleParams(
         saleDepartment,
         fiberTab,
@@ -302,7 +340,7 @@ export default function SaleClient({
         selectedColor,
         selectedBrands,
         selectedFiberSubtypes,
-        sortBy,
+        serverSort,
         PAGE_SIZE,
         nextOffset
       );
@@ -345,7 +383,6 @@ export default function SaleClient({
     selectedColor,
     selectedBrands.join(","),
     selectedFiberSubtypes.join(","),
-    sortBy,
     hasActiveFilters,
     initialProducts,
     initialTotal,
@@ -573,26 +610,6 @@ export default function SaleClient({
               </button>
             ))}
           </div>
-          <div
-            className="flex gap-2 overflow-x-auto pb-1 max-w-3xl mx-auto w-full px-2 scrollbar-hide"
-            data-testid="sale-category-picker"
-          >
-            {saleCategoryOptionsForUI.map((cat) => (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => {
-                  setCategoryFilter(cat.key);
-                  setSelectedSubcategory(null);
-                }}
-                className={`shrink-0 px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] border whitespace-nowrap ${
-                  categoryFilter === cat.key ? "border-foreground bg-foreground text-background" : "border-border/40"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
           <h1 className="text-3xl md:text-5xl font-serif" data-testid="text-sale-title">
             {shoesMode ? "Shoes — On Sale" : "The Edit — On Sale"}
           </h1>
@@ -607,13 +624,22 @@ export default function SaleClient({
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 w-full">
           <CatalogMobileToolbar
-            className="mb-6 lg:hidden"
+            className="mb-3 lg:hidden"
             resultCount={displayedCount > 0 ? displayedCount : null}
             countLoading={isLoading && total === 0}
             sortLabel={currentSort.label}
             onOpenFilter={() => setShowFilterSheet(true)}
             onOpenSort={() => setShowSortSheet(true)}
             activeFilters={activeFilters}
+          />
+          <SaleCategoryQuickNav
+            className="mb-6 lg:hidden px-0"
+            options={saleCategoryOptionsForUI}
+            selectedKey={categoryFilter}
+            onSelect={(key) => {
+              setCategoryFilter(key);
+              setSelectedSubcategory(null);
+            }}
           />
 
           <div className="lg:flex lg:gap-10 lg:items-start">
@@ -699,6 +725,16 @@ export default function SaleClient({
                   )}
                 </div>
               </div>
+
+              <SaleCategoryQuickNav
+                className="mb-6 hidden lg:flex"
+                options={saleCategoryOptionsForUI}
+                selectedKey={categoryFilter}
+                onSelect={(key) => {
+                  setCategoryFilter(key);
+                  setSelectedSubcategory(null);
+                }}
+              />
 
               <CatalogMobileSheet
                 open={showSortSheet}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchSaleProducts } from "../../../lib/supabase-server";
 import { priceBoundsFromTier, type ShopPriceTierId } from "../../../lib/catalog-filter-options";
+import { normalizeSaleSort } from "../../../lib/sale-sort";
 
 export const revalidate = 300;
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
   const category = sp.get("category") || undefined;
   const color = sp.get("color") || undefined;
   const brand = sp.get("brand") || undefined;
-  const sort = sp.get("sort") || "discount";
+  const sort = normalizeSaleSort(sp.get("sort") || "discount");
   const region = sp.get("region") || sp.get("market") || undefined;
   // Only skip the exact count when the client explicitly asks — auto-skipping on page 1
   // made `/sale` treat the first deduped page length (~22) as the full catalog total.

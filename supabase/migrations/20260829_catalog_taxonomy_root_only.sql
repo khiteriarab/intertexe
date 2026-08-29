@@ -1,3 +1,5 @@
+-- ⚠️  SUPERSEDED — DO NOT RE-APPLY. Slow/incorrect browse body may follow in this file.
+-- Canonical fast path: lib/sql/catalog_taxonomy_browse_page.sql + 20260830_catalog_taxonomy_browse_speed_lock.sql
 -- Root-only assignment model: no forced wrong leaf mappings; 100% All coverage via live catalog browse.
 -- Provisional inactive nodes for jumpsuits, lingerie, bottoms, espadrilles.
 
