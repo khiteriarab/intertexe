@@ -361,8 +361,10 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
   });
 
   useEffect(() => {
-    /** Server already rendered with `getHomePageData` — avoid doubling Supabase work on mount. */
-    if (initialData !== undefined) return;
+    /** SSR can time out and cache an empty New In rail — recover client-side from /api/homepage. */
+    const ssrMissingNewIn =
+      initialData !== undefined && !(initialData.newInProducts?.length);
+    if (initialData !== undefined && !ssrMissingNewIn) return;
     fetch("/api/homepage")
       .then((r) => {
         if (!r.ok) throw new Error("API error");

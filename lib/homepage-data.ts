@@ -470,6 +470,6 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
 export const getCachedHomePageData = unstable_cache(
   async () => getHomePageData(),
-  ["homepage-payload-v13"],
+  ["homepage-payload-v14"],
   { revalidate: HOMEPAGE_REVALIDATE_SEC, tags: ["homepage"] }
 );
