@@ -171,6 +171,7 @@ function buildSaleParams(
   params.set("region", "us");
   params.set("limit", String(limit));
   params.set("offset", String(offset));
+  params.set("skipCount", "0");
   // Shoes are a category (not a fiber) — apparel-only sale feed excludes footwear.
   if (fiberTab === "shoes") {
     params.set("category", "shoes");
@@ -297,13 +298,14 @@ export default function SaleClient({
       const res = await fetch(`/api/sale?${params}`);
       const data = await res.json();
       const nextProducts = data.products || [];
-      const nextTotal = data.total ?? nextProducts.length ?? 0;
+      const nextTotal =
+        typeof data.total === "number" && data.total >= 0 ? data.total : append ? total : 0;
       setProducts((prev) => (append ? [...prev, ...nextProducts] : nextProducts));
       setTotal(nextTotal);
       setOffset(nextOffset + nextProducts.length);
-      setHasMore(Boolean(data.hasMore) && nextProducts.length > 0);
+      setHasMore(Boolean(data.hasMore));
     },
-    [fiberTab, priceTier, categoryFilter, selectedColor, selectedBrands, selectedFiberSubtypes, sortBy]
+    [fiberTab, priceTier, categoryFilter, selectedColor, selectedBrands, selectedFiberSubtypes, sortBy, total]
   );
 
   useEffect(() => {

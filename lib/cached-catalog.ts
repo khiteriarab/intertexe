@@ -115,12 +115,12 @@ export const getCachedSalePageData = unstable_cache(
           limit: 24,
           offset: 0,
           useMerchFeedPreview: false,
-          skipTotal: true,
+          skipTotal: false,
         }),
       FETCH_BUDGET_MS,
       { products: [], total: 0, hasMore: false },
       "sale-page"
     ),
-  ["sale-page-first-v5"],
+  ["sale-page-first-v6"],
   { revalidate: SALE_PAGE_REVALIDATE, tags: ["sale-catalog"] }
 );

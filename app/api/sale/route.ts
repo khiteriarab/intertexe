@@ -24,9 +24,9 @@ export async function GET(request: NextRequest) {
   const brand = sp.get("brand") || undefined;
   const sort = sp.get("sort") || "discount";
   const region = sp.get("region") || sp.get("market") || undefined;
-  const skipCount =
-    sp.get("skipCount") === "1" ||
-    (Number(sp.get("limit") || 40) <= 48 && Number(sp.get("offset") || 0) === 0);
+  // Only skip the exact count when the client explicitly asks — auto-skipping on page 1
+  // made `/sale` treat the first deduped page length (~22) as the full catalog total.
+  const skipCount = sp.get("skipCount") === "1";
   const priceTier = parsePriceTier(sp.get("price"));
   const priceBounds = priceBoundsFromTier(priceTier);
   const legacyMax = sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined;
