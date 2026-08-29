@@ -42,6 +42,33 @@ export function isDepartmentAllSlug(slug: string): boolean {
   return slug === "clothing/all" || slug === "shoes/all";
 }
 
+/** Map clothing/* taxonomy slug → catalog_browse_page_v2 category param. */
+export function taxonomyLegacyBrowseCategory(taxonomySlug: string): string | null {
+  if (!taxonomySlug.startsWith("clothing/")) return null;
+  const seg = taxonomyPathSegment(taxonomySlug).toLowerCase();
+  const map: Record<string, string> = {
+    dresses: "dresses",
+    "bridal-dresses": "dresses",
+    shirts: "shirts",
+    blouses: "blouses",
+    "tanks-and-camisoles": "tops",
+    "t-shirts": "tops",
+    tops: "tops",
+    knitwear: "knitwear",
+    trousers: "trousers",
+    jeans: "jeans",
+    bottoms: "trousers",
+    shorts: "shorts",
+    skirts: "skirts",
+    jackets: "jackets",
+    coats: "coats",
+    lingerie: "lingerie",
+    swimwear: "swimwear",
+    jumpsuits: "jumpsuits",
+  };
+  return map[seg] ?? null;
+}
+
 /** Browse grids allow department-all slugs even when the node is menu-only (inactive in nav seed). */
 export function resolveTaxonomyBrowseNode(
   nodes: CatalogTaxonomyNode[],
@@ -247,7 +274,7 @@ export async function queryTaxonomyBrowse(opts: TaxonomyBrowseOpts): Promise<Tax
   const limit = Math.min(Math.max(opts.limit ?? 24, 1), 100);
   const offset = Math.max(opts.offset ?? 0, 0);
 
-  // Department-all routes scan the full live catalog — use fast browse RPCs instead.
+  // Department-all and mappable leaf slugs — use fast catalog_browse_page_v2 (taxonomy RPC card-dedupe times out).
   if (isDepartmentAllSlug(opts.taxonomySlug)) {
     if (department === "shoes") {
       const page = await fetchFootwearCatalogPage({ region, limit, offset });
@@ -263,6 +290,34 @@ export async function queryTaxonomyBrowse(opts: TaxonomyBrowseOpts): Promise<Tax
       region,
       limit,
       offset,
+      fiber: opts.fiber,
+      brand: opts.brand,
+      search: opts.search,
+      sort: opts.sort,
+      minPrice: opts.minPrice,
+      maxPrice: opts.maxPrice,
+      color: opts.color,
+      materialSubtype: opts.materialSubtype,
+      fabricConstruction: opts.fabricConstruction,
+      apparelOnly: true,
+    });
+    if (v2.error) return empty;
+    return {
+      products: v2.products as unknown as Record<string, unknown>[],
+      total: v2.total ?? 0,
+      hasMore: v2.hasMore,
+      totalStatus: v2.totalStatus === "exact" || v2.totalStatus === "cached" ? "exact" : "unavailable",
+      rpcVersion: v2.rpcVersion,
+    };
+  }
+
+  const legacyCategory = taxonomyLegacyBrowseCategory(opts.taxonomySlug);
+  if (legacyCategory) {
+    const v2 = await queryCatalogBrowsePageV2({
+      region,
+      limit,
+      offset,
+      category: legacyCategory,
       fiber: opts.fiber,
       brand: opts.brand,
       search: opts.search,
