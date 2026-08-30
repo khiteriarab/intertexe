@@ -6,7 +6,10 @@ import { getServerSupabase, catalogRegionsFromMarket, type Product } from "./sup
 import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { sanitizeBrandName } from "./brand-display";
 import { catalogDedupeKey } from "./catalog-rules";
-import { displayNaturalFiberPercent } from "./display-natural-fiber";
+import {
+  displayNaturalFiberPercent,
+  naturalFiberPercentFromComposition,
+} from "./display-natural-fiber";
 import { logSupabaseTiming } from "./supabase-timing";
 
 export const MERCH_RAIL_KEYS = {
@@ -69,6 +72,9 @@ function compositionMatchesBodyFiber(composition: string, fiber: string): boolea
 }
 
 function mapFeedRowToProduct(row: Record<string, unknown>): Product {
+  const storedRaw = row.natural_fiber_percent;
+  const stored =
+    storedRaw == null || storedRaw === "" ? null : Number(storedRaw);
   return {
     id: String(row.source_id ?? ""),
     productId: String(row.product_id ?? ""),
@@ -79,12 +85,60 @@ function mapFeedRowToProduct(row: Record<string, unknown>): Product {
     imageUrl: String(row.image_url ?? ""),
     price: String(row.price ?? ""),
     composition: "",
-    naturalFiberPercent: displayNaturalFiberPercent(
-      Number(row.natural_fiber_percent ?? 0)
-    ),
+    naturalFiberPercent: naturalFiberPercentFromComposition("", stored),
     category: row.category != null ? String(row.category) : "",
     isSale: row.is_sale === true,
   };
+}
+
+/** Feed cache rows omit composition — backfill from products when NFP is missing or zero. */
+async function enrichMerchFeedProducts(products: Product[]): Promise<Product[]> {
+  const needs = products.filter(
+    (p) =>
+      (p.naturalFiberPercent == null || p.naturalFiberPercent === 0) &&
+      !(p.composition || "").trim()
+  );
+  if (needs.length === 0) return products;
+
+  const supabase = getServerSupabase();
+  if (!supabase) return products;
+
+  const allIds = [...new Set(needs.map((p) => p.id).filter(Boolean))];
+  if (allIds.length === 0) return products;
+
+  const byId = new Map<
+    string,
+    { id: string; composition?: string | null; natural_fiber_percent?: number | null }
+  >();
+  const batchSize = 48;
+
+  for (let start = 0; start < allIds.length; start += batchSize) {
+    const batch = allIds.slice(start, start + batchSize);
+    const { data } = await supabase
+      .from("products")
+      .select("id, composition, natural_fiber_percent")
+      .in("id", batch);
+    for (const row of data ?? []) {
+      byId.set(String(row.id), row);
+    }
+  }
+
+  if (byId.size === 0) return products;
+
+  return products.map((product) => {
+    const row = byId.get(product.id);
+    if (!row) return product;
+    const nfp = naturalFiberPercentFromComposition(
+      row.composition,
+      row.natural_fiber_percent
+    );
+    if (nfp == null) return product;
+    return {
+      ...product,
+      composition: row.composition || product.composition,
+      naturalFiberPercent: nfp,
+    };
+  });
 }
 
 export type MerchFeedMetaRow = {
@@ -182,7 +236,7 @@ export async function fetchMerchRailProducts(
     products.push(mapFeedRowToProduct(row));
     if (products.length >= limit) break;
   }
-  if (products.length > 0) return products;
+  if (products.length > 0) return enrichMerchFeedProducts(products);
 
   return fetchMerchRailLiveFallback(railKey, limit, opts?.market);
 }
@@ -224,6 +278,15 @@ export async function fetchMerchRailsBatch(
     if (seenByRail[rail].has(dedupeKey)) continue;
     seenByRail[rail].add(dedupeKey);
     out[rail].push(mapFeedRowToProduct(row));
+  }
+
+  const flat = Object.values(out).flat();
+  if (flat.length === 0) return out;
+
+  const enriched = await enrichMerchFeedProducts(flat);
+  const enrichedById = new Map(enriched.map((p) => [p.id, p]));
+  for (const rail of railKeys) {
+    out[rail] = out[rail].map((p) => enrichedById.get(p.id) ?? p);
   }
   return out;
 }

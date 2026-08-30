@@ -11,16 +11,23 @@ export function displayNaturalFiberPercent(
   return Math.min(100, Math.max(0, Math.round(Number(nfp))));
 }
 
-/** Parse composition first (PDP parity), else fall back to stored DB value. */
+/** Parse composition first (PDP parity), else fall back to stored DB value. Never returns 0. */
 export function naturalFiberPercentFromComposition(
   composition: string | null | undefined,
   storedNfp?: number | null
 ): number | null {
   const parsed = parseCompositionText(composition);
-  if (parsed.natural_fiber_percentage != null) {
-    return displayNaturalFiberPercent(parsed.natural_fiber_percentage);
-  }
-  return displayNaturalFiberPercent(storedNfp);
+  const parsedNfp =
+    parsed.natural_fiber_percentage != null
+      ? displayNaturalFiberPercent(parsed.natural_fiber_percentage)
+      : null;
+  const stored =
+    storedNfp != null && Number(storedNfp) > 0
+      ? displayNaturalFiberPercent(storedNfp)
+      : null;
+  const resolved = parsedNfp ?? stored;
+  if (resolved == null || resolved < MIN_CATALOG_NATURAL_FIBER_PERCENT) return null;
+  return resolved;
 }
 
 export function isPrimarilySyntheticProduct(p: {
