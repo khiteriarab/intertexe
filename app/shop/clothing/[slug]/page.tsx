@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   fetchTaxonomyNodes,
   queryTaxonomyBrowse,
@@ -18,6 +18,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  if (slug.toLowerCase() === "blouses") {
+    redirect("/shop/clothing/tops");
+  }
   const taxonomySlug = slugFromPath("clothing", slug);
   const nodes = await fetchTaxonomyNodes({ department: "clothing" });
   const node = resolveTaxonomyBrowseNode(nodes, taxonomySlug);
@@ -37,6 +40,9 @@ export default async function ClothingTaxonomyGridPage({
 }) {
   const { slug } = await params;
   const sp = await searchParams;
+  if (slug.toLowerCase() === "blouses") {
+    redirect("/shop/clothing/tops");
+  }
   const taxonomySlug = slugFromPath("clothing", slug);
   const nodes = await fetchTaxonomyNodes({ department: "clothing" });
   const node = resolveTaxonomyBrowseNode(nodes, taxonomySlug);

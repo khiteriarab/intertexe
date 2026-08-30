@@ -7,6 +7,8 @@ export const CATEGORY_SUBCATEGORY_OPTIONS: CatalogSubcategoryMap = {
   shoes: [...SHOP_SHOE_TYPES],
   dresses: ["Midi Dresses", "Maxi Dresses", "Mini Dresses", "Shirt Dresses", "Wrap Dresses", "Gowns"],
   tops: ["Blouses", "T-Shirts", "Shirts", "Camisoles", "Bodysuits", "Tunics"],
+  shirts: ["Shirts"],
+  tanks: ["Tanks", "Camisoles"],
   knitwear: ["Sweaters", "Cardigans", "Turtlenecks", "Hoodies"],
   trousers: ["Trousers", "Jeans", "Shorts", "Leggings", "Culottes"],
   skirts: ["Midi Skirts", "Mini Skirts", "Maxi Skirts", "Pencil Skirts"],

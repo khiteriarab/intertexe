@@ -1,16 +1,15 @@
 /**
- * Sale category picker — mirrors shop taxonomy (blouses, lingerie, etc.), not coarse legacy buckets.
+ * Sale category picker — Tops group: Tops, Shirts, Tanks & Camisoles (no separate Blouses row).
  */
 
 export type SaleCategoryOption = { key: string; label: string };
 
-/** Clothing sale filters — aligned with /shop/clothing taxonomy menu. */
+/** Clothing sale filters — Tops group: Tops (incl. blouses), Shirts, Tanks & Camisoles. */
 export const SALE_CLOTHING_CATEGORY_OPTIONS: SaleCategoryOption[] = [
   { key: "all", label: "All" },
   { key: "dresses", label: "Dresses" },
   { key: "tops", label: "Tops" },
   { key: "shirts", label: "Shirts" },
-  { key: "blouses", label: "Blouses" },
   { key: "tanks", label: "Tanks & Camisoles" },
   { key: "trousers", label: "Trousers" },
   { key: "jeans", label: "Jeans" },

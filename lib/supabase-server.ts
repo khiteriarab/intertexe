@@ -17,6 +17,7 @@ import {
   materialPrimaryForShopFiber,
   rowMatchesGarmentFilter,
   applyCategoryFilter,
+  productMatchesHardCategory,
 } from "./catalog-shop-mappings";
 import {
   productMatchesAnyShopCategory,
@@ -1017,6 +1018,10 @@ export function mapProductRow(row: any): Product {
         : row.genderScope != null && String(row.genderScope).trim()
           ? String(row.genderScope).trim().toLowerCase()
           : null,
+    garmentType:
+      row.garment_type != null && String(row.garment_type).trim()
+        ? String(row.garment_type).trim().toLowerCase()
+        : null,
     isEditorPick: row.is_editor_pick === true,
     editorPickedAt:
       row.editor_picked_at != null && String(row.editor_picked_at).trim()
@@ -2301,13 +2306,13 @@ export async function fetchMoreAtPrice(
 }
 
 function productMatchesSaleCategory(product: Product, category: string): boolean {
-  return rowMatchesTaxonomy(
+  return productMatchesHardCategory(
     {
       garment_type: (product as { garmentType?: string }).garmentType,
       category: product.category,
       name: product.name,
     },
-    { shopCategory: category }
+    category
   );
 }
 
@@ -2493,6 +2498,83 @@ export async function getSaleTotalCount(opts: {
   }
 }
 
+/** Category / refinement sale paths — direct table query (count + grid share applyCategoryFilter). */
+async function fetchSaleProductsViaDirectTable(options: {
+  supabase: NonNullable<ReturnType<typeof getServerSupabase>>;
+  preferred: string;
+  fiber?: string;
+  fiberSubtype?: string;
+  maxPrice?: number;
+  minPrice?: number;
+  category?: string;
+  color?: string;
+  brand?: string;
+  sort?: string;
+  limit: number;
+  offset: number;
+  skipTotal: boolean;
+  filterOpts: { fiber?: string; fiberSubtype?: string; category?: string; color?: string; brand?: string };
+}): Promise<{ products: Product[]; total: number | null; hasMore: boolean }> {
+  const {
+    supabase,
+    preferred,
+    fiber,
+    fiberSubtype,
+    maxPrice,
+    minPrice,
+    category,
+    color,
+    brand,
+    sort,
+    limit,
+    offset,
+    skipTotal,
+    filterOpts,
+  } = options;
+
+  let q = buildSaleDirectQuery(supabase, preferred, filterOpts, "*");
+  q = applySaleQuerySort(q, sort);
+  q = q.range(offset, offset + limit - 1);
+  const { data, error } = await q;
+  if (error) throw error;
+
+  let products = filterConsumerCatalogProducts((data || []).map(mapProductRow));
+  products = dedupeCatalogProducts(products);
+  products = applySaleProductFilters(products, {
+    fiber,
+    fiberSubtype,
+    maxPrice,
+    minPrice,
+    category,
+    color,
+    brand,
+  });
+
+  if (skipTotal) {
+    return {
+      products,
+      total: null,
+      hasMore: (data || []).length >= limit,
+    };
+  }
+
+  const total = await getSaleTotalCount({
+    region: preferred,
+    fiber,
+    maxPrice,
+    minPrice,
+    category,
+    color,
+    brand,
+  });
+
+  return {
+    products,
+    total,
+    hasMore: (data || []).length >= limit || offset + products.length < total,
+  };
+}
+
 /** Paginated sale catalog — `sale_catalog_list` RPC (products-first) with direct fallback. */
 async function fetchSaleProductsDirect(options: {
   fiber?: string;
@@ -2540,6 +2622,32 @@ async function fetchSaleProductsDirect(options: {
       minPrice,
       sort: normalizedSort,
       skipTotal: skipTotal,
+    });
+  }
+
+  const useDirectTable =
+    Boolean(category && category !== "all") ||
+    Boolean(fiberSubtype) ||
+    minPrice != null ||
+    Boolean(color) ||
+    Boolean(brand);
+
+  if (useDirectTable) {
+    return fetchSaleProductsViaDirectTable({
+      supabase,
+      preferred,
+      fiber,
+      fiberSubtype,
+      maxPrice,
+      minPrice,
+      category,
+      color,
+      brand,
+      sort: normalizedSort,
+      limit,
+      offset,
+      skipTotal,
+      filterOpts,
     });
   }
 

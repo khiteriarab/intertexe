@@ -189,6 +189,17 @@ export function applyCategoryFilter(query: any, category: string): any {
   const key = category.toLowerCase();
   const garmentTypes =
     SHOP_CATEGORY_GARMENT_TYPES[key] ?? COLLECTION_CATEGORY_GARMENT_TYPES[key];
+  const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
+
+  // Subcategory chips (blouses, shirts, tanks, …) — keyword required, same as productMatchesHardCategory.
+  // Do NOT OR garment_type with keywords: PostgREST `or=` broadens to ~all tops_blouses (114 vs 4 blouses).
+  if (keywords?.length && garmentTypes?.length && !["jumpsuits", "sleepwear", "jeans", "lingerie", "dresses", "tops"].includes(key)) {
+    const orClause = keywords
+      .flatMap((k) => [`name.ilike.%${k}%`, `category.ilike.%${k}%`])
+      .join(",");
+    return query.or(orClause);
+  }
+
   if (garmentTypes?.length) {
     let q = query.in("garment_type", garmentTypes);
     // Jumpsuits: also require name/category keyword so residual mislabels cannot leak.
@@ -207,7 +218,6 @@ export function applyCategoryFilter(query: any, category: string): any {
       q = q.or("name.ilike.%jean%,name.ilike.%denim%,fabric_construction.eq.denim");
       return q;
     }
-    const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
     if (keywords?.length && !["jumpsuits", "sleepwear"].includes(key)) {
       const orClause = keywords
         .flatMap((k) => [`name.ilike.%${k}%`, `category.ilike.%${k}%`])

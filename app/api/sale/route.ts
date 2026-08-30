@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
     sp.get("materialSubtype") || sp.get("fiberSubtype") || undefined;
   const fabricConstruction = sp.get("fabricConstruction") || undefined;
   const category = sp.get("category") || undefined;
+  const normalizedCategory =
+    category && category.toLowerCase() === "blouses" ? "tops" : category;
   const color = sp.get("color") || undefined;
   const brand = sp.get("brand") || undefined;
   const sort = normalizeSaleSort(sp.get("sort") || "discount");
@@ -41,7 +43,7 @@ export async function GET(request: NextRequest) {
       fiberSubtype: fiberSubtype || undefined,
       maxPrice,
       minPrice,
-      category: category && category !== "all" ? category : undefined,
+      category: normalizedCategory && normalizedCategory !== "all" ? normalizedCategory : undefined,
       color: color || undefined,
       brand: brand || undefined,
       sort: sort || undefined,

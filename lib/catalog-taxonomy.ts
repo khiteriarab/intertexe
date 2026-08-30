@@ -27,6 +27,16 @@ export type TaxonomyMenuRow = CatalogTaxonomyNode & {
 
 const TAXONOMY_VERSION = "retail-v1";
 
+/** Flat category menus — blouses roll up under Tops (subtype in filter sheet). */
+export const TAXONOMY_MENU_HIDDEN_SLUGS = new Set(["clothing/blouses"]);
+
+/** Tops group main pickers: Tops, Shirts, Tanks & Camisoles. */
+export const TOPS_GROUP_MENU_SLUGS = [
+  "clothing/tops",
+  "clothing/shirts",
+  "clothing/tanks-and-camisoles",
+] as const;
+
 export function taxonomyPathSegment(slug: string): string {
   const parts = slug.split("/");
   return parts.length > 1 ? parts.slice(1).join("/") : slug;
@@ -50,8 +60,8 @@ export function taxonomyLegacyBrowseCategory(taxonomySlug: string): string | nul
     dresses: "dresses",
     "bridal-dresses": "dresses",
     shirts: "shirts",
-    blouses: "blouses",
-    "tanks-and-camisoles": "tops",
+    blouses: "tops",
+    "tanks-and-camisoles": "tanks",
     "t-shirts": "tops",
     tops: "tops",
     knitwear: "knitwear",
@@ -147,10 +157,12 @@ function mapNode(row: Record<string, unknown>): CatalogTaxonomyNode {
 export function flattenTaxonomyMenu(nodes: CatalogTaxonomyNode[]): TaxonomyMenuRow[] {
   const byDept = nodes
     .filter((n) => !n.slug.endsWith("/all"))
+    .filter((n) => !TAXONOMY_MENU_HIDDEN_SLUGS.has(n.slug))
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder || a.slug.localeCompare(b.slug));
   return byDept.map((n) => ({
     ...n,
+    label: n.slug === "clothing/tanks-and-camisoles" ? "Tanks & Camisoles" : n.label,
     pathSegment: taxonomyPathSegment(n.slug),
     href: taxonomyHref(n.department, n.slug),
   }));
