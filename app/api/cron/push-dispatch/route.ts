@@ -1,15 +1,10 @@
 /**
- * Rich remote push dispatcher (P1 foundation).
+ * Rich remote push dispatcher (manual / inventory).
  * Auth: Authorization: Bearer $CRON_SECRET
  *
- * Dry-run by default unless PUSH_APNS_ENABLED=1.
- *
- * IMPORTANT: Do not break price-drop email crons
- * (`/api/cron/price-check`, `/api/notifications/price-drops`).
- * Push should consolidate with price-check later (same drop detection →
- * email + rich APNs). This route only reads `user_push_tokens` and sends
- * when an explicit payload is supplied (query/body) — it does not replace
- * the email pipelines.
+ * Transactional alerts (price drops, sale starts) are sent from
+ * `/api/notifications/price-drops` alongside email. Use this route only for
+ * manual broadcasts or token inventory checks.
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

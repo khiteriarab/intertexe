@@ -40,5 +40,6 @@ describe("Sale alerts", () => {
     assert.match(popup, /Sign in to turn on a sale alert\./);
     assert.match(popup, /SALE_ALERT/);
     assert.match(drops, /dispatchCatalogSaleAlerts/);
+    assert.match(drops, /sendAlertPushToUser/);
   });
 });

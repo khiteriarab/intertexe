@@ -12,9 +12,9 @@
  * Uses Apple's token-authenticated HTTP/2 API directly; no deprecated APNs
  * package or filesystem-backed key is required on Vercel.
  *
- * NOTE: Price-drop emails stay on /api/cron/price-check and
- * /api/notifications/price-drops. Push should consolidate with price-check
- * later (same drop detection → email + rich push) — do not fork that logic here.
+ * NOTE: Price-drop + sale alerts send email and rich APNs from
+ * /api/notifications/price-drops (consolidated). This module is the shared
+ * APNs transport; alert detection lives in the notification crons.
  */
 
 import fs from "fs";

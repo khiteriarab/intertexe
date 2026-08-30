@@ -82,7 +82,7 @@ export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
   {
     id: "price-drops",
     path: "/api/notifications/price-drops",
-    purpose: "Send price-drop notification emails",
+    purpose: "Send price-drop emails + rich APNs push for saved items",
     owner: "growth",
     schedule: "0 9 * * *",
     estimatedRuntime: "15–45s",
