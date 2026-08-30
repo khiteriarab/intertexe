@@ -111,6 +111,10 @@ BEGIN
 END;
 $$;
 
+-- Replace bodies (DROP required when Postgres sees a return-type mismatch on OR REPLACE).
+DROP FUNCTION IF EXISTS public.catalog_list(text, text, text, text, text, text, int, int, int);
+DROP FUNCTION IF EXISTS public.catalog_list_count(text, text, text, text, text, text, int);
+
 CREATE OR REPLACE FUNCTION public.catalog_list(
   p_preferred_region text DEFAULT 'us',
   p_fallback_region text DEFAULT 'us',
