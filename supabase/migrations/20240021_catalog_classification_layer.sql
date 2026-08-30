@@ -5,7 +5,8 @@
 -- - Derived tables + functions only; backfill via manual batch SQL
 -- =============================================================================
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- Supabase hosts pgcrypto in the extensions schema (not public search_path).
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- -----------------------------------------------------------------------------
 -- 1) Classification functions (derived from source fields only)
@@ -32,12 +33,15 @@ IMMUTABLE
 PARALLEL SAFE
 AS $$
   SELECT encode(
-    digest(
-      concat_ws('|',
-        public.catalog_image_url_norm(p_image_url),
-        lower(trim(coalesce(p_brand_slug, ''))),
-        lower(trim(coalesce(public.homepage_style_base_name(p_name), ''))),
-        lower(trim(regexp_replace(coalesce(p_composition, ''), '\s+', ' ', 'g')))
+    extensions.digest(
+      convert_to(
+        concat_ws('|',
+          public.catalog_image_url_norm(p_image_url),
+          lower(trim(coalesce(p_brand_slug, ''))),
+          lower(trim(coalesce(public.homepage_style_base_name(p_name), ''))),
+          lower(trim(regexp_replace(coalesce(p_composition, ''), '\s+', ' ', 'g')))
+        ),
+        'UTF8'
       ),
       'sha256'
     ),

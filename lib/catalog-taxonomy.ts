@@ -213,12 +213,12 @@ export async function fetchTaxonomyMenu(opts: {
   department: TaxonomyDepartment;
   region?: string;
   activeOnly?: boolean;
-  /** Customer menus must not show counts at launch; grids use browse RPC totals. */
+  /** When true, attach liveCount from catalog_taxonomy_node_counts. */
   includeCounts?: boolean;
 }): Promise<TaxonomyMenuRow[]> {
   const nodes = await fetchTaxonomyNodes({ department: opts.department, activeOnly: opts.activeOnly });
 
-  if (opts.includeCounts === false || opts.includeCounts === undefined) {
+  if (!opts.includeCounts) {
     return prependDepartmentAllRow(flattenTaxonomyMenu(nodes), opts.department);
   }
 

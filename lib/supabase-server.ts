@@ -1949,7 +1949,7 @@ async function fetchShopLiveApparelAllRows(
       q2 = q2.or(orClauses.join(","));
     }
     if (opts.rpcFiber) q2 = q2.ilike("composition", `%${opts.rpcFiber}%`);
-    if (opts.rpcCategory) q2 = q2.eq("category", opts.rpcCategory);
+    if (opts.rpcCategory) q2 = applyCategoryFilter(q2, opts.rpcCategory);
     q2 = q2.range(fetchOffset, fetchOffset + pageSize - 1);
     const { data: chunk, error: chunkErr } = await q2;
     if (chunkErr || !chunk || chunk.length === 0) break;
@@ -2412,7 +2412,15 @@ function wantsSaleShoes(opts: { fiber?: string; category?: string }): boolean {
 function buildSaleDirectQuery(
   supabase: NonNullable<ReturnType<typeof getServerSupabase>>,
   region: string,
-  opts: { fiber?: string; fiberSubtype?: string; category?: string; color?: string; brand?: string },
+  opts: {
+    fiber?: string;
+    fiberSubtype?: string;
+    category?: string;
+    color?: string;
+    brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+  },
   columns = "*",
   selectOptions?: { count: "exact"; head: true }
 ) {
@@ -2454,6 +2462,12 @@ function buildSaleDirectQuery(
   if (opts.brand) {
     q = q.eq("brand_slug", opts.brand.toLowerCase());
   }
+  if (opts.minPrice != null && opts.minPrice > 0) {
+    q = q.gte("price_numeric", opts.minPrice);
+  }
+  if (opts.maxPrice != null && opts.maxPrice > 0) {
+    q = q.lte("price_numeric", opts.maxPrice);
+  }
   return q;
 }
 
@@ -2482,11 +2496,13 @@ export async function getSaleTotalCount(opts: {
   const category = opts.category && opts.category !== "all" ? opts.category : undefined;
   const color = opts.color || undefined;
   const brand = opts.brand || undefined;
+  const minPrice = opts.minPrice;
+  const maxPrice = opts.maxPrice;
   try {
     const { count, error } = await buildSaleDirectQuery(
       supabase,
       preferred,
-      { fiber, category, color, brand },
+      { fiber, category, color, brand, minPrice, maxPrice },
       "id",
       { count: "exact", head: true }
     );
@@ -2532,7 +2548,7 @@ async function fetchSaleProductsViaDirectTable(options: {
     filterOpts,
   } = options;
 
-  let q = buildSaleDirectQuery(supabase, preferred, filterOpts, "*");
+  let q = buildSaleDirectQuery(supabase, preferred, { ...filterOpts, minPrice, maxPrice }, "*");
   q = applySaleQuerySort(q, sort);
   q = q.range(offset, offset + limit - 1);
   const { data, error } = await q;
@@ -2629,6 +2645,7 @@ async function fetchSaleProductsDirect(options: {
     Boolean(category && category !== "all") ||
     Boolean(fiberSubtype) ||
     minPrice != null ||
+    maxPrice != null ||
     Boolean(color) ||
     Boolean(brand);
 

@@ -5,7 +5,7 @@
  */
 import { getServerSupabase } from "./supabase-service-client";
 import { filterConsumerCatalogProducts } from "./catalog-consumer-guard";
-import { applyCategoryFilter, CATEGORY_TO_GARMENT_TYPE } from "./catalog-shop-mappings";
+import { applyCategoryFilter, CATEGORY_TO_GARMENT_TYPE, isKeywordHardShopCategory, SHOP_CATEGORY_TEXT_KEYWORDS } from "./catalog-shop-mappings";
 import { queryCatalogListRPC } from "./catalog-list-rpc";
 import {
   queryCatalogBrowsePageV2,
@@ -446,9 +446,28 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
     if (categories.length === 1) {
       query = applyCategoryFilter(query, categories[0]);
     } else if (categories.length > 1) {
-      const allTypes = categories.flatMap((c) => CATEGORY_TO_GARMENT_TYPE[c.toLowerCase()] || []);
-      if (allTypes.length) {
-        query = query.in("garment_type", [...new Set(allTypes)]);
+      const keywordParts: string[] = [];
+      let allKeywordHard = true;
+      for (const c of categories) {
+        const key = c.toLowerCase();
+        if (!isKeywordHardShopCategory(key)) {
+          allKeywordHard = false;
+          break;
+        }
+        const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
+        if (keywords?.length) {
+          for (const k of keywords) {
+            keywordParts.push(`name.ilike.%${k}%`, `category.ilike.%${k}%`);
+          }
+        }
+      }
+      if (allKeywordHard && keywordParts.length > 0) {
+        query = query.or(keywordParts.join(","));
+      } else {
+        const allTypes = categories.flatMap((c) => CATEGORY_TO_GARMENT_TYPE[c.toLowerCase()] || []);
+        if (allTypes.length) {
+          query = query.in("garment_type", [...new Set(allTypes)]);
+        }
       }
     }
 

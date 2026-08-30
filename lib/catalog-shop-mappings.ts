@@ -185,15 +185,45 @@ const COLLECTION_CATEGORY_GARMENT_TYPES: Record<string, string[]> = {
   "cotton-clothing": ["dresses", "tops_blouses", "pants_trousers"],
 };
 
+/** Subcategories where count/grid must use keyword AND, not garment_type OR (114 vs 4 blouses). */
+export const KEYWORD_HARD_SHOP_CATEGORIES = new Set([
+  "shirts",
+  "blouses",
+  "tanks",
+  "trousers",
+  "bottoms",
+  "pants",
+  "shorts",
+  "coats",
+  "jackets",
+  "matching-sets",
+  "shoes",
+  "bags",
+]);
+
+export function isKeywordHardShopCategory(category: string): boolean {
+  return KEYWORD_HARD_SHOP_CATEGORIES.has(category.toLowerCase());
+}
+
+/** Parent categories that intentionally use garment_type OR keyword (broader hub totals). */
+export const GARMENT_OR_KEYWORD_PARENT_CATEGORIES = new Set([
+  "jumpsuits",
+  "sleepwear",
+  "jeans",
+  "lingerie",
+  "dresses",
+  "tops",
+]);
+
 export function applyCategoryFilter(query: any, category: string): any {
   const key = category.toLowerCase();
   const garmentTypes =
     SHOP_CATEGORY_GARMENT_TYPES[key] ?? COLLECTION_CATEGORY_GARMENT_TYPES[key];
   const keywords = SHOP_CATEGORY_TEXT_KEYWORDS[key];
 
-  // Subcategory chips (blouses, shirts, tanks, …) — keyword required, same as productMatchesHardCategory.
+  // Subcategory chips — keyword required, same as productMatchesHardCategory.
   // Do NOT OR garment_type with keywords: PostgREST `or=` broadens to ~all tops_blouses (114 vs 4 blouses).
-  if (keywords?.length && garmentTypes?.length && !["jumpsuits", "sleepwear", "jeans", "lingerie", "dresses", "tops"].includes(key)) {
+  if (keywords?.length && garmentTypes?.length && isKeywordHardShopCategory(key)) {
     const orClause = keywords
       .flatMap((k) => [`name.ilike.%${k}%`, `category.ilike.%${k}%`])
       .join(",");

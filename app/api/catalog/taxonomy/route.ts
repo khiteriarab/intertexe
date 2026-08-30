@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (withCounts) {
-    const menu = await fetchTaxonomyMenu({ department, region, activeOnly });
+    const menu = await fetchTaxonomyMenu({ department, region, activeOnly, includeCounts: true });
     return NextResponse.json(
       {
         department,

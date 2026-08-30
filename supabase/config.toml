@@ -1,0 +1,7 @@
+# Consumer + Founder HQ Supabase (intertexe / burrylupizvggupsryuj)
+# Enterprise/DPP uses enterprise/supabase/config.toml (obelisk-core) — never mix.
+
+project_id = "burrylupizvggupsryuj"
+
+[db]
+major_version = 15
