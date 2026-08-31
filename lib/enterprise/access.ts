@@ -33,7 +33,10 @@ export async function resolveDashboardActor(): Promise<DashboardActor | null> {
 
   const memberships =
     enterprise && isEnterpriseConfigured()
-      ? await listEnterpriseMembershipsForUser(getEnterpriseUserClient(enterprise.accessToken))
+      ? await listEnterpriseMembershipsForUser(
+          getEnterpriseUserClient(enterprise.accessToken),
+          enterprise.accessToken
+        )
       : [];
   const hasStaffDppLink = hq ? Boolean(await getActiveIdentityLinkByHqUserId(hq.authUserId)) : false;
 

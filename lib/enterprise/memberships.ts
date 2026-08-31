@@ -1,13 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { CUSTOMER_ZERO_SLUG, DEMO_BRAND_SLUG, isReservedHqSlug } from "./constants";
+import { authUserIdFromAccessToken } from "./jwt-claims";
 import type { EnterpriseMembership, WorkspaceContext } from "./types";
 
 export type { EnterpriseMembership, WorkspaceContext } from "./types";
 
 export async function listEnterpriseMembershipsForUser(
-  client: SupabaseClient
+  client: SupabaseClient,
+  accessToken?: string | null
 ): Promise<EnterpriseMembership[]> {
-  const { data: profile } = await client.from("profiles").select("id").maybeSingle();
+  const authUserId = accessToken ? authUserIdFromAccessToken(accessToken) : null;
+  let profileQuery = client.from("profiles").select("id");
+  if (authUserId) {
+    profileQuery = profileQuery.eq("auth_user_id", authUserId);
+  }
+  const { data: profile } = await profileQuery.maybeSingle();
   if (!profile?.id) return [];
 
   const { data: rows } = await client

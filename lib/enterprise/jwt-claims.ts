@@ -13,3 +13,9 @@ export function sessionIdFromAccessToken(token: string): string | null {
   const sessionId = payload?.session_id;
   return typeof sessionId === "string" && sessionId ? sessionId : null;
 }
+
+export function authUserIdFromAccessToken(token: string): string | null {
+  const payload = decodeJwtPayload(token);
+  const sub = payload?.sub;
+  return typeof sub === "string" && sub ? sub : null;
+}

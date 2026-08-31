@@ -1,7 +1,7 @@
 import { getHqSession, writeAuthAudit } from "../dashboard/auth";
 import { createEphemeralEnterpriseAnonClient, getEnterpriseServiceClient, getEnterpriseUserClient } from "./client";
 import { CUSTOMER_ZERO_SLUG, ENTERPRISE_HANDOFF_TTL_SECONDS } from "./constants";
-import { sessionIdFromAccessToken } from "./jwt-claims";
+import { authUserIdFromAccessToken, sessionIdFromAccessToken } from "./jwt-claims";
 import {
   getActiveIdentityLinkByHqUserId,
   getHandoffSession,
@@ -24,7 +24,13 @@ async function activeMembershipForUser(
   slug: string
 ): Promise<EnterpriseMembership | null> {
   const client = getEnterpriseUserClient(accessToken);
-  const { data: profile } = await client.from("profiles").select("id").maybeSingle();
+  const authUserId = authUserIdFromAccessToken(accessToken);
+  if (!authUserId) return null;
+  const { data: profile } = await client
+    .from("profiles")
+    .select("id")
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
   if (!profile?.id) return null;
   const { data: rows } = await client
     .from("organization_memberships")

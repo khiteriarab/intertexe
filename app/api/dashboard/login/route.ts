@@ -101,7 +101,8 @@ export async function POST(request: NextRequest) {
           );
         }
         const memberships = await listEnterpriseMembershipsForUser(
-          getEnterpriseUserClient(enterprise.data.session.access_token)
+          getEnterpriseUserClient(enterprise.data.session.access_token),
+          enterprise.data.session.access_token
         );
         if (!memberships.length) {
           return NextResponse.json(
