@@ -1,5 +1,7 @@
 -- =============================================================================
 -- Batched NFP mismatch repair (run in Supabase SQL Editor or psql)
+-- ⚠️ DISABLED ON PRODUCTION — see docs/production-catalog-safety.md
+-- Do not run manually unless CATALOG_BULK_MUTATIONS_ENABLED=true during maintenance.
 -- Prereq: 20260830_fix_synthetic_nfp_mismatch.sql applied
 -- Run repeatedly until remaining = 0. Tune batch size if IO is high.
 -- =============================================================================
