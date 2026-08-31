@@ -2,6 +2,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 import { NextResponse } from "next/server";
+import {
+  catalogBulkMutationsDisabledReason,
+  catalogBulkMutationsEnabled,
+} from "@/lib/catalog-bulk-mutations";
 import { getServerSupabase } from "@/lib/supabase-service-client";
 
 function authorize(request: Request): NextResponse | null {
@@ -16,8 +20,15 @@ function authorize(request: Request): NextResponse | null {
   return null;
 }
 
-/** Ops: batched NFP/composition repair. Pass ?afterId=uuid cursor between invocations. */
+/** Ops: batched NFP/composition repair. Disabled unless CATALOG_BULK_MUTATIONS_ENABLED=true. */
 export async function GET(request: Request) {
+  if (!catalogBulkMutationsEnabled()) {
+    return NextResponse.json(
+      { ok: false, disabled: true, error: catalogBulkMutationsDisabledReason() },
+      { status: 403 }
+    );
+  }
+
   const denied = authorize(request);
   if (denied) return denied;
 

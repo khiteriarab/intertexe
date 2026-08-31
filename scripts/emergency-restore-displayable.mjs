@@ -31,6 +31,9 @@ const root = process.cwd();
 loadEnvFile(path.join(root, ".env.development.local"));
 loadEnvFile(path.join(root, ".env.local"));
 
+import { assertCatalogBulkMutationsAllowed } from "./lib/catalog-bulk-guard.mjs";
+assertCatalogBulkMutationsAllowed();
+
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 const projectRef = process.env.SUPABASE_PROJECT_REF || "burrylupizvggupsryuj";
 const hotfixSql = fs.readFileSync(

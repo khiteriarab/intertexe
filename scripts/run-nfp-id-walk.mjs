@@ -27,6 +27,9 @@ loadEnvFile(path.join(root, ".env.development.local"));
 loadEnvFile(path.join(root, ".env.local"));
 loadEnvFile(path.join(root, "../.env"));
 
+import { assertCatalogBulkMutationsAllowed } from "./lib/catalog-bulk-guard.mjs";
+assertCatalogBulkMutationsAllowed();
+
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 const projectRef = process.env.SUPABASE_PROJECT_REF || "burrylupizvggupsryuj";
 const scanLimit = Number(process.argv[2] || 1200);

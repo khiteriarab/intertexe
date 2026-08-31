@@ -28,6 +28,9 @@ loadEnvFile(path.join(root, ".env.development.local"));
 loadEnvFile(path.join(root, ".env.local"));
 loadEnvFile(path.join(root, "../.env"));
 
+import { assertCatalogBulkMutationsAllowed } from "./lib/catalog-bulk-guard.mjs";
+assertCatalogBulkMutationsAllowed();
+
 const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const scanLimit = Number(process.argv[2] || 1200);
