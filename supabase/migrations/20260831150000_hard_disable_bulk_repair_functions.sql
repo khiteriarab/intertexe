@@ -2,7 +2,7 @@
 -- Normal feed ingest still updates rows one-at-a-time via update_is_displayable trigger.
 -- Re-enable only by restoring function bodies from prior migrations during a maintenance window.
 
-CREATE OR REPLACE FUNCTION public.fix_synthetic_nfp_mismatch_batch(p_limit integer DEFAULT 500)
+CREATE OR REPLACE FUNCTION public.fix_synthetic_nfp_mismatch_batch(p_limit integer DEFAULT 2000)
 RETURNS integer
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -15,7 +15,7 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.fix_synthetic_nfp_mismatch_id_batch(
-  p_after_id uuid,
+  p_after_id uuid DEFAULT '00000000-0000-0000-0000-000000000000',
   p_scan_limit integer DEFAULT 800,
   p_fix_limit integer DEFAULT 400
 )
