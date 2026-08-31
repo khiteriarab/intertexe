@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       fabricConstruction,
       maxPrice: Number.isFinite(maxPrice) ? maxPrice : undefined,
       minPrice: Number.isFinite(minPrice) ? minPrice : undefined,
-      skipCount: false,
+      skipCount: true,
       type,
       shoeType: searchParams.get("shoeType") || undefined,
       subcategory: searchParams.get("subcategory") || undefined,

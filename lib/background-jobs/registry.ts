@@ -247,7 +247,7 @@ export const BACKGROUND_JOBS: BackgroundJobDefinition[] = [
   {
     id: "refresh-catalog-stats",
     path: "/api/cron/refresh-catalog-stats",
-    purpose: "Weekly platform_stats_cache refresh",
+    purpose: "Weekly platform_stats_cache + catalog route stats (iOS toolbar)",
     owner: "catalog",
     schedule: "0 5 * * 0",
     estimatedRuntime: "30–90s",

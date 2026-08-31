@@ -33,6 +33,65 @@ function apparelOnlyProducts<T extends { category?: string | null; name?: string
   return products.filter((p) => !isFootwearListing(p));
 }
 
+/** v2 browse is slow/empty for these — prefer catalog_list. */
+const CATALOG_LIST_FIRST_CATEGORIES = new Set([
+  "swimwear",
+  "shorts",
+  "matching-sets",
+  "tanks",
+]);
+
+function isSimpleCategoryBrowse(
+  opts: CatalogDirectQueryOpts,
+  categories: string[]
+): boolean {
+  const searchText = (opts.q || opts.search || "").trim();
+  return (
+    categories.length === 1 &&
+    !opts.fiber &&
+    !opts.fiberSubtype &&
+    !opts.materialSubtype &&
+    !opts.fabricConstruction &&
+    !opts.brand &&
+    searchText.length < 2 &&
+    !opts.color &&
+    opts.maxPrice == null &&
+    opts.minPrice == null &&
+    !opts.isSale &&
+    !opts.collection
+  );
+}
+
+async function queryCatalogListCategoryBrowse(
+  opts: CatalogDirectQueryOpts,
+  category: string
+): Promise<CatalogLiveQueryResult | null> {
+  const region = (opts.region || "us").toLowerCase();
+  const limit = Math.min(Math.max(opts.limit ?? 48, 1), 200);
+  const offset = Math.max(opts.offset ?? 0, 0);
+
+  const rpc = await queryCatalogListRPC({
+    region,
+    limit,
+    offset,
+    category,
+    skipCount: opts.skipCount ?? true,
+  });
+  if (rpc.error) return null;
+
+  const products = applyCatalogIntegrity(
+    apparelOnlyProducts(rpc.products as DirectCatalogProduct[]),
+    { ...opts, category }
+  );
+  return {
+    products,
+    total: opts.skipCount ? null : rpc.total,
+    hasMore: rpc.hasMore,
+    productIds: products.map((p) => p.id).filter(Boolean),
+    rpcVersion: "catalog_list",
+  };
+}
+
 const CATALOG_TABLE = "live_products_apparel";
 
 export { CATEGORY_TO_GARMENT_TYPE, applyCategoryFilter };
@@ -228,12 +287,28 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
 
   // Same RPC as iOS for all shop browse except collection/sale specialty paths.
   if (shouldUseAuthoritativeBrowse(opts)) {
+    const browseCategory =
+      categories[0] || (opts.category === "clothing" ? "clothing" : undefined);
+    const simpleCategory = isSimpleCategoryBrowse(opts, categories);
+    const categoryKey = categories[0]?.toLowerCase();
+
+    if (
+      simpleCategory &&
+      categoryKey &&
+      CATALOG_LIST_FIRST_CATEGORIES.has(categoryKey)
+    ) {
+      const listResult = await queryCatalogListCategoryBrowse(opts, categories[0]);
+      if (listResult && (listResult.products.length > 0 || offset > 0)) {
+        return listResult;
+      }
+    }
+
     const v2 = await queryCatalogBrowsePageV2({
       region,
       limit: Math.min(limit, 100),
       offset,
       fiber: opts.fiber,
-      category: categories[0] || (opts.category === "clothing" ? "clothing" : undefined),
+      category: browseCategory,
       brand: opts.brand,
       search: searchText || undefined,
       sort: opts.sort,
@@ -244,24 +319,35 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       fabricConstruction: opts.fabricConstruction,
       apparelOnly: true,
     });
+    if (!v2.error && v2.products.length > 0) {
+      return mapV2Result(v2);
+    }
+
+    // v2 timeout / no_matches for coarse buckets — catalog_list is faster and more complete.
+    if (simpleCategory && categories[0]) {
+      const listResult = await queryCatalogListCategoryBrowse(opts, categories[0]);
+      if (listResult && (listResult.products.length > 0 || offset > 0)) {
+        return listResult;
+      }
+    }
+
     if (!v2.error) {
       return mapV2Result(v2);
     }
+
     // Filtered browse must not fall back to legacy (would diverge from iOS IDs).
-    // Timeouts / RPC failures must surface as errors — never as empty catalogs.
-    const hasFilters = Boolean(
+    const hasComplexFilters = Boolean(
       opts.fiber ||
         opts.fiberSubtype ||
         opts.materialSubtype ||
         opts.fabricConstruction ||
-        categories.length ||
         opts.brand ||
         searchText.length >= 2 ||
         opts.color ||
         opts.maxPrice ||
         opts.minPrice
     );
-    if (hasFilters) {
+    if (hasComplexFilters || categories.length !== 1) {
       console.error(
         "[queryLiveCatalog] authoritative v2 failed; refusing legacy fallback for filtered browse",
         v2.error,

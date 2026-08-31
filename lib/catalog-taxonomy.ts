@@ -4,7 +4,16 @@
  */
 import { getServerSupabase } from "./supabase-service-client";
 import { queryCatalogBrowsePageV2 } from "./catalog-browse-v2";
+import { queryCatalogListRPC } from "./catalog-list-rpc";
 import { fetchFootwearCatalogPage } from "./footwear-catalog";
+
+/** Same slow/broken v2 categories as catalog-direct-query — prefer catalog_list. */
+const CATALOG_LIST_FIRST_CATEGORIES = new Set([
+  "swimwear",
+  "shorts",
+  "matching-sets",
+  "tanks",
+]);
 
 export type TaxonomyDepartment = "clothing" | "shoes";
 
@@ -325,6 +334,25 @@ export async function queryTaxonomyBrowse(opts: TaxonomyBrowseOpts): Promise<Tax
 
   const legacyCategory = taxonomyLegacyBrowseCategory(opts.taxonomySlug);
   if (legacyCategory) {
+    if (CATALOG_LIST_FIRST_CATEGORIES.has(legacyCategory)) {
+      const list = await queryCatalogListRPC({
+        region,
+        limit,
+        offset,
+        category: legacyCategory,
+        skipCount: true,
+      });
+      if (!list.error && (list.products.length > 0 || offset > 0)) {
+        return {
+          products: list.products as unknown as Record<string, unknown>[],
+          total: list.total ?? 0,
+          hasMore: list.hasMore,
+          totalStatus: "unavailable",
+          rpcVersion: "catalog_list",
+        };
+      }
+    }
+
     const v2 = await queryCatalogBrowsePageV2({
       region,
       limit,
@@ -341,6 +369,34 @@ export async function queryTaxonomyBrowse(opts: TaxonomyBrowseOpts): Promise<Tax
       fabricConstruction: opts.fabricConstruction,
       apparelOnly: true,
     });
+
+    if (!v2.error && v2.products.length > 0) {
+      return {
+        products: v2.products as unknown as Record<string, unknown>[],
+        total: v2.total ?? 0,
+        hasMore: v2.hasMore,
+        totalStatus: v2.totalStatus === "exact" || v2.totalStatus === "cached" ? "exact" : "unavailable",
+        rpcVersion: v2.rpcVersion,
+      };
+    }
+
+    const list = await queryCatalogListRPC({
+      region,
+      limit,
+      offset,
+      category: legacyCategory,
+      skipCount: true,
+    });
+    if (!list.error && (list.products.length > 0 || offset > 0)) {
+      return {
+        products: list.products as unknown as Record<string, unknown>[],
+        total: list.total ?? 0,
+        hasMore: list.hasMore,
+        totalStatus: "unavailable",
+        rpcVersion: "catalog_list",
+      };
+    }
+
     if (v2.error) return empty;
     return {
       products: v2.products as unknown as Record<string, unknown>[],
