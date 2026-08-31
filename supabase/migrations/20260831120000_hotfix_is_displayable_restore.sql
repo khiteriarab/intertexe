@@ -1,5 +1,6 @@
--- Keep products.natural_fiber_percent in sync with composition on every write.
--- Prevents feed re-syncs and parser upgrades from leaving stale NFP in the stored column.
+-- EMERGENCY: NFP id-walk backfill re-fired update_is_displayable on ~138k rows with
+-- stricter rules (composition required + catalog_consumer_exclusion_reason), hiding most catalog.
+-- Keep NFP sync on write; restore is_displayable to pre-NFP-migration consumer gates.
 
 CREATE OR REPLACE FUNCTION public.update_is_displayable()
 RETURNS TRIGGER AS $$
@@ -64,4 +65,41 @@ END;
 $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION public.update_is_displayable() IS
-  'Derives natural_fiber_percent from composition on write, then sets is_displayable from derived NFP >= 80.';
+  'Derives NFP from composition on write; is_displayable uses indexed consumer gates (no exclusion_reason in trigger).';
+
+-- Batch restore: touch rows so fixed trigger recomputes is_displayable.
+CREATE OR REPLACE FUNCTION public.restore_is_displayable_batch(p_limit integer DEFAULT 5000)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_updated integer := 0;
+BEGIN
+  SET LOCAL statement_timeout = '180s';
+
+  WITH pick AS (
+    SELECT p.id
+    FROM public.products AS p
+    WHERE p.approved = 'yes'
+      AND coalesce(p.is_active, true) IS TRUE
+      AND coalesce(p.natural_fiber_percent, 0) >= 80
+      AND p.is_displayable IS DISTINCT FROM true
+    ORDER BY p.id
+    LIMIT greatest(100, least(coalesce(p_limit, 5000), 10000))
+  ),
+  updated AS (
+    UPDATE public.products AS p
+    SET composition = p.composition
+    FROM pick
+    WHERE p.id = pick.id
+    RETURNING p.id
+  )
+  SELECT count(*)::integer INTO v_updated FROM updated;
+
+  RETURN coalesce(v_updated, 0);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.restore_is_displayable_batch(integer) TO service_role;
