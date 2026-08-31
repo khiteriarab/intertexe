@@ -259,6 +259,20 @@ export async function evaluatePromoteGates(
     blockers.push("system_status.catalog_publish_blocked is true");
   }
 
+  const maxNfpMismatch = Number(process.env.CATALOG_MAX_NFP_MISMATCH || 500);
+  try {
+    const { data: mismatchCount, error: mismatchErr } = await supabase.rpc(
+      "count_synthetic_nfp_mismatch"
+    );
+    if (!mismatchErr && typeof mismatchCount === "number" && mismatchCount > maxNfpMismatch) {
+      warnings.push(
+        `NFP/composition mismatch rows: ${mismatchCount.toLocaleString()} (threshold ${maxNfpMismatch.toLocaleString()}) — run NFP backfill`
+      );
+    }
+  } catch {
+    // RPC may be absent on older schemas — non-blocking
+  }
+
   return {
     ready: blockers.length === 0,
     blockers,
