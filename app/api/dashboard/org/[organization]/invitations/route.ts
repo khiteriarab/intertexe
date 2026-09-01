@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireOrganizationMutation } from "../../../../../lib/enterprise/access";
+import { requireOrganizationMutation } from "../../../../../../lib/enterprise/access";
 import {
   createOrganizationInvitation,
   listOrganizationInvitations,
-} from "../../../../../lib/enterprise/founder-invitations";
+} from "../../../../../../lib/enterprise/founder-invitations";
 
 export const dynamic = "force-dynamic";
 

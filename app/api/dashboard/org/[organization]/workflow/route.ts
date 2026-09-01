@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrganizationAccess, requireOrganizationMutation } from "../../../../../lib/enterprise/access";
-import { mergeWorkflowAssignments, type WorkflowStageId } from "../../../../../lib/enterprise/workflow";
+import { getOrganizationAccess, requireOrganizationMutation } from "../../../../../../lib/enterprise/access";
+import { mergeWorkflowAssignments, type WorkflowStageId } from "../../../../../../lib/enterprise/workflow";
 
 export const dynamic = "force-dynamic";
 
