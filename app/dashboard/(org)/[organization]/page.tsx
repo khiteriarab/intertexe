@@ -113,7 +113,7 @@ export default async function OrganizationOverviewPage({
 
       {membership.plan === "free_snapshot" ? (
         <div className="ent-zone ent-zone-butter rounded-[var(--ent-radius-2xl)] px-8 py-10 md:px-10 md:py-12 mb-14 shadow-[var(--ent-shadow-panel)]">
-          <p className="ent-serif text-[1.65rem] text-[var(--ent-ink)]">Continue with the Founding DPP Pilot</p>
+          <p className="ent-heading text-[1.65rem] text-[var(--ent-ink)]">Continue with the Founding DPP Pilot</p>
           <p className="text-sm leading-relaxed text-[var(--ent-muted)] mt-3 max-w-2xl">
             $5,000 · 100 complex products or 500 structured rows. This snapshot organization upgrades in place — source
             records are not copied into a new account.

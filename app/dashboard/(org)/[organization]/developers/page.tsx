@@ -76,7 +76,7 @@ export default async function DevelopersPage({
 
         <EntVisualPanel tone="stone" title="Webhooks">
           <div className="ent-panel-nested px-6 py-8 text-center">
-            <p className="ent-display ent-serif text-[3rem] leading-none text-[var(--ent-petrol-deep)]">{data.webhookCount}</p>
+            <p className="ent-display text-[3rem] leading-none text-[var(--ent-petrol-deep)]">{data.webhookCount}</p>
             <p className="text-sm text-[var(--ent-muted)] mt-2">
               {data.webhookCount === 1 ? "Webhook configured" : "Webhooks configured"}
             </p>

@@ -31,7 +31,6 @@ export default async function FilesPage({
     >
       {data.rows.length > 0 ? (
         <EntModuleMetrics
-          tone="cream"
           items={[
             { label: "Catalog imports", value: data.summary.imports },
             { label: "Source records", value: data.summary.sourceRecords },
@@ -51,7 +50,6 @@ export default async function FilesPage({
         />
       ) : (
         <EntModuleList
-          tone="blush"
           items={data.rows.map((row) => ({
             key: `${row.kind}-${row.id}`,
             primary: row.label,

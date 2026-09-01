@@ -48,7 +48,6 @@ export default async function BenchmarkingPage({
       ) : (
         <>
           <EntModuleMetrics
-            tone="cream"
             items={[
               { label: "Products in catalog", value: data.productCount },
               { label: "Published", value: `${data.publishedPct}%`, accent: true },

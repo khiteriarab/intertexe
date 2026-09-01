@@ -65,9 +65,9 @@ export function EntMetricTile({
   accent?: boolean;
 }) {
   return (
-    <div className="ent-panel-nested px-5 py-5 md:px-6 md:py-6">
+    <div className="ent-float-card px-5 py-5 md:px-6 md:py-6">
       <p
-        className={`ent-display ent-serif leading-none tabular-nums ${accent ? "text-[var(--ent-petrol-deep)]" : "text-[var(--ent-ink)]"}`}
+        className={`ent-display leading-none tabular-nums ${accent ? "text-[var(--ent-petrol-deep)]" : "text-[var(--ent-ink)]"}`}
         style={{ fontSize: "clamp(2rem, 4vw, 2.75rem)" }}
       >
         {value}
@@ -80,19 +80,15 @@ export function EntMetricTile({
 
 export function EntModuleMetrics({
   items,
-  tone = "cream",
 }: {
   items: Array<{ label: string; value: string | number; hint?: string; accent?: boolean }>;
-  tone?: EntZoneTone;
 }) {
   return (
-    <EntVisualZone tone={tone} className="p-5 md:p-6 mb-10 md:mb-12">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {items.map((item) => (
-          <EntMetricTile key={item.label} {...item} />
-        ))}
-      </div>
-    </EntVisualZone>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-10 md:mb-12">
+      {items.map((item) => (
+        <EntMetricTile key={item.label} {...item} />
+      ))}
+    </div>
   );
 }
 
@@ -157,7 +153,6 @@ export function EntModuleSection({
 
 export function EntModuleList({
   items,
-  tone = "cream",
 }: {
   items: Array<{
     key: string;
@@ -167,14 +162,12 @@ export function EntModuleList({
     href?: string;
     trailing?: React.ReactNode;
   }>;
-  tone?: EntZoneTone;
 }) {
   if (items.length === 0) return null;
   return (
-    <EntVisualZone tone={tone} className="p-2 md:p-3">
-      <ul className="divide-y divide-[var(--ent-border)]/80">
-        {items.map((item) => (
-          <li key={item.key} className="px-4 py-5 md:px-5 md:py-6">
+    <ul className="grid sm:grid-cols-2 gap-4">
+      {items.map((item) => (
+        <li key={item.key} className="ent-float-card p-5 md:p-6">
             {item.href ? (
               <Link href={item.href} className="group block">
                 <EntModuleListRow item={item} linked />
@@ -182,10 +175,9 @@ export function EntModuleList({
             ) : (
               <EntModuleListRow item={item} />
             )}
-          </li>
-        ))}
-      </ul>
-    </EntVisualZone>
+        </li>
+      ))}
+    </ul>
   );
 }
 

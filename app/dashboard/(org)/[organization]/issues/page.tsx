@@ -13,10 +13,9 @@ import { formatOperatorTime, formatReviewerLine } from "../../../../../lib/enter
 import {
   EntEmptyState,
   EntIssuePill,
-  EntPageHeader,
   entLinkClass,
 } from "../../../components/EnterpriseUi";
-import { EntIssueCompare, EntVisualPanel } from "../../../components/EnterpriseModuleUi";
+import { EntIssueCompare, EntModulePage, EntVisualPanel } from "../../../components/EnterpriseModuleUi";
 import { IssueActions } from "./IssueActions";
 
 export const dynamic = "force-dynamic";
@@ -80,7 +79,7 @@ function IssueCard({
         </p>
       </div>
 
-      <h3 className="ent-serif text-[1.35rem] text-[var(--ent-ink)]">{issue.title}</h3>
+      <h3 className="ent-heading text-[1.35rem] text-[var(--ent-ink)]">{issue.title}</h3>
 
       <p className="text-sm text-[var(--ent-muted)] mt-2">
         {issue.product_id ? (
@@ -152,19 +151,16 @@ export default async function IssuesPage({
   const base = `/dashboard/${membership.slug}`;
 
   return (
-    <div>
-      <div className="ent-float-card px-8 py-10 md:px-10 md:py-12 mb-10">
-        <EntPageHeader
-          brandLine
-          title="Issues"
-          description="What INTERTEXE found in your catalog, why it matters, and what you can do."
-        />
-        <p className="text-sm text-[var(--ent-muted)] mt-2">
+    <EntModulePage
+      zone="cream"
+      title="Issues"
+      description="What INTERTEXE found in your catalog, why it matters, and what you can do."
+    >
+      <p className="text-sm text-[var(--ent-muted)] -mt-4 mb-8">
         {issues.length === 0
           ? "No findings yet. Import a catalog on Products — validation and identifier collisions appear here."
           : `${openCount} open · ${blockingCount} blocking publish`}
-        </p>
-      </div>
+      </p>
 
       {issues.length === 0 ? (
         <EntEmptyState
@@ -194,6 +190,6 @@ export default async function IssuesPage({
           })}
         </div>
       )}
-    </div>
+    </EntModulePage>
   );
 }

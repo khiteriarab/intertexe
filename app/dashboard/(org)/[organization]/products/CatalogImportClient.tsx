@@ -2,6 +2,14 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  entButtonClass,
+  entButtonGhostClass,
+  entInputClass,
+  entLabelClass,
+  entMetaClass,
+  entSelectClass,
+} from "../../../components/EnterpriseUi";
 
 type PreviewResponse = {
   columns: string[];
@@ -118,20 +126,19 @@ export function CatalogImportClient({
   if (!canMutate) return null;
 
   return (
-    <section className="bg-white border border-black/10 rounded-xl p-5 mb-6">
-      <h2 className="text-sm font-medium">Upload catalog</h2>
-      <p className="text-sm text-black/55 mt-1">
-        What happens: INTERTEXE reads your rows, suggests obvious columns, and shows identifier
-        matches before anything is saved. What we need: confirm the mapping, then Confirm import.
-        Colliding GTINs or SKUs are not silently merged.
+    <div>
+      <h2 className="ent-heading text-lg text-[var(--ent-ink)]">Upload catalog</h2>
+      <p className={`text-sm text-[var(--ent-muted)] mt-2 max-w-2xl leading-relaxed`}>
+        INTERTEXE reads your rows, suggests obvious columns, and shows identifier matches before anything is saved.
+        Confirm the mapping, then confirm import. Colliding GTINs or SKUs are not silently merged.
       </p>
-      <form onSubmit={onPreview} className="mt-4 space-y-3">
-        <label className="block text-sm">
+      <form onSubmit={onPreview} className="mt-6 space-y-4">
+        <label className="block text-sm text-[var(--ent-ink-soft)]">
           Upload CSV
           <input
             type="file"
             accept=".csv,text/csv,text/plain"
-            className="mt-1 block w-full text-sm"
+            className="mt-2 block w-full text-sm"
             onChange={async (event) => {
               const file = event.target.files?.[0];
               if (!file) return;
@@ -141,15 +148,15 @@ export function CatalogImportClient({
             }}
           />
         </label>
-        <label className="block text-sm">
+        <label className="block text-sm text-[var(--ent-ink-soft)]">
           File name
           <input
             value={filename}
             onChange={(e) => setFilename(e.target.value)}
-            className="mt-1 w-full border border-black/15 rounded-lg px-3 py-2 text-sm"
+            className={`mt-2 w-full ${entInputClass}`}
           />
         </label>
-        <label className="block text-sm">
+        <label className="block text-sm text-[var(--ent-ink-soft)]">
           CSV
           <textarea
             required
@@ -159,42 +166,38 @@ export function CatalogImportClient({
               setPreview(null);
             }}
             rows={8}
-            className="mt-1 w-full border border-black/15 rounded-lg px-3 py-2 font-mono text-xs"
+            className={`mt-2 w-full font-mono text-xs ${entInputClass}`}
             placeholder={"SKU,Product Name,Composition\nSKU-1,Oxford shirt,100% Cotton"}
           />
         </label>
-        <button
-          type="submit"
-          disabled={busy}
-          className="text-xs tracking-widest uppercase bg-black text-white px-4 py-2 disabled:opacity-50"
-        >
+        <button type="submit" disabled={busy} className={entButtonClass}>
           Preview import
         </button>
       </form>
 
       {preview ? (
-        <div className="mt-5 space-y-3">
-          <p className="text-sm">
+        <div className="mt-8 ent-panel-nested p-5 md:p-6 space-y-4">
+          <p className="text-sm text-[var(--ent-ink-soft)]">
             {preview.rowCount} rows · {preview.preview.estimatedNewProducts} new ·{" "}
             {preview.preview.estimatedUpdates} same-product updates · {preview.preview.duplicateRisk}{" "}
             identifier collisions kept separate
             {preview.mappingSource === "saved_template" ? " · mapping recalled from a previous file" : ""}
           </p>
           {preview.preview.parsingWarnings.length ? (
-            <ul className="text-sm text-black/70 list-disc pl-5 space-y-1">
+            <ul className="text-sm text-[var(--ent-muted)] list-disc pl-5 space-y-1">
               {preview.preview.parsingWarnings.map((warning) => (
                 <li key={warning}>{warning}</li>
               ))}
             </ul>
           ) : null}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {preview.columns.map((column) => {
               const suggestion = preview.suggested.find((row) => row.sourceColumn === column);
               return (
                 <label key={column} className="flex flex-wrap items-center gap-3 text-sm">
-                  <span className="w-40 truncate font-mono text-xs">{column}</span>
+                  <span className="w-40 truncate font-mono text-xs text-[var(--ent-muted)]">{column}</span>
                   <select
-                    className="border border-black/15 rounded px-2 py-1"
+                    className={`${entSelectClass} text-sm py-2`}
                     value={mapping[column] || ""}
                     onChange={(e) => setMapping((current) => ({ ...current, [column]: e.target.value }))}
                   >
@@ -204,7 +207,7 @@ export function CatalogImportClient({
                       </option>
                     ))}
                   </select>
-                  <span className="text-[11px] text-black/45">
+                  <span className={`${entMetaClass}`}>
                     {suggestion?.confidence === "high" && suggestion.canonicalField
                       ? "Suggested (high confidence)"
                       : suggestion?.confidence === "medium" && suggestion.canonicalField
@@ -215,21 +218,15 @@ export function CatalogImportClient({
               );
             })}
           </div>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onCommit}
-            className="text-xs tracking-widest uppercase border border-black/20 px-4 py-2"
-          >
+          <button type="button" disabled={busy} onClick={onCommit} className={entButtonGhostClass}>
             Confirm import
           </button>
-          <p className="text-xs text-black/45">
-            Next: open Issues for collisions and missing fields, then review a product and publish
-            its passport when ready.
+          <p className={`${entMetaClass}`}>
+            Next: open Issues for collisions and missing fields, then review a product and publish its passport when ready.
           </p>
         </div>
       ) : null}
-      {message ? <p className="text-sm text-black/60 mt-3">{message}</p> : null}
-    </section>
+      {message ? <p className="text-sm text-[var(--ent-muted)] mt-4">{message}</p> : null}
+    </div>
   );
 }

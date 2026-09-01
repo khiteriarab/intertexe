@@ -31,7 +31,6 @@ export default async function SuppliersPage({
     >
       {data.suppliers.length > 0 ? (
         <EntModuleMetrics
-          tone="cream"
           items={[
             { label: "Total suppliers", value: data.summary.total },
             { label: "With linked products", value: data.summary.withProducts },
@@ -53,7 +52,6 @@ export default async function SuppliersPage({
       ) : (
         <EntModuleSection title="Supplier list" subtitle="Linked products, evidence status, and recent activity">
           <EntModuleList
-            tone="cream"
             items={data.suppliers.map((supplier) => ({
               key: supplier.id,
               primary: supplier.name,

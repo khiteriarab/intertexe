@@ -66,11 +66,11 @@ export default async function AnalyticsPage({
         <EntVisualPanel tone="blush" title="Catalog overview" subtitle="Active products and import history">
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="ent-panel-nested px-5 py-6">
-              <p className="ent-display ent-serif text-[3rem] leading-none text-[var(--ent-ink)]">{data.catalog.total}</p>
+              <p className="ent-display text-[3rem] leading-none text-[var(--ent-ink)]">{data.catalog.total}</p>
               <p className="text-sm text-[var(--ent-muted)] mt-2">Total products</p>
             </div>
             <div className="ent-panel-nested px-5 py-6">
-              <p className="ent-display ent-serif text-[3rem] leading-none text-[var(--ent-petrol-deep)]">{data.catalog.imports}</p>
+              <p className="ent-display text-[3rem] leading-none text-[var(--ent-petrol-deep)]">{data.catalog.imports}</p>
               <p className="text-sm text-[var(--ent-muted)] mt-2">Catalog imports</p>
             </div>
           </div>

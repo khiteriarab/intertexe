@@ -4,10 +4,10 @@ import { loadOrgPassports } from "../../../../../lib/enterprise/queries";
 import { formatReviewerLine } from "../../../../../lib/enterprise/reviewer-display";
 import {
   EntEmptyState,
-  EntPageHeader,
   EntPassportPill,
   entLinkClass,
 } from "../../../components/EnterpriseUi";
+import { EntModulePage } from "../../../components/EnterpriseModuleUi";
 import { PassportQr } from "./PassportQr";
 
 export const dynamic = "force-dynamic";
@@ -24,18 +24,14 @@ export default async function PassportsPage({
   const base = `/dashboard/${membership.slug}`;
 
   return (
-    <div>
-      <div className="ent-float-card px-8 py-10 md:px-12 md:py-12 mb-10">
-        <EntPageHeader
-          brandLine
-          title="Passports"
-          description="Digital product identities for your catalog. Published versions are immutable — QR codes keep the same public identity across updates."
-        />
-      </div>
-
+    <EntModulePage
+      zone="cream"
+      title="Passports"
+      description="Digital product identities for your catalog. Published versions are immutable — QR codes keep the same public identity across updates."
+    >
       {readyUnpublished.length > 0 ? (
         <section className="mb-12 md:mb-14">
-          <h2 className="ent-serif text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-6">Ready to publish</h2>
+          <h2 className="ent-heading text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-6">Ready to publish</h2>
           <ul className="grid sm:grid-cols-2 gap-5">
             {readyUnpublished.map((product) => (
               <li
@@ -50,7 +46,7 @@ export default async function PassportsPage({
                 />
                 <Link href={`${base}/products/${product.id}`} className="block group relative">
                   <p className="text-[11px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)]">Awaiting publish</p>
-                  <p className="ent-serif text-[1.5rem] mt-2 text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)] transition-colors">
+                  <p className="ent-heading text-[1.5rem] mt-2 text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)] transition-colors">
                     {product.name}
                   </p>
                   {product.sku ? <p className="text-xs text-[var(--ent-muted-light)] mt-1">SKU {product.sku}</p> : null}
@@ -74,7 +70,7 @@ export default async function PassportsPage({
         />
       ) : (
         <section>
-          <h2 className="ent-serif text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-6">Published identities</h2>
+          <h2 className="ent-heading text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-6">Published identities</h2>
           <ul className="grid lg:grid-cols-2 gap-6">
             {passports.map((passport) => {
               const absoluteUrl = passport.publicUrl.startsWith("http")
@@ -109,7 +105,7 @@ export default async function PassportsPage({
                         <p className={`text-[10px] tracking-[0.14em] uppercase ${isPublished ? "text-white/45" : "text-[var(--ent-muted-light)]"}`}>
                           Digital passport
                         </p>
-                        <h3 className={`ent-serif text-[1.65rem] md:text-[1.85rem] mt-2 leading-tight truncate ${isPublished ? "text-white" : "text-[var(--ent-ink)]"}`}>
+                        <h3 className={`ent-heading text-[1.65rem] md:text-[1.85rem] mt-2 leading-tight truncate ${isPublished ? "text-white" : "text-[var(--ent-ink)]"}`}>
                           {passport.productName || "Product"}
                         </h3>
                         {passport.productSku ? (
@@ -188,6 +184,6 @@ export default async function PassportsPage({
           </ul>
         </section>
       )}
-    </div>
+    </EntModulePage>
   );
 }

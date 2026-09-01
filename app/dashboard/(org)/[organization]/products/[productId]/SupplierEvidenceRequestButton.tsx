@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { entButtonGhostClass, entInputClass } from "../../../../components/EnterpriseUi";
 
 export function SupplierEvidenceRequestButton({
   slug,
@@ -57,59 +58,50 @@ export function SupplierEvidenceRequestButton({
           type="button"
           disabled={busy}
           onClick={() => setOpen(true)}
-          className="text-[10px] tracking-wide uppercase border border-black/15 px-2 py-1"
+          className={entButtonGhostClass + " text-xs py-2 px-3"}
         >
           Request from supplier
         </button>
       ) : (
-        <form onSubmit={onSubmit} className="space-y-2 border border-black/10 rounded p-2">
-          <p className="text-xs text-black/55">Scoped request for: {issueTitle}</p>
+        <form onSubmit={onSubmit} className="ent-panel-nested p-4 space-y-3">
+          <p className="text-xs text-[var(--ent-muted)]">Scoped request for: {issueTitle}</p>
           <input
             required
             value={supplierName}
             onChange={(e) => setSupplierName(e.target.value)}
             placeholder="Supplier name"
-            className="border border-black/15 rounded px-2 py-1 text-xs w-full"
+            className={`w-full text-sm ${entInputClass}`}
           />
           <input
             value={supplierEmail}
             onChange={(e) => setSupplierEmail(e.target.value)}
             placeholder="Supplier email (optional)"
-            className="border border-black/15 rounded px-2 py-1 text-xs w-full"
+            className={`w-full text-sm ${entInputClass}`}
           />
           <input
             type="date"
             value={dueAt}
             onChange={(e) => setDueAt(e.target.value)}
-            className="border border-black/15 rounded px-2 py-1 text-xs w-full"
+            className={`w-full text-sm ${entInputClass}`}
           />
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Notes for supplier"
-            className="border border-black/15 rounded px-2 py-1 text-xs w-full"
+            className={`w-full text-sm ${entInputClass}`}
             rows={2}
           />
-          <div className="flex gap-1">
-            <button
-              type="submit"
-              disabled={busy || !supplierName.trim()}
-              className="text-[10px] tracking-wide uppercase border border-black/15 px-2 py-1 disabled:opacity-40"
-            >
+          <div className="flex gap-2">
+            <button type="submit" disabled={busy || !supplierName.trim()} className={entButtonGhostClass}>
               Send request
             </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => setOpen(false)}
-              className="text-[10px] tracking-wide uppercase border border-black/15 px-2 py-1"
-            >
+            <button type="button" disabled={busy} onClick={() => setOpen(false)} className={entButtonGhostClass}>
               Cancel
             </button>
           </div>
         </form>
       )}
-      {message ? <p className="text-xs text-red-700 mt-1">{message}</p> : null}
+      {message ? <p className="text-xs text-[var(--ent-raspberry)] mt-1">{message}</p> : null}
     </div>
   );
 }

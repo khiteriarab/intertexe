@@ -51,7 +51,7 @@ export default async function ActivityPage({
               if (!groupItems?.length) return null;
               return (
                 <section key={group} className="relative">
-                  <p className="ent-serif text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-8">{group}</p>
+                  <p className="ent-heading text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-8">{group}</p>
                   <ul className="relative pl-2">
                     <span className="ent-timeline-spine" aria-hidden />
                     {groupItems.map((item, index) => {

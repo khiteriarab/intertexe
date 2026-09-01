@@ -5,7 +5,6 @@ import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgProducts } from "../../../../../lib/enterprise/queries";
 import {
   EntEmptyState,
-  EntPageHeader,
   EntPassportPill,
   EntProductPlaceholder,
   entButtonGhostClass,
@@ -14,6 +13,7 @@ import {
   entMetaClass,
   entSelectClass,
 } from "../../../components/EnterpriseUi";
+import { EntModulePage } from "../../../components/EnterpriseModuleUi";
 import { CatalogImportClient } from "./CatalogImportClient";
 
 export const dynamic = "force-dynamic";
@@ -45,15 +45,11 @@ export default async function ProductsPage({
   const totalPages = Math.max(1, Math.ceil(catalog.total / catalog.pageSize));
 
   return (
-    <div>
-      <div className="ent-float-card px-8 py-10 md:px-10 md:py-12 mb-8">
-        <EntPageHeader
-          brandLine
-          title="Products"
-          description="Your canonical catalog. Upload a file, confirm column mapping, then review before publishing passports."
-        />
-      </div>
-
+    <EntModulePage
+      zone="cream"
+      title="Products"
+      description="Your canonical catalog. Upload a file, confirm column mapping, then review before publishing passports."
+    >
       <div className="ent-float-card p-5 md:p-6 mb-8">
         <CatalogImportClient slug={membership.slug} canMutate={canMutate} />
       </div>
@@ -172,6 +168,6 @@ export default async function ProductsPage({
           {catalog.total} product{catalog.total === 1 ? "" : "s"} in this catalog
         </p>
       ) : null}
-    </div>
+    </EntModulePage>
   );
 }

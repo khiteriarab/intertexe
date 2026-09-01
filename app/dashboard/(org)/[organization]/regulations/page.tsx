@@ -48,7 +48,7 @@ export default async function RegulationsPage({
               ].map((item) => (
                 <div key={item.label} className="ent-panel-nested px-5 py-6">
                   <p
-                    className={`ent-display ent-serif text-[2.5rem] leading-none tabular-nums ${item.accent ? "text-[var(--ent-forest)]" : "text-[var(--ent-ink)]"}`}
+                    className={`ent-display text-[2.5rem] leading-none tabular-nums ${item.accent ? "text-[var(--ent-forest)]" : "text-[var(--ent-ink)]"}`}
                   >
                     {item.value}
                   </p>
@@ -60,7 +60,7 @@ export default async function RegulationsPage({
             <div className="ent-panel-nested px-6 py-5">
               <div className="flex flex-wrap items-end justify-between gap-4 mb-3">
                 <p className="text-sm text-[var(--ent-muted)]">Catalog readiness</p>
-                <p className="ent-display ent-serif text-[2rem] leading-none text-[var(--ent-petrol-deep)]">{readyPct}%</p>
+                <p className="ent-display text-[2rem] leading-none text-[var(--ent-petrol-deep)]">{readyPct}%</p>
               </div>
               <div className="h-3 rounded-full bg-white/70 overflow-hidden ring-1 ring-[var(--ent-border)]">
                 <div
@@ -92,7 +92,7 @@ export default async function RegulationsPage({
           </section>
 
           <section className="mb-12">
-            <h2 className="ent-serif text-[1.85rem] md:text-[2rem] text-[var(--ent-ink)] mb-6">Requirement domains</h2>
+            <h2 className="ent-heading text-[1.85rem] md:text-[2rem] text-[var(--ent-ink)] mb-6">Requirement domains</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {data.requirements.map((req) => {
                 const technicalKey = req.requirement_key || req.field_key || "";

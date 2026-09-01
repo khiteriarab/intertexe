@@ -111,7 +111,7 @@ export function EntEmptyState({
         aria-hidden
       />
       <div className="relative max-w-lg">
-        <p className="ent-serif text-[2rem] md:text-[2.5rem] leading-tight text-[var(--ent-ink)]">{title}</p>
+        <p className="ent-heading text-[2rem] md:text-[2.5rem] leading-tight text-[var(--ent-ink)]">{title}</p>
         <p className="text-[15px] leading-relaxed text-[var(--ent-muted)] mt-4">{body}</p>
         {ctaHref && ctaLabel ? (
           <Link href={ctaHref} className={`${entButtonClass} mt-8 inline-flex`}>
@@ -354,7 +354,7 @@ export function EntActivityFeed({
   if (items.length === 0) {
     return (
       <section className="pt-4">
-        <h2 className="ent-serif text-[1.85rem] md:text-[2.25rem] text-[var(--ent-ink)] mb-6">Recent activity</h2>
+        <h2 className="ent-heading text-[1.85rem] md:text-[2.25rem] text-[var(--ent-ink)] mb-6">Recent activity</h2>
         <div className="ent-zone ent-zone-stone rounded-[var(--ent-radius-2xl)] px-8 py-10 shadow-[var(--ent-shadow-panel)]">
           <p className="text-sm text-[var(--ent-muted)]">No activity recorded yet.</p>
         </div>
@@ -429,7 +429,7 @@ export function EntMetricStrip({
     <div className="flex flex-wrap gap-x-10 gap-y-6 py-6 border-y border-[var(--ent-border)]">
       {items.map((item, index) => (
         <div key={item.label} className={index === 0 ? "min-w-[8rem]" : ""}>
-          <p className="ent-display ent-serif text-[2.5rem] leading-none text-[var(--ent-ink)]">{item.value}</p>
+          <p className="ent-display text-[2.5rem] leading-none text-[var(--ent-ink)]">{item.value}</p>
           <p className="text-[12px] text-[var(--ent-muted)] mt-2">{item.label}</p>
           {item.hint ? <p className="text-xs text-[var(--ent-muted-light)] mt-1">{item.hint}</p> : null}
         </div>
@@ -454,7 +454,7 @@ export function EntPassportStatusPanel({
         {order.map((state) => (
           <li key={state} className="flex items-center justify-between gap-4">
             <EntPassportPill state={state} />
-            <span className="ent-serif text-2xl tabular-nums text-[var(--ent-ink)]">{productStateCounts[state] || 0}</span>
+            <span className="ent-display text-2xl tabular-nums text-[var(--ent-ink)]">{productStateCounts[state] || 0}</span>
           </li>
         ))}
       </ul>

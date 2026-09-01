@@ -35,16 +35,16 @@ export function PublishPassportButton({
   }
 
   return (
-    <div>
+    <div className="mt-4 pt-4 border-t border-white/10">
       <button
         type="button"
         disabled={busy}
         onClick={onPublish}
-        className="text-xs tracking-widest uppercase border border-black/20 px-4 py-2 disabled:opacity-50"
+        className="inline-flex w-full justify-center items-center rounded-[var(--ent-radius-lg)] px-5 py-3 text-sm font-semibold bg-[var(--ent-petrol-deep)] text-white hover:bg-[var(--ent-forest)] transition-colors disabled:opacity-50"
       >
         Publish passport
       </button>
-      {message ? <p className="text-sm text-black/55 mt-2">{message}</p> : null}
+      {message ? <p className="text-sm text-white/60 mt-2">{message}</p> : null}
     </div>
   );
 }
