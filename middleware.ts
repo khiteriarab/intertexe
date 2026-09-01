@@ -86,7 +86,10 @@ export function middleware(request: NextRequest) {
           url.searchParams.set("next", pathname);
           return NextResponse.redirect(url);
         }
-        // HQ staff: allow through so the org layout can mint an enterprise handoff in-place.
+        const url = request.nextUrl.clone();
+        url.pathname = "/api/dashboard/workspace/handoff";
+        url.searchParams.set("next", pathname);
+        return NextResponse.redirect(url);
       }
     }
   }

@@ -171,7 +171,7 @@ export async function loadOrgWorkflow(
       .limit(24),
     client
       .from("supplier_requests")
-      .select("id, due_at, created_at, status, suppliers(name), products(name)")
+      .select("id, due_at, created_at, status, supplier:suppliers(name), product:products(name)")
       .eq("organization_id", organizationId)
       .eq("status", "open")
       .not("due_at", "is", null)
@@ -221,10 +221,10 @@ export async function loadOrgWorkflow(
   }
 
   for (const row of supplierRequests.data || []) {
-    const supplier = Array.isArray(row.suppliers) ? row.suppliers[0] : row.suppliers;
-    const product = Array.isArray(row.products) ? row.products[0] : row.products;
-    const supplierName = supplier && typeof supplier === "object" && "name" in supplier ? String(supplier.name) : "";
-    const productName = product && typeof product === "object" && "name" in product ? String(product.name) : "";
+    const supplier = (row as { supplier?: { name?: string } | { name?: string }[] | null }).supplier;
+    const product = (row as { product?: { name?: string } | { name?: string }[] | null }).product;
+    const supplierName = Array.isArray(supplier) ? supplier[0]?.name : supplier?.name;
+    const productName = Array.isArray(product) ? product[0]?.name : product?.name;
     const detail = [supplierName, productName].filter(Boolean).join(" · ");
     calendarEvents.push({
       id: `supplier-${row.id}`,
