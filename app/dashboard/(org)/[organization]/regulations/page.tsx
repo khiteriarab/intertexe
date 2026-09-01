@@ -6,7 +6,6 @@ import {
   EntEmptyState,
   EntModulePage,
   EntRequirementCard,
-  EntVisualPanel,
   entLinkClass,
   entLabelClass,
 } from "../../../components/EnterpriseModuleUi";
@@ -28,8 +27,19 @@ export default async function RegulationsPage({
   return (
     <EntModulePage
       title="Regulations"
-      description="Readiness against the rulesets INTERTEXE evaluates today. This is not legal certification or EU approval."
-      zone="blush"
+      meta={
+        <>
+          <span>
+            <strong>{readyPct}%</strong> catalog readiness
+          </span>
+          <span>
+            <strong>{data.gapSummary.openMissingFields}</strong> missing fields
+          </span>
+          <span>
+            <strong>{data.gapSummary.openRegulatoryIssues}</strong> regulatory issues
+          </span>
+        </>
+      }
     >
       {!data.ruleset ? (
         <EntEmptyState
@@ -38,33 +48,22 @@ export default async function RegulationsPage({
         />
       ) : (
         <>
-          <EntVisualPanel tone="cream" title="Readiness summary" subtitle={data.ruleset.frameworkName}>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {[
-                { label: "Products evaluated", value: data.gapSummary.productsEvaluated },
-                { label: "Ready or published", value: data.gapSummary.readyOrPublished, accent: true },
-                { label: "Open missing fields", value: data.gapSummary.openMissingFields },
-                { label: "Regulatory issues", value: data.gapSummary.openRegulatoryIssues },
-              ].map((item) => (
-                <div key={item.label} className="ent-panel-nested px-5 py-6">
-                  <p
-                    className={`ent-display text-[2.5rem] leading-none tabular-nums ${item.accent ? "text-[var(--ent-forest)]" : "text-[var(--ent-ink)]"}`}
-                  >
-                    {item.value}
-                  </p>
-                  <p className="text-sm text-[var(--ent-muted)] mt-2">{item.label}</p>
-                </div>
-              ))}
+          <section className="mb-10 pb-8 border-b border-[var(--ent-border)]">
+            <h2 className="ent-serif text-[1.35rem] text-[var(--ent-ink)] mb-2">Readiness summary</h2>
+            <p className="text-sm text-[var(--ent-muted)] mb-5">{data.ruleset.frameworkName}</p>
+            <div className="flex flex-wrap gap-x-8 gap-y-3 mb-6 text-sm">
+              <span><strong className="text-[var(--ent-ink)]">{data.gapSummary.productsEvaluated}</strong> products evaluated</span>
+              <span><strong className="text-[var(--ent-forest)]">{data.gapSummary.readyOrPublished}</strong> ready or published</span>
+              <span><strong className="text-[var(--ent-ink)]">{data.gapSummary.needsAttention}</strong> need attention</span>
             </div>
-
-            <div className="ent-panel-nested px-6 py-5">
-              <div className="flex flex-wrap items-end justify-between gap-4 mb-3">
+            <div className="max-w-xl">
+              <div className="flex items-end justify-between gap-4 mb-2">
                 <p className="text-sm text-[var(--ent-muted)]">Catalog readiness</p>
-                <p className="ent-display text-[2rem] leading-none text-[var(--ent-petrol-deep)]">{readyPct}%</p>
+                <p className="ent-display text-[1.75rem] leading-none text-[var(--ent-petrol-deep)]">{readyPct}%</p>
               </div>
-              <div className="h-3 rounded-full bg-white/70 overflow-hidden ring-1 ring-[var(--ent-border)]">
+              <div className="h-2.5 rounded-full bg-[var(--ent-surface-muted)] overflow-hidden">
                 <div
-                  className="h-full rounded-full transition-all"
+                  className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${readyPct}%`,
                     background: "linear-gradient(90deg, var(--ent-forest), var(--ent-petrol))",
@@ -72,28 +71,27 @@ export default async function RegulationsPage({
                 />
               </div>
             </div>
-          </EntVisualPanel>
+          </section>
 
-          <section className="mt-8 mb-10">
-            <EntVisualPanel tone="stone" padding="normal" title="Active ruleset">
-              <p className="text-[17px] font-medium text-[var(--ent-ink)]">{data.ruleset.versionLabel}</p>
-              <p className="text-sm text-[var(--ent-muted)] mt-2">
-                Effective {data.ruleset.effectiveDate} · {data.ruleset.status}
-              </p>
-              {data.ruleset.notes ? (
-                <p className="text-sm leading-relaxed text-[var(--ent-ink-soft)] mt-4 max-w-2xl">{data.ruleset.notes}</p>
-              ) : null}
-              {data.ruleset.sourceUrl ? (
-                <a href={data.ruleset.sourceUrl} className={`${entLinkClass} mt-4 inline-flex`} target="_blank" rel="noreferrer">
-                  View framework source →
-                </a>
-              ) : null}
-            </EntVisualPanel>
+          <section className="mb-10 pb-8 border-b border-[var(--ent-border)]">
+            <h2 className="ent-serif text-[1.35rem] text-[var(--ent-ink)] mb-2">Active ruleset</h2>
+            <p className="text-[17px] font-medium text-[var(--ent-ink)] mt-4">{data.ruleset.versionLabel}</p>
+            <p className="text-sm text-[var(--ent-muted)] mt-2">
+              Effective {data.ruleset.effectiveDate} · {data.ruleset.status}
+            </p>
+            {data.ruleset.notes ? (
+              <p className="text-sm leading-relaxed text-[var(--ent-ink-soft)] mt-4 max-w-2xl">{data.ruleset.notes}</p>
+            ) : null}
+            {data.ruleset.sourceUrl ? (
+              <a href={data.ruleset.sourceUrl} className={`${entLinkClass} mt-4 inline-flex`} target="_blank" rel="noreferrer">
+                View framework source →
+              </a>
+            ) : null}
           </section>
 
           <section className="mb-12">
-            <h2 className="ent-heading text-[1.85rem] md:text-[2rem] text-[var(--ent-ink)] mb-6">Requirement domains</h2>
-            <div className="grid md:grid-cols-2 gap-4">
+            <h2 className="ent-serif text-[1.5rem] text-[var(--ent-ink)] mb-6">Requirement domains</h2>
+            <div className="max-w-3xl">
               {data.requirements.map((req) => {
                 const technicalKey = req.requirement_key || req.field_key || "";
                 return (
@@ -111,7 +109,8 @@ export default async function RegulationsPage({
             </div>
           </section>
 
-          <EntVisualPanel tone="butter" title="Catalog gaps">
+          <section className="pt-2">
+            <h2 className="ent-serif text-[1.35rem] text-[var(--ent-ink)] mb-2">Catalog gaps</h2>
             <p className="text-sm text-[var(--ent-muted)] mb-5 max-w-xl">
               {data.gapSummary.needsAttention} product{data.gapSummary.needsAttention === 1 ? "" : "s"} still need
               attention before passport readiness.
@@ -128,7 +127,7 @@ export default async function RegulationsPage({
               INTERTEXE evaluates readiness against configured rulesets. Textile delegated-act obligations marked
               awaiting rule are not treated as final compliance requirements.
             </p>
-          </EntVisualPanel>
+          </section>
         </>
       )}
     </EntModulePage>

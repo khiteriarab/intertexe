@@ -26,8 +26,8 @@ export default async function OrganizationOverviewPage({
       ? {
           title: "Upload your catalog",
           body: "INTERTEXE needs a CSV of products. You will map columns, preview identifier matches, then confirm import.",
-          href: `${base}/products`,
-          label: "Go to Products",
+          href: `${base}/products?import=1`,
+          label: "Import products",
         }
       : overview.issueCount > 0
         ? {

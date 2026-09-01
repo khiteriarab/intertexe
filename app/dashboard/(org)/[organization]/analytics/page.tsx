@@ -3,20 +3,13 @@ import { requireOrganizationAccess } from "../../../../../lib/enterprise/access"
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgAnalytics } from "../../../../../lib/enterprise/module-queries";
 import {
-  ACTIVITY_COLORS,
-  EntAreaChart,
   EntDonutChart,
   EntRadialActivityChart,
   EntRoundedBarChart,
-  EntStackedBarChart,
   ISSUE_COLORS,
   LIFECYCLE_COLORS,
 } from "../../../components/EnterpriseCharts";
-import {
-  EntModulePage,
-  EntVisualPanel,
-  entLinkClass,
-} from "../../../components/EnterpriseModuleUi";
+import { EntModulePage, entLinkClass } from "../../../components/EnterpriseModuleUi";
 
 export const dynamic = "force-dynamic";
 
@@ -47,36 +40,62 @@ export default async function AnalyticsPage({
   ].filter((row) => row.value > 0);
 
   const activityRows = [
-    { label: "Imports", value: data.activityCounts.imports, color: ACTIVITY_COLORS.imports },
-    { label: "Publishes", value: data.activityCounts.publishes, color: ACTIVITY_COLORS.publishes },
-    { label: "Updates", value: data.activityCounts.updates, color: ACTIVITY_COLORS.updates },
-    { label: "Reviews", value: data.activityCounts.reviews, color: ACTIVITY_COLORS.reviews },
-    { label: "Other", value: data.activityCounts.other, color: ACTIVITY_COLORS.other },
+    { label: "Imports", value: data.activityCounts.imports, color: ISSUE_COLORS.open },
+    { label: "Publishes", value: data.activityCounts.publishes, color: LIFECYCLE_COLORS.published },
+    { label: "Updates", value: data.activityCounts.updates, color: ISSUE_COLORS.missing },
+    { label: "Reviews", value: data.activityCounts.reviews, color: ISSUE_COLORS.conflicts },
+    { label: "Other", value: data.activityCounts.other, color: "rgba(154, 148, 140, 0.45)" },
   ].filter((row) => row.value > 0);
 
   const totalStates = stateRows.reduce((sum, row) => sum + row.value, 0);
+  const readyOrLive = data.passports.published + data.passports.ready;
+  const readyPct = data.catalog.total > 0 ? Math.round((readyOrLive / data.catalog.total) * 100) : 0;
 
   return (
     <EntModulePage
       title="Analytics"
-      description="Operational metrics from your catalog, passports, issues, and recorded activity."
-      zone="butter"
+      meta={
+        <>
+          <span>
+            <strong>{readyPct}%</strong> passport-ready
+          </span>
+          <span>
+            <strong>{data.issues.open}</strong> open issues
+          </span>
+          <span>
+            <strong>{data.catalog.imports}</strong> imports
+          </span>
+        </>
+      }
     >
-      <div className="grid lg:grid-cols-2 gap-5 md:gap-6 mb-6">
-        <EntVisualPanel tone="blush" title="Catalog overview" subtitle="Active products and import history">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="ent-panel-nested px-5 py-6">
-              <p className="ent-display text-[3rem] leading-none text-[var(--ent-ink)]">{data.catalog.total}</p>
-              <p className="text-sm text-[var(--ent-muted)] mt-2">Total products</p>
+      <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 mb-10">
+        <section className="ent-animate-in">
+          <h2 className="ent-serif text-[1.35rem] text-[var(--ent-ink)] mb-2">How much of my catalog is passport-ready?</h2>
+          <p className="text-sm text-[var(--ent-muted)] mb-6 max-w-lg">
+            Share of active products that are ready to publish or already live.
+          </p>
+          {totalStates > 0 ? (
+            <div className="grid md:grid-cols-[auto_1fr] gap-8 items-center">
+              <EntDonutChart
+                segments={stateRows}
+                centerValue={`${readyPct}%`}
+                centerLabel="Ready"
+                size={220}
+                strokeWidth={26}
+              />
+              <EntRoundedBarChart rows={stateRows.map((r) => ({ label: r.label, value: r.value, color: r.color }))} height={140} />
             </div>
-            <div className="ent-panel-nested px-5 py-6">
-              <p className="ent-display text-[3rem] leading-none text-[var(--ent-petrol-deep)]">{data.catalog.imports}</p>
-              <p className="text-sm text-[var(--ent-muted)] mt-2">Catalog imports</p>
-            </div>
-          </div>
-        </EntVisualPanel>
+          ) : (
+            <p className="text-sm text-[var(--ent-muted)]">No products in catalog yet.</p>
+          )}
+        </section>
 
-        <EntVisualPanel tone="petrol" title="Passport states" subtitle="Published, ready, and incomplete">
+        <section
+          className="rounded-[var(--ent-radius-2xl)] p-6 md:p-8 ent-animate-in"
+          style={{ background: "var(--ent-gradient-hero)" }}
+        >
+          <h2 className="ent-serif text-[1.35rem] text-white mb-2">Passport states</h2>
+          <p className="text-sm text-white/65 mb-6">Published, ready, and incomplete today.</p>
           <div className="grid sm:grid-cols-[auto_1fr] gap-6 items-center">
             <EntDonutChart
               light={false}
@@ -86,10 +105,10 @@ export default async function AnalyticsPage({
                 { key: "incomplete", label: "Incomplete", value: data.passports.incomplete, color: "rgba(255,255,255,0.35)" },
                 { key: "update", label: "Update required", value: data.passports.updateRequired, color: LIFECYCLE_COLORS.update_required },
               ].filter((s) => s.value > 0)}
-              centerValue={String(data.passports.published + data.passports.ready)}
+              centerValue={String(readyOrLive)}
               centerLabel="Ready or live"
-              size={200}
-              strokeWidth={24}
+              size={180}
+              strokeWidth={22}
             />
             <ul className="space-y-3 text-sm text-white/75">
               <li className="flex justify-between"><span>Published</span><span className="tabular-nums text-white">{data.passports.published}</span></li>
@@ -98,45 +117,42 @@ export default async function AnalyticsPage({
               <li className="flex justify-between"><span>Update required</span><span className="tabular-nums text-white">{data.passports.updateRequired}</span></li>
             </ul>
           </div>
-        </EntVisualPanel>
+        </section>
       </div>
 
-      <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-5 md:gap-6 mb-6">
-        <EntVisualPanel tone="cream" title="Product state distribution" subtitle="Share of catalog by passport workflow state">
-          {totalStates > 0 ? (
-            <div className="space-y-8">
-              <EntAreaChart rows={stateRows} height={200} gradientId="analytics-area" />
-              <div className="grid md:grid-cols-[auto_1fr] gap-8 items-center">
-                <EntDonutChart segments={stateRows} centerValue={String(totalStates)} centerLabel="Products" size={220} strokeWidth={26} />
-                <EntRoundedBarChart rows={stateRows.map((r) => ({ label: r.label, value: r.value, color: r.color }))} height={120} />
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-[var(--ent-muted)]">No products in catalog yet.</p>
-          )}
-        </EntVisualPanel>
-
-        <EntVisualPanel tone="stone" title="Issue mix" subtitle="Open, resolved, and conflict findings">
+      <div className="grid lg:grid-cols-2 gap-8 pb-4">
+        <section>
+          <h2 className="ent-serif text-[1.35rem] text-[var(--ent-ink)] mb-2">Where are my data gaps?</h2>
+          <p className="text-sm text-[var(--ent-muted)] mb-6">Open, resolved, and conflict findings in the catalog.</p>
           {issueRows.length > 0 ? (
-            <EntStackedBarChart rows={issueRows} tall />
+            <EntRoundedBarChart rows={issueRows.map((r) => ({ label: r.label, value: r.value, color: r.color }))} height={120} />
           ) : (
             <p className="text-sm text-[var(--ent-muted)]">No issues recorded.</p>
           )}
-        </EntVisualPanel>
-      </div>
+        </section>
 
-      <EntVisualPanel tone="butter" title="Activity composition" subtitle="Recent event types from the last recorded sample — not a historical trend">
-        <div className="grid md:grid-cols-[auto_1fr] gap-8 items-center">
-          <EntRadialActivityChart rows={activityRows} size={220} />
+        <section>
+          <h2 className="ent-serif text-[1.35rem] text-[var(--ent-ink)] mb-2">What has changed recently?</h2>
+          <p className="text-sm text-[var(--ent-muted)] mb-6">Recent event types from recorded activity — not a time series.</p>
           {activityRows.length > 0 ? (
-            <EntStackedBarChart rows={activityRows} tall />
+            <div className="grid sm:grid-cols-[auto_1fr] gap-6 items-center">
+              <EntRadialActivityChart rows={activityRows} size={180} />
+              <ul className="space-y-2 text-sm text-[var(--ent-muted)]">
+                {activityRows.map((row) => (
+                  <li key={row.label} className="flex justify-between gap-4">
+                    <span>{row.label}</span>
+                    <span className="tabular-nums text-[var(--ent-ink)]">{row.value}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : (
             <p className="text-sm text-[var(--ent-muted)]">No activity events yet.</p>
           )}
-        </div>
-      </EntVisualPanel>
+        </section>
+      </div>
 
-      <Link href={`${base}/activity`} className={`${entLinkClass} mt-10 inline-flex`}>
+      <Link href={`${base}/activity`} className={`${entLinkClass} mt-8 inline-flex`}>
         View full activity feed →
       </Link>
     </EntModulePage>

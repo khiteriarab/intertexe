@@ -24,11 +24,7 @@ export default async function FilesPage({
   const base = `/dashboard/${membership.slug}`;
 
   return (
-    <EntModulePage
-      title="Files"
-      description="Source imports, immutable source records, and stored files linked to this organization."
-      zone="stone"
-    >
+    <EntModulePage title="Files">
       {data.rows.length > 0 ? (
         <EntModuleMetrics
           items={[

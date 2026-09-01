@@ -15,36 +15,25 @@ import {
   EntIssuePill,
   entLinkClass,
 } from "../../../components/EnterpriseUi";
-import { EntIssueCompare, EntModulePage, EntVisualPanel } from "../../../components/EnterpriseModuleUi";
+import { EntIssueCompare, EntModulePage } from "../../../components/EnterpriseModuleUi";
 import { IssueActions } from "./IssueActions";
 
 export const dynamic = "force-dynamic";
 
 type IssueRow = Awaited<ReturnType<typeof loadOrgIssues>>[number];
+type IssueSegment = "open" | "review" | "resolved";
 
-const GROUP_TONES: Record<string, "blush" | "butter" | "cream" | "stone"> = {
-  missing: "butter",
-  conflict: "blush",
-  review: "cream",
-  resolved: "stone",
-};
-
-const ISSUE_GROUPS: Array<{ id: string; label: string; match: (issue: IssueRow) => boolean }> = [
+const SEGMENTS: Array<{ id: IssueSegment; label: string; match: (issue: IssueRow) => boolean }> = [
   {
-    id: "missing",
-    label: "Missing information",
-    match: (issue) => issue.issue_type === "missing_data",
-  },
-  {
-    id: "conflict",
-    label: "Conflict",
-    match: (issue) => issue.issue_type === "conflict" || issue.issue_type === "identifier",
+    id: "open",
+    label: "Open",
+    match: (issue) => issue.status === "open" && !["conflict", "identifier"].includes(issue.issue_type),
   },
   {
     id: "review",
     label: "Needs review",
     match: (issue) =>
-      !["missing_data", "conflict", "identifier"].includes(issue.issue_type) && issue.status === "open",
+      issue.status === "open" && (issue.issue_type === "conflict" || issue.issue_type === "identifier" || issue.issue_type === "validation"),
   },
   {
     id: "resolved",
@@ -66,65 +55,62 @@ function IssueCard({
 }) {
   const blocking = issueBlocksPublish(issue);
   const open = issue.status === "open";
+  const isConflict = issue.issue_type === "conflict" || Boolean(issue.original_value && issue.interpreted_value);
 
   return (
-    <article className="ent-panel-nested px-5 py-6 md:px-7 md:py-8 mb-4 last:mb-0">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <EntIssuePill label={issueTypeLabel(issue.issue_type)} tone="neutral" />
-          {open && blocking ? <EntIssuePill label="Blocks publish" tone="attention" /> : null}
-        </div>
-        <p className="text-xs uppercase tracking-wide text-[var(--ent-muted-light)]">
-          {issue.severity} · {issue.status.replaceAll("_", " ")}
-        </p>
+    <article className="py-7 border-b border-[var(--ent-border)] last:border-b-0">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <EntIssuePill label={issueTypeLabel(issue.issue_type)} tone="neutral" />
+        {open && blocking ? <EntIssuePill label="Blocks publish" tone="attention" /> : null}
+        <span className="text-xs uppercase tracking-wide text-[var(--ent-muted-light)] ml-auto">
+          {issue.severity}
+        </span>
       </div>
 
-      <h3 className="ent-heading text-[1.35rem] text-[var(--ent-ink)]">{issue.title}</h3>
+      <h3 className="ent-serif text-[1.45rem] text-[var(--ent-ink)] leading-tight">{issue.title}</h3>
 
-      <p className="text-sm text-[var(--ent-muted)] mt-2">
-        {issue.product_id ? (
-          <Link className={entLinkClass} href={`${base}/products/${issue.product_id}`}>
-            {issue.productName || issue.productSku || "Product"}
-          </Link>
-        ) : (
-          "No product attached"
-        )}
-        {issue.productSku ? ` · ${issue.productSku}` : ""}
-        {" · "}
-        {issueAffectedField(issue)}
-      </p>
-
-      <p className="text-sm leading-relaxed text-[var(--ent-ink-soft)] mt-4">{issueWhyItMatters(issue)}</p>
+      <div className="grid md:grid-cols-3 gap-4 mt-5 text-sm">
+        <div>
+          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-1.5">What happened</p>
+          <p className="text-[var(--ent-ink-soft)] leading-relaxed">
+            {issue.product_id ? (
+              <Link className={entLinkClass} href={`${base}/products/${issue.product_id}`}>
+                {issue.productName || issue.productSku || "Product"}
+              </Link>
+            ) : (
+              "No product attached"
+            )}
+            {issue.productSku ? ` · ${issue.productSku}` : ""}
+            {" · "}
+            {issueAffectedField(issue)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-1.5">Why it matters</p>
+          <p className="text-[var(--ent-muted)] leading-relaxed">{issueWhyItMatters(issue)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-1.5">What to do</p>
+          <p className="text-[var(--ent-muted)] leading-relaxed">{issueRecommendedAction(issue)}</p>
+        </div>
+      </div>
 
       {issue.identifier ? (
-        <div className="rounded-[var(--ent-radius-lg)] bg-[var(--ent-gradient-stone)] px-5 py-4 mt-5 space-y-2">
+        <div className="mt-5 px-5 py-4 rounded-[var(--ent-radius-lg)] bg-[var(--ent-surface-muted)]/60 space-y-2">
           <p className="text-sm">
             Classification: <strong>{identifierClassLabel(issue.identifier.classification)}</strong>
           </p>
-          <p className="text-sm">
-            Matched on {issue.identifier.matchOn || "identifier"}{" "}
-            <span className="font-mono text-xs">{issue.identifier.identifierValue || "—"}</span>
-          </p>
-          <p className="text-xs text-[var(--ent-muted-light)]">
-            Both original source rows stay stored. Confirming same product archives the extra catalog record.
+          <p className="text-sm text-[var(--ent-muted)]">
+            Matched on {issue.identifier.matchOn || "identifier"} {issue.identifier.identifierValue || "—"}
           </p>
         </div>
-      ) : !issue.identifier && issue.original_value ? (
-        <EntIssueCompare source={issue.original_value} interpreted={issue.interpreted_value || ""} />
+      ) : isConflict && issue.original_value ? (
+        <EntIssueCompare source={issue.original_value} interpreted={issue.interpreted_value || ""} variant="conflict" />
       ) : null}
 
-      <p className="text-sm text-[var(--ent-muted)] mt-5">
-        Recommended: {issueRecommendedAction(issue)}
-      </p>
-
       {open ? (
-        <div className="mt-5 pt-4 border-t border-[var(--ent-border)]/80">
-          <IssueActions
-            slug={slug}
-            issueId={issue.id}
-            canMutate={canMutate}
-            kind={issue.identifier ? "identifier" : "standard"}
-          />
+        <div className="mt-5 pt-4 border-t border-[var(--ent-border)]">
+          <IssueActions slug={slug} issueId={issue.id} canMutate={canMutate} kind={issue.identifier ? "identifier" : "standard"} />
         </div>
       ) : (
         <p className="text-sm text-[var(--ent-muted)] mt-5">
@@ -139,55 +125,70 @@ function IssueCard({
 
 export default async function IssuesPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ organization: string }>;
+  searchParams?: Promise<{ segment?: string }>;
 }) {
   const { organization } = await params;
+  const query = (await searchParams) || {};
+  const segment = (query.segment || "open") as IssueSegment;
+  const activeSegment = SEGMENTS.some((item) => item.id === segment) ? segment : "open";
+
   const { membership, client } = await requireOrganizationAccess(organization);
   const issues = await loadOrgIssues(client, membership.organizationId);
   const canMutate = canMutateEnterprise(membership.role);
+  const base = `/dashboard/${membership.slug}`;
   const openCount = issues.filter((issue) => issue.status === "open").length;
   const blockingCount = issues.filter((issue) => issueBlocksPublish(issue)).length;
-  const base = `/dashboard/${membership.slug}`;
+  const resolvedCount = issues.filter((issue) => issue.status !== "open").length;
+  const filtered = issues.filter(SEGMENTS.find((item) => item.id === activeSegment)!.match);
 
   return (
     <EntModulePage
-      zone="cream"
       title="Issues"
-      description="What INTERTEXE found in your catalog, why it matters, and what you can do."
+      meta={
+        <>
+          <span>
+            <strong>{openCount}</strong> open
+          </span>
+          <span>
+            <strong>{blockingCount}</strong> blocking
+          </span>
+          <span>
+            <strong>{resolvedCount}</strong> resolved
+          </span>
+        </>
+      }
     >
-      <p className="text-sm text-[var(--ent-muted)] -mt-4 mb-8">
-        {issues.length === 0
-          ? "No findings yet. Import a catalog on Products — validation and identifier collisions appear here."
-          : `${openCount} open · ${blockingCount} blocking publish`}
-      </p>
+      <div className="ent-segmented mb-8">
+        {SEGMENTS.map((item) => {
+          const count = issues.filter(item.match).length;
+          const href = `${base}/issues${item.id === "open" ? "" : `?segment=${item.id}`}`;
+          const active = item.id === activeSegment;
+          return (
+            <Link key={item.id} href={href} className={`ent-segmented-link ${active ? "ent-segmented-link-active" : ""}`}>
+              {item.label}
+              {count ? ` · ${count}` : ""}
+            </Link>
+          );
+        })}
+      </div>
 
       {issues.length === 0 ? (
         <EntEmptyState
           title="Empty inbox"
           body="After import, missing composition, origin, percentage totals, conflicts, and identifier collisions will list here with a recommended action."
-          ctaHref={`${base}/products`}
-          ctaLabel="Go to Products"
+          ctaHref={`${base}/products?import=1`}
+          ctaLabel="Import products"
         />
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-[var(--ent-muted)] py-8">No issues in this segment.</p>
       ) : (
-        <div className="space-y-8 md:space-y-10">
-          {ISSUE_GROUPS.map((group) => {
-            const groupIssues = issues.filter(group.match);
-            if (groupIssues.length === 0) return null;
-            return (
-              <EntVisualPanel
-                key={group.id}
-                tone={GROUP_TONES[group.id] || "cream"}
-                title={group.label}
-                subtitle={`${groupIssues.length} item${groupIssues.length === 1 ? "" : "s"}`}
-                padding="normal"
-              >
-                {groupIssues.map((issue) => (
-                  <IssueCard key={issue.id} issue={issue} base={base} slug={membership.slug} canMutate={canMutate} />
-                ))}
-              </EntVisualPanel>
-            );
-          })}
+        <div>
+          {filtered.map((issue) => (
+            <IssueCard key={issue.id} issue={issue} base={base} slug={membership.slug} canMutate={canMutate} />
+          ))}
         </div>
       )}
     </EntModulePage>

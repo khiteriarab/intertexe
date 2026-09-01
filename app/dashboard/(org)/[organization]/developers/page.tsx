@@ -23,11 +23,7 @@ export default async function DevelopersPage({
   const data = await loadOrgDevelopers(client, membership.organizationId, membership.role);
 
   return (
-    <EntModulePage
-      title="Developers"
-      description="Technical identifiers and integration references. Secrets are never displayed here."
-      zone="stone"
-    >
+    <EntModulePage title="Developers">
       <div className="grid lg:grid-cols-2 gap-5 md:gap-6 mb-6">
         <EntVisualPanel tone="cream" title="Organization identifiers">
           <div className="space-y-4">

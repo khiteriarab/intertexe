@@ -20,11 +20,7 @@ export default async function IntegrationsPage({
   const connected = rows.filter((r) => r.state === "connected").length;
 
   return (
-    <EntModulePage
-      title="Integrations"
-      description="Connections and import paths available to this organization today."
-      zone="cream"
-    >
+    <EntModulePage title="Integrations">
       {connected === 0 ? (
         <div className="mb-8">
           <EntEmptyState

@@ -34,11 +34,7 @@ export default async function ActivityPage({
   const order: Array<"Today" | "Yesterday" | "Earlier"> = ["Today", "Yesterday", "Earlier"];
 
   return (
-    <EntModulePage
-      title="Activity"
-      description="Organization activity recorded by INTERTEXE — imports, reviews, publishes, and field updates."
-      zone="stone"
-    >
+    <EntModulePage title="Activity">
       {items.length === 0 ? (
         <EntVisualPanel tone="cream">
           <p className="text-sm text-[var(--ent-muted)]">No activity recorded yet.</p>

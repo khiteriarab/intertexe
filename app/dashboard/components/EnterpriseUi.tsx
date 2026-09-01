@@ -8,11 +8,8 @@ import {
   parseActivityFeedLine,
 } from "../../../lib/enterprise/display-format";
 import {
-  EntAreaChart,
   EntPassportLifecycleChart,
-  EntProgressRing,
   EntRoundedBarChart,
-  EntStackedBarChart,
   LIFECYCLE_COLORS,
 } from "./EnterpriseCharts";
 
@@ -138,86 +135,68 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
     { key: "update_required", label: passportStateLabel("update_required"), value: overview.productStateCounts.update_required || 0, color: LIFECYCLE_COLORS.update_required },
   ].filter((s) => s.value > 0 || total === 0);
 
-  const areaRows = lifecycleSegments.map((s) => ({ label: s.label, value: s.value, color: s.color }));
   const barRows = lifecycleSegments.map((s) => ({ label: s.label, value: s.value, color: s.color }));
-
-  const metrics = [
-    { label: "Products", value: total },
-    { label: "Ready", value: overview.readyCount },
-    { label: "Published", value: overview.publishedCount || overview.passportCounts.published || 0 },
-    { label: "Issues", value: overview.issueCount },
-  ];
 
   return (
     <section className="mb-10 md:mb-12">
       <div className="mb-8 md:mb-10">
-        <p className="ent-serif text-[10px] tracking-[0.32em] uppercase text-[var(--ent-petrol-deep)]">INTERTEXE</p>
-        <h1 className="ent-heading text-[2.25rem] md:text-[3rem] lg:text-[3.5rem] text-[var(--ent-ink)] mt-4">
+        <p className="ent-serif text-[11px] tracking-[0.28em] uppercase text-[var(--ent-petrol-deep)]">INTERTEXE</p>
+        <h1 className="ent-serif text-[2.25rem] md:text-[3.25rem] lg:text-[3.75rem] leading-[1.02] text-[var(--ent-ink)] mt-3">
           Welcome in, <span className="text-[var(--ent-petrol-deep)]">{orgName.split(" ")[0]}</span>
         </h1>
-        <p className="text-[15px] text-[var(--ent-muted)] mt-3 max-w-lg">
-          Passport readiness across your active catalog.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-        {metrics.map((m) => (
-          <div key={m.label} className="ent-float-card px-5 py-5 md:px-6 md:py-6">
-            <p className="ent-display text-[2rem] md:text-[2.25rem] leading-none text-[var(--ent-ink)]">{m.value}</p>
-            <p className="text-sm text-[var(--ent-muted)] mt-2">{m.label}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid lg:grid-cols-[1.1fr_0.9fr_0.75fr] gap-4 md:gap-5 items-stretch">
-        <div className="ent-float-card p-6 md:p-8 lg:col-span-1">
-          <p className="text-[11px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-1">Catalog distribution</p>
-          <p className="ent-heading text-lg text-[var(--ent-ink)] mb-6">Passport states</p>
-          {total > 0 ? (
-            <>
-              <EntAreaChart rows={areaRows} height={180} gradientId="overview-area" />
-              <div className="mt-6 h-28">
-                <EntRoundedBarChart rows={barRows} height={112} />
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-[var(--ent-muted)] py-12">Import a catalog to see distribution.</p>
-          )}
+        <div className="ent-page-meta mt-4">
+          <span>
+            <strong>{total}</strong> products
+          </span>
+          <span>
+            <strong>{overview.publishedCount || overview.passportCounts.published || 0}</strong> published
+          </span>
+          <span>
+            <strong>{overview.readyCount}</strong> ready
+          </span>
+          <span>
+            <strong>{overview.issueCount}</strong> issues
+          </span>
         </div>
+      </div>
 
+      <div
+        className="relative overflow-hidden rounded-[var(--ent-radius-2xl)] p-6 md:p-8 lg:p-10 ent-animate-in"
+        style={{ background: "var(--ent-gradient-hero)" }}
+      >
         <div
-          className="relative rounded-[var(--ent-radius-2xl)] overflow-hidden p-6 md:p-8 flex flex-col justify-between min-h-[320px]"
-          style={{ background: "var(--ent-gradient-hero)" }}
-        >
-          <div className="absolute inset-0 opacity-50 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255,255,255,0.2) 0%, transparent 60%)" }} aria-hidden />
-          <div className="relative">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-white/45">Lifecycle</p>
-            <p className="text-white/80 text-sm mt-2 max-w-xs">Share of catalog passport-ready today.</p>
-          </div>
-          <div className="relative flex justify-center py-4">
-            <EntPassportLifecycleChart
-              segments={lifecycleSegments}
-              centerValue={total > 0 ? `${readinessPct}%` : "—"}
-              centerLabel={total > 0 ? "Ready" : "Empty"}
-              size={200}
-              strokeWidth={22}
-            />
+          className="absolute inset-0 opacity-45 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255,255,255,0.18) 0%, transparent 60%)" }}
+          aria-hidden
+        />
+        <div className="relative grid lg:grid-cols-[1fr_auto] gap-8 items-center">
+          <div>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-white/45">Passport intelligence</p>
+            <p className="ent-serif text-[1.75rem] md:text-[2.25rem] text-white mt-2 leading-tight">
+              {total > 0 ? `${readinessPct}% of catalog passport-ready` : "Import your catalog to begin"}
+            </p>
+            <p className="text-sm text-white/65 mt-3 max-w-md leading-relaxed">
+              {total > 0
+                ? `${passportReady} products ready or published${overview.missingCount > 0 ? ` · ${overview.missingCount} missing fields` : ""}`
+                : "Upload products, resolve issues, then publish digital passports."}
+            </p>
+            {total > 0 ? (
+              <div className="mt-8 max-w-md">
+                <EntRoundedBarChart rows={barRows} height={96} dark />
+              </div>
+            ) : null}
           </div>
           {total > 0 ? (
-            <div className="relative pt-4 border-t border-white/10">
-              <EntStackedBarChart dark tall rows={barRows} />
+            <div className="relative flex justify-center lg:justify-end">
+              <EntPassportLifecycleChart
+                segments={lifecycleSegments}
+                centerValue={`${readinessPct}%`}
+                centerLabel="Ready"
+                size={220}
+                strokeWidth={24}
+              />
             </div>
           ) : null}
-        </div>
-
-        <div className="ent-float-card p-6 md:p-8 flex flex-col items-center justify-center text-center">
-          <EntProgressRing value={readinessPct} label="Passport ready" size={130} />
-          <p className="text-sm text-[var(--ent-muted)] mt-6 leading-relaxed">
-            {total > 0
-              ? `${passportReady} of ${total} products ready or published`
-              : "No products in catalog yet"}
-            {overview.missingCount > 0 ? ` · ${overview.missingCount} missing fields` : ""}
-          </p>
         </div>
       </div>
     </section>
@@ -289,42 +268,43 @@ export function EntAttentionPanel({
 }) {
   return (
     <section className="mb-12 md:mb-16">
-      <div className="grid lg:grid-cols-[1fr_340px] gap-5 md:gap-6 items-start">
+      <div className="grid lg:grid-cols-[1fr_320px] gap-8 md:gap-10 items-start">
         <div>
-          <h2 className="ent-heading text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)]">Needs your attention</h2>
-          <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-lg leading-relaxed mb-6">{nextBody}</p>
-
+          <h2 className="ent-serif text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)]">Needs your attention</h2>
           {items.length === 0 ? (
-            <div className="ent-float-card px-8 py-10">
-              <p className="text-[15px] text-[var(--ent-muted)]">
-                Nothing blocking right now. Review products or publish ready passports when you are set.
-              </p>
-            </div>
+            <p className="text-[15px] text-[var(--ent-muted)] mt-4 max-w-lg leading-relaxed">
+              Nothing blocking right now. Review products or publish ready passports when you are set.
+            </p>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-4">
+            <ul className="mt-6 divide-y divide-[var(--ent-border)]">
               {items.map((item) => (
-                <Link
-                  key={item.href + item.label}
-                  href={item.href}
-                  className={`group ent-float-card p-6 transition-transform hover:-translate-y-0.5 ${
-                    item.emphasis ? "ring-2 ring-[var(--ent-raspberry)]/20" : ""
-                  }`}
-                >
-                  <p className={`ent-display text-[2.5rem] leading-none ${item.emphasis ? "text-[var(--ent-raspberry)]" : "text-[var(--ent-petrol-deep)]"}`}>
-                    {item.count != null ? padCount(item.count) : "—"}
-                  </p>
-                  <p className="ent-heading text-base text-[var(--ent-ink)] mt-3 capitalize">{item.label}</p>
-                  {item.context ? <p className="text-sm text-[var(--ent-muted)] mt-1.5">{item.context}</p> : null}
-                  <span className="text-[var(--ent-petrol-deep)] text-sm mt-4 inline-flex group-hover:translate-x-0.5 transition-transform">Open →</span>
-                </Link>
+                <li key={item.href + item.label}>
+                  <Link
+                    href={item.href}
+                    className={`group flex items-center justify-between gap-4 py-4 transition-colors hover:text-[var(--ent-petrol-deep)] ${
+                      item.emphasis ? "text-[var(--ent-raspberry)]" : "text-[var(--ent-ink)]"
+                    }`}
+                  >
+                    <div>
+                      <p className="ent-heading text-base capitalize">{item.label}</p>
+                      {item.context ? <p className="text-sm text-[var(--ent-muted)] mt-1">{item.context}</p> : null}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {item.count != null ? (
+                        <span className="ent-display text-[1.75rem] leading-none tabular-nums">{padCount(item.count)}</span>
+                      ) : null}
+                      <span className="text-sm text-[var(--ent-petrol-deep)] group-hover:translate-x-0.5 transition-transform">→</span>
+                    </div>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
 
         <div className="ent-dark-panel p-6 md:p-8 lg:sticky lg:top-8">
           <p className="text-[10px] tracking-[0.14em] uppercase text-white/40 mb-2">Suggested next</p>
-          <p className="ent-heading text-xl text-white mb-3">{nextTitle}</p>
+          <p className="ent-serif text-[1.45rem] text-white mb-3 leading-tight">{nextTitle}</p>
           <p className="text-sm text-white/60 leading-relaxed mb-8">{nextBody}</p>
           <Link
             href={nextHref}
@@ -372,27 +352,26 @@ export function EntActivityFeed({
 
   return (
     <section className="pt-2">
-      <h2 className="ent-heading text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-8 md:mb-10">Recent activity</h2>
-      <div className="ent-float-card px-6 py-8 md:px-10 md:py-10">
-        <div className="space-y-12">
+      <h2 className="ent-serif text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-6 md:mb-8">Recent activity</h2>
+      <div className="divide-y divide-[var(--ent-border)]">
           {order.map((group) => {
             const groupItems = grouped.get(group);
             if (!groupItems?.length) return null;
             return (
-              <div key={group} className="relative">
-                <p className="ent-heading text-xl text-[var(--ent-ink-soft)] mb-6">{group}</p>
+              <div key={group} className="relative py-6 first:pt-0">
+                <p className="ent-heading text-xl text-[var(--ent-ink-soft)] mb-4">{group}</p>
                 <ul className="relative pl-1">
                   <span className="ent-timeline-spine" aria-hidden />
-                  {groupItems.map((item, index) => {
+                  {groupItems.slice(0, 5).map((item, index) => {
                     const { headline, detail } = parseActivityFeedLine(item.title);
                     const when = formatRelativeActivityTime(item.created_at);
                     return (
-                      <li key={item.id} className={`relative pl-10 ${index < groupItems.length - 1 ? "pb-8" : ""}`}>
+                      <li key={item.id} className={`relative pl-10 ${index < Math.min(groupItems.length, 5) - 1 ? "pb-6" : ""}`}>
                         <span
                           className={`absolute left-0 top-1.5 h-6 w-6 rounded-full border-2 border-white shadow-sm ${activityDotClass(headline)}`}
                           aria-hidden
                         />
-                        <div className="ent-panel-nested px-5 py-4 md:px-6 md:py-5">
+                        <div className="py-3 md:py-4">
                           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                             <p className="text-[16px] md:text-[17px] font-medium text-[var(--ent-ink)]">{headline}</p>
                             {when ? (
@@ -412,7 +391,6 @@ export function EntActivityFeed({
               </div>
             );
           })}
-        </div>
       </div>
     </section>
   );
@@ -479,20 +457,10 @@ export const entButtonGhostClass =
 export const entLinkClass =
   "text-[14px] font-medium text-[var(--ent-petrol-deep)] hover:text-[var(--ent-forest)] transition-colors inline-flex items-center gap-1";
 
-/** Neutral product thumbnail placeholder — no fabricated imagery. */
+/** Neutral product visual — material placeholder, no fabricated imagery. */
 export function EntProductPlaceholder({ category }: { category?: string | null }) {
-  const label = String(category || "").trim();
-  return (
-    <div
-      className="shrink-0 w-14 h-16 rounded-[var(--ent-radius-lg)] flex items-end overflow-hidden shadow-[var(--ent-shadow-sm)]"
-      style={{ background: "linear-gradient(145deg, #f3e6e4 0%, #e8e2d9 100%)" }}
-      aria-hidden={!label}
-    >
-      {label ? (
-        <span className="px-1.5 pb-1.5 text-[8px] leading-tight text-[var(--ent-muted)] line-clamp-3">{label}</span>
-      ) : null}
-    </div>
-  );
+  void category;
+  return <div className="ent-product-visual" aria-hidden />;
 }
 
 export const entMetaClass = "text-[11px] text-[var(--ent-muted-light)]";

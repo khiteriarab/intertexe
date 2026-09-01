@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   EntEmptyState,
-  EntPageHeader,
   entButtonClass,
   entLabelClass,
   entLinkClass,
@@ -9,6 +8,29 @@ import {
 } from "./EnterpriseUi";
 
 export type EntZoneTone = "blush" | "butter" | "cream" | "stone" | "petrol";
+
+export function EntInlinePageHeader({
+  title,
+  meta,
+  action,
+}: {
+  title: string;
+  meta?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <header className="ent-page-header mb-8 md:mb-10">
+      <p className="ent-serif text-[11px] tracking-[0.28em] uppercase text-[var(--ent-petrol-deep)]">INTERTEXE</p>
+      <div className="mt-3 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="ent-serif text-[2rem] md:text-[2.75rem] leading-[1.02] text-[var(--ent-ink)]">{title}</h1>
+          {meta ? <div className="ent-page-meta">{meta}</div> : null}
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </div>
+    </header>
+  );
+}
 
 export function EntVisualZone({
   tone,
@@ -30,24 +52,20 @@ export function EntVisualZone({
 
 export function EntModulePage({
   title,
-  description,
+  meta,
+  action,
   children,
-  zone,
 }: {
   title: string;
-  description: string;
+  meta?: React.ReactNode;
+  action?: React.ReactNode;
   children: React.ReactNode;
+  description?: string;
   zone?: EntZoneTone;
 }) {
   return (
     <div>
-      {zone ? (
-        <div className="ent-float-card px-7 py-10 md:px-10 md:py-12 mb-10 md:mb-12">
-          <EntPageHeader brandLine title={title} description={description} />
-        </div>
-      ) : (
-        <EntPageHeader brandLine title={title} description={description} />
-      )}
+      <EntInlinePageHeader title={title} meta={meta} action={action} />
       {children}
     </div>
   );
@@ -315,25 +333,37 @@ export function EntRequirementCard({
   meta?: string;
   severity?: string | null;
 }) {
+  const severityLabel =
+    severity === "blocking"
+      ? "High priority"
+      : severity === "required"
+        ? "Required"
+        : severity
+          ? severity.replaceAll("_", " ")
+          : null;
   const severityTone =
     severity === "blocking"
       ? "bg-[var(--ent-raspberry-soft)] text-[var(--ent-raspberry)]"
       : severity === "required"
         ? "bg-[#E4EDEA] text-[var(--ent-forest)]"
-        : "bg-white/70 text-[var(--ent-muted)] ring-1 ring-[var(--ent-border)]";
+        : "bg-[var(--ent-surface-muted)] text-[var(--ent-muted)]";
 
   return (
-    <article className="ent-panel-nested px-5 py-5 md:px-6 md:py-6 flex flex-col sm:flex-row sm:items-start gap-4">
-      <div className="flex-1 min-w-0">
-        <p className="text-[17px] font-medium text-[var(--ent-ink)]">{title}</p>
-        {technicalKey ? <p className="font-mono text-[11px] text-[var(--ent-muted-light)] mt-1.5">{technicalKey}</p> : null}
-        {meta ? <p className="text-sm text-[var(--ent-muted)] mt-2">{meta}</p> : null}
+    <article className="py-5 border-b border-[var(--ent-border)] last:border-b-0">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="ent-serif text-[1.35rem] text-[var(--ent-ink)] leading-tight">{title}</p>
+          {technicalKey ? (
+            <p className="font-mono text-[11px] text-[var(--ent-muted-light)] mt-2">Technical key: {technicalKey}</p>
+          ) : null}
+          {meta ? <p className="text-sm text-[var(--ent-muted)] mt-2 leading-relaxed">{meta}</p> : null}
+        </div>
+        {severityLabel ? (
+          <span className={`inline-flex shrink-0 self-start rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-wide ${severityTone}`}>
+            {severityLabel}
+          </span>
+        ) : null}
       </div>
-      {severity ? (
-        <span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-wide ${severityTone}`}>
-          {severity.replaceAll("_", " ")}
-        </span>
-      ) : null}
     </article>
   );
 }
@@ -341,10 +371,30 @@ export function EntRequirementCard({
 export function EntIssueCompare({
   source,
   interpreted,
+  variant = "default",
 }: {
   source: string;
   interpreted: string;
+  variant?: "default" | "conflict";
 }) {
+  if (variant === "conflict") {
+    return (
+      <div className="ent-conflict-compare">
+        <div className="ent-conflict-panel ent-conflict-panel-approved">
+          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-forest)] mb-2">Current approved</p>
+          <p className="ent-serif text-[1.35rem] text-[var(--ent-ink)] leading-snug">{source || "—"}</p>
+        </div>
+        <div className="ent-conflict-arrow" aria-hidden>
+          →
+        </div>
+        <div className="ent-conflict-panel ent-conflict-panel-incoming">
+          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-raspberry)] mb-2">Incoming source</p>
+          <p className="ent-serif text-[1.35rem] text-[var(--ent-ink)] leading-snug">{interpreted || "—"}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid sm:grid-cols-2 gap-3 mt-4">
       <div className="rounded-[var(--ent-radius-lg)] bg-[var(--ent-gradient-stone)] px-4 py-4 md:px-5 md:py-5">

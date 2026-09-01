@@ -24,11 +24,7 @@ export default async function SuppliersPage({
   const base = `/dashboard/${membership.slug}`;
 
   return (
-    <EntModulePage
-      title="Suppliers"
-      description="Supplier and evidence relationships from requests, evidence records, and open issues."
-      zone="blush"
-    >
+    <EntModulePage title="Suppliers">
       {data.suppliers.length > 0 ? (
         <EntModuleMetrics
           items={[

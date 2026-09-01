@@ -60,21 +60,47 @@ export function isValidOrgSlug(slug: string): boolean {
   return /^[a-z0-9][a-z0-9-]{1,62}$/.test(slug) && !isReservedHqSlug(slug);
 }
 
-export const ENTERPRISE_NAV = [
-  { href: "", label: "Overview", exact: true as const },
-  { href: "/products", label: "Products" },
-  { href: "/issues", label: "Issues" },
-  { href: "/passports", label: "Passports" },
-  { href: "/settings", label: "Settings" },
-  { href: "/suppliers", label: "Suppliers" },
-  { href: "/regulations", label: "Regulations" },
-  { href: "/benchmarking", label: "Benchmarking" },
-  { href: "/analytics", label: "Analytics" },
-  { href: "/integrations", label: "Integrations" },
-  { href: "/developers", label: "Developers" },
-  { href: "/files", label: "Files" },
-  { href: "/activity", label: "Activity" },
+export const ENTERPRISE_NAV_GROUPS = [
+  {
+    id: "core",
+    label: "Core",
+    items: [
+      { href: "", label: "Overview", exact: true as const },
+      { href: "/products", label: "Products" },
+      { href: "/issues", label: "Issues" },
+      { href: "/passports", label: "Passports" },
+    ],
+  },
+  {
+    id: "operations",
+    label: "Operations",
+    items: [
+      { href: "/suppliers", label: "Suppliers" },
+      { href: "/files", label: "Files" },
+      { href: "/activity", label: "Activity" },
+    ],
+  },
+  {
+    id: "intelligence",
+    label: "Intelligence",
+    items: [
+      { href: "/regulations", label: "Regulations" },
+      { href: "/benchmarking", label: "Benchmarking" },
+      { href: "/analytics", label: "Analytics" },
+    ],
+  },
+  {
+    id: "system",
+    label: "System",
+    items: [
+      { href: "/integrations", label: "Integrations" },
+      { href: "/developers", label: "Developers" },
+      { href: "/settings", label: "Settings" },
+    ],
+  },
 ] as const;
+
+export const ENTERPRISE_NAV = ENTERPRISE_NAV_GROUPS.flatMap((group) => group.items);
 
 /** @deprecated use ENTERPRISE_NAV */
 export const ENTERPRISE_PILOT_NAV = ENTERPRISE_NAV.slice(0, 5);

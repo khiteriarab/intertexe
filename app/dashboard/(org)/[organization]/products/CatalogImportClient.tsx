@@ -127,10 +127,8 @@ export function CatalogImportClient({
 
   return (
     <div>
-      <h2 className="ent-heading text-lg text-[var(--ent-ink)]">Upload catalog</h2>
-      <p className={`text-sm text-[var(--ent-muted)] mt-2 max-w-2xl leading-relaxed`}>
+      <p className={`text-sm text-[var(--ent-muted)] max-w-2xl leading-relaxed`}>
         INTERTEXE reads your rows, suggests obvious columns, and shows identifier matches before anything is saved.
-        Confirm the mapping, then confirm import. Colliding GTINs or SKUs are not silently merged.
       </p>
       <form onSubmit={onPreview} className="mt-6 space-y-4">
         <label className="block text-sm text-[var(--ent-ink-soft)]">

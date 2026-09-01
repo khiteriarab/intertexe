@@ -8,10 +8,12 @@ export function WorkspaceSwitcher({
   contexts,
   currentHref,
   variant = "light",
+  organizationName,
 }: {
   contexts: WorkspaceContext[];
   currentHref: string;
-  variant?: "light" | "sidebar";
+  variant?: "light" | "sidebar" | "rail";
+  organizationName?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -19,8 +21,6 @@ export function WorkspaceSwitcher({
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  if (contexts.length < 2) return null;
 
   const current =
     contexts.find((item) => item.href === currentHref) ||
@@ -56,7 +56,19 @@ export function WorkspaceSwitcher({
     router.refresh();
   }
 
+  const isRail = variant === "rail";
   const isSidebar = variant === "sidebar";
+  const label = current?.label || organizationName || "Workspace";
+
+  if (contexts.length < 2) {
+    if (!isRail || !organizationName) return null;
+    return (
+      <div className="ent-workspace-static">
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--ent-muted-light)]">Workspace</p>
+        <p className="text-sm font-medium mt-1 truncate text-[var(--ent-ink)]">{organizationName}</p>
+      </div>
+    );
+  }
 
   return (
     <div ref={rootRef} className="relative">
@@ -64,25 +76,24 @@ export function WorkspaceSwitcher({
         type="button"
         disabled={pending}
         onClick={() => setOpen((value) => !value)}
-        className={`w-full text-left rounded-[var(--ent-radius-lg)] transition-colors ${
-          isSidebar
-            ? "bg-white/10 hover:bg-white/14 border border-white/12 px-4 py-3.5 text-white"
-            : "bg-[var(--ent-surface)] border border-[var(--ent-border-strong)] px-4 py-3 text-[var(--ent-ink)] shadow-[var(--ent-shadow-sm)]"
-        }`}
+        className={`ent-workspace-trigger ${isRail ? "ent-workspace-trigger-rail" : isSidebar ? "ent-workspace-trigger-sidebar" : "ent-workspace-trigger-light"}`}
       >
-        <p className={`text-[10px] tracking-[0.12em] uppercase ${isSidebar ? "text-white/45" : "text-[var(--ent-muted-light)]"}`}>
-          Workspace
-        </p>
-        <p className={`text-sm font-medium mt-1 truncate ${isSidebar ? "text-white/95" : "text-[var(--ent-ink)]"}`}>
-          {current?.label || "Select workspace"}
-        </p>
+        <span className="min-w-0 flex-1">
+          <span className={`block text-[10px] tracking-[0.14em] uppercase ${isRail || isSidebar ? "text-[var(--ent-muted-light)]" : "text-[var(--ent-muted-light)]"}`}>
+            Workspace
+          </span>
+          <span className={`block text-sm font-medium mt-1 truncate ${isRail ? "text-[var(--ent-ink)]" : isSidebar ? "text-white/95" : "text-[var(--ent-ink)]"}`}>
+            {label}
+          </span>
+        </span>
+        <svg className="shrink-0 ml-2 opacity-50" width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+          <path fill="currentColor" d="M3 4.5 6 7.5 9 4.5" />
+        </svg>
       </button>
 
       {open ? (
         <ul
-          className={`absolute z-50 left-0 right-0 mt-2 overflow-hidden rounded-[var(--ent-radius-lg)] shadow-[var(--ent-shadow-lg)] ${
-            isSidebar ? "bg-[#345860] border border-white/12" : "bg-[var(--ent-surface)] border border-[var(--ent-border-strong)]"
-          }`}
+          className={`ent-workspace-menu ${isRail ? "ent-workspace-menu-rail" : isSidebar ? "ent-workspace-menu-sidebar" : "ent-workspace-menu-light"}`}
         >
           {contexts.map((item) => {
             const active = item.href === current?.href;
@@ -92,15 +103,7 @@ export function WorkspaceSwitcher({
                   type="button"
                   disabled={pending}
                   onClick={() => void onSelect(item.href)}
-                  className={`w-full text-left px-4 py-3 text-sm transition-colors ${
-                    isSidebar
-                      ? active
-                        ? "bg-white/12 text-white"
-                        : "text-white/75 hover:bg-white/8 hover:text-white"
-                      : active
-                        ? "bg-[var(--ent-surface-muted)] text-[var(--ent-ink)]"
-                        : "text-[var(--ent-muted)] hover:bg-[var(--ent-surface-muted)]/70"
-                  }`}
+                  className={`ent-workspace-option ${active ? "ent-workspace-option-active" : ""}`}
                 >
                   {item.label}
                 </button>
@@ -110,7 +113,7 @@ export function WorkspaceSwitcher({
         </ul>
       ) : null}
 
-      {error ? <p className={`mt-2 text-[11px] ${isSidebar ? "text-[#f5c6cb]" : "text-[var(--ent-raspberry)]"}`}>{error}</p> : null}
+      {error ? <p className="mt-2 text-[11px] text-[var(--ent-raspberry)]">{error}</p> : null}
     </div>
   );
 }

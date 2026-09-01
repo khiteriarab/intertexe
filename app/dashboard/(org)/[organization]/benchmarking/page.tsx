@@ -33,11 +33,7 @@ export default async function BenchmarkingPage({
     }));
 
   return (
-    <EntModulePage
-      title="Benchmarking"
-      description="Portfolio benchmarks from your catalog — internal comparisons, not industry or competitor data."
-      zone="butter"
-    >
+    <EntModulePage title="Benchmarking">
       {data.productCount === 0 ? (
         <EntEmptyState
           title="No catalog to benchmark yet"
