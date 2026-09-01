@@ -9,57 +9,136 @@
   --ent-petrol-light: #5a8289;
   --ent-petrol-glow: rgba(62, 98, 104, 0.18);
   --ent-forest: #2c4a3e;
+  --ent-charcoal: #2a3438;
   --ent-stone: #b8b0a6;
   --ent-stone-soft: #d4cdc4;
   --ent-blush: #f3e6e4;
   --ent-blush-deep: #ead9d6;
   --ent-rose: #e8d4d0;
+  --ent-rose-glow: rgba(232, 180, 168, 0.35);
   --ent-butter: #f5ecd4;
   --ent-butter-soft: #faf4e4;
+  --ent-gold: #e8c547;
   --ent-ivory: #f7f1e8;
   --ent-cream: #faf8f4;
-  --ent-surface: #fdfcf9;
+  --ent-surface: #ffffff;
   --ent-surface-muted: #f0ebe3;
   --ent-surface-tint: #ebe6dc;
-  --ent-ink: #141414;
-  --ent-ink-soft: #3d3a36;
+  --ent-ink: #1a1f22;
+  --ent-ink-soft: #3d4549;
   --ent-muted: #6b6560;
   --ent-muted-light: #9a948c;
   --ent-raspberry: #9e4a5a;
   --ent-raspberry-soft: #f5e8eb;
-  --ent-border: rgba(20, 20, 20, 0.05);
-  --ent-border-strong: rgba(20, 20, 20, 0.09);
-  --ent-shadow-sm: 0 8px 32px rgba(62, 98, 104, 0.06);
-  --ent-shadow: 0 16px 48px rgba(62, 98, 104, 0.09);
-  --ent-shadow-lg: 0 28px 72px rgba(62, 98, 104, 0.12);
-  --ent-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  --ent-shadow-panel: 0 20px 60px rgba(62, 98, 104, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --ent-border: rgba(26, 31, 34, 0.06);
+  --ent-border-strong: rgba(26, 31, 34, 0.1);
+  --ent-shadow-sm: 0 4px 24px rgba(62, 98, 104, 0.07), 0 1px 2px rgba(62, 98, 104, 0.04);
+  --ent-shadow: 0 12px 40px rgba(62, 98, 104, 0.1), 0 2px 8px rgba(62, 98, 104, 0.04);
+  --ent-shadow-lg: 0 24px 64px rgba(62, 98, 104, 0.14), 0 4px 16px rgba(62, 98, 104, 0.06);
+  --ent-shadow-float: 0 32px 80px rgba(62, 98, 104, 0.12), 0 8px 24px rgba(62, 98, 104, 0.06);
+  --ent-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  --ent-shadow-panel: 0 20px 60px rgba(62, 98, 104, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.65);
   --ent-gradient-hero: linear-gradient(145deg, #42666c 0%, #3e6268 42%, #2c4a3e 100%);
+  --ent-gradient-dark: linear-gradient(160deg, #2a3438 0%, #1f282b 100%);
   --ent-gradient-sidebar: linear-gradient(180deg, #42666c 0%, #3e6268 55%, #345860 100%);
-  --ent-gradient-warm: linear-gradient(180deg, #fdfcf9 0%, #f3efe8 100%);
-  --ent-gradient-blush: linear-gradient(135deg, #faf8f4 0%, #f3e6e4 52%, #f7f1e8 100%);
-  --ent-gradient-butter: linear-gradient(145deg, #faf4e4 0%, #f5ecd4 48%, #f7f1e8 100%);
-  --ent-gradient-stone: linear-gradient(160deg, #f0ebe3 0%, #e8e2d9 100%);
-  --ent-gradient-petrol-soft: linear-gradient(145deg, #4a7279 0%, #3e6268 100%);
+  --ent-gradient-canvas: radial-gradient(ellipse 80% 60% at 10% 0%, rgba(243, 230, 228, 0.9) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 20%, rgba(245, 236, 212, 0.75) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(240, 235, 227, 0.8) 0%, transparent 55%),
+    linear-gradient(180deg, #f7f1e8 0%, #f3ece3 100%);
+  --ent-gradient-warm: linear-gradient(180deg, #ffffff 0%, #f8f4ee 100%);
+  --ent-gradient-blush: linear-gradient(135deg, #ffffff 0%, #f8f0ed 45%, #f3e6e4 100%);
+  --ent-gradient-butter: linear-gradient(145deg, #fffdf8 0%, #f5ecd4 48%, #f7f1e8 100%);
+  --ent-gradient-stone: linear-gradient(160deg, #f5f1eb 0%, #ebe4db 100%);
+  --ent-gradient-chart-area: linear-gradient(180deg, rgba(158, 74, 90, 0.35) 0%, rgba(66, 102, 108, 0.08) 100%);
+  --ent-gradient-chart-rose: linear-gradient(135deg, #e8b4a8 0%, #c9788a 100%);
+  --ent-gradient-chart-petrol: linear-gradient(135deg, #5a8289 0%, #3e6268 100%);
   --ent-radius: 1.125rem;
   --ent-radius-lg: 1.375rem;
   --ent-radius-xl: 1.75rem;
   --ent-radius-2xl: 2rem;
-  --ent-radius-3xl: 2.25rem;
+  --ent-radius-3xl: 2.5rem;
 }
 
 .enterprise-app {
   background: var(--ent-ivory);
   color: var(--ent-ink);
+  font-feature-settings: "ss01" 1, "cv01" 1;
 }
 
 .enterprise-app .ent-serif {
   font-family: var(--font-serif, "Playfair Display", Georgia, serif);
 }
 
+.enterprise-app .ent-sans {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+}
+
+.enterprise-app .ent-heading {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
 .enterprise-app .ent-display {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-weight: 600;
+}
+
+/* ── Canvas ambient background ── */
+.enterprise-app .ent-canvas {
+  position: relative;
+  background: var(--ent-gradient-canvas);
+  min-height: 100%;
+}
+
+.enterprise-app .ent-canvas::before,
+.enterprise-app .ent-canvas::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.enterprise-app .ent-canvas::before {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  right: -80px;
+  background: var(--ent-rose-glow);
+}
+
+.enterprise-app .ent-canvas::after {
+  width: 360px;
+  height: 360px;
+  bottom: 10%;
+  left: -60px;
+  background: rgba(245, 236, 212, 0.6);
+}
+
+.enterprise-app .ent-canvas-inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Floating white cards (moodboard) ── */
+.enterprise-app .ent-float-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border-radius: var(--ent-radius-2xl);
+  box-shadow: var(--ent-shadow-float);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.enterprise-app .ent-dark-panel {
+  background: var(--ent-gradient-dark);
+  border-radius: var(--ent-radius-2xl);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--ent-shadow-lg);
 }
 
 /* ── Tonal zones ── */
@@ -96,51 +175,64 @@
   position: absolute;
   pointer-events: none;
   border-radius: 50%;
-  filter: blur(48px);
-  opacity: 0.55;
+  filter: blur(56px);
+  opacity: 0.6;
 }
 
 .enterprise-app .ent-zone-blush.ent-zone-glow::before {
-  width: 280px;
-  height: 280px;
-  top: -80px;
-  right: -40px;
-  background: rgba(62, 98, 104, 0.12);
+  width: 320px;
+  height: 320px;
+  top: -100px;
+  right: -60px;
+  background: rgba(201, 120, 138, 0.15);
 }
 
 .enterprise-app .ent-zone-butter.ent-zone-glow::before {
-  width: 240px;
-  height: 240px;
-  bottom: -60px;
-  left: -20px;
-  background: rgba(158, 74, 90, 0.08);
-}
-
-.enterprise-app .ent-panel {
-  border-radius: var(--ent-radius-xl);
-  box-shadow: var(--ent-shadow-sm);
+  width: 280px;
+  height: 280px;
+  bottom: -80px;
+  left: -40px;
+  background: rgba(232, 197, 71, 0.12);
 }
 
 .enterprise-app .ent-panel-nested {
   border-radius: var(--ent-radius-lg);
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(8px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--ent-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .enterprise-app .ent-code-panel {
-  background: linear-gradient(160deg, #345860 0%, #2a4a50 100%);
+  background: linear-gradient(160deg, #345860 0%, #243a40 100%);
   border-radius: var(--ent-radius-lg);
   color: rgba(255, 255, 255, 0.92);
-  box-shadow: var(--ent-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: var(--ent-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .enterprise-app .ent-timeline-spine {
   position: absolute;
-  left: 11px;
+  left: 13px;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: linear-gradient(180deg, var(--ent-petrol-glow) 0%, var(--ent-stone-soft) 100%);
+  width: 3px;
+  background: linear-gradient(180deg, rgba(66, 102, 108, 0.25) 0%, rgba(212, 205, 196, 0.5) 100%);
   border-radius: 999px;
+}
+
+/* Custom form controls */
+.enterprise-app select.ent-select,
+.enterprise-app input.ent-input {
+  appearance: none;
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--ent-border-strong);
+  border-radius: var(--ent-radius-lg);
+  box-shadow: var(--ent-shadow-sm);
+}
+
+.enterprise-app select.ent-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6560' d='M3 4.5 6 7.5 9 4.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 2.5rem;
 }

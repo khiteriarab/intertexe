@@ -63,9 +63,9 @@ export function EnterpriseShell({
         </button>
       </div>
 
-      <div className="md:grid md:grid-cols-[272px_1fr] min-h-screen">
+      <div className="md:grid md:grid-cols-[280px_1fr] min-h-screen md:gap-4 md:p-4 md:pr-5">
         <aside
-          className={`${mobileOpen ? "block" : "hidden"} md:flex md:flex-col text-white min-h-full relative`}
+          className={`${mobileOpen ? "block" : "hidden"} md:flex md:flex-col text-white min-h-full relative rounded-[var(--ent-radius-3xl)] overflow-hidden shadow-[var(--ent-shadow-lg)]`}
           style={{ background: "var(--ent-gradient-sidebar)" }}
         >
           <div
@@ -141,14 +141,8 @@ export function EnterpriseShell({
           </div>
         </aside>
 
-        <main
-          className="min-w-0"
-          style={{
-            background:
-              "linear-gradient(180deg, var(--ent-ivory) 0%, #f3ece3 45%, var(--ent-cream) 100%)",
-          }}
-        >
-          <div className="px-5 md:px-10 lg:px-14 py-10 md:py-12 max-w-[92rem]">{children}</div>
+        <main className="min-w-0 ent-canvas">
+          <div className="ent-canvas-inner px-5 md:px-10 lg:px-14 py-10 md:py-12 max-w-[92rem]">{children}</div>
         </main>
       </div>
     </div>

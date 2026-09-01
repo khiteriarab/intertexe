@@ -42,9 +42,9 @@ export function EntModulePage({
   return (
     <div>
       {zone ? (
-        <EntVisualZone tone={zone} glow className="px-7 py-10 md:px-10 md:py-12 mb-10 md:mb-12">
+        <div className="ent-float-card px-7 py-10 md:px-10 md:py-12 mb-10 md:mb-12">
           <EntPageHeader brandLine title={title} description={description} />
-        </EntVisualZone>
+        </div>
       ) : (
         <EntPageHeader brandLine title={title} description={description} />
       )}
@@ -122,7 +122,7 @@ export function EntVisualPanel({
     >
       {title ? (
         <div className="mb-6 md:mb-8 relative">
-          <h2 className={`ent-serif text-[1.65rem] md:text-[2rem] leading-tight ${isPetrol ? "text-white" : "text-[var(--ent-ink)]"}`}>
+            <h2 className={`ent-heading text-[1.65rem] md:text-[2rem] leading-tight ${isPetrol ? "text-white" : "text-[var(--ent-ink)]"}`}>
             {title}
           </h2>
           {subtitle ? (
@@ -147,7 +147,7 @@ export function EntModuleSection({
   return (
     <section className="mb-12 md:mb-14">
       <div className="mb-6 md:mb-8">
-        <h2 className="ent-serif text-[1.65rem] md:text-[2rem] text-[var(--ent-ink)]">{title}</h2>
+        <h2 className="ent-heading text-[1.65rem] md:text-[2rem] text-[var(--ent-ink)]">{title}</h2>
         {subtitle ? <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-xl">{subtitle}</p> : null}
       </div>
       {children}
@@ -247,7 +247,7 @@ export function EntIntegrationTile({
         <p className={`text-[10px] tracking-[0.14em] uppercase ${featured ? "text-white/50" : "text-[var(--ent-muted-light)]"}`}>
           {category}
         </p>
-        <h3 className={`ent-serif text-[1.5rem] md:text-[1.75rem] mt-2 ${featured ? "text-white" : "text-[var(--ent-ink)]"}`}>
+        <h3 className={`ent-heading text-[1.5rem] md:text-[1.75rem] mt-2 ${featured ? "text-white" : "text-[var(--ent-ink)]"}`}>
           {label}
         </h3>
         <p className={`text-sm mt-3 leading-relaxed max-w-xs ${featured ? "text-white/70" : "text-[var(--ent-muted)]"}`}>
@@ -401,7 +401,7 @@ export function EntHeroEmpty({
         </>
       )}
       <div className="relative max-w-lg">
-        <p className="ent-serif text-[2rem] md:text-[2.75rem] leading-tight text-[var(--ent-ink)]">{title}</p>
+        <p className="ent-heading text-[2rem] md:text-[2.75rem] leading-tight text-[var(--ent-ink)]">{title}</p>
         <p className="text-[15px] leading-relaxed text-[var(--ent-muted)] mt-4">{body}</p>
         {ctaHref && ctaLabel ? (
           <Link href={ctaHref} className={`${entButtonClass} mt-8 inline-flex`}>

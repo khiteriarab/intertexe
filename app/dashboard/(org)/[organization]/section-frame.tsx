@@ -1,4 +1,4 @@
-import { EntEmptyState, EntPageHeader, EntSurface } from "../../components/EnterpriseUi";
+import { EntEmptyState, EntPageHeader } from "../../components/EnterpriseUi";
 import { ORG_PAGE_STATES, type ImplementationState } from "../../../../lib/enterprise/page-states";
 
 export function OrgSectionFrame({
@@ -20,7 +20,7 @@ export function OrgSectionFrame({
 }) {
   return (
     <div>
-      <div className="ent-zone ent-zone-cream rounded-[var(--ent-radius-2xl)] px-8 py-10 md:px-10 md:py-12 mb-10 shadow-[var(--ent-shadow-panel)]">
+      <div className="ent-float-card px-8 py-10 md:px-10 md:py-12 mb-10">
         <EntPageHeader title={title} description={description} brandLine={brandLine} />
       </div>
       {children}
@@ -32,16 +32,17 @@ export function OrgSectionFrame({
 export function HqCard({
   title,
   children,
-  tone = "blush",
+  tone: _tone = "blush",
 }: {
   title: string;
   children: React.ReactNode;
   tone?: "blush" | "butter" | "stone" | "cream";
 }) {
   return (
-    <EntSurface title={title} variant="tint" padding="large" className={`ent-zone ent-zone-${tone} shadow-[var(--ent-shadow-panel)]`}>
+    <div className="ent-float-card p-6 md:p-8">
+      <h2 className="ent-heading text-lg text-[var(--ent-ink)] mb-5">{title}</h2>
       {children}
-    </EntSurface>
+    </div>
   );
 }
 

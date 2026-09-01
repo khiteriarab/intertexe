@@ -25,7 +25,7 @@ export default async function PassportsPage({
 
   return (
     <div>
-      <div className="ent-zone ent-zone-blush ent-zone-glow rounded-[var(--ent-radius-3xl)] px-8 py-10 md:px-12 md:py-12 mb-10 shadow-[var(--ent-shadow-lg)]">
+      <div className="ent-float-card px-8 py-10 md:px-12 md:py-12 mb-10">
         <EntPageHeader
           brandLine
           title="Passports"

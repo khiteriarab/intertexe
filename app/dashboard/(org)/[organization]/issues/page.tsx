@@ -153,17 +153,18 @@ export default async function IssuesPage({
 
   return (
     <div>
-      <EntPageHeader
-        brandLine
-        title="Issues"
-        description="What INTERTEXE found in your catalog, why it matters, and what you can do."
-      />
-
-      <p className="text-sm text-[var(--ent-muted)] mb-10 -mt-6">
+      <div className="ent-float-card px-8 py-10 md:px-10 md:py-12 mb-10">
+        <EntPageHeader
+          brandLine
+          title="Issues"
+          description="What INTERTEXE found in your catalog, why it matters, and what you can do."
+        />
+        <p className="text-sm text-[var(--ent-muted)] mt-2">
         {issues.length === 0
           ? "No findings yet. Import a catalog on Products — validation and identifier collisions appear here."
           : `${openCount} open · ${blockingCount} blocking publish`}
-      </p>
+        </p>
+      </div>
 
       {issues.length === 0 ? (
         <EntEmptyState

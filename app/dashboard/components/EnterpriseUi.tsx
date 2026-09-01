@@ -8,7 +8,10 @@ import {
   parseActivityFeedLine,
 } from "../../../lib/enterprise/display-format";
 import {
+  EntAreaChart,
   EntPassportLifecycleChart,
+  EntProgressRing,
+  EntRoundedBarChart,
   EntStackedBarChart,
   LIFECYCLE_COLORS,
 } from "./EnterpriseCharts";
@@ -40,7 +43,7 @@ export function EntPageHeader({
       ) : null}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
         <div className="max-w-2xl">
-          <h1 className="ent-serif text-[2.5rem] md:text-[3.5rem] leading-[1.02] tracking-[-0.03em] text-[var(--ent-ink)]">
+          <h1 className="ent-heading text-[2.5rem] md:text-[3.25rem] lg:text-[3.75rem] leading-[1.05] text-[var(--ent-ink)]">
             {title}
           </h1>
           {description ? (
@@ -135,101 +138,86 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
     { key: "update_required", label: passportStateLabel("update_required"), value: overview.productStateCounts.update_required || 0, color: LIFECYCLE_COLORS.update_required },
   ].filter((s) => s.value > 0 || total === 0);
 
-  const supporting = [
-    { label: "Ready for passport", value: overview.readyCount },
+  const areaRows = lifecycleSegments.map((s) => ({ label: s.label, value: s.value, color: s.color }));
+  const barRows = lifecycleSegments.map((s) => ({ label: s.label, value: s.value, color: s.color }));
+
+  const metrics = [
+    { label: "Products", value: total },
+    { label: "Ready", value: overview.readyCount },
     { label: "Published", value: overview.publishedCount || overview.passportCounts.published || 0 },
-    { label: "Open issues", value: overview.issueCount },
+    { label: "Issues", value: overview.issueCount },
   ];
 
   return (
-    <section className="mb-10 md:mb-14">
-      <div className="ent-zone ent-zone-blush ent-zone-glow rounded-[var(--ent-radius-3xl)] overflow-hidden shadow-[var(--ent-shadow-lg)]">
-        <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-0 items-stretch">
-          <div className="px-8 py-10 md:px-12 md:py-14 lg:py-16 flex flex-col justify-between min-h-[380px]">
-            <div>
-              <p className="ent-serif text-[11px] tracking-[0.32em] uppercase text-[var(--ent-petrol-deep)]">INTERTEXE</p>
-              <p className="text-[12px] tracking-[0.1em] uppercase text-[var(--ent-muted-light)] mt-3">{orgName}</p>
-              <h1 className="ent-serif text-[2.75rem] md:text-[3.75rem] lg:text-[4.25rem] leading-[0.98] tracking-[-0.03em] text-[var(--ent-ink)] mt-8">
-                Overview
-              </h1>
-              <p className="text-[16px] text-[var(--ent-muted)] mt-5 max-w-md leading-relaxed">
-                Product and passport readiness across your catalog.
-              </p>
-            </div>
+    <section className="mb-10 md:mb-12">
+      <div className="mb-8 md:mb-10">
+        <p className="ent-serif text-[10px] tracking-[0.32em] uppercase text-[var(--ent-petrol-deep)]">INTERTEXE</p>
+        <h1 className="ent-heading text-[2.25rem] md:text-[3rem] lg:text-[3.5rem] text-[var(--ent-ink)] mt-4">
+          Welcome in, <span className="text-[var(--ent-petrol-deep)]">{orgName.split(" ")[0]}</span>
+        </h1>
+        <p className="text-[15px] text-[var(--ent-muted)] mt-3 max-w-lg">
+          Passport readiness across your active catalog.
+        </p>
+      </div>
 
-            <div className="mt-10 lg:mt-0">
-              <p className={entLabelClass + " mb-3"}>Catalog size</p>
-              <div className="flex items-end gap-4 flex-wrap">
-                <p className="ent-display ent-serif text-[5rem] sm:text-[6rem] lg:text-[6.5rem] leading-[0.85] text-[var(--ent-ink)]">
-                  {total}
-                </p>
-                <div className="pb-2 lg:pb-4">
-                  <p className="text-lg text-[var(--ent-ink-soft)]">{total === 1 ? "Product" : "Products"}</p>
-                  {total > 0 ? (
-                    <p className="text-sm text-[var(--ent-muted)] mt-1">
-                      {readinessPct}% passport-ready
-                      {overview.missingCount > 0 ? ` · ${overview.missingCount} missing fields` : ""}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-[var(--ent-muted)] mt-1">Import a catalog to begin.</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 mt-10">
-                {supporting.map((item) => (
-                  <div key={item.label} className="ent-panel-nested px-4 py-4">
-                    <p className="ent-display text-[1.5rem] md:text-[1.65rem] leading-none tabular-nums text-[var(--ent-petrol-deep)]">
-                      {item.value}
-                    </p>
-                    <p className="text-[11px] text-[var(--ent-muted)] mt-2 leading-snug">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+        {metrics.map((m) => (
+          <div key={m.label} className="ent-float-card px-5 py-5 md:px-6 md:py-6">
+            <p className="ent-display text-[2rem] md:text-[2.25rem] leading-none text-[var(--ent-ink)]">{m.value}</p>
+            <p className="text-sm text-[var(--ent-muted)] mt-2">{m.label}</p>
           </div>
+        ))}
+      </div>
 
-          <div
-            className="relative px-6 py-8 md:px-8 md:py-10 lg:py-12 flex flex-col justify-center min-h-[340px]"
-            style={{ background: "var(--ent-gradient-hero)" }}
-          >
-            <div
-              className="absolute inset-0 opacity-40 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(ellipse 90% 70% at 100% 0%, rgba(255,255,255,0.18) 0%, transparent 55%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(44,74,62,0.35) 0%, transparent 50%)",
-              }}
-              aria-hidden
+      <div className="grid lg:grid-cols-[1.1fr_0.9fr_0.75fr] gap-4 md:gap-5 items-stretch">
+        <div className="ent-float-card p-6 md:p-8 lg:col-span-1">
+          <p className="text-[11px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-1">Catalog distribution</p>
+          <p className="ent-heading text-lg text-[var(--ent-ink)] mb-6">Passport states</p>
+          {total > 0 ? (
+            <>
+              <EntAreaChart rows={areaRows} height={180} gradientId="overview-area" />
+              <div className="mt-6 h-28">
+                <EntRoundedBarChart rows={barRows} height={112} />
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-[var(--ent-muted)] py-12">Import a catalog to see distribution.</p>
+          )}
+        </div>
+
+        <div
+          className="relative rounded-[var(--ent-radius-2xl)] overflow-hidden p-6 md:p-8 flex flex-col justify-between min-h-[320px]"
+          style={{ background: "var(--ent-gradient-hero)" }}
+        >
+          <div className="absolute inset-0 opacity-50 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255,255,255,0.2) 0%, transparent 60%)" }} aria-hidden />
+          <div className="relative">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-white/45">Lifecycle</p>
+            <p className="text-white/80 text-sm mt-2 max-w-xs">Share of catalog passport-ready today.</p>
+          </div>
+          <div className="relative flex justify-center py-4">
+            <EntPassportLifecycleChart
+              segments={lifecycleSegments}
+              centerValue={total > 0 ? `${readinessPct}%` : "—"}
+              centerLabel={total > 0 ? "Ready" : "Empty"}
+              size={200}
+              strokeWidth={22}
             />
-            <div className="relative">
-              <p className="text-[10px] tracking-[0.16em] uppercase text-white/45 mb-2">Passport lifecycle</p>
-              <p className="text-[15px] text-white/75 mb-6 max-w-[16rem] leading-relaxed">
-                Distribution across passport states in your active catalog.
-              </p>
-              <div className="flex justify-center py-2">
-                <EntPassportLifecycleChart
-                  segments={lifecycleSegments}
-                  centerValue={total > 0 ? `${readinessPct}%` : "—"}
-                  centerLabel={total > 0 ? "Passport ready" : "No products"}
-                  size={240}
-                  strokeWidth={26}
-                />
-              </div>
-              {total > 0 ? (
-                <div className="mt-6 pt-5 border-t border-white/10">
-                  <EntStackedBarChart
-                    dark
-                    tall
-                    rows={lifecycleSegments.map((s) => ({
-                      label: s.label,
-                      value: s.value,
-                      color: s.color,
-                    }))}
-                  />
-                </div>
-              ) : null}
-            </div>
           </div>
+          {total > 0 ? (
+            <div className="relative pt-4 border-t border-white/10">
+              <EntStackedBarChart dark tall rows={barRows} />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="ent-float-card p-6 md:p-8 flex flex-col items-center justify-center text-center">
+          <EntProgressRing value={readinessPct} label="Passport ready" size={130} />
+          <p className="text-sm text-[var(--ent-muted)] mt-6 leading-relaxed">
+            {total > 0
+              ? `${passportReady} of ${total} products ready or published`
+              : "No products in catalog yet"}
+            {overview.missingCount > 0 ? ` · ${overview.missingCount} missing fields` : ""}
+          </p>
         </div>
       </div>
     </section>
@@ -301,59 +289,51 @@ export function EntAttentionPanel({
 }) {
   return (
     <section className="mb-12 md:mb-16">
-      <div className="grid lg:grid-cols-[1fr_auto] gap-6 lg:gap-10 items-start mb-8">
+      <div className="grid lg:grid-cols-[1fr_340px] gap-5 md:gap-6 items-start">
         <div>
-          <h2 className="ent-serif text-[1.85rem] md:text-[2.25rem] text-[var(--ent-ink)]">Needs your attention</h2>
-          <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-lg leading-relaxed">{nextBody}</p>
-        </div>
-        <Link href={nextHref} className={`${entButtonClass} shrink-0 self-start`}>
-          {nextLabel}
-        </Link>
-      </div>
+          <h2 className="ent-heading text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)]">Needs your attention</h2>
+          <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-lg leading-relaxed mb-6">{nextBody}</p>
 
-      {items.length === 0 ? (
-        <div className="ent-zone ent-zone-stone rounded-[var(--ent-radius-2xl)] px-8 py-10 shadow-[var(--ent-shadow-panel)]">
-          <p className="text-[15px] text-[var(--ent-muted)]">
-            Nothing blocking right now. Review products or publish ready passports when you are set.
-          </p>
-        </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 gap-4 md:gap-5">
-          {items.map((item) => (
-            <Link
-              key={item.href + item.label}
-              href={item.href}
-              className={`group relative overflow-hidden rounded-[var(--ent-radius-2xl)] p-6 md:p-7 shadow-[var(--ent-shadow-sm)] transition-all hover:shadow-[var(--ent-shadow)] hover:-translate-y-0.5 ${
-                item.emphasis
-                  ? "ent-zone ent-zone-butter ring-1 ring-[var(--ent-raspberry)]/15"
-                  : "ent-zone ent-zone-cream"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p
-                    className={`ent-display ent-serif leading-none tabular-nums ${
-                      item.emphasis ? "text-[var(--ent-raspberry)]" : "text-[var(--ent-petrol-deep)]"
-                    }`}
-                    style={{ fontSize: "2.75rem" }}
-                  >
+          {items.length === 0 ? (
+            <div className="ent-float-card px-8 py-10">
+              <p className="text-[15px] text-[var(--ent-muted)]">
+                Nothing blocking right now. Review products or publish ready passports when you are set.
+              </p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {items.map((item) => (
+                <Link
+                  key={item.href + item.label}
+                  href={item.href}
+                  className={`group ent-float-card p-6 transition-transform hover:-translate-y-0.5 ${
+                    item.emphasis ? "ring-2 ring-[var(--ent-raspberry)]/20" : ""
+                  }`}
+                >
+                  <p className={`ent-display text-[2.5rem] leading-none ${item.emphasis ? "text-[var(--ent-raspberry)]" : "text-[var(--ent-petrol-deep)]"}`}>
                     {item.count != null ? padCount(item.count) : "—"}
                   </p>
-                  <p className="text-[16px] font-medium text-[var(--ent-ink)] mt-3 capitalize">{item.label}</p>
+                  <p className="ent-heading text-base text-[var(--ent-ink)] mt-3 capitalize">{item.label}</p>
                   {item.context ? <p className="text-sm text-[var(--ent-muted)] mt-1.5">{item.context}</p> : null}
-                </div>
-                <span className="text-[var(--ent-muted-light)] group-hover:text-[var(--ent-petrol-deep)] transition-all text-xl mt-1">
-                  →
-                </span>
-              </div>
-            </Link>
-          ))}
+                  <span className="text-[var(--ent-petrol-deep)] text-sm mt-4 inline-flex group-hover:translate-x-0.5 transition-transform">Open →</span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
-      )}
 
-      <p className="text-[11px] tracking-[0.1em] uppercase text-[var(--ent-muted-light)] mt-8">
-        Suggested next · {nextTitle}
-      </p>
+        <div className="ent-dark-panel p-6 md:p-8 lg:sticky lg:top-8">
+          <p className="text-[10px] tracking-[0.14em] uppercase text-white/40 mb-2">Suggested next</p>
+          <p className="ent-heading text-xl text-white mb-3">{nextTitle}</p>
+          <p className="text-sm text-white/60 leading-relaxed mb-8">{nextBody}</p>
+          <Link
+            href={nextHref}
+            className="inline-flex w-full justify-center items-center rounded-[var(--ent-radius-lg)] px-5 py-3.5 text-sm font-medium bg-white text-[var(--ent-charcoal)] hover:bg-[var(--ent-butter-soft)] transition-colors"
+          >
+            {nextLabel}
+          </Link>
+        </div>
+      </div>
     </section>
   );
 }
@@ -392,15 +372,15 @@ export function EntActivityFeed({
 
   return (
     <section className="pt-2">
-      <h2 className="ent-serif text-[1.85rem] md:text-[2.25rem] text-[var(--ent-ink)] mb-8 md:mb-10">Recent activity</h2>
-      <div className="ent-zone ent-zone-cream rounded-[var(--ent-radius-2xl)] px-6 py-8 md:px-10 md:py-10 shadow-[var(--ent-shadow-panel)]">
+      <h2 className="ent-heading text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)] mb-8 md:mb-10">Recent activity</h2>
+      <div className="ent-float-card px-6 py-8 md:px-10 md:py-10">
         <div className="space-y-12">
           {order.map((group) => {
             const groupItems = grouped.get(group);
             if (!groupItems?.length) return null;
             return (
               <div key={group} className="relative">
-                <p className="ent-serif text-[1.25rem] text-[var(--ent-ink-soft)] mb-6">{group}</p>
+                <p className="ent-heading text-xl text-[var(--ent-ink-soft)] mb-6">{group}</p>
                 <ul className="relative pl-1">
                   <span className="ent-timeline-spine" aria-hidden />
                   {groupItems.map((item, index) => {
@@ -485,13 +465,16 @@ export function EntPassportStatusPanel({
 /* ── Form controls ── */
 
 export const entInputClass =
-  "border border-[var(--ent-border-strong)] rounded-xl px-4 py-3 text-sm bg-[var(--ent-surface)] text-[var(--ent-ink)] placeholder:text-[var(--ent-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--ent-petrol)]/20 transition-shadow";
+  "ent-input border border-[var(--ent-border-strong)] rounded-[var(--ent-radius-lg)] px-4 py-3 text-sm bg-white/90 text-[var(--ent-ink)] placeholder:text-[var(--ent-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--ent-petrol)]/25 shadow-[var(--ent-shadow-sm)] transition-shadow";
+
+export const entSelectClass =
+  "ent-select border border-[var(--ent-border-strong)] rounded-[var(--ent-radius-lg)] px-4 py-3 text-sm bg-white/90 text-[var(--ent-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ent-petrol)]/25 shadow-[var(--ent-shadow-sm)]";
 
 export const entButtonClass =
-  "inline-flex items-center justify-center text-[14px] font-medium rounded-xl px-5 py-3 bg-[var(--ent-petrol-deep)] text-white hover:bg-[var(--ent-forest)] shadow-[var(--ent-shadow-sm)] transition-all hover:shadow-[var(--ent-shadow)] disabled:opacity-50";
+  "inline-flex items-center justify-center text-[14px] font-semibold rounded-[var(--ent-radius-lg)] px-5 py-3 bg-[var(--ent-petrol-deep)] text-white hover:bg-[var(--ent-forest)] shadow-[var(--ent-shadow-sm)] transition-all hover:shadow-[var(--ent-shadow)] hover:-translate-y-px disabled:opacity-50";
 
 export const entButtonGhostClass =
-  "inline-flex items-center justify-center text-[14px] font-medium rounded-xl px-5 py-3 border border-[var(--ent-border-strong)] bg-transparent text-[var(--ent-ink-soft)] hover:bg-[var(--ent-surface-muted)] transition-colors";
+  "inline-flex items-center justify-center text-[14px] font-medium rounded-[var(--ent-radius-lg)] px-5 py-3 border border-[var(--ent-border-strong)] bg-white/80 text-[var(--ent-ink-soft)] hover:bg-white shadow-[var(--ent-shadow-sm)] transition-all";
 
 export const entLinkClass =
   "text-[14px] font-medium text-[var(--ent-petrol-deep)] hover:text-[var(--ent-forest)] transition-colors inline-flex items-center gap-1";
@@ -501,11 +484,12 @@ export function EntProductPlaceholder({ category }: { category?: string | null }
   const label = String(category || "").trim();
   return (
     <div
-      className="shrink-0 w-11 h-[3.25rem] rounded-md bg-[var(--ent-surface-muted)] border border-[var(--ent-border)] flex items-end overflow-hidden"
+      className="shrink-0 w-14 h-16 rounded-[var(--ent-radius-lg)] flex items-end overflow-hidden shadow-[var(--ent-shadow-sm)]"
+      style={{ background: "linear-gradient(145deg, #f3e6e4 0%, #e8e2d9 100%)" }}
       aria-hidden={!label}
     >
       {label ? (
-        <span className="px-1 pb-1 text-[8px] leading-tight text-[var(--ent-muted-light)] line-clamp-3">{label}</span>
+        <span className="px-1.5 pb-1.5 text-[8px] leading-tight text-[var(--ent-muted)] line-clamp-3">{label}</span>
       ) : null}
     </div>
   );

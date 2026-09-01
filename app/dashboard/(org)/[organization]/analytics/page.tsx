@@ -4,8 +4,10 @@ import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgAnalytics } from "../../../../../lib/enterprise/module-queries";
 import {
   ACTIVITY_COLORS,
+  EntAreaChart,
   EntDonutChart,
   EntRadialActivityChart,
+  EntRoundedBarChart,
   EntStackedBarChart,
   ISSUE_COLORS,
   LIFECYCLE_COLORS,
@@ -102,15 +104,12 @@ export default async function AnalyticsPage({
       <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-5 md:gap-6 mb-6">
         <EntVisualPanel tone="cream" title="Product state distribution" subtitle="Share of catalog by passport workflow state">
           {totalStates > 0 ? (
-            <div className="grid md:grid-cols-[auto_1fr] gap-8 items-center">
-              <EntDonutChart
-                segments={stateRows}
-                centerValue={String(totalStates)}
-                centerLabel="Products"
-                size={240}
-                strokeWidth={28}
-              />
-              <EntStackedBarChart rows={stateRows} tall />
+            <div className="space-y-8">
+              <EntAreaChart rows={stateRows} height={200} gradientId="analytics-area" />
+              <div className="grid md:grid-cols-[auto_1fr] gap-8 items-center">
+                <EntDonutChart segments={stateRows} centerValue={String(totalStates)} centerLabel="Products" size={220} strokeWidth={26} />
+                <EntRoundedBarChart rows={stateRows.map((r) => ({ label: r.label, value: r.value, color: r.color }))} height={120} />
+              </div>
             </div>
           ) : (
             <p className="text-sm text-[var(--ent-muted)]">No products in catalog yet.</p>

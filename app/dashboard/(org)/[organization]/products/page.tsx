@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { canMutateEnterprise, requireOrganizationAccess } from "../../../../../lib/enterprise/access";
-import {
-  formatCompositionLines,
-} from "../../../../../lib/enterprise/display-format";
+import { formatCompositionLines } from "../../../../../lib/enterprise/display-format";
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgProducts } from "../../../../../lib/enterprise/queries";
 import {
@@ -14,6 +12,7 @@ import {
   entInputClass,
   entLinkClass,
   entMetaClass,
+  entSelectClass,
 } from "../../../components/EnterpriseUi";
 import { CatalogImportClient } from "./CatalogImportClient";
 
@@ -47,29 +46,34 @@ export default async function ProductsPage({
 
   return (
     <div>
-      <EntPageHeader
-        brandLine
-        title="Products"
-        description="Your canonical catalog. Upload a file, confirm column mapping, then review before publishing passports."
-      />
-      <CatalogImportClient slug={membership.slug} canMutate={canMutate} />
+      <div className="ent-float-card px-8 py-10 md:px-10 md:py-12 mb-8">
+        <EntPageHeader
+          brandLine
+          title="Products"
+          description="Your canonical catalog. Upload a file, confirm column mapping, then review before publishing passports."
+        />
+      </div>
+
+      <div className="ent-float-card p-5 md:p-6 mb-8">
+        <CatalogImportClient slug={membership.slug} canMutate={canMutate} />
+      </div>
 
       {imported != null && !Number.isNaN(imported) ? (
-        <p className="text-sm text-[var(--ent-muted)] mb-8 py-4 border-y border-[var(--ent-border)]">
+        <div className="ent-zone ent-zone-butter rounded-[var(--ent-radius-2xl)] px-6 py-4 mb-8 text-sm text-[var(--ent-muted)]">
           Imported {imported} products · {importedIssues} issues opened
           {importedCollisions ? ` · ${importedCollisions} identifier collisions kept separate` : ""}. Next: resolve
           blocking issues, then review and publish.
-        </p>
+        </div>
       ) : null}
 
-      <form className="flex flex-wrap gap-3 mb-10" method="get">
+      <form className="ent-float-card flex flex-wrap gap-3 p-5 md:p-6 mb-8" method="get">
         <input
           name="q"
           defaultValue={q}
           placeholder="Search name, SKU, style"
           className={`${entInputClass} min-w-[12rem] flex-1 md:flex-none md:min-w-[16rem]`}
         />
-        <select name="state" defaultValue={passportState} className={entInputClass}>
+        <select name="state" defaultValue={passportState} className={`${entSelectClass} min-w-[12rem]`}>
           <option value="">All passport states</option>
           {["incomplete", "review_required", "ready", "published", "update_required"].map((state) => (
             <option key={state} value={state}>
@@ -94,42 +98,46 @@ export default async function ProductsPage({
           ctaLabel={q || passportState ? "Clear filters" : undefined}
         />
       ) : (
-        <ul className="divide-y divide-[var(--ent-border)]">
+        <ul className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
           {catalog.rows.map((product) => {
             const compositionLines = formatCompositionLines(product.composition);
             return (
               <li key={product.id}>
                 <Link
                   href={`${base}/${product.id}`}
-                  className="group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 py-5 md:py-6 transition-colors hover:bg-[var(--ent-surface-muted)]/25 -mx-2 px-2 rounded-[var(--ent-radius-lg)]"
+                  className="group ent-float-card flex flex-col h-full p-5 md:p-6 transition-transform hover:-translate-y-1"
                 >
-                  <EntProductPlaceholder category={product.category} />
-
-                  <div className="flex-1 min-w-0 grid sm:grid-cols-[1fr_auto] gap-3 sm:gap-6 items-start sm:items-center">
-                    <div className="min-w-0 space-y-2">
-                      <p className="text-[17px] font-medium text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)] transition-colors">
+                  <div className="flex items-start gap-4 mb-4">
+                    <EntProductPlaceholder category={product.category} />
+                    <div className="min-w-0 flex-1">
+                      <p className="ent-heading text-[17px] text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)] transition-colors line-clamp-2">
                         {product.name}
                       </p>
-                      {compositionLines.length > 0 ? (
-                        <ul className="text-[15px] text-[var(--ent-ink-soft)] space-y-0.5">
-                          {compositionLines.slice(0, 4).map((line) => (
-                            <li key={line}>{line}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-[var(--ent-muted-light)]">Composition not recorded</p>
-                      )}
-                      <p className={entMetaClass}>
+                      <p className={entMetaClass + " mt-1"}>
                         {[product.style_code && `Style ${product.style_code}`, product.sku && `SKU ${product.sku}`]
                           .filter(Boolean)
                           .join(" · ") || "—"}
-                        {product.openIssueCount ? ` · ${product.openIssueCount} open issue${product.openIssueCount === 1 ? "" : "s"}` : ""}
                       </p>
                     </div>
+                  </div>
 
-                    <div className="flex sm:flex-col items-start sm:items-end gap-2 shrink-0">
-                      <EntPassportPill state={product.passport_state} />
-                    </div>
+                  {compositionLines.length > 0 ? (
+                    <ul className="text-sm text-[var(--ent-ink-soft)] space-y-0.5 flex-1">
+                      {compositionLines.slice(0, 3).map((line) => (
+                        <li key={line}>{line}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-[var(--ent-muted-light)] flex-1">Composition not recorded</p>
+                  )}
+
+                  <div className="flex items-center justify-between gap-3 mt-5 pt-4 border-t border-[var(--ent-border)]">
+                    <EntPassportPill state={product.passport_state} />
+                    {product.openIssueCount ? (
+                      <span className="text-xs text-[var(--ent-raspberry)]">{product.openIssueCount} issue{product.openIssueCount === 1 ? "" : "s"}</span>
+                    ) : (
+                      <span className="text-xs text-[var(--ent-muted-light)]">View →</span>
+                    )}
                   </div>
                 </Link>
               </li>
@@ -139,7 +147,7 @@ export default async function ProductsPage({
       )}
 
       {catalog.total > catalog.pageSize ? (
-        <p className="text-xs text-[var(--ent-muted-light)] mt-8 pt-6 border-t border-[var(--ent-border)]">
+        <p className="text-xs text-[var(--ent-muted-light)] mt-8 ent-float-card px-6 py-4 inline-block">
           Showing {(catalog.page - 1) * catalog.pageSize + 1}–{Math.min(catalog.page * catalog.pageSize, catalog.total)}{" "}
           of {catalog.total}
           {catalog.page > 1 ? (
@@ -160,7 +168,7 @@ export default async function ProductsPage({
           ) : null}
         </p>
       ) : catalog.rows.length > 0 ? (
-        <p className="text-xs text-[var(--ent-muted-light)] mt-8 pt-6 border-t border-[var(--ent-border)]">
+        <p className="text-xs text-[var(--ent-muted-light)] mt-8">
           {catalog.total} product{catalog.total === 1 ? "" : "s"} in this catalog
         </p>
       ) : null}
