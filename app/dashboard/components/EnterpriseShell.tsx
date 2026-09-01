@@ -54,7 +54,7 @@ export function EnterpriseShell({
     <div className="enterprise-app min-h-screen">
       <div className="md:hidden ent-mobile-bar px-4 py-3.5 flex items-center justify-between">
         <div>
-          <p className="ent-serif text-[11px] tracking-[0.24em] uppercase text-[var(--ent-petrol-deep)]">INTERTEXE</p>
+          <p className="ent-brand">INTERTEXE</p>
           <p className="text-sm font-medium mt-1 truncate max-w-[12rem] text-[var(--ent-ink)]">{organizationName}</p>
         </div>
         <button type="button" className="ent-mobile-menu-btn" onClick={() => setMobileOpen((v) => !v)}>
@@ -66,9 +66,7 @@ export function EnterpriseShell({
         <aside className={`ent-nav-rail ${mobileOpen ? "block" : "hidden"} md:flex md:flex-col`}>
           <div className="px-5 pt-7 pb-5 hidden md:block">
             <Link href={base} className="block group">
-              <p className="ent-serif text-[13px] tracking-[0.28em] uppercase text-[var(--ent-petrol-deep)] group-hover:text-[var(--ent-forest)] transition-colors">
-                INTERTEXE
-              </p>
+              <p className="ent-brand group-hover:text-[var(--ent-forest)] transition-colors">INTERTEXE</p>
             </Link>
           </div>
 
@@ -118,7 +116,7 @@ export function EnterpriseShell({
         </aside>
 
         <main className="min-w-0 ent-canvas">
-          <div className="ent-canvas-inner px-5 md:px-10 lg:px-12 xl:px-16 py-8 md:py-10 max-w-[88rem]">{children}</div>
+          <div className="ent-canvas-inner px-5 md:px-10 lg:px-14 xl:px-16 py-8 md:py-10 max-w-[84rem]">{children}</div>
         </main>
       </div>
     </div>

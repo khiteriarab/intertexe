@@ -19,11 +19,10 @@ export function EntInlinePageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <header className="ent-page-header mb-8 md:mb-10">
-      <p className="ent-serif text-[11px] tracking-[0.28em] uppercase text-[var(--ent-petrol-deep)]">INTERTEXE</p>
-      <div className="mt-3 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+    <header className="ent-page-header">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="ent-serif text-[2rem] md:text-[2.75rem] leading-[1.02] text-[var(--ent-ink)]">{title}</h1>
+          <h1 className="ent-title text-[1.625rem] md:text-[2rem] text-[var(--ent-ink)]">{title}</h1>
           {meta ? <div className="ent-page-meta">{meta}</div> : null}
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}

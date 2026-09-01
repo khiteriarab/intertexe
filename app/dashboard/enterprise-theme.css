@@ -60,64 +60,59 @@
 }
 
 .enterprise-app {
-  background: var(--ent-ivory);
+  background: #f7f6f3;
   color: var(--ent-ink);
-  font-feature-settings: "ss01" 1, "cv01" 1;
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.enterprise-app .ent-serif {
-  font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+/* Legacy class name — now premium sans, not serif */
+.enterprise-app .ent-serif,
+.enterprise-app .ent-title {
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.035em;
 }
 
 .enterprise-app .ent-sans {
-  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 .enterprise-app .ent-heading {
-  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
 }
 
 .enterprise-app .ent-display {
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
-  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  letter-spacing: -0.04em;
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
+}
+
+.enterprise-app .ent-brand {
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ent-ink);
 }
 
 /* ── Canvas ambient background ── */
 .enterprise-app .ent-canvas {
   position: relative;
-  background: var(--ent-gradient-canvas);
+  background: #f7f6f3;
   min-height: 100%;
 }
 
 .enterprise-app .ent-canvas::before,
 .enterprise-app .ent-canvas::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
-  z-index: 0;
-}
-
-.enterprise-app .ent-canvas::before {
-  width: 420px;
-  height: 420px;
-  top: -120px;
-  right: -80px;
-  background: var(--ent-rose-glow);
-}
-
-.enterprise-app .ent-canvas::after {
-  width: 360px;
-  height: 360px;
-  bottom: 10%;
-  left: -60px;
-  background: rgba(245, 236, 212, 0.6);
+  display: none;
 }
 
 .enterprise-app .ent-canvas-inner {
@@ -239,30 +234,42 @@
 
 /* ── Navigation rail (2026 shell) ── */
 .enterprise-app .ent-nav-rail {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px);
-  border-right: 1px solid var(--ent-border);
+  background: #fcfbfa;
+  border-right: 1px solid rgba(26, 31, 34, 0.07);
   min-height: 100vh;
 }
 
 .enterprise-app .ent-nav-link {
   display: block;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
+  position: relative;
+  padding: 0.45rem 0.7rem 0.45rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--ent-muted);
-  transition: color 0.18s ease, background-color 0.18s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .enterprise-app .ent-nav-link:hover {
   color: var(--ent-ink-soft);
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(26, 31, 34, 0.03);
 }
 
 .enterprise-app .ent-nav-link-active {
-  color: var(--ent-petrol-deep);
-  background: rgba(66, 102, 108, 0.08);
-  font-weight: 500;
+  color: var(--ent-ink);
+  background: rgba(62, 98, 104, 0.06);
+  font-weight: 600;
+}
+
+.enterprise-app .ent-nav-link-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45rem;
+  bottom: 0.45rem;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--ent-petrol-deep);
 }
 
 .enterprise-app .ent-nav-avatar {
@@ -387,17 +394,25 @@
 
 /* ── Inline page header ── */
 .enterprise-app .ent-page-header {
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--ent-border);
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(26, 31, 34, 0.08);
+  margin-bottom: 1.75rem;
 }
 
 .enterprise-app .ent-page-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 1.25rem;
-  margin-top: 0.65rem;
-  font-size: 0.875rem;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
   color: var(--ent-muted);
+}
+
+.enterprise-app .ent-page-meta > span:not(:last-child)::after {
+  content: "·";
+  margin-left: 0.5rem;
+  color: var(--ent-muted-light);
 }
 
 .enterprise-app .ent-page-meta strong {
@@ -405,44 +420,75 @@
   font-weight: 600;
 }
 
-/* ── Product catalog rows ── */
-.enterprise-app .ent-product-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem 1.25rem;
-  padding: 1.15rem 0;
-  border-bottom: 1px solid var(--ent-border);
-  transition: background-color 0.18s ease, padding 0.18s ease;
+/* ── Product catalog ── */
+.enterprise-app .ent-catalog-grid {
+  display: grid;
+  gap: 0.75rem;
 }
 
-.enterprise-app .ent-product-row:hover {
-  background: rgba(255, 255, 255, 0.45);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  margin-left: -0.5rem;
-  margin-right: -0.5rem;
-  border-radius: var(--ent-radius-lg);
+@media (min-width: 768px) {
+  .enterprise-app .ent-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .enterprise-app .ent-catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.enterprise-app .ent-catalog-card {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 0.875rem;
+  background: #ffffff;
+  border: 1px solid rgba(26, 31, 34, 0.06);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.enterprise-app .ent-catalog-card:hover {
+  border-color: rgba(62, 98, 104, 0.14);
+  box-shadow: 0 14px 36px rgba(26, 31, 34, 0.05);
+  transform: translateY(-1px);
 }
 
 .enterprise-app .ent-product-visual {
-  width: 4.5rem;
-  height: 5.75rem;
+  width: 4.25rem;
+  height: 5.25rem;
   flex-shrink: 0;
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   overflow: hidden;
   position: relative;
-  background: linear-gradient(165deg, #f5f0ea 0%, #ebe4db 48%, #e3dcd2 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  background:
+    linear-gradient(180deg, #f0ebe4 0%, #e6dfd6 100%);
+  border: 1px solid rgba(26, 31, 34, 0.06);
 }
 
 .enterprise-app .ent-product-visual::before {
   content: "";
   position: absolute;
   inset: 0;
+  opacity: 0.55;
   background:
-    linear-gradient(135deg, transparent 45%, rgba(255, 255, 255, 0.35) 46%, rgba(255, 255, 255, 0.35) 48%, transparent 49%),
-    linear-gradient(45deg, transparent 62%, rgba(184, 176, 166, 0.18) 63%, rgba(184, 176, 166, 0.18) 65%, transparent 66%);
-  opacity: 0.8;
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.35) 3px,
+      rgba(255, 255, 255, 0.35) 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      rgba(0, 0, 0, 0.02) 8px,
+      rgba(0, 0, 0, 0.02) 9px
+    );
 }
 
 /* ── Issue triage ── */

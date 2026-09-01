@@ -51,7 +51,7 @@ export function EntDrawer({
       >
         <div className="ent-drawer-header">
           <div className="min-w-0 pr-6">
-            <p id={titleId} className="ent-serif text-[1.65rem] md:text-[1.85rem] text-[var(--ent-ink)] leading-tight">
+            <p id={titleId} className="ent-title text-[1.35rem] md:text-[1.5rem] text-[var(--ent-ink)] leading-tight">
               {title}
             </p>
             {subtitle ? <p className="text-sm text-[var(--ent-muted)] mt-2 leading-relaxed">{subtitle}</p> : null}

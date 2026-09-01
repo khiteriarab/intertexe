@@ -69,14 +69,14 @@ export default async function ProductsPage({
         </div>
       ) : null}
 
-      <form className="flex flex-wrap gap-3 mb-8 pb-6 border-b border-[var(--ent-border)]" method="get">
+      <form className="flex flex-wrap items-center gap-2.5 mb-6" method="get">
         <input
           name="q"
           defaultValue={q}
           placeholder="Search products…"
-          className={`${entInputClass} min-w-[12rem] flex-1 md:flex-none md:min-w-[18rem]`}
+          className={`${entInputClass} min-w-[12rem] flex-1 md:flex-none md:min-w-[20rem] !rounded-full !py-2.5`}
         />
-        <select name="state" defaultValue={passportState} className={`${entSelectClass} min-w-[12rem]`}>
+        <select name="state" defaultValue={passportState} className={`${entSelectClass} min-w-[11rem] !rounded-full !py-2.5`}>
           <option value="">All passport states</option>
           {["incomplete", "review_required", "ready", "published", "update_required"].map((state) => (
             <option key={state} value={state}>
@@ -101,32 +101,32 @@ export default async function ProductsPage({
           ctaLabel={q || passportState ? "Clear filters" : "Import products"}
         />
       ) : (
-        <ul>
+        <ul className="ent-catalog-grid">
           {catalog.rows.map((product) => {
             const compositionLines = formatCompositionLines(product.composition);
             const compositionDisplay = formatCompositionDisplay(product.composition);
             return (
               <li key={product.id}>
-                <Link href={`${base}/${product.id}`} className="ent-product-row group">
+                <Link href={`${base}/${product.id}`} className="ent-catalog-card group h-full">
                   <EntProductPlaceholder category={product.category} />
-                  <div className="min-w-0 flex-1">
-                    <p className="ent-serif text-[1.35rem] md:text-[1.5rem] text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)] transition-colors line-clamp-2">
+                  <div className="min-w-0 flex-1 flex flex-col">
+                    <p className="ent-title text-[1.05rem] text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)] transition-colors line-clamp-2">
                       {product.name}
                     </p>
-                    <p className="text-sm text-[var(--ent-ink-soft)] mt-1">
+                    <p className="text-[13px] text-[var(--ent-muted)] mt-1 line-clamp-2">
                       {compositionLines.length > 0 ? compositionDisplay : "Composition not recorded"}
                     </p>
-                    <p className={entMetaClass + " mt-1.5"}>
+                    <p className={`${entMetaClass} mt-auto pt-3`}>
                       {[product.sku, product.style_code && `Style ${product.style_code}`].filter(Boolean).join(" · ") || "—"}
                     </p>
-                  </div>
-                  <div className="hidden sm:flex flex-col items-end gap-2 shrink-0">
-                    <EntPassportPill state={product.passport_state} />
-                    {product.openIssueCount ? (
-                      <span className="text-xs text-[var(--ent-raspberry)]">{product.openIssueCount} issue{product.openIssueCount === 1 ? "" : "s"}</span>
-                    ) : (
-                      <span className="text-xs text-[var(--ent-muted-light)]">Open →</span>
-                    )}
+                    <div className="flex items-center justify-between gap-3 mt-3">
+                      <EntPassportPill state={product.passport_state} />
+                      {product.openIssueCount ? (
+                        <span className="text-[11px] text-[var(--ent-raspberry)]">{product.openIssueCount} issue{product.openIssueCount === 1 ? "" : "s"}</span>
+                      ) : (
+                        <span className="text-[11px] text-[var(--ent-muted-light)]">Open →</span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               </li>

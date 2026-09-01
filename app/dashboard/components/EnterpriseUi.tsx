@@ -140,8 +140,8 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
   return (
     <section className="mb-10 md:mb-12">
       <div className="mb-8 md:mb-10">
-        <p className="ent-serif text-[11px] tracking-[0.28em] uppercase text-[var(--ent-petrol-deep)]">INTERTEXE</p>
-        <h1 className="ent-serif text-[2.25rem] md:text-[3.25rem] lg:text-[3.75rem] leading-[1.02] text-[var(--ent-ink)] mt-3">
+        <p className="ent-brand">INTERTEXE</p>
+        <h1 className="ent-title text-[2rem] md:text-[2.75rem] text-[var(--ent-ink)] mt-3">
           Welcome in, <span className="text-[var(--ent-petrol-deep)]">{orgName.split(" ")[0]}</span>
         </h1>
         <div className="ent-page-meta mt-4">
@@ -172,7 +172,7 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
         <div className="relative grid lg:grid-cols-[1fr_auto] gap-8 items-center">
           <div>
             <p className="text-[10px] tracking-[0.14em] uppercase text-white/45">Passport intelligence</p>
-            <p className="ent-serif text-[1.75rem] md:text-[2.25rem] text-white mt-2 leading-tight">
+            <p className="ent-title text-[1.5rem] md:text-[1.75rem] text-white mt-2 leading-tight">
               {total > 0 ? `${readinessPct}% of catalog passport-ready` : "Import your catalog to begin"}
             </p>
             <p className="text-sm text-white/65 mt-3 max-w-md leading-relaxed">
@@ -443,13 +443,13 @@ export function EntPassportStatusPanel({
 /* ── Form controls ── */
 
 export const entInputClass =
-  "ent-input border border-[var(--ent-border-strong)] rounded-[var(--ent-radius-lg)] px-4 py-3 text-sm bg-white/90 text-[var(--ent-ink)] placeholder:text-[var(--ent-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--ent-petrol)]/25 shadow-[var(--ent-shadow-sm)] transition-shadow";
+  "ent-input border border-[rgba(26,31,34,0.1)] rounded-[var(--ent-radius-lg)] px-4 py-2.5 text-[14px] bg-white text-[var(--ent-ink)] placeholder:text-[var(--ent-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--ent-petrol)]/20 transition-shadow";
 
 export const entSelectClass =
   "ent-select border border-[var(--ent-border-strong)] rounded-[var(--ent-radius-lg)] px-4 py-3 text-sm bg-white/90 text-[var(--ent-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ent-petrol)]/25 shadow-[var(--ent-shadow-sm)]";
 
 export const entButtonClass =
-  "inline-flex items-center justify-center text-[14px] font-semibold rounded-[var(--ent-radius-lg)] px-5 py-3 bg-[var(--ent-petrol-deep)] text-white hover:bg-[var(--ent-forest)] shadow-[var(--ent-shadow-sm)] transition-all hover:shadow-[var(--ent-shadow)] hover:-translate-y-px disabled:opacity-50";
+  "inline-flex items-center justify-center text-[13px] font-semibold rounded-full px-5 py-2.5 bg-[var(--ent-petrol-deep)] text-white hover:bg-[var(--ent-forest)] transition-colors disabled:opacity-50";
 
 export const entButtonGhostClass =
   "inline-flex items-center justify-center text-[14px] font-medium rounded-[var(--ent-radius-lg)] px-5 py-3 border border-[var(--ent-border-strong)] bg-white/80 text-[var(--ent-ink-soft)] hover:bg-white shadow-[var(--ent-shadow-sm)] transition-all";

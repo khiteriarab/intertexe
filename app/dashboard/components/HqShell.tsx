@@ -42,7 +42,7 @@ export function HqShell({
         <div>
           <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE Dashboard</p>
           <p className="text-sm font-medium">{workspaceName}</p>
-          <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" />
+          <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" variant="hq" />
         </div>
         <button
           type="button"
@@ -60,10 +60,10 @@ export function HqShell({
           } md:block border-r border-black/10 bg-white`}
         >
           <div className="px-5 py-6 border-b border-black/10 hidden md:block">
-            <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE Dashboard</p>
-            <p className="text-lg font-medium mt-1">{workspaceName}</p>
+            <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">Dashboard</p>
+            <p className="text-[15px] font-semibold tracking-tight mt-1">INTERTEXE</p>
             <p className="text-xs text-black/50 mt-1">Private operating system</p>
-            <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" />
+            <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" variant="hq" />
           </div>
           <nav className="px-3 py-4 space-y-0.5">
             {HQ_NAV.filter((item) => !("founderOnly" in item && item.founderOnly) || roles.includes("founder")).map((item) => {
