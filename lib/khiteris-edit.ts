@@ -424,7 +424,7 @@ export const KHITERIS_EDIT_SEPTEMBER_2026: KhiterisEditConfig = {
     "The fall edit — wool and cashmere knits, silk layers, leather coats, and the boots I'm wearing into October.",
   coverImage: {
     src: "/khiteri/cover-september.jpg",
-    alt: "Róhe Turtleneck Wool and Cashmere Top on model",
+    alt: "Ganni Fluffy Denim Corsage Dress on model — layered fall knit and denim",
   },
   moodBoard: {
     caption: "Cashmere season, leather boots, and the first knits worth buying.",
