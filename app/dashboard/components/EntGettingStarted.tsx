@@ -2,17 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { GettingStartedStep } from "../../../lib/enterprise/getting-started";
 import { ENT_NAV_ITEM_ICONS } from "./EnterpriseNavIcons";
-
-type Step = {
-  id: string;
-  title: string;
-  body: string;
-  href: string;
-  label: string;
-  icon: keyof typeof ENT_NAV_ITEM_ICONS;
-  done: boolean;
-};
 
 export function EntGettingStarted({
   base,
@@ -21,7 +12,7 @@ export function EntGettingStarted({
 }: {
   base: string;
   orgSlug: string;
-  steps: Step[];
+  steps: GettingStartedStep[];
 }) {
   const storageKey = `ent-onboarding-dismissed-${orgSlug}`;
   const [dismissed, setDismissed] = useState(false);
@@ -130,50 +121,4 @@ export function EntGettingStarted({
       </div>
     </section>
   );
-}
-
-export function buildGettingStartedSteps(overview: {
-  productCount: number;
-  issueCount: number;
-  readyCount: number;
-  publishedCount: number;
-}): Step[] {
-  return [
-    {
-      id: "import",
-      title: "Import your catalog",
-      body: "Upload a CSV, map columns, and preview identifier matches before confirming.",
-      href: "/products?import=1",
-      label: "Import products",
-      icon: "products",
-      done: overview.productCount > 0,
-    },
-    {
-      id: "review",
-      title: "Review product fields",
-      body: "Open products, compare source vs canonical data, and approve required fields.",
-      href: "/products",
-      label: "Review catalog",
-      icon: "products",
-      done: overview.productCount > 0 && overview.issueCount === 0,
-    },
-    {
-      id: "issues",
-      title: "Resolve open issues",
-      body: "Clear blocking findings and missing composition or origin data.",
-      href: "/issues",
-      label: "Open issues",
-      icon: "issues",
-      done: overview.issueCount === 0 && overview.productCount > 0,
-    },
-    {
-      id: "publish",
-      title: "Publish passports",
-      body: "Release digital product passports when products are ready and compliant.",
-      href: "/passports",
-      label: "Go to passports",
-      icon: "passports",
-      done: overview.publishedCount > 0,
-    },
-  ];
 }

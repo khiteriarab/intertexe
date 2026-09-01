@@ -9,7 +9,8 @@ import {
   type EntAttentionItem,
 } from "../../components/EnterpriseUi";
 import { EntKpiGrid, EntModuleShowcase, EntOverviewBenchmarkTeaser, EntOverviewCharts } from "../../components/EntDashboardWidgets";
-import { EntGettingStarted, buildGettingStartedSteps } from "../../components/EntGettingStarted";
+import { buildGettingStartedSteps } from "../../../../lib/enterprise/getting-started";
+import { EntGettingStarted } from "../../components/EntGettingStarted";
 
 export const dynamic = "force-dynamic";
 
