@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ENTERPRISE_NAV_GROUPS, enterpriseNavForActor } from "../../../lib/enterprise/constants";
+import { enterpriseNavForActor } from "../../../lib/enterprise/constants";
 import type { WorkspaceContext } from "../../../lib/enterprise/types";
+import { EnterpriseNav } from "./EnterpriseNav";
+import { EntIconSettings } from "./EnterpriseNavIcons";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type Props = {
@@ -19,11 +21,6 @@ type Props = {
   founderHq?: boolean;
 };
 
-function navItemActive(pathname: string, base: string, href: string, exact?: boolean) {
-  const target = `${base}${href}`;
-  return exact ? pathname === target || pathname === base : pathname === target || pathname.startsWith(`${target}/`);
-}
-
 export function EnterpriseShell({
   children,
   email,
@@ -34,13 +31,11 @@ export function EnterpriseShell({
   workspaceContexts,
   founderHq = false,
 }: Props) {
-  const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const base = `/dashboard/${organizationSlug}`;
   const displayName = fullName || email.split("@")[0];
-  const navGroups = ENTERPRISE_NAV_GROUPS;
   void enterpriseNavForActor(founderHq);
 
   async function logout() {
@@ -62,60 +57,48 @@ export function EnterpriseShell({
         </button>
       </div>
 
-      <div className="md:grid md:grid-cols-[232px_1fr] min-h-screen">
+      <div className="md:grid md:grid-cols-[260px_1fr] min-h-screen">
         <aside className={`ent-nav-rail ${mobileOpen ? "block" : "hidden"} md:flex md:flex-col`}>
-          <div className="px-5 pt-7 pb-5 hidden md:block">
+          <div className="px-5 pt-7 pb-4 hidden md:block">
             <Link href={base} className="block group">
-              <p className="ent-brand group-hover:text-[var(--ent-forest)] transition-colors">INTERTEXE</p>
+              <p className="ent-brand-rail group-hover:text-white transition-colors">INTERTEXE</p>
             </Link>
           </div>
 
-          <div className="px-4 pb-4 md:pb-5 border-b border-[var(--ent-border)] md:border-none">
-            <WorkspaceSwitcher contexts={workspaceContexts} currentHref={base} variant="rail" organizationName={organizationName} />
+          <div className="px-4 pb-3">
+            <WorkspaceSwitcher contexts={workspaceContexts} currentHref={base} variant="sidebar" organizationName={organizationName} />
           </div>
 
-          <nav className="flex-1 px-3 py-4 md:py-2 overflow-y-auto" aria-label="Organization">
-            {navGroups.map((group, groupIndex) => (
-              <div key={group.id} className={groupIndex > 0 ? "mt-6" : ""}>
-                <p className="px-3 mb-2 text-[10px] tracking-[0.16em] uppercase text-[var(--ent-muted-light)]">{group.label}</p>
-                <ul className="space-y-0.5">
-                  {group.items.map((item) => {
-                    const href = `${base}${item.href}`;
-                    const active = navItemActive(pathname, base, item.href, "exact" in item && item.exact);
-                    return (
-                      <li key={href}>
-                        <Link
-                          href={href}
-                          onClick={() => setMobileOpen(false)}
-                          className={`ent-nav-link ${active ? "ent-nav-link-active" : ""}`}
-                        >
-                          {item.label}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </nav>
+          <EnterpriseNav base={base} onNavigate={() => setMobileOpen(false)} />
 
-          <div className="px-4 py-5 mt-auto border-t border-[var(--ent-border)]">
+          <div className="px-4 py-5 mt-auto border-t border-white/10">
             <div className="flex items-center gap-3 px-2">
-              <div className="ent-nav-avatar" aria-hidden>
+              <div className="ent-nav-avatar ent-nav-avatar-rail" aria-hidden>
                 {displayName.slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate text-[var(--ent-ink)]">{displayName}</p>
-                <p className="text-[11px] text-[var(--ent-muted-light)] truncate mt-0.5">{role.replaceAll("_", " ")}</p>
+                <p className="text-sm font-semibold truncate text-white/95">{displayName}</p>
+                <p className="text-[11px] text-white/45 truncate mt-0.5 capitalize">{role.replaceAll("_", " ")}</p>
               </div>
             </div>
-            <button type="button" onClick={logout} disabled={loggingOut} className="ent-nav-signout">
+            <button type="button" onClick={logout} disabled={loggingOut} className="ent-nav-signout ent-nav-signout-rail">
               {loggingOut ? "Signing out…" : "Sign out"}
             </button>
           </div>
         </aside>
 
         <main className="min-w-0 ent-canvas">
+          <header className="ent-topbar hidden md:flex items-center gap-4 px-10 lg:px-14 xl:px-16 pt-6">
+            <div className="ent-topbar-search flex-1">
+              <span className="ent-topbar-search-icon" aria-hidden>
+                ⌕
+              </span>
+              <input type="search" placeholder="Search products, issues, passports…" className="ent-topbar-search-input" />
+            </div>
+            <Link href={`${base}/settings`} className="ent-topbar-icon-btn" aria-label="Workspace settings">
+              <EntIconSettings className="h-[18px] w-[18px]" />
+            </Link>
+          </header>
           <div className="ent-canvas-inner px-5 md:px-10 lg:px-14 xl:px-16 py-8 md:py-10 max-w-[84rem]">{children}</div>
         </main>
       </div>

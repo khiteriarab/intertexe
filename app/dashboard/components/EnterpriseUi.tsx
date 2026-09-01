@@ -142,8 +142,12 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
       <div className="mb-8 md:mb-10">
         <p className="ent-brand">INTERTEXE</p>
         <h1 className="ent-title text-[2rem] md:text-[2.75rem] text-[var(--ent-ink)] mt-3">
-          Welcome in, <span className="text-[var(--ent-petrol-deep)]">{orgName.split(" ")[0]}</span>
+          {orgName}
         </h1>
+        <p className="text-[15px] text-[var(--ent-muted)] mt-3 max-w-2xl leading-relaxed">
+          What is in your catalog, where material and data gaps exist, how ready products are, and what your team
+          should do next.
+        </p>
         <div className="ent-page-meta mt-4">
           <span>
             <strong>{total}</strong> products
@@ -171,14 +175,14 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
         />
         <div className="relative grid lg:grid-cols-[1fr_auto] gap-8 items-center">
           <div>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-white/45">Passport intelligence</p>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-white/45">Catalog intelligence</p>
             <p className="ent-title text-[1.5rem] md:text-[1.75rem] text-white mt-2 leading-tight">
-              {total > 0 ? `${readinessPct}% of catalog passport-ready` : "Import your catalog to begin"}
+              {total > 0 ? `${readinessPct}% passport-ready · ${overview.issueCount} open issues` : "Import your catalog to begin"}
             </p>
             <p className="text-sm text-white/65 mt-3 max-w-md leading-relaxed">
               {total > 0
                 ? `${passportReady} products ready or published${overview.missingCount > 0 ? ` · ${overview.missingCount} missing fields` : ""}`
-                : "Upload products, resolve issues, then publish digital passports."}
+                : "Bring in products, improve material data, resolve issues, then publish passports when ready."}
             </p>
             {total > 0 ? (
               <div className="mt-8 max-w-md">

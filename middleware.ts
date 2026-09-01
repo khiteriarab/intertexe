@@ -79,16 +79,14 @@ export function middleware(request: NextRequest) {
     if (dashboardPathRequiresEnterpriseSession(pathname)) {
       const enterprise = request.cookies.get(ENTERPRISE_SESSION_COOKIE)?.value?.trim();
       if (!enterprise) {
-        const url = request.nextUrl.clone();
         const hq = request.cookies.get(HQ_SESSION_COOKIE)?.value?.trim();
-        if (hq) {
-          url.pathname = "/dashboard";
-          url.search = "";
+        if (!hq) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/dashboard/login";
+          url.searchParams.set("next", pathname);
           return NextResponse.redirect(url);
         }
-        url.pathname = "/dashboard/login";
-        url.searchParams.set("next", pathname);
-        return NextResponse.redirect(url);
+        // HQ staff: allow through so the org layout can mint an enterprise handoff in-place.
       }
     }
   }

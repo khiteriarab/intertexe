@@ -14,6 +14,7 @@ export const ORG_PAGE_STATES: Record<string, ImplementationState> = {
   suppliers: "placeholder",
   regulations: "placeholder",
   benchmarking: "partial",
+  workflows: "partial",
   analytics: "placeholder",
   integrations: "partial",
   developers: "placeholder",

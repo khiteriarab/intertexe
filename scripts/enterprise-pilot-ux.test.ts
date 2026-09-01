@@ -107,6 +107,7 @@ describe("Enterprise navigation", () => {
       "Products",
       "Issues",
       "Passports",
+      "Workflows",
       "Suppliers",
       "Files",
       "Activity",

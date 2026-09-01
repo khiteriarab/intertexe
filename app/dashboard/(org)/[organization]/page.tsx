@@ -1,12 +1,15 @@
 import { requireOrganizationAccess } from "../../../../lib/enterprise/access";
 import { entitlementsForPlan, type PlanKey } from "../../../../lib/enterprise/entitlements";
 import { loadOrgOverview } from "../../../../lib/enterprise/queries";
+import { loadOrgCompositionBenchmark } from "../../../../lib/enterprise/composition-benchmark";
 import {
   EntActivityFeed,
   EntAttentionPanel,
   EntOverviewHero,
   type EntAttentionItem,
 } from "../../components/EnterpriseUi";
+import { EntKpiGrid, EntModuleShowcase, EntOverviewBenchmarkTeaser, EntOverviewCharts } from "../../components/EntDashboardWidgets";
+import { EntGettingStarted, buildGettingStartedSteps } from "../../components/EntGettingStarted";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +20,10 @@ export default async function OrganizationOverviewPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const overview = await loadOrgOverview(client, membership.organizationId);
+  const [overview, composition] = await Promise.all([
+    loadOrgOverview(client, membership.organizationId),
+    loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
+  ]);
   const entitlement = entitlementsForPlan(membership.plan as PlanKey, {});
   const base = `/dashboard/${membership.slug}`;
 
@@ -103,6 +109,15 @@ export default async function OrganizationOverviewPage({
 
       <EntOverviewHero overview={overview} orgName={membership.name} />
 
+      <EntKpiGrid overview={overview} base={base} />
+
+      <EntOverviewBenchmarkTeaser
+        base={base}
+        overview={overview}
+        stats={composition.stats}
+        peerRows={composition.peerRows}
+      />
+
       <EntAttentionPanel
         nextTitle={nextStep.title}
         nextBody={nextStep.body}
@@ -110,6 +125,16 @@ export default async function OrganizationOverviewPage({
         nextLabel={nextStep.label}
         items={attentionItems}
       />
+
+      <EntOverviewCharts overview={overview} />
+
+      <EntGettingStarted
+        base={base}
+        orgSlug={membership.slug}
+        steps={buildGettingStartedSteps(overview)}
+      />
+
+      <EntModuleShowcase overview={overview} base={base} />
 
       {membership.plan === "free_snapshot" ? (
         <div className="ent-zone ent-zone-butter rounded-[var(--ent-radius-2xl)] px-8 py-10 md:px-10 md:py-12 mb-14 shadow-[var(--ent-shadow-panel)]">

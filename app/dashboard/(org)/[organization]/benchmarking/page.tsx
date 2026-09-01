@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
+import { loadOrgCompositionBenchmark } from "../../../../../lib/enterprise/composition-benchmark";
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgBenchmarking } from "../../../../../lib/enterprise/module-queries";
+import { EntFabricPeerComparison } from "../../../components/EntFabricBenchmark";
 import { EntDonutChart, EntStackedBarChart, LIFECYCLE_COLORS } from "../../../components/EnterpriseCharts";
 import {
   EntEmptyState,
@@ -20,7 +22,10 @@ export default async function BenchmarkingPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const data = await loadOrgBenchmarking(client, membership.organizationId);
+  const [data, composition] = await Promise.all([
+    loadOrgBenchmarking(client, membership.organizationId),
+    loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
+  ]);
   const base = `/dashboard/${membership.slug}`;
 
   const stateRows = Object.entries(data.byState)
@@ -37,21 +42,27 @@ export default async function BenchmarkingPage({
       {data.productCount === 0 ? (
         <EntEmptyState
           title="No catalog to benchmark yet"
-          body="Import products to see passport readiness and category distribution across your portfolio."
+          body="Import products to see passport readiness, fiber composition, and peer comparisons across retailers."
           ctaHref={`${base}/products`}
           ctaLabel="Go to Products"
         />
       ) : (
         <>
+          <EntFabricPeerComparison
+            fiberRows={composition.stats.fiberRows}
+            peerRows={composition.peerRows}
+            market={composition.market}
+            base={base}
+          />
+
           <EntModuleMetrics
             items={[
               { label: "Products in catalog", value: data.productCount },
-              { label: "Published", value: `${data.publishedPct}%`, accent: true },
-              { label: "Ready to publish", value: `${data.readyPct}%` },
+              { label: "Composition coverage", value: `${composition.stats.compositionCoveragePct ?? 0}%` },
+              { label: "Natural fiber share", value: `${composition.stats.naturalFiberShare ?? 0}%`, accent: true },
               {
-                label: "Data completeness",
-                value: data.completenessBuckets.high + data.completenessBuckets.mid,
-                hint: `${data.completenessBuckets.unknown} without score`,
+                label: "Published",
+                value: `${data.publishedPct}%`,
               },
             ]}
           />

@@ -100,7 +100,7 @@ export function WorkspaceSwitcher({
         const res = await fetch("/api/dashboard/workspace/enter-enterprise", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug: next.slug }),
+          body: JSON.stringify({ slug: next.slug, redirectTo: pathname }),
         });
         const data = (await res.json().catch(() => ({}))) as { message?: string; redirectTo?: string };
         if (!res.ok) {
@@ -121,9 +121,9 @@ export function WorkspaceSwitcher({
   const label = current?.label || organizationName || "Workspace";
 
   if (contexts.length < 2) {
-    if (variant !== "rail" || !organizationName) return null;
+    if ((variant !== "rail" && variant !== "sidebar") || !organizationName) return null;
     return (
-      <div className="mt-4">
+      <div className="mt-1">
         <p className={styles.eyebrow}>Workspace</p>
         <p className={`${styles.value} mt-1`}>{organizationName}</p>
       </div>
