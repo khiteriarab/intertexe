@@ -4,9 +4,10 @@ import { formatRelativeActivityTime } from "../../../../../lib/enterprise/displa
 import { loadOrgFiles } from "../../../../../lib/enterprise/module-queries";
 import {
   EntEmptyState,
+  EntHeroEmpty,
+  EntModuleList,
   EntModuleMetrics,
   EntModulePage,
-  EntModuleSection,
   entLinkClass,
 } from "../../../components/EnterpriseModuleUi";
 
@@ -26,49 +27,42 @@ export default async function FilesPage({
     <EntModulePage
       title="Files"
       description="Source imports, immutable source records, and stored files linked to this organization."
+      zone="stone"
     >
-      <EntModuleMetrics
-        items={[
-          { label: "Catalog imports", value: data.summary.imports },
-          { label: "Source records", value: data.summary.sourceRecords },
-          { label: "Stored files", value: data.summary.files },
-        ]}
-      />
+      {data.rows.length > 0 ? (
+        <EntModuleMetrics
+          tone="cream"
+          items={[
+            { label: "Catalog imports", value: data.summary.imports },
+            { label: "Source records", value: data.summary.sourceRecords },
+            { label: "Stored files", value: data.summary.files },
+          ]}
+        />
+      ) : null}
 
       {data.rows.length === 0 ? (
-        <EntEmptyState
-          title="No source files have been added yet"
+        <EntHeroEmpty
+          title="No source files have been added yet."
           body="Import a catalog CSV from Products. INTERTEXE stores immutable source records for provenance — original binary files may not be retained."
           ctaHref={`${base}/products`}
           ctaLabel="Go to Products"
+          tone="cream"
+          motif="grid"
         />
       ) : (
-        <EntModuleSection title="Source and import records">
-          <ul className="divide-y divide-[var(--ent-border)]">
-            {data.rows.map((row) => (
-              <li key={`${row.kind}-${row.id}`} className="py-5 md:py-6">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] tracking-[0.08em] uppercase text-[var(--ent-muted-light)]">
-                      {row.kind.replace("_", " ")}
-                      {row.status ? ` · ${row.status}` : ""}
-                    </p>
-                    <p className="text-[16px] font-medium text-[var(--ent-ink)] mt-1">{row.label}</p>
-                    {row.detail ? <p className="text-sm text-[var(--ent-muted)] mt-1">{row.detail}</p> : null}
-                    {row.productName && row.productId ? (
-                      <Link href={`${base}/products/${row.productId}`} className={`${entLinkClass} mt-2 inline-flex`}>
-                        {row.productName} →
-                      </Link>
-                    ) : null}
-                  </div>
-                  <time className="text-xs text-[var(--ent-muted-light)]">
-                    {formatRelativeActivityTime(row.createdAt)}
-                  </time>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </EntModuleSection>
+        <EntModuleList
+          tone="blush"
+          items={data.rows.map((row) => ({
+            key: `${row.kind}-${row.id}`,
+            primary: row.label,
+            secondary: [row.kind.replace("_", " "), row.status, row.detail].filter(Boolean).join(" · ") || undefined,
+            meta: formatRelativeActivityTime(row.createdAt) || undefined,
+            href: row.productId ? `${base}/products/${row.productId}` : undefined,
+            trailing: row.productName ? (
+              <span className="text-sm text-[var(--ent-muted)]">{row.productName}</span>
+            ) : undefined,
+          }))}
+        />
       )}
     </EntModulePage>
   );

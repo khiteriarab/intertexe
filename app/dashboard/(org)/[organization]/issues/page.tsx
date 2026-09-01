@@ -16,11 +16,19 @@ import {
   EntPageHeader,
   entLinkClass,
 } from "../../../components/EnterpriseUi";
+import { EntIssueCompare, EntVisualPanel } from "../../../components/EnterpriseModuleUi";
 import { IssueActions } from "./IssueActions";
 
 export const dynamic = "force-dynamic";
 
 type IssueRow = Awaited<ReturnType<typeof loadOrgIssues>>[number];
+
+const GROUP_TONES: Record<string, "blush" | "butter" | "cream" | "stone"> = {
+  missing: "butter",
+  conflict: "blush",
+  review: "cream",
+  resolved: "stone",
+};
 
 const ISSUE_GROUPS: Array<{ id: string; label: string; match: (issue: IssueRow) => boolean }> = [
   {
@@ -61,18 +69,18 @@ function IssueCard({
   const open = issue.status === "open";
 
   return (
-    <article className="py-6 md:py-7 border-b border-[var(--ent-border)] last:border-0">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
+    <article className="ent-panel-nested px-5 py-6 md:px-7 md:py-8 mb-4 last:mb-0">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
         <div className="flex flex-wrap items-center gap-2">
           <EntIssuePill label={issueTypeLabel(issue.issue_type)} tone="neutral" />
           {open && blocking ? <EntIssuePill label="Blocks publish" tone="attention" /> : null}
         </div>
-        <p className="text-xs text-[var(--ent-muted-light)] capitalize">
+        <p className="text-xs uppercase tracking-wide text-[var(--ent-muted-light)]">
           {issue.severity} · {issue.status.replaceAll("_", " ")}
         </p>
       </div>
 
-      <h3 className="text-[17px] font-medium text-[var(--ent-ink)]">{issue.title}</h3>
+      <h3 className="ent-serif text-[1.35rem] text-[var(--ent-ink)]">{issue.title}</h3>
 
       <p className="text-sm text-[var(--ent-muted)] mt-2">
         {issue.product_id ? (
@@ -87,14 +95,14 @@ function IssueCard({
         {issueAffectedField(issue)}
       </p>
 
-      <p className="text-sm leading-relaxed text-[var(--ent-ink-soft)] mt-3">{issueWhyItMatters(issue)}</p>
+      <p className="text-sm leading-relaxed text-[var(--ent-ink-soft)] mt-4">{issueWhyItMatters(issue)}</p>
 
       {issue.identifier ? (
-        <div className="text-sm bg-[var(--ent-surface-muted)]/60 rounded-xl p-4 mt-4 space-y-2">
-          <p>
+        <div className="rounded-[var(--ent-radius-lg)] bg-[var(--ent-gradient-stone)] px-5 py-4 mt-5 space-y-2">
+          <p className="text-sm">
             Classification: <strong>{identifierClassLabel(issue.identifier.classification)}</strong>
           </p>
-          <p>
+          <p className="text-sm">
             Matched on {issue.identifier.matchOn || "identifier"}{" "}
             <span className="font-mono text-xs">{issue.identifier.identifierValue || "—"}</span>
           </p>
@@ -103,24 +111,15 @@ function IssueCard({
           </p>
         </div>
       ) : !issue.identifier && issue.original_value ? (
-        <dl className="grid sm:grid-cols-2 gap-4 text-sm mt-4 pt-4 border-t border-[var(--ent-border)]">
-          <div>
-            <dt className="text-[var(--ent-muted-light)] text-xs mb-1">Source evidence</dt>
-            <dd className="text-[var(--ent-ink-soft)]">{issue.original_value || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--ent-muted-light)] text-xs mb-1">Interpreted value</dt>
-            <dd className="text-[var(--ent-ink-soft)]">{issue.interpreted_value || "—"}</dd>
-          </div>
-        </dl>
+        <EntIssueCompare source={issue.original_value} interpreted={issue.interpreted_value || ""} />
       ) : null}
 
-      <p className="text-sm text-[var(--ent-muted)] mt-4">
+      <p className="text-sm text-[var(--ent-muted)] mt-5">
         Recommended: {issueRecommendedAction(issue)}
       </p>
 
       {open ? (
-        <div className="mt-4">
+        <div className="mt-5 pt-4 border-t border-[var(--ent-border)]/80">
           <IssueActions
             slug={slug}
             issueId={issue.id}
@@ -129,7 +128,7 @@ function IssueCard({
           />
         </div>
       ) : (
-        <p className="text-sm text-[var(--ent-muted)] mt-4">
+        <p className="text-sm text-[var(--ent-muted)] mt-5">
           {issue.resolver
             ? `Resolved by ${formatReviewerLine(issue.resolver, issue.resolvedAt)}`
             : `Closed ${formatOperatorTime(issue.resolvedAt || issue.updated_at)}`}
@@ -174,22 +173,22 @@ export default async function IssuesPage({
           ctaLabel="Go to Products"
         />
       ) : (
-        <div className="space-y-12 md:space-y-16">
+        <div className="space-y-8 md:space-y-10">
           {ISSUE_GROUPS.map((group) => {
             const groupIssues = issues.filter(group.match);
             if (groupIssues.length === 0) return null;
             return (
-              <section key={group.id}>
-                <div className="flex items-baseline justify-between gap-4 mb-6 pb-4 border-b border-[var(--ent-border)]">
-                  <h2 className="ent-serif text-[1.5rem] md:text-[1.75rem] text-[var(--ent-ink)]">{group.label}</h2>
-                  <span className="text-sm tabular-nums text-[var(--ent-muted-light)]">{groupIssues.length}</span>
-                </div>
-                <div>
-                  {groupIssues.map((issue) => (
-                    <IssueCard key={issue.id} issue={issue} base={base} slug={membership.slug} canMutate={canMutate} />
-                  ))}
-                </div>
-              </section>
+              <EntVisualPanel
+                key={group.id}
+                tone={GROUP_TONES[group.id] || "cream"}
+                title={group.label}
+                subtitle={`${groupIssues.length} item${groupIssues.length === 1 ? "" : "s"}`}
+                padding="normal"
+              >
+                {groupIssues.map((issue) => (
+                  <IssueCard key={issue.id} issue={issue} base={base} slug={membership.slug} canMutate={canMutate} />
+                ))}
+              </EntVisualPanel>
             );
           })}
         </div>

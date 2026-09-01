@@ -108,3 +108,18 @@ export function activityDateGroup(value: string | null | undefined): ActivityDat
 export function padCount(value: number): string {
   return value < 10 ? `0${value}` : String(value);
 }
+
+/** Turn dotted requirement keys into readable labels — technical key preserved separately. */
+export function humanizeFieldKey(key: string | null | undefined): string {
+  const raw = String(key || "").trim();
+  if (!raw) return "Requirement";
+  const parts = raw.split(".").filter(Boolean);
+  const slice = parts.length >= 2 ? parts.slice(-2) : parts;
+  return slice
+    .map((part) =>
+      part
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+    )
+    .join(" ");
+}

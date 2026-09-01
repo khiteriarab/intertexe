@@ -5,15 +5,21 @@
 .enterprise-app {
   --ent-petrol: #42666c;
   --ent-petrol-deep: #3e6268;
+  --ent-petrol-mid: #4a7279;
   --ent-petrol-light: #5a8289;
-  --ent-petrol-glow: rgba(62, 98, 104, 0.14);
+  --ent-petrol-glow: rgba(62, 98, 104, 0.18);
   --ent-forest: #2c4a3e;
   --ent-stone: #b8b0a6;
-  --ent-blush: #f0e8e2;
-  --ent-ivory: #f7f4ee;
+  --ent-stone-soft: #d4cdc4;
+  --ent-blush: #f3e6e4;
+  --ent-blush-deep: #ead9d6;
+  --ent-rose: #e8d4d0;
+  --ent-butter: #f5ecd4;
+  --ent-butter-soft: #faf4e4;
+  --ent-ivory: #f7f1e8;
   --ent-cream: #faf8f4;
   --ent-surface: #fdfcf9;
-  --ent-surface-muted: #f3efe8;
+  --ent-surface-muted: #f0ebe3;
   --ent-surface-tint: #ebe6dc;
   --ent-ink: #141414;
   --ent-ink-soft: #3d3a36;
@@ -21,18 +27,25 @@
   --ent-muted-light: #9a948c;
   --ent-raspberry: #9e4a5a;
   --ent-raspberry-soft: #f5e8eb;
-  --ent-border: rgba(20, 20, 20, 0.06);
-  --ent-border-strong: rgba(20, 20, 20, 0.1);
-  --ent-shadow-sm: 0 4px 20px rgba(62, 98, 104, 0.04);
-  --ent-shadow: 0 12px 40px rgba(62, 98, 104, 0.07);
-  --ent-shadow-lg: 0 24px 64px rgba(62, 98, 104, 0.1);
-  --ent-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  --ent-gradient-hero: linear-gradient(145deg, #3e6268 0%, #2f5056 48%, #2c4a3e 100%);
+  --ent-border: rgba(20, 20, 20, 0.05);
+  --ent-border-strong: rgba(20, 20, 20, 0.09);
+  --ent-shadow-sm: 0 8px 32px rgba(62, 98, 104, 0.06);
+  --ent-shadow: 0 16px 48px rgba(62, 98, 104, 0.09);
+  --ent-shadow-lg: 0 28px 72px rgba(62, 98, 104, 0.12);
+  --ent-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --ent-shadow-panel: 0 20px 60px rgba(62, 98, 104, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --ent-gradient-hero: linear-gradient(145deg, #42666c 0%, #3e6268 42%, #2c4a3e 100%);
+  --ent-gradient-sidebar: linear-gradient(180deg, #42666c 0%, #3e6268 55%, #345860 100%);
   --ent-gradient-warm: linear-gradient(180deg, #fdfcf9 0%, #f3efe8 100%);
-  --ent-gradient-blush: linear-gradient(135deg, #faf8f4 0%, #f0e8e2 100%);
-  --ent-radius: 1rem;
+  --ent-gradient-blush: linear-gradient(135deg, #faf8f4 0%, #f3e6e4 52%, #f7f1e8 100%);
+  --ent-gradient-butter: linear-gradient(145deg, #faf4e4 0%, #f5ecd4 48%, #f7f1e8 100%);
+  --ent-gradient-stone: linear-gradient(160deg, #f0ebe3 0%, #e8e2d9 100%);
+  --ent-gradient-petrol-soft: linear-gradient(145deg, #4a7279 0%, #3e6268 100%);
+  --ent-radius: 1.125rem;
   --ent-radius-lg: 1.375rem;
   --ent-radius-xl: 1.75rem;
+  --ent-radius-2xl: 2rem;
+  --ent-radius-3xl: 2.25rem;
 }
 
 .enterprise-app {
@@ -47,4 +60,87 @@
 .enterprise-app .ent-display {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
+}
+
+/* ── Tonal zones ── */
+.enterprise-app .ent-zone {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ent-radius-2xl);
+  box-shadow: var(--ent-shadow-panel);
+}
+
+.enterprise-app .ent-zone-blush {
+  background: var(--ent-gradient-blush);
+}
+
+.enterprise-app .ent-zone-butter {
+  background: var(--ent-gradient-butter);
+}
+
+.enterprise-app .ent-zone-cream {
+  background: var(--ent-gradient-warm);
+}
+
+.enterprise-app .ent-zone-stone {
+  background: var(--ent-gradient-stone);
+}
+
+.enterprise-app .ent-zone-petrol {
+  background: var(--ent-gradient-hero);
+  color: white;
+}
+
+.enterprise-app .ent-zone-glow::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.55;
+}
+
+.enterprise-app .ent-zone-blush.ent-zone-glow::before {
+  width: 280px;
+  height: 280px;
+  top: -80px;
+  right: -40px;
+  background: rgba(62, 98, 104, 0.12);
+}
+
+.enterprise-app .ent-zone-butter.ent-zone-glow::before {
+  width: 240px;
+  height: 240px;
+  bottom: -60px;
+  left: -20px;
+  background: rgba(158, 74, 90, 0.08);
+}
+
+.enterprise-app .ent-panel {
+  border-radius: var(--ent-radius-xl);
+  box-shadow: var(--ent-shadow-sm);
+}
+
+.enterprise-app .ent-panel-nested {
+  border-radius: var(--ent-radius-lg);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.enterprise-app .ent-code-panel {
+  background: linear-gradient(160deg, #345860 0%, #2a4a50 100%);
+  border-radius: var(--ent-radius-lg);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--ent-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.enterprise-app .ent-timeline-spine {
+  position: absolute;
+  left: 11px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--ent-petrol-glow) 0%, var(--ent-stone-soft) 100%);
+  border-radius: 999px;
 }

@@ -21,7 +21,7 @@ export default async function OrganizationSettingsPage({
       state={ORG_PAGE_STATES.settings}
     >
       <div className="grid md:grid-cols-2 gap-6 mb-6">
-        <HqCard title="Organization">
+        <HqCard title="Organization" tone="blush">
           <dl className="text-sm space-y-4">
             <div>
               <dt className="text-[var(--ent-muted-light)] text-xs mb-1">Name</dt>
@@ -37,7 +37,7 @@ export default async function OrganizationSettingsPage({
             </div>
           </dl>
         </HqCard>
-        <HqCard title="Entitlements">
+        <HqCard title="Entitlements" tone="butter">
           <dl className="text-sm space-y-4">
             <div>
               <dt className="text-[var(--ent-muted-light)] text-xs mb-1">Plan</dt>

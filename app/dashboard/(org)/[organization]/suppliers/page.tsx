@@ -3,7 +3,7 @@ import { requireOrganizationAccess } from "../../../../../lib/enterprise/access"
 import { formatRelativeActivityTime } from "../../../../../lib/enterprise/display-format";
 import { loadOrgSuppliers } from "../../../../../lib/enterprise/module-queries";
 import {
-  EntEmptyState,
+  EntHeroEmpty,
   EntModuleList,
   EntModuleMetrics,
   EntModulePage,
@@ -26,27 +26,34 @@ export default async function SuppliersPage({
   return (
     <EntModulePage
       title="Suppliers"
-      description="Supplier and evidence relationships drawn from requests, evidence records, and open issues in your organization."
+      description="Supplier and evidence relationships from requests, evidence records, and open issues."
+      zone="blush"
     >
-      <EntModuleMetrics
-        items={[
-          { label: "Total suppliers", value: data.summary.total },
-          { label: "With linked products", value: data.summary.withProducts },
-          { label: "Open requests", value: data.summary.openRequests },
-          { label: "Open supplier issues", value: data.summary.openSupplierIssues },
-        ]}
-      />
+      {data.suppliers.length > 0 ? (
+        <EntModuleMetrics
+          tone="cream"
+          items={[
+            { label: "Total suppliers", value: data.summary.total },
+            { label: "With linked products", value: data.summary.withProducts },
+            { label: "Open requests", value: data.summary.openRequests },
+            { label: "Open supplier issues", value: data.summary.openSupplierIssues, accent: data.summary.openSupplierIssues > 0 },
+          ]}
+        />
+      ) : null}
 
       {data.suppliers.length === 0 ? (
-        <EntEmptyState
-          title="No suppliers have been added yet"
-          body="Suppliers appear when you request evidence from a supplier on a product issue, or when supplier records are created through your workflow."
+        <EntHeroEmpty
+          title="No supplier relationships yet."
+          body="Suppliers appear when you request evidence on a product issue, or when supplier records are created through your workflow."
           ctaHref={`${base}/issues`}
           ctaLabel="Review issues"
+          tone="blush"
+          motif="rings"
         />
       ) : (
-        <EntModuleSection title="Supplier list">
+        <EntModuleSection title="Supplier list" subtitle="Linked products, evidence status, and recent activity">
           <EntModuleList
+            tone="cream"
             items={data.suppliers.map((supplier) => ({
               key: supplier.id,
               primary: supplier.name,
