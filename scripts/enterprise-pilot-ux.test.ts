@@ -99,16 +99,27 @@ describe("Reviewer identity", () => {
   });
 });
 
-describe("Pilot navigation", () => {
-  it("hides unfinished modules from brand operators", () => {
-    const brand = enterpriseNavForActor(false).map((item) => item.label);
-    assert.deepEqual(brand, ["Overview", "Products", "Issues", "Passports", "Settings"]);
-    assert.equal(brand.includes("Suppliers"), false);
-    assert.equal(brand.includes("Analytics"), false);
-    const founder = enterpriseNavForActor(true);
-    assert.equal(founder.some((item) => item.label === "Suppliers" && item.later), true);
+describe("Enterprise navigation", () => {
+  it("exposes all platform modules without later badges", () => {
+    const nav = enterpriseNavForActor(false).map((item) => item.label);
+    assert.deepEqual(nav, [
+      "Overview",
+      "Products",
+      "Issues",
+      "Passports",
+      "Settings",
+      "Suppliers",
+      "Regulations",
+      "Benchmarking",
+      "Analytics",
+      "Integrations",
+      "Developers",
+      "Files",
+      "Activity",
+    ]);
+    assert.equal(enterpriseNavForActor(true).length, nav.length);
     assert.equal(ENTERPRISE_PILOT_NAV.length, 5);
-    assert.ok(ENTERPRISE_LATER_NAV.length >= 6);
+    assert.ok(ENTERPRISE_LATER_NAV.length >= 8);
     assert.equal(identifierClassLabel("ambiguous_collision"), "Ambiguous identifier collision");
   });
 });

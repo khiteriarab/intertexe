@@ -1,20 +1,15 @@
-import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../lib/enterprise/access";
 import { entitlementsForPlan, type PlanKey } from "../../../../lib/enterprise/entitlements";
-import { passportStateLabel } from "../../../../lib/enterprise/issue-copy";
 import { loadOrgOverview } from "../../../../lib/enterprise/queries";
-import { HqCard, HqMetricGrid, HqPageHeader } from "../../components/HqUi";
+import {
+  EntActivityFeed,
+  EntAttentionPanel,
+  EntOverviewHero,
+  EntSurface,
+  type EntAttentionItem,
+} from "../../components/EnterpriseUi";
 
 export const dynamic = "force-dynamic";
-
-const PASSPORT_STATES = [
-  "incomplete",
-  "review_required",
-  "ready",
-  "published",
-  "update_required",
-  "archived",
-];
 
 export default async function OrganizationOverviewPage({
   params,
@@ -38,132 +33,100 @@ export default async function OrganizationOverviewPage({
       : overview.issueCount > 0
         ? {
             title: "Resolve open issues",
-            body: "Blocking findings (missing composition/origin, invalid percentages, identifier collisions) must be understood before publish.",
+            body: "Blocking findings must be understood before publish.",
             href: `${base}/issues`,
-            label: "Go to Issues",
+            label: "Review issues",
           }
         : overview.readyCount > 0
           ? {
               title: "Publish ready passports",
               body: "Eligible products have identity, composition, origin, no blocking issues, and approved fields.",
               href: `${base}/passports`,
-              label: "Go to Passports",
+              label: "Review passports",
             }
           : overview.updateRequiredCount > 0
             ? {
                 title: "Publish updated versions",
-                body: "A later source change marked passports update-required. The last published snapshot stays live until you publish again.",
+                body: "Source changes marked passports update-required. The last published snapshot stays live until you publish again.",
                 href: `${base}/passports`,
-                label: "Go to Passports",
+                label: "Review passports",
               }
             : {
                 title: "Review products",
                 body: "Open a product to compare source vs canonical data, approve fields, then publish.",
                 href: `${base}/products`,
-                label: "Go to Products",
+                label: "Review products",
               };
+
+  const attentionItems: EntAttentionItem[] = [];
+  if (overview.productStateCounts.review_required) {
+    attentionItems.push({
+      label: "products need review",
+      count: overview.productStateCounts.review_required,
+      href: `${base}/products?state=review_required`,
+      context: "Fields awaiting approval",
+    });
+  }
+  if (overview.readyCount > 0) {
+    attentionItems.push({
+      label: "passports ready to publish",
+      count: overview.readyCount,
+      href: `${base}/passports`,
+      emphasis: true,
+      context: "All requirements met",
+    });
+  }
+  if (overview.issueCount > 0) {
+    attentionItems.push({
+      label: "open issues",
+      count: overview.issueCount,
+      href: `${base}/issues`,
+      context: "Review before publishing",
+    });
+  }
+  if (overview.missingCount > 0) {
+    attentionItems.push({
+      label: "missing data fields",
+      count: overview.missingCount,
+      href: `${base}/issues`,
+      context: "Composition, origin, or identifiers",
+    });
+  }
 
   return (
     <div>
-      <HqPageHeader
-        title="Overview"
-        description="Where this catalog stands, what INTERTEXE needs from you, and what is blocking a passport."
-      />
-
       {!overview.backendLinked ? (
-        <p className="mb-6 text-sm text-black/60">
+        <p className="mb-8 text-sm text-[var(--ent-muted)]">
           Enterprise database is not linked in this environment. Metrics stay at zero until
           ENTERPRISE_SUPABASE_URL is configured.
         </p>
       ) : null}
 
-      <HqMetricGrid
-        items={[
-          { label: "Total products", value: String(overview.productCount) },
-          {
-            label: "Ready for passport",
-            value: String(overview.readyCount),
-          },
-          {
-            label: "Published passports",
-            value: String(overview.publishedCount || overview.passportCounts.published || 0),
-          },
-          {
-            label: "Open issues",
-            value: String(overview.issueCount),
-          },
-        ]}
+      <EntOverviewHero overview={overview} orgName={membership.name} />
+
+      <EntAttentionPanel
+        nextTitle={nextStep.title}
+        nextBody={nextStep.body}
+        nextHref={nextStep.href}
+        nextLabel={nextStep.label}
+        items={attentionItems}
       />
 
-      <div className="mt-6 rounded-xl border border-black/15 bg-white p-5">
-        <p className="text-[10px] uppercase tracking-wide text-black/45">What happens next</p>
-        <p className="text-sm font-medium mt-1">{nextStep.title}</p>
-        <p className="text-sm text-black/55 mt-1">{nextStep.body}</p>
-        <Link className="inline-block mt-3 text-xs tracking-widest uppercase underline" href={nextStep.href}>
-          {nextStep.label}
-        </Link>
-      </div>
-
       {membership.plan === "free_snapshot" ? (
-        <div className="mt-6 rounded-xl border border-black/15 bg-white p-5">
-          <p className="text-sm font-medium">Continue with the Founding DPP Pilot</p>
-          <p className="text-sm text-black/55 mt-1">
-            $5,000 · 100 complex products or 500 structured rows. This snapshot organization upgrades
-            in place — source records are not copied into a new account.
+        <EntSurface variant="tint" padding="large" className="mb-14">
+          <p className="text-[17px] font-medium text-[var(--ent-ink)]">Continue with the Founding DPP Pilot</p>
+          <p className="text-sm leading-relaxed text-[var(--ent-muted)] mt-2 max-w-2xl">
+            $5,000 · 100 complex products or 500 structured rows. This snapshot organization upgrades in place — source
+            records are not copied into a new account.
           </p>
-          <p className="text-xs text-black/45 mt-2">
-            Product allowance: {entitlement.productAllowance ?? "unlimited"}. Passport publishing is
-            not included on the free snapshot.
+          <p className="text-xs text-[var(--ent-muted-light)] mt-3">
+            Product allowance: {entitlement.productAllowance ?? "unlimited"}. Passport publishing is not included on the
+            free snapshot.
           </p>
-        </div>
+        </EntSurface>
       ) : null}
 
-      <div className="grid md:grid-cols-2 gap-4 mt-6">
-        <HqCard title="Needs your attention">
-          {overview.issueCount === 0 && overview.missingCount === 0 ? (
-            <p className="text-sm text-black/55">
-              No open issues. Import a catalog if this workspace is empty, or publish ready products.
-            </p>
-          ) : (
-            <ul className="text-sm space-y-2">
-              <li>
-                <Link className="underline" href={`${base}/issues`}>
-                  {overview.issueCount} open issues
-                </Link>
-              </li>
-              <li>
-                <Link className="underline" href={`${base}/issues`}>
-                  {overview.missingCount} missing-data rows
-                </Link>
-              </li>
-            </ul>
-          )}
-        </HqCard>
-        <HqCard title="Passport status">
-          <ul className="text-sm space-y-1">
-            {PASSPORT_STATES.map((state) => (
-              <li key={state} className="flex justify-between">
-                <span className="text-black/70">{passportStateLabel(state)}</span>
-                <span className="tabular-nums">{overview.productStateCounts[state] || 0}</span>
-              </li>
-            ))}
-          </ul>
-        </HqCard>
-      </div>
-
-      <div className="mt-4">
-        <HqCard title="Recent activity">
-          {overview.recentActivity.length === 0 ? (
-            <p className="text-sm text-black/55">No operational activity recorded yet.</p>
-          ) : (
-            <ul className="text-sm space-y-2">
-              {overview.recentActivity.map((item) => (
-                <li key={item.id}>{item.title}</li>
-              ))}
-            </ul>
-          )}
-        </HqCard>
-      </div>
+      <EntActivityFeed items={overview.recentActivity} />
     </div>
   );
 }

@@ -10,10 +10,134 @@ import {
 import { identifierClassLabel } from "../../../../../lib/enterprise/identity-reconciliation";
 import { loadOrgIssues } from "../../../../../lib/enterprise/queries";
 import { formatOperatorTime, formatReviewerLine } from "../../../../../lib/enterprise/reviewer-display";
-import { HqPageHeader } from "../../../components/HqUi";
+import {
+  EntEmptyState,
+  EntIssuePill,
+  EntPageHeader,
+  entLinkClass,
+} from "../../../components/EnterpriseUi";
 import { IssueActions } from "./IssueActions";
 
 export const dynamic = "force-dynamic";
+
+type IssueRow = Awaited<ReturnType<typeof loadOrgIssues>>[number];
+
+const ISSUE_GROUPS: Array<{ id: string; label: string; match: (issue: IssueRow) => boolean }> = [
+  {
+    id: "missing",
+    label: "Missing information",
+    match: (issue) => issue.issue_type === "missing_data",
+  },
+  {
+    id: "conflict",
+    label: "Conflict",
+    match: (issue) => issue.issue_type === "conflict" || issue.issue_type === "identifier",
+  },
+  {
+    id: "review",
+    label: "Needs review",
+    match: (issue) =>
+      !["missing_data", "conflict", "identifier"].includes(issue.issue_type) && issue.status === "open",
+  },
+  {
+    id: "resolved",
+    label: "Resolved",
+    match: (issue) => issue.status !== "open",
+  },
+];
+
+function IssueCard({
+  issue,
+  base,
+  slug,
+  canMutate,
+}: {
+  issue: IssueRow;
+  base: string;
+  slug: string;
+  canMutate: boolean;
+}) {
+  const blocking = issueBlocksPublish(issue);
+  const open = issue.status === "open";
+
+  return (
+    <article className="py-6 md:py-7 border-b border-[var(--ent-border)] last:border-0">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <EntIssuePill label={issueTypeLabel(issue.issue_type)} tone="neutral" />
+          {open && blocking ? <EntIssuePill label="Blocks publish" tone="attention" /> : null}
+        </div>
+        <p className="text-xs text-[var(--ent-muted-light)] capitalize">
+          {issue.severity} · {issue.status.replaceAll("_", " ")}
+        </p>
+      </div>
+
+      <h3 className="text-[17px] font-medium text-[var(--ent-ink)]">{issue.title}</h3>
+
+      <p className="text-sm text-[var(--ent-muted)] mt-2">
+        {issue.product_id ? (
+          <Link className={entLinkClass} href={`${base}/products/${issue.product_id}`}>
+            {issue.productName || issue.productSku || "Product"}
+          </Link>
+        ) : (
+          "No product attached"
+        )}
+        {issue.productSku ? ` · ${issue.productSku}` : ""}
+        {" · "}
+        {issueAffectedField(issue)}
+      </p>
+
+      <p className="text-sm leading-relaxed text-[var(--ent-ink-soft)] mt-3">{issueWhyItMatters(issue)}</p>
+
+      {issue.identifier ? (
+        <div className="text-sm bg-[var(--ent-surface-muted)]/60 rounded-xl p-4 mt-4 space-y-2">
+          <p>
+            Classification: <strong>{identifierClassLabel(issue.identifier.classification)}</strong>
+          </p>
+          <p>
+            Matched on {issue.identifier.matchOn || "identifier"}{" "}
+            <span className="font-mono text-xs">{issue.identifier.identifierValue || "—"}</span>
+          </p>
+          <p className="text-xs text-[var(--ent-muted-light)]">
+            Both original source rows stay stored. Confirming same product archives the extra catalog record.
+          </p>
+        </div>
+      ) : !issue.identifier && issue.original_value ? (
+        <dl className="grid sm:grid-cols-2 gap-4 text-sm mt-4 pt-4 border-t border-[var(--ent-border)]">
+          <div>
+            <dt className="text-[var(--ent-muted-light)] text-xs mb-1">Source evidence</dt>
+            <dd className="text-[var(--ent-ink-soft)]">{issue.original_value || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--ent-muted-light)] text-xs mb-1">Interpreted value</dt>
+            <dd className="text-[var(--ent-ink-soft)]">{issue.interpreted_value || "—"}</dd>
+          </div>
+        </dl>
+      ) : null}
+
+      <p className="text-sm text-[var(--ent-muted)] mt-4">
+        Recommended: {issueRecommendedAction(issue)}
+      </p>
+
+      {open ? (
+        <div className="mt-4">
+          <IssueActions
+            slug={slug}
+            issueId={issue.id}
+            canMutate={canMutate}
+            kind={issue.identifier ? "identifier" : "standard"}
+          />
+        </div>
+      ) : (
+        <p className="text-sm text-[var(--ent-muted)] mt-4">
+          {issue.resolver
+            ? `Resolved by ${formatReviewerLine(issue.resolver, issue.resolvedAt)}`
+            : `Closed ${formatOperatorTime(issue.resolvedAt || issue.updated_at)}`}
+        </p>
+      )}
+    </article>
+  );
+}
 
 export default async function IssuesPage({
   params,
@@ -30,117 +154,46 @@ export default async function IssuesPage({
 
   return (
     <div>
-      <HqPageHeader
+      <EntPageHeader
+        brandLine
         title="Issues"
-        description="What INTERTEXE found in your catalog, why it matters, and what you can do. Blocking findings must be resolved before a passport can publish."
+        description="What INTERTEXE found in your catalog, why it matters, and what you can do."
       />
-      <p className="text-sm text-black/60 mb-4">
+
+      <p className="text-sm text-[var(--ent-muted)] mb-10 -mt-6">
         {issues.length === 0
           ? "No findings yet. Import a catalog on Products — validation and identifier collisions appear here."
-          : `${openCount} open · ${blockingCount} blocking publish. Review evidence, then take the recommended action.`}
+          : `${openCount} open · ${blockingCount} blocking publish`}
       </p>
-      <div className="space-y-4">
-        {issues.length === 0 ? (
-          <div className="bg-white border border-black/10 rounded-xl p-6 text-sm text-black/55">
-            Empty inbox. After import, missing composition, origin, percentage totals, conflicts, and
-            identifier collisions will list here with a recommended action.
-          </div>
-        ) : (
-          issues.map((issue) => {
-            const blocking = issueBlocksPublish(issue);
+
+      {issues.length === 0 ? (
+        <EntEmptyState
+          title="Empty inbox"
+          body="After import, missing composition, origin, percentage totals, conflicts, and identifier collisions will list here with a recommended action."
+          ctaHref={`${base}/products`}
+          ctaLabel="Go to Products"
+        />
+      ) : (
+        <div className="space-y-12 md:space-y-16">
+          {ISSUE_GROUPS.map((group) => {
+            const groupIssues = issues.filter(group.match);
+            if (groupIssues.length === 0) return null;
             return (
-              <article
-                key={issue.id}
-                className="bg-white border border-black/10 rounded-xl p-5 space-y-3"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wide text-black/45">
-                      {issueTypeLabel(issue.issue_type)}
-                      {blocking ? " · Blocks publish" : " · Does not block publish"}
-                    </p>
-                    <h2 className="text-base font-medium mt-1">{issue.title}</h2>
-                    <p className="text-sm text-black/60 mt-1">
-                      {issue.product_id ? (
-                        <Link className="underline" href={`${base}/products/${issue.product_id}`}>
-                          {issue.productName || issue.productSku || "Product"}
-                        </Link>
-                      ) : (
-                        "No product attached"
-                      )}
-                      {issue.productSku ? ` · ${issue.productSku}` : ""}
-                      {" · "}
-                      {issueAffectedField(issue)}
-                    </p>
-                  </div>
-                  <p className="text-xs uppercase tracking-wide text-black/45">
-                    {issue.severity} · {issue.status.replaceAll("_", " ")}
-                  </p>
+              <section key={group.id}>
+                <div className="flex items-baseline justify-between gap-4 mb-6 pb-4 border-b border-[var(--ent-border)]">
+                  <h2 className="ent-serif text-[1.5rem] md:text-[1.75rem] text-[var(--ent-ink)]">{group.label}</h2>
+                  <span className="text-sm tabular-nums text-[var(--ent-muted-light)]">{groupIssues.length}</span>
                 </div>
-                <p className="text-sm">{issueWhyItMatters(issue)}</p>
-                {issue.identifier ? (
-                  <div className="text-sm bg-[#f6f5f3] rounded-lg p-3 space-y-1">
-                    <p>
-                      Classification:{" "}
-                      <strong>{identifierClassLabel(issue.identifier.classification)}</strong>
-                    </p>
-                    <p>
-                      Matched on {issue.identifier.matchOn || "identifier"}{" "}
-                      <span className="font-mono">{issue.identifier.identifierValue || "—"}</span>
-                    </p>
-                    <p>
-                      Incoming: {issue.identifier.incoming.name || "row"}{" "}
-                      {issue.identifier.incoming.sku ? `(${issue.identifier.incoming.sku})` : ""}
-                      {issue.identifier.incoming.rowIndex != null
-                        ? ` · source row ${issue.identifier.incoming.rowIndex + 1}`
-                        : ""}
-                    </p>
-                    <p>
-                      Matched: {issue.identifier.matched?.name || issue.interpreted_value || "catalog product"}{" "}
-                      {issue.identifier.matched?.sku ? `(${issue.identifier.matched.sku})` : ""}
-                    </p>
-                    <p className="text-xs text-black/50">
-                      Both original source rows stay stored. Confirming same product archives this extra
-                      catalog record; it does not rewrite source files.
-                    </p>
-                  </div>
-                ) : (
-                  <dl className="grid sm:grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <dt className="text-black/45">Source evidence</dt>
-                      <dd>{issue.original_value || "—"}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-black/45">Interpreted value</dt>
-                      <dd>{issue.interpreted_value || "—"}</dd>
-                    </div>
-                  </dl>
-                )}
-                <p className="text-sm text-black/60">
-                  Recommended: {issueRecommendedAction(issue)}
-                </p>
-                {issue.status === "open" ? (
-                  <IssueActions
-                    slug={membership.slug}
-                    issueId={issue.id}
-                    canMutate={canMutate}
-                    kind={issue.identifier ? "identifier" : "standard"}
-                  />
-                ) : (
-                  <p className="text-sm text-black/55">
-                    {issue.resolver
-                      ? `Resolved by ${formatReviewerLine(issue.resolver, issue.resolvedAt)}`
-                      : `Closed ${formatOperatorTime(issue.resolvedAt || issue.updated_at)}`}
-                    {issue.identifier?.resolution?.action
-                      ? ` · ${issue.identifier.resolution.action.replaceAll("_", " ")}`
-                      : ""}
-                  </p>
-                )}
-              </article>
+                <div>
+                  {groupIssues.map((issue) => (
+                    <IssueCard key={issue.id} issue={issue} base={base} slug={membership.slug} canMutate={canMutate} />
+                  ))}
+                </div>
+              </section>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }

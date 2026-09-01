@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireOrganizationAccess } from "../../../../lib/enterprise/access";
 import { isReservedHqSlug } from "../../../../lib/enterprise/constants";
 import { EnterpriseShell } from "../../components/EnterpriseShell";
+import "../../enterprise-theme.css";
 
 export const dynamic = "force-dynamic";
 

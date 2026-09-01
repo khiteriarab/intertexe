@@ -60,29 +60,30 @@ export function isValidOrgSlug(slug: string): boolean {
   return /^[a-z0-9][a-z0-9-]{1,62}$/.test(slug) && !isReservedHqSlug(slug);
 }
 
-export const ENTERPRISE_PILOT_NAV = [
-  { href: "", label: "Overview", exact: true, later: false },
-  { href: "/products", label: "Products", later: false },
-  { href: "/issues", label: "Issues", later: false },
-  { href: "/passports", label: "Passports", later: false },
-  { href: "/settings", label: "Settings", later: false },
+export const ENTERPRISE_NAV = [
+  { href: "", label: "Overview", exact: true as const },
+  { href: "/products", label: "Products" },
+  { href: "/issues", label: "Issues" },
+  { href: "/passports", label: "Passports" },
+  { href: "/settings", label: "Settings" },
+  { href: "/suppliers", label: "Suppliers" },
+  { href: "/regulations", label: "Regulations" },
+  { href: "/benchmarking", label: "Benchmarking" },
+  { href: "/analytics", label: "Analytics" },
+  { href: "/integrations", label: "Integrations" },
+  { href: "/developers", label: "Developers" },
+  { href: "/files", label: "Files" },
+  { href: "/activity", label: "Activity" },
 ] as const;
 
-export const ENTERPRISE_LATER_NAV = [
-  { href: "/suppliers", label: "Suppliers", later: true },
-  { href: "/regulations", label: "Regulations", later: true },
-  { href: "/benchmarking", label: "Benchmarking", later: true },
-  { href: "/analytics", label: "Analytics", later: true },
-  { href: "/integrations", label: "Integrations", later: true },
-  { href: "/developers", label: "Developers", later: true },
-  { href: "/files", label: "Files", later: true },
-  { href: "/activity", label: "Activity", later: true },
-] as const;
+/** @deprecated use ENTERPRISE_NAV */
+export const ENTERPRISE_PILOT_NAV = ENTERPRISE_NAV.slice(0, 5);
 
-export const ENTERPRISE_NAV = [...ENTERPRISE_PILOT_NAV, ...ENTERPRISE_LATER_NAV];
+/** @deprecated roadmap modules are active; retained for tests referencing table names */
+export const ENTERPRISE_LATER_NAV = ENTERPRISE_NAV.slice(5);
 
-export function enterpriseNavForActor(hq: boolean) {
-  return hq ? ENTERPRISE_NAV : ENTERPRISE_PILOT_NAV;
+export function enterpriseNavForActor(_hq?: boolean) {
+  return ENTERPRISE_NAV;
 }
 
 export type { ImplementationState } from "./page-states";

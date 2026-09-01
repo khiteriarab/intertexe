@@ -2,7 +2,7 @@ import { implementationLabel, type ImplementationState } from "../../../../lib/e
 
 export function StateBadge({ state }: { state: ImplementationState }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-black/15 px-2 py-0.5 text-[10px] tracking-[0.14em] uppercase text-black/55">
+    <span className="inline-flex items-center rounded-full bg-[var(--ent-surface-muted)] px-3 py-1 text-[11px] tracking-[0.06em] text-[var(--ent-muted)]">
       {implementationLabel(state)}
     </span>
   );

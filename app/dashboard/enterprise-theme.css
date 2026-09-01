@@ -1,0 +1,50 @@
+/**
+ * INTERTEXE Enterprise — visual tokens (UI only).
+ * Scoped under .enterprise-app so HQ dashboard styling is unchanged.
+ */
+.enterprise-app {
+  --ent-petrol: #42666c;
+  --ent-petrol-deep: #3e6268;
+  --ent-petrol-light: #5a8289;
+  --ent-petrol-glow: rgba(62, 98, 104, 0.14);
+  --ent-forest: #2c4a3e;
+  --ent-stone: #b8b0a6;
+  --ent-blush: #f0e8e2;
+  --ent-ivory: #f7f4ee;
+  --ent-cream: #faf8f4;
+  --ent-surface: #fdfcf9;
+  --ent-surface-muted: #f3efe8;
+  --ent-surface-tint: #ebe6dc;
+  --ent-ink: #141414;
+  --ent-ink-soft: #3d3a36;
+  --ent-muted: #6b6560;
+  --ent-muted-light: #9a948c;
+  --ent-raspberry: #9e4a5a;
+  --ent-raspberry-soft: #f5e8eb;
+  --ent-border: rgba(20, 20, 20, 0.06);
+  --ent-border-strong: rgba(20, 20, 20, 0.1);
+  --ent-shadow-sm: 0 4px 20px rgba(62, 98, 104, 0.04);
+  --ent-shadow: 0 12px 40px rgba(62, 98, 104, 0.07);
+  --ent-shadow-lg: 0 24px 64px rgba(62, 98, 104, 0.1);
+  --ent-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --ent-gradient-hero: linear-gradient(145deg, #3e6268 0%, #2f5056 48%, #2c4a3e 100%);
+  --ent-gradient-warm: linear-gradient(180deg, #fdfcf9 0%, #f3efe8 100%);
+  --ent-gradient-blush: linear-gradient(135deg, #faf8f4 0%, #f0e8e2 100%);
+  --ent-radius: 1rem;
+  --ent-radius-lg: 1.375rem;
+  --ent-radius-xl: 1.75rem;
+}
+
+.enterprise-app {
+  background: var(--ent-ivory);
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-serif {
+  font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+}
+
+.enterprise-app .ent-display {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}

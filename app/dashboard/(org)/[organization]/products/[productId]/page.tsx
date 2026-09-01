@@ -12,6 +12,7 @@ import {
   issueWhyItMatters,
   passportStateLabel,
 } from "../../../../../../lib/enterprise/issue-copy";
+import { formatCompositionLines } from "../../../../../../lib/enterprise/display-format";
 import { loadDppReadiness } from "../../../../../../lib/enterprise/dpp-readiness";
 import { loadOrgProduct } from "../../../../../../lib/enterprise/queries";
 import { publishabilityForProduct } from "../../../../../../lib/enterprise/publish";
@@ -19,7 +20,15 @@ import {
   formatOperatorTime,
   formatReviewerLine,
 } from "../../../../../../lib/enterprise/reviewer-display";
-import { HqCard, HqPageHeader } from "../../../../components/HqUi";
+import { HqCard } from "../../section-frame";
+import {
+  EntPageHeader,
+  EntPassportPill,
+  EntIssuePill,
+  entLinkClass,
+  entLabelClass,
+  entMetaClass,
+} from "../../../../components/EnterpriseUi";
 import { IssueActions } from "../../issues/IssueActions";
 import { PassportQr } from "../../passports/PassportQr";
 import { PublishPassportButton } from "../../passports/PublishPassportButton";
@@ -65,36 +74,56 @@ export default async function ProductRecordPage({
       ? record.passport.publicUrl
       : `${origin}${record.passport.publicUrl}`
     : null;
+  const compositionField = record.fields.find((f) => f.field_key === "composition");
+  const compositionLines = formatCompositionLines(
+    compositionField?.normalized_value || compositionField?.original_value || null
+  );
 
   return (
     <div>
-      <HqPageHeader
+      <EntPageHeader
+        brandLine
         title={String(record.product.name || "Product")}
-        description={`${passportStateLabel(record.product.passport_state)} · Source values stay as uploaded. Canonical values are what INTERTEXE will publish after you review them.`}
+        description="Source values stay as uploaded. Canonical values are what INTERTEXE will publish after you review them."
+        action={<EntPassportPill state={record.product.passport_state} />}
       />
-      <p className="text-sm text-black/60 mb-4">
+
+      {compositionLines.length > 0 ? (
+        <div className="mb-8 pb-8 border-b border-[var(--ent-border)]">
+          <p className={entLabelClass}>Composition</p>
+          <ul className="mt-3 space-y-1">
+            {compositionLines.map((line) => (
+              <li key={line} className="text-[17px] md:text-[19px] text-[var(--ent-ink)]">
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <p className="text-sm text-[var(--ent-muted)] mb-8">
         {publishability.status === "ready"
           ? "Nothing is blocking a passport. Preview the public fields, then publish."
           : `Blocking this passport: ${publishability.blockers.join("; ")}.`}
       </p>
-      <div className="grid gap-4">
-        <HqCard title="Identity">
-          <dl className="grid sm:grid-cols-2 gap-2 text-sm">
+      <div className="space-y-10 md:space-y-12">
+        <HqCard title="Identity" variant="open" padding="none">
+          <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-5 text-sm">
             <div>
-              <dt className="text-black/45">SKU</dt>
-              <dd>{record.product.sku || "—"}</dd>
+              <dt className={entLabelClass}>SKU</dt>
+              <dd className="mt-1 text-[var(--ent-ink)]">{record.product.sku || "—"}</dd>
             </div>
             <div>
-              <dt className="text-black/45">Style</dt>
-              <dd>{record.product.style_code || "—"}</dd>
+              <dt className={entLabelClass}>Style</dt>
+              <dd className="mt-1 text-[var(--ent-ink)]">{record.product.style_code || "—"}</dd>
             </div>
             <div>
-              <dt className="text-black/45">Category</dt>
-              <dd>{record.product.category || "—"}</dd>
+              <dt className={entLabelClass}>Category</dt>
+              <dd className="mt-1 text-[var(--ent-ink)]">{record.product.category || "—"}</dd>
             </div>
             <div>
-              <dt className="text-black/45">Identifiers</dt>
-              <dd>
+              <dt className={entLabelClass}>Identifiers</dt>
+              <dd className="mt-1 text-[var(--ent-ink-soft)]">
                 {record.identifiers.length
                   ? record.identifiers
                       .map((row) => `${row.identifier_type}:${row.identifier_value}`)
@@ -104,8 +133,8 @@ export default async function ProductRecordPage({
             </div>
             {record.variants.length ? (
               <div className="sm:col-span-2">
-                <dt className="text-black/45">Variants</dt>
-                <dd>
+                <dt className={entLabelClass}>Variants</dt>
+                <dd className="mt-1 text-[var(--ent-ink-soft)]">
                   {record.variants
                     .map((row) => [row.name, row.sku, row.gtin].filter(Boolean).join(" · "))
                     .join("; ")}
@@ -116,8 +145,8 @@ export default async function ProductRecordPage({
         </HqCard>
 
         {identifierIssues.length ? (
-          <HqCard title="Identifier reconciliation">
-            <p className="text-sm text-black/60 mb-3">
+          <HqCard title="Identifier reconciliation" variant="open" padding="none">
+            <p className="text-sm text-[var(--ent-muted)] mb-4">
               These source rows share a GTIN, SKU, or style. They were not silently collapsed.
               Source files remain unchanged.
             </p>
@@ -125,12 +154,12 @@ export default async function ProductRecordPage({
               {identifierIssues.map((issue) => {
                 const ident = parseIdentifierIssueDetail(issue.detail);
                 return (
-                  <li key={issue.id} className="text-sm border border-black/10 rounded-lg p-3">
-                    <p className="font-medium">
+                  <li key={issue.id} className="text-sm py-4 border-t border-[var(--ent-border)] first:border-0 first:pt-0">
+                    <p className="font-medium text-[var(--ent-ink)]">
                       {ident ? identifierClassLabel(ident.classification) : issue.title}
                     </p>
                     {ident ? (
-                      <p className="text-black/60 mt-1">
+                      <p className="text-[var(--ent-muted)] mt-1">
                         Matched on {ident.matchOn} {ident.identifierValue} · incoming{" "}
                         {ident.incoming.sku || ident.incoming.name}
                         {ident.incoming.rowIndex != null ? ` (row ${ident.incoming.rowIndex + 1})` : ""}{" "}
@@ -147,7 +176,7 @@ export default async function ProductRecordPage({
                         />
                       </div>
                     ) : ident?.resolution ? (
-                      <p className="text-black/55 mt-2">
+                      <p className="text-[var(--ent-muted)] mt-2">
                         {ident.resolution.actorName}
                         {ident.resolution.actorRole ? ` · ${ident.resolution.actorRole.replaceAll("_", " ")}` : ""}
                         {ident.resolution.at ? ` · ${formatOperatorTime(ident.resolution.at)}` : ""}
@@ -162,17 +191,17 @@ export default async function ProductRecordPage({
           </HqCard>
         ) : null}
 
-        <HqCard title="Source vs canonical">
+        <HqCard title="Source vs canonical" variant="open" padding="none">
           {record.fields.length === 0 ? (
-            <p className="text-sm text-black/55">No normalized fields yet.</p>
+            <p className="text-sm text-[var(--ent-muted)]">No normalized fields yet.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-1">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="text-left text-[10px] uppercase tracking-wider text-black/45">
+                  <tr className="text-left text-[11px] tracking-[0.06em] text-[var(--ent-muted-light)] border-b border-[var(--ent-border)]">
                     {["Field", "Source (original)", "Canonical", "State", "Why / provenance", "Reviewer"].map(
                       (col) => (
-                        <th key={col} className="pr-4 py-1">
+                        <th key={col} className="pr-4 py-3 font-medium">
                           {col}
                         </th>
                       )
@@ -181,15 +210,15 @@ export default async function ProductRecordPage({
                 </thead>
                 <tbody>
                   {record.fields.map((field) => (
-                    <tr key={field.id} className="border-t border-black/5 align-top">
-                      <td className="pr-4 py-2">{field.field_key}</td>
-                      <td className="pr-4 py-2">{field.original_value || "—"}</td>
-                      <td className="pr-4 py-2">{field.normalized_value || "—"}</td>
-                      <td className="pr-4 py-2">{field.state}</td>
-                      <td className="pr-4 py-2 text-xs text-black/60 max-w-sm">
+                    <tr key={field.id} className="border-b border-[var(--ent-border)] align-top last:border-0">
+                      <td className="pr-4 py-3 text-[var(--ent-ink)]">{field.field_key}</td>
+                      <td className="pr-4 py-3 text-[var(--ent-ink-soft)]">{field.original_value || "—"}</td>
+                      <td className="pr-4 py-3 text-[var(--ent-ink)]">{field.normalized_value || "—"}</td>
+                      <td className="pr-4 py-3 text-[var(--ent-muted)]">{field.state}</td>
+                      <td className="pr-4 py-3 text-xs text-[var(--ent-muted)] max-w-sm">
                         {field.explanation || field.transformation_method || "Copied from source."}
                       </td>
-                      <td className="pr-4 py-2 text-xs">
+                      <td className="pr-4 py-3 text-xs text-[var(--ent-muted)]">
                         {field.reviewer_id
                           ? formatReviewerLine(field.reviewer, field.updated_at)
                           : "Not reviewed"}
@@ -202,13 +231,13 @@ export default async function ProductRecordPage({
           )}
         </HqCard>
 
-        <HqCard title="Source records">
+        <HqCard title="Source records" variant="open" padding="none">
           {record.sourceRecords.length === 0 ? (
-            <p className="text-sm text-black/55">No immutable source records stored yet.</p>
+            <p className="text-sm text-[var(--ent-muted)]">No immutable source records stored yet.</p>
           ) : (
             <ul className="text-sm space-y-3">
               {record.sourceRecords.map((row, index) => (
-                <li key={row.id} className="border border-black/10 rounded-lg p-3">
+                <li key={row.id} className="py-4 border-t border-[var(--ent-border)] first:border-0">
                   <p>
                     Source {index + 1} · {row.source_system || "upload"} ·{" "}
                     {formatOperatorTime(row.retrieved_at || row.created_at)}
@@ -218,7 +247,7 @@ export default async function ProductRecordPage({
                       {payloadPreview(row.original_payload)}
                     </pre>
                   ) : (
-                    <p className="text-xs text-black/45 mt-1">Original payload stored; hash {row.payload_hash.slice(0, 12)}</p>
+                    <p className="text-xs entLabelClass mt-1">Original payload stored; hash {row.payload_hash.slice(0, 12)}</p>
                   )}
                 </li>
               ))}
@@ -226,18 +255,22 @@ export default async function ProductRecordPage({
           )}
         </HqCard>
 
-        <HqCard title="Issues">
+        <HqCard title="Issues" variant="open" padding="none">
           {record.issues.length === 0 ? (
-            <p className="text-sm text-black/55">No issues on this product.</p>
+            <p className="text-sm text-[var(--ent-muted)]">No issues on this product.</p>
           ) : (
             <ul className="text-sm space-y-3">
               {record.issues.map((issue) => (
-                <li key={issue.id} className="border border-black/10 rounded-lg p-3">
-                  <p className="font-medium">
-                    {issueTypeLabel(issue.issue_type)}: {issue.title}
-                  </p>
-                  <p className="text-black/60 mt-1">{issueWhyItMatters(issue)}</p>
-                  <p className="text-xs text-black/45 mt-1">
+                <li key={issue.id} className="py-5 border-t border-[var(--ent-border)] first:border-0">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <EntIssuePill label={issueTypeLabel(issue.issue_type)} tone="neutral" />
+                    {issueBlocksPublish(issue) ? (
+                      <EntIssuePill label="Blocks publish" tone="attention" />
+                    ) : null}
+                  </div>
+                  <p className="font-medium text-[var(--ent-ink)]">{issue.title}</p>
+                  <p className="text-[var(--ent-muted)] mt-1">{issueWhyItMatters(issue)}</p>
+                  <p className="text-xs entLabelClass mt-1">
                     {issueBlocksPublish(issue) ? "Blocks publish" : "Does not block publish"} ·{" "}
                     {issueRecommendedAction(issue)}
                   </p>
@@ -259,7 +292,7 @@ export default async function ProductRecordPage({
                       ) : null}
                     </div>
                   ) : (
-                    <p className="text-black/55 mt-1">{issue.status.replaceAll("_", " ")}</p>
+                    <p className="text-[var(--ent-muted)] mt-1">{issue.status.replaceAll("_", " ")}</p>
                   )}
                 </li>
               ))}
@@ -267,23 +300,23 @@ export default async function ProductRecordPage({
           )}
         </HqCard>
 
-        <HqCard title="DPP readiness">
+        <HqCard title="DPP readiness" variant="open" padding="none">
           {readiness ? <DppReadinessPanel report={readiness} /> : (
-            <p className="text-sm text-black/55">Readiness unavailable until EU DPP foundations are migrated.</p>
+            <p className="text-sm text-[var(--ent-muted)]">Readiness unavailable until EU DPP foundations are migrated.</p>
           )}
           <div className="mt-3">
             <AccessClassLegend />
           </div>
         </HqCard>
 
-        <HqCard title="Review and publish">
-          <p className="text-sm text-black/60 mb-3">
+        <HqCard title="Review and publish" variant="open" padding="none">
+          <p className="text-sm text-[var(--ent-muted)] mb-3">
             {publishability.status === "ready"
               ? "Phase 1 DPP requirements met. Publication is allowed."
               : `Not ready: ${publishability.blockers.join("; ")}`}
           </p>
           {record.reviews.length ? (
-            <ul className="text-sm text-black/60 mb-3 space-y-1">
+            <ul className="text-sm text-[var(--ent-muted)] mb-3 space-y-1">
               {record.reviews.map((row) => (
                 <li key={row.id}>
                   {formatReviewerLine(row.actor, row.created_at)} — {row.title}
@@ -294,7 +327,7 @@ export default async function ProductRecordPage({
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-black/55 mb-3">No review activity on this product yet.</p>
+            <p className="text-sm text-[var(--ent-muted)] mb-3">No review activity on this product yet.</p>
           )}
           <div className="flex flex-wrap gap-3">
             <ApproveFieldsButton slug={membership.slug} productId={productId} canMutate={canMutate} />
@@ -302,20 +335,20 @@ export default async function ProductRecordPage({
           </div>
         </HqCard>
 
-        <HqCard title="Passport preview">
-          <p className="text-sm text-black/60 mb-2">
+        <HqCard title="Passport preview" variant="open" padding="none">
+          <p className="text-sm text-[var(--ent-muted)] mb-2">
             Public fields that would appear on the resolver. Missing values are not invented.
           </p>
           <dl className="text-sm space-y-1">
             <div>
-              <dt className="text-black/45">Name</dt>
+              <dt className={entLabelClass}>Name</dt>
               <dd>{record.product.name || "—"}</dd>
             </div>
             {record.fields
               .filter((field) => field.access_class === "public")
               .map((field) => (
                 <div key={field.id}>
-                  <dt className="text-black/45">{field.field_key}</dt>
+                  <dt className={entLabelClass}>{field.field_key}</dt>
                   <dd>{field.normalized_value || "—"}</dd>
                 </div>
               ))}
@@ -329,16 +362,16 @@ export default async function ProductRecordPage({
                   : ""}
               </p>
               {publicUrl && record.passport.state !== "incomplete" ? (
-                <PassportQr url={publicUrl} publicId={record.passport.public_id} />
+                <PassportQr url={publicUrl} publicId={record.passport.public_id} variant="collapsible" />
               ) : null}
               {record.passport.state === "published" || record.passport.state === "update_required" ? (
-                <Link className="inline-block text-xs uppercase tracking-wide underline" href={`/p/${record.passport.public_id}`}>
-                  Open public passport
+                <Link className={`${entLinkClass} mt-3 inline-block`} href={`/p/${record.passport.public_id}`}>
+                  Open public passport →
                 </Link>
               ) : null}
             </div>
           ) : (
-            <p className="text-sm text-black/55 mt-3">
+            <p className="text-sm text-[var(--ent-muted)] mt-3">
               No public identity yet. Publishing allocates a stable ID and QR that keep working across
               later versions.
             </p>
@@ -346,8 +379,8 @@ export default async function ProductRecordPage({
         </HqCard>
 
         {record.passport?.versions.length ? (
-          <HqCard title="Version history">
-            <p className="text-sm text-black/55 mb-3">
+          <HqCard title="Version history" variant="open" padding="none">
+            <p className="text-sm text-[var(--ent-muted)] mb-3">
               Previous published versions are immutable. An update-required passport still serves the
               last published snapshot until you publish again.
             </p>
