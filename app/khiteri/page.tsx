@@ -3,7 +3,9 @@ import { headers } from "next/headers";
 import {
   affiliateOnlyKhiterisEdit,
   getKhiterisEditConfig,
+  KHITERIS_EDIT_AUGUST_2026,
   KHITERIS_EDIT_JULY_2026,
+  type KhiterisEditConfig,
 } from "../../lib/khiteris-edit";
 import { catalogRegionFromCountry, getCountryFromHeaders } from "../../lib/geo-detect";
 import { resolveKhiterisEditForRegion } from "../../lib/khiteri-regional-links";
@@ -16,7 +18,18 @@ const baseEdit = getKhiterisEditConfig();
 
 const seoDescription =
   baseEdit.subtitle ??
-  "A curated monthly edit of natural-fiber fashion — linen, silk, and cotton selections from INTERTEXE.";
+  "A curated monthly edit of natural-fiber fashion — cashmere, wool, silk, and leather for fall.";
+
+function khiterisEditForPreview(preview?: string): KhiterisEditConfig {
+  switch (preview) {
+    case "2026-07":
+      return KHITERIS_EDIT_JULY_2026;
+    case "2026-08":
+      return KHITERIS_EDIT_AUGUST_2026;
+    default:
+      return baseEdit;
+  }
+}
 
 const coverAbsolute = baseEdit.coverImage.src.startsWith("http")
   ? baseEdit.coverImage.src
@@ -28,12 +41,12 @@ export const metadata: Metadata = {
   keywords: [
     "Khiteri edit",
     "INTERTEXE",
-    "August travel edit",
-    "travel fashion",
-    "airport pants",
-    "linen dress",
+    "fall edit",
+    "September fall edit",
+    "cashmere knit",
+    "wool blazer",
+    "leather coat",
     "natural fiber fashion",
-    "The Attico",
     "editorial fashion edit",
   ],
   alternates: { canonical: CANONICAL },
@@ -60,9 +73,7 @@ export default async function KhiteriPage(props: { searchParams?: Promise<{ prev
   const country = getCountryFromHeaders(await headers());
   const catalogRegion = catalogRegionFromCountry(country);
   const params = (await props.searchParams) || {};
-  const sourceEdit = affiliateOnlyKhiterisEdit(
-    params.preview === "2026-07" ? KHITERIS_EDIT_JULY_2026 : baseEdit
-  );
+  const sourceEdit = affiliateOnlyKhiterisEdit(khiterisEditForPreview(params.preview));
   // Regional catalog lookup is soft-budgeted so the page never waits on a slow Supabase round-trip.
   const edit = await resolveKhiterisEditForRegion(sourceEdit, catalogRegion);
 
