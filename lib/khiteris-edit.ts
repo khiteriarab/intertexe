@@ -444,7 +444,6 @@ export const KHITERIS_EDIT_SEPTEMBER_2026: KhiterisEditConfig = {
     ],
   },
   products: [
-    FIRST_SALE_MYTHERESA_PRODUCT,
     {
       id: "01",
       name: "Turtleneck Wool and Cashmere Top",
