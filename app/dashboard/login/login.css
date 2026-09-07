@@ -51,19 +51,10 @@
 }
 
 .ent-login-logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 3.25rem;
   height: 3.25rem;
-  background: linear-gradient(145deg, var(--ent-login-petrol-light) 0%, var(--ent-login-petrol) 100%);
-  color: white;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 0.5rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  text-transform: uppercase;
+  object-fit: cover;
 }
 
 .ent-login-wordmark {

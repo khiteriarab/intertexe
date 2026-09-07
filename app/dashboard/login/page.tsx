@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
@@ -117,9 +118,14 @@ function LoginForm() {
     <div className="ent-login-page">
       <div className="ent-login-card">
         <div className="ent-login-logo">
-          <span className="ent-login-logo-mark" aria-hidden>
-            ITX
-          </span>
+          <Image
+            src="/app-icon.png"
+            alt=""
+            width={52}
+            height={52}
+            className="ent-login-logo-mark"
+            priority
+          />
           <span className="ent-login-wordmark">
             <span className="ent-login-wordmark-light">INTER</span>
             <span className="ent-login-wordmark-bold">TEXE</span>
