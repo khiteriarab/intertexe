@@ -78,4 +78,24 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(sections, /leaves/i);
     assert.doesNotMatch(sections, /factory/i);
   });
+
+  it("adds editorial graphics without replacing existing charts", () => {
+    assert.match(sections, /PlatformEditorialGraphic/);
+    assert.match(sections, /INTERTEXE_01_Data_Architecture\.png/);
+    assert.match(sections, /INTERTEXE_02_Product_Data_Journey\.png/);
+    assert.match(sections, /INTERTEXE_03_Fashion_Ecosystem\.png/);
+    assert.match(sections, /DataSourcesVisual/);
+    assert.match(sections, /BenchmarkPreview/);
+    assert.match(sections, /ConsumerBridgeVisual/);
+    for (const asset of [
+      "INTERTEXE_01_Data_Architecture.png",
+      "INTERTEXE_02_Product_Data_Journey.png",
+      "INTERTEXE_03_Fashion_Ecosystem.png",
+    ]) {
+      assert.ok(
+        fs.existsSync(path.join(process.cwd(), "public/platform", asset)),
+        `missing editorial asset: ${asset}`,
+      );
+    }
+  });
 });

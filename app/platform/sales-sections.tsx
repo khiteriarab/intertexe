@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   BenchmarkPreview,
   IssuesPreview,
@@ -66,6 +67,55 @@ const CONSUMER_SURFACES = [
   { label: "Chrome fabric scanner", href: "/scanner", copy: "Save and compare composition while browsing retailers." },
 ] as const;
 
+const EDITORIAL_GRAPHICS = {
+  dataArchitecture: "/platform/INTERTEXE_01_Data_Architecture.png",
+  productJourney: "/platform/INTERTEXE_02_Product_Data_Journey.png",
+  fashionEcosystem: "/platform/INTERTEXE_03_Fashion_Ecosystem.png",
+} as const;
+
+/** Full-width editorial graphic — ivory background blends with page, no SaaS card chrome. */
+function PlatformEditorialGraphic({
+  src,
+  alt,
+  caption,
+}: {
+  src: string;
+  alt: string;
+  caption?: string;
+}) {
+  return (
+    <figure className="m-0">
+      <div className="relative w-full overflow-hidden bg-[#f7f5f1]">
+        <img
+          src={src}
+          alt={alt}
+          width={2400}
+          height={1350}
+          className="block w-full h-auto max-w-none"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+      {caption ? (
+        <figcaption className="mt-3 text-[11px] text-[#8a847c] leading-relaxed">{caption}</figcaption>
+      ) : null}
+    </figure>
+  );
+}
+
+function EditorialGraphicWrap({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative my-10 sm:my-14 lg:my-16">
+      <div className="max-w-[88rem] mx-auto">
+        {/* On small screens, preserve legibility via horizontal scroll rather than over-shrinking */}
+        <div className="overflow-x-auto sm:overflow-visible px-3 sm:px-6 md:px-8 lg:px-12 [-webkit-overflow-scrolling:touch]">
+          <div className="w-[720px] max-w-none sm:w-full">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SalesHeroSection() {
   const signIn = getEnterpriseLoginUrl();
   return (
@@ -123,31 +173,43 @@ export function SalesHeroSection() {
 
 export function SalesProblemSection() {
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
-      <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-        <div>
-          <Eyebrow>The problem</Eyebrow>
-          <Heading className="mb-5">
-            Your product data already exists.
-            <br />
-            It just doesn&apos;t work together.
-          </Heading>
-          <Body className="mb-6">
-            Fashion brands already hold product and material information across many systems — but it rarely connects
-            into one usable record.
-          </Body>
-          <ul className="space-y-2 mb-8">
-            {DATA_SOURCES.map((source) => (
-              <li key={source} className="text-sm text-[#5c5854] pl-4 border-l-2 border-[#e8e3da]">
-                {source}
-              </li>
-            ))}
-          </ul>
-          <Body>
-            INTERTEXE connects these sources without requiring brands to replace their existing systems.
-          </Body>
+    <section className="bg-[#f7f5f1] py-16 sm:py-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+        <Eyebrow>The problem</Eyebrow>
+        <Heading className="mb-5">
+          Your product data already exists.
+          <br />
+          It just doesn&apos;t work together.
+        </Heading>
+        <Body className="max-w-2xl mb-2">
+          Fashion brands already hold product and material information across many systems — but it rarely connects
+          into one usable record.
+        </Body>
+      </div>
+
+      <EditorialGraphicWrap>
+        <PlatformEditorialGraphic
+          src={EDITORIAL_GRAPHICS.dataArchitecture}
+          alt="INTERTEXE data architecture — fragmented PLM, ERP, spreadsheets and supplier files converging on one governed product record"
+        />
+      </EditorialGraphicWrap>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <div>
+            <ul className="space-y-2 mb-8">
+              {DATA_SOURCES.map((source) => (
+                <li key={source} className="text-sm text-[#5c5854] pl-4 border-l-2 border-[#e8e3da]">
+                  {source}
+                </li>
+              ))}
+            </ul>
+            <Body>
+              INTERTEXE connects these sources without requiring brands to replace their existing systems.
+            </Body>
+          </div>
+          <DataSourcesVisual />
         </div>
-        <DataSourcesVisual />
       </div>
     </section>
   );
@@ -210,25 +272,37 @@ export function SalesGovernedRecordSection() {
 
 export function SalesHowItWorksSection() {
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
-      <Eyebrow>How it works</Eyebrow>
-      <Heading className="mb-4">From fragmented data to usable intelligence.</Heading>
-      <Body className="max-w-2xl mb-12">
-        Four editorial steps — not a feature dump. Each builds on the governed record before it.
-      </Body>
-      <div className="grid sm:grid-cols-2 gap-0 border border-[#e8e3da]">
-        {RECORD_STEPS.map((step, i) => (
-          <article
-            key={step.n}
-            className={`p-8 sm:p-10 bg-white ${i % 2 === 0 ? "sm:border-r border-[#e8e3da]" : ""} ${i < 2 ? "border-b border-[#e8e3da]" : ""}`}
-          >
-            <p className="text-[11px] tracking-[0.2em] uppercase text-[#9c7b8b] mb-4 tabular-nums">{step.n}</p>
-            <h3 className="text-2xl sm:text-[1.65rem] font-light mb-3 text-[#161513]" style={SERIF}>
-              {step.title}
-            </h3>
-            <p className="text-sm text-[#5c5854] leading-relaxed">{step.copy}</p>
-          </article>
-        ))}
+    <section className="bg-[#f7f5f1] py-16 sm:py-24 border-t border-[#e8e3da]/60">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+        <Eyebrow>How it works</Eyebrow>
+        <Heading className="mb-4">From fragmented data to usable intelligence.</Heading>
+        <Body className="max-w-2xl mb-2">
+          Four editorial steps — not a feature dump. Each builds on the governed record before it.
+        </Body>
+      </div>
+
+      <EditorialGraphicWrap>
+        <PlatformEditorialGraphic
+          src={EDITORIAL_GRAPHICS.productJourney}
+          alt="The INTERTEXE process — connect, normalize, resolve, understand and publish from one product record"
+        />
+      </EditorialGraphicWrap>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+        <div className="grid sm:grid-cols-2 gap-0 border border-[#e8e3da] bg-white">
+          {RECORD_STEPS.map((step, i) => (
+            <article
+              key={step.n}
+              className={`p-8 sm:p-10 bg-white ${i % 2 === 0 ? "sm:border-r border-[#e8e3da]" : ""} ${i < 2 ? "border-b border-[#e8e3da]" : ""}`}
+            >
+              <p className="text-[11px] tracking-[0.2em] uppercase text-[#9c7b8b] mb-4 tabular-nums">{step.n}</p>
+              <h3 className="text-2xl sm:text-[1.65rem] font-light mb-3 text-[#161513]" style={SERIF}>
+                {step.title}
+              </h3>
+              <p className="text-sm text-[#5c5854] leading-relaxed">{step.copy}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -337,26 +411,38 @@ function DppFlow() {
 
 export function SalesConsumerSection() {
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
-      <Eyebrow>The consumer advantage</Eyebrow>
-      <Heading className="mb-4">Built on both sides of fashion.</Heading>
-      <Body className="max-w-3xl mb-10">
-        INTERTEXE is not only enterprise software. Our consumer products create a real-world environment for
-        understanding how people discover and evaluate materials. Over time, permitted and appropriately aggregated
-        signals can help brands relate consumer material demand to their own assortment — without individual tracking,
-        without PII, and without claiming live enterprise intelligence where it does not yet exist.
-      </Body>
-      <ConsumerBridgeVisual />
-      <div className="grid sm:grid-cols-3 gap-6 mt-12">
-        {CONSUMER_SURFACES.map((surface) => (
-          <div key={surface.label} className="border-t border-[#e8e3da] pt-5">
-            <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">{surface.label}</p>
-            <p className="text-sm text-[#5c5854] leading-relaxed mb-3">{surface.copy}</p>
-            <Link href={surface.href} className="text-[11px] tracking-[0.12em] uppercase text-[#152238] underline underline-offset-4">
-              Explore →
-            </Link>
-          </div>
-        ))}
+    <section className="bg-[#f7f5f1] py-16 sm:py-24 border-t border-[#e8e3da]/60">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+        <Eyebrow>The consumer advantage</Eyebrow>
+        <Heading className="mb-4">Built on both sides of fashion.</Heading>
+        <Body className="max-w-3xl mb-2">
+          INTERTEXE is not only enterprise software. Our consumer products create a real-world environment for
+          understanding how people discover and evaluate materials. Over time, permitted and appropriately aggregated
+          signals can help brands relate consumer material demand to their own assortment — without individual tracking,
+          without PII, and without claiming live enterprise intelligence where it does not yet exist.
+        </Body>
+      </div>
+
+      <EditorialGraphicWrap>
+        <PlatformEditorialGraphic
+          src={EDITORIAL_GRAPHICS.fashionEcosystem}
+          alt="INTERTEXE fashion ecosystem — consumers discover and scan while brands benchmark, prepare and publish from the same material intelligence"
+        />
+      </EditorialGraphicWrap>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+        <ConsumerBridgeVisual />
+        <div className="grid sm:grid-cols-3 gap-6 mt-12">
+          {CONSUMER_SURFACES.map((surface) => (
+            <div key={surface.label} className="border-t border-[#e8e3da] pt-5">
+              <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">{surface.label}</p>
+              <p className="text-sm text-[#5c5854] leading-relaxed mb-3">{surface.copy}</p>
+              <Link href={surface.href} className="text-[11px] tracking-[0.12em] uppercase text-[#152238] underline underline-offset-4">
+                Explore →
+              </Link>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
