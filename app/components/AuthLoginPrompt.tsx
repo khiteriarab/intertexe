@@ -2,6 +2,15 @@
 
 import Link from "next/link";
 import { X, Heart } from "lucide-react";
+import { isPlatformHost } from "@/lib/dashboard/constants";
+import { getConsumerAccountUrl } from "@/lib/platform-urls";
+
+function accountHref(mode?: "signup"): string {
+  if (typeof window !== "undefined" && isPlatformHost(window.location.hostname)) {
+    return getConsumerAccountUrl(mode);
+  }
+  return mode === "signup" ? "/account?mode=signup" : "/account";
+}
 
 export function AuthLoginPrompt({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
@@ -39,14 +48,14 @@ export function AuthLoginPrompt({ open, onClose }: { open: boolean; onClose: () 
 
         <div className="flex flex-col gap-3">
           <Link
-            href="/account"
+            href={accountHref()}
             onClick={onClose}
             className="w-full text-center border border-foreground px-6 py-3.5 uppercase tracking-[0.15em] text-[10px] md:text-xs hover:bg-foreground hover:text-background transition-colors"
           >
             Sign in
           </Link>
           <Link
-            href="/account"
+            href={accountHref("signup")}
             onClick={onClose}
             className="w-full text-center border border-border/60 px-6 py-3.5 uppercase tracking-[0.15em] text-[10px] md:text-xs hover:border-foreground transition-colors"
           >

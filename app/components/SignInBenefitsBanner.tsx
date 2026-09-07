@@ -2,15 +2,28 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { isPlatformHost } from "@/lib/dashboard/constants";
+import { getConsumerAccountUrl } from "@/lib/platform-urls";
 
 const DISMISS_KEY = "intertexe_signin_banner_dismissed";
 const TOKEN_KEY = "intertexe_auth_token";
 
+function accountHref(mode?: "signup"): string {
+  if (typeof window !== "undefined" && isPlatformHost(window.location.hostname)) {
+    return getConsumerAccountUrl(mode);
+  }
+  return mode === "signup" ? "/account?mode=signup" : "/account";
+}
+
 /** Slim strip below navbar — dismissible, does not cover hero content. */
 export function SignInBenefitsBanner() {
   const [hidden, setHidden] = useState(true);
+  const [signInHref, setSignInHref] = useState("/account");
+  const [signupHref, setSignupHref] = useState("/account?mode=signup");
 
   useEffect(() => {
+    setSignInHref(accountHref());
+    setSignupHref(accountHref("signup"));
     try {
       if (localStorage.getItem(TOKEN_KEY)) return;
       if (localStorage.getItem(DISMISS_KEY) === "1") return;
@@ -50,13 +63,13 @@ export function SignInBenefitsBanner() {
           </p>
           <div className="flex items-center gap-4">
             <Link
-              href="/account"
+              href={signInHref}
               className="text-[10px] uppercase tracking-[0.14em] text-[#1C1C1E] hover:opacity-70"
             >
               Sign in
             </Link>
             <Link
-              href="/account?mode=signup"
+              href={signupHref}
               className="text-[10px] uppercase tracking-[0.14em] text-[#1C1C1E] hover:opacity-70"
             >
               Create account

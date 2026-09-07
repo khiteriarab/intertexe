@@ -54,11 +54,27 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // platform.intertexe.com → enterprise login at /, existing /dashboard SaaS
+  // platform.intertexe.com → enterprise login at /, existing /dashboard SaaS only
   if (isPlatformHost(host)) {
+    const consumerOrigin =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.intertexe.com";
+
     if (pathname.startsWith("/platform")) {
-      const consumerOrigin =
-        process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.intertexe.com";
+      return NextResponse.redirect(`${consumerOrigin}${pathname}${request.nextUrl.search}`);
+    }
+
+    const isEnterpriseSurface =
+      pathname === "/" ||
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/api/dashboard") ||
+      pathname.startsWith("/reset-password");
+
+    // Consumer routes (account, shop, etc.) belong on www — never rewrite into /dashboard/*
+    if (
+      !isEnterpriseSurface &&
+      !pathname.startsWith("/_next") &&
+      pathname !== "/favicon.ico"
+    ) {
       return NextResponse.redirect(`${consumerOrigin}${pathname}${request.nextUrl.search}`);
     }
 
@@ -69,17 +85,6 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
       url.pathname = "/dashboard/login";
-      return NextResponse.rewrite(url);
-    }
-
-    if (
-      !pathname.startsWith("/dashboard") &&
-      !pathname.startsWith("/api/dashboard") &&
-      !pathname.startsWith("/_next") &&
-      !pathname.startsWith("/reset-password")
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/dashboard${pathname}`;
       return NextResponse.rewrite(url);
     }
   }

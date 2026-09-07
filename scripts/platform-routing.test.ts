@@ -63,6 +63,17 @@ test("middleware handles platform host and enterprise login path", () => {
   assert.match(middleware, /isPlatformHost/);
   assert.match(middleware, /enterpriseLoginPath/);
   assert.match(middleware, /\/dashboard\/login/);
+  assert.match(middleware, /Consumer routes.*belong on www/);
+  assert.match(middleware, /isEnterpriseSurface/);
+});
+
+test("consumer sign-in banner targets www account, not enterprise login", () => {
+  const banner = fs.readFileSync(path.join(process.cwd(), "app/components/SignInBenefitsBanner.tsx"), "utf8");
+  const urls = fs.readFileSync(path.join(process.cwd(), "lib/platform-urls.ts"), "utf8");
+  assert.match(banner, /getConsumerAccountUrl/);
+  assert.match(banner, /isPlatformHost/);
+  assert.doesNotMatch(banner, /getEnterpriseLoginUrl/);
+  assert.match(urls, /getConsumerAccountUrl/);
 });
 
 test("sales page links sign-in to enterprise login helper", () => {

@@ -33,6 +33,12 @@ export function getConsumerSiteUrl(): string {
   return "https://www.intertexe.com";
 }
 
+/** Personal shopper account — always on www, never platform.intertexe.com. */
+export function getConsumerAccountUrl(mode?: "signup"): string {
+  const base = `${getConsumerSiteUrl()}/account`;
+  return mode === "signup" ? `${base}?mode=signup` : base;
+}
+
 /** Password reset redirect — stays on the requesting host (platform or www). */
 export function buildDashboardPasswordResetRedirect(origin: string): string {
   const base = origin.replace(/\/$/, "");
