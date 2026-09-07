@@ -2,8 +2,36 @@ const { createClient } = require("@supabase/supabase-js");
 const Client = require("ftp");
 const zlib = require("zlib");
 const { Transform } = require("stream");
+const fs = require("fs");
+const path = require("path");
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.SUPABASE_PROJECT_URL;
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return {};
+  const out = {};
+  for (const line of fs.readFileSync(filePath, "utf8").split("\n")) {
+    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (!m) continue;
+    let v = m[2];
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+      v = v.slice(1, -1);
+    }
+    out[m[1]] = v;
+  }
+  return out;
+}
+
+const root = path.resolve(__dirname, "..");
+const fromFiles = {
+  ...loadEnvFile(path.join(root, ".env.production.local")),
+  ...loadEnvFile(path.join(root, ".env.vercel.local")),
+  ...loadEnvFile(path.join(root, ".env.local")),
+};
+Object.assign(process.env, { ...fromFiles, ...process.env });
+
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.SUPABASE_PROJECT_URL ||
+  process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const FTP_HOST = process.env.RAKUTEN_FTP_HOST || "aftp.linksynergy.com";
 const FTP_USER = process.env.RAKUTEN_FTP_USER || "rkp_4668007";
@@ -406,9 +434,14 @@ async function streamMarketFeed(marketKey, market, options) {
                 approved: "yes",
                 feed_source: "mytheresa",
                 retailer: "Mytheresa",
+                retailer_mid: market.mid,
                 region: market.region,
+                currency: currency,
+                retailer_country: market.region === "uk" ? "GB" : market.region === "eu" ? "DE" : "US",
                 is_displayable: true,
                 is_active: true,
+                last_seen_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
               };
               if (isShoe) product.garment_type = "shoes";
 

@@ -132,6 +132,25 @@ export async function GET(request: Request) {
     warnings.push("Daily catalog refresh has never recorded a successful run");
   }
 
+  // Per-MID staleness: any tracked Rakuten MID with zero live rows is a warning.
+  let staleMids: string[] = [];
+  try {
+    const { RAKUTEN_MERCHANT_MIDS } = await import('@/lib/feed-sync/rakuten-merchants.js');
+    for (const mid of RAKUTEN_MERCHANT_MIDS) {
+      const { count } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('retailer_mid', mid)
+        .eq('is_active', true);
+      if ((count ?? 0) < 5) staleMids.push(mid);
+    }
+    if (staleMids.length) {
+      warnings.push(`Rakuten MIDs with <5 live products: ${staleMids.join(', ')}`);
+    }
+  } catch {
+    /* registry import optional in edge runtime */
+  }
+
   const problems = [...critical, ...warnings];
   const isCritical = critical.length > 0;
 

@@ -9,7 +9,8 @@ Related: `docs/PRODUCTION_RELIABILITY_RELEASE.md` (P1 sale reliability).
 | Source | Path | Sale support |
 |---|---|---|
 | **Rakuten** (multi-MID FTP XML) | `lib/feed-sync/rakuten-sync.js` → `normalizeProduct` | `is_sale` set via `isSale()` |
-| **MyTheresa** (Rakuten MIDs `35663`, `43172`, `43654`) | Same sync; `feed_source: 'mytheresa'` | Same `isSale()` plus MyTheresa-specific URL / retail-price heuristics |
+| **MyTheresa** (Rakuten MIDs `35663`, `43172`) | Same sync; `feed_source: 'mytheresa'` | Same `isSale()` plus MyTheresa-specific URL / retail-price heuristics |
+| **Tory Burch UK** (Rakuten MID `43654`) | Generic Rakuten sync | Standard apparel ≥80% NFP + leather footwear gate |
 | **Rakuten footwear** | Same sync when footwear gate passes and apparel does not | `feed_source: 'rakuten_footwear'`; sale flag still via `isSale()` |
 | **SSENSE** | — | **Not implemented** (scanner/retailer map only; no affiliate feed ingest) |
 | **Awin** (`scripts/import-awin-feed.cjs`) | Legacy / secondary import | Does not currently write `is_sale` on insert |
@@ -35,7 +36,7 @@ Normalized row stores:
 
 ### MyTheresa notes
 
-- Detected by MID set (`35663`, `43172`, `43654`) or advertiser/feed URL containing `mytheresa`.
+- Detected by MID set (`35663`, `43172`) or advertiser/feed URL containing `mytheresa`.
 - Region/currency resolved in `resolveMidRegionCurrency` (MID `43172` splits US USD vs CA CAD).
 - Sale detection leans on retail/sale price pairs and **sale URL paths** when list and sale prices are identical in the feed.
 - Soft-inactive / markInactive includes `mytheresa` in default `markInactiveSources`.
