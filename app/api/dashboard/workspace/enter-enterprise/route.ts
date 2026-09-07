@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getHqSession } from "../../../../../lib/dashboard/auth";
+import { hostScopedSessionCookieOptions } from "../../../../../lib/dashboard/session-cookies";
 import { ENTERPRISE_SESSION_COOKIE } from "../../../../../lib/enterprise/constants";
 import { mintStaffEnterpriseHandoff } from "../../../../../lib/enterprise/handoff";
 
@@ -33,13 +34,7 @@ export async function POST(request: NextRequest) {
       redirectTo: safeRedirect,
       expiresAt: minted.expiresAt.toISOString(),
     });
-    response.cookies.set(ENTERPRISE_SESSION_COOKIE, minted.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge,
-    });
+    response.cookies.set(ENTERPRISE_SESSION_COOKIE, minted.accessToken, hostScopedSessionCookieOptions(maxAge));
     return response;
   } catch (error) {
     return NextResponse.json(

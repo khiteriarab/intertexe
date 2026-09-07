@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HQ_SESSION_COOKIE, writeAuthAudit, clearHqSessionMemo } from "../../../../lib/dashboard/auth";
+import { clearHostScopedSessionCookieOptions } from "../../../../lib/dashboard/session-cookies";
 import { ENTERPRISE_SESSION_COOKIE } from "../../../../lib/enterprise/constants";
 import { revokeHandoffSessionsForHqUser } from "../../../../lib/enterprise/identity-links";
 import { revokeMintedEnterpriseSession } from "../../../../lib/enterprise/handoff";
@@ -35,13 +36,7 @@ export async function POST(request: NextRequest) {
   await revokeMintedEnterpriseSession(enterpriseToken || null);
 
   const response = NextResponse.json({ ok: true });
-  const clear = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
-    path: "/",
-    maxAge: 0,
-  };
+  const clear = clearHostScopedSessionCookieOptions();
   response.cookies.set(HQ_SESSION_COOKIE, "", clear);
   response.cookies.set(ENTERPRISE_SESSION_COOKIE, "", clear);
   return response;

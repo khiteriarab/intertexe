@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server";
 import { writeAuthAudit } from "../../../../lib/dashboard/auth";
+import { buildDashboardPasswordResetRedirect } from "../../../../lib/platform-urls";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +24,9 @@ export async function POST(request: NextRequest) {
 
     // HQ Auth only. Never start obelisk-core recovery — linked staff principals
     // must not become a second human password.
+    // redirectTo uses request origin so platform.intertexe.com resets stay on enterprise host.
     if (!isTechnicalPrincipalEmail(email)) {
-      const origin = request.nextUrl.origin;
-      const redirectTo = `${origin}/reset-password?next=/dashboard`;
+      const redirectTo = buildDashboardPasswordResetRedirect(request.nextUrl.origin);
       const { error } = await auth.auth.resetPasswordForEmail(email, { redirectTo });
       await writeAuthAudit({
         email,

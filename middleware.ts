@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { HQ_SESSION_COOKIE, isHqHost } from "./lib/dashboard/constants";
+import { HQ_SESSION_COOKIE, isHqHost, isPlatformHost } from "./lib/dashboard/constants";
 import {
   ENTERPRISE_SESSION_COOKIE,
   dashboardPathRequiresEnterpriseSession,
@@ -14,6 +14,17 @@ const API_CACHE_HEADERS: Record<string, string> = {
 };
 
 const NO_CACHE_PREFIXES = ["/api/auth/", "/api/cron/", "/api/dashboard/", "/api/matches"];
+
+function hasDashboardSession(request: NextRequest): boolean {
+  return !!(
+    request.cookies.get(HQ_SESSION_COOKIE)?.value?.trim() ||
+    request.cookies.get(ENTERPRISE_SESSION_COOKIE)?.value?.trim()
+  );
+}
+
+function enterpriseLoginPath(host: string | null): string {
+  return isPlatformHost(host) ? "/" : "/dashboard/login";
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -41,6 +52,36 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = pathname.replace(/^\/api\/hq/, "/api/dashboard");
     return NextResponse.redirect(url);
+  }
+
+  // platform.intertexe.com → enterprise login at /, existing /dashboard SaaS
+  if (isPlatformHost(host)) {
+    if (pathname.startsWith("/platform")) {
+      const consumerOrigin =
+        process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.intertexe.com";
+      return NextResponse.redirect(`${consumerOrigin}${pathname}${request.nextUrl.search}`);
+    }
+
+    if (pathname === "/" || pathname === "") {
+      const url = request.nextUrl.clone();
+      if (hasDashboardSession(request)) {
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+      url.pathname = "/dashboard/login";
+      return NextResponse.rewrite(url);
+    }
+
+    if (
+      !pathname.startsWith("/dashboard") &&
+      !pathname.startsWith("/api/dashboard") &&
+      !pathname.startsWith("/_next") &&
+      !pathname.startsWith("/reset-password")
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/dashboard${pathname}`;
+      return NextResponse.rewrite(url);
+    }
   }
 
   // dashboard.intertexe.com (or legacy hq.) → /dashboard app
@@ -72,8 +113,12 @@ export function middleware(request: NextRequest) {
       request.cookies.get(ENTERPRISE_SESSION_COOKIE)?.value;
     if (!token) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard/login";
-      url.searchParams.set("next", pathname);
+      url.pathname = enterpriseLoginPath(host);
+      if (url.pathname !== "/") {
+        url.searchParams.set("next", pathname);
+      } else if (pathname !== "/dashboard/login") {
+        url.searchParams.set("next", pathname);
+      }
       return NextResponse.redirect(url);
     }
     if (dashboardPathRequiresEnterpriseSession(pathname)) {
@@ -82,8 +127,10 @@ export function middleware(request: NextRequest) {
         const hq = request.cookies.get(HQ_SESSION_COOKIE)?.value?.trim();
         if (!hq) {
           const url = request.nextUrl.clone();
-          url.pathname = "/dashboard/login";
-          url.searchParams.set("next", pathname);
+          url.pathname = enterpriseLoginPath(host);
+          if (url.pathname !== "/") {
+            url.searchParams.set("next", pathname);
+          }
           return NextResponse.redirect(url);
         }
         const url = request.nextUrl.clone();

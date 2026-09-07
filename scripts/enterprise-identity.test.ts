@@ -110,6 +110,7 @@ describe("Phase 1 identity invariants", () => {
       "utf8"
     );
     assert.match(forgot, /resetPasswordForEmail/);
+    assert.match(forgot, /buildDashboardPasswordResetRedirect/);
     assert.doesNotMatch(forgot, /getEnterprise/);
     assert.match(forgot, /isTechnicalPrincipalEmail/);
   });

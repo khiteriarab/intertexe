@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
 export type PlatformNavKey = "demo" | "docs" | "request" | "platform" | "login" | "discover";
 
@@ -27,6 +28,7 @@ export function PlatformNav({
   tone?: "light" | "dark";
 }) {
   const [open, setOpen] = useState(false);
+  const signInUrl = getEnterpriseLoginUrl();
   const dark = tone === "dark";
 
   useEffect(() => {
@@ -73,14 +75,14 @@ export function PlatformNav({
         </div>
         <div className="flex items-center justify-end gap-2 shrink-0">
           <Link
-            href="/dashboard/login"
+            href={signInUrl}
             className={
               dark
                 ? "inline-flex items-center gap-2 rounded-md border border-white px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-white min-h-[40px] hover:bg-white/10"
                 : "inline-flex items-center gap-2 rounded-md border border-[#152238] px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-[#152238] min-h-[40px] hover:bg-[#152238]/5"
             }
           >
-            Log in
+            Sign in
             <Arrow />
           </Link>
           <Link
@@ -91,7 +93,7 @@ export function PlatformNav({
                 : "inline-flex items-center gap-2 rounded-md bg-[#152238] px-3 sm:px-4 py-2 sm:py-2.5 text-[12px] sm:text-[13px] font-medium text-white min-h-[40px] hover:bg-[#0f1a2c]"
             }
           >
-            Book a demo
+            Request a demo
             <Arrow />
           </Link>
           <button

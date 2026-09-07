@@ -1,14 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { getConsumerSiteUrl } from "@/lib/platform-urls";
 import "./login.css";
 
 type Phase = "idle" | "signing_in" | "opening" | "forgot";
-type AuthMode = "email" | "sso";
 
 function LoginForm() {
   const router = useRouter();
@@ -16,7 +15,6 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [authMode, setAuthMode] = useState<AuthMode>("email");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(
     params.get("reset") === "1" ? "Check your email to finish resetting your password." : null
@@ -26,15 +24,10 @@ function LoginForm() {
   const inviteToken = params.get("invite");
   const busy = phase !== "idle";
 
-  const canSubmitEmail =
-    authMode === "email" &&
-    !busy &&
-    email.trim().length > 0 &&
-    (forgotMode || password.length > 0);
+  const canSubmit = !busy && email.trim().length > 0 && (forgotMode || password.length > 0);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (authMode === "sso") return;
     setError(null);
     setInfo(null);
     try {
@@ -112,163 +105,130 @@ function LoginForm() {
           ? "Sending…"
           : forgotMode
             ? "Send reset link"
-            : "Log in";
+            : "Sign in";
+
+  const consumerUrl = getConsumerSiteUrl();
 
   return (
     <div className="ent-login-page">
       <div className="ent-login-brand">
         <div className="ent-login-brand-inner">
-          <div className="ent-login-brand-lockup">
-            <Image
-              src="/app-icon.png"
-              alt=""
-              width={48}
-              height={48}
-              className="ent-login-brand-mark"
-              priority
-            />
-            <span className="ent-login-brand-wordmark">
-              <span className="ent-login-wordmark-light">INTER</span>
-              <span className="ent-login-wordmark-bold">TEXE</span>
-            </span>
-          </div>
-          <p className="ent-login-brand-tagline">
-            Material intelligence for brands.
-            <br />
-            Digital product passports at your fingertips.
+          <p className="ent-login-brand-wordmark">
+            <span className="ent-login-wordmark-light">INTER</span>
+            <span className="ent-login-wordmark-bold">TEXE</span>
           </p>
+          <h1 className="ent-login-brand-statement" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+            Your product data,
+            <br />
+            connected.
+          </h1>
+          <p className="ent-login-brand-tagline">Product intelligence for fashion.</p>
+          <div className="ent-login-brand-visual" aria-hidden>
+            <div className="ent-login-brand-visual-row">
+              <span />
+              <span />
+              <span />
+            </div>
+            <div className="ent-login-brand-visual-core" />
+          </div>
         </div>
       </div>
 
-      <div className="ent-login-card-wrap">
-        <div className="ent-login-card">
-          <h1 className="ent-login-title">{authMode === "sso" ? "Enterprise sign-on" : "Welcome back"}</h1>
+      <div className="ent-login-auth">
+        <div className="ent-login-auth-inner">
+          <div className="ent-login-mobile-brand">
+            <p className="ent-login-brand-wordmark ent-login-brand-wordmark-dark">
+              <span className="ent-login-wordmark-light">INTER</span>
+              <span className="ent-login-wordmark-bold">TEXE</span>
+            </p>
+          </div>
+
+          <h2 className="ent-login-title">Welcome to INTERTEXE</h2>
           <p className="ent-login-lead">
-            {authMode === "sso"
-              ? "Single sign-on is available for enterprise accounts on the INTERTEXE material intelligence platform."
-              : forgotMode
-                ? "Enter the email address for your workspace account and we will send a password reset link."
-                : "Sign in with the email and password for your brand workspace — catalog, passports, and material intelligence in one place."}
+            {forgotMode
+              ? "Enter your work email and we will send a password reset link."
+              : "Sign in to your organization workspace."}
           </p>
 
-          {authMode === "sso" ? (
-            <div className="ent-login-sso-panel">
-              <Link href="/platform/request" className="ent-login-sso-link">
-                Request enterprise access →
-              </Link>
-              <button
-                type="button"
-                className="ent-login-sso-secondary"
+          <form onSubmit={onSubmit} aria-busy={busy}>
+            <label className="ent-login-field" htmlFor="login-email">
+              <span className="ent-login-label">Work email</span>
+              <input
+                id="login-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 disabled={busy}
-                onClick={() => {
-                  setAuthMode("email");
-                  setError(null);
-                }}
-              >
-                Back to email sign-in
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={onSubmit} aria-busy={busy}>
-              <label className="ent-login-field" htmlFor="login-email">
-                <span className="ent-login-label">Email</span>
+                placeholder="you@brand.com"
+                className="ent-login-input"
+                autoComplete="username"
+              />
+            </label>
+
+            {!forgotMode ? (
+              <label className="ent-login-field" htmlFor="login-password">
+                <span className="ent-login-label">Password</span>
                 <div className="ent-login-input-wrap">
                   <input
-                    id="login-email"
-                    type="email"
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     disabled={busy}
-                    placeholder="example@email.com"
+                    placeholder="Password"
                     className="ent-login-input"
-                    autoComplete="username"
+                    autoComplete="current-password"
                   />
+                  <button
+                    type="button"
+                    className="ent-login-input-toggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} strokeWidth={1.75} /> : <Eye size={18} strokeWidth={1.75} />}
+                  </button>
                 </div>
               </label>
+            ) : null}
 
-              {!forgotMode ? (
-                <label className="ent-login-field" htmlFor="login-password">
-                  <span className="ent-login-label">Password</span>
-                  <div className="ent-login-input-wrap">
-                    <input
-                      id="login-password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={busy}
-                      placeholder="Password"
-                      className="ent-login-input"
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      className="ent-login-input-toggle"
-                      onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff size={18} strokeWidth={1.75} /> : <Eye size={18} strokeWidth={1.75} />}
-                    </button>
-                  </div>
-                </label>
-              ) : null}
+            {error ? <p className="ent-login-message ent-login-message-error">{error}</p> : null}
+            {info ? <p className="ent-login-message ent-login-message-info">{info}</p> : null}
 
-              {error ? <p className="ent-login-message ent-login-message-error">{error}</p> : null}
-              {info ? <p className="ent-login-message ent-login-message-info">{info}</p> : null}
-
-              {phase === "opening" ? (
-                <div className="ent-login-opening" role="status" aria-live="polite">
-                  <p className="font-semibold text-[#3e6268]">Signed in — loading your workspace</p>
-                  <p className="mt-1 text-xs leading-relaxed">Pulling overview metrics. This can take a moment on first load.</p>
-                  <div className="ent-login-opening-bar">
-                    <div className="ent-login-opening-bar-inner" />
-                  </div>
+            {phase === "opening" ? (
+              <div className="ent-login-opening" role="status" aria-live="polite">
+                <p className="font-semibold text-[#3e6268]">Signed in — loading your workspace</p>
+                <p className="mt-1 text-xs leading-relaxed">Pulling overview metrics. This can take a moment on first load.</p>
+                <div className="ent-login-opening-bar">
+                  <div className="ent-login-opening-bar-inner" />
                 </div>
-              ) : null}
-
-              <button type="submit" disabled={!canSubmitEmail} className="ent-login-submit">
-                {buttonLabel}
-              </button>
-
-              <button
-                type="button"
-                className="ent-login-forgot"
-                disabled={busy}
-                onClick={() => {
-                  setForgotMode((v) => !v);
-                  setError(null);
-                  setInfo(null);
-                }}
-              >
-                {forgotMode ? "Back to sign-in" : "I forgot my password"}
-              </button>
-
-              <div className="ent-login-divider" role="presentation">
-                <span>Or sign in with</span>
               </div>
+            ) : null}
 
-              <button
-                type="button"
-                className="ent-login-sso-secondary"
-                disabled={busy}
-                onClick={() => {
-                  setAuthMode("sso");
-                  setForgotMode(false);
-                  setError(null);
-                }}
-              >
-                Single sign-on
-              </button>
-            </form>
-          )}
+            <button type="submit" disabled={!canSubmit} className="ent-login-submit">
+              {buttonLabel}
+            </button>
 
-          <div className="ent-login-footer">
-            <Link href="/">Consumer site</Link>
-            <span aria-hidden>·</span>
-            <Link href="/platform">Platform</Link>
-          </div>
+            <button
+              type="button"
+              className="ent-login-forgot"
+              disabled={busy}
+              onClick={() => {
+                setForgotMode((v) => !v);
+                setError(null);
+                setInfo(null);
+              }}
+            >
+              {forgotMode ? "Back to sign-in" : "Forgot password?"}
+            </button>
+          </form>
+
+          <p className="ent-login-consumer-link">
+            Looking for your personal INTERTEXE account?{" "}
+            <a href={consumerUrl}>Go to INTERTEXE →</a>
+          </p>
         </div>
       </div>
     </div>

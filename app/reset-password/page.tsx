@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { isPlatformHost } from '@/lib/dashboard/constants';
+import { getEnterpriseLoginUrl } from '@/lib/platform-urls';
 
 const INK = '#1C2B2A';
 const MUTED = '#64748B';
@@ -40,6 +42,13 @@ export default function ResetPasswordPage() {
   const [status, setStatus] = useState('Verifying reset link…');
   const supabase = createClientComponentClient();
   const router = useRouter();
+
+  function isEnterpriseResetFlow(): boolean {
+    if (typeof window === 'undefined') return false;
+    const next = new URLSearchParams(window.location.search).get('next') || '';
+    if (next.startsWith('/dashboard')) return true;
+    return isPlatformHost(window.location.hostname);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -135,24 +144,42 @@ export default function ResetPasswordPage() {
     }
 
     setSuccess(true);
+    const params =
+      typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const nextParam = params?.get('next');
+    const enterprise = isEnterpriseResetFlow();
     const next =
-      typeof window !== 'undefined'
-        ? new URLSearchParams(window.location.search).get('next') || '/open?next=/account&itx_cta=password_reset_done'
-        : '/shop';
+      nextParam ||
+      (enterprise ? '/dashboard' : '/open?next=/account&itx_cta=password_reset_done');
     setTimeout(() => router.push(next), 1500);
   };
 
   if (success) {
+    const enterprise = isEnterpriseResetFlow();
     return (
       <div style={{ fontFamily: 'Georgia, serif', maxWidth: 480, margin: '120px auto', padding: '0 24px', textAlign: 'center' }}>
         <p style={{ color: '#0D9488', fontSize: 13, letterSpacing: '0.15em' }}>INTERTEXE</p>
         <h1 style={{ fontSize: 24, color: INK, fontWeight: 'normal', margin: '16px 0' }}>Password updated.</h1>
-        <p style={{ color: MUTED }}>Opening INTERTEXE…</p>
-        <p style={{ marginTop: 24 }}>
-          <a href="https://www.intertexe.com/open?next=/account&itx_cta=password_reset_done" style={{ color: INK }}>
-            Open the app
-          </a>
+        <p style={{ color: MUTED }}>
+          {enterprise ? 'Opening your workspace…' : 'Opening INTERTEXE…'}
         </p>
+        {enterprise ? (
+          <p style={{ marginTop: 24 }}>
+            <a href="/dashboard" style={{ color: INK }}>
+              Go to workspace
+            </a>
+            {' · '}
+            <a href={getEnterpriseLoginUrl()} style={{ color: INK }}>
+              Sign in
+            </a>
+          </p>
+        ) : (
+          <p style={{ marginTop: 24 }}>
+            <a href="https://www.intertexe.com/open?next=/account&itx_cta=password_reset_done" style={{ color: INK }}>
+              Open the app
+            </a>
+          </p>
+        )}
       </div>
     );
   }

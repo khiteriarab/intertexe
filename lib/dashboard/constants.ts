@@ -32,6 +32,17 @@ export function isHqHost(host: string | null | undefined): boolean {
   );
 }
 
+/** Enterprise SaaS entry — login + existing /dashboard app. */
+export function isPlatformHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase().split(":")[0];
+  return (
+    h === "platform.intertexe.com" ||
+    h === "platform.localhost" ||
+    h.endsWith(".platform.localhost")
+  );
+}
+
 export const HQ_NAV = [
   { href: "/dashboard", label: "This week", exact: true },
   { href: "/dashboard/command-center", label: "$50K Command Center", founderOnly: true },

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { PlatformNav, type PlatformNavKey } from "./PlatformNav";
+import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
 export function PlatformChrome({
   children,
@@ -29,8 +30,8 @@ export function PlatformChrome({
             <Link href="/platform/demo" className="text-xs text-[#8a847c] hover:text-black">
               Demo
             </Link>
-            <Link href="/dashboard/login" className="text-xs text-[#8a847c] hover:text-black">
-              Login
+            <Link href={getEnterpriseLoginUrl()} className="text-xs text-[#8a847c] hover:text-black">
+              Sign in
             </Link>
             <Link href="/privacy" className="text-xs text-[#8a847c] hover:text-black">
               Privacy

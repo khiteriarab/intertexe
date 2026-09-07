@@ -6,6 +6,10 @@ import {
   HQ_SESSION_COOKIE,
   writeAuthAudit,
 } from "../../../../lib/dashboard/auth";
+import {
+  clearHostScopedSessionCookieOptions,
+  hostScopedSessionCookieOptions,
+} from "../../../../lib/dashboard/session-cookies";
 import { getEnterpriseAnonClient, getEnterpriseUserClient } from "../../../../lib/enterprise/client";
 import { ENTERPRISE_SESSION_COOKIE } from "../../../../lib/enterprise/constants";
 import { isLinkedEnterprisePrincipal } from "../../../../lib/enterprise/identity-links";
@@ -15,16 +19,6 @@ import {
 } from "../../../../lib/enterprise/memberships";
 
 export const dynamic = "force-dynamic";
-
-function cookieOptions(maxAge = 60 * 60 * 12) {
-  return {
-    httpOnly: true as const,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
-    path: "/",
-    maxAge,
-  };
-}
 
 function safeNext(raw: unknown): string | null {
   const next = String(raw || "").trim();
@@ -84,8 +78,8 @@ export async function POST(request: NextRequest) {
           name: data.user.user_metadata?.name || null,
           redirectTo,
         });
-        response.cookies.set(HQ_SESSION_COOKIE, data.session.access_token, cookieOptions());
-        response.cookies.set(ENTERPRISE_SESSION_COOKIE, "", { ...cookieOptions(0), maxAge: 0 });
+        response.cookies.set(HQ_SESSION_COOKIE, data.session.access_token, hostScopedSessionCookieOptions());
+        response.cookies.set(ENTERPRISE_SESSION_COOKIE, "", clearHostScopedSessionCookieOptions());
         return response;
       }
     }
@@ -120,9 +114,9 @@ export async function POST(request: NextRequest) {
         response.cookies.set(
           ENTERPRISE_SESSION_COOKIE,
           enterprise.data.session.access_token,
-          cookieOptions()
+          hostScopedSessionCookieOptions()
         );
-        response.cookies.set(HQ_SESSION_COOKIE, "", { ...cookieOptions(0), maxAge: 0 });
+        response.cookies.set(HQ_SESSION_COOKIE, "", clearHostScopedSessionCookieOptions());
         return response;
       }
     }
