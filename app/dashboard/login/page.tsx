@@ -3,14 +3,19 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import "./login.css";
 
 type Phase = "idle" | "signing_in" | "opening" | "forgot";
+type AuthTab = "email" | "sso";
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [authTab, setAuthTab] = useState<AuthTab>("email");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(
     params.get("reset") === "1" ? "Check your email to finish resetting your password." : null
@@ -20,8 +25,15 @@ function LoginForm() {
   const inviteToken = params.get("invite");
   const busy = phase !== "idle";
 
+  const canSubmitEmail =
+    authTab === "email" &&
+    !busy &&
+    email.trim().length > 0 &&
+    (forgotMode || password.length > 0);
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (authTab === "sso") return;
     setError(null);
     setInfo(null);
     try {
@@ -81,7 +93,6 @@ function LoginForm() {
           }
         }
       }
-      // Keep the loading state until navigation finishes — overview can take a while.
       setPhase("opening");
       router.replace(destination);
       router.refresh();
@@ -95,111 +106,158 @@ function LoginForm() {
     phase === "signing_in"
       ? "Signing in…"
       : phase === "opening"
-        ? "Opening dashboard…"
+        ? "Opening workspace…"
         : phase === "forgot"
           ? "Sending…"
           : forgotMode
             ? "Send reset link"
-            : "Sign in";
+            : "Log in";
 
   return (
-    <div className="min-h-screen bg-[#f6f5f3] flex items-center justify-center px-6">
-      <div className="w-full max-w-md bg-white border border-black/10 rounded-2xl p-8 shadow-sm">
-        <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE</p>
-        <h1 className="text-2xl font-medium mt-2">Welcome to INTERTEXE</h1>
-        <p className="text-sm text-black/55 mt-2">
-          Brand workspace: after sign-in you upload a catalog, confirm mapping, resolve issues, then
-          publish Digital Product Passports.
-        </p>
+    <div className="ent-login-page">
+      <div className="ent-login-card">
+        <div className="ent-login-logo">
+          <span className="ent-login-logo-mark" aria-hidden>
+            ITX
+          </span>
+          <span className="ent-login-wordmark">
+            <span className="ent-login-wordmark-light">INTER</span>
+            <span className="ent-login-wordmark-bold">TEXE</span>
+          </span>
+        </div>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-4" aria-busy={busy}>
-          <label className="block">
-            <span className="text-xs uppercase tracking-wider text-black/50">Email</span>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={busy}
-              className="mt-1 w-full border border-black/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-black disabled:opacity-60"
-              autoComplete="username"
-            />
-          </label>
+        <h1 className="ent-login-title">Welcome</h1>
 
-          {!forgotMode ? (
-            <label className="block">
-              <span className="text-xs uppercase tracking-wider text-black/50">Password</span>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={busy}
-                className="mt-1 w-full border border-black/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-black disabled:opacity-60"
-                autoComplete="current-password"
-              />
-            </label>
-          ) : null}
-
-          {error ? <p className="text-sm text-red-700">{error}</p> : null}
-          {info ? <p className="text-sm text-black/60">{info}</p> : null}
-
-          {phase === "opening" ? (
-            <div
-              className="rounded-lg border border-black/10 bg-[#f6f5f3] px-3 py-3 text-sm text-black/70"
-              role="status"
-              aria-live="polite"
-            >
-              <p className="font-medium text-black/85">Signed in — loading your workspace</p>
-              <p className="mt-1 text-xs text-black/50 leading-relaxed">
-                Pulling overview metrics. This can take up to a minute on first load.
-              </p>
-              <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-black/10">
-                <div className="hq-login-bar h-full w-1/3 rounded-full bg-black" />
-              </div>
-            </div>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full bg-black text-white text-xs tracking-[0.18em] uppercase py-3 rounded-lg disabled:opacity-60"
-          >
-            {buttonLabel}
-          </button>
-        </form>
-
-        <div className="mt-5 flex items-center justify-between text-xs text-black/50">
+        <div className="ent-login-tabs" role="tablist" aria-label="Sign-in method">
           <button
             type="button"
-            className="hover:text-black disabled:opacity-40"
+            role="tab"
+            aria-selected={authTab === "email"}
+            className={`ent-login-tab ${authTab === "email" ? "ent-login-tab-active" : "ent-login-tab-inactive"}`}
+            onClick={() => {
+              setAuthTab("email");
+              setForgotMode(false);
+              setError(null);
+            }}
             disabled={busy}
-            onClick={() => setForgotMode((v) => !v)}
           >
-            {forgotMode ? "Back to sign-in" : "Forgot password"}
+            Login with email
           </button>
-          <Link href="/platform" className="hover:text-black">
-            Public platform →
-          </Link>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={authTab === "sso"}
+            className={`ent-login-tab ${authTab === "sso" ? "ent-login-tab-active" : "ent-login-tab-inactive"}`}
+            onClick={() => {
+              setAuthTab("sso");
+              setForgotMode(false);
+              setError(null);
+            }}
+            disabled={busy}
+          >
+            Login with SSO
+          </button>
+        </div>
+
+        {authTab === "sso" ? (
+          <div className="ent-login-sso-panel">
+            <p className="ent-login-sso-copy">
+              Single sign-on is available for enterprise accounts on the INTERTEXE material intelligence
+              platform. Contact your account team or request a pilot to enable SAML/OIDC for your organization.
+            </p>
+            <Link href="/platform/request" className="ent-login-sso-link">
+              Request enterprise access →
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} aria-busy={busy}>
+            <div className="ent-login-field">
+              <div className="ent-login-input-wrap">
+                <input
+                  id="login-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={busy}
+                  placeholder="Enter your email address"
+                  className="ent-login-input"
+                  autoComplete="username"
+                />
+              </div>
+            </div>
+
+            {!forgotMode ? (
+              <div className="ent-login-field">
+                <div className="ent-login-input-wrap">
+                  <input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={busy}
+                    placeholder="Password"
+                    className="ent-login-input"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="ent-login-input-toggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} strokeWidth={1.75} /> : <Eye size={18} strokeWidth={1.75} />}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {error ? <p className="ent-login-message ent-login-message-error">{error}</p> : null}
+            {info ? <p className="ent-login-message ent-login-message-info">{info}</p> : null}
+
+            {phase === "opening" ? (
+              <div className="ent-login-opening" role="status" aria-live="polite">
+                <p className="font-semibold text-[#3e6268]">Signed in — loading your workspace</p>
+                <p className="mt-1 text-xs leading-relaxed">Pulling overview metrics. This can take a moment on first load.</p>
+                <div className="ent-login-opening-bar">
+                  <div className="ent-login-opening-bar-inner" />
+                </div>
+              </div>
+            ) : null}
+
+            <button type="submit" disabled={!canSubmitEmail} className="ent-login-submit">
+              {buttonLabel}
+            </button>
+
+            <button
+              type="button"
+              className="ent-login-forgot"
+              disabled={busy}
+              onClick={() => {
+                setForgotMode((v) => !v);
+                setError(null);
+                setInfo(null);
+              }}
+            >
+              {forgotMode ? "Back to sign-in" : "I forgot my password"}
+            </button>
+          </form>
+        )}
+
+        <div className="ent-login-footer">
+          <Link href="/">Consumer site</Link>
+          <Link href="/platform">Platform</Link>
         </div>
       </div>
-
-      <style>{`
-        @keyframes hqLoginBar {
-          0% { transform: translateX(-120%); }
-          100% { transform: translateX(320%); }
-        }
-        .hq-login-bar {
-          animation: hqLoginBar 1.2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }
 
 export default function HqLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f6f5f3]" />}>
+    <Suspense fallback={<div className="ent-login-page" />}>
       <LoginForm />
     </Suspense>
   );
