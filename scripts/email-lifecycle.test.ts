@@ -163,6 +163,16 @@ test("lifecycle copy has one CTA each", () => {
   }
 });
 
+test("lifecycle emails are never signed Khiteri (founder welcome only)", () => {
+  for (const branch of Object.values(LIFECYCLE_BRANCHES)) {
+    const copy = copyForLifecycleBranch(branch, "Alex");
+    const blob = [copy.subject, copy.preview, copy.hook, copy.body, copy.ctaLabel, copy.ctaUrl, copy.closing ?? ""].join("\n");
+    assert.doesNotMatch(blob, /Khiteri/i, branch);
+    assert.doesNotMatch(copy.ctaUrl, /khiteri@intertexe\.com/i, branch);
+    assert.equal(copy.closing, undefined, branch);
+  }
+});
+
 test("cohort window is [day, day+1) days ago", () => {
   const now = new Date("2026-08-12T15:00:00.000Z");
   const w = cohortWindowIso(4, now);
