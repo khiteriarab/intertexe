@@ -1,13 +1,12 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import {
   BenchmarkPreview,
   IssuesPreview,
   NormalizePreview,
   PassportPreview,
   WorkspaceChrome,
-  WorkspaceHeroPreview,
 } from "./workspace-previews";
+import { WorkspaceHeroPreview } from "./WorkspaceHeroPreview";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
