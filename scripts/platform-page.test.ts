@@ -66,7 +66,7 @@ describe("Platform B2B sales page", () => {
   });
 
   it("uses intelligence-first page metadata", () => {
-    assert.match(page, /INTERTEXE for Brands \| Product & Material Intelligence for Fashion/);
+    assert.match(page, /absolute: "INTERTEXE for Brands \| Product & Material Intelligence for Fashion"/);
     assert.match(page, /Digital Product Passports/);
     assert.match(page, /benchmarks material strategy/i);
   });
