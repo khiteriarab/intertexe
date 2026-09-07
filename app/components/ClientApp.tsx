@@ -29,11 +29,19 @@ function isDocumentRoute(pathname: string) {
   );
 }
 
-export function ClientApp({ children }: { children: ReactNode }) {
+export function ClientApp({
+  children,
+  platformHost = false,
+}: {
+  children: ReactNode;
+  platformHost?: boolean;
+}) {
   const pathname = usePathname();
   const b2b = isB2BRoute(pathname ?? "");
   const document = isDocumentRoute(pathname ?? "");
-  const minimalChrome = b2b || document;
+  /** platform.intertexe.com — entire host is private SaaS; URL stays at / for login. */
+  const minimalChrome = platformHost || b2b || document;
+  const showConsumerChrome = !platformHost && !minimalChrome;
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -51,8 +59,8 @@ export function ClientApp({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthLoginPromptProvider>
       <UtmCapture />
-      <Analytics />
-      <MetaPixel />
+      {showConsumerChrome ? <Analytics /> : null}
+      {showConsumerChrome ? <MetaPixel /> : null}
       <Suspense fallback={null}>
         <RouteProgress />
       </Suspense>
@@ -61,8 +69,8 @@ export function ClientApp({ children }: { children: ReactNode }) {
           minimalChrome ? "bg-white text-gray-900" : "bg-background text-foreground"
         }`}
       >
-        {!minimalChrome && <Navbar />}
-        {!minimalChrome && <SignInBenefitsBanner />}
+        {showConsumerChrome ? <Navbar /> : null}
+        {showConsumerChrome ? <SignInBenefitsBanner /> : null}
         <main
           className={
             minimalChrome
@@ -72,10 +80,10 @@ export function ClientApp({ children }: { children: ReactNode }) {
         >
           {children}
         </main>
-        {!minimalChrome && <Footer />}
-        {!minimalChrome && <EmailBanner />}
-        {!minimalChrome && <ScrollToTop />}
-        {!minimalChrome && <AppDownloadPrompt />}
+        {showConsumerChrome ? <Footer /> : null}
+        {showConsumerChrome ? <EmailBanner /> : null}
+        {showConsumerChrome ? <ScrollToTop /> : null}
+        {showConsumerChrome ? <AppDownloadPrompt /> : null}
       </div>
       <Toaster position="top-right" />
       </AuthLoginPromptProvider>

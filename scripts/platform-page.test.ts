@@ -23,17 +23,17 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(sections, /Guaranteed Compliant/);
   });
 
-  it("uses the ten-section B2B hierarchy", () => {
+  it("uses the nine-section B2B hierarchy", () => {
     assert.match(home, /SalesHeroSection/);
     assert.match(home, /SalesProblemSection/);
     assert.match(home, /SalesGovernedRecordSection/);
     assert.match(home, /SalesHowItWorksSection/);
-    assert.match(home, /SalesOutcomesSection/);
     assert.match(home, /SalesIntelligenceSection/);
     assert.match(home, /SalesDppSection/);
     assert.match(home, /SalesConsumerSection/);
     assert.match(home, /SalesPlatformBreadthSection/);
     assert.match(home, /SalesCtaSection/);
+    assert.doesNotMatch(home, /SalesOutcomesSection/);
     assert.doesNotMatch(home, /PricingPlans/);
     assert.doesNotMatch(home, /StoryTabs/);
     assert.doesNotMatch(home, /ComparisonView/);
@@ -55,11 +55,20 @@ describe("Platform B2B sales page", () => {
     assert.match(sections, /See your catalog differently/);
     assert.match(sections, /BenchmarkPreview/);
     assert.match(sections, /Built on both sides of fashion/);
-    assert.match(sections, /without individual tracking/);
-    assert.match(sections, /without claiming live enterprise intelligence/);
+    assert.match(sections, /never individual tracking/);
+    assert.match(sections, /not yet operational/);
     assert.match(sections, /Illustrative example/);
     assert.match(sections, /not fabricated competitor dumps/);
+    assert.match(sections, /Understand/);
+    assert.match(sections, /Publish/);
     assert.doesNotMatch(sections, /150 companies trust us/i);
+    assert.doesNotMatch(sections, /being built/i);
+  });
+
+  it("uses intelligence-first page metadata", () => {
+    assert.match(page, /INTERTEXE for Brands \| Product & Material Intelligence for Fashion/);
+    assert.match(page, /Digital Product Passports/);
+    assert.match(page, /benchmarks material strategy/i);
   });
 
   it("keeps FAQ and detailed comparison off the home page", () => {

@@ -6,12 +6,11 @@ import {
   SalesHeroSection,
   SalesHowItWorksSection,
   SalesIntelligenceSection,
-  SalesOutcomesSection,
   SalesPlatformBreadthSection,
   SalesProblemSection,
 } from "./sales-sections";
 
-/** Public B2B sales page — intertexe.com/platform (10 sections) */
+/** Public B2B sales page — intertexe.com/platform (9 sections) */
 export function PlatformHome() {
   return (
     <div>
@@ -19,7 +18,6 @@ export function PlatformHome() {
       <SalesProblemSection />
       <SalesGovernedRecordSection />
       <SalesHowItWorksSection />
-      <SalesOutcomesSection />
       <SalesIntelligenceSection />
       <SalesDppSection />
       <SalesConsumerSection />

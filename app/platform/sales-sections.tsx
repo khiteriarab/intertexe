@@ -11,41 +11,47 @@ import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./pla
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
 const DATA_SOURCES = [
-  "PLM / PIM / ERP exports",
+  "PLM / PIM",
+  "ERP exports",
   "Spreadsheets",
   "Supplier files",
   "Product feeds",
-  "Internal systems",
 ] as const;
 
 const RECORD_STEPS = [
-  { n: "01", title: "Connect", copy: "Bring existing product and material data into INTERTEXE." },
-  { n: "02", title: "Normalize", copy: "Standardize materials, compositions, identifiers and product fields." },
-  { n: "03", title: "Resolve", copy: "Surface missing, conflicting and unverified information for review." },
-  { n: "04", title: "Act", copy: "Benchmark the catalog, prepare DPP-ready data and publish approved product identities." },
+  { n: "01", title: "Connect", copy: "Bring existing product and material data into INTERTEXE — Excel, CSV, PLM/PIM/ERP exports, supplier files and product feeds." },
+  { n: "02", title: "Normalize", copy: "Standardize materials, compositions, identifiers and product fields into a consistent structure." },
+  { n: "03", title: "Resolve", copy: "Surface missing, conflicting and unverified information for review — gaps become an actionable inbox." },
+  { n: "04", title: "Understand", copy: "Benchmark material strategy, composition completeness, data quality and readiness across your catalog." },
+  { n: "05", title: "Publish", copy: "Create approved outputs from the same record — Digital Product Passports, stable public identity and versioned publication." },
 ] as const;
 
-const OUTCOMES = [
-  {
-    title: "Benchmark your catalog",
-    copy: "See natural vs synthetic mix, completeness and passport readiness against governed peer groups — where data exists.",
-  },
-  {
-    title: "Understand material composition",
-    copy: "Fiber distribution, category relationships and composition quality across the assortment.",
-  },
-  {
-    title: "Identify missing or conflicting information",
-    copy: "Issues become an inbox — not another spreadsheet hiding gaps.",
-  },
-  {
-    title: "Prepare for regulatory requirements",
-    copy: "Readiness and required-field completeness as obligations evolve — not legal certification.",
-  },
-  {
-    title: "Create and manage Digital Product Passports",
-    copy: "Versioned passports and stable public identities from the same approved record.",
-  },
+const GOVERNED_CAPABILITIES = [
+  "Normalization across fragmented sources",
+  "Provenance and source-record preservation",
+  "Conflicting values surfaced for review",
+  "Missing fields flagged — never invented",
+  "Confidence and review state",
+  "Evidence and approval workflow",
+  "Versioned product and passport history",
+] as const;
+
+const INTELLIGENCE_POINTS = [
+  "Natural vs synthetic material mix",
+  "Fiber distribution across the catalog",
+  "Composition completeness and data quality",
+  "Passport and regulatory readiness",
+  "Category and material relationships",
+  "Governed peer benchmarking — where aggregate data exists",
+] as const;
+
+const DPP_OUTPUTS = [
+  "Digital Product Passports",
+  "Stable public product identity",
+  "QR / data carrier resolution",
+  "Versioned publication",
+  "Regulatory readiness tracking",
+  "Future additional product-data outputs",
 ] as const;
 
 const PLATFORM_MODULES = [
@@ -140,8 +146,9 @@ export function SalesHeroSection() {
               Turn product data into material intelligence.
             </h1>
             <p className="text-[15px] sm:text-base font-light leading-relaxed text-white/78 max-w-xl mb-8">
-              Connect and normalize your product and material data, uncover gaps, benchmark your catalog and prepare
-              for Digital Product Passports from one governed product record.
+              INTERTEXE connects and normalizes the product data fashion brands already have, identifies gaps and
+              inconsistencies, benchmarks material strategy, and prepares the same governed data for Digital Product
+              Passports.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <PrimaryLink href="/platform/request?intent=snapshot&cta=hero" tone="dark">
@@ -181,8 +188,8 @@ export function SalesProblemSection() {
           It just doesn&apos;t work together.
         </Heading>
         <Body className="max-w-2xl mb-2">
-          Fashion brands already hold product and material information across many systems — but it rarely connects
-          into one usable record.
+          Product and material information already lives across PLM, ERP, spreadsheets, suppliers and feeds — but
+          rarely connects into one governed record your teams can use.
         </Body>
       </div>
 
@@ -255,10 +262,18 @@ export function SalesGovernedRecordSection() {
         <div className="max-w-2xl mb-10 sm:mb-14">
           <Eyebrow>One governed product record</Eyebrow>
           <Heading className="mb-4">One source of truth for product and material data.</Heading>
-          <Body>
-            INTERTEXE connects fragmented inputs, normalizes materials and compositions, flags gaps and conflicts,
-            preserves provenance, and creates an approved canonical record your teams can trust.
+          <Body className="mb-6">
+            INTERTEXE connects fragmented inputs, normalizes materials and compositions, preserves original source
+            values and provenance, flags gaps and conflicts, and creates an approved canonical record your teams can
+            trust — without replacing the systems you already use.
           </Body>
+          <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-2">
+            {GOVERNED_CAPABILITIES.map((item) => (
+              <li key={item} className="text-sm text-[#5c5854] pl-4 border-l-2 border-[#e8e3da] leading-relaxed">
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
         <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-8 items-start">
           <NormalizePreview className="mb-0" />
@@ -276,7 +291,7 @@ export function SalesHowItWorksSection() {
         <Eyebrow>How it works</Eyebrow>
         <Heading className="mb-4">From fragmented data to usable intelligence.</Heading>
         <Body className="max-w-2xl mb-2">
-          Four editorial steps — not a feature dump. Each builds on the governed record before it.
+          Five steps from fragmented inputs to approved outputs — each building on the governed record before it.
         </Body>
       </div>
 
@@ -288,14 +303,11 @@ export function SalesHowItWorksSection() {
       </EditorialGraphicWrap>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="grid sm:grid-cols-2 gap-0 border border-[#e8e3da] bg-white">
-          {RECORD_STEPS.map((step, i) => (
-            <article
-              key={step.n}
-              className={`p-8 sm:p-10 bg-white ${i % 2 === 0 ? "sm:border-r border-[#e8e3da]" : ""} ${i < 2 ? "border-b border-[#e8e3da]" : ""}`}
-            >
-              <p className="text-[11px] tracking-[0.2em] uppercase text-[#9c7b8b] mb-4 tabular-nums">{step.n}</p>
-              <h3 className="text-2xl sm:text-[1.65rem] font-light mb-3 text-[#161513]" style={SERIF}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+          {RECORD_STEPS.map((step) => (
+            <article key={step.n} className="p-6 sm:p-7 bg-white border border-[#e8e3da]">
+              <p className="text-[11px] tracking-[0.2em] uppercase text-[#9c7b8b] mb-3 tabular-nums">{step.n}</p>
+              <h3 className="text-xl sm:text-[1.35rem] font-light mb-2 text-[#161513]" style={SERIF}>
                 {step.title}
               </h3>
               <p className="text-sm text-[#5c5854] leading-relaxed">{step.copy}</p>
@@ -307,53 +319,33 @@ export function SalesHowItWorksSection() {
   );
 }
 
-export function SalesOutcomesSection() {
+export function SalesIntelligenceSection() {
   return (
     <section className="bg-[#152238] text-[#f7f5f1] py-16 sm:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <Eyebrow>What that unlocks</Eyebrow>
-        <Heading className="mb-4 text-white">From product data to decisions.</Heading>
-        <Body className="max-w-2xl mb-12 text-white/72">
-          Material intelligence turns the governed record into outcomes merchandising, sustainability and product teams
-          can act on.
+        <Eyebrow>Intelligence</Eyebrow>
+        <Heading className="mb-4 text-white">See your catalog differently.</Heading>
+        <Body className="max-w-2xl mb-8 text-white/72">
+          Benchmarking is one of INTERTEXE&apos;s strongest differentiators — material mix, completeness, readiness
+          and governed peer comparison from the same product record, before the conversation turns to passports or
+          compliance outputs.
         </Body>
-        <div className="space-y-0 divide-y divide-white/10">
-          {OUTCOMES.map((item, i) => (
-            <div key={item.title} className="grid md:grid-cols-[12rem_minmax(0,1fr)] gap-4 py-7 sm:py-8">
-              <p className="text-[11px] tracking-[0.16em] uppercase text-[#9bb4c9] tabular-nums pt-1">
-                {String(i + 1).padStart(2, "0")}
-              </p>
-              <div>
-                <h3 className="text-xl sm:text-2xl font-light mb-2 text-white" style={SERIF}>
-                  {item.title}
-                </h3>
-                <p className="text-sm text-white/68 leading-relaxed max-w-2xl">{item.copy}</p>
-              </div>
-            </div>
+        <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-2 mb-12">
+          {INTELLIGENCE_POINTS.map((item) => (
+            <li key={item} className="text-sm text-white/75 pl-4 border-l-2 border-white/15 leading-relaxed">
+              {item}
+            </li>
           ))}
+        </ul>
+        <div className="space-y-8">
+          <WorkspaceHeroPreview className="mt-0" />
+          <BenchmarkPreview className="mb-0" />
         </div>
+        <p className="mt-6 text-xs text-white/45 leading-relaxed max-w-3xl">
+          Illustrative example · Individual customer data is never exposed. Peer medians come from governed datasets —
+          not fabricated competitor dumps. Consumer demand signals remain future-facing where not yet operational.
+        </p>
       </div>
-    </section>
-  );
-}
-
-export function SalesIntelligenceSection() {
-  return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
-      <Eyebrow>Intelligence centerpiece</Eyebrow>
-      <Heading className="mb-4">See your catalog differently.</Heading>
-      <Body className="max-w-2xl mb-10">
-        Natural vs synthetic composition, fiber distribution, completeness, passport readiness, material relationships
-        and issue concentration — governed peer benchmarks only where real aggregate data exists.
-      </Body>
-      <div className="space-y-8">
-        <WorkspaceHeroPreview className="mt-0" />
-        <BenchmarkPreview className="mb-0" />
-      </div>
-      <p className="mt-6 text-xs text-[#8a847c] leading-relaxed max-w-3xl">
-        Illustrative example · Individual customer data is never exposed. Peer medians come from governed datasets —
-        not fabricated competitor dumps.
-      </p>
     </section>
   );
 }
@@ -371,13 +363,22 @@ export function SalesDppSection() {
               Ready for what comes next.
             </Heading>
             <Body className="mb-6">
-              Approved product data can support versioned Digital Product Passports and public product identities as
-              regulatory requirements mature. DPP is an important output — not the entire identity of INTERTEXE.
+              The same approved governed record supports passports and public product identity — a major output of
+              INTERTEXE, not its entire definition. DPP publication flows from the intelligence and readiness work
+              that comes first.
             </Body>
+            <ul className="space-y-2 mb-8">
+              {DPP_OUTPUTS.map((item) => (
+                <li key={item} className="text-sm text-[#5c5854] pl-4 border-l-2 border-[#3e6268]/30 leading-relaxed">
+                  {item}
+                </li>
+              ))}
+            </ul>
             <DppFlow />
             <p className="mt-6 text-xs text-[#8a847c] leading-relaxed">
-              Preparation status and required-field completeness — not official certification or a guarantee of
-              compliance with final textile requirements.
+              DPP is an important output — not the entire identity of INTERTEXE. Preparation status and
+              required-field completeness only — not EU certification, full textile compliance, or approval as a
+              verified DPP service provider unless explicitly established.
             </p>
           </div>
           <PassportPreview className="mb-0" />
@@ -415,10 +416,12 @@ export function SalesConsumerSection() {
         <Eyebrow>The consumer advantage</Eyebrow>
         <Heading className="mb-4">Built on both sides of fashion.</Heading>
         <Body className="max-w-3xl mb-2">
-          INTERTEXE is not only enterprise software. Our consumer products create a real-world environment for
-          understanding how people discover and evaluate materials. Over time, permitted and appropriately aggregated
-          signals can help brands relate consumer material demand to their own assortment — without individual tracking,
-          without PII, and without claiming live enterprise intelligence where it does not yet exist.
+          INTERTEXE operates on both sides of fashion — consumer discovery and scanning on one side, enterprise product
+          and material intelligence on the other. The center is governed product data that connects them over time.
+        </Body>
+        <Body className="max-w-3xl mb-2 text-[#5c5854]">
+          Future consumer signals will remain governed, anonymized and aggregated — never individual tracking, never
+          PII, and never implied as live enterprise intelligence where it does not yet exist.
         </Body>
       </div>
 
@@ -485,7 +488,8 @@ export function SalesPlatformBreadthSection() {
         <Eyebrow>Platform breadth</Eyebrow>
         <Heading className="mb-4">One workspace for product intelligence.</Heading>
         <Body className="max-w-2xl mb-10">
-          One connected operating environment — not a grid of identical feature cards.
+          A real operating environment for product intelligence — catalog, materials, issues, benchmarking, passports,
+          suppliers and readiness — not a single-purpose DPP generator.
         </Body>
         <WorkspaceChrome active="Overview" issueCount="487">
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
@@ -525,11 +529,11 @@ export function SalesCtaSection() {
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-24">
       <div className="border border-[#e8e3da] bg-[#f7f5f1] p-10 sm:p-14 text-center">
-        <Eyebrow>Pilot</Eyebrow>
+        <Eyebrow>Founding Pilot</Eyebrow>
         <Heading className="mb-4">Start with your own product data.</Heading>
         <Body className="max-w-xl mx-auto mb-8">
-          A controlled pilot on your catalog — connect sources, normalize materials, resolve issues, and see
-          intelligence and readiness on real products.
+          Available through the Founding Pilot — connect your sources, normalize materials, resolve issues, and see
+          intelligence and readiness on real products, with broader platform capabilities rolling out in stages.
         </Body>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <PrimaryLink href="/platform/request?intent=snapshot&cta=footer">Request a demo</PrimaryLink>

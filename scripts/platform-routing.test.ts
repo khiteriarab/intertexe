@@ -90,3 +90,16 @@ test("reset-password recognizes enterprise flow from platform host", () => {
   assert.match(reset, /isPlatformHost/);
   assert.match(reset, /Opening your workspace/);
 });
+
+test("platform host strips consumer chrome from login", () => {
+  const appShell = fs.readFileSync(path.join(process.cwd(), "app/components/AppShell.tsx"), "utf8");
+  const clientApp = fs.readFileSync(path.join(process.cwd(), "app/components/ClientApp.tsx"), "utf8");
+  const layout = fs.readFileSync(path.join(process.cwd(), "app/layout.tsx"), "utf8");
+  assert.match(appShell, /isPlatformHost/);
+  assert.match(appShell, /platformHost/);
+  assert.match(clientApp, /platformHost/);
+  assert.match(clientApp, /showConsumerChrome/);
+  assert.match(clientApp, /platformHost \|\| b2b/);
+  assert.match(layout, /AppShell/);
+  assert.match(layout, /ConsumerCookieConsent/);
+});

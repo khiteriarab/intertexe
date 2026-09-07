@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ClientApp } from "./components/ClientApp";
-import { CookieConsent } from "./components/CookieConsent";
+import { AppShell } from "./components/AppShell";
+import { ConsumerCookieConsent } from "./components/ConsumerCookieConsent";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GENERIC_SITE_DESCRIPTION } from "../lib/catalog-stats-labels";
@@ -173,10 +173,8 @@ export default function RootLayout({
         />
       </head>
       <body className="w-full min-h-screen overflow-x-hidden" suppressHydrationWarning>
-        <ClientApp>
-          {children}
-        </ClientApp>
-        <CookieConsent />
+        <AppShell>{children}</AppShell>
+        <ConsumerCookieConsent />
         <Analytics />
         <SpeedInsights />
       </body>
