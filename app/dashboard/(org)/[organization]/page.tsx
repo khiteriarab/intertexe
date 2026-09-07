@@ -17,6 +17,9 @@ import { EntConsumerSignalsTeaser } from "../../components/EntConsumerSignals";
 import { buildGettingStartedSteps } from "../../../../lib/enterprise/getting-started";
 import { EntGettingStarted } from "../../components/EntGettingStarted";
 import livePilotProducts from "../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
+import { isCustomerZeroOrg } from "../../../../lib/enterprise/dual-model";
+import { EntCustomerZeroBanner } from "../../components/EntCustomerZeroBanner";
+import { EntDualModelFlywheel } from "../../components/EntDualModelFlywheel";
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +121,8 @@ export default async function OrganizationOverviewPage({
 
       <EntOverviewHero overview={overview} orgName={membership.name} />
 
+      {isCustomerZeroOrg(membership.slug) ? <EntCustomerZeroBanner base={base} /> : null}
+
       <EntKpiGrid overview={overview} base={base} />
 
       <EntOverviewBenchmarkTeaser
@@ -128,6 +133,8 @@ export default async function OrganizationOverviewPage({
       />
 
       <EntConsumerSignalsTeaser base={base} signals={signals} />
+
+      {isCustomerZeroOrg(membership.slug) ? <EntDualModelFlywheel base={base} /> : null}
 
       <EntAttentionPanel
         nextTitle={nextStep.title}

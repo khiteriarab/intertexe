@@ -33,7 +33,7 @@ const MODULE_LINKS: Array<{
   count?: (overview: OrgOverviewData) => number | string;
 }> = [
   { href: "/workflows", label: "Workflows", description: "Stage owners, due dates, and team coordination", icon: "workflows" },
-  { href: "/benchmarking", label: "Benchmarking", description: "Consumer signals, fiber mix, and peer comparison", icon: "benchmarking" },
+  { href: "/benchmarking", label: "Signals & benchmarks", description: "Consumer signals, fiber mix, and peer comparison", icon: "benchmarking" },
   { href: "/products", label: "Products", description: "Catalog, imports, field approval", icon: "products", count: (o) => o.productCount },
   { href: "/issues", label: "Issues", description: "Blocking findings and missing data", icon: "issues", count: (o) => o.issueCount },
   { href: "/passports", label: "Passports", description: "Publish and version DPPs", icon: "passports", count: (o) => o.readyCount + o.publishedCount },

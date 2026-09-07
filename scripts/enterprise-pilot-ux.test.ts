@@ -112,7 +112,7 @@ describe("Enterprise navigation", () => {
       "Files",
       "Activity",
       "Regulations",
-      "Benchmarking",
+      "Signals & benchmarks",
       "Analytics",
       "Integrations",
       "Developers",

@@ -9,6 +9,7 @@ import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgBenchmarking } from "../../../../../lib/enterprise/module-queries";
 import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import { EntConsumerSignals } from "../../../components/EntConsumerSignals";
+import { EntDualModelFlywheel } from "../../../components/EntDualModelFlywheel";
 import { EntFabricPeerComparison } from "../../../components/EntFabricBenchmark";
 import { EntDonutChart, EntStackedBarChart, LIFECYCLE_COLORS } from "../../../components/EnterpriseCharts";
 import {
@@ -56,6 +57,8 @@ export default async function BenchmarkingPage({
         />
       ) : (
         <>
+          <EntDualModelFlywheel base={base} />
+
           <EntConsumerSignals base={base} signals={signals} />
 
           <EntFabricPeerComparison

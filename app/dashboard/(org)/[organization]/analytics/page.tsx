@@ -3,6 +3,11 @@ import { requireOrganizationAccess } from "../../../../../lib/enterprise/access"
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgAnalytics } from "../../../../../lib/enterprise/module-queries";
 import {
+  imageMapFromLiveFixture,
+  loadConsumerSignals,
+} from "../../../../../lib/enterprise/consumer-signals";
+import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
+import {
   EntDonutChart,
   EntRadialActivityChart,
   EntRoundedBarChart,
@@ -20,7 +25,11 @@ export default async function AnalyticsPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const data = await loadOrgAnalytics(client, membership.organizationId);
+  const imageBySku = imageMapFromLiveFixture(livePilotProducts);
+  const [data, signals] = await Promise.all([
+    loadOrgAnalytics(client, membership.organizationId),
+    loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
+  ]);
   const base = `/dashboard/${membership.slug}`;
 
   const stateRows = Object.entries(data.overview.productStateCounts)
@@ -68,6 +77,41 @@ export default async function AnalyticsPage({
         </>
       }
     >
+      {signals.summary.productCount > 0 ? (
+        <section className="mb-10 rounded-[var(--ent-radius-2xl)] p-6 md:p-8 ent-animate-in border border-[var(--ent-border)] bg-[rgba(244,240,234,0.45)]">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+            <div>
+              <p className="ent-section-eyebrow mb-2">Consumer layer</p>
+              <h2 className="ent-widget-title">Material intelligence beyond compliance</h2>
+              <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-xl">
+                Governed shopper signals layered on passport readiness — what pure B2B compliance tools cannot show.
+              </p>
+            </div>
+            <Link href={`${base}/benchmarking`} className={entLinkClass}>
+              Open signals & benchmarks →
+            </Link>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="ent-panel-nested px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Opportunity</p>
+              <p className="ent-display text-2xl tabular-nums mt-1">{signals.summary.opportunityScore ?? "—"}</p>
+            </div>
+            <div className="ent-panel-nested px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Avg natural</p>
+              <p className="ent-display text-2xl tabular-nums mt-1">{signals.summary.avgNaturalPct ?? "—"}%</p>
+            </div>
+            <div className="ent-panel-nested px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Active insights</p>
+              <p className="ent-display text-2xl tabular-nums mt-1">{signals.insights.length}</p>
+            </div>
+            <div className="ent-panel-nested px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Live products</p>
+              <p className="ent-display text-2xl tabular-nums mt-1">{signals.summary.productCount}</p>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 mb-10">
         <section className="ent-animate-in">
           <h2 className="ent-serif text-[1.35rem] text-[var(--ent-ink)] mb-2">How much of my catalog is passport-ready?</h2>

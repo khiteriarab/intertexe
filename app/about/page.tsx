@@ -103,16 +103,32 @@ export default async function AboutPage() {
             FOR BRANDS AND PARTNERS
           </h2>
           <p>
-            Intertexe is building the infrastructure layer for material transparency in fashion. If you
-            are a brand, retailer, or platform interested in verified composition data, API access, or
-            featured placement within the Intertexe edit, we would like to hear from you.
+            Intertexe is building the infrastructure layer for material transparency in fashion. The same textile
+            intelligence that powers our consumer catalog — verified composition, scanner data, and material preference
+            signals — is available to brands as digital product passports and governed benchmarking.
           </p>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+            <Link
+              href="/platform"
+              className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-foreground border-b border-foreground/30 pb-1 w-fit hover:text-muted-foreground transition-colors"
+              data-testid="link-platform-brands"
+            >
+              Material intelligence for brands →
+            </Link>
+            <Link
+              href="/platform/request"
+              className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-1 w-fit hover:text-foreground transition-colors"
+              data-testid="link-platform-request"
+            >
+              Request a pilot →
+            </Link>
+          </div>
           <Link
             href="mailto:hello@intertexe.com"
-            className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-foreground border-b border-foreground/30 pb-1 w-fit hover:text-muted-foreground transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
             data-testid="link-contact-partners"
           >
-            Contact us → hello@intertexe.com
+            Or email hello@intertexe.com
           </Link>
         </section>
 

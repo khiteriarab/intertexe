@@ -77,6 +77,7 @@ export function Navbar() {
     })),
     { name: "Rewards", href: "/rewards", isDesigners: false, isShop: false },
     { name: "Scanner", href: "/scanner", isDesigners: false, isShop: false },
+    { name: "For brands", href: "/platform", isDesigners: false, isShop: false },
   ];
 
   const openShopMenu = () => {

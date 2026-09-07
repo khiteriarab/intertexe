@@ -8,6 +8,7 @@ import type { WorkspaceContext } from "../../../lib/enterprise/types";
 import { EnterpriseNav } from "./EnterpriseNav";
 import { EntIconSettings } from "./EnterpriseNavIcons";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import { CONSUMER_PROOF_LINKS } from "../../../lib/enterprise/dual-model";
 
 type Props = {
   children: React.ReactNode;
@@ -70,6 +71,25 @@ export function EnterpriseShell({
           </div>
 
           <EnterpriseNav base={base} onNavigate={() => setMobileOpen(false)} />
+
+          <div className="px-4 py-4 border-t border-white/10">
+            <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-white/35 px-2 mb-2">Consumer proof</p>
+            <ul className="space-y-1">
+              {CONSUMER_PROOF_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-2 py-1.5 text-xs text-white/55 hover:text-white/90 transition-colors rounded-md hover:bg-white/5"
+                    title={link.description}
+                  >
+                    {link.label} ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <div className="px-4 py-5 mt-auto border-t border-white/10">
             <div className="flex items-center gap-3 px-2">
