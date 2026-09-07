@@ -10,8 +10,13 @@ major_version = 17
 
 [auth]
 enabled = true
-site_url = "https://www.intertexe.com"
-additional_redirect_urls = ["https://www.intertexe.com/dashboard", "https://www.intertexe.com/dashboard/login"]
+site_url = "https://platform.intertexe.com"
+additional_redirect_urls = [
+  "https://platform.intertexe.com/api/auth/sso/callback",
+  "https://platform.intertexe.com/reset-password",
+  "https://platform.intertexe.com/dashboard",
+  "https://www.intertexe.com/reset-password",
+]
 jwt_expiry = 3600
 enable_signup = false
 

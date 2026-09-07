@@ -2,8 +2,6 @@
  * Editorial campaign imagery — prefer landscape campaign files for wide heroes/panels.
  */
 
-const BASE = "https://www.intertexe.com";
-
 /** Fabric hub covers — served from /public/fabrics. */
 const FABRIC_HERO = {
   silk: "/fabrics/fabric-silk.jpg",
@@ -69,9 +67,9 @@ export function editorialHeroForSlug(slug: string): string {
  * Homepage hero — v8 portrait (woman in grotto) + studio JPG.
  * Edit HOMEPAGE_HERO_SLIDES below; iOS/web pull from /api/editorial-config.
  */
-export const HOMEPAGE_HERO_IMAGE_MOBILE = `${BASE}/hero-editorial-v8-mobile.png`;
-export const HOMEPAGE_HERO_IMAGE_DESKTOP = `${BASE}/hero-editorial.jpg`;
-export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP = `${BASE}/hero-editorial-v8-desktop.png`;
+export const HOMEPAGE_HERO_IMAGE_MOBILE = "/hero-editorial-v8-mobile.png";
+export const HOMEPAGE_HERO_IMAGE_DESKTOP = "/hero-editorial.jpg";
+export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP = "/hero-editorial-v8-desktop.png";
 
 export type HomepageHeroSlide = {
   url: string;

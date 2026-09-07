@@ -78,9 +78,12 @@ export const ENTERPRISE_NAV_GROUPS = [
     icon: "operations" as const,
     items: [
       { href: "/workflows", label: "Workflows", icon: "workflows" as const },
+      { href: "/imports", label: "Import center", icon: "files" as const },
+      { href: "/approvals", label: "Approvals", icon: "issues" as const },
       { href: "/suppliers", label: "Suppliers", icon: "suppliers" as const },
       { href: "/files", label: "Files", icon: "files" as const },
       { href: "/activity", label: "Activity", icon: "activity" as const },
+      { href: "/audit", label: "Audit log", icon: "settings" as const },
     ],
   },
   {
@@ -100,6 +103,7 @@ export const ENTERPRISE_NAV_GROUPS = [
     items: [
       { href: "/integrations", label: "Integrations", icon: "integrations" as const },
       { href: "/developers", label: "Developers", icon: "developers" as const },
+      { href: "/exports", label: "Exports", icon: "files" as const },
       { href: "/settings", label: "Settings", icon: "settings" as const },
     ],
   },

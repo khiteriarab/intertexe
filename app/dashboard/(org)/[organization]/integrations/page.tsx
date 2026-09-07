@@ -5,6 +5,7 @@ import {
   EntIntegrationTile,
   EntModulePage,
 } from "../../../components/EnterpriseModuleUi";
+import { IntegrationsHealthPanel } from "./IntegrationsHealthPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function IntegrationsPage({
 
   return (
     <EntModulePage title="Integrations">
+      <IntegrationsHealthPanel slug={membership.slug} />
       {connected === 0 ? (
         <div className="mb-8">
           <EntEmptyState

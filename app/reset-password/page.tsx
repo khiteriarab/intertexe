@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@/lib/supabase/client';
+import { createEnterpriseClientComponentClient } from '@/lib/supabase/enterprise-browser-client';
 import { useRouter } from 'next/navigation';
 import { isPlatformHost } from '@/lib/dashboard/constants';
 import { getEnterpriseLoginUrl } from '@/lib/platform-urls';
@@ -40,7 +41,7 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [status, setStatus] = useState('Verifying reset link…');
-  const supabase = createClientComponentClient();
+  const [enterpriseFlow, setEnterpriseFlow] = useState(false);
   const router = useRouter();
 
   function isEnterpriseResetFlow(): boolean {
@@ -51,14 +52,21 @@ export default function ResetPasswordPage() {
   }
 
   useEffect(() => {
+    setEnterpriseFlow(isEnterpriseResetFlow());
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
+    const enterprise = isEnterpriseResetFlow();
+    setEnterpriseFlow(enterprise);
+    const client = enterprise ? createEnterpriseClientComponentClient() : createClientComponentClient();
 
     const markReady = () => {
       if (!cancelled) setSessionReady(true);
     };
 
     const run = async () => {
-      const { data: existing } = await supabase.auth.getSession();
+      const { data: existing } = await client.auth.getSession();
       if (existing.session) {
         markReady();
         return;
@@ -66,7 +74,7 @@ export default function ResetPasswordPage() {
 
       const hash = parseHashParams();
       if (hash.access_token && hash.refresh_token) {
-        const { error: setErr } = await supabase.auth.setSession({
+        const { error: setErr } = await client.auth.setSession({
           access_token: hash.access_token,
           refresh_token: hash.refresh_token,
         });
@@ -78,7 +86,7 @@ export default function ResetPasswordPage() {
 
       const code = new URLSearchParams(window.location.search).get('code');
       if (code) {
-        const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
+        const { error: exErr } = await client.auth.exchangeCodeForSession(code);
         if (!exErr) {
           markReady();
           return;
@@ -91,7 +99,7 @@ export default function ResetPasswordPage() {
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' || session) markReady();
     });
 
@@ -112,7 +120,7 @@ export default function ResetPasswordPage() {
       subscription.unsubscribe();
       window.clearTimeout(timeout);
     };
-  }, [supabase, sessionReady]);
+  }, []);
 
   const openAppHref = () => {
     if (typeof window === 'undefined') return 'https://www.intertexe.com/open?next=/reset-password&itx_cta=password_reset';
@@ -135,7 +143,8 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    const client = enterpriseFlow ? createEnterpriseClientComponentClient() : createClientComponentClient();
+    const { error } = await client.auth.updateUser({ password });
 
     if (error) {
       setError(error.message);

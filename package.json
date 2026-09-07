@@ -33,7 +33,9 @@
     "supabase:migrations:normalize": "node scripts/normalize-migration-timestamps.mjs",
     "supabase:migrations:repair": "node scripts/repair-consumer-migration-history.mjs",
     "test:install-ctas": "node --import tsx --test scripts/install-ctas.test.ts scripts/chrome-web-store-hq.test.ts",
-    "test:enterprise": "node --import tsx --test scripts/enterprise-foundation.test.ts scripts/enterprise-phase1.test.ts scripts/enterprise-identity.test.ts scripts/enterprise-intelligence.test.ts scripts/enterprise-pilot-ux.test.ts scripts/enterprise-founder-onboarding.test.ts scripts/enterprise-eu-dpp.test.ts scripts/enterprise-isolation.live.test.ts scripts/enterprise-permissions.live.test.ts scripts/enterprise-identity.live.test.ts scripts/enterprise-intelligence.live.test.ts scripts/enterprise-org-member-directory.live.test.ts scripts/enterprise-founder-onboarding.live.test.ts"
+    "test:enterprise": "node --import tsx --test scripts/enterprise-foundation.test.ts scripts/enterprise-phase1.test.ts scripts/enterprise-identity.test.ts scripts/enterprise-intelligence.test.ts scripts/enterprise-pilot-ux.test.ts scripts/enterprise-founder-onboarding.test.ts scripts/enterprise-eu-dpp.test.ts scripts/enterprise-sso.test.ts scripts/enterprise-isolation.live.test.ts scripts/enterprise-permissions.live.test.ts scripts/enterprise-identity.live.test.ts scripts/enterprise-intelligence.live.test.ts scripts/enterprise-org-member-directory.live.test.ts scripts/enterprise-founder-onboarding.live.test.ts",
+    "test:enterprise-sso": "node --import tsx --test scripts/enterprise-sso.test.ts",
+    "test:enterprise-operations": "node --import tsx --test scripts/enterprise-operations.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

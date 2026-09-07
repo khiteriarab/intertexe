@@ -9,6 +9,8 @@ import { EnterpriseNav } from "./EnterpriseNav";
 import { EntIconSettings } from "./EnterpriseNavIcons";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { CONSUMER_PROOF_LINKS } from "../../../lib/enterprise/dual-model";
+import { NotificationBell } from "./NotificationBell";
+import { GlobalSearch } from "./GlobalSearch";
 
 type Props = {
   children: React.ReactNode;
@@ -109,12 +111,8 @@ export function EnterpriseShell({
 
         <main className="min-w-0 ent-canvas">
           <header className="ent-topbar hidden md:flex items-center gap-4 px-10 lg:px-14 xl:px-16 pt-6">
-            <div className="ent-topbar-search flex-1">
-              <span className="ent-topbar-search-icon" aria-hidden>
-                ⌕
-              </span>
-              <input type="search" placeholder="Search products, issues, passports…" className="ent-topbar-search-input" />
-            </div>
+            <GlobalSearch organization={organizationSlug} />
+            <NotificationBell organization={organizationSlug} />
             <Link href={`${base}/settings`} className="ent-topbar-icon-btn" aria-label="Workspace settings">
               <EntIconSettings className="h-[18px] w-[18px]" />
             </Link>

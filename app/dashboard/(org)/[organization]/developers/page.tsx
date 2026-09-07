@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
-import { formatOperatorTime } from "../../../../../lib/enterprise/reviewer-display";
 import { loadOrgDevelopers } from "../../../../../lib/enterprise/module-queries";
 import {
   EntCodePanel,
-  EntEmptyState,
   EntModulePage,
   EntVisualPanel,
   entLinkClass,
 } from "../../../components/EnterpriseModuleUi";
 import { entButtonGhostClass } from "../../../components/EnterpriseUi";
+import { DevelopersClient } from "./DevelopersClient";
 
 export const dynamic = "force-dynamic";
 
@@ -45,39 +44,17 @@ export default async function DevelopersPage({
 
       <div className="grid lg:grid-cols-2 gap-5 md:gap-6">
         <EntVisualPanel tone="butter" title="API credentials">
-          {!data.canSeeCredentials ? (
-            <p className="text-sm text-[var(--ent-muted)]">API credential management requires an owner, admin, or developer role.</p>
-          ) : data.credentials.length === 0 ? (
-            <EntEmptyState
-              title="No API credentials configured"
-              body="Organization API key management is not exposed in this workspace yet. Contact INTERTEXE when you need programmatic access."
-            />
-          ) : (
-            <ul className="space-y-3">
-              {data.credentials.map((cred) => (
-                <li key={cred.id} className="ent-panel-nested px-5 py-4">
-                  <p className="font-medium text-[var(--ent-ink)]">{cred.name}</p>
-                  <p className="font-mono text-xs text-[var(--ent-muted)] mt-2">
-                    Prefix {cred.prefix}···
-                  </p>
-                  <p className="text-sm text-[var(--ent-muted-light)] mt-2">
-                    Created {formatOperatorTime(cred.created_at)}
-                    {cred.last_used_at ? ` · Last used ${formatOperatorTime(cred.last_used_at)}` : ""}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
+          <DevelopersClient slug={membership.slug} canManage={data.canSeeCredentials} />
         </EntVisualPanel>
 
         <EntVisualPanel tone="stone" title="Webhooks">
+          <p className="text-xs text-[var(--ent-muted-light)] mb-4">
+            Create and revoke webhooks in the API credentials panel.
+          </p>
           <div className="ent-panel-nested px-6 py-8 text-center">
             <p className="ent-display text-[3rem] leading-none text-[var(--ent-petrol-deep)]">{data.webhookCount}</p>
             <p className="text-sm text-[var(--ent-muted)] mt-2">
               {data.webhookCount === 1 ? "Webhook configured" : "Webhooks configured"}
-            </p>
-            <p className="text-xs text-[var(--ent-muted-light)] mt-4 max-w-xs mx-auto">
-              Endpoint URLs and secrets are not shown here.
             </p>
           </div>
         </EntVisualPanel>

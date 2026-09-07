@@ -6,18 +6,19 @@ import { AppStoreCtaLink } from "../components/AppStoreCtaLink";
 import { KhiteriPageViewTracker } from "./KhiteriPageViewTracker";
 import { KhiteriProductAffiliateLink } from "./KhiteriProductAffiliateLink";
 import { KhiteriIntroMotion } from "./KhiteriIntroMotion";
-import { KhiteriAirportOrbit } from "./KhiteriAirportOrbit";
+import { getChromeWebStoreUrl } from "../../lib/chrome-extension";
 
 const FINAL_NOTE = {
   lead: "Love finding better materials?",
   body: "INTERTEXE helps you discover what your clothes are actually made of.",
 };
 
-const BETA_COPY = {
-  headline: "Join the INTERTEXE Beta",
-  body: "Create a free account to access the beta and use the scanner to identify materials while shopping in-store.",
+const DISCOVER_COPY = {
+  headline: "Take INTERTEXE with you",
+  body: "Create a free account to save pieces from this edit. Scan labels in stores with the iOS app, or check fabric composition while you browse with our Chrome extension.",
   primaryCta: "Create Account",
-  secondaryCta: "Download App",
+  appCta: "Download iOS App",
+  chromeCta: "Add Chrome Extension",
 };
 
 const PIECE_WORDS = [
@@ -168,21 +169,31 @@ export function KhiterisEditView({ edit, appStoreUrl, catalogRegion }: Props) {
         <p className="khiteris-edit__note-body">{FINAL_NOTE.body}</p>
       </section>
 
-      {/* Section 5 — Beta access */}
-      <section className="khiteris-edit__beta" aria-label="Beta access">
-        <h2 className="khiteris-edit__beta-headline">{BETA_COPY.headline}</h2>
-        <p className="khiteris-edit__beta-body">{BETA_COPY.body}</p>
+      {/* Section 5 — Discover INTERTEXE */}
+      <section className="khiteris-edit__beta" aria-label="Discover INTERTEXE">
+        <h2 className="khiteris-edit__beta-headline">{DISCOVER_COPY.headline}</h2>
+        <p className="khiteris-edit__beta-body">{DISCOVER_COPY.body}</p>
         <div className="khiteris-edit__beta-actions">
           <Link href="/account?mode=signup" className="khiteris-edit__cta khiteris-edit__cta--primary">
-            {BETA_COPY.primaryCta}
+            {DISCOVER_COPY.primaryCta}
           </Link>
           <AppStoreCtaLink
             appStoreUrl={appStoreUrl}
             path="/scanner"
             cta="khiteri_edit_cta"
+            label={DISCOVER_COPY.appCta}
             className="khiteris-edit__cta khiteris-edit__cta--secondary"
             testId="link-khiteri-app-store"
           />
+          <a
+            href={getChromeWebStoreUrl()}
+            className="khiteris-edit__cta khiteris-edit__cta--secondary"
+            data-testid="link-khiteri-chrome-extension"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {DISCOVER_COPY.chromeCta}
+          </a>
         </div>
       </section>
 

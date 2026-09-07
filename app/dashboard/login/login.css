@@ -77,28 +77,49 @@
   line-height: 1.5;
 }
 
-.ent-login-brand-visual {
-  margin-top: 2rem;
+.ent-login-brand-motif {
+  margin-top: 2.5rem;
+  opacity: 0.72;
 }
 
-.ent-login-brand-visual-row {
+.ent-login-brand-motif-svg {
+  display: block;
+  width: 100%;
+  max-width: 17rem;
+  height: auto;
+}
+
+.ent-login-brand-motif-steps {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.ent-login-brand-visual-row span {
-  flex: 1;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 1px;
+.ent-login-brand-motif-steps li {
+  position: relative;
+  padding-left: 0.85rem;
 }
 
-.ent-login-brand-visual-core {
-  height: 5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(21, 34, 56, 0.2);
-  border-radius: 0.25rem;
+.ent-login-brand-motif-steps li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.ent-login-brand-motif-steps li:last-child {
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .ent-login-auth {
@@ -297,6 +318,55 @@
 
 .ent-login-consumer-link a:hover {
   text-decoration: underline;
+}
+
+.ent-login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.35rem 0 1rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #b8b0a6;
+}
+
+.ent-login-divider::before,
+.ent-login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(62, 98, 104, 0.14);
+}
+
+.ent-login-sso {
+  width: 100%;
+  padding: 0.95rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ent-login-forest);
+  background: #fff;
+  border: 1px solid rgba(62, 98, 104, 0.28);
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ent-login-sso:hover:not(:disabled) {
+  border-color: var(--ent-login-petrol);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.ent-login-sso:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ent-login-sso-hint {
+  margin: 0.65rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #8a847c;
 }
 
 @media (max-width: 900px) {

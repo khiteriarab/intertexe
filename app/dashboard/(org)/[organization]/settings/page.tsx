@@ -7,6 +7,7 @@ import { OrgTeamPanel } from "../../../components/OrgTeamPanel";
 import { HqCard } from "../section-frame";
 import { OrgSectionFrame } from "../section-frame";
 import { ORG_PAGE_STATES } from "../../../../../lib/enterprise/page-states";
+import { SettingsAdminPanel } from "./SettingsAdminPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export default async function OrganizationSettingsPage({
   const entitlement = entitlementsForPlan(membership.plan as PlanKey, {});
   const base = `/dashboard/${membership.slug}`;
   const canInvite = ["owner", "admin"].includes(membership.role);
+  const canAdmin = ["owner", "admin"].includes(membership.role);
   const [members, invitations] = await Promise.all([
     loadOrgMemberDirectory(client, membership.organizationId),
     canInvite ? listOrganizationInvitations(client, membership.organizationId) : Promise.resolve([]),
@@ -109,6 +111,8 @@ export default async function OrganizationSettingsPage({
           </ul>
         </HqCard>
       </div>
+
+      <SettingsAdminPanel slug={membership.slug} canAdmin={canAdmin} />
     </OrgSectionFrame>
   );
 }

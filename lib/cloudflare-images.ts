@@ -81,6 +81,25 @@ export const cfProductDetail = (url: string | null | undefined) =>
 export const cfHomepageRail = (url: string | null | undefined) =>
   cfImage(url, { width: 300, quality: 75 });
 
+const SITE_ORIGIN =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "")) ||
+  "https://www.intertexe.com";
+
+/** Absolute URL for /public assets — required for Cloudflare cdn-cgi/image. */
+function toAbsoluteAssetUrl(url: string): string {
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${SITE_ORIGIN}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
+/** Homepage LCP hero — 11MB PNG → ~700KB JPEG via Cloudflare resize. */
+export function cfHomepageHero(url: string, variant: "desktop" | "mobile"): string {
+  return cfImage(toAbsoluteAssetUrl(url), {
+    width: variant === "desktop" ? 1600 : 828,
+    quality: 80,
+    format: "auto",
+  });
+}
+
 export const cfScanResult = (url: string | null | undefined) =>
   cfImage(url, { width: 600, quality: 85 });
 

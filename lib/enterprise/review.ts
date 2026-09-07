@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseIdentifierIssueDetail } from "./identity-reconciliation";
 import { recordNormalizationCandidate } from "./learning-loop";
 import { displayReviewerName } from "./reviewer-display";
+import { emitWorkflowEvent } from "./workflow-events";
 
 async function currentProfile(client: SupabaseClient): Promise<{
   id: string | null;
@@ -23,7 +24,7 @@ export async function resolveIssue(input: {
   const supabase = input.client;
   const { data: issue } = await supabase
     .from("issues")
-    .select("id, product_id, issue_type, title, original_value, interpreted_value, detail")
+    .select("id, product_id, issue_type, title, original_value, interpreted_value, detail, assignee_id")
     .eq("organization_id", input.organizationId)
     .eq("id", input.issueId)
     .maybeSingle();
@@ -107,20 +108,29 @@ export async function resolveIssue(input: {
     }
   }
 
-  await supabase.from("audit_logs").insert({
-    organization_id: input.organizationId,
-    actor_id: profileId,
-    action: `issue_${input.status}`,
-    object_type: "issue",
-    object_id: input.issueId,
-    previous_ref: "open",
-    resulting_ref: input.status,
-  });
-  await supabase.from("activity_events").insert({
-    organization_id: input.organizationId,
-    actor_id: profileId,
+  await emitWorkflowEvent({
+    client: supabase,
+    organizationId: input.organizationId,
+    actorId: profileId,
+    kind: "issue_assigned",
     title: `Issue ${input.status.replaceAll("_", " ")}: ${issue.title}`,
     detail: `product:${issue.product_id || ""} | reviewer:${profile.name}`,
+    href: `/dashboard/issues`,
+    audit: {
+      action: `issue_${input.status}`,
+      objectType: "issue",
+      objectId: input.issueId,
+      previousRef: "open",
+      resultingRef: input.status,
+    },
+    notify:
+      issue.assignee_id && issue.assignee_id !== profileId
+        ? {
+            recipientIds: [issue.assignee_id],
+            category: "issue_assigned",
+            emailSubject: `Issue updated: ${issue.title}`,
+          }
+        : undefined,
   });
 }
 
@@ -193,25 +203,36 @@ export async function approveProductFields(input: {
     .map((row) => `${row.field_key}:approved:${row.normalized_value || ""}`)
     .join(" | ");
 
-  await supabase.from("audit_logs").insert({
-    organization_id: input.organizationId,
-    actor_id: profileId,
-    action: "fields_approved",
-    object_type: "product",
-    object_id: input.productId,
-    previous_ref: beforeSummary.slice(0, 500) || null,
-    resulting_ref: afterSummary.slice(0, 500) || "approved",
-    request_meta: {
-      reason,
-      before: before || [],
-      after_state: "approved",
-    },
-  });
-  await supabase.from("activity_events").insert({
-    organization_id: input.organizationId,
-    actor_id: profileId,
-    title: `Approved identity and composition`,
+  const passportReady = !blocking;
+
+  await emitWorkflowEvent({
+    client: supabase,
+    organizationId: input.organizationId,
+    actorId: profileId,
+    kind: passportReady ? "passport_ready" : "fields_approved",
+    title: passportReady ? "Passport ready for publish" : "Approved identity and composition",
     detail: `product:${input.productId} | reviewer:${profile.name} | reason: ${reason}`,
+    href: `/dashboard/products/${input.productId}`,
+    audit: {
+      action: "fields_approved",
+      objectType: "product",
+      objectId: input.productId,
+      previousRef: beforeSummary.slice(0, 500) || null,
+      resultingRef: afterSummary.slice(0, 500) || "approved",
+      requestMeta: {
+        reason,
+        before: before || [],
+        after_state: "approved",
+        passport_ready: passportReady,
+      },
+    },
+    notify: passportReady && profileId
+      ? {
+          recipientIds: [profileId],
+          category: "passport_ready",
+          emailSubject: "Passport ready for publish",
+        }
+      : undefined,
   });
 }
 
@@ -334,29 +355,30 @@ export async function applyIdentifierDecision(input: {
         ? "Treated as separate product"
         : "Corrected identifier";
 
-  await supabase.from("audit_logs").insert({
-    organization_id: input.organizationId,
-    actor_id: profile.id,
-    action: `identifier_${input.action}`,
-    object_type: "issue",
-    object_id: input.issueId,
-    previous_ref: "open",
-    resulting_ref: input.action,
-    request_meta: {
-      classification: detail.classification,
-      matchOn: detail.matchOn,
-      identifierValue: detail.identifierValue,
-      matchedProductId: detail.matchedProductId,
-      productId: issue.product_id,
-      correctedIdentifier: resolution.correctedIdentifier || null,
-      actorName: profile.name,
-      actorRole: membership?.role || null,
-    },
-  });
-  await supabase.from("activity_events").insert({
-    organization_id: input.organizationId,
-    actor_id: profile.id,
+  await emitWorkflowEvent({
+    client: supabase,
+    organizationId: input.organizationId,
+    actorId: profile.id,
+    kind: "issue_assigned",
     title: `${actionLabel}: ${issue.title}`,
     detail: `product:${issue.product_id || ""} | reviewer:${profile.name} | action:${input.action}`,
+    href: issue.product_id ? `/dashboard/products/${issue.product_id}` : `/dashboard/issues`,
+    audit: {
+      action: `identifier_${input.action}`,
+      objectType: "issue",
+      objectId: input.issueId,
+      previousRef: "open",
+      resultingRef: input.action,
+      requestMeta: {
+        classification: detail.classification,
+        matchOn: detail.matchOn,
+        identifierValue: detail.identifierValue,
+        matchedProductId: detail.matchedProductId,
+        productId: issue.product_id,
+        correctedIdentifier: resolution.correctedIdentifier || null,
+        actorName: profile.name,
+        actorRole: membership?.role || null,
+      },
+    },
   });
 }

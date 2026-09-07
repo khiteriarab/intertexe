@@ -14,6 +14,7 @@ import {
   entSelectClass,
 } from "../../../components/EnterpriseUi";
 import { EntModulePage } from "../../../components/EnterpriseModuleUi";
+import { ProductsBulkBar } from "./ProductsBulkBar";
 import { ProductsImportDrawer } from "./ProductsImportDrawer";
 
 export const dynamic = "force-dynamic";
@@ -101,7 +102,17 @@ export default async function ProductsPage({
           ctaLabel={q || passportState ? "Clear filters" : "Import products"}
         />
       ) : (
-        <ul className="ent-catalog-grid">
+        <>
+          <ProductsBulkBar
+            slug={membership.slug}
+            canMutate={canMutate}
+            products={catalog.rows.map((product) => ({
+              id: product.id,
+              name: product.name,
+              passport_state: product.passport_state,
+            }))}
+          />
+          <ul className="ent-catalog-grid">
           {catalog.rows.map((product) => {
             const compositionLines = formatCompositionLines(product.composition);
             const compositionDisplay = formatCompositionDisplay(product.composition);
@@ -133,6 +144,7 @@ export default async function ProductsPage({
             );
           })}
         </ul>
+        </>
       )}
 
       {catalog.total > catalog.pageSize ? (

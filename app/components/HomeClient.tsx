@@ -24,7 +24,7 @@ import { SaleHomeRail } from "./SaleHomeRail";
 import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "./ShopTheEditCarousel";
 import { CatalogProductImage } from "./CatalogProductImage";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
-import { IntelligenceForBrandsStrip } from "./IntelligenceForBrandsStrip";
+import { CATALOG_STATS } from "../../lib/catalog-stats";
 
 const BLUR_DATA_URL =
   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k=";
@@ -450,8 +450,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           Take the quiz
         </Link>
       </section>
-
-      <IntelligenceForBrandsStrip />
 
     </div>
   );

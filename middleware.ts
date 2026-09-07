@@ -67,6 +67,7 @@ export function middleware(request: NextRequest) {
       pathname === "/" ||
       pathname.startsWith("/dashboard") ||
       pathname.startsWith("/api/dashboard") ||
+      pathname.startsWith("/api/auth/sso") ||
       pathname.startsWith("/reset-password");
 
     // Consumer routes (account, shop, etc.) belong on www — never rewrite into /dashboard/*

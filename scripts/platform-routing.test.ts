@@ -86,13 +86,13 @@ test("sales page links sign-in to enterprise login helper", () => {
   assert.doesNotMatch(nav, /\/dashboard\/login/);
 });
 
-test("enterprise login has no SSO placeholder", () => {
+test("enterprise login supports SSO without consumer chrome", () => {
   const login = fs.readFileSync(path.join(process.cwd(), "app/dashboard/login/page.tsx"), "utf8");
-  assert.doesNotMatch(login, /Single sign-on/);
-  assert.doesNotMatch(login, /sso/i);
+  assert.match(login, /Continue with SSO/);
   assert.match(login, /Welcome to INTERTEXE/);
   assert.match(login, /Go to INTERTEXE/);
   assert.match(login, /Your product data,/);
+  assert.match(login, /getConsumerAccountUrl/);
 });
 
 test("reset-password recognizes enterprise flow from platform host", () => {

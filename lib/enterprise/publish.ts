@@ -6,6 +6,8 @@ import { newPublicId } from "./ids";
 import { ITX_RULESET_VERSION } from "./intelligence";
 import { ITX_ONTOLOGY_VERSION } from "./ontology";
 import { evaluatePublishability } from "./publishability";
+import { emitWorkflowEvent } from "./workflow-events";
+import { dispatchWebhookEvent } from "./webhooks-admin";
 
 function siteOrigin(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com").replace(/\/$/, "");
@@ -277,18 +279,26 @@ export async function publishProductPassport(input: {
     artwork_variant: "default",
     public_url: publicUrl,
   });
-  await supabase.from("audit_logs").insert({
-    organization_id: input.organizationId,
-    actor_id: profile?.id || null,
-    action: "passport_published",
-    object_type: "passport",
-    object_id: passport.id,
-    resulting_ref: `v${versionNumber}`,
-  });
-  await supabase.from("activity_events").insert({
-    organization_id: input.organizationId,
-    actor_id: profile?.id || null,
+  await emitWorkflowEvent({
+    client: supabase,
+    organizationId: input.organizationId,
+    actorId: profile?.id || null,
+    kind: "passport_published",
     title: `Published passport ${identity.public_id} v${versionNumber}`,
+    detail: `product:${input.productId} | url:${publicUrl}`,
+    href: publicUrl,
+    audit: {
+      action: "passport_published",
+      objectType: "passport",
+      objectId: passport.id,
+      resultingRef: `v${versionNumber}`,
+    },
+  });
+  await dispatchWebhookEvent(supabase, input.organizationId, "passport.published", {
+    public_id: identity.public_id,
+    version: versionNumber,
+    product_id: input.productId,
+    url: publicUrl,
   });
 
   return { publicId: identity.public_id, version: version.version_number, url: publicUrl };

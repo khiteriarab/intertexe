@@ -1,13 +1,26 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { getConsumerSiteUrl } from "@/lib/platform-urls";
+import { getConsumerAccountUrl } from "@/lib/platform-urls";
 import "./login.css";
 
-type Phase = "idle" | "signing_in" | "opening" | "forgot";
+type Phase = "idle" | "signing_in" | "opening" | "forgot" | "sso";
+
+type SsoDiscovery = {
+  ssoAvailable: boolean;
+  ssoRequired?: boolean;
+  passwordAllowed?: boolean;
+  providerLabel?: string;
+};
+
+const SSO_ERRORS: Record<string, string> = {
+  invalid_callback: "SSO sign-in could not be completed. Try again.",
+  expired_state: "Your SSO session expired. Start again from the login page.",
+  exchange_failed: "We could not verify your organization sign-in.",
+  not_authorized: "Your organization account is not authorized for workspace access.",
+};
 
 function LoginForm() {
   const router = useRouter();
@@ -15,16 +28,45 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    SSO_ERRORS[params.get("sso_error") || ""] || null
+  );
   const [info, setInfo] = useState<string | null>(
     params.get("reset") === "1" ? "Check your email to finish resetting your password." : null
   );
   const [phase, setPhase] = useState<Phase>("idle");
   const [forgotMode, setForgotMode] = useState(false);
+  const [discovery, setDiscovery] = useState<SsoDiscovery | null>(null);
   const inviteToken = params.get("invite");
   const busy = phase !== "idle";
 
-  const canSubmit = !busy && email.trim().length > 0 && (forgotMode || password.length > 0);
+  const passwordAllowed = !discovery?.ssoAvailable || !discovery.ssoRequired || discovery.passwordAllowed !== false;
+  const showSso = Boolean(discovery?.ssoAvailable) && !forgotMode;
+
+  const refreshDiscovery = useCallback(async (value: string) => {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed.includes("@")) {
+      setDiscovery(null);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/dashboard/sso/discover?email=${encodeURIComponent(trimmed)}`);
+      const data = (await res.json()) as SsoDiscovery;
+      setDiscovery(data.ssoAvailable ? data : null);
+    } catch {
+      setDiscovery(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void refreshDiscovery(email);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [email, refreshDiscovery]);
+
+  const canSubmit =
+    !busy && email.trim().length > 0 && (forgotMode || (passwordAllowed && password.length > 0));
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -96,6 +138,33 @@ function LoginForm() {
     }
   }
 
+  async function onSsoContinue() {
+    setError(null);
+    setInfo(null);
+    if (!email.trim()) {
+      setError("Enter your work email first.");
+      return;
+    }
+    setPhase("sso");
+    try {
+      const res = await fetch("/api/dashboard/sso/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok || typeof data.redirectUrl !== "string") {
+        setError(data.message || "SSO is not available for this email domain.");
+        setPhase("idle");
+        return;
+      }
+      window.location.assign(data.redirectUrl);
+    } catch {
+      setError("Network error. Try again.");
+      setPhase("idle");
+    }
+  }
+
   const buttonLabel =
     phase === "signing_in"
       ? "Signing in…"
@@ -103,11 +172,13 @@ function LoginForm() {
         ? "Opening workspace…"
         : phase === "forgot"
           ? "Sending…"
-          : forgotMode
-            ? "Send reset link"
-            : "Sign in";
+          : phase === "sso"
+            ? "Redirecting…"
+            : forgotMode
+              ? "Send reset link"
+              : "Sign in";
 
-  const consumerUrl = getConsumerSiteUrl();
+  const consumerAccountUrl = getConsumerAccountUrl();
 
   return (
     <div className="ent-login-page">
@@ -123,13 +194,28 @@ function LoginForm() {
             connected.
           </h1>
           <p className="ent-login-brand-tagline">Product intelligence for fashion.</p>
-          <div className="ent-login-brand-visual" aria-hidden>
-            <div className="ent-login-brand-visual-row">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="ent-login-brand-visual-core" />
+          <div className="ent-login-brand-motif" aria-hidden>
+            <svg viewBox="0 0 280 100" className="ent-login-brand-motif-svg" fill="none">
+              <path
+                d="M20 18 H100 M20 50 H88 M20 82 H96"
+                stroke="rgba(255,255,255,0.18)"
+                strokeWidth="1"
+                strokeLinecap="round"
+              />
+              <path
+                d="M100 18 C160 18 180 50 220 50 M88 50 C150 50 170 50 220 50 M96 82 C158 82 178 50 220 50"
+                stroke="rgba(255,255,255,0.12)"
+                strokeWidth="1"
+                strokeLinecap="round"
+              />
+              <rect x="220" y="38" width="48" height="24" rx="2" stroke="rgba(255,255,255,0.35)" strokeWidth="1" />
+              <path d="M228 50 H260" stroke="rgba(255,255,255,0.25)" strokeWidth="1" strokeLinecap="round" />
+            </svg>
+            <ol className="ent-login-brand-motif-steps">
+              <li>Product data</li>
+              <li>Normalized</li>
+              <li>Governed</li>
+            </ol>
           </div>
         </div>
       </div>
@@ -166,14 +252,14 @@ function LoginForm() {
               />
             </label>
 
-            {!forgotMode ? (
+            {!forgotMode && passwordAllowed ? (
               <label className="ent-login-field" htmlFor="login-password">
                 <span className="ent-login-label">Password</span>
                 <div className="ent-login-input-wrap">
                   <input
                     id="login-password"
                     type={showPassword ? "text" : "password"}
-                    required
+                    required={!showSso || password.length > 0}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={busy}
@@ -194,6 +280,14 @@ function LoginForm() {
               </label>
             ) : null}
 
+            {discovery?.ssoAvailable ? (
+              <p className="ent-login-message ent-login-message-info">
+                {discovery.ssoRequired && !discovery.passwordAllowed
+                  ? "Your organization requires SSO."
+                  : "Single sign-on is available for your organization."}
+              </p>
+            ) : null}
+
             {error ? <p className="ent-login-message ent-login-message-error">{error}</p> : null}
             {info ? <p className="ent-login-message ent-login-message-info">{info}</p> : null}
 
@@ -207,27 +301,57 @@ function LoginForm() {
               </div>
             ) : null}
 
-            <button type="submit" disabled={!canSubmit} className="ent-login-submit">
-              {buttonLabel}
-            </button>
+            {passwordAllowed ? (
+              <button type="submit" disabled={!canSubmit} className="ent-login-submit">
+                {buttonLabel}
+              </button>
+            ) : null}
 
-            <button
-              type="button"
-              className="ent-login-forgot"
-              disabled={busy}
-              onClick={() => {
-                setForgotMode((v) => !v);
-                setError(null);
-                setInfo(null);
-              }}
-            >
-              {forgotMode ? "Back to sign-in" : "Forgot password?"}
-            </button>
+            {!forgotMode && passwordAllowed ? (
+              <button
+                type="button"
+                className="ent-login-forgot"
+                disabled={busy}
+                onClick={() => {
+                  setForgotMode(true);
+                  setError(null);
+                  setInfo(null);
+                }}
+              >
+                Forgot password?
+              </button>
+            ) : null}
+
+            {forgotMode ? (
+              <button
+                type="button"
+                className="ent-login-forgot"
+                disabled={busy}
+                onClick={() => {
+                  setForgotMode(false);
+                  setError(null);
+                  setInfo(null);
+                }}
+              >
+                Back to sign-in
+              </button>
+            ) : null}
           </form>
 
+          {showSso ? (
+            <>
+              {passwordAllowed ? <div className="ent-login-divider">OR</div> : null}
+              <button type="button" className="ent-login-sso" disabled={busy} onClick={() => void onSsoContinue()}>
+                {phase === "sso" ? "Redirecting…" : "Continue with SSO"}
+              </button>
+              {discovery?.providerLabel ? (
+                <p className="ent-login-sso-hint">via {discovery.providerLabel}</p>
+              ) : null}
+            </>
+          ) : null}
+
           <p className="ent-login-consumer-link">
-            Looking for your personal INTERTEXE account?{" "}
-            <a href={consumerUrl}>Go to INTERTEXE →</a>
+            Personal account? <a href={consumerAccountUrl}>Go to INTERTEXE →</a>
           </p>
         </div>
       </div>

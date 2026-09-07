@@ -17,6 +17,7 @@ import {
   listEnterpriseMembershipsForUser,
   resolvePostLoginPath,
 } from "../../../../lib/enterprise/memberships";
+import { passwordLoginBlockedForEmail } from "../../../../lib/enterprise/sso-config";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,11 @@ export async function POST(request: NextRequest) {
         response.cookies.set(ENTERPRISE_SESSION_COOKIE, "", clearHostScopedSessionCookieOptions());
         return response;
       }
+    }
+
+    const ssoPolicy = await passwordLoginBlockedForEmail(email);
+    if (ssoPolicy.blocked) {
+      return NextResponse.json({ message: ssoPolicy.message || "SSO is required for this organization." }, { status: 403 });
     }
 
     const enterpriseAuth = getEnterpriseAnonClient();

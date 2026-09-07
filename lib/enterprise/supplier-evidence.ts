@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { emitWorkflowEvent } from "./workflow-events";
 
 function inferFieldKeyFromIssue(issue: {
   title: string;
@@ -25,7 +26,7 @@ export async function createSupplierEvidenceRequest(input: {
 }) {
   const { data: issue } = await input.client
     .from("issues")
-    .select("id, product_id, title, detail, issue_type, status")
+    .select("id, product_id, title, detail, issue_type, status, assignee_id")
     .eq("organization_id", input.organizationId)
     .eq("id", input.issueId)
     .maybeSingle();
@@ -100,11 +101,22 @@ export async function createSupplierEvidenceRequest(input: {
     metadata: { supplier_request_id: request?.id, notes: input.notes || null },
   });
 
-  await input.client.from("activity_events").insert({
-    organization_id: input.organizationId,
-    actor_id: input.requesterId,
+  await emitWorkflowEvent({
+    client: input.client,
+    organizationId: input.organizationId,
+    actorId: input.requesterId,
+    kind: "supplier_evidence",
     title: `Requested supplier evidence for issue ${issue.title}`,
     detail: `product:${issue.product_id}|issue:${issue.id}|request:${request?.id}`,
+    href: `/dashboard/issues`,
+    notify:
+      issue.assignee_id && issue.assignee_id !== input.requesterId
+        ? {
+            recipientIds: [issue.assignee_id],
+            category: "supplier_evidence",
+            emailSubject: `Supplier evidence requested: ${issue.title}`,
+          }
+        : undefined,
   });
 
   return { requestId: request?.id, supplierId };
@@ -137,6 +149,16 @@ export async function submitSupplierEvidence(input: {
     .from("supplier_requests")
     .update({ status: "submitted" })
     .eq("id", request.id);
+
+  await emitWorkflowEvent({
+    client: input.client,
+    organizationId: input.organizationId,
+    actorId: input.submittedBy,
+    kind: "supplier_evidence",
+    title: "Supplier evidence submitted",
+    detail: `request:${request.id}|product:${request.product_id}`,
+    href: `/dashboard/suppliers`,
+  });
 
   const fieldKey =
     (Array.isArray(request.requested_evidence) &&
@@ -201,6 +223,16 @@ export async function approveSupplierEvidence(input: {
     .from("supplier_requests")
     .update({ status: "closed" })
     .eq("id", submission.request_id);
+
+  await emitWorkflowEvent({
+    client: input.client,
+    organizationId: input.organizationId,
+    actorId: input.reviewerId,
+    kind: "supplier_evidence",
+    title: "Supplier evidence approved",
+    detail: `request:${submission.request_id}|product:${request?.product_id || ""}`,
+    href: request?.product_id ? `/dashboard/products/${request.product_id}` : `/dashboard/suppliers`,
+  });
 
   // Supplier submissions do not auto-modify approved canonical fields.
   return { fieldKey, productId: request?.product_id, issueId: request?.issue_id };

@@ -9,6 +9,7 @@ import {
   HOMEPAGE_HERO_SWAP_MS,
   type HomepageHeroSlide,
 } from "../../lib/editorial-assets";
+import { cfHomepageHero } from "../../lib/cloudflare-images";
 
 /** Portrait campaign hero — alternates slides from editorial-config (default 5s). */
 export function HomepageHeroSection({
@@ -36,19 +37,25 @@ export function HomepageHeroSection({
 
   const renderHeroImages = (variant: "mobile" | "desktop") =>
     heroSlides.map((slide, index) => {
-      const src = variant === "desktop" ? slide.desktopUrl ?? slide.url : slide.url;
-      const isJpg = src.includes("hero-editorial.jpg");
+      const raw = variant === "desktop" ? slide.desktopUrl ?? slide.url : slide.url;
+      const src = cfHomepageHero(raw, variant);
+      const isJpg = raw.includes("hero-editorial.jpg");
+      const isFirst = index === 0;
+      /** Only preload the visible breakpoint — mobile had priority while hidden on desktop (6MB wasted). */
+      const eager = variant === "desktop" ? isFirst : false;
+
       if (variant === "mobile") {
         return (
           <Image
             key={slide.url}
             src={src}
-            alt={index === 0 ? "INTERTEXE editorial" : ""}
+            alt={isFirst ? "INTERTEXE editorial" : ""}
             fill
-            priority={index === 0}
-            quality={100}
+            priority={eager}
+            loading={eager ? undefined : "lazy"}
+            quality={80}
             sizes="100vw"
-            aria-hidden={index !== 0}
+            aria-hidden={!isFirst}
             className={`homepage-hero-img transition-opacity duration-500 ${
               heroIndex === index ? "opacity-100" : "opacity-0"
             } ${isJpg ? "homepage-hero-img--editorial-jpg" : ""}`}
@@ -61,14 +68,15 @@ export function HomepageHeroSection({
       const objectPosition = slide.objectPositionDesktop ?? slide.objectPosition;
       return (
         <Image
-          key={`desktop-${src}`}
+          key={`desktop-${raw}`}
           src={src}
-          alt={index === 0 ? "INTERTEXE editorial" : ""}
+          alt={isFirst ? "INTERTEXE editorial" : ""}
           fill
-          priority={index === 0}
-          quality={100}
+          priority={eager}
+          loading={eager ? undefined : "lazy"}
+          quality={80}
           sizes="100vw"
-          aria-hidden={index !== 0}
+          aria-hidden={!isFirst}
           className={`homepage-hero-img transition-opacity duration-500 ${
             heroIndex === index ? "opacity-100" : "opacity-0"
           } ${isJpg ? "homepage-hero-img--editorial-jpg" : "homepage-hero-img--editorial-v8"}`}

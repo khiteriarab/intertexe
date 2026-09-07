@@ -17,6 +17,7 @@ import {
 } from "../../../components/EnterpriseUi";
 import { EntIssueCompare, EntModulePage } from "../../../components/EnterpriseModuleUi";
 import { IssueActions } from "./IssueActions";
+import { IssuesBulkBar } from "./IssuesBulkBar";
 
 export const dynamic = "force-dynamic";
 
@@ -186,6 +187,13 @@ export default async function IssuesPage({
         <p className="text-sm text-[var(--ent-muted)] py-8">No issues in this segment.</p>
       ) : (
         <div>
+          {activeSegment !== "resolved" ? (
+            <IssuesBulkBar
+              slug={membership.slug}
+              canMutate={canMutate}
+              issues={filtered.map((issue) => ({ id: issue.id, title: issue.title, status: issue.status }))}
+            />
+          ) : null}
           {filtered.map((issue) => (
             <IssueCard key={issue.id} issue={issue} base={base} slug={membership.slug} canMutate={canMutate} />
           ))}

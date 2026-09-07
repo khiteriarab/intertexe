@@ -6,6 +6,7 @@ import path from "node:path";
 describe("Platform B2B sales page", () => {
   const home = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHome.tsx"), "utf8");
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
+  const visuals = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-visuals.tsx"), "utf8");
   const chrome = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformChrome.tsx"), "utf8");
   const nav = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformNav.tsx"), "utf8");
   const login = fs.readFileSync(path.join(process.cwd(), "app/platform/login/page.tsx"), "utf8");
@@ -53,14 +54,14 @@ describe("Platform B2B sales page", () => {
 
   it("centers intelligence and consumer advantage without overclaiming", () => {
     assert.match(sections, /See your catalog differently/);
-    assert.match(sections, /BenchmarkPreview/);
+    assert.match(sections, /IntelligenceBenchmarkVisual/);
     assert.match(sections, /Built on both sides of fashion/);
     assert.match(sections, /never individual tracking/);
     assert.match(sections, /not yet operational/);
     assert.match(sections, /Illustrative example/);
     assert.match(sections, /not fabricated competitor dumps/);
-    assert.match(sections, /Understand/);
-    assert.match(sections, /Publish/);
+    assert.match(visuals, /Understand/);
+    assert.match(visuals, /Publish/);
     assert.doesNotMatch(sections, /150 companies trust us/i);
     assert.doesNotMatch(sections, /being built/i);
   });
@@ -78,33 +79,23 @@ describe("Platform B2B sales page", () => {
     assert.match(page, /PlatformHome/);
   });
 
-  it("uses dashboard visuals, not stock sustainability imagery", () => {
+  it("uses native sales visuals instead of editorial PNG decks", () => {
     assert.match(sections, /hero-workspace-desktop\.png/);
-    assert.match(sections, /NormalizePreview/);
-    assert.match(sections, /IssuesPreview/);
-    assert.match(sections, /PassportPreview/);
-    assert.match(sections, /WorkspaceChrome/);
+    assert.match(sections, /ProblemConvergenceVisual/);
+    assert.match(sections, /GovernedRecordVisual/);
+    assert.match(sections, /JourneyStepsVisual/);
+    assert.match(sections, /PassportIdentityVisual/);
+    assert.match(sections, /ConsumerEcosystemVisual/);
+    assert.match(sections, /PlatformModuleGrid/);
+    assert.doesNotMatch(sections, /PlatformEditorialGraphic/);
+    assert.doesNotMatch(sections, /INTERTEXE_01_Data_Architecture/);
+    assert.doesNotMatch(sections, /WorkspaceChrome/);
+    assert.doesNotMatch(sections, /WorkspaceHeroPreview/);
+    assert.doesNotMatch(sections, /DataSourcesVisual/);
+    assert.doesNotMatch(sections, /ConsumerBridgeVisual/);
+    assert.doesNotMatch(sections, /DppFlow/);
+    assert.match(visuals, /Discover · Scan · Compare/);
     assert.doesNotMatch(sections, /leaves/i);
     assert.doesNotMatch(sections, /factory/i);
-  });
-
-  it("adds editorial graphics without replacing existing charts", () => {
-    assert.match(sections, /PlatformEditorialGraphic/);
-    assert.match(sections, /INTERTEXE_01_Data_Architecture\.png/);
-    assert.match(sections, /INTERTEXE_02_Product_Data_Journey\.png/);
-    assert.match(sections, /INTERTEXE_03_Fashion_Ecosystem\.png/);
-    assert.match(sections, /DataSourcesVisual/);
-    assert.match(sections, /BenchmarkPreview/);
-    assert.match(sections, /ConsumerBridgeVisual/);
-    for (const asset of [
-      "INTERTEXE_01_Data_Architecture.png",
-      "INTERTEXE_02_Product_Data_Journey.png",
-      "INTERTEXE_03_Fashion_Ecosystem.png",
-    ]) {
-      assert.ok(
-        fs.existsSync(path.join(process.cwd(), "public/platform", asset)),
-        `missing editorial asset: ${asset}`,
-      );
-    }
   });
 });

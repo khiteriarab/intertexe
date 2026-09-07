@@ -642,19 +642,57 @@ export async function commitMappedImport(input: {
     approvedBy: profile?.id || null,
   });
 
-  await supabase.from("imports").update({ status: "succeeded" }).eq("id", importRow.id);
+  const sameProductUpdates = reconciliations.filter((row) => row.action === "update_same_product").length;
+  const collisionsKept = reconciliations.filter((row) => row.action === "create_with_collision").length;
+
+  await supabase.from("imports").update({
+    status: "succeeded",
+    summary: {
+      rowsTotal: input.rows.length,
+      rowsProcessed: productsTouched,
+      productsTouched,
+      issuesCreated,
+      sameProductUpdates,
+      collisionsKept,
+    },
+    finished_at: new Date().toISOString(),
+  }).eq("id", importRow.id);
   await supabase
     .from("processing_jobs")
     .update({ status: "succeeded", stage: "validation", finished_at: new Date().toISOString() })
     .eq("import_id", importRow.id);
-  const sameProductUpdates = reconciliations.filter((row) => row.action === "update_same_product").length;
-  const collisionsKept = reconciliations.filter((row) => row.action === "create_with_collision").length;
-  await supabase.from("activity_events").insert({
-    organization_id: input.organizationId,
-    actor_id: profile?.id || null,
+
+  const { emitWorkflowEvent } = await import("./workflow-events");
+  await emitWorkflowEvent({
+    client: supabase,
+    organizationId: input.organizationId,
+    actorId: profile?.id || null,
+    kind: "import_completed",
     title: `Imported ${productsTouched} products from ${input.filename}`,
     detail: `${sameProductUpdates} same-product updates · ${collisionsKept} identifier collisions kept separate until confirmed`,
+    href: `/dashboard/imports`,
+    audit: {
+      action: "import_completed",
+      objectType: "import",
+      objectId: importRow.id,
+      resultingRef: `${productsTouched} products, ${issuesCreated} issues`,
+    },
+    notify: profile?.id
+      ? { recipientIds: [profile.id], category: "import_completed", emailSubject: `Import completed: ${input.filename}` }
+      : undefined,
   });
+
+  const { ensureIntegrationConnection, recordIntegrationRun } = await import("./integration-health");
+  const connId = await ensureIntegrationConnection(supabase, input.organizationId, "csv-import", "Catalog CSV import");
+  await recordIntegrationRun(supabase, {
+    organizationId: input.organizationId,
+    connectionId: connId,
+    status: "succeeded",
+    recordsProcessed: productsTouched,
+  });
+
+  const { incrementUsageMeter } = await import("./usage-meters");
+  await incrementUsageMeter(supabase, input.organizationId, "imports_completed", 1);
 
   return { importId: importRow.id, productsTouched, issuesCreated, reconciliations };
 }
