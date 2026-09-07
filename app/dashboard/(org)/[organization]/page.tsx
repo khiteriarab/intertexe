@@ -3,14 +3,20 @@ import { entitlementsForPlan, type PlanKey } from "../../../../lib/enterprise/en
 import { loadOrgOverview } from "../../../../lib/enterprise/queries";
 import { loadOrgCompositionBenchmark } from "../../../../lib/enterprise/composition-benchmark";
 import {
+  imageMapFromLiveFixture,
+  loadConsumerSignals,
+} from "../../../../lib/enterprise/consumer-signals";
+import {
   EntActivityFeed,
   EntAttentionPanel,
   EntOverviewHero,
   type EntAttentionItem,
 } from "../../components/EnterpriseUi";
 import { EntKpiGrid, EntModuleShowcase, EntOverviewBenchmarkTeaser, EntOverviewCharts } from "../../components/EntDashboardWidgets";
+import { EntConsumerSignalsTeaser } from "../../components/EntConsumerSignals";
 import { buildGettingStartedSteps } from "../../../../lib/enterprise/getting-started";
 import { EntGettingStarted } from "../../components/EntGettingStarted";
+import livePilotProducts from "../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +27,11 @@ export default async function OrganizationOverviewPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const [overview, composition] = await Promise.all([
+  const imageBySku = imageMapFromLiveFixture(livePilotProducts);
+  const [overview, composition, signals] = await Promise.all([
     loadOrgOverview(client, membership.organizationId),
     loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
+    loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
   ]);
   const entitlement = entitlementsForPlan(membership.plan as PlanKey, {});
   const base = `/dashboard/${membership.slug}`;
@@ -118,6 +126,8 @@ export default async function OrganizationOverviewPage({
         stats={composition.stats}
         peerRows={composition.peerRows}
       />
+
+      <EntConsumerSignalsTeaser base={base} signals={signals} />
 
       <EntAttentionPanel
         nextTitle={nextStep.title}

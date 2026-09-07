@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { loadOrgCompositionBenchmark } from "../../../../../lib/enterprise/composition-benchmark";
+import {
+  imageMapFromLiveFixture,
+  loadConsumerSignals,
+} from "../../../../../lib/enterprise/consumer-signals";
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgBenchmarking } from "../../../../../lib/enterprise/module-queries";
+import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
+import { EntConsumerSignals } from "../../../components/EntConsumerSignals";
 import { EntFabricPeerComparison } from "../../../components/EntFabricBenchmark";
 import { EntDonutChart, EntStackedBarChart, LIFECYCLE_COLORS } from "../../../components/EnterpriseCharts";
 import {
@@ -22,9 +28,11 @@ export default async function BenchmarkingPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const [data, composition] = await Promise.all([
+  const imageBySku = imageMapFromLiveFixture(livePilotProducts);
+  const [data, composition, signals] = await Promise.all([
     loadOrgBenchmarking(client, membership.organizationId),
     loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
+    loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
   ]);
   const base = `/dashboard/${membership.slug}`;
 
@@ -42,12 +50,14 @@ export default async function BenchmarkingPage({
       {data.productCount === 0 ? (
         <EntEmptyState
           title="No catalog to benchmark yet"
-          body="Import products to see passport readiness, fiber composition, and peer comparisons across retailers."
+          body="Import products to see passport readiness, fiber composition, consumer signals, and peer comparisons."
           ctaHref={`${base}/products`}
           ctaLabel="Go to Products"
         />
       ) : (
         <>
+          <EntConsumerSignals base={base} signals={signals} />
+
           <EntFabricPeerComparison
             fiberRows={composition.stats.fiberRows}
             peerRows={composition.peerRows}

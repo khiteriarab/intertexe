@@ -73,7 +73,7 @@ export function EntIconChevron({ className, open }: IconProps & { open?: boolean
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="2.25"
       aria-hidden
     >
       <path d="m6 9 6 6 6-6" />

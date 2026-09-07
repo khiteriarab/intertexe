@@ -67,7 +67,7 @@ export function EnterpriseNav({
                 <GroupIcon className="h-[15px] w-[15px]" />
               </span>
               <span className="flex-1 text-left">{group.label}</span>
-              <EntIconChevron className="opacity-60" open={isOpen} />
+              <EntIconChevron className="ent-nav-chevron" open={isOpen} />
             </button>
 
             {isOpen ? (

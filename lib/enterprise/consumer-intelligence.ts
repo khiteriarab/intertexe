@@ -7,6 +7,8 @@ export type ConsumerIntelligenceResult =
       sampleSize: number;
       methodologyVersion: string;
       privacyClassification: string;
+      methodology: string | null;
+      payload: Record<string, unknown>;
     }
   | { status: "insufficient"; reason: "Insufficient benchmark data" };
 
@@ -27,7 +29,7 @@ export async function loadConsumerIntelligenceAggregate(
   const { data, error } = await client
     .from("consumer_intelligence_aggregates")
     .select(
-      "metric_key, sample_size, min_cohort_size, methodology_version, privacy_classification, status"
+      "metric_key, sample_size, min_cohort_size, methodology, methodology_version, privacy_classification, status, payload"
     )
     .eq("metric_key", metricKey)
     .eq("status", "approved")
@@ -44,5 +46,7 @@ export async function loadConsumerIntelligenceAggregate(
     sampleSize: sample,
     methodologyVersion: data.methodology_version || "unspecified",
     privacyClassification: data.privacy_classification,
+    methodology: data.methodology || null,
+    payload: (data.payload as Record<string, unknown>) || {},
   };
 }

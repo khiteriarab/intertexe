@@ -16,6 +16,8 @@ const nextConfig = {
   reactStrictMode: false,
   images: {
     remotePatterns: [
+      { protocol: "https", hostname: "img.mytheresa.com" },
+      { protocol: "https", hostname: "images.bloomingdalesassets.com" },
       { protocol: "https", hostname: "cdn.shopify.com" },
       { protocol: "https", hostname: "intertexe.com" },
       { protocol: "https", hostname: "www.intertexe.com" },
