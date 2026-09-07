@@ -52,6 +52,12 @@ export function EntIconDevelopers({ className }: IconProps) {
 export function EntIconSettings({ className }: IconProps) {
   return base({ className, children: <><circle cx="12" cy="12" r="3" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></> });
 }
+export function EntIconBell({ className }: IconProps) {
+  return base({ className, children: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></> });
+}
+export function EntIconSearch({ className }: IconProps) {
+  return base({ className, children: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></> });
+}
 export function EntIconCore({ className }: IconProps) {
   return base({ className, children: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></> });
 }

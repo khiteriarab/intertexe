@@ -39,8 +39,7 @@ const MATERIAL_RAIL_FETCH_LIMIT = HOMEPAGE_LIMITS.materialRailFetchLimit;
 const MATERIAL_RAIL_DISPLAY_MAX = HOMEPAGE_LIMITS.materialRailDisplayMax;
 /** Homepage rails are curated previews only — keep small for fast SSR. */
 const MERCH_HOME_FETCH_LIMIT = 24;
-/** Sale rail needs a deeper pool — homepage filter is strict ($200+ approved brands). */
-const MERCH_HOME_SALE_FETCH_LIMIT = HOMEPAGE_LIMITS.saleFetchLimit;
+/** Homepage sale rail — full /sale catalog preview (28 items). */
 const MERCH_HOME_SALE_DISPLAY_LIMIT = HOMEPAGE_LIMITS.saleDisplayLimit;
 const MERCH_HOME_NEW_IN_FETCH_LIMIT = HOMEPAGE_LIMITS.newInFetchLimit;
 const MERCH_HOME_NEW_IN_DISPLAY_LIMIT = HOMEPAGE_LIMITS.newInDisplayLimit;
@@ -49,8 +48,6 @@ const HOMEPAGE_BRAND_LIVE_ROW_CAP = HOMEPAGE_LIMITS.brandLiveRowCap;
 /** New In: few brands × small cap to avoid dozens of parallel SSR queries. */
 const NEW_IN_FETCH_PER_BRAND = HOMEPAGE_LIMITS.newInFetchPerBrand;
 const NEW_IN_TARGET_ITEMS = HOMEPAGE_LIMITS.newInTargetItems;
-const HOMEPAGE_SALE_FETCH_LIMIT = 64;
-const HOMEPAGE_SALE_MAX_SOURCE_ROWS = 180;
 const DESIGNERS_FETCH_LIMIT = 48;
 
 const RAIL_TIMEOUT_MS = 3800;
@@ -217,6 +214,19 @@ const CURATED_DESIGNERS_STATIC_FALLBACK = CURATED_BRAND_SLUGS.map((slug) => {
   };
 });
 
+async function fetchHomepageSaleRail(): Promise<Product[]> {
+  const result = await fetchSaleProducts({
+    limit: MERCH_HOME_SALE_DISPLAY_LIMIT,
+    offset: 0,
+    useMerchFeedPreview: false,
+    skipTotal: true,
+  });
+  return filterHomepageSaleProducts(
+    (result.products || []).filter((p) => !isZeroPrice(p.price)),
+    MERCH_HOME_SALE_DISPLAY_LIMIT
+  );
+}
+
 async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const t0 = Date.now();
   const railKeys = [
@@ -226,10 +236,9 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     MERCH_RAIL_KEYS.tailoring,
     MERCH_RAIL_KEYS.summerInCity,
     MERCH_RAIL_KEYS.whiteEdit,
-    MERCH_RAIL_KEYS.sale,
   ] as const;
 
-  const [curatedDesigners, platformStats, railsByKey, saleRailPool, newInRailPool] =
+  const [curatedDesigners, platformStats, railsByKey, saleProducts, newInRailPool] =
     await Promise.all([
     withHomepageRailTimeout(
       "rail:curated-designers",
@@ -250,9 +259,9 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
       {} as Record<string, Product[]>
     ),
     withHomepageRailTimeout(
-      "rail:sale-pool",
+      "rail:sale",
       RAIL_TIMEOUT_MS,
-      () => fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, { limit: MERCH_HOME_SALE_FETCH_LIMIT }),
+      fetchHomepageSaleRail,
       [] as Product[]
     ),
     withHomepageRailTimeout(
@@ -281,11 +290,6 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const tailoringProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.tailoring] || []);
   const summerInCityProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.summerInCity] || []);
   const whiteEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.whiteEdit] || []);
-  const saleSource =
-    saleRailPool.length > (railsByKey[MERCH_RAIL_KEYS.sale]?.length ?? 0)
-      ? saleRailPool
-      : railsByKey[MERCH_RAIL_KEYS.sale] || [];
-  const saleProducts = filterHomepageSaleProducts(saleSource, MERCH_HOME_SALE_DISPLAY_LIMIT);
 
   console.log(
     "[merch-feed] homepage payload:",
@@ -321,7 +325,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     return getHomePageDataFromFeedCache();
   }
 
-  const [designers, vacationProducts, saleResult, curatedDesigners, platformStats, brandProductLists] = await Promise.all([
+  const [designers, vacationProducts, saleProducts, curatedDesigners, platformStats, brandProductLists] = await Promise.all([
     withHomepageRailTimeout(
       "rail:designers",
       DESIGNERS_TIMEOUT_MS,
@@ -340,14 +344,8 @@ export async function getHomePageData(): Promise<HomePageData> {
     withHomepageRailTimeout(
       "rail:sale",
       RAIL_TIMEOUT_MS,
-      () =>
-        fetchSaleProducts({
-          limit: HOMEPAGE_SALE_FETCH_LIMIT,
-          offset: 0,
-          maxSourceRows: HOMEPAGE_SALE_MAX_SOURCE_ROWS,
-          useMerchFeedPreview: true,
-        }),
-      { products: [], total: 0 }
+      fetchHomepageSaleRail,
+      [] as Product[]
     ),
     withHomepageRailTimeout(
       "rail:curated-designers",
@@ -365,10 +363,6 @@ export async function getHomePageData(): Promise<HomePageData> {
     ),
   ]);
 
-  const saleProducts = filterHomepageSaleProducts(
-    (saleResult.products || []).filter((p) => !isZeroPrice(p.price)),
-    MERCH_HOME_SALE_DISPLAY_LIMIT
-  );
   const seenIds = new Set<string>();
   const seenBaseNames = new Set<string>();
   const newInProducts: any[] = [];

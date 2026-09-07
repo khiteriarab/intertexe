@@ -436,15 +436,18 @@ export default function SaleClient({
   );
 
   const currentSort = SORT_OPTIONS.find((o) => o.key === sortBy) || SORT_OPTIONS[0];
-  const saleCountPending =
-    (isLoading && products.length === 0) ||
-    (total === 0 && products.length > 0 && hasMore && !selectedSubcategory && !(shoesMode && categoryFilter !== "all"));
   const displayedCount =
     selectedSubcategory || (shoesMode && categoryFilter !== "all")
       ? rankedProducts.length
       : total > 0
         ? total
-        : null;
+        : rankedProducts.length > 0
+          ? rankedProducts.length
+          : null;
+  const saleCountPending =
+    displayedCount == null ||
+    (isLoading && products.length === 0) ||
+    (total === 0 && products.length > 0 && hasMore && !selectedSubcategory && !(shoesMode && categoryFilter !== "all"));
 
   const activeFilters = [
     ...(saleDepartment !== "clothing"
@@ -714,7 +717,7 @@ export default function SaleClient({
                   Filter
                 </span>
                 <p className="text-[11px] text-muted-foreground text-center flex-1 min-w-0">
-                  {saleCountPending ? (
+                  {saleCountPending || displayedCount == null ? (
                     <span className="animate-pulse">Loading…</span>
                   ) : (
                     <>

@@ -53,7 +53,7 @@ export function HomepageHeroSection({
             fill
             priority={eager}
             loading={eager ? undefined : "lazy"}
-            quality={80}
+            quality={100}
             sizes="100vw"
             aria-hidden={!isFirst}
             className={`homepage-hero-img transition-opacity duration-500 ${
@@ -74,7 +74,7 @@ export function HomepageHeroSection({
           fill
           priority={eager}
           loading={eager ? undefined : "lazy"}
-          quality={80}
+          quality={100}
           sizes="100vw"
           aria-hidden={!isFirst}
           className={`homepage-hero-img transition-opacity duration-500 ${

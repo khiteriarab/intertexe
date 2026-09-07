@@ -91,11 +91,15 @@ function toAbsoluteAssetUrl(url: string): string {
   return `${SITE_ORIGIN}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
-/** Homepage LCP hero — 11MB PNG → ~700KB JPEG via Cloudflare resize. */
+/** Homepage LCP hero — resize large /public PNGs without over-compressing campaign art. */
 export function cfHomepageHero(url: string, variant: "desktop" | "mobile"): string {
+  if (url.startsWith("/")) {
+    // Same-origin hero assets are already optimized in /public; avoid double compression.
+    return url;
+  }
   return cfImage(toAbsoluteAssetUrl(url), {
-    width: variant === "desktop" ? 1600 : 828,
-    quality: 80,
+    width: variant === "desktop" ? 2400 : 1200,
+    quality: 92,
     format: "auto",
   });
 }

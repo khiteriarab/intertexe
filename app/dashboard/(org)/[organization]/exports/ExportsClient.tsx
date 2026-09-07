@@ -17,7 +17,7 @@ export function ExportsClient({ organization }: { organization: string }) {
       setStatus(data.message || "Export failed.");
       return;
     }
-    setStatus(`Exported ${data.rowCount} rows. Snapshot ${data.snapshotId.slice(0, 8)}…`);
+    setStatus(`Exported ${data.rowCount} rows${data.snapshotId ? `. Snapshot ${String(data.snapshotId).slice(0, 8)}…` : "."}`);
   }
 
   return (

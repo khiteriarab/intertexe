@@ -1,7 +1,7 @@
+import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { loadImportHistory } from "../../../../../lib/enterprise/import-ops";
 import { EntModulePage } from "../../../components/EnterpriseModuleUi";
-import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +16,14 @@ export default async function ImportsPage({
 
   return (
     <EntModulePage title="Import center" subtitle="Upload history, row counts, and errors.">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <Link
+          href={`/dashboard/${membership.slug}/products?import=1`}
+          className="ent-btn ent-btn-primary text-sm"
+        >
+          + Import catalog
+        </Link>
+      </div>
       <div className="space-y-3">
         {items.length === 0 ? (
           <p className="text-sm text-[var(--ent-muted)]">No imports yet. Upload a catalog from Products.</p>

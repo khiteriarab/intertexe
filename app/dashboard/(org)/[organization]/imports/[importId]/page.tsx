@@ -16,19 +16,21 @@ export default async function ImportDetailPage({
   if (!detail) notFound();
 
   const summary = (detail.import.summary || {}) as Record<string, number | undefined>;
+  const formatStat = (value: number | undefined) =>
+    typeof value === "number" && Number.isFinite(value) ? value.toLocaleString() : "0";
 
   return (
     <EntModulePage title={detail.import.original_filename || "Import detail"} subtitle={`Status: ${detail.import.status}`}>
       <div className="grid md:grid-cols-4 gap-4 mb-8">
         {[
-          ["Rows", summary.rowsTotal],
-          ["Products", summary.productsTouched],
-          ["Issues", summary.issuesCreated],
-          ["Errors", detail.errors.length],
+          ["Rows", formatStat(summary.rowsTotal)],
+          ["Products", formatStat(summary.productsTouched)],
+          ["Issues", formatStat(summary.issuesCreated)],
+          ["Errors", detail.errors.length.toLocaleString()],
         ].map(([label, value]) => (
           <div key={String(label)} className="rounded-xl border border-[var(--ent-border)] p-4">
             <p className="text-xs uppercase tracking-wide text-[var(--ent-muted)]">{label}</p>
-            <p className="text-2xl font-semibold mt-1">{value ?? "—"}</p>
+            <p className="text-2xl font-semibold mt-1">{value}</p>
           </div>
         ))}
       </div>

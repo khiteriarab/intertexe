@@ -206,7 +206,7 @@ export async function loadOrgWorkflow(
       date: String(row.created_at),
       title: `Catalog import${row.filename ? ` · ${row.filename}` : ""}`,
       kind: "import",
-      href: `${base}/files`,
+      href: `${base}/imports/${row.id}`,
     });
   }
 

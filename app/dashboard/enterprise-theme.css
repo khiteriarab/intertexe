@@ -1009,7 +1009,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: var(--ent-muted-light);
-  font-size: 0.95rem;
+  pointer-events: none;
 }
 
 .enterprise-app .ent-topbar-search-input {
@@ -1045,6 +1045,23 @@
 .enterprise-app .ent-topbar-icon-btn:hover {
   background: rgba(62, 98, 104, 0.08);
   color: var(--ent-forest);
+}
+
+.enterprise-app .ent-topbar-badge {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.15rem;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: #b42318;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.125rem;
+  text-align: center;
+  border: 2px solid rgba(247, 246, 243, 0.95);
 }
 
 .enterprise-app .ent-settings-banner {

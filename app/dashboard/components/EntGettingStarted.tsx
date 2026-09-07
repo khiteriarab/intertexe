@@ -17,8 +17,10 @@ export function EntGettingStarted({
   const storageKey = `ent-onboarding-dismissed-${orgSlug}`;
   const [dismissed, setDismissed] = useState(false);
   const completed = steps.filter((s) => s.done).length;
+  if (steps.length === 0) return null;
   const progress = Math.round((completed / steps.length) * 100);
   const nextStep = steps.find((s) => !s.done) || steps[steps.length - 1];
+  if (!nextStep) return null;
 
   useEffect(() => {
     try {

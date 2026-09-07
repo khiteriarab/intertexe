@@ -68,6 +68,7 @@ export function middleware(request: NextRequest) {
       pathname.startsWith("/dashboard") ||
       pathname.startsWith("/api/dashboard") ||
       pathname.startsWith("/api/auth/sso") ||
+      pathname.startsWith("/auth/sso") ||
       pathname.startsWith("/reset-password");
 
     // Consumer routes (account, shop, etc.) belong on www — never rewrite into /dashboard/*
@@ -92,12 +93,18 @@ export function middleware(request: NextRequest) {
 
   // dashboard.intertexe.com (or legacy hq.) → /dashboard app
   if (isHqHost(host)) {
+    const isAuthSurface =
+      pathname.startsWith("/api/auth/sso") ||
+      pathname.startsWith("/auth/sso") ||
+      pathname.startsWith("/reset-password");
+
     if (pathname === "/" || pathname === "") {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.rewrite(url);
     }
     if (
+      !isAuthSurface &&
       !pathname.startsWith("/dashboard") &&
       !pathname.startsWith("/api/dashboard") &&
       !pathname.startsWith("/_next")

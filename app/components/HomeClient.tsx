@@ -361,10 +361,11 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
   });
 
   useEffect(() => {
-    /** SSR can time out and cache an empty New In rail — recover client-side from /api/homepage. */
-    const ssrMissingNewIn =
-      initialData !== undefined && !(initialData.newInProducts?.length);
-    if (initialData !== undefined && !ssrMissingNewIn) return;
+    /** SSR can time out and cache empty rails — recover client-side from /api/homepage. */
+    const ssrMissingRails =
+      initialData !== undefined &&
+      (!(initialData.newInProducts?.length) || !(initialData.saleProducts?.length));
+    if (initialData !== undefined && !ssrMissingRails) return;
     fetch("/api/homepage")
       .then((r) => {
         if (!r.ok) throw new Error("API error");
@@ -412,8 +413,6 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
         <ShopTheEditCarousel slides={EDIT_CAROUSEL_SLIDES} />
       </section>
 
-      <SaleHomeRail products={data.saleProducts} />
-
       <section className="-mx-4 md:-mx-8 bg-[#f8f7f5]">
         <div className="max-w-5xl mx-auto py-10 md:py-14 px-6 md:px-12">
           <ul className="grid grid-cols-2 md:grid-cols-4 gap-y-5 gap-x-4 md:gap-x-6 text-center list-none m-0 p-0">
@@ -433,6 +432,8 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           </ul>
         </div>
       </section>
+
+      <SaleHomeRail products={data.saleProducts} />
 
       <section className="py-16 md:py-28 flex flex-col items-center text-center">
         <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-neutral-400 mb-5 md:mb-7">

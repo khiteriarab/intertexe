@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { EntIconSearch } from "./EnterpriseNavIcons";
 
 export function GlobalSearch({ organization }: { organization: string }) {
   const router = useRouter();
@@ -22,25 +23,31 @@ export function GlobalSearch({ organization }: { organization: string }) {
   }, [q, organization]);
 
   return (
-    <div className="relative hidden md:block">
+    <div className="relative ent-topbar-search flex-1 min-w-0 max-w-xl hidden md:block">
+      <EntIconSearch className="ent-topbar-search-icon h-[16px] w-[16px]" />
       <input
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search products, issues, passports…"
-        className="ent-input w-64 text-sm"
+        className="ent-topbar-search-input"
+        aria-label="Search workspace"
       />
       {results.length > 0 ? (
-        <div className="absolute top-full mt-1 w-full rounded-xl border border-[var(--ent-border)] bg-white shadow-lg z-50 max-h-64 overflow-auto">
+        <div className="absolute top-full mt-1.5 w-full rounded-xl border border-[var(--ent-border)] bg-white shadow-lg z-50 max-h-64 overflow-auto">
           {results.map((r) => (
             <button
               key={`${r.kind}-${r.href}`}
               type="button"
-              className="block w-full text-left px-3 py-2 text-sm hover:bg-[var(--ent-surface-alt)]"
-              onClick={() => router.push(r.href)}
+              className="block w-full text-left px-3 py-2.5 text-sm hover:bg-[var(--ent-surface-alt)] border-b border-[var(--ent-border)] last:border-0"
+              onClick={() => {
+                setQ("");
+                setResults([]);
+                router.push(r.href);
+              }}
             >
-              <span className="font-medium">{r.label}</span>
-              <span className="text-[var(--ent-muted)] text-xs ml-2">{r.kind}</span>
+              <span className="font-medium text-[var(--ent-ink)]">{r.label}</span>
+              <span className="text-[var(--ent-muted)] text-xs ml-2 capitalize">{r.kind}</span>
             </button>
           ))}
         </div>

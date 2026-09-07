@@ -110,12 +110,14 @@ export function EnterpriseShell({
         </aside>
 
         <main className="min-w-0 ent-canvas">
-          <header className="ent-topbar hidden md:flex items-center gap-4 px-10 lg:px-14 xl:px-16 pt-6">
+          <header className="ent-topbar hidden md:flex items-center gap-3 px-10 lg:px-14 xl:px-16 pt-6 pb-4">
             <GlobalSearch organization={organizationSlug} />
-            <NotificationBell organization={organizationSlug} />
-            <Link href={`${base}/settings`} className="ent-topbar-icon-btn" aria-label="Workspace settings">
-              <EntIconSettings className="h-[18px] w-[18px]" />
-            </Link>
+            <div className="ml-auto flex items-center gap-2 shrink-0">
+              <NotificationBell organization={organizationSlug} />
+              <Link href={`${base}/settings`} className="ent-topbar-icon-btn" aria-label="Workspace settings">
+                <EntIconSettings className="h-[18px] w-[18px]" />
+              </Link>
+            </div>
           </header>
           <div className="ent-canvas-inner px-5 md:px-10 lg:px-14 xl:px-16 py-8 md:py-10 max-w-[84rem]">{children}</div>
         </main>

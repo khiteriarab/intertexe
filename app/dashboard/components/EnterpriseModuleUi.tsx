@@ -53,18 +53,34 @@ export function EntModulePage({
   title,
   meta,
   action,
+  subtitle,
+  description,
   children,
 }: {
   title: string;
   meta?: React.ReactNode;
   action?: React.ReactNode;
+  subtitle?: string;
   children: React.ReactNode;
+  /** @deprecated use subtitle */
   description?: string;
   zone?: EntZoneTone;
 }) {
+  const lead = subtitle || description;
   return (
     <div>
-      <EntInlinePageHeader title={title} meta={meta} action={action} />
+      <EntInlinePageHeader
+        title={title}
+        meta={
+          meta || lead ? (
+            <>
+              {lead ? <span>{lead}</span> : null}
+              {meta}
+            </>
+          ) : undefined
+        }
+        action={action}
+      />
       {children}
     </div>
   );

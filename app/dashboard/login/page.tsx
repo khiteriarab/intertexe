@@ -41,7 +41,8 @@ function LoginForm() {
   const busy = phase !== "idle";
 
   const passwordAllowed = !discovery?.ssoAvailable || !discovery.ssoRequired || discovery.passwordAllowed !== false;
-  const showSso = Boolean(discovery?.ssoAvailable) && !forgotMode;
+  const emailReady = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const showSso = !forgotMode;
 
   const refreshDiscovery = useCallback(async (value: string) => {
     const trimmed = value.trim().toLowerCase();
@@ -341,12 +342,21 @@ function LoginForm() {
           {showSso ? (
             <>
               {passwordAllowed ? <div className="ent-login-divider">OR</div> : null}
-              <button type="button" className="ent-login-sso" disabled={busy} onClick={() => void onSsoContinue()}>
+              <button
+                type="button"
+                className="ent-login-sso"
+                disabled={busy || !emailReady}
+                onClick={() => void onSsoContinue()}
+              >
                 {phase === "sso" ? "Redirecting…" : "Continue with SSO"}
               </button>
               {discovery?.providerLabel ? (
                 <p className="ent-login-sso-hint">via {discovery.providerLabel}</p>
-              ) : null}
+              ) : emailReady ? (
+                <p className="ent-login-sso-hint">Single sign-on for your organization domain</p>
+              ) : (
+                <p className="ent-login-sso-hint">Enter your work email above to use SSO</p>
+              )}
             </>
           ) : null}
 

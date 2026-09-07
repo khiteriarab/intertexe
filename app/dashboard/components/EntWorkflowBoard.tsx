@@ -141,6 +141,9 @@ export function EntWorkflowCalendar({ events }: { events: OrgWorkflowData["calen
   const grouped = useMemo(() => {
     const map = new Map<string, typeof events>();
     for (const event of events) {
+      if (!event?.date || event.date === "null" || event.date === "undefined") continue;
+      const parsed = new Date(event.date);
+      if (Number.isNaN(parsed.getTime())) continue;
       const key = event.date.slice(0, 10);
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(event);
