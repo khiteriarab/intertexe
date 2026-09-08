@@ -1,6 +1,7 @@
 /** Homepage “Brands we love” — editorial houses (web). */
 export const CURATED_BRAND_SLUGS = [
   "re-done",
+  "staud",
   "toteme",
   "cult-gaia",
   "zimmermann",
@@ -10,6 +11,7 @@ export const CURATED_BRAND_SLUGS = [
 /** Display names when the designers table is slow or unavailable. */
 export const CURATED_BRAND_LABELS: Record<(typeof CURATED_BRAND_SLUGS)[number], string> = {
   "re-done": "Re/Done",
+  staud: "Staud",
   toteme: "Totême",
   "cult-gaia": "Cult Gaia",
   zimmermann: "Zimmermann",

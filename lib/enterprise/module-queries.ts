@@ -72,10 +72,17 @@ export async function loadOrgRegulations(client: SupabaseClient, organizationId:
   const requirements = ruleVersion.data?.id
     ? await client.from("regulatory_requirements").select("requirement_key, field_key, obligation_kind, severity, authoritative_source, source_reference").eq("rule_version_id", ruleVersion.data.id)
     : { data: [] };
-  const [missing, regulatoryIssues] = await Promise.all([
+  const [missing, regulatoryIssues, missingRows] = await Promise.all([
     client.from("missing_data_register").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "open"),
     client.from("issues").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "open").in("issue_type", ["missing_data", "validation", "regulatory"]),
+    client.from("missing_data_register").select("field_key").eq("organization_id", organizationId).eq("status", "open").limit(500),
   ]);
+  const gapsByField: Record<string, number> = {};
+  for (const row of missingRows.data || []) {
+    const key = String(row.field_key || "").trim();
+    if (!key) continue;
+    gapsByField[key] = (gapsByField[key] || 0) + 1;
+  }
   const framework = Array.isArray(ruleVersion.data?.framework) ? ruleVersion.data.framework[0] : ruleVersion.data?.framework;
   return {
     overview,
@@ -89,6 +96,7 @@ export async function loadOrgRegulations(client: SupabaseClient, organizationId:
       sourceUrl: framework?.source_url || null,
     } : null,
     requirements: requirements.data || [],
+    gapsByField,
     gapSummary: {
       openMissingFields: missing.count || 0,
       openRegulatoryIssues: regulatoryIssues.count || 0,

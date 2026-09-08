@@ -10,6 +10,8 @@ import { BRAND_PROFILES, getTierLabel, type BrandProfile } from "../../lib/brand
 import { getCuratedScore } from "../../lib/curated-quality-scores";
 import { getBrandHeroImage } from "../../lib/brand-hero-images";
 import { formatDisplayPrice } from "../../lib/format-display-price";
+import { AppStoreCtaLink } from "../components/AppStoreCtaLink";
+import { getChromeWebStoreUrl } from "../../lib/chrome-extension";
 
 const POPULAR_BRAND_NAMES = [
   "FRAME", "RE/DONE", "Reformation", "Ganni", "Isabel Marant",
@@ -119,6 +121,39 @@ export default function QuizClient() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !recommendation) return;
+    const pending = localStorage.getItem("intertexe_pending_quiz");
+    if (!pending) return;
+    const token = localStorage.getItem("intertexe_auth_token");
+    if (!token) return;
+
+    try {
+      const parsed = JSON.parse(pending);
+      fetch("/api/quiz", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          materials: parsed.materials,
+          priceRange: parsed.priceRange,
+          syntheticTolerance: parsed.syntheticTolerance,
+          favoriteBrands: parsed.favoriteBrands,
+          profileType: parsed.profileType,
+          recommendation: parsed.recommendation,
+        }),
+      })
+        .then((res) => {
+          if (res.ok) localStorage.removeItem("intertexe_pending_quiz");
+        })
+        .catch(() => {});
+    } catch {
+      // ignore
+    }
+  }, [isAuthenticated, recommendation]);
 
   useEffect(() => {
     if (!isSubmitting) return;
@@ -821,17 +856,54 @@ function QuizResults({ selections, recommendation, designers, isAuthenticated }:
         </p>
       </header>
 
-      {!isAuthenticated && (
-        <div className="bg-foreground text-background p-5 md:p-8 flex flex-col md:flex-row items-center gap-4 md:gap-8 justify-between" data-testid="banner-save-results">
-          <div className="flex flex-col gap-1.5 text-center md:text-left">
-            <span className="text-sm md:text-base font-serif">Save your results</span>
-            <span className="text-xs text-background/70 leading-relaxed">Create an account to keep your fabric persona and get personalized recommendations.</span>
-          </div>
-          <Link href="/account" className="border border-background px-6 py-3.5 md:py-3 uppercase tracking-[0.15em] text-[10px] md:text-xs hover:bg-background hover:text-foreground transition-colors active:scale-[0.97] whitespace-nowrap flex-shrink-0 w-full md:w-auto text-center" data-testid="link-create-account-save">
-            Create Account
-          </Link>
+      <div
+        className="bg-[#f8f7f5] border border-neutral-200/80 p-6 md:p-8 flex flex-col gap-6 md:gap-8"
+        data-testid="banner-save-results"
+      >
+        <div className="flex flex-col gap-2 text-center md:text-left">
+          <span className="text-[9px] uppercase tracking-[0.3em] text-neutral-400">
+            {isAuthenticated ? "Take it with you" : "Save your fabric persona"}
+          </span>
+          <h2 className="text-xl md:text-2xl font-serif leading-snug">
+            {isAuthenticated
+              ? "Your results are ready in the app"
+              : "Download the app and create an account"}
+          </h2>
+          <p className="text-sm text-neutral-500 leading-relaxed max-w-xl">
+            {isAuthenticated
+              ? "Open the INTERTEXE app to save this persona, scan labels in stores, and get alerts when we find pieces that match your material standards."
+              : "Keep your fabric identity, scan care labels in stores with our fabric scanner, and get personalized recommendations wherever you shop."}
+          </p>
         </div>
-      )}
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+          <AppStoreCtaLink
+            path="/scanner"
+            cta="quiz_results_app"
+            className="bg-foreground text-background px-6 py-3.5 md:py-4 uppercase tracking-[0.15em] text-[10px] md:text-xs hover:bg-foreground/90 transition-colors active:scale-[0.97] text-center flex items-center justify-center gap-2"
+            testId="link-quiz-download-app"
+          >
+            Download the app <ArrowRight className="w-3.5 h-3.5" />
+          </AppStoreCtaLink>
+          {!isAuthenticated && (
+            <Link
+              href="/account?mode=signup&next=/quiz"
+              className="border border-neutral-800 text-neutral-800 px-6 py-3.5 md:py-4 uppercase tracking-[0.15em] text-[10px] md:text-xs hover:bg-neutral-800 hover:text-white transition-colors active:scale-[0.97] text-center"
+              data-testid="link-create-account-save"
+            >
+              Create account
+            </Link>
+          )}
+          <a
+            href={getChromeWebStoreUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] md:text-xs uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors text-center py-2 sm:ml-auto"
+            data-testid="link-quiz-chrome-extension"
+          >
+            Or add Chrome extension →
+          </a>
+        </div>
+      </div>
 
       {brandProductsWithImages.length > 0 && (
         <section className="flex flex-col gap-6 md:gap-8" data-testid="section-selected-products">

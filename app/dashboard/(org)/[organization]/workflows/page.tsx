@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { canMutateEnterprise } from "../../../../../lib/enterprise/roles";
+import { ORG_PAGE_STATES } from "../../../../../lib/enterprise/page-states";
 import { loadOrgWorkflow } from "../../../../../lib/enterprise/workflow";
 import { EntWorkflowBoard, EntWorkflowCalendar } from "../../../components/EntWorkflowBoard";
-import { EntModuleMetrics, EntModulePage } from "../../../components/EnterpriseModuleUi";
+import { EntModuleMetrics, EntModulePage, entLinkClass } from "../../../components/EnterpriseModuleUi";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,7 @@ export default async function WorkflowsPage({
   return (
     <EntModulePage
       title="Workflows"
+      state={ORG_PAGE_STATES.workflows}
       meta={
         <>
           <span>
@@ -39,6 +42,9 @@ export default async function WorkflowsPage({
               <strong>{supplierDueCount}</strong> supplier due dates
             </span>
           ) : null}
+          <Link href={`/dashboard/${membership.slug}/regulations`} className={entLinkClass}>
+            Regulatory readiness →
+          </Link>
         </>
       }
     >

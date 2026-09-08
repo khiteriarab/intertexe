@@ -4,6 +4,10 @@ import { SERIF } from "./platform-ui";
 
 const FAQ: { q: string; a: ReactNode }[] = [
   {
+    q: "What is INTERTEXE — a data layer, a DPP company, or a consumer app?",
+    a: "INTERTEXE is the product and material data layer for fashion companies. Brands buy a governed workspace that connects existing product data, resolves conflicts, benchmarks material strategy, tracks readiness, and publishes passports and public product experiences. Digital Product Passport generation is an important output — not the whole company. The consumer app is INTERTEXE's strategic demand surface, not the enterprise SKU.",
+  },
+  {
     q: "Is INTERTEXE a Digital Product Passport company?",
     a: "DPP regulation is why many brands start. INTERTEXE is a material-intelligence system: it structures catalog data, shows what is wrong or missing, benchmarks material strategy, and then publishes passports from that same record. Passport generation is an outcome, not the whole product.",
   },

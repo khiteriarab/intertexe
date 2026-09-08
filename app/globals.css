@@ -149,8 +149,8 @@
 }
 
 /* next/image fill — avoid subpixel blur from transform stacking */
-.homepage-hero-desktop-frame > span,
-.homepage-hero-frame-mobile > span {
+.homepage-hero-desktop-frame > img,
+.homepage-hero-frame-mobile > img {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
@@ -333,6 +333,13 @@
     z-index: 999;
     border-top-color: rgba(0, 0, 0, 0.06);
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.06);
+    pointer-events: auto;
+  }
+
+  /* Keep horizontal rails scrollable above the cookie banner touch zone */
+  .horizontal-rail,
+  .product-rail-scroll {
+    scroll-padding-bottom: 88px;
   }
 }
 

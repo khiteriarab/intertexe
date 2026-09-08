@@ -5,10 +5,10 @@ import { PlatformViewTracker } from "./PlatformViewTracker";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "INTERTEXE for Brands | Product & Material Intelligence for Fashion",
+    absolute: "INTERTEXE for Brands | Product & Material Data Layer for Fashion",
   },
   description:
-    "INTERTEXE connects and normalizes fashion product data, benchmarks material strategy, resolves data-quality issues, and prepares governed records for Digital Product Passports. Product and material intelligence for brands — from fragmented inputs to approved outputs.",
+    "INTERTEXE is the product and material data layer for fashion — connect PLM, ERP, spreadsheets and feeds into one governed record, benchmark material strategy, track regulatory readiness, and publish Digital Product Passports and public product experiences.",
 };
 
 export default function PlatformPage() {

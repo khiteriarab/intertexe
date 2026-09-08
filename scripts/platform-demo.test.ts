@@ -260,8 +260,12 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(form, /Do not attach confidential catalogs/);
     assert.doesNotMatch(form, /type=["']file["']/);
     assert.match(office, /Barcelona, Spain/);
-    assert.match(office, /khiteri@intertexe\.com/);
-    assert.match(office, /info@intertexe\.com/);
+    assert.match(office, /PlatformLeadForm/);
+    assert.match(office, /sourceCta="office_section"/);
+    assert.match(office, /variant="office"/);
+    assert.doesNotMatch(office, /khiteri@intertexe\.com/);
+    assert.doesNotMatch(office, /info@intertexe\.com/);
+    assert.doesNotMatch(office, /street address is shared/);
     assert.doesNotMatch(office, /Fairly Made/);
     assert.doesNotMatch(office, /Boulevard|Calle |Carrer |Via /);
     assert.doesNotMatch(page, /Fairly Made/);
@@ -269,8 +273,8 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(chrome, /active === "platform" \|\| active === "demo"/);
     assert.match(previews, /Navy = your brand/);
     assert.doesNotMatch(previews, /Forest = your brand/);
-    assert.match(constants, /PLATFORM_LEAD_TO = "khiteri@intertexe\.com"/);
-    assert.match(constants, /PLATFORM_LEAD_CC = "info@intertexe\.com"/);
+    assert.match(constants, /PLATFORM_LEAD_TO = "info@intertexe\.com"/);
+    assert.match(constants, /PLATFORM_LEAD_CC = "khiteri@intertexe\.com"/);
     assert.match(leads, /PLATFORM_LEAD_TO/);
     assert.match(leads, /cc: salesCc/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/barcelona-platform-office.jpg")));

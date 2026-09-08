@@ -3,7 +3,10 @@ import type { OrgOverviewData } from "../../../lib/enterprise/queries";
 import type { PeerComparisonRow } from "../../../lib/enterprise/composition-benchmark";
 import type { CatalogCompositionStats } from "../../../lib/enterprise/composition-benchmark";
 import { padCount } from "../../../lib/enterprise/display-format";
+import { enterpriseModuleCatalog, implementationSummary } from "../../../lib/enterprise/marketing-modules";
+import { implementationLabel } from "../../../lib/enterprise/page-states";
 import { ENT_NAV_ITEM_ICONS } from "./EnterpriseNavIcons";
+import { StateBadge } from "./StateBadge";
 import { EntDonutChart, EntRoundedBarChart, LIFECYCLE_COLORS } from "./EnterpriseCharts";
 import { passportStateLabel } from "../../../lib/enterprise/issue-copy";
 
@@ -25,24 +28,54 @@ const KPI_TONES: Record<KpiCard["tone"], { bg: string; icon: string }> = {
   blush: { bg: "bg-[rgba(243,230,228,0.85)]", icon: "text-[var(--ent-petrol-deep)]" },
 };
 
-const MODULE_LINKS: Array<{
-  href: string;
-  label: string;
-  description: string;
-  icon: keyof typeof ENT_NAV_ITEM_ICONS;
-  count?: (overview: OrgOverviewData) => number | string;
-}> = [
-  { href: "/workflows", label: "Workflows", description: "Stage owners, due dates, and team coordination", icon: "workflows" },
-  { href: "/benchmarking", label: "Signals & benchmarks", description: "Consumer signals, fiber mix, and peer comparison", icon: "benchmarking" },
-  { href: "/products", label: "Products", description: "Catalog, imports, field approval", icon: "products", count: (o) => o.productCount },
-  { href: "/issues", label: "Issues", description: "Blocking findings and missing data", icon: "issues", count: (o) => o.issueCount },
-  { href: "/passports", label: "Passports", description: "Publish and version DPPs", icon: "passports", count: (o) => o.readyCount + o.publishedCount },
-  { href: "/regulations", label: "Regulations", description: "EU ESPR and market rules", icon: "regulations" },
-  { href: "/analytics", label: "Analytics", description: "Readiness and compliance trends", icon: "analytics" },
-  { href: "/suppliers", label: "Suppliers", description: "Evidence requests and partners", icon: "suppliers" },
-  { href: "/activity", label: "Activity", description: "Audit trail across the org", icon: "activity" },
-  { href: "/integrations", label: "Integrations", description: "PLM, ERP, and data pipes", icon: "integrations" },
-];
+const MODULE_COUNT_KEYS: Partial<Record<string, (overview: OrgOverviewData) => number | undefined>> = {
+  "/products": (o) => o.productCount,
+  "/issues": (o) => o.issueCount,
+  "/passports": (o) => o.readyCount + o.publishedCount,
+};
+
+export function EntModuleShowcase({ overview, base }: { overview: OrgOverviewData; base: string }) {
+  const modules = enterpriseModuleCatalog().filter((mod) => mod.href !== "");
+  const summary = implementationSummary();
+
+  return (
+    <section className="mb-10 md:mb-12">
+      <div className="mb-6">
+        <p className="ent-section-eyebrow">Workspace</p>
+        <h2 className="ent-section-title">Explore the platform</h2>
+        <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-2xl">
+          Multi-module SaaS — {summary.implemented} production-ready, {summary.partial} operational,{" "}
+          {summary.placeholder} on roadmap. Every module connects to your live catalog.
+        </p>
+      </div>
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {modules.map((mod) => {
+          const Icon = ENT_NAV_ITEM_ICONS[mod.icon as keyof typeof ENT_NAV_ITEM_ICONS];
+          const countFn = MODULE_COUNT_KEYS[mod.href];
+          const count = countFn?.(overview);
+          return (
+            <Link key={mod.href} href={`${base}${mod.href}`} className="ent-module-card group">
+              <div className="flex items-start justify-between gap-3">
+                <span className="ent-module-icon">
+                  <Icon className="h-[18px] w-[18px]" />
+                </span>
+                <div className="flex flex-col items-end gap-1.5">
+                  <StateBadge state={mod.state} />
+                  {count != null ? (
+                    <span className="ent-module-badge">{typeof count === "number" ? padCount(count) : count}</span>
+                  ) : null}
+                </div>
+              </div>
+              <p className="ent-module-title">{mod.label}</p>
+              <p className="ent-module-desc">{mod.description}</p>
+              <span className="ent-module-cta">Open {implementationLabel(mod.state).toLowerCase()} module →</span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 export function EntKpiGrid({ overview, base }: { overview: OrgOverviewData; base: string }) {
   const total = overview.productCount;

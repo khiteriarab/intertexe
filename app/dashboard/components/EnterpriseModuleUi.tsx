@@ -6,6 +6,8 @@ import {
   entLinkClass,
   entMetaClass,
 } from "./EnterpriseUi";
+import { StateBadge } from "./StateBadge";
+import type { ImplementationState } from "../../../lib/enterprise/page-states";
 
 export type EntZoneTone = "blush" | "butter" | "cream" | "stone" | "petrol";
 
@@ -13,16 +15,21 @@ export function EntInlinePageHeader({
   title,
   meta,
   action,
+  state,
 }: {
   title: string;
   meta?: React.ReactNode;
   action?: React.ReactNode;
+  state?: ImplementationState;
 }) {
   return (
     <header className="ent-page-header">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="ent-title text-[1.625rem] md:text-[2rem] text-[var(--ent-ink)]">{title}</h1>
+          <div className="flex flex-wrap items-center gap-3 mb-1">
+            <h1 className="ent-title text-[1.625rem] md:text-[2rem] text-[var(--ent-ink)]">{title}</h1>
+            {state ? <StateBadge state={state} /> : null}
+          </div>
           {meta ? <div className="ent-page-meta">{meta}</div> : null}
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}
@@ -55,6 +62,7 @@ export function EntModulePage({
   action,
   subtitle,
   description,
+  state,
   children,
 }: {
   title: string;
@@ -64,6 +72,7 @@ export function EntModulePage({
   children: React.ReactNode;
   /** @deprecated use subtitle */
   description?: string;
+  state?: ImplementationState;
   zone?: EntZoneTone;
 }) {
   const lead = subtitle || description;
@@ -71,6 +80,7 @@ export function EntModulePage({
     <div>
       <EntInlinePageHeader
         title={title}
+        state={state}
         meta={
           meta || lead ? (
             <>
@@ -342,11 +352,15 @@ export function EntRequirementCard({
   technicalKey,
   meta,
   severity,
+  actionHref,
+  actionLabel,
 }: {
   title: string;
   technicalKey?: string | null;
   meta?: string;
   severity?: string | null;
+  actionHref?: string;
+  actionLabel?: string;
 }) {
   const severityLabel =
     severity === "blocking"
@@ -372,6 +386,11 @@ export function EntRequirementCard({
             <p className="font-mono text-[11px] text-[var(--ent-muted-light)] mt-2">Technical key: {technicalKey}</p>
           ) : null}
           {meta ? <p className="text-sm text-[var(--ent-muted)] mt-2 leading-relaxed">{meta}</p> : null}
+          {actionHref ? (
+            <Link href={actionHref} className={`${entLinkClass} mt-3 inline-flex text-sm`}>
+              {actionLabel || "Review gaps →"}
+            </Link>
+          ) : null}
         </div>
         {severityLabel ? (
           <span className={`inline-flex shrink-0 self-start rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-wide ${severityTone}`}>

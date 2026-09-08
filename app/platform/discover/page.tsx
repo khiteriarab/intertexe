@@ -7,7 +7,7 @@ import { PlatformFaq } from "../PlatformFaq";
 export const metadata: Metadata = {
   title: "Discover the INTERTEXE workspace",
   description:
-    "One workspace for material intelligence: overview, issues, benchmarking, passport studio and regulatory monitor. Illustrative sample — not a live customer catalog.",
+    "See what brands buy — the governed data layer, workspace, intelligence, readiness, and outputs — versus INTERTEXE's consumer discovery surface. Illustrative sample workspace.",
 };
 
 export default function PlatformDiscoverPage() {

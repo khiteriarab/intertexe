@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { PlatformNav, type PlatformNavKey } from "./PlatformNav";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
+import "./b2b-visuals.css";
 
 export function PlatformChrome({
   children,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { humanizeFieldKey } from "../../../../../lib/enterprise/display-format";
 import { loadOrgRegulations } from "../../../../../lib/enterprise/module-queries";
+import { ORG_PAGE_STATES } from "../../../../../lib/enterprise/page-states";
 import {
   EntEmptyState,
   EntModulePage,
@@ -27,6 +28,7 @@ export default async function RegulationsPage({
   return (
     <EntModulePage
       title="Regulations"
+      state={ORG_PAGE_STATES.regulations}
       meta={
         <>
           <span>
@@ -94,15 +96,22 @@ export default async function RegulationsPage({
             <div className="max-w-3xl">
               {data.requirements.map((req) => {
                 const technicalKey = req.requirement_key || req.field_key || "";
+                const gapCount = technicalKey ? data.gapsByField[technicalKey] || 0 : 0;
                 return (
                   <EntRequirementCard
                     key={technicalKey}
                     title={humanizeFieldKey(technicalKey)}
                     technicalKey={technicalKey}
                     severity={req.severity}
-                    meta={[req.authoritative_source || "INTERTEXE evaluation", req.obligation_kind?.replaceAll("_", " ")]
+                    meta={[
+                      req.authoritative_source || "INTERTEXE evaluation",
+                      req.obligation_kind?.replaceAll("_", " "),
+                      gapCount > 0 ? `${gapCount} open catalog gap${gapCount === 1 ? "" : "s"}` : "No open gaps",
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
+                    actionHref={gapCount > 0 ? `${base}/issues?field=${encodeURIComponent(technicalKey)}` : `${base}/products`}
+                    actionLabel={gapCount > 0 ? "Review gaps in Issues →" : "Review products →"}
                   />
                 );
               })}

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { cfProductCard } from "../../lib/cloudflare-images";
 import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format-display-price";
 import {
-  HORIZONTAL_RAIL_BLEED_CLASS,
+  HORIZONTAL_RAIL_BLEED_PROXIMITY_CLASS,
   HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS,
 } from "../../lib/horizontal-rail";
 
@@ -16,7 +16,15 @@ function railImageSrc(url: string): string {
   return cfProductCard(trimmed) || trimmed;
 }
 
-function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) {
+function SaleProductCard({
+  product,
+  eager,
+  suppressNavigate,
+}: {
+  product: any;
+  eager?: boolean;
+  suppressNavigate?: () => boolean;
+}) {
   const name = product.name || "";
   const brandName = product.brandName || product.brand_name || "";
   const rawUrl = (product.imageUrl || product.image_url || "").trim();
@@ -41,6 +49,11 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
       data-rail-card
       data-testid={`product-sale-${product.id}`}
       draggable={false}
+      onClick={(e) => {
+        if (suppressNavigate?.()) {
+          e.preventDefault();
+        }
+      }}
     >
       <div className="aspect-[3/4] bg-[#f3f2f0] relative overflow-hidden">
         {rawUrl ? (
@@ -80,12 +93,90 @@ function SaleProductCard({ product, eager }: { product: any; eager?: boolean }) 
   );
 }
 
-export function SaleHomeRail({ products }: { products?: any[] }) {
-  const railProducts = (products || []).slice(0, 28);
+function useRailDragScroll() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({ active: false, moved: false, startX: 0, startScroll: 0 });
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (!el || e.pointerType === "mouse") return;
+    dragRef.current = {
+      active: true,
+      moved: false,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+    };
+    el.setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    const drag = dragRef.current;
+    if (!el || !drag.active) return;
+    const dx = e.clientX - drag.startX;
+    if (Math.abs(dx) > 6) drag.moved = true;
+    if (drag.moved) {
+      el.scrollLeft = drag.startScroll - dx;
+    }
+  }, []);
+
+  const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (el?.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId);
+    }
+    dragRef.current.active = false;
+  }, []);
+
+  const scrollBy = useCallback((direction: "left" | "right") => {
+    scrollRef.current?.scrollBy({
+      left: direction === "left" ? -420 : 420,
+      behavior: "smooth",
+    });
+  }, []);
+
+  return {
+    scrollRef,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    suppressNavigate: () => dragRef.current.moved,
+    scrollBy,
+  };
+}
+
+export function SaleHomeRail({ products: initialProducts }: { products?: any[] }) {
+  const [products, setProducts] = useState<any[]>(initialProducts || []);
+  const { scrollRef, onPointerDown, onPointerMove, onPointerUp, suppressNavigate, scrollBy } =
+    useRailDragScroll();
+
+  useEffect(() => {
+    setProducts(initialProducts || []);
+  }, [initialProducts]);
+
+  useEffect(() => {
+    if ((initialProducts || []).length > 0) return;
+    let cancelled = false;
+    fetch("/api/homepage")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.saleProducts?.length) return;
+        setProducts(data.saleProducts);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [initialProducts]);
+
+  const railProducts = products.slice(0, 28);
   if (railProducts.length === 0) return null;
 
   return (
-    <section className="border-t border-neutral-200/70 py-10 md:py-14 lg:py-16 layout-bleed-full" data-testid="section-sale">
+    <section
+      className="border-t border-neutral-200/70 py-10 md:py-14 lg:py-16 lg:layout-bleed-full"
+      data-testid="section-sale"
+    >
       <div className="px-4 md:px-8 mb-6 md:mb-8">
         <Link href="/sale" className="group inline-flex items-center gap-2" data-testid="link-sale">
           <h2 className="text-[34px] sm:text-[40px] md:text-[44px] lg:text-[48px] font-serif leading-[1.02] group-hover:text-neutral-500 transition-colors">
@@ -96,14 +187,43 @@ export function SaleHomeRail({ products }: { products?: any[] }) {
       </div>
 
       <div className={`relative min-w-0 ${HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}`}>
-        <div className={`${HORIZONTAL_RAIL_BLEED_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4`}>
+        <div
+          ref={scrollRef}
+          className={`${HORIZONTAL_RAIL_BLEED_PROXIMITY_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 pr-14 md:pr-16`}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
           {railProducts.map((product: any, i: number) => (
-            <SaleProductCard key={product.id} product={product} eager={i < 8} />
+            <SaleProductCard
+              key={product.id}
+              product={product}
+              eager={i < 8}
+              suppressNavigate={suppressNavigate}
+            />
           ))}
         </div>
+
+        <button
+          type="button"
+          onClick={() => scrollBy("left")}
+          className="absolute left-1 md:left-4 top-[38%] -translate-y-1/2 z-10 w-10 h-10 md:w-11 md:h-11 rounded-full border border-neutral-200 bg-white/95 shadow-sm flex items-center justify-center hover:border-neutral-400 transition-colors"
+          aria-label="Scroll sale products left"
+        >
+          <ChevronLeft className="w-5 h-5 text-neutral-700" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollBy("right")}
+          className="absolute right-1 md:right-4 top-[38%] -translate-y-1/2 z-10 w-10 h-10 md:w-11 md:h-11 rounded-full border border-neutral-200 bg-white/95 shadow-sm flex items-center justify-center hover:border-neutral-400 transition-colors"
+          aria-label="Scroll sale products right"
+        >
+          <ChevronRight className="w-5 h-5 text-neutral-700" />
+        </button>
       </div>
 
-      <div className="px-4 md:px-8 mt-5 md:mt-6">
+      <div className="px-4 md:px-8 mt-5 md:mt-6 pb-[max(0px,env(safe-area-inset-bottom))]">
         <Link
           href="/sale"
           className="text-[10px] uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors inline-flex items-center gap-2"

@@ -23,6 +23,7 @@ import { NewInHomeRail } from "./NewInHomeRail";
 import { SaleHomeRail } from "./SaleHomeRail";
 import { ShopTheEditCarousel, EDIT_CAROUSEL_SHORT_SUBTITLES } from "./ShopTheEditCarousel";
 import { CatalogProductImage } from "./CatalogProductImage";
+import { HomepageProductToolsSection } from "./HomepageProductToolsSection";
 import { cfHomepageRail } from "../../lib/cloudflare-images";
 import { CATALOG_STATS } from "../../lib/catalog-stats";
 
@@ -435,7 +436,9 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
 
       <SaleHomeRail products={data.saleProducts} />
 
-      <section className="py-16 md:py-28 flex flex-col items-center text-center">
+      <HomepageProductToolsSection />
+
+      <section className="py-16 md:py-28 flex flex-col items-center text-center border-t border-neutral-200/60">
         <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-neutral-400 mb-5 md:mb-7">
           Personalized for you
         </p>

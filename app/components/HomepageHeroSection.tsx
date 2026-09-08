@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import {
@@ -39,49 +38,31 @@ export function HomepageHeroSection({
     heroSlides.map((slide, index) => {
       const raw = variant === "desktop" ? slide.desktopUrl ?? slide.url : slide.url;
       const src = cfHomepageHero(raw, variant);
-      const isJpg = raw.includes("hero-editorial.jpg");
+      const srcSet = variant === "desktop" ? slide.desktopSrcSet : undefined;
+      const isJpg = raw.includes(".jpg") || raw.includes(".jpeg");
       const isFirst = index === 0;
-      /** Only preload the visible breakpoint — mobile had priority while hidden on desktop (6MB wasted). */
-      const eager = variant === "desktop" ? isFirst : false;
+      const isVisible = heroIndex === index;
+      const objectPosition =
+        variant === "desktop"
+          ? slide.objectPositionDesktop ?? slide.objectPosition
+          : slide.objectPosition;
 
-      if (variant === "mobile") {
-        return (
-          <Image
-            key={slide.url}
-            src={src}
-            alt={isFirst ? "INTERTEXE editorial" : ""}
-            fill
-            priority={eager}
-            loading={eager ? undefined : "lazy"}
-            quality={100}
-            sizes="100vw"
-            aria-hidden={!isFirst}
-            className={`homepage-hero-img transition-opacity duration-500 ${
-              heroIndex === index ? "opacity-100" : "opacity-0"
-            } ${isJpg ? "homepage-hero-img--editorial-jpg" : ""}`}
-            style={{ objectPosition: slide.objectPosition }}
-            draggable={false}
-          />
-        );
-      }
-
-      const objectPosition = slide.objectPositionDesktop ?? slide.objectPosition;
       return (
-        <Image
-          key={`desktop-${raw}`}
+        <img
+          key={variant === "desktop" ? `desktop-${raw}` : slide.url}
           src={src}
+          srcSet={srcSet}
+          sizes={srcSet ? "100vw" : undefined}
           alt={isFirst ? "INTERTEXE editorial" : ""}
-          fill
-          priority={eager}
-          loading={eager ? undefined : "lazy"}
-          quality={100}
-          sizes="100vw"
-          aria-hidden={!isFirst}
+          aria-hidden={!isVisible}
+          loading={isFirst ? "eager" : "lazy"}
+          fetchPriority={isFirst ? "high" : "auto"}
+          decoding={isFirst ? "sync" : "async"}
+          draggable={false}
           className={`homepage-hero-img transition-opacity duration-500 ${
-            heroIndex === index ? "opacity-100" : "opacity-0"
+            isVisible ? "opacity-100" : "opacity-0"
           } ${isJpg ? "homepage-hero-img--editorial-jpg" : "homepage-hero-img--editorial-v8"}`}
           style={{ objectPosition }}
-          draggable={false}
         />
       );
     });

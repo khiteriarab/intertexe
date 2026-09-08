@@ -27,7 +27,7 @@ export function PlatformLeadForm({
 }: {
   intent?: string;
   sourceCta: string;
-  variant?: "default" | "demo";
+  variant?: "default" | "demo" | "office";
 }) {
   const [state, setState] = useState<"idle" | "submitting" | "done" | "dup" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -63,21 +63,56 @@ export function PlatformLeadForm({
     }
   }
 
+  const demo = variant === "demo";
+  const office = variant === "office";
+
   if (state === "done" || state === "dup") {
     return (
       <p className="text-sm text-[#5c5854] leading-relaxed">
-        We received your request. The INTERTEXE team in Barcelona will review your catalog profile and reply
-        with the next step.
+        {office
+          ? "We received your message. The INTERTEXE platform team will reply shortly."
+          : "We received your request. The INTERTEXE team in Barcelona will review your catalog profile and reply with the next step."}
         {state === "dup" ? " This email was already received in the last 24 hours." : ""}
       </p>
     );
   }
 
-  const demo = variant === "demo";
-
   return (
-    <form onSubmit={onSubmit} className={`grid gap-4 ${demo ? "" : "max-w-xl"}`}>
+    <form onSubmit={onSubmit} className={`grid gap-4 ${demo || office ? "" : "max-w-xl"}`}>
       <input name="company_fax" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+      <input type="hidden" name="intent" value={selectedIntent} />
+      {office ? (
+        <>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <label className={LABEL}>
+              First name*
+              <input required name="first_name" autoComplete="given-name" className={FIELD} />
+            </label>
+            <label className={LABEL}>
+              Last name*
+              <input required name="last_name" autoComplete="family-name" className={FIELD} />
+            </label>
+            <label className={LABEL}>
+              Work email*
+              <input required type="email" name="email" autoComplete="email" className={FIELD} />
+            </label>
+            <label className={LABEL}>
+              Company*
+              <input required name="company" autoComplete="organization" className={FIELD} />
+            </label>
+          </div>
+          <label className={LABEL}>
+            Message
+            <textarea
+              name="message"
+              rows={4}
+              placeholder="How can we help?"
+              className={`${FIELD} resize-y min-h-[112px]`}
+            />
+          </label>
+        </>
+      ) : (
+        <>
       <div className="grid sm:grid-cols-2 gap-4">
         <label className={LABEL}>
           First name*
@@ -116,7 +151,9 @@ export function PlatformLeadForm({
           </>
         ) : null}
       </div>
-      {demo ? (
+        </>
+      )}
+      {office ? null : demo ? (
         <fieldset>
           <legend className={`${LABEL} mb-3`}>Company type</legend>
           <div className="grid sm:grid-cols-2 gap-2">
@@ -129,7 +166,7 @@ export function PlatformLeadForm({
           </div>
         </fieldset>
       ) : null}
-      {demo ? null : (
+      {office ? null : demo ? null : (
         <>
           <label className={LABEL}>
             Role
@@ -141,6 +178,8 @@ export function PlatformLeadForm({
           </label>
         </>
       )}
+      {office ? null : (
+        <>
       <label className={LABEL}>
         Company website
         <input name="company_website" className={FIELD} />
@@ -172,6 +211,8 @@ export function PlatformLeadForm({
           ))}
         </select>
       </label>
+        </>
+      )}
       <p className="text-xs text-[#8a847c] leading-relaxed">
         Do not attach confidential catalogs here. We arrange secure transfer after qualification. See{" "}
         <a href="/privacy" className="underline">
@@ -189,7 +230,7 @@ export function PlatformLeadForm({
         disabled={state === "submitting"}
         className="text-[11px] tracking-[0.2em] uppercase bg-[#152238] text-white px-8 py-4 min-h-[44px] disabled:opacity-50 hover:bg-[#0f1a2c]"
       >
-        {state === "submitting" ? "Sending…" : demo ? "Book a conversation" : "Submit request"}
+        {state === "submitting" ? "Sending…" : office ? "Send message" : demo ? "Book a conversation" : "Submit request"}
       </button>
     </form>
   );

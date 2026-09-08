@@ -13,28 +13,31 @@ describe("Platform B2B sales page", () => {
   const page = fs.readFileSync(path.join(process.cwd(), "app/platform/page.tsx"), "utf8");
   const form = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformLeadForm.tsx"), "utf8");
   const faq = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformFaq.tsx"), "utf8");
+  const discover = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
 
-  it("positions INTERTEXE as material intelligence, not DPP-only software", () => {
-    assert.match(sections, /Turn product data into material intelligence/);
+  it("positions INTERTEXE as the product and material data layer, not DPP-only software", () => {
+    assert.match(sections, /product and material data layer for fashion/i);
     assert.match(sections, /INTERTEXE FOR BRANDS/);
     assert.match(sections, /one governed product record/i);
-    assert.match(sections, /DPP is an important output/);
+    assert.match(sections, /Outputs from one record/);
+    assert.match(sections, /not the whole product/);
     assert.doesNotMatch(sections, /EU certified/i);
     assert.doesNotMatch(sections, /EU approved/i);
     assert.doesNotMatch(sections, /Guaranteed Compliant/);
   });
 
-  it("uses the nine-section B2B hierarchy", () => {
+  it("uses the eight-section B2B hierarchy", () => {
     assert.match(home, /SalesHeroSection/);
-    assert.match(home, /SalesProblemSection/);
+    assert.match(home, /SalesWhatItIsSection/);
     assert.match(home, /SalesGovernedRecordSection/);
-    assert.match(home, /SalesHowItWorksSection/);
     assert.match(home, /SalesIntelligenceSection/);
-    assert.match(home, /SalesDppSection/);
+    assert.match(home, /SalesOutputsSection/);
     assert.match(home, /SalesConsumerSection/);
     assert.match(home, /SalesPlatformBreadthSection/);
     assert.match(home, /SalesCtaSection/);
-    assert.doesNotMatch(home, /SalesOutcomesSection/);
+    assert.doesNotMatch(home, /SalesProblemSection/);
+    assert.doesNotMatch(home, /SalesHowItWorksSection/);
+    assert.doesNotMatch(home, /SalesDppSection/);
     assert.doesNotMatch(home, /PricingPlans/);
     assert.doesNotMatch(home, /StoryTabs/);
     assert.doesNotMatch(home, /ComparisonView/);
@@ -52,11 +55,11 @@ describe("Platform B2B sales page", () => {
     assert.match(form, /Free 10-product Material Snapshot/);
   });
 
-  it("centers intelligence and consumer advantage without overclaiming", () => {
+  it("centers intelligence and consumer moat without overclaiming", () => {
     assert.match(sections, /See your catalog differently/);
     assert.match(sections, /IntelligenceBenchmarkVisual/);
-    assert.match(sections, /Built on both sides of fashion/);
-    assert.match(sections, /never individual tracking/);
+    assert.match(sections, /not the enterprise SKU/);
+    assert.match(sections, /aggregate only, never individual shopper data/);
     assert.match(sections, /not yet operational/);
     assert.match(sections, /Illustrative example/);
     assert.match(sections, /not fabricated competitor dumps/);
@@ -66,13 +69,15 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(sections, /being built/i);
   });
 
-  it("uses intelligence-first page metadata", () => {
-    assert.match(page, /absolute: "INTERTEXE for Brands \| Product & Material Intelligence for Fashion"/);
+  it("uses data-layer-first page metadata", () => {
+    assert.match(page, /absolute: "INTERTEXE for Brands \| Product & Material Data Layer for Fashion"/);
+    assert.match(page, /product and material data layer/i);
+    assert.match(page, /regulatory readiness/i);
     assert.match(page, /Digital Product Passports/);
-    assert.match(page, /benchmarks material strategy/i);
   });
 
   it("keeps FAQ and detailed comparison off the home page", () => {
+    assert.match(faq, /product and material data layer/i);
     assert.match(faq, /does not fabricate product data/i);
     assert.doesNotMatch(home, /PlatformFaq/);
     assert.doesNotMatch(home, /ComparisonView/);
@@ -83,8 +88,14 @@ describe("Platform B2B sales page", () => {
     assert.match(sections, /hero-workspace-desktop\.png/);
     assert.match(sections, /ProblemConvergenceVisual/);
     assert.match(sections, /GovernedRecordVisual/);
-    assert.match(sections, /JourneyStepsVisual/);
-    assert.match(sections, /PassportIdentityVisual/);
+    assert.match(sections, /Connected product identity/i);
+    assert.match(sections, /From product record to physical product/);
+    assert.match(sections, /ProductIdentityCarriersVisual/);
+    assert.match(sections, /Managed product identity and passport infrastructure/);
+    assert.match(sections, /compatible connected carriers/i);
+    assert.doesNotMatch(sections, /PassportIdentityVisual/);
+    assert.doesNotMatch(sections, /manufactures NFC/i);
+    assert.doesNotMatch(sections, /Supabase hosting/i);
     assert.match(sections, /ConsumerEcosystemVisual/);
     assert.match(sections, /PlatformModuleGrid/);
     assert.doesNotMatch(sections, /PlatformEditorialGraphic/);
@@ -95,7 +106,16 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(sections, /ConsumerBridgeVisual/);
     assert.doesNotMatch(sections, /DppFlow/);
     assert.match(visuals, /Discover · Scan · Compare/);
+    assert.match(visuals, /enterpriseModuleCatalogByGroup/);
+    assert.match(visuals, /marketingMaturityFootnote/);
     assert.doesNotMatch(sections, /leaves/i);
     assert.doesNotMatch(sections, /factory/i);
+  });
+
+  it("contrasts enterprise contract vs consumer surface on Discover", () => {
+    assert.match(discover, /What you buy vs\. what we run/);
+    assert.match(discover, /Enterprise contract vs\. consumer surface/);
+    assert.match(discover, /What brands buy/);
+    assert.match(discover, /not the SKU on the contract/);
   });
 });

@@ -108,14 +108,18 @@ describe("Enterprise navigation", () => {
       "Issues",
       "Passports",
       "Workflows",
+      "Import center",
+      "Approvals",
       "Suppliers",
       "Files",
       "Activity",
+      "Audit log",
       "Regulations",
       "Signals & benchmarks",
       "Analytics",
       "Integrations",
       "Developers",
+      "Exports",
       "Settings",
     ]);
     assert.equal(enterpriseNavForActor(true).length, nav.length);

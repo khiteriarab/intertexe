@@ -1,14 +1,15 @@
-import { EntEmptyState, EntPageHeader } from "../../components/EnterpriseUi";
+import { EntEmptyState } from "../../components/EnterpriseUi";
+import { EntInlinePageHeader } from "../../components/EnterpriseModuleUi";
 import { ORG_PAGE_STATES, type ImplementationState } from "../../../../lib/enterprise/page-states";
 
 export function OrgSectionFrame({
   title,
   description,
-  state: _state,
+  state,
   children,
   emptyTitle,
   emptyBody,
-  brandLine = false,
+  brandLine: _brandLine = false,
 }: {
   title: string;
   description: string;
@@ -21,7 +22,7 @@ export function OrgSectionFrame({
   return (
     <div>
       <div className="ent-float-card px-8 py-10 md:px-10 md:py-12 mb-10">
-        <EntPageHeader title={title} description={description} brandLine={brandLine} />
+        <EntInlinePageHeader title={title} state={state} meta={<span>{description}</span>} />
       </div>
       {children}
       {emptyTitle && emptyBody ? <EntEmptyState title={emptyTitle} body={emptyBody} /> : null}

@@ -1,25 +1,23 @@
 import {
   SalesConsumerSection,
   SalesCtaSection,
-  SalesDppSection,
   SalesGovernedRecordSection,
   SalesHeroSection,
-  SalesHowItWorksSection,
   SalesIntelligenceSection,
+  SalesOutputsSection,
   SalesPlatformBreadthSection,
-  SalesProblemSection,
+  SalesWhatItIsSection,
 } from "./sales-sections";
 
-/** Public B2B sales page — intertexe.com/platform (9 sections) */
+/** Public B2B sales page — intertexe.com/platform (8 sections) */
 export function PlatformHome() {
   return (
     <div>
       <SalesHeroSection />
-      <SalesProblemSection />
+      <SalesWhatItIsSection />
       <SalesGovernedRecordSection />
-      <SalesHowItWorksSection />
       <SalesIntelligenceSection />
-      <SalesDppSection />
+      <SalesOutputsSection />
       <SalesConsumerSection />
       <SalesPlatformBreadthSection />
       <SalesCtaSection />

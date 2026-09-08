@@ -44,6 +44,7 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "rails": "/brands/rails.jpg",
   "re-done": "/brands/re-done.png",
   "reformation": "/brands/reformation.jpg",
+  "the-attico": "/brands/the-attico.jpg",
   "reiss": "/brands/reiss.jpg",
   "rixo": "/brands/rixo.jpg",
   "rodebjer": "/brands/rodebjer.jpg",

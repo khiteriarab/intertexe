@@ -1,22 +1,23 @@
-import Link from "next/link";
-import { getChromeWebStoreUrl } from "../../lib/chrome-extension";
 import { QrMark, SERIF } from "./platform-ui";
+import {
+  enterpriseModuleCatalogByGroup,
+  marketingMaturityFootnote,
+} from "../../lib/enterprise/marketing-modules";
+import { implementationLabel, type ImplementationState } from "../../lib/enterprise/page-states";
 
-const DATA_SOURCES = [
-  "PLM / PIM",
-  "ERP exports",
-  "Spreadsheets",
-  "Supplier files",
-  "Product feeds",
-] as const;
+export { DataArchitectureVisual as ProblemConvergenceVisual } from "./b2b-visuals/DataArchitectureVisual";
+export { JourneyStepsVisual } from "./b2b-visuals/ProductDataJourneyVisual";
+export { ConsumerEcosystemVisual } from "./b2b-visuals/FashionEcosystemVisual";
+export { ProductIdentityCarriersVisual } from "./b2b-visuals/ProductIdentityCarriersVisual";
 
-const JOURNEY_STEPS = [
-  { n: "01", title: "Connect", copy: "Bring existing product data together." },
-  { n: "02", title: "Normalize", copy: "Standardize fields, fibers and formats." },
-  { n: "03", title: "Resolve", copy: "Surface gaps and conflicting values." },
-  { n: "04", title: "Understand", copy: "Analyze your catalog and benchmark readiness." },
-  { n: "05", title: "Publish", copy: "Turn approved data into governed outputs." },
-] as const;
+/** Journey stages: Connect · Normalize · Resolve · Understand · Publish */
+/** Ecosystem consumer lane: Discover · Scan · Compare */
+
+const MATURITY_BADGE: Record<ImplementationState, string> = {
+  implemented: "bg-[#e4edea] text-[#2c4a3e]",
+  partial: "bg-[#f5efd8] text-[#7a6218]",
+  placeholder: "bg-[#f0ebe4] text-[#8a847c]",
+};
 
 const PEERS = [
   ["Natural fiber share", "57%", "46%"],
@@ -31,31 +32,6 @@ const FIBERS = [
   ["Viscose", 13, "#9c7b8b"],
   ["Wool", 8, "#c4a574"],
   ["Other", 15, "#d4cdc4"],
-] as const;
-
-const MODULE_GROUPS = [
-  {
-    label: "Core",
-    modules: ["Overview", "Products", "Issues", "Passports"],
-  },
-  {
-    label: "Operations",
-    modules: ["Workflows", "Suppliers", "Files", "Activity"],
-  },
-  {
-    label: "Intelligence",
-    modules: ["Benchmarking", "Regulations", "Analytics"],
-  },
-  {
-    label: "System",
-    modules: ["Integrations", "Developers", "Settings"],
-  },
-] as const;
-
-const CONSUMER_SURFACES = [
-  { label: "Shopping platform", href: "/shop", hint: "Material-first discovery" },
-  { label: "iOS app", href: "/scanner", hint: "Scan labels in store" },
-  { label: "Chrome extension", href: getChromeWebStoreUrl(), hint: "Compare while browsing", external: true },
 ] as const;
 
 export function SalesPanel({
@@ -80,83 +56,6 @@ export function SalesPanel({
       </div>
       {caption ? <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">{caption}</figcaption> : null}
     </figure>
-  );
-}
-
-/** Fragmented sources → one governed record (single visual). */
-export function ProblemConvergenceVisual() {
-  return (
-    <SalesPanel
-      caption="Illustrative — INTERTEXE connects existing systems without replacing them."
-      className="mt-10 sm:mt-14"
-    >
-      <div className="p-6 sm:p-10 lg:p-12">
-        <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-8 lg:gap-10 items-center">
-          <div className="space-y-2.5">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Fragmented inputs</p>
-            {DATA_SOURCES.map((source) => (
-              <div
-                key={source}
-                className="text-[11px] sm:text-xs tracking-[0.06em] uppercase text-[#5c5854] bg-white border border-[#e8e3da] px-4 py-3"
-              >
-                {source}
-              </div>
-            ))}
-          </div>
-
-          <div className="hidden lg:flex flex-col items-center gap-3 px-2" aria-hidden>
-            <div className="w-px h-16 bg-gradient-to-b from-transparent via-[#3e6268]/50 to-transparent" />
-            <div className="w-10 h-10 rounded-full border border-[#3e6268]/30 flex items-center justify-center text-[#3e6268]">
-              →
-            </div>
-            <div className="w-px h-16 bg-gradient-to-b from-transparent via-[#3e6268]/50 to-transparent" />
-          </div>
-
-          <div className="lg:hidden flex justify-center py-2 text-[#3e6268]" aria-hidden>
-            ↓
-          </div>
-
-          <div className="bg-[#152238] text-white p-6 sm:p-8 relative overflow-hidden">
-            <div
-              className="pointer-events-none absolute inset-0 opacity-[0.12]"
-              aria-hidden
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(-24deg, transparent, transparent 14px, rgba(255,255,255,0.06) 14px, rgba(255,255,255,0.06) 15px)",
-              }}
-            />
-            <div className="relative">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-white/50 mb-3">INTERTEXE</p>
-              <p className="text-xl sm:text-2xl font-light leading-snug mb-3" style={SERIF}>
-                One governed product record
-              </p>
-              <p className="text-sm text-white/70 leading-relaxed">
-                Accurate. Complete. Traceable. Source values preserved — canonical fields for intelligence.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </SalesPanel>
-  );
-}
-
-/** Five-step journey — native horizontal flow. */
-export function JourneyStepsVisual() {
-  return (
-    <div className="mt-10 sm:mt-14">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-px bg-[#e8e3da] border border-[#e8e3da] rounded-xl overflow-hidden">
-        {JOURNEY_STEPS.map((step) => (
-          <article key={step.n} className="bg-white p-6 sm:p-7 flex flex-col min-h-[168px]">
-            <p className="text-[11px] tracking-[0.22em] uppercase text-[#9c7b8b] mb-3 tabular-nums">{step.n}</p>
-            <h3 className="text-lg sm:text-xl font-light mb-2 text-[#161513]" style={SERIF}>
-              {step.title}
-            </h3>
-            <p className="text-sm text-[#5c5854] leading-relaxed mt-auto">{step.copy}</p>
-          </article>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -331,8 +230,8 @@ export function PassportIdentityVisual() {
                 <span>Portugal</span>
               </li>
               <li className="flex justify-between gap-4 border-t border-[#eeeae4] pt-3">
-                <span>Public identity</span>
-                <span className="font-mono text-xs">/p/INTX-ITX-4102</span>
+                <span>Public surfaces</span>
+                <span className="text-right text-xs leading-snug">Site · passport · QR · product pages</span>
               </li>
               <li className="flex justify-between gap-4 border-t border-[#eeeae4] pt-3">
                 <span>Regulatory readiness</span>
@@ -352,96 +251,34 @@ export function PassportIdentityVisual() {
   );
 }
 
-/** Consumer ↔ INTERTEXE ↔ Brands — one distinctive visual. */
-export function ConsumerEcosystemVisual() {
+/** Platform breadth — grouped module grid synced with enterprise nav + maturity. */
+export function PlatformModuleGrid() {
+  const groups = enterpriseModuleCatalogByGroup();
   return (
-    <SalesPanel className="mt-10 sm:mt-14">
-      <div className="p-6 sm:p-10">
-        <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 md:gap-8 items-stretch">
-          <div className="space-y-4">
-            <div>
-              <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-2">Consumers</p>
-              <p className="text-lg font-light" style={SERIF}>
-                Discover · Scan · Compare
-              </p>
-            </div>
-            <ul className="space-y-2">
-              {CONSUMER_SURFACES.map((surface) => (
-                <li key={surface.label}>
-                  {surface.external ? (
-                    <a
-                      href={surface.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block bg-white border border-[#e8e3da] px-4 py-3 hover:border-[#3e6268]/40 transition-colors"
+    <div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {groups.map((group) => (
+          <div key={group.id} className="border border-[#e8e3da] bg-[#f7f5f1] p-5 sm:p-6">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{group.label}</p>
+            <ul className="space-y-3">
+              {group.modules.map((mod) => (
+                <li key={mod.href || mod.label} className="pl-3 border-l-2 border-[#3e6268]/25">
+                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                    <span className="text-sm text-[#161513] leading-snug">{mod.label}</span>
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide ${MATURITY_BADGE[mod.state]}`}
                     >
-                      <p className="text-[10px] tracking-[0.12em] uppercase text-[#9c7b8b]">{surface.label}</p>
-                      <p className="text-xs text-[#5c5854] mt-1">{surface.hint}</p>
-                    </a>
-                  ) : (
-                    <Link
-                      href={surface.href}
-                      className="block bg-white border border-[#e8e3da] px-4 py-3 hover:border-[#3e6268]/40 transition-colors"
-                    >
-                      <p className="text-[10px] tracking-[0.12em] uppercase text-[#9c7b8b]">{surface.label}</p>
-                      <p className="text-xs text-[#5c5854] mt-1">{surface.hint}</p>
-                    </Link>
-                  )}
+                      {implementationLabel(mod.state)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#8a847c] leading-relaxed">{mod.description}</p>
                 </li>
               ))}
             </ul>
           </div>
-
-          <div className="hidden md:flex flex-col items-center justify-center px-2" aria-hidden>
-            <div className="w-px flex-1 min-h-[40px] bg-[#e8e3da]" />
-            <div className="my-3 w-16 h-16 rounded-full bg-[#152238] text-white flex items-center justify-center text-[10px] tracking-[0.14em] uppercase text-center leading-tight px-2">
-              INTERTEXE
-            </div>
-            <div className="w-px flex-1 min-h-[40px] bg-[#e8e3da]" />
-          </div>
-
-          <div className="flex flex-col justify-center">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-2">Brands</p>
-            <p className="text-lg font-light mb-4" style={SERIF}>
-              Understand · Benchmark · Prepare · Publish
-            </p>
-            <div className="bg-[#152238] text-white p-5 sm:p-6">
-              <p className="text-[10px] tracking-[0.14em] uppercase text-white/50 mb-3">Enterprise workspace</p>
-              <ul className="text-xs text-white/75 space-y-2">
-                <li>Governed product & material records</li>
-                <li>Issues, benchmarking & readiness</li>
-                <li>Digital Product Passport publication</li>
-              </ul>
-              <p className="text-[10px] text-white/40 mt-4 leading-relaxed">
-                Future consumer signals · governed aggregate only · not live where not operational
-              </p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
-    </SalesPanel>
-  );
-}
-
-/** Platform breadth — grouped module grid, no empty workspace frame. */
-export function PlatformModuleGrid() {
-  return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-      {MODULE_GROUPS.map((group) => (
-        <div key={group.label} className="border border-[#e8e3da] bg-[#f7f5f1] p-5 sm:p-6">
-          <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{group.label}</p>
-          <ul className="space-y-2">
-            {group.modules.map((mod) => (
-              <li
-                key={mod}
-                className="text-sm text-[#161513] pl-3 border-l-2 border-[#3e6268]/25 leading-snug"
-              >
-                {mod}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      <p className="mt-4 text-xs text-[#8a847c] leading-relaxed">{marketingMaturityFootnote()}.</p>
     </div>
   );
 }

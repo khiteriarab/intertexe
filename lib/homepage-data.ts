@@ -215,16 +215,38 @@ const CURATED_DESIGNERS_STATIC_FALLBACK = CURATED_BRAND_SLUGS.map((slug) => {
 });
 
 async function fetchHomepageSaleRail(): Promise<Product[]> {
+  const t0 = Date.now();
+  /** Prefer pre-built merch feed — same source as other homepage rails; avoids 3.8s direct-query timeouts. */
+  if (isMerchFeedEnabled()) {
+    try {
+      const feedProducts = await fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, {
+        limit: MERCH_HOME_SALE_DISPLAY_LIMIT,
+      });
+      const fromFeed = filterHomepageSaleProducts(
+        feedProducts.filter((p) => !isZeroPrice(p.price)),
+        MERCH_HOME_SALE_DISPLAY_LIMIT
+      );
+      if (fromFeed.length > 0) {
+        homepageTiming("rail:sale-feed", t0, `items=${fromFeed.length}`);
+        return fromFeed;
+      }
+    } catch (e: any) {
+      homepageTiming("rail:sale-feed", t0, e?.message || "feed-error");
+    }
+  }
+
   const result = await fetchSaleProducts({
     limit: MERCH_HOME_SALE_DISPLAY_LIMIT,
     offset: 0,
     useMerchFeedPreview: false,
     skipTotal: true,
   });
-  return filterHomepageSaleProducts(
+  const direct = filterHomepageSaleProducts(
     (result.products || []).filter((p) => !isZeroPrice(p.price)),
     MERCH_HOME_SALE_DISPLAY_LIMIT
   );
+  homepageTiming("rail:sale-direct", t0, `items=${direct.length}`);
+  return direct;
 }
 
 async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
@@ -458,8 +480,24 @@ export async function getHomePageData(): Promise<HomePageData> {
 }
 
 /** Whole homepage payload cached — avoids rebuilding rails on every navigation. */
+/** Sale rail cached separately — shorter TTL so a transient empty fetch does not hide Sale for an hour. */
+export const getCachedHomepageSaleRail = unstable_cache(
+  fetchHomepageSaleRail,
+  ["homepage-sale-rail-v3"],
+  { revalidate: 600, tags: ["homepage", "sale"] }
+);
+
 export const getCachedHomePageData = unstable_cache(
-  async () => getHomePageData(),
-  ["homepage-payload-v15"],
+  async () => {
+    const data = await getHomePageData();
+    if (data.saleProducts.length === 0) {
+      const saleProducts = await getCachedHomepageSaleRail();
+      if (saleProducts.length > 0) {
+        return { ...data, saleProducts };
+      }
+    }
+    return data;
+  },
+  ["homepage-payload-v16"],
   { revalidate: HOMEPAGE_REVALIDATE_SEC, tags: ["homepage"] }
 );

@@ -45,6 +45,7 @@ export function parseLeadBody(body: Record<string, unknown>) {
       phone: cleanLeadField(body.phone, 40) || null,
       country: cleanLeadField(body.country, 80) || null,
       company_type: COMPANY_TYPES.has(companyTypeRaw) ? companyTypeRaw : null,
+      message: cleanLeadField(body.message, 1200) || null,
     },
   };
 }
@@ -127,7 +128,7 @@ export async function POST(req: NextRequest) {
     subject: `Platform lead: ${intentLabel} — ${company}`,
     emailType: EMAIL_TYPES.PLATFORM_LEAD,
     html: `<p>${firstName} ${lastName} (${email}) at ${company} requested ${intentLabel}.</p>
-<p>Role: ${row.role || "—"}<br/>Phone: ${extras.phone || "—"}<br/>Country / region: ${extras.country || "—"}<br/>Company type: ${companyTypeLabel}<br/>Website: ${row.company_website || "—"}<br/>Products: ${row.product_count || "—"}<br/>Sells into EU: ${row.sells_into_eu || "—"}<br/>Catalog: ${row.catalog_system || "—"}<br/>CTA: ${row.source_cta || "—"}</p>
+<p>Role: ${row.role || "—"}<br/>Phone: ${extras.phone || "—"}<br/>Country / region: ${extras.country || "—"}<br/>Company type: ${companyTypeLabel}<br/>Website: ${row.company_website || "—"}<br/>Products: ${row.product_count || "—"}<br/>Sells into EU: ${row.sells_into_eu || "—"}<br/>Catalog: ${row.catalog_system || "—"}<br/>Message: ${extras.message || "—"}<br/>CTA: ${row.source_cta || "—"}</p>
 <p>No catalog file was accepted via the public form.</p>`,
     metadata: { intent, company },
   }).catch(() => {});

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { ProductDataJourneyVisual } from "./b2b-visuals/ProductDataJourneyVisual";
 import { PlatformGraphic } from "./PlatformGraphic";
 import { WorkspaceHeroPreview } from "./WorkspaceHeroPreview";
 import {
@@ -232,13 +233,10 @@ export function DiscoverWorkspace() {
           className="text-[2.15rem] sm:text-5xl md:text-[3.2rem] font-light leading-[1.12] text-[#152238] max-w-3xl mb-5"
           style={SERIF}
         >
-          One workspace for <em className="italic">material intelligence</em>.
+          How INTERTEXE works.
         </h1>
         <p className="max-w-2xl text-[15px] sm:text-base text-[#5c5854] font-light leading-relaxed mb-8">
-          Material Intelligence is live in the public demo. Overview, Issues, Benchmarking, Passport Studio and
-          Regulatory Monitor are the workspace the Founding Pilot delivers into, and the platform now being built.
-          Click a surface — a new INTERTEXE workspace mockup opens. Previews are illustrative, not a live customer
-          catalog.
+          From connect to publish — one continuous product data journey through the INTERTEXE workspace.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <a
@@ -255,6 +253,64 @@ export function DiscoverWorkspace() {
             See the live demo
             <span aria-hidden="true">→</span>
           </a>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
+        <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Product data journey</p>
+        <h2
+          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#152238] max-w-3xl mb-4"
+          style={SERIF}
+        >
+          Connect → normalize → resolve → understand → publish.
+        </h2>
+        <p className="max-w-2xl text-[15px] text-[#5c5854] font-light leading-relaxed mb-8">
+          One governed process — scroll to see each stage reveal with real product states.
+        </p>
+        <ProductDataJourneyVisual />
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
+        <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">What you buy vs. what we run</p>
+        <h2
+          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#152238] max-w-3xl mb-4"
+          style={SERIF}
+        >
+          Enterprise contract vs. consumer surface.
+        </h2>
+        <p className="max-w-2xl text-[15px] text-[#5c5854] font-light leading-relaxed mb-8">
+          INTERTEXE is one company with two surfaces. Brands purchase the data layer and workspace. The consumer app is
+          strategic infrastructure — not the SKU on the contract.
+        </p>
+        <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+          <article className="rounded-2xl border border-[#d5dee8] bg-white p-6 sm:p-8 shadow-[0_12px_30px_rgba(21,34,56,0.04)]">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-[#3e6268] mb-3">What brands buy</p>
+            <h3 className="text-xl text-[#152238] mb-4" style={SERIF}>
+              Data layer → workspace → intelligence → outputs
+            </h3>
+            <ul className="space-y-2.5 text-sm text-[#5c5854] leading-relaxed">
+              <li className="pl-4 border-l-2 border-[#3e6268]/30">Connect PLM, ERP, spreadsheets, suppliers and feeds</li>
+              <li className="pl-4 border-l-2 border-[#3e6268]/30">Normalize, resolve conflicts, and govern one product record</li>
+              <li className="pl-4 border-l-2 border-[#3e6268]/30">Benchmark material strategy and track readiness gaps</li>
+              <li className="pl-4 border-l-2 border-[#3e6268]/30">
+                Publish passports, regulatory preparation, and public product experiences
+              </li>
+            </ul>
+          </article>
+          <article className="rounded-2xl border border-[#d5dee8] bg-[#152238] text-white p-6 sm:p-8 shadow-[0_12px_30px_rgba(21,34,56,0.08)]">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-[#9bb4c9] mb-3">What INTERTEXE also runs</p>
+            <h3 className="text-xl text-white mb-4" style={SERIF}>
+              Consumer discovery — strategic, not the sale
+            </h3>
+            <ul className="space-y-2.5 text-sm text-white/75 leading-relaxed">
+              <li className="pl-4 border-l-2 border-white/20">Shopping platform, scan, and compare for material-first discovery</li>
+              <li className="pl-4 border-l-2 border-white/20">Demand surface and long-term signal engine for INTERTEXE</li>
+              <li className="pl-4 border-l-2 border-white/20">
+                Future aggregate demand intelligence — governed, anonymized, not individual shopper data
+              </li>
+              <li className="pl-4 border-l-2 border-white/20">Not included in the enterprise contract or sold as live brand dashboards today</li>
+            </ul>
+          </article>
         </div>
       </section>
 

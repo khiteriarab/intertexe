@@ -69,12 +69,17 @@ export function editorialHeroForSlug(slug: string): string {
  */
 export const HOMEPAGE_HERO_IMAGE_MOBILE = "/hero-editorial-v8-mobile.png";
 export const HOMEPAGE_HERO_IMAGE_DESKTOP = "/hero-editorial.jpg";
-export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP = "/hero-editorial-v8-desktop.png";
+/** Native 2304px JPEG — primary desktop grotto hero (sharper than 8-bit PNG). */
+export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP = "/hero-editorial-v8-desktop-2400.jpg";
+/** 3840px JPEG for Retina / large desktop viewports. */
+export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP_2X = "/hero-editorial-v8-desktop-3840.jpg";
 
 export type HomepageHeroSlide = {
   url: string;
   /** Optional desktop-specific source with same crop intent but higher resolution. */
   desktopUrl?: string;
+  /** Optional responsive srcSet for desktop (e.g. 1x + 2x campaign art). */
+  desktopSrcSet?: string;
   /** CSS object-position on mobile, e.g. "center 75%" */
   objectPosition: string;
   /** CSS object-position on desktop (lg+) only */
@@ -86,10 +91,16 @@ export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
   {
     url: HOMEPAGE_HERO_IMAGE_MOBILE,
     desktopUrl: HOMEPAGE_HERO_IMAGE_V8_DESKTOP,
+    desktopSrcSet: `${HOMEPAGE_HERO_IMAGE_V8_DESKTOP} 2304w, ${HOMEPAGE_HERO_IMAGE_V8_DESKTOP_2X} 3840w`,
     objectPosition: "center 75%",
     objectPositionDesktop: "center 50%",
   },
-  { url: HOMEPAGE_HERO_IMAGE_DESKTOP, objectPosition: "center 25%" },
+  {
+    url: HOMEPAGE_HERO_IMAGE_DESKTOP,
+    desktopUrl: HOMEPAGE_HERO_IMAGE_DESKTOP,
+    desktopSrcSet: `${HOMEPAGE_HERO_IMAGE_DESKTOP} 2400w`,
+    objectPosition: "center 25%",
+  },
 ];
 
 export const HOMEPAGE_HERO_SWAP_MS = 5000;
@@ -99,6 +110,7 @@ export const HOMEPAGE_HERO_IMAGE = HOMEPAGE_HERO_IMAGE_MOBILE;
 
 export const BRAND_WE_LOVE_IMAGES: Record<string, string> = {
   "re-done": "/brands/re-done.png",
+  staud: BRAND_CAMPAIGN_HEROES.staud,
   "isabel-marant": BRAND_CAMPAIGN_HEROES["isabel-marant"],
   "l-agence":
     "https://lagence.com/cdn/shop/files/Hero-Desktop_2_7ff67339-b858-4593-99ee-6be2b035a36b.jpg?v=1752629879&width=1920",

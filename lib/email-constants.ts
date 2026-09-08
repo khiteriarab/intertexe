@@ -11,9 +11,9 @@ export const EMAIL_FROM = "Intertexe <info@mail.intertexe.com>";
 /** Default Reply-To for Resend customer emails. */
 export const EMAIL_REPLY_TO = "info@intertexe.com";
 
-/** Platform lead notifications: founder inbox, with info@ copied. */
-export const PLATFORM_LEAD_TO = "khiteri@intertexe.com";
-export const PLATFORM_LEAD_CC = "info@intertexe.com";
+/** Platform lead notifications: info@ inbox, founder copied. */
+export const PLATFORM_LEAD_TO = "info@intertexe.com";
+export const PLATFORM_LEAD_CC = "khiteri@intertexe.com";
 
 /**
  * Founder Welcome From identity — configured in the Loops transactional template,
