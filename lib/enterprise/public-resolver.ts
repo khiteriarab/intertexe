@@ -13,7 +13,7 @@ export type PublicPassportView = {
 
 export async function resolvePublicPassport(
   publicId: string,
-  opts?: { recordScan?: boolean }
+  opts?: { recordScan?: boolean; carrierId?: string }
 ): Promise<PublicPassportView> {
   const id = publicId.trim();
   const unknown: PublicPassportView = { found: false, publicId: id };
@@ -74,7 +74,11 @@ export async function resolvePublicPassport(
       organization_id: passport.organization_id,
       passport_id: passport.id,
       event_name: "passport_scan",
-      metadata: { public_id: id, demo: Boolean(org?.is_demo) },
+      metadata: {
+        public_id: id,
+        demo: Boolean(org?.is_demo),
+        carrier_id: opts.carrierId || null,
+      },
     });
   }
 

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrgApi } from "../../../../../../lib/enterprise/api-auth";
+import { loadBillingDashboard } from "../../../../../../lib/enterprise/billing-gates";
 import { loadSecuritySettings, updateSecuritySettings } from "../../../../../../lib/enterprise/security-settings";
 import { disableScimConnection, enableScimConnection, getScimStatus } from "../../../../../../lib/enterprise/scim";
-import { loadBillingSummary } from "../../../../../../lib/enterprise/usage-meters";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ export async function GET(
   }
   const section = request.nextUrl.searchParams.get("section") || "security";
   if (section === "billing") {
-    const billing = await loadBillingSummary(gate.access.client, gate.access.membership.organizationId);
+    const billing = await loadBillingDashboard(gate.access.client, gate.access.membership.organizationId);
     return NextResponse.json(billing);
   }
   if (section === "scim") {

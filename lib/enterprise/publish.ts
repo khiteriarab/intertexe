@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPassportBackupPackage } from "./backup-provider";
+import { assertCanPublishPassport, recordPassportPublished } from "./billing-gates";
+import { ensurePassportShell, publicResolverUrl, syncQrCarrierOnPublish } from "./carriers";
 import { buildIdentifierBundle } from "./identifiers";
 import { integrityHash } from "./integrity";
-import { newPublicId } from "./ids";
 import { ITX_RULESET_VERSION } from "./intelligence";
 import { ITX_ONTOLOGY_VERSION } from "./ontology";
 import { evaluatePublishability } from "./publishability";
@@ -88,6 +89,11 @@ export async function publishProductPassport(input: {
   organizationId: string;
   productId: string;
 }): Promise<{ publicId: string; version: number; url: string }> {
+  const gate = await assertCanPublishPassport(input.client, input.organizationId, input.productId);
+  if (!gate.allowed) {
+    throw new Error(gate.reason);
+  }
+
   const check = await publishabilityForProduct(input.client, input.organizationId, input.productId);
   if (check.status === "blocked") {
     throw new Error(`Passport cannot be published: ${check.blockers.join("; ")}`);
@@ -115,21 +121,12 @@ export async function publishProductPassport(input: {
     .eq("active", true)
     .maybeSingle();
   if (!identity?.public_id) {
-    const publicId = newPublicId();
-    const inserted = await supabase
-      .from("persistent_identities")
-      .insert({
-        organization_id: input.organizationId,
-        product_id: input.productId,
-        public_id: publicId,
-      })
-      .select("id, public_id")
-      .maybeSingle();
-    identity = inserted.data;
+    const shell = await ensurePassportShell(supabase, input.organizationId, input.productId);
+    identity = { id: shell.identityId, public_id: shell.publicId };
   }
   if (!identity?.public_id) throw new Error("Could not allocate a public identity.");
 
-  const publicUrl = `${siteOrigin()}/p/${identity.public_id}`;
+  const publicUrl = publicResolverUrl(identity.public_id);
   const publicFields = (fields || [])
     .filter((row) => row.access_class === "public" && row.normalized_value)
     .map((row) => ({
@@ -272,13 +269,18 @@ export async function publishProductPassport(input: {
     .eq("id", input.productId)
     .eq("organization_id", input.organizationId);
 
-  await supabase.from("data_carriers").insert({
-    organization_id: input.organizationId,
-    passport_id: passport.id,
-    carrier_type: "qr",
-    artwork_variant: "default",
-    public_url: publicUrl,
+  const isFirstPublish = versionNumber === 1;
+
+  await syncQrCarrierOnPublish(supabase, {
+    organizationId: input.organizationId,
+    productId: input.productId,
+    passportId: passport.id,
+    identityId: identity.id,
+    publicUrl,
   });
+
+  await recordPassportPublished(supabase, input.organizationId, isFirstPublish);
+
   await emitWorkflowEvent({
     client: supabase,
     organizationId: input.organizationId,

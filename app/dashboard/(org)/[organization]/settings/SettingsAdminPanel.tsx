@@ -9,8 +9,10 @@ type Security = {
 };
 
 type Billing = {
-  periodStart?: string;
-  periodEnd?: string;
+  plan?: string;
+  canPublish?: boolean;
+  publishBlockReason?: string;
+  publishedPassportCount?: number;
   meters?: Array<{ key: string; used: number; limit: number | null }>;
 };
 
@@ -90,11 +92,16 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
 
       <section className="rounded-xl border border-[var(--ent-border)] p-5">
         <h3 className="text-sm font-semibold mb-3">Usage & billing</h3>
+        {billing.plan ? (
+          <p className="text-xs text-[var(--ent-muted)] mb-3 uppercase tracking-wider">
+            Plan · {billing.plan.replaceAll("_", " ")}
+          </p>
+        ) : null}
         {billing.meters?.length ? (
           <ul className="space-y-2 text-sm">
             {billing.meters.map((meter) => (
               <li key={meter.key} className="flex justify-between gap-4">
-                <span>{meter.key}</span>
+                <span>{meter.key.replaceAll("_", " ")}</span>
                 <span className="text-[var(--ent-muted)]">
                   {meter.used}
                   {meter.limit != null ? ` / ${meter.limit}` : ""}
@@ -105,6 +112,11 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
         ) : (
           <p className="text-sm text-[var(--ent-muted)]">No usage meters recorded this period.</p>
         )}
+        {billing.publishBlockReason ? (
+          <p className="text-xs text-amber-800 mt-4 leading-relaxed">{billing.publishBlockReason}</p>
+        ) : billing.canPublish ? (
+          <p className="text-xs text-emerald-700 mt-4">Passport publishing is available on this plan.</p>
+        ) : null}
       </section>
 
       <section className="rounded-xl border border-[var(--ent-border)] p-5 lg:col-span-2">

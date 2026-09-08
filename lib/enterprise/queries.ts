@@ -302,11 +302,25 @@ export async function loadOrgProduct(client: SupabaseClient, organizationId: str
   const carriers = passports.data?.id
     ? await client
         .from("data_carriers")
-        .select("public_url, carrier_type")
+        .select(
+          "id, public_url, carrier_type, state, artwork_variant, batch_label, activated_at, retired_at, created_at"
+        )
         .eq("organization_id", organizationId)
         .eq("passport_id", passports.data.id)
-        .limit(1)
-    : { data: [] };
+        .order("created_at", { ascending: false })
+    : await client
+        .from("data_carriers")
+        .select(
+          "id, public_url, carrier_type, state, artwork_variant, batch_label, activated_at, retired_at, created_at"
+        )
+        .eq("organization_id", organizationId)
+        .eq("product_id", productId)
+        .order("created_at", { ascending: false });
+
+  const activeCarrier =
+    (carriers.data || []).find((row) => row.state === "active") ||
+    (carriers.data || []).find((row) => row.state === "draft") ||
+    carriers.data?.[0];
 
   const reviews = (activity.data || []).filter((row) =>
     String(row.detail || "").includes(`product:${productId}`)
@@ -336,7 +350,8 @@ export async function loadOrgProduct(client: SupabaseClient, organizationId: str
     passport: passports.data
       ? {
           ...passports.data,
-          publicUrl: carriers.data?.[0]?.public_url || `/p/${passports.data.public_id}`,
+          publicUrl: activeCarrier?.public_url || `/p/${passports.data.public_id}`,
+          carriers: carriers.data || [],
           versions: (versions.data || []).map((row) => ({
             ...row,
             actor: reviewerFromDirectory(directory, row.actor_id),

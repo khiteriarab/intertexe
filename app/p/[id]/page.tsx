@@ -27,11 +27,14 @@ export async function generateMetadata({
 
 export default async function PublicIdPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ c?: string }>;
 }) {
   const { id } = await params;
-  const view = await resolvePublicPassport(id, { recordScan: true });
+  const { c: carrierId } = await searchParams;
+  const view = await resolvePublicPassport(id, { recordScan: true, carrierId: carrierId || undefined });
 
   if (view.found) {
     return (

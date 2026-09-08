@@ -37,6 +37,7 @@ import { PublishPassportButton } from "../../passports/PublishPassportButton";
 import { ApproveFieldsButton } from "./ApproveFieldsButton";
 import { AccessClassLegend, DppReadinessPanel } from "./DppReadinessPanel";
 import { SupplierEvidenceRequestButton } from "./SupplierEvidenceRequestButton";
+import { ProductCarriersPanel } from "./ProductCarriersPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -334,6 +335,14 @@ export default async function ProductRecordPage({
               </p>
             )}
           </div>
+
+          <ProductCarriersPanel
+            slug={membership.slug}
+            productId={productId}
+            canMutate={canMutate}
+            carriers={(record.passport?.carriers as any[]) || []}
+            publishReady={publishability.status === "ready"}
+          />
         </aside>
       </div>
     </div>
