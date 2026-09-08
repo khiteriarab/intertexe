@@ -6,6 +6,7 @@ import { getCachedCatalogStats } from "./cached-catalog-stats";
 import { fetchShoppableBrandCount } from "./shoppable-brands";
 import { liveProductsApparelFrom } from "./global-catalog-scope";
 import { getServerSupabase } from "./supabase-service-client";
+import { CATALOG_STATS } from "./catalog-stats";
 
 export type PlatformStats = {
   productCount: number;
@@ -36,6 +37,12 @@ export async function fetchPlatformStats(): Promise<PlatformStats> {
   }
   if (brandCount <= 0) {
     brandCount = await fetchShoppableBrandCount();
+  }
+  if (productCount <= 0) {
+    productCount = CATALOG_STATS.productCount;
+  }
+  if (brandCount <= 0) {
+    brandCount = CATALOG_STATS.brandCount;
   }
 
   return {

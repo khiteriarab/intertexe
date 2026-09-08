@@ -10,6 +10,7 @@
  */
 import { unstable_cache } from "next/cache";
 import { getServerSupabase } from "./supabase-service-client";
+import { CATALOG_STATS } from "./catalog-stats";
 
 export type CachedCatalogStats = {
   /** Live regional offers — marketing hero only when explicitly unfiltered. */
@@ -72,10 +73,10 @@ async function readPlatformStatsCache(): Promise<CachedCatalogStats | null> {
 
 function unavailableStats(): CachedCatalogStats {
   return {
-    catalogProductCount: null,
-    brandCount: 0,
-    updatedAt: null,
-    source: "unavailable",
+    catalogProductCount: CATALOG_STATS.productCount,
+    brandCount: CATALOG_STATS.brandCount,
+    updatedAt: CATALOG_STATS.lastUpdated,
+    source: "cache",
   };
 }
 
