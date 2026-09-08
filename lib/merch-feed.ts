@@ -302,6 +302,56 @@ async function fetchMerchRailLiveFallback(
 
   const { preferred } = catalogRegionsFromMarket(market);
   const fiber = railKey.startsWith("fabrics:") ? railKey.split(":")[1] : null;
+
+  if (railKey === MERCH_RAIL_KEYS.sale) {
+    const t0 = Date.now();
+    const { data, error } = await liveProductsApparelFrom(supabase)
+      .select(
+        "id, product_id, brand_slug, brand_name, name, url, image_url, price, composition, natural_fiber_percent, category, is_sale, original_price, region"
+      )
+      .eq("region", preferred)
+      .or("is_sale.eq.true,original_price.not.is.null")
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .not("price", "is", null)
+      .limit(Math.min(limit * 3, 120));
+
+    logSupabaseTiming(
+      `merch-feed live-fallback ${railKey}`,
+      t0,
+      error ? `error:${error.message}` : `rows:${(data || []).length}`
+    );
+    if (error || !data?.length) return [];
+
+    const seen = new Set<string>();
+    const out: Product[] = [];
+    for (const row of data as Record<string, unknown>[]) {
+      const key = catalogDedupeKey(row);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const price = String(row.price ?? "");
+      if (!price || price === "0" || price === "$0.00") continue;
+      out.push({
+        id: String(row.id ?? ""),
+        productId: String(row.product_id || row.id),
+        brandSlug: String(row.brand_slug ?? ""),
+        brandName: sanitizeBrandName(String(row.brand_name ?? "")),
+        name: String(row.name ?? ""),
+        url: String(row.url ?? ""),
+        imageUrl: String(row.image_url ?? ""),
+        price,
+        originalPrice: row.original_price != null ? String(row.original_price) : undefined,
+        composition: String(row.composition ?? ""),
+        naturalFiberPercent: displayNaturalFiberPercent(Number(row.natural_fiber_percent ?? 0)),
+        category: row.category != null ? String(row.category) : "",
+        isSale: row.is_sale === true,
+        listingRegion: row.region != null ? String(row.region) : null,
+      });
+      if (out.length >= limit) break;
+    }
+    return out;
+  }
+
   if (!fiber) return [];
 
   const t0 = Date.now();

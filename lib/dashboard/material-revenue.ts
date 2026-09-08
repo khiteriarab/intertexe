@@ -1,4 +1,5 @@
 import { getServerSupabase } from "../supabase-service-client";
+import { rakutenSkuBase } from "./revenue-enrichment";
 
 export type MaterialRevenueRow = {
   material: string;
@@ -77,11 +78,30 @@ export async function fetchMaterialRevenue(
     };
   }
 
-  const productIds = [...new Set(verifiedTxs.map((t) => t.product_id).filter(Boolean).map(String))].slice(
-    0,
-    200
-  );
-  const skus = [...new Set(verifiedTxs.map((t) => t.sku).filter(Boolean).map(String))].slice(0, 200);
+  const productIds = [
+    ...new Set(
+      verifiedTxs
+        .flatMap((t: any) => [t.product_id, t.raw?.catalog_uuid].filter(Boolean))
+        .map(String)
+    ),
+  ].slice(0, 200);
+  const skus = [
+    ...new Set(
+      verifiedTxs
+        .flatMap((t: any) => {
+          const out: string[] = [];
+          if (t.sku) out.push(String(t.sku));
+          const rakutenSku = t.raw?.rakuten_sku || t.sku;
+          if (rakutenSku) {
+            out.push(String(rakutenSku));
+            const base = rakutenSkuBase(String(rakutenSku));
+            if (base) out.push(base);
+          }
+          return out;
+        })
+        .filter(Boolean)
+    ),
+  ].slice(0, 200);
 
   const materialByKey = new Map<string, string>();
 
@@ -113,14 +133,37 @@ export async function fetchMaterialRevenue(
     }
   }
 
+  const baseSkus = [...new Set(skus.map((s) => rakutenSkuBase(s)).filter(Boolean) as string[])];
+  for (const base of baseSkus.slice(0, 40)) {
+    if ([...materialByKey.keys()].some((k) => k === base || k.startsWith(`${base}-`))) continue;
+    const { data: suffixed } = await supabase
+      .from("products")
+      .select("id, sku, shop_material_family, composition")
+      .or(`sku.eq.${base},sku.like.${base}-%`)
+      .eq("is_active", true)
+      .order("last_seen_at", { ascending: false })
+      .limit(3);
+    for (const p of suffixed || []) {
+      const mat = normalizeMaterial(p.shop_material_family) || inferMaterial(p.composition);
+      if (!mat) continue;
+      if (p.id) materialByKey.set(String(p.id), mat);
+      if (p.sku) {
+        materialByKey.set(String(p.sku), mat);
+        materialByKey.set(base, mat);
+      }
+    }
+  }
+
   const byMat = new Map<string, { matchedTx: number; sales: number; commission: number }>();
   let unmatchedCommission = 0;
   let matchedCommission = 0;
 
   for (const t of verifiedTxs) {
+    const catalogId = t.raw?.catalog_uuid || t.product_id;
     const key =
-      (t.product_id && materialByKey.get(String(t.product_id))) ||
+      (catalogId && materialByKey.get(String(catalogId))) ||
       (t.sku && materialByKey.get(String(t.sku))) ||
+      (t.raw?.rakuten_sku && materialByKey.get(String(t.raw.rakuten_sku))) ||
       inferMaterial(t.product_name) ||
       null;
     const commission = Number(t.commission_amount || 0);

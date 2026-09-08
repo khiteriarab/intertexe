@@ -20,6 +20,7 @@ import { Writable } from "node:stream";
 import { gunzipSync } from "node:zlib";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { parseAffiliateReport, type ParsedAffiliateRow } from "./revenue";
+import { importAffiliateRows } from "./revenue-import-core";
 
 const REPORT_NAME_RE =
   /(transaction|transactions|commission|commissions|payment|payments|revenue|report|sales)/i;
@@ -147,63 +148,17 @@ async function importTransactionRows(
   workspaceId: string,
   rows: ParsedAffiliateRow[],
   meta: { source: string; filename: string; extra?: Record<string, unknown> }
-): Promise<{ upserted: number; batchId: string | null }> {
-  const { data: batch } = await supabase
-    .from("hq_revenue_import_batches")
-    .insert({
-      workspace_id: workspaceId,
-      network: "rakuten",
-      filename: meta.filename,
-      rows_seen: rows.length,
-      status: "running",
-      metadata: { source: meta.source, ...(meta.extra || {}) },
-    })
-    .select("id")
-    .maybeSingle();
-
-  let upserted = 0;
-  for (const r of rows) {
-    const { error } = await supabase.from("hq_affiliate_transactions").upsert(
-      {
-        workspace_id: workspaceId,
-        network: "rakuten",
-        external_transaction_id: r.external_transaction_id,
-        order_id: r.order_id,
-        transaction_date: r.transaction_date,
-        process_date: r.process_date,
-        click_date: r.click_date,
-        advertiser_id: r.advertiser_id,
-        advertiser_name: r.advertiser_name,
-        sku: r.sku,
-        product_name: r.product_name,
-        product_id: r.product_id,
-        quantity: r.quantity,
-        sales_amount: r.sales_amount,
-        commission_amount: r.commission_amount,
-        currency: r.currency || "USD",
-        status: r.status && r.status !== "demo" ? r.status : "imported",
-        u1: r.u1,
-        raw: { ...(r.raw || {}), import_source: meta.source },
-        import_batch_id: batch?.id || null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "workspace_id,network,external_transaction_id" }
-    );
-    if (!error) upserted += 1;
-  }
-
-  if (batch?.id) {
-    await supabase
-      .from("hq_revenue_import_batches")
-      .update({
-        status: "success",
-        rows_upserted: upserted,
-        finished_at: new Date().toISOString(),
-      })
-      .eq("id", batch.id);
-  }
-
-  return { upserted, batchId: batch?.id || null };
+): Promise<{ upserted: number; batchId: string | null; newTransactions: number; catalogMatched: number }> {
+  const result = await importAffiliateRows(supabase, workspaceId, rows, {
+    ...meta,
+    notify: true,
+  });
+  return {
+    upserted: result.upserted,
+    batchId: result.batchId,
+    newTransactions: result.newTransactions.length,
+    catalogMatched: result.catalogMatched,
+  };
 }
 
 async function markRevenueConnected(

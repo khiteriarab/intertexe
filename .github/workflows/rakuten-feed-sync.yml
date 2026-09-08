@@ -11,7 +11,7 @@ on:
       file_limit:
         description: "Files per run"
         required: false
-        default: "2"
+        default: "16"
       ftp_dir_filter:
         description: "Optional MID filter (empty = all merchants)"
         required: false
@@ -65,7 +65,7 @@ jobs:
           RAKUTEN_FTP_HOST: ${{ secrets.RAKUTEN_FTP_HOST }}
           FEED_LIVE_INGEST_ENABLED: "1"
           # Ensure GitHub secret RAKUTEN_FTP_PASSWORD is the full 24-char Rakuten password (not truncated).
-          RAKUTEN_CHUNK_FILE_LIMIT: ${{ github.event.inputs.file_limit || '2' }}
+          RAKUTEN_CHUNK_FILE_LIMIT: ${{ github.event.inputs.file_limit || '16' }}
           RAKUTEN_FTP_DIR_FILTER: ${{ github.event.inputs.ftp_dir_filter || '' }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM: ${{ secrets.RESEND_FROM }}

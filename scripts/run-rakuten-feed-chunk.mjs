@@ -154,7 +154,7 @@ async function main() {
         pathToFileURL(path.join(root, "lib/feed-sync/rakuten-sync.js")).href
       );
       let fileOffset = checkpointBefore;
-      const fileLimit = Number(process.env.RAKUTEN_CHUNK_FILE_LIMIT || 2);
+      const fileLimit = Number(process.env.RAKUTEN_CHUNK_FILE_LIMIT || 16);
       const syncResult = await syncRakutenFeeds({
         fileOffset,
         fileLimit,

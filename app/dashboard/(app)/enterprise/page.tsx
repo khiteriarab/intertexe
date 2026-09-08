@@ -1,6 +1,7 @@
 import { requireHqSession } from "../../../../lib/dashboard/auth";
 import { getEnterpriseServiceClient } from "../../../../lib/enterprise/client";
 import { HqPageHeader } from "../../components/HqUi";
+import { EnterpriseBillingOverview } from "./EnterpriseBillingOverview";
 import { SnapshotAdminClient } from "./SnapshotAdminClient";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,9 @@ export default async function EnterpriseAdminPage() {
         title="Enterprise"
         description="Create snapshot workspaces, inspect organization health, and upgrade prospects in place. This area is INTERTEXE-only and is not shown in customer navigation."
       />
+      <div className="mb-8">
+        <EnterpriseBillingOverview />
+      </div>
       <SnapshotAdminClient configured={Boolean(supabase)} initial={data || []} />
     </div>
   );

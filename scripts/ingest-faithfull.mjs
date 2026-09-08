@@ -5,36 +5,16 @@
  * Usage:
  *   FEED_LIVE_INGEST_ENABLED=1 node scripts/ingest-faithfull.cjs
  */
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { loadProjectEnv, armLiveIngest } from './lib/load-env.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-function loadEnvFile(filePath) {
-  if (!fs.existsSync(filePath)) return {};
-  const out = {};
-  for (const line of fs.readFileSync(filePath, 'utf8').split('\n')) {
-    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
-    if (!m) continue;
-    let v = m[2];
-    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-      v = v.slice(1, -1);
-    }
-    out[m[1]] = v;
-  }
-  return out;
-}
-
-Object.assign(
-  process.env,
-  loadEnvFile(path.join(root, '.env.production.local')),
-  loadEnvFile(path.join(root, '.env.vercel.local')),
-  loadEnvFile(path.join(root, '.env.local'))
-);
+loadProjectEnv(root);
+armLiveIngest();
 
 process.env.RAKUTEN_FTP_DIR_FILTER = '46961';
-process.env.FEED_LIVE_INGEST_ENABLED = process.env.FEED_LIVE_INGEST_ENABLED || '1';
 
 const { syncRakutenFeeds, refreshCatalogMaterializedViews } = await import(
   pathToFileURL(path.join(root, 'lib/feed-sync/rakuten-sync.js')).href

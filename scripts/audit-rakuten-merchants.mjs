@@ -24,7 +24,7 @@ const sb = createClient(url, key, { auth: { persistSession: false } });
 
 async function midStats(mid) {
   const base = () => sb.from('products').select('*', { count: 'exact', head: true }).eq('retailer_mid', mid);
-  const [{ count: total }, { count: active }, { count: nfp80 }, { count: shoes }, { data: sample }] =
+  const [{ count: total, error: totalErr }, { count: active, error: activeErr }, { count: nfp80 }, { count: shoes }, { data: sample }] =
     await Promise.all([
       base(),
       base().eq('is_active', true),
@@ -32,19 +32,49 @@ async function midStats(mid) {
       base().or('category.ilike.%footwear%,category.ilike.%shoe%,name.ilike.%sandal%,name.ilike.%boot%'),
       sb
         .from('products')
-        .select('last_seen_at, feed_source, approved')
+        .select('last_seen_at, feed_source, approved, retailer_mid')
         .eq('retailer_mid', mid)
         .order('last_seen_at', { ascending: false })
         .limit(1),
     ]);
+
+  // Under heavy ingest, head counts can time out and return null — fall back to feed_url sample.
+  let resolvedTotal = total || 0;
+  let resolvedActive = active || 0;
+  let tag = totalErr || activeErr ? 'COUNT_ERR' : null;
+  if (!resolvedTotal) {
+    const { data: feedSample } = await sb
+      .from('products')
+      .select('last_seen_at, feed_source, approved, is_active, retailer_mid')
+      .ilike('feed_url', `%${mid}_%`)
+      .order('last_seen_at', { ascending: false })
+      .limit(1);
+    if (feedSample?.length) {
+      tag = feedSample[0].retailer_mid ? tag : 'UNTAGGED';
+      return {
+        total: resolvedTotal,
+        active: resolvedActive,
+        nfp80: nfp80 || 0,
+        shoes: shoes || 0,
+        lastSeen: feedSample[0]?.last_seen_at || sample?.[0]?.last_seen_at || null,
+        feedSource: feedSample[0]?.feed_source || sample?.[0]?.feed_source || '—',
+        approved: feedSample[0]?.approved || sample?.[0]?.approved || '—',
+        tag,
+        hasFeedRows: true,
+      };
+    }
+  }
+
   return {
-    total: total || 0,
-    active: active || 0,
+    total: resolvedTotal,
+    active: resolvedActive,
     nfp80: nfp80 || 0,
     shoes: shoes || 0,
     lastSeen: sample?.[0]?.last_seen_at || null,
     feedSource: sample?.[0]?.feed_source || '—',
     approved: sample?.[0]?.approved || '—',
+    tag,
+    hasFeedRows: false,
   };
 }
 
@@ -55,7 +85,15 @@ const report = [];
 for (const def of RAKUTEN_MERCHANTS) {
   const stats = await midStats(def.mid);
   const status =
-    stats.active >= 20 ? 'OK' : stats.total > 0 ? 'STALE/THIN' : 'MISSING';
+    stats.active >= 20
+      ? 'OK'
+      : stats.hasFeedRows
+        ? stats.tag === 'UNTAGGED'
+          ? 'UNTAGGED'
+          : 'STALE/THIN'
+        : stats.total > 0
+          ? 'STALE/THIN'
+          : 'MISSING';
   report.push({
     status,
     mid: def.mid,
@@ -67,6 +105,7 @@ for (const def of RAKUTEN_MERCHANTS) {
     feed_source: stats.feedSource,
     last_seen: stats.lastSeen ? stats.lastSeen.slice(0, 10) : '—',
     ingest: def.dedicatedIngest || 'generic chunk sync',
+    note: stats.tag || '',
   });
 }
 

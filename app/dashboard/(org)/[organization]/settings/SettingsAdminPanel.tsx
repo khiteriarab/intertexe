@@ -13,6 +13,9 @@ type Billing = {
   canPublish?: boolean;
   publishBlockReason?: string;
   publishedPassportCount?: number;
+  paddleCheckoutAvailable?: boolean;
+  upgradePriceId?: string | null;
+  billingAccount?: { paddle_subscription_id?: string | null; invoice_status?: string | null };
   meters?: Array<{ key: string; used: number; limit: number | null }>;
 };
 
@@ -28,6 +31,25 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
   const [scim, setScim] = useState<ScimStatus>({ enabled: false });
   const [scimToken, setScimToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+
+  async function startPaddleCheckout() {
+    setCheckoutBusy(true);
+    try {
+      const res = await fetch(`/api/dashboard/org/${slug}/billing/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId: billing.upgradePriceId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Checkout failed");
+      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Checkout failed");
+    } finally {
+      setCheckoutBusy(false);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -116,6 +138,22 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
           <p className="text-xs text-amber-800 mt-4 leading-relaxed">{billing.publishBlockReason}</p>
         ) : billing.canPublish ? (
           <p className="text-xs text-emerald-700 mt-4">Passport publishing is available on this plan.</p>
+        ) : null}
+        {billing.paddleCheckoutAvailable && billing.plan === "free_snapshot" ? (
+          <button
+            type="button"
+            className={`${entButtonClass} mt-4`}
+            disabled={checkoutBusy}
+            onClick={startPaddleCheckout}
+            data-testid="btn-paddle-upgrade"
+          >
+            {checkoutBusy ? "Opening checkout…" : "Upgrade with Paddle"}
+          </button>
+        ) : billing.billingAccount?.paddle_subscription_id ? (
+          <p className="text-xs text-[var(--ent-muted)] mt-4">
+            Paddle subscription active
+            {billing.billingAccount.invoice_status ? ` · ${billing.billingAccount.invoice_status}` : ""}.
+          </p>
         ) : null}
       </section>
 

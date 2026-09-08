@@ -170,7 +170,7 @@ export function SaleHomeRail({ products: initialProducts }: { products?: any[] }
   }, [initialProducts]);
 
   const railProducts = products.slice(0, 28);
-  if (railProducts.length === 0) return null;
+  const hasItems = railProducts.length > 0;
 
   return (
     <section
@@ -186,7 +186,9 @@ export function SaleHomeRail({ products: initialProducts }: { products?: any[] }
         </Link>
       </div>
 
-      <div className={`relative min-w-0 ${HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}`}>
+      {hasItems ? (
+        <>
+          <div className={`relative min-w-0 ${HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}`}>
         <div
           ref={scrollRef}
           className={`${HORIZONTAL_RAIL_BLEED_PROXIMITY_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 pr-14 md:pr-16`}
@@ -232,6 +234,21 @@ export function SaleHomeRail({ products: initialProducts }: { products?: any[] }
           Shop all sale <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
+        </>
+      ) : (
+        <div className="px-4 md:px-8">
+          <p className="text-[12px] md:text-[13px] text-neutral-400 max-w-md leading-relaxed">
+            Sale picks are refreshing — browse the full sale edit for verified natural-fiber markdowns.
+          </p>
+          <Link
+            href="/sale"
+            className="mt-4 text-[10px] uppercase tracking-[0.15em] text-neutral-500 hover:text-neutral-800 transition-colors inline-flex items-center gap-2"
+            data-testid="link-shop-all-sale-empty"
+          >
+            Shop all sale <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

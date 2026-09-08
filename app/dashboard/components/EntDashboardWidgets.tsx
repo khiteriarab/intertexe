@@ -163,41 +163,6 @@ export function EntKpiGrid({ overview, base }: { overview: OrgOverviewData; base
   );
 }
 
-export function EntModuleShowcase({ overview, base }: { overview: OrgOverviewData; base: string }) {
-  return (
-    <section className="mb-10 md:mb-12">
-      <div className="mb-6">
-        <p className="ent-section-eyebrow">Workspace</p>
-        <h2 className="ent-section-title">Explore the platform</h2>
-        <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-2xl">
-          Every module connects to your live catalog — import once, then work across compliance, publishing, and operations.
-        </p>
-      </div>
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {MODULE_LINKS.map((mod) => {
-          const Icon = ENT_NAV_ITEM_ICONS[mod.icon];
-          const count = mod.count?.(overview);
-          return (
-            <Link key={mod.href} href={`${base}${mod.href}`} className="ent-module-card group">
-              <div className="flex items-start justify-between gap-3">
-                <span className="ent-module-icon">
-                  <Icon className="h-[18px] w-[18px]" />
-                </span>
-                {count != null ? (
-                  <span className="ent-module-badge">{typeof count === "number" ? padCount(count) : count}</span>
-                ) : null}
-              </div>
-              <p className="ent-module-title">{mod.label}</p>
-              <p className="ent-module-desc">{mod.description}</p>
-              <span className="ent-module-cta">Open module →</span>
-            </Link>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 export function EntOverviewBenchmarkTeaser({
   base,
   overview,

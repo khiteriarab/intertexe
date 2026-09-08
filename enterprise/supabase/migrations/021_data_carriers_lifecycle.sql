@@ -18,6 +18,22 @@ FROM public.passports p
 WHERE dc.passport_id = p.id
   AND dc.product_id IS NULL;
 
+-- Keep one carrier per (passport, type); retire extras before unique index.
+DELETE FROM public.data_carriers dc
+WHERE dc.id IN (
+  SELECT id
+  FROM (
+    SELECT
+      id,
+      row_number() OVER (
+        PARTITION BY passport_id, carrier_type
+        ORDER BY created_at DESC, id DESC
+      ) AS rn
+    FROM public.data_carriers
+  ) ranked
+  WHERE rn > 1
+);
+
 UPDATE public.data_carriers
 SET activated_at = COALESCE(activated_at, created_at)
 WHERE state = 'active';

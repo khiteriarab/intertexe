@@ -692,7 +692,9 @@ export async function fetchHqCommercePage(workspaceId?: string) {
         ...r,
         is_demo: isDemoRow(r),
       }));
-      unmatchedTx30d = activeRows.filter((r) => !r.product_id && !r.sku).length;
+      unmatchedTx30d = activeRows.filter(
+        (r) => !(r.product_id || r.sku || r.raw?.catalog_uuid)
+      ).length;
       nullU1Tx30d = activeRows.filter(isBlankU1).length;
       txWithU130d = activeRows.length - (nullU1Tx30d || 0);
       lastSaleDate = activeRows[0]?.transaction_date

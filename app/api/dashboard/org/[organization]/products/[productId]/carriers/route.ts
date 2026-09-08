@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireOrgApi } from "../../../../../../../lib/enterprise/api-auth";
+import { requireOrgApi } from "../../../../../../../../lib/enterprise/api-auth";
 import {
   loadProductCarriers,
   provisionDraftQrCarrier,
   registerCarrierType,
   retireCarrier,
   type CarrierType,
-} from "../../../../../../../lib/enterprise/carriers";
-import { publishabilityForProduct } from "../../../../../../../lib/enterprise/publish";
+} from "../../../../../../../../lib/enterprise/carriers";
+import { publishabilityForProduct } from "../../../../../../../../lib/enterprise/publish";
 
 export const dynamic = "force-dynamic";
 

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { entButtonClass, entButtonGhostClass, entLabelClass } from "../../../components/EnterpriseUi";
-import type { DataCarrierRow } from "../../../../../lib/enterprise/carriers";
+import { entButtonClass, entButtonGhostClass, entLabelClass } from "../../../../components/EnterpriseUi";
+import type { DataCarrierRow } from "../../../../../../lib/enterprise/carriers";
 
 const CARRIER_LABELS: Record<string, string> = {
   qr: "QR code",

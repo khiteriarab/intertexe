@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   entitlementsForPlan,
+  canAddProducts,
   type EntitlementSnapshot,
   type PlanKey,
 } from "./entitlements";
 import { incrementUsageMeter, loadUsageMeters } from "./usage-meters";
+import { defaultCheckoutPriceForPlan, isPaddleConfigured } from "./paddle";
 
 export type BillingDashboard = {
   plan: PlanKey;
@@ -24,7 +26,11 @@ export type BillingDashboard = {
     cancellation_state: string | null;
     stripe_customer_id?: string | null;
     plan_key?: string | null;
+    paddle_customer_id?: string | null;
+    paddle_subscription_id?: string | null;
   } | null;
+  paddleCheckoutAvailable: boolean;
+  upgradePriceId: string | null;
 };
 
 export async function loadOrgEntitlements(
@@ -71,6 +77,41 @@ export async function countActiveProducts(
 export type PublishGateResult =
   | { allowed: true }
   | { allowed: false; reason: string; code: "plan" | "allowance" | "entitlement" };
+
+export type ProductGateResult =
+  | { allowed: true; remaining: number | null }
+  | { allowed: false; reason: string; code: "plan" | "allowance" };
+
+/** Enforce product catalog allowance before import or manual create. */
+export async function assertCanAddProducts(
+  client: SupabaseClient,
+  organizationId: string,
+  additional = 1
+): Promise<ProductGateResult> {
+  const entitlements = await loadOrgEntitlements(client, organizationId);
+  const activeProductCount = await countActiveProducts(client, organizationId);
+  if (entitlements.productAllowance == null) {
+    return { allowed: true, remaining: null };
+  }
+  const remaining = entitlements.productAllowance - activeProductCount;
+  if (!canAddProducts(entitlements, activeProductCount) || remaining < additional) {
+    return {
+      allowed: false,
+      code: "allowance",
+      reason: `Product allowance reached (${activeProductCount}/${entitlements.productAllowance}). Upgrade your plan or archive products.`,
+    };
+  }
+  return { allowed: true, remaining: remaining - additional };
+}
+
+export async function recordProductsImported(
+  client: SupabaseClient,
+  organizationId: string,
+  newProducts: number
+): Promise<void> {
+  if (newProducts <= 0) return;
+  await incrementUsageMeter(client, organizationId, "products_active", newProducts);
+}
 
 /** Enforce plan + passport allowance before publish (Phase B billing gate). */
 export async function assertCanPublishPassport(
@@ -134,7 +175,7 @@ export async function loadBillingDashboard(
       client
         .from("billing_accounts")
         .select(
-          "contract_value, invoice_status, amount_outstanding, renewal_date, cancellation_state, stripe_customer_id, plan_key"
+          "contract_value, invoice_status, amount_outstanding, renewal_date, cancellation_state, stripe_customer_id, plan_key, paddle_customer_id, paddle_subscription_id"
         )
         .eq("organization_id", organizationId)
         .maybeSingle(),
@@ -193,5 +234,7 @@ export async function loadBillingDashboard(
       },
     ],
     billingAccount: billingRes.data || null,
+    paddleCheckoutAvailable: isPaddleConfigured(),
+    upgradePriceId: defaultCheckoutPriceForPlan(entitlements.plan),
   };
 }

@@ -2388,18 +2388,17 @@ function applySaleProductFilters(
 /** Shared base filters for sale catalog — direct table query (no RPC). */
 function applySaleQuerySort(query: any, sort?: string) {
   switch (sort) {
-    case "price-low":
-      return query.order("price", { ascending: true });
-    case "price-high":
-      return query.order("price", { ascending: false });
     case "natural":
     case "natural-high":
+      // Only sort that stays fast on the sale OR filter at scale.
       return query.order("natural_fiber_percent", { ascending: false });
+    case "price-low":
+    case "price-high":
     case "new":
-      return query.order("created_at", { ascending: false });
     case "discount":
     default:
-      return query.order("created_at", { ascending: false });
+      // created_at / price sorts force full scans on markdown rows — sort in memory instead.
+      return query;
   }
 }
 
@@ -2439,11 +2438,11 @@ function buildSaleDirectQuery(
   }
 
   // Fast indexed path — `live_products_apparel` + region equality.
-  // Do NOT use `url ILIKE mid=43172` here: that scan times out and forces iOS "Try again".
+  // Match footwear: include markdown rows via original_price (is_sale-only scans time out at scale).
   let q = liveProductsApparelFrom(supabase)
     .select(columns, selectOptions)
-    .eq("is_sale", true)
     .eq("region", region)
+    .or("is_sale.eq.true,original_price.not.is.null")
     .gte("natural_fiber_percent", 80)
     .not("image_url", "is", null)
     .not("price", "is", null);
@@ -2548,9 +2547,12 @@ async function fetchSaleProductsViaDirectTable(options: {
     filterOpts,
   } = options;
 
+  const normalizedSort = normalizeSaleSort(sort);
+  const fetchCap = Math.min(Math.max(offset + limit * 3, limit * 2), 480);
+
   let q = buildSaleDirectQuery(supabase, preferred, { ...filterOpts, minPrice, maxPrice }, "*");
-  q = applySaleQuerySort(q, sort);
-  q = q.range(offset, offset + limit - 1);
+  q = applySaleQuerySort(q, normalizedSort);
+  q = q.limit(fetchCap);
   const { data, error } = await q;
   if (error) throw error;
 
@@ -2565,33 +2567,129 @@ async function fetchSaleProductsViaDirectTable(options: {
     color,
     brand,
   });
+  products = sortSaleProducts(products, normalizedSort);
+  const page = products.slice(offset, offset + limit);
 
   if (skipTotal) {
     return {
-      products,
+      products: page,
       total: null,
-      hasMore: (data || []).length >= limit,
+      hasMore: page.length >= limit || (data || []).length >= fetchCap,
     };
   }
 
-  const total = await getSaleTotalCount({
-    region: preferred,
+  let total: number | null = null;
+  try {
+    const { fetchMerchRailDisplayCount, MERCH_RAIL_KEYS } = await import("./merch-feed");
+    const feedTotal = await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.sale);
+    if (feedTotal > 0) total = feedTotal;
+  } catch {
+    /* optional */
+  }
+  if (total == null) {
+    total = await getSaleTotalCount({
+      region: preferred,
+      fiber,
+      maxPrice,
+      minPrice,
+      category,
+      color,
+      brand,
+    });
+  }
+
+  return {
+    products: page,
+    total,
+    hasMore: page.length >= limit || offset + page.length < (total ?? offset + page.length + 1),
+  };
+}
+
+/** Pre-built sale rail — fast path before live table scan. */
+async function fetchSaleProductsFromMerchFeed(options: {
+  fiber?: string;
+  fiberSubtype?: string;
+  maxPrice?: number;
+  minPrice?: number;
+  category?: string;
+  color?: string;
+  brand?: string;
+  market?: string;
+  sort?: string;
+  limit: number;
+  offset: number;
+  skipTotal: boolean;
+}): Promise<{ products: Product[]; total: number | null; hasMore: boolean } | null> {
+  const {
     fiber,
+    fiberSubtype,
     maxPrice,
     minPrice,
     category,
     color,
     brand,
-  });
+    market,
+    sort,
+    limit,
+    offset,
+    skipTotal,
+  } = options;
 
-  return {
-    products,
-    total,
-    hasMore: (data || []).length >= limit || offset + products.length < total,
-  };
+  if (
+    fiberSubtype ||
+    minPrice != null ||
+    maxPrice != null ||
+    (category && category !== "all") ||
+    color ||
+    brand ||
+    (fiber && fiber !== "all" && fiber.toLowerCase() !== "shoes")
+  ) {
+    return null;
+  }
+
+  try {
+    const { fetchMerchRailProducts, fetchMerchRailDisplayCount, MERCH_RAIL_KEYS } = await import(
+      "./merch-feed"
+    );
+    const feedCap = Math.min(Math.max(offset + limit + 48, 120), 600);
+    const feedProducts = await fetchMerchRailProducts(MERCH_RAIL_KEYS.sale, {
+      limit: feedCap,
+      market,
+    });
+    if (!feedProducts.length) return null;
+
+    let products = applySaleProductFilters(feedProducts, {
+      fiber,
+      maxPrice,
+      minPrice,
+      category,
+      color,
+      brand,
+    });
+    products = sortSaleProducts(products, sort);
+    const page = products.slice(offset, offset + limit);
+    if (!page.length) return null;
+
+    let total: number | null = null;
+    if (!skipTotal) {
+      total = await fetchMerchRailDisplayCount(MERCH_RAIL_KEYS.sale);
+    }
+
+    return {
+      products: page,
+      total,
+      hasMore: skipTotal
+        ? products.length > offset + limit
+        : total != null
+          ? offset + page.length < total
+          : page.length >= limit,
+    };
+  } catch {
+    return null;
+  }
 }
 
-/** Paginated sale catalog — `sale_catalog_list` RPC (products-first) with direct fallback. */
+/** Paginated sale catalog — direct table query (RPC sale_catalog_list times out at current scale). */
 async function fetchSaleProductsDirect(options: {
   fiber?: string;
   fiberSubtype?: string;
@@ -2622,7 +2720,7 @@ async function fetchSaleProductsDirect(options: {
     offset = 0,
     skipTotal = false,
   } = options;
-  const { preferred, fallback } = catalogRegionsFromMarket(market);
+  const { preferred } = catalogRegionsFromMarket(market);
   const filterOpts = { fiber, fiberSubtype, category, color, brand };
   const normalizedSort = normalizeSaleSort(sort);
 
@@ -2640,6 +2738,22 @@ async function fetchSaleProductsDirect(options: {
       skipTotal: skipTotal,
     });
   }
+
+  const fromFeed = await fetchSaleProductsFromMerchFeed({
+    fiber,
+    fiberSubtype,
+    maxPrice,
+    minPrice,
+    category,
+    color,
+    brand,
+    market,
+    sort: normalizedSort,
+    limit,
+    offset,
+    skipTotal,
+  });
+  if (fromFeed?.products.length) return fromFeed;
 
   const useDirectTable =
     Boolean(category && category !== "all") ||
@@ -2668,27 +2782,10 @@ async function fetchSaleProductsDirect(options: {
     });
   }
 
-  let rawRows: Record<string, unknown>[] = [];
-  {
-    const { data, error } = await supabase.rpc("sale_catalog_list", {
-      p_preferred_region: preferred,
-      p_fallback_region: fallback,
-      p_fiber: fiber && fiber !== "all" ? fiber : null,
-      p_max_price: maxPrice ?? null,
-      p_limit: limit,
-      p_offset: offset,
-      p_category: category && category !== "all" ? category : null,
-      p_brand_slug: brand ? brand.toLowerCase() : null,
-      p_color: color || null,
-      p_sort: normalizedSort,
-    });
-    if (error) throw error;
-    rawRows = (data || []) as Record<string, unknown>[];
-  }
-
-  let products = filterConsumerCatalogProducts(rawRows.map(mapProductRow));
-  products = dedupeCatalogProducts(products);
-  products = applySaleProductFilters(products, {
+  // sale_catalog_list RPC times out on the current catalog — direct table query is ~500ms.
+  return fetchSaleProductsViaDirectTable({
+    supabase,
+    preferred,
     fiber,
     fiberSubtype,
     maxPrice,
@@ -2696,48 +2793,12 @@ async function fetchSaleProductsDirect(options: {
     category,
     color,
     brand,
+    sort: normalizedSort,
+    limit,
+    offset,
+    skipTotal,
+    filterOpts,
   });
-
-  if (skipTotal) {
-    return {
-      products,
-      total: null,
-      hasMore: rawRows.length >= limit,
-    };
-  }
-
-  let total: number;
-  if (
-    !fiberSubtype &&
-    !minPrice &&
-    !category &&
-    !color &&
-    !brand
-  ) {
-    const { data: rpcCount, error: countErr } = await supabase.rpc("sale_catalog_count", {
-      p_fiber: fiber && fiber !== "all" ? fiber : null,
-      p_max_price: maxPrice ?? null,
-      p_region: preferred,
-    });
-    if (countErr) throw countErr;
-    total = Number(rpcCount) || 0;
-  } else {
-    const { count, error: countErr } = await buildSaleDirectQuery(
-      supabase,
-      preferred,
-      filterOpts,
-      "id",
-      { count: "exact", head: true }
-    );
-    if (countErr) throw countErr;
-    total = count ?? products.length;
-  }
-
-  return {
-    products,
-    total,
-    hasMore: rawRows.length >= limit || offset + products.length < total,
-  };
 }
 
 export async function fetchSaleProducts(options: {

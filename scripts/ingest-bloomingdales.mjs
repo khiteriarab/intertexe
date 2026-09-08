@@ -8,38 +8,18 @@
  *
  * Requires: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RAKUTEN_FTP_* credentials.
  */
-import fs from "fs";
 import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
+import { loadProjectEnv, armLiveIngest } from "./lib/load-env.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BLOOMINGDALES_MIDS = ["13867", "37206"];
 
-function loadEnvFile(filePath) {
-  if (!fs.existsSync(filePath)) return {};
-  const out = {};
-  for (const line of fs.readFileSync(filePath, "utf8").split(/\n/)) {
-    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
-    if (!m) continue;
-    let v = m[2];
-    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-      v = v.slice(1, -1);
-    }
-    out[m[1]] = v;
-  }
-  return out;
-}
-
-Object.assign(
-  process.env,
-  loadEnvFile(path.join(root, ".env")),
-  loadEnvFile(path.join(root, ".env.local")),
-  loadEnvFile(path.join(root, ".env.vercel.local"))
-);
+loadProjectEnv(root);
+armLiveIngest();
 
 process.env.RAKUTEN_FTP_DIR_FILTER = BLOOMINGDALES_MIDS.join(",");
 process.env.RAKUTEN_CHUNK_FILE_LIMIT = process.env.RAKUTEN_CHUNK_FILE_LIMIT || "8";
-process.env.FEED_LIVE_INGEST_ENABLED = process.env.FEED_LIVE_INGEST_ENABLED || "1";
 
 const { syncRakutenFeeds, refreshCatalogMaterializedViews } = await import(
   pathToFileURL(path.join(root, "lib/feed-sync/rakuten-sync.js")).href

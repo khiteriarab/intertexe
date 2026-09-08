@@ -1,5 +1,6 @@
 import type { HqOverviewMetrics } from "./metrics";
 import type { HqInsight } from "./insights";
+import { normalizeAffiliateU1 } from "./revenue-enrichment";
 
 /** Normalize Rakuten (and similar) report headers to a canonical key. */
 export function normalizeHeader(h: string): string {
@@ -177,6 +178,7 @@ export function parseAffiliateReport(text: string): {
       }
     });
     row.raw = raw;
+    row.u1 = normalizeAffiliateU1(row.u1);
     if (
       !row.external_transaction_id &&
       !row.order_id &&

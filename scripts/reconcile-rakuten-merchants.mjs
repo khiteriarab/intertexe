@@ -14,13 +14,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import { createClient } from '@supabase/supabase-js';
-import { loadProjectEnv } from './lib/load-env.mjs';
+import { loadProjectEnv, armLiveIngest } from './lib/load-env.mjs';
 import { RAKUTEN_MERCHANTS } from '../lib/feed-sync/rakuten-merchants.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 loadProjectEnv(root);
+armLiveIngest();
 
-process.env.FEED_LIVE_INGEST_ENABLED = process.env.FEED_LIVE_INGEST_ENABLED || '1';
 process.env.RAKUTEN_FTP_USER = process.env.RAKUTEN_FTP_USER || process.env.RAKUTEN_FTP_USERNAME || 'rkp_4668007';
 
 const auditOnly = process.argv.includes('--audit-only');
@@ -110,6 +110,8 @@ async function main() {
 
   // Generic pass for all MIDs (brand programs without dedicated scripts).
   runNode('scripts/ingest-all-rakuten-merchants.mjs');
+
+  runNode('scripts/backfill-retailer-mid.mjs');
 
   const after = await auditMids(sb);
   console.log('\nAfter ingest:');

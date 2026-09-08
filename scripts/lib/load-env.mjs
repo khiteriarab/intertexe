@@ -32,3 +32,8 @@ export function loadProjectEnv(root = process.cwd()) {
   Object.assign(process.env, merged);
   return merged;
 }
+
+/** Dedicated ingest scripts must write live — ignore FEED_LIVE_INGEST_ENABLED=0 in local env. */
+export function armLiveIngest() {
+  process.env.FEED_LIVE_INGEST_ENABLED = '1';
+}

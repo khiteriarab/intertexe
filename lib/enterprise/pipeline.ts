@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseCompositionText, isKnownMaterialCode } from "../material-intelligence/composition";
-import { canAddProducts, entitlementsForPlan, type PlanKey } from "./entitlements";
+import { assertCanAddProducts, recordProductsImported } from "./billing-gates";
+import { recordImportRowError } from "./import-ops";
 import { applyColumnMapping } from "./import-preview";
 import { ITX_RULESET_VERSION, type IntelligenceKind } from "./intelligence";
 import {
@@ -214,19 +215,21 @@ export async function commitMappedImport(input: {
 }> {
   const supabase = input.client;
 
-  const entitlement = entitlementsForPlan(input.organizationPlan as PlanKey, {
-    productAllowance: input.productAllowance,
-  });
   const { count } = await supabase
     .from("products")
     .select("id", { count: "exact", head: true })
-    .eq("organization_id", input.organizationId);
-  const currentCount = count || 0;
+    .eq("organization_id", input.organizationId)
+    .neq("lifecycle_state", "archived");
 
   const mappedRows = input.rows.map((row) => applyColumnMapping(row, input.mapping));
-  const newNeeded = mappedRows.filter((row) => !mappedValue(row, "sku") && !mappedValue(row, "gtin")).length;
-  if (!canAddProducts(entitlement, currentCount) && newNeeded > 0) {
-    throw new Error("Product allowance reached for this plan.");
+  const newProductEstimate = mappedRows.filter((row) => {
+    const sku = mappedValue(row, "sku");
+    const gtin = mappedValue(row, "gtin");
+    return !sku && !gtin;
+  }).length;
+  const gate = await assertCanAddProducts(supabase, input.organizationId, Math.max(1, newProductEstimate));
+  if (!gate.allowed && newProductEstimate > 0) {
+    throw new Error(gate.reason);
   }
 
   const { data: catalog } = await supabase
@@ -292,6 +295,7 @@ export async function commitMappedImport(input: {
   });
 
   let productsTouched = 0;
+  let newProductsCreated = 0;
   let issuesCreated = 0;
   const orgAliases = await loadApprovedOrgAliases(supabase, input.organizationId);
   const unknownTokens = new Set<string>();
@@ -339,7 +343,15 @@ export async function commitMappedImport(input: {
       }
       reconciliations.push(fate);
     } else {
-      if (entitlement.productAllowance != null && currentCount + productsTouched >= entitlement.productAllowance) {
+      const addGate = await assertCanAddProducts(supabase, input.organizationId, 1);
+      if (!addGate.allowed) {
+        await recordImportRowError(supabase, {
+          organizationId: input.organizationId,
+          importId: importRow.id,
+          rowNumber: rowIndex + 1,
+          errorCode: "product_allowance",
+          message: addGate.reason,
+        });
         continue;
       }
       const { data: created, error } = await supabase
@@ -356,6 +368,7 @@ export async function commitMappedImport(input: {
         .maybeSingle();
       if (error || !created?.id) continue;
       productId = created.id;
+      newProductsCreated += 1;
       incoming.productId = productId;
       const forWorking = {
         ...incoming,
@@ -693,6 +706,7 @@ export async function commitMappedImport(input: {
 
   const { incrementUsageMeter } = await import("./usage-meters");
   await incrementUsageMeter(supabase, input.organizationId, "imports_completed", 1);
+  await recordProductsImported(supabase, input.organizationId, newProductsCreated);
 
   return { importId: importRow.id, productsTouched, issuesCreated, reconciliations };
 }

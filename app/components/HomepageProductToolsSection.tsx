@@ -6,7 +6,7 @@ import { getAppStoreUrl } from "../../lib/app-store";
 import { getChromeWebStoreUrl } from "../../lib/chrome-extension";
 import { AppStoreCtaLink } from "./AppStoreCtaLink";
 
-const APP_PROMO_IMAGE = "/promo/home-ios-scanner.jpg";
+const APP_PROMO_IMAGE = "/promo/home-ios-scanner.png";
 const CHROME_PROMO_IMAGE = "/promo/home-chrome-extension.png";
 
 function ToolCard({

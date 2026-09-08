@@ -2,13 +2,13 @@
 /** Targeted Rakuten ingest for Tory Burch UK (MID 43654). */
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { loadProjectEnv } from './lib/load-env.mjs';
+import { loadProjectEnv, armLiveIngest } from './lib/load-env.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 loadProjectEnv(root);
+armLiveIngest();
 
 process.env.RAKUTEN_FTP_DIR_FILTER = '43654';
-process.env.FEED_LIVE_INGEST_ENABLED = process.env.FEED_LIVE_INGEST_ENABLED || '1';
 
 const { syncRakutenFeeds, refreshCatalogMaterializedViews } = await import(
   pathToFileURL(path.join(root, 'lib/feed-sync/rakuten-sync.js')).href
