@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { fetchBrandStats, fetchSaleProducts, getServerSupabase } from "./supabase-server";
 import { fetchPlatformStats, type PlatformStats } from "./platform-stats";
+import { CATALOG_STATS } from "./catalog-stats";
 import { SHOPPABLE_MIN_PRODUCTS } from "./shoppable-brands";
 import { sanitizeBrandName } from "./brand-display";
 
@@ -76,7 +77,7 @@ export const getCachedPlatformStats = unstable_cache(
     withTimeout(
       () => fetchPlatformStats(),
       FETCH_BUDGET_MS,
-      { productCount: 0, brandCount: 0 },
+      { productCount: CATALOG_STATS.productCount, brandCount: CATALOG_STATS.brandCount },
       "platform-stats"
     ),
   ["platform-stats-v8"],

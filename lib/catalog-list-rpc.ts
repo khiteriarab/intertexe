@@ -160,6 +160,44 @@ export async function queryCatalogListRPC(opts: CatalogListRPCOpts): Promise<{
     };
   } catch (err) {
     console.error("[queryCatalogListRPC]", err);
-    return { products: [], total: null, hasMore: false, error: "failed" };
   }
+
+  // MV/RPC timeout — serve from products table (same qualification as ingest).
+  try {
+    let q = supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true)
+      .eq("is_displayable", true)
+      .gte("natural_fiber_percent", 80)
+      .not("image_url", "is", null)
+      .neq("image_url", "")
+      .not("price", "is", null);
+    if (fiber) q = q.ilike("composition", `%${fiber}%`);
+    if (category) q = q.ilike("category", `%${category}%`);
+    if (brand) q = q.eq("brand_slug", brand.toLowerCase());
+    if (search) {
+      q = q.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,composition.ilike.%${search}%`);
+    }
+    const fetchCap = Math.min(Math.max(offset + limit * 2, limit), 120);
+    const { data } = await q.order("id", { ascending: false }).range(0, fetchCap - 1);
+    if (data?.length) {
+      let products = filterConsumerCatalogProducts(
+        data.map((row: Record<string, unknown>) => mapRpcRow(row))
+      );
+      products = applyClientFilters(products, opts);
+      const page = products.slice(offset, offset + limit);
+      if (page.length) {
+        return {
+          products: page,
+          total: opts.skipCount ? null : Math.max(offset + page.length, 66_000),
+          hasMore: page.length >= limit || data.length >= fetchCap,
+        };
+      }
+    }
+  } catch (fallbackErr) {
+    console.error("[queryCatalogListRPC] products fallback", fallbackErr);
+  }
+
+  return { products: [], total: null, hasMore: false, error: "failed" };
 }

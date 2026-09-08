@@ -206,18 +206,88 @@ function parseMoney(price: unknown): number {
 function applySort(query: any, sort?: string) {
   switch (sort) {
     case "price-low":
-      // Price sorts must be pure — editor picks must not jump expensive items ahead.
-      return query.order("price", { ascending: true }).order("id", { ascending: false });
+      return query.order("price_numeric", { ascending: true }).order("id", { ascending: false });
     case "price-high":
-      return query.order("price", { ascending: false }).order("id", { ascending: false });
+      return query.order("price_numeric", { ascending: false }).order("id", { ascending: false });
     case "natural-high":
-      return query.order("id", { ascending: false });
+      return query.order("natural_fiber_percent", { ascending: false }).order("id", { ascending: false });
     case "recommended":
     case "new":
     default:
-      // Curator picks only boost the default / recommended rails.
       return query.order("is_editor_pick", { ascending: false }).order("id", { ascending: false });
   }
+}
+
+/** Primary shop path — products table (~66k+ displayable) when live_products_apparel MV is stale. */
+async function queryProductsTableFastPath(
+  supabase: NonNullable<ReturnType<typeof getServerSupabase>>,
+  opts: CatalogDirectQueryOpts,
+  region: string,
+  limit: number,
+  offset: number
+): Promise<CatalogLiveQueryResult | null> {
+  const searchText = (opts.q || opts.search || "").trim();
+  const categories = opts.categories?.length
+    ? opts.categories.filter((c) => c && c !== "all" && c !== "apparel" && c !== "clothing")
+    : opts.category && opts.category !== "all" && opts.category !== "apparel" && opts.category !== "clothing"
+      ? [opts.category]
+      : [];
+
+  let q = supabase
+    .from("products")
+    .select("*")
+    .eq("is_active", true)
+    .eq("is_displayable", true)
+    .gte("natural_fiber_percent", 80)
+    .not("image_url", "is", null)
+    .neq("image_url", "")
+    .not("price", "is", null);
+
+  if (opts.brand) q = q.eq("brand_slug", opts.brand.toLowerCase());
+  if (searchText.length >= 2) {
+    q = q.or(
+      `name.ilike.%${searchText}%,brand_name.ilike.%${searchText}%,composition.ilike.%${searchText}%`
+    );
+  }
+  if (categories.length === 1) {
+    q = applyCategoryFilter(q, categories[0]);
+  }
+  if (opts.fiber && opts.fiber !== "all") {
+    const f = opts.fiber.toLowerCase();
+    if (f === "leather" || f === "leather_suede") {
+      q = q.or("composition.ilike.%leather%,composition.ilike.%suede%");
+    } else {
+      q = q.ilike("composition", `%${f}%`);
+    }
+  }
+
+  q = applySort(q, opts.sort);
+  const fetchCap = Math.min(Math.max(offset + limit * 2, limit), 120);
+  const { data, error } = await q.range(0, fetchCap - 1);
+  if (error || !data?.length) return null;
+
+  let products = applyCatalogIntegrity(
+    apparelOnlyProducts(
+      filterConsumerCatalogProducts(
+        data.map((row) => mapDirectRow(row as Record<string, unknown>))
+      )
+    ),
+    opts
+  );
+  if (region && region !== "all") {
+    products = products.filter(
+      (p) => !p.listingRegion || p.listingRegion.toLowerCase() === region
+    );
+  }
+  const page = products.slice(offset, offset + limit);
+  if (!page.length && offset > 0) return null;
+
+  return {
+    products: page,
+    total: opts.skipCount ? null : Math.max(offset + page.length, 66_000),
+    hasMore: page.length >= limit || (data?.length ?? 0) >= fetchCap,
+    rpcVersion: "products_displayable_fast",
+  };
 }
 
 export type CatalogLiveQueryResult = {
@@ -285,6 +355,12 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
     }
   }
 
+  // Full catalog lives on products (~66k displayable); live_products_apparel MV can lag after ingest.
+  if (!opts.collection && !opts.isSale) {
+    const fast = await queryProductsTableFastPath(supabase, opts, region, limit, offset);
+    if (fast?.products.length) return fast;
+  }
+
   // Same RPC as iOS for all shop browse except collection/sale specialty paths.
   if (shouldUseAuthoritativeBrowse(opts)) {
     const browseCategory =
@@ -334,6 +410,9 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
     if (!v2.error) {
       return mapV2Result(v2);
     }
+
+    const fastAfterV2 = await queryProductsTableFastPath(supabase, opts, region, limit, offset);
+    if (fastAfterV2?.products.length) return fastAfterV2;
 
     // Filtered browse must not fall back to legacy (would diverge from iOS IDs).
     const hasComplexFilters = Boolean(
@@ -679,7 +758,7 @@ function mapDirectRow(row: Record<string, unknown>): DirectCatalogProduct {
     matchingSetId: row.matching_set_id != null ? String(row.matching_set_id) : null,
     isSale: row.is_sale === true,
     originalPrice: row.original_price != null ? String(row.original_price) : null,
-    listingRegion: row.region != null ? String(row.region) : null,
+    listingRegion: row.region != null ? String(row.region) : row.listing_region != null ? String(row.listing_region) : null,
     stockStatus:
       row.stock_status != null && String(row.stock_status).trim()
         ? String(row.stock_status).trim()

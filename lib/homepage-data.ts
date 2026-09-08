@@ -483,7 +483,7 @@ export async function getHomePageData(): Promise<HomePageData> {
 /** Sale rail cached separately — shorter TTL so a transient empty fetch does not hide Sale for an hour. */
 export const getCachedHomepageSaleRail = unstable_cache(
   fetchHomepageSaleRail,
-  ["homepage-sale-rail-v4"],
+  ["homepage-sale-rail-v5"],
   { revalidate: 600, tags: ["homepage", "sale"] }
 );
 
