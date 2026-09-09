@@ -96,6 +96,35 @@ export async function claimTypedEmailSend(
   let blocking: EmailDeliveryRow | null = null;
   if (emailType === EMAIL_TYPES.FOUNDER_WELCOME) {
     blocking = await findBlockingFounderWelcome(supabase, { userId, email });
+  } else if (
+    emailType === EMAIL_TYPES.LIFECYCLE_DAY4 ||
+    emailType === EMAIL_TYPES.LIFECYCLE_DAY10 ||
+    emailType === EMAIL_TYPES.LIFECYCLE_DAY25
+  ) {
+    if (userId) {
+      const { data } = await supabase
+        .from("email_deliveries")
+        .select("*")
+        .eq("email_type", emailType)
+        .eq("user_id", userId)
+        .in("status", ACTIVE_STATUSES)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      blocking = (data as EmailDeliveryRow) || null;
+    }
+    if (!blocking) {
+      const { data } = await supabase
+        .from("email_deliveries")
+        .select("*")
+        .eq("email_type", emailType)
+        .ilike("email", email)
+        .in("status", ACTIVE_STATUSES)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      blocking = (data as EmailDeliveryRow) || null;
+    }
   } else if (userId) {
     const { data } = await supabase
       .from("email_deliveries")

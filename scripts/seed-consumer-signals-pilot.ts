@@ -355,6 +355,268 @@ async function main() {
   }
 
   console.log(`\nDone. Products touched: ${touched}. Dataset: ${datasetId}`);
+
+  await seedPeerSegmentBenchmarks(ent);
+  await seedConversionCohorts(ent);
+}
+
+async function seedPeerSegmentBenchmarks(ent: ReturnType<typeof createClient>) {
+  const segments = [
+    { key: "luxury", sample: 420, natural: 72, synthetic: 28, cotton: 28, silk: 14, wool: 18, linen: 12 },
+    { key: "contemporary", sample: 1240, natural: 57, synthetic: 43, cotton: 36, silk: 6, wool: 8, linen: 8.5 },
+    { key: "mass", sample: 2100, natural: 41, synthetic: 59, cotton: 48, silk: 2, wool: 4, linen: 3 },
+  ] as const;
+
+  for (const segment of segments) {
+    const { data: existing } = await ent
+      .from("benchmark_datasets")
+      .select("id")
+      .eq("source", "intertexe_consumer_assortment")
+      .eq("category", "apparel")
+      .eq("market", "eu_fashion")
+      .eq("peer_segment", segment.key)
+      .maybeSingle();
+
+    let datasetId = existing?.id as string | undefined;
+    if (!datasetId) {
+      const { data: created, error } = await ent
+        .from("benchmark_datasets")
+        .insert({
+          source: "intertexe_consumer_assortment",
+          category: "apparel",
+          market: "eu_fashion",
+          peer_segment: segment.key,
+          period_start: "2026-01-01",
+          period_end: "2026-09-01",
+          sample_size: segment.sample,
+          min_sample_size: 50,
+          status: "approved",
+          provenance: `INTERTEXE ${segment.key} segment assortment sample`,
+          aggregation_rules: "median fiber / completeness metrics across approved displayable SKUs",
+          permission_scope: "plan",
+          methodology_version: "assortment.v1",
+          data_classification: "aggregate_enterprise",
+          calculated_at: new Date().toISOString(),
+        })
+        .select("id")
+        .maybeSingle();
+      if (error || !created?.id) throw new Error(error?.message || `benchmark dataset insert failed (${segment.key})`);
+      datasetId = created.id;
+    }
+
+    for (const plan of ["internal", "saas", "founding_pilot"]) {
+      const { data: perm } = await ent
+        .from("benchmark_permissions")
+        .select("id")
+        .eq("dataset_id", datasetId)
+        .eq("plan", plan)
+        .maybeSingle();
+      if (!perm) await ent.from("benchmark_permissions").insert({ dataset_id: datasetId, plan });
+    }
+
+    const metrics = [
+      { metric_key: "natural_fiber_share", median: segment.natural },
+      { metric_key: "synthetic_share", median: segment.synthetic },
+      { metric_key: "cotton_share", median: segment.cotton },
+      { metric_key: "wool_share", median: segment.wool },
+      { metric_key: "linen_share", median: segment.linen },
+      { metric_key: "silk_share", median: segment.silk },
+      { metric_key: "material_data_complete", median: segment.key === "luxury" ? 91 : segment.key === "mass" ? 74 : 81 },
+      { metric_key: "passport_ready_share", median: segment.key === "luxury" ? 58 : segment.key === "mass" ? 34 : 48 },
+    ];
+
+    for (const metric of metrics) {
+      const { data: existingMetric } = await ent
+        .from("benchmark_metrics")
+        .select("id")
+        .eq("dataset_id", datasetId)
+        .eq("metric_key", metric.metric_key)
+        .maybeSingle();
+      if (existingMetric?.id) {
+        await ent.from("benchmark_metrics").update({ median: metric.median }).eq("id", existingMetric.id);
+      } else {
+        await ent.from("benchmark_metrics").insert({
+          dataset_id: datasetId,
+          metric_key: metric.metric_key,
+          median: metric.median,
+          p25: Math.max(0, metric.median - 8),
+          p75: Math.min(100, metric.median + 8),
+          metric_definition: `Governed peer median for ${metric.metric_key}`,
+          time_period: "2026-H1",
+        });
+      }
+    }
+    console.log(`  ✓ peer segment dataset ${segment.key}`);
+  }
+}
+
+async function seedConversionCohorts(ent: ReturnType<typeof createClient>) {
+  const segmentCohorts: Record<
+    string,
+    Array<{ cohort: string; label: string; index: number | null; sample: number; signal?: string }>
+  > = {
+    luxury: [
+      { cohort: "silk_fine_naturals", label: "Silk & fine naturals", index: 24, sample: 180, signal: "Outperforming peer median" },
+      { cohort: "cotton_basics", label: "Cotton basics", index: -4, sample: 220 },
+      { cohort: "recycled_synthetics", label: "Recycled synthetics", index: 9, sample: 95 },
+      { cohort: "wool_outerwear", label: "Wool outerwear", index: 12, sample: 140 },
+    ],
+    contemporary: [
+      { cohort: "silk_fine_naturals", label: "Silk & fine naturals", index: 18, sample: 320, signal: "Outperforming peer median" },
+      { cohort: "cotton_basics", label: "Cotton basics", index: -11, sample: 540, signal: "Under index vs segment" },
+      { cohort: "recycled_synthetics", label: "Recycled synthetics", index: 6, sample: 210, signal: "Growing share, stable conversion" },
+      { cohort: "wool_outerwear", label: "Wool outerwear", index: null, sample: 28, signal: "Insufficient peer sample" },
+    ],
+    mass: [
+      { cohort: "silk_fine_naturals", label: "Silk & fine naturals", index: 3, sample: 85 },
+      { cohort: "cotton_basics", label: "Cotton basics", index: -6, sample: 890 },
+      { cohort: "recycled_synthetics", label: "Recycled synthetics", index: 14, sample: 260 },
+      { cohort: "wool_outerwear", label: "Wool outerwear", index: -2, sample: 120 },
+    ],
+  };
+
+  for (const [segment, cohorts] of Object.entries(segmentCohorts)) {
+    for (const row of cohorts) {
+      const { data: existing } = await ent
+        .from("consumer_intelligence_aggregates")
+        .select("id")
+        .eq("metric_key", "conversion_index")
+        .eq("cohort", row.cohort)
+        .eq("category", segment)
+        .eq("geography", "eu")
+        .maybeSingle();
+
+      const payload = {
+        label: row.label,
+        index: row.index,
+        signal: row.signal || null,
+        unit: "index_vs_peer",
+      };
+
+      const record = {
+        metric_key: "conversion_index",
+        cohort: row.cohort,
+        category: segment,
+        geography: "eu",
+        sample_size: row.sample,
+        min_cohort_size: 50,
+        methodology: "Conversion index vs governed peer median for material cohort",
+        methodology_version: "conversion_index.v1",
+        source_channel: "intertexe_consumer_signals",
+        privacy_classification: "aggregate_enterprise",
+        status: "approved",
+        provenance: "INTERTEXE governed consumer signal aggregate — no shopper identities",
+        payload,
+        period_start: "2026-01-01",
+        period_end: "2026-09-01",
+        metric_version: "v1",
+        calculated_at: new Date().toISOString(),
+      };
+
+      if (existing?.id) await ent.from("consumer_intelligence_aggregates").update(record).eq("id", existing.id);
+      else await ent.from("consumer_intelligence_aggregates").insert(record);
+    }
+    console.log(`  ✓ conversion cohorts ${segment}`);
+  }
+
+  const categoryRows = [
+    {
+      category: "Dress",
+      index: 14,
+      sample: 210,
+      cohorts: [
+        { cohort: "silk_fine_naturals", label: "Silk & fine naturals", index: 22, sample: 95 },
+        { cohort: "cotton_basics", label: "Cotton basics", index: -5, sample: 68 },
+      ],
+    },
+    {
+      category: "Shirt",
+      index: -3,
+      sample: 180,
+      cohorts: [
+        { cohort: "cotton_basics", label: "Cotton basics", index: -9, sample: 120 },
+        { cohort: "linen_blend", label: "Linen blends", index: 11, sample: 44 },
+      ],
+    },
+    {
+      category: "Knitwear",
+      index: 8,
+      sample: 160,
+      cohorts: [
+        { cohort: "wool_outerwear", label: "Wool outerwear", index: 15, sample: 88 },
+        { cohort: "cotton_basics", label: "Cotton basics", index: 2, sample: 52 },
+      ],
+    },
+  ];
+
+  for (const row of categoryRows) {
+    const { data: existingSummary } = await ent
+      .from("consumer_intelligence_aggregates")
+      .select("id")
+      .eq("metric_key", "category_conversion_index")
+      .eq("category", row.category)
+      .eq("geography", "eu")
+      .is("cohort", null)
+      .maybeSingle();
+
+    const summary = {
+      metric_key: "category_conversion_index",
+      cohort: null,
+      category: row.category,
+      geography: "eu",
+      sample_size: row.sample,
+      min_cohort_size: 50,
+      methodology: "Category-level conversion index vs peer segment median",
+      methodology_version: "conversion_index.v1",
+      source_channel: "intertexe_consumer_signals",
+      privacy_classification: "aggregate_enterprise",
+      status: "approved",
+      provenance: "INTERTEXE governed consumer signal aggregate — no shopper identities",
+      payload: { index: row.index, unit: "index_vs_peer" },
+      period_start: "2026-01-01",
+      period_end: "2026-09-01",
+      metric_version: "v1",
+      calculated_at: new Date().toISOString(),
+    };
+
+    if (existingSummary?.id) await ent.from("consumer_intelligence_aggregates").update(summary).eq("id", existingSummary.id);
+    else await ent.from("consumer_intelligence_aggregates").insert(summary);
+
+    for (const cohort of row.cohorts) {
+      const { data: existing } = await ent
+        .from("consumer_intelligence_aggregates")
+        .select("id")
+        .eq("metric_key", "category_conversion_index")
+        .eq("category", row.category)
+        .eq("cohort", cohort.cohort)
+        .eq("geography", "eu")
+        .maybeSingle();
+
+      const record = {
+        metric_key: "category_conversion_index",
+        cohort: cohort.cohort,
+        category: row.category,
+        geography: "eu",
+        sample_size: cohort.sample,
+        min_cohort_size: 40,
+        methodology: "Material cohort conversion within category vs peer median",
+        methodology_version: "conversion_index.v1",
+        source_channel: "intertexe_consumer_signals",
+        privacy_classification: "aggregate_enterprise",
+        status: "approved",
+        provenance: "INTERTEXE governed consumer signal aggregate — no shopper identities",
+        payload: { label: cohort.label, index: cohort.index, unit: "index_vs_peer" },
+        period_start: "2026-01-01",
+        period_end: "2026-09-01",
+        metric_version: "v1",
+        calculated_at: new Date().toISOString(),
+      };
+
+      if (existing?.id) await ent.from("consumer_intelligence_aggregates").update(record).eq("id", existing.id);
+      else await ent.from("consumer_intelligence_aggregates").insert(record);
+    }
+    console.log(`  ✓ category drill-down ${row.category}`);
+  }
 }
 
 main().catch((err) => {

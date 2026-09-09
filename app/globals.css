@@ -167,18 +167,7 @@
   display: block;
 }
 
-/* Desktop golden-dress slide — frame on subject (head ~38% in source); JPG unchanged */
-.homepage-hero-desktop-frame .homepage-hero-img--editorial-v8 {
-  object-position: center 50% !important;
-}
-
-.homepage-hero-desktop-frame .homepage-hero-img--editorial-jpg {
-  object-position: center 25% !important;
-}
-
-.homepage-hero-frame-mobile .homepage-hero-img {
-  object-position: center 75%;
-}
+/* Per-slide object-fit / object-position come from editorial-assets via inline style. */
 
 /* Editorial imagery — always cover-fill; never letterbox (NAP / Mytheresa style). */
 .editorial-frame-hero {

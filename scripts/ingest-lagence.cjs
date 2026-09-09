@@ -1,7 +1,13 @@
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const https = require('https');
-const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const { loadProjectEnv, armLiveIngest } = require('./lib/load-env.cjs');
+loadProjectEnv();
+armLiveIngest();
+const sb = createClient(
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const AFFILIATE_ID = '*8b0zWDyXo0';
 const MID = '42841';
@@ -123,6 +129,11 @@ async function scrapeComposition(url) {
 
 async function main() {
   const feedFile = '/tmp/feed-42841.txt';
+  if (!fs.existsSync(feedFile)) {
+    const { spawnSync } = require('child_process');
+    console.log('Fetching pipe feed from Rakuten FTP...');
+    spawnSync('node', ['scripts/fetch-rakuten-pipe-feed.mjs', MID], { cwd: require('path').resolve(__dirname, '..'), stdio: 'inherit' });
+  }
   if (!fs.existsSync(feedFile)) {
     console.error('Feed file not found:', feedFile);
     return;

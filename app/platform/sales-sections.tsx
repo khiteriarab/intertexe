@@ -19,9 +19,10 @@ const GOVERNED_POINTS = [
 ] as const;
 
 const INTELLIGENCE_POINTS = [
-  "Natural vs synthetic material mix across your catalog",
-  "Composition completeness, passport readiness, and regulatory field gaps",
-  "Governed peer benchmarking — where aggregate data exists",
+  "Material Benchmark — compare fiber mix, completeness, and readiness against governed peer segments in your market",
+  "Conversion signals — see which material compositions and categories outperform or underperform vs peers",
+  "Cohort drill-down — slice by category, price tier, natural-fiber threshold, and passport readiness",
+  "Governed datasets only — aggregate peer medians, never individual competitor catalogs or shopper identity",
 ] as const;
 
 const OUTPUT_PILLARS = [
@@ -145,10 +146,11 @@ export function SalesIntelligenceSection() {
         <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 lg:gap-14 items-start">
           <div>
             <Eyebrow>Intelligence</Eyebrow>
-            <Heading className="mb-4 text-white">See your catalog differently.</Heading>
+            <Heading className="mb-4 text-white">Benchmark your material strategy against the market.</Heading>
             <Body className="text-white/72 mb-6">
-              Benchmarking and readiness are core differentiators — material mix, completeness, regulatory field gaps,
-              and governed peer comparison from the same product record, before the conversation turns to passports or
+              Material Benchmark is the subscription-style dataset brands use to compare fabric strategy — your catalog
+              against governed peer segments, with conversion signals that show what is working and what is not. Same
+              product record powers readiness gaps, regulatory field tracking, and peer comparison before passports or
               public surfaces.
             </Body>
             <ul className="space-y-2">
@@ -242,7 +244,7 @@ export function SalesConsumerSection() {
   return (
     <section className="bg-white py-16 sm:py-20 lg:py-24 border-t border-[#e8e3da]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <Eyebrow>Strategic moat — not what you buy</Eyebrow>
+        <Eyebrow>Consumer surface — not what you buy</Eyebrow>
         <Heading className="mb-4">The consumer app is strategic advantage, not the enterprise SKU.</Heading>
         <Body className="max-w-3xl mb-4">
           Enterprise customers buy the governed data layer and workspace. The INTERTEXE consumer app and shopping

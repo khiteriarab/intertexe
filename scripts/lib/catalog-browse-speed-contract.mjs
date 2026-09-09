@@ -242,3 +242,29 @@ export function validateRepoCatalogBrowseSpeed(opts = {}) {
 
   return { ok: errors.length === 0, errors, warnings, notes };
 }
+
+/** Web shop router must never send silk/material filters through catalog_list. */
+export function validateCatalogDirectQueryRouting() {
+  const errors = [];
+  const warnings = [];
+  const src = readFileSync(path.join(REPO_ROOT, "lib/catalog-direct-query.ts"), "utf8");
+
+  if (!/function isMaterialFamilyBrowse/.test(src)) {
+    errors.push("catalog-direct-query: missing isMaterialFamilyBrowse guard");
+  }
+  if (!/queryCatalogBrowsePageV2/.test(src)) {
+    errors.push("catalog-direct-query: must call catalog_browse_page_v2");
+  }
+  if (/hasNarrowingFilter[\s\S]{0,800}?queryCatalogListRPC\(opts\)/.test(src)) {
+    errors.push(
+      "catalog-direct-query: catalog_list must not run in filtered-browse v2 block (statement_timeout ~80s)"
+    );
+  }
+  if (/!isMaterialFamilyBrowse\(opts\)/.test(src)) {
+    warnings.push("catalog-direct-query: material-family guard present");
+  } else {
+    errors.push("catalog-direct-query: legacy path must exclude isMaterialFamilyBrowse from catalog_list");
+  }
+
+  return { ok: errors.length === 0, errors, warnings };
+}

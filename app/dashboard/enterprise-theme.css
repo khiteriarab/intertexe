@@ -1281,6 +1281,28 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+.enterprise-app .ent-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--ent-border);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ent-ink-soft);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.enterprise-app .ent-chip:hover {
+  border-color: var(--ent-petrol-muted);
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-chip-active {
+  background: var(--ent-petrol-deep);
+  border-color: var(--ent-petrol-deep);
+  color: white;
+}
+
 .enterprise-app .ent-widget-card-elevated {
   box-shadow: var(--ent-shadow);
 }

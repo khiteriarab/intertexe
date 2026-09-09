@@ -1,33 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { unstable_cache } from "next/cache";
-import { queryLiveCatalog } from "./catalog-direct-query";
 
-export type RewardsGridProduct = {
-  id: string;
-  name?: string;
-  imageUrl?: string;
-  slug?: string;
-};
-
-export const getCachedRewardsNewInProducts = unstable_cache(
-  async (): Promise<RewardsGridProduct[]> => {
-    const result = await queryLiveCatalog({
-      region: "us",
-      sort: "new",
-      limit: 9,
-      offset: 0,
-      skipCount: true,
-    });
-    return (result.products || []).slice(0, 9).map((p) => ({
-      id: p.id,
-      name: p.name,
-      imageUrl: p.imageUrl,
-      slug: p.brandSlug,
-    }));
-  },
-  ["rewards-new-in-v1"],
-  { revalidate: 3600, tags: ["rewards-new-in"] }
-);
+/** Curated editorial tiles for /rewards — stable local assets, no catalog dependency. */
+export const REWARDS_EDITORIAL_TILES = [
+  { src: "/editorial-silk.jpg", href: "/materials/silk", alt: "Silk edit" },
+  { src: "/editorial-linen.jpg", href: "/materials/linen", alt: "Linen edit" },
+  { src: "/editorial-cashmere.jpg", href: "/materials/cashmere", alt: "Cashmere edit" },
+  { src: "/editorial-evening.jpg", href: "/collections/evening", alt: "Evening edit" },
+  { src: "/editorial-vacation.jpg", href: "/collections/vacation", alt: "Vacation edit" },
+  { src: "/fabrics/fabric-wool.jpg", href: "/materials/wool", alt: "Wool edit" },
+  { src: "/fabrics/fabric-cotton.jpg", href: "/materials/cotton", alt: "Cotton edit" },
+  { src: "/editorial-white-edit.png", href: "/collections/white-edit", alt: "The White Edit" },
+  { src: "/hero-editorial-v8-landscape-2400.jpg", href: "/shop?sort=new", alt: "New arrivals" },
+] as const;
 
 export async function incrementScanCount(
   supabase: SupabaseClient,

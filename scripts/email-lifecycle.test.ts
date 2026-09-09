@@ -4,6 +4,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { Webhook } from "svix";
 import {
   EMAIL_FROM,
@@ -93,6 +94,15 @@ test("lifecycle checkpoint cron is scheduled", () => {
   assert.equal(lifecycleEmailTypeForDay(4), EMAIL_TYPES.LIFECYCLE_DAY4);
   assert.equal(lifecycleEmailTypeForDay(10), EMAIL_TYPES.LIFECYCLE_DAY10);
   assert.equal(lifecycleEmailTypeForDay(25), EMAIL_TYPES.LIFECYCLE_DAY25);
+});
+
+test("lifecycle dedupes by inbox email not only user_id", () => {
+  const sendSrc = readFileSync("lib/lifecycle-send.ts", "utf8");
+  const deliveriesSrc = readFileSync("lib/email-deliveries.ts", "utf8");
+  assert.match(sendSrc, /blockedEmails/);
+  assert.match(sendSrc, /\.in\("email", emails\)/);
+  assert.match(deliveriesSrc, /LIFECYCLE_DAY4/);
+  assert.match(deliveriesSrc, /\.ilike\("email", email\)/);
 });
 
 test("day4 behavior router", () => {

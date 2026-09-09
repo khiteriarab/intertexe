@@ -7,6 +7,7 @@ import {
   EMAIL_TYPES,
   LIFECYCLE_BRANCHES,
   lifecycleEmailTypeForDay,
+  normalizeEmail,
   type LifecycleCheckpointDay,
 } from "./email-constants";
 import { claimTypedEmailSend } from "./email-deliveries";
@@ -61,9 +62,13 @@ export async function listLifecycleCandidates(
 
   for (const row of welcomes || []) {
     if (!row.user_id || !row.email) continue;
-    byUser.set(String(row.user_id), {
-      userId: String(row.user_id),
-      email: String(row.email).toLowerCase(),
+    const email = normalizeEmail(String(row.email));
+    const userId = String(row.user_id);
+    const existing = [...byUser.values()].find((c) => c.email === email);
+    if (existing) continue;
+    byUser.set(userId, {
+      userId,
+      email,
       firstName: "",
       cohortAt: row.sent_at || since,
     });
@@ -78,6 +83,8 @@ export async function listLifecycleCandidates(
       if (!user.id || !user.email || !user.created_at) continue;
       const created = user.created_at;
       if (created < since || created >= until) continue;
+      const email = normalizeEmail(user.email);
+      if ([...byUser.values()].some((c) => c.email === email)) continue;
       if (byUser.has(user.id)) continue;
       const meta = (user.user_metadata || {}) as Record<string, unknown>;
       const firstName =
@@ -86,7 +93,7 @@ export async function listLifecycleCandidates(
         "";
       byUser.set(user.id, {
         userId: user.id,
-        email: user.email.toLowerCase(),
+        email,
         firstName,
         cohortAt: created,
       });
@@ -95,17 +102,36 @@ export async function listLifecycleCandidates(
     page++;
   }
 
-  // Drop anyone who already has this checkpoint claimed/sent.
+  // Drop anyone who already has this checkpoint claimed/sent (by user or inbox).
   const userIds = [...byUser.keys()];
-  if (userIds.length) {
-    const { data: existing } = await supabase
-      .from("email_deliveries")
-      .select("user_id")
-      .eq("email_type", emailType)
-      .in("status", ["pending", "sent", "delivered"])
-      .in("user_id", userIds);
-    for (const row of existing || []) {
+  const emails = [...new Set([...byUser.values()].map((c) => c.email))];
+  if (userIds.length || emails.length) {
+    const existing: Array<{ user_id: string | null; email: string | null }> = [];
+    if (userIds.length) {
+      const { data } = await supabase
+        .from("email_deliveries")
+        .select("user_id, email")
+        .eq("email_type", emailType)
+        .in("status", ["pending", "sent", "delivered"])
+        .in("user_id", userIds);
+      existing.push(...(data || []));
+    }
+    if (emails.length) {
+      const { data } = await supabase
+        .from("email_deliveries")
+        .select("user_id, email")
+        .eq("email_type", emailType)
+        .in("status", ["pending", "sent", "delivered"])
+        .in("email", emails);
+      existing.push(...(data || []));
+    }
+    const blockedEmails = new Set<string>();
+    for (const row of existing) {
       if (row.user_id) byUser.delete(String(row.user_id));
+      if (row.email) blockedEmails.add(normalizeEmail(String(row.email)));
+    }
+    for (const [userId, candidate] of [...byUser.entries()]) {
+      if (blockedEmails.has(candidate.email)) byUser.delete(userId);
     }
   }
 

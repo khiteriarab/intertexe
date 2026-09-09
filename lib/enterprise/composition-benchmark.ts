@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseCompositionText, isNaturalFiber } from "../material-intelligence/composition";
+import { peerMarketLabel, peerSegmentLabel, type PeerMarket, type PeerSegment } from "./benchmark-segments";
 import { loadGovernedBenchmark } from "./benchmarks";
 import { loadOrgOverview } from "./queries";
 
@@ -131,12 +132,17 @@ export async function loadOrgCompositionBenchmark(
   client: SupabaseClient,
   organizationId: string,
   plan: string,
-  market = "eu_fashion"
+  options: { market?: string; peerSegment?: string } = {}
 ): Promise<{
   stats: CatalogCompositionStats;
   peerRows: PeerComparisonRow[];
   market: string;
+  peerSegment: string;
+  marketLabel: string;
+  segmentLabel: string;
 }> {
+  const market = options.market || "eu_fashion";
+  const peerSegment = options.peerSegment || "contemporary";
   const [{ data: products }, overview] = await Promise.all([
     client
       .from("products")
@@ -170,6 +176,7 @@ export async function loadOrgCompositionBenchmark(
     const governed = await loadGovernedBenchmark(client, {
       metricKey: metric.key,
       market,
+      peerSegment,
       plan,
       category: "apparel",
     });
@@ -197,5 +204,12 @@ export async function loadOrgCompositionBenchmark(
     }
   }
 
-  return { stats, peerRows, market };
+  return {
+    stats,
+    peerRows,
+    market,
+    peerSegment,
+    marketLabel: peerMarketLabel(market as PeerMarket),
+    segmentLabel: peerSegmentLabel(peerSegment as PeerSegment),
+  };
 }

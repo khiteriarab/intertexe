@@ -55,14 +55,18 @@ describe("Platform B2B sales page", () => {
     assert.match(form, /Free 10-product Material Snapshot/);
   });
 
-  it("centers intelligence and consumer moat without overclaiming", () => {
-    assert.match(sections, /See your catalog differently/);
+  it("centers intelligence and consumer surface without overclaiming", () => {
+    assert.match(sections, /Benchmark your material strategy against the market/);
+    assert.match(sections, /Material Benchmark/);
+    assert.match(sections, /Conversion signals/);
     assert.match(sections, /IntelligenceBenchmarkVisual/);
     assert.match(sections, /not the enterprise SKU/);
     assert.match(sections, /aggregate only, never individual shopper data/);
     assert.match(sections, /not yet operational/);
     assert.match(sections, /Illustrative example/);
     assert.match(sections, /not fabricated competitor dumps/);
+    assert.match(visuals, /Material Benchmark/);
+    assert.match(visuals, /Conversion by material cohort/);
     assert.match(visuals, /Understand/);
     assert.match(visuals, /Publish/);
     assert.doesNotMatch(sections, /150 companies trust us/i);

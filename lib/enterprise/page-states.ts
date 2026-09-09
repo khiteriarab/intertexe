@@ -36,7 +36,7 @@ export const ORG_PAGE_STATES: Record<string, ImplementationState> = {
   activity: "implemented",
   audit: "partial",
   regulations: "implemented",
-  benchmarking: "partial",
+  benchmarking: "implemented",
   analytics: "implemented",
   integrations: "partial",
   developers: "partial",

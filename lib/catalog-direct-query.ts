@@ -1,7 +1,7 @@
 /**
  * Shop catalog browse.
- * Authoritative path: catalog_browse_page_v2 (same RPC + param mapping as iOS).
- * Legacy paths: collection / sale only (not covered by v2).
+ * Hot path: catalog_browse_page_v2 (~4–6s for silk/material filters).
+ * Never route material-family browse through catalog_list (statement_timeout ~80s on prod).
  */
 import { getServerSupabase } from "./supabase-service-client";
 import { filterConsumerCatalogProducts } from "./catalog-consumer-guard";
@@ -40,6 +40,15 @@ const CATALOG_LIST_FIRST_CATEGORIES = new Set([
   "matching-sets",
   "tanks",
 ]);
+
+function isMaterialFamilyBrowse(opts: CatalogDirectQueryOpts): boolean {
+  return Boolean(
+    opts.fiber ||
+      opts.fiberSubtype ||
+      opts.materialSubtype ||
+      opts.fabricConstruction
+  );
+}
 
 function isSimpleCategoryBrowse(
   opts: CatalogDirectQueryOpts,
@@ -355,13 +364,75 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
     }
   }
 
-  // Full catalog lives on products (~66k displayable); live_products_apparel MV can lag after ingest.
-  if (!opts.collection && !opts.isSale) {
+  const hasNarrowingFilter = Boolean(
+    opts.fiber ||
+      opts.fiberSubtype ||
+      opts.materialSubtype ||
+      opts.fabricConstruction ||
+      categories.length ||
+      opts.brand ||
+      searchText.length >= 2 ||
+      opts.color ||
+      opts.maxPrice ||
+      opts.minPrice
+  );
+
+  const canUseCatalogListRPC =
+    !opts.isSale &&
+    !opts.collection &&
+    !opts.color &&
+    !opts.fiberSubtype &&
+    !opts.materialSubtype &&
+    !opts.fabricConstruction &&
+    opts.maxPrice == null &&
+    opts.minPrice == null;
+
+  // Filtered browse — catalog_browse_page_v2 only (~4–6s). Never catalog_list here (statement_timeout ~80s on prod).
+  if (!opts.collection && !opts.isSale && hasNarrowingFilter && shouldUseAuthoritativeBrowse(opts)) {
+    const browseCategory =
+      categories[0] || (opts.category === "clothing" ? "clothing" : undefined);
+    const v2 = await queryCatalogBrowsePageV2({
+      region,
+      limit: Math.min(limit, 100),
+      offset,
+      fiber: opts.fiber,
+      category: browseCategory,
+      brand: opts.brand,
+      search: searchText || undefined,
+      sort: opts.sort,
+      minPrice: opts.minPrice,
+      maxPrice: opts.maxPrice,
+      color: opts.color,
+      materialSubtype: opts.materialSubtype || opts.fiberSubtype,
+      fabricConstruction: opts.fabricConstruction,
+      apparelOnly: true,
+    });
+    if (!v2.error && v2.products.length > 0) {
+      return mapV2Result(v2);
+    }
+    if (!v2.error) {
+      return mapV2Result(v2);
+    }
+    const fastAfterV2 = await queryProductsTableFastPath(supabase, opts, region, limit, offset);
+    if (fastAfterV2?.products.length) return fastAfterV2;
+    return {
+      products: [],
+      total: null,
+      hasMore: false,
+      error: v2.error === "timeout" ? "timeout" : "failed",
+      emptyReason: v2.emptyReason,
+      rpcVersion: "catalog_browse_page_v2",
+      rpcParams: v2.rpcParams,
+    };
+  }
+
+  // Unfiltered shop browse — products table (~66k displayable) when MV is stale.
+  if (!opts.collection && !opts.isSale && !hasNarrowingFilter) {
     const fast = await queryProductsTableFastPath(supabase, opts, region, limit, offset);
     if (fast?.products.length) return fast;
   }
 
-  // Same RPC as iOS for all shop browse except collection/sale specialty paths.
+  // Same RPC as iOS for remaining browse paths.
   if (shouldUseAuthoritativeBrowse(opts)) {
     const browseCategory =
       categories[0] || (opts.category === "clothing" ? "clothing" : undefined);
@@ -445,31 +516,7 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
     console.warn("[queryLiveCatalog] v2 failed on unfiltered browse; using legacy fast path");
   }
 
-  const hasNarrowingFilter = Boolean(
-    opts.fiber ||
-    opts.fiberSubtype ||
-    opts.materialSubtype ||
-    opts.fabricConstruction ||
-    categories.length ||
-    opts.collection ||
-    opts.brand ||
-    searchText.length >= 2 ||
-    opts.color ||
-    opts.isSale ||
-    opts.maxPrice ||
-    opts.minPrice
-  );
   const useExactCount = false;
-
-  const canUseCatalogListRPC =
-    !opts.isSale &&
-    !opts.collection &&
-    !opts.color &&
-    !opts.fiberSubtype &&
-    !opts.materialSubtype &&
-    !opts.fabricConstruction &&
-    opts.maxPrice == null &&
-    opts.minPrice == null;
 
   try {
     // Fast path — is_displayable + id sort (~500ms). Legacy RPC/NFP sort hits statement_timeout.
@@ -499,8 +546,12 @@ export async function queryLiveCatalog(opts: CatalogDirectQueryOpts): Promise<Ca
       }
     }
 
-    // Consumer catalog — use indexed catalog_list RPC (same as iOS; direct view scan times out).
-    if (canUseCatalogListRPC && (!hasNarrowingFilter || opts.fiber || categories.length === 1 || opts.brand || searchText.length >= 2)) {
+    // Consumer catalog — catalog_list only for simple category/brand/search (never material-family: ~80s timeout).
+    if (
+      canUseCatalogListRPC &&
+      !isMaterialFamilyBrowse(opts) &&
+      (!hasNarrowingFilter || opts.brand || searchText.length >= 2 || (categories.length === 1 && !opts.fiber))
+    ) {
       const rpc = await queryCatalogListRPC(opts);
       if (!rpc.error && rpc.products.length > 0) {
         const products = applyCatalogIntegrity(

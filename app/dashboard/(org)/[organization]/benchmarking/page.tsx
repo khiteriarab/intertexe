@@ -1,16 +1,24 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
+import { resolveBenchmarkSegmentSelection } from "../../../../../lib/enterprise/benchmark-segments";
+import { loadCategoryBenchmarkDrilldown } from "../../../../../lib/enterprise/category-benchmark";
 import { loadOrgCompositionBenchmark } from "../../../../../lib/enterprise/composition-benchmark";
+import { loadConversionIndexByCohort } from "../../../../../lib/enterprise/conversion-cohorts";
 import {
   imageMapFromLiveFixture,
   loadConsumerSignals,
 } from "../../../../../lib/enterprise/consumer-signals";
+import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadOrgBenchmarking } from "../../../../../lib/enterprise/module-queries";
-import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
+import { pageStateForNavHref } from "../../../../../lib/enterprise/page-states";
+import { EntCategoryBenchmarkDrilldown } from "../../../components/EntCategoryBenchmarkDrilldown";
 import { EntConsumerSignals } from "../../../components/EntConsumerSignals";
+import { EntConversionCohortTable } from "../../../components/EntConversionCohortTable";
 import { EntDualModelFlywheel } from "../../../components/EntDualModelFlywheel";
 import { EntFabricPeerComparison } from "../../../components/EntFabricBenchmark";
+import { EntPeerSegmentPicker } from "../../../components/EntPeerSegmentPicker";
 import { EntDonutChart, EntStackedBarChart, LIFECYCLE_COLORS } from "../../../components/EnterpriseCharts";
 import {
   EntEmptyState,
@@ -24,17 +32,26 @@ export const dynamic = "force-dynamic";
 
 export default async function BenchmarkingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ organization: string }>;
+  searchParams: Promise<{ market?: string; segment?: string }>;
 }) {
   const { organization } = await params;
+  const query = await searchParams;
+  const selection = resolveBenchmarkSegmentSelection(query);
   const { membership, client } = await requireOrganizationAccess(organization);
   const imageBySku = imageMapFromLiveFixture(livePilotProducts);
-  const [data, composition, signals] = await Promise.all([
+  const [data, composition, signals, conversionCohorts] = await Promise.all([
     loadOrgBenchmarking(client, membership.organizationId),
-    loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
+    loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan, {
+      market: selection.market,
+      peerSegment: selection.peerSegment,
+    }),
     loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
+    loadConversionIndexByCohort(client, selection),
   ]);
+  const categoryDrilldown = await loadCategoryBenchmarkDrilldown(client, selection, data.categoryRows);
   const base = `/dashboard/${membership.slug}`;
 
   const stateRows = Object.entries(data.byState)
@@ -47,7 +64,7 @@ export default async function BenchmarkingPage({
     }));
 
   return (
-    <EntModulePage title="Benchmarking">
+    <EntModulePage title="Benchmarking" state={pageStateForNavHref("benchmarking")}>
       {data.productCount === 0 ? (
         <EntEmptyState
           title="No catalog to benchmark yet"
@@ -57,6 +74,10 @@ export default async function BenchmarkingPage({
         />
       ) : (
         <>
+          <Suspense fallback={null}>
+            <EntPeerSegmentPicker market={selection.market} peerSegment={selection.peerSegment} />
+          </Suspense>
+
           <EntDualModelFlywheel base={base} />
 
           <EntConsumerSignals base={base} signals={signals} />
@@ -65,8 +86,14 @@ export default async function BenchmarkingPage({
             fiberRows={composition.stats.fiberRows}
             peerRows={composition.peerRows}
             market={composition.market}
+            marketLabel={composition.marketLabel}
+            segmentLabel={composition.segmentLabel}
             base={base}
           />
+
+          <div className="mb-10 max-w-2xl">
+            <EntConversionCohortTable bundle={conversionCohorts} />
+          </div>
 
           <EntModuleMetrics
             items={[
@@ -94,19 +121,7 @@ export default async function BenchmarkingPage({
             </EntVisualPanel>
           </div>
 
-          <EntVisualPanel tone="cream" title="By category">
-            <ul className="space-y-3">
-              {data.categoryRows.map((row) => (
-                <li key={row.category} className="ent-panel-nested px-5 py-4 grid sm:grid-cols-[1.2fr_repeat(4,auto)] gap-3 items-baseline text-sm">
-                  <span className="font-medium text-[var(--ent-ink)]">{row.category}</span>
-                  <span className="text-[var(--ent-muted)]">{row.total} products</span>
-                  <span className="text-[var(--ent-muted)]">{row.published} published</span>
-                  <span className="text-[var(--ent-muted)]">{row.ready} ready</span>
-                  <span className="text-[var(--ent-muted)]">{row.openIssues} open issues</span>
-                </li>
-              ))}
-            </ul>
-          </EntVisualPanel>
+          <EntCategoryBenchmarkDrilldown bundle={categoryDrilldown} />
 
           <Link href={`${base}/analytics`} className={`${entLinkClass} mt-10 inline-flex`}>
             View analytics →

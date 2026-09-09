@@ -15,6 +15,7 @@ import {
   REPO_ROOT,
   SUPERSEDED_MIGRATION_MARKERS,
   validateRepoCatalogBrowseSpeed,
+  validateCatalogDirectQueryRouting,
   validateTaxonomyBrowseSql,
 } from "./lib/catalog-browse-speed-contract.mjs";
 
@@ -49,6 +50,7 @@ async function liveProbe() {
 
   const sb = createClient(url, key, { auth: { persistSession: false } });
   const probes = [
+    { label: "silk/v2", slug: null, v2: { p_material_family: "silk" }, maxMs: LATENCY_BUDGET_MS },
     { label: "clothing/all", slug: "clothing/all", maxMs: LATENCY_BUDGET_MS },
     { label: "clothing/dresses", slug: "clothing/dresses", maxMs: LATENCY_BUDGET_MS },
     { label: "clothing/tanks-and-camisoles", slug: "clothing/tanks-and-camisoles", maxMs: LATENCY_BUDGET_MS },
@@ -59,22 +61,45 @@ async function liveProbe() {
   const errors = [];
   for (const p of probes) {
     const t0 = performance.now();
-    const { data, error } = await sb.rpc("catalog_taxonomy_browse_page", {
-      p_region: "us",
-      p_taxonomy_slug: p.slug,
-      p_material_family: null,
-      p_material_subtype: null,
-      p_fabric_construction: null,
-      p_min_nfp: null,
-      p_color: null,
-      p_brand_slug: null,
-      p_search: null,
-      p_min_price: null,
-      p_max_price: null,
-      p_sort: "newest",
-      p_limit: 24,
-      p_offset: 0,
-    });
+    let data;
+    let error;
+    if (p.v2) {
+      ({ data, error } = await sb.rpc("catalog_browse_page_v2", {
+        p_region: "us",
+        p_category: "clothing",
+        p_material_family: p.v2.p_material_family ?? null,
+        p_material_subtype: null,
+        p_fabric_construction: null,
+        p_min_nfp: 80,
+        p_max_synthetic: null,
+        p_color: null,
+        p_brand_slug: null,
+        p_search: null,
+        p_min_price: null,
+        p_max_price: null,
+        p_include_unverified: false,
+        p_sort: "newest",
+        p_limit: 24,
+        p_offset: 0,
+      }));
+    } else {
+      ({ data, error } = await sb.rpc("catalog_taxonomy_browse_page", {
+        p_region: "us",
+        p_taxonomy_slug: p.slug,
+        p_material_family: null,
+        p_material_subtype: null,
+        p_fabric_construction: null,
+        p_min_nfp: null,
+        p_color: null,
+        p_brand_slug: null,
+        p_search: null,
+        p_min_price: null,
+        p_max_price: null,
+        p_sort: "newest",
+        p_limit: 24,
+        p_offset: 0,
+      }));
+    }
     const ms = Math.round(performance.now() - t0);
     if (error) {
       errors.push(`${p.label}: RPC error ${error.message}`);
@@ -138,6 +163,13 @@ async function main() {
   for (const w of repo.warnings) console.warn("WARN", w);
   if (!repo.ok) {
     for (const e of repo.errors) console.error("FAIL", e);
+    process.exit(1);
+  }
+
+  const route = validateCatalogDirectQueryRouting();
+  for (const w of route.warnings) console.log("OK", w);
+  if (!route.ok) {
+    for (const e of route.errors) console.error("FAIL", e);
     process.exit(1);
   }
 

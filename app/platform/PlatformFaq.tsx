@@ -52,6 +52,10 @@ const FAQ: { q: string; a: ReactNode }[] = [
     a: "No. INTERTEXE is software for preparation, generation, publication and maintenance. It does not provide legal certification, an official DPP score, or a guarantee of regulatory compliance. The EU Registry remains the registry for passport identifiers.",
   },
   {
+    q: "What is Material Benchmark?",
+    a: "Material Benchmark is INTERTEXE's peer comparison layer — like subscription analytics for SaaS, but for fabric and material strategy. Brands compare fiber mix, completeness, passport readiness, and conversion signals against governed peer segments in their market. You see what material compositions are outperforming or underperforming vs peers, sliced by category and cohort. Individual competitor catalogs and shopper identity are never exposed — only aggregate medians from approved datasets.",
+  },
+  {
     q: "What happens as DPP requirements evolve?",
     a: "A regulatory monitor evaluates tracked requirement changes against the catalog and shows preparation status: unaffected, already complete, missing data, or review needed. Brands do not start over. That is operational software, not legal advice.",
   },

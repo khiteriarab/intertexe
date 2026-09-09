@@ -59,8 +59,8 @@ export function workspaceFrames(): WorkspaceFrame[] {
     },
     {
       id: "benchmark",
-      label: "Benchmark",
-      lead: "See natural vs synthetic share and completeness against an appropriate peer group.",
+      label: "Material Benchmark",
+      lead: "Compare fiber strategy, conversion signals, and readiness against governed peer segments — see what is converting and what is not.",
       caption: "Illustrative example · Individual customer data is never exposed.",
       children: PLATFORM_GRAPHICS.compareBenchmark.ready ? (
         <PlatformGraphic slot="compareBenchmark" />
@@ -102,8 +102,8 @@ export const WORKSPACE_NEEDS = [
     copy: "The Issues inbox lists composition conflicts, invalid totals and gaps. Unknown stays unknown.",
   },
   {
-    title: "Compare, publish, and watch requirements",
-    copy: "Benchmark peers, prepare Digital Product Passports, and see which products a requirement change actually touches.",
+    title: "Benchmark material strategy vs the market",
+    copy: "Material Benchmark compares your fabric mix, conversion signals, and readiness against governed peer segments — aggregate only, never competitor dumps.",
   },
 ] as const;
 

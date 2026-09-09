@@ -4,6 +4,7 @@ export type BenchmarkQuery = {
   metricKey: string;
   category?: string | null;
   market?: string | null;
+  peerSegment?: string | null;
   plan?: string | null;
 };
 
@@ -47,13 +48,19 @@ export async function loadGovernedBenchmark(
 
   let request = supabase
     .from("benchmark_datasets")
-    .select("id, status, sample_size, min_sample_size, provenance, aggregation_rules, category, market")
+    .select("id, status, sample_size, min_sample_size, provenance, aggregation_rules, category, market, peer_segment")
     .eq("status", "approved");
   if (query.category) request = request.eq("category", query.category);
   if (query.market) request = request.eq("market", query.market);
+  if (query.peerSegment) request = request.eq("peer_segment", query.peerSegment);
 
-  const { data: datasets, error } = await request.limit(20);
-  if (error || !datasets?.length) return INSUFFICIENT;
+  const { data: datasets, error } = await request.order("calculated_at", { ascending: false }).limit(20);
+  if (error || !datasets?.length) {
+    if (query.peerSegment) {
+      return loadGovernedBenchmark(client, { ...query, peerSegment: null });
+    }
+    return INSUFFICIENT;
+  }
 
   const dataset = datasets[0];
   if (query.plan) {

@@ -1,8 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
 const Client = require('ftp');
 const zlib = require('zlib');
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const { loadProjectEnv, armLiveIngest } = require('./lib/load-env.cjs');
+loadProjectEnv();
+armLiveIngest();
+const supabase = createClient(
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const AFFILIATE_ID = '*8b0zWDyXo0';
 const MID = '50739';

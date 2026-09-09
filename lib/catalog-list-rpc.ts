@@ -1,8 +1,25 @@
 /**
- * Fast shop catalog via catalog_list / catalog_list_count RPCs (same path as iOS).
+ * Fast shop catalog via catalog_list / catalog_list_count RPCs.
+ * Safety-capped — full statement_timeout on prod is ~80s; we abort at 8s.
  */
 import { getServerSupabase } from "./supabase-service-client";
 import { filterConsumerCatalogProducts } from "./catalog-consumer-guard";
+
+const CATALOG_LIST_RPC_TIMEOUT_MS = Number(process.env.CATALOG_LIST_RPC_TIMEOUT_MS || 8000);
+
+async function withCatalogListTimeout<T>(promise: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("catalog_list_timeout")), CATALOG_LIST_RPC_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export type CatalogListRPCOpts = {
   region?: string;
@@ -115,17 +132,19 @@ export async function queryCatalogListRPC(opts: CatalogListRPCOpts): Promise<{
   const fallbackRegion = region === "us" && (brand || search) ? "uk" : "us";
 
   try {
-    const { data, error } = await supabase.rpc("catalog_list", {
-      p_preferred_region: region,
-      p_fallback_region: fallbackRegion,
-      p_fiber: fiber,
-      p_category: category,
-      p_brand_slug: brand,
-      p_search: search,
-      p_min_nfp: 80,
-      p_limit: limit,
-      p_offset: offset,
-    });
+    const { data, error } = await withCatalogListTimeout(
+      supabase.rpc("catalog_list", {
+        p_preferred_region: region,
+        p_fallback_region: fallbackRegion,
+        p_fiber: fiber,
+        p_category: category,
+        p_brand_slug: brand,
+        p_search: search,
+        p_min_nfp: 80,
+        p_limit: limit,
+        p_offset: offset,
+      })
+    );
     if (error) throw error;
 
     let products = filterConsumerCatalogProducts(
@@ -135,15 +154,17 @@ export async function queryCatalogListRPC(opts: CatalogListRPCOpts): Promise<{
 
     let total: number | null = null;
     if (!opts.skipCount) {
-      const { data: count, error: countError } = await supabase.rpc("catalog_list_count", {
-        p_preferred_region: region,
-        p_fallback_region: fallbackRegion,
-        p_fiber: fiber,
-        p_category: category,
-        p_brand_slug: brand,
-        p_search: search,
-        p_min_nfp: 80,
-      });
+      const { data: count, error: countError } = await withCatalogListTimeout(
+        supabase.rpc("catalog_list_count", {
+          p_preferred_region: region,
+          p_fallback_region: fallbackRegion,
+          p_fiber: fiber,
+          p_category: category,
+          p_brand_slug: brand,
+          p_search: search,
+          p_min_nfp: 80,
+        })
+      );
       if (!countError && count != null) {
         total = Number(count);
       }

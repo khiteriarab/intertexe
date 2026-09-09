@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { RewardsNewInGrid } from "./RewardsNewInGrid";
-import { getCachedRewardsNewInProducts } from "../../lib/rewards";
+import { RewardsScanCta } from "./RewardsScanCta";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Intertexe Rewards | Know More, Earn More",
+  title: "Intertexe Rewards | Scan, Shop, Unlock Access",
   description:
-    "The more you scan and shop, the more exclusive your access. Three tiers of natural fiber rewards.",
+    "Download the INTERTEXE app, scan fabrics to earn points, and unlock Fiber, Silk, and Cashmere tiers.",
 };
 
 const FAQ = [
@@ -82,9 +81,7 @@ function BenefitList({
   );
 }
 
-export default async function RewardsPage() {
-  const newInProducts = await getCachedRewardsNewInProducts();
-
+export default function RewardsPage() {
   return (
     <main className="min-h-screen bg-white">
       <section
@@ -106,8 +103,8 @@ export default async function RewardsPage() {
             Rewards
           </h1>
           <p className="text-[13px] font-light text-white/70 max-w-md leading-relaxed">
-            The more you scan and shop, the more exclusive your access. Natural
-            fiber discovery, rewarded.
+            Scan fabrics, earn points, and unlock exclusive access. The more you discover natural
+            fiber, the more you unlock.
           </p>
         </div>
       </section>
@@ -117,14 +114,12 @@ export default async function RewardsPage() {
           Our Rewards Program
         </p>
         <p className="text-[15px] font-light text-[#1C2B2A] leading-relaxed">
-          Intertexe Rewards offers exclusive benefits based on your scans and
-          annual spend. The more you discover and shop natural fiber, the more
-          exclusive your access — including early sale access, brand
-          collaborations, and your own personal fiber stylist.
+          Download the INTERTEXE app and scan care labels to earn points. Your tier — Fiber, Silk, or
+          Cashmere — is based on scans and annual spend. Scanning counts even when you do not buy.
         </p>
       </section>
 
-      <RewardsNewInGrid products={newInProducts} />
+      <RewardsNewInGrid />
 
       <section className="pb-20 px-6 md:px-16">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-1">
@@ -175,26 +170,7 @@ export default async function RewardsPage() {
         </div>
       </section>
 
-      <section className="bg-[#F4F4ED] py-16 px-6 md:px-16">
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-[9px] tracking-[0.4em] uppercase text-[#AAAAAA] mb-4">
-            Founding Members
-          </p>
-          <h2 className="text-3xl font-serif font-light text-[#1C2B2A] mb-4">
-            Join as a founding member
-          </h2>
-          <p className="text-[13px] font-light text-[#1C2B2A] leading-relaxed mb-8">
-            Pre-register and receive Fiber status automatically — no scans or
-            spend required. Founding members keep their status forever.
-          </p>
-          <Link
-            href="/signup"
-            className="inline-block text-[9px] tracking-[0.35em] uppercase bg-[#1C2B2A] text-white px-10 py-4 hover:bg-[#2A3B3A] transition-colors"
-          >
-            Become a Founding Member
-          </Link>
-        </div>
-      </section>
+      <RewardsScanCta />
 
       <section className="py-16 px-6 md:px-16 max-w-2xl mx-auto">
         <h2 className="text-[10px] tracking-[0.45em] uppercase text-[#1C2B2A] mb-10 text-center">

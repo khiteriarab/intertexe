@@ -17,7 +17,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 loadProjectEnv(root);
 armLiveIngest();
 
-process.env.RAKUTEN_FTP_DIR_FILTER = RAKUTEN_MERCHANT_MIDS.join(',');
+process.env.RAKUTEN_FTP_DIR_FILTER =
+  process.env.RAKUTEN_FTP_DIR_FILTER || RAKUTEN_MERCHANT_MIDS.join(',');
 process.env.RAKUTEN_CHUNK_FILE_LIMIT = process.env.RAKUTEN_CHUNK_FILE_LIMIT || '32';
 
 const { syncRakutenFeeds, refreshCatalogMaterializedViews } = await import(
@@ -28,8 +29,12 @@ console.log('INTERTEXE — ingest all Rakuten merchants');
 console.log(`MIDs (${RAKUTEN_MERCHANT_MIDS.length}): ${RAKUTEN_MERCHANT_MIDS.join(', ')}`);
 console.log(`File limit: ${process.env.RAKUTEN_CHUNK_FILE_LIMIT}\n`);
 
+const filterMids =
+  process.env.RAKUTEN_FTP_DIR_FILTER?.split(',').map((s) => s.trim()).filter(Boolean) ||
+  RAKUTEN_MERCHANT_MIDS;
+
 const result = await syncRakutenFeeds({
-  ftpDirFilter: RAKUTEN_MERCHANT_MIDS,
+  ftpDirFilter: filterMids,
   fileLimit: Number(process.env.RAKUTEN_CHUNK_FILE_LIMIT || 32),
   forceLive: true,
   markInactive: false,

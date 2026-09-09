@@ -39,7 +39,6 @@ export function HomepageHeroSection({
       const raw = variant === "desktop" ? slide.desktopUrl ?? slide.url : slide.url;
       const src = cfHomepageHero(raw, variant);
       const srcSet = variant === "desktop" ? slide.desktopSrcSet : undefined;
-      const isJpg = raw.includes(".jpg") || raw.includes(".jpeg");
       const isFirst = index === 0;
       const isVisible = heroIndex === index;
       const objectPosition =
@@ -61,7 +60,7 @@ export function HomepageHeroSection({
           draggable={false}
           className={`homepage-hero-img transition-opacity duration-500 ${
             isVisible ? "opacity-100" : "opacity-0"
-          } ${isJpg ? "homepage-hero-img--editorial-jpg" : "homepage-hero-img--editorial-v8"}`}
+          }`}
           style={{ objectPosition }}
         />
       );

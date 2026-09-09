@@ -734,7 +734,9 @@ async function main() {
     console.log(`${key}: ${result.products} qualifying products, ${result.brands} designers, ${result.inserted} upserted`);
   }
   if (!dryRun) {
-    await refreshDesignerScores();
+    if (String(process.env.SKIP_DESIGNER_REFRESH || '') !== '1') {
+      await refreshDesignerScores();
+    }
     try {
       const refreshed = await refreshCatalogMaterializedViews();
       console.log(`Materialized views refreshed: ${refreshed.join(", ") || "none"}`);

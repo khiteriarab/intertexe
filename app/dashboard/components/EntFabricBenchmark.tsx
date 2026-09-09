@@ -9,11 +9,15 @@ export function EntFabricPeerComparison({
   fiberRows,
   peerRows,
   market,
+  marketLabel,
+  segmentLabel,
   base,
 }: {
   fiberRows: FiberShareRow[];
   peerRows: PeerComparisonRow[];
   market: string;
+  marketLabel?: string;
+  segmentLabel?: string;
   base: string;
 }) {
   const visiblePeers = peerRows.filter((row) => row.status !== "no_catalog");
@@ -85,7 +89,7 @@ export function EntFabricPeerComparison({
         </div>
 
         <div className="ent-widget-card ent-widget-card-elevated p-6 md:p-8">
-          <p className="ent-section-eyebrow">Governed peers · {market.replaceAll("_", " ")}</p>
+          <p className="ent-section-eyebrow">Governed peers · {segmentLabel || "Contemporary"} · {marketLabel || market.replaceAll("_", " ")}</p>
           <h3 className="ent-widget-title">Your brand vs peer median</h3>
           <div className="mt-6 overflow-x-auto">
             <table className="ent-benchmark-table w-full text-left text-sm">

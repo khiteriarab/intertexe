@@ -1,6 +1,12 @@
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
-const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const { loadProjectEnv, armLiveIngest } = require('./lib/load-env.cjs');
+loadProjectEnv();
+armLiveIngest();
+const sb = createClient(
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const AFFILIATE_ID = '*8b0zWDyXo0';
 const MID = '42623';
@@ -49,7 +55,13 @@ function mapCategory(type, name) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function main() {
-  const lines = fs.readFileSync('/tmp/feed-42623.txt', 'utf8').split('\n').slice(1).filter(l => l.trim());
+  const feedPath = '/tmp/feed-42623.txt';
+  if (!fs.existsSync(feedPath)) {
+    const { spawnSync } = require('child_process');
+    console.log('Fetching pipe feed from Rakuten FTP...');
+    spawnSync('node', ['scripts/fetch-rakuten-pipe-feed.mjs', MID], { cwd: require('path').resolve(__dirname, '..'), stdio: 'inherit' });
+  }
+  const lines = fs.readFileSync(feedPath, 'utf8').split('\n').slice(1).filter(l => l.trim());
   console.log('Feed lines:', lines.length);
 
   const uniqueProducts = new Map();

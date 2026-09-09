@@ -26,6 +26,19 @@ const PEERS = [
   ["Passport-ready", "62%", "48%"],
 ] as const;
 
+const CONVERSION_COHORTS = [
+  { cohort: "Silk & fine naturals", index: "+18", tone: "up" as const, signal: "Outperforming peer median" },
+  { cohort: "Cotton basics", index: "-11", tone: "down" as const, signal: "Under index vs segment" },
+  { cohort: "Recycled synthetics", index: "+6", tone: "up" as const, signal: "Growing share, stable conversion" },
+  { cohort: "Wool outerwear", index: "—", tone: "neutral" as const, signal: "Insufficient peer sample" },
+] as const;
+
+const BENCHMARK_STATS = [
+  ["Products in dataset", "12,400+"],
+  ["Peer segments", "8"],
+  ["Conversion signals", "Live"],
+] as const;
+
 const FIBERS = [
   ["Cotton", 36, "#d9cbb8"],
   ["Polyester", 28, "#7d9bb8"],
@@ -138,14 +151,28 @@ export function GovernedRecordVisual() {
   );
 }
 
-/** Intelligence centerpiece — one composed visual system. */
+/** Intelligence centerpiece — Material Benchmark visual system. */
 export function IntelligenceBenchmarkVisual() {
   return (
     <SalesPanel tone="dark" caption="Illustrative example · Peer medians from governed datasets — not fabricated competitor dumps.">
       <div className="p-5 sm:p-8">
-        <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] gap-4 lg:gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <p className="text-[10px] tracking-[0.16em] uppercase text-[#9bb4c9]">Material Benchmark</p>
+          <div className="flex flex-wrap gap-4 sm:gap-6">
+            {BENCHMARK_STATS.map(([label, value]) => (
+              <div key={label} className="text-right">
+                <p className="text-sm font-light tabular-nums text-white" style={SERIF}>
+                  {value}
+                </p>
+                <p className="text-[10px] text-white/45">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] gap-4 lg:gap-6">
           <div className="bg-white/5 border border-white/10 rounded-lg p-5 sm:p-6">
-            <p className="text-[10px] tracking-[0.16em] uppercase text-white/50 mb-5">Your material position</p>
+            <p className="text-[10px] tracking-[0.16em] uppercase text-white/50 mb-5">Your brand vs peer median</p>
             <ul className="space-y-4">
               {PEERS.map(([metric, you, peer]) => {
                 const youN = parseFloat(you);
@@ -179,17 +206,25 @@ export function IntelligenceBenchmarkVisual() {
 
           <div className="flex flex-col gap-4">
             <div className="bg-white/5 border border-white/10 rounded-lg p-4 sm:p-5 flex-1">
-              <p className="text-[10px] tracking-[0.14em] uppercase text-white/50 mb-3">Material mix</p>
-              <div className="flex h-2 overflow-hidden rounded-sm mb-3" aria-hidden>
-                {FIBERS.map(([name, pct, color]) => (
-                  <span key={name} style={{ width: `${pct}%`, background: color }} title={name} />
-                ))}
-              </div>
-              <ul className="space-y-1 text-xs text-white/70">
-                {FIBERS.slice(0, 4).map(([name, pct]) => (
-                  <li key={name} className="flex justify-between">
-                    <span>{name}</span>
-                    <span className="tabular-nums">{pct}%</span>
+              <p className="text-[10px] tracking-[0.14em] uppercase text-white/50 mb-3">Conversion by material cohort</p>
+              <ul className="space-y-3">
+                {CONVERSION_COHORTS.map((row) => (
+                  <li key={row.cohort} className="border-b border-white/8 pb-3 last:border-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <span className="text-xs text-white/80">{row.cohort}</span>
+                      <span
+                        className={`text-xs font-medium tabular-nums shrink-0 ${
+                          row.tone === "up"
+                            ? "text-[#9dd4b0]"
+                            : row.tone === "down"
+                              ? "text-[#e8a8a8]"
+                              : "text-white/45"
+                        }`}
+                      >
+                        {row.index}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-white/45">{row.signal}</p>
                   </li>
                 ))}
               </ul>
@@ -201,6 +236,24 @@ export function IntelligenceBenchmarkVisual() {
               </p>
               <p className="text-xs text-white/55 mt-1">Passport preparation status</p>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="flex flex-wrap gap-4 items-center">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-white/50 mb-0">Material mix</p>
+            <div className="flex h-2 flex-1 min-w-[120px] max-w-xs overflow-hidden rounded-sm" aria-hidden>
+              {FIBERS.map(([name, pct, color]) => (
+                <span key={name} style={{ width: `${pct}%`, background: color }} title={name} />
+              ))}
+            </div>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/55">
+              {FIBERS.slice(0, 4).map(([name, pct]) => (
+                <li key={name}>
+                  {name} {pct}%
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

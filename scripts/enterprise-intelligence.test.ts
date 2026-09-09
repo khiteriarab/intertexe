@@ -112,6 +112,39 @@ describe("Learning loop promotion guard", () => {
   });
 });
 
+describe("Benchmark segment selection", () => {
+  it("defaults to EU contemporary when params are missing or invalid", async () => {
+    const { resolveBenchmarkSegmentSelection } = await import("../lib/enterprise/benchmark-segments.ts");
+    const selection = resolveBenchmarkSegmentSelection({});
+    assert.equal(selection.market, "eu_fashion");
+    assert.equal(selection.peerSegment, "contemporary");
+    assert.equal(selection.geography, "eu");
+  });
+
+  it("parses luxury segment and US market from query params", async () => {
+    const { resolveBenchmarkSegmentSelection } = await import("../lib/enterprise/benchmark-segments.ts");
+    const selection = resolveBenchmarkSegmentSelection({ market: "us_fashion", segment: "luxury" });
+    assert.equal(selection.market, "us_fashion");
+    assert.equal(selection.peerSegment, "luxury");
+    assert.equal(selection.geography, "us");
+  });
+});
+
+describe("Conversion cohort loader stays fail-closed", () => {
+  it("queries only approved consumer_intelligence_aggregates", () => {
+    const src = fs.readFileSync(path.join(ROOT, "lib/enterprise/conversion-cohorts.ts"), "utf8");
+    assert.match(src, /consumer_intelligence_aggregates/);
+    assert.match(src, /status", "approved"/);
+    assert.doesNotMatch(src, /from\("products"\)/);
+  });
+
+  it("benchmark loader supports peer segment dimension with fallback", () => {
+    const src = fs.readFileSync(path.join(ROOT, "lib/enterprise/benchmarks.ts"), "utf8");
+    assert.match(src, /peer_segment/);
+    assert.match(src, /peerSegment: null/);
+  });
+});
+
 describe("Intelligence SQL and loaders stay fail-closed", () => {
   it("records ontology and ruleset on new passport snapshots", () => {
     const src = fs.readFileSync(path.join(ROOT, "lib/enterprise/publish.ts"), "utf8");

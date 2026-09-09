@@ -25,7 +25,7 @@ const MODULE_DESCRIPTIONS: Record<string, string> = {
   Activity: "Audit trail across the organization",
   "Audit log": "Immutable admin and security events",
   Regulations: "Rulesets, readiness gaps, and requirement domains",
-  "Signals & benchmarks": "Fiber mix, peer comparison, consumer signals",
+  "Signals & benchmarks": "Material Benchmark — peer comparison, conversion signals, category cohorts",
   Analytics: "Readiness trends and catalog health",
   Integrations: "CSV import, API credentials, registry connections",
   Developers: "API keys, webhooks, and resolver documentation",

@@ -73,6 +73,9 @@ export const HOMEPAGE_HERO_IMAGE_DESKTOP = "/hero-editorial.jpg";
 export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP = "/hero-editorial-v8-desktop-2400.jpg";
 /** 3840px JPEG for Retina / large desktop viewports. */
 export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP_2X = "/hero-editorial-v8-desktop-3840.jpg";
+/** Landscape crop of grotto — same 2400×1309 ratio as studio slide for matched hero alternation. */
+export const HOMEPAGE_HERO_IMAGE_V8_LANDSCAPE = "/hero-editorial-v8-landscape-2400.jpg";
+export const HOMEPAGE_HERO_IMAGE_V8_LANDSCAPE_2X = "/hero-editorial-v8-landscape-3840.jpg";
 
 export type HomepageHeroSlide = {
   url: string;
@@ -80,7 +83,7 @@ export type HomepageHeroSlide = {
   desktopUrl?: string;
   /** Optional responsive srcSet for desktop (e.g. 1x + 2x campaign art). */
   desktopSrcSet?: string;
-  /** CSS object-position on mobile, e.g. "center 75%" */
+  /** CSS object-position on mobile */
   objectPosition: string;
   /** CSS object-position on desktop (lg+) only */
   objectPositionDesktop?: string;
@@ -91,8 +94,8 @@ export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
   {
     url: HOMEPAGE_HERO_IMAGE_MOBILE,
     desktopUrl: HOMEPAGE_HERO_IMAGE_V8_DESKTOP,
-    desktopSrcSet: `${HOMEPAGE_HERO_IMAGE_V8_DESKTOP} 2304w, ${HOMEPAGE_HERO_IMAGE_V8_DESKTOP_2X} 3840w`,
-    objectPosition: "center 75%",
+    desktopSrcSet: `${HOMEPAGE_HERO_IMAGE_V8_DESKTOP} 2400w, ${HOMEPAGE_HERO_IMAGE_V8_DESKTOP_2X} 3840w`,
+    objectPosition: "center 68%",
     objectPositionDesktop: "center 50%",
   },
   {
@@ -100,6 +103,7 @@ export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
     desktopUrl: HOMEPAGE_HERO_IMAGE_DESKTOP,
     desktopSrcSet: `${HOMEPAGE_HERO_IMAGE_DESKTOP} 2400w`,
     objectPosition: "center 25%",
+    objectPositionDesktop: "center 25%",
   },
 ];
 
