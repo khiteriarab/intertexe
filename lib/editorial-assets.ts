@@ -88,6 +88,8 @@ export type HomepageHeroSlide = {
   objectPosition: string;
   /** CSS object-position on desktop (lg+) only */
   objectPositionDesktop?: string;
+  /** iOS app hero anchor — parsed separately from mobile web */
+  objectPositionApp?: string;
 };
 
 /** Homepage hero — single slide; change URL here, redeploy website only. */
@@ -96,7 +98,8 @@ export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
     url: HOMEPAGE_HERO_IMAGE_ZIMMERMANN,
     desktopUrl: HOMEPAGE_HERO_IMAGE_ZIMMERMANN,
     objectPosition: "center 42%",
-    objectPositionDesktop: "center 38%",
+    objectPositionDesktop: "center 14%",
+    objectPositionApp: "center 14%",
   },
 ];
 
