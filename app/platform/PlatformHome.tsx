@@ -14,9 +14,9 @@ export function PlatformHome() {
   return (
     <div>
       <SalesHeroSection />
+      <SalesIntelligenceSection />
       <SalesWhatItIsSection />
       <SalesGovernedRecordSection />
-      <SalesIntelligenceSection />
       <SalesOutputsSection />
       <SalesConsumerSection />
       <SalesPlatformBreadthSection />

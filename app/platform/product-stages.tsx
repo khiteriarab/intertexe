@@ -6,8 +6,8 @@ import { SERIF } from "./platform-ui";
 
 export function HeroProductStage() {
   return (
-    <figure className="relative mt-12 sm:mt-16 m-0">
-      <div className="relative mx-auto max-w-6xl min-h-[340px] sm:min-h-[480px] lg:min-h-[620px]">
+    <figure className="relative mt-4 sm:mt-6 m-0 max-w-6xl mx-auto">
+      <div className="relative mx-auto min-h-[320px] sm:min-h-[440px] lg:min-h-[580px]">
         <svg
           className="pointer-events-none absolute inset-0 hidden lg:block z-30"
           viewBox="0 0 1100 640"

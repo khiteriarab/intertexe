@@ -6,6 +6,7 @@ import path from "node:path";
 describe("Platform B2B sales page", () => {
   const home = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHome.tsx"), "utf8");
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
+  const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
   const visuals = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-visuals.tsx"), "utf8");
   const chrome = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformChrome.tsx"), "utf8");
   const nav = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformNav.tsx"), "utf8");
@@ -90,8 +91,10 @@ describe("Platform B2B sales page", () => {
 
   it("uses native sales visuals instead of editorial PNG decks", () => {
     assert.match(sections, /hero-workspace-desktop\.png/);
-    assert.match(sections, /ProblemConvergenceVisual/);
-    assert.match(sections, /GovernedRecordVisual/);
+    assert.match(sections, /HeroProductStage/);
+    assert.match(stages, /hero-silk-dress\.png/);
+    assert.doesNotMatch(sections, /ProblemConvergenceVisual/);
+    assert.doesNotMatch(sections, /GovernedRecordVisual/);
     assert.match(sections, /Connected product identity/i);
     assert.match(sections, /From product record to physical product/);
     assert.match(sections, /ProductIdentityCarriersVisual/);

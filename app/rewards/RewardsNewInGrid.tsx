@@ -17,7 +17,7 @@ export function RewardsNewInGrid() {
       <div className="max-w-3xl mx-auto grid grid-cols-3 gap-1.5 md:gap-2">
         {REWARDS_EDITORIAL_TILES.map((tile) => (
           <Link
-            key={tile.href}
+            key={tile.src}
             href={tile.href}
             className="aspect-[3/4] bg-[#F4F4ED] overflow-hidden relative block group"
           >
@@ -25,7 +25,8 @@ export function RewardsNewInGrid() {
               src={tile.src}
               alt={tile.alt}
               fill
-              className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+              className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+              style={{ objectPosition: tile.objectPosition ?? "center" }}
               sizes="(min-width: 768px) 320px, 33vw"
             />
           </Link>

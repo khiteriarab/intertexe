@@ -260,9 +260,9 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(form, /Do not attach confidential catalogs/);
     assert.doesNotMatch(form, /type=["']file["']/);
     assert.match(office, /Barcelona, Spain/);
-    assert.match(office, /PlatformLeadForm/);
-    assert.match(office, /sourceCta="office_section"/);
-    assert.match(office, /variant="office"/);
+    assert.doesNotMatch(office, /PlatformLeadForm/);
+    assert.match(office, /cta=office_section/);
+    assert.match(office, /#book/);
     assert.doesNotMatch(office, /khiteri@intertexe\.com/);
     assert.doesNotMatch(office, /info@intertexe\.com/);
     assert.doesNotMatch(office, /street address is shared/);

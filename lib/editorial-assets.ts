@@ -99,7 +99,8 @@ export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
     desktopUrl: HOMEPAGE_HERO_IMAGE_ZIMMERMANN,
     objectPosition: "center 42%",
     objectPositionDesktop: "center 14%",
-    objectPositionApp: "center 14%",
+    /** iOS — anchor high so portrait campaign art keeps the model's head in frame */
+    objectPositionApp: "center 0%",
   },
 ];
 

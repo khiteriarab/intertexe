@@ -1,5 +1,5 @@
-import { SERIF } from "../platform-ui";
-import { PlatformLeadForm } from "../PlatformLeadForm";
+import Link from "next/link";
+import { PrimaryLink, SERIF } from "../platform-ui";
 
 export function DemoOfficeSection() {
   return (
@@ -20,30 +20,28 @@ export function DemoOfficeSection() {
             <p className="text-[11px] tracking-[0.14em] uppercase text-[#9c7b8b] mb-2">Platform office</p>
             <p className="text-sm text-[#5c5854] leading-relaxed">Barcelona, Spain</p>
           </div>
-          <p className="text-sm text-[#8a847c] leading-relaxed max-w-sm">
-            The INTERTEXE platform team is based in Barcelona. Send a note below and we&apos;ll reply from our
-            platform inbox.
+          <p className="text-sm text-[#8a847c] leading-relaxed max-w-sm mb-6">
+            The INTERTEXE platform team is based in Barcelona. Use the form above to book a conversation, or
+            request a demo from the platform page.
           </p>
+          <PrimaryLink href="/platform/request?intent=snapshot&cta=office_section">Request a demo</PrimaryLink>
         </div>
-        <div className="min-w-0 grid gap-8">
-          <figure className="m-0 min-w-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/platform/barcelona-platform-office.jpg"
-              alt="A street in Barcelona, Spain"
-              width={1400}
-              height={933}
-              className="w-full h-auto aspect-[3/2] object-cover border border-[#e8e3da] bg-[#eeeae4]"
-            />
-            <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
-              Barcelona, Spain. City context for the platform office — not a photograph of INTERTEXE rooms or
-              staff.
-            </figcaption>
-          </figure>
-          <div className="border border-[#e8e3da] bg-[#f7f5f1] p-5 sm:p-8">
-            <PlatformLeadForm intent="snapshot" sourceCta="office_section" variant="office" />
-          </div>
-        </div>
+        <figure className="m-0 min-w-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/platform/barcelona-platform-office.jpg"
+            alt="A street in Barcelona, Spain"
+            width={1400}
+            height={933}
+            className="w-full h-auto aspect-[3/2] object-cover border border-[#e8e3da] bg-[#eeeae4]"
+          />
+          <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
+            Barcelona, Spain. City context for the platform office — not a photograph of INTERTEXE rooms or staff.{" "}
+            <Link href="#book" className="underline underline-offset-4 hover:text-[#152238]">
+              Book a conversation ↑
+            </Link>
+          </figcaption>
+        </figure>
       </div>
     </section>
   );

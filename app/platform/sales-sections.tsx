@@ -1,13 +1,12 @@
 import Link from "next/link";
 import {
   ConsumerEcosystemVisual,
-  GovernedRecordVisual,
   IntelligenceBenchmarkVisual,
   PlatformModuleGrid,
-  ProblemConvergenceVisual,
   ProductIdentityCarriersVisual,
 } from "./sales-visuals";
-import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink } from "./platform-ui";
+import { HeroProductStage } from "./product-stages";
+import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import { cfImage } from "../../lib/cloudflare-images";
 
@@ -42,6 +41,21 @@ const OUTPUT_PILLARS = [
 
 const SITE = "https://www.intertexe.com";
 
+const VALUE_PILLARS = [
+  {
+    title: "Connect",
+    copy: "PLM, ERP, spreadsheets and supplier files into one workspace — without replacing the systems you already use.",
+  },
+  {
+    title: "Benchmark",
+    copy: "Compare fiber mix, completeness and passport readiness against governed peer segments in your market.",
+  },
+  {
+    title: "Publish",
+    copy: "Digital Product Passports, regulatory readiness and brand-owned product surfaces from the same record.",
+  },
+] as const;
+
 export function SalesHeroSection() {
   const signIn = getEnterpriseLoginUrl();
 
@@ -49,46 +63,41 @@ export function SalesHeroSection() {
     <section className="relative overflow-hidden bg-[#152238] text-[#f7f5f1]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.2]"
+        className="pointer-events-none absolute inset-0 opacity-[0.22]"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(-32deg, transparent, transparent 18px, rgba(255,255,255,0.04) 18px, rgba(255,255,255,0.04) 19px)",
+            "repeating-linear-gradient(-32deg, transparent, transparent 18px, rgba(255,255,255,0.045) 18px, rgba(255,255,255,0.045) 19px)",
         }}
       />
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-9 pb-8 lg:pb-9 min-h-[100svh] lg:min-h-0 lg:h-[min(100svh,780px)] flex flex-col justify-between gap-5 lg:gap-4">
-        <div className="max-w-3xl text-left shrink-0">
-          <p className="text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-[#9bb4c9] mb-4 lg:mb-3">
-            INTERTEXE FOR BRANDS
-          </p>
-          <h1
-            className="text-[2.1rem] sm:text-[2.75rem] md:text-[3.25rem] lg:text-[2.65rem] xl:text-[3.25rem] font-light leading-[1.08] mb-4 lg:mb-3 text-white"
-            style={{ fontFamily: "Georgia, 'Iowan Old Style', Palatino, serif" }}
-          >
-            Fragmented product data → governed intelligence.
-          </h1>
-          <p
-            className="text-[17px] sm:text-lg lg:text-[17px] xl:text-lg font-light leading-snug text-[#c5d4e0] max-w-2xl mb-4 lg:mb-3"
-            style={{ fontFamily: "Georgia, 'Iowan Old Style', Palatino, serif" }}
-          >
-            The product and material data layer for fashion.
-          </p>
-          <p className="text-[15px] sm:text-base md:text-lg lg:text-[15px] xl:text-base font-light leading-relaxed text-white/78 max-w-2xl mb-6 lg:mb-5">
-            INTERTEXE connects PLM, ERP, spreadsheets and supplier files into one governed record — then benchmarks
-            material strategy, tracks readiness, and publishes passports and public product experiences from that same
-            record.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <PrimaryLink href="/platform/request?intent=snapshot&cta=hero" tone="dark">
-              Request a demo
-            </PrimaryLink>
-            <SecondaryLink href={signIn} tone="dark">
-              Sign in
-            </SecondaryLink>
-          </div>
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 md:pt-20 text-center">
+        <p className="text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-[#9bb4c9] mb-5">
+          INTERTEXE FOR BRANDS
+        </p>
+        <h1
+          className="text-[2.15rem] sm:text-5xl md:text-[3.35rem] font-light leading-[1.12] mb-5 text-white max-w-4xl mx-auto"
+          style={SERIF}
+        >
+          Trace, benchmark and govern{" "}
+          <span className="italic text-[#c5d4e0]">your product data</span>.
+        </h1>
+        <p className="mx-auto max-w-2xl mb-3 text-[17px] sm:text-lg font-light leading-snug text-[#c5d4e0]" style={SERIF}>
+          The product and material data layer for fashion.
+        </p>
+        <p className="mx-auto max-w-2xl mb-8 text-[15px] sm:text-base font-light leading-relaxed text-white/78">
+          Connect the product information you already have. INTERTEXE normalizes materials, surfaces gaps, benchmarks
+          your catalog against peers, and publishes passports from one governed record.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-2">
+          <PrimaryLink href="/platform/request?intent=snapshot&cta=hero" tone="dark">
+            Request a demo
+          </PrimaryLink>
+          <SecondaryLink href={signIn} tone="dark">
+            Sign in
+          </SecondaryLink>
         </div>
-        <div className="shrink-0 min-w-0">
-          <ProblemConvergenceVisual className="mt-0" />
-        </div>
+      </div>
+      <div className="relative px-4 sm:px-6 md:px-8 pb-10 sm:pb-14 lg:pb-16">
+        <HeroProductStage />
       </div>
     </section>
   );
@@ -98,42 +107,71 @@ export function SalesWhatItIsSection() {
   return (
     <section className="bg-[#f7f5f1] py-12 sm:py-14 lg:py-16 border-b border-[#e8e3da]/60">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <Eyebrow>What INTERTEXE is</Eyebrow>
-        <Heading className="mb-4 max-w-3xl">
-          The product and material data layer for fashion companies.
-        </Heading>
-        <Body className="max-w-3xl mb-0">
-          Brands buy a governed data layer and workspace — not a consumer app. INTERTEXE takes product and material
-          information you already have, normalizes and resolves it into one trusted record, turns that record into
-          intelligence and readiness, then publishes passports and public product experiences from the same source.
-          Your product data already exists — it just doesn&apos;t work together yet.
-        </Body>
+        <div className="max-w-2xl mb-8 sm:mb-10">
+          <Eyebrow>What INTERTEXE is</Eyebrow>
+          <Heading className="mb-3">The product and material data layer for fashion companies.</Heading>
+          <Body className="mb-0">
+            A governed workspace brands buy — not a consumer app. Your product data already exists; INTERTEXE makes it
+            work together.
+          </Body>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+          {VALUE_PILLARS.map((pillar) => (
+            <article
+              key={pillar.title}
+              className="bg-white border border-[#e8e3da] p-5 sm:p-6 border-l-[3px] border-l-[#3e6268]/50"
+            >
+              <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-2">{pillar.title}</p>
+              <p className="text-sm text-[#5c5854] leading-relaxed">{pillar.copy}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
 export function SalesGovernedRecordSection() {
+  const workspaceSrc = cfImage(`${SITE}/platform/hero-workspace-desktop.png`, {
+    width: 1400,
+    quality: 82,
+    format: "auto",
+  });
+
   return (
     <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="max-w-2xl mb-8 sm:mb-10">
-          <Eyebrow>One governed product record</Eyebrow>
-          <Heading className="mb-4">One source of truth for product and material data.</Heading>
-          <Body className="mb-6">
-            INTERTEXE connects fragmented inputs, normalizes materials and compositions, preserves original source
-            values and provenance, flags gaps and conflicts, and creates an approved canonical record your teams can
-            trust — without replacing the systems you already use.
-          </Body>
-          <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-2">
-            {GOVERNED_POINTS.map((item) => (
-              <li key={item} className="text-sm text-[#5c5854] pl-4 border-l-2 border-[#e8e3da] leading-relaxed">
-                {item}
-              </li>
-            ))}
-          </ul>
+        <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-10 lg:gap-14 items-center">
+          <div>
+            <Eyebrow>One governed product record</Eyebrow>
+            <Heading className="mb-4">One source of truth for product and material data.</Heading>
+            <Body className="mb-6">
+              INTERTEXE connects fragmented inputs, normalizes materials and compositions, preserves original source
+              values and provenance, flags gaps and conflicts, and creates an approved canonical record your teams can
+              trust — without replacing the systems you already use.
+            </Body>
+            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+              {GOVERNED_POINTS.map((item) => (
+                <li key={item} className="text-sm text-[#5c5854] pl-4 border-l-2 border-[#e8e3da] leading-relaxed">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <figure className="m-0">
+            <img
+              src={workspaceSrc}
+              alt="INTERTEXE enterprise workspace — illustrative sample catalog, not a live customer"
+              width={1400}
+              height={933}
+              className="w-full rounded-xl border border-[#e8e3da] shadow-[0_24px_60px_rgba(22,21,19,0.08)]"
+              loading="lazy"
+            />
+            <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
+              Illustrative workspace · catalog → materials → issues → benchmark → passport
+            </figcaption>
+          </figure>
         </div>
-        <GovernedRecordVisual />
       </div>
     </section>
   );
@@ -261,12 +299,6 @@ export function SalesConsumerSection() {
 }
 
 export function SalesPlatformBreadthSection() {
-  const heroSrc = cfImage(`${SITE}/platform/hero-workspace-desktop.png`, {
-    width: 1400,
-    quality: 82,
-    format: "auto",
-  });
-
   return (
     <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
@@ -276,19 +308,6 @@ export function SalesPlatformBreadthSection() {
           The operating environment brands buy — synced with the live enterprise workspace sidebar. Maturity badges
           reflect what is production-ready today versus expanding modules.
         </Body>
-        <figure className="m-0 mb-10 sm:mb-12">
-          <img
-            src={heroSrc}
-            alt="INTERTEXE enterprise workspace — illustrative sample catalog, not a live customer"
-            width={1400}
-            height={933}
-            className="w-full rounded-xl border border-[#e8e3da] shadow-[0_20px_50px_rgba(22,21,19,0.06)]"
-            loading="lazy"
-          />
-          <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
-            Illustrative workspace · Overview → Products → Issues → Benchmark → Readiness → Passport
-          </figcaption>
-        </figure>
         <PlatformModuleGrid />
         <p className="mt-8 text-xs text-[#8a847c] leading-relaxed max-w-2xl">
           Explore the live demo for module-level detail, or request a walkthrough tailored to your product data.
