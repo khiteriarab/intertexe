@@ -10,7 +10,7 @@ import {
 } from "../../lib/editorial-assets";
 import { cfHomepageHero } from "../../lib/cloudflare-images";
 
-/** Portrait campaign hero — alternates slides from editorial-config (default 5s). */
+/** Campaign hero — slides from editorial-config (single slide = no rotation). */
 export function HomepageHeroSection({
   productCountLabel,
   brandCountLabel,

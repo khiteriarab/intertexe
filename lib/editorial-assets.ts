@@ -64,11 +64,12 @@ export function editorialHeroForSlug(slug: string): string {
 }
 
 /**
- * Homepage hero — v8 portrait (woman in grotto) + studio JPG.
+ * Homepage hero — Zimmermann brand campaign (woman in denim).
  * Edit HOMEPAGE_HERO_SLIDES below; iOS/web pull from /api/editorial-config.
  */
-export const HOMEPAGE_HERO_IMAGE_MOBILE = "/hero-editorial-v8-mobile.png";
-export const HOMEPAGE_HERO_IMAGE_DESKTOP = "/hero-editorial.jpg";
+export const HOMEPAGE_HERO_IMAGE_ZIMMERMANN = "/brands/zimmermann.jpg";
+export const HOMEPAGE_HERO_IMAGE_MOBILE = HOMEPAGE_HERO_IMAGE_ZIMMERMANN;
+export const HOMEPAGE_HERO_IMAGE_DESKTOP = HOMEPAGE_HERO_IMAGE_ZIMMERMANN;
 /** Native 2304px JPEG — primary desktop grotto hero (sharper than 8-bit PNG). */
 export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP = "/hero-editorial-v8-desktop-2400.jpg";
 /** 3840px JPEG for Retina / large desktop viewports. */
@@ -89,21 +90,13 @@ export type HomepageHeroSlide = {
   objectPositionDesktop?: string;
 };
 
-/** Rotating homepage hero — change URLs here, redeploy website only. */
+/** Homepage hero — single slide; change URL here, redeploy website only. */
 export const HOMEPAGE_HERO_SLIDES: HomepageHeroSlide[] = [
   {
-    url: HOMEPAGE_HERO_IMAGE_MOBILE,
-    desktopUrl: HOMEPAGE_HERO_IMAGE_V8_DESKTOP,
-    desktopSrcSet: `${HOMEPAGE_HERO_IMAGE_V8_DESKTOP} 2400w, ${HOMEPAGE_HERO_IMAGE_V8_DESKTOP_2X} 3840w`,
-    objectPosition: "center 68%",
-    objectPositionDesktop: "center 50%",
-  },
-  {
-    url: HOMEPAGE_HERO_IMAGE_DESKTOP,
-    desktopUrl: HOMEPAGE_HERO_IMAGE_DESKTOP,
-    desktopSrcSet: `${HOMEPAGE_HERO_IMAGE_DESKTOP} 2400w`,
-    objectPosition: "center 25%",
-    objectPositionDesktop: "center 25%",
+    url: HOMEPAGE_HERO_IMAGE_ZIMMERMANN,
+    desktopUrl: HOMEPAGE_HERO_IMAGE_ZIMMERMANN,
+    objectPosition: "center 42%",
+    objectPositionDesktop: "center 38%",
   },
 ];
 

@@ -7,7 +7,7 @@ import { EditorialHeroImage } from "./EditorialHeroImage";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { cfProductCard } from "../../lib/cloudflare-images";
 import type { CollectionSectionConfig } from "../../lib/site-architecture";
-import { HORIZONTAL_RAIL_CLASS } from "../../lib/horizontal-rail";
+import { HORIZONTAL_RAIL_CLASS, HOMEPAGE_PRODUCT_CARD_WIDTH_CLASS } from "../../lib/horizontal-rail";
 
 function railImageSrc(url: string): string {
   const trimmed = url.trim();
@@ -29,7 +29,7 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
   return (
     <Link
       href={productHref}
-      className="group flex flex-shrink-0 w-[132px] sm:w-[148px] md:w-[164px] lg:w-[176px] xl:w-[188px] flex-col snap-start"
+      className={`group flex flex-col ${HOMEPAGE_PRODUCT_CARD_WIDTH_CLASS}`}
       data-rail-card
       draggable={false}
     >

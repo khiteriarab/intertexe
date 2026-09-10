@@ -13,7 +13,7 @@ import {
   HORIZONTAL_RAIL_BLEED_CLASS,
   HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS,
   HORIZONTAL_RAIL_INSET_CLASS,
-  HORIZONTAL_RAIL_PRODUCT_CARD_CLASS,
+  HOMEPAGE_PRODUCT_CARD_WIDTH_CLASS,
 } from "../../lib/horizontal-rail";
 import { formatProductCountLabel } from "../../lib/catalog-stats-labels";
 import { EditorialHeroImage } from "./EditorialHeroImage";
@@ -55,7 +55,7 @@ function ProductCard({
   return (
     <ProductLink
       href={`/product/${product.id}`}
-      className="group flex-shrink-0 w-[155px] md:w-[220px] flex flex-col cursor-pointer"
+      className={`group flex flex-col cursor-pointer ${HOMEPAGE_PRODUCT_CARD_WIDTH_CLASS}`}
       data-testid={`product-home-${product.id}`}
     >
       <div className="relative">
@@ -66,7 +66,7 @@ function ProductCard({
             category={product.category}
             name={name}
             eager={eager}
-            sizes="(min-width: 768px) 220px, 155px"
+            sizes="(min-width: 1280px) 300px, (min-width: 768px) 240px, 180px"
           />
         ) : (
           <div className="aspect-[3/4] bg-[#1C2B2A] flex items-center justify-center">
@@ -153,7 +153,7 @@ export function HorizontalProductScroll({
   const isDesktop = useIsDesktopRail();
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
-    const amount = direction === "left" ? -420 : 420;
+    const amount = direction === "left" ? -560 : 560;
     scrollRef.current.scrollBy({ left: amount, behavior: "smooth" });
   };
 

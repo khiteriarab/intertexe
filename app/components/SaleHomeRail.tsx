@@ -8,6 +8,7 @@ import { formatDisplayPrice, formatDisplayOriginalPrice } from "../../lib/format
 import {
   HORIZONTAL_RAIL_BLEED_PROXIMITY_CLASS,
   HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS,
+  HOMEPAGE_PRODUCT_CARD_WIDTH_CLASS,
 } from "../../lib/horizontal-rail";
 
 function railImageSrc(url: string): string {
@@ -45,7 +46,7 @@ function SaleProductCard({
   return (
     <Link
       href={productHref}
-      className="group flex flex-shrink-0 w-[148px] sm:w-[172px] md:w-[196px] lg:w-[228px] xl:w-[252px] 2xl:w-[272px] flex-col snap-start"
+      className={`group flex flex-col ${HOMEPAGE_PRODUCT_CARD_WIDTH_CLASS}`}
       data-rail-card
       data-testid={`product-sale-${product.id}`}
       draggable={false}
@@ -130,7 +131,7 @@ function useRailDragScroll() {
 
   const scrollBy = useCallback((direction: "left" | "right") => {
     scrollRef.current?.scrollBy({
-      left: direction === "left" ? -420 : 420,
+      left: direction === "left" ? -560 : 560,
       behavior: "smooth",
     });
   }, []);
@@ -191,7 +192,7 @@ export function SaleHomeRail({ products: initialProducts }: { products?: any[] }
           <div className={`relative min-w-0 ${HORIZONTAL_RAIL_BLEED_WRAPPER_CLASS}`}>
         <div
           ref={scrollRef}
-          className={`${HORIZONTAL_RAIL_BLEED_PROXIMITY_CLASS} gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 pr-14 md:pr-16`}
+          className={`${HORIZONTAL_RAIL_BLEED_PROXIMITY_CLASS} gap-4 sm:gap-4 md:gap-5 lg:gap-6 pr-14 md:pr-16`}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}

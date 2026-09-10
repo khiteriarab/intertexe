@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { cfProductCard } from "../../lib/cloudflare-images";
-import { HORIZONTAL_RAIL_CLASS } from "../../lib/horizontal-rail";
+import { HORIZONTAL_RAIL_CLASS, HOMEPAGE_PRODUCT_CARD_WIDTH_CLASS } from "../../lib/horizontal-rail";
 import { formatProductCountLabel } from "../../lib/catalog-stats-labels";
 
 function railImageSrc(url: string): string {
@@ -27,7 +27,7 @@ function NewInProductCard({ product, eager }: { product: any; eager?: boolean })
   return (
     <Link
       href={productHref}
-      className="group flex flex-shrink-0 w-[148px] sm:w-[172px] md:w-[196px] lg:w-[228px] xl:w-[252px] 2xl:w-[272px] flex-col snap-start"
+      className={`group flex flex-col ${HOMEPAGE_PRODUCT_CARD_WIDTH_CLASS}`}
       data-rail-card
       data-testid={`product-new-in-${product.id}`}
       draggable={false}
@@ -75,7 +75,7 @@ export function NewInHomeRail({
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({ left: direction === "left" ? -520 : 520, behavior: "smooth" });
+    scrollRef.current.scrollBy({ left: direction === "left" ? -640 : 640, behavior: "smooth" });
   };
 
   return (
@@ -110,7 +110,7 @@ export function NewInHomeRail({
         <div className="relative min-w-0 lg:layout-bleed-full lg:pr-0">
           <div
             ref={scrollRef}
-            className={`${HORIZONTAL_RAIL_CLASS} gap-3 sm:gap-3.5 md:gap-4 lg:gap-5 min-h-[260px] sm:min-h-[300px] md:min-h-[360px] lg:min-h-[420px] xl:min-h-[460px] pl-0 pr-14 md:pr-16 lg:pl-2 lg:pr-20`}
+            className={`${HORIZONTAL_RAIL_CLASS} gap-4 sm:gap-4 md:gap-5 lg:gap-6 min-h-[300px] sm:min-h-[340px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[520px] pl-0 pr-14 md:pr-16 lg:pl-2 lg:pr-20`}
           >
             {hasItems ? (
               railProducts.map((product: any, i: number) => (
