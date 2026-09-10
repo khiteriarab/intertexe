@@ -33,6 +33,7 @@ export const BRAND_CAMPAIGN_HEROES = {
     "https://intl.isabelmarant.com/cdn/shop/files/Isabel_Marant_FW25_look_01.jpg?v=1741306390&width=1920",
   staud:
     "https://staud.clothing/cdn/shop/files/Nav_Summer_Tommys.jpg?v=1777958857&width=1920",
+  zimmermann: "https://www.zimmermann.com/media/wysiwyg/1-camp_3.jpg",
 } as const;
 
 export const EDITORIAL_HERO = {
@@ -112,6 +113,7 @@ export const BRAND_WE_LOVE_IMAGES: Record<string, string> = {
   "re-done": "/brands/re-done.png",
   staud: BRAND_CAMPAIGN_HEROES.staud,
   "isabel-marant": BRAND_CAMPAIGN_HEROES["isabel-marant"],
+  zimmermann: BRAND_CAMPAIGN_HEROES.zimmermann,
   "l-agence":
     "https://lagence.com/cdn/shop/files/Hero-Desktop_2_7ff67339-b858-4593-99ee-6be2b035a36b.jpg?v=1752629879&width=1920",
   theory: "/brands/theory.jpg",

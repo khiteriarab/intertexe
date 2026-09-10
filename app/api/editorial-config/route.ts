@@ -27,7 +27,7 @@ function homepageHeroSlidesForApp() {
 export async function GET() {
   return NextResponse.json(
     {
-      version: 3,
+      version: 4,
       updatedAt: new Date().toISOString(),
       heroes: EDITORIAL_HERO,
       fabrics: fabricImages,

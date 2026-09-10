@@ -67,7 +67,9 @@ const LOCAL_BRAND_IMAGES: Record<string, string> = {
   "veronica-beard": "/brands/veronica-beard.jpg",
   "vince": "/brands/vince.webp",
   "zadig-voltaire": "/brands/zadig-voltaire.jpg",
-  "zimmermann": "/brands/zimmermann.jpg",
+  /** Dress campaign — do not use /brands/zimmermann.jpg (denim hero crop). */
+  "zimmermann":
+    "https://www.zimmermann.com/media/wysiwyg/1-camp_3.jpg",
   "7-for-all-mankind": "/brands/7-for-all-mankind.jpg",
   "splendid": "/brands/splendid.jpg",
 };
