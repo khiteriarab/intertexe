@@ -12,6 +12,7 @@ import {
   RegulatoryPreview,
 } from "./workspace-previews";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
+import { PlatformPageHeader } from "./PlatformPageHeader";
 import { SERIF, SoftwareStage } from "./platform-ui";
 import { LIVING_SYSTEM, RETAIN, DISCOVER_STORY } from "./living-system";
 
@@ -224,37 +225,20 @@ export function DiscoverWorkspace() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#dce7f2] via-[#f7f5f1] to-[#e8eef4]">
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 md:pt-20 pb-10">
-        <p className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase text-[#6b8499] mb-5">
-          Discover · /platform/discover
-        </p>
-        <h1
-          className="text-[2.15rem] sm:text-5xl md:text-[3.2rem] font-light leading-[1.12] text-[#152238] max-w-3xl mb-5"
-          style={SERIF}
-        >
-          How INTERTEXE works.
-        </h1>
-        <p className="max-w-2xl text-[15px] sm:text-base text-[#5c5854] font-light leading-relaxed mb-8">
-          From connect to publish — one continuous product data journey through the INTERTEXE workspace.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <a
-            href="/platform/request?intent=snapshot&cta=discover"
-            className="inline-flex items-center gap-2 rounded-md bg-[#152238] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c] w-fit"
-          >
-            Book a demo
-            <span aria-hidden="true">→</span>
-          </a>
-          <a
-            href="/platform/demo"
-            className="inline-flex items-center gap-2 text-[13px] font-medium text-[#152238] min-h-[44px]"
-          >
-            See the live demo
-            <span aria-hidden="true">→</span>
-          </a>
-        </div>
-      </section>
+    <div className="bg-[var(--platform-bg)]">
+      <PlatformPageHeader
+        eyebrow="Discover"
+        title={
+          <>
+            How <span className="font-light">INTERTEXE</span> works.
+          </>
+        }
+        description="From connect to publish — one continuous product data journey through the governed workspace brands buy."
+        primaryHref="/platform/request?intent=snapshot&cta=discover"
+        primaryLabel="Book a demo"
+        secondaryHref="/platform/demo"
+        secondaryLabel="See the live demo"
+      />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
         <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Product data journey</p>

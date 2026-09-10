@@ -5,7 +5,7 @@ import {
   PlatformModuleGrid,
   ProductIdentityCarriersVisual,
 } from "./sales-visuals";
-import { HeroProductStage } from "./product-stages";
+import { PlatformHero } from "./PlatformHero";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import { cfImage } from "../../lib/cloudflare-images";
@@ -57,57 +57,14 @@ const VALUE_PILLARS = [
 ] as const;
 
 export function SalesHeroSection() {
-  const signIn = getEnterpriseLoginUrl();
-
-  return (
-    <section className="relative overflow-hidden bg-[#152238] text-[#f7f5f1]">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.22]"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(-32deg, transparent, transparent 18px, rgba(255,255,255,0.045) 18px, rgba(255,255,255,0.045) 19px)",
-        }}
-      />
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 md:pt-20 text-center">
-        <p className="text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-[#9bb4c9] mb-5">
-          INTERTEXE FOR BRANDS
-        </p>
-        <h1
-          className="text-[2.15rem] sm:text-5xl md:text-[3.35rem] font-light leading-[1.12] mb-5 text-white max-w-4xl mx-auto"
-          style={SERIF}
-        >
-          Trace, benchmark and govern{" "}
-          <span className="italic text-[#c5d4e0]">your product data</span>.
-        </h1>
-        <p className="mx-auto max-w-2xl mb-3 text-[17px] sm:text-lg font-light leading-snug text-[#c5d4e0]" style={SERIF}>
-          The product and material data layer for fashion.
-        </p>
-        <p className="mx-auto max-w-2xl mb-8 text-[15px] sm:text-base font-light leading-relaxed text-white/78">
-          Connect the product information you already have. INTERTEXE normalizes materials, surfaces gaps, benchmarks
-          your catalog against peers, and publishes passports from one governed record.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-2">
-          <PrimaryLink href="/platform/request?intent=snapshot&cta=hero" tone="dark">
-            Request a demo
-          </PrimaryLink>
-          <SecondaryLink href={signIn} tone="dark">
-            Sign in
-          </SecondaryLink>
-        </div>
-      </div>
-      <div className="relative px-4 sm:px-6 md:px-8 pb-10 sm:pb-14 lg:pb-16">
-        <HeroProductStage />
-      </div>
-    </section>
-  );
+  return <PlatformHero />;
 }
 
 export function SalesWhatItIsSection() {
   return (
-    <section className="bg-[#f7f5f1] py-12 sm:py-14 lg:py-16 border-b border-[#e8e3da]/60">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="max-w-2xl mb-8 sm:mb-10">
+    <section className="bg-[#f7f5f1] py-12 sm:py-14 lg:py-20 xl:py-24 border-b border-[#e8e3da]/60">
+      <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="max-w-2xl lg:max-w-3xl mb-8 sm:mb-10 lg:mb-14">
           <Eyebrow>What INTERTEXE is</Eyebrow>
           <Heading className="mb-3">The product and material data layer for fashion companies.</Heading>
           <Body className="mb-0">
@@ -115,11 +72,11 @@ export function SalesWhatItIsSection() {
             work together.
           </Body>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {VALUE_PILLARS.map((pillar) => (
             <article
               key={pillar.title}
-              className="bg-white border border-[#e8e3da] p-5 sm:p-6 border-l-[3px] border-l-[#3e6268]/50"
+              className="bg-white border border-[#e8e3da] p-5 sm:p-6 lg:p-8 border-l-[3px] border-l-[#3e6268]/50 lg:hover:shadow-[0_20px_50px_rgba(22,21,19,0.04)] transition-shadow"
             >
               <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-2">{pillar.title}</p>
               <p className="text-sm text-[#5c5854] leading-relaxed">{pillar.copy}</p>
@@ -139,10 +96,10 @@ export function SalesGovernedRecordSection() {
   });
 
   return (
-    <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-10 lg:gap-14 items-center">
-          <div>
+    <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-28 xl:py-32">
+      <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-10 lg:gap-16 xl:gap-20 items-center">
+          <div className="lg:sticky lg:top-28 lg:self-start">
             <Eyebrow>One governed product record</Eyebrow>
             <Heading className="mb-4">One source of truth for product and material data.</Heading>
             <Body className="mb-6">
@@ -179,10 +136,10 @@ export function SalesGovernedRecordSection() {
 
 export function SalesIntelligenceSection() {
   return (
-    <section className="bg-[#152238] text-[#f7f5f1] py-16 sm:py-20 lg:py-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 lg:gap-14 items-start">
-          <div>
+    <section className="bg-[#152238] text-[#f7f5f1] py-16 sm:py-20 lg:py-28 xl:py-32">
+      <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 lg:gap-16 xl:gap-20 items-start">
+          <div className="lg:sticky lg:top-28 lg:self-start">
             <Eyebrow>Intelligence</Eyebrow>
             <Heading className="mb-4 text-white">Benchmark your material strategy against the market.</Heading>
             <Body className="text-white/72 mb-6">

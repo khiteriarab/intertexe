@@ -3,9 +3,11 @@ import type { ReactNode } from "react";
 
 export const SERIF = { fontFamily: "Georgia, 'Iowan Old Style', Palatino, serif" } as const;
 
-export function Eyebrow({ children }: { children: ReactNode }) {
+export function Eyebrow({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <p className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-5">
+    <p
+      className={`text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-[var(--platform-quiet,#9c9488)] mb-5 ${className}`}
+    >
       {children}
     </p>
   );
@@ -14,7 +16,7 @@ export function Eyebrow({ children }: { children: ReactNode }) {
 export function Heading({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <h2
-      className={`text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#161513] ${className}`}
+      className={`text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.15] text-[var(--platform-ink,#161513)] ${className}`}
       style={SERIF}
     >
       {children}
@@ -23,7 +25,11 @@ export function Heading({ children, className = "" }: { children: ReactNode; cla
 }
 
 export function Body({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <p className={`text-[15px] sm:text-base text-[#5c5854] font-light leading-relaxed ${className}`}>{children}</p>;
+  return (
+    <p className={`text-[15px] sm:text-base text-[var(--platform-muted,#5c5854)] font-light leading-relaxed ${className}`}>
+      {children}
+    </p>
+  );
 }
 
 export function PrimaryLink({
@@ -41,8 +47,8 @@ export function PrimaryLink({
       href={href}
       className={
         onDark
-          ? "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-white text-[#152238] px-7 py-3.5 hover:bg-[#f7f5f1] min-h-[44px]"
-          : "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#152238] text-white px-7 py-3.5 hover:bg-[#0f1a2c] min-h-[44px]"
+          ? "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase bg-white text-[var(--platform-navy,#152238)] px-7 py-3.5 hover:bg-[#f7f5f1] min-h-[44px] transition-colors"
+          : "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-navy,#152238)] text-white px-7 py-3.5 hover:bg-[#0f1a2c] min-h-[44px] transition-colors"
       }
     >
       {children}
@@ -65,8 +71,8 @@ export function SecondaryLink({
       href={href}
       className={
         onDark
-          ? "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase border border-white/70 text-white px-7 py-3.5 hover:bg-white/10 min-h-[44px]"
-          : "inline-flex w-full sm:w-auto items-center justify-center text-[11px] tracking-[0.14em] uppercase border border-[#161513] px-7 py-3.5 hover:bg-white min-h-[44px]"
+          ? "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase border border-white/70 text-white px-7 py-3.5 hover:bg-white/10 min-h-[44px] transition-colors"
+          : "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase border border-[var(--platform-ink,#161513)]/20 text-[var(--platform-ink,#161513)] px-7 py-3.5 hover:bg-white min-h-[44px] transition-colors"
       }
     >
       {children}

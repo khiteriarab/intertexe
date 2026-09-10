@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { SERIF } from "./platform-ui";
+import { PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
 const INSIGHTS = [
@@ -54,114 +53,249 @@ const TRUST_MARKS = [
   "Material transparency",
 ] as const;
 
+const HERO_TABS = [
+  { id: "trace", label: "Trace" },
+  { id: "measure", label: "Measure" },
+  { id: "govern", label: "Govern" },
+  { id: "publish", label: "Publish" },
+] as const;
+
+function InsightCard({ insight, index, activeIndex }: { insight: (typeof INSIGHTS)[number]; index: number; activeIndex: number }) {
+  return (
+    <div
+      className={`platform-hero-card transition-opacity duration-500 ${
+        index === activeIndex ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
+      }`}
+      role="status"
+      aria-live={index === activeIndex ? "polite" : "off"}
+      aria-hidden={index !== activeIndex}
+    >
+      <div className="rounded-2xl border border-[var(--platform-border)] bg-white/97 backdrop-blur-md shadow-[0_24px_60px_rgba(22,21,19,0.12)] px-4 py-3.5 sm:px-5 sm:py-4 text-left lg:px-6 lg:py-5">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f0ebe4] text-[10px] font-medium text-[var(--platform-navy)]">
+            TX
+          </span>
+          <div className="min-w-0 flex-1">
+            <p
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] tracking-[0.08em] uppercase mb-2 ${PILL_TONE[insight.tone]}`}
+            >
+              {insight.pill}
+            </p>
+            <p className="text-[9px] tracking-[0.14em] uppercase text-[var(--platform-quiet)] mb-0.5">{insight.brand}</p>
+            <p className="text-sm lg:text-[15px] font-medium text-[var(--platform-ink)] truncate">{insight.name}</p>
+            <p className="text-[12px] lg:text-[13px] text-[var(--platform-muted)] leading-snug mt-0.5">{insight.detail}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PlatformHero() {
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
   const signIn = getEnterpriseLoginUrl();
-  const insight = INSIGHTS[index]!;
 
   useEffect(() => {
+    if (paused) return;
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % INSIGHTS.length);
     }, 3800);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [paused]);
+
+  function selectTab(tabIndex: number) {
+    setIndex(tabIndex);
+    setPaused(true);
+    window.setTimeout(() => setPaused(false), 12000);
+  }
+
+  function HeroTabs({ className = "" }: { className?: string }) {
+    return (
+      <div
+        role="tablist"
+        aria-label="Platform journey"
+        className={`flex flex-wrap gap-2 justify-center lg:justify-start ${className}`}
+      >
+        {HERO_TABS.map((tab, i) => {
+          const selected = i === index;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => selectTab(i)}
+              className={`px-4 py-2 min-h-[40px] text-[11px] tracking-[0.14em] uppercase rounded-full border transition-colors ${
+                selected
+                  ? "bg-[var(--platform-navy)] text-white border-[var(--platform-navy)]"
+                  : "bg-white/80 text-[var(--platform-muted)] border-[var(--platform-border)] hover:text-[var(--platform-ink)]"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
-    <section className="relative overflow-hidden bg-[#faf9f7] text-[#161513]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-14 sm:pt-20 md:pt-24 text-center">
-        <p className="text-[10px] sm:text-[11px] tracking-[0.28em] uppercase text-[#9c9488] mb-6">
-          INTERTEXE FOR BRANDS
-        </p>
-        <h1
-          className="text-[2.35rem] sm:text-[3.25rem] md:text-[3.75rem] font-light leading-[1.06] tracking-[-0.02em] text-[#161513] max-w-4xl mx-auto mb-5"
-          style={SERIF}
-        >
-          Trace, measure and{" "}
-          <em className="not-italic italic text-[#3e6268]">govern</em> your product data.
-        </h1>
-        <p className="mx-auto max-w-xl text-[16px] sm:text-[17px] font-light leading-relaxed text-[#6f6a63] mb-8">
-          The product and material data layer for fashion — connect fragmented sources, benchmark against peers, and
-          publish passports from one record.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
-          <Link
-            href="/platform/request?intent=snapshot&cta=hero"
-            className="inline-flex items-center justify-center rounded-full bg-[#152238] text-white px-8 py-3.5 text-[11px] tracking-[0.16em] uppercase min-h-[44px] hover:bg-[#0f1a2c] transition-colors"
+    <section className="relative overflow-hidden bg-[var(--platform-bg)] text-[var(--platform-ink)]">
+      {/* Mobile + tablet: centered stack (unchanged feel) */}
+      <div className="lg:hidden">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-14 sm:pt-20 md:pt-24 text-center">
+          <p className="text-[10px] sm:text-[11px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-6">
+            INTERTEXE FOR BRANDS
+          </p>
+          <h1
+            className="text-[2.35rem] sm:text-[3.25rem] md:text-[3.75rem] font-light leading-[1.06] tracking-[-0.02em] max-w-4xl mx-auto mb-5"
+            style={SERIF}
           >
-            Request a demo
-          </Link>
-          <Link
-            href={signIn}
-            className="inline-flex items-center justify-center rounded-full border border-[#161513]/20 text-[#161513] px-8 py-3.5 text-[11px] tracking-[0.16em] uppercase min-h-[44px] hover:bg-white transition-colors"
-          >
-            Sign in
-          </Link>
+            Trace, benchmark and{" "}
+            <em className="not-italic italic text-[var(--platform-accent)]">govern</em> your product data.
+          </h1>
+          <p className="mx-auto max-w-xl text-[16px] sm:text-[17px] font-light leading-relaxed text-[var(--platform-muted)] mb-8">
+            The product and material data layer for fashion — connect fragmented sources, benchmark against peers, and
+            publish passports from one record.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+            <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Request a demo</PrimaryLink>
+            <SecondaryLink href={signIn}>Sign in</SecondaryLink>
+          </div>
+          <HeroTabs className="mb-2" />
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 pt-8 sm:pt-12">
+          <div className="relative mx-auto max-w-[980px]">
+            <img
+              src="/platform/hero-workspace-desktop.png"
+              alt="INTERTEXE enterprise workspace — illustrative sample catalog"
+              width={1920}
+              height={1080}
+              className="w-full rounded-2xl border border-[var(--platform-border)]/80 shadow-[0_40px_100px_rgba(22,21,19,0.08)]"
+            />
+            <div className="absolute left-1/2 top-[38%] sm:top-[42%] z-20 w-[min(92%,340px)] -translate-x-1/2">
+              <InsightCard insight={INSIGHTS[index]!} index={index} activeIndex={index} />
+            </div>
+            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+              {INSIGHTS.map((item, i) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-label={`Show insight ${i + 1}`}
+                  onClick={() => setIndex(i)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === index ? "w-6 bg-[var(--platform-navy)]" : "w-1.5 bg-[var(--platform-navy)]/25"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          <p className="mt-6 text-center text-xs text-[var(--platform-quiet)] leading-relaxed max-w-2xl mx-auto">
+            Illustrative workspace · sample catalog, not a live customer.
+          </p>
         </div>
       </div>
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-6 sm:pb-10 pt-10 sm:pt-14">
-        <div className="relative mx-auto max-w-[980px]">
-          <img
-            src="/platform/hero-workspace-desktop.png"
-            alt="INTERTEXE enterprise workspace — illustrative sample catalog"
-            width={1920}
-            height={1080}
-            className="w-full rounded-2xl border border-[#e8e3da]/80 shadow-[0_40px_100px_rgba(22,21,19,0.08)]"
-          />
-
-          <div
-            key={insight.id}
-            className="platform-hero-card absolute left-1/2 top-[38%] sm:top-[42%] z-20 w-[min(92%,340px)] -translate-x-1/2"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="rounded-2xl border border-[#e8e3da] bg-white/95 backdrop-blur-md shadow-[0_24px_60px_rgba(22,21,19,0.14)] px-4 py-3.5 sm:px-5 sm:py-4 text-left">
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f0ebe4] text-[10px] font-medium text-[#152238]">
-                  TX
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] tracking-[0.08em] uppercase mb-2 ${PILL_TONE[insight.tone]}`}
-                  >
-                    {insight.pill}
-                  </p>
-                  <p className="text-[9px] tracking-[0.14em] uppercase text-[#9c9488] mb-0.5">{insight.brand}</p>
-                  <p className="text-sm font-medium text-[#161513] truncate">{insight.name}</p>
-                  <p className="text-[12px] text-[#6f6a63] leading-snug mt-0.5">{insight.detail}</p>
+      {/* Desktop: Phia-style split — copy left, editorial product stage right */}
+      <div className="hidden lg:block">
+        <div className="max-w-[1280px] mx-auto px-8 xl:px-12 pt-16 xl:pt-20 pb-8 min-h-[min(88vh,920px)] grid grid-cols-[minmax(0,42%)_minmax(0,58%)] gap-12 xl:gap-16 items-center">
+          <div className="pr-4 xl:pr-8">
+            <p className="text-[11px] tracking-[0.32em] uppercase text-[var(--platform-quiet)] mb-8">
+              INTERTEXE FOR BRANDS
+            </p>
+            <h1
+              className="text-[3.25rem] xl:text-[4rem] font-light leading-[1.04] tracking-[-0.025em] mb-6"
+              style={SERIF}
+            >
+              Trace, benchmark and{" "}
+              <em className="not-italic italic text-[var(--platform-accent)]">govern</em>
+              <br />
+              your product data.
+            </h1>
+            <p className="text-[17px] xl:text-[18px] font-light leading-relaxed text-[var(--platform-muted)] max-w-md mb-10">
+              The product and material data layer for fashion — connect fragmented sources, benchmark against peers, and
+              publish passports from one governed record.
+            </p>
+            <div className="flex flex-wrap gap-3 mb-8">
+              <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Request a demo</PrimaryLink>
+              <SecondaryLink href={signIn}>Sign in</SecondaryLink>
+            </div>
+            <HeroTabs className="mb-10" />
+            <dl className="grid grid-cols-3 gap-6 pt-8 border-t border-[var(--platform-border)]/80 max-w-lg">
+              {[
+                { label: "Sources connected", value: "PLM · ERP · feeds" },
+                { label: "Peer benchmark", value: "Governed segments" },
+                { label: "Outputs", value: "DPP · readiness · PDP" },
+              ].map((stat) => (
+                <div key={stat.label}>
+                  <dt className="text-[9px] tracking-[0.16em] uppercase text-[var(--platform-quiet)] mb-1">{stat.label}</dt>
+                  <dd className="text-[13px] text-[var(--platform-ink)] leading-snug">{stat.value}</dd>
                 </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="relative min-h-[520px] xl:min-h-[580px]">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-8 rounded-[2rem] bg-gradient-to-br from-[#f0ebe4]/60 via-transparent to-[#e8f0ef]/40"
+            />
+            <img
+              src="/platform/hero-workspace-desktop.png"
+              alt="INTERTEXE enterprise workspace — illustrative sample catalog"
+              width={1920}
+              height={1080}
+              className="relative z-10 w-full rounded-2xl border border-[var(--platform-border)]/70 shadow-[0_48px_120px_rgba(22,21,19,0.10)]"
+            />
+            <img
+              src="/platform/hero-silk-dress.png"
+              alt=""
+              aria-hidden
+              width={400}
+              height={600}
+              className="absolute -left-6 xl:-left-10 bottom-8 z-20 w-[28%] max-w-[200px] object-contain drop-shadow-[0_32px_64px_rgba(22,21,19,0.18)]"
+              style={{
+                WebkitMaskImage: "radial-gradient(ellipse 80% 88% at 50% 50%, #000 50%, transparent 82%)",
+                maskImage: "radial-gradient(ellipse 80% 88% at 50% 50%, #000 50%, transparent 82%)",
+              }}
+            />
+            <div className="absolute z-30 left-[8%] xl:left-[6%] bottom-[14%] w-[min(340px,42%)]">
+              <div className="relative min-h-[120px]">
+                {INSIGHTS.map((item, i) => (
+                  <InsightCard key={item.id} insight={item} index={i} activeIndex={index} />
+                ))}
+              </div>
+              <div className="flex gap-1.5 mt-4">
+                {INSIGHTS.map((item, i) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-label={`Show insight ${i + 1}`}
+                    onClick={() => setIndex(i)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === index ? "w-6 bg-[var(--platform-navy)]" : "w-1.5 bg-[var(--platform-navy)]/25 hover:bg-[var(--platform-navy)]/45"
+                    }`}
+                  />
+                ))}
               </div>
             </div>
           </div>
-
-          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
-            {INSIGHTS.map((item, i) => (
-              <button
-                key={item.id}
-                type="button"
-                aria-label={`Show insight ${i + 1}`}
-                onClick={() => setIndex(i)}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === index ? "w-6 bg-[#152238]" : "w-1.5 bg-[#152238]/25 hover:bg-[#152238]/45"
-                }`}
-              />
-            ))}
-          </div>
         </div>
-
-        <p className="mt-6 text-center text-xs text-[#9c9488] leading-relaxed max-w-2xl mx-auto">
-          Illustrative workspace · sample catalog, not a live customer. The card cycles through governed-record
-          moments — composition resolution, benchmarking, and passport readiness.
+        <p className="max-w-[1280px] mx-auto px-8 xl:px-12 pb-6 text-xs text-[var(--platform-quiet)]">
+          Illustrative workspace · sample catalog, not a live customer. Insight card cycles through composition resolution,
+          benchmarking, and passport readiness.
         </p>
       </div>
 
-      <div className="border-t border-[#e8e3da]/70 bg-[#161513] py-5 sm:py-6">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:gap-x-12">
+      <div className="border-t border-[var(--platform-border)]/70 bg-[var(--platform-navy)] py-5 sm:py-6 lg:py-7">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+          <ul className="flex flex-wrap items-center justify-center lg:justify-between gap-x-8 gap-y-3">
             {TRUST_MARKS.map((mark) => (
               <li
                 key={mark}
-                className="text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-white/55 whitespace-nowrap"
+                className="text-[10px] sm:text-[11px] lg:text-[12px] tracking-[0.22em] uppercase text-white/55 whitespace-nowrap"
                 style={SERIF}
               >
                 {mark}

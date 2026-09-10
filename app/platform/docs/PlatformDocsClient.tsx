@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { PlatformPageHeader } from "../PlatformPageHeader";
+import { PlatformDocsOverview } from "./PlatformDocsOverview";
 import {
   DEMO_GTIN_MISSING,
   DEMO_GTIN_REPORTED,
@@ -46,7 +48,7 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
       {label ? (
         <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">{label}</p>
       ) : null}
-      <pre className="bg-[#faf8f5] border border-[#ddd5cb] p-3 sm:p-4 text-[11px] sm:text-xs overflow-x-auto rounded-md pr-14">
+      <pre className="bg-[#faf8f5] lg:bg-[#152238] lg:text-[#e8eef4] border border-[#ddd5cb] lg:border-[#152238] p-3 sm:p-4 lg:p-5 text-[11px] sm:text-xs overflow-x-auto rounded-lg pr-14">
         <code>{code}</code>
       </pre>
       <button
@@ -126,8 +128,19 @@ export function PlatformDocsClient() {
   -H "Authorization: Bearer itx_live_…"`;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20">
-      <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12 xl:gap-16">
+    <>
+      <PlatformPageHeader
+        eyebrow="API reference"
+        title="Material Intelligence API"
+        description="Full reference for developers — authentication, GTIN validation, evidence statuses, and DPP-readiness. Try the live lookup on the demo page first."
+        primaryHref="/platform/demo#api"
+        primaryLabel="Try live demo"
+        secondaryHref="/platform/request?intent=api_access&cta=docs"
+        secondaryLabel="Discuss API access"
+      />
+      <PlatformDocsOverview />
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-12 sm:py-16 md:py-20">
+        <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-14 xl:gap-20">
         <aside className="hidden lg:block">
           <nav aria-label="Documentation sections" className="sticky top-24">
             <p className="text-[10px] tracking-[0.2em] uppercase text-[#9c7b8b] mb-4">On this page</p>
@@ -165,14 +178,6 @@ export function PlatformDocsClient() {
               ))}
             </ul>
           </details>
-
-          <p className="text-[11px] tracking-[0.25em] text-[#9c7b8b] mb-6">DOCUMENTATION</p>
-          <h1
-            className="text-[2rem] sm:text-4xl font-light text-[#1a1a1a] mb-6"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            INTERTEXE Material Intelligence API
-          </h1>
 
           <DocSection id="overview" title="What the API does">
             <p>
@@ -398,7 +403,8 @@ print(json.load(urllib.request.urlopen(url)))`}
             </p>
           </DocSection>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

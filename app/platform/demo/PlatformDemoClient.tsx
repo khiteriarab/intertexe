@@ -92,10 +92,10 @@ export function PlatformDemoClient() {
   const coverage = mapped + missing ? Math.round((mapped / (mapped + missing)) * 100) : 0;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:pt-20 md:pb-24">
+    <div className="py-8 sm:py-12 lg:py-4 lg:pb-16">
       <DemoCatalogWalkthrough />
 
-      <section className="rounded-sm border border-[#e8e3da] bg-white p-5 sm:p-8 mb-6">
+      <section id="api" className="scroll-mt-28 rounded-2xl border border-[var(--platform-border)] bg-white p-5 sm:p-8 lg:p-10 mb-6 shadow-[0_24px_60px_rgba(22,21,19,0.04)]">
       <p className="text-[10px] sm:text-[11px] tracking-[0.12em] sm:tracking-[0.25em] text-[#9c7b8b] mb-3 break-words">
         INTERTEXE MATERIAL INTELLIGENCE API
       </p>

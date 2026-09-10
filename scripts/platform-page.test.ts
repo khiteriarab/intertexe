@@ -5,6 +5,7 @@ import path from "node:path";
 
 describe("Platform B2B sales page", () => {
   const home = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHome.tsx"), "utf8");
+  const hero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHero.tsx"), "utf8");
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
   const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
   const visuals = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-visuals.tsx"), "utf8");
@@ -18,7 +19,7 @@ describe("Platform B2B sales page", () => {
 
   it("positions INTERTEXE as the product and material data layer, not DPP-only software", () => {
     assert.match(sections, /product and material data layer for fashion/i);
-    assert.match(sections, /INTERTEXE FOR BRANDS/);
+    assert.match(hero, /INTERTEXE FOR BRANDS/);
     assert.match(sections, /one governed product record/i);
     assert.match(sections, /Outputs from one record/);
     assert.match(sections, /not the whole product/);
@@ -45,8 +46,8 @@ describe("Platform B2B sales page", () => {
   });
 
   it("converts with Request a demo and Sign in to enterprise login", () => {
-    assert.match(sections, /href="\/platform\/request\?intent=snapshot&cta=hero"/);
-    assert.match(sections, /Request a demo/);
+    assert.match(hero, /href="\/platform\/request\?intent=snapshot&cta=hero"/);
+    assert.match(hero, /Request a demo/);
     assert.match(sections, /getEnterpriseLoginUrl/);
     assert.match(nav, /getEnterpriseLoginUrl/);
     assert.match(nav, /Request a demo/);
@@ -90,8 +91,8 @@ describe("Platform B2B sales page", () => {
   });
 
   it("uses native sales visuals instead of editorial PNG decks", () => {
-    assert.match(sections, /hero-workspace-desktop\.png/);
-    assert.match(sections, /HeroProductStage/);
+    assert.match(hero, /hero-workspace-desktop\.png/);
+    assert.match(hero, /hero-silk-dress\.png/);
     assert.match(stages, /hero-silk-dress\.png/);
     assert.doesNotMatch(sections, /ProblemConvergenceVisual/);
     assert.doesNotMatch(sections, /GovernedRecordVisual/);

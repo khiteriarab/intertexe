@@ -1,0 +1,14 @@
+/* Shared design tokens for /platform, /platform/discover, /platform/demo, /platform/docs */
+
+.platform-shell {
+  --platform-bg: #faf9f7;
+  --platform-surface: #ffffff;
+  --platform-ink: #161513;
+  --platform-navy: #152238;
+  --platform-muted: #6f6a63;
+  --platform-quiet: #9c9488;
+  --platform-border: #e8e3da;
+  --platform-accent: #3e6268;
+  background-color: var(--platform-bg);
+  color: var(--platform-ink);
+}
