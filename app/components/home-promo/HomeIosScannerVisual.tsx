@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 
-/** Real iOS scanner promo — transparent matte asset on ivory section. */
+/** Real iOS scanner promo — edge-matted PNG on ivory section. */
 export function HomeIosScannerVisual() {
   return (
     <div className="relative w-full" data-testid="home-ios-scanner-visual">
-      <div className="relative aspect-[4/3] sm:aspect-[16/11] lg:aspect-[5/4]">
+      <div className="relative w-full" style={{ aspectRatio: "1024 / 935" }}>
         <Image
           src="/promo/home-ios-scanner-transparent.png"
           alt="INTERTEXE iOS app scanning a Massimo Dutti price tag, showing fiber composition and better-material matches"

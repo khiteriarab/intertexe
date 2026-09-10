@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 
-/** Real Chrome extension promo — transparent matte asset on ivory section. */
+/** Real Chrome extension promo — edge-matted PNG on ivory section. */
 export function HomeChromeExtensionVisual() {
   return (
     <div className="relative w-full" data-testid="home-chrome-extension-visual">
-      <div className="relative aspect-[4/3] sm:aspect-[16/11] lg:aspect-[5/4]">
+      <div className="relative w-full" style={{ aspectRatio: "1024 / 682" }}>
         <Image
           src="/promo/home-chrome-extension-transparent.png"
           alt="INTERTEXE Chrome extension on a Massimo Dutti product page, surfacing better-material jean matches"
