@@ -56,6 +56,15 @@ const nextConfig = {
     },
   },
   devIndicators: false,
+  async redirects() {
+    return [
+      {
+        source: "/collections/summer-in-the-city",
+        destination: "/collections/fall-edit",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

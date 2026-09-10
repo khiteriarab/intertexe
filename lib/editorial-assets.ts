@@ -15,9 +15,8 @@ const FABRIC_HERO = {
 /** Rag & Bone Ann embroidered slip — hosted on intertexe.com. */
 const SILK_EDITORIAL_HERO = FABRIC_HERO.silk;
 
-/** Zimmermann resort campaign — Summer in the City collection panel. */
-export const ZIMMERMANN_SUMMER_CAMPAIGN =
-  "https://www.zimmermann.com/media/wysiwyg/ZIM-SPRING26_CAMPAIGN_16x9-9_4.jpg";
+/** Zimmermann brand campaign — Fall Edit collection panel. */
+export const ZIMMERMANN_FALL_CAMPAIGN = "/brands/zimmermann.jpg";
 
 /** Hosted White Edit hero — bundled in /public for reliable delivery. */
 export const WHITE_EDIT_EDITORIAL_HERO = "/editorial-white-edit.png";
@@ -47,7 +46,7 @@ export const EDITORIAL_HERO = {
   vacation: "/editorial-vacation.jpg",
   evening: EVENING_EDITORIAL_HERO,
   tailoring: TAILORING_EDITORIAL_HERO,
-  "summer-in-the-city": ZIMMERMANN_SUMMER_CAMPAIGN,
+  "fall-edit": ZIMMERMANN_FALL_CAMPAIGN,
   "white-edit": WHITE_EDIT_EDITORIAL_HERO,
   "first-fall-edit": FABRIC_HERO.cashmere,
   "coat-edit": FABRIC_HERO.wool,

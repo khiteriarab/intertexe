@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryLiveCatalog } from "../../../lib/catalog-direct-query";
 import { fetchProductCount, fetchFiberCounts } from "../../../lib/supabase-server";
+import { resolveCachedCatalogPreviewTotal } from "../../../lib/catalog-preview-total";
 
 export const revalidate = 300;
 
@@ -75,10 +76,22 @@ export async function GET(request: NextRequest) {
       subcategory: searchParams.get("subcategory") || undefined,
       material,
     });
+    let total = result.total;
+    if (total == null || total <= 0) {
+      const cachedTotal = await resolveCachedCatalogPreviewTotal({
+        fiber: fiber === "all" ? undefined : fiber,
+        category,
+        region,
+      });
+      if (cachedTotal != null && cachedTotal > 0) {
+        total = cachedTotal;
+      }
+    }
+
     return NextResponse.json(
       {
         products: result.products,
-        total: result.total,
+        total,
         hasMore: result.hasMore,
         productIds: result.productIds ?? result.products.map((p) => p.id),
         rpcVersion: result.rpcVersion ?? null,

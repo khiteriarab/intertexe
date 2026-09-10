@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { readCatalogRouteStats } from "../../../../lib/catalog-route-stats";
+import {
+  readCatalogRouteStats,
+  readLiveOfferTotal,
+} from "../../../../lib/catalog-route-stats";
 import { refreshCatalogRouteStats } from "../../../../lib/refresh-catalog-route-stats";
 
 export const revalidate = 3600;
@@ -30,15 +33,23 @@ export async function GET(request: Request) {
     }
   }
 
+  const liveOfferTotal = await readLiveOfferTotal();
+  const catalogTotal = liveOfferTotal ?? stats.catalogTotal;
+  const taxonomyCounts = { ...stats.taxonomyCounts };
+  if (catalogTotal > 0) {
+    taxonomyCounts["clothing/all"] = catalogTotal;
+  }
+
   return NextResponse.json(
     {
       version: stats.version,
       updatedAt: stats.updatedAt,
       region: stats.region,
-      catalogTotal: stats.catalogTotal,
+      catalogTotal,
       shoesTotal: stats.shoesTotal,
       fiberCounts: stats.fiberCounts,
-      taxonomyCounts: stats.taxonomyCounts,
+      taxonomyCounts,
+      shopCardTotal: stats.catalogTotal,
       source: stats.source,
     },
     { headers: CACHE_HEADERS }

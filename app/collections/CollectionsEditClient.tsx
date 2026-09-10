@@ -36,13 +36,14 @@ function CollectionCoverLink({
   return (
     <Link
       href={collection.href}
-      className={`group relative block overflow-hidden bg-[#1c1c1c] ${className}`}
+      className="group block w-full touch-manipulation cursor-pointer"
       data-testid={`link-collection-${slug}`}
     >
+      <div className={`relative w-full overflow-hidden bg-[#1c1c1c] ${className}`}>
       <img
         src={imageUrl}
         alt={collection.label}
-        className="absolute inset-0 h-full w-full object-cover object-top"
+        className="absolute inset-0 h-full w-full object-cover object-top group-hover:scale-[1.02] transition-transform duration-700"
         loading={slug === HERO_SLUG ? "eager" : "lazy"}
         draggable={false}
       />
@@ -75,6 +76,12 @@ function CollectionCoverLink({
         >
           {subtitle}
         </p>
+        {!compact ? (
+          <span className="inline-flex items-center gap-2 mt-4 text-[10px] uppercase tracking-[0.2em] text-white/70 group-hover:text-white group-hover:gap-3 transition-all">
+            Shop collection →
+          </span>
+        ) : null}
+      </div>
       </div>
     </Link>
   );
@@ -93,7 +100,7 @@ export function CollectionsEditClient() {
         />
       </div>
 
-      <div className="layout-bleed-full px-4 md:px-8 pb-4 md:pb-6">
+      <div className="layout-bleed-full px-4 md:px-8 pb-8 md:pb-10">
         <div className="grid grid-cols-2 gap-2 md:gap-3">
           {GRID_SLUGS.map((slug) => (
             <CollectionCoverLink
@@ -105,38 +112,6 @@ export function CollectionsEditClient() {
           ))}
         </div>
       </div>
-
-      <nav
-        className="px-4 md:px-8 py-8 md:py-10 border-t border-neutral-200/70"
-        aria-label="All collections"
-      >
-        <p className="text-[10px] uppercase tracking-[0.22em] text-neutral-500 mb-4">
-          All edits
-        </p>
-        <ul className="flex flex-col gap-0 divide-y divide-neutral-200/80 max-w-2xl">
-          {COLLECTION_SECTIONS.map((collection) => (
-            <li key={collection.slug}>
-              <Link
-                href={collection.href}
-                className="flex items-center justify-between py-4 group"
-                data-testid={`link-collection-list-${collection.slug}`}
-              >
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-neutral-400 mb-1">
-                    {collection.kicker}
-                  </p>
-                  <p className="text-[15px] md:text-[16px] font-serif text-neutral-900 group-hover:text-neutral-600 transition-colors">
-                    {collection.label}
-                  </p>
-                </div>
-                <span className="text-[10px] uppercase tracking-[0.14em] text-neutral-400 group-hover:text-neutral-800 transition-colors">
-                  Shop
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
     </div>
   );
 }

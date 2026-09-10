@@ -14,6 +14,7 @@ import {
 import { queryCatalogListRPC } from "../../../lib/catalog-list-rpc";
 import { CATALOG_PAGE_SIZE } from "../../../lib/catalog-rules";
 import { getShopCatalogKnownTotal } from "../../../lib/cached-catalog-stats";
+import { resolveCachedCatalogPreviewTotal } from "../../../lib/catalog-preview-total";
 import {
   safeCatalogLimit,
   safeCatalogOffset,
@@ -209,8 +210,8 @@ async function fetchCollectionWithFallback(
   let fallbackOpts: Parameters<typeof queryLiveCatalog>[0] | null = null;
   if (slug === "tailoring") {
     fallbackOpts = { region: "us", category: "outerwear", sort: "new", limit, offset: 0, skipCount: true };
-  } else if (slug === "summer-in-the-city") {
-    fallbackOpts = { region: "us", fiber: "linen", limit, offset: 0, skipCount: true };
+  } else if (slug === "fall-edit") {
+    fallbackOpts = { region: "us", fiber: "cashmere", limit, offset: 0, skipCount: true };
   } else if (slug === "white-edit") {
     fallbackOpts = { region: "us", search: "white", sort: "new", limit, offset: 0, skipCount: true };
   }
@@ -532,6 +533,16 @@ export async function GET(request: NextRequest) {
       offset === 0;
 
     let total = catalogTotalValue(result.total, result.products.length, offset, skipCount);
+    if ((total == null || total <= result.products.length) && skipCount) {
+      const cachedTotal = await resolveCachedCatalogPreviewTotal({
+        fiber: shopFiber,
+        category,
+        region,
+      });
+      if (cachedTotal != null && cachedTotal > 0) {
+        total = cachedTotal;
+      }
+    }
 
     if (isJustInRequest) {
       const JUST_IN_CAP = 300;

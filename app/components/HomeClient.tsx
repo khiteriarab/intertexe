@@ -305,7 +305,7 @@ function EditorialPanel({
         <EditorialHeroImage src={imageUrl} alt={title} variant="panel" hoverZoom slug={slug} title={title} />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 pb-10 md:p-14 md:pb-16 gap-2">
+      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 pb-10 md:p-14 md:pb-16 gap-2 pointer-events-none">
         <span className="text-white/45 text-[9px] md:text-[10px] uppercase tracking-[0.35em] font-light">{label}</span>
         <h3 className="text-white text-[28px] md:text-[44px] font-serif leading-[1.08] max-w-md">{title}</h3>
         <p className="text-white/55 text-[12px] md:text-[15px] font-light max-w-sm leading-relaxed mt-1">{subtitle}</p>
@@ -328,7 +328,7 @@ interface HomePageData {
   vacationProducts: any[];
   eveningProducts: any[];
   tailoringProducts: any[];
-  summerInCityProducts: any[];
+  fallEditProducts: any[];
   whiteEditProducts: any[];
   saleProducts: any[];
 }
@@ -356,7 +356,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     vacationProducts: [],
     eveningProducts: [],
     tailoringProducts: [],
-    summerInCityProducts: [],
+    fallEditProducts: [],
     whiteEditProducts: [],
     saleProducts: [],
   });

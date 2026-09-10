@@ -50,12 +50,12 @@ export const COLLECTION_SECTIONS = [
     subtitle: "Investment dressing. The pieces that outlast every trend. Wool. Cashmere. Cotton. Verified.",
   },
   {
-    slug: "summer-in-the-city",
-    label: "Summer in the City",
-    href: "/collections/summer-in-the-city",
-    railKey: "collections:summer-in-the-city",
-    kicker: "Urban",
-    subtitle: "Downtown luxury. Lightweight. Breathable. The real thing.",
+    slug: "fall-edit",
+    label: "The Fall Edit",
+    href: "/collections/fall-edit",
+    railKey: "collections:fall-edit",
+    kicker: "September",
+    subtitle: "Transitional luxury. Cashmere that layers. Suede with weight. Verified.",
   },
   {
     slug: "white-edit",

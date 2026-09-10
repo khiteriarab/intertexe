@@ -23,7 +23,7 @@ export const MERCH_RAIL_KEYS = {
   vacation: "collections:vacation",
   evening: "collections:evening",
   tailoring: "collections:tailoring",
-  summerInCity: "collections:summer-in-the-city",
+  fallEdit: "collections:fall-edit",
   whiteEdit: "collections:white-edit",
   designersCurated: "designers:curated",
   sale: "sale:all",

@@ -68,6 +68,24 @@ export async function readCatalogRouteStats(): Promise<CatalogRouteStatsReadResu
   }
 }
 
+/** Live regional offers from weekly platform_stats_cache (300k+), for toolbar marketing totals. */
+export async function readLiveOfferTotal(): Promise<number | null> {
+  const supabase = getServerSupabase();
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from("platform_stats_cache")
+      .select("product_count, updated_at")
+      .eq("id", "main")
+      .maybeSingle();
+    if (error || !data?.product_count) return null;
+    const count = Number(data.product_count);
+    return count > 0 ? count : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Persist precomputed route stats for fast API reads. */
 export async function writeCatalogRouteStats(payload: CatalogRouteStatsPayload): Promise<void> {
   const supabase = getServerSupabase();

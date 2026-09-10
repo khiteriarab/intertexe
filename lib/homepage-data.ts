@@ -162,7 +162,7 @@ export interface HomePageData {
   vacationProducts: any[];
   eveningProducts: any[];
   tailoringProducts: any[];
-  summerInCityProducts: any[];
+  fallEditProducts: any[];
   whiteEditProducts: any[];
   saleProducts: any[];
 }
@@ -256,7 +256,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     MERCH_RAIL_KEYS.vacation,
     MERCH_RAIL_KEYS.evening,
     MERCH_RAIL_KEYS.tailoring,
-    MERCH_RAIL_KEYS.summerInCity,
+    MERCH_RAIL_KEYS.fallEdit,
     MERCH_RAIL_KEYS.whiteEdit,
   ] as const;
 
@@ -310,7 +310,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const vacationProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.vacation] || []);
   const eveningProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.evening] || []);
   const tailoringProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.tailoring] || []);
-  const summerInCityProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.summerInCity] || []);
+  const fallEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.fallEdit] || []);
   const whiteEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.whiteEdit] || []);
 
   console.log(
@@ -319,7 +319,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     `vacation=${vacationProducts.length}`,
     `evening=${eveningProducts.length}`,
     `tailoring=${tailoringProducts.length}`,
-    `summer-in-city=${summerInCityProducts.length}`,
+    `fall-edit=${fallEditProducts.length}`,
     `white-edit=${whiteEditProducts.length}`,
     `sale=${saleProducts.length}`,
     `ms=${Date.now() - t0}`
@@ -336,7 +336,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     vacationProducts,
     eveningProducts,
     tailoringProducts,
-    summerInCityProducts,
+    fallEditProducts,
     whiteEditProducts,
     saleProducts,
   };
@@ -473,7 +473,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     vacationProducts,
     eveningProducts: [] as Product[],
     tailoringProducts: [] as Product[],
-    summerInCityProducts: [] as Product[],
+    fallEditProducts: [] as Product[],
     whiteEditProducts: [] as Product[],
     saleProducts,
   };
@@ -498,6 +498,6 @@ export const getCachedHomePageData = unstable_cache(
     }
     return data;
   },
-  ["homepage-payload-v16"],
+  ["homepage-payload-v17"],
   { revalidate: HOMEPAGE_REVALIDATE_SEC, tags: ["homepage"] }
 );

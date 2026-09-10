@@ -46,9 +46,9 @@ export const HOMEPAGE_RAIL_LABELS: Record<string, { title: string; subtitle: str
     title: "Tailoring",
     subtitle: "Investment dressing. The pieces that outlast every trend. Wool. Cashmere. Cotton. Verified.",
   },
-  summerInCityProducts: {
-    title: "Summer in the City",
-    subtitle: "Downtown luxury. Lightweight. Breathable. The real thing.",
+  fallEditProducts: {
+    title: "The Fall Edit",
+    subtitle: "Transitional luxury. Cashmere that layers. Suede with weight. Verified.",
   },
   whiteEditProducts: {
     title: "The White Edit",

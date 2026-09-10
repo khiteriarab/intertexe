@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { fetchProductCount } from "../../lib/supabase-server";
 import { getCachedBrandStats, getCachedPlatformStats } from "../../lib/cached-catalog";
 import {
   formatBrandCountLabel,
@@ -11,7 +10,8 @@ import {
 } from "../../lib/catalog-stats-labels";
 import { fabricImages } from "../../lib/fabric-images";
 
-export const dynamic = "force-dynamic";
+/** Hub layout is static — stats come from cached platform totals (never block on live_products count). */
+export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
   const stats = await getCachedPlatformStats();
@@ -73,15 +73,15 @@ const FABRICS = [
 ];
 
 export default async function MaterialsPage() {
-  const [platformStats, brandStats, productCount] = await Promise.all([
+  const [platformStats, brandStats] = await Promise.all([
     getCachedPlatformStats(),
     getCachedBrandStats(),
-    fetchProductCount(),
   ]);
 
-  const totalProducts = platformStats.productCount > 0 ? platformStats.productCount : productCount;
   const displayCount =
-    totalProducts > 0 ? new Intl.NumberFormat("en-US").format(totalProducts) : "—";
+    platformStats.productCount > 0
+      ? new Intl.NumberFormat("en-US").format(platformStats.productCount)
+      : "—";
   const shoppableBrandCount = resolveShoppableBrandCount(
     platformStats.brandCount,
     brandStats.filter((b) => b.count >= 2).length

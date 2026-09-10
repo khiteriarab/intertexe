@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Shop The Edit | INTERTEXE Collections",
   description:
-    "Curated natural-fiber collections — Vacation, Evening, Tailoring, Summer in the City, and The White Edit.",
+    "Curated natural-fiber collections — Vacation, Evening, Tailoring, The Fall Edit, and The White Edit.",
   alternates: { canonical: "https://www.intertexe.com/collections" },
 };
 

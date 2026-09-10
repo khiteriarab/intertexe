@@ -3,7 +3,7 @@ import { COLLECTION_SECTIONS } from "./site-architecture";
 
 /** Seasonal menu layout — change hero/grid here without an app release. */
 export const COLLECTIONS_MENU = {
-  heroSlug: "summer-in-the-city" as CollectionSlug,
+  heroSlug: "fall-edit" as CollectionSlug,
   gridSlugs: ["vacation", "evening", "tailoring", "white-edit"] as const,
 };
 
@@ -11,7 +11,7 @@ const MENU_LABELS: Record<CollectionSlug, string> = {
   vacation: "Vacation Shop",
   evening: "Evening",
   tailoring: "Tailoring",
-  "summer-in-the-city": "Summer in the City",
+  "fall-edit": "The Fall Edit",
   "white-edit": "The White Edit",
 };
 
@@ -19,7 +19,7 @@ const GRID_SUBLINES: Record<CollectionSlug, string> = {
   vacation: "Linen & silk.",
   evening: "After dark.",
   tailoring: "Outlast every trend.",
-  "summer-in-the-city": "Luxury. Lightweight. Breathable.",
+  "fall-edit": "Cashmere & suede.",
   "white-edit": "Ivory. Chalk. Cream.",
 };
 
@@ -30,8 +30,8 @@ const EDITORIAL_INTROS: Record<CollectionSlug, string> = {
     "Silk that drapes. Wool crêpe that holds its shape through the night. This edit is built for the moments that matter — each piece verified to contain at least 80% natural fiber.",
   tailoring:
     "A blazer that fits perfectly lasts a decade. These are the structured pieces worth investing in — natural fiber construction that holds its form, season after season.",
-  "summer-in-the-city":
-    "The city in summer demands fabric that breathes. Linen that softens with wear. Cotton that moves. This edit is everything you need for the urban heat — verified natural fiber from first wear.",
+  "fall-edit":
+    "September is the shift — lighter days, cooler evenings. Cashmere that layers without bulk. Suede with texture and weight. This edit is transitional luxury for the season change — every piece verified for natural fiber content.",
   "white-edit":
     "White is not a single color. It is ivory silk, chalk linen, cream cashmere. This edit collects the full spectrum of natural white — every piece independently verified.",
 };
@@ -41,12 +41,12 @@ const IMAGE_CROP: Record<CollectionSlug, "top" | "center"> = {
   tailoring: "top",
   "white-edit": "top",
   evening: "top",
-  "summer-in-the-city": "top",
+  "fall-edit": "top",
 };
 
 const CAPTION_PLACEMENT: Record<CollectionSlug, "below" | "overlay"> = {
   evening: "overlay",
-  "summer-in-the-city": "overlay",
+  "fall-edit": "overlay",
   vacation: "overlay",
   tailoring: "overlay",
   "white-edit": "overlay",
@@ -56,7 +56,7 @@ const HOMEPAGE_TITLES: Record<CollectionSlug, string> = {
   vacation: "VACATION",
   evening: "EVENING",
   tailoring: "TAILORING",
-  "summer-in-the-city": "SUMMER IN THE CITY",
+  "fall-edit": "THE FALL EDIT",
   "white-edit": "THE WHITE EDIT",
 };
 
@@ -64,7 +64,7 @@ const HOMEPAGE_SUBTITLES: Record<CollectionSlug, string> = {
   vacation: "The vacation edit",
   evening: "The evening edit",
   tailoring: "The tailoring edit",
-  "summer-in-the-city": "The summer in the city edit",
+  "fall-edit": "The fall edit",
   "white-edit": "Monochrome natural fibers",
 };
 
@@ -117,7 +117,7 @@ function manifestItemForSlug(slug: CollectionSlug): CollectionManifestItem {
 
 export function buildCollectionsManifest(): CollectionsManifest {
   return {
-    version: 1,
+    version: 2,
     updatedAt: new Date().toISOString(),
     menu: COLLECTIONS_MENU,
     carouselSlugs: [...COLLECTION_SLUGS],

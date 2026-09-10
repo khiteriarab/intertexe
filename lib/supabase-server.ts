@@ -1618,32 +1618,35 @@ export async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
   return data.map(mapProductRow);
 }
 
+/** Fresh fiber hub counts — used by weekly cron (never stale unstable_cache). */
+export async function fetchFiberCountsFresh(region = "us"): Promise<Record<string, number>> {
+  const supabase = getServerSupabase();
+  if (!supabase) return {};
+  const fibers = ["cashmere", "silk", "wool", "cotton", "linen"];
+  const counts: Record<string, number> = {};
+  await Promise.all(
+    fibers.map(async (fiber) => {
+      const n = await rpcCatalogListCount(supabase, {
+        preferred: region,
+        fallback: region,
+        fiber,
+        category: null,
+        brandSlug: null,
+        search: null,
+        minNfp: 80,
+      });
+      if (n != null) counts[fiber] = n;
+    })
+  );
+  return counts;
+}
+
 export async function fetchFiberCounts(): Promise<Record<string, number>> {
   return getCachedFiberCounts();
 }
 
 const getCachedFiberCounts = unstable_cache(
-  async (): Promise<Record<string, number>> => {
-    const supabase = getServerSupabase();
-    if (!supabase) return {};
-    const fibers = ["cashmere", "silk", "wool", "cotton", "linen"];
-    const counts: Record<string, number> = {};
-    await Promise.all(
-      fibers.map(async (fiber) => {
-        const n = await rpcCatalogListCount(supabase, {
-          preferred: "us",
-          fallback: "us",
-          fiber,
-          category: null,
-          brandSlug: null,
-          search: null,
-          minNfp: 80,
-        });
-        if (n != null) counts[fiber] = n;
-      })
-    );
-    return counts;
-  },
+  async (): Promise<Record<string, number>> => fetchFiberCountsFresh("us"),
   ["fiber-counts-v1"],
   { revalidate: 600, tags: ["fiber-counts"] }
 );

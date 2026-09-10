@@ -59,8 +59,8 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
  * Homepage collection edit — mobile: image then rail below.
  * Desktop: image left, product rail right (avoids ultra-wide crop on landscape heroes).
  */
-/** When true, desktop layout is products left / editorial image right (Evening, Summer in the City). */
-const SHOP_ON_LEFT_SLUGS = new Set(["evening", "summer-in-the-city"]);
+/** When true, desktop layout is products left / editorial image right (Evening, Fall Edit). */
+const SHOP_ON_LEFT_SLUGS = new Set(["evening", "fall-edit"]);
 
 const COLLECTION_RAIL_LIMIT = 20;
 
@@ -97,7 +97,7 @@ export function HomepageCollectionBlock({
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 md:p-10 lg:p-12 gap-2">
+      <div className="absolute inset-0 z-10 flex flex-col justify-end p-7 md:p-10 lg:p-12 gap-2 pointer-events-none">
         <span className="text-white/45 text-[9px] md:text-[10px] uppercase tracking-[0.35em] font-light">
           {collection.kicker}
         </span>

@@ -6,7 +6,7 @@ export type CollectionSlug =
   | "vacation"
   | "evening"
   | "tailoring"
-  | "summer-in-the-city"
+  | "fall-edit"
   | "white-edit";
 
 export type CollectionPageConfig = {
@@ -62,18 +62,18 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     catalogLabel: "Browse full tailoring collection",
     editorialImage: EDITORIAL_HERO.tailoring,
   },
-  "summer-in-the-city": {
-    slug: "summer-in-the-city",
-    title: "Summer in the City",
-    kicker: "Urban",
+  "fall-edit": {
+    slug: "fall-edit",
+    title: "The Fall Edit",
+    kicker: "September",
     description:
-      "Downtown luxury. Lightweight. Breathable. The real thing.",
-    atmosphere: "Black · white · elevated basics · city movement",
-    themes: COLLECTION_EDITORIAL["summer-in-the-city"].themes,
-    railKey: MERCH_RAIL_KEYS.summerInCity,
-    catalogHref: "/collections/summer-in-the-city",
-    catalogLabel: "Browse full city summer collection",
-    editorialImage: EDITORIAL_HERO["summer-in-the-city"],
+      "Transitional luxury. Cashmere that layers. Suede with weight. Verified.",
+    atmosphere: "Cashmere · suede · wool · layered warmth",
+    themes: COLLECTION_EDITORIAL["fall-edit"].themes,
+    railKey: MERCH_RAIL_KEYS.fallEdit,
+    catalogHref: "/collections/fall-edit",
+    catalogLabel: "Browse full fall edit collection",
+    editorialImage: EDITORIAL_HERO["fall-edit"],
   },
   "white-edit": {
     slug: "white-edit",

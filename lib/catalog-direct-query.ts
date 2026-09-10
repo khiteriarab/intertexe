@@ -111,7 +111,7 @@ export const COLLECTION_CANONICAL_SLUGS: Record<string, string[]> = {
   vacation: ["vacation", "vacation-shop", "vacation-edit"],
   evening: ["evening", "occasion-edit", "silk-occasion", "evening-edit"],
   tailoring: ["tailoring", "tailoring-edit"],
-  "summer-in-the-city": ["summer-in-the-city", "city-wardrobe"],
+  "fall-edit": ["fall-edit", "city-wardrobe", "summer-in-the-city"],
   "white-edit": ["white-edit", "the-white-edit"],
 };
 

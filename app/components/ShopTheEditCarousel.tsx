@@ -35,11 +35,11 @@ const DEFAULT_SLIDES: EditCarouselSlide[] = [
     href: "/collections/tailoring",
   },
   {
-    slug: "summer-in-the-city",
-    title: "Summer in the City",
-    kicker: "Urban",
-    subtitle: "Downtown luxury. Lightweight. Breathable.",
-    href: "/collections/summer-in-the-city",
+    slug: "fall-edit",
+    title: "The Fall Edit",
+    kicker: "September",
+    subtitle: "Cashmere that layers. Suede with weight.",
+    href: "/collections/fall-edit",
   },
   {
     slug: "white-edit",

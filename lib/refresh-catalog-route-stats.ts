@@ -6,7 +6,7 @@ import { fetchTaxonomyCounts } from "./catalog-taxonomy";
 import type { CatalogRouteStatsPayload } from "./catalog-route-stats";
 import { writeCatalogRouteStats } from "./catalog-route-stats";
 import { fetchFootwearCatalogCount } from "./footwear-catalog";
-import { fetchFiberCounts, resolveShopCatalogTotal } from "./supabase-server";
+import { fetchFiberCountsFresh, resolveShopCatalogTotal } from "./supabase-server";
 import { getServerSupabase } from "./supabase-service-client";
 
 export type RefreshedCatalogRouteStats = CatalogRouteStatsPayload & {
@@ -22,7 +22,7 @@ export async function refreshCatalogRouteStats(region = "us"): Promise<Refreshed
   const normalizedRegion = region.toLowerCase();
 
   const [fiberCounts, clothingTaxonomy, shoesTaxonomy, catalogTotal, shoesTotal] = await Promise.all([
-    fetchFiberCounts(),
+    fetchFiberCountsFresh(),
     fetchTaxonomyCounts("clothing", normalizedRegion),
     fetchTaxonomyCounts("shoes", normalizedRegion),
     resolveShopCatalogTotal(supabase, {

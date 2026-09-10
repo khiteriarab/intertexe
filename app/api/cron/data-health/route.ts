@@ -10,7 +10,7 @@ const COLLECTION_SLUGS = [
   "vacation",
   "evening",
   "tailoring",
-  "summer-in-the-city",
+  "fall-edit",
   "white-edit",
 ] as const;
 

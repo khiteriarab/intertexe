@@ -18,9 +18,9 @@ export const collectionRotation = [
       "Investment dressing. The pieces that outlast every trend. Wool. Cashmere. Cotton. Verified.",
   },
   {
-    name: "Summer in the City",
-    url: "https://www.intertexe.com/collections/summer-in-the-city",
-    subline: "Downtown luxury. Lightweight. Breathable. The real thing.",
+    name: "The Fall Edit",
+    url: "https://www.intertexe.com/collections/fall-edit",
+    subline: "Transitional luxury. Cashmere that layers. Suede with weight. Verified.",
   },
   {
     name: "The White Edit",

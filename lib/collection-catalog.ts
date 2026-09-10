@@ -44,12 +44,13 @@ export const COLLECTION_CATALOG_QUERIES: Record<CollectionSlug, CollectionCatalo
     { search: "trouser" },
     { category: "outerwear" },
   ],
-  "summer-in-the-city": [
-    { fiber: "cotton" },
-    { fiber: "linen" },
-    { category: "dresses", fiber: "cotton" },
-    { search: "poplin" },
-    { category: "outerwear", fiber: "linen" },
+  "fall-edit": [
+    { fiber: "cashmere" },
+    { fiber: "cashmere", category: "outerwear" },
+    { search: "suede" },
+    { search: "cashmere knit" },
+    { fiber: "wool", category: "outerwear" },
+    { search: "leather" },
   ],
   "white-edit": [
     { search: "white" },
