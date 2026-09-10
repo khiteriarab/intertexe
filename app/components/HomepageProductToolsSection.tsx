@@ -81,28 +81,16 @@ export function HomepageProductToolsSection() {
       className="border-t border-neutral-200/70 bg-[#faf9f7]"
       data-testid="homepage-product-tools"
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 xl:px-16">
-        <header className="pt-16 md:pt-20 lg:pt-24 pb-14 md:pb-16 lg:pb-20 max-w-2xl">
-          <p className="text-[10px] uppercase tracking-[0.42em] text-neutral-400 mb-5">Shop with confidence</p>
-          <h2 className="text-[32px] md:text-[44px] lg:text-[48px] font-serif leading-[1.08] tracking-[-0.02em] text-neutral-900 mb-5">
-            Scan fabrics in stores. <em className="not-italic italic text-neutral-700">Shop smarter online.</em>
-          </h2>
-          <p className="text-neutral-500 text-[15px] md:text-[17px] leading-[1.65] font-light max-w-xl">
-            The INTERTEXE fabric scanner reads care labels and barcodes in seconds — then finds better-material
-            matches at similar prices, in the app or on Chrome.
-          </p>
-        </header>
-
-        <div className="pb-16 md:pb-20 lg:pb-28 space-y-0">
-          {SLIDES.map((slide, index) => {
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 xl:px-16 pb-16 md:pb-20 lg:pb-28">
+        {SLIDES.map((slide, index) => {
             const { Visual } = slide;
             const flip = slide.id === "chrome";
 
             return (
               <article
                 key={slide.id}
-                className={`grid lg:grid-cols-2 gap-10 md:gap-12 lg:gap-16 xl:gap-20 items-center py-14 md:py-16 lg:py-20 ${
-                  index > 0 ? "border-t border-neutral-200/80" : ""
+                className={`grid lg:grid-cols-2 gap-10 md:gap-12 lg:gap-16 xl:gap-20 items-center ${
+                  index === 0 ? "pt-16 md:pt-20 lg:pt-24 pb-14 md:pb-16 lg:pb-20" : "py-14 md:py-16 lg:py-20 border-t border-neutral-200/80"
                 }`}
               >
                 <div className={flip ? "lg:col-start-2 lg:row-start-1" : ""}>
@@ -119,7 +107,6 @@ export function HomepageProductToolsSection() {
               </article>
             );
           })}
-        </div>
       </div>
     </section>
   );
