@@ -74,8 +74,8 @@ DO $$
 BEGIN
   IF to_regclass('public.collection_product_memberships') IS NOT NULL THEN
     UPDATE public.collection_product_memberships
-    SET slug = 'fall-edit'
-    WHERE slug = 'summer-in-the-city';
+    SET collection_slug = 'fall-edit'
+    WHERE collection_slug = 'summer-in-the-city';
   END IF;
 END $$;
 
