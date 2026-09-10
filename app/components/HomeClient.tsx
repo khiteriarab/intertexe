@@ -329,7 +329,7 @@ interface HomePageData {
   eveningProducts: any[];
   tailoringProducts: any[];
   fallEditProducts: any[];
-  whiteEditProducts: any[];
+  leatherEditProducts: any[];
   saleProducts: any[];
 }
 
@@ -357,7 +357,7 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
     eveningProducts: [],
     tailoringProducts: [],
     fallEditProducts: [],
-    whiteEditProducts: [],
+    leatherEditProducts: [],
     saleProducts: [],
   });
 

@@ -112,17 +112,12 @@ export const COLLECTION_CANONICAL_SLUGS: Record<string, string[]> = {
   evening: ["evening", "occasion-edit", "silk-occasion", "evening-edit"],
   tailoring: ["tailoring", "tailoring-edit"],
   "fall-edit": ["fall-edit", "city-wardrobe", "summer-in-the-city"],
-  "white-edit": ["white-edit", "the-white-edit"],
+  "leather-edit": ["leather-edit", "the-leather-edit", "white-edit", "the-white-edit"],
 };
-
-const WHITE_EDIT_COLORS = ["white", "ivory", "cream", "ecru", "off-white"];
 
 export function applyCollectionFilter(query: any, collection: string): any {
   const slugs = COLLECTION_CANONICAL_SLUGS[collection] || [collection];
   const slugConditions = slugs.map((slug) => `collection_slugs.cs.{${slug}}`);
-  if (collection === "white-edit") {
-    slugConditions.push(`color.in.(${WHITE_EDIT_COLORS.join(",")})`);
-  }
   return query.or(slugConditions.join(","));
 }
 

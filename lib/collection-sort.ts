@@ -5,22 +5,17 @@ import type { CollectionSlug } from "./collection-pages";
 import { collectionEditorialScore } from "./collection-editorial";
 import type { Product } from "./supabase-server";
 
-/** White Edit — priority brands surface first (dresses & editorial over mall tees). */
-export const WHITE_EDIT_PRIORITY_BRAND_SLUGS = [
-  "faithfull-the-brand",
-  "faithfull",
-  "zimmermann",
-  "posse",
+/** Leather Edit — prestige leather houses surface first. */
+export const LEATHER_EDIT_PRIORITY_BRAND_SLUGS = [
+  "saint-laurent",
   "the-row",
+  "toteme",
   "isabel-marant",
-  "alc",
-  "a-l-c",
-  "a-l-c-",
-  "sir",
-  "alemais",
-  "rixo",
   "nili-lotan",
+  "rag-and-bone",
   "reformation",
+  "allsaints",
+  "deadwood",
 ] as const;
 
 /** Evening — luxury houses open the collection; sort by prestige tier then price. */
@@ -55,17 +50,16 @@ function brandSlugMatches(slug: string, name: string, keys: readonly string[]): 
   return 0;
 }
 
-export function whiteEditBrandPriorityScore(product: Product): number {
+export function leatherEditBrandPriorityScore(product: Product): number {
   const slug = (product.brandSlug || "").toLowerCase();
   const name = (product.brandName || "").toLowerCase();
   const productName = (product.name || "").toLowerCase();
-  const tier = brandSlugMatches(slug, name, WHITE_EDIT_PRIORITY_BRAND_SLUGS);
+  const tier = brandSlugMatches(slug, name, LEATHER_EDIT_PRIORITY_BRAND_SLUGS);
   let score = tier * 10_000;
-  if (tier > 0) score += collectionEditorialScore(product, "white-edit");
-  // Dresses & gowns before basic tees within non-priority tail
-  if (/dress|gown|midi|maxi/i.test(productName)) score += 200;
+  if (tier > 0) score += collectionEditorialScore(product, "leather-edit");
+  if (/jacket|coat|boot|bag|skirt|trouser/i.test(productName)) score += 200;
   if (/\b(tee|t-?shirt)\b/i.test(productName)) score -= 300;
-  if (tier === 0) score += collectionEditorialScore(product, "white-edit") * 0.1;
+  if (tier === 0) score += collectionEditorialScore(product, "leather-edit") * 0.1;
   return score;
 }
 
@@ -79,9 +73,9 @@ export function eveningCollectionRankScore(product: Product): number {
 }
 
 /** Round-robin across brands so one label cannot monopolize the first page. */
-function interleaveWhiteEditProducts<T extends Product>(products: T[]): T[] {
+function interleaveLeatherEditProducts<T extends Product>(products: T[]): T[] {
   const scored = [...products].sort(
-    (a, b) => whiteEditBrandPriorityScore(b) - whiteEditBrandPriorityScore(a)
+    (a, b) => leatherEditBrandPriorityScore(b) - leatherEditBrandPriorityScore(a)
   );
 
   const byBrand = new Map<string, T[]>();
@@ -95,7 +89,7 @@ function interleaveWhiteEditProducts<T extends Product>(products: T[]): T[] {
   const brandOrder = [...byBrand.entries()]
     .sort(
       (a, b) =>
-        whiteEditBrandPriorityScore(b[1][0]!) - whiteEditBrandPriorityScore(a[1][0]!)
+        leatherEditBrandPriorityScore(b[1][0]!) - leatherEditBrandPriorityScore(a[1][0]!)
     )
     .map(([brand]) => brand);
 
@@ -120,8 +114,8 @@ export function sortProductsForCollection<T extends Product>(
   products: T[],
   slug: CollectionSlug
 ): T[] {
-  if (slug === "white-edit") {
-    return interleaveWhiteEditProducts(products);
+  if (slug === "leather-edit") {
+    return interleaveLeatherEditProducts(products);
   }
   if (slug === "evening") {
     return [...products].sort(

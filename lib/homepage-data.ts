@@ -163,7 +163,7 @@ export interface HomePageData {
   eveningProducts: any[];
   tailoringProducts: any[];
   fallEditProducts: any[];
-  whiteEditProducts: any[];
+  leatherEditProducts: any[];
   saleProducts: any[];
 }
 
@@ -257,7 +257,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     MERCH_RAIL_KEYS.evening,
     MERCH_RAIL_KEYS.tailoring,
     MERCH_RAIL_KEYS.fallEdit,
-    MERCH_RAIL_KEYS.whiteEdit,
+    MERCH_RAIL_KEYS.leatherEdit,
   ] as const;
 
   const [curatedDesigners, platformStats, railsByKey, saleProducts, newInRailPool] =
@@ -311,7 +311,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
   const eveningProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.evening] || []);
   const tailoringProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.tailoring] || []);
   const fallEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.fallEdit] || []);
-  const whiteEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.whiteEdit] || []);
+  const leatherEditProducts = postProcessHomepageMaterialRail(railsByKey[MERCH_RAIL_KEYS.leatherEdit] || []);
 
   console.log(
     "[merch-feed] homepage payload:",
@@ -320,7 +320,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     `evening=${eveningProducts.length}`,
     `tailoring=${tailoringProducts.length}`,
     `fall-edit=${fallEditProducts.length}`,
-    `white-edit=${whiteEditProducts.length}`,
+    `leather-edit=${leatherEditProducts.length}`,
     `sale=${saleProducts.length}`,
     `ms=${Date.now() - t0}`
   );
@@ -337,7 +337,7 @@ async function getHomePageDataFromFeedCache(): Promise<HomePageData> {
     eveningProducts,
     tailoringProducts,
     fallEditProducts,
-    whiteEditProducts,
+    leatherEditProducts,
     saleProducts,
   };
 }
@@ -474,7 +474,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     eveningProducts: [] as Product[],
     tailoringProducts: [] as Product[],
     fallEditProducts: [] as Product[],
-    whiteEditProducts: [] as Product[],
+    leatherEditProducts: [] as Product[],
     saleProducts,
   };
 }
@@ -498,6 +498,6 @@ export const getCachedHomePageData = unstable_cache(
     }
     return data;
   },
-  ["homepage-payload-v17"],
+  ["homepage-payload-v18"],
   { revalidate: HOMEPAGE_REVALIDATE_SEC, tags: ["homepage"] }
 );

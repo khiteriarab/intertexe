@@ -70,7 +70,7 @@ export async function refreshCollectionMemberships(
 
   const slugs: CollectionSlug[] = slug
     ? [slug]
-    : (["vacation", "evening", "tailoring", "fall-edit", "white-edit"] as CollectionSlug[]);
+    : (["vacation", "evening", "tailoring", "fall-edit", "leather-edit"] as CollectionSlug[]);
 
   const counts: Record<string, number> = {};
 

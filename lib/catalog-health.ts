@@ -134,7 +134,7 @@ export async function runCatalogSmokeTests(): Promise<{
   checks.push(await timedFetch("/"));
   checks.push(await timedFetch("/api/catalog?mode=search&q=linen&limit=8&region=us&skipCount=1"));
   checks.push(await timedFetch("/api/catalog?mode=brand&slug=dissh&limit=12&offset=0&region=us&skipCount=1"));
-  checks.push(await timedFetch("/api/catalog?mode=collection&slug=white-edit&limit=8&region=us&skipCount=1"));
+  checks.push(await timedFetch("/api/catalog?mode=collection&slug=leather-edit&limit=8&region=us&skipCount=1"));
   checks.push(await timedFetch("/api/sale?limit=12&offset=0&region=us&skipCount=1"));
   checks.push(await timedFetch("/api/catalog?mode=search&q=cotton&limit=4&region=us&skipCount=1"));
   checks.push(await timedFetch("/khiteri"));
@@ -338,7 +338,7 @@ export async function computeCatalogHealthScore(
       key: "materials",
       label: "Materials",
       weight: 5,
-      ok: smokeResult.checks.some((c) => c.name.includes("white-edit") && c.ok),
+      ok: smokeResult.checks.some((c) => c.name.includes("leather-edit") && c.ok),
       detail: "collection smoke",
     },
     {

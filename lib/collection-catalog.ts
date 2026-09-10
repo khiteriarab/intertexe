@@ -10,7 +10,6 @@ import { sortProductsForCollection } from "./collection-sort";
 import { isEditorialWomensApparel } from "./catalog-product-filters";
 import type { Product } from "./supabase-server";
 import { catalogDedupeKey } from "./catalog-rules";
-import { qualifiesForWhiteEditProduct } from "./white-edit-qualifies";
 
 export type CollectionCatalogQuery = {
   fiber?: string;
@@ -50,22 +49,21 @@ export const COLLECTION_CATALOG_QUERIES: Record<CollectionSlug, CollectionCatalo
     { search: "suede" },
     { search: "cashmere knit" },
     { fiber: "wool", category: "outerwear" },
-    { search: "leather" },
   ],
-  "white-edit": [
-    { search: "white" },
-    { search: "ivory" },
-    { search: "cream" },
-    { search: "ecru" },
-    { fiber: "linen", category: "dresses" },
-    { fiber: "cotton", category: "dresses" },
-    { fiber: "linen" },
-    { fiber: "cotton" },
+  "leather-edit": [
+    { search: "leather" },
+    { search: "suede" },
+    { search: "shearling" },
+    { category: "outerwear", search: "leather" },
+    { category: "outerwear", search: "suede" },
+    { search: "leather jacket" },
+    { search: "leather skirt" },
   ],
 };
 
-function isWhiteEditTonal(product: Product): boolean {
-  return qualifiesForWhiteEditProduct(product);
+function isLeatherEditProduct(product: Product): boolean {
+  const text = `${product.name || ""} ${product.category || ""} ${product.composition || ""}`.toLowerCase();
+  return /leather|suede|nappa|lambskin|shearling|calfskin/.test(text);
 }
 
 export function isCollectionEligible(
@@ -77,13 +75,13 @@ export function isCollectionEligible(
   const slugs = (product.collectionSlugs || []).map((s) => s.toLowerCase());
   const canonical = COLLECTION_CANONICAL_SLUGS[slug] || [];
   if (canonical.some((c) => slugs.includes(c))) {
-    if (slug === "white-edit") return isWhiteEditTonal(product);
+    if (slug === "leather-edit") return isLeatherEditProduct(product);
     if (slug === "evening") return collectionEditorialScore(product, slug) > 0;
     return true;
   }
 
-  if (slug === "white-edit") {
-    return collectionEditorialScore(product, slug) > 0 && isWhiteEditTonal(product);
+  if (slug === "leather-edit") {
+    return collectionEditorialScore(product, slug) > 0 && isLeatherEditProduct(product);
   }
 
   return collectionEditorialScore(product, slug) > 0;

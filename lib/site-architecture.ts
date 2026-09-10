@@ -58,12 +58,12 @@ export const COLLECTION_SECTIONS = [
     subtitle: "Transitional luxury. Cashmere that layers. Suede with weight. Verified.",
   },
   {
-    slug: "white-edit",
-    label: "The White Edit",
-    href: "/collections/white-edit",
-    railKey: "collections:white-edit",
-    kicker: "All white",
-    subtitle: "White in every form. Ivory. Chalk. Cream. All natural.",
+    slug: "leather-edit",
+    label: "The Leather Edit",
+    href: "/collections/leather-edit",
+    railKey: "collections:leather-edit",
+    kicker: "Leather & suede",
+    subtitle: "Leather with weight. Suede with texture. Jackets, skirts, boots — verified.",
   },
 ] as const;
 

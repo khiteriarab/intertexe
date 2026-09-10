@@ -50,9 +50,9 @@ export const HOMEPAGE_RAIL_LABELS: Record<string, { title: string; subtitle: str
     title: "The Fall Edit",
     subtitle: "Transitional luxury. Cashmere that layers. Suede with weight. Verified.",
   },
-  whiteEditProducts: {
-    title: "The White Edit",
-    subtitle: "White in every form. Ivory. Chalk. Cream. All natural.",
+  leatherEditProducts: {
+    title: "The Leather Edit",
+    subtitle: "Leather with weight. Suede with texture. Jackets, skirts, boots — verified.",
   },
   saleProducts: { title: "Sale", subtitle: "Natural fibers, reduced" },
 };

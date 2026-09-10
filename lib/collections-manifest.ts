@@ -4,7 +4,7 @@ import { COLLECTION_SECTIONS } from "./site-architecture";
 /** Seasonal menu layout — change hero/grid here without an app release. */
 export const COLLECTIONS_MENU = {
   heroSlug: "fall-edit" as CollectionSlug,
-  gridSlugs: ["vacation", "evening", "tailoring", "white-edit"] as const,
+  gridSlugs: ["vacation", "evening", "tailoring", "leather-edit"] as const,
 };
 
 const MENU_LABELS: Record<CollectionSlug, string> = {
@@ -12,7 +12,7 @@ const MENU_LABELS: Record<CollectionSlug, string> = {
   evening: "Evening",
   tailoring: "Tailoring",
   "fall-edit": "The Fall Edit",
-  "white-edit": "The White Edit",
+  "leather-edit": "The Leather Edit",
 };
 
 const GRID_SUBLINES: Record<CollectionSlug, string> = {
@@ -20,7 +20,7 @@ const GRID_SUBLINES: Record<CollectionSlug, string> = {
   evening: "After dark.",
   tailoring: "Outlast every trend.",
   "fall-edit": "Cashmere & suede.",
-  "white-edit": "Ivory. Chalk. Cream.",
+  "leather-edit": "Leather & suede.",
 };
 
 const EDITORIAL_INTROS: Record<CollectionSlug, string> = {
@@ -32,14 +32,14 @@ const EDITORIAL_INTROS: Record<CollectionSlug, string> = {
     "A blazer that fits perfectly lasts a decade. These are the structured pieces worth investing in — natural fiber construction that holds its form, season after season.",
   "fall-edit":
     "September is the shift — lighter days, cooler evenings. Cashmere that layers without bulk. Suede with texture and weight. This edit is transitional luxury for the season change — every piece verified for natural fiber content.",
-  "white-edit":
-    "White is not a single color. It is ivory silk, chalk linen, cream cashmere. This edit collects the full spectrum of natural white — every piece independently verified.",
+  "leather-edit":
+    "Leather and suede with real weight — jackets that structure, skirts with movement, boots built to last. Every piece verified for natural leather content and composition transparency.",
 };
 
 const IMAGE_CROP: Record<CollectionSlug, "top" | "center"> = {
   vacation: "top",
   tailoring: "top",
-  "white-edit": "top",
+  "leather-edit": "top",
   evening: "top",
   "fall-edit": "top",
 };
@@ -49,7 +49,7 @@ const CAPTION_PLACEMENT: Record<CollectionSlug, "below" | "overlay"> = {
   "fall-edit": "overlay",
   vacation: "overlay",
   tailoring: "overlay",
-  "white-edit": "overlay",
+  "leather-edit": "overlay",
 };
 
 const HOMEPAGE_TITLES: Record<CollectionSlug, string> = {
@@ -57,7 +57,7 @@ const HOMEPAGE_TITLES: Record<CollectionSlug, string> = {
   evening: "EVENING",
   tailoring: "TAILORING",
   "fall-edit": "THE FALL EDIT",
-  "white-edit": "THE WHITE EDIT",
+  "leather-edit": "THE LEATHER EDIT",
 };
 
 const HOMEPAGE_SUBTITLES: Record<CollectionSlug, string> = {
@@ -65,7 +65,7 @@ const HOMEPAGE_SUBTITLES: Record<CollectionSlug, string> = {
   evening: "The evening edit",
   tailoring: "The tailoring edit",
   "fall-edit": "The fall edit",
-  "white-edit": "Monochrome natural fibers",
+  "leather-edit": "The leather edit",
 };
 
 export type CollectionManifestItem = {
@@ -117,7 +117,7 @@ function manifestItemForSlug(slug: CollectionSlug): CollectionManifestItem {
 
 export function buildCollectionsManifest(): CollectionsManifest {
   return {
-    version: 2,
+    version: 4,
     updatedAt: new Date().toISOString(),
     menu: COLLECTIONS_MENU,
     carouselSlugs: [...COLLECTION_SLUGS],

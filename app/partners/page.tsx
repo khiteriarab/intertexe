@@ -100,8 +100,8 @@ export default function PartnersPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Your products featured in our curated collections — Vacation, Evening, Tailoring, Summer in the
-                  City, The White Edit. Editorial placement alongside verified natural fiber pieces from the
+                  Your products featured in our curated collections — Vacation, Evening, Tailoring, The Fall Edit,
+                  The Leather Edit. Editorial placement alongside verified natural fiber pieces from the
                   world&apos;s best brands.
                 </p>
               </div>

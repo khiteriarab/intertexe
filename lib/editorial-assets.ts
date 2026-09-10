@@ -15,11 +15,13 @@ const FABRIC_HERO = {
 /** Rag & Bone Ann embroidered slip — hosted on intertexe.com. */
 const SILK_EDITORIAL_HERO = FABRIC_HERO.silk;
 
-/** Zimmermann brand campaign — Fall Edit collection panel. */
-export const ZIMMERMANN_FALL_CAMPAIGN = "/brands/zimmermann.jpg";
+/** Fall Edit — Zimmermann campaign editorial (not homepage denim or Brands We Love dress). */
+export const FALL_EDIT_EDITORIAL_HERO = "/editorial-fall-edit.jpg";
+export const FALL_EDIT_EDITORIAL_HERO_REMOTE =
+  "https://www.zimmermann.com/media/wysiwyg/ZIM-SPRING26_CAMPAIGN_16x9-9_4.jpg";
 
-/** Hosted White Edit hero — bundled in /public for reliable delivery. */
-export const WHITE_EDIT_EDITORIAL_HERO = "/editorial-white-edit.png";
+/** Leather Edit — leather & suede hub cover. */
+export const LEATHER_EDIT_EDITORIAL_HERO = FABRIC_HERO.leather;
 
 /** Hosted tailoring hero — bundled in /public for reliable delivery. */
 export const TAILORING_EDITORIAL_HERO = "/editorial-tailoring.png";
@@ -47,8 +49,8 @@ export const EDITORIAL_HERO = {
   vacation: "/editorial-vacation.jpg",
   evening: EVENING_EDITORIAL_HERO,
   tailoring: TAILORING_EDITORIAL_HERO,
-  "fall-edit": ZIMMERMANN_FALL_CAMPAIGN,
-  "white-edit": WHITE_EDIT_EDITORIAL_HERO,
+  "fall-edit": FALL_EDIT_EDITORIAL_HERO,
+  "leather-edit": LEATHER_EDIT_EDITORIAL_HERO,
   "first-fall-edit": FABRIC_HERO.cashmere,
   "coat-edit": FABRIC_HERO.wool,
   "holiday-edit": EVENING_EDITORIAL_HERO,

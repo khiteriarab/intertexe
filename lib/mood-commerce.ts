@@ -135,7 +135,7 @@ export const MOOD_CATALOG: MoodConfig[] = [
     label: "White Cotton",
     kicker: "Crisp summer",
     description: "Verified white and ivory cotton — not name-only matches.",
-    collection: "white-edit",
+    collection: "vacation",
     searchTerms: ["white cotton", "ivory cotton"],
   },
   {

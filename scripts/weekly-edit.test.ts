@@ -211,7 +211,7 @@ describe("Weekly Edit presentation", () => {
 
   it("titles collections as shopping edits and uses hosted campaign art", () => {
     assert.equal(collectionEditTitle("Vacation"), "The Vacation Edit");
-    assert.equal(collectionEditTitle("The White Edit"), "The White Edit");
+    assert.equal(collectionEditTitle("The Leather Edit"), "The Leather Edit");
     assert.equal(collectionEditTitle("The First Fall Edit"), "The First Fall Edit");
     assert.match(collectionImageUrl("Vacation"), /editorial-vacation/);
     assert.match(collectionImageUrl("The First Fall Edit"), /fabric-cashmere/);

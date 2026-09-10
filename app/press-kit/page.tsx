@@ -184,8 +184,8 @@ export default function PressKitPage() {
             </p>
           </div>
           <div className="press-tile" style={{ backgroundColor: "#FAFAFA" }}>
-            <h3 className="text-[#1C2B2A]">The White Edit</h3>
-            <p>White in every form. Ivory. Chalk. Cream. All natural.</p>
+            <h3 className="text-[#1C2B2A]">The Leather Edit</h3>
+            <p>Leather and suede with real weight — jackets, skirts, boots. All verified.</p>
           </div>
         </div>
       </section>

@@ -63,6 +63,16 @@ const nextConfig = {
         destination: "/collections/fall-edit",
         permanent: true,
       },
+      {
+        source: "/collections/white-edit",
+        destination: "/collections/leather-edit",
+        permanent: true,
+      },
+      {
+        source: "/collections/the-white-edit",
+        destination: "/collections/leather-edit",
+        permanent: true,
+      },
     ];
   },
   async headers() {

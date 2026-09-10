@@ -212,8 +212,8 @@ async function fetchCollectionWithFallback(
     fallbackOpts = { region: "us", category: "outerwear", sort: "new", limit, offset: 0, skipCount: true };
   } else if (slug === "fall-edit") {
     fallbackOpts = { region: "us", fiber: "cashmere", limit, offset: 0, skipCount: true };
-  } else if (slug === "white-edit") {
-    fallbackOpts = { region: "us", search: "white", sort: "new", limit, offset: 0, skipCount: true };
+  } else if (slug === "leather-edit") {
+    fallbackOpts = { region: "us", search: "leather", sort: "new", limit, offset: 0, skipCount: true };
   }
 
   const fallbackProducts = fallbackOpts
@@ -246,13 +246,7 @@ async function fetchCollectionTotalFromDB(collection: string, region: string) {
     .select("id", { count: "exact", head: true })
     .eq("region", region);
 
-  if (collection === "white-edit") {
-    const slugConditions = slugs.map((slug) => `collection_slugs.cs.{${slug}}`);
-    slugConditions.push("color.in.(white,ivory,cream,ecru,off-white)");
-    countQuery = countQuery.or(slugConditions.join(","));
-  } else {
-    countQuery = countQuery.overlaps("collection_slugs", slugs);
-  }
+  countQuery = countQuery.overlaps("collection_slugs", slugs);
 
   const primary = await countQuery;
   return primary.count ?? null;

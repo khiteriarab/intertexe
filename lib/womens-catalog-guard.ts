@@ -94,7 +94,26 @@ export function isMensCatalogRow(row: {
   return false;
 }
 
-/** White Edit — require explicit light color in title; not "white" in unrelated tokens. */
+/** Leather Edit — require leather/suede in product text; exclude faux/vegan. */
+export function qualifiesForLeatherEdit(row: {
+  name?: string;
+  category?: string;
+  composition?: string;
+  collection_slugs?: string[] | null;
+  collectionSlugs?: string[] | null;
+}): boolean {
+  const text = `${row.name || ""} ${row.category || ""} ${row.composition || ""}`.toLowerCase();
+  const slugs = (row.collection_slugs || row.collectionSlugs || []) as string[];
+  const hasEditorialSlug = slugs.some((s) =>
+    /leather-edit|the-leather-edit|white-edit|the-white-edit/.test(String(s))
+  );
+  const hasLeather = /\b(leather|suede|nappa|lambskin|shearling|calfskin)\b/i.test(text);
+  if (!hasLeather && !hasEditorialSlug) return false;
+  if (/\b(faux|vegan|pu leather|pleather|bonded leather|synthetic)\b/i.test(text)) return false;
+  return true;
+}
+
+/** @deprecated White Edit retired — kept for legacy slug backfill. */
 export function qualifiesForWhiteEdit(row: {
   name?: string;
   category?: string;

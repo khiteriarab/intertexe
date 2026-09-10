@@ -42,11 +42,11 @@ const DEFAULT_SLIDES: EditCarouselSlide[] = [
     href: "/collections/fall-edit",
   },
   {
-    slug: "white-edit",
-    title: "The White Edit",
-    kicker: "Monochrome",
-    subtitle: "White in every form. Ivory. Chalk. Cream.",
-    href: "/collections/white-edit",
+    slug: "leather-edit",
+    title: "The Leather Edit",
+    kicker: "Leather & suede",
+    subtitle: "Jackets, skirts, boots — verified leather.",
+    href: "/collections/leather-edit",
   },
 ].map((slide) => ({
   ...slide,

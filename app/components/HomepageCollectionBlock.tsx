@@ -60,7 +60,7 @@ function CollectionProductCard({ product, eager }: { product: any; eager?: boole
  * Desktop: image left, product rail right (avoids ultra-wide crop on landscape heroes).
  */
 /** When true, desktop layout is products left / editorial image right (Evening, Fall Edit). */
-const SHOP_ON_LEFT_SLUGS = new Set(["evening", "fall-edit"]);
+const SHOP_ON_LEFT_SLUGS = new Set(["evening", "fall-edit", "leather-edit"]);
 
 const COLLECTION_RAIL_LIMIT = 20;
 

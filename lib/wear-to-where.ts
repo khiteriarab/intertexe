@@ -46,11 +46,11 @@ const VACATION_MOOD_HERO_BY_SLUG: Partial<Record<MoodSlug, string>> = {
 const MOOD_IMAGES: Partial<Record<MoodSlug, string>> = {
   ...VACATION_MOOD_HERO_BY_SLUG,
   "silk-at-sunset": EDITORIAL_HERO.silk,
-  "white-cotton": EDITORIAL_HERO["white-edit"],
+  "white-cotton": EDITORIAL_HERO.cotton,
   "destination-energy": EDITORIAL_HERO.vacation,
   ibiza: EDITORIAL_HERO.vacation,
   amalfi: EDITORIAL_HERO.linen,
-  hydra: EDITORIAL_HERO["white-edit"],
+  hydra: EDITORIAL_HERO.linen,
   "st-barths": EDITORIAL_HERO.silk,
 };
 

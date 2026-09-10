@@ -51,7 +51,7 @@ export async function GET(request: Request) {
       "evening",
       "tailoring",
       "fall-edit",
-      "white-edit",
+      "leather-edit",
     ] as const) {
       const { data: c, error } = await supabase.rpc("collection_catalog_count", { p_slug: slug });
       collections[slug] = error ? -1 : Number(c ?? 0);
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
       "evening",
       "tailoring",
       "fall-edit",
-      "white-edit",
+      "leather-edit",
     ]) {
       const { count } = await supabase
         .from("homepage_feed_items")

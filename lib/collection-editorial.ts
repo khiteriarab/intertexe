@@ -18,7 +18,7 @@ export const COLLECTION_CANONICAL_SLUGS: Record<CollectionSlug, string[]> = {
   evening: ["evening-edit", "evening"],
   tailoring: ["tailoring-edit", "tailoring"],
   "fall-edit": ["city-wardrobe", "fall-edit", "summer-in-the-city"],
-  "white-edit": ["white-edit", "the-white-edit"],
+  "leather-edit": ["leather-edit", "the-leather-edit", "white-edit", "the-white-edit"],
 };
 
 export const COLLECTION_EDITORIAL: Record<CollectionSlug, CollectionEditorial> = {
@@ -110,31 +110,25 @@ export const COLLECTION_EDITORIAL: Record<CollectionSlug, CollectionEditorial> =
     ],
     exclude: [/swim|bikini|beach|resort|linen short|poplin shirt/i],
   },
-  "white-edit": {
-    slug: "white-edit",
+  "leather-edit": {
+    slug: "leather-edit",
     themes: [
-      "tonal dressing",
-      "whites",
-      "creams",
-      "ivory",
-      "stone",
-      "purity",
-      "softness",
-      "summer elegance",
-      "minimal styling",
-      "airy fabrics",
-      "luxury simplicity",
-      "visual calm",
-      "editorial restraint",
-      "expensive minimalism",
+      "leather outerwear",
+      "suede texture",
+      "investment jackets",
+      "boots and bags",
+      "shearling lining",
+      "rich brown tones",
+      "black leather",
+      "quiet luxury",
+      "structured silhouettes",
+      "city polish",
+      "heritage craft",
     ],
     patterns: [
-      /\bwhite\b|\bivory\b|\bcream\b|\boff[- ]?white\b|\bchalk\b|\bpearl\b|\bsnow\b/i,
+      /leather|suede|nappa|lambskin|shearling|calfskin|leather jacket|leather skirt|leather trouser|leather boot|leather bag/i,
     ],
-    exclude: [
-      /black dress|navy|burgundy|print|floral/i,
-      /\b(tan|camel|khaki|yellow|mustard|gold|brown|beige|sand|taupe|nude|rust|terracotta|olive|orange)\b/i,
-    ],
+    exclude: [/swim|bikini|beach|resort|linen short|poplin shirt|synthetic/i],
   },
 };
 

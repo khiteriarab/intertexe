@@ -24,7 +24,7 @@ export const MERCH_RAIL_KEYS = {
   evening: "collections:evening",
   tailoring: "collections:tailoring",
   fallEdit: "collections:fall-edit",
-  whiteEdit: "collections:white-edit",
+  leatherEdit: "collections:leather-edit",
   designersCurated: "designers:curated",
   sale: "sale:all",
 } as const;

@@ -11,7 +11,7 @@ const COLLECTION_SLUGS = [
   "evening",
   "tailoring",
   "fall-edit",
-  "white-edit",
+  "leather-edit",
 ] as const;
 
 function authorize(request: Request): NextResponse | null {
@@ -61,13 +61,7 @@ export async function GET(request: Request) {
       .select("*", { count: "exact", head: true })
       .eq("region", "us");
 
-    if (slug === "white-edit") {
-      const orParts = canonical.map((s) => `collection_slugs.cs.{${s}}`);
-      orParts.push("color.in.(white,ivory,cream,ecru,off-white)");
-      countQuery = countQuery.or(orParts.join(","));
-    } else {
-      countQuery = countQuery.overlaps("collection_slugs", canonical);
-    }
+    countQuery = countQuery.overlaps("collection_slugs", canonical);
 
     const { count } = await countQuery;
     collectionCounts[slug] = count || 0;

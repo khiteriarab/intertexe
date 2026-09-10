@@ -7,7 +7,7 @@ export type CollectionSlug =
   | "evening"
   | "tailoring"
   | "fall-edit"
-  | "white-edit";
+  | "leather-edit";
 
 export type CollectionPageConfig = {
   slug: CollectionSlug;
@@ -75,18 +75,18 @@ export const COLLECTION_PAGES: Record<CollectionSlug, CollectionPageConfig> = {
     catalogLabel: "Browse full fall edit collection",
     editorialImage: EDITORIAL_HERO["fall-edit"],
   },
-  "white-edit": {
-    slug: "white-edit",
-    title: "The White Edit",
-    kicker: "All white",
+  "leather-edit": {
+    slug: "leather-edit",
+    title: "The Leather Edit",
+    kicker: "Leather & suede",
     description:
-      "White in every form. Ivory. Chalk. Cream. All natural.",
-    atmosphere: "Visual calm · editorial restraint · luxury simplicity",
-    themes: COLLECTION_EDITORIAL["white-edit"].themes,
-    railKey: MERCH_RAIL_KEYS.whiteEdit,
-    catalogHref: "/collections/white-edit",
-    catalogLabel: "Browse full white edit collection",
-    editorialImage: EDITORIAL_HERO["white-edit"],
+      "Leather with weight. Suede with texture. Jackets, skirts, boots — verified natural fiber where it counts.",
+    atmosphere: "Leather · suede · shearling · investment outerwear",
+    themes: COLLECTION_EDITORIAL["leather-edit"].themes,
+    railKey: MERCH_RAIL_KEYS.leatherEdit,
+    catalogHref: "/collections/leather-edit",
+    catalogLabel: "Browse full leather edit collection",
+    editorialImage: EDITORIAL_HERO["leather-edit"],
   },
 };
 

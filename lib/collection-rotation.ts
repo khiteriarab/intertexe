@@ -23,9 +23,9 @@ export const collectionRotation = [
     subline: "Transitional luxury. Cashmere that layers. Suede with weight. Verified.",
   },
   {
-    name: "The White Edit",
-    url: "https://www.intertexe.com/collections/white-edit",
-    subline: "White in every form. Ivory. Chalk. Cream. All natural.",
+    name: "The Leather Edit",
+    url: "https://www.intertexe.com/collections/leather-edit",
+    subline: "Leather with weight. Suede with texture. Jackets, skirts, boots — verified.",
   },
 ];
 

@@ -46,6 +46,30 @@ export const VACATION_HOMEPAGE_EXCLUDE_COLORS = [
   "gunmetal",
 ] as const;
 
+export const LEATHER_EDIT_TERMS = [
+  "leather",
+  "suede",
+  "nappa",
+  "lambskin",
+  "shearling",
+  "calfskin",
+  "leather jacket",
+  "leather skirt",
+  "leather boot",
+] as const;
+
+export function qualifiesForLeatherEditMembership(row: {
+  name?: string | null;
+  composition?: string | null;
+  category?: string | null;
+}): boolean {
+  const text = `${row.name || ""} ${row.composition || ""} ${row.category || ""}`.toLowerCase();
+  if (!LEATHER_EDIT_TERMS.some((term) => text.includes(term))) return false;
+  if (/\b(faux|vegan|pu leather|pleather|bonded leather|synthetic)\b/i.test(text)) return false;
+  return true;
+}
+
+/** @deprecated White Edit retired — kept for legacy slug backfill scripts. */
 export const WHITE_EDIT_TERMS = [
   "white",
   "cream",

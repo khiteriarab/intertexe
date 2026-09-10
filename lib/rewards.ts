@@ -9,7 +9,7 @@ export const REWARDS_EDITORIAL_TILES = [
   { src: "/editorial-vacation.jpg", href: "/collections/vacation", alt: "Vacation edit", objectPosition: "center 22%" },
   { src: "/fabrics/fabric-wool.jpg", href: "/materials/wool", alt: "Wool edit", objectPosition: "center top" },
   { src: "/fabrics/fabric-cotton.jpg", href: "/materials/cotton", alt: "Cotton edit", objectPosition: "center top" },
-  { src: "/editorial-white-edit.png", href: "/collections/white-edit", alt: "The White Edit", objectPosition: "center top" },
+  { src: "/fabrics/fabric-leather.jpg", href: "/collections/leather-edit", alt: "The Leather Edit", objectPosition: "center top" },
   {
     src: "/brands/zimmermann.jpg",
     href: "/shop?sort=new",
