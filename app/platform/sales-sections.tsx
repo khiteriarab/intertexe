@@ -300,7 +300,7 @@ export function SalesConsumerSection() {
 
 export function SalesPlatformBreadthSection() {
   return (
-    <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-24">
+    <section className="bg-[#faf9f7] border-y border-[#e8e3da]/60 py-16 sm:py-20 lg:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <Eyebrow>Platform breadth</Eyebrow>
         <Heading className="mb-4">One workspace for product intelligence.</Heading>
@@ -320,8 +320,8 @@ export function SalesPlatformBreadthSection() {
 export function SalesCtaSection() {
   const signIn = getEnterpriseLoginUrl();
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 lg:py-24">
-      <div className="border border-[#e8e3da] bg-[#f7f5f1] p-10 sm:p-14 text-center">
+    <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 lg:py-24 pb-24">
+      <div className="rounded-3xl border border-[#e8e3da]/80 bg-white p-10 sm:p-14 text-center shadow-[0_32px_80px_rgba(22,21,19,0.05)]">
         <Eyebrow>Founding Pilot</Eyebrow>
         <Heading className="mb-4">Start with your own product data.</Heading>
         <Body className="max-w-xl mx-auto mb-8">

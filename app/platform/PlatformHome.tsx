@@ -1,24 +1,18 @@
+import { PlatformFeatureScroll } from "./PlatformFeatureScroll";
+import { PlatformHero } from "./PlatformHero";
+import { PlatformTestimonials } from "./PlatformTestimonials";
 import {
-  SalesConsumerSection,
   SalesCtaSection,
-  SalesGovernedRecordSection,
-  SalesHeroSection,
-  SalesIntelligenceSection,
-  SalesOutputsSection,
   SalesPlatformBreadthSection,
-  SalesWhatItIsSection,
 } from "./sales-sections";
 
-/** Public B2B sales page — intertexe.com/platform (8 sections) */
+/** Public B2B sales page — intertexe.com/platform */
 export function PlatformHome() {
   return (
     <div>
-      <SalesHeroSection />
-      <SalesIntelligenceSection />
-      <SalesWhatItIsSection />
-      <SalesGovernedRecordSection />
-      <SalesOutputsSection />
-      <SalesConsumerSection />
+      <PlatformHero />
+      <PlatformFeatureScroll />
+      <PlatformTestimonials />
       <SalesPlatformBreadthSection />
       <SalesCtaSection />
     </div>

@@ -12,8 +12,8 @@ export function PlatformChrome({
   active?: PlatformNavKey;
 }) {
   return (
-    <div className="min-h-screen bg-[#f7f5f1] text-[#161513]">
-      <PlatformNav active={active} tone={active === "platform" || active === "demo" ? "dark" : "light"} />
+    <div className="min-h-screen bg-[#faf9f7] text-[#161513]">
+      <PlatformNav active={active} tone="light" />
       {children}
       <footer className="border-t border-[#e8e3da] px-4 sm:px-6 md:px-8 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-4">

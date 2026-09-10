@@ -1,5 +1,20 @@
 /* B2B platform storytelling motion — scoped to /platform routes via PlatformChrome import */
 
+@keyframes platform-hero-card-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.platform-hero-card {
+  animation: platform-hero-card-in 0.45s ease-out both;
+}
+
 @keyframes b2b-pulse-line {
   0% {
     transform: scaleX(0);
