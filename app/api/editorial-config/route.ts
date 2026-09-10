@@ -14,18 +14,27 @@ import { buildHomepageMerchandisingManifest } from "../../../lib/homepage-mercha
 
 export const revalidate = 300;
 
+/** iOS reads homepageHeroSlides from this API — not the web bundle. */
+function homepageHeroSlidesForApp() {
+  return HOMEPAGE_HERO_SLIDES.map((slide) => ({
+    ...slide,
+    // App Store builds that predate objectPositionApp only honor objectPosition.
+    objectPosition: slide.objectPositionApp ?? slide.objectPosition,
+  }));
+}
+
 /** Remote editorial + fabric cover URLs for iOS/web clients (update without app release). */
 export async function GET() {
   return NextResponse.json(
     {
-      version: 1,
+      version: 2,
       updatedAt: new Date().toISOString(),
       heroes: EDITORIAL_HERO,
       fabrics: fabricImages,
       brands: BRAND_WE_LOVE_IMAGES,
       homepageHeroMobile: HOMEPAGE_HERO_IMAGE_MOBILE,
       homepageHeroDesktop: HOMEPAGE_HERO_IMAGE_DESKTOP,
-      homepageHeroSlides: HOMEPAGE_HERO_SLIDES,
+      homepageHeroSlides: homepageHeroSlidesForApp(),
       homepageHeroSwapMs: HOMEPAGE_HERO_SWAP_MS,
       collections: buildCollectionsManifest(),
       promoMessages: [...PROMO_MESSAGES],
