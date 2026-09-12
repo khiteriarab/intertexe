@@ -28,6 +28,10 @@ const FAQ: { q: string; a: ReactNode }[] = [
     a: "Three modes, not mutually exclusive: INTERTEXE Hosted (Editorial, Trace, Essential, Circular templates — included in Platform plans), White Label (your branded passport domain — Professional/Enterprise), and Headless API (structured passport JSON for your app or website — Enterprise). Hosted is zero development; headless is maximum control.",
   },
   {
+    q: "Can I see a live example before buying?",
+    a: "Yes. Scan the case study QR on intertexe.com/platform — it opens a published Customer Zero passport with real product photography and a full governed lifecycle (raw material through next life). That is exactly what your customers would see when they scan a garment QR.",
+  },
+  {
     q: "What data do we need to start?",
     a: "Existing data. CSV, Excel, JSON, a PLM/PIM export or a supplier file. INTERTEXE identifies what can be used and what remains missing.",
   },

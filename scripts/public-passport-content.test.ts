@@ -43,4 +43,30 @@ describe("public passport content — data integrity", () => {
     const mfg = content.journeyStages.find((s) => s.id === "manufacturing");
     assert.equal(mfg?.status, "unavailable");
   });
+
+  it("builds full lifecycle from governed trace nodes and public fields", () => {
+    const content = buildConsumerPassportContent({
+      productName: "Linen Shirt",
+      snapshotFields: [
+        { key: "composition", value: "100% Linen" },
+        { key: "manufacturing_country", value: "PT" },
+        { key: "care_instructions", value: "Cold wash · Line dry" },
+        { key: "distribution", value: "European distribution" },
+        { key: "retail_market", value: "Barcelona" },
+      ],
+      traceNodes: [
+        { tier: 4, tier_label: "Raw material", facility_name: "Flax cultivation", country_code: "FR" },
+        { tier: 3, tier_label: "Processing", facility_name: "Linen scutching", country_code: "FR" },
+        { tier: 2, tier_label: "Fabric", facility_name: "Woven linen mill", country_code: "IT" },
+        { tier: 1, tier_label: "Manufacturing", facility_name: "Shirt assembly", country_code: "PT" },
+      ],
+    });
+    const ids = content.journeyStages.map((s) => s.id);
+    assert.ok(ids.includes("raw"));
+    assert.ok(ids.includes("fabric"));
+    assert.ok(ids.includes("distribution"));
+    assert.ok(ids.includes("sale"));
+    assert.ok(ids.includes("care"));
+    assert.equal(content.journeyStages.find((s) => s.id === "sale")?.location, "Barcelona");
+  });
 });

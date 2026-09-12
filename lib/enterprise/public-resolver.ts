@@ -59,7 +59,8 @@ export async function resolvePublicPassport(
     .eq("organization_id", passport.organization_id)
     .maybeSingle();
 
-  const [{ data: carriers }, { data: traceNodes }, { data: allVersions }] = await Promise.all([
+  const [{ data: carriers }, { data: traceNodes }, { data: allVersions }, { data: liveFields }] =
+    await Promise.all([
     supabase
       .from("data_carriers")
       .select("id, public_url, carrier_type, state, activated_at, created_at")
@@ -78,17 +79,36 @@ export async function resolvePublicPassport(
       .eq("organization_id", passport.organization_id)
       .eq("passport_id", passport.id)
       .order("version_number", { ascending: true }),
+    supabase
+      .from("normalized_fields")
+      .select("field_key, normalized_value, access_class")
+      .eq("organization_id", passport.organization_id)
+      .eq("product_id", passport.product_id)
+      .eq("access_class", "public"),
   ]);
 
   const snapshot = (version?.snapshot || {}) as Record<string, unknown>;
   const fieldList = Array.isArray(snapshot.fields) ? snapshot.fields : [];
-  const publicFields = filterFieldsForAccess(
+  const snapshotPublicFields = filterFieldsForAccess(
     fieldList.filter((field) => field && typeof field === "object") as Array<{
       access_class?: string | null;
       key?: string;
       value?: string;
     }>
   ) as Array<{ key?: string; value?: string }>;
+
+  const livePublicFields = (liveFields || [])
+    .filter((row) => row.field_key && row.normalized_value)
+    .map((row) => ({ key: row.field_key, value: String(row.normalized_value) }));
+
+  const mergedByKey = new Map<string, { key?: string; value?: string }>();
+  for (const field of snapshotPublicFields) {
+    if (field.key) mergedByKey.set(field.key, field);
+  }
+  for (const field of livePublicFields) {
+    if (field.key) mergedByKey.set(field.key, field);
+  }
+  const publicFields = Array.from(mergedByKey.values());
 
   const publicSnapshot = {
     product_name: snapshot.product_name || product?.name,

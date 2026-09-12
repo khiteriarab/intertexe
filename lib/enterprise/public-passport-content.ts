@@ -93,20 +93,14 @@ function materialBreakdownFromComposition(composition: string | null): Array<{ f
   }));
 }
 
-function tierStage(
-  id: string,
-  eyebrow: string,
-  node: TraceNode | null,
-  fallbackCountry: string | null
-): JourneyStage {
-  const known = Boolean(node?.facility_name || node?.country_code || fallbackCountry);
-  const location = countryLabel(node?.country_code || fallbackCountry);
+function tierStage(id: string, eyebrow: string, node: TraceNode | null): JourneyStage {
+  const known = Boolean(node?.facility_name || node?.country_code);
   return {
     id,
     eyebrow,
     title: node?.facility_name || node?.tier_label || eyebrow,
     detail: known ? node?.tier_label || null : null,
-    location,
+    location: countryLabel(node?.country_code),
     status: known ? "known" : "unavailable",
   };
 }
@@ -116,6 +110,8 @@ function buildJourneyStages(input: {
   manufacturingCountry: string | null;
   manufacturer: string | null;
   facility: string | null;
+  distribution: string | null;
+  retailMarket: string | null;
   traceNodes: TraceNode[];
   imageUrl: string | null;
   productName: string;
@@ -123,37 +119,64 @@ function buildJourneyStages(input: {
   careInstructions: string[] | null;
 }): JourneyStage[] {
   const byTier = new Map(input.traceNodes.map((n) => [n.tier, n]));
+  const tier1 = byTier.get(1) || null;
   const makeCountry = input.manufacturingCountry;
 
   const stages: JourneyStage[] = [
-    tierStage("raw", "Origin", byTier.get(4) || null, null),
-    tierStage("process", "Material", byTier.get(3) || null, null),
-    tierStage("textile", "Textile", byTier.get(2) || null, null),
+    tierStage("raw", "Raw material", byTier.get(4) || null),
+    tierStage("process", "Processing", byTier.get(3) || null),
+    tierStage("fabric", "Fabric", byTier.get(2) || null),
     {
       id: "manufacturing",
       eyebrow: "Manufacturing",
-      title: input.manufacturer || input.facility || "Garment assembly",
-      detail: input.manufacturer || input.facility ? "Manufacturing stage" : null,
-      location: countryLabel(makeCountry),
-      status: input.manufacturer || input.facility || makeCountry ? "known" : "unavailable",
+      title:
+        tier1?.facility_name || input.manufacturer || input.facility || "Garment assembly",
+      detail: tier1?.tier_label || input.manufacturer || null,
+      location: countryLabel(tier1?.country_code || makeCountry),
+      status:
+        tier1?.facility_name || tier1?.country_code || input.manufacturer || input.facility || makeCountry
+          ? "known"
+          : "unavailable",
     },
     {
       id: "product",
       eyebrow: "Product",
       title: input.productName,
-      detail: input.brand,
+      detail: input.composition || input.brand,
       location: null,
       status: "known",
       imageUrl: input.imageUrl,
     },
   ];
 
+  if (input.distribution) {
+    stages.push({
+      id: "distribution",
+      eyebrow: "Distribution",
+      title: input.distribution,
+      detail: null,
+      location: null,
+      status: "known",
+    });
+  }
+
+  if (input.retailMarket) {
+    stages.push({
+      id: "sale",
+      eyebrow: "Sale",
+      title: "Retail",
+      detail: null,
+      location: input.retailMarket,
+      status: "known",
+    });
+  }
+
   if (input.careInstructions?.length) {
     stages.push({
       id: "care",
       eyebrow: "Ownership",
       title: "Care & longevity",
-      detail: input.careInstructions[0] || null,
+      detail: input.careInstructions.join(" · "),
       location: null,
       status: "known",
     });
@@ -162,8 +185,8 @@ function buildJourneyStages(input: {
   stages.push({
     id: "next-life",
     eyebrow: "Next life",
-    title: "Repair · resale · recycling",
-    detail: "See Next Life section for INTERTEXE guidance",
+    title: "Repair · Resell · Donate · Recycle",
+    detail: "INTERTEXE circularity guidance",
     location: null,
     status: "known",
   });
@@ -232,6 +255,8 @@ export function buildConsumerPassportContent(input: {
     fieldValue(fields, "manufacturing_country") || fixture?.country_of_origin || null;
   const manufacturer = fieldValue(fields, "manufacturer");
   const facility = fieldValue(fields, "facility");
+  const distribution = fieldValue(fields, "distribution");
+  const retailMarket = fieldValue(fields, "retail_market");
   const color = fieldValue(fields, "color");
   const careInstructions = parseCare(fieldValue(fields, "care_instructions"));
 
@@ -268,6 +293,8 @@ export function buildConsumerPassportContent(input: {
       manufacturingCountry,
       manufacturer,
       facility,
+      distribution,
+      retailMarket,
       traceNodes: input.traceNodes || [],
       imageUrl,
       productName: input.productName || fixture?.name || "Product",

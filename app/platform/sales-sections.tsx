@@ -104,9 +104,10 @@ export function SalesLifecycleSection() {
             Raw data → governed record → passport → experience → QR → scan → beautiful product page.
           </Heading>
           <Body className="mb-0">
-            INTERTEXE connects fashion brands, product data, and consumers across the full lifecycle of a garment. When
-            it works, you can physically demonstrate what INTERTEXE does in about thirty seconds — scan with an iPhone
-            and show the real photograph, real composition, and every lifecycle stage you actually have evidence for.
+            INTERTEXE connects fashion brands, product data, and consumers across the full lifecycle of a garment. Scan
+            the live case study QR below with an iPhone — you will see the real product photograph, governed composition,
+            and every lifecycle stage backed by evidence in obelisk-core. That is the thirty-second demonstration for
+            prospective clients.
           </Body>
         </div>
         <ProductLifecycleVisual />

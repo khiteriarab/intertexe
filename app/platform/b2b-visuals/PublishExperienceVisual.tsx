@@ -1,3 +1,4 @@
+import { PASSPORT_CASE_STUDY, caseStudyPassportUrl } from "../../../lib/enterprise/passport-case-study";
 import { SERIF } from "../platform-ui";
 
 export function PublishExperienceVisual() {
@@ -96,7 +97,7 @@ export function PublishExperienceVisual() {
                   <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-[#161513]/75 to-transparent">
                     <p className="text-[9px] tracking-[0.12em] uppercase text-white/60">Linen dress</p>
                     <p className="text-xs text-white font-light" style={SERIF}>
-                      100% linen · Portugal
+                      {PASSPORT_CASE_STUDY.composition} · Portugal
                     </p>
                   </div>
                 </div>
@@ -110,15 +111,17 @@ export function PublishExperienceVisual() {
                     />
                   ))}
                 </div>
-                <p className="text-[10px] text-[var(--platform-muted)] mt-2 font-mono">Scan with iPhone → live passport</p>
+                <p className="text-[10px] text-[var(--platform-muted)] mt-2 font-mono break-all">
+                  Scan → {caseStudyPassportUrl().replace(/^https?:\/\//, "")}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
       <figcaption className="mt-3 text-xs text-[var(--platform-quiet)] leading-relaxed">
-        Illustrative publish screen from the enterprise workspace. The full-circle moment: configure, publish, scan, and
-        verify — without leaving your desk.
+        Publish screen from the enterprise workspace. Case study product: {PASSPORT_CASE_STUDY.styleCode}. Configure,
+        publish, scan, and verify — without leaving your desk.
       </figcaption>
     </figure>
   );

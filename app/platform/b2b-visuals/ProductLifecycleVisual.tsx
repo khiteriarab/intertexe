@@ -1,16 +1,9 @@
 "use client";
 
+import Image from "next/image";
+import { PASSPORT_CASE_STUDY } from "../../../lib/enterprise/passport-case-study";
+import { PlatformCaseStudyQr } from "./PlatformCaseStudyQr";
 import { SERIF } from "../platform-ui";
-
-const LIFECYCLE_STAGES = [
-  { stage: "Raw material", detail: "Flax", location: "France" },
-  { stage: "Fabric", detail: "100% linen", location: "Woven in Italy" },
-  { stage: "Manufacturing", detail: "Dress assembled", location: "Portugal" },
-  { stage: "Distribution", detail: "European distribution", location: "" },
-  { stage: "Sale", detail: "Retail", location: "Barcelona" },
-  { stage: "Ownership", detail: "Wash cold · air dry · repair guidance", location: "" },
-  { stage: "Next life", detail: "Repair → Resell → Donate → Recycle", location: "" },
-] as const;
 
 const FLOW_STEPS = [
   "Raw data",
@@ -36,21 +29,28 @@ export function ProductLifecycleVisual() {
                 "repeating-linear-gradient(-18deg, transparent, transparent 22px, rgba(196,165,116,0.08) 22px, rgba(196,165,116,0.08) 23px)",
             }}
           />
-          <div className="relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-8 lg:gap-12 items-start">
+          <div className="relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8 lg:gap-12 items-start">
             <div>
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--platform-accent)] mb-3">Example · Linen dress</p>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--platform-accent)] mb-3">
+                Live case study · Customer Zero
+              </p>
               <h3 className="text-2xl sm:text-[1.75rem] font-light text-[var(--platform-primary)] mb-3" style={SERIF}>
-                One structured product journey — not webpage copy.
+                Scan the QR. See the full product lifecycle your customer would see.
               </h3>
+              <p className="text-sm text-[var(--platform-muted)] leading-relaxed mb-2">
+                <span className="font-medium text-[var(--platform-primary)]">{PASSPORT_CASE_STUDY.productName}</span>
+                {" · "}
+                {PASSPORT_CASE_STUDY.composition}
+              </p>
               <p className="text-sm text-[var(--platform-muted)] leading-relaxed mb-6">
-                Each stage is governed data in obelisk-core: evidence, source, public/private status, and approval
-                state. The same record powers passports, hosted experiences, white-label domains, and headless API
-                responses.
+                Every stage below is governed data in obelisk-core — traceability tiers, public fields, evidence, and
+                approval state. Not marketing copy. The same record powers hosted passports, white-label domains, and
+                headless API responses.
               </p>
               <ol className="space-y-0">
-                {LIFECYCLE_STAGES.map((item, index) => (
+                {PASSPORT_CASE_STUDY.lifecycleStages.map((item, index) => (
                   <li key={item.stage} className="relative pl-6 pb-4 last:pb-0">
-                    {index < LIFECYCLE_STAGES.length - 1 ? (
+                    {index < PASSPORT_CASE_STUDY.lifecycleStages.length - 1 ? (
                       <span
                         className="absolute left-[7px] top-5 bottom-0 w-px bg-[var(--platform-accent)]/35"
                         aria-hidden
@@ -72,7 +72,7 @@ export function ProductLifecycleVisual() {
 
             <div className="rounded-xl border border-[var(--platform-border)] bg-white/90 backdrop-blur-sm p-5 sm:p-6">
               <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--platform-quiet)] mb-4">
-                30-second demonstration
+                30-second sales demonstration
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
                 {FLOW_STEPS.map((step, index) => (
@@ -88,41 +88,28 @@ export function ProductLifecycleVisual() {
                   </span>
                 ))}
               </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="rounded-lg border border-[var(--platform-border)] overflow-hidden">
-                  <div className="aspect-[4/5] bg-gradient-to-br from-[#e8e0d4] via-[#f0ebe3] to-[#d9cbb8] relative">
-                    <div
-                      className="absolute inset-0 opacity-30"
-                      aria-hidden
-                      style={{
-                        backgroundImage:
-                          "radial-gradient(circle at 30% 20%, rgba(201,169,98,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(212,196,168,0.5) 0%, transparent 45%)",
-                      }}
-                    />
-                    <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[#161513]/70 to-transparent">
-                      <p className="text-[10px] tracking-[0.14em] uppercase text-white/70">Consumer preview</p>
-                      <p className="text-sm text-white font-light mt-1" style={SERIF}>
-                        Linen dress · Editorial
-                      </p>
-                    </div>
+              <div className="grid sm:grid-cols-2 gap-4 items-start">
+                <div className="rounded-lg border border-[var(--platform-border)] overflow-hidden relative aspect-[4/5] bg-[var(--platform-highlight)]">
+                  <Image
+                    src={PASSPORT_CASE_STUDY.imageUrl}
+                    alt={PASSPORT_CASE_STUDY.productName}
+                    fill
+                    className="object-cover"
+                    sizes="240px"
+                    unoptimized
+                  />
+                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[#161513]/75 to-transparent">
+                    <p className="text-[10px] tracking-[0.14em] uppercase text-white/70">Consumer passport</p>
+                    <p className="text-sm text-white font-light mt-1" style={SERIF}>
+                      {PASSPORT_CASE_STUDY.template} template
+                    </p>
                   </div>
                 </div>
-                <div className="flex flex-col justify-center gap-4 p-2">
-                  <div className="rounded-lg border border-[var(--platform-border)] p-4 text-center bg-[var(--platform-highlight)]">
-                    <div className="mx-auto w-16 h-16 border border-[var(--platform-border)] bg-white grid grid-cols-4 grid-rows-4 gap-0.5 p-1.5 mb-2">
-                      {Array.from({ length: 16 }).map((_, i) => (
-                        <span
-                          key={i}
-                          className={`block ${i % 3 === 0 ? "bg-[var(--platform-primary)]" : "bg-[var(--platform-border)]"}`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-muted)]">Scannable QR</p>
-                    <p className="font-mono text-[10px] text-[var(--platform-primary)] mt-1">intertexe.com/p/abc123</p>
-                  </div>
-                  <p className="text-xs text-[var(--platform-muted)] leading-relaxed text-center sm:text-left">
-                    Scan beside your desk. See the real photograph, real composition, and every lifecycle stage you
-                    approved — in about thirty seconds.
+                <div className="flex flex-col gap-4">
+                  <PlatformCaseStudyQr compact />
+                  <p className="text-xs text-[var(--platform-muted)] leading-relaxed">
+                    Point your iPhone at the QR beside your laptop. You will see the real product photograph, full
+                    lifecycle journey, composition, care, and circularity guidance — exactly as your customer would.
                   </p>
                 </div>
               </div>
@@ -131,8 +118,8 @@ export function ProductLifecycleVisual() {
         </div>
       </div>
       <figcaption className="mt-3 text-xs text-[var(--platform-quiet)] leading-relaxed">
-        Illustrative product journey. INTERTEXE does not fabricate care, origin, or circularity data — only surfaces what
-        your governed record contains.
+        Customer Zero pilot product {PASSPORT_CASE_STUDY.styleCode}. INTERTEXE surfaces only governed, approved data —
+        unavailable stages remain explicitly marked on the passport.
       </figcaption>
     </figure>
   );

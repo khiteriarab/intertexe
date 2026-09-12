@@ -39,7 +39,8 @@
     "test:enterprise-orchestration": "node --import tsx --test scripts/enterprise-orchestration.test.ts",
     "test:public-passport": "node --import tsx --test scripts/public-passport-content.test.ts",
     "audit:pilot-passports": "npx tsx scripts/audit-pilot-passports.ts",
-    "provision:pilot-qr": "npx tsx scripts/provision-pilot-qr.ts"
+    "provision:pilot-qr": "npx tsx scripts/provision-pilot-qr.ts",
+    "provision:case-study": "npx tsx scripts/provision-case-study-lifecycle.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -151,7 +151,7 @@ export function JourneyBlock({ content }: { content: ConsumerPassportContent }) 
   if (!knownStages.length) return null;
   return (
     <section className="itx-passport-section">
-      <h2 className="itx-passport-section-title">Traceability</h2>
+      <h2 className="itx-passport-section-title">Product journey</h2>
       <div className="itx-passport-journey">
         {content.journeyStages.map((stage) => (
           <div
