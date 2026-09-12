@@ -49,8 +49,10 @@ export function PassportPreviewPanel({
         ))}
       </div>
 
-      {tab === "qr" && absoluteUrl && publicId ? (
-        <QrCodeActions url={absoluteUrl} publicId={publicId} />
+      {tab === "qr" && publicId ? (
+        <QrCodeActions url={absoluteUrl || `/p/${publicId}`} publicId={publicId} />
+      ) : tab === "qr" ? (
+        <p className="text-sm text-[var(--ent-muted)]">Identity provisioning in progress — reload in a moment.</p>
       ) : null}
 
       {tab !== "qr" ? (

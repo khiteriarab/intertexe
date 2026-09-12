@@ -46,12 +46,20 @@ export default async function PublicIdPage({
       ...DEFAULT_EXPERIENCE,
     };
     return (
-      <PassportExperienceRenderer
-        content={view.consumer}
-        experience={experience}
-        publicId={view.publicId}
-        versionNumber={view.versionNumber}
-      />
+      <>
+        {view.preview ? (
+          <div className="bg-[#1a1f22] text-white/90 text-center text-xs tracking-[0.12em] uppercase py-2 px-4">
+            Preview passport — publish to activate the live resolver
+          </div>
+        ) : null}
+        <PassportExperienceRenderer
+          content={view.consumer}
+          experience={experience}
+          publicId={view.publicId}
+          versionNumber={view.versionNumber}
+          preview={view.preview}
+        />
+      </>
     );
   }
 

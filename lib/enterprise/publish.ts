@@ -6,6 +6,7 @@ import { buildIdentifierBundle } from "./identifiers";
 import { integrityHash } from "./integrity";
 import { ITX_RULESET_VERSION } from "./intelligence";
 import { ITX_ONTOLOGY_VERSION } from "./ontology";
+import { validationIssueBlocksPublish } from "./issue-copy";
 import { evaluatePublishability } from "./publishability";
 import { emitWorkflowEvent } from "./workflow-events";
 import { dispatchWebhookEvent } from "./webhooks-admin";
@@ -57,8 +58,12 @@ export async function publishabilityForProduct(
   const identityPresent = Boolean(product?.name && (product.sku || product.style_code || fieldMap.get("gtin")));
   const requiredFieldsPresent = Boolean(product?.name && composition?.normalized_value);
   const criticalConflicts = (issues || []).filter((row) => row.issue_type === "conflict").length;
-  const criticalValidations = (issues || []).filter(
-    (row) => row.issue_type === "validation" && (row.severity === "critical" || row.severity === "high")
+  const criticalValidations = (issues || []).filter((row) =>
+    validationIssueBlocksPublish({
+      issue_type: row.issue_type,
+      title: row.title || "",
+      severity: row.severity,
+    })
   ).length;
   const unresolvedMissingData = (issues || []).filter(
     (row) => row.issue_type === "missing_data" && (row.severity === "critical" || row.severity === "high")

@@ -17,7 +17,7 @@ import { loadProductImpactReadiness } from "../../../../../../lib/enterprise/imp
 import { buildProductProvenanceBundle } from "../../../../../../lib/enterprise/provenance";
 import { loadOrgProduct } from "../../../../../../lib/enterprise/queries";
 import { buildProductJourney } from "../../../../../../lib/enterprise/product-journey";
-import { ensurePassportShell } from "../../../../../../lib/enterprise/carriers";
+import { ensurePassportShell, provisionDraftQrCarrier, publicResolverUrl } from "../../../../../../lib/enterprise/carriers";
 import { publishabilityForProduct } from "../../../../../../lib/enterprise/publish";
 import { loadProductTraceability } from "../../../../../../lib/enterprise/traceability";
 import {
@@ -83,14 +83,28 @@ export default async function ProductRecordPage({
 
   let publishability = await publishabilityForProduct(client, membership.organizationId, productId);
 
-  if (publishability.status === "ready" && !record.passport?.public_id && canMutateEnterprise(membership.role)) {
+  const hasProductIdentity = Boolean(
+    record.product.name && (record.product.sku || record.product.style_code)
+  );
+  const needsPassportShell = !record.passport?.public_id && !record.identityPublicId;
+
+  if (canMutate && hasProductIdentity && needsPassportShell) {
     try {
       await ensurePassportShell(client, membership.organizationId, productId);
+      await provisionDraftQrCarrier(client, membership.organizationId, productId);
       const refreshed = await loadOrgProduct(client, membership.organizationId, productId);
       if (refreshed) Object.assign(record, refreshed);
       publishability = await publishabilityForProduct(client, membership.organizationId, productId);
     } catch {
-      // Shell provisioning is best-effort on overview load
+      // Shell provisioning is best-effort on load
+    }
+  } else if (canMutate && hasProductIdentity && !(record.passport?.carriers || []).some((c) => c.carrier_type === "qr")) {
+    try {
+      await provisionDraftQrCarrier(client, membership.organizationId, productId);
+      const refreshed = await loadOrgProduct(client, membership.organizationId, productId);
+      if (refreshed) Object.assign(record, refreshed);
+    } catch {
+      // Draft QR provisioning is best-effort on load
     }
   }
 
@@ -124,12 +138,13 @@ export default async function ProductRecordPage({
     ...record.relatedIdentifierIssues,
   ];
   const origin = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com").replace(/\/$/, "");
+  const effectivePublicId = record.passport?.public_id || record.identityPublicId || null;
   const journey = buildProductJourney(record, origin);
   const provenance = buildProductProvenanceBundle(record.fields, record.sourceRecords);
-  const publicUrl = record.passport
-    ? record.passport.publicUrl.startsWith("http")
+  const publicUrl = effectivePublicId
+    ? record.passport?.publicUrl?.startsWith("http")
       ? record.passport.publicUrl
-      : `${origin}${record.passport.publicUrl}`
+      : publicResolverUrl(effectivePublicId)
     : null;
   const previewContent = buildPassportPreviewContent({
     product: record.product,
@@ -171,13 +186,37 @@ export default async function ProductRecordPage({
 
         {showPassport ? (
           <div className="space-y-6">
+            <div className="ent-review-panel max-w-3xl">
+              <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--ent-muted-light)] mb-2">Review & publish</p>
+              <p className="ent-heading text-xl text-[var(--ent-ink)] mb-3">
+                {publishability.status === "ready"
+                  ? "Ready to publish"
+                  : effectivePublicId
+                    ? "Preview ready"
+                    : "Not ready yet"}
+              </p>
+              <p className="text-sm text-[var(--ent-muted)] leading-relaxed mb-6">
+                {publishability.status === "ready"
+                  ? "Phase 1 DPP requirements met. Publish to activate the live resolver and QR carrier."
+                  : effectivePublicId
+                    ? `Scan the preview QR — it opens /p/${effectivePublicId}. Resolve blockers to publish: ${publishability.blockers.join("; ")}`
+                    : `Blocking: ${publishability.blockers.join("; ")}`}
+              </p>
+              <ApproveFieldsButton slug={membership.slug} productId={productId} canMutate={canMutate} />
+              <PublishPassportButton
+                slug={membership.slug}
+                productId={productId}
+                canMutate={canMutate}
+                publishReady={publishability.status === "ready"}
+              />
+            </div>
             <PassportExperienceDesigner
               slug={membership.slug}
               productId={productId}
               canMutate={canMutate}
               publishReady={publishability.status === "ready"}
               published={isPublished}
-              publicId={record.passport?.public_id || null}
+              publicId={effectivePublicId}
               absoluteUrl={publicUrl}
               carriers={(record.passport?.carriers as any[]) || []}
               experience={experienceConfig}
@@ -192,7 +231,7 @@ export default async function ProductRecordPage({
               carriers={(record.passport?.carriers as any[]) || []}
               publishReady={publishability.status === "ready"}
               absoluteUrl={publicUrl}
-              publicId={record.passport?.public_id || null}
+              publicId={effectivePublicId}
             />
           </div>
         ) : (
@@ -372,21 +411,32 @@ export default async function ProductRecordPage({
             <div className="ent-review-panel">
               <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--ent-muted-light)] mb-2">Review & publish</p>
               <p className="ent-heading text-xl text-[var(--ent-ink)] mb-3">
-                {publishability.status === "ready" ? "Ready to publish" : "Not ready yet"}
+                {publishability.status === "ready"
+                  ? "Ready to publish"
+                  : effectivePublicId
+                    ? "Preview ready"
+                    : "Not ready yet"}
               </p>
               <p className="text-sm text-[var(--ent-muted)] leading-relaxed mb-6">
                 {publishability.status === "ready"
                   ? "Phase 1 DPP requirements met. Preview public fields, approve, then publish."
-                  : `Blocking: ${publishability.blockers.join("; ")}`}
+                  : effectivePublicId
+                    ? `Preview QR is live at ${effectivePublicId}. Resolve blockers to publish: ${publishability.blockers.join("; ")}`
+                    : `Blocking: ${publishability.blockers.join("; ")}`}
               </p>
               <ApproveFieldsButton slug={membership.slug} productId={productId} canMutate={canMutate} />
-              <PublishPassportButton slug={membership.slug} productId={productId} canMutate={canMutate} />
+              <PublishPassportButton
+                slug={membership.slug}
+                productId={productId}
+                canMutate={canMutate}
+                publishReady={publishability.status === "ready"}
+              />
             </div>
 
             {showOverview && (
               <PassportPreviewPanel
                 content={previewContent}
-                publicId={record.passport?.public_id || null}
+                publicId={effectivePublicId}
                 absoluteUrl={publicUrl}
                 versionNumber={record.passport?.versions.at(-1)?.version_number}
                 published={isPublished}
@@ -401,7 +451,7 @@ export default async function ProductRecordPage({
                 carriers={(record.passport?.carriers as any[]) || []}
                 publishReady={publishability.status === "ready"}
                 absoluteUrl={publicUrl}
-                publicId={record.passport?.public_id || null}
+                publicId={effectivePublicId}
               />
             )}
           </aside>

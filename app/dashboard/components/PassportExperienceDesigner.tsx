@@ -272,8 +272,10 @@ export function PassportExperienceDesigner({
             ))}
           </div>
 
-          {previewTab === "qr" && absoluteUrl && publicId ? (
-            <QrCodeActions url={absoluteUrl} publicId={publicId} size={96} />
+          {previewTab === "qr" && publicId ? (
+            <QrCodeActions url={absoluteUrl || `/p/${publicId}`} publicId={publicId} size={96} />
+          ) : previewTab === "qr" ? (
+            <p className="text-sm text-[var(--ent-muted)]">Identity provisioning in progress — reload in a moment.</p>
           ) : null}
 
           {previewTab !== "qr" ? (

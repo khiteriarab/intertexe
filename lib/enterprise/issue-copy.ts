@@ -68,8 +68,32 @@ export function issueRecommendedAction(issue: {
   return "Resolve, reject, or mark not applicable.";
 }
 
-export function issueBlocksPublish(issue: { status: string; severity: string }): boolean {
-  return issue.status === "open" && (issue.severity === "critical" || issue.severity === "high");
+/** Composition integrity failures block publish; advisory validations do not. */
+export function validationIssueBlocksPublish(issue: {
+  issue_type: string;
+  title: string;
+  severity: string;
+}): boolean {
+  if (issue.issue_type !== "validation") return false;
+  if (issue.severity !== "critical" && issue.severity !== "high") return false;
+  return /percentages do not total 100|composition.*total/i.test(issue.title);
+}
+
+export function issueBlocksPublish(issue: {
+  status: string;
+  severity: string;
+  issue_type?: string;
+  title?: string;
+}): boolean {
+  if (issue.status !== "open") return false;
+  if (issue.issue_type === "validation") {
+    return validationIssueBlocksPublish({
+      issue_type: issue.issue_type,
+      title: issue.title || "",
+      severity: issue.severity,
+    });
+  }
+  return issue.severity === "critical" || issue.severity === "high";
 }
 
 export function issueAffectedField(issue: {

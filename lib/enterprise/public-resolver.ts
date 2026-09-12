@@ -1,6 +1,7 @@
 import { filterFieldsForAccess } from "./access-classes";
 import { getEnterpriseServiceClient } from "./client";
 import { DEMO_BRAND_SLUG } from "./constants";
+import { buildPassportPreviewContent } from "./passport-preview";
 import { buildConsumerPassportContent, type ConsumerPassportContent } from "./public-passport-content";
 import { loadProductExperienceConfig, type PassportExperienceConfig } from "./passport-experience";
 
@@ -10,10 +11,88 @@ export type PublicPassportView = {
   productName?: string;
   state?: string;
   versionNumber?: number;
+  preview?: boolean;
   snapshot?: Record<string, unknown>;
   consumer?: ConsumerPassportContent;
   experience?: PassportExperienceConfig;
 };
+
+async function resolvePreviewPassport(
+  supabase: NonNullable<ReturnType<typeof getEnterpriseServiceClient>>,
+  input: {
+    publicId: string;
+    organizationId: string;
+    productId: string;
+    passportState: string;
+    passportCreatedAt?: string | null;
+  }
+): Promise<PublicPassportView | null> {
+  const [{ data: product }, { data: fields }, { data: traceNodes }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("name, sku, style_code, category, passport_state")
+      .eq("id", input.productId)
+      .eq("organization_id", input.organizationId)
+      .maybeSingle(),
+    supabase
+      .from("normalized_fields")
+      .select("field_key, normalized_value, original_value, access_class")
+      .eq("organization_id", input.organizationId)
+      .eq("product_id", input.productId),
+    supabase
+      .from("supply_chain_nodes")
+      .select("tier, tier_label, facility_name, country_code, data_status")
+      .eq("organization_id", input.organizationId)
+      .eq("product_id", input.productId)
+      .order("tier"),
+  ]);
+
+  if (!product) return null;
+
+  const consumer = buildPassportPreviewContent({
+    product,
+    fields: fields || [],
+    traceability: {
+      productId: input.productId,
+      completenessPct: 0,
+      knownTierCount: (traceNodes || []).filter((node) => node.data_status === "known").length,
+      missingTierLabels: [],
+      tiers: (traceNodes || []).map((node) => ({
+        tier: node.tier,
+        label: node.tier_label || `Tier ${node.tier}`,
+        role: "",
+        status: node.data_status === "known" ? "known" : "unknown",
+        facility: node.facility_name,
+        country: null,
+        countryCode: node.country_code,
+        supplierId: null,
+        supplierName: null,
+        evidenceStatus: null,
+        sourceRecordId: null,
+        confidence: null,
+        nodeId: null,
+      })),
+      warnings: [],
+    },
+    passport: {
+      state: input.passportState,
+      created_at: input.passportCreatedAt || null,
+      versions: [],
+    },
+  });
+
+  const experience = await loadProductExperienceConfig(supabase, input.organizationId, input.productId);
+
+  return {
+    found: true,
+    publicId: input.publicId,
+    productName: product.name || undefined,
+    state: input.passportState,
+    preview: true,
+    consumer,
+    experience,
+  };
+}
 
 export async function resolvePublicPassport(
   publicId: string,
@@ -26,14 +105,42 @@ export async function resolvePublicPassport(
   const supabase = getEnterpriseServiceClient();
   if (!supabase) return unknown;
 
-  const { data: passport } = await supabase
+  let { data: passport } = await supabase
     .from("passports")
     .select("id, public_id, state, organization_id, product_id, current_version_id, created_at")
     .eq("public_id", id)
     .maybeSingle();
 
-  if (!passport) return unknown;
-  if (passport.state !== "published" && passport.state !== "update_required") return unknown;
+  if (!passport) {
+    const { data: identity } = await supabase
+      .from("persistent_identities")
+      .select("public_id, organization_id, product_id")
+      .eq("public_id", id)
+      .eq("active", true)
+      .maybeSingle();
+    if (!identity?.product_id) return unknown;
+    return (
+      (await resolvePreviewPassport(supabase, {
+        publicId: id,
+        organizationId: identity.organization_id,
+        productId: identity.product_id,
+        passportState: "ready",
+      })) || unknown
+    );
+  }
+
+  const isPublished = passport.state === "published" || passport.state === "update_required";
+  if (!isPublished) {
+    return (
+      (await resolvePreviewPassport(supabase, {
+        publicId: id,
+        organizationId: passport.organization_id,
+        productId: passport.product_id,
+        passportState: passport.state,
+        passportCreatedAt: passport.created_at,
+      })) || unknown
+    );
+  }
   if (!passport.current_version_id) return unknown;
 
   const { data: org } = await supabase
@@ -156,6 +263,7 @@ export async function resolvePublicPassport(
     productName: product?.name || undefined,
     state: passport.state,
     versionNumber: version?.version_number,
+    preview: false,
     snapshot: publicSnapshot,
     consumer,
     experience,

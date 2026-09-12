@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseIdentifierIssueDetail } from "./identity-reconciliation";
+import { issueBlocksPublish } from "./issue-copy";
 import { recordNormalizationCandidate } from "./learning-loop";
 import { displayReviewerName } from "./reviewer-display";
 import { emitWorkflowEvent } from "./workflow-events";
@@ -182,13 +183,13 @@ export async function approveProductFields(input: {
     }
   }
 
-  const { count: blocking } = await supabase
+  const { data: openIssues } = await supabase
     .from("issues")
-    .select("id", { count: "exact", head: true })
+    .select("issue_type, severity, title, status")
     .eq("organization_id", input.organizationId)
     .eq("product_id", input.productId)
-    .eq("status", "open")
-    .in("severity", ["critical", "high"]);
+    .eq("status", "open");
+  const blocking = (openIssues || []).filter((row) => issueBlocksPublish(row)).length;
 
   await supabase
     .from("products")
