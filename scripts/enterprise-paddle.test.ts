@@ -29,7 +29,7 @@ describe("Enterprise Paddle billing Phase C", () => {
     const meta = paddlePlanByPriceId("pri_test_founding");
     process.env.PADDLE_PRICE_FOUNDING_PILOT = prev;
     assert.equal(meta?.plan, "founding_pilot");
-    assert.equal(meta?.passportAllowance, 100);
+    assert.equal(meta?.kind, "implementation");
   });
 
   it("verifies Paddle webhook signatures", () => {

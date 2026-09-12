@@ -99,6 +99,53 @@
   animation: b2b-fade-in 0.5s ease-out forwards;
 }
 
+/* Platform scroll showcase — dial + floating card spacing */
+.platform-scroll-showcase {
+  overflow: visible;
+}
+
+.platform-scroll-showcase-dial-wrap {
+  overflow: visible;
+  padding-bottom: clamp(6.5rem, 18vw, 9rem);
+}
+
+.platform-scroll-showcase-dial-wrap--desktop {
+  min-height: min(520px, 72vh);
+  padding-bottom: 5rem;
+}
+
+.platform-scroll-showcase-stage-nav {
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+@media (min-width: 1024px) {
+  .platform-scroll-showcase-grid {
+    align-items: start;
+  }
+
+  .platform-scroll-showcase-col-center {
+    position: sticky;
+    top: 7rem;
+    align-self: start;
+    padding-top: 10vh;
+    padding-bottom: 12vh;
+  }
+
+  .platform-scroll-showcase-col-side {
+    position: sticky;
+    top: 7rem;
+    align-self: start;
+    padding-top: 12vh;
+    padding-bottom: 12vh;
+  }
+}
+
+@media (max-width: 1023px) {
+  .platform-scroll-showcase-mobile-body {
+    margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .b2b-pulse-line,
   .b2b-pulse-line-delay,

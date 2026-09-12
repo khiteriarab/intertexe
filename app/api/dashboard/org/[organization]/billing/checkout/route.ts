@@ -19,7 +19,23 @@ export async function POST(
   }
 
   const body = await request.json().catch(() => ({}));
-  const priceId = String(body.priceId || process.env.PADDLE_PRICE_FOUNDING_PILOT || "").trim();
+  const requestedOrgId = body.organizationId ? String(body.organizationId) : null;
+  if (requestedOrgId && requestedOrgId !== gate.access.membership.organizationId) {
+    return NextResponse.json({ message: "Organization mismatch." }, { status: 403 });
+  }
+
+  const plan = body.plan ? String(body.plan) : null;
+  const priceId = String(
+    body.priceId ||
+      (plan === "platform"
+        ? process.env.PADDLE_PRICE_PLATFORM || process.env.PADDLE_PRICE_SAAS_PLATFORM
+        : plan === "professional"
+          ? process.env.PADDLE_PRICE_PROFESSIONAL || process.env.PADDLE_PRICE_SAAS_PROFESSIONAL
+          : plan === "implementation"
+            ? process.env.PADDLE_PRICE_IMPLEMENTATION || process.env.PADDLE_PRICE_FOUNDING_PILOT
+            : "") ||
+      ""
+  ).trim();
   if (!priceId) {
     return NextResponse.json({ message: "Missing Paddle price ID." }, { status: 400 });
   }

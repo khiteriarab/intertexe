@@ -1,37 +1,64 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  entitlementsForPlan,
   canAddProducts,
+  canPublishNewPassport,
+  entitlementsForPlan,
+  getOrganizationEntitlements,
+  checkUsageAllowance,
   type EntitlementSnapshot,
   type PlanKey,
 } from "./entitlements";
+import {
+  billingAllowsNewResources,
+  billingPreservesPublicPassports,
+  isOverLimit,
+  usageAllowanceMessage,
+  type BillingAccountRow,
+} from "./billing-lifecycle";
 import { incrementUsageMeter, loadUsageMeters } from "./usage-meters";
-import { defaultCheckoutPriceForPlan, isPaddleConfigured } from "./paddle";
+import {
+  checkoutPricesForPlan,
+  defaultCheckoutPriceForPlan,
+  isPaddleConfigured,
+} from "./paddle";
+import { normalizePlanKey, planDefinition } from "./plans";
 import { upgradeHintForPlan } from "./pricing";
 
 export type BillingDashboard = {
   plan: PlanKey;
+  planLabel: string;
   productAllowance: number | null;
   passportAllowance: number | null;
   entitlements: EntitlementSnapshot;
-  meters: Array<{ key: string; used: number; limit: number | null }>;
+  meters: Array<{ key: string; used: number; limit: number | null; overLimit: boolean }>;
   publishedPassportCount: number;
   activeProductCount: number;
   canPublish: boolean;
   publishBlockReason?: string;
+  billingStatus: string;
+  billingProvider: string | null;
+  gracePeriodUntil: string | null;
+  renewalDate: string | null;
+  cancelAtPeriodEnd: boolean;
+  overLimitProducts: boolean;
+  overLimitPassports: boolean;
   billingAccount: {
     contract_value: number | null;
     invoice_status: string | null;
     amount_outstanding: number | null;
     renewal_date: string | null;
     cancellation_state: string | null;
-    stripe_customer_id?: string | null;
-    plan_key?: string | null;
+    billing_status?: string | null;
+    billing_provider?: string | null;
+    grace_period_until?: string | null;
+    cancel_at_period_end?: boolean | null;
+    billing_price_id?: string | null;
     paddle_customer_id?: string | null;
     paddle_subscription_id?: string | null;
   } | null;
   paddleCheckoutAvailable: boolean;
   upgradePriceId: string | null;
+  checkoutPrices: ReturnType<typeof checkoutPricesForPlan>;
 };
 
 export async function loadOrgEntitlements(
@@ -44,23 +71,27 @@ export async function loadOrgEntitlements(
     .eq("id", organizationId)
     .maybeSingle();
 
-  const plan = (org?.plan || "free_snapshot") as PlanKey;
-  return entitlementsForPlan(plan, {
+  const plan = normalizePlanKey(org?.plan || "demo") as PlanKey;
+  return getOrganizationEntitlements({
+    plan,
     productAllowance: org?.product_allowance ?? undefined,
     passportAllowance: org?.passport_allowance ?? undefined,
   });
 }
 
+/** Count distinct products with an active published passport (v1/v2/v3 = one allowance). */
 export async function countPublishedPassports(
   client: SupabaseClient,
   organizationId: string
 ): Promise<number> {
-  const { count } = await client
+  const { data } = await client
     .from("passports")
-    .select("*", { count: "exact", head: true })
+    .select("product_id")
     .eq("organization_id", organizationId)
     .in("state", ["published", "update_required"]);
-  return count || 0;
+
+  const unique = new Set((data || []).map((row) => row.product_id).filter(Boolean));
+  return unique.size;
 }
 
 export async function countActiveProducts(
@@ -77,11 +108,25 @@ export async function countActiveProducts(
 
 export type PublishGateResult =
   | { allowed: true }
-  | { allowed: false; reason: string; code: "plan" | "allowance" | "entitlement" };
+  | { allowed: false; reason: string; code: "plan" | "allowance" | "entitlement" | "billing" };
 
 export type ProductGateResult =
-  | { allowed: true; remaining: number | null }
-  | { allowed: false; reason: string; code: "plan" | "allowance" };
+  | { allowed: true; remaining: number | null; overLimit?: boolean }
+  | { allowed: false; reason: string; code: "plan" | "allowance" | "billing"; overLimit?: boolean };
+
+async function loadBillingAccount(
+  client: SupabaseClient,
+  organizationId: string
+): Promise<BillingAccountRow | null> {
+  const { data } = await client
+    .from("billing_accounts")
+    .select(
+      "billing_status, grace_period_until, cancel_at_period_end, billing_provider, renewal_date, invoice_status, cancellation_state, contract_value, amount_outstanding, billing_price_id, paddle_customer_id, paddle_subscription_id"
+    )
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  return data;
+}
 
 /** Enforce product catalog allowance before import or manual create. */
 export async function assertCanAddProducts(
@@ -89,20 +134,31 @@ export async function assertCanAddProducts(
   organizationId: string,
   additional = 1
 ): Promise<ProductGateResult> {
-  const entitlements = await loadOrgEntitlements(client, organizationId);
-  const activeProductCount = await countActiveProducts(client, organizationId);
-  if (entitlements.productAllowance == null) {
-    return { allowed: true, remaining: null };
-  }
-  const remaining = entitlements.productAllowance - activeProductCount;
-  if (!canAddProducts(entitlements, activeProductCount) || remaining < additional) {
+  const [entitlements, activeProductCount, billing] = await Promise.all([
+    loadOrgEntitlements(client, organizationId),
+    countActiveProducts(client, organizationId),
+    loadBillingAccount(client, organizationId),
+  ]);
+
+  if (!billingAllowsNewResources(billing)) {
     return {
       allowed: false,
-      code: "allowance",
-      reason: `Product allowance reached (${activeProductCount}/${entitlements.productAllowance}). ${upgradeHintForPlan(entitlements.plan)}`,
+      code: "billing",
+      reason: "Billing action required — subscription is restricted. Contact your workspace owner.",
     };
   }
-  return { allowed: true, remaining: remaining - additional };
+
+  const usage = checkUsageAllowance(entitlements, "products", activeProductCount, additional);
+  if (!usage.allowed) {
+    const overMsg = usageAllowanceMessage("products", activeProductCount, entitlements.productAllowance, usage.overLimit);
+    return {
+      allowed: false,
+      code: usage.overLimit ? "allowance" : "allowance",
+      overLimit: usage.overLimit,
+      reason: overMsg || `Product allowance reached. ${upgradeHintForPlan(entitlements.plan)}`,
+    };
+  }
+  return { allowed: true, remaining: usage.remaining, overLimit: false };
 }
 
 export async function recordProductsImported(
@@ -120,7 +176,19 @@ export async function assertCanPublishPassport(
   organizationId: string,
   productId: string
 ): Promise<PublishGateResult> {
-  const entitlements = await loadOrgEntitlements(client, organizationId);
+  const [entitlements, billing] = await Promise.all([
+    loadOrgEntitlements(client, organizationId),
+    loadBillingAccount(client, organizationId),
+  ]);
+
+  if (!billingAllowsNewResources(billing) && !billingPreservesPublicPassports(billing)) {
+    return {
+      allowed: false,
+      code: "billing",
+      reason: "Billing action required before publishing new passports.",
+    };
+  }
+
   if (!entitlements.canPublishPassports) {
     return {
       allowed: false,
@@ -139,13 +207,26 @@ export async function assertCanPublishPassport(
   const alreadyPublished =
     existingPassport?.state === "published" || existingPassport?.state === "update_required";
 
-  if (!alreadyPublished && entitlements.passportAllowance != null) {
+  if (!alreadyPublished) {
+    if (!billingAllowsNewResources(billing)) {
+      return {
+        allowed: false,
+        code: "billing",
+        reason: "New passport publishing is paused while billing is restricted. Existing public passports remain available.",
+      };
+    }
+
     const publishedCount = await countPublishedPassports(client, organizationId);
-    if (publishedCount >= entitlements.passportAllowance) {
+    if (
+      !canPublishNewPassport(entitlements, publishedCount, false)
+    ) {
+      const usage = checkUsageAllowance(entitlements, "hosted_passports", publishedCount, 1);
       return {
         allowed: false,
         code: "allowance",
-        reason: `Passport allowance reached (${publishedCount}/${entitlements.passportAllowance}). ${upgradeHintForPlan(entitlements.plan)}`,
+        reason:
+          usageAllowanceMessage("hosted_passports", publishedCount, entitlements.passportAllowance, usage.overLimit) ||
+          upgradeHintForPlan(entitlements.plan),
       };
     }
   }
@@ -176,7 +257,7 @@ export async function loadBillingDashboard(
       client
         .from("billing_accounts")
         .select(
-          "contract_value, invoice_status, amount_outstanding, renewal_date, cancellation_state, stripe_customer_id, plan_key, paddle_customer_id, paddle_subscription_id"
+          "contract_value, invoice_status, amount_outstanding, renewal_date, cancellation_state, billing_status, billing_provider, grace_period_until, cancel_at_period_end, billing_price_id, paddle_customer_id, paddle_subscription_id"
         )
         .eq("organization_id", organizationId)
         .maybeSingle(),
@@ -197,44 +278,68 @@ export async function loadBillingDashboard(
   const passportsMeter = meterMap.get(`passports_published:${period}`) ?? publishedPassportCount;
   const productsMeter = meterMap.get(`products_active:${period}`) ?? activeProductCount;
 
+  const productAllowance = orgRes.data?.product_allowance ?? entitlements.productAllowance;
+  const passportAllowance = orgRes.data?.passport_allowance ?? entitlements.passportAllowance;
+  const overLimitProducts = isOverLimit(activeProductCount, productAllowance);
+  const overLimitPassports = isOverLimit(publishedPassportCount, passportAllowance);
+
   const canPublish =
     entitlements.canPublishPassports &&
-    (entitlements.passportAllowance == null ||
-      publishedPassportCount < entitlements.passportAllowance);
+    billingAllowsNewResources(billingRes.data) &&
+    (passportAllowance == null || publishedPassportCount < passportAllowance || overLimitPassports);
 
   let publishBlockReason: string | undefined;
   if (!entitlements.canPublishPassports) {
     publishBlockReason = upgradeHintForPlan(entitlements.plan);
-  } else if (
-    entitlements.passportAllowance != null &&
-    publishedPassportCount >= entitlements.passportAllowance
-  ) {
-    publishBlockReason = `Passport allowance reached (${publishedPassportCount}/${entitlements.passportAllowance}). ${upgradeHintForPlan(entitlements.plan)}`;
+  } else if (!billingAllowsNewResources(billingRes.data)) {
+    publishBlockReason = "New passport publishing paused — resolve billing in Settings.";
+  } else if (overLimitPassports) {
+    publishBlockReason = usageAllowanceMessage(
+      "hosted_passports",
+      publishedPassportCount,
+      passportAllowance,
+      true
+    )!;
+  } else if (passportAllowance != null && publishedPassportCount >= passportAllowance) {
+    publishBlockReason = `Passport allowance reached (${publishedPassportCount}/${passportAllowance}). ${upgradeHintForPlan(entitlements.plan)}`;
   }
 
+  const plan = entitlements.plan;
+
   return {
-    plan: entitlements.plan,
-    productAllowance: orgRes.data?.product_allowance ?? entitlements.productAllowance,
-    passportAllowance: orgRes.data?.passport_allowance ?? entitlements.passportAllowance,
+    plan,
+    planLabel: planDefinition(plan).label,
+    productAllowance,
+    passportAllowance,
     entitlements,
     publishedPassportCount,
     activeProductCount,
     canPublish,
     publishBlockReason,
+    billingStatus: billingRes.data?.billing_status || "none",
+    billingProvider: billingRes.data?.billing_provider || planDefinition(plan).billingProvider,
+    gracePeriodUntil: billingRes.data?.grace_period_until || null,
+    renewalDate: billingRes.data?.renewal_date || null,
+    cancelAtPeriodEnd: Boolean(billingRes.data?.cancel_at_period_end),
+    overLimitProducts,
+    overLimitPassports,
     meters: [
       {
-        key: "passports_published",
-        used: Math.max(publishedPassportCount, passportsMeter),
-        limit: entitlements.passportAllowance,
+        key: "products",
+        used: Math.max(activeProductCount, productsMeter),
+        limit: productAllowance,
+        overLimit: overLimitProducts,
       },
       {
-        key: "products_active",
-        used: Math.max(activeProductCount, productsMeter),
-        limit: entitlements.productAllowance,
+        key: "hosted_passports",
+        used: Math.max(publishedPassportCount, passportsMeter),
+        limit: passportAllowance,
+        overLimit: overLimitPassports,
       },
     ],
     billingAccount: billingRes.data || null,
     paddleCheckoutAvailable: isPaddleConfigured(),
-    upgradePriceId: defaultCheckoutPriceForPlan(entitlements.plan),
+    upgradePriceId: defaultCheckoutPriceForPlan(plan),
+    checkoutPrices: checkoutPricesForPlan(plan),
   };
 }

@@ -38,14 +38,14 @@ export const SAAS_TIERS: SaasTierDefinition[] = [
     priceLabel: "$499/month",
     monthlyUsd: PLATFORM_MONTHLY_USD,
     productAllowance: 500,
-    passportAllowance: 50,
+    passportAllowance: 500,
     userSeats: 3,
     headline: "Core enterprise operating system for governed product records.",
     features: [
       "Governed product records & material intelligence",
       "Issues register, workflows & basic Material Benchmark",
       "DPP management, QR generation & passport publishing",
-      "Up to 500 managed products · 50 active INTERTEXE-hosted passports",
+      "Up to 500 managed products · 500 hosted passports",
       "3 workspace users",
     ],
     notIncluded: [
@@ -59,13 +59,13 @@ export const SAAS_TIERS: SaasTierDefinition[] = [
     name: "Professional",
     priceLabel: "$1,250/month",
     monthlyUsd: PROFESSIONAL_MONTHLY_USD,
-    productAllowance: 2_500,
-    passportAllowance: 250,
+    productAllowance: 5_000,
+    passportAllowance: 5_000,
     userSeats: 10,
     headline: "Presentation and distribution layer on top of the operating system.",
     features: [
       "Everything in Platform",
-      "Up to 2,500 managed products · 250 active passports",
+      "Up to 5,000 managed products · 5,000 hosted passports",
       "White-label consumer passport experiences & branded templates",
       "Advanced analytics & 10 workspace users",
       "Resale / circularity tooling as released",
@@ -112,8 +112,9 @@ export function formatTierPrice(monthlyUsd: number | null): string {
 
 export function planDisplayName(plan: string): string {
   switch (plan) {
+    case "demo":
     case "free_snapshot":
-      return "Free Material Snapshot";
+      return "Free demo";
     case "founding_pilot":
       return ONBOARDING_FEE_LABEL;
     case "platform":
@@ -131,8 +132,8 @@ export function planDisplayName(plan: string): string {
 }
 
 export function upgradeHintForPlan(plan: string): string {
-  if (plan === "free_snapshot") {
-    return `Start with the ${onboardingFeePriceLabel()} onboarding fee (implementation), then choose Platform ($${PLATFORM_MONTHLY_USD}/mo), Professional ($${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo), or Enterprise.`;
+  if (plan === "demo" || plan === "free_snapshot") {
+    return "Contact INTERTEXE to upgrade your plan or request implementation support.";
   }
   if (plan === "founding_pilot") {
     return `Onboarding complete? Move to Platform ($${PLATFORM_MONTHLY_USD}/mo), Professional ($${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo), or Enterprise for headless API & integrations.`;

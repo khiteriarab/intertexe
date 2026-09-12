@@ -198,20 +198,22 @@ export function PlatformScrollShowcase() {
   }, []);
 
   return (
-    <section className="platform-abstract-band itx-abstract-motif border-y border-[var(--platform-border)]/60">
+    <section className="platform-scroll-showcase platform-abstract-band itx-abstract-motif border-y border-[var(--platform-border)]/60 overflow-visible">
       {/* Mobile + tablet: tabbed dial (Fairly Made pattern) */}
-      <div className="lg:hidden max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-14 sm:py-16">
+      <div className="lg:hidden max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16">
         <p className="text-[10px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-3 text-center">
           Platform capabilities
         </p>
         <p className="text-center text-sm text-[var(--platform-muted)] max-w-md mx-auto mb-8">
           Tap each stage — Trace, Measure, Govern, Publish, Next life — on the Customer Zero linen shirt passport.
         </p>
-        <StageTabs activeId={activeId} onSelect={setActiveId} className="justify-center mb-10 px-1" />
-        <div className="mb-12 pt-2 pb-28">
+        <StageTabs activeId={activeId} onSelect={setActiveId} className="justify-center mb-8 sm:mb-10 px-1" />
+        <div className="platform-scroll-showcase-dial-wrap mb-6 sm:mb-8 pt-2">
           <RecordDial stage={stage} index={activeIndex} total={PLATFORM_SCROLL_STAGES.length} compact />
         </div>
-        <StageDetail stage={stage} />
+        <div className="platform-scroll-showcase-mobile-body">
+          <StageDetail stage={stage} />
+        </div>
       </div>
 
       {/* Desktop: Phia-style scroll showcase */}
@@ -224,12 +226,12 @@ export function PlatformScrollShowcase() {
           each stage.
         </p>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(320px,400px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_440px_minmax(0,1fr)] gap-8 xl:gap-14 items-start">
+        <div className="platform-scroll-showcase-grid grid grid-cols-[minmax(0,1fr)_minmax(300px,400px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_440px_minmax(0,1fr)] gap-6 xl:gap-12 2xl:gap-14">
           <div className="relative min-h-0">
             {PLATFORM_SCROLL_STAGES.map((item) => (
-              <div key={item.id} id={`platform-scroll-${item.id}`} className="min-h-[72vh] scroll-mt-28" aria-hidden />
+              <div key={item.id} id={`platform-scroll-${item.id}`} className="min-h-[68vh] scroll-mt-28" aria-hidden />
             ))}
-            <div className="sticky top-28 pt-[12vh] pb-[12vh]">
+            <div className="platform-scroll-showcase-col-side">
               <div key={stage.id} className="platform-hero-card max-w-md">
                 <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-4">
                   {stage.kicker}
@@ -250,13 +252,15 @@ export function PlatformScrollShowcase() {
             </div>
           </div>
 
-          <div className="sticky top-28 self-start py-[8vh] flex items-center justify-center">
-            <RecordDial stage={stage} index={activeIndex} total={PLATFORM_SCROLL_STAGES.length} />
+          <div className="platform-scroll-showcase-col-center flex items-center justify-center">
+            <div className="platform-scroll-showcase-dial-wrap platform-scroll-showcase-dial-wrap--desktop w-full">
+              <RecordDial stage={stage} index={activeIndex} total={PLATFORM_SCROLL_STAGES.length} />
+            </div>
           </div>
 
-          <div className="sticky top-28 self-start pt-[12vh] pb-[12vh]">
+          <div className="platform-scroll-showcase-col-side">
             <StageDetail stage={stage} />
-            <div className="mt-12 flex flex-col gap-2">
+            <div className="platform-scroll-showcase-stage-nav flex flex-col gap-2">
               {PLATFORM_SCROLL_STAGES.map((item, i) => (
                 <a
                   key={item.id}

@@ -1,42 +1,34 @@
 import Link from "next/link";
-import {
-  ONBOARDING_FEE_USD,
-  ONBOARDING_FEE_LABEL,
-  onboardingFeePriceLabel,
-  PLATFORM_MONTHLY_USD,
-  PROFESSIONAL_MONTHLY_USD,
-  SAAS_TIERS,
-} from "../../lib/enterprise/pricing";
+import { ONBOARDING_FEE_LABEL, SAAS_TIERS } from "../../lib/enterprise/pricing";
 import { Body, Eyebrow, Heading, SERIF } from "./platform-ui";
 
 const ENTRY = [
   {
     step: "1. Try it",
-    title: "Free 10-Product Material Snapshot",
-    price: "€0",
+    title: "Free demo workspace",
+    priceLabel: "No payment required",
     popular: false,
     copy: "See what INTERTEXE finds in your material data — inside a real workspace.",
     points: [
       "Material normalization & completeness score",
       "Issues register & DPP readiness overview",
-      "Limited Material Benchmark preview",
-      "10 products · preview QR after identity is provisioned",
+      "Material Benchmark preview",
+      "10 products · live passport QR when published",
     ],
     href: "/platform/request?intent=snapshot&cta=pricing_snapshot",
-    cta: "Request my snapshot",
+    cta: "Request demo access",
   },
   {
     step: "2. Prove it",
     title: ONBOARDING_FEE_LABEL,
-    price: onboardingFeePriceLabel(),
+    priceLabel: "Quoted per engagement",
     popular: true,
-    copy: "Implementation and onboarding — not a monthly subscription. Target ~10 business days.",
+    copy: "Implementation and onboarding — not a monthly subscription. Scoped with your commercial team.",
     points: [
-      "100 complex products or 500 structured rows",
+      "Catalog onboarding & data mapping",
       "Material intelligence, normalization & human review",
-      "Material Benchmark snapshot & DPP data preparation",
-      "QR identities, passport generation & structured export",
-      "50% to start · 50% on completion",
+      "DPP data preparation & passport publishing",
+      "QR identities and structured export",
     ],
     href: "/platform/request?intent=founding_pilot&cta=pricing_pilot",
     cta: "Request onboarding",
@@ -66,8 +58,8 @@ export function PricingPlans() {
           <aside className="rounded-xl border border-[#e8e3da] bg-white p-5 sm:p-6">
             <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Commercial path</p>
             <p className="text-sm text-[#5c5854] font-light leading-relaxed">
-              Free snapshot → {onboardingFeePriceLabel()} onboarding fee → Platform (${PLATFORM_MONTHLY_USD}/mo) ·
-              Professional (${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo) · Enterprise (custom).
+              Free demo → scoped onboarding → Platform · Professional · Enterprise. Commercial terms are shared during
+              sales conversations — not published here.
             </p>
           </aside>
         </div>

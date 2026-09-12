@@ -15,7 +15,8 @@ describe("enterprise pricing model", () => {
     assert.equal(PLATFORM_MONTHLY_USD, 499);
     assert.equal(PROFESSIONAL_MONTHLY_USD, 1250);
     assert.equal(saasTierByKey("platform").productAllowance, 500);
-    assert.equal(saasTierByKey("professional").passportAllowance, 250);
+    assert.equal(saasTierByKey("platform").passportAllowance, 500);
+    assert.equal(saasTierByKey("professional").passportAllowance, 5000);
   });
 
   it("gates headless API to enterprise only", () => {

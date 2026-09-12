@@ -1,0 +1,48 @@
+{
+  "syncedAt": "2026-09-12T21:34:08.145Z",
+  "environment": "production",
+  "note": "Entitlements are enforced in obelisk-core (lib/enterprise/plans.ts), not in Paddle.",
+  "results": {
+    "INTERTEXE Platform": {
+      "productId": "pro_01m2brne3f04evprty8k9458x2",
+      "priceId": "pri_01m2brnf2svwnnwbdw7mzzgjrm",
+      "envKey": "PADDLE_PRICE_PLATFORM",
+      "plan": "platform",
+      "monthlyUsd": 499,
+      "maxProducts": 500,
+      "maxHostedPassports": 500,
+      "kind": "subscription"
+    },
+    "INTERTEXE Professional": {
+      "productId": "pro_01m2brnfdpqdrd2yvejzxf5pxy",
+      "priceId": "pri_01m2brnfnk1gqsvrcb0v3brzva",
+      "envKey": "PADDLE_PRICE_PROFESSIONAL",
+      "plan": "professional",
+      "monthlyUsd": 1250,
+      "maxProducts": 5000,
+      "maxHostedPassports": 5000,
+      "kind": "subscription"
+    },
+    "INTERTEXE Implementation": {
+      "productId": "pro_01m2brnfz2ksmevkrpdrtgyrg7",
+      "priceId": "pri_01m2brngcrsysakyj2r20v7t88",
+      "envKey": "PADDLE_PRICE_IMPLEMENTATION",
+      "plan": "founding_pilot",
+      "oneTimeUsd": 5000,
+      "note": "One-time fee — does not set monthly subscription limits",
+      "kind": "implementation"
+    }
+  },
+  "demoPlan": {
+    "plan": "demo",
+    "paddleProduct": null,
+    "maxProducts": 10,
+    "maxHostedPassports": 10
+  },
+  "envTemplate": {
+    "PADDLE_ENV": "production",
+    "PADDLE_PRICE_PLATFORM": "pri_01m2brnf2svwnnwbdw7mzzgjrm",
+    "PADDLE_PRICE_PROFESSIONAL": "pri_01m2brnfnk1gqsvrcb0v3brzva",
+    "PADDLE_PRICE_IMPLEMENTATION": "pri_01m2brngcrsysakyj2r20v7t88"
+  }
+}
