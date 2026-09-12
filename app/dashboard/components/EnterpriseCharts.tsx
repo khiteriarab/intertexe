@@ -235,8 +235,8 @@ export function EntRadialActivityChart({
 }
 
 export const LIFECYCLE_COLORS = {
-  published: "#2c4a3e",
-  ready: "#42666c",
+  published: "#2c2620",
+  ready: "#c4a574",
   review_required: "#b8b0a6",
   incomplete: "rgba(154, 148, 140, 0.55)",
   update_required: "#9e4a5a",
@@ -244,8 +244,8 @@ export const LIFECYCLE_COLORS = {
 } as const;
 
 export const ACTIVITY_COLORS = {
-  imports: "#42666c",
-  publishes: "#2c4a3e",
+  imports: "#c4a574",
+  publishes: "#2c2620",
   updates: "#b8b0a6",
   reviews: "#9e4a5a",
   other: "rgba(154, 148, 140, 0.5)",
@@ -253,8 +253,8 @@ export const ACTIVITY_COLORS = {
 
 export const ISSUE_COLORS = {
   open: "#9e4a5a",
-  resolved: "#2c4a3e",
-  missing: "#42666c",
+  resolved: "#2c2620",
+  missing: "#c4a574",
   conflicts: "#b8b0a6",
 } as const;
 
@@ -291,9 +291,9 @@ export function EntAreaChart({
 
   const line = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
   const area = `${line} L ${points[points.length - 1].x} ${padding.top + innerH} L ${points[0].x} ${padding.top + innerH} Z`;
-  const stroke = dark ? "rgba(255,255,255,0.85)" : "#42666c";
-  const gradStart = dark ? "rgba(255,255,255,0.35)" : "rgba(158, 74, 90, 0.4)";
-  const gradEnd = dark ? "rgba(255,255,255,0.02)" : "rgba(66, 102, 108, 0.05)";
+  const stroke = dark ? "rgba(255,255,255,0.85)" : "#c4a574";
+  const gradStart = dark ? "rgba(255,255,255,0.35)" : "rgba(201, 169, 98, 0.35)";
+  const gradEnd = dark ? "rgba(255,255,255,0.02)" : "rgba(196, 165, 116, 0.06)";
 
   return (
     <div className="w-full">
@@ -307,7 +307,7 @@ export function EntAreaChart({
         <path d={area} fill={`url(#${gradientId})`} />
         <path d={line} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {points.map((p) => (
-          <circle key={p.label} cx={p.x} cy={p.y} r="4" fill={dark ? "#fff" : p.color || "#42666c"} opacity={dark ? 0.9 : 1} />
+          <circle key={p.label} cx={p.x} cy={p.y} r="4" fill={dark ? "#fff" : p.color || "#c4a574"} opacity={dark ? 0.9 : 1} />
         ))}
       </svg>
       <ul className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
@@ -382,7 +382,7 @@ export function EntProgressRing({
   return (
     <div className="relative inline-flex" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={cx} cy={cy} r={radius} fill="none" stroke="rgba(62,98,104,0.1)" strokeWidth={stroke} />
+        <circle cx={cx} cy={cy} r={radius} fill="none" stroke="rgba(196,165,116,0.18)" strokeWidth={stroke} />
         <circle
           cx={cx}
           cy={cy}

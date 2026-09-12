@@ -20,8 +20,8 @@ type KpiCard = {
 };
 
 const KPI_TONES: Record<KpiCard["tone"], { bg: string; icon: string }> = {
-  petrol: { bg: "bg-[rgba(62,98,104,0.1)]", icon: "text-[var(--ent-petrol-deep)]" },
-  forest: { bg: "bg-[rgba(44,74,62,0.1)]", icon: "text-[var(--ent-forest)]" },
+  petrol: { bg: "bg-[rgba(196,165,116,0.15)]", icon: "text-[var(--ent-petrol-deep)]" },
+  forest: { bg: "bg-[rgba(44,38,32,0.08)]", icon: "text-[var(--ent-forest)]" },
   rose: { bg: "bg-[rgba(158,74,90,0.1)]", icon: "text-[var(--ent-raspberry)]" },
   gold: { bg: "bg-[rgba(232,197,71,0.18)]", icon: "text-[#9a7b1a]" },
   stone: { bg: "bg-[rgba(184,176,166,0.22)]", icon: "text-[var(--ent-muted)]" },

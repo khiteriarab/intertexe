@@ -30,7 +30,7 @@
   inset: 0;
   background:
     radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.08), transparent 40%),
-    radial-gradient(circle at 80% 85%, rgba(21, 34, 56, 0.35), transparent 45%);
+    radial-gradient(circle at 80% 85%, rgba(201, 169, 98, 0.28), transparent 45%);
   pointer-events: none;
 }
 
@@ -99,7 +99,7 @@
   font-size: 0.6875rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(44, 38, 32, 0.45);
 }
 
 .ent-login-brand-motif-steps li {
@@ -115,11 +115,11 @@
   width: 0.25rem;
   height: 0.25rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(44, 38, 32, 0.22);
 }
 
 .ent-login-brand-motif-steps li:last-child {
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(44, 38, 32, 0.62);
 }
 
 .ent-login-auth {
@@ -180,7 +180,7 @@
   font-size: 1rem;
   color: var(--ent-login-ink);
   background: #fff;
-  border: 1px solid rgba(62, 98, 104, 0.22);
+  border: 1px solid rgba(196, 165, 116, 0.22);
   border-radius: 0.4rem;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -192,7 +192,7 @@
 
 .ent-login-input:focus {
   border-color: var(--ent-login-petrol);
-  box-shadow: 0 0 0 3px rgba(62, 98, 104, 0.12);
+  box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.12);
 }
 
 .ent-login-input:disabled {
@@ -227,7 +227,7 @@
 
 .ent-login-opening {
   border-radius: 0.4rem;
-  border: 1px solid rgba(62, 98, 104, 0.12);
+  border: 1px solid rgba(196, 165, 116, 0.12);
   background: rgba(255, 255, 255, 0.65);
   padding: 0.85rem 1rem;
   margin-bottom: 1rem;
@@ -240,7 +240,7 @@
   height: 3px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(62, 98, 104, 0.12);
+  background: rgba(196, 165, 116, 0.12);
 }
 
 .ent-login-opening-bar-inner {
@@ -274,7 +274,7 @@
 }
 
 .ent-login-submit:hover:not(:disabled) {
-  background: #0f1a2c;
+  background: #1f1a14;
 }
 
 .ent-login-submit:disabled {
@@ -289,7 +289,7 @@
   padding: 0;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--ent-login-petrol);
+  color: var(--ent-login-forest);
   text-align: center;
   background: transparent;
   border: none;
@@ -303,7 +303,7 @@
 .ent-login-consumer-link {
   margin-top: 2.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(62, 98, 104, 0.12);
+  border-top: 1px solid rgba(196, 165, 116, 0.12);
   font-size: 0.8125rem;
   line-height: 1.55;
   color: #6b6560;
@@ -311,7 +311,7 @@
 }
 
 .ent-login-consumer-link a {
-  color: var(--ent-login-petrol);
+  color: var(--ent-login-forest);
   font-weight: 600;
   text-decoration: none;
 }
@@ -336,7 +336,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: rgba(62, 98, 104, 0.14);
+  background: rgba(196, 165, 116, 0.14);
 }
 
 .ent-login-sso {
@@ -346,7 +346,7 @@
   font-weight: 600;
   color: var(--ent-login-forest);
   background: #fff;
-  border: 1px solid rgba(62, 98, 104, 0.28);
+  border: 1px solid rgba(196, 165, 116, 0.28);
   border-radius: 0.4rem;
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease;

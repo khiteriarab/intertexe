@@ -24,7 +24,7 @@ export function DppReadinessPanel({ report }: { report: DppReadinessReport }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-6">
-        <EntProgressRing value={pct} label="Domains ready" size={110} accent="#42666c" />
+        <EntProgressRing value={pct} label="Domains ready" size={110} accent="#c4a574" />
         <div className="flex-1 min-w-[12rem]">
           <p className="text-sm text-[var(--ent-muted)] leading-relaxed">{report.disclaimer}</p>
           <p className={`${entMetaClass} mt-2`}>{report.rulesetLabel}</p>

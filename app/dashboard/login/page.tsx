@@ -199,18 +199,18 @@ function LoginForm() {
             <svg viewBox="0 0 280 100" className="ent-login-brand-motif-svg" fill="none">
               <path
                 d="M20 18 H100 M20 50 H88 M20 82 H96"
-                stroke="rgba(255,255,255,0.18)"
+                stroke="rgba(44,38,32,0.18)"
                 strokeWidth="1"
                 strokeLinecap="round"
               />
               <path
                 d="M100 18 C160 18 180 50 220 50 M88 50 C150 50 170 50 220 50 M96 82 C158 82 178 50 220 50"
-                stroke="rgba(255,255,255,0.12)"
+                stroke="rgba(44,38,32,0.12)"
                 strokeWidth="1"
                 strokeLinecap="round"
               />
-              <rect x="220" y="38" width="48" height="24" rx="2" stroke="rgba(255,255,255,0.35)" strokeWidth="1" />
-              <path d="M228 50 H260" stroke="rgba(255,255,255,0.25)" strokeWidth="1" strokeLinecap="round" />
+              <rect x="220" y="38" width="48" height="24" rx="2" stroke="rgba(44,38,32,0.28)" strokeWidth="1" />
+              <path d="M228 50 H260" stroke="rgba(44,38,32,0.2)" strokeWidth="1" strokeLinecap="round" />
             </svg>
             <ol className="ent-login-brand-motif-steps">
               <li>Product data</li>
@@ -294,7 +294,7 @@ function LoginForm() {
 
             {phase === "opening" ? (
               <div className="ent-login-opening" role="status" aria-live="polite">
-                <p className="font-semibold text-[#3e6268]">Signed in — loading your workspace</p>
+                <p className="font-semibold text-[#2c2620]">Signed in — loading your workspace</p>
                 <p className="mt-1 text-xs leading-relaxed">Pulling overview metrics. This can take a moment on first load.</p>
                 <div className="ent-login-opening-bar">
                   <div className="ent-login-opening-bar-inner" />
