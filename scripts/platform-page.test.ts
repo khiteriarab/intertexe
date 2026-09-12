@@ -66,7 +66,8 @@ describe("Platform B2B sales page", () => {
     assert.match(sections, /IntelligenceBenchmarkVisual/);
     assert.match(sections, /Headless API/);
     assert.match(sections, /thirty seconds/i);
-    assert.match(sections, /Live case study/i);
+    assert.match(sections, /silk evening dress/i);
+    assert.match(sections, /SaaSDemoFlowVisual/);
     assert.match(sections, /aggregate only, never individual shopper data/);
     assert.match(sections, /not yet operational/);
     assert.match(sections, /Illustrative example/);
@@ -109,7 +110,7 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(sections, /manufactures NFC/i);
     assert.doesNotMatch(sections, /Supabase hosting/i);
     assert.match(sections, /DeliveryModesVisual/);
-    assert.match(sections, /ProductLifecycleVisual/);
+    assert.match(sections, /SaaSDemoFlowVisual/);
     assert.match(sections, /PublishExperienceVisual/);
     assert.match(sections, /PlatformModuleGrid/);
     assert.doesNotMatch(sections, /PlatformEditorialGraphic/);

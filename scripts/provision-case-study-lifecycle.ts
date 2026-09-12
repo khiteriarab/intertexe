@@ -35,6 +35,19 @@ async function main() {
 
   console.log(`Case study product: ${product.name} (${product.id})`);
 
+  const { error: productUpdateError } = await client
+    .from("products")
+    .update({
+      name: PASSPORT_CASE_STUDY.productName,
+      sku: PASSPORT_CASE_STUDY.sku,
+    })
+    .eq("id", product.id);
+  if (productUpdateError) {
+    console.warn("Product rename skipped:", productUpdateError.message);
+  } else {
+    console.log(`  renamed → ${PASSPORT_CASE_STUDY.productName} (${PASSPORT_CASE_STUDY.sku})`);
+  }
+
   for (const node of CASE_STUDY_SUPPLY_CHAIN) {
     const { error } = await client.from("supply_chain_nodes").upsert(
       {

@@ -1,4 +1,8 @@
-import { PASSPORT_CASE_STUDY, caseStudyPassportUrl } from "../../../lib/enterprise/passport-case-study";
+"use client";
+
+import Image from "next/image";
+import { PASSPORT_CASE_STUDY } from "../../../lib/enterprise/passport-case-study";
+import { PlatformCaseStudyQr } from "./PlatformCaseStudyQr";
 import { SERIF } from "../platform-ui";
 
 export function PublishExperienceVisual() {
@@ -13,6 +17,30 @@ export function PublishExperienceVisual() {
 
           <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-6 lg:gap-8">
             <div className="space-y-5">
+              <div className="rounded-xl border border-[var(--platform-border)] bg-white p-5">
+                <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-quiet)] mb-3">Sample product</p>
+                <div className="flex gap-4 items-center">
+                  <div className="relative h-20 w-16 shrink-0 rounded-lg overflow-hidden bg-[var(--platform-highlight)]">
+                    <Image
+                      src={PASSPORT_CASE_STUDY.imageUrl}
+                      alt={PASSPORT_CASE_STUDY.productName}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--platform-primary)]" style={SERIF}>
+                      {PASSPORT_CASE_STUDY.productName}
+                    </p>
+                    <p className="text-xs text-[var(--platform-muted)] mt-1">{PASSPORT_CASE_STUDY.composition}</p>
+                    <p className="text-[10px] tracking-[0.1em] uppercase text-[var(--platform-quiet)] mt-1">
+                      {PASSPORT_CASE_STUDY.sku} · {PASSPORT_CASE_STUDY.template} template
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="rounded-xl border border-[var(--platform-border)] bg-white p-5">
                 <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-quiet)] mb-3">Data carrier</p>
                 <div className="flex flex-wrap gap-3 text-sm">
@@ -85,43 +113,30 @@ export function PublishExperienceVisual() {
             <div className="rounded-xl border border-[var(--platform-border)] bg-white p-5 flex flex-col gap-4">
               <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-quiet)]">Live preview</p>
               <div className="rounded-lg border border-[var(--platform-border)] overflow-hidden max-w-[220px] mx-auto">
-                <div className="aspect-[9/16] bg-gradient-to-b from-[#e8e0d4] to-[#f5f0e8] relative">
-                  <div
-                    className="absolute inset-0 opacity-40"
-                    aria-hidden
-                    style={{
-                      backgroundImage:
-                        "radial-gradient(circle at 50% 30%, rgba(196,165,116,0.45) 0%, transparent 55%)",
-                    }}
+                <div className="aspect-[9/16] relative bg-[#f5f0e8]">
+                  <Image
+                    src={PASSPORT_CASE_STUDY.imageUrl}
+                    alt={PASSPORT_CASE_STUDY.productName}
+                    fill
+                    className="object-cover"
+                    sizes="220px"
                   />
                   <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-[#161513]/75 to-transparent">
-                    <p className="text-[9px] tracking-[0.12em] uppercase text-white/60">Linen dress</p>
+                    <p className="text-[9px] tracking-[0.12em] uppercase text-white/60">{PASSPORT_CASE_STUDY.brand}</p>
                     <p className="text-xs text-white font-light" style={SERIF}>
                       {PASSPORT_CASE_STUDY.composition} · Portugal
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="text-center pt-2 border-t border-[var(--platform-border)]">
-                <div className="inline-grid grid-cols-5 grid-rows-5 gap-0.5 p-2 border border-[var(--platform-border)] bg-[var(--platform-highlight)]">
-                  {Array.from({ length: 25 }).map((_, i) => (
-                    <span
-                      key={i}
-                      className={`block w-2 h-2 ${i % 2 === 0 ? "bg-[var(--platform-primary)]" : "bg-[var(--platform-border)]"}`}
-                    />
-                  ))}
-                </div>
-                <p className="text-[10px] text-[var(--platform-muted)] mt-2 font-mono break-all">
-                  Scan → {caseStudyPassportUrl().replace(/^https?:\/\//, "")}
-                </p>
-              </div>
+              <PlatformCaseStudyQr compact />
             </div>
           </div>
         </div>
       </div>
       <figcaption className="mt-3 text-xs text-[var(--platform-quiet)] leading-relaxed">
-        Publish screen from the enterprise workspace. Case study product: {PASSPORT_CASE_STUDY.styleCode}. Configure,
-        publish, scan, and verify — without leaving your desk.
+        Publish screen from the enterprise workspace. Case study product: {PASSPORT_CASE_STUDY.styleCode} ·{" "}
+        {PASSPORT_CASE_STUDY.productName}. Configure, publish, scan, and verify — without leaving your desk.
       </figcaption>
     </figure>
   );

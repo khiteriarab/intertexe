@@ -4,8 +4,8 @@ import {
   IntelligenceBenchmarkVisual,
   PlatformModuleGrid,
   ProductIdentityCarriersVisual,
-  ProductLifecycleVisual,
   PublishExperienceVisual,
+  SaaSDemoFlowVisual,
 } from "./sales-visuals";
 import { PlatformHero } from "./PlatformHero";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
@@ -104,13 +104,13 @@ export function SalesLifecycleSection() {
             Raw data → governed record → passport → experience → QR → scan → beautiful product page.
           </Heading>
           <Body className="mb-0">
-            INTERTEXE connects fashion brands, product data, and consumers across the full lifecycle of a garment. Scan
-            the live case study QR below with an iPhone — you will see the real product photograph, governed composition,
-            and every lifecycle stage backed by evidence in obelisk-core. That is the thirty-second demonstration for
-            prospective clients.
+            INTERTEXE connects fashion brands, product data, and consumers across the full lifecycle of a garment.
+            Publish a silk evening dress in the SaaS workspace, scan the QR beside your laptop, and open the consumer
+            passport your customer would see — product photograph, governed composition, and full lifecycle journey.
+            That is the thirty-second demonstration for prospective clients.
           </Body>
         </div>
-        <ProductLifecycleVisual />
+        <SaaSDemoFlowVisual />
       </div>
     </section>
   );

@@ -7,9 +7,9 @@ import { DemoOfficeSection } from "./DemoOfficeSection";
 import { PlatformPageHeader } from "../PlatformPageHeader";
 
 export const metadata: Metadata = {
-  title: "INTERTEXE 10-product demonstration",
+  title: "INTERTEXE live demonstration",
   description:
-    "See INTERTEXE turn a 10-product catalog into governed records, published passports, and scannable consumer experiences — then scan the QR and show the real product page in thirty seconds. Book a conversation with the Barcelona platform office.",
+    "See INTERTEXE SaaS in action: govern a silk evening dress on desktop, publish the passport, scan the QR, and open the consumer page your customer sees. Then explore the 10-product catalog walkthrough.",
   alternates: { canonical: "https://www.intertexe.com/platform/demo" },
 };
 
@@ -19,10 +19,10 @@ export default function PlatformDemoPage() {
       <PlatformPageHeader
         eyebrow="Live demonstration"
         align="center"
-        title="See INTERTEXE with a 10-product catalog."
-        description="Raw data → governed record → passport → experience → QR → scan. See the full lifecycle on a 10-product catalog, then book a conversation with the platform office in Barcelona."
-        primaryHref="#book"
-        primaryLabel="Book a conversation"
+        title="SaaS on desktop → QR on the garment → passport your customer sees."
+        description="Start with the live scan demo on a silk evening dress — workspace publish, scannable QR, and the real consumer passport. Then walk through a 10-product catalog from raw data to DPP readiness."
+        primaryHref="#live-demo"
+        primaryLabel="See the live scan"
         secondaryHref="#walkthrough"
         secondaryLabel="Open the catalog"
       />

@@ -70,6 +70,30 @@ export const DEMO_ISSUE_LABEL: Record<DemoIssueKind, string> = {
 
 export const DEMO_CATALOG: DemoCatalogProduct[] = [
   {
+    id: "silk-evening-dress",
+    sku: "ITX-4102",
+    name: "Silk Evening Dress",
+    category: "Dresses",
+    source: {
+      main: "92 SE 8 EA",
+      lining: "LINING 100 VI",
+      supplier: "Portugal atelier declaration",
+      origin: "PT",
+      identifier: "ITX-4102",
+    },
+    normalized: {
+      shell: "92% Silk · 8% Elastane",
+      lining: "100% Viscose",
+      origin: "Portugal",
+      identifier: "ITX-4102",
+      confidence: "high",
+    },
+    issues: [],
+    passport: { status: "ready", missing: [] },
+    naturalFiberShare: 92,
+    silk: true,
+  },
+  {
     id: "dress-8721",
     sku: "ITX-8721",
     name: "Dress 8721",
@@ -93,30 +117,6 @@ export const DEMO_CATALOG: DemoCatalogProduct[] = [
     passport: { status: "review", missing: ["resolved_composition", "country_of_origin"] },
     naturalFiberShare: null,
     silk: false,
-  },
-  {
-    id: "silk-evening-dress",
-    sku: "ITX-4102",
-    name: "Silk Evening Dress",
-    category: "Dresses",
-    source: {
-      main: "92 SE 8 EA",
-      lining: "LINING 100 VI",
-      supplier: "Portugal atelier declaration",
-      origin: "PT",
-      identifier: "ITX-4102",
-    },
-    normalized: {
-      shell: "92% Silk · 8% Elastane",
-      lining: "100% Viscose",
-      origin: "Portugal",
-      identifier: "ITX-4102",
-      confidence: "high",
-    },
-    issues: [],
-    passport: { status: "ready", missing: [] },
-    naturalFiberShare: 92,
-    silk: true,
   },
   {
     id: "silk-midi-skirt",

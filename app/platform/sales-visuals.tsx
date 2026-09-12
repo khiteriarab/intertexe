@@ -10,6 +10,7 @@ export { JourneyStepsVisual } from "./b2b-visuals/ProductDataJourneyVisual";
 export { ConsumerEcosystemVisual } from "./b2b-visuals/FashionEcosystemVisual";
 export { ProductIdentityCarriersVisual } from "./b2b-visuals/ProductIdentityCarriersVisual";
 export { ProductLifecycleVisual } from "./b2b-visuals/ProductLifecycleVisual";
+export { SaaSDemoFlowVisual } from "./b2b-visuals/SaaSDemoFlowVisual";
 export { DeliveryModesVisual } from "./b2b-visuals/DeliveryModesVisual";
 export { PublishExperienceVisual } from "./b2b-visuals/PublishExperienceVisual";
 

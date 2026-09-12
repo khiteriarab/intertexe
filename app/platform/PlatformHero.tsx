@@ -25,8 +25,8 @@ const INSIGHTS = [
     id: "passport",
     pill: "Passport ready",
     brand: "Digital Product Passport",
-    name: "Cashmere crew knit",
-    detail: "QR linked · 12 required fields complete",
+    name: "Silk evening dress",
+    detail: "QR linked · scan to open consumer passport",
     tone: "green" as const,
   },
   {

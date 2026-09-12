@@ -7,6 +7,8 @@ import {
 } from "../../../lib/material-intelligence/demo-records";
 import type { MaterialApiSuccess, MaterialLookupData } from "../../../lib/material-intelligence/types";
 import { trackPlatform } from "../../../lib/platform-analytics";
+import { SaaSDemoFlowVisual } from "../b2b-visuals/SaaSDemoFlowVisual";
+import { PASSPORT_CASE_STUDY } from "../../../lib/enterprise/passport-case-study";
 import { DemoCatalogWalkthrough } from "./DemoCatalogWalkthrough";
 
 const FIBER_TONE: Record<string, string> = {
@@ -93,6 +95,24 @@ export function PlatformDemoClient() {
 
   return (
     <div className="py-8 sm:py-12 lg:py-4 lg:pb-16">
+      <section id="live-demo" className="scroll-mt-28 mb-16 sm:mb-24">
+        <p className="text-[10px] sm:text-[11px] tracking-[0.12em] sm:tracking-[0.25em] text-[#9c7b8b] mb-3">
+          LIVE SCAN DEMONSTRATION
+        </p>
+        <h2
+          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light mb-5 sm:mb-6 leading-[1.15]"
+          style={{ fontFamily: "Georgia, serif" }}
+        >
+          Desktop SaaS → QR → consumer passport.
+        </h2>
+        <p className="text-base sm:text-lg text-[#5c5854] font-light leading-relaxed max-w-2xl mb-8">
+          Publish {PASSPORT_CASE_STUDY.productName} in the INTERTEXE workspace, scan the QR with your iPhone, and
+          verify the live passport page — product image, materials, lifecycle journey, and circularity guidance exactly
+          as your customer would see them.
+        </p>
+        <SaaSDemoFlowVisual compact />
+      </section>
+
       <DemoCatalogWalkthrough />
 
       <section id="api" className="scroll-mt-28 rounded-2xl border border-[var(--platform-border)] bg-white p-5 sm:p-8 lg:p-10 mb-6 shadow-[0_24px_60px_rgba(22,21,19,0.04)]">

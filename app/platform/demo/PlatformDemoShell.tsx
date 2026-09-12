@@ -6,6 +6,7 @@ import Link from "next/link";
 import { SERIF } from "../platform-ui";
 
 const JOURNEY = [
+  { id: "live-demo", label: "Live scan", hint: "Desktop → QR → customer" },
   { id: "walkthrough", label: "Catalog", hint: "10-product sample" },
   { id: "api", label: "API lookup", hint: "Live GTIN demo" },
   { id: "book", label: "Book", hint: "Founding pilot" },

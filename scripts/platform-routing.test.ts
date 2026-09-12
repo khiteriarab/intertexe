@@ -79,10 +79,11 @@ test("consumer sign-in banner targets www account, not enterprise login", () => 
 test("sales page links sign-in to enterprise login helper", () => {
   const nav = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformNav.tsx"), "utf8");
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
+  const hero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHero.tsx"), "utf8");
   assert.match(nav, /getEnterpriseLoginUrl/);
   assert.match(sections, /Request a demo/);
   assert.match(sections, /Sign in/);
-  assert.match(sections, /INTERTEXE FOR BRANDS/);
+  assert.match(hero, /INTERTEXE FOR BRANDS/);
   assert.doesNotMatch(nav, /\/dashboard\/login/);
 });
 
