@@ -28,10 +28,10 @@ const STAGES = [
     panel: (
       <div className="text-sm">
         <p className="font-mono text-xs text-[#8a847c] mb-2">92 SE · 8 EA</p>
-        <p className="text-[#3e6268] mb-2" aria-hidden>
+        <p className="text-[var(--platform-accent)] mb-2" aria-hidden>
           ↓
         </p>
-        <p className="font-mono text-xs text-[#152238] bg-[#e8eef4] px-3 py-2">Silk 92% · Elastane 8%</p>
+        <p className="font-mono text-xs text-[var(--platform-primary)] bg-[var(--platform-highlight)] px-3 py-2">Silk 92% · Elastane 8%</p>
       </div>
     ),
   },
@@ -85,10 +85,10 @@ const STAGES = [
     copy: "Create persistent product identity, version the passport, connect a data carrier, and expose approved public data through a stable resolver.",
     panel: (
       <div className="text-xs space-y-2.5">
-        <p className="font-mono text-[#152238]">{IDENTITY_ID} · identity created</p>
+        <p className="font-mono text-[var(--platform-primary)]">{IDENTITY_ID} · identity created</p>
         <p className="text-[#5c5854]">Passport v2 published · 92% Silk · 8% Elastane</p>
         <div className="flex flex-wrap gap-2">
-          <span className="border border-[#3e6268]/40 text-[#152238] px-2 py-1 text-[10px] uppercase tracking-[0.08em]">
+          <span className="border border-[var(--platform-accent)]/40 text-[var(--platform-primary)] px-2 py-1 text-[10px] uppercase tracking-[0.08em]">
             QR connected
           </span>
           <span className="border border-[#e8e3da] text-[#8a847c] px-2 py-1 text-[10px] uppercase tracking-[0.08em]">
@@ -118,7 +118,7 @@ function StagePanel({ index, activeStep, reduced }: { index: number; activeStep:
       <p className="text-sm text-[#5c5854] leading-relaxed mb-4">{stage.copy}</p>
       <div
         className={`rounded-lg border bg-white p-4 min-h-[120px] transition-colors ${
-          index === activeStep ? "border-[#3e6268]/40 shadow-sm" : "border-[#e8e3da]"
+          index === activeStep ? "border-[var(--platform-accent)]/40 shadow-sm" : "border-[#e8e3da]"
         }`}
       >
         {stage.panel}
@@ -145,7 +145,7 @@ export function JourneyStepsVisual() {
       <p className="mt-6 text-center">
         <Link
           href="/platform/discover#product-journey"
-          className="text-[11px] tracking-[0.14em] uppercase text-[#152238] underline underline-offset-4 hover:text-[#3e6268]"
+          className="text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] underline underline-offset-4 hover:text-[var(--platform-accent)]"
         >
           Explore the interactive journey →
         </Link>
@@ -169,7 +169,7 @@ export function ProductDataJourneyVisual() {
           aria-hidden
         >
           <span
-            className="block h-full bg-[#3e6268]/60 origin-left transition-transform duration-700 ease-out"
+            className="block h-full bg-[var(--platform-accent)]/60 origin-left transition-transform duration-700 ease-out"
             style={{ transform: `scaleX(${(step + 1) / STAGES.length})` }}
           />
         </div>
@@ -184,7 +184,7 @@ export function ProductDataJourneyVisual() {
         {STAGES.map((stage, i) => (
           <div key={stage.n}>
             {i > 0 ? (
-              <div className="flex justify-center py-1 text-[#3e6268]" aria-hidden>
+              <div className="flex justify-center py-1 text-[var(--platform-accent)]" aria-hidden>
                 ↓
               </div>
             ) : null}

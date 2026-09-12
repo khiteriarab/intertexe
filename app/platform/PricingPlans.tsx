@@ -94,7 +94,7 @@ export function PricingPlans() {
           </div>
           <aside className="rounded-xl border border-[#e8e3da] bg-white p-5 sm:p-6">
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 text-[#152238]" aria-hidden="true">
+              <span className="mt-0.5 text-[var(--platform-primary)]" aria-hidden="true">
                 <CalloutIcon />
               </span>
               <div>
@@ -113,11 +113,11 @@ export function PricingPlans() {
             <article
               key={plan.title}
               className={`flex flex-col rounded-xl overflow-hidden bg-white ${
-                plan.popular ? "border-2 border-[#152238] shadow-[0_24px_50px_rgba(21,34,56,0.08)]" : "border border-[#e8e3da]"
+                plan.popular ? "border-2 border-[var(--platform-primary)] shadow-[0_24px_50px_rgba(44,38,32,0.08)]" : "border border-[#e8e3da]"
               }`}
             >
               {plan.popular ? (
-                <p className="bg-[#152238] text-white text-center text-[10px] tracking-[0.18em] uppercase py-2.5">
+                <p className="bg-[var(--platform-primary)] text-white text-center text-[10px] tracking-[0.18em] uppercase py-2.5">
                   Most popular
                 </p>
               ) : (
@@ -142,7 +142,7 @@ export function PricingPlans() {
                 </ul>
                 <Link
                   href={plan.href}
-                  className="inline-flex w-full items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[#152238] text-white px-5 py-3.5 hover:bg-[#0f1a2c] min-h-[44px] rounded-md mt-auto"
+                  className="inline-flex w-full items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-primary)] text-white px-5 py-3.5 hover:bg-[var(--platform-primary-hover)] min-h-[44px] rounded-md mt-auto"
                 >
                   {plan.cta}
                 </Link>
@@ -160,10 +160,10 @@ export function PricingPlans() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-10 border-t border-[#e8e3da] pb-10 sm:pb-12">
           {VALUES.map((item) => (
             <div key={item.title}>
-              <span className="mb-3 flex h-8 items-center text-[#152238]" aria-hidden="true">
+              <span className="mb-3 flex h-8 items-center text-[var(--platform-primary)]" aria-hidden="true">
                 <ValueIcon name={item.icon} />
               </span>
-              <p className="text-[10px] tracking-[0.16em] uppercase text-[#152238] mb-2">{item.title}</p>
+              <p className="text-[10px] tracking-[0.16em] uppercase text-[var(--platform-primary)] mb-2">{item.title}</p>
               <p className="text-sm text-[#5c5854] font-light leading-relaxed">{item.copy}</p>
             </div>
           ))}
@@ -175,7 +175,7 @@ export function PricingPlans() {
 
 function CheckMark() {
   return (
-    <svg className="mt-0.5 h-4 w-4 shrink-0 text-[#152238]" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg className="mt-0.5 h-4 w-4 shrink-0 text-[var(--platform-primary)]" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" strokeWidth="1.4" />
     </svg>
   );

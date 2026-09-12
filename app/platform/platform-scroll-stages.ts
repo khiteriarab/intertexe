@@ -97,5 +97,5 @@ export const CARD_TONE_CLASS: Record<PlatformScrollStage["card"]["tone"], string
   amber: "bg-[#f5efe6] text-[#7a5c2e] border-[#e8dcc8]",
   teal: "bg-[#e8f0ef] text-[#2c4a3e] border-[#cdded9]",
   green: "bg-[#eaf2ea] text-[#2d5a34] border-[#cfe0cf]",
-  slate: "bg-[#eef0f4] text-[#152238] border-[#d5dee8]",
+  slate: "bg-[var(--platform-highlight)] text-[var(--platform-primary)] border-[var(--platform-border)]",
 };

@@ -64,7 +64,7 @@ export function EnterpriseShell({
         <aside className={`ent-nav-rail ${mobileOpen ? "block" : "hidden"} md:flex md:flex-col`}>
           <div className="px-5 pt-7 pb-4 hidden md:block">
             <Link href={base} className="block group">
-              <p className="ent-brand-rail group-hover:text-white transition-colors">INTERTEXE</p>
+              <p className="ent-brand-rail group-hover:text-[var(--ent-charcoal)] transition-colors">INTERTEXE</p>
             </Link>
           </div>
 
@@ -74,8 +74,8 @@ export function EnterpriseShell({
 
           <EnterpriseNav base={base} onNavigate={() => setMobileOpen(false)} />
 
-          <div className="px-4 py-4 border-t border-white/10">
-            <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-white/35 px-2 mb-2">Consumer proof</p>
+          <div className="px-4 py-4 border-t border-[var(--ent-border-strong)]">
+            <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-[var(--ent-sidebar-fg-soft)] px-2 mb-2">Consumer proof</p>
             <ul className="space-y-1">
               {CONSUMER_PROOF_LINKS.map((link) => (
                 <li key={link.href}>
@@ -83,7 +83,7 @@ export function EnterpriseShell({
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block px-2 py-1.5 text-xs text-white/55 hover:text-white/90 transition-colors rounded-md hover:bg-white/5"
+                    className="block px-2 py-1.5 text-xs text-[var(--ent-sidebar-fg-muted)] hover:text-[var(--ent-sidebar-fg)] transition-colors rounded-md hover:bg-[rgba(232,220,200,0.35)]"
                     title={link.description}
                   >
                     {link.label} ↗
@@ -93,14 +93,14 @@ export function EnterpriseShell({
             </ul>
           </div>
 
-          <div className="px-4 py-5 mt-auto border-t border-white/10">
+          <div className="px-4 py-5 mt-auto border-t border-[var(--ent-border-strong)]">
             <div className="flex items-center gap-3 px-2">
               <div className="ent-nav-avatar ent-nav-avatar-rail" aria-hidden>
                 {displayName.slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate text-white/95">{displayName}</p>
-                <p className="text-[11px] text-white/45 truncate mt-0.5 capitalize">{role.replaceAll("_", " ")}</p>
+                <p className="text-sm font-semibold truncate text-[var(--ent-sidebar-fg)]">{displayName}</p>
+                <p className="text-[11px] text-[var(--ent-sidebar-fg-soft)] truncate mt-0.5 capitalize">{role.replaceAll("_", " ")}</p>
               </div>
             </div>
             <button type="button" onClick={logout} disabled={loggingOut} className="ent-nav-signout ent-nav-signout-rail">

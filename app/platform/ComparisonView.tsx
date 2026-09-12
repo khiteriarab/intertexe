@@ -71,10 +71,10 @@ export function ComparisonView({
       <ul className="grid grid-cols-2 lg:grid-cols-6 gap-x-6 gap-y-8 mb-12 sm:mb-16">
         {PILLARS.map((pillar) => (
           <li key={pillar.title} className="min-w-0">
-            <span className="mb-3 flex h-9 items-center text-[#152238]" aria-hidden="true">
+            <span className="mb-3 flex h-9 items-center text-[var(--platform-primary)]" aria-hidden="true">
               <PillarIcon name={pillar.icon} />
             </span>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-2">{pillar.title}</p>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-primary)] mb-2">{pillar.title}</p>
             <p className="text-[13px] text-[#5c5854] font-light leading-relaxed">{pillar.copy}</p>
           </li>
         ))}
@@ -100,8 +100,8 @@ export function ComparisonView({
           {rows.map((row) => (
             <article key={row.capability} className="border-t border-[#e8e3da] pt-4">
               <h3 className="text-sm font-medium mb-3">{row.capability}</h3>
-              <p className="text-[10px] tracking-[0.12em] uppercase text-[#152238] mb-1">INTERTEXE</p>
-              <p className="text-sm text-[#152238] mb-3 leading-relaxed">
+              <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-primary)] mb-1">INTERTEXE</p>
+              <p className="text-sm text-[var(--platform-primary)] mb-3 leading-relaxed">
                 <Mark level={markLevel(row.intertexe)} /> {row.intertexe}
               </p>
               <p className="text-[10px] tracking-[0.12em] uppercase text-[#8a847c] mb-1">{selected.label}</p>
@@ -118,7 +118,7 @@ export function ComparisonView({
           <thead>
             <tr className="border-b border-[#e8e3da]">
               <th className="py-3 pr-3 font-medium align-bottom text-[#8a847c] w-[18%]">Capability</th>
-              <th className="py-3 px-3 font-medium align-bottom bg-[#152238] text-white w-[18%]">INTERTEXE</th>
+              <th className="py-3 px-3 font-medium align-bottom bg-[var(--platform-primary)] text-white w-[18%]">INTERTEXE</th>
               {PEERS.map((item) => (
                 <th key={item.key} className="py-3 px-2 font-medium align-bottom text-[#161513]">
                   {item.label}
@@ -131,13 +131,13 @@ export function ComparisonView({
               <tr key={row.capability} className="border-b border-[#e8e3da] align-top">
                 <th className="py-3.5 pr-3 font-medium text-[#161513]">
                   <span className="inline-flex items-start gap-2">
-                    <span className="mt-0.5 text-[#152238]" aria-hidden="true">
+                    <span className="mt-0.5 text-[var(--platform-primary)]" aria-hidden="true">
                       <RowIcon capability={row.capability} />
                     </span>
                     <span>{row.capability}</span>
                   </span>
                 </th>
-                <td className="py-3.5 px-3 bg-[#f4f6f8] text-[#152238] border-x border-[#e8e3da]">
+                <td className="py-3.5 px-3 bg-[#f4f6f8] text-[var(--platform-primary)] border-x border-[#e8e3da]">
                   <Cell text={row.intertexe} emphasis />
                 </td>
                 <td className="py-3.5 px-2 text-[#5c5854]">
@@ -181,7 +181,7 @@ export function ComparisonView({
           </p>
         </div>
         <details className="border border-[#e8e3da] bg-white px-5 py-4 max-w-sm">
-          <summary className="cursor-pointer list-none text-sm text-[#152238] [&::-webkit-details-marker]:hidden">
+          <summary className="cursor-pointer list-none text-sm text-[var(--platform-primary)] [&::-webkit-details-marker]:hidden">
             Want the technical details?
             <span className="mt-1 block text-[11px] tracking-[0.12em] uppercase">
               View detailed comparison table →
@@ -201,7 +201,7 @@ function Cell({ text, emphasis = false }: { text: string; emphasis?: boolean }) 
   return (
     <span className="flex items-start gap-2 leading-relaxed">
       <Mark level={markLevel(text)} />
-      <span className={emphasis ? "text-[#152238]" : undefined}>{text}</span>
+      <span className={emphasis ? "text-[var(--platform-primary)]" : undefined}>{text}</span>
     </span>
   );
 }
@@ -233,11 +233,11 @@ function Mark({ level }: { level: MarkLevel }) {
   return (
     <span className="inline-flex mt-0.5 shrink-0" role="img" aria-label={label}>
       <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" aria-hidden="true">
-        {level === "core" ? <circle cx="8" cy="8" r="6" fill="#152238" /> : null}
+        {level === "core" ? <circle cx="8" cy="8" r="6" fill="var(--platform-primary)" /> : null}
         {level === "partial" ? (
           <>
-            <circle cx="8" cy="8" r="6" fill="none" stroke="#152238" strokeWidth="1.4" />
-            <path d="M8 2a6 6 0 0 1 0 12Z" fill="#152238" />
+            <circle cx="8" cy="8" r="6" fill="none" stroke="var(--platform-primary)" strokeWidth="1.4" />
+            <path d="M8 2a6 6 0 0 1 0 12Z" fill="var(--platform-primary)" />
           </>
         ) : null}
         {level === "unconfirmed" ? (
@@ -249,7 +249,7 @@ function Mark({ level }: { level: MarkLevel }) {
 }
 
 function PillarIcon({ name }: { name: (typeof PILLARS)[number]["icon"] }) {
-  const props = { width: 28, height: 28, fill: "none", stroke: "#152238", strokeWidth: 1.4 };
+  const props = { width: 28, height: 28, fill: "none", stroke: "var(--platform-primary)", strokeWidth: 1.4 };
   if (name === "layers") {
     return (
       <svg {...props} viewBox="0 0 28 28">

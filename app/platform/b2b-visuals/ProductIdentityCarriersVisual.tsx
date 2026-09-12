@@ -27,15 +27,15 @@ function FlowConnector({ active, vertical = true }: { active: boolean; vertical?
       <div className="flex flex-col items-center py-1" aria-hidden>
         <div className="w-px h-6 bg-[#e8e3da] overflow-hidden">
           <span
-            className={`block w-full h-full bg-[#3e6268]/70 origin-top ${
+            className={`block w-full h-full bg-[var(--platform-accent)]/70 origin-top ${
               active ? "b2b-pulse-vertical" : "scale-y-0 opacity-30"
             }`}
           />
         </div>
-        <span className={`text-[#3e6268] text-xs my-0.5 ${active ? "opacity-100" : "opacity-35"}`}>↓</span>
+        <span className={`text-[var(--platform-accent)] text-xs my-0.5 ${active ? "opacity-100" : "opacity-35"}`}>↓</span>
         <div className="w-px h-6 bg-[#e8e3da] overflow-hidden">
           <span
-            className={`block w-full h-full bg-[#3e6268]/70 origin-top ${
+            className={`block w-full h-full bg-[var(--platform-accent)]/70 origin-top ${
               active ? "b2b-pulse-vertical" : "scale-y-0 opacity-30"
             }`}
           />
@@ -47,15 +47,15 @@ function FlowConnector({ active, vertical = true }: { active: boolean; vertical?
   return (
     <div className="hidden lg:flex items-center justify-center px-2 self-stretch" aria-hidden>
       <div className="h-px w-8 bg-[#e8e3da] overflow-hidden">
-        <span className={`block h-full w-full bg-[#3e6268]/70 origin-left ${active ? "b2b-pulse-line" : "scale-x-0 opacity-30"}`} />
+        <span className={`block h-full w-full bg-[var(--platform-accent)]/70 origin-left ${active ? "b2b-pulse-line" : "scale-x-0 opacity-30"}`} />
       </div>
-      <span className={`text-[#3e6268] mx-1 text-xs ${active ? "opacity-100" : "opacity-35"}`}>→</span>
+      <span className={`text-[var(--platform-accent)] mx-1 text-xs ${active ? "opacity-100" : "opacity-35"}`}>→</span>
     </div>
   );
 }
 
 function CarrierIcon({ id, active }: { id: CarrierId; active: boolean }) {
-  const stroke = active ? "#3e6268" : "#8a847c";
+  const stroke = active ? "var(--platform-accent)" : "#8a847c";
   const common = { width: 28, height: 28, fill: "none", stroke, strokeWidth: 1.4, "aria-hidden": true as const };
 
   if (id === "qr") {
@@ -91,7 +91,7 @@ function PassportPanel({ version, active }: { version: 1 | 2; active: boolean })
   return (
     <div
       className={`rounded-lg border bg-white p-4 transition-all duration-500 ${
-        active ? "border-[#3e6268]/40 shadow-sm" : "border-[#e8e3da] opacity-60"
+        active ? "border-[var(--platform-accent)]/40 shadow-sm" : "border-[#e8e3da] opacity-60"
       }`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -101,14 +101,14 @@ function PassportPanel({ version, active }: { version: 1 | 2; active: boolean })
             Silk Evening Dress
           </p>
         </div>
-        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] border border-[#3e6268]/30 text-[#152238] px-2 py-1">
+        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] border border-[var(--platform-accent)]/30 text-[var(--platform-primary)] px-2 py-1">
           v{version}
         </span>
       </div>
       <dl className="space-y-2 text-xs text-[#5c5854]">
         <div className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
           <dt>Identity</dt>
-          <dd className="font-mono text-[#152238]">{IDENTITY}</dd>
+          <dd className="font-mono text-[var(--platform-primary)]">{IDENTITY}</dd>
         </div>
         <div className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
           <dt>Composition</dt>
@@ -166,7 +166,7 @@ export function ProductIdentityCarriersVisual({ className = "" }: { className?: 
             {/* Governed record */}
             <div
               className={`rounded-lg border bg-white p-4 transition-all duration-500 ${
-                recordActive ? "border-[#3e6268]/35" : "border-[#e8e3da] opacity-50"
+                recordActive ? "border-[var(--platform-accent)]/35" : "border-[#e8e3da] opacity-50"
               }`}
             >
               <p className="text-[10px] tracking-[0.14em] uppercase text-[#9c7b8b] mb-1">Governed product record</p>
@@ -182,7 +182,7 @@ export function ProductIdentityCarriersVisual({ className = "" }: { className?: 
             <div
               className={`rounded-lg border p-4 transition-all duration-500 relative overflow-hidden ${
                 identityActive
-                  ? "border-[#152238] bg-[#152238] text-white shadow-[0_12px_32px_rgba(21,34,56,0.15)]"
+                  ? "border-[var(--platform-primary)] bg-[var(--platform-primary)] text-white shadow-[0_12px_32px_rgba(44,38,32,0.15)]"
                   : "border-[#e8e3da] bg-white opacity-50"
               }`}
             >
@@ -198,7 +198,7 @@ export function ProductIdentityCarriersVisual({ className = "" }: { className?: 
                 <p className={`text-[10px] tracking-[0.16em] uppercase mb-1 ${identityActive ? "text-white/50" : "text-[#9c7b8b]"}`}>
                   INTERTEXE product identity
                 </p>
-                <p className={`font-mono text-sm mb-1 ${identityActive ? "text-[#9bb4c9]" : "text-[#152238]"}`}>{IDENTITY}</p>
+                <p className={`font-mono text-sm mb-1 ${identityActive ? "text-[var(--platform-accent-muted)]" : "text-[var(--platform-primary)]"}`}>{IDENTITY}</p>
                 <p className={`text-xs leading-relaxed ${identityActive ? "text-white/65" : "text-[#5c5854]"}`}>
                   Persistent · stable resolver · passport versions attach here
                 </p>
@@ -230,22 +230,22 @@ export function ProductIdentityCarriersVisual({ className = "" }: { className?: 
                       className={`flex flex-col items-center text-center px-2 py-3 sm:px-3 sm:py-4 border transition-all min-h-[88px] ${
                         selected
                           ? item.tone === "primary"
-                            ? "bg-white border-[#3e6268]/50 shadow-sm"
-                            : "bg-white border-[#3e6268]/30"
-                          : "bg-white/70 border-[#e8e3da] hover:border-[#3e6268]/20 opacity-80"
+                            ? "bg-white border-[var(--platform-accent)]/50 shadow-sm"
+                            : "bg-white border-[var(--platform-accent)]/30"
+                          : "bg-white/70 border-[#e8e3da] hover:border-[var(--platform-accent)]/20 opacity-80"
                       } ${!carrierActive ? "opacity-45 pointer-events-none" : ""}`}
                     >
                       <CarrierIcon id={item.id} active={lit} />
-                      <span className="text-xs font-medium text-[#152238] mt-2">{item.label}</span>
+                      <span className="text-xs font-medium text-[var(--platform-primary)] mt-2">{item.label}</span>
                       <span
                         className={`text-[9px] uppercase tracking-[0.08em] mt-0.5 ${
-                          item.tone === "primary" ? "text-[#3e6268]" : "text-[#8a847c]"
+                          item.tone === "primary" ? "text-[var(--platform-accent)]" : "text-[#8a847c]"
                         }`}
                       >
                         {item.detail}
                       </span>
                       {selected && carrierActive ? (
-                        <span className="mt-2 block w-full h-px bg-[#3e6268]/40 b2b-pulse-line" aria-hidden />
+                        <span className="mt-2 block w-full h-px bg-[var(--platform-accent)]/40 b2b-pulse-line" aria-hidden />
                       ) : null}
                     </button>
                   );
@@ -269,7 +269,7 @@ export function ProductIdentityCarriersVisual({ className = "" }: { className?: 
                   type="button"
                   onClick={() => setVersion((v) => (v === 1 ? 2 : 1))}
                   disabled={!passportActive}
-                  className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] bg-white px-3 py-2 min-h-[36px] hover:border-[#3e6268]/30 disabled:opacity-40"
+                  className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] bg-white px-3 py-2 min-h-[36px] hover:border-[var(--platform-accent)]/30 disabled:opacity-40"
                 >
                   Show passport {version === 1 ? "v2" : "v1"}
                 </button>

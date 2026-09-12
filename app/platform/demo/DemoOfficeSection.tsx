@@ -10,13 +10,13 @@ export function DemoOfficeSection() {
             Location
           </p>
           <h2
-            className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#152238] mb-8"
+            className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] mb-8"
             style={SERIF}
           >
             Our <em className="italic font-light">office</em>
           </h2>
-          <div className="border-l-2 border-[#152238] pl-5 mb-8">
-            <p className="text-base font-medium text-[#152238] mb-1">Barcelona</p>
+          <div className="border-l-2 border-[var(--platform-primary)] pl-5 mb-8">
+            <p className="text-base font-medium text-[var(--platform-primary)] mb-1">Barcelona</p>
             <p className="text-[11px] tracking-[0.14em] uppercase text-[#9c7b8b] mb-2">Platform office</p>
             <p className="text-sm text-[#5c5854] leading-relaxed">Barcelona, Spain</p>
           </div>
@@ -37,7 +37,7 @@ export function DemoOfficeSection() {
           />
           <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
             Barcelona, Spain. City context for the platform office — not a photograph of INTERTEXE rooms or staff.{" "}
-            <Link href="#book" className="underline underline-offset-4 hover:text-[#152238]">
+            <Link href="#book" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
               Book a conversation ↑
             </Link>
           </figcaption>

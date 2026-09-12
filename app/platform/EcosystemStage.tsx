@@ -38,7 +38,7 @@ export function EcosystemStage() {
           and Digital Product Passports — while the same material records connect into the INTERTEXE consumer shopping
           ecosystem.
         </Body>
-        <p className="text-[15px] sm:text-base text-[#152238] mb-8 sm:mb-10">
+        <p className="text-[15px] sm:text-base text-[var(--platform-primary)] mb-8 sm:mb-10">
           One intelligence layer. Your brand experience. Our consumer ecosystem.
         </p>
 
@@ -65,9 +65,9 @@ export function EcosystemStage() {
 function StageColumn({ stage }: { stage: (typeof STAGES)[number] }) {
   return (
     <figure className="m-0 min-w-0 h-full flex flex-col">
-      <p className="text-[10px] tracking-[0.16em] uppercase text-[#152238] mb-2">{stage.label}</p>
+      <p className="text-[10px] tracking-[0.16em] uppercase text-[var(--platform-primary)] mb-2">{stage.label}</p>
       <p className="text-sm text-[#5c5854] leading-relaxed mb-5 min-h-[6.5rem]">{stage.copy}</p>
-      <div className="mt-auto overflow-hidden border border-[#e8e3da] bg-[#e8eef4] aspect-[3/2]">
+      <div className="mt-auto overflow-hidden border border-[#e8e3da] bg-[var(--platform-highlight)] aspect-[3/2]">
         <img
           src={stage.image}
           alt={stage.alt}

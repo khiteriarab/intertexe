@@ -22,7 +22,7 @@ export function DemoBookSection() {
             "Platform from $499/month",
           ].map((point) => (
             <li key={point} className="flex items-start gap-2">
-              <span className="text-[#152238] mt-0.5 shrink-0" aria-hidden="true">
+              <span className="text-[var(--platform-primary)] mt-0.5 shrink-0" aria-hidden="true">
                 →
               </span>
               <span>{point}</span>

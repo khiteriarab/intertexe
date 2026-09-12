@@ -32,7 +32,7 @@ function RecordDial({
           cy="180"
           r="158"
           fill="none"
-          stroke="#152238"
+          stroke="var(--platform-primary)"
           strokeWidth="2"
           strokeLinecap="round"
           strokeDasharray={`${(progress / 100) * 993} 993`}
@@ -119,7 +119,7 @@ function StageTabs({
             onClick={() => onSelect(item.id)}
             className={`shrink-0 px-4 py-2.5 min-h-[44px] text-[11px] tracking-[0.14em] uppercase rounded-full border transition-colors ${
               selected
-                ? "bg-[var(--platform-navy)] text-white border-[var(--platform-navy)]"
+                ? "bg-[var(--platform-accent-soft)] text-[var(--platform-primary)] border-[var(--platform-accent-muted)]"
                 : "bg-white text-[var(--platform-muted)] border-[var(--platform-border)] hover:text-[var(--platform-ink)]"
             }`}
           >
@@ -151,7 +151,7 @@ function StageDetail({ stage }: { stage: PlatformScrollStage }) {
       <ul className="space-y-2.5 mb-6">
         {stage.points.map((point) => (
           <li key={point} className="flex items-start gap-2.5 text-sm text-[var(--platform-muted)]">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--platform-navy)]" aria-hidden />
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--platform-accent)]" aria-hidden />
             {point}
           </li>
         ))}

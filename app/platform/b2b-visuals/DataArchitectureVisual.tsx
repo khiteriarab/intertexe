@@ -50,15 +50,15 @@ function HorizontalConnector({ active = false }: { active?: boolean }) {
     <div className="relative hidden lg:flex items-center justify-center px-2 xl:px-4 self-stretch" aria-hidden>
       <div className="h-px w-full min-w-[24px] xl:min-w-[40px] bg-[#e8e3da] overflow-hidden">
         <span
-          className={`block h-full w-full bg-[#3e6268]/70 origin-left ${
+          className={`block h-full w-full bg-[var(--platform-accent)]/70 origin-left ${
             active ? "b2b-pulse-line" : "scale-x-0 opacity-0"
           }`}
         />
       </div>
-      <span className={`shrink-0 text-[#3e6268] mx-2 ${active ? "opacity-100" : "opacity-40"}`}>→</span>
+      <span className={`shrink-0 text-[var(--platform-accent)] mx-2 ${active ? "opacity-100" : "opacity-40"}`}>→</span>
       <div className="h-px w-full min-w-[24px] xl:min-w-[40px] bg-[#e8e3da] overflow-hidden">
         <span
-          className={`block h-full w-full bg-[#3e6268]/70 ${
+          className={`block h-full w-full bg-[var(--platform-accent)]/70 ${
             active ? "b2b-pulse-line-delay" : "scale-x-0 opacity-0"
           }`}
         />
@@ -72,15 +72,15 @@ function VerticalConnector({ active = false }: { active?: boolean }) {
     <div className="relative flex lg:hidden flex-col items-center py-2" aria-hidden>
       <div className="w-px h-8 bg-[#e8e3da] overflow-hidden">
         <span
-          className={`block w-full h-full bg-[#3e6268]/70 origin-top ${
+          className={`block w-full h-full bg-[var(--platform-accent)]/70 origin-top ${
             active ? "b2b-pulse-vertical" : "scale-y-0 opacity-0"
           }`}
         />
       </div>
-      <span className={`shrink-0 text-[#3e6268] my-1 ${active ? "opacity-100" : "opacity-40"}`}>↓</span>
+      <span className={`shrink-0 text-[var(--platform-accent)] my-1 ${active ? "opacity-100" : "opacity-40"}`}>↓</span>
       <div className="w-px h-8 bg-[#e8e3da] overflow-hidden">
         <span
-          className={`block w-full h-full bg-[#3e6268]/70 origin-top ${
+          className={`block w-full h-full bg-[var(--platform-accent)]/70 origin-top ${
             active ? "b2b-pulse-vertical" : "scale-y-0 opacity-0"
           }`}
         />
@@ -124,8 +124,8 @@ export function DataArchitectureVisual({ className = "" }: { className?: string 
                       aria-pressed={selected}
                       className={`w-full text-left px-3 lg:px-3.5 py-2.5 lg:py-2 border transition-colors min-h-[44px] ${
                         selected
-                          ? "bg-white border-[#3e6268]/40 shadow-sm"
-                          : "bg-white/60 border-[#e8e3da] hover:border-[#3e6268]/25"
+                          ? "bg-white border-[var(--platform-accent)]/40 shadow-sm"
+                          : "bg-white/60 border-[#e8e3da] hover:border-[var(--platform-accent)]/25"
                       }`}
                     >
                       <p className="text-[9px] lg:text-[10px] tracking-[0.1em] lg:tracking-[0.12em] uppercase text-[#9c7b8b] mb-0.5 lg:mb-1">
@@ -143,7 +143,7 @@ export function DataArchitectureVisual({ className = "" }: { className?: string 
             <VerticalConnector active={!reduced} />
             <HorizontalConnector active={!reduced} />
 
-            <div className="bg-[#152238] text-white p-4 sm:p-5 lg:p-4 xl:p-5 flex flex-col justify-center relative overflow-hidden">
+            <div className="bg-[var(--platform-primary)] text-white p-4 sm:p-5 lg:p-4 xl:p-5 flex flex-col justify-center relative overflow-hidden">
               <div
                 className="pointer-events-none absolute inset-0 opacity-[0.1]"
                 aria-hidden
@@ -157,7 +157,7 @@ export function DataArchitectureVisual({ className = "" }: { className?: string 
                 <p className="hidden lg:block text-base xl:text-lg font-light mb-2 xl:mb-3" style={SERIF}>
                   Normalize · resolve · govern
                 </p>
-                <p className="lg:hidden font-mono text-sm text-[#9bb4c9]" aria-live="polite">
+                <p className="lg:hidden font-mono text-sm text-[var(--platform-accent-muted)]" aria-live="polite">
                   {active.raw} → {active.normalized}
                 </p>
                 <div className="hidden lg:block rounded border border-white/15 bg-white/5 p-2.5 xl:p-3 text-xs">
@@ -165,7 +165,7 @@ export function DataArchitectureVisual({ className = "" }: { className?: string 
                   <p className="font-mono text-white/90 mb-1.5 text-[11px]">{active.raw}</p>
                   <p className="text-white/40 mb-1">↓</p>
                   <p className="text-white/50 mb-1 uppercase tracking-[0.1em] text-[10px]">Normalized</p>
-                  <p className="font-mono text-[#9bb4c9] text-[11px]" aria-live="polite">
+                  <p className="font-mono text-[var(--platform-accent-muted)] text-[11px]" aria-live="polite">
                     {active.normalized}
                   </p>
                 </div>
@@ -196,7 +196,7 @@ export function DataArchitectureVisual({ className = "" }: { className?: string 
                 {OUTPUTS.map((item) => (
                   <li
                     key={item}
-                    className="text-xs sm:text-sm text-[#161513] bg-white border border-[#e8e3da] px-3 lg:px-4 py-2 lg:py-2.5 pl-4 lg:pl-5 border-l-[3px] border-l-[#3e6268]/50"
+                    className="text-xs sm:text-sm text-[#161513] bg-white border border-[#e8e3da] px-3 lg:px-4 py-2 lg:py-2.5 pl-4 lg:pl-5 border-l-[3px] border-l-[var(--platform-accent)]/50"
                   >
                     {item}
                   </li>

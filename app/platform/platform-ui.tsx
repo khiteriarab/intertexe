@@ -47,8 +47,8 @@ export function PrimaryLink({
       href={href}
       className={
         onDark
-          ? "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase bg-white text-[var(--platform-navy,#152238)] px-7 py-3.5 hover:bg-[#f7f5f1] min-h-[44px] transition-colors"
-          : "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-navy,#152238)] text-white px-7 py-3.5 hover:bg-[#0f1a2c] min-h-[44px] transition-colors"
+          ? "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-surface)] text-[var(--platform-primary)] px-7 py-3.5 hover:bg-[var(--platform-highlight)] min-h-[44px] transition-colors"
+          : "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-accent-soft)] text-[var(--platform-primary)] px-7 py-3.5 hover:bg-[var(--platform-accent-muted)] min-h-[44px] transition-colors border border-[var(--platform-border)]"
       }
     >
       {children}
@@ -90,12 +90,12 @@ export function SoftwareStage({
   copy?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[#d5dee8] bg-white p-5 sm:p-8 shadow-[0_24px_60px_rgba(21,34,56,0.08)]">
+    <div className="rounded-2xl border border-[var(--platform-border)] bg-[var(--platform-surface)] p-5 sm:p-8 shadow-[0_24px_60px_rgba(44,38,32,0.06)]">
       {title ? (
-        <p className="text-[15px] sm:text-[17px] font-medium text-[#152238] mb-1">{title}</p>
+        <p className="text-[15px] sm:text-[17px] font-medium text-[var(--platform-primary)] mb-1">{title}</p>
       ) : null}
-      {copy ? <p className="text-sm text-[#5c5854] font-light mb-5">{copy}</p> : null}
-      <div className="rounded-xl bg-[#d4e0ee] p-3 sm:p-6">{children}</div>
+      {copy ? <p className="text-sm text-[var(--platform-muted)] font-light mb-5">{copy}</p> : null}
+      <div className="rounded-xl bg-[var(--platform-highlight)] p-3 sm:p-6">{children}</div>
     </div>
   );
 }
@@ -104,7 +104,7 @@ export function DiscoverLink({ href, children }: { href: string; children: React
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 rounded-md bg-[#152238] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c]"
+      className="inline-flex items-center gap-2 rounded-md bg-[var(--platform-accent-soft)] px-5 py-2.5 text-[13px] font-medium text-[var(--platform-primary)] min-h-[44px] hover:bg-[var(--platform-accent-muted)] border border-[var(--platform-border)] transition-colors"
     >
       {children}
       <span aria-hidden="true">→</span>

@@ -14,7 +14,7 @@ export function PlatformChrome({
   active?: PlatformNavKey;
 }) {
   return (
-    <div className="platform-shell min-h-screen">
+    <div className="platform-shell platform-editorial min-h-screen">
       <PlatformNav active={active} tone="light" />
       {children}
       <footer className="border-t border-[var(--platform-border)] px-4 sm:px-6 md:px-8 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] bg-[var(--platform-surface)]">

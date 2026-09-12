@@ -1,0 +1,98 @@
+/* INTERTEXE HQ dashboard — beige editorial (abstract art direction) */
+
+.hq-app {
+  --hq-bg: #f5f0e8;
+  --hq-surface: #faf8f4;
+  --hq-ink: #1c1915;
+  --hq-primary: #2c2620;
+  --hq-muted: #6f6a63;
+  --hq-quiet: #9c9488;
+  --hq-border: #e8e0d4;
+  --hq-accent: #c4a574;
+  --hq-accent-soft: #e8dcc8;
+  --hq-highlight: #f0ebe3;
+  --hq-serif: Georgia, "Iowan Old Style", Palatino, "Times New Roman", serif;
+  min-height: 100vh;
+  background: var(--hq-bg);
+  color: var(--hq-ink);
+  position: relative;
+  isolation: isolate;
+}
+
+.hq-app::before,
+.hq-app::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.5;
+}
+
+.hq-app::before {
+  width: min(40vw, 420px);
+  height: min(40vw, 420px);
+  top: -6%;
+  right: 4%;
+  background: radial-gradient(circle, rgba(201, 169, 98, 0.24) 0%, transparent 68%);
+}
+
+.hq-app::after {
+  width: min(36vw, 380px);
+  height: min(36vw, 380px);
+  bottom: 6%;
+  left: -4%;
+  background: radial-gradient(circle, rgba(232, 220, 200, 0.55) 0%, transparent 70%);
+}
+
+.hq-app > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hq-app .hq-sidebar {
+  background: linear-gradient(180deg, rgba(250, 248, 244, 0.98) 0%, rgba(240, 235, 227, 0.96) 100%);
+  border-color: var(--hq-border);
+}
+
+.hq-app .hq-nav-link {
+  color: rgba(28, 25, 21, 0.62);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.hq-app .hq-nav-link:hover {
+  color: var(--hq-ink);
+  background: rgba(232, 220, 200, 0.35);
+}
+
+.hq-app .hq-nav-link-active {
+  color: var(--hq-surface);
+  background: var(--hq-primary);
+}
+
+.hq-app .hq-card {
+  background: rgba(250, 248, 244, 0.92);
+  border: 1px solid var(--hq-border);
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgba(44, 38, 32, 0.04);
+}
+
+.hq-app .hq-display {
+  font-family: var(--hq-serif);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.hq-app .hq-eyebrow {
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--hq-quiet);
+}
+
+.hq-app .hq-metric-value {
+  font-family: var(--hq-serif);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}

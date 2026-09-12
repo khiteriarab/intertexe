@@ -65,12 +65,12 @@ export function PlatformFaq() {
   return (
     <section className="bg-[#f7f5f1] border-t border-[#e8e3da]">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <h2 className="mb-2 text-[1.75rem] sm:text-3xl md:text-4xl font-light text-[#152238]" style={SERIF}>
+        <h2 className="mb-2 text-[1.75rem] sm:text-3xl md:text-4xl font-light text-[var(--platform-primary)]" style={SERIF}>
           FAQ
         </h2>
         <p className="text-sm text-[#8a847c] mb-8">
           Workspace questions for{" "}
-          <span className="text-[#152238]">intertexe.com/platform/discover</span>.
+          <span className="text-[var(--platform-primary)]">intertexe.com/platform/discover</span>.
         </p>
         <div className="border-t border-[#e8e3da]">
           {FAQ.map((item) => (

@@ -43,7 +43,7 @@ const PILL_TONE: Record<(typeof INSIGHTS)[number]["tone"], string> = {
   amber: "bg-[#f5efe6] text-[#7a5c2e] border-[#e8dcc8]",
   teal: "bg-[#e8f0ef] text-[#2c4a3e] border-[#cdded9]",
   green: "bg-[#eaf2ea] text-[#2d5a34] border-[#cfe0cf]",
-  slate: "bg-[#eef0f4] text-[#152238] border-[#d5dee8]",
+  slate: "bg-[var(--platform-highlight)] text-[var(--platform-primary)] border-[var(--platform-border)]",
 };
 
 const TRUST_MARKS = [
@@ -72,7 +72,7 @@ function InsightCard({ insight, index, activeIndex }: { insight: (typeof INSIGHT
     >
       <div className="rounded-2xl border border-[var(--platform-border)] bg-white/97 backdrop-blur-md shadow-[0_24px_60px_rgba(22,21,19,0.12)] px-4 py-3.5 sm:px-5 sm:py-4 text-left lg:px-6 lg:py-5">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f0ebe4] text-[10px] font-medium text-[var(--platform-navy)]">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--platform-accent-soft)] text-[10px] font-medium text-[var(--platform-primary)]">
             TX
           </span>
           <div className="min-w-0 flex-1">
@@ -128,7 +128,7 @@ export function PlatformHero() {
               onClick={() => selectTab(i)}
               className={`px-4 py-2 min-h-[40px] text-[11px] tracking-[0.14em] uppercase rounded-full border transition-colors ${
                 selected
-                  ? "bg-[var(--platform-navy)] text-white border-[var(--platform-navy)]"
+                  ? "bg-[var(--platform-accent-soft)] text-[var(--platform-primary)] border-[var(--platform-accent-muted)]"
                   : "bg-white/80 text-[var(--platform-muted)] border-[var(--platform-border)] hover:text-[var(--platform-ink)]"
               }`}
             >
@@ -186,7 +186,7 @@ export function PlatformHero() {
                   aria-label={`Show insight ${i + 1}`}
                   onClick={() => setIndex(i)}
                   className={`h-1.5 rounded-full transition-all ${
-                    i === index ? "w-6 bg-[var(--platform-navy)]" : "w-1.5 bg-[var(--platform-navy)]/25"
+                    i === index ? "w-6 bg-[var(--platform-accent)]" : "w-1.5 bg-[var(--platform-accent)]/25"
                   }`}
                 />
               ))}
@@ -275,7 +275,7 @@ export function PlatformHero() {
                     aria-label={`Show insight ${i + 1}`}
                     onClick={() => setIndex(i)}
                     className={`h-1.5 rounded-full transition-all ${
-                      i === index ? "w-6 bg-[var(--platform-navy)]" : "w-1.5 bg-[var(--platform-navy)]/25 hover:bg-[var(--platform-navy)]/45"
+                      i === index ? "w-6 bg-[var(--platform-accent)]" : "w-1.5 bg-[var(--platform-accent)]/25 hover:bg-[var(--platform-accent)]/45"
                     }`}
                   />
                 ))}
@@ -289,13 +289,13 @@ export function PlatformHero() {
         </p>
       </div>
 
-      <div className="border-t border-[var(--platform-border)]/70 bg-[var(--platform-navy)] py-5 sm:py-6 lg:py-7">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+      <div className="platform-abstract-band border-t border-[var(--platform-border)]/70 py-5 sm:py-6 lg:py-7">
+        <div className="relative max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
           <ul className="flex flex-wrap items-center justify-center lg:justify-between gap-x-8 gap-y-3">
             {TRUST_MARKS.map((mark) => (
               <li
                 key={mark}
-                className="text-[10px] sm:text-[11px] lg:text-[12px] tracking-[0.22em] uppercase text-white/55 whitespace-nowrap"
+                className="text-[10px] sm:text-[11px] lg:text-[12px] tracking-[0.22em] uppercase text-[var(--platform-muted)] whitespace-nowrap"
                 style={SERIF}
               >
                 {mark}

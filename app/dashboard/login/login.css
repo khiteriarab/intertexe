@@ -1,10 +1,10 @@
-/* Enterprise login — platform.intertexe.com · 45% petrol / 55% ivory */
+/* Enterprise login — platform.intertexe.com · beige editorial */
 
 .ent-login-page {
-  --ent-login-petrol: #3e6268;
-  --ent-login-petrol-hover: #345860;
-  --ent-login-forest: #152238;
-  --ent-login-ivory: #f7f1e8;
+  --ent-login-petrol: #e8dcc8;
+  --ent-login-petrol-hover: #d9c9a8;
+  --ent-login-forest: #2c2620;
+  --ent-login-ivory: #f5f0e8;
   --ent-login-ink: #1a1f22;
   --ent-login-muted: #9a948c;
 
@@ -19,7 +19,7 @@
   align-items: center;
   padding: clamp(2rem, 5vw, 4rem);
   background: var(--ent-login-petrol);
-  color: #fff;
+  color: var(--ent-login-forest);
   position: relative;
   overflow: hidden;
 }
@@ -49,7 +49,7 @@
 }
 
 .ent-login-brand-wordmark-dark {
-  color: #fff;
+  color: var(--ent-login-forest);
   margin-bottom: 0;
   font-size: 0.85rem;
 }
@@ -73,7 +73,7 @@
 .ent-login-brand-tagline {
   margin: 0 0 2.5rem;
   font-size: 0.9375rem;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(44, 38, 32, 0.72);
   line-height: 1.5;
 }
 

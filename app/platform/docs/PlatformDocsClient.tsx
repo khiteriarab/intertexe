@@ -48,13 +48,13 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
       {label ? (
         <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c] mb-2">{label}</p>
       ) : null}
-      <pre className="bg-[#faf8f5] lg:bg-[#152238] lg:text-[#e8eef4] border border-[#ddd5cb] lg:border-[#152238] p-3 sm:p-4 lg:p-5 text-[11px] sm:text-xs overflow-x-auto rounded-lg pr-14">
+      <pre className="bg-[#faf8f5] lg:bg-[var(--platform-primary)] lg:text-[var(--platform-highlight)] border border-[#ddd5cb] lg:border-[var(--platform-primary)] p-3 sm:p-4 lg:p-5 text-[11px] sm:text-xs overflow-x-auto rounded-lg pr-14">
         <code>{code}</code>
       </pre>
       <button
         type="button"
         onClick={copy}
-        className="absolute top-8 sm:top-9 right-2 text-[10px] tracking-[0.1em] uppercase border border-[#ddd5cb] bg-white px-2.5 py-1.5 min-h-[32px] hover:border-[#152238]/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#152238]/40"
+        className="absolute top-8 sm:top-9 right-2 text-[10px] tracking-[0.1em] uppercase border border-[#ddd5cb] bg-white px-2.5 py-1.5 min-h-[32px] hover:border-[var(--platform-primary)]/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--platform-primary)]/40"
         aria-label={copied ? "Copied" : "Copy code"}
       >
         {copied ? "Copied" : "Copy"}
@@ -94,7 +94,7 @@ function EndpointCard({
   return (
     <div className="border border-[#e8e3da] bg-white rounded-lg p-4 sm:p-5 mb-3">
       <div className="flex flex-wrap items-center gap-2 mb-2">
-        <span className="text-[10px] tracking-[0.12em] uppercase bg-[#152238] text-white px-2 py-1">{method}</span>
+        <span className="text-[10px] tracking-[0.12em] uppercase bg-[var(--platform-primary)] text-white px-2 py-1">{method}</span>
         <code className="text-xs break-all">{path}</code>
       </div>
       <p className="text-sm text-[#5c5854] leading-relaxed">{description}</p>
@@ -151,8 +151,8 @@ export function PlatformDocsClient() {
                     href={`#${item.id}`}
                     className={`block py-1.5 pl-3 border-l-2 transition-colors ${
                       active === item.id
-                        ? "border-[#152238] text-[#152238]"
-                        : "border-transparent text-[#8a847c] hover:text-[#152238]"
+                        ? "border-[var(--platform-primary)] text-[var(--platform-primary)]"
+                        : "border-transparent text-[#8a847c] hover:text-[var(--platform-primary)]"
                     }`}
                   >
                     {item.label}
@@ -165,13 +165,13 @@ export function PlatformDocsClient() {
 
         <div className="min-w-0 text-sm text-[#5c5854] leading-relaxed">
           <details className="lg:hidden mb-8 border border-[#e8e3da] bg-white rounded-lg p-4">
-            <summary className="text-[11px] tracking-[0.14em] uppercase cursor-pointer text-[#152238]">
+            <summary className="text-[11px] tracking-[0.14em] uppercase cursor-pointer text-[var(--platform-primary)]">
               Jump to section
             </summary>
             <ul className="mt-3 space-y-2 text-sm">
               {NAV.map((item) => (
                 <li key={item.id}>
-                  <a href={`#${item.id}`} className="text-[#5c5854] hover:text-[#152238]">
+                  <a href={`#${item.id}`} className="text-[#5c5854] hover:text-[var(--platform-primary)]">
                     {item.label}
                   </a>
                 </li>

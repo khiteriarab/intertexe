@@ -78,7 +78,7 @@ export function ResourceCarousel() {
                 onClick={() => go(index)}
                 className={`min-h-[44px] rounded-full px-5 sm:px-7 text-[11px] tracking-[0.14em] uppercase transition-colors ${
                   selected
-                    ? "bg-[#152238] text-white"
+                    ? "bg-[var(--platform-primary)] text-white"
                     : "bg-[#ece8e1] text-[#5c5854] hover:bg-[#e2ddd4]"
                 }`}
               >
@@ -96,7 +96,7 @@ export function ResourceCarousel() {
         >
           <blockquote className="order-2 lg:order-1 min-w-0">
             <p
-              className="text-[1.45rem] sm:text-[1.7rem] font-normal italic leading-[1.3] text-[#152238]"
+              className="text-[1.45rem] sm:text-[1.7rem] font-normal italic leading-[1.3] text-[var(--platform-primary)]"
               style={SERIF}
             >
               {surface.quote}
@@ -108,11 +108,11 @@ export function ResourceCarousel() {
               type="button"
               onClick={() => go(active - 1)}
               aria-label="Previous surface"
-              className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-20 hidden sm:inline-flex w-11 h-11 border border-[#152238] text-[#152238] bg-[#f7f5f1] items-center justify-center hover:bg-white"
+              className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-20 hidden sm:inline-flex w-11 h-11 border border-[var(--platform-primary)] text-[var(--platform-primary)] bg-[#f7f5f1] items-center justify-center hover:bg-white"
             >
               ←
             </button>
-            <div className="relative overflow-hidden rounded-2xl bg-[#152238] aspect-[4/3] shadow-[0_20px_50px_rgba(21,34,56,0.14)]">
+            <div className="relative overflow-hidden rounded-2xl bg-[var(--platform-primary)] aspect-[4/3] shadow-[0_20px_50px_rgba(44,38,32,0.14)]">
               {SURFACES.map((item, index) => (
                 <img
                   key={item.id}
@@ -130,7 +130,7 @@ export function ResourceCarousel() {
               type="button"
               onClick={() => go(active + 1)}
               aria-label="Next surface"
-              className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-20 hidden sm:inline-flex w-11 h-11 border border-[#152238] text-[#152238] bg-[#f7f5f1] items-center justify-center hover:bg-white"
+              className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-20 hidden sm:inline-flex w-11 h-11 border border-[var(--platform-primary)] text-[var(--platform-primary)] bg-[#f7f5f1] items-center justify-center hover:bg-white"
             >
               →
             </button>
@@ -139,7 +139,7 @@ export function ResourceCarousel() {
                 type="button"
                 onClick={() => go(active - 1)}
                 aria-label="Previous surface"
-                className="w-11 h-11 border border-[#152238] text-[#152238] inline-flex items-center justify-center"
+                className="w-11 h-11 border border-[var(--platform-primary)] text-[var(--platform-primary)] inline-flex items-center justify-center"
               >
                 ←
               </button>
@@ -147,7 +147,7 @@ export function ResourceCarousel() {
                 type="button"
                 onClick={() => go(active + 1)}
                 aria-label="Next surface"
-                className="w-11 h-11 border border-[#152238] text-[#152238] inline-flex items-center justify-center"
+                className="w-11 h-11 border border-[var(--platform-primary)] text-[var(--platform-primary)] inline-flex items-center justify-center"
               >
                 →
               </button>
@@ -156,20 +156,20 @@ export function ResourceCarousel() {
 
           <div className="order-3 min-w-0">
             <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-3">{surface.tab}</p>
-            <h3 className="text-xl sm:text-2xl leading-snug text-[#152238] mb-3" style={SERIF}>
+            <h3 className="text-xl sm:text-2xl leading-snug text-[var(--platform-primary)] mb-3" style={SERIF}>
               {surface.heading}
             </h3>
             <p className="text-[15px] text-[#5c5854] font-light leading-relaxed mb-6">{surface.copy}</p>
             <Link
               href={surface.primary.href}
-              className="inline-flex items-center justify-center rounded-md bg-[#152238] text-white text-[12px] tracking-[0.04em] px-6 py-3.5 min-h-[44px] hover:bg-[#0f1a2c]"
+              className="inline-flex items-center justify-center rounded-md bg-[var(--platform-primary)] text-white text-[12px] tracking-[0.04em] px-6 py-3.5 min-h-[44px] hover:bg-[var(--platform-primary-hover)]"
             >
               {surface.primary.label} →
             </Link>
             <div className="mt-3">
               <Link
                 href={surface.secondary.href}
-                className="inline-flex items-center min-h-[44px] text-[13px] text-[#152238] hover:underline underline-offset-4"
+                className="inline-flex items-center min-h-[44px] text-[13px] text-[var(--platform-primary)] hover:underline underline-offset-4"
               >
                 {surface.secondary.label} →
               </Link>

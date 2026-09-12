@@ -76,7 +76,7 @@ export function SalesWhatItIsSection() {
           {VALUE_PILLARS.map((pillar) => (
             <article
               key={pillar.title}
-              className="bg-white border border-[#e8e3da] p-5 sm:p-6 lg:p-8 border-l-[3px] border-l-[#3e6268]/50 lg:hover:shadow-[0_20px_50px_rgba(22,21,19,0.04)] transition-shadow"
+              className="bg-white border border-[#e8e3da] p-5 sm:p-6 lg:p-8 border-l-[3px] border-l-[var(--platform-accent)]/50 lg:hover:shadow-[0_20px_50px_rgba(22,21,19,0.04)] transition-shadow"
             >
               <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-2">{pillar.title}</p>
               <p className="text-sm text-[#5c5854] leading-relaxed">{pillar.copy}</p>
@@ -136,13 +136,13 @@ export function SalesGovernedRecordSection() {
 
 export function SalesIntelligenceSection() {
   return (
-    <section className="bg-[#152238] text-[#f7f5f1] py-16 sm:py-20 lg:py-28 xl:py-32">
-      <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+    <section className="platform-abstract-band py-16 sm:py-20 lg:py-28 xl:py-32">
+      <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 lg:gap-16 xl:gap-20 items-start">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <Eyebrow>Intelligence</Eyebrow>
-            <Heading className="mb-4 text-white">Benchmark your material strategy against the market.</Heading>
-            <Body className="text-white/72 mb-6">
+            <Heading className="mb-4">Benchmark your material strategy against the market.</Heading>
+            <Body className="mb-6">
               Material Benchmark is the subscription-style dataset brands use to compare fabric strategy — your catalog
               against governed peer segments, with conversion signals that show what is working and what is not. Same
               product record powers readiness gaps, regulatory field tracking, and peer comparison before passports or
@@ -150,12 +150,12 @@ export function SalesIntelligenceSection() {
             </Body>
             <ul className="space-y-2">
               {INTELLIGENCE_POINTS.map((item) => (
-                <li key={item} className="text-sm text-white/75 pl-4 border-l-2 border-white/15 leading-relaxed">
+                <li key={item} className="text-sm text-[var(--platform-muted)] pl-4 border-l-2 border-[var(--platform-accent-muted)] leading-relaxed">
                   {item}
                 </li>
               ))}
             </ul>
-            <p className="mt-6 text-xs text-white/45 leading-relaxed">
+            <p className="mt-6 text-xs text-[var(--platform-quiet)] leading-relaxed">
               Illustrative example · Individual customer data is never exposed. Peer medians come from governed datasets
               — not fabricated competitor dumps. Over time, governed consumer signals may inform aggregate material
               strategy — aggregate only, never individual shopper data, and not live enterprise intelligence where it
@@ -193,7 +193,7 @@ export function SalesOutputsSection() {
               separate systems to rebuild, and not the whole product. Publication flows from the intelligence and
               readiness work that comes first.
             </Body>
-            <div className="mb-8 p-4 sm:p-5 bg-white border border-[#e8e3da] border-l-[3px] border-l-[#3e6268]/50">
+            <div className="mb-8 p-4 sm:p-5 bg-white border border-[#e8e3da] border-l-[3px] border-l-[var(--platform-accent)]/50">
               <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-2">Connected product identity</p>
               <p className="text-lg font-light text-[#161513] mb-2" style={{ fontFamily: "Georgia, 'Iowan Old Style', Palatino, serif" }}>
                 From product record to physical product.
@@ -205,7 +205,7 @@ export function SalesOutputsSection() {
               <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-2">
                 {IDENTITY_CAPABILITIES.map(({ verb, detail }) => (
                   <li key={verb} className="text-xs text-[#5c5854]">
-                    <span className="text-[10px] tracking-[0.1em] uppercase text-[#152238]">{verb}</span>
+                    <span className="text-[10px] tracking-[0.1em] uppercase text-[var(--platform-primary)]">{verb}</span>
                     <span className="text-[#8a847c]"> · </span>
                     {detail}
                   </li>
@@ -216,9 +216,9 @@ export function SalesOutputsSection() {
               {OUTPUT_PILLARS.map((pillar) => (
                 <article
                   key={pillar.title}
-                  className="bg-white border border-[#e8e3da] px-4 sm:px-5 py-4 border-l-[3px] border-l-[#3e6268]/50"
+                  className="bg-white border border-[#e8e3da] px-4 sm:px-5 py-4 border-l-[3px] border-l-[var(--platform-accent)]/50"
                 >
-                  <h3 className="text-sm font-medium text-[#152238] mb-1.5">{pillar.title}</h3>
+                  <h3 className="text-sm font-medium text-[var(--platform-primary)] mb-1.5">{pillar.title}</h3>
                   <p className="text-sm text-[#5c5854] leading-relaxed">{pillar.copy}</p>
                 </article>
               ))}
@@ -290,7 +290,7 @@ export function SalesCtaSection() {
           <SecondaryLink href={signIn}>Sign in</SecondaryLink>
         </div>
         <p className="mt-8 text-xs text-[#8a847c]">
-          <Link href="/platform/demo" className="underline underline-offset-4 hover:text-[#152238]">
+          <Link href="/platform/demo" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
             Or explore the live demo first →
           </Link>
         </p>

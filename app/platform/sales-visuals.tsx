@@ -59,7 +59,7 @@ export function SalesPanel({
   tone?: "ivory" | "white" | "dark";
 }) {
   const bg =
-    tone === "dark" ? "bg-[#152238] text-white border-[#2a3d5c]" : tone === "white" ? "bg-white" : "bg-[#f7f5f1]";
+    tone === "dark" ? "bg-[var(--platform-primary)] text-white border-[#2a3d5c]" : tone === "white" ? "bg-white" : "bg-[#f7f5f1]";
   return (
     <figure className={`m-0 ${className}`}>
       <div
@@ -77,7 +77,7 @@ function SourcePill({ children, tone = "neutral" }: { children: React.ReactNode;
     tone === "alert"
       ? "bg-[#f3e6e6] text-[#8b2e2e]"
       : tone === "ok"
-        ? "bg-[#e8eef4] text-[#152238]"
+        ? "bg-[var(--platform-highlight)] text-[var(--platform-primary)]"
         : "bg-[#f0ebe4] text-[#5c5854]";
   return <span className={`inline-block text-[11px] px-2 py-1 ${cls}`}>{children}</span>;
 }
@@ -110,7 +110,7 @@ export function GovernedRecordVisual() {
             →
           </div>
 
-          <div className="bg-[#152238] text-white p-4 sm:p-5 flex flex-col justify-center">
+          <div className="bg-[var(--platform-primary)] text-white p-4 sm:p-5 flex flex-col justify-center">
             <p className="text-[10px] tracking-[0.16em] uppercase text-white/50 mb-3">INTERTEXE resolution</p>
             <p className="text-sm font-light mb-3" style={SERIF}>
               Composition conflict detected
@@ -127,7 +127,7 @@ export function GovernedRecordVisual() {
           </div>
 
           <div className="bg-white border border-[#e8e3da] p-4 sm:p-5">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-4">Approved record</p>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-primary)] mb-4">Approved record</p>
             <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-2">Composition</p>
             <div className="flex flex-wrap gap-1.5 mb-4">
               <SourcePill tone="ok">98% Cotton</SourcePill>
@@ -157,7 +157,7 @@ export function IntelligenceBenchmarkVisual() {
     <SalesPanel tone="dark" caption="Illustrative example · Peer medians from governed datasets — not fabricated competitor dumps.">
       <div className="p-5 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <p className="text-[10px] tracking-[0.16em] uppercase text-[#9bb4c9]">Material Benchmark</p>
+          <p className="text-[10px] tracking-[0.16em] uppercase text-[var(--platform-accent-muted)]">Material Benchmark</p>
           <div className="flex flex-wrap gap-4 sm:gap-6">
             {BENCHMARK_STATS.map(([label, value]) => (
               <div key={label} className="text-right">
@@ -191,7 +191,7 @@ export function IntelligenceBenchmarkVisual() {
                         style={{ width: `${Math.min(peerN, 100)}%` }}
                       />
                       <span
-                        className="absolute inset-y-0 left-0 bg-[#9bb4c9]"
+                        className="absolute inset-y-0 left-0 bg-[var(--platform-accent-muted)]"
                         style={{ width: `${Math.min(youN, 100)}%` }}
                       />
                     </div>
@@ -315,7 +315,7 @@ export function PlatformModuleGrid() {
             <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{group.label}</p>
             <ul className="space-y-3">
               {group.modules.map((mod) => (
-                <li key={mod.href || mod.label} className="pl-3 border-l-2 border-[#3e6268]/25">
+                <li key={mod.href || mod.label} className="pl-3 border-l-2 border-[var(--platform-accent)]/25">
                   <div className="flex flex-wrap items-center gap-2 mb-0.5">
                     <span className="text-sm text-[#161513] leading-snug">{mod.label}</span>
                     <span

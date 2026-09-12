@@ -40,7 +40,7 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
         </p>
         <Link
           href="/platform/docs"
-          className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase text-[var(--platform-navy)] shrink-0"
+          className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] shrink-0"
         >
           API documentation
           <span aria-hidden>→</span>
@@ -62,7 +62,7 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
               aria-selected={selected}
               className={`shrink-0 rounded-full border px-4 py-2.5 min-h-[44px] text-[11px] tracking-[0.12em] uppercase ${
                 selected
-                  ? "bg-[var(--platform-navy)] text-white border-[var(--platform-navy)]"
+                  ? "bg-[var(--platform-accent-soft)] text-[var(--platform-primary)] border-[var(--platform-accent-muted)]"
                   : "bg-white text-[var(--platform-muted)] border-[var(--platform-border)]"
               }`}
             >
@@ -85,7 +85,7 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
                       href={`#${item.id}`}
                       className={`block py-3 pl-4 -ml-px border-l-2 transition-colors ${
                         selected
-                          ? "border-[var(--platform-navy)] text-[var(--platform-ink)]"
+                          ? "border-[var(--platform-accent)] text-[var(--platform-ink)]"
                           : "border-transparent text-[var(--platform-muted)] hover:text-[var(--platform-ink)]"
                       }`}
                     >

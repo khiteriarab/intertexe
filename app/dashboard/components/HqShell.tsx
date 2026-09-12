@@ -6,6 +6,7 @@ import { useState } from "react";
 import { HQ_NAV } from "../../../lib/dashboard/constants";
 import type { WorkspaceContext } from "../../../lib/enterprise/types";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import "../hq-theme.css";
 
 type Props = {
   children: React.ReactNode;
@@ -37,32 +38,32 @@ export function HqShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f5f3] text-[#1a1a1a]">
-      <div className="md:hidden border-b border-black/10 bg-white px-4 py-3 flex items-center justify-between">
+    <div className="hq-app min-h-screen">
+      <div className="md:hidden border-b border-[var(--hq-border)] bg-[var(--hq-surface)]/95 backdrop-blur-md px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">INTERTEXE Dashboard</p>
+          <p className="hq-eyebrow">INTERTEXE Dashboard</p>
           <p className="text-sm font-medium">{workspaceName}</p>
           <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" variant="hq" />
         </div>
         <button
           type="button"
-          className="text-xs tracking-widest uppercase border border-black/15 px-3 py-2"
+          className="text-xs tracking-widest uppercase border border-[var(--hq-border)] px-3 py-2 rounded-md text-[var(--hq-muted)]"
           onClick={() => setMobileOpen((v) => !v)}
         >
           {mobileOpen ? "Close" : "Menu"}
         </button>
       </div>
 
-      <div className="md:grid md:grid-cols-[220px_1fr] min-h-screen">
+      <div className="md:grid md:grid-cols-[240px_1fr] min-h-screen">
         <aside
-          className={`${
+          className={`hq-sidebar ${
             mobileOpen ? "block" : "hidden"
-          } md:block border-r border-black/10 bg-white`}
+          } md:block border-r`}
         >
-          <div className="px-5 py-6 border-b border-black/10 hidden md:block">
-            <p className="text-[10px] tracking-[0.22em] uppercase text-black/45">Dashboard</p>
-            <p className="text-[15px] font-semibold tracking-tight mt-1">INTERTEXE</p>
-            <p className="text-xs text-black/50 mt-1">Private operating system</p>
+          <div className="px-5 py-6 border-b border-[var(--hq-border)] hidden md:block">
+            <p className="hq-eyebrow">Dashboard</p>
+            <p className="hq-display text-[1.35rem] mt-1">INTERTEXE</p>
+            <p className="text-xs text-[var(--hq-muted)] mt-1">Private operating system</p>
             <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" variant="hq" />
           </div>
           <nav className="px-3 py-4 space-y-0.5">
@@ -76,8 +77,8 @@ export function HqShell({
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2 text-sm rounded-md ${
-                    active ? "bg-black text-white" : "text-black/70 hover:bg-black/[0.04]"
+                  className={`hq-nav-link block px-3 py-2 text-sm rounded-md ${
+                    active ? "hq-nav-link-active" : ""
                   }`}
                 >
                   {item.label}
@@ -85,17 +86,17 @@ export function HqShell({
               );
             })}
           </nav>
-          <div className="px-5 py-5 border-t border-black/10 mt-4">
+          <div className="px-5 py-5 border-t border-[var(--hq-border)] mt-4">
             <p className="text-sm font-medium truncate">{fullName || "Founder"}</p>
-            <p className="text-xs text-black/50 truncate">{email}</p>
-            <p className="text-[10px] tracking-wide uppercase text-black/40 mt-2">
+            <p className="text-xs text-[var(--hq-muted)] truncate">{email}</p>
+            <p className="text-[10px] tracking-wide uppercase text-[var(--hq-quiet)] mt-2">
               {roles.join(" · ")}
             </p>
             <button
               type="button"
               onClick={logout}
               disabled={loggingOut}
-              className="mt-4 text-xs tracking-widest uppercase text-black/60 hover:text-black"
+              className="mt-4 text-xs tracking-widest uppercase text-[var(--hq-muted)] hover:text-[var(--hq-ink)]"
             >
               {loggingOut ? "Signing out…" : "Sign out"}
             </button>

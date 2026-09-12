@@ -147,7 +147,7 @@ export function WorkspaceGallery({
               aria-controls={`workspace-panel-${current.id}`}
               onClick={() => select(frame.id)}
               className={`shrink-0 text-[12px] sm:text-[13px] px-3 py-2 min-h-[40px] rounded-md ${
-                selected ? "bg-[#152238] text-white" : "bg-white/70 text-[#152238] hover:bg-white"
+                selected ? "bg-[var(--platform-primary)] text-white" : "bg-white/70 text-[var(--platform-primary)] hover:bg-white"
               }`}
             >
               {frame.label}
@@ -174,7 +174,7 @@ function NeedIcon({ index }: { index: number }) {
     width: 28,
     height: 28,
     fill: "none",
-    stroke: "#152238",
+    stroke: "var(--platform-primary)",
     strokeWidth: 1.5,
     "aria-hidden": true as const,
   };
@@ -199,7 +199,7 @@ function NeedIcon({ index }: { index: number }) {
       <svg {...common} viewBox="0 0 28 28">
         <circle cx="14" cy="14" r="9" />
         <path d="M14 10v5" />
-        <circle cx="14" cy="18.5" r="0.8" fill="#152238" stroke="none" />
+        <circle cx="14" cy="18.5" r="0.8" fill="var(--platform-primary)" stroke="none" />
       </svg>
     );
   }
@@ -243,7 +243,7 @@ export function DiscoverWorkspace() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
         <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Product data journey</p>
         <h2
-          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#152238] max-w-3xl mb-4"
+          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] max-w-3xl mb-4"
           style={SERIF}
         >
           Connect → normalize → resolve → understand → publish.
@@ -257,7 +257,7 @@ export function DiscoverWorkspace() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
         <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">What you buy vs. what we run</p>
         <h2
-          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#152238] max-w-3xl mb-4"
+          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] max-w-3xl mb-4"
           style={SERIF}
         >
           Enterprise contract vs. consumer surface.
@@ -267,32 +267,32 @@ export function DiscoverWorkspace() {
           strategic infrastructure — not the SKU on the contract.
         </p>
         <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
-          <article className="rounded-2xl border border-[#d5dee8] bg-white p-6 sm:p-8 shadow-[0_12px_30px_rgba(21,34,56,0.04)]">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-[#3e6268] mb-3">What brands buy</p>
-            <h3 className="text-xl text-[#152238] mb-4" style={SERIF}>
+          <article className="rounded-2xl border border-[var(--platform-border)] bg-white p-6 sm:p-8 shadow-[0_12px_30px_rgba(44,38,32,0.04)]">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--platform-accent)] mb-3">What brands buy</p>
+            <h3 className="text-xl text-[var(--platform-primary)] mb-4" style={SERIF}>
               Data layer → workspace → intelligence → outputs
             </h3>
             <ul className="space-y-2.5 text-sm text-[#5c5854] leading-relaxed">
-              <li className="pl-4 border-l-2 border-[#3e6268]/30">Connect PLM, ERP, spreadsheets, suppliers and feeds</li>
-              <li className="pl-4 border-l-2 border-[#3e6268]/30">Normalize, resolve conflicts, and govern one product record</li>
-              <li className="pl-4 border-l-2 border-[#3e6268]/30">Benchmark material strategy and track readiness gaps</li>
-              <li className="pl-4 border-l-2 border-[#3e6268]/30">
+              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/30">Connect PLM, ERP, spreadsheets, suppliers and feeds</li>
+              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/30">Normalize, resolve conflicts, and govern one product record</li>
+              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/30">Benchmark material strategy and track readiness gaps</li>
+              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/30">
                 Publish passports, regulatory preparation, and public product experiences
               </li>
             </ul>
           </article>
-          <article className="rounded-2xl border border-[#d5dee8] bg-[#152238] text-white p-6 sm:p-8 shadow-[0_12px_30px_rgba(21,34,56,0.08)]">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-[#9bb4c9] mb-3">What INTERTEXE also runs</p>
-            <h3 className="text-xl text-white mb-4" style={SERIF}>
+          <article className="platform-abstract-band rounded-2xl border border-[var(--platform-border)] p-6 sm:p-8 shadow-[0_12px_30px_rgba(44,38,32,0.06)]">
+            <p className="relative text-[10px] tracking-[0.18em] uppercase text-[var(--platform-accent)] mb-3">What INTERTEXE also runs</p>
+            <h3 className="relative text-xl text-[var(--platform-primary)] mb-4" style={SERIF}>
               Consumer discovery — strategic, not the sale
             </h3>
-            <ul className="space-y-2.5 text-sm text-white/75 leading-relaxed">
-              <li className="pl-4 border-l-2 border-white/20">Shopping platform, scan, and compare for material-first discovery</li>
-              <li className="pl-4 border-l-2 border-white/20">Demand surface and long-term signal engine for INTERTEXE</li>
-              <li className="pl-4 border-l-2 border-white/20">
+            <ul className="relative space-y-2.5 text-sm text-[var(--platform-muted)] leading-relaxed">
+              <li className="pl-4 border-l-2 border-[var(--platform-accent-muted)]">Shopping platform, scan, and compare for material-first discovery</li>
+              <li className="pl-4 border-l-2 border-[var(--platform-accent-muted)]">Demand surface and long-term signal engine for INTERTEXE</li>
+              <li className="pl-4 border-l-2 border-[var(--platform-accent-muted)]">
                 Future aggregate demand intelligence — governed, anonymized, not individual shopper data
               </li>
-              <li className="pl-4 border-l-2 border-white/20">Not included in the enterprise contract or sold as live brand dashboards today</li>
+              <li className="pl-4 border-l-2 border-[var(--platform-accent-muted)]">Not included in the enterprise contract or sold as live brand dashboards today</li>
             </ul>
           </article>
         </div>
@@ -300,12 +300,12 @@ export function DiscoverWorkspace() {
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-10 sm:pb-16">
         <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{LIVING_SYSTEM.eyebrow}</p>
-        <h2 className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[#152238] max-w-3xl mb-4" style={SERIF}>
+        <h2 className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] max-w-3xl mb-4" style={SERIF}>
           {LIVING_SYSTEM.title}
         </h2>
         <p className="max-w-2xl text-[15px] text-[#5c5854] font-light leading-relaxed mb-8">{LIVING_SYSTEM.body}</p>
 
-        <div className="rounded-2xl border border-[#d5dee8] bg-white px-5 py-8 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(21,34,56,0.08)] mb-10">
+        <div className="rounded-2xl border border-[var(--platform-border)] bg-white px-5 py-8 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(44,38,32,0.08)] mb-10">
           <div
             role="tablist"
             aria-label="Compare, act, engage"
@@ -322,8 +322,8 @@ export function DiscoverWorkspace() {
                   onClick={() => selectStory(item.id)}
                   className={`shrink-0 min-h-[44px] px-2 sm:px-3 text-[12px] sm:text-sm tracking-[0.14em] uppercase border-b-2 ${
                     selected
-                      ? "border-[#152238] text-[#152238]"
-                      : "border-transparent text-[#8a847c] hover:text-[#152238]"
+                      ? "border-[var(--platform-primary)] text-[var(--platform-primary)]"
+                      : "border-transparent text-[#8a847c] hover:text-[var(--platform-primary)]"
                   }`}
                 >
                   {item.label}
@@ -331,7 +331,7 @@ export function DiscoverWorkspace() {
               );
             })}
           </div>
-          <h3 className="text-xl sm:text-2xl text-[#152238] mb-3" style={SERIF}>
+          <h3 className="text-xl sm:text-2xl text-[var(--platform-primary)] mb-3" style={SERIF}>
             {story.title}
           </h3>
           <p className="text-[15px] text-[#5c5854] font-light leading-relaxed max-w-3xl mb-3">{story.copy}</p>
@@ -345,8 +345,8 @@ export function DiscoverWorkspace() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {RETAIN.map((item) => (
-            <div key={item.id} className="border-t border-[#d5dee8] pt-5">
-              <h3 className="mb-2 text-[#152238]" style={SERIF}>
+            <div key={item.id} className="border-t border-[var(--platform-border)] pt-5">
+              <h3 className="mb-2 text-[var(--platform-primary)]" style={SERIF}>
                 {item.title}
               </h3>
               <p className="text-sm text-[#5c5854] leading-relaxed">{item.copy}</p>
@@ -359,13 +359,13 @@ export function DiscoverWorkspace() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
             <p className="text-[10px] tracking-[0.18em] uppercase text-[#6b8499] mb-3">Needs</p>
-            <h2 className="text-[1.75rem] sm:text-3xl font-light text-[#152238]" style={SERIF}>
+            <h2 className="text-[1.75rem] sm:text-3xl font-light text-[var(--platform-primary)]" style={SERIF}>
               Different needs, <em className="italic">one workspace</em>.
             </h2>
           </div>
           <a
             href="/platform/request?intent=snapshot&cta=discover_needs"
-            className="inline-flex items-center gap-2 rounded-md bg-[#152238] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[#0f1a2c] w-fit"
+            className="inline-flex items-center gap-2 rounded-md bg-[var(--platform-primary)] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[var(--platform-primary-hover)] w-fit"
           >
             Book a demo
             <span aria-hidden="true">→</span>
@@ -375,10 +375,10 @@ export function DiscoverWorkspace() {
           {WORKSPACE_NEEDS.map((item, index) => (
             <article
               key={item.title}
-              className="rounded-2xl border border-[#d5dee8] bg-white p-5 sm:p-6 shadow-[0_12px_30px_rgba(21,34,56,0.04)]"
+              className="rounded-2xl border border-[var(--platform-border)] bg-white p-5 sm:p-6 shadow-[0_12px_30px_rgba(44,38,32,0.04)]"
             >
               <NeedIcon index={index} />
-              <h3 className="mt-4 text-[15px] font-medium text-[#152238] leading-snug">{item.title}</h3>
+              <h3 className="mt-4 text-[15px] font-medium text-[var(--platform-primary)] leading-snug">{item.title}</h3>
               <p className="mt-2 text-sm text-[#5c5854] font-light leading-relaxed">{item.copy}</p>
             </article>
           ))}

@@ -26,7 +26,7 @@ function MiniPhone() {
         <span className="mt-0.5 w-8 h-0.5 rounded-full bg-[#161513]/70" />
       </div>
       <div className="px-1.5 py-1">
-        <p className="text-[6px] tracking-[0.14em] uppercase text-center text-[#152238]">INTERTEXE</p>
+        <p className="text-[6px] tracking-[0.14em] uppercase text-center text-[var(--platform-primary)]">INTERTEXE</p>
         <div className="grid grid-cols-2 gap-0.5 mt-1">
           <div className="aspect-[3/4] bg-[#e8e0d4]" />
           <div className="aspect-[3/4] bg-[#d9cbb8]" />
@@ -39,9 +39,9 @@ function MiniPhone() {
 function MiniExtension() {
   return (
     <div className="rounded-md border border-[#e8e3da] bg-[#f7f5f1] w-[88px] p-2 shadow-sm">
-      <p className="text-[6px] tracking-[0.12em] uppercase text-[#152238]">Fabric Scanner</p>
+      <p className="text-[6px] tracking-[0.12em] uppercase text-[var(--platform-primary)]">Fabric Scanner</p>
       <div className="mt-1 space-y-1">
-        <div className="h-1.5 bg-[#152238]/80 rounded-sm w-full" />
+        <div className="h-1.5 bg-[var(--platform-primary)]/80 rounded-sm w-full" />
         <div className="h-1 bg-[#e8e3da] rounded-sm w-4/5" />
         <div className="h-1 bg-[#e8e3da] rounded-sm w-3/5" />
       </div>
@@ -63,7 +63,7 @@ function PulseBeam({ active, vertical }: { active: boolean; vertical?: boolean }
       className={`relative overflow-hidden ${vertical ? "w-px h-10 mx-auto" : "h-px flex-1 min-w-[32px]"}`}
       aria-hidden
     >
-      <span className={`absolute inset-0 bg-[#3e6268]/30 ${vertical ? "b2b-pulse-vertical" : "b2b-pulse-line"}`} />
+      <span className={`absolute inset-0 bg-[var(--platform-accent)]/30 ${vertical ? "b2b-pulse-vertical" : "b2b-pulse-line"}`} />
     </div>
   );
 }
@@ -110,7 +110,7 @@ export function FashionEcosystemVisual({ className = "" }: { className?: string 
               <div className="flex items-end gap-3 pt-2">
                 <Link
                   href="/shop"
-                  className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] bg-white px-3 py-2 hover:border-[#3e6268]/40 min-h-[44px] flex items-center"
+                  className="text-[10px] tracking-[0.1em] uppercase border border-[#e8e3da] bg-white px-3 py-2 hover:border-[var(--platform-accent)]/40 min-h-[44px] flex items-center"
                 >
                   Shopping platform
                 </Link>
@@ -121,13 +121,13 @@ export function FashionEcosystemVisual({ className = "" }: { className?: string 
 
             <div className="hidden md:flex flex-col items-center justify-center gap-2 px-1 min-w-[48px]" aria-hidden>
               <PulseBeam active={active && inView} />
-              <span className="text-[10px] text-[#3e6268] uppercase tracking-[0.08em]">scan</span>
+              <span className="text-[10px] text-[var(--platform-accent)] uppercase tracking-[0.08em]">scan</span>
               <PulseBeam active={active && inView} />
             </div>
 
             {/* INTERTEXE hub */}
             <div className="flex flex-col justify-center">
-              <div className="bg-[#152238] text-white p-6 sm:p-8 relative overflow-hidden text-center md:text-left">
+              <div className="bg-[var(--platform-primary)] text-white p-6 sm:p-8 relative overflow-hidden text-center md:text-left">
                 <div
                   className="pointer-events-none absolute inset-0 opacity-[0.1]"
                   aria-hidden
@@ -145,20 +145,20 @@ export function FashionEcosystemVisual({ className = "" }: { className?: string 
                     Composition normalized · governed · benchmarked
                   </p>
                   {active && inView ? (
-                    <p className="mt-4 text-[10px] font-mono text-[#9bb4c9] b2b-fade-in" aria-live="polite">
+                    <p className="mt-4 text-[10px] font-mono text-[var(--platform-accent-muted)] b2b-fade-in" aria-live="polite">
                       100% Linen → readiness updated
                     </p>
                   ) : null}
                 </div>
               </div>
-              <p className="md:hidden text-center text-[#3e6268] py-2" aria-hidden>
+              <p className="md:hidden text-center text-[var(--platform-accent)] py-2" aria-hidden>
                 ↕
               </p>
             </div>
 
             <div className="hidden md:flex flex-col items-center justify-center gap-2 px-1 min-w-[48px]" aria-hidden>
               <PulseBeam active={active && inView} />
-              <span className="text-[10px] text-[#3e6268] uppercase tracking-[0.08em]">govern</span>
+              <span className="text-[10px] text-[var(--platform-accent)] uppercase tracking-[0.08em]">govern</span>
               <PulseBeam active={active && inView} />
             </div>
 

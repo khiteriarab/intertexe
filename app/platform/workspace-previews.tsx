@@ -24,7 +24,7 @@ export function WorkspaceChrome({
 }) {
   return (
     <figure className={`m-0 ${className}`}>
-      <div className="overflow-hidden rounded-2xl border border-[#d5dee8] bg-white shadow-[0_28px_70px_rgba(21,34,56,0.12)]">
+      <div className="overflow-hidden rounded-2xl border border-[var(--platform-border)] bg-white shadow-[0_28px_70px_rgba(44,38,32,0.12)]">
         <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#eeeae4] bg-[#faf8f5]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
@@ -32,7 +32,7 @@ export function WorkspaceChrome({
           <span className="ml-2 text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">INTERTEXE workspace</span>
         </div>
         <div className="sm:grid sm:grid-cols-[9.5rem_minmax(0,1fr)]">
-          <aside className="hidden sm:flex flex-col justify-between bg-[#152238] text-white px-3 py-5 min-h-0">
+          <aside className="hidden sm:flex flex-col justify-between bg-[var(--platform-accent-soft)] text-[var(--platform-primary)] px-3 py-5 min-h-0">
             <div>
               <p className="text-[10px] tracking-[0.2em] uppercase text-white/55 mb-5 px-2">INTERTEXE</p>
               <ul className="space-y-0.5">
@@ -162,7 +162,7 @@ function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: "neu
     tone === "alert"
       ? "bg-[#f3e6e6] text-[#8b2e2e]"
       : tone === "ok"
-        ? "bg-[#e8eef4] text-[#152238]"
+        ? "bg-[var(--platform-highlight)] text-[var(--platform-primary)]"
         : "bg-[#f0ebe4] text-[#5c5854]";
   return <span className={`inline-block max-w-full break-words text-[11px] px-2 py-1 ${cls}`}>{children}</span>;
 }
@@ -290,7 +290,7 @@ function NormalizeBody() {
           <span className="sr-only">Normalized INTERTEXE record</span>
         </div>
         <Card>
-          <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-3">INTERTEXE record</p>
+          <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-primary)] mb-3">INTERTEXE record</p>
           <p className="text-[11px] tracking-[0.1em] uppercase text-[#8a847c] mb-1">Composition · normalized</p>
           <p className="mb-2 flex flex-wrap gap-1">
             <Pill>70% Cotton</Pill>
@@ -410,7 +410,7 @@ function BenchmarkBody() {
                     style={{ width: `${Math.min(peerN, 100)}%` }}
                   />
                   <span
-                    className="absolute inset-y-0 left-0 bg-[#152238]"
+                    className="absolute inset-y-0 left-0 bg-[var(--platform-primary)]"
                     style={{ width: `${Math.min(youN, 100)}%` }}
                   />
                 </div>
@@ -433,7 +433,7 @@ function BenchmarkBody() {
           {SIGNAL.map(([label, delta, up]) => (
             <li key={label} className="flex justify-between gap-3 py-3 text-sm">
               <span className="min-w-0 break-words">{label}</span>
-              <span className={`tabular-nums shrink-0 ${up ? "text-[#152238]" : "text-[#8b2e2e]"}`}>{delta}</span>
+              <span className={`tabular-nums shrink-0 ${up ? "text-[var(--platform-primary)]" : "text-[#8b2e2e]"}`}>{delta}</span>
             </li>
           ))}
         </ul>
@@ -449,7 +449,7 @@ function PassportBody() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 min-w-0">
       <Card>
-        <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] mb-2">01 · Ready to publish</p>
+        <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-primary)] mb-2">01 · Ready to publish</p>
         <p className="text-base mb-1 break-words" style={SERIF}>
           Silk Evening Dress
         </p>
@@ -648,7 +648,7 @@ export function CatalogPreview({
         ) : null}
         {showNormalized ? (
           <div className="overflow-x-auto bg-white border border-[#e8e3da] min-w-0">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-[#152238] px-3 py-2 border-b border-[#e8e3da]">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-primary)] px-3 py-2 border-b border-[#e8e3da]">
               INTERTEXE record
             </p>
             <table className="w-full text-left text-xs">

@@ -1,14 +1,75 @@
-/* Shared design tokens for /platform, /platform/discover, /platform/demo, /platform/docs */
+/* INTERTEXE platform — beige editorial brand tokens */
 
 .platform-shell {
-  --platform-bg: #faf9f7;
-  --platform-surface: #ffffff;
-  --platform-ink: #161513;
-  --platform-navy: #152238;
+  --platform-bg: #f5f0e8;
+  --platform-surface: #faf8f4;
+  --platform-ink: #1c1915;
+  --platform-primary: #2c2620;
+  --platform-primary-hover: #1f1a14;
   --platform-muted: #6f6a63;
   --platform-quiet: #9c9488;
-  --platform-border: #e8e3da;
-  --platform-accent: #3e6268;
+  --platform-border: #e8e0d4;
+  --platform-accent: #c4a574;
+  --platform-accent-soft: #e8dcc8;
+  --platform-accent-muted: #d9c9a8;
+  --platform-highlight: #f0ebe3;
+  --platform-gold: #c9a962;
+  /* legacy aliases */
+  --platform-navy: var(--platform-primary);
   background-color: var(--platform-bg);
   color: var(--platform-ink);
+}
+
+.platform-shell.platform-editorial {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+.platform-shell.platform-editorial::before,
+.platform-shell.platform-editorial::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+}
+
+.platform-shell.platform-editorial::before {
+  width: min(52vw, 520px);
+  height: min(52vw, 520px);
+  top: -8%;
+  right: -6%;
+  background: radial-gradient(circle, rgba(201, 169, 98, 0.28) 0%, transparent 68%);
+}
+
+.platform-shell.platform-editorial::after {
+  width: min(44vw, 440px);
+  height: min(44vw, 440px);
+  bottom: 8%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(232, 220, 200, 0.65) 0%, transparent 70%);
+}
+
+.platform-shell.platform-editorial > * {
+  position: relative;
+  z-index: 1;
+}
+
+.platform-abstract-band {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--platform-accent-soft) 0%, var(--platform-highlight) 48%, var(--platform-bg) 100%);
+}
+
+.platform-abstract-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 58% at 88% 18%, rgba(201, 169, 98, 0.22) 0%, transparent 62%),
+    radial-gradient(ellipse 36% 48% at 8% 82%, rgba(212, 196, 168, 0.35) 0%, transparent 58%);
 }

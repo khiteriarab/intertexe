@@ -54,7 +54,7 @@ export function PlatformNav({
     <nav
       className={
         dark
-          ? "border-b border-white/10 bg-[var(--platform-navy)] text-[#f7f5f1]"
+          ? "border-b border-[var(--platform-border)] bg-[var(--platform-accent-soft)] text-[var(--platform-primary)]"
           : "border-b border-[var(--platform-border)]/80 bg-[var(--platform-bg)]/95 backdrop-blur-md sticky top-0 z-50"
       }
     >
@@ -91,8 +91,8 @@ export function PlatformNav({
             href="/platform/request?intent=snapshot&cta=nav"
             className={
               dark
-                ? "inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-[12px] font-medium text-[var(--platform-navy)] min-h-[40px] hover:bg-[#f7f5f1]"
-                : "inline-flex items-center gap-2 rounded-full bg-[var(--platform-navy)] px-4 sm:px-5 py-2.5 text-[12px] font-medium text-white min-h-[40px] hover:bg-[#0f1a2c] transition-colors"
+                ? "inline-flex items-center gap-2 rounded-full bg-[var(--platform-surface)] px-4 py-2.5 text-[12px] font-medium text-[var(--platform-primary)] min-h-[40px] hover:bg-[var(--platform-highlight)] border border-[var(--platform-border)]"
+                : "inline-flex items-center gap-2 rounded-full bg-[var(--platform-accent-soft)] px-4 sm:px-5 py-2.5 text-[12px] font-medium text-[var(--platform-primary)] min-h-[40px] hover:bg-[var(--platform-accent-muted)] transition-colors border border-[var(--platform-border)]"
             }
           >
             Request a demo
@@ -115,7 +115,7 @@ export function PlatformNav({
         <div
           id="platform-mobile-menu"
           className={`md:hidden border-t px-4 pb-4 pt-2 ${
-            dark ? "border-white/10 bg-[var(--platform-navy)]" : "border-[var(--platform-border)] bg-[var(--platform-bg)]"
+            dark ? "border-[var(--platform-border)] bg-[var(--platform-accent-soft)]" : "border-[var(--platform-border)] bg-[var(--platform-bg)]"
           }`}
         >
           {NAV.map((item) => (

@@ -55,7 +55,7 @@ export function UnderstandCatalog() {
         or Diagnose — the workspace mockup changes with the step.
       </Body>
 
-      <div className="rounded-2xl border border-[#d5dee8] bg-white px-5 py-8 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(21,34,56,0.08)]">
+      <div className="rounded-2xl border border-[var(--platform-border)] bg-white px-5 py-8 sm:px-10 sm:py-10 shadow-[0_24px_60px_rgba(44,38,32,0.08)]">
         <div
           role="tablist"
           aria-label="Ingest, structure, diagnose"
@@ -74,8 +74,8 @@ export function UnderstandCatalog() {
                 onClick={() => setActiveId(step.id)}
                 className={`shrink-0 min-h-[44px] px-2 sm:px-3 text-[12px] sm:text-sm tracking-[0.14em] uppercase border-b-2 transition-colors ${
                   selected
-                    ? "border-[#152238] text-[#152238]"
-                    : "border-transparent text-[#8a847c] hover:text-[#152238]"
+                    ? "border-[var(--platform-primary)] text-[var(--platform-primary)]"
+                    : "border-transparent text-[#8a847c] hover:text-[var(--platform-primary)]"
                 }`}
               >
                 {step.n} — {step.title}
@@ -87,7 +87,7 @@ export function UnderstandCatalog() {
         <div id="understand-panel" role="tabpanel" aria-labelledby={`understand-tab-${current.id}`}>
           <h3
             key={`lead-${current.id}`}
-            className="text-xl sm:text-2xl text-[#152238] mb-3 itx-understand-copy"
+            className="text-xl sm:text-2xl text-[var(--platform-primary)] mb-3 itx-understand-copy"
             style={SERIF}
           >
             {current.lead}
@@ -98,8 +98,8 @@ export function UnderstandCatalog() {
           >
             {current.copy}
           </p>
-          <div className="rounded-xl bg-[#d4e0ee] p-3 sm:p-6">
-            <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[#e8eef4]">
+          <div className="rounded-xl bg-[var(--platform-highlight)] p-3 sm:p-6">
+            <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[var(--platform-highlight)]">
               {STEPS.map((step) => (
                 <img
                   key={step.id}
@@ -120,7 +120,7 @@ export function UnderstandCatalog() {
             <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-px bg-[#e8e3da] border border-[#e8e3da]">
               {AUDIT.map(([n, label]) => (
                 <div key={label} className="bg-white p-4">
-                  <p className="text-xl font-light tabular-nums text-[#152238]" style={SERIF}>
+                  <p className="text-xl font-light tabular-nums text-[var(--platform-primary)]" style={SERIF}>
                     {n}
                   </p>
                   <p className="text-[10px] tracking-[0.08em] uppercase text-[#8a847c] mt-1">{label}</p>

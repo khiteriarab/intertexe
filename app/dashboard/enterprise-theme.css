@@ -3,13 +3,13 @@
  * Scoped under .enterprise-app so HQ dashboard styling is unchanged.
  */
 .enterprise-app {
-  --ent-petrol: #42666c;
-  --ent-petrol-deep: #3e6268;
-  --ent-petrol-mid: #4a7279;
-  --ent-petrol-light: #5a8289;
-  --ent-petrol-glow: rgba(62, 98, 104, 0.18);
-  --ent-forest: #2c4a3e;
-  --ent-charcoal: #2a3438;
+  --ent-petrol: #c4a574;
+  --ent-petrol-deep: #b89968;
+  --ent-petrol-mid: #d4bc8e;
+  --ent-petrol-light: #e8dcc8;
+  --ent-petrol-glow: rgba(196, 165, 116, 0.22);
+  --ent-forest: #2c2620;
+  --ent-charcoal: #1c1915;
   --ent-stone: #b8b0a6;
   --ent-stone-soft: #d4cdc4;
   --ent-blush: #f3e6e4;
@@ -32,15 +32,18 @@
   --ent-raspberry-soft: #f5e8eb;
   --ent-border: rgba(26, 31, 34, 0.06);
   --ent-border-strong: rgba(26, 31, 34, 0.1);
-  --ent-shadow-sm: 0 4px 24px rgba(62, 98, 104, 0.07), 0 1px 2px rgba(62, 98, 104, 0.04);
-  --ent-shadow: 0 12px 40px rgba(62, 98, 104, 0.1), 0 2px 8px rgba(62, 98, 104, 0.04);
-  --ent-shadow-lg: 0 24px 64px rgba(62, 98, 104, 0.14), 0 4px 16px rgba(62, 98, 104, 0.06);
-  --ent-shadow-float: 0 32px 80px rgba(62, 98, 104, 0.12), 0 8px 24px rgba(62, 98, 104, 0.06);
+  --ent-shadow-sm: 0 4px 24px rgba(44, 38, 32, 0.06), 0 1px 2px rgba(44, 38, 32, 0.03);
+  --ent-shadow: 0 12px 40px rgba(44, 38, 32, 0.08), 0 2px 8px rgba(44, 38, 32, 0.03);
+  --ent-shadow-lg: 0 24px 64px rgba(44, 38, 32, 0.1), 0 4px 16px rgba(44, 38, 32, 0.04);
+  --ent-shadow-float: 0 32px 80px rgba(44, 38, 32, 0.08), 0 8px 24px rgba(44, 38, 32, 0.04);
   --ent-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-  --ent-shadow-panel: 0 20px 60px rgba(62, 98, 104, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  --ent-gradient-hero: linear-gradient(145deg, #42666c 0%, #3e6268 42%, #2c4a3e 100%);
-  --ent-gradient-dark: linear-gradient(160deg, #2a3438 0%, #1f282b 100%);
-  --ent-gradient-sidebar: linear-gradient(180deg, #42666c 0%, #3e6268 55%, #345860 100%);
+  --ent-shadow-panel: 0 20px 60px rgba(44, 38, 32, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --ent-gradient-hero: linear-gradient(145deg, #e8dcc8 0%, #d9c9a8 42%, #c4a574 100%);
+  --ent-gradient-dark: linear-gradient(160deg, #2c2620 0%, #1f1a14 100%);
+  --ent-gradient-sidebar: linear-gradient(180deg, #f5f0e8 0%, #ebe4d8 55%, #e0d6c8 100%);
+  --ent-sidebar-fg: rgba(28, 25, 21, 0.92);
+  --ent-sidebar-fg-muted: rgba(28, 25, 21, 0.58);
+  --ent-sidebar-fg-soft: rgba(28, 25, 21, 0.42);
   --ent-gradient-canvas: radial-gradient(ellipse 80% 60% at 10% 0%, rgba(243, 230, 228, 0.9) 0%, transparent 55%),
     radial-gradient(ellipse 70% 50% at 90% 20%, rgba(245, 236, 212, 0.75) 0%, transparent 50%),
     radial-gradient(ellipse 60% 40% at 50% 100%, rgba(240, 235, 227, 0.8) 0%, transparent 55%),
@@ -49,9 +52,9 @@
   --ent-gradient-blush: linear-gradient(135deg, #ffffff 0%, #f8f0ed 45%, #f3e6e4 100%);
   --ent-gradient-butter: linear-gradient(145deg, #fffdf8 0%, #f5ecd4 48%, #f7f1e8 100%);
   --ent-gradient-stone: linear-gradient(160deg, #f5f1eb 0%, #ebe4db 100%);
-  --ent-gradient-chart-area: linear-gradient(180deg, rgba(158, 74, 90, 0.35) 0%, rgba(66, 102, 108, 0.08) 100%);
-  --ent-gradient-chart-rose: linear-gradient(135deg, #e8b4a8 0%, #c9788a 100%);
-  --ent-gradient-chart-petrol: linear-gradient(135deg, #5a8289 0%, #3e6268 100%);
+  --ent-gradient-chart-area: linear-gradient(180deg, rgba(201, 169, 98, 0.35) 0%, rgba(196, 165, 116, 0.08) 100%);
+  --ent-gradient-chart-rose: linear-gradient(135deg, #e8dcc8 0%, #c4a574 100%);
+  --ent-gradient-chart-petrol: linear-gradient(135deg, #e8dcc8 0%, #b89968 100%);
   --ent-radius: 1.125rem;
   --ent-radius-lg: 1.375rem;
   --ent-radius-xl: 1.75rem;
@@ -60,7 +63,7 @@
 }
 
 .enterprise-app {
-  background: #f7f6f3;
+  background: #f5f0e8;
   color: var(--ent-ink);
   font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-size: 15px;
@@ -106,13 +109,35 @@
 /* ── Canvas ambient background ── */
 .enterprise-app .ent-canvas {
   position: relative;
-  background: #f7f6f3;
+  background: #f5f0e8;
   min-height: 100%;
 }
 
 .enterprise-app .ent-canvas::before,
 .enterprise-app .ent-canvas::after {
-  display: none;
+  content: "";
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+}
+
+.enterprise-app .ent-canvas::before {
+  width: min(42vw, 460px);
+  height: min(42vw, 460px);
+  top: 4%;
+  right: 2%;
+  background: radial-gradient(circle, rgba(201, 169, 98, 0.22) 0%, transparent 68%);
+}
+
+.enterprise-app .ent-canvas::after {
+  width: min(38vw, 400px);
+  height: min(38vw, 400px);
+  bottom: 10%;
+  left: 18%;
+  background: radial-gradient(circle, rgba(232, 220, 200, 0.55) 0%, transparent 70%);
 }
 
 .enterprise-app .ent-canvas-inner {
@@ -199,7 +224,7 @@
 }
 
 .enterprise-app .ent-code-panel {
-  background: linear-gradient(160deg, #345860 0%, #243a40 100%);
+  background: linear-gradient(160deg, #2c2620 0%, #1f1a14 100%);
   border-radius: var(--ent-radius-lg);
   color: rgba(255, 255, 255, 0.92);
   box-shadow: var(--ent-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -232,21 +257,21 @@
   padding-right: 2.5rem;
 }
 
-/* ── Navigation rail (dark sidebar) ── */
+/* ── Navigation rail (beige editorial sidebar) ── */
 .enterprise-app .ent-nav-rail {
   background: var(--ent-gradient-sidebar);
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: 1px solid rgba(28, 25, 21, 0.08);
   min-height: 100vh;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--ent-sidebar-fg);
 }
 
 .enterprise-app .ent-brand-rail {
-  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.26em;
+  font-family: Georgia, "Iowan Old Style", Palatino, "Times New Roman", serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--ent-sidebar-fg);
 }
 
 .enterprise-app .ent-nav-group-trigger {
@@ -260,29 +285,29 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--ent-sidebar-fg-soft);
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .enterprise-app .ent-nav-group-trigger:hover {
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--ent-sidebar-fg);
+  background: rgba(232, 220, 200, 0.35);
 }
 
 .enterprise-app .ent-nav-group-trigger-active {
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--ent-sidebar-fg);
 }
 
 .enterprise-app .ent-nav-chevron {
   flex-shrink: 0;
   margin-left: auto;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--ent-sidebar-fg-muted);
   opacity: 1;
 }
 
 .enterprise-app .ent-nav-group-trigger:hover .ent-nav-chevron,
 .enterprise-app .ent-nav-group-trigger-active .ent-nav-chevron {
-  color: rgba(255, 255, 255, 0.98);
+  color: var(--ent-sidebar-fg);
 }
 
 .enterprise-app .ent-nav-icon {
@@ -293,7 +318,7 @@
   height: 1.75rem;
   border-radius: 0.5rem;
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--ent-sidebar-fg-muted);
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 
@@ -304,8 +329,8 @@
 }
 
 .enterprise-app .ent-nav-icon-active {
-  color: white;
-  background: rgba(255, 255, 255, 0.14);
+  color: var(--ent-sidebar-fg);
+  background: rgba(196, 165, 116, 0.22);
 }
 
 .enterprise-app .ent-nav-link {
@@ -317,18 +342,18 @@
   border-radius: 0.625rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--ent-sidebar-fg-muted);
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .enterprise-app .ent-nav-link:hover {
-  color: rgba(255, 255, 255, 0.92);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--ent-sidebar-fg);
+  background: rgba(232, 220, 200, 0.35);
 }
 
 .enterprise-app .ent-nav-link-active {
-  color: white;
-  background: rgba(255, 255, 255, 0.12);
+  color: #faf8f4;
+  background: var(--ent-charcoal);
   font-weight: 600;
 }
 
@@ -350,7 +375,7 @@
 }
 
 .enterprise-app .ent-nav-avatar-rail {
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(28, 25, 21, 0.1);
 }
 
 .enterprise-app .ent-nav-signout {
@@ -364,12 +389,12 @@
 }
 
 .enterprise-app .ent-nav-signout-rail {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--ent-sidebar-fg-soft);
 }
 
 .enterprise-app .ent-nav-signout:hover,
 .enterprise-app .ent-nav-signout-rail:hover {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--ent-sidebar-fg);
 }
 
 .enterprise-app .ent-mobile-bar {
@@ -405,15 +430,15 @@
 }
 
 .enterprise-app .ent-workspace-trigger-rail:hover {
-  border-color: rgba(66, 102, 108, 0.18);
+  border-color: rgba(196, 165, 116, 0.35);
   box-shadow: var(--ent-shadow-sm);
 }
 
 .enterprise-app .ent-workspace-trigger-sidebar {
   padding: 0.85rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: white;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(28, 25, 21, 0.08);
+  color: var(--ent-sidebar-fg);
 }
 
 .enterprise-app .ent-workspace-trigger-light {
@@ -441,8 +466,8 @@
 }
 
 .enterprise-app .ent-workspace-menu-sidebar {
-  background: #345860;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #faf8f4;
+  border: 1px solid rgba(28, 25, 21, 0.08);
 }
 
 .enterprise-app .ent-workspace-option {
