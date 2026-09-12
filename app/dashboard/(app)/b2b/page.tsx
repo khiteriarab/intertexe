@@ -3,6 +3,7 @@ import { fetchCompanyHqBundle } from "../../../../lib/dashboard/company-hq";
 import { fetchRevenueCommandCenter } from "../../../../lib/dashboard/revenue-command-center";
 import { formatCompanyCount, formatCompanyMoney } from "../../../../lib/dashboard/company-plan";
 import { NorthStarKpiCard, HqSectionFrame } from "../../components/CompanyHqUi";
+import { SaasPricingTiers } from "../../components/SaasPricingTiers";
 
 export const metadata = { title: "B2B" };
 export const dynamic = "force-dynamic";
@@ -46,6 +47,10 @@ export default async function HqB2bPage() {
         <Stat label="Proposals sent" value={String(bundle.b2b.proposals)} />
         <Stat label="Pilots active" value={String(bundle.b2b.pilotsActive)} />
       </div>
+
+      <HqSectionFrame title="SaaS pricing & $600K ARR model" description="Onboarding fee + three tiers — ~58 customers hits target">
+        <SaasPricingTiers showArrModel />
+      </HqSectionFrame>
 
       <HqSectionFrame title="Company pipeline" description="Deals in flight — company scope only">
         {openPipeline.length ? (

@@ -6,7 +6,7 @@ import { clientIpFromHeaders, demoRateLimit } from "../../../../lib/platform-dem
 
 export const dynamic = "force-dynamic";
 
-const INTENTS = new Set(["snapshot", "founding_pilot", "api_access"]);
+const INTENTS = new Set(["snapshot", "founding_pilot", "api_access", "saas", "enterprise"]);
 const COMPANY_TYPES = new Set(["brand", "retailer", "supplier", "other"]);
 
 export function cleanLeadField(v: unknown, max = 200) {
@@ -104,12 +104,17 @@ export async function POST(req: NextRequest) {
   const salesTo = process.env.PLATFORM_SALES_EMAIL || PLATFORM_LEAD_TO;
   const salesCc =
     salesTo.toLowerCase() === PLATFORM_LEAD_CC.toLowerCase() ? undefined : PLATFORM_LEAD_CC;
+  const tier = cleanLeadField(body.tier, 40);
   const intentLabel =
     intent === "founding_pilot"
-      ? "Founding Pilot"
-      : intent === "api_access"
-        ? "Platform access"
-        : "10-product snapshot";
+      ? "Founding Pilot ($5,000 onboarding)"
+      : intent === "enterprise"
+        ? "Enterprise (custom)"
+        : intent === "saas" || intent === "api_access"
+          ? tier
+            ? `SaaS — ${tier}`
+            : "SaaS — Platform / Professional"
+          : "10-product snapshot";
   const companyTypeLabel =
     extras.company_type === "brand"
       ? "Fashion or textile brand"

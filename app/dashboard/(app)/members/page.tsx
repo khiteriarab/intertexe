@@ -5,7 +5,7 @@ import { formatCompanyCount } from "../../../../lib/dashboard/company-plan";
 import { NorthStarKpiCard, HqSectionFrame } from "../../components/CompanyHqUi";
 import { UserGrowthDashboard } from "../email/UserGrowthDashboard";
 
-export const metadata = { title: "Members" };
+export const metadata = { title: "Users" };
 export const dynamic = "force-dynamic";
 
 export default async function HqMembersPage() {
@@ -19,9 +19,10 @@ export default async function HqMembersPage() {
     <div className="space-y-8">
       <header>
         <p className="text-[10px] tracking-[0.2em] uppercase text-[#9c7b8b]">INTERTEXE HQ</p>
-        <h1 className="font-serif text-2xl sm:text-3xl mt-1">Member growth</h1>
+        <h1 className="font-serif text-2xl sm:text-3xl mt-1">Users & members</h1>
         <p className="text-sm text-black/55 mt-2">
-          {formatCompanyCount(bundle.members.total)} today · target {formatCompanyCount(bundle.plan.members)} by{" "}
+          {formatCompanyCount(bundle.members.total)} users · {formatCompanyCount(bundle.members.founderWelcomeTotal)}{" "}
+          Founder Welcome · target {formatCompanyCount(bundle.plan.members)} by{" "}
           {new Date(bundle.plan.deadlineIso).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
         </p>
       </header>
@@ -31,13 +32,15 @@ export default async function HqMembersPage() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Stat label="Email lifecycle users" value={formatCompanyCount(bundle.members.emailUsers)} />
+        <Stat label="Registered accounts" value={formatCompanyCount(bundle.members.registeredUsers)} />
         <Stat label="This week" value={`+${formatCompanyCount(bundle.members.d7)}`} />
-        <Stat label="This month" value={`+${formatCompanyCount(bundle.members.d30)}`} />
+        <Stat label="Lifecycle delivered (7d)" value={String(bundle.members.lifecycleDelivered7d)} />
         <Stat label="Required / day" value={`+${formatCompanyCount(bundle.members.requiredPerDay)}`} />
         <Stat label="Forecast hit date" value={bundle.members.forecastHitDate || "—"} />
       </div>
 
-      <HqSectionFrame title="Growth scoreboard" description="Dynamic pace from live member count">
+      <HqSectionFrame title="Growth scoreboard" description="Users counted from Founder Welcome + lifecycle emails and registered accounts">
         <UserGrowthDashboard bundle={growth} />
       </HqSectionFrame>
     </div>

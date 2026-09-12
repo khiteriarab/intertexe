@@ -42,7 +42,7 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(home, /SalesProblemSection/);
     assert.doesNotMatch(home, /SalesHowItWorksSection/);
     assert.doesNotMatch(home, /SalesDppSection/);
-    assert.doesNotMatch(home, /PricingPlans/);
+    assert.match(home, /PricingPlans/);
     assert.doesNotMatch(home, /StoryTabs/);
     assert.doesNotMatch(home, /ComparisonView/);
   });

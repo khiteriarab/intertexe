@@ -203,16 +203,22 @@ export default async function OrganizationOverviewPage({
 
       <EntModuleShowcase overview={overview} base={base} />
 
-      {membership.plan === "free_snapshot" ? (
+      {membership.plan === "free_snapshot" || membership.plan === "founding_pilot" ? (
         <div className="ent-zone ent-zone-butter rounded-[var(--ent-radius-2xl)] px-8 py-10 md:px-10 md:py-12 mb-14 shadow-[var(--ent-shadow-panel)]">
-          <p className="ent-heading text-[1.65rem] text-[var(--ent-ink)]">Continue with the Founding DPP Pilot</p>
+          <p className="ent-heading text-[1.65rem] text-[var(--ent-ink)]">
+            {membership.plan === "free_snapshot" ? "Continue with the Founding Pilot" : "Choose your operating plan"}
+          </p>
           <p className="text-sm leading-relaxed text-[var(--ent-muted)] mt-3 max-w-2xl">
-            $5,000 · 100 complex products or 500 structured rows. This snapshot organization upgrades in place — source
-            records are not copied into a new account.
+            {membership.plan === "free_snapshot"
+              ? "$5,000 onboarding · 100 complex products or 500 structured rows — implementation, not a subscription. Then Platform ($499/mo), Professional ($1,250/mo), or Enterprise."
+              : "Pilot is onboarding. Ongoing operation: Platform ($499/mo) for core OS · Professional ($1,250/mo) for white-label passports · Enterprise for headless API & integrations."}
           </p>
           <p className="text-xs text-[var(--ent-muted-light)] mt-4">
-            Product allowance: {entitlement.productAllowance ?? "unlimited"}. Passport publishing is not included on the
-            free snapshot.
+            Products: {entitlement.productAllowance ?? "custom"} · Passports:{" "}
+            {entitlement.canPublishPassports
+              ? entitlement.passportAllowance ?? "custom"
+              : "preview QR only until pilot or SaaS"}
+            {!entitlement.canUseHeadlessApi ? " · Headless API: Enterprise only" : null}
           </p>
         </div>
       ) : null}

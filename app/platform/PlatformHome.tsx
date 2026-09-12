@@ -1,3 +1,4 @@
+import { PricingPlans } from "./PricingPlans";
 import { PlatformScrollShowcase } from "./PlatformScrollShowcase";
 import {
   SalesCtaSection,
@@ -26,6 +27,7 @@ export function PlatformHome() {
       <SalesOutputsSection />
       <SalesPublishSection />
       <SalesPlatformBreadthSection />
+      <PricingPlans />
       <SalesCtaSection />
     </div>
   );

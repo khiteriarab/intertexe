@@ -65,6 +65,10 @@ export type CompanyHqBundle = {
     activationRate: number | null;
     forecastHitDate: string | null;
     requiredPerDay: number;
+    emailUsers: number;
+    registeredUsers: number;
+    founderWelcomeTotal: number;
+    lifecycleDelivered7d: number;
   };
   acquisition: {
     funnel: AcquisitionFunnelStage[];
@@ -157,7 +161,7 @@ export async function fetchCompanyHqBundle(
     }),
     members: computeKpiSnapshot({
       key: "members",
-      label: "Members / Users",
+      label: "Users (members)",
       current: growth.accounts.total,
       target: plan.members,
       deadlineIso: plan.deadlineIso,
@@ -196,10 +200,17 @@ export async function fetchCompanyHqBundle(
     { key: "platform", label: "Platform Visitors", volume: null, conversionPct: null, wowChange: null },
     {
       key: "signups",
-      label: "Sign-ups",
-      volume: founder.accounts.total,
+      label: "Users / members",
+      volume: growth.accounts.total,
       conversionPct: null,
-      wowChange: founder.accounts.d7,
+      wowChange: growth.accounts.d7,
+    },
+    {
+      key: "founder_welcome",
+      label: "Founder Welcome (email users)",
+      volume: growth.memberUsers.founderWelcomeTotal,
+      conversionPct: null,
+      wowChange: growth.memberUsers.lifecycleDelivered7d,
     },
     {
       key: "activated",
@@ -295,6 +306,10 @@ export async function fetchCompanyHqBundle(
         fetchedAt
       ),
       requiredPerDay: growth.scoreboard.perDay,
+      emailUsers: growth.memberUsers.emailUsers,
+      registeredUsers: growth.memberUsers.registeredUsers,
+      founderWelcomeTotal: growth.memberUsers.founderWelcomeTotal,
+      lifecycleDelivered7d: growth.memberUsers.lifecycleDelivered7d,
     },
     acquisition: { funnel, sources: sourceRows, bestSource, worstSource },
     b2b: {

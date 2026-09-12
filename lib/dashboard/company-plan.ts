@@ -317,7 +317,7 @@ export function buildWeeklyReview(input: {
   speakingOps: number;
 }): WeeklyReviewRow[] {
   const rows: Array<[string, number, number]> = [
-    ["Members gained", input.membersWeek, input.membersWeekTarget],
+    ["Users gained", input.membersWeek, input.membersWeekTarget],
     ["Revenue", input.revenueWeek, input.revenueWeekTarget],
     ["Affiliate orders", input.affiliateOrders, 0],
     ["Affiliate revenue", input.affiliateRevenue, 0],

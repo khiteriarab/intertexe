@@ -26,7 +26,7 @@ export function useCompanyHorizon(bundle: CompanyHqBundle) {
       }),
       members: computeKpiSnapshot({
         key: "members",
-        label: "Members / Users",
+        label: "Users (members)",
         current: bundle.members.total,
         target: plan.members,
         deadlineIso: plan.deadlineIso,

@@ -50,16 +50,19 @@ export function CompanyHqOverview({ bundle }: { bundle: CompanyHqBundle }) {
         </HqSectionFrame>
 
         <HqSectionFrame
-          title="Member growth"
-          description={`${formatCompanyCount(bundle.members.total)} today · forecast ${memberForecast || "—"}`}
+          title="Users & members"
+          description={`${formatCompanyCount(bundle.members.total)} users · Founder Welcome ${formatCompanyCount(bundle.members.founderWelcomeTotal)} · forecast ${memberForecast || "—"}`}
           href="/dashboard/members"
         >
           <div className="grid grid-cols-2 gap-3 text-sm">
+            <Metric label="Email lifecycle users" value={formatCompanyCount(bundle.members.emailUsers)} />
+            <Metric label="Registered accounts" value={formatCompanyCount(bundle.members.registeredUsers)} />
             <Metric label="This week" value={`+${formatCompanyCount(bundle.members.d7)}`} />
-            <Metric label="This month" value={`+${formatCompanyCount(bundle.members.d30)}`} />
             <Metric label="Required / day" value={`+${formatCompanyCount(bundle.members.requiredPerDay)}`} />
-            <Metric label="Activated" value={formatCompanyCount(bundle.members.activated)} />
           </div>
+          <p className="text-[11px] text-black/40 mt-3">
+            Users = Founder Welcome + lifecycle emails (Day 4/10/25, Weekly Edit, etc.) merged with registered accounts.
+          </p>
         </HqSectionFrame>
       </div>
 

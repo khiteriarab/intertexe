@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fetchFounderToday } from "./command-center";
 import { fetchEmailEngineBundle, type EmailEngineBundle } from "./email-engine";
+import { fetchMemberUserCounts, type MemberUserCounts } from "./member-users";
 import { getServerSupabase } from "../supabase-service-client";
 import {
   buildMonthlyCheckpoints,
@@ -45,6 +46,8 @@ export type UserGrowthEngineBundle = {
     d7: number;
     d30: number;
   };
+  /** Email lifecycle + registered — same people as HQ “users / members”. */
+  memberUsers: MemberUserCounts;
   activated: {
     total: number;
     d7: number;
@@ -130,11 +133,18 @@ export async function fetchUserGrowthEngineBundle(workspaceId: string): Promise<
     fetchEmailEngineBundle(),
   ]);
 
-  const accounts = {
+  const registered = {
     total: founder.accounts.total ?? 0,
     today: founder.accounts.today ?? 0,
     d7: founder.accounts.d7 ?? 0,
     d30: founder.accounts.d30 ?? 0,
+  };
+  const memberUsers = await fetchMemberUserCounts(registered);
+  const accounts = {
+    total: memberUsers.total,
+    today: memberUsers.today,
+    d7: memberUsers.d7,
+    d30: memberUsers.d30,
   };
   const activated = {
     total: founder.activated.total ?? 0,
@@ -167,14 +177,16 @@ export async function fetchUserGrowthEngineBundle(workspaceId: string): Promise<
   const monthlyCheckpoints = buildMonthlyCheckpoints(fetchedAt);
 
   const funnel: GrowthFunnelRow[] = [
-    { label: "Emails delivered", value: email.statusTotals.delivered7d, period: "7d" },
-    { label: "New accounts", value: accounts.d7, period: "7d" },
+    { label: "Lifecycle emails delivered", value: email.statusTotals.delivered7d, period: "7d" },
+    { label: "Founder Welcome sent (all time)", value: memberUsers.founderWelcomeTotal, period: "users" },
+    { label: "New users this week", value: accounts.d7, period: "7d" },
     { label: "Activated members", value: activated.d7, period: "7d" },
-    { label: "Registered total", value: accounts.total, period: "all time" },
+    { label: "Total users / members", value: accounts.total, period: "all time" },
   ];
 
   return {
     accounts,
+    memberUsers,
     activated,
     activationRate,
     pace,

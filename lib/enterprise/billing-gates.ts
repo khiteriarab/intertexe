@@ -7,6 +7,7 @@ import {
 } from "./entitlements";
 import { incrementUsageMeter, loadUsageMeters } from "./usage-meters";
 import { defaultCheckoutPriceForPlan, isPaddleConfigured } from "./paddle";
+import { upgradeHintForPlan } from "./pricing";
 
 export type BillingDashboard = {
   plan: PlanKey;
@@ -98,7 +99,7 @@ export async function assertCanAddProducts(
     return {
       allowed: false,
       code: "allowance",
-      reason: `Product allowance reached (${activeProductCount}/${entitlements.productAllowance}). Upgrade your plan or archive products.`,
+      reason: `Product allowance reached (${activeProductCount}/${entitlements.productAllowance}). ${upgradeHintForPlan(entitlements.plan)}`,
     };
   }
   return { allowed: true, remaining: remaining - additional };
@@ -124,7 +125,7 @@ export async function assertCanPublishPassport(
     return {
       allowed: false,
       code: "plan",
-      reason: "Your plan does not include passport publishing. Upgrade to Founding Pilot or SaaS.",
+      reason: upgradeHintForPlan(entitlements.plan),
     };
   }
 
@@ -144,7 +145,7 @@ export async function assertCanPublishPassport(
       return {
         allowed: false,
         code: "allowance",
-        reason: `Passport allowance reached (${publishedCount}/${entitlements.passportAllowance}). Contact INTERTEXE to increase your limit.`,
+        reason: `Passport allowance reached (${publishedCount}/${entitlements.passportAllowance}). ${upgradeHintForPlan(entitlements.plan)}`,
       };
     }
   }
@@ -203,13 +204,12 @@ export async function loadBillingDashboard(
 
   let publishBlockReason: string | undefined;
   if (!entitlements.canPublishPassports) {
-    publishBlockReason =
-      "Your plan does not include passport publishing. Upgrade to Founding Pilot or SaaS.";
+    publishBlockReason = upgradeHintForPlan(entitlements.plan);
   } else if (
     entitlements.passportAllowance != null &&
     publishedPassportCount >= entitlements.passportAllowance
   ) {
-    publishBlockReason = `Passport allowance reached (${publishedPassportCount}/${entitlements.passportAllowance}).`;
+    publishBlockReason = `Passport allowance reached (${publishedPassportCount}/${entitlements.passportAllowance}). ${upgradeHintForPlan(entitlements.plan)}`;
   }
 
   return {

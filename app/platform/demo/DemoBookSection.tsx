@@ -18,8 +18,8 @@ export function DemoBookSection() {
         <ul className="space-y-3 text-sm text-[#161513] mb-8 max-w-md mx-auto text-left">
           {[
             "Free 10-product Material Snapshot",
-            "Founding Pilot — $5,000",
-            "Platform from $499/month",
+            "Founding Pilot — $5,000 (onboarding, not subscription)",
+            "Platform $499/mo · Professional $1,250/mo · Enterprise custom",
           ].map((point) => (
             <li key={point} className="flex items-start gap-2">
               <span className="text-[var(--platform-primary)] mt-0.5 shrink-0" aria-hidden="true">

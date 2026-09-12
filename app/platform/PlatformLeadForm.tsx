@@ -5,8 +5,8 @@ import { trackPlatform } from "../../lib/platform-analytics";
 
 const INTENTS = [
   { value: "snapshot", label: "Free 10-product Material Snapshot" },
-  { value: "founding_pilot", label: "Founding Pilot ($5,000)" },
-  { value: "api_access", label: "Ongoing platform / API access" },
+  { value: "founding_pilot", label: "Founding Pilot ($5,000 onboarding)" },
+  { value: "saas", label: "SaaS — Platform / Professional / Enterprise" },
 ] as const;
 
 const COMPANY_TYPES = [
@@ -23,10 +23,12 @@ const LABEL = "text-[11px] tracking-[0.14em] uppercase text-[#8a847c]";
 export function PlatformLeadForm({
   intent = "snapshot",
   sourceCta,
+  tier,
   variant = "default",
 }: {
   intent?: string;
   sourceCta: string;
+  tier?: string;
   variant?: "default" | "demo" | "office";
 }) {
   const [state, setState] = useState<"idle" | "submitting" | "done" | "dup" | "error">("idle");
@@ -45,7 +47,7 @@ export function PlatformLeadForm({
       const res = await fetch("/api/v1/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, intent: selectedIntent, source_cta: sourceCta }),
+        body: JSON.stringify({ ...payload, intent: selectedIntent, source_cta: sourceCta, tier: tier || payload.tier }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -54,7 +56,7 @@ export function PlatformLeadForm({
         return;
       }
       if (selectedIntent === "founding_pilot") trackPlatform("platform_pilot_submitted");
-      else if (selectedIntent === "api_access") trackPlatform("platform_api_access_submitted");
+      else if (selectedIntent === "saas" || selectedIntent === "api_access") trackPlatform("platform_api_access_submitted");
       else trackPlatform("platform_snapshot_submitted");
       setState(json.duplicate ? "dup" : "done");
     } catch {

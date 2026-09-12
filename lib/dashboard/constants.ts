@@ -47,7 +47,7 @@ export function isPlatformHost(host: string | null | undefined): boolean {
 export const HQ_NAV = [
   { href: "/dashboard", label: "Overview", exact: true },
   { href: "/dashboard/revenue", label: "Revenue" },
-  { href: "/dashboard/members", label: "Members" },
+  { href: "/dashboard/members", label: "Users" },
   { href: "/dashboard/acquisition", label: "Acquisition" },
   { href: "/dashboard/affiliate", label: "Affiliate" },
   { href: "/dashboard/b2b", label: "B2B" },

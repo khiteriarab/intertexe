@@ -35,12 +35,20 @@ export function paddlePlanByPriceId(priceId: string): PaddlePlanMeta | null {
       { plan: "founding_pilot", productAllowance: 500, passportAllowance: 100 },
     ],
     [
+      process.env.PADDLE_PRICE_SAAS_PLATFORM,
+      { plan: "platform", productAllowance: 500, passportAllowance: 50 },
+    ],
+    [
+      process.env.PADDLE_PRICE_SAAS_PROFESSIONAL,
+      { plan: "professional", productAllowance: 2500, passportAllowance: 250 },
+    ],
+    [
       process.env.PADDLE_PRICE_SAAS_STARTER,
-      { plan: "saas", productAllowance: 2000, passportAllowance: 500 },
+      { plan: "platform", productAllowance: 500, passportAllowance: 50 },
     ],
     [
       process.env.PADDLE_PRICE_SAAS_GROWTH,
-      { plan: "saas", productAllowance: null, passportAllowance: null },
+      { plan: "professional", productAllowance: 2500, passportAllowance: 250 },
     ],
   ];
   for (const [envId, meta] of fromEnv) {
@@ -287,6 +295,19 @@ export async function handlePaddleWebhookEvent(
 
 export function defaultCheckoutPriceForPlan(plan: PlanKey): string | null {
   if (plan === "founding_pilot") return process.env.PADDLE_PRICE_FOUNDING_PILOT?.trim() || null;
-  if (plan === "saas") return process.env.PADDLE_PRICE_SAAS_STARTER?.trim() || null;
+  if (plan === "platform") {
+    return (
+      process.env.PADDLE_PRICE_SAAS_PLATFORM?.trim() ||
+      process.env.PADDLE_PRICE_SAAS_STARTER?.trim() ||
+      null
+    );
+  }
+  if (plan === "professional" || plan === "saas") {
+    return (
+      process.env.PADDLE_PRICE_SAAS_PROFESSIONAL?.trim() ||
+      process.env.PADDLE_PRICE_SAAS_GROWTH?.trim() ||
+      null
+    );
+  }
   return process.env.PADDLE_PRICE_FOUNDING_PILOT?.trim() || null;
 }

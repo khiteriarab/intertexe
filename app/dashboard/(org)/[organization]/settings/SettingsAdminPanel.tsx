@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { planDisplayName } from "../../../../../lib/enterprise/pricing";
 import { entButtonClass, entButtonGhostClass } from "../../../components/EnterpriseUi";
 
 type Security = {
@@ -116,7 +117,7 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
         <h3 className="text-sm font-semibold mb-3">Usage & billing</h3>
         {billing.plan ? (
           <p className="text-xs text-[var(--ent-muted)] mb-3 uppercase tracking-wider">
-            Plan · {billing.plan.replaceAll("_", " ")}
+            Plan · {planDisplayName(billing.plan)}
           </p>
         ) : null}
         {billing.meters?.length ? (
