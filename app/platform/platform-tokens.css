@@ -1,4 +1,5 @@
 /* INTERTEXE platform — beige editorial brand tokens */
+@import "../shared/intertexe-editorial.css";
 
 .platform-shell {
   --platform-bg: #f5f0e8;

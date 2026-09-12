@@ -184,12 +184,35 @@ function LoginForm() {
   return (
     <div className="ent-login-page">
       <div className="ent-login-brand">
+        <div className="ent-login-brand-art" aria-hidden>
+          <svg viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice" fill="none">
+            <path
+              d="M-40 720 C180 640 260 820 420 760 S640 680 860 820 L860 920 L-40 920 Z"
+              fill="rgba(44,38,32,0.08)"
+            />
+            <path
+              d="M640 40 C720 120 780 80 820 160 C860 240 780 300 700 260 C620 220 560 120 640 40 Z"
+              fill="rgba(201,169,98,0.12)"
+            />
+            <path
+              d="M0 420 Q200 360 340 400 T680 380"
+              stroke="rgba(44,38,32,0.1)"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M80 520 Q260 480 400 510 T720 490"
+              stroke="rgba(196,165,116,0.35)"
+              strokeWidth="1"
+            />
+          </svg>
+        </div>
+        <p className="ent-login-brand-edge">Trace · Measure · Govern · Publish</p>
         <div className="ent-login-brand-inner">
           <p className="ent-login-brand-wordmark">
             <span className="ent-login-wordmark-light">INTER</span>
             <span className="ent-login-wordmark-bold">TEXE</span>
           </p>
-          <h1 className="ent-login-brand-statement" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+          <h1 className="ent-login-brand-statement">
             Your product data,
             <br />
             connected.

@@ -49,7 +49,7 @@ export function EnterpriseShell({
   }
 
   return (
-    <div className="enterprise-app min-h-screen">
+    <div className="enterprise-app itx-abstract-canvas min-h-screen">
       <div className="md:hidden ent-mobile-bar px-4 py-3.5 flex items-center justify-between">
         <div>
           <p className="ent-brand">INTERTEXE</p>
@@ -62,6 +62,17 @@ export function EnterpriseShell({
 
       <div className="md:grid md:grid-cols-[260px_1fr] min-h-screen">
         <aside className={`ent-nav-rail ${mobileOpen ? "block" : "hidden"} md:flex md:flex-col`}>
+          <div className="ent-sidebar-art" aria-hidden>
+            <svg viewBox="0 0 260 900" preserveAspectRatio="xMidYMid slice" fill="none">
+              <circle cx="220" cy="80" r="72" fill="rgba(201,169,98,0.14)" />
+              <path
+                d="M-20 680 C80 620 140 760 220 700 S340 640 280 820 L280 920 L-20 920 Z"
+                fill="rgba(44,38,32,0.06)"
+              />
+              <path d="M20 420 Q120 380 200 400 T260 390" stroke="rgba(196,165,116,0.35)" strokeWidth="1" />
+            </svg>
+          </div>
+          <p className="ent-sidebar-edge hidden md:block">Material intelligence</p>
           <div className="px-5 pt-7 pb-4 hidden md:block">
             <Link href={base} className="block group">
               <p className="ent-brand-rail group-hover:text-[var(--ent-charcoal)] transition-colors">INTERTEXE</p>

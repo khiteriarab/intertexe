@@ -1,0 +1,139 @@
+/**
+ * INTERTEXE SaaS editorial system
+ * Modern · chic · abstract · editorial
+ */
+
+:root {
+  --itx-serif: Georgia, "Iowan Old Style", Palatino, "Times New Roman", serif;
+  --itx-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --itx-canvas: #f5f0e8;
+  --itx-surface: #faf8f4;
+  --itx-ink: #1c1915;
+  --itx-ink-soft: #2c2620;
+  --itx-muted: #6f6a63;
+  --itx-quiet: #9c9488;
+  --itx-border: #e8e0d4;
+
+  --itx-accent: #c4a574;
+  --itx-accent-soft: #e8dcc8;
+  --itx-accent-muted: #d9c9a8;
+  --itx-gold: #c9a962;
+  --itx-highlight: #f0ebe3;
+
+  --itx-shadow-panel: 0 20px 60px rgba(44, 38, 32, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --itx-radius-xl: 1.75rem;
+  --itx-radius-2xl: 2rem;
+}
+
+/* ── Abstract canvas orbs ── */
+.itx-abstract-canvas {
+  position: relative;
+  isolation: isolate;
+}
+
+.itx-abstract-canvas::before,
+.itx-abstract-canvas::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(72px);
+}
+
+.itx-abstract-canvas::before {
+  width: min(44vw, 480px);
+  height: min(44vw, 480px);
+  top: -6%;
+  right: 2%;
+  background: radial-gradient(circle, rgba(201, 169, 98, 0.24) 0%, transparent 68%);
+  opacity: 0.55;
+}
+
+.itx-abstract-canvas::after {
+  width: min(38vw, 400px);
+  height: min(38vw, 400px);
+  bottom: 6%;
+  left: 14%;
+  background: radial-gradient(circle, rgba(232, 220, 200, 0.5) 0%, transparent 70%);
+  opacity: 0.45;
+}
+
+.itx-abstract-canvas > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Editorial typography ── */
+.itx-eyebrow {
+  font-family: var(--itx-sans);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--itx-quiet);
+}
+
+.itx-display {
+  font-family: var(--itx-serif);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  color: var(--itx-ink);
+}
+
+.itx-display-strong {
+  font-family: var(--itx-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--itx-ink);
+}
+
+.itx-edge-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--itx-sans);
+  font-size: 0.5625rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(28, 25, 21, 0.26);
+  user-select: none;
+}
+
+/* ── Chic panels ── */
+.itx-editorial-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--itx-radius-2xl);
+  border: 1px solid rgba(28, 25, 21, 0.06);
+  background: linear-gradient(145deg, rgba(250, 248, 244, 0.96) 0%, rgba(240, 235, 227, 0.88) 100%);
+  box-shadow: var(--itx-shadow-panel);
+}
+
+.itx-editorial-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 50% 42% at 92% 8%, rgba(201, 169, 98, 0.16) 0%, transparent 58%),
+    radial-gradient(ellipse 40% 36% at 4% 92%, rgba(212, 196, 168, 0.28) 0%, transparent 55%);
+}
+
+.itx-editorial-panel-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.itx-gold-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 38% 32%,
+    rgba(232, 210, 160, 0.75) 0%,
+    rgba(201, 169, 98, 0.35) 42%,
+    transparent 70%
+  );
+  box-shadow: inset 0 0 32px rgba(255, 255, 255, 0.2);
+}

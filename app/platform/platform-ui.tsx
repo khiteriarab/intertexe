@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-export const SERIF = { fontFamily: "Georgia, 'Iowan Old Style', Palatino, serif" } as const;
+export const SERIF = { fontFamily: "var(--itx-serif, Georgia, 'Iowan Old Style', Palatino, serif)" } as const;
 
 export function Eyebrow({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
