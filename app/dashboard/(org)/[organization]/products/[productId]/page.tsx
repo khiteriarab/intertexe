@@ -17,6 +17,7 @@ import { loadProductImpactReadiness } from "../../../../../../lib/enterprise/imp
 import { buildProductProvenanceBundle } from "../../../../../../lib/enterprise/provenance";
 import { loadOrgProduct } from "../../../../../../lib/enterprise/queries";
 import { buildProductJourney } from "../../../../../../lib/enterprise/product-journey";
+import { ensurePassportShell } from "../../../../../../lib/enterprise/carriers";
 import { publishabilityForProduct } from "../../../../../../lib/enterprise/publish";
 import { loadProductTraceability } from "../../../../../../lib/enterprise/traceability";
 import {
@@ -80,8 +81,20 @@ export default async function ProductRecordPage({
   const canMutate = canMutateEnterprise(membership.role);
   const basePath = `/dashboard/${membership.slug}/products/${productId}`;
 
-  const [publishability, traceability, governance, supplierRequests, experienceConfig] = await Promise.all([
-    publishabilityForProduct(client, membership.organizationId, productId),
+  let publishability = await publishabilityForProduct(client, membership.organizationId, productId);
+
+  if (publishability.status === "ready" && !record.passport?.public_id && canMutateEnterprise(membership.role)) {
+    try {
+      await ensurePassportShell(client, membership.organizationId, productId);
+      const refreshed = await loadOrgProduct(client, membership.organizationId, productId);
+      if (refreshed) Object.assign(record, refreshed);
+      publishability = await publishabilityForProduct(client, membership.organizationId, productId);
+    } catch {
+      // Shell provisioning is best-effort on overview load
+    }
+  }
+
+  const [traceability, governance, supplierRequests, experienceConfig] = await Promise.all([
     loadProductTraceability(client, membership.organizationId, productId, record.fields),
     loadProductGovernanceScore(client, membership.organizationId, productId),
     client

@@ -235,7 +235,7 @@ export async function loadOrgProduct(client: SupabaseClient, organizationId: str
     .maybeSingle();
   if (!product) return null;
   const directory = await loadOrgMemberDirectory(client, organizationId);
-  const [fields, issues, identifiers, sourceQuery, activity, variants, passports, identIssues] =
+  const [fields, issues, identifiers, sourceQuery, activity, variants, passports, identity, identIssues] =
     await Promise.all([
       client
         .from("normalized_fields")
@@ -271,6 +271,13 @@ export async function loadOrgProduct(client: SupabaseClient, organizationId: str
         .select("id, public_id, state, current_version_id, created_at, updated_at")
         .eq("organization_id", organizationId)
         .eq("product_id", productId)
+        .maybeSingle(),
+      client
+        .from("persistent_identities")
+        .select("id, public_id")
+        .eq("organization_id", organizationId)
+        .eq("product_id", productId)
+        .eq("active", true)
         .maybeSingle(),
       client
         .from("issues")
@@ -357,7 +364,20 @@ export async function loadOrgProduct(client: SupabaseClient, organizationId: str
             actor: reviewerFromDirectory(directory, row.actor_id),
           })),
         }
-      : null,
+      : identity.data?.public_id
+        ? {
+            id: "",
+            public_id: identity.data.public_id,
+            state: product.passport_state || "ready",
+            current_version_id: null,
+            created_at: null,
+            updated_at: null,
+            publicUrl: activeCarrier?.public_url || `/p/${identity.data.public_id}`,
+            carriers: carriers.data || [],
+            versions: [],
+          }
+        : null,
+    identityPublicId: identity.data?.public_id || null,
     directory,
   };
 }
