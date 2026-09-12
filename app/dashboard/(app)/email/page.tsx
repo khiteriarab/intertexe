@@ -50,7 +50,7 @@ export default async function HqEmailPage() {
     <div>
       <HqPageHeader
         title="Email Engine"
-        description="Growth command center for 25,000 users by 2027 — trajectory and email levers above, delivery ledger below."
+        description="Growth scoreboard for 25,000 members by Sep 2027 — live counts, weekly operating targets, monthly checkpoints, and email funnel inputs. Delivery ledger below."
       />
 
       <UserGrowthDashboard bundle={growth} />

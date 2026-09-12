@@ -7,11 +7,15 @@ import { fetchFounderToday } from "./command-center";
 import { fetchEmailEngineBundle, type EmailEngineBundle } from "./email-engine";
 import { getServerSupabase } from "../supabase-service-client";
 import {
+  buildMonthlyCheckpoints,
   buildWeeklyUserTrajectory,
+  computeScoreboardTargets,
   computeUserGrowthPace,
   EMAIL_GROWTH_LEVERS,
   USER_GROWTH_MILESTONES,
   USER_GROWTH_TARGET,
+  type GrowthScoreboardTargets,
+  type MonthlyCheckpoint,
   type UserGrowthTrajectoryPoint,
 } from "./user-growth-plan";
 
@@ -28,6 +32,12 @@ export type EmailLeverRow = {
   delivered7d: number;
 };
 
+export type GrowthFunnelRow = {
+  label: string;
+  value: number;
+  period: string;
+};
+
 export type UserGrowthEngineBundle = {
   accounts: {
     total: number;
@@ -41,10 +51,13 @@ export type UserGrowthEngineBundle = {
   };
   activationRate: number | null;
   pace: ReturnType<typeof computeUserGrowthPace>;
+  scoreboard: GrowthScoreboardTargets;
+  monthlyCheckpoints: MonthlyCheckpoint[];
   milestones: typeof USER_GROWTH_MILESTONES;
   trajectory: UserGrowthTrajectoryPoint[];
   weeklySignups: WeeklySignupRow[];
   emailLevers: EmailLeverRow[];
+  funnel: GrowthFunnelRow[];
   email: EmailEngineBundle;
   fetchedAt: string;
 };
@@ -147,15 +160,31 @@ export async function fetchUserGrowthEngineBundle(workspaceId: string): Promise<
     asOfIso: fetchedAt,
   });
 
+  const scoreboard = computeScoreboardTargets({
+    currentTotal: accounts.total,
+    asOfIso: fetchedAt,
+  });
+  const monthlyCheckpoints = buildMonthlyCheckpoints(fetchedAt);
+
+  const funnel: GrowthFunnelRow[] = [
+    { label: "Emails delivered", value: email.statusTotals.delivered7d, period: "7d" },
+    { label: "New accounts", value: accounts.d7, period: "7d" },
+    { label: "Activated members", value: activated.d7, period: "7d" },
+    { label: "Registered total", value: accounts.total, period: "all time" },
+  ];
+
   return {
     accounts,
     activated,
     activationRate,
     pace,
+    scoreboard,
+    monthlyCheckpoints,
     milestones: USER_GROWTH_MILESTONES,
     trajectory,
     weeklySignups,
     emailLevers: buildEmailLevers(email),
+    funnel,
     email,
     fetchedAt,
   };

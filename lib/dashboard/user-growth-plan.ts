@@ -5,6 +5,9 @@
 
 export const USER_GROWTH_TARGET = 25_000;
 export const USER_GROWTH_DEADLINE_ISO = "2027-12-31";
+/** Founder scoreboard headline deadline (phone dashboard + monthly checkpoints). */
+export const USER_GROWTH_SCOREBOARD_DEADLINE_ISO = "2027-09-30";
+export const USER_GROWTH_SCOREBOARD_START_ISO = "2026-10-01";
 export const USER_GROWTH_START_ISO = "2026-01-01";
 
 export const USER_GROWTH_COLORS = {
@@ -83,6 +86,123 @@ export function weeksBetween(startIso: string, endIso: string): number {
   const end = parsePlanDate(endIso).getTime();
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
   return Math.max(1, Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000)));
+}
+
+export function daysBetween(startIso: string, endIso: string): number {
+  const start = parsePlanDate(startIso).getTime();
+  const end = parsePlanDate(endIso).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+  return Math.max(1, Math.ceil((end - start) / (24 * 60 * 60 * 1000)));
+}
+
+export function monthsBetween(startIso: string, endIso: string): number {
+  const start = parsePlanDate(startIso);
+  const end = parsePlanDate(endIso);
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) return 0;
+  const months =
+    (end.getUTCFullYear() - start.getUTCFullYear()) * 12 + (end.getUTCMonth() - start.getUTCMonth());
+  return Math.max(1, months || 1);
+}
+
+export type GrowthScoreboardTargets = {
+  goal: number;
+  current: number;
+  remaining: number;
+  progressPct: number;
+  perMonth: number;
+  perWeek: number;
+  perDay: number;
+  fourWeekTarget: number;
+  quarterTarget: number;
+  monthsRemaining: number;
+  weeksRemaining: number;
+  daysRemaining: number;
+  deadlineLabel: string;
+};
+
+/** Even-pace targets from current total → 25k by the scoreboard deadline. */
+export function computeScoreboardTargets(opts: {
+  currentTotal: number;
+  asOfIso?: string;
+}): GrowthScoreboardTargets {
+  const asOf = opts.asOfIso?.slice(0, 10) || new Date().toISOString().slice(0, 10);
+  const remaining = Math.max(0, USER_GROWTH_TARGET - opts.currentTotal);
+  const monthsRemaining = monthsBetween(asOf, USER_GROWTH_SCOREBOARD_DEADLINE_ISO);
+  const weeksRemaining = weeksBetween(asOf, USER_GROWTH_SCOREBOARD_DEADLINE_ISO);
+  const daysRemaining = daysBetween(asOf, USER_GROWTH_SCOREBOARD_DEADLINE_ISO);
+  const perMonth = monthsRemaining > 0 ? Math.ceil(remaining / monthsRemaining) : remaining;
+  const perWeek = weeksRemaining > 0 ? Math.ceil(remaining / weeksRemaining) : remaining;
+  const perDay = daysRemaining > 0 ? Math.ceil(remaining / daysRemaining) : remaining;
+  const deadline = parsePlanDate(USER_GROWTH_SCOREBOARD_DEADLINE_ISO);
+  const deadlineLabel = deadline.toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
+  return {
+    goal: USER_GROWTH_TARGET,
+    current: opts.currentTotal,
+    remaining,
+    progressPct: USER_GROWTH_TARGET > 0 ? (opts.currentTotal / USER_GROWTH_TARGET) * 100 : 0,
+    perMonth,
+    perWeek,
+    perDay,
+    fourWeekTarget: perWeek * 4,
+    quarterTarget: perMonth * 3,
+    monthsRemaining,
+    weeksRemaining,
+    daysRemaining,
+    deadlineLabel,
+  };
+}
+
+export type MonthlyCheckpoint = {
+  checkpoint: string;
+  totalMembers: number;
+  netNew: number;
+  isPast: boolean;
+  isCurrent: boolean;
+};
+
+/** Linear monthly ramp Oct 2026 → Sep 2027 (even growth scoreboard). */
+export function buildMonthlyCheckpoints(asOfIso?: string): MonthlyCheckpoint[] {
+  const asOf = asOfIso?.slice(0, 10) || new Date().toISOString().slice(0, 10);
+  const start = parsePlanDate(USER_GROWTH_SCOREBOARD_START_ISO);
+  const end = parsePlanDate(USER_GROWTH_SCOREBOARD_DEADLINE_ISO);
+  const monthCount = monthsBetween(USER_GROWTH_SCOREBOARD_START_ISO, USER_GROWTH_SCOREBOARD_DEADLINE_ISO);
+  const netNewPerMonth = Math.round(USER_GROWTH_TARGET / monthCount);
+  const rows: MonthlyCheckpoint[] = [];
+  const cursor = new Date(start);
+  let index = 1;
+
+  while (cursor.getTime() <= end.getTime()) {
+    const checkpoint = cursor.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+    const monthIso = cursor.toISOString().slice(0, 10);
+    const year = cursor.getUTCFullYear();
+    const month = cursor.getUTCMonth();
+    const asOfDate = parsePlanDate(asOf);
+    const isPast =
+      year < asOfDate.getUTCFullYear() ||
+      (year === asOfDate.getUTCFullYear() && month < asOfDate.getUTCMonth());
+    const isCurrent = year === asOfDate.getUTCFullYear() && month === asOfDate.getUTCMonth();
+
+    rows.push({
+      checkpoint,
+      totalMembers: Math.min(USER_GROWTH_TARGET, netNewPerMonth * index),
+      netNew: netNewPerMonth,
+      isPast,
+      isCurrent,
+    });
+    cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+    index += 1;
+  }
+
+  return rows;
 }
 
 /** Interpolate milestone curve for any date between defined milestones. */

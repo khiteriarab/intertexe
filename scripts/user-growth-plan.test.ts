@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   USER_GROWTH_TARGET,
+  buildMonthlyCheckpoints,
   buildWeeklyUserTrajectory,
+  computeScoreboardTargets,
   computeUserGrowthPace,
   targetUsersOnDate,
 } from "../lib/dashboard/user-growth-plan";
@@ -22,6 +24,21 @@ describe("user growth plan", () => {
     assert.ok(pace.weeksRemaining > 0);
     assert.ok(pace.requiredWeekly > 0);
     assert.ok(pace.progressPct > 0 && pace.progressPct < 10);
+  });
+
+  it("computes even-growth scoreboard targets from zero", () => {
+    const board = computeScoreboardTargets({ currentTotal: 0, asOfIso: "2026-09-12" });
+    assert.equal(board.goal, USER_GROWTH_TARGET);
+    assert.ok(board.perMonth >= 2000 && board.perMonth <= 2100);
+    assert.ok(board.perWeek >= 450 && board.perWeek <= 490);
+    assert.ok(board.perDay >= 65 && board.perDay <= 70);
+  });
+
+  it("builds monthly checkpoints through Sep 2027", () => {
+    const rows = buildMonthlyCheckpoints("2026-09-12");
+    assert.equal(rows.length, 12);
+    assert.equal(rows[0]?.checkpoint, "Oct 2026");
+    assert.equal(rows.at(-1)?.totalMembers, USER_GROWTH_TARGET);
   });
 
   it("builds weekly trajectory with actuals", () => {
