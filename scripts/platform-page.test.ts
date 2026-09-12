@@ -66,6 +66,7 @@ describe("Platform B2B sales page", () => {
     assert.match(sections, /IntelligenceBenchmarkVisual/);
     assert.match(sections, /Headless API/);
     assert.match(sections, /thirty seconds/i);
+    assert.match(sections, /Live case study/i);
     assert.match(sections, /aggregate only, never individual shopper data/);
     assert.match(sections, /not yet operational/);
     assert.match(sections, /Illustrative example/);

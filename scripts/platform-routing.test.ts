@@ -91,7 +91,7 @@ test("enterprise login supports SSO without consumer chrome", () => {
   assert.match(login, /Continue with SSO/);
   assert.match(login, /Welcome to INTERTEXE/);
   assert.match(login, /Go to INTERTEXE/);
-  assert.match(login, /Your product data,/);
+  assert.match(login, /Governed data/);
   assert.match(login, /getConsumerAccountUrl/);
 });
 
