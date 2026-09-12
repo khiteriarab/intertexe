@@ -463,7 +463,7 @@ export const entButtonGhostClass =
 export const entLinkClass =
   "text-[14px] font-medium text-[var(--ent-petrol-deep)] hover:text-[var(--ent-forest)] transition-colors inline-flex items-center gap-1";
 
-/** Product thumbnail — real image when available, otherwise neutral material placeholder. */
+/** Product thumbnail — real image when available, otherwise beige material placeholder. */
 export function EntProductPlaceholder({
   category,
   imageUrl,
@@ -476,13 +476,13 @@ export function EntProductPlaceholder({
   void category;
   if (imageUrl) {
     return (
-      <div className="ent-product-visual">
+      <div className="ent-product-visual ent-product-visual--photo">
         <Image
           src={imageUrl}
           alt={alt || ""}
           fill
           sizes="68px"
-          className="object-cover"
+          className="object-cover relative z-[1]"
           unoptimized
         />
       </div>

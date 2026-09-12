@@ -5,7 +5,7 @@ import { SERIF } from "./platform-ui";
 const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "What is INTERTEXE — a data layer, a DPP company, or a consumer app?",
-    a: "INTERTEXE is the product and material data layer for fashion companies. Brands buy a governed workspace that connects existing product data, resolves conflicts, benchmarks material strategy, tracks readiness, and publishes passports and public product experiences. Digital Product Passport generation is an important output — not the whole company. The consumer app is INTERTEXE's strategic demand surface, not the enterprise SKU.",
+    a: "INTERTEXE is product intelligence infrastructure for fashion. We govern your product data, publish passports, and deliver approved information to consumers — through INTERTEXE-hosted pages, your branded domain, or headless API into your existing app. We don't just organize DPP fields; we turn governed data into the digital product experience your customer actually sees.",
   },
   {
     q: "Is INTERTEXE a Digital Product Passport company?",
@@ -17,7 +17,15 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
   {
     q: "Do consumers need the INTERTEXE app?",
-    a: "No. Passport experiences can be opened from the web or a QR on the product. The architecture supports brand-owned interfaces and API integrations. The INTERTEXE scanner is not required.",
+    a: "No. Consumers scan a QR or open a link — they see your product experience, not a requirement to download anything. You choose delivery: INTERTEXE-hosted passport, white-label on your domain, or headless API into your own app and website. The INTERTEXE shopping app is separate strategic infrastructure, not what enterprise customers buy.",
+  },
+  {
+    q: "We already have an app. Why would we send customers to INTERTEXE?",
+    a: "You don't have to. Headless API delivery lets your developers pull approved passport data — product, journey, care, circularity — and render it inside your existing digital ecosystem. INTERTEXE owns the data cloud and intelligence; your brand owns the presentation. Large brands often use all three: QR on garment, API in app, white-label on web — all reading from one governed record.",
+  },
+  {
+    q: "What are the delivery options for consumer-facing passports?",
+    a: "Three modes, not mutually exclusive: INTERTEXE Hosted (Editorial, Trace, Essential, Circular templates — included in Platform plans), White Label (your branded passport domain — Professional/Enterprise), and Headless API (structured passport JSON for your app or website — Enterprise). Hosted is zero development; headless is maximum control.",
   },
   {
     q: "What data do we need to start?",
@@ -63,8 +71,8 @@ const FAQ: { q: string; a: ReactNode }[] = [
 
 export function PlatformFaq() {
   return (
-    <section className="bg-[#f7f5f1] border-t border-[#e8e3da]">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
+    <section className="platform-abstract-band itx-abstract-motif border-t border-[#e8e3da]">
+      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
         <h2 className="mb-2 text-[1.75rem] sm:text-3xl md:text-4xl font-light text-[var(--platform-primary)]" style={SERIF}>
           FAQ
         </h2>

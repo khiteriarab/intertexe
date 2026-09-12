@@ -86,10 +86,10 @@ function opportunityScore(input: {
 export async function loadConsumerSignals(
   client: SupabaseClient,
   organizationId: string,
-  options?: { limit?: number; imageBySku?: Record<string, string> }
+  options?: { limit?: number; imageBySku?: Record<string, string>; pilotImages?: PilotImageMaps }
 ): Promise<ConsumerSignalsBundle> {
   const limit = options?.limit ?? 10;
-  const imageBySku = options?.imageBySku || {};
+  const pilotImages = options?.pilotImages || { bySku: options?.imageBySku || {}, byStyle: {} };
 
   const { data: productRows } = await client
     .from("products")
@@ -151,7 +151,7 @@ export async function loadConsumerSignals(
       containsPolyester,
       aboveNaturalThreshold: naturalPct != null && naturalPct >= NATURAL_THRESHOLD,
       passportState: row.passport_state,
-      imageUrl: row.sku && imageBySku[row.sku] ? imageBySku[row.sku] : null,
+      imageUrl: resolvePilotProductImage(row.sku, row.style_code, pilotImages),
     };
   });
 
@@ -382,12 +382,37 @@ export async function loadConsumerSignals(
   };
 }
 
+export type PilotImageMaps = {
+  bySku: Record<string, string>;
+  byStyle: Record<string, string>;
+};
+
+export function pilotImageMaps(
+  rows: Array<{ sku?: string; style?: string; image_url?: string | null }>
+): PilotImageMaps {
+  const bySku: Record<string, string> = {};
+  const byStyle: Record<string, string> = {};
+  for (const row of rows) {
+    if (!row.image_url) continue;
+    if (row.sku) bySku[row.sku] = row.image_url;
+    if (row.style) byStyle[row.style] = row.image_url;
+  }
+  return { bySku, byStyle };
+}
+
+/** @deprecated Use pilotImageMaps + resolvePilotProductImage for style_code fallback. */
 export function imageMapFromLiveFixture(
   rows: Array<{ sku?: string; image_url?: string | null }>
 ): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (const row of rows) {
-    if (row.sku && row.image_url) map[row.sku] = row.image_url;
-  }
-  return map;
+  return pilotImageMaps(rows).bySku;
+}
+
+export function resolvePilotProductImage(
+  sku: string | null | undefined,
+  styleCode: string | null | undefined,
+  maps: PilotImageMaps
+): string | null {
+  if (sku && maps.bySku[sku]) return maps.bySku[sku];
+  if (styleCode && maps.byStyle[styleCode]) return maps.byStyle[styleCode];
+  return null;
 }

@@ -39,8 +39,14 @@ import { ProductRecordShell } from "../../../../components/ProductRecordShell";
 import type { ProductRecordTab } from "../../../../components/ProductRecordNav";
 import { ProvenanceInline } from "../../../../components/ProvenanceInline";
 import { TraceabilityPanel } from "../../../../components/TraceabilityPanel";
+import { buildPassportPreviewContent } from "../../../../../../lib/enterprise/passport-preview";
+import { loadProductExperienceConfig } from "../../../../../../lib/enterprise/passport-experience";
 import { IssueActions } from "../../issues/IssueActions";
-import { PassportQr } from "../../passports/PassportQr";
+import {
+  buildFieldRows,
+  PassportExperienceDesigner,
+} from "../../../../components/PassportExperienceDesigner";
+import { PassportPreviewPanel } from "../../../../components/PassportPreviewPanel";
 import { PublishPassportButton } from "../../passports/PublishPassportButton";
 import { ApproveFieldsButton } from "./ApproveFieldsButton";
 import { AccessClassLegend, DppReadinessPanel } from "./DppReadinessPanel";
@@ -74,7 +80,7 @@ export default async function ProductRecordPage({
   const canMutate = canMutateEnterprise(membership.role);
   const basePath = `/dashboard/${membership.slug}/products/${productId}`;
 
-  const [publishability, traceability, governance, supplierRequests] = await Promise.all([
+  const [publishability, traceability, governance, supplierRequests, experienceConfig] = await Promise.all([
     publishabilityForProduct(client, membership.organizationId, productId),
     loadProductTraceability(client, membership.organizationId, productId, record.fields),
     loadProductGovernanceScore(client, membership.organizationId, productId),
@@ -84,6 +90,7 @@ export default async function ProductRecordPage({
       .eq("organization_id", membership.organizationId)
       .eq("product_id", productId)
       .order("created_at", { ascending: false }),
+    loadProductExperienceConfig(client, membership.organizationId, productId),
   ]);
   const impactReadiness = await loadProductImpactReadiness(
     client,
@@ -111,6 +118,14 @@ export default async function ProductRecordPage({
       ? record.passport.publicUrl
       : `${origin}${record.passport.publicUrl}`
     : null;
+  const previewContent = buildPassportPreviewContent({
+    product: record.product,
+    fields: record.fields,
+    traceability,
+    passport: record.passport,
+  });
+  const isPublished =
+    record.passport?.state === "published" || record.passport?.state === "update_required";
 
   const showOverview = tab === "overview";
   const showMaterials = tab === "materials" || tab === "overview";
@@ -141,6 +156,33 @@ export default async function ProductRecordPage({
           </>
         ) : null}
 
+        {showPassport ? (
+          <div className="space-y-6">
+            <PassportExperienceDesigner
+              slug={membership.slug}
+              productId={productId}
+              canMutate={canMutate}
+              publishReady={publishability.status === "ready"}
+              published={isPublished}
+              publicId={record.passport?.public_id || null}
+              absoluteUrl={publicUrl}
+              carriers={(record.passport?.carriers as any[]) || []}
+              experience={experienceConfig}
+              content={previewContent}
+              fields={buildFieldRows(record.fields)}
+              versionNumber={record.passport?.versions.at(-1)?.version_number}
+            />
+            <ProductCarriersPanel
+              slug={membership.slug}
+              productId={productId}
+              canMutate={canMutate}
+              carriers={(record.passport?.carriers as any[]) || []}
+              publishReady={publishability.status === "ready"}
+              absoluteUrl={publicUrl}
+              publicId={record.passport?.public_id || null}
+            />
+          </div>
+        ) : (
         <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
           <div className="space-y-6">
             {(showOverview || tab === "materials") && (
@@ -314,12 +356,12 @@ export default async function ProductRecordPage({
           </div>
 
           <aside className="lg:sticky lg:top-8 space-y-6">
-            <div className="ent-dark-panel p-6 md:p-8">
-              <p className="text-[10px] tracking-[0.14em] uppercase text-white/40 mb-2">Review & publish</p>
-              <p className="ent-heading text-xl text-white mb-3">
+            <div className="ent-review-panel">
+              <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--ent-muted-light)] mb-2">Review & publish</p>
+              <p className="ent-heading text-xl text-[var(--ent-ink)] mb-3">
                 {publishability.status === "ready" ? "Ready to publish" : "Not ready yet"}
               </p>
-              <p className="text-sm text-white/60 leading-relaxed mb-6">
+              <p className="text-sm text-[var(--ent-muted)] leading-relaxed mb-6">
                 {publishability.status === "ready"
                   ? "Phase 1 DPP requirements met. Preview public fields, approve, then publish."
                   : `Blocking: ${publishability.blockers.join("; ")}`}
@@ -328,47 +370,30 @@ export default async function ProductRecordPage({
               <PublishPassportButton slug={membership.slug} productId={productId} canMutate={canMutate} />
             </div>
 
-            {(showOverview || showPassport) && (
-              <div className="ent-float-card p-6 md:p-8">
-                <p className="ent-heading text-lg text-[var(--ent-ink)] mb-3">Passport preview</p>
-                <dl className="text-sm space-y-2">
-                  <div>
-                    <dt className={entLabelClass}>Name</dt>
-                    <dd className="text-[var(--ent-ink)]">{record.product.name || "—"}</dd>
-                  </div>
-                  {record.fields
-                    .filter((field) => field.access_class === "public")
-                    .map((field) => (
-                      <div key={field.id}>
-                        <dt className={entLabelClass}>{field.field_key}</dt>
-                        <dd className="text-[var(--ent-ink-soft)]">{field.normalized_value || "—"}</dd>
-                      </div>
-                    ))}
-                </dl>
-                {record.passport && publicUrl && record.passport.state !== "incomplete" ? (
-                  <div className="mt-5">
-                    <PassportQr url={publicUrl} publicId={record.passport.public_id} variant="compact" />
-                  </div>
-                ) : null}
-                {record.passport?.state === "published" || record.passport?.state === "update_required" ? (
-                  <Link className={`${entLinkClass} mt-4 inline-flex`} href={`/p/${record.passport.public_id}`}>
-                    Open public passport →
-                  </Link>
-                ) : null}
-              </div>
+            {showOverview && (
+              <PassportPreviewPanel
+                content={previewContent}
+                publicId={record.passport?.public_id || null}
+                absoluteUrl={publicUrl}
+                versionNumber={record.passport?.versions.at(-1)?.version_number}
+                published={isPublished}
+              />
             )}
 
-            {(showOverview || showPassport) && (
+            {showOverview && (
               <ProductCarriersPanel
                 slug={membership.slug}
                 productId={productId}
                 canMutate={canMutate}
                 carriers={(record.passport?.carriers as any[]) || []}
                 publishReady={publishability.status === "ready"}
+                absoluteUrl={publicUrl}
+                publicId={record.passport?.public_id || null}
               />
             )}
           </aside>
         </div>
+        )}
       </ProductRecordShell>
     </div>
   );

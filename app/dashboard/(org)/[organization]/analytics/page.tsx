@@ -4,7 +4,7 @@ import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadDecisionIntelligence } from "../../../../../lib/enterprise/decision-intelligence";
 import { loadOrgAnalytics } from "../../../../../lib/enterprise/module-queries";
 import {
-  imageMapFromLiveFixture,
+  pilotImageMaps,
   loadConsumerSignals,
 } from "../../../../../lib/enterprise/consumer-signals";
 import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
@@ -26,10 +26,10 @@ export default async function AnalyticsPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const imageBySku = imageMapFromLiveFixture(livePilotProducts);
+  const pilotImages = pilotImageMaps(livePilotProducts);
   const [data, signals, decisions] = await Promise.all([
     loadOrgAnalytics(client, membership.organizationId),
-    loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
+    loadConsumerSignals(client, membership.organizationId, { limit: 10, pilotImages }),
     loadDecisionIntelligence(client, membership.organizationId, membership.slug),
   ]);
   const base = `/dashboard/${membership.slug}`;

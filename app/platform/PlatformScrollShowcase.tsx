@@ -198,7 +198,7 @@ export function PlatformScrollShowcase() {
   }, []);
 
   return (
-    <section className="bg-[var(--platform-bg)] border-y border-[var(--platform-border)]/60">
+    <section className="platform-abstract-band itx-abstract-motif border-y border-[var(--platform-border)]/60">
       {/* Mobile + tablet: tabbed dial (Fairly Made pattern) */}
       <div className="lg:hidden max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-14 sm:py-16">
         <p className="text-[10px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-3 text-center">

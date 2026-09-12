@@ -9,7 +9,7 @@ import { PlatformPageHeader } from "../PlatformPageHeader";
 export const metadata: Metadata = {
   title: "INTERTEXE 10-product demonstration",
   description:
-    "See INTERTEXE turn a 10-product catalog from messy source data into normalized material intelligence, issues, benchmarking, DPP readiness and passports. Book a conversation with the Barcelona platform office.",
+    "See INTERTEXE turn a 10-product catalog into governed records, published passports, and scannable consumer experiences — then scan the QR and show the real product page in thirty seconds. Book a conversation with the Barcelona platform office.",
   alternates: { canonical: "https://www.intertexe.com/platform/demo" },
 };
 
@@ -20,7 +20,7 @@ export default function PlatformDemoPage() {
         eyebrow="Live demonstration"
         align="center"
         title="See INTERTEXE with a 10-product catalog."
-        description="Messy source data → normalization → issues → material intelligence → benchmarking → DPP readiness → passport. Then book a conversation with the platform office in Barcelona."
+        description="Raw data → governed record → passport → experience → QR → scan. See the full lifecycle on a 10-product catalog, then book a conversation with the platform office in Barcelona."
         primaryHref="#book"
         primaryLabel="Book a conversation"
         secondaryHref="#walkthrough"

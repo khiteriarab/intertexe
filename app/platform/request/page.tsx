@@ -26,6 +26,7 @@ export default async function PlatformRequestPage({
     <PlatformChrome active="request">
       <PlatformViewTracker event={startedEvent} />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-24">
+        <div className="itx-editorial-panel itx-editorial-panel-inner p-8 sm:p-10 md:p-12">
         <p className="text-[10px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.25em] text-[#9c7b8b] mb-6">INTERTEXE PLATFORM</p>
         <h1 className="text-[2rem] sm:text-4xl font-light mb-4" style={{ fontFamily: "Georgia, serif" }}>
           {intent === "founding_pilot"
@@ -42,6 +43,7 @@ export default async function PlatformRequestPage({
               : "Send 10 product records. We will show you what INTERTEXE finds, what you are missing, how your material data compares, and what it would take to make those products passport-ready. Free. No commitment. We will not ask for a confidential catalog on this form."}
         </p>
         <PlatformLeadForm intent={intent} sourceCta={source} />
+        </div>
       </div>
     </PlatformChrome>
   );

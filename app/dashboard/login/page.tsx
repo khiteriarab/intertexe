@@ -206,18 +206,20 @@ function LoginForm() {
             />
           </svg>
         </div>
-        <p className="ent-login-brand-edge">Trace · Measure · Govern · Publish</p>
+        <p className="ent-login-brand-edge">Govern · Publish · Deliver</p>
         <div className="ent-login-brand-inner">
           <p className="ent-login-brand-wordmark">
             <span className="ent-login-wordmark-light">INTER</span>
             <span className="ent-login-wordmark-bold">TEXE</span>
           </p>
           <h1 className="ent-login-brand-statement">
-            Your product data,
+            Governed data.
             <br />
-            connected.
+            Real product experiences.
           </h1>
-          <p className="ent-login-brand-tagline">Product intelligence for fashion.</p>
+          <p className="ent-login-brand-tagline">
+            Infrastructure connecting brands, product data, and consumers across the garment lifecycle.
+          </p>
           <div className="ent-login-brand-motif" aria-hidden>
             <svg viewBox="0 0 280 100" className="ent-login-brand-motif-svg" fill="none">
               <path
@@ -236,9 +238,9 @@ function LoginForm() {
               <path d="M228 50 H260" stroke="rgba(44,38,32,0.2)" strokeWidth="1" strokeLinecap="round" />
             </svg>
             <ol className="ent-login-brand-motif-steps">
-              <li>Product data</li>
-              <li>Normalized</li>
-              <li>Governed</li>
+              <li>Governed record</li>
+              <li>Passport</li>
+              <li>Consumer experience</li>
             </ol>
           </div>
         </div>

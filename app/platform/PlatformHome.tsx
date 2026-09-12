@@ -1,12 +1,14 @@
 import { PlatformScrollShowcase } from "./PlatformScrollShowcase";
 import {
-  SalesConsumerSection,
   SalesCtaSection,
+  SalesDeliverySection,
   SalesGovernedRecordSection,
   SalesHeroSection,
   SalesIntelligenceSection,
+  SalesLifecycleSection,
   SalesOutputsSection,
   SalesPlatformBreadthSection,
+  SalesPublishSection,
   SalesWhatItIsSection,
 } from "./sales-sections";
 
@@ -16,11 +18,13 @@ export function PlatformHome() {
     <div>
       <SalesHeroSection />
       <SalesWhatItIsSection />
+      <SalesLifecycleSection />
       <PlatformScrollShowcase />
       <SalesGovernedRecordSection />
+      <SalesDeliverySection />
       <SalesIntelligenceSection />
       <SalesOutputsSection />
-      <SalesConsumerSection />
+      <SalesPublishSection />
       <SalesPlatformBreadthSection />
       <SalesCtaSection />
     </div>

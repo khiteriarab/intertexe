@@ -22,7 +22,7 @@ export function PlatformChrome({
           <div>
             <PlatformWordmark size="sm" className="text-[var(--platform-ink)] mb-3" />
             <p className="text-xs text-[var(--platform-quiet)] max-w-xs leading-relaxed">
-              Product and material data layer for fashion — governed records, intelligence, and passport outputs.
+              Product intelligence infrastructure for fashion — govern one record, deliver consumer experiences your way.
             </p>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs text-[var(--platform-quiet)]">

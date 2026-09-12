@@ -1,6 +1,6 @@
 import { formatOperatorTime } from "./reviewer-display";
-import { imageMapFromLiveFixture } from "./consumer-signals";
 import livePilotProducts from "./fixtures/intertexe-live-10-products.json";
+import { pilotProductImage, resolvePilotFixture } from "./pilot-product-media";
 
 export type JourneyNodeStatus = "complete" | "current" | "pending";
 
@@ -61,7 +61,13 @@ type ProductRecordInput = {
     state: string;
     publicUrl?: string;
     versions: Array<{ published_at?: string | null; created_at?: string | null }>;
-    carriers: Array<{ activated_at?: string | null; created_at?: string | null; state?: string | null }>;
+    carriers: Array<{
+      carrier_type?: string;
+      public_url?: string | null;
+      activated_at?: string | null;
+      created_at?: string | null;
+      state?: string | null;
+    }>;
   } | null;
 };
 
@@ -80,15 +86,8 @@ const GEO: Record<string, { x: number; y: number; label: string }> = {
   EG: { x: 54, y: 26, label: "Egypt" },
 };
 
-const imageBySku = imageMapFromLiveFixture(livePilotProducts);
-
 function fixtureForProduct(product: ProductRecordInput["product"]): FixtureRow | null {
-  const rows = livePilotProducts as FixtureRow[];
-  return (
-    rows.find((r) => r.sku && product.sku && r.sku === product.sku) ||
-    rows.find((r) => r.style && product.style_code && r.style === product.style_code) ||
-    null
-  );
+  return resolvePilotFixture(product.sku, product.style_code) as FixtureRow | null;
 }
 
 function fieldValue(
@@ -150,7 +149,7 @@ function geo(code: string) {
 export function buildProductJourney(record: ProductRecordInput, origin: string): ProductJourney {
   const fixture = fixtureForProduct(record.product);
   const sku = record.product.sku || null;
-  const imageUrl = (sku && imageBySku[sku]) || fixture?.image_url || null;
+  const imageUrl = pilotProductImage(sku, record.product.style_code) || fixture?.image_url || null;
   const compositionField = fieldValue(record.fields, "composition");
   const originField = fieldValue(record.fields, "manufacturing_country");
   const composition =
@@ -181,12 +180,17 @@ export function buildProductJourney(record: ProductRecordInput, origin: string):
   const passportState = record.passport?.state || record.product.passport_state || null;
   const isPublished = passportState === "published" || passportState === "update_required";
   const hasPassport = Boolean(record.passport);
-  const qrUrl =
-    record.passport && record.passport.state !== "incomplete"
-      ? record.passport.publicUrl?.startsWith("http")
+  const qrCarrier =
+    record.passport?.carriers.find(
+      (c) => (c as { carrier_type?: string }).carrier_type === "qr" && c.state !== "retired"
+    ) || record.passport?.carriers.find((c) => c.state !== "retired");
+  const qrUrl = record.passport?.public_id
+    ? qrCarrier?.public_url?.startsWith("http")
+      ? qrCarrier.public_url
+      : record.passport.publicUrl?.startsWith("http")
         ? record.passport.publicUrl
         : `${origin.replace(/\/$/, "")}${record.passport.publicUrl || `/p/${record.passport.public_id}`}`
-      : null;
+    : null;
 
   const nodes: JourneyNode[] = [
     {

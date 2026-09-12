@@ -7,7 +7,7 @@ import { PlatformFaq } from "../PlatformFaq";
 export const metadata: Metadata = {
   title: "Discover the INTERTEXE workspace",
   description:
-    "See what brands buy — the governed data layer, workspace, intelligence, readiness, and outputs — versus INTERTEXE's consumer discovery surface. Illustrative sample workspace.",
+    "See how INTERTEXE governs product data and delivers consumer experiences — hosted passport, white-label domain, or headless API into your app. Illustrative sample workspace.",
 };
 
 export default function PlatformDiscoverPage() {

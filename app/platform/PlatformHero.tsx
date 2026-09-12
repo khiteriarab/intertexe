@@ -141,7 +141,7 @@ export function PlatformHero() {
   }
 
   return (
-    <section className="relative overflow-hidden bg-[var(--platform-bg)] text-[var(--platform-ink)]">
+    <section className="itx-abstract-section itx-abstract-motif relative overflow-hidden bg-[var(--platform-bg)] text-[var(--platform-ink)]">
       {/* Mobile + tablet: centered stack (unchanged feel) */}
       <div className="lg:hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-14 sm:pt-20 md:pt-24 text-center">
@@ -152,12 +152,12 @@ export function PlatformHero() {
             className="text-[2.35rem] sm:text-[3.25rem] md:text-[3.75rem] font-light leading-[1.06] tracking-[-0.02em] max-w-4xl mx-auto mb-5"
             style={SERIF}
           >
-            Trace, benchmark and{" "}
-            <em className="not-italic italic text-[var(--platform-accent)]">govern</em> your product data.
+            Turn governed product data into the{" "}
+            <em className="not-italic italic text-[var(--platform-accent)]">experience</em> your customer sees.
           </h1>
           <p className="mx-auto max-w-xl text-[16px] sm:text-[17px] font-light leading-relaxed text-[var(--platform-muted)] mb-8">
-            The product and material data layer for fashion — connect fragmented sources, benchmark against peers, and
-            publish passports from one record.
+            Product intelligence infrastructure for fashion — connect raw data, govern one record, publish passports,
+            and deliver through hosted pages, your domain, or your existing app.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
             <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Request a demo</PrimaryLink>
@@ -209,14 +209,14 @@ export function PlatformHero() {
               className="text-[3.25rem] xl:text-[4rem] font-light leading-[1.04] tracking-[-0.025em] mb-6"
               style={SERIF}
             >
-              Trace, benchmark and{" "}
-              <em className="not-italic italic text-[var(--platform-accent)]">govern</em>
+              Turn governed product data into the{" "}
+              <em className="not-italic italic text-[var(--platform-accent)]">experience</em>
               <br />
-              your product data.
+              your customer sees.
             </h1>
             <p className="text-[17px] xl:text-[18px] font-light leading-relaxed text-[var(--platform-muted)] max-w-md mb-10">
-              The product and material data layer for fashion — connect fragmented sources, benchmark against peers, and
-              publish passports from one governed record.
+              INTERTEXE connects fashion brands, product data, and consumers across the lifecycle of a garment — from
+              raw material to the moment someone scans the QR on the hangtag.
             </p>
             <div className="flex flex-wrap gap-3 mb-8">
               <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Request a demo</PrimaryLink>
@@ -225,9 +225,9 @@ export function PlatformHero() {
             <HeroTabs className="mb-10" />
             <dl className="grid grid-cols-3 gap-6 pt-8 border-t border-[var(--platform-border)]/80 max-w-lg">
               {[
-                { label: "Sources connected", value: "PLM · ERP · feeds" },
-                { label: "Peer benchmark", value: "Governed segments" },
-                { label: "Outputs", value: "DPP · readiness · PDP" },
+                { label: "Govern", value: "One product record" },
+                { label: "Deliver", value: "Hosted · API · white label" },
+                { label: "Demonstrate", value: "Scan QR in 30 seconds" },
               ].map((stat) => (
                 <div key={stat.label}>
                   <dt className="text-[9px] tracking-[0.16em] uppercase text-[var(--platform-quiet)] mb-1">{stat.label}</dt>

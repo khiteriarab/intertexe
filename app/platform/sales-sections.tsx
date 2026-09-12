@@ -1,9 +1,11 @@
 import Link from "next/link";
 import {
-  ConsumerEcosystemVisual,
+  DeliveryModesVisual,
   IntelligenceBenchmarkVisual,
   PlatformModuleGrid,
   ProductIdentityCarriersVisual,
+  ProductLifecycleVisual,
+  PublishExperienceVisual,
 } from "./sales-visuals";
 import { PlatformHero } from "./PlatformHero";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
@@ -34,8 +36,8 @@ const OUTPUT_PILLARS = [
     copy: "Tracked requirements, field completeness, and which products a rule change actually touches — preparation status, not legal certification.",
   },
   {
-    title: "Public product experiences",
-    copy: "One record powers your ecommerce site, passport pages, QR resolution, and brand-owned product surfaces — without rebuilding data per channel.",
+    title: "Consumer delivery",
+    copy: "Hosted passport, white-label domain, or headless API — the same approved record powers your app, website, QR scan, and customer service tools without rebuilding data per channel.",
   },
 ] as const;
 
@@ -43,16 +45,16 @@ const SITE = "https://www.intertexe.com";
 
 const VALUE_PILLARS = [
   {
-    title: "Connect",
-    copy: "PLM, ERP, spreadsheets and supplier files into one workspace — without replacing the systems you already use.",
-  },
-  {
-    title: "Benchmark",
-    copy: "Compare fiber mix, completeness and passport readiness against governed peer segments in your market.",
+    title: "Govern",
+    copy: "Connect PLM, ERP, spreadsheets and supplier files into one structured product record — with evidence, provenance, and approval workflow.",
   },
   {
     title: "Publish",
-    copy: "Digital Product Passports, regulatory readiness and brand-owned product surfaces from the same record.",
+    copy: "Turn approved data into passports, regulatory readiness, and consumer-ready product experiences — not just compliance fields in a dashboard.",
+  },
+  {
+    title: "Deliver",
+    copy: "Hosted passport, white-label domain, or headless API into your existing app. One governed record powers every channel.",
   },
 ] as const;
 
@@ -62,14 +64,15 @@ export function SalesHeroSection() {
 
 export function SalesWhatItIsSection() {
   return (
-    <section className="bg-[#f7f5f1] py-12 sm:py-14 lg:py-20 xl:py-24 border-b border-[#e8e3da]/60">
-      <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-14 lg:py-20 xl:py-24 border-b border-[#e8e3da]/60">
+      <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="max-w-2xl lg:max-w-3xl mb-8 sm:mb-10 lg:mb-14">
           <Eyebrow>What INTERTEXE is</Eyebrow>
-          <Heading className="mb-3">The product and material data layer for fashion companies.</Heading>
+          <Heading className="mb-3">Product intelligence infrastructure for fashion.</Heading>
           <Body className="mb-0">
-            A governed workspace brands buy — not a consumer app. Your product data already exists; INTERTEXE makes it
-            work together.
+            We don&apos;t just help you organize the information a Digital Product Passport requires. We turn that
+            information into the digital product experience your customer actually sees — hosted by INTERTEXE, on your
+            domain, or inside your existing app.
           </Body>
         </div>
         <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
@@ -88,6 +91,82 @@ export function SalesWhatItIsSection() {
   );
 }
 
+export function SalesLifecycleSection() {
+  return (
+    <section className="itx-abstract-section itx-abstract-motif bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-28 xl:py-32">
+      <span className="itx-abstract-edge" aria-hidden>
+        Lifecycle
+      </span>
+      <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="max-w-3xl mb-10 lg:mb-14">
+          <Eyebrow>From raw data to the scan moment</Eyebrow>
+          <Heading className="mb-4">
+            Raw data → governed record → passport → experience → QR → scan → beautiful product page.
+          </Heading>
+          <Body className="mb-0">
+            INTERTEXE connects fashion brands, product data, and consumers across the full lifecycle of a garment. When
+            it works, you can physically demonstrate what INTERTEXE does in about thirty seconds — scan with an iPhone
+            and show the real photograph, real composition, and every lifecycle stage you actually have evidence for.
+          </Body>
+        </div>
+        <ProductLifecycleVisual />
+      </div>
+    </section>
+  );
+}
+
+export function SalesDeliverySection() {
+  return (
+    <section className="platform-abstract-band itx-abstract-motif py-16 sm:py-20 lg:py-28 xl:py-32">
+      <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="max-w-3xl mb-10 lg:mb-14">
+          <Eyebrow>How consumers experience your product</Eyebrow>
+          <Heading className="mb-4">You don&apos;t have to send customers to an INTERTEXE-looking page.</Heading>
+          <Body className="mb-0">
+            Already have the app and website? Perfect. INTERTEXE powers the product experience inside your existing
+            digital ecosystem. Smaller brands can choose hosted passports with zero development. Enterprise brands can
+            run all three delivery modes from the same governed record — QR on the garment, API in the app, white-label
+            on the web.
+          </Body>
+        </div>
+        <DeliveryModesVisual />
+      </div>
+    </section>
+  );
+}
+
+export function SalesPublishSection() {
+  return (
+    <section className="platform-abstract-band itx-abstract-motif border-y border-[#e8e3da] py-16 sm:py-20 lg:py-24">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+        <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-10 lg:gap-14 items-start">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <Eyebrow>Publish product experience</Eyebrow>
+            <Heading className="mb-4">The full-circle moment in your workspace.</Heading>
+            <Body className="mb-6">
+              When a brand finishes a product passport, the publish screen is where governance becomes experience: choose
+              your data carrier, select hosted or headless delivery, preview on mobile, and scan the QR beside your
+              computer to verify exactly what your customer will see.
+            </Body>
+            <ul className="space-y-2 text-sm text-[#5c5854]">
+              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/50">
+                Publication engine controls which fields are approved for consumers
+              </li>
+              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/50">
+                Experience designer — Editorial, Trace, Essential, Circular templates
+              </li>
+              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/50">
+                Headless API and white-label domain on Enterprise plans
+              </li>
+            </ul>
+          </div>
+          <PublishExperienceVisual />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function SalesGovernedRecordSection() {
   const workspaceSrc = cfImage(`${SITE}/platform/hero-workspace-desktop.png`, {
     width: 1400,
@@ -96,7 +175,7 @@ export function SalesGovernedRecordSection() {
   });
 
   return (
-    <section className="bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-28 xl:py-32">
+    <section className="itx-abstract-section itx-abstract-motif bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-28 xl:py-32">
       <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-10 lg:gap-16 xl:gap-20 items-center">
           <div className="lg:sticky lg:top-28 lg:self-start">
@@ -136,7 +215,7 @@ export function SalesGovernedRecordSection() {
 
 export function SalesIntelligenceSection() {
   return (
-    <section className="platform-abstract-band py-16 sm:py-20 lg:py-28 xl:py-32">
+    <section className="platform-abstract-band itx-abstract-motif py-16 sm:py-20 lg:py-28 xl:py-32">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 lg:gap-16 xl:gap-20 items-start">
           <div className="lg:sticky lg:top-28 lg:self-start">
@@ -178,7 +257,7 @@ const IDENTITY_CAPABILITIES = [
 
 export function SalesOutputsSection() {
   return (
-    <section className="bg-[#f7f5f1] border-y border-[#e8e3da] py-16 sm:py-20 lg:py-24">
+    <section className="itx-abstract-section itx-abstract-motif bg-[#f7f5f1] border-y border-[#e8e3da] py-16 sm:py-20 lg:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-start">
           <div>
@@ -235,30 +314,15 @@ export function SalesOutputsSection() {
   );
 }
 
+/** @deprecated Use SalesDeliverySection — kept for tests importing the old name. */
 export function SalesConsumerSection() {
-  return (
-    <section className="bg-white py-16 sm:py-20 lg:py-24 border-t border-[#e8e3da]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <Eyebrow>Consumer surface — not what you buy</Eyebrow>
-        <Heading className="mb-4">The consumer app is strategic advantage, not the enterprise SKU.</Heading>
-        <Body className="max-w-3xl mb-4">
-          Enterprise customers buy the governed data layer and workspace. The INTERTEXE consumer app and shopping
-          surfaces are INTERTEXE&apos;s demand engine and long-term signal surface — not the core contract.
-        </Body>
-        <Body className="max-w-3xl mb-8">
-          Over time, governed consumer signals may inform aggregate material strategy — aggregate only, never individual
-          shopper data, and not sold as live brand intelligence today.
-        </Body>
-        <ConsumerEcosystemVisual />
-      </div>
-    </section>
-  );
+  return <SalesDeliverySection />;
 }
 
 export function SalesPlatformBreadthSection() {
   return (
-    <section className="bg-[#faf9f7] border-y border-[#e8e3da]/60 py-16 sm:py-20 lg:py-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+    <section className="platform-abstract-band itx-abstract-motif border-y border-[#e8e3da]/60 py-16 sm:py-20 lg:py-24">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <Eyebrow>Platform breadth</Eyebrow>
         <Heading className="mb-4">One workspace for product intelligence.</Heading>
         <Body className="max-w-2xl mb-8 sm:mb-10">
@@ -277,13 +341,13 @@ export function SalesPlatformBreadthSection() {
 export function SalesCtaSection() {
   const signIn = getEnterpriseLoginUrl();
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 lg:py-24 pb-24">
-      <div className="rounded-3xl border border-[#e8e3da]/80 bg-white p-10 sm:p-14 text-center shadow-[0_32px_80px_rgba(22,21,19,0.05)]">
+    <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 lg:py-24 pb-24">
+      <div className="itx-editorial-panel itx-editorial-panel-inner p-10 sm:p-14 text-center">
         <Eyebrow>Founding Pilot</Eyebrow>
         <Heading className="mb-4">Start with your own product data.</Heading>
         <Body className="max-w-xl mx-auto mb-8">
-          Available through the Founding Pilot — connect your sources, normalize materials, resolve issues, and see
-          intelligence and readiness on real products from your catalog.
+          Connect your sources, govern one product record, publish a passport, scan the QR, and show your customer the
+          real product page — in about thirty seconds. Available through the Founding Pilot on your own catalog.
         </Body>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <PrimaryLink href="/platform/request?intent=snapshot&cta=footer">Request a demo</PrimaryLink>

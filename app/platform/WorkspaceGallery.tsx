@@ -72,7 +72,7 @@ export function workspaceFrames(): WorkspaceFrame[] {
     {
       id: "studio",
       label: "Passport studio",
-      lead: "Publish from the same record. Consumers do not need the INTERTEXE app.",
+      lead: "Publish product experience — choose carrier, template, or headless API. Scan the QR beside your desk to verify what your customer sees.",
       children: PLATFORM_GRAPHICS.actPassport.ready ? (
         <PlatformGraphic slot="actPassport" />
       ) : (
@@ -105,6 +105,10 @@ export const WORKSPACE_NEEDS = [
   {
     title: "Benchmark material strategy vs the market",
     copy: "Material Benchmark compares your fabric mix, conversion signals, and readiness against governed peer segments — aggregate only, never competitor dumps.",
+  },
+  {
+    title: "Deliver the consumer experience your way",
+    copy: "Hosted passport, white-label domain, or headless API — same governed record, your choice of presentation. Scan the QR and demonstrate in thirty seconds.",
   },
 ] as const;
 
@@ -225,7 +229,7 @@ export function DiscoverWorkspace() {
   };
 
   return (
-    <div className="bg-[var(--platform-bg)]">
+    <div className="itx-abstract-section bg-[var(--platform-bg)]">
       <PlatformPageHeader
         eyebrow="Discover"
         title={
@@ -233,14 +237,14 @@ export function DiscoverWorkspace() {
             How <span className="font-light">INTERTEXE</span> works.
           </>
         }
-        description="From connect to publish — one continuous product data journey through the governed workspace brands buy."
+        description="From raw data to the scan moment — govern one record, publish passports, and deliver consumer experiences through hosted pages, your domain, or your app."
         primaryHref="/platform/request?intent=snapshot&cta=discover"
         primaryLabel="Book a demo"
         secondaryHref="/platform/demo"
         secondaryLabel="See the live demo"
       />
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
+      <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
         <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Product data journey</p>
         <h2
           className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] max-w-3xl mb-4"
@@ -254,47 +258,49 @@ export function DiscoverWorkspace() {
         <ProductDataJourneyVisual />
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
-        <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">What you buy vs. what we run</p>
+      <section className="platform-abstract-band itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16 py-12 sm:py-14 rounded-none">
+        <p className="relative text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Consumer delivery</p>
         <h2
           className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] max-w-3xl mb-4"
           style={SERIF}
         >
-          Enterprise contract vs. consumer surface.
+          Your brand. Your presentation. One governed record.
         </h2>
         <p className="max-w-2xl text-[15px] text-[#5c5854] font-light leading-relaxed mb-8">
-          INTERTEXE is one company with two surfaces. Brands purchase the data layer and workspace. The consumer app is
-          strategic infrastructure — not the SKU on the contract.
+          You are not forced to use an INTERTEXE-looking consumer page. Choose hosted passports for speed, white-label
+          for brand domain, or headless API to power your existing app — or all three from the same product record.
         </p>
-        <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
-          <article className="rounded-2xl border border-[var(--platform-border)] bg-white p-6 sm:p-8 shadow-[0_12px_30px_rgba(44,38,32,0.04)]">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--platform-accent)] mb-3">What brands buy</p>
-            <h3 className="text-xl text-[var(--platform-primary)] mb-4" style={SERIF}>
-              Data layer → workspace → intelligence → outputs
-            </h3>
-            <ul className="space-y-2.5 text-sm text-[#5c5854] leading-relaxed">
-              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/30">Connect PLM, ERP, spreadsheets, suppliers and feeds</li>
-              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/30">Normalize, resolve conflicts, and govern one product record</li>
-              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/30">Benchmark material strategy and track readiness gaps</li>
-              <li className="pl-4 border-l-2 border-[var(--platform-accent)]/30">
-                Publish passports, regulatory preparation, and public product experiences
-              </li>
-            </ul>
-          </article>
-          <article className="platform-abstract-band rounded-2xl border border-[var(--platform-border)] p-6 sm:p-8 shadow-[0_12px_30px_rgba(44,38,32,0.06)]">
-            <p className="relative text-[10px] tracking-[0.18em] uppercase text-[var(--platform-accent)] mb-3">What INTERTEXE also runs</p>
-            <h3 className="relative text-xl text-[var(--platform-primary)] mb-4" style={SERIF}>
-              Consumer discovery — strategic, not the sale
-            </h3>
-            <ul className="relative space-y-2.5 text-sm text-[var(--platform-muted)] leading-relaxed">
-              <li className="pl-4 border-l-2 border-[var(--platform-accent-muted)]">Shopping platform, scan, and compare for material-first discovery</li>
-              <li className="pl-4 border-l-2 border-[var(--platform-accent-muted)]">Demand surface and long-term signal engine for INTERTEXE</li>
-              <li className="pl-4 border-l-2 border-[var(--platform-accent-muted)]">
-                Future aggregate demand intelligence — governed, anonymized, not individual shopper data
-              </li>
-              <li className="pl-4 border-l-2 border-[var(--platform-accent-muted)]">Not included in the enterprise contract or sold as live brand dashboards today</li>
-            </ul>
-          </article>
+        <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
+          {[
+            {
+              title: "INTERTEXE Hosted",
+              tier: "Platform",
+              copy: "Editorial, Trace, Essential, or Circular templates with your logo and colors. QR resolves to a passport we host — zero development.",
+            },
+            {
+              title: "White Label",
+              tier: "Professional · Enterprise",
+              copy: "Same governed data and templates on passport.yourbrand.com. Your customer sees your domain, not ours.",
+            },
+            {
+              title: "Headless API",
+              tier: "Enterprise",
+              copy: "Structured passport JSON for your app, website, and service tools. INTERTEXE owns the data infrastructure — you own the experience.",
+            },
+          ].map((mode) => (
+            <article
+              key={mode.title}
+              className="platform-abstract-band rounded-2xl border border-[var(--platform-border)] p-6 sm:p-7 shadow-[0_12px_30px_rgba(44,38,32,0.06)]"
+            >
+              <p className="relative text-[10px] tracking-[0.18em] uppercase text-[var(--platform-accent)] mb-2">
+                {mode.tier}
+              </p>
+              <h3 className="relative text-lg text-[var(--platform-primary)] mb-3" style={SERIF}>
+                {mode.title}
+              </h3>
+              <p className="relative text-sm text-[var(--platform-muted)] leading-relaxed">{mode.copy}</p>
+            </article>
+          ))}
         </div>
       </section>
 

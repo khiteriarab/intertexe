@@ -6,8 +6,8 @@ import { loadCategoryBenchmarkDrilldown } from "../../../../../lib/enterprise/ca
 import { loadOrgCompositionBenchmark } from "../../../../../lib/enterprise/composition-benchmark";
 import { loadConversionIndexByCohort } from "../../../../../lib/enterprise/conversion-cohorts";
 import {
-  imageMapFromLiveFixture,
   loadConsumerSignals,
+  pilotImageMaps,
 } from "../../../../../lib/enterprise/consumer-signals";
 import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
@@ -41,14 +41,14 @@ export default async function BenchmarkingPage({
   const query = await searchParams;
   const selection = resolveBenchmarkSegmentSelection(query);
   const { membership, client } = await requireOrganizationAccess(organization);
-  const imageBySku = imageMapFromLiveFixture(livePilotProducts);
+  const pilotImages = pilotImageMaps(livePilotProducts);
   const [data, composition, signals, conversionCohorts] = await Promise.all([
     loadOrgBenchmarking(client, membership.organizationId),
     loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan, {
       market: selection.market,
       peerSegment: selection.peerSegment,
     }),
-    loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
+    loadConsumerSignals(client, membership.organizationId, { limit: 10, pilotImages }),
     loadConversionIndexByCohort(client, selection),
   ]);
   const categoryDrilldown = await loadCategoryBenchmarkDrilldown(client, selection, data.categoryRows);

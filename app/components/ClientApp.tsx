@@ -18,6 +18,7 @@ import { AppDownloadPrompt } from "./AppDownloadPrompt";
 
 const B2B_ROUTE_PREFIXES = ["/platform", "/partners", "/khiteri", "/dashboard"];
 const DOCUMENT_ROUTE_PREFIXES = ["/press-kit"];
+const PASSPORT_ROUTE_PREFIX = "/p/";
 
 function isB2BRoute(pathname: string) {
   return B2B_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -27,6 +28,11 @@ function isDocumentRoute(pathname: string) {
   return DOCUMENT_ROUTE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
+}
+
+/** Public DPP resolver — no consumer shop chrome, login banners, or app download walls. */
+function isPassportRoute(pathname: string) {
+  return pathname === "/p" || pathname.startsWith(PASSPORT_ROUTE_PREFIX);
 }
 
 export function ClientApp({
@@ -40,7 +46,7 @@ export function ClientApp({
   const b2b = isB2BRoute(pathname ?? "");
   const document = isDocumentRoute(pathname ?? "");
   /** platform.intertexe.com — entire host is private SaaS; URL stays at / for login. */
-  const minimalChrome = platformHost || b2b || document;
+  const minimalChrome = platformHost || b2b || document || isPassportRoute(pathname ?? "");
   const showConsumerChrome = !platformHost && !minimalChrome;
   const [queryClient] = useState(
     () =>

@@ -5,8 +5,8 @@ import { loadOrgOverview } from "../../../../lib/enterprise/queries";
 import { PlatformOperatingModel } from "../../components/PlatformOperatingModel";
 import { loadOrgCompositionBenchmark } from "../../../../lib/enterprise/composition-benchmark";
 import {
-  imageMapFromLiveFixture,
   loadConsumerSignals,
+  pilotImageMaps,
 } from "../../../../lib/enterprise/consumer-signals";
 import {
   EntActivityFeed,
@@ -32,11 +32,11 @@ export default async function OrganizationOverviewPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const imageBySku = imageMapFromLiveFixture(livePilotProducts);
+  const pilotImages = pilotImageMaps(livePilotProducts);
   const [overview, composition, signals, platform] = await Promise.all([
     loadOrgOverview(client, membership.organizationId),
     loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
-    loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
+    loadConsumerSignals(client, membership.organizationId, { limit: 10, pilotImages }),
     loadPlatformOverview(client, membership.organizationId, membership.slug),
   ]);
   const entitlement = entitlementsForPlan(membership.plan as PlanKey, {});

@@ -1,6 +1,8 @@
 import { filterFieldsForAccess } from "./access-classes";
 import { getEnterpriseServiceClient } from "./client";
 import { DEMO_BRAND_SLUG } from "./constants";
+import { buildConsumerPassportContent, type ConsumerPassportContent } from "./public-passport-content";
+import { loadProductExperienceConfig, type PassportExperienceConfig } from "./passport-experience";
 
 export type PublicPassportView = {
   found: boolean;
@@ -9,6 +11,8 @@ export type PublicPassportView = {
   state?: string;
   versionNumber?: number;
   snapshot?: Record<string, unknown>;
+  consumer?: ConsumerPassportContent;
+  experience?: PassportExperienceConfig;
 };
 
 export async function resolvePublicPassport(
@@ -24,7 +28,7 @@ export async function resolvePublicPassport(
 
   const { data: passport } = await supabase
     .from("passports")
-    .select("id, public_id, state, organization_id, product_id, current_version_id")
+    .select("id, public_id, state, organization_id, product_id, current_version_id, created_at")
     .eq("public_id", id)
     .maybeSingle();
 
@@ -50,24 +54,68 @@ export async function resolvePublicPassport(
 
   const { data: product } = await supabase
     .from("products")
-    .select("name")
+    .select("name, sku, style_code, category, passport_state")
     .eq("id", passport.product_id)
     .eq("organization_id", passport.organization_id)
     .maybeSingle();
 
+  const [{ data: carriers }, { data: traceNodes }, { data: allVersions }] = await Promise.all([
+    supabase
+      .from("data_carriers")
+      .select("id, public_url, carrier_type, state, activated_at, created_at")
+      .eq("organization_id", passport.organization_id)
+      .eq("passport_id", passport.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("supply_chain_nodes")
+      .select("tier, tier_label, facility_name, country_code, data_status")
+      .eq("organization_id", passport.organization_id)
+      .eq("product_id", passport.product_id)
+      .order("tier"),
+    supabase
+      .from("passport_versions")
+      .select("version_number, published_at, created_at")
+      .eq("organization_id", passport.organization_id)
+      .eq("passport_id", passport.id)
+      .order("version_number", { ascending: true }),
+  ]);
+
   const snapshot = (version?.snapshot || {}) as Record<string, unknown>;
   const fieldList = Array.isArray(snapshot.fields) ? snapshot.fields : [];
+  const publicFields = filterFieldsForAccess(
+    fieldList.filter((field) => field && typeof field === "object") as Array<{
+      access_class?: string | null;
+      key?: string;
+      value?: string;
+    }>
+  ) as Array<{ key?: string; value?: string }>;
+
   const publicSnapshot = {
     product_name: snapshot.product_name || product?.name,
     public_id: id,
     resolver_note: "Public resolver ID is separate from any EU Registry registration identifier.",
     identifier_bundle: snapshot.identifier_bundle || null,
-    fields: filterFieldsForAccess(
-      fieldList.filter((field) => field && typeof field === "object") as Array<{
-        access_class?: string | null;
-      }>
-    ),
+    fields: publicFields,
   };
+
+  const consumer = buildConsumerPassportContent({
+    productName: product?.name,
+    sku: product?.sku,
+    styleCode: product?.style_code,
+    category: product?.category,
+    snapshotFields: publicFields,
+    traceNodes: traceNodes || [],
+    passportStatus: passport.state,
+    publishedAt: version?.published_at || null,
+    passportCreatedAt: passport.created_at || null,
+    versions: allVersions || [],
+  });
+
+  const experience = await loadProductExperienceConfig(
+    supabase,
+    passport.organization_id,
+    passport.product_id
+  );
 
   if (opts?.recordScan) {
     await supabase.from("analytics_events").insert({
@@ -89,6 +137,8 @@ export async function resolvePublicPassport(
     state: passport.state,
     versionNumber: version?.version_number,
     snapshot: publicSnapshot,
+    consumer,
+    experience,
   };
 }
 

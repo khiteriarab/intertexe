@@ -1,0 +1,229 @@
+@import "../shared/intertexe-editorial.css";
+
+.itx-passport {
+  --pp-cream: #f5f0e8;
+  --pp-ivory: #faf8f4;
+  --pp-petrol: #3e6268;
+  --pp-petrol-deep: #2c4a4e;
+  --pp-gold: #c4a574;
+  --pp-ink: #1a1f22;
+  --pp-muted: #6b6560;
+  --pp-muted-light: #9a948c;
+  min-height: 100vh;
+  background: var(--pp-cream);
+  color: var(--pp-ink);
+  font-family: var(--font-ent-sans, "DM Sans"), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.itx-passport-inner {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+@media (min-width: 768px) {
+  .itx-passport-inner {
+    padding: 2.5rem 1.5rem 4rem;
+  }
+}
+
+.itx-passport-brand {
+  font-family: var(--itx-serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--pp-muted-light);
+}
+
+.itx-passport-hero-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: min(72vh, 520px);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: linear-gradient(180deg, #faf4e4, #f0e6d4);
+  box-shadow: 0 20px 60px rgba(44, 38, 32, 0.1);
+}
+
+.itx-passport-product-name {
+  font-family: var(--itx-serif);
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin-top: 0.5rem;
+}
+
+.itx-passport-section {
+  margin-top: 2.5rem;
+}
+
+.itx-passport-section-title {
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pp-muted-light);
+  margin-bottom: 1rem;
+}
+
+.itx-passport-composition {
+  font-family: var(--itx-serif);
+  font-size: 1.35rem;
+  line-height: 1.4;
+}
+
+.itx-passport-journey {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.itx-passport-journey-stage {
+  position: relative;
+  padding-left: 1.75rem;
+  padding-bottom: 1.75rem;
+}
+
+.itx-passport-journey-stage::before {
+  content: "";
+  position: absolute;
+  left: 0.4rem;
+  top: 0.45rem;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(196, 165, 116, 0.5), rgba(62, 98, 104, 0.25));
+}
+
+.itx-passport-journey-stage:last-child::before {
+  display: none;
+}
+
+.itx-passport-journey-dot {
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 999px;
+  background: var(--pp-gold);
+  border: 2px solid var(--pp-cream);
+  box-shadow: 0 0 0 1px rgba(196, 165, 116, 0.35);
+}
+
+.itx-passport-journey-stage--unavailable .itx-passport-journey-dot {
+  background: #e8e2d8;
+  box-shadow: none;
+}
+
+.itx-passport-journey-eyebrow {
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pp-petrol);
+}
+
+.itx-passport-journey-title {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-top: 0.15rem;
+}
+
+.itx-passport-journey-detail,
+.itx-passport-journey-location {
+  font-size: 0.8125rem;
+  color: var(--pp-muted);
+  margin-top: 0.25rem;
+  line-height: 1.5;
+}
+
+.itx-passport-journey-product-thumb {
+  position: relative;
+  width: 4rem;
+  height: 5rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  border: 1px solid rgba(26, 31, 34, 0.08);
+}
+
+@media (min-width: 768px) {
+  .itx-passport-journey-desktop {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .itx-passport-journey-desktop .itx-passport-journey-stage {
+    padding-left: 0;
+    padding-bottom: 0;
+    text-align: center;
+  }
+
+  .itx-passport-journey-desktop .itx-passport-journey-stage::before,
+  .itx-passport-journey-desktop .itx-passport-journey-dot {
+    display: none;
+  }
+
+  .itx-passport-journey-desktop .itx-passport-journey-product-thumb {
+    margin: 0.5rem auto 0;
+  }
+}
+
+.itx-passport-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.itx-passport-chip {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(196, 165, 116, 0.22);
+  color: var(--pp-ink);
+}
+
+.itx-passport-unavailable {
+  font-size: 0.8125rem;
+  color: var(--pp-muted-light);
+  font-style: italic;
+}
+
+.itx-passport-next-life {
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(196, 165, 116, 0.18);
+}
+
+.itx-passport-guidance-tag {
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pp-petrol);
+}
+
+.itx-passport-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-size: 0.75rem;
+  color: var(--pp-muted);
+}
+
+.itx-passport-preview-badge {
+  display: inline-block;
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(196, 165, 116, 0.2);
+  color: var(--pp-petrol-deep);
+  margin-bottom: 1rem;
+}

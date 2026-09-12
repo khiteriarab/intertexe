@@ -9,6 +9,9 @@ export { DataArchitectureVisual as ProblemConvergenceVisual } from "./b2b-visual
 export { JourneyStepsVisual } from "./b2b-visuals/ProductDataJourneyVisual";
 export { ConsumerEcosystemVisual } from "./b2b-visuals/FashionEcosystemVisual";
 export { ProductIdentityCarriersVisual } from "./b2b-visuals/ProductIdentityCarriersVisual";
+export { ProductLifecycleVisual } from "./b2b-visuals/ProductLifecycleVisual";
+export { DeliveryModesVisual } from "./b2b-visuals/DeliveryModesVisual";
+export { PublishExperienceVisual } from "./b2b-visuals/PublishExperienceVisual";
 
 /** Journey stages: Connect · Normalize · Resolve · Understand · Publish */
 /** Ecosystem consumer lane: Discover · Scan · Compare */

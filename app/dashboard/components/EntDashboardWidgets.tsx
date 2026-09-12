@@ -186,9 +186,9 @@ export function EntOverviewBenchmarkTeaser({
       <div className="ent-benchmark-teaser">
         <div className="relative z-[1] grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
           <div>
-            <p className="ent-section-eyebrow text-white/50">Material intelligence</p>
+            <p className="ent-section-eyebrow">Material intelligence</p>
             <h2 className="ent-benchmark-teaser-title">How your catalog compares</h2>
-            <p className="text-sm text-white/70 mt-3 max-w-xl leading-relaxed">
+            <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-xl leading-relaxed">
               Fiber mix, data completeness, and passport readiness — benchmarked against governed peer medians when
               available. No fabricated competitor data.
             </p>
@@ -219,15 +219,15 @@ export function EntOverviewBenchmarkTeaser({
           </div>
 
           <div className="ent-benchmark-teaser-panel">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-white/45 mb-4">Peer comparison</p>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--ent-muted-light)] mb-4">Peer comparison</p>
             {highlights.length > 0 ? (
               <ul className="space-y-4">
                 {highlights.map((row) => (
                   <li key={row.metricKey} className="flex items-center justify-between gap-4">
-                    <span className="text-sm text-white/75">{row.label}</span>
+                    <span className="text-sm text-[var(--ent-muted)]">{row.label}</span>
                     <div className="text-right">
-                      <p className="ent-display text-xl text-white tabular-nums">{row.yours}%</p>
-                      <p className="text-xs text-white/45 mt-0.5">
+                      <p className="ent-display text-xl text-[var(--ent-ink)] tabular-nums">{row.yours}%</p>
+                      <p className="text-xs text-[var(--ent-muted-light)] mt-0.5">
                         peers {row.peerMedian}% · {row.delta != null && row.delta > 0 ? "+" : ""}
                         {row.delta}%
                       </p>
@@ -236,14 +236,14 @@ export function EntOverviewBenchmarkTeaser({
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-white/60 leading-relaxed">
+              <p className="text-sm text-[var(--ent-muted)] leading-relaxed">
                 Governed peer medians appear here when approved benchmark datasets meet the sample threshold for your
                 plan. Your catalog metrics above are already live.
               </p>
             )}
             {stats.fiberRows.length > 0 ? (
-              <div className="mt-6 pt-6 border-t border-white/10">
-                <p className="text-[10px] tracking-[0.12em] uppercase text-white/40 mb-3">Top fibers</p>
+              <div className="mt-6 pt-6 border-t border-[var(--ent-border)]">
+                <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-3">Top fibers</p>
                 <div className="flex flex-wrap gap-2">
                   {stats.fiberRows.slice(0, 5).map((fiber) => (
                     <span key={fiber.fiberCode} className="ent-benchmark-fiber-chip">
@@ -253,7 +253,7 @@ export function EntOverviewBenchmarkTeaser({
                 </div>
               </div>
             ) : null}
-            <p className="text-[11px] text-white/40 mt-5">
+            <p className="text-[11px] text-[var(--ent-muted-light)] mt-5">
               {governedCount > 0
                 ? `${governedCount} governed peer metrics available`
                 : "Collecting governed peer benchmarks"}

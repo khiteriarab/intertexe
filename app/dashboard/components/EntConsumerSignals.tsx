@@ -22,9 +22,9 @@ export function EntConsumerSignals({
       <div className="ent-signal-hero mb-8">
         <div className="relative z-[1] grid lg:grid-cols-[1.35fr_0.9fr] gap-8 items-end">
           <div>
-            <p className="ent-section-eyebrow text-white/50">Consumer signals</p>
+            <p className="ent-section-eyebrow">Consumer signals</p>
             <h2 className="ent-signal-hero-title">What shoppers respond to in material reality</h2>
-            <p className="text-sm text-white/70 mt-3 max-w-2xl leading-relaxed">
+            <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-2xl leading-relaxed">
               INTERTEXE is not pure B2B compliance — the consumer layer adds governed behavior, discovery context,
               cultural relevance, and material preference signals on top of passport readiness, without attaching shopper
               identity to your brand.
@@ -206,11 +206,11 @@ export function EntConsumerSignalsTeaser({
       <div className="ent-signal-teaser">
         <div className="relative z-[1] grid lg:grid-cols-[1.2fr_0.9fr] gap-8 items-center">
           <div>
-            <p className="ent-section-eyebrow text-white/50">Consumer signals</p>
+            <p className="ent-section-eyebrow">Consumer signals</p>
             <h2 className="ent-benchmark-teaser-title">
               {lead?.headline || "Material reality meets shopper preference"}
             </h2>
-            <p className="text-sm text-white/70 mt-3 max-w-xl leading-relaxed">
+            <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-xl leading-relaxed">
               {lead?.body ||
                 "See how natural fiber share, linen tilt, and polyester presence map onto governed consumer aggregates."}
             </p>
@@ -230,27 +230,27 @@ export function EntConsumerSignalsTeaser({
             </Link>
           </div>
           <div className="ent-benchmark-teaser-panel">
-            <p className="text-[10px] tracking-[0.14em] uppercase text-white/45 mb-4">Pilot sample</p>
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--ent-muted-light)] mb-4">Pilot sample</p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="ent-display text-3xl text-white tabular-nums">{signals.summary.productCount}</p>
-                <p className="text-xs text-white/50 mt-1">Live products</p>
+                <p className="ent-display text-3xl text-[var(--ent-ink)] tabular-nums">{signals.summary.productCount}</p>
+                <p className="text-xs text-[var(--ent-muted-light)] mt-1">Live products</p>
               </div>
               <div>
-                <p className="ent-display text-3xl text-white tabular-nums">
+                <p className="ent-display text-3xl text-[var(--ent-ink)] tabular-nums">
                   {signals.summary.opportunityScore ?? "—"}
                 </p>
-                <p className="text-xs text-white/50 mt-1">Opportunity score</p>
+                <p className="text-xs text-[var(--ent-muted-light)] mt-1">Opportunity score</p>
               </div>
               <div>
-                <p className="ent-display text-3xl text-white tabular-nums">
+                <p className="ent-display text-3xl text-[var(--ent-ink)] tabular-nums">
                   {signals.summary.avgNaturalPct ?? "—"}%
                 </p>
-                <p className="text-xs text-white/50 mt-1">Avg natural</p>
+                <p className="text-xs text-[var(--ent-muted-light)] mt-1">Avg natural</p>
               </div>
               <div>
-                <p className="ent-display text-3xl text-white tabular-nums">{signals.insights.length}</p>
-                <p className="text-xs text-white/50 mt-1">Active insights</p>
+                <p className="ent-display text-3xl text-[var(--ent-ink)] tabular-nums">{signals.insights.length}</p>
+                <p className="text-xs text-[var(--ent-muted-light)] mt-1">Active insights</p>
               </div>
             </div>
           </div>

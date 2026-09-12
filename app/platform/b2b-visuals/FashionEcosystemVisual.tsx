@@ -201,8 +201,8 @@ export function FashionEcosystemVisual({ className = "" }: { className?: string 
         </div>
       </div>
       <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
-        Enterprise customers buy the governed data layer. Consumer discovery is INTERTEXE&apos;s strategic surface —
-        not the product on the contract.
+        Brands buy the governed data cloud and choose how consumers experience it — hosted, white-label, or inside their
+        own app. INTERTEXE&apos;s consumer shopping surface is separate strategic infrastructure.
       </figcaption>
     </figure>
   );

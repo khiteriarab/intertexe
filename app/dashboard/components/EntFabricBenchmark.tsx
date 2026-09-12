@@ -28,9 +28,9 @@ export function EntFabricPeerComparison({
   return (
     <section className="mb-10">
       <div className="ent-benchmark-page-hero mb-8">
-        <p className="ent-section-eyebrow text-white/50">Benchmarking</p>
+        <p className="ent-section-eyebrow">Benchmarking</p>
         <h2 className="ent-benchmark-teaser-title">Material intelligence vs governed peers</h2>
-        <p className="text-sm text-white/70 mt-3 max-w-2xl leading-relaxed">
+        <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-2xl leading-relaxed">
           Understand what your products are made from, how complete your material data is, and how you compare to
           approved aggregate benchmarks. INTERTEXE only surfaces peer medians from governed datasets — never fabricated
           competitor catalogs.
@@ -40,14 +40,14 @@ export function EntFabricPeerComparison({
             <p className="ent-benchmark-stat-value">{naturalRow?.yours ?? "—"}%</p>
             <p className="ent-benchmark-stat-label">Your natural fiber share</p>
             {naturalRow?.peerMedian != null ? (
-              <p className="text-xs text-white/45 mt-1">Peer median {naturalRow.peerMedian}%</p>
+              <p className="text-xs text-[var(--ent-muted-light)] mt-1">Peer median {naturalRow.peerMedian}%</p>
             ) : null}
           </div>
           <div className="ent-benchmark-stat">
             <p className="ent-benchmark-stat-value">{syntheticRow?.yours ?? "—"}%</p>
             <p className="ent-benchmark-stat-label">Your synthetic share</p>
             {syntheticRow?.peerMedian != null ? (
-              <p className="text-xs text-white/45 mt-1">Peer median {syntheticRow.peerMedian}%</p>
+              <p className="text-xs text-[var(--ent-muted-light)] mt-1">Peer median {syntheticRow.peerMedian}%</p>
             ) : null}
           </div>
         </div>

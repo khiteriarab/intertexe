@@ -65,6 +65,65 @@
   z-index: 1;
 }
 
+/* ── Abstract gradient bands (platform + enterprise SaaS) ── */
+.itx-abstract-band {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--itx-accent-soft) 0%, var(--itx-highlight) 48%, var(--itx-canvas) 100%);
+}
+
+.itx-abstract-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 58% at 88% 18%, rgba(201, 169, 98, 0.22) 0%, transparent 62%),
+    radial-gradient(ellipse 36% 48% at 8% 82%, rgba(212, 196, 168, 0.35) 0%, transparent 58%);
+}
+
+/* Diagonal editorial motif — subtle abstract texture on sections and panels */
+.itx-abstract-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.itx-abstract-motif::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.45;
+  background-image: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 22px,
+    rgba(196, 165, 116, 0.08) 22px,
+    rgba(196, 165, 116, 0.08) 23px
+  );
+}
+
+.itx-abstract-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.itx-abstract-edge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.25rem;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--itx-sans);
+  font-size: 0.5625rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(28, 25, 21, 0.18);
+  user-select: none;
+  pointer-events: none;
+}
+
 /* ── Editorial typography ── */
 .itx-eyebrow {
   font-family: var(--itx-sans);
