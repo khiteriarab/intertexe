@@ -58,7 +58,7 @@ function RecordDial({
 
       <div
         key={stage.id}
-        className="platform-hero-card absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(88%,280px)] z-20"
+        className="platform-dial-card absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(88%,280px)] z-20"
       >
         <div className="rounded-full bg-white/95 backdrop-blur-md border border-[var(--platform-border)] shadow-[0_20px_50px_rgba(22,21,19,0.14)] px-5 py-4 sm:px-6 sm:py-5 text-center">
           <p
@@ -74,7 +74,7 @@ function RecordDial({
 
       <div
         key={`${stage.id}-card`}
-        className={`platform-hero-card absolute left-1/2 -translate-x-1/2 w-[min(92%,300px)] z-30 ${
+        className={`platform-dial-card absolute left-1/2 -translate-x-1/2 w-[min(92%,300px)] z-30 ${
           compact ? "bottom-0 translate-y-[78%]" : "-bottom-2 translate-y-full"
         }`}
       >
@@ -133,7 +133,7 @@ function StageTabs({
 
 function StageDetail({ stage }: { stage: PlatformScrollStage }) {
   return (
-    <div key={stage.id} className="platform-hero-card">
+    <div key={stage.id}>
       <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-3">{stage.kicker}</p>
       <h2
         className="text-[1.85rem] sm:text-[2.35rem] font-light leading-[1.1] tracking-[-0.02em] text-[var(--platform-ink)] mb-4"
@@ -232,7 +232,7 @@ export function PlatformScrollShowcase() {
               <div key={item.id} id={`platform-scroll-${item.id}`} className="min-h-[68vh] scroll-mt-28" aria-hidden />
             ))}
             <div className="platform-scroll-showcase-col-side">
-              <div key={stage.id} className="platform-hero-card max-w-md">
+              <div key={stage.id} className="max-w-md">
                 <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-4">
                   {stage.kicker}
                 </p>

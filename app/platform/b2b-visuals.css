@@ -1,6 +1,6 @@
 /* B2B platform storytelling motion — scoped to /platform routes via PlatformChrome import */
 
-@keyframes platform-hero-card-in {
+@keyframes platform-dial-card-in {
   from {
     opacity: 0;
     transform: translate(-50%, 12px);
@@ -11,8 +11,9 @@
   }
 }
 
-.platform-hero-card {
-  animation: platform-hero-card-in 0.45s ease-out both;
+/* Centered overlays on the scroll dial only — do not use on in-flow copy blocks. */
+.platform-dial-card {
+  animation: platform-dial-card-in 0.45s ease-out both;
 }
 
 @keyframes b2b-pulse-line {
@@ -151,7 +152,7 @@
   .b2b-pulse-line-delay,
   .b2b-pulse-vertical,
   .b2b-fade-in,
-  .platform-hero-card {
+  .platform-dial-card {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

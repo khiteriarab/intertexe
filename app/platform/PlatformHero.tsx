@@ -69,7 +69,7 @@ const HERO_TABS = [
 function InsightCard({ insight, index, activeIndex }: { insight: (typeof INSIGHTS)[number]; index: number; activeIndex: number }) {
   return (
     <div
-      className={`platform-hero-card transition-opacity duration-500 ${
+      className={`b2b-fade-in transition-opacity duration-500 ${
         index === activeIndex ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
       }`}
       role="status"
