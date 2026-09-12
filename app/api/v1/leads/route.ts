@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
   const tier = cleanLeadField(body.tier, 40);
   const intentLabel =
     intent === "founding_pilot"
-      ? "Founding Pilot ($5,000 onboarding)"
+      ? "Onboarding fee ($5,000)"
       : intent === "enterprise"
         ? "Enterprise (custom)"
         : intent === "saas" || intent === "api_access"

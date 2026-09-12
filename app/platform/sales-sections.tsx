@@ -105,9 +105,9 @@ export function SalesLifecycleSection() {
           </Heading>
           <Body className="mb-0">
             INTERTEXE connects fashion brands, product data, and consumers across the full lifecycle of a garment.
-            Publish a silk evening dress in the SaaS workspace, scan the QR beside your laptop, and open the consumer
-            passport your customer would see — product photograph, governed composition, and full lifecycle journey.
-            That is the thirty-second demonstration for prospective clients.
+            Publish the Customer Zero linen shirt in the SaaS workspace, scan the QR beside your laptop, and open the
+            live passport your customer sees — product photograph, governed composition, trace journey, and next-life
+            resale options. That is the thirty-second demonstration for prospective clients.
           </Body>
         </div>
         <SaaSDemoFlowVisual />
@@ -198,14 +198,14 @@ export function SalesGovernedRecordSection() {
           <figure className="m-0">
             <img
               src={workspaceSrc}
-              alt="INTERTEXE enterprise workspace — illustrative sample catalog, not a live customer"
+              alt="INTERTEXE enterprise workspace — Customer Zero live catalog"
               width={1400}
               height={933}
               className="w-full rounded-xl border border-[#e8e3da] shadow-[0_24px_60px_rgba(22,21,19,0.08)]"
               loading="lazy"
             />
             <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
-              Illustrative workspace · catalog → materials → issues → benchmark → passport
+              Customer Zero · catalog → materials → issues → benchmark → passport → next life
             </figcaption>
           </figure>
         </div>
@@ -236,10 +236,8 @@ export function SalesIntelligenceSection() {
               ))}
             </ul>
             <p className="mt-6 text-xs text-[var(--platform-quiet)] leading-relaxed">
-              Illustrative example · Individual customer data is never exposed. Peer medians come from governed datasets
-              — not fabricated competitor dumps. Over time, governed consumer signals may inform aggregate material
-              strategy — aggregate only, never individual shopper data, and not live enterprise intelligence where it
-              is not yet operational.
+              Customer Zero catalog · 10 live products · peer medians from governed datasets. Individual competitor
+              catalogs and shopper identity are never exposed.
             </p>
           </div>
           <IntelligenceBenchmarkVisual />
@@ -344,11 +342,11 @@ export function SalesCtaSection() {
   return (
     <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 lg:py-24 pb-24">
       <div className="itx-editorial-panel itx-editorial-panel-inner p-10 sm:p-14 text-center">
-        <Eyebrow>Founding Pilot</Eyebrow>
+        <Eyebrow>Onboarding fee</Eyebrow>
         <Heading className="mb-4">Start with your own product data.</Heading>
         <Body className="max-w-xl mx-auto mb-8">
           Connect your sources, govern one product record, publish a passport, scan the QR, and show your customer the
-          real product page — in about thirty seconds. Available through the Founding Pilot on your own catalog.
+          real product page — in about thirty seconds. Available through the onboarding fee on your own catalog.
         </Body>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <PrimaryLink href="/platform/request?intent=snapshot&cta=footer">Request a demo</PrimaryLink>

@@ -4,6 +4,7 @@ import { DEMO_BRAND_SLUG } from "./constants";
 import { buildPassportPreviewContent } from "./passport-preview";
 import { buildConsumerPassportContent, type ConsumerPassportContent } from "./public-passport-content";
 import { loadProductExperienceConfig, type PassportExperienceConfig } from "./passport-experience";
+import { loadLifecycleEvents } from "./resale-service";
 
 export type PublicPassportView = {
   found: boolean;
@@ -225,17 +226,33 @@ export async function resolvePublicPassport(
     fields: publicFields,
   };
 
+  const { data: identityRow } = await supabase
+    .from("persistent_identities")
+    .select("id")
+    .eq("public_id", id)
+    .eq("active", true)
+    .maybeSingle();
+
+  const lifecycleEvents = identityRow?.id
+    ? await loadLifecycleEvents(identityRow.id)
+    : [];
+
+  const brandField = publicFields.find((f) => f.key === "brand")?.value;
+
   const consumer = buildConsumerPassportContent({
     productName: product?.name,
     sku: product?.sku,
     styleCode: product?.style_code,
     category: product?.category,
+    brand: brandField || null,
+    publicId: id,
     snapshotFields: publicFields,
     traceNodes: traceNodes || [],
     passportStatus: passport.state,
     publishedAt: version?.published_at || null,
     passportCreatedAt: passport.created_at || null,
     versions: allVersions || [],
+    lifecycleEvents,
   });
 
   const experience = await loadProductExperienceConfig(

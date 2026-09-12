@@ -73,8 +73,8 @@ export type StreamMeta = {
 export const REVENUE_STREAMS: StreamMeta[] = [
   {
     key: "api_pilot",
-    label: "Pilot",
-    shortLabel: "Pilot",
+    label: "Onboarding",
+    shortLabel: "Onboarding",
     scope: "company",
     color: PLAN_COLORS.pilot,
     pattern: "solid",
@@ -162,7 +162,7 @@ export const DEFAULT_MILESTONES: Milestone[] = [
     targetDate: SEPTEMBER_MILESTONE_ISO,
     cumulative: 5000,
     increment: 5000,
-    logic: "Close the first founding pilot and prove the sales process.",
+    logic: "Close the first onboarding fee and prove the sales process.",
   },
   {
     name: "October",
@@ -193,7 +193,7 @@ export const DEFAULT_STREAM_TARGETS: Array<{
   unitTarget: number | null;
   unitPlan: string;
 }> = [
-  { stream: "api_pilot", target: 25000, unitTarget: 5, unitPlan: "Five $5,000 Founding Material Data Pilots sold on /platform" },
+  { stream: "api_pilot", target: 25000, unitTarget: 5, unitPlan: "Five $5,000 onboarding fees sold on /platform" },
   { stream: "api_integration", target: 12500, unitTarget: 1, unitPlan: "One early integration after a paid pilot" },
   { stream: "creator_partnership", target: 9000, unitTarget: 3, unitPlan: "Three partnerships at $3,000" },
   { stream: "affiliate", target: 3500, unitTarget: null, unitPlan: "Confirmed commission revenue" },
@@ -207,7 +207,7 @@ export type MonthlyBookingMix = {
   segments: Array<{ stream: RevenueStreamKey; amount: number }>;
 };
 
-export const PLAN_BOOKING_SUBTITLE = "5 pilots · 1 integration · creator and affiliate buffer.";
+export const PLAN_BOOKING_SUBTITLE = "5 onboarding fees · 1 integration · creator and affiliate buffer.";
 
 /** Streams shown as colored squares on the scaled booking plan. */
 export const BOOKING_LEGEND_STREAMS: RevenueStreamKey[] = [
@@ -217,7 +217,7 @@ export const BOOKING_LEGEND_STREAMS: RevenueStreamKey[] = [
   "affiliate",
 ];
 
-/** Visible monthly stack: 5 pilots · 1 integration · creator and affiliate buffer. */
+/** Visible monthly stack: 5 onboarding fees · 1 integration · creator and affiliate buffer. */
 export const MONTHLY_BOOKING_MIX: MonthlyBookingMix[] = [
   {
     month: "September",

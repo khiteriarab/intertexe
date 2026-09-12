@@ -205,7 +205,7 @@ export function PlatformScrollShowcase() {
           Platform capabilities
         </p>
         <p className="text-center text-sm text-[var(--platform-muted)] max-w-md mx-auto mb-8">
-          Tap each stage to see how one governed record moves from sources to passport.
+          Tap each stage — Trace, Measure, Govern, Publish, Next life — on the Customer Zero linen shirt passport.
         </p>
         <StageTabs activeId={activeId} onSelect={setActiveId} className="justify-center mb-10 px-1" />
         <div className="mb-12 pt-2 pb-28">
@@ -220,51 +220,43 @@ export function PlatformScrollShowcase() {
           Platform capabilities
         </p>
         <p className="text-center text-sm text-[var(--platform-muted)] max-w-xl mx-auto mb-16 xl:mb-20">
-          Scroll to see how one governed record moves from connected sources to published passport — the center dial
-          updates with each stage.
+          Scroll through Trace → Measure → Govern → Publish → Next life on ITX-LIVE-01 — the center dial updates with
+          each stage.
         </p>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_400px_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_440px_minmax(0,1fr)] gap-10 xl:gap-14">
-          <div className="relative">
-            {PLATFORM_SCROLL_STAGES.map((item) => {
-              const selected = item.id === activeId;
-              return (
-                <div
-                  key={item.id}
-                  id={`platform-scroll-${item.id}`}
-                  className="min-h-[88vh] flex items-center scroll-mt-28"
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(320px,400px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_440px_minmax(0,1fr)] gap-8 xl:gap-14 items-start">
+          <div className="relative min-h-0">
+            {PLATFORM_SCROLL_STAGES.map((item) => (
+              <div key={item.id} id={`platform-scroll-${item.id}`} className="min-h-[72vh] scroll-mt-28" aria-hidden />
+            ))}
+            <div className="sticky top-28 pt-[12vh] pb-[12vh]">
+              <div key={stage.id} className="platform-hero-card max-w-md">
+                <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-4">
+                  {stage.kicker}
+                </p>
+                <h2
+                  className="text-[2.5rem] xl:text-[3rem] font-light leading-[1.08] tracking-[-0.02em] text-[var(--platform-ink)]"
+                  style={SERIF}
                 >
-                  <div
-                    className={`max-w-md transition-opacity duration-500 ${selected ? "opacity-100" : "opacity-35"}`}
-                  >
-                    <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-4">
-                      {item.kicker}
-                    </p>
-                    <h2
-                      className="text-[2.75rem] xl:text-[3.25rem] font-light leading-[1.08] tracking-[-0.02em] text-[var(--platform-ink)]"
-                      style={SERIF}
-                    >
-                      {item.headline}
-                      {item.headlineEmphasis ? (
-                        <>
-                          <br />
-                          <em className="not-italic italic text-[var(--platform-accent)]">{item.headlineEmphasis}</em>
-                        </>
-                      ) : null}
-                    </h2>
-                  </div>
-                </div>
-              );
-            })}
+                  {stage.headline}
+                  {stage.headlineEmphasis ? (
+                    <>
+                      <br />
+                      <em className="not-italic italic text-[var(--platform-accent)]">{stage.headlineEmphasis}</em>
+                    </>
+                  ) : null}
+                </h2>
+              </div>
+            </div>
           </div>
 
-          <div className="sticky top-24 self-start h-[calc(100vh-6rem)] flex items-center justify-center pb-24">
+          <div className="sticky top-28 self-start py-[8vh] flex items-center justify-center">
             <RecordDial stage={stage} index={activeIndex} total={PLATFORM_SCROLL_STAGES.length} />
           </div>
 
-          <div className="sticky top-24 self-start pt-[30vh]">
+          <div className="sticky top-28 self-start pt-[12vh] pb-[12vh]">
             <StageDetail stage={stage} />
-            <div className="mt-16 flex flex-col gap-2">
+            <div className="mt-12 flex flex-col gap-2">
               {PLATFORM_SCROLL_STAGES.map((item, i) => (
                 <a
                   key={item.id}

@@ -1007,7 +1007,7 @@ function buildSourceAudit(input: {
       label: "Deals, payments and activities",
       availability: planTablesReady ? "live" : "unavailable",
       detail: planTablesReady
-        ? "Brand Gmail and /platform founding-pilot or snapshot requests open $5,000 Pilot opportunities automatically. Booked revenue still requires a won deal; cash still requires a cleared payment."
+        ? "Brand Gmail and /platform onboarding-fee or snapshot requests open $5,000 opportunities automatically. Booked revenue still requires a won deal; cash still requires a cleared payment."
         : "hq_deals / hq_deal_payments / hq_revenue_activities are not in the database yet.",
       action: planTablesReady ? undefined : "Apply 20260820_hq_revenue_command_center.sql",
     },

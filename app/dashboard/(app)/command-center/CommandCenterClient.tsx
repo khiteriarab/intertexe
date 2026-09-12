@@ -36,7 +36,7 @@ import type { CommandCenterBundle, DataAvailability } from "../../../../lib/dash
 
 const SCOPES: Array<{ key: RevenueScope; label: string; hint: string }> = [
   { key: "combined", label: "Combined plan", hint: "Company plus personal revenue for the $50,000 founder objective" },
-  { key: "company", label: "INTERTEXE company", hint: "Founding Material Data Pilots sold on /platform, integrations, affiliate and INTERTEXE partnerships" },
+  { key: "company", label: "INTERTEXE company", hint: "Onboarding fees sold on /platform, integrations, affiliate and INTERTEXE partnerships" },
   { key: "personal", label: "@khiteri personal", hint: "Creator partnerships contracted personally" },
 ];
 
@@ -192,7 +192,7 @@ function RevenueView({
         <h2 className="text-xl font-semibold tracking-tight">Scaled booking plan</h2>
         <p className="text-sm text-black/50 mt-1">{PLAN_BOOKING_SUBTITLE}</p>
         <p className="text-[12px] text-black/45 mt-2 leading-relaxed max-w-2xl">
-          Pilot is the $5,000 Founding Material Data Pilot sold on{" "}
+          Onboarding fee is the $5,000 implementation project sold on{" "}
           <a href="/platform" className="underline decoration-black/20 hover:decoration-black">
             /platform
           </a>
@@ -240,14 +240,14 @@ function RevenueView({
 
       <HqCard title="Open $5K Pilot opportunities">
         <p className="text-[12px] text-black/50 leading-relaxed mb-4 max-w-2xl">
-          A brand Gmail send/reply or a `/platform` request now opens a $5,000 Founding Material Data Pilot
+          A brand Gmail send/reply or a `/platform` request now opens a $5,000 onboarding fee opportunity
           here. Weighted pipeline moves. Booked revenue still only counts when you mark the deal won —
           HQ never auto-closes a sale.
         </p>
         {bundle.deals.filter((d) => d.revenueStream === "api_pilot" && d.stage !== "won" && d.stage !== "lost")
           .length === 0 ? (
           <p className="text-sm text-black/55">
-            No open pilots yet. Email a brand from Gmail or take a founding-pilot request on /platform.
+            No open onboarding deals yet. Email a brand from Gmail or take an onboarding fee request on /platform.
           </p>
         ) : (
           <ul className="divide-y divide-black/[0.06]">
@@ -263,7 +263,7 @@ function RevenueView({
                         {formatPlanMoney(deal.amount)} · {stageLabel}
                       </span>
                     </div>
-                    <p className="text-[12px] text-black/55 mt-1">{deal.opportunity || "Founding Material Data Pilot"}</p>
+                    <p className="text-[12px] text-black/55 mt-1">{deal.opportunity || "Material Data Onboarding"}</p>
                     {deal.nextAction ? (
                       <p className="text-[12px] mt-1">
                         <span className="text-black/45">Next: </span>
@@ -704,7 +704,7 @@ function DealForm({ bundle }: { bundle: CommandCenterBundle }) {
       </label>
       <label className={LABEL}>
         Opportunity
-        <input name="opportunity" placeholder="Founding Material Data Pilot" className={FIELD} />
+        <input name="opportunity" placeholder="Material Data Onboarding" className={FIELD} />
       </label>
       <label className={LABEL}>
         Amount (USD)

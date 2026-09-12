@@ -29,9 +29,25 @@ describe("public passport content — data integrity", () => {
     assert.ok(content.imageUrl?.includes("mytheresa.com"));
   });
 
-  it("labels next life as guidance not brand programs", () => {
-    const content = buildConsumerPassportContent({ productName: "Test" });
-    assert.ok(content.nextLife.every((item) => item.kind === "guidance"));
+  it("exposes sell action in next life when passport is valid", () => {
+    const content = buildConsumerPassportContent({
+      productName: "God's True Cashmere Brilliant Linen Shirt with Lapis Lazuli",
+      brand: "God's True Cashmere",
+      category: "Shirt",
+      styleCode: "ITX-LIVE-01",
+      sku: "P01152404-3",
+      publicId: "itx_test",
+      snapshotFields: [{ key: "composition", value: "100% Linen" }],
+      traceNodes: [
+        { tier_label: "Raw material", facility_name: "European flax cultivation" },
+        { tier_label: "Manufacturing", facility_name: "Shirt assembly", country_code: "PT" },
+      ],
+    });
+    const sell = content.nextLife.find((item) => item.title === "Sell this item");
+    assert.ok(sell);
+    assert.equal(sell?.kind, "action");
+    assert.equal(sell?.primary, true);
+    assert.equal(content.resaleEligible, true);
   });
 
   it("marks unavailable manufacturing when no data", () => {

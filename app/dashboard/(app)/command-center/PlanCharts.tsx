@@ -424,7 +424,7 @@ export function ScaledBookingPlan({ mix = MONTHLY_BOOKING_MIX }: { mix?: Monthly
             )} cumulative · ${active.segments
               .map((seg) => `${streamMeta(seg.stream)?.shortLabel || seg.stream} ${formatPlanMoney(seg.amount)}`)
               .join(" · ")}`
-          : `Hover or tab a month for the mix. Pilot is the $5,000 Founding Material Data Pilot sold on /platform. ${PLAN_BOOKING_SUBTITLE}`}
+          : `Hover or tab a month for the mix. Onboarding fee is the $5,000 implementation project sold on /platform. ${PLAN_BOOKING_SUBTITLE}`}
       </p>
     </div>
   );

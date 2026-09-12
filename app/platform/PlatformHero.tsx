@@ -1,41 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  PLATFORM_CASE_STUDY,
+  PLATFORM_LIVE_CATALOG,
+  PLATFORM_PRODUCT_SHORT_NAME,
+} from "../../lib/enterprise/platform-showcase";
 import { PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
 const INSIGHTS = [
   {
     id: "resolve",
-    pill: "Resolving composition…",
+    pill: "Tracing supply chain…",
     brand: "Supplier feed · ERP · PLM",
-    name: "Wide-leg linen trouser",
-    detail: "98% Cotton / 2% Elastane vs 100% Cotton — conflict flagged",
+    name: PLATFORM_PRODUCT_SHORT_NAME,
+    detail: `${PLATFORM_CASE_STUDY.composition} · European flax · Portugal assembly`,
     tone: "amber" as const,
   },
   {
     id: "benchmark",
     pill: "Benchmarking material mix…",
-    brand: "Peer segment · Ready-to-wear",
-    name: "Silk-blend midi dress",
-    detail: "Natural fiber share +11% vs governed peer median",
+    brand: "Peer segment · Shirts",
+    name: PLATFORM_CASE_STUDY.productName,
+    detail: `${PLATFORM_LIVE_CATALOG.avgNaturalFiberPct}% natural fiber · Customer Zero catalog`,
     tone: "teal" as const,
   },
   {
     id: "passport",
-    pill: "Passport ready",
+    pill: "Passport published",
     brand: "Digital Product Passport",
-    name: "Silk evening dress",
-    detail: "QR linked · scan to open consumer passport",
+    name: PLATFORM_PRODUCT_SHORT_NAME,
+    detail: `${PLATFORM_CASE_STUDY.styleCode} · scan QR to open live passport`,
     tone: "green" as const,
   },
   {
-    id: "publish",
-    pill: "Publishing to channels…",
-    brand: "Ecommerce · QR · Brand site",
-    name: "Wool tailored blazer",
-    detail: "One governed record → passport, PDP, and compliance fields",
-    tone: "slate" as const,
+    id: "next-life",
+    pill: "Next life ready",
+    brand: "Resale · Ownership transfer",
+    name: PLATFORM_CASE_STUDY.styleCode,
+    detail: "Sell on eBay, Vinted, or Poshmark · integrity-gated",
+    tone: "rose" as const,
   },
 ] as const;
 
@@ -43,7 +48,7 @@ const PILL_TONE: Record<(typeof INSIGHTS)[number]["tone"], string> = {
   amber: "bg-[#f5efe6] text-[#7a5c2e] border-[#e8dcc8]",
   teal: "bg-[#e8f0ef] text-[#2c4a3e] border-[#cdded9]",
   green: "bg-[#eaf2ea] text-[#2d5a34] border-[#cfe0cf]",
-  slate: "bg-[var(--platform-highlight)] text-[var(--platform-primary)] border-[var(--platform-border)]",
+  rose: "bg-[#f5ece8] text-[#6b3a2e] border-[#e8d4cc]",
 };
 
 const TRUST_MARKS = [
@@ -58,6 +63,7 @@ const HERO_TABS = [
   { id: "measure", label: "Measure" },
   { id: "govern", label: "Govern" },
   { id: "publish", label: "Publish" },
+  { id: "next-life", label: "Next life" },
 ] as const;
 
 function InsightCard({ insight, index, activeIndex }: { insight: (typeof INSIGHTS)[number]; index: number; activeIndex: number }) {
@@ -170,7 +176,7 @@ export function PlatformHero() {
           <div className="relative mx-auto max-w-[980px]">
             <img
               src="/platform/hero-workspace-desktop.png"
-              alt="INTERTEXE enterprise workspace — illustrative sample catalog"
+              alt="INTERTEXE enterprise workspace — Customer Zero catalog"
               width={1920}
               height={1080}
               className="w-full rounded-2xl border border-[var(--platform-border)]/80 shadow-[0_40px_100px_rgba(22,21,19,0.08)]"
@@ -193,7 +199,7 @@ export function PlatformHero() {
             </div>
           </div>
           <p className="mt-6 text-center text-xs text-[var(--platform-quiet)] leading-relaxed max-w-2xl mx-auto">
-            Illustrative workspace · sample catalog, not a live customer.
+            Customer Zero · {PLATFORM_CASE_STUDY.styleCode} · live passport at intertexe.com/p/{PLATFORM_CASE_STUDY.publicId}
           </p>
         </div>
       </div>
@@ -244,15 +250,14 @@ export function PlatformHero() {
             />
             <img
               src="/platform/hero-workspace-desktop.png"
-              alt="INTERTEXE enterprise workspace — illustrative sample catalog"
+              alt="INTERTEXE enterprise workspace — Customer Zero catalog"
               width={1920}
               height={1080}
               className="relative z-10 w-full rounded-2xl border border-[var(--platform-border)]/70 shadow-[0_48px_120px_rgba(22,21,19,0.10)]"
             />
             <img
-              src="/platform/hero-silk-dress.png"
-              alt=""
-              aria-hidden
+              src={PLATFORM_CASE_STUDY.imageUrl}
+              alt={PLATFORM_CASE_STUDY.productName}
               width={400}
               height={600}
               className="absolute -left-6 xl:-left-10 bottom-8 z-20 w-[28%] max-w-[200px] object-contain drop-shadow-[0_32px_64px_rgba(22,21,19,0.18)]"
@@ -284,8 +289,8 @@ export function PlatformHero() {
           </div>
         </div>
         <p className="max-w-[1280px] mx-auto px-8 xl:px-12 pb-6 text-xs text-[var(--platform-quiet)]">
-          Illustrative workspace · sample catalog, not a live customer. Insight card cycles through composition resolution,
-          benchmarking, and passport readiness.
+          Customer Zero · {PLATFORM_LIVE_CATALOG.productCount} live products · {PLATFORM_LIVE_CATALOG.publishedPassports}{" "}
+          published passports · insight card cycles trace, benchmark, publish, and next life.
         </p>
       </div>
 

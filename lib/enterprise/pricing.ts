@@ -3,7 +3,16 @@
  * Brands pay for product intelligence and identity infrastructure, not dashboard access alone.
  */
 
-export const FOUNDING_PILOT_PRICE_USD = 5_000;
+/** Fixed-fee implementation and onboarding — not a monthly subscription. */
+export const ONBOARDING_FEE_USD = 5_000;
+/** @deprecated Prefer ONBOARDING_FEE_USD */
+export const FOUNDING_PILOT_PRICE_USD = ONBOARDING_FEE_USD;
+
+export const ONBOARDING_FEE_LABEL = "Onboarding fee";
+
+export function onboardingFeePriceLabel(): string {
+  return `$${ONBOARDING_FEE_USD.toLocaleString("en-US")}`;
+}
 export const PLATFORM_MONTHLY_USD = 499;
 export const PROFESSIONAL_MONTHLY_USD = 1_250;
 
@@ -93,7 +102,7 @@ export const SAAS_ARR_600K_MODEL = {
     { tier: "professional" as const, customers: 28, monthlyUsd: PROFESSIONAL_MONTHLY_USD },
   ],
   totalCustomers: 58,
-  note: "Pilots ($5K), enterprise contracts, API fees, and hosting overages sit on top of SaaS ARR.",
+  note: "Onboarding fees ($5K), enterprise contracts, API fees, and hosting overages sit on top of SaaS ARR.",
 };
 
 export function formatTierPrice(monthlyUsd: number | null): string {
@@ -106,7 +115,7 @@ export function planDisplayName(plan: string): string {
     case "free_snapshot":
       return "Free Material Snapshot";
     case "founding_pilot":
-      return "Founding Pilot (onboarding)";
+      return ONBOARDING_FEE_LABEL;
     case "platform":
       return "Platform";
     case "professional":
@@ -123,10 +132,10 @@ export function planDisplayName(plan: string): string {
 
 export function upgradeHintForPlan(plan: string): string {
   if (plan === "free_snapshot") {
-    return `Start with the $${FOUNDING_PILOT_PRICE_USD.toLocaleString("en-US")} Founding Pilot (implementation), then choose Platform ($${PLATFORM_MONTHLY_USD}/mo), Professional ($${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo), or Enterprise.`;
+    return `Start with the ${onboardingFeePriceLabel()} onboarding fee (implementation), then choose Platform ($${PLATFORM_MONTHLY_USD}/mo), Professional ($${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo), or Enterprise.`;
   }
   if (plan === "founding_pilot") {
-    return `Pilot complete? Move to Platform ($${PLATFORM_MONTHLY_USD}/mo), Professional ($${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo), or Enterprise for headless API & integrations.`;
+    return `Onboarding complete? Move to Platform ($${PLATFORM_MONTHLY_USD}/mo), Professional ($${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo), or Enterprise for headless API & integrations.`;
   }
   if (plan === "platform") {
     return "Need white-label passports or higher catalog limits? Upgrade to Professional ($1,250/mo). Headless API requires Enterprise.";

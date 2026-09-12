@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { PLATFORM_MONTHLY_USD, PROFESSIONAL_MONTHLY_USD, FOUNDING_PILOT_PRICE_USD, saasTierByKey } from "../../../lib/enterprise/pricing";
+import {
+  ONBOARDING_FEE_LABEL,
+  PLATFORM_MONTHLY_USD,
+  PROFESSIONAL_MONTHLY_USD,
+  onboardingFeePriceLabel,
+  saasTierByKey,
+} from "../../../lib/enterprise/pricing";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformLeadForm } from "../PlatformLeadForm";
 import { PlatformViewTracker } from "../PlatformViewTracker";
 
 export const metadata: Metadata = {
   title: "See INTERTEXE with your own products",
-  description: `Free snapshot, $${FOUNDING_PILOT_PRICE_USD.toLocaleString("en-US")} Founding Pilot, or SaaS from $${PLATFORM_MONTHLY_USD}/month.`,
+  description: `Free snapshot, ${onboardingFeePriceLabel()} onboarding fee, or SaaS from $${PLATFORM_MONTHLY_USD}/month.`,
 };
 
 export default async function PlatformRequestPage({
@@ -30,8 +36,8 @@ export default async function PlatformRequestPage({
     "Send 10 product records. We will show you what INTERTEXE finds, what you are missing, how your material data compares, and what it would take to make those products passport-ready. Free. No commitment.";
 
   if (intent === "founding_pilot") {
-    headline = "Request the Founding Pilot";
-    body = `The Founding Pilot is $${FOUNDING_PILOT_PRICE_USD.toLocaleString("en-US")} — implementation and onboarding, not a monthly subscription. 100 complex products or 500 structured rows.`;
+    headline = `Request the ${ONBOARDING_FEE_LABEL.toLowerCase()}`;
+    body = `The onboarding fee is ${onboardingFeePriceLabel()} — implementation and onboarding, not a monthly subscription. 100 complex products or 500 structured rows.`;
   } else if (intent === "enterprise") {
     headline = "Talk to us about Enterprise";
     body =

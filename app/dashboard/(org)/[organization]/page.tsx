@@ -1,4 +1,11 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { requireOrganizationAccess } from "../../../../lib/enterprise/access";
+import {
+  buildGettingStartedSteps,
+  isOnboardingComplete,
+  onboardingSkipCookieName,
+} from "../../../../lib/enterprise/getting-started";
 import { entitlementsForPlan, type PlanKey } from "../../../../lib/enterprise/entitlements";
 import { loadPlatformOverview } from "../../../../lib/enterprise/platform-overview";
 import { loadOrgOverview } from "../../../../lib/enterprise/queries";
@@ -16,7 +23,6 @@ import {
 } from "../../components/EnterpriseUi";
 import { EntKpiGrid, EntModuleShowcase, EntOverviewBenchmarkTeaser, EntOverviewCharts } from "../../components/EntDashboardWidgets";
 import { EntConsumerSignalsTeaser } from "../../components/EntConsumerSignals";
-import { buildGettingStartedSteps } from "../../../../lib/enterprise/getting-started";
 import { EntGettingStarted } from "../../components/EntGettingStarted";
 import livePilotProducts from "../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import { isCustomerZeroOrg } from "../../../../lib/enterprise/dual-model";
@@ -41,6 +47,13 @@ export default async function OrganizationOverviewPage({
   ]);
   const entitlement = entitlementsForPlan(membership.plan as PlanKey, {});
   const base = `/dashboard/${membership.slug}`;
+  const steps = buildGettingStartedSteps(overview);
+  const cookieStore = await cookies();
+  const onboardingSkipped =
+    cookieStore.get(onboardingSkipCookieName(membership.slug))?.value === "1";
+  if (!isOnboardingComplete(steps) && !onboardingSkipped) {
+    redirect(`${base}/onboarding`);
+  }
 
   const nextStep =
     overview.productCount === 0
@@ -198,7 +211,7 @@ export default async function OrganizationOverviewPage({
       <EntGettingStarted
         base={base}
         orgSlug={membership.slug}
-        steps={buildGettingStartedSteps(overview)}
+        steps={steps}
       />
 
       <EntModuleShowcase overview={overview} base={base} />
@@ -206,12 +219,12 @@ export default async function OrganizationOverviewPage({
       {membership.plan === "free_snapshot" || membership.plan === "founding_pilot" ? (
         <div className="ent-zone ent-zone-butter rounded-[var(--ent-radius-2xl)] px-8 py-10 md:px-10 md:py-12 mb-14 shadow-[var(--ent-shadow-panel)]">
           <p className="ent-heading text-[1.65rem] text-[var(--ent-ink)]">
-            {membership.plan === "free_snapshot" ? "Continue with the Founding Pilot" : "Choose your operating plan"}
+            {membership.plan === "free_snapshot" ? "Continue with the onboarding fee" : "Choose your operating plan"}
           </p>
           <p className="text-sm leading-relaxed text-[var(--ent-muted)] mt-3 max-w-2xl">
             {membership.plan === "free_snapshot"
               ? "$5,000 onboarding · 100 complex products or 500 structured rows — implementation, not a subscription. Then Platform ($499/mo), Professional ($1,250/mo), or Enterprise."
-              : "Pilot is onboarding. Ongoing operation: Platform ($499/mo) for core OS · Professional ($1,250/mo) for white-label passports · Enterprise for headless API & integrations."}
+              : "Onboarding is complete. Ongoing operation: Platform ($499/mo) for core OS · Professional ($1,250/mo) for white-label passports · Enterprise for headless API & integrations."}
           </p>
           <p className="text-xs text-[var(--ent-muted-light)] mt-4">
             Products: {entitlement.productAllowance ?? "custom"} · Passports:{" "}

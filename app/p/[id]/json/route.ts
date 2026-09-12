@@ -17,5 +17,22 @@ export async function GET(
     product_name: view.productName,
     version: view.versionNumber,
     data: view.snapshot || {},
+    product: view.consumer
+      ? {
+          brand: view.consumer.brand,
+          name: view.consumer.productName,
+          category: view.consumer.category,
+          composition: view.consumer.composition,
+          image_url: view.consumer.imageUrl,
+        }
+      : null,
+    lifecycle: view.consumer?.lifecycleEvents || [],
+    care: view.consumer?.careInstructions || null,
+    next_life: view.consumer?.nextLife || [],
+    resale_availability: {
+      eligible: view.consumer?.resaleEligible ?? false,
+      integrity_status: view.consumer?.integrityStatus ?? "unknown",
+      sell_url: view.consumer?.resaleEligible ? `/p/${view.publicId}/sell` : null,
+    },
   });
 }

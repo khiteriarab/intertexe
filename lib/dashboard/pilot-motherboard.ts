@@ -11,7 +11,7 @@ import { normalizeEmail } from "../email-constants";
 
 export const PILOT_AMOUNT_USD = 5000;
 export const PILOT_STREAM = "api_pilot";
-export const PILOT_OPPORTUNITY = "Founding Material Data Pilot";
+export const PILOT_OPPORTUNITY = "Material Data Onboarding";
 
 export const B2B_BUYER_TYPES = new Set(["brand", "business", "organization"]);
 
@@ -60,7 +60,7 @@ export function stageForPlatformIntent(intent: PilotLeadIntent): PilotStagePlan 
       stage: "proposal",
       amount: PILOT_AMOUNT_USD,
       opportunity: PILOT_OPPORTUNITY,
-      nextAction: "Send the $5,000 Founding Material Data Pilot SOW and sample deliverable.",
+      nextAction: "Send the $5,000 onboarding fee SOW and sample deliverable.",
       activityType: "proposal",
       source: "platform_founding_pilot",
     };
@@ -70,7 +70,7 @@ export function stageForPlatformIntent(intent: PilotLeadIntent): PilotStagePlan 
       stage: "snapshot_sent",
       amount: PILOT_AMOUNT_USD,
       opportunity: `${PILOT_OPPORTUNITY} (from snapshot request)`,
-      nextAction: "Deliver the 10-product snapshot and invite them to the $5,000 founding pilot.",
+      nextAction: "Deliver the 10-product snapshot and invite them to the $5,000 onboarding fee.",
       activityType: "snapshot_sent",
       source: "platform_snapshot",
     };
@@ -88,7 +88,7 @@ export function stageFromGmailEvent(
     return {
       stage,
       activityType: "personalized_outreach",
-      nextAction: "Follow up on the Founding Material Data Pilot and offer a 10-product snapshot.",
+      nextAction: "Follow up on the onboarding fee and offer a 10-product snapshot.",
     };
   }
   if (eventType === "email_reply_received") {
@@ -393,7 +393,7 @@ export async function syncGmailEventToPilotPipeline(
   const stage = move?.stage || "qualified";
   const activityType = move?.activityType || "personalized_outreach";
   const nextAction =
-    move?.nextAction || "Follow up on the Founding Material Data Pilot and offer a 10-product snapshot.";
+    move?.nextAction || "Follow up on the onboarding fee and offer a 10-product snapshot.";
 
   try {
     return writePilotDeal(supabase, input.workspaceId, {

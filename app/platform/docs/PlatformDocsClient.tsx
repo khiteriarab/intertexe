@@ -359,7 +359,7 @@ export function PlatformDocsClient() {
           <DocSection id="rate-limits" title="Rate limits">
             <p>
               Demo: 40 requests / 10 minutes / IP. Production: per-key per-minute and monthly limits from the client
-              plan (founding pilot default 60/min, 5,000/month). Production CORS is limited to https://www.intertexe.com.
+              plan (onboarding fee default 60/min, 5,000/month). Production CORS is limited to https://www.intertexe.com.
             </p>
           </DocSection>
 

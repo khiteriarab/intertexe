@@ -9,7 +9,7 @@ import { PlatformPageHeader } from "../PlatformPageHeader";
 export const metadata: Metadata = {
   title: "INTERTEXE live demonstration",
   description:
-    "See INTERTEXE SaaS in action: govern a silk evening dress on desktop, publish the passport, scan the QR, and open the consumer page your customer sees. Then explore the 10-product catalog walkthrough.",
+    "See INTERTEXE SaaS in action: govern the Customer Zero linen shirt on desktop, publish the passport, scan the QR, and open the live consumer page. Then explore the 10-product catalog walkthrough.",
   alternates: { canonical: "https://www.intertexe.com/platform/demo" },
 };
 
@@ -20,7 +20,7 @@ export default function PlatformDemoPage() {
         eyebrow="Live demonstration"
         align="center"
         title="SaaS on desktop → QR on the garment → passport your customer sees."
-        description="Start with the live scan demo on a silk evening dress — workspace publish, scannable QR, and the real consumer passport. Then walk through a 10-product catalog from raw data to DPP readiness."
+        description="Start with the live scan demo on ITX-LIVE-01 — God's True Cashmere linen shirt. Workspace publish, scannable QR, and the live consumer passport. Then walk through the 10-product Customer Zero catalog from raw data to DPP readiness and next-life resale."
         primaryHref="#live-demo"
         primaryLabel="See the live scan"
         secondaryHref="#walkthrough"

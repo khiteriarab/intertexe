@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type RefObject } from "react";
+import { PLATFORM_CASE_STUDY, PLATFORM_IDENTITY_LABEL } from "../../../lib/enterprise/platform-showcase";
 import { useInView, useReducedMotion } from "../b2b-motion";
 import { SERIF } from "../platform-ui";
 
@@ -19,7 +20,7 @@ const CARRIERS: ReadonlyArray<{
 
 const ACCESS = ["Consumer", "Regulator", "Authorized partner"] as const;
 
-const IDENTITY = "INTX-ITX-4102";
+const IDENTITY = PLATFORM_CASE_STUDY.publicId;
 
 function FlowConnector({ active, vertical = true }: { active: boolean; vertical?: boolean }) {
   if (vertical) {
@@ -98,7 +99,7 @@ function PassportPanel({ version, active }: { version: 1 | 2; active: boolean })
         <div>
           <p className="text-[10px] tracking-[0.14em] uppercase text-[#9c7b8b] mb-1">Hosted digital passport</p>
           <p className="text-base font-light text-[#161513]" style={SERIF}>
-            Silk Evening Dress
+            {PLATFORM_CASE_STUDY.productName}
           </p>
         </div>
         <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] border border-[var(--platform-accent)]/30 text-[var(--platform-primary)] px-2 py-1">
@@ -112,7 +113,9 @@ function PassportPanel({ version, active }: { version: 1 | 2; active: boolean })
         </div>
         <div className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2">
           <dt>Composition</dt>
-          <dd className="text-right">{version === 1 ? "92% Silk · 8% Elastane" : "92% Silk · 8% Elastane · verified"}</dd>
+          <dd className="text-right">
+            {version === 1 ? PLATFORM_CASE_STUDY.composition : `${PLATFORM_CASE_STUDY.composition} · verified`}
+          </dd>
         </div>
         {version === 2 ? (
           <div className="flex justify-between gap-3 border-t border-[#eeeae4] pt-2 b2b-fade-in">
@@ -171,9 +174,9 @@ export function ProductIdentityCarriersVisual({ className = "" }: { className?: 
             >
               <p className="text-[10px] tracking-[0.14em] uppercase text-[#9c7b8b] mb-1">Governed product record</p>
               <p className="text-sm text-[#161513] mb-2" style={SERIF}>
-                Silk Evening Dress · approved
+                {PLATFORM_IDENTITY_LABEL} · approved
               </p>
-              <p className="text-xs text-[#5c5854]">92% Silk · 8% Elastane · source values preserved</p>
+              <p className="text-xs text-[#5c5854]">{PLATFORM_CASE_STUDY.composition} · source values preserved</p>
             </div>
 
             <FlowConnector active={identityActive} />
@@ -298,7 +301,7 @@ export function ProductIdentityCarriersVisual({ className = "" }: { className?: 
         </div>
       </div>
       <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
-        Illustrative · Managed product identity and passport infrastructure. Preparation status only — not EU certification or hardware fulfillment.
+        Live Customer Zero passport · {PLATFORM_IDENTITY_LABEL}. Preparation status only — not EU certification or hardware fulfillment.
       </figcaption>
     </figure>
   );

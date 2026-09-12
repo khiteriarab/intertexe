@@ -1,4 +1,9 @@
-import { FOUNDING_PILOT_PRICE_USD, SAAS_ARR_600K_MODEL, SAAS_TIERS } from "../../../lib/enterprise/pricing";
+import {
+  ONBOARDING_FEE_LABEL,
+  onboardingFeePriceLabel,
+  SAAS_ARR_600K_MODEL,
+  SAAS_TIERS,
+} from "../../../lib/enterprise/pricing";
 
 /** Shared tier comparison — HQ B2B page and enterprise org upsell panels. */
 export function SaasPricingTiers({ showArrModel = false }: { showArrModel?: boolean }) {
@@ -6,7 +11,7 @@ export function SaasPricingTiers({ showArrModel = false }: { showArrModel?: bool
     <div className="space-y-8">
       <div className="rounded-xl border border-black/10 bg-[#faf8f5] p-5 sm:p-6">
         <p className="text-[10px] tracking-[0.16em] uppercase text-black/40">Onboarding</p>
-        <p className="font-serif text-xl mt-2">Founding Pilot · ${FOUNDING_PILOT_PRICE_USD.toLocaleString("en-US")}</p>
+        <p className="font-serif text-xl mt-2">{ONBOARDING_FEE_LABEL} · {onboardingFeePriceLabel()}</p>
         <p className="text-sm text-black/55 mt-2 leading-relaxed">
           Implementation and analysis — not a monthly subscription. 100 complex products or 500 structured rows,
           material intelligence, DPP prep, QR identities, and a finished data project (~10 business days).

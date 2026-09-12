@@ -5,7 +5,7 @@ import { trackPlatform } from "../../lib/platform-analytics";
 
 const INTENTS = [
   { value: "snapshot", label: "Free 10-product Material Snapshot" },
-  { value: "founding_pilot", label: "Founding Pilot ($5,000 onboarding)" },
+  { value: "founding_pilot", label: "Onboarding fee ($5,000)" },
   { value: "saas", label: "SaaS — Platform / Professional / Enterprise" },
 ] as const;
 

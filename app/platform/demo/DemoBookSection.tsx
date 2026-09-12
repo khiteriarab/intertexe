@@ -13,12 +13,12 @@ export function DemoBookSection() {
         </h2>
         <Body className="mb-6 max-w-xl mx-auto">
           Send a catalog profile — not the files. The INTERTEXE team replies from Barcelona with the next step
-          for a 10-product Material Snapshot, the Founding Pilot, or platform access.
+          for a 10-product Material Snapshot, the onboarding fee, or platform access.
         </Body>
         <ul className="space-y-3 text-sm text-[#161513] mb-8 max-w-md mx-auto text-left">
           {[
             "Free 10-product Material Snapshot",
-            "Founding Pilot — $5,000 (onboarding, not subscription)",
+            "Onboarding fee — $5,000 (implementation, not subscription)",
             "Platform $499/mo · Professional $1,250/mo · Enterprise custom",
           ].map((point) => (
             <li key={point} className="flex items-start gap-2">
@@ -32,7 +32,7 @@ export function DemoBookSection() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <PrimaryLink href="/platform/request?intent=snapshot&cta=demo_page">Request a demo</PrimaryLink>
           <SecondaryLink href="/platform/request?intent=founding_pilot&cta=demo_page">
-            Founding Pilot
+            Onboarding fee
           </SecondaryLink>
         </div>
       </div>

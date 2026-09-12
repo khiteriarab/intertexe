@@ -1,6 +1,7 @@
 import type { TemplateProps } from "./shared";
 import {
   CareBlock,
+  LifecycleHistoryBlock,
   MaterialsBlock,
   NextLifeBlock,
   PassportShell,
@@ -23,6 +24,7 @@ export function EssentialPassportTemplate(props: TemplateProps) {
       ) : null}
       <ProductHero content={content} large={false} />
       <CareBlock content={content} />
+      <LifecycleHistoryBlock content={content} />
       <NextLifeBlock content={content} />
     </PassportShell>
   );

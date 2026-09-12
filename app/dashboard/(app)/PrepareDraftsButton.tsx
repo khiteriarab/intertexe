@@ -39,7 +39,7 @@ export function PrepareDraftsButton({ connected }: { connected: boolean }) {
         "Create Gmail drafts from your templates?\n\n" +
         "• Influencers ← “you might love what we built…”\n" +
         "• Customers ← “i think you'd love the intertexe clothing app…”\n" +
-        "• Brands ← “founding material data pilot…”\n\n" +
+        "• Brands ← “material data onboarding…”\n\n" +
         "Up to 40 of each, from uncontacted hq_contacts.\n" +
         "Nothing is sent — you review and press Send in Gmail."
     );

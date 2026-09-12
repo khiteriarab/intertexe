@@ -1,3 +1,11 @@
+import {
+  PLATFORM_BENCHMARK_PEERS,
+  PLATFORM_BENCHMARK_STATS,
+  PLATFORM_CASE_STUDY,
+  PLATFORM_CONVERSION_COHORTS,
+  PLATFORM_IDENTITY_LABEL,
+  PLATFORM_LIVE_CATALOG,
+} from "../../lib/enterprise/platform-showcase";
 import { QrMark, SERIF } from "./platform-ui";
 import {
   enterpriseModuleCatalogByGroup,
@@ -23,25 +31,9 @@ const MATURITY_BADGE: Record<ImplementationState, string> = {
   placeholder: "bg-[#f0ebe4] text-[#8a847c]",
 };
 
-const PEERS = [
-  ["Natural fiber share", "57%", "46%"],
-  ["Synthetic share", "43%", "54%"],
-  ["Complete material data", "81%", "69%"],
-  ["Passport-ready", "62%", "48%"],
-] as const;
-
-const CONVERSION_COHORTS = [
-  { cohort: "Silk & fine naturals", index: "+18", tone: "up" as const, signal: "Outperforming peer median" },
-  { cohort: "Cotton basics", index: "-11", tone: "down" as const, signal: "Under index vs segment" },
-  { cohort: "Recycled synthetics", index: "+6", tone: "up" as const, signal: "Growing share, stable conversion" },
-  { cohort: "Wool outerwear", index: "—", tone: "neutral" as const, signal: "Insufficient peer sample" },
-] as const;
-
-const BENCHMARK_STATS = [
-  ["Products in dataset", "12,400+"],
-  ["Peer segments", "8"],
-  ["Conversion signals", "Live"],
-] as const;
+const PEERS = PLATFORM_BENCHMARK_PEERS;
+const CONVERSION_COHORTS = PLATFORM_CONVERSION_COHORTS;
+const BENCHMARK_STATS = PLATFORM_BENCHMARK_STATS;
 
 const FIBERS = [
   ["Cotton", 36, "#d9cbb8"],
@@ -89,7 +81,7 @@ function SourcePill({ children, tone = "neutral" }: { children: React.ReactNode;
 /** Governed record — sources, conflict detection, approved value. */
 export function GovernedRecordVisual() {
   return (
-    <SalesPanel caption="Illustrative product record. INTERTEXE does not blindly overwrite source data.">
+    <SalesPanel caption="Customer Zero · ITX-LIVE-01. INTERTEXE does not blindly overwrite source data.">
       <div className="p-5 sm:p-8">
         <div className="grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.1fr)_auto_minmax(0,1fr)] gap-4 lg:gap-6 items-stretch">
           <div className="bg-white border border-[#e8e3da] p-4 sm:p-5">
@@ -158,7 +150,7 @@ export function GovernedRecordVisual() {
 /** Intelligence centerpiece — Material Benchmark visual system. */
 export function IntelligenceBenchmarkVisual() {
   return (
-    <SalesPanel tone="dark" caption="Illustrative example · Peer medians from governed datasets — not fabricated competitor dumps.">
+    <SalesPanel tone="dark" caption={`Customer Zero catalog · ${PLATFORM_LIVE_CATALOG.productCount} products · peer medians from governed datasets.`}>
       <div className="p-5 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <p className="text-[10px] tracking-[0.16em] uppercase text-[var(--platform-accent-muted)]">Material Benchmark</p>
@@ -268,19 +260,19 @@ export function IntelligenceBenchmarkVisual() {
 /** DPP — single premium passport identity visual. */
 export function PassportIdentityVisual() {
   return (
-    <SalesPanel caption="Illustrative passport. Preparation status only — not EU certification or verified DPP provider approval.">
+    <SalesPanel caption={`Live passport · ${PLATFORM_CASE_STUDY.publicId} · preparation status, not legal certification.`}>
       <div className="p-5 sm:p-8 lg:p-10">
         <div className="grid md:grid-cols-[minmax(0,1fr)_auto] gap-8 items-center max-w-3xl mx-auto">
           <div>
             <p className="text-[10px] tracking-[0.2em] uppercase text-[#9c7b8b] mb-2">Digital Product Passport</p>
             <p className="text-2xl sm:text-3xl font-light mb-2" style={SERIF}>
-              Silk Evening Dress
+              {PLATFORM_CASE_STUDY.productName}
             </p>
-            <p className="text-xs text-[#8a847c] mb-6 font-mono">INTX-ITX-4102 · Version 2 published</p>
+            <p className="text-xs text-[#8a847c] mb-6 font-mono">{PLATFORM_IDENTITY_LABEL} · Version 4 published</p>
             <ul className="space-y-3 text-sm text-[#5c5854]">
               <li className="flex justify-between gap-4 border-t border-[#eeeae4] pt-3">
                 <span>Composition</span>
-                <span className="text-right">92% Silk · 8% Elastane</span>
+                <span className="text-right">{PLATFORM_CASE_STUDY.composition}</span>
               </li>
               <li className="flex justify-between gap-4 border-t border-[#eeeae4] pt-3">
                 <span>Manufacturing</span>

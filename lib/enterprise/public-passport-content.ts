@@ -4,6 +4,7 @@ import {
   resolvePilotFixture,
   type PilotFixtureRow,
 } from "./pilot-product-media";
+import { auditPassportIntegrity } from "./passport-integrity";
 
 export type JourneyStage = {
   id: string;
@@ -18,7 +19,12 @@ export type JourneyStage = {
 export type NextLifeItem = {
   title: string;
   detail: string;
-  kind: "guidance" | "program";
+  kind: "guidance" | "program" | "action";
+  href?: string;
+  cta?: string;
+  primary?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
 };
 
 export type ConsumerPassportContent = {
@@ -39,6 +45,9 @@ export type ConsumerPassportContent = {
   nextLife: NextLifeItem[];
   timeline: Array<{ label: string; date: string | null }>;
   publicFields: Array<{ key: string; value: string }>;
+  integrityStatus?: string;
+  resaleEligible?: boolean;
+  lifecycleEvents?: Array<{ year: number | null; label: string; detail?: string | null }>;
 };
 
 type PublicField = { key?: string; value?: string };
@@ -194,20 +203,39 @@ function buildJourneyStages(input: {
   return stages;
 }
 
-function buildNextLife(): NextLifeItem[] {
+function buildNextLife(input: {
+  publicId?: string;
+  resaleEligible?: boolean;
+  integrityReason?: string;
+}): NextLifeItem[] {
+  const sellHref = input.publicId ? `/p/${input.publicId}/sell` : undefined;
+  const sellDisabled = input.resaleEligible === false;
+
   return [
+    {
+      title: "Sell this item",
+      detail: sellDisabled
+        ? input.integrityReason || "Passport data must be validated before resale listing."
+        : "List on eBay, Vinted, or prepare a Poshmark package from this governed product record.",
+      kind: "action",
+      href: sellHref,
+      cta: "Sell this item",
+      primary: true,
+      disabled: sellDisabled,
+      disabledReason: sellDisabled ? "Resale blocked — data conflict" : undefined,
+    },
     {
       title: "Repair & rewear",
       detail: "Extending wear through repair and alteration is the highest-impact circular action.",
       kind: "guidance",
     },
     {
-      title: "Resell & donate",
-      detail: "Quality garments can enter resale or donation channels when you no longer wear them.",
+      title: "Donate",
+      detail: "Quality garments can enter donation channels when you no longer wear them.",
       kind: "guidance",
     },
     {
-      title: "Recycling",
+      title: "Recycle",
       detail: "Check local textile collection — fiber mix affects recyclability.",
       kind: "guidance",
     },
@@ -239,6 +267,8 @@ export function buildConsumerPassportContent(input: {
   sku?: string | null;
   styleCode?: string | null;
   category?: string | null;
+  brand?: string | null;
+  publicId?: string | null;
   snapshotFields?: PublicField[];
   traceNodes?: TraceNode[];
   passportStatus?: string;
@@ -246,6 +276,7 @@ export function buildConsumerPassportContent(input: {
   passportCreatedAt?: string | null;
   versions?: Array<{ version_number: number; published_at?: string | null; created_at?: string | null }>;
   fixture?: PilotFixtureRow | null;
+  lifecycleEvents?: Array<{ year: number | null; label: string; detail?: string | null }>;
 }): ConsumerPassportContent {
   const fixture = input.fixture ?? resolvePilotFixture(input.sku, input.styleCode);
   const fields = input.snapshotFields || [];
@@ -273,11 +304,41 @@ export function buildConsumerPassportContent(input: {
     null;
 
   const imageUrl = pilotProductImage(input.sku, input.styleCode);
+  const productName = input.productName || fixture?.name || "Product";
+  const brand = input.brand || fixture?.brand || null;
+  const category = input.category || fixture?.category || null;
+
+  const journeyStages = buildJourneyStages({
+    composition,
+    manufacturingCountry,
+    manufacturer,
+    facility,
+    distribution,
+    retailMarket,
+    traceNodes: input.traceNodes || [],
+    imageUrl,
+    productName,
+    brand,
+    careInstructions,
+  });
+
+  const integrity = auditPassportIntegrity({
+    styleCode: input.styleCode,
+    sku: input.sku,
+    productName,
+    brand,
+    category,
+    composition,
+    imageUrl,
+    traceNodes: input.traceNodes,
+    journeyStages,
+    careInstructions: fieldValue(fields, "care_instructions"),
+  });
 
   return {
-    productName: input.productName || fixture?.name || "Product",
-    brand: fixture?.brand || null,
-    category: input.category || fixture?.category || null,
+    productName,
+    brand,
+    category,
     color,
     identifier,
     composition,
@@ -288,20 +349,15 @@ export function buildConsumerPassportContent(input: {
     imageUrl,
     passportStatus: input.passportStatus || "published",
     careInstructions,
-    journeyStages: buildJourneyStages({
-      composition,
-      manufacturingCountry,
-      manufacturer,
-      facility,
-      distribution,
-      retailMarket,
-      traceNodes: input.traceNodes || [],
-      imageUrl,
-      productName: input.productName || fixture?.name || "Product",
-      brand: fixture?.brand || null,
-      careInstructions,
+    journeyStages,
+    nextLife: buildNextLife({
+      publicId: input.publicId || undefined,
+      resaleEligible: integrity.resaleEligible,
+      integrityReason: integrity.checks.find((c) => c.severity === "error")?.message,
     }),
-    nextLife: buildNextLife(),
+    integrityStatus: integrity.status,
+    resaleEligible: integrity.resaleEligible,
+    lifecycleEvents: input.lifecycleEvents,
     timeline: buildTimeline({
       publishedAt: input.publishedAt || null,
       passportCreatedAt: input.passportCreatedAt || null,

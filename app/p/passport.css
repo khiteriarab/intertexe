@@ -227,3 +227,91 @@
   color: var(--pp-petrol-deep);
   margin-bottom: 1rem;
 }
+
+.itx-passport-sell-cta {
+  display: block;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(62, 98, 104, 0.12), rgba(196, 165, 116, 0.15));
+  border: 1px solid rgba(62, 98, 104, 0.22);
+  text-decoration: none;
+  color: inherit;
+}
+
+.itx-resale-flow {
+  max-width: 28rem;
+}
+
+.itx-resale-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pp-muted-light);
+}
+
+.itx-resale-steps span.active {
+  color: var(--pp-petrol-deep);
+  font-weight: 600;
+}
+
+.itx-resale-primary,
+.itx-resale-secondary {
+  padding: 0.85rem 1rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.itx-resale-primary {
+  background: var(--pp-petrol);
+  color: white;
+  border: none;
+}
+
+.itx-resale-primary:disabled {
+  opacity: 0.45;
+}
+
+.itx-resale-secondary {
+  background: transparent;
+  border: 1px solid rgba(26, 31, 34, 0.15);
+  color: var(--pp-ink);
+}
+
+.itx-resale-input {
+  border: 1px solid rgba(26, 31, 34, 0.12);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.itx-resale-radio {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(26, 31, 34, 0.08);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.itx-resale-marketplace {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(26, 31, 34, 0.08);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.itx-resale-listing-row {
+  padding: 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(26, 31, 34, 0.1);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.itx-resale-back {
+  color: var(--pp-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

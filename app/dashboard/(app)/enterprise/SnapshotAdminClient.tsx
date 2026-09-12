@@ -332,7 +332,7 @@ export function SnapshotAdminClient({
       setMessage(data.message || "Upgrade failed.");
       return;
     }
-    setMessage(`Upgraded ${data.slug} to founding pilot in place.`);
+    setMessage(`Upgraded ${data.slug} to onboarding fee plan in place.`);
     await refreshOrgs();
   }
 

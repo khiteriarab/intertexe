@@ -37,7 +37,8 @@
     "test:enterprise-sso": "node --import tsx --test scripts/enterprise-sso.test.ts",
     "test:enterprise-operations": "node --import tsx --test scripts/enterprise-operations.test.ts",
     "test:enterprise-orchestration": "node --import tsx --test scripts/enterprise-orchestration.test.ts",
-    "test:public-passport": "node --import tsx --test scripts/public-passport-content.test.ts",
+    "test:public-passport": "node --import tsx --test scripts/public-passport-content.test.ts scripts/passport-integrity.test.ts scripts/resale-sync.test.ts",
+    "audit:customer-zero-integrity": "npx tsx scripts/audit-customer-zero-integrity.ts",
     "audit:pilot-passports": "npx tsx scripts/audit-pilot-passports.ts",
     "provision:pilot-qr": "npx tsx scripts/provision-pilot-qr.ts",
     "provision:case-study": "npx tsx scripts/provision-case-study-lifecycle.ts"

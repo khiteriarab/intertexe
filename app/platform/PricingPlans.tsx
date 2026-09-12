@@ -1,6 +1,8 @@
 import Link from "next/link";
 import {
-  FOUNDING_PILOT_PRICE_USD,
+  ONBOARDING_FEE_USD,
+  ONBOARDING_FEE_LABEL,
+  onboardingFeePriceLabel,
   PLATFORM_MONTHLY_USD,
   PROFESSIONAL_MONTHLY_USD,
   SAAS_TIERS,
@@ -25,8 +27,8 @@ const ENTRY = [
   },
   {
     step: "2. Prove it",
-    title: "Founding Pilot",
-    price: `$${FOUNDING_PILOT_PRICE_USD.toLocaleString("en-US")}`,
+    title: ONBOARDING_FEE_LABEL,
+    price: onboardingFeePriceLabel(),
     popular: true,
     copy: "Implementation and onboarding — not a monthly subscription. Target ~10 business days.",
     points: [
@@ -37,14 +39,14 @@ const ENTRY = [
       "50% to start · 50% on completion",
     ],
     href: "/platform/request?intent=founding_pilot&cta=pricing_pilot",
-    cta: "Request the Founding Pilot",
+    cta: "Request onboarding",
   },
 ] as const;
 
 const VALUES = [
   { title: "Infrastructure, not a tool", copy: "You pay for product intelligence and identity infrastructure — hosted, white-label, or via API.", icon: "shield" },
   { title: "Volume-aware", copy: "Plans include managed product and passport allowances that grow with your catalog.", icon: "lock" },
-  { title: "Start with proof", copy: "Snapshot free, pilot proves value, then subscribe to operate at scale.", icon: "clock" },
+  { title: "Start with proof", copy: "Snapshot free, onboarding proves value, then subscribe to operate at scale.", icon: "clock" },
   { title: "Built for fashion", copy: "Materials, compositions, and regulatory complexity — our focus.", icon: "people" },
 ] as const;
 
@@ -64,9 +66,8 @@ export function PricingPlans() {
           <aside className="rounded-xl border border-[#e8e3da] bg-white p-5 sm:p-6">
             <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Commercial path</p>
             <p className="text-sm text-[#5c5854] font-light leading-relaxed">
-              Free snapshot → ${FOUNDING_PILOT_PRICE_USD.toLocaleString("en-US")} pilot (onboarding) → Platform (
-              ${PLATFORM_MONTHLY_USD}/mo) · Professional (${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo) ·
-              Enterprise (custom).
+              Free snapshot → {onboardingFeePriceLabel()} onboarding fee → Platform (${PLATFORM_MONTHLY_USD}/mo) ·
+              Professional (${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo) · Enterprise (custom).
             </p>
           </aside>
         </div>
@@ -130,9 +131,9 @@ export function PricingPlans() {
         </div>
 
         <p className="text-xs text-[#8a847c] max-w-3xl leading-relaxed mb-12">
-          The Founding Pilot is a fixed-fee implementation project — analysis, software, and finished material data.
+          The onboarding fee is a fixed-fee implementation project — analysis, software, and finished material data.
           Monthly plans are priced by managed product volume and passport hosting. Headless passport API, SSO, custom
-          domains, and ERP integrations require Enterprise. Pilot fees, enterprise contracts, API usage, NFC/RFID, and
+          domains, and ERP integrations require Enterprise. Onboarding fees, enterprise contracts, API usage, NFC/RFID, and
           hosting overages are additional to SaaS ARR.
         </p>
 

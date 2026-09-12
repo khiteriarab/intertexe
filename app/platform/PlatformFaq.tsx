@@ -13,7 +13,7 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
   {
     q: "Does INTERTEXE generate the Digital Product Passport?",
-    a: "Yes — once the underlying record is structured and the required fields are present. INTERTEXE determines what is still missing for the applicable passport requirements, the brand or supplier supplies those fields, and INTERTEXE generates the passport record, persistent product identity and QR. Material Intelligence is live in the public demo. Passport generation, identity/QR and publication are delivered through the Founding Pilot and the platform now being built.",
+    a: "Yes — once the underlying record is structured and the required fields are present. INTERTEXE determines what is still missing for the applicable passport requirements, the brand or supplier supplies those fields, and INTERTEXE generates the passport record, persistent product identity and QR. Material Intelligence is live in the public demo. Passport generation, identity/QR and publication are delivered through the onboarding fee engagement and the platform now being built.",
   },
   {
     q: "Do consumers need the INTERTEXE app?",

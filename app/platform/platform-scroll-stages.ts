@@ -1,5 +1,11 @@
 /** Shared scroll-story stages for desktop platform showcase (Phia / Fairly Made pattern). */
 
+import {
+  PLATFORM_CASE_STUDY,
+  PLATFORM_LIVE_CATALOG,
+  PLATFORM_PRODUCT_SHORT_NAME,
+} from "../../lib/enterprise/platform-showcase";
+
 export type PlatformScrollStage = {
   id: string;
   kicker: string;
@@ -16,7 +22,7 @@ export type PlatformScrollStage = {
     eyebrow: string;
     title: string;
     detail: string;
-    tone: "amber" | "teal" | "green" | "slate";
+    tone: "amber" | "teal" | "green" | "slate" | "rose";
   };
   image: string;
   imageAlt: string;
@@ -30,11 +36,11 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
     headlineEmphasis: "product sources",
     copy: "PLM, ERP, spreadsheets and supplier feeds into one workspace — provenance preserved, conflicts surfaced, never overwritten.",
     points: ["Dedicated supplier interface", "Source lineage on every row", "Conflict detection, not blind merge"],
-    dial: { value: "4", unit: "sources", label: "Connected on this record" },
+    dial: { value: "4", unit: "sources", label: "Connected on ITX-LIVE-01" },
     card: {
       eyebrow: "Supplier feed · ERP · PLM",
-      title: "Wide-leg linen trouser",
-      detail: "98% Cotton / 2% Elastane vs 100% Cotton — conflict flagged",
+      title: PLATFORM_PRODUCT_SHORT_NAME,
+      detail: "100% Linen · European flax · Portugal assembly",
       tone: "amber",
     },
     image: "/platform/INTERTEXE_02_Product_Data_Journey.png",
@@ -47,11 +53,15 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
     headlineEmphasis: "strategy",
     copy: "Compare fiber mix, completeness and passport readiness against governed peer segments — with conversion signals that show what is working.",
     points: ["Peer segment medians", "Category and price-tier drill-down", "Governed datasets only"],
-    dial: { value: "+11%", unit: "NFP", label: "vs governed peer median" },
+    dial: {
+      value: `${PLATFORM_LIVE_CATALOG.avgNaturalFiberPct}%`,
+      unit: "NFP",
+      label: "Customer Zero catalog · vs 46% peer median",
+    },
     card: {
-      eyebrow: "Peer segment · Ready-to-wear",
-      title: "Silk-blend midi dress",
-      detail: "Natural fiber share +11% vs governed peer median",
+      eyebrow: "Peer segment · Shirts",
+      title: PLATFORM_CASE_STUDY.productName,
+      detail: `${PLATFORM_CASE_STUDY.composition} · ${PLATFORM_LIVE_CATALOG.avgNaturalFiberPct}% natural fiber catalog average`,
       tone: "teal",
     },
     image: "/platform/ecosystem-intelligence.jpg",
@@ -64,15 +74,19 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
     headlineEmphasis: "product record",
     copy: "Normalization, evidence workflow, and version history — an approved canonical record your teams can trust without replacing existing systems.",
     points: ["Evidence and confidence workflow", "Issues inbox, not another spreadsheet", "Versioned product history"],
-    dial: { value: "81%", unit: "complete", label: "Required fields on sample catalog" },
+    dial: {
+      value: `${PLATFORM_LIVE_CATALOG.completeMaterialPct}%`,
+      unit: "complete",
+      label: "Required fields · Customer Zero catalog",
+    },
     card: {
       eyebrow: "Issues · Resolution",
-      title: "Cashmere crew knit",
-      detail: "Composition conflict resolved · provenance preserved",
+      title: PLATFORM_CASE_STUDY.styleCode,
+      detail: `${PLATFORM_CASE_STUDY.composition} · provenance preserved · v4 published`,
       tone: "green",
     },
     image: "/platform/hero-workspace-desktop.png",
-    imageAlt: "INTERTEXE enterprise workspace — illustrative sample catalog",
+    imageAlt: "INTERTEXE enterprise workspace — Customer Zero catalog",
   },
   {
     id: "publish",
@@ -81,15 +95,36 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
     headlineEmphasis: "from one record",
     copy: "Digital Product Passports, regulatory readiness tracking, and brand-owned product surfaces — all outputs of the same governed source.",
     points: ["QR-ready passport hosting", "Regulatory field tracking", "Public product experiences"],
-    dial: { value: "12/12", unit: "fields", label: "Passport readiness on sample SKU" },
+    dial: {
+      value: String(PLATFORM_LIVE_CATALOG.publishedPassports),
+      unit: "live",
+      label: "Published passports · Customer Zero",
+    },
     card: {
       eyebrow: "Digital Product Passport",
-      title: "Wool tailored blazer",
-      detail: "QR linked · published from approved record",
+      title: PLATFORM_PRODUCT_SHORT_NAME,
+      detail: `${PLATFORM_CASE_STUDY.template} template · QR linked · scan to open`,
       tone: "slate",
     },
     image: "/platform/INTERTEXE_03_Fashion_Ecosystem.png",
     imageAlt: "Fashion ecosystem from product record to passport and channels",
+  },
+  {
+    id: "next-life",
+    kicker: "Next life",
+    headline: "Resale and ownership",
+    headlineEmphasis: "after first sale",
+    copy: "When a garment moves on, the passport stays useful — list on connected marketplaces, transfer ownership, and keep circular options attached to the same product identity.",
+    points: ["Multi-marketplace resale orchestration", "Ownership transfer on sold", "Repair · resell · donate · recycle"],
+    dial: { value: "3", unit: "channels", label: "eBay · Vinted · Poshmark adapters" },
+    card: {
+      eyebrow: "Next life · Resale",
+      title: PLATFORM_CASE_STUDY.styleCode,
+      detail: "Sell this item · integrity-gated · ownership transfer",
+      tone: "rose",
+    },
+    image: PLATFORM_CASE_STUDY.imageUrl,
+    imageAlt: `${PLATFORM_CASE_STUDY.productName} — live Customer Zero passport`,
   },
 ] as const;
 
@@ -98,4 +133,5 @@ export const CARD_TONE_CLASS: Record<PlatformScrollStage["card"]["tone"], string
   teal: "bg-[#e8f0ef] text-[#2c4a3e] border-[#cdded9]",
   green: "bg-[#eaf2ea] text-[#2d5a34] border-[#cfe0cf]",
   slate: "bg-[var(--platform-highlight)] text-[var(--platform-primary)] border-[var(--platform-border)]",
+  rose: "bg-[#f5ece8] text-[#6b3a2e] border-[#e8d4cc]",
 };

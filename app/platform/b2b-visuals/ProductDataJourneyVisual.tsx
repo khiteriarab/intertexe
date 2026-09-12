@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { useState, type RefObject } from "react";
+import {
+  PLATFORM_CASE_STUDY,
+  PLATFORM_IDENTITY_LABEL,
+  PLATFORM_LIVE_CATALOG,
+} from "../../../lib/enterprise/platform-showcase";
 import { useReducedMotion, useScrollSteps } from "../b2b-motion";
 import { SERIF } from "../platform-ui";
 
-const IDENTITY_ID = "INTX-ITX-4102";
+const IDENTITY_ID = PLATFORM_CASE_STUDY.publicId;
 
 const STAGES = [
   {
@@ -27,11 +32,13 @@ const STAGES = [
     copy: "Standardize fibers, fields and formats while preserving original source strings.",
     panel: (
       <div className="text-sm">
-        <p className="font-mono text-xs text-[#8a847c] mb-2">92 SE · 8 EA</p>
+        <p className="font-mono text-xs text-[#8a847c] mb-2">100 LI · European flax</p>
         <p className="text-[var(--platform-accent)] mb-2" aria-hidden>
           ↓
         </p>
-        <p className="font-mono text-xs text-[var(--platform-primary)] bg-[var(--platform-highlight)] px-3 py-2">Silk 92% · Elastane 8%</p>
+        <p className="font-mono text-xs text-[var(--platform-primary)] bg-[var(--platform-highlight)] px-3 py-2">
+          {PLATFORM_CASE_STUDY.composition}
+        </p>
       </div>
     ),
   },
@@ -71,10 +78,10 @@ const STAGES = [
           </div>
         </div>
         <p>
-          <span className="text-[#8a847c]">Benchmark ·</span> Natural fiber 57% vs peer 46%
+          <span className="text-[#8a847c]">Benchmark ·</span> Natural fiber {PLATFORM_LIVE_CATALOG.avgNaturalFiberPct}% vs peer 46%
         </p>
         <p>
-          <span className="text-[#8a847c]">Readiness ·</span> 62% passport preparation
+          <span className="text-[#8a847c]">Readiness ·</span> {PLATFORM_LIVE_CATALOG.passportReadyPct}% passport preparation
         </p>
       </div>
     ),
@@ -86,7 +93,7 @@ const STAGES = [
     panel: (
       <div className="text-xs space-y-2.5">
         <p className="font-mono text-[var(--platform-primary)]">{IDENTITY_ID} · identity created</p>
-        <p className="text-[#5c5854]">Passport v2 published · 92% Silk · 8% Elastane</p>
+        <p className="text-[#5c5854]">Passport v4 published · {PLATFORM_CASE_STUDY.composition}</p>
         <div className="flex flex-wrap gap-2">
           <span className="border border-[var(--platform-accent)]/40 text-[var(--platform-primary)] px-2 py-1 text-[10px] uppercase tracking-[0.08em]">
             QR connected

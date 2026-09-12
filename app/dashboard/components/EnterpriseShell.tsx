@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { enterpriseNavForActor } from "../../../lib/enterprise/constants";
 import type { WorkspaceContext } from "../../../lib/enterprise/types";
@@ -35,9 +35,12 @@ export function EnterpriseShell({
   founderHq = false,
 }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const base = `/dashboard/${organizationSlug}`;
+  const onboardingPath = `${base}/onboarding`;
+  const isOnboarding = pathname === onboardingPath || pathname.startsWith(`${onboardingPath}/`);
   const displayName = fullName || email.split("@")[0];
   void enterpriseNavForActor(founderHq);
 
@@ -46,6 +49,25 @@ export function EnterpriseShell({
     await fetch("/api/dashboard/logout", { method: "POST" });
     router.replace("/dashboard/login");
     router.refresh();
+  }
+
+  if (isOnboarding) {
+    return (
+      <div className="enterprise-app ent-onboarding-shell min-h-screen">
+        <header className="ent-onboarding-shell-header">
+          <Link href={base} className="ent-onboarding-shell-brand">
+            INTERTEXE
+          </Link>
+          <div className="ent-onboarding-shell-meta">
+            <span className="ent-onboarding-shell-org">{organizationName}</span>
+            <button type="button" onClick={logout} disabled={loggingOut} className="ent-onboarding-shell-signout">
+              {loggingOut ? "Signing out…" : "Sign out"}
+            </button>
+          </div>
+        </header>
+        <main className="ent-onboarding-shell-main">{children}</main>
+      </div>
+    );
   }
 
   return (

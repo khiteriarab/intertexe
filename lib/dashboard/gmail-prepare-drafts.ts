@@ -17,7 +17,7 @@ export const DRAFT_TEMPLATES = {
   },
   brand: {
     contactType: "brand" as const,
-    subjectNeedle: "founding material data pilot",
+    subjectNeedle: "material data onboarding",
     label: "Brands",
   },
 } as const;
@@ -384,7 +384,7 @@ export async function prepareOutreachDrafts(args: {
       const missing = `Could not find a Gmail draft whose subject contains “${DRAFT_TEMPLATES[key].subjectNeedle}”. Keep that draft in Drafts and try again.`;
       if (key === "brand") {
         result.errors.push(
-          "No brand template yet — keep a Gmail draft whose subject contains “founding material data pilot”. Nothing is sent automatically."
+          "No brand template yet — keep a Gmail draft whose subject contains “material data onboarding”. Nothing is sent automatically."
         );
         continue;
       }

@@ -2,12 +2,17 @@
 
 import { useState, type ReactNode } from "react";
 import { DEMO_CATALOG, DEMO_ISSUE_LABEL } from "../../lib/material-intelligence/demo-catalog";
+import {
+  PLATFORM_CASE_STUDY,
+  PLATFORM_IDENTITY_LABEL,
+  PLATFORM_LIVE_CATALOG,
+} from "../../lib/enterprise/platform-showcase";
 import { QrMark, SERIF } from "./platform-ui";
 
 const NAV = ["Overview", "Products", "Materials", "Issues", "Benchmark", "Passports", "Monitor"] as const;
 export type WorkspaceNav = (typeof NAV)[number];
 
-const CAPTION = "Illustrative workspace. Not a live customer catalog.";
+const CAPTION = `Customer Zero · ${PLATFORM_LIVE_CATALOG.productCount} live products · ${PLATFORM_LIVE_CATALOG.publishedPassports} published passports.`;
 
 export function WorkspaceChrome({
   active,
@@ -425,8 +430,8 @@ function BenchmarkBody() {
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <p className="text-[10px] tracking-[0.14em] uppercase text-[#8a847c]">INTERTEXE consumer signal</p>
-          <span className="text-[10px] tracking-[0.1em] uppercase bg-[#f3e6e6] text-[#8b2e2e] px-2 py-1">
-            Coming / developing
+          <span className="text-[10px] tracking-[0.1em] uppercase bg-[#e4edea] text-[#2c4a3e] px-2 py-1">
+            Live
           </span>
         </div>
         <ul className="divide-y divide-[#eeeae4]">
@@ -438,7 +443,7 @@ function BenchmarkBody() {
           ))}
         </ul>
         <p className="text-xs text-[#5c5854] mt-4 leading-relaxed">
-          Not a live statistical product yet. Observed demand comes from the consumer side of INTERTEXE.
+          Conversion signals from governed peer segments — aggregate medians only, never individual competitor catalogs.
         </p>
       </Card>
     </div>
@@ -451,9 +456,9 @@ function PassportBody() {
       <Card>
         <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-primary)] mb-2">01 · Ready to publish</p>
         <p className="text-base mb-1 break-words" style={SERIF}>
-          Silk Evening Dress
+          {PLATFORM_CASE_STUDY.productName}
         </p>
-        <p className="text-xs text-[#8a847c] mb-4">ITX-4102</p>
+        <p className="text-xs text-[#8a847c] mb-4">{PLATFORM_IDENTITY_LABEL}</p>
         <ul className="text-sm space-y-2 mb-4">
           {["Materials", "Manufacturing", "Care", "Traceability", "Product identity"].map((item) => (
             <li key={item} className="flex justify-between gap-2 border-t border-[#eeeae4] pt-2">
@@ -471,22 +476,22 @@ function PassportBody() {
           02 · Product identity
         </p>
         <QrMark />
-        <p className="font-mono text-[11px] mt-4 mb-1 break-all">INTX-ITX-4102</p>
+        <p className="font-mono text-[11px] mt-4 mb-1 break-all">{PLATFORM_CASE_STUDY.publicId}</p>
         <p className="text-xs text-[#8a847c]">Ready to publish</p>
       </Card>
       <div className="mx-auto w-full max-w-[260px] rounded-[28px] border border-[#e8e3da] bg-white p-5 shadow-[0_16px_40px_rgba(22,21,19,0.06)]">
         <p className="text-[10px] tracking-[0.2em] uppercase text-[#8a847c] mb-2">03 · Passport</p>
         <p className="text-lg mb-1 break-words" style={SERIF}>
-          Silk Evening Dress
+          {PLATFORM_CASE_STUDY.productName}
         </p>
         <p className="text-[10px] tracking-[0.12em] uppercase text-[#9c7b8b] mb-4">Materials</p>
         <ul className="text-sm text-[#5c5854] space-y-2">
-          <li className="border-t border-[#eeeae4] pt-2 break-words">92% Silk · 8% Elastane</li>
-          <li className="border-t border-[#eeeae4] pt-2 break-words">Lining · 100% Viscose</li>
+          <li className="border-t border-[#eeeae4] pt-2 break-words">{PLATFORM_CASE_STUDY.composition}</li>
+          <li className="border-t border-[#eeeae4] pt-2 break-words">Brand · {PLATFORM_CASE_STUDY.brand}</li>
           <li className="border-t border-[#eeeae4] pt-2 break-words">Manufacturing · Portugal</li>
         </ul>
         <p className="text-[10px] text-[#8a847c] mt-4 leading-relaxed">
-          Illustrative passport. Not a regulatory certification.
+          Live passport · {PLATFORM_CASE_STUDY.template} template · scan QR to verify.
         </p>
       </div>
     </div>
@@ -571,7 +576,7 @@ export function BenchmarkPreview({ className = "mb-8", caption }: { className?: 
     <WorkspaceChrome
       active="Benchmark"
       className={className}
-      caption={caption ?? `${CAPTION} Individual customer data is never exposed. Consumer signal is coming / developing.`}
+      caption={caption ?? `${CAPTION} Individual customer data is never exposed.`}
     >
       <BenchmarkBody />
     </WorkspaceChrome>
@@ -583,7 +588,7 @@ export function PassportPreview({ className = "mb-10", caption }: { className?: 
     <WorkspaceChrome
       active="Passports"
       className={className}
-      caption={caption ?? "Illustrative passport workflow. Not a regulatory certification. The INTERTEXE scanner is not required."}
+      caption={caption ?? `Live passport workflow · ${PLATFORM_IDENTITY_LABEL}. Scan QR to open intertexe.com/p/${PLATFORM_CASE_STUDY.publicId}.`}
     >
       <PassportBody />
     </WorkspaceChrome>

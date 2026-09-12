@@ -202,13 +202,61 @@ export function NextLifeBlock({ content }: { content: ConsumerPassportContent })
   return (
     <section className="itx-passport-section">
       <h2 className="itx-passport-section-title">Next life</h2>
-      <p className="text-xs text-[var(--pp-muted,#6b6560)] mb-3">INTERTEXE guidance — not a brand-operated program unless verified.</p>
+      {content.resaleEligible === false ? (
+        <p className="text-xs text-amber-800/80 mb-3 rounded-lg bg-amber-50 px-3 py-2 border border-amber-200/80">
+          Resale blocked — passport data conflict until reviewed.
+        </p>
+      ) : (
+        <p className="text-xs text-[var(--pp-muted,#6b6560)] mb-3">
+          Repair, resell, donate, or recycle this item.
+        </p>
+      )}
       <ul className="space-y-3">
         {content.nextLife.map((item) => (
           <li key={item.title} className="itx-passport-next-life">
-            <p className="itx-passport-guidance-tag">Guidance</p>
-            <p className="font-medium mt-1">{item.title}</p>
-            <p className="text-sm text-[var(--pp-muted,#6b6560)] mt-1">{item.detail}</p>
+            {item.kind === "action" ? (
+              item.disabled ? (
+                <>
+                  <p className="itx-passport-guidance-tag">{item.disabledReason || "Unavailable"}</p>
+                  <p className="font-medium mt-1">{item.title}</p>
+                  <p className="text-sm text-[var(--pp-muted,#6b6560)] mt-1">{item.detail}</p>
+                </>
+              ) : item.href ? (
+                <Link href={item.href} className="itx-passport-sell-cta block">
+                  <span className="text-[10px] tracking-[0.18em] uppercase text-[var(--pp-petrol,#3e6268)]">
+                    Primary
+                  </span>
+                  <span className="block font-medium mt-1">{item.cta || item.title}</span>
+                  <span className="block text-sm text-[var(--pp-muted,#6b6560)] mt-1">{item.detail}</span>
+                </Link>
+              ) : null
+            ) : (
+              <>
+                <p className="itx-passport-guidance-tag">Guidance</p>
+                <p className="font-medium mt-1">{item.title}</p>
+                <p className="text-sm text-[var(--pp-muted,#6b6560)] mt-1">{item.detail}</p>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function LifecycleHistoryBlock({ content }: { content: ConsumerPassportContent }) {
+  if (!content.lifecycleEvents?.length) return null;
+  return (
+    <section className="itx-passport-section">
+      <h2 className="itx-passport-section-title">Product history</h2>
+      <ul className="space-y-2 text-sm">
+        {content.lifecycleEvents.map((ev) => (
+          <li key={`${ev.year}-${ev.label}`} className="flex gap-3">
+            <span className="text-[var(--pp-muted)] w-12 shrink-0">{ev.year || "—"}</span>
+            <span>
+              <span className="font-medium">{ev.label}</span>
+              {ev.detail ? <span className="text-[var(--pp-muted)]"> · {ev.detail}</span> : null}
+            </span>
           </li>
         ))}
       </ul>

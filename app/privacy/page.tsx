@@ -168,7 +168,7 @@ export default function PrivacyPage() {
         <section className="flex flex-col gap-3">
           <h2 className="text-xl md:text-2xl font-serif text-foreground">11. Material Intelligence API and B2B leads</h2>
           <p>
-            If you request a Material Data Snapshot, founding pilot, or API access, we collect the work
+            If you request a Material Data Snapshot, onboarding fee engagement, or API access, we collect the work
             contact details you submit (name, email, company, role, website, approximate catalog size, and
             related qualification fields). We use them to reply and to deliver a paid engagement if you
             proceed. We do not ask for confidential catalogs on the public form. Public demonstration records
