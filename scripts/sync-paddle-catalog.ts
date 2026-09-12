@@ -66,9 +66,114 @@ async function paddleFetch<T>(pathSuffix: string, init?: RequestInit): Promise<T
   return (json.data ?? json) as T;
 }
 
+function buildCommercialSummary(
+  results: Record<
+    string,
+    {
+      productId: string;
+      priceId: string;
+      envKey: string;
+      plan: string;
+      kind: string;
+      monthlyUsd?: number;
+      oneTimeUsd?: number;
+      maxProducts?: number;
+      maxHostedPassports?: number;
+      maxTeamMembers?: number;
+    }
+  >
+) {
+  const paddleByPlan = new Map(
+    Object.entries(results).map(([, row]) => [row.plan, row])
+  );
+
+  const rows: Array<Record<string, unknown>> = [
+    {
+      plan: "demo",
+      label: PLAN_DEFINITIONS.demo.label,
+      paddleProduct: null,
+      priceId: null,
+      monthlyUsd: 0,
+      implementationUsd: null,
+      maxProducts: PLAN_DEFINITIONS.demo.maxProducts,
+      maxHostedPassports: PLAN_DEFINITIONS.demo.maxHostedPassports,
+      maxTeamMembers: PLAN_DEFINITIONS.demo.maxTeamMembers,
+      billing: "None — internal demo workspace",
+    },
+    {
+      plan: "platform",
+      label: PLAN_DEFINITIONS.platform.label,
+      paddleProduct: "INTERTEXE Platform",
+      priceId: paddleByPlan.get("platform")?.priceId ?? null,
+      envKey: "PADDLE_PRICE_PLATFORM",
+      monthlyUsd: PLAN_DEFINITIONS.platform.monthlyUsd,
+      implementationUsd: PLAN_DEFINITIONS.platform.implementationUsd,
+      maxProducts: PLAN_DEFINITIONS.platform.maxProducts,
+      maxHostedPassports: PLAN_DEFINITIONS.platform.maxHostedPassports,
+      maxTeamMembers: PLAN_DEFINITIONS.platform.maxTeamMembers,
+      billing: "Paddle subscription",
+    },
+    {
+      plan: "professional",
+      label: PLAN_DEFINITIONS.professional.label,
+      paddleProduct: "INTERTEXE Professional",
+      priceId: paddleByPlan.get("professional")?.priceId ?? null,
+      envKey: "PADDLE_PRICE_PROFESSIONAL",
+      monthlyUsd: PLAN_DEFINITIONS.professional.monthlyUsd,
+      implementationUsd: PLAN_DEFINITIONS.professional.implementationUsd,
+      maxProducts: PLAN_DEFINITIONS.professional.maxProducts,
+      maxHostedPassports: PLAN_DEFINITIONS.professional.maxHostedPassports,
+      maxTeamMembers: PLAN_DEFINITIONS.professional.maxTeamMembers,
+      billing: "Paddle subscription",
+    },
+    {
+      plan: "founding_pilot",
+      label: PLAN_DEFINITIONS.founding_pilot.label,
+      paddleProduct: "INTERTEXE Implementation",
+      priceId: paddleByPlan.get("founding_pilot")?.priceId ?? null,
+      envKey: "PADDLE_PRICE_IMPLEMENTATION",
+      monthlyUsd: null,
+      implementationUsd: PLAN_DEFINITIONS.founding_pilot.implementationUsd,
+      maxProducts: PLAN_DEFINITIONS.founding_pilot.maxProducts,
+      maxHostedPassports: PLAN_DEFINITIONS.founding_pilot.maxHostedPassports,
+      maxTeamMembers: PLAN_DEFINITIONS.founding_pilot.maxTeamMembers,
+      billing: "Paddle one-time — does not activate subscription limits alone",
+    },
+    {
+      plan: "enterprise",
+      label: PLAN_DEFINITIONS.enterprise.label,
+      paddleProduct: null,
+      priceId: null,
+      monthlyUsd: null,
+      implementationUsd: null,
+      maxProducts: PLAN_DEFINITIONS.enterprise.maxProducts,
+      maxHostedPassports: PLAN_DEFINITIONS.enterprise.maxHostedPassports,
+      maxTeamMembers: PLAN_DEFINITIONS.enterprise.maxTeamMembers,
+      billing: "Manual / invoice — set entitlements in obelisk-core",
+    },
+  ];
+
+  return rows;
+}
+
 async function main() {
   console.log(`Paddle environment: ${getPaddleEnvironment()}`);
-  const results: Record<string, { productId: string; priceId: string; envKey: string }> = {};
+  const results: Record<
+    string,
+    {
+      productId: string;
+      priceId: string;
+      envKey: string;
+      plan: string;
+      kind: string;
+      monthlyUsd?: number;
+      oneTimeUsd?: number;
+      maxProducts?: number;
+      maxHostedPassports?: number;
+      maxTeamMembers?: number;
+      note?: string;
+    }
+  > = {};
 
   for (const item of CATALOG) {
     const product = await paddleFetch<{ id: string }>("/products", {
@@ -104,13 +209,15 @@ async function main() {
       envKey: item.envKey,
       plan: item.planKey,
       kind: item.kind,
+      maxProducts: plan.maxProducts,
+      maxHostedPassports: plan.maxHostedPassports,
+      maxTeamMembers: plan.maxTeamMembers,
       ...(item.kind === "subscription"
-        ? {
-            monthlyUsd: item.priceUsd,
-            maxProducts: plan.maxProducts,
-            maxHostedPassports: plan.maxHostedPassports,
-          }
-        : { oneTimeUsd: item.priceUsd, note: "One-time fee — does not set monthly subscription limits" }),
+        ? { monthlyUsd: item.priceUsd }
+        : {
+            oneTimeUsd: item.priceUsd,
+            note: "One-time fee — does not set monthly subscription limits",
+          }),
     };
     console.log(`${item.name}: product=${product.id} price=${price.id}`);
   }
@@ -119,23 +226,38 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, "paddle-catalog-ids.json");
   const demo = PLAN_DEFINITIONS.demo;
+  const envTemplate = {
+    PADDLE_ENV: getPaddleEnvironment(),
+    PADDLE_API_KEY: "<server-only — Paddle dashboard>",
+    PADDLE_WEBHOOK_SECRET: "<server-only — Paddle notifications>",
+    PADDLE_GRACE_PERIOD_DAYS: "14",
+    ...Object.fromEntries(Object.values(results).map((row) => [row.envKey, row.priceId])),
+  };
+
   fs.writeFileSync(
     outPath,
     JSON.stringify(
       {
+        documentPurpose:
+          "Single commercial + engineering reference: Paddle price IDs, list prices, and INTERTEXE-enforced limits.",
+        sourceOfTruth: {
+          entitlements: "lib/enterprise/plans.ts",
+          paddleBilling: "Paddle dashboard + env price IDs mapped in lib/enterprise/paddle.ts",
+          note: "Paddle stores billing only. Product/passport/team limits are enforced in obelisk-core, not in Paddle.",
+        },
         syncedAt: new Date().toISOString(),
         environment: getPaddleEnvironment(),
-        note: "Entitlements are enforced in obelisk-core (lib/enterprise/plans.ts), not in Paddle.",
+        commercialSummary: buildCommercialSummary(results),
         results,
         demoPlan: {
           plan: "demo",
           paddleProduct: null,
           maxProducts: demo.maxProducts,
           maxHostedPassports: demo.maxHostedPassports,
+          maxTeamMembers: demo.maxTeamMembers,
         },
-        envTemplate: Object.fromEntries(
-          Object.values(results).map((row) => [row.envKey, row.priceId])
-        ),
+        envTemplate,
+        webhookUrl: "https://platform.intertexe.com/api/webhooks/paddle",
       },
       null,
       2

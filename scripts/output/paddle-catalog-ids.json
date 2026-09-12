@@ -1,7 +1,77 @@
 {
+  "documentPurpose": "Single commercial + engineering reference: Paddle price IDs, list prices, and INTERTEXE-enforced limits.",
+  "sourceOfTruth": {
+    "entitlements": "lib/enterprise/plans.ts",
+    "paddleBilling": "Paddle dashboard + env price IDs mapped in lib/enterprise/paddle.ts",
+    "note": "Paddle stores billing only. Product/passport/team limits are enforced in obelisk-core, not in Paddle."
+  },
   "syncedAt": "2026-09-12T21:34:08.145Z",
   "environment": "production",
-  "note": "Entitlements are enforced in obelisk-core (lib/enterprise/plans.ts), not in Paddle.",
+  "commercialSummary": [
+    {
+      "plan": "demo",
+      "label": "Free demo",
+      "paddleProduct": null,
+      "priceId": null,
+      "monthlyUsd": 0,
+      "implementationUsd": null,
+      "maxProducts": 10,
+      "maxHostedPassports": 10,
+      "maxTeamMembers": 3,
+      "billing": "None — internal demo workspace"
+    },
+    {
+      "plan": "platform",
+      "label": "Platform",
+      "paddleProduct": "INTERTEXE Platform",
+      "priceId": "pri_01m2brnf2svwnnwbdw7mzzgjrm",
+      "envKey": "PADDLE_PRICE_PLATFORM",
+      "monthlyUsd": 499,
+      "implementationUsd": 5000,
+      "maxProducts": 500,
+      "maxHostedPassports": 500,
+      "maxTeamMembers": 3,
+      "billing": "Paddle subscription"
+    },
+    {
+      "plan": "professional",
+      "label": "Professional",
+      "paddleProduct": "INTERTEXE Professional",
+      "priceId": "pri_01m2brnfnk1gqsvrcb0v3brzva",
+      "envKey": "PADDLE_PRICE_PROFESSIONAL",
+      "monthlyUsd": 1250,
+      "implementationUsd": 5000,
+      "maxProducts": 5000,
+      "maxHostedPassports": 5000,
+      "maxTeamMembers": 10,
+      "billing": "Paddle subscription"
+    },
+    {
+      "plan": "founding_pilot",
+      "label": "Onboarding (implementation)",
+      "paddleProduct": "INTERTEXE Implementation",
+      "priceId": "pri_01m2brngcrsysakyj2r20v7t88",
+      "envKey": "PADDLE_PRICE_IMPLEMENTATION",
+      "monthlyUsd": null,
+      "implementationUsd": 5000,
+      "maxProducts": 500,
+      "maxHostedPassports": 100,
+      "maxTeamMembers": 5,
+      "billing": "Paddle one-time — does not activate subscription limits alone"
+    },
+    {
+      "plan": "enterprise",
+      "label": "Enterprise",
+      "paddleProduct": null,
+      "priceId": null,
+      "monthlyUsd": null,
+      "implementationUsd": null,
+      "maxProducts": null,
+      "maxHostedPassports": null,
+      "maxTeamMembers": null,
+      "billing": "Manual / invoice — set entitlements in obelisk-core"
+    }
+  ],
   "results": {
     "INTERTEXE Platform": {
       "productId": "pro_01m2brne3f04evprty8k9458x2",
@@ -11,6 +81,7 @@
       "monthlyUsd": 499,
       "maxProducts": 500,
       "maxHostedPassports": 500,
+      "maxTeamMembers": 3,
       "kind": "subscription"
     },
     "INTERTEXE Professional": {
@@ -21,6 +92,7 @@
       "monthlyUsd": 1250,
       "maxProducts": 5000,
       "maxHostedPassports": 5000,
+      "maxTeamMembers": 10,
       "kind": "subscription"
     },
     "INTERTEXE Implementation": {
@@ -29,6 +101,9 @@
       "envKey": "PADDLE_PRICE_IMPLEMENTATION",
       "plan": "founding_pilot",
       "oneTimeUsd": 5000,
+      "maxProducts": 500,
+      "maxHostedPassports": 100,
+      "maxTeamMembers": 5,
       "note": "One-time fee — does not set monthly subscription limits",
       "kind": "implementation"
     }
@@ -37,12 +112,17 @@
     "plan": "demo",
     "paddleProduct": null,
     "maxProducts": 10,
-    "maxHostedPassports": 10
+    "maxHostedPassports": 10,
+    "maxTeamMembers": 3
   },
   "envTemplate": {
     "PADDLE_ENV": "production",
+    "PADDLE_API_KEY": "<server-only — Paddle dashboard>",
+    "PADDLE_WEBHOOK_SECRET": "<server-only — Paddle notifications>",
+    "PADDLE_GRACE_PERIOD_DAYS": "14",
     "PADDLE_PRICE_PLATFORM": "pri_01m2brnf2svwnnwbdw7mzzgjrm",
     "PADDLE_PRICE_PROFESSIONAL": "pri_01m2brnfnk1gqsvrcb0v3brzva",
     "PADDLE_PRICE_IMPLEMENTATION": "pri_01m2brngcrsysakyj2r20v7t88"
-  }
+  },
+  "webhookUrl": "https://platform.intertexe.com/api/webhooks/paddle"
 }

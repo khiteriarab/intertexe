@@ -23,7 +23,7 @@ Never put `PADDLE_API_KEY` or `PADDLE_WEBHOOK_SECRET` in `NEXT_PUBLIC_*`, git, l
 PADDLE_API_KEY=... npx tsx scripts/sync-paddle-catalog.ts
 ```
 
-Writes price IDs to `scripts/output/paddle-catalog-ids.json` and prints `.env` lines.
+Writes the commercial reference to `scripts/output/paddle-catalog-ids.json` — one doc with price IDs, list prices, and enforced limits for commercial + engineering. Also prints `.env` lines.
 
 ## Plans (internal)
 
