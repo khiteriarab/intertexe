@@ -4,7 +4,9 @@ import {
   fetchEmailEngineBundle,
   type EmailProgramMetrics,
 } from "../../../../lib/dashboard/email-engine";
+import { fetchUserGrowthEngineBundle } from "../../../../lib/dashboard/user-growth-engine";
 import { HqCard, HqPageHeader } from "../../components/HqUi";
+import { UserGrowthDashboard } from "./UserGrowthDashboard";
 
 export const metadata = { title: "Email" };
 export const dynamic = "force-dynamic";
@@ -37,16 +39,23 @@ function statusBadge(status: EmailProgramMetrics["status"]) {
 }
 
 export default async function HqEmailPage() {
-  await requireHqSession();
-  const engine = await fetchEmailEngineBundle();
+  const session = await requireHqSession();
+  const [growth, engine] = await Promise.all([
+    fetchUserGrowthEngineBundle(session.workspaceId),
+    fetchEmailEngineBundle(),
+  ]);
   const t = engine.statusTotals;
 
   return (
     <div>
       <HqPageHeader
         title="Email Engine"
-        description="Canonical ledger is email_deliveries (Resend Day 4/10/25 + Loops Founder Welcome when enabled). Gmail founder outreach / replies stay separate."
+        description="Growth command center for 25,000 users by 2027 — trajectory and email levers above, delivery ledger below."
       />
+
+      <UserGrowthDashboard bundle={growth} />
+
+      <p className="text-[10px] tracking-[0.18em] uppercase text-black/35 mb-4">Delivery operations</p>
 
       <HqCard className="mb-6" title="Delivery outcomes (7d)">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
