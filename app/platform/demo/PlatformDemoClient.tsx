@@ -92,10 +92,9 @@ export function PlatformDemoClient() {
   const coverage = mapped + missing ? Math.round((mapped / (mapped + missing)) * 100) : 0;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:pt-20 md:pb-24">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:pt-20 md:pb-24">
       <DemoCatalogWalkthrough />
 
-      <section className="rounded-sm border border-[#e8e3da] bg-white p-5 sm:p-8 mb-6">
       <p className="text-[10px] sm:text-[11px] tracking-[0.12em] sm:tracking-[0.25em] text-[#9c7b8b] mb-3 break-words">
         INTERTEXE MATERIAL INTELLIGENCE API
       </p>
@@ -288,6 +287,22 @@ export function PlatformDemoClient() {
           </div>
         </article>
       ) : null}
+
+      <section className="border-t border-[#ddd5cb] pt-10 sm:pt-12 flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <Link
+          href="/platform/request?intent=snapshot&cta=demo_primary"
+          onClick={() => trackPlatform("platform_snapshot_started")}
+          className="text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase bg-black text-white px-5 sm:px-8 py-4 text-center leading-relaxed"
+        >
+          Submit 10 products for a Material Data Snapshot
+        </Link>
+        <Link
+          href="/platform/request?intent=api_access&cta=demo_secondary"
+          onClick={() => trackPlatform("platform_api_access_started")}
+          className="text-[11px] tracking-[0.12em] sm:tracking-[0.18em] uppercase border border-black px-5 sm:px-8 py-4 text-center"
+        >
+          Discuss API access
+        </Link>
       </section>
     </div>
   );
