@@ -1,6 +1,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { commitMappedImport } from "./pipeline";
 
+export const IMPORT_PIPELINE_STAGES = [
+  "Uploaded",
+  "Parsed",
+  "Mapped",
+  "Normalized",
+  "Issues created",
+  "Completed",
+] as const;
+
+export function deriveImportPipelineStage(status: string, summary: ImportSummary): string {
+  if (status === "failed") return "Failed";
+  if (status === "processing") return "Normalized";
+  if (summary.issuesCreated && summary.issuesCreated > 0) return "Issues created";
+  if (summary.productsTouched && summary.productsTouched > 0) return "Completed";
+  if (summary.rowsProcessed && summary.rowsProcessed > 0) return "Normalized";
+  return status === "succeeded" ? "Completed" : "Uploaded";
+}
+
 export type ImportSummary = {
   rowsTotal?: number;
   rowsProcessed?: number;
@@ -68,16 +86,21 @@ export async function loadImportHistory(client: SupabaseClient, organizationId: 
     errorsByImport.set(row.import_id, (errorsByImport.get(row.import_id) || 0) + 1);
   }
 
-  return (imports || []).map((row) => ({
-    id: row.id,
-    filename: row.original_filename || "Catalog import",
-    status: row.status,
-    summary: (row.summary || {}) as ImportSummary,
-    errorMessage: row.error_message,
-    errorCount: errorsByImport.get(row.id) || 0,
-    createdAt: row.created_at,
-    finishedAt: row.finished_at,
-  }));
+  return (imports || []).map((row) => {
+    const summary = (row.summary || {}) as ImportSummary;
+    const pipelineStage = deriveImportPipelineStage(String(row.status || ""), summary);
+    return {
+      id: row.id,
+      filename: row.original_filename || "Catalog import",
+      status: row.status,
+      pipelineStage,
+      summary,
+      errorMessage: row.error_message,
+      errorCount: errorsByImport.get(row.id) || 0,
+      createdAt: row.created_at,
+      finishedAt: row.finished_at,
+    };
+  });
 }
 
 export async function loadImportDetail(client: SupabaseClient, organizationId: string, importId: string) {

@@ -77,7 +77,14 @@ export function EntModulePage({
 }) {
   const lead = subtitle || description;
   return (
-    <div>
+    <div className="ent-module-stage">
+      <div className="ent-module-motif" aria-hidden>
+        <svg viewBox="0 0 800 120" preserveAspectRatio="none" fill="none">
+          <path d="M0 80 C120 40 220 100 340 60 S520 20 800 50" stroke="rgba(196,165,116,0.35)" strokeWidth="1" />
+          <path d="M0 95 C160 55 280 110 420 70 S600 35 800 65" stroke="rgba(62,98,104,0.12)" strokeWidth="0.75" />
+          <circle cx="720" cy="28" r="36" fill="rgba(201,169,98,0.12)" />
+        </svg>
+      </div>
       <EntInlinePageHeader
         title={title}
         state={state}

@@ -69,6 +69,7 @@ export const ENTERPRISE_NAV_GROUPS = [
       { href: "", label: "Overview", icon: "overview" as const, exact: true as const },
       { href: "/products", label: "Products", icon: "products" as const },
       { href: "/issues", label: "Issues", icon: "issues" as const },
+      { href: "/traceability", label: "Traceability", icon: "products" as const },
       { href: "/passports", label: "Passports", icon: "passports" as const },
     ],
   },

@@ -1,6 +1,9 @@
 import { parseIdentifierIssueDetail } from "./identity-reconciliation";
+import { formatIssueSubtypeLabel } from "./issue-taxonomy";
 
-export function issueTypeLabel(type: string): string {
+export function issueTypeLabel(type: string, detail?: string | null): string {
+  const subtype = formatIssueSubtypeLabel(detail || null, type);
+  if (subtype !== type.replaceAll("_", " ")) return subtype;
   const labels: Record<string, string> = {
     missing_data: "Missing data",
     conflict: "Source conflict",
@@ -33,6 +36,15 @@ export function issueWhyItMatters(issue: {
   }
   if (issue.issue_type === "validation") {
     return "Listed composition percentages do not total 100. The remainder was not invented.";
+  }
+  if (issue.issue_type === "evidence") {
+    return "Required evidence is missing or not yet verified.";
+  }
+  if (issue.issue_type === "supplier") {
+    return "Supplier-provided data is incomplete or awaiting review.";
+  }
+  if (issue.issue_type === "regulatory") {
+    return "A regulatory requirement field is missing or not ready.";
   }
   return "This finding must be reviewed before the product can be published.";
 }

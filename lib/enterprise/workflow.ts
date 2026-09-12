@@ -22,10 +22,31 @@ export const PASSPORT_WORKFLOW_STAGES = [
     roleHint: "reviewer",
   },
   {
+    id: "traceability",
+    label: "Traceability review",
+    description: "Confirm tier coverage, facilities, and supplier relationships.",
+    href: "/traceability",
+    roleHint: "sustainability",
+  },
+  {
     id: "issues",
     label: "Issue resolution",
     description: "Clear blocking findings and missing supplier evidence.",
     href: "/issues",
+    roleHint: "sustainability",
+  },
+  {
+    id: "evidence",
+    label: "Evidence collection",
+    description: "Request, receive, and approve supplier evidence.",
+    href: "/suppliers",
+    roleHint: "sustainability",
+  },
+  {
+    id: "impact",
+    label: "Impact readiness review",
+    description: "Assess structured inputs for future LCA — no fabricated scores.",
+    href: "/analytics",
     roleHint: "sustainability",
   },
   {
@@ -129,9 +150,18 @@ function stageStatus(
     case "review":
       if (overview.productCount === 0) return "upcoming";
       return (overview.productStateCounts.review_required || 0) > 0 ? "active" : "complete";
+    case "traceability":
+      if (overview.productCount === 0) return "upcoming";
+      return overview.missingCount > 0 ? "active" : "complete";
     case "issues":
       if (overview.productCount === 0) return "upcoming";
       return overview.issueCount > 0 ? "active" : "complete";
+    case "evidence":
+      if (overview.productCount === 0) return "upcoming";
+      return "upcoming";
+    case "impact":
+      if (overview.productCount === 0) return "upcoming";
+      return "upcoming";
     case "publish":
       if (overview.productCount === 0) return "upcoming";
       return overview.publishedCount > 0

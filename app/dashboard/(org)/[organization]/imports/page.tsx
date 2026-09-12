@@ -38,7 +38,10 @@ export default async function ImportsPage({
                 <div>
                   <p className="font-medium text-[var(--ent-ink)]">{item.filename}</p>
                   <p className="text-xs text-[var(--ent-muted)] mt-1">
-                    {new Date(item.createdAt).toLocaleString()} · {item.status}
+                    {new Date(item.createdAt).toLocaleString()} · {item.pipelineStage} · {item.status}
+                  </p>
+                  <p className="text-[11px] text-[var(--ent-muted-light)] mt-1">
+                    Uploaded → Parsed → Mapped → Normalized → Issues → Completed
                   </p>
                 </div>
                 <div className="text-right text-xs text-[var(--ent-muted)]">

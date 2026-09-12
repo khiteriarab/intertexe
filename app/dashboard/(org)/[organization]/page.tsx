@@ -1,6 +1,8 @@
 import { requireOrganizationAccess } from "../../../../lib/enterprise/access";
 import { entitlementsForPlan, type PlanKey } from "../../../../lib/enterprise/entitlements";
+import { loadPlatformOverview } from "../../../../lib/enterprise/platform-overview";
 import { loadOrgOverview } from "../../../../lib/enterprise/queries";
+import { PlatformOperatingModel } from "../../components/PlatformOperatingModel";
 import { loadOrgCompositionBenchmark } from "../../../../lib/enterprise/composition-benchmark";
 import {
   imageMapFromLiveFixture,
@@ -31,10 +33,11 @@ export default async function OrganizationOverviewPage({
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
   const imageBySku = imageMapFromLiveFixture(livePilotProducts);
-  const [overview, composition, signals] = await Promise.all([
+  const [overview, composition, signals, platform] = await Promise.all([
     loadOrgOverview(client, membership.organizationId),
     loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
     loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
+    loadPlatformOverview(client, membership.organizationId, membership.slug),
   ]);
   const entitlement = entitlementsForPlan(membership.plan as PlanKey, {});
   const base = `/dashboard/${membership.slug}`;
@@ -109,6 +112,22 @@ export default async function OrganizationOverviewPage({
       context: "Composition, origin, or identifiers",
     });
   }
+  if (platform.traceability.avgCompletenessPct < 100 && overview.productCount > 0) {
+    attentionItems.push({
+      label: "traceability gaps",
+      count: overview.productCount - Math.round((platform.traceability.completeChainPct / 100) * overview.productCount),
+      href: `${base}/traceability`,
+      context: `${platform.traceability.avgCompletenessPct}% avg tier coverage`,
+    });
+  }
+  if (platform.supplierRequestsOpen > 0) {
+    attentionItems.push({
+      label: "supplier requests outstanding",
+      count: platform.supplierRequestsOpen,
+      href: `${base}/suppliers`,
+      context: "Awaiting response or review",
+    });
+  }
 
   return (
     <div>
@@ -124,6 +143,36 @@ export default async function OrganizationOverviewPage({
       {isCustomerZeroOrg(membership.slug) ? <EntCustomerZeroBanner base={base} /> : null}
 
       <EntKpiGrid overview={overview} base={base} />
+
+      <div className="grid lg:grid-cols-[1fr_1fr] gap-6 mb-10">
+        <PlatformOperatingModel model={platform.operatingModel} />
+        <div className="ent-float-card p-6 md:p-8">
+          <p className="ent-journey-eyebrow">Platform depth</p>
+          <dl className="grid grid-cols-2 gap-4 mt-4 text-sm">
+            <div>
+              <dt className="text-[var(--ent-muted-light)]">Traceability</dt>
+              <dd className="text-xl font-semibold text-[var(--ent-ink)]">{platform.traceability.avgCompletenessPct}%</dd>
+            </div>
+            <div>
+              <dt className="text-[var(--ent-muted-light)]">Impact ready</dt>
+              <dd className="text-xl font-semibold text-[var(--ent-ink)]">{platform.impact.ready}</dd>
+            </div>
+            <div>
+              <dt className="text-[var(--ent-muted-light)]">Impact partial</dt>
+              <dd className="text-xl font-semibold text-[var(--ent-ink)]">{platform.impact.partial}</dd>
+            </div>
+            <div>
+              <dt className="text-[var(--ent-muted-light)]">Supplier requests</dt>
+              <dd className="text-xl font-semibold text-[var(--ent-ink)]">{platform.supplierRequestsOpen}</dd>
+            </div>
+          </dl>
+          {platform.topRisks[0] ? (
+            <p className="text-sm text-[var(--ent-muted)] mt-5">
+              Priority: {platform.topRisks[0].title} — {platform.topRisks[0].action}
+            </p>
+          ) : null}
+        </div>
+      </div>
 
       <EntOverviewBenchmarkTeaser
         base={base}

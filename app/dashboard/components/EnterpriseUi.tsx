@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { OrgOverviewData } from "../../../lib/enterprise/queries";
 import { passportStateLabel } from "../../../lib/enterprise/issue-copy";
@@ -462,9 +463,31 @@ export const entButtonGhostClass =
 export const entLinkClass =
   "text-[14px] font-medium text-[var(--ent-petrol-deep)] hover:text-[var(--ent-forest)] transition-colors inline-flex items-center gap-1";
 
-/** Neutral product visual — material placeholder, no fabricated imagery. */
-export function EntProductPlaceholder({ category }: { category?: string | null }) {
+/** Product thumbnail — real image when available, otherwise neutral material placeholder. */
+export function EntProductPlaceholder({
+  category,
+  imageUrl,
+  alt,
+}: {
+  category?: string | null;
+  imageUrl?: string | null;
+  alt?: string;
+}) {
   void category;
+  if (imageUrl) {
+    return (
+      <div className="ent-product-visual">
+        <Image
+          src={imageUrl}
+          alt={alt || ""}
+          fill
+          sizes="68px"
+          className="object-cover"
+          unoptimized
+        />
+      </div>
+    );
+  }
   return <div className="ent-product-visual" aria-hidden />;
 }
 

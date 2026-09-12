@@ -16,6 +16,35 @@ export type SupplierRow = {
   productIds: string[];
 };
 
+export async function loadOrgSupplierCollaboration(client: SupabaseClient, organizationId: string) {
+  const { data: requests } = await client
+    .from("supplier_requests")
+    .select("id, title, status, collaboration_status, due_at, product_id, supplier_id, request_kind, created_at")
+    .eq("organization_id", organizationId)
+    .not("status", "eq", "closed")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  const supplierIds = Array.from(new Set((requests || []).map((r) => r.supplier_id).filter(Boolean))) as string[];
+  const { data: suppliers } = supplierIds.length
+    ? await client.from("suppliers").select("id, name").eq("organization_id", organizationId).in("id", supplierIds)
+    : { data: [] };
+  const supplierById = new Map((suppliers || []).map((s) => [s.id, s.name]));
+
+  return {
+    requests: (requests || []).map((row) => ({
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      collaborationStatus: row.collaboration_status || row.status,
+      requestKind: row.request_kind,
+      productId: row.product_id,
+      supplierName: row.supplier_id ? supplierById.get(row.supplier_id) || "Supplier" : "Supplier",
+      dueAt: row.due_at,
+    })),
+  };
+}
+
 export async function loadOrgSuppliers(client: SupabaseClient, organizationId: string) {
   const [{ data: suppliers }, { data: requests }, { data: evidence }, { count: openSupplierIssues }] =
     await Promise.all([

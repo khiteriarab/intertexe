@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { formatRelativeActivityTime } from "../../../../../lib/enterprise/display-format";
-import { loadOrgSuppliers } from "../../../../../lib/enterprise/module-queries";
+import { collaborationStatusLabel } from "../../../../../lib/enterprise/issue-taxonomy";
+import { loadOrgSupplierCollaboration, loadOrgSuppliers } from "../../../../../lib/enterprise/module-queries";
 import {
   EntHeroEmpty,
   EntModuleList,
@@ -20,7 +21,10 @@ export default async function SuppliersPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const data = await loadOrgSuppliers(client, membership.organizationId);
+  const [data, collaboration] = await Promise.all([
+    loadOrgSuppliers(client, membership.organizationId),
+    loadOrgSupplierCollaboration(client, membership.organizationId),
+  ]);
   const base = `/dashboard/${membership.slug}`;
 
   return (
@@ -46,6 +50,29 @@ export default async function SuppliersPage({
           motif="rings"
         />
       ) : (
+        {collaboration.requests.length ? (
+          <EntModuleSection title="Active requests" subtitle="Supplier collaboration workflow — responses require review before canonical update">
+            <ul className="space-y-2 mb-8">
+              {collaboration.requests.slice(0, 8).map((req) => (
+                <li key={req.id} className="ent-panel-nested px-4 py-3 text-sm flex flex-wrap justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-[var(--ent-ink)]">{req.title || "Supplier request"}</p>
+                    <p className="text-[var(--ent-muted)] mt-1">
+                      {req.supplierName} · {collaborationStatusLabel(req.collaborationStatus)}
+                      {req.dueAt ? ` · due ${req.dueAt}` : ""}
+                    </p>
+                  </div>
+                  {req.productId ? (
+                    <Link href={`${base}/products/${req.productId}?tab=suppliers`} className={entLinkClass}>
+                      Open product →
+                    </Link>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </EntModuleSection>
+        ) : null}
+
         <EntModuleSection title="Supplier list" subtitle="Linked products, evidence status, and recent activity">
           <EntModuleList
             items={data.suppliers.map((supplier) => ({

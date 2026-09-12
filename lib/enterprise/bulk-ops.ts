@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { approveProductFields } from "./review";
-import { resolveIssue } from "./review";
+import { createSupplierEvidenceRequest } from "./supplier-evidence";
+import { approveProductFields, resolveIssue } from "./review";
 
 export type BulkIssueAction = "resolve" | "reject" | "not_applicable";
 export type BulkProductAction = "approve_fields" | "archive";
@@ -70,4 +70,36 @@ export async function bulkArchiveProducts(input: {
     .select("id");
   if (error) throw new Error(error.message);
   return { ok: data?.length || 0, failed: input.productIds.length - (data?.length || 0) };
+}
+
+export async function bulkRequestSupplierEvidence(input: {
+  client: SupabaseClient;
+  organizationId: string;
+  issueIds: string[];
+  requesterId: string | null;
+  supplierName: string;
+  supplierEmail?: string;
+  dueAt?: string;
+}): Promise<{ ok: number; failed: number; errors: string[] }> {
+  let ok = 0;
+  let failed = 0;
+  const errors: string[] = [];
+  for (const issueId of input.issueIds) {
+    try {
+      await createSupplierEvidenceRequest({
+        client: input.client,
+        organizationId: input.organizationId,
+        issueId,
+        requesterId: input.requesterId,
+        supplierName: input.supplierName,
+        supplierEmail: input.supplierEmail,
+        dueAt: input.dueAt,
+      });
+      ok += 1;
+    } catch (e) {
+      failed += 1;
+      errors.push(`${issueId}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  return { ok, failed, errors };
 }

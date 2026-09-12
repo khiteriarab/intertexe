@@ -2,7 +2,9 @@ import Link from "next/link";
 import { canMutateEnterprise, requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { formatCompositionDisplay, formatCompositionLines } from "../../../../../lib/enterprise/display-format";
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
+import { imageMapFromLiveFixture } from "../../../../../lib/enterprise/consumer-signals";
 import { loadOrgOverview, loadOrgProducts } from "../../../../../lib/enterprise/queries";
+import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import {
   EntEmptyState,
   EntPassportPill,
@@ -43,6 +45,7 @@ export default async function ProductsPage({
   const base = `/dashboard/${membership.slug}/products`;
   const canMutate = canMutateEnterprise(membership.role);
   const totalPages = Math.max(1, Math.ceil(catalog.total / catalog.pageSize));
+  const imageBySku = imageMapFromLiveFixture(livePilotProducts);
 
   return (
     <EntModulePage
@@ -119,7 +122,11 @@ export default async function ProductsPage({
             return (
               <li key={product.id}>
                 <Link href={`${base}/${product.id}`} className="ent-catalog-card group h-full">
-                  <EntProductPlaceholder category={product.category} />
+                  <EntProductPlaceholder
+                    category={product.category}
+                    imageUrl={product.sku ? imageBySku[product.sku] : null}
+                    alt={product.name}
+                  />
                   <div className="min-w-0 flex-1 flex flex-col">
                     <p className="ent-title text-[1.05rem] text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)] transition-colors line-clamp-2">
                       {product.name}

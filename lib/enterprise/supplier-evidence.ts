@@ -32,8 +32,9 @@ export async function createSupplierEvidenceRequest(input: {
     .maybeSingle();
   if (!issue?.product_id) throw new Error("Issue must be linked to a product.");
   if (issue.status !== "open") throw new Error("Only open issues can spawn supplier requests.");
-  if (issue.issue_type !== "missing_data") {
-    throw new Error("Supplier evidence requests are supported for missing-data issues.");
+  const allowedTypes = new Set(["missing_data", "evidence", "supplier", "regulatory"]);
+  if (!allowedTypes.has(issue.issue_type)) {
+    throw new Error("Supplier requests are supported for missing-data, evidence, supplier, and regulatory issues.");
   }
 
   const fieldKey = inferFieldKeyFromIssue(issue);
@@ -83,6 +84,8 @@ export async function createSupplierEvidenceRequest(input: {
       fields: requestedEvidence,
       requested_evidence: requestedEvidence,
       status: "open",
+      collaboration_status: input.dueAt ? "sent" : "draft",
+      sent_at: input.dueAt ? new Date().toISOString() : null,
       due_at: input.dueAt || null,
     })
     .select("id")
@@ -147,7 +150,7 @@ export async function submitSupplierEvidence(input: {
 
   await input.client
     .from("supplier_requests")
-    .update({ status: "submitted" })
+    .update({ status: "submitted", collaboration_status: "received" })
     .eq("id", request.id);
 
   await emitWorkflowEvent({
@@ -221,7 +224,13 @@ export async function approveSupplierEvidence(input: {
 
   await input.client
     .from("supplier_requests")
-    .update({ status: "closed" })
+    .update({
+      status: "closed",
+      collaboration_status: "accepted",
+      reviewer_status: "accepted",
+      reviewer_id: input.reviewerId,
+      closed_at: new Date().toISOString(),
+    })
     .eq("id", submission.request_id);
 
   await emitWorkflowEvent({

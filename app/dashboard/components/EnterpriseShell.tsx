@@ -50,7 +50,7 @@ export function EnterpriseShell({
 
   return (
     <div className="enterprise-app itx-abstract-canvas min-h-screen">
-      <div className="md:hidden ent-mobile-bar px-4 py-3.5 flex items-center justify-between">
+      <div className="md:hidden ent-mobile-bar ent-mobile-bar-abstract px-4 py-3.5 flex items-center justify-between">
         <div>
           <p className="ent-brand">INTERTEXE</p>
           <p className="text-sm font-medium mt-1 truncate max-w-[12rem] text-[var(--ent-ink)]">{organizationName}</p>

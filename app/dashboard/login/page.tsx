@@ -182,7 +182,7 @@ function LoginForm() {
   const consumerAccountUrl = getConsumerAccountUrl();
 
   return (
-    <div className="ent-login-page">
+    <div className="ent-login-page itx-abstract-canvas">
       <div className="ent-login-brand">
         <div className="ent-login-brand-art" aria-hidden>
           <svg viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice" fill="none">

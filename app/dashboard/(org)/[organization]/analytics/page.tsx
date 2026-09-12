@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
+import { loadDecisionIntelligence } from "../../../../../lib/enterprise/decision-intelligence";
 import { loadOrgAnalytics } from "../../../../../lib/enterprise/module-queries";
 import {
   imageMapFromLiveFixture,
@@ -26,9 +27,10 @@ export default async function AnalyticsPage({
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
   const imageBySku = imageMapFromLiveFixture(livePilotProducts);
-  const [data, signals] = await Promise.all([
+  const [data, signals, decisions] = await Promise.all([
     loadOrgAnalytics(client, membership.organizationId),
     loadConsumerSignals(client, membership.organizationId, { limit: 10, imageBySku }),
+    loadDecisionIntelligence(client, membership.organizationId, membership.slug),
   ]);
   const base = `/dashboard/${membership.slug}`;
 
@@ -77,6 +79,28 @@ export default async function AnalyticsPage({
         </>
       }
     >
+      {decisions.length > 0 ? (
+        <section className="mb-10">
+          <p className="ent-section-eyebrow mb-3">Decision intelligence</p>
+          <ul className="grid md:grid-cols-2 gap-4">
+            {decisions.slice(0, 6).map((insight) => (
+              <li key={insight.id} className="ent-panel-nested p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-[var(--ent-ink)]">{insight.title}</p>
+                    <p className="text-sm text-[var(--ent-muted)] mt-1">{insight.body}</p>
+                  </div>
+                  <span className="text-lg tabular-nums text-[var(--ent-petrol-deep)]">{insight.metric}</span>
+                </div>
+                <Link href={insight.href} className={`${entLinkClass} mt-4 inline-flex`}>
+                  {insight.action} →
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {signals.summary.productCount > 0 ? (
         <section className="mb-10 rounded-[var(--ent-radius-2xl)] p-6 md:p-8 ent-animate-in border border-[var(--ent-border)] bg-[rgba(244,240,234,0.45)]">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
