@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { HQ_NAV } from "../../../lib/dashboard/constants";
+import { HQ_NAV, HQ_NAV_SECONDARY } from "../../../lib/dashboard/constants";
 import type { WorkspaceContext } from "../../../lib/enterprise/types";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import "../hq-theme.css";
@@ -63,7 +63,7 @@ export function HqShell({
           <div className="px-5 py-6 border-b border-[var(--hq-border)] hidden md:block">
             <p className="hq-eyebrow">Dashboard</p>
             <p className="hq-display text-[1.35rem] mt-1">INTERTEXE</p>
-            <p className="text-xs text-[var(--hq-muted)] mt-1">Private operating system</p>
+            <p className="text-xs text-[var(--hq-muted)] mt-1">Company operating system</p>
             <WorkspaceSwitcher contexts={workspaceContexts} currentHref="/dashboard" variant="hq" />
           </div>
           <nav className="px-3 py-4 space-y-0.5">
@@ -86,7 +86,29 @@ export function HqShell({
               );
             })}
           </nav>
-          <div className="px-5 py-5 border-t border-[var(--hq-border)] mt-4">
+          <nav className="px-3 py-2 space-y-0.5 border-t border-[var(--hq-border)] mt-2">
+            <p className="px-3 pt-3 pb-1 text-[10px] tracking-[0.14em] uppercase text-[var(--hq-quiet)]">
+              Operations
+            </p>
+            {HQ_NAV_SECONDARY.filter(
+              (item) => !("founderOnly" in item && item.founderOnly) || roles.includes("founder")
+            ).map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`hq-nav-link block px-3 py-2 text-sm rounded-md ${
+                    active ? "hq-nav-link-active" : "text-[var(--hq-muted)]"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="px-5 py-5 border-t border-[var(--hq-border)] mt-2">
             <p className="text-sm font-medium truncate">{fullName || "Founder"}</p>
             <p className="text-xs text-[var(--hq-muted)] truncate">{email}</p>
             <p className="text-[10px] tracking-wide uppercase text-[var(--hq-quiet)] mt-2">

@@ -164,7 +164,7 @@ export default async function HqEmailPage() {
 
       <p className="text-[11px] text-black/40">
         <Link href="/dashboard" className="underline underline-offset-4">
-          ← Today
+          ← Overview
         </Link>
         {" · "}
         Replies are not counted here — they come from Gmail / inbox, not the ESP webhook.

@@ -4,7 +4,7 @@ import { HqPageHeader } from "../../components/HqUi";
 import { CommandCenterClient } from "./CommandCenterClient";
 
 export const metadata = {
-  title: "$50K Command Center",
+  title: "Founder Personal",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
@@ -21,8 +21,8 @@ export default async function CommandCenterPage() {
   return (
     <div>
       <HqPageHeader
-        title="$50K Command Center"
-        description="Interactive $50K booking plan: five $5,000 Founding Material Data Pilots sold on /platform, one integration, and creator plus affiliate buffer. Founder-only."
+        title="Founder Personal"
+        description="Personal @khiteri revenue, creator income, and private booking plan. Separate from the company operating dashboard. Founder-only."
       />
       <CommandCenterClient bundle={bundle} />
     </div>

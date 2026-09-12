@@ -43,23 +43,29 @@ export function isPlatformHost(host: string | null | undefined): boolean {
   );
 }
 
+/** Company operating system — business metrics only. */
 export const HQ_NAV = [
-  { href: "/dashboard", label: "This week", exact: true },
-  { href: "/dashboard/command-center", label: "$50K Command Center", founderOnly: true },
-  { href: "/dashboard/email", label: "Email" },
+  { href: "/dashboard", label: "Overview", exact: true },
+  { href: "/dashboard/revenue", label: "Revenue" },
+  { href: "/dashboard/members", label: "Members" },
   { href: "/dashboard/acquisition", label: "Acquisition" },
-  { href: "/dashboard/scanner", label: "Engagement" },
-  { href: "/dashboard/commerce", label: "Commerce" },
-  { href: "/dashboard/operations", label: "Product" },
+  { href: "/dashboard/affiliate", label: "Affiliate" },
+  { href: "/dashboard/b2b", label: "B2B" },
+  { href: "/dashboard/pilots", label: "Pilots" },
+  { href: "/dashboard/partnerships", label: "Partnerships" },
+  { href: "/dashboard/product", label: "Product / Data" },
+  { href: "/dashboard/press", label: "Press" },
+  { href: "/dashboard/speaking", label: "Speaking" },
+  { href: "/dashboard/goals", label: "Goals" },
+  { href: "/dashboard/weekly-review", label: "Weekly Review" },
+] as const;
+
+/** Secondary ops — not north-star navigation. */
+export const HQ_NAV_SECONDARY = [
+  { href: "/dashboard/email", label: "Email Ops" },
   { href: "/dashboard/consumers", label: "Consumers" },
-  { href: "/dashboard/materials", label: "Materials" },
-  { href: "/dashboard/brands", label: "Brands" },
-  { href: "/dashboard/products", label: "Catalog" },
-  { href: "/dashboard/dpp", label: "Digital Product Passport" },
-  { href: "/dashboard/campaigns", label: "Campaigns" },
-  { href: "/dashboard/content", label: "Content" },
-  { href: "/dashboard/insights", label: "Insights" },
-  { href: "/dashboard/ai", label: "AI" },
+  { href: "/dashboard/catalog", label: "Catalog" },
   { href: "/dashboard/settings", label: "Settings" },
-  { href: "/dashboard/enterprise", label: "Enterprise", founderOnly: true },
+  { href: "/dashboard/command-center", label: "Founder Personal", founderOnly: true },
+  { href: "/dashboard/enterprise", label: "Enterprise Admin", founderOnly: true },
 ] as const;
