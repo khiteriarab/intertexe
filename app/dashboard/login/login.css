@@ -1,5 +1,5 @@
 /* Enterprise login — platform.intertexe.com · modern · chic · abstract · editorial */
-@import "../shared/intertexe-editorial.css";
+@import "../../shared/intertexe-editorial.css";
 
 .ent-login-page {
   --ent-login-petrol: #e8dcc8;
