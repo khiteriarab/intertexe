@@ -155,17 +155,16 @@ export function EntVisualPanel({
   return (
     <section
       className={`relative overflow-hidden rounded-[var(--ent-radius-2xl)] shadow-[var(--ent-shadow-panel)] ${pad} ${className} ${
-        isPetrol ? "text-white" : ""
+        isPetrol ? "ent-zone ent-zone-butter ent-zone-glow text-[var(--ent-ink)]" : ""
       } ${!isPetrol ? `ent-zone ent-zone-${tone}` : ""}`}
-      style={isPetrol ? { background: "var(--ent-gradient-hero)" } : undefined}
     >
       {title ? (
         <div className="mb-6 md:mb-8 relative">
-            <h2 className={`ent-heading text-[1.65rem] md:text-[2rem] leading-tight ${isPetrol ? "text-white" : "text-[var(--ent-ink)]"}`}>
+            <h2 className="ent-heading text-[1.65rem] md:text-[2rem] leading-tight text-[var(--ent-ink)]">
             {title}
           </h2>
           {subtitle ? (
-            <p className={`text-sm mt-2 max-w-md ${isPetrol ? "text-white/65" : "text-[var(--ent-muted)]"}`}>{subtitle}</p>
+            <p className="text-sm mt-2 max-w-md text-[var(--ent-muted)]">{subtitle}</p>
           ) : null}
         </div>
       ) : null}

@@ -40,7 +40,7 @@ export function PublishPassportButton({
         type="button"
         disabled={busy}
         onClick={onPublish}
-        className="inline-flex w-full justify-center items-center rounded-[var(--ent-radius-lg)] px-5 py-3 text-sm font-semibold bg-[var(--ent-petrol-deep)] text-white hover:bg-[var(--ent-forest)] transition-colors disabled:opacity-50"
+        className="inline-flex w-full justify-center items-center rounded-[var(--ent-radius-lg)] px-5 py-3 text-sm font-semibold bg-[var(--ent-charcoal)] text-[var(--ent-cream)] hover:bg-[#1f1a14] transition-colors disabled:opacity-50"
       >
         Publish passport
       </button>

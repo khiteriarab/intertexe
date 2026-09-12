@@ -187,7 +187,7 @@
 
 .enterprise-app .ent-zone-petrol {
   background: var(--ent-gradient-hero);
-  color: white;
+  color: var(--ent-ink);
 }
 
 .enterprise-app .ent-zone-glow::before {
@@ -1724,13 +1724,13 @@
 }
 
 .enterprise-app .ent-customer-zero-link-primary {
-  background: var(--ent-petrol-deep);
-  color: white;
+  background: var(--ent-charcoal);
+  color: var(--ent-cream);
   border-color: transparent;
 }
 
 .enterprise-app .ent-customer-zero-link-primary:hover {
-  background: var(--ent-charcoal);
-  color: white;
+  background: #1f1a14;
+  color: var(--ent-cream);
 }
 

@@ -164,29 +164,29 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
         </div>
       </div>
 
-      <div
-        className="relative overflow-hidden rounded-[var(--ent-radius-2xl)] p-6 md:p-8 lg:p-10 ent-animate-in"
-        style={{ background: "var(--ent-gradient-hero)" }}
-      >
+      <div className="ent-zone ent-zone-butter ent-zone-glow relative overflow-hidden rounded-[var(--ent-radius-2xl)] p-6 md:p-8 lg:p-10 ent-animate-in border border-[rgba(28,25,21,0.06)]">
         <div
-          className="absolute inset-0 opacity-45 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255,255,255,0.18) 0%, transparent 60%)" }}
+          className="absolute inset-0 opacity-60 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 55% at 100% 0%, rgba(201,169,98,0.22) 0%, transparent 58%), radial-gradient(ellipse 50% 45% at 0% 100%, rgba(232,220,200,0.45) 0%, transparent 55%)",
+          }}
           aria-hidden
         />
         <div className="relative grid lg:grid-cols-[1fr_auto] gap-8 items-center">
           <div>
-            <p className="text-[10px] tracking-[0.14em] uppercase text-white/45">Catalog intelligence</p>
-            <p className="ent-title text-[1.5rem] md:text-[1.75rem] text-white mt-2 leading-tight">
+            <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--ent-muted)]">Catalog intelligence</p>
+            <p className="ent-title text-[1.5rem] md:text-[1.75rem] text-[var(--ent-ink)] mt-2 leading-tight">
               {total > 0 ? `${readinessPct}% passport-ready · ${overview.issueCount} open issues` : "Import your catalog to begin"}
             </p>
-            <p className="text-sm text-white/65 mt-3 max-w-md leading-relaxed">
+            <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-md leading-relaxed">
               {total > 0
                 ? `${passportReady} products ready or published${overview.missingCount > 0 ? ` · ${overview.missingCount} missing fields` : ""}`
                 : "Bring in products, improve material data, resolve issues, then publish passports when ready."}
             </p>
             {total > 0 ? (
               <div className="mt-8 max-w-md">
-                <EntRoundedBarChart rows={barRows} height={96} dark />
+                <EntRoundedBarChart rows={barRows} height={96} />
               </div>
             ) : null}
           </div>
@@ -198,6 +198,7 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
                 centerLabel="Ready"
                 size={220}
                 strokeWidth={24}
+                theme="light"
               />
             </div>
           ) : null}
@@ -453,7 +454,7 @@ export const entSelectClass =
   "ent-select border border-[var(--ent-border-strong)] rounded-[var(--ent-radius-lg)] px-4 py-3 text-sm bg-white/90 text-[var(--ent-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--ent-petrol)]/25 shadow-[var(--ent-shadow-sm)]";
 
 export const entButtonClass =
-  "inline-flex items-center justify-center text-[13px] font-semibold rounded-full px-5 py-2.5 bg-[var(--ent-petrol-deep)] text-white hover:bg-[var(--ent-forest)] transition-colors disabled:opacity-50";
+  "inline-flex items-center justify-center text-[13px] font-semibold rounded-full px-5 py-2.5 bg-[var(--ent-charcoal)] text-[var(--ent-cream)] hover:bg-[#1f1a14] transition-colors disabled:opacity-50";
 
 export const entButtonGhostClass =
   "inline-flex items-center justify-center text-[14px] font-medium rounded-[var(--ent-radius-lg)] px-5 py-3 border border-[var(--ent-border-strong)] bg-white/80 text-[var(--ent-ink-soft)] hover:bg-white shadow-[var(--ent-shadow-sm)] transition-all";

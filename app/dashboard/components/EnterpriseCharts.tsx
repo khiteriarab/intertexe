@@ -19,13 +19,16 @@ export function EntPassportLifecycleChart({
   centerValue,
   size = 300,
   strokeWidth = 32,
+  theme = "light",
 }: {
   segments: Segment[];
   centerLabel: string;
   centerValue: string;
   size?: number;
   strokeWidth?: number;
+  theme?: "light" | "dark";
 }) {
+  const onDark = theme === "dark";
   const total = segments.reduce((sum, seg) => sum + seg.value, 0);
   const cx = size / 2;
   const cy = size / 2;
@@ -52,7 +55,14 @@ export function EntPassportLifecycleChart({
   return (
     <div className="relative mx-auto" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
-        <circle cx={cx} cy={cy} r={radius} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={strokeWidth} />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill="none"
+          stroke={onDark ? "rgba(255,255,255,0.12)" : "rgba(196,165,116,0.22)"}
+          strokeWidth={strokeWidth}
+        />
         {arcs.map((arc) => (
           <path
             key={arc.key}
@@ -69,15 +79,21 @@ export function EntPassportLifecycleChart({
             cy={cy}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.2)"
+            stroke={onDark ? "rgba(255,255,255,0.2)" : "rgba(44,38,32,0.12)"}
             strokeWidth={strokeWidth}
             strokeDasharray="4 12"
           />
         ) : null}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-        <p className="ent-display text-[3.25rem] md:text-[3.75rem] leading-none text-white">{centerValue}</p>
-        <p className="text-[11px] tracking-[0.14em] uppercase text-white/55 mt-2 max-w-[8rem]">{centerLabel}</p>
+        <p className={`ent-display text-[3.25rem] md:text-[3.75rem] leading-none ${onDark ? "text-white" : "text-[var(--ent-ink)]"}`}>
+          {centerValue}
+        </p>
+        <p
+          className={`text-[11px] tracking-[0.14em] uppercase mt-2 max-w-[8rem] ${onDark ? "text-white/55" : "text-[var(--ent-muted)]"}`}
+        >
+          {centerLabel}
+        </p>
       </div>
     </div>
   );
@@ -103,7 +119,7 @@ export function EntDonutChart({
   const cy = size / 2;
   const radius = (size - strokeWidth) / 2 - 4;
   let cumulative = 0;
-  const track = light ? "rgba(62, 98, 104, 0.08)" : "rgba(255,255,255,0.12)";
+  const track = light ? "rgba(196, 165, 116, 0.18)" : "rgba(255,255,255,0.12)";
 
   const arcs =
     total > 0
