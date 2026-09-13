@@ -1,28 +1,33 @@
-import { PlatformScrollShowcase } from "./PlatformScrollShowcase";
 import {
   SalesDeliverySection,
-  SalesGovernedRecordSection,
-  SalesHeroSection,
   SalesIntelligenceSection,
+  SalesHeroSection,
   SalesPlatformBreadthSection,
   SalesStartFreeSection,
-  SalesWhatItIsSection,
 } from "./sales-sections";
+import { PlatformFaq } from "./PlatformFaq";
+import { PlatformHowItWorksSection } from "./PlatformHowItWorksSection";
+import { PlatformProofSection } from "./PlatformProofSection";
+import { PlatformScrollShowcase } from "./PlatformScrollShowcase";
+import { PlatformWorkflowDeepDive } from "./PlatformWorkflowDeepDive";
 
 /**
  * Public B2B platform overview — intertexe.com/platform
- * Lifecycle detail lives in PlatformScrollShowcase; live QR flow on /platform/demo; API on /platform/api.
+ * Single conversion journey: hero → how it works → workflow → intelligence → delivery → breadth → proof → FAQ → CTA.
+ * Live tour on /platform/demo. API on /platform/api.
  */
 export function PlatformHome() {
   return (
     <div>
       <SalesHeroSection />
-      <SalesWhatItIsSection />
       <PlatformScrollShowcase />
-      <SalesGovernedRecordSection />
+      <PlatformHowItWorksSection />
+      <PlatformWorkflowDeepDive />
       <SalesIntelligenceSection />
       <SalesDeliverySection />
       <SalesPlatformBreadthSection />
+      <PlatformProofSection />
+      <PlatformFaq />
       <SalesStartFreeSection />
     </div>
   );

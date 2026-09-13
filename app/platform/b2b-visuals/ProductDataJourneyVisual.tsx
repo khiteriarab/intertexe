@@ -151,7 +151,7 @@ export function JourneyStepsVisual() {
       </div>
       <p className="mt-6 text-center">
         <Link
-          href="/platform/discover#product-journey"
+          href="/platform/demo#journey"
           className="text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] underline underline-offset-4 hover:text-[var(--platform-accent)]"
         >
           Explore the interactive journey →
@@ -161,7 +161,7 @@ export function JourneyStepsVisual() {
   );
 }
 
-/** Full scroll-sequenced journey for /platform/discover. */
+/** Full scroll-sequenced journey (legacy discover layout). */
 export function ProductDataJourneyVisual() {
   const [ref, activeStep] = useScrollSteps(STAGES.length);
   const [manualStep, setManualStep] = useState(0);

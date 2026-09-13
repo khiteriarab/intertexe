@@ -52,7 +52,7 @@ export function EcosystemStage() {
           Your brand keeps the customer relationship. INTERTEXE supplies the material intelligence underneath it —
           across your digital channels, passports and the INTERTEXE shopping ecosystem.
         </p>
-        <PrimaryLink href="/platform/discover">See how the ecosystem connects →</PrimaryLink>
+        <PrimaryLink href="/platform/demo">See how the ecosystem connects →</PrimaryLink>
         <p className="mt-6 text-xs text-[#8a847c] leading-relaxed max-w-3xl">
           Illustrative sample — Dress 8721 is not a live customer catalog. Consumers do not need the INTERTEXE app to
           open a passport. Observed shopper demand in brand workspaces is coming / developing.

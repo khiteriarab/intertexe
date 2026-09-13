@@ -1,28 +1,32 @@
 import Link from "next/link";
-import { DEMO_GTIN_VERIFIED } from "../../../lib/material-intelligence/demo-records";
 import { SERIF } from "../platform-ui";
 
 const CARDS = [
   {
-    title: "Public",
-    badge: "Demo endpoint",
-    points: ["No auth", "Limited sample records", "Safe for documentation"],
-    href: "/platform/demo#api",
+    method: "GET",
+    path: "/api/v1/demo/composition/{gtin}",
+    title: "Public demo",
+    description: "No auth. A limited sample record for documentation and sales demos.",
+    href: "#quickstart",
     cta: "Try live lookup",
     external: false,
   },
   {
+    method: "GET",
+    path: "/api/v1/composition/{gtin}",
     title: "Production",
-    badge: "Authenticated",
-    points: ["Bearer token", "Real catalog usage", "Per-key rate limits"],
+    description:
+      "Bearer token required. Returns normalized composition, evidence and DPP-readiness for your catalog.",
     href: "/platform/request?intent=api_access&cta=docs",
     cta: "Discuss API access",
     external: false,
   },
   {
+    method: "GET",
+    path: "/api/openapi.json",
     title: "OpenAPI 3.1",
-    badge: "Schema contract",
-    points: ["Endpoint definitions", "Response shapes", "Error envelopes"],
+    description:
+      "Runtime contract for the Material Intelligence API — endpoints, schemas and error shapes.",
     href: "/api/openapi.json",
     cta: "Download OpenAPI 3.1",
     external: true,
@@ -31,47 +35,34 @@ const CARDS = [
 
 export function ApiAccessCards() {
   return (
-    <section className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-10 lg:py-14">
-      <div className="api-docs-access-grid">
-        {CARDS.map((card) => (
-          <article key={card.title} className="api-docs-access-card">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--platform-quiet)] mb-1">{card.badge}</p>
-            <h2 className="text-xl text-[var(--platform-ink)] mb-3" style={SERIF}>
-              {card.title}
-            </h2>
-            <ul className="space-y-2 mb-6 flex-1">
-              {card.points.map((point) => (
-                <li key={point} className="text-sm text-[var(--platform-muted)] flex items-start gap-2">
-                  <span className="text-[var(--platform-accent)] mt-0.5" aria-hidden>
-                    ·
-                  </span>
-                  {point}
-                </li>
-              ))}
-            </ul>
-            {card.external ? (
-              <a
-                href={card.href}
-                className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] hover:text-[var(--platform-accent)]"
-              >
-                {card.cta}
-                <span aria-hidden>→</span>
-              </a>
-            ) : (
-              <Link
-                href={card.href}
-                className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] hover:text-[var(--platform-accent)]"
-              >
-                {card.cta}
-                <span aria-hidden>→</span>
-              </Link>
-            )}
-          </article>
-        ))}
+    <section className="api-editorial-access">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-10 lg:py-14">
+        <div className="api-editorial-access-grid">
+          {CARDS.map((card) => (
+            <article key={card.title} className="api-editorial-access-card">
+              <div className="api-editorial-access-endpoint">
+                <span className="api-editorial-access-method">{card.method}</span>
+                <code>{card.path}</code>
+              </div>
+              <h2 className="text-lg text-[var(--platform-ink)] mb-2 mt-4" style={SERIF}>
+                {card.title}
+              </h2>
+              <p className="text-sm leading-relaxed text-[var(--platform-muted)] mb-6 flex-1">
+                {card.description}
+              </p>
+              {card.external ? (
+                <a href={card.href} className="api-editorial-access-link">
+                  {card.cta} →
+                </a>
+              ) : (
+                <Link href={card.href} className="api-editorial-access-link">
+                  {card.cta} →
+                </Link>
+              )}
+            </article>
+          ))}
+        </div>
       </div>
-      <p className="mt-6 text-xs text-[var(--platform-quiet)] text-center">
-        Demo sample GTIN · <span className="font-mono">{DEMO_GTIN_VERIFIED}</span>
-      </p>
     </section>
   );
 }

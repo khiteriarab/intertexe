@@ -328,7 +328,10 @@ export function SalesPlatformBreadthSection() {
         </Body>
         <PlatformModuleGrid />
         <p className="mt-10 lg:mt-12 text-sm text-[#8a847c] leading-relaxed max-w-2xl">
-          Explore the live product flow for module-level detail, or{" "}
+          <Link href="/platform/demo" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
+            See it live
+          </Link>{" "}
+          with sample products, or{" "}
           <Link href="/platform/request?intent=snapshot&cta=platform_breadth" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
             start with 10 of your own products
           </Link>

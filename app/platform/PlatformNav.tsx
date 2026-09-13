@@ -5,10 +5,10 @@ import { useEffect, useState } from "react";
 import { PlatformWordmark } from "./PlatformWordmark";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
-export type PlatformNavKey = "demo" | "api" | "request" | "platform" | "login" | "discover";
+export type PlatformNavKey = "demo" | "api" | "request" | "platform" | "login";
 
 const NAV = [
-  { href: "/platform/discover", label: "Discover" },
+  { href: "/platform#how-it-works", label: "How it works" },
   { href: "/platform/demo", label: "See it live" },
   { href: "/platform/api", label: "API" },
 ] as const;
@@ -43,7 +43,7 @@ export function PlatformNav({
 
   const linkTone = (href: string) => {
     const isActive =
-      (active === "discover" && href === "/platform/discover") ||
+      (active === "platform" && href === "/platform#how-it-works") ||
       (active === "demo" && href === "/platform/demo") ||
       (active === "api" && href === "/platform/api");
     if (dark) return isActive ? "text-white" : "text-white/70 hover:text-white";

@@ -6,6 +6,10 @@ import path from "node:path";
 describe("Platform B2B sales page", () => {
   const home = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHome.tsx"), "utf8");
   const hero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHero.tsx"), "utf8");
+  const heroVisual = fs.readFileSync(
+    path.join(process.cwd(), "app/platform/PlatformHeroLifecycleVisual.tsx"),
+    "utf8",
+  );
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
   const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
   const visuals = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-visuals.tsx"), "utf8");
@@ -15,14 +19,12 @@ describe("Platform B2B sales page", () => {
   const page = fs.readFileSync(path.join(process.cwd(), "app/platform/page.tsx"), "utf8");
   const form = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformLeadForm.tsx"), "utf8");
   const faq = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformFaq.tsx"), "utf8");
-  const discover = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
+  const gallery = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
   const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
   const demoClient = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
 
   it("positions INTERTEXE as product intelligence infrastructure, not DPP-only software", () => {
     assert.match(sections, /product intelligence infrastructure for/i);
-    assert.match(sections, /WhatItIsProcessVisual/);
-    assert.match(sections, /PlatformCapabilityNav/);
     assert.match(hero, /INTERTEXE FOR BRANDS/);
     assert.match(sections, /one governed product record/i);
     assert.doesNotMatch(sections, /EU certified/i);
@@ -32,31 +34,40 @@ describe("Platform B2B sales page", () => {
 
   it("uses a focused home hierarchy without redundant lifecycle or pricing blocks", () => {
     assert.match(home, /SalesHeroSection/);
-    assert.match(home, /SalesWhatItIsSection/);
-    assert.match(home, /PlatformScrollShowcase/);
-    assert.match(home, /SalesGovernedRecordSection/);
+    assert.match(home, /PlatformHowItWorksSection/);
+    assert.match(home, /PlatformWorkflowDeepDive/);
     assert.match(home, /SalesIntelligenceSection/);
     assert.match(home, /SalesDeliverySection/);
     assert.match(home, /SalesPlatformBreadthSection/);
+    assert.match(home, /PlatformProofSection/);
+    assert.match(home, /PlatformFaq/);
     assert.match(home, /SalesStartFreeSection/);
+    assert.doesNotMatch(home, /SalesWhatItIsSection/);
+    assert.match(home, /PlatformScrollShowcase/);
+    assert.doesNotMatch(home, /SalesGovernedRecordSection/);
     assert.doesNotMatch(home, /SalesLifecycleSection/);
     assert.doesNotMatch(home, /SalesOutputsSection/);
     assert.doesNotMatch(home, /SalesPublishSection/);
     assert.doesNotMatch(home, /PricingPlans/);
-    assert.doesNotMatch(home, /SalesProblemSection/);
     assert.doesNotMatch(home, /StoryTabs/);
     assert.doesNotMatch(home, /ComparisonView/);
   });
 
   it("routes live QR flow and API detail to dedicated pages", () => {
     assert.match(demo, /PlatformDemoClient/);
-    assert.match(demoClient, /DemoLiveScan/);
-    assert.match(demoClient, /ProductLifecycleVisual/);
-    assert.match(demoClient, /live-passport/);
-    assert.match(demoClient, /DemoScrollyJourney/);
-    assert.match(demo, /guided tour/i);
-    assert.match(discover, /Consumer delivery/);
-    assert.match(discover, /Headless API/);
+    assert.match(demoClient, /DemoHero/);
+    assert.match(demoClient, /DemoIntertexeFlow/);
+    assert.match(demoClient, /DemoStoryline/);
+    assert.match(demoClient, /DemoFeaturedExample/);
+    const demoHero = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoHero.tsx"), "utf8");
+    assert.match(demoHero, /demo-see-it-live\.jpg/);
+    assert.match(demo, /See INTERTEXE live/i);
+    assert.match(gallery, /WorkspaceGallery/);
+    assert.match(gallery, /headless API/i);
+    assert.ok(!fs.existsSync(path.join(process.cwd(), "app/platform/discover/page.tsx")));
+    assert.ok(!fs.existsSync(path.join(process.cwd(), "app/platform/ebook/page.tsx")));
+    assert.doesNotMatch(chrome, /\/platform\/ebook/);
+    assert.doesNotMatch(faq, /\/platform\/ebook/);
   });
 
   it("converts with 10-product pilot, live flow, and enterprise login", () => {
@@ -67,6 +78,8 @@ describe("Platform B2B sales page", () => {
     assert.match(nav, /getEnterpriseLoginUrl/);
     assert.match(nav, /Start with 10 products/);
     assert.match(nav, /Sign in/);
+    assert.match(nav, /How it works/);
+    assert.doesNotMatch(nav, /\/platform\/discover/);
     assert.match(chrome, /getEnterpriseLoginUrl/);
     assert.match(login, /getEnterpriseLoginUrl/);
     assert.match(form, /Start with 10 products \(pilot workspace\)/);
@@ -106,11 +119,11 @@ describe("Platform B2B sales page", () => {
     assert.match(page, /headless API/i);
   });
 
-  it("keeps FAQ and detailed comparison off the home page", () => {
-    assert.match(faq, /product intelligence infrastructure/i);
+  it("keeps detailed comparison off the home page but includes FAQ", () => {
+    assert.match(faq, /more transparent industry/i);
     assert.match(faq, /does not fabricate product data/i);
-    assert.match(faq, /Headless API/);
-    assert.doesNotMatch(home, /PlatformFaq/);
+    assert.match(faq, /headless API/i);
+    assert.match(home, /PlatformFaq/);
     assert.doesNotMatch(home, /ComparisonView/);
     assert.match(page, /PlatformHome/);
   });
@@ -130,7 +143,9 @@ describe("Platform B2B sales page", () => {
   });
 
   it("uses native sales visuals instead of editorial PNG decks", () => {
-    assert.match(hero, /hero-workspace-desktop\.png/);
+    assert.match(hero, /PlatformHeroLifecycleVisual/);
+    assert.match(heroVisual, /hero-lifecycle-experience\.jpg/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-lifecycle-experience.jpg")));
     assert.doesNotMatch(sections, /ProblemConvergenceVisual/);
     assert.doesNotMatch(sections, /GovernedRecordVisual/);
     assert.match(sections, /DeliveryModesVisual/);

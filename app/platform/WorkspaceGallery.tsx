@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ProductDataJourneyVisual } from "./b2b-visuals/ProductDataJourneyVisual";
 import { PlatformGraphic } from "./PlatformGraphic";
 import { WorkspaceHeroPreview } from "./WorkspaceHeroPreview";
 import {
@@ -12,7 +11,6 @@ import {
   RegulatoryPreview,
 } from "./workspace-previews";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
-import { PlatformPageHeader } from "./PlatformPageHeader";
 import { SERIF, SoftwareStage } from "./platform-ui";
 import { LIVING_SYSTEM, RETAIN, DISCOVER_STORY } from "./living-system";
 
@@ -230,81 +228,7 @@ export function DiscoverWorkspace() {
 
   return (
     <div className="itx-abstract-section bg-[var(--platform-bg)]">
-      <PlatformPageHeader
-        eyebrow="Discover"
-        title={
-          <>
-            How <span className="font-light">INTERTEXE</span> works.
-          </>
-        }
-        description="From raw data to the scan moment — govern one record, publish passports, and deliver consumer experiences through hosted pages, your domain, or your app."
-        primaryHref="/platform/request?intent=snapshot&cta=discover"
-        primaryLabel="Start with 10 products"
-        secondaryHref="/platform/demo"
-        secondaryLabel="See it live"
-      />
-
-      <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
-        <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Product data journey</p>
-        <h2
-          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] max-w-3xl mb-4"
-          style={SERIF}
-        >
-          Connect → normalize → resolve → understand → publish.
-        </h2>
-        <p className="max-w-2xl text-[15px] text-[#5c5854] font-light leading-relaxed mb-8">
-          One governed process — scroll to see each stage reveal with real product states.
-        </p>
-        <ProductDataJourneyVisual />
-      </section>
-
-      <section className="platform-abstract-band itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16 py-12 sm:py-14 rounded-none">
-        <p className="relative text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Consumer delivery</p>
-        <h2
-          className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] max-w-3xl mb-4"
-          style={SERIF}
-        >
-          Your brand. Your presentation. One governed record.
-        </h2>
-        <p className="max-w-2xl text-[15px] text-[#5c5854] font-light leading-relaxed mb-8">
-          You are not forced to use an INTERTEXE-looking consumer page. Choose hosted passports for speed, white-label
-          for brand domain, or headless API to power your existing app — or all three from the same product record.
-        </p>
-        <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
-          {[
-            {
-              title: "INTERTEXE Hosted",
-              tier: "Platform",
-              copy: "Editorial, Trace, Essential, or Circular templates with your logo and colors. QR resolves to a passport we host — zero development.",
-            },
-            {
-              title: "White Label",
-              tier: "Professional · Enterprise",
-              copy: "Same governed data and templates on passport.yourbrand.com. Your customer sees your domain, not ours.",
-            },
-            {
-              title: "Headless API",
-              tier: "Enterprise",
-              copy: "Structured passport JSON for your app, website, and service tools. INTERTEXE owns the data infrastructure — you own the experience.",
-            },
-          ].map((mode) => (
-            <article
-              key={mode.title}
-              className="platform-abstract-band rounded-2xl border border-[var(--platform-border)] p-6 sm:p-7 shadow-[0_12px_30px_rgba(44,38,32,0.06)]"
-            >
-              <p className="relative text-[10px] tracking-[0.18em] uppercase text-[var(--platform-accent)] mb-2">
-                {mode.tier}
-              </p>
-              <h3 className="relative text-lg text-[var(--platform-primary)] mb-3" style={SERIF}>
-                {mode.title}
-              </h3>
-              <p className="relative text-sm text-[var(--platform-muted)] leading-relaxed">{mode.copy}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-10 sm:pb-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-10 sm:pb-16 pt-4">
         <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{LIVING_SYSTEM.eyebrow}</p>
         <h2 className="text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.2] text-[var(--platform-primary)] max-w-3xl mb-4" style={SERIF}>
           {LIVING_SYSTEM.title}

@@ -37,7 +37,7 @@ const SURFACES = [
     copy: "One workspace for the records brands already have. Original values stay on every product. Sample workspace — not a live customer catalog.",
     image: "/platform/surface-platform-laptop.jpg",
     alt: "Laptop showing the INTERTEXE Enterprise workspace for Dress 8721. Illustrative sample, not a live customer.",
-    primary: { href: "/platform/discover", label: "Discover the workspace" },
+    primary: { href: "/platform/demo", label: "See the platform" },
     secondary: { href: "/platform/request?intent=snapshot", label: "See it with your products" },
   },
 ] as const;

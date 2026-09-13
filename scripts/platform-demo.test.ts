@@ -225,22 +225,29 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(conflict?.normalized.shell || "", /Conflict/);
   });
 
-  it("keeps the guided tour on /platform/demo without inventing missing fields", () => {
+  it("keeps the editorial demo page focused on one featured product", () => {
     const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
-    const journey = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoScrollyJourney.tsx"), "utf8");
-    const catalog = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoCatalogGrid.tsx"), "utf8");
+    const hero = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoHero.tsx"), "utf8");
+    const featuredSection = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoFeaturedExample.tsx"), "utf8");
     const featured = fs.readFileSync(path.join(process.cwd(), "lib/material-intelligence/demo-featured.ts"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
-    assert.match(demo, /DemoScrollyJourney/);
-    assert.match(demo, /DemoCatalogGrid/);
-    assert.match(journey, /Source retained/);
-    assert.match(journey, /DEMO_FEATURED_PRODUCT/);
-    assert.match(featured, /Silk Midi Skirt/);
-    assert.match(catalog, /View source data/);
-    assert.match(catalog, /DEMO_CATALOG_NOTICE/);
+    const storyline = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoStoryline.tsx"), "utf8");
+    assert.match(demo, /DemoHero/);
+    assert.match(demo, /DemoIntertexeFlow/);
+    assert.match(demo, /DemoStoryline/);
+    assert.match(demo, /DemoFeaturedExample/);
+    assert.match(demo, /DemoClosingQuote/);
+    assert.doesNotMatch(demo, /DemoScrollyJourney/);
+    assert.doesNotMatch(demo, /DemoCatalogGrid/);
+    assert.match(storyline, /Source retained/);
+    assert.match(storyline, /DEMO_FEATURED_PRODUCT/);
+    assert.match(hero, /From a tag to full transparency/);
+    assert.match(hero, /demo-see-it-live\.jpg/);
+    assert.match(featuredSection, /DEMO_FEATURED/);
+    assert.match(featuredSection, /DEMO_FEATURED\.name/);
     assert.match(featured, /ITX-4102/);
-    assert.doesNotMatch(journey, /EU Certified/);
-    assert.doesNotMatch(journey, /Guaranteed Compliant/);
+    assert.doesNotMatch(featuredSection, /EU Certified/);
+    assert.doesNotMatch(featuredSection, /Guaranteed Compliant/);
     assert.doesNotMatch(previews, /Official DPP Score/);
   });
 

@@ -138,7 +138,7 @@ export function UnderstandCatalog() {
         Illustrative example. Counts are not a live customer catalog. Teams click from each issue into the product
         and fix it.
       </p>
-      <DiscoverLink href="/platform/discover">Discover</DiscoverLink>
+      <DiscoverLink href="/platform/demo">See it live</DiscoverLink>
     </section>
   );
 }

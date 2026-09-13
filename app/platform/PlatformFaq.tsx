@@ -1,108 +1,167 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { SERIF } from "./platform-ui";
+import { PrimaryLink, SERIF } from "./platform-ui";
 
-const FAQ: { q: string; a: ReactNode }[] = [
+const FAQ: { q: string; a: ReactNode; icon: "catalog" | "demand" | "resolve" | "deliver" | "living" | "compliance" }[] = [
+  {
+    q: "What is actually in the catalog?",
+    icon: "catalog",
+    a: "Overview shows products, completeness, material mix, and what still needs attention — on your governed sample or live catalog after onboarding.",
+  },
+  {
+    q: "How is consumer demand observed?",
+    icon: "demand",
+    a: "Material Benchmark includes conversion signals by material cohort vs peer medians. Observed shopper demand in brand workspaces is developing — aggregate only, never competitor dumps.",
+  },
+  {
+    q: "How does INTERTEXE resolve conflicting data?",
+    icon: "resolve",
+    a: "The Issues inbox lists composition conflicts, invalid totals, and missing fields. Original source strings stay on the row — conflicts are surfaced, never overwritten silently.",
+  },
+  {
+    q: "How can we deliver this to consumers?",
+    icon: "deliver",
+    a: "Three modes from one record: INTERTEXE Hosted, white-label on your domain, or headless API into your existing app and website.",
+  },
+  {
+    q: "Why is INTERTEXE a living system?",
+    icon: "living",
+    a: "After the first passports, the catalog stays in a material intelligence workspace — issues, benchmark, and publication update from the same governed record.",
+  },
+  {
+    q: "How does INTERTEXE support compliance?",
+    icon: "compliance",
+    a: "Regulatory monitor tracks requirement changes and preparation status — not legal certification. INTERTEXE does not fabricate product data; unknown information stays unknown.",
+  },
+];
+
+const MORE_FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "What is INTERTEXE — a data layer, a DPP company, or a consumer app?",
-    a: "INTERTEXE is product intelligence infrastructure for fashion. We govern your product data, publish passports, and deliver approved information to consumers — through INTERTEXE-hosted pages, your branded domain, or headless API into your existing app. We don't just organize DPP fields; we turn governed data into the digital product experience your customer actually sees.",
-  },
-  {
-    q: "Is INTERTEXE a Digital Product Passport company?",
-    a: "DPP regulation is why many brands start. INTERTEXE is a material-intelligence system: it structures catalog data, shows what is wrong or missing, benchmarks material strategy, and then publishes passports from that same record. Passport generation is an outcome, not the whole product.",
-  },
-  {
-    q: "Does INTERTEXE generate the Digital Product Passport?",
-    a: "Yes — once the underlying record is structured and the required fields are present. INTERTEXE determines what is still missing for the applicable passport requirements, the brand or supplier supplies those fields, and INTERTEXE generates the passport record, persistent product identity and QR. Material Intelligence is live in the public demo. Passport generation, identity/QR and publication are delivered through the onboarding fee engagement and the platform now being built.",
+    a: "Product intelligence infrastructure for fashion. We govern product data, publish passports, and deliver approved information through hosted pages, your domain, or headless API.",
   },
   {
     q: "Do consumers need the INTERTEXE app?",
-    a: "No. Consumers scan a QR or open a link — they see your product experience, not a requirement to download anything. You choose delivery: INTERTEXE-hosted passport, white-label on your domain, or headless API into your own app and website. The INTERTEXE shopping app is separate strategic infrastructure, not what enterprise customers buy.",
-  },
-  {
-    q: "We already have an app. Why would we send customers to INTERTEXE?",
-    a: "You don't have to. Headless API delivery lets your developers pull approved passport data — product, journey, care, circularity — and render it inside your existing digital ecosystem. INTERTEXE owns the data cloud and intelligence; your brand owns the presentation. Large brands often use all three: QR on garment, API in app, white-label on web — all reading from one governed record.",
-  },
-  {
-    q: "What are the delivery options for consumer-facing passports?",
-    a: "Three modes, not mutually exclusive: INTERTEXE Hosted (Editorial, Trace, Essential, Circular templates — included in Platform plans), White Label (your branded passport domain — Professional/Enterprise), and Headless API (structured passport JSON for your app or website — Enterprise). Hosted is zero development; headless is maximum control.",
+    a: "No. Consumers scan a QR or open a link — they see your product experience. The INTERTEXE shopping app is separate infrastructure.",
   },
   {
     q: "Can I see a live example before buying?",
-    a: "Yes. Scan the case study QR on intertexe.com/platform — it opens a published Customer Zero passport with real product photography and a full governed lifecycle (raw material through next life). That is exactly what your customers would see when they scan a garment QR.",
-  },
-  {
-    q: "What data do we need to start?",
-    a: "Existing data. CSV, Excel, JSON, a PLM/PIM export or a supplier file. INTERTEXE identifies what can be used and what remains missing.",
-  },
-  {
-    q: "What happens if our data is incomplete?",
-    a: "Unknown information stays unknown. INTERTEXE produces an actionable missing-data register. It does not fabricate product data.",
-  },
-  {
-    q: "Can INTERTEXE work with our PIM, PLM or ERP?",
-    a: "Start with file import (CSV, Excel, JSON) or a managed catalog after qualification. Broader systems integration and brand APIs are part of the platform architecture and scoped after the pilot. We do not claim pre-built connectors that are not live.",
-  },
-  {
-    q: "How does INTERTEXE handle confidential information?",
     a: (
       <>
-        Do not upload confidential catalogs on the public form. Secure transfer is arranged after qualification. See{" "}
-        <Link href="/privacy" className="underline underline-offset-4">
-          Privacy
+        Yes. Scan the case study QR on{" "}
+        <Link href="/platform/demo#live-passport" className="underline underline-offset-4">
+          /platform/demo
         </Link>{" "}
-        and{" "}
-        <Link href="/terms" className="underline underline-offset-4">
-          Terms
+        or explore the Material Intelligence API on{" "}
+        <Link href="/platform/api" className="underline underline-offset-4">
+          /platform/api
         </Link>
         .
       </>
     ),
   },
-  {
-    q: "Is INTERTEXE a compliance certification service?",
-    a: "No. INTERTEXE is software for preparation, generation, publication and maintenance. It does not provide legal certification, an official DPP score, or a guarantee of regulatory compliance. The EU Registry remains the registry for passport identifiers.",
-  },
-  {
-    q: "What is Material Benchmark?",
-    a: "Material Benchmark is INTERTEXE's peer comparison layer — like subscription analytics for SaaS, but for fabric and material strategy. Brands compare fiber mix, completeness, passport readiness, and conversion signals against governed peer segments in their market. You see what material compositions are outperforming or underperforming vs peers, sliced by category and cohort. Individual competitor catalogs and shopper identity are never exposed — only aggregate medians from approved datasets.",
-  },
-  {
-    q: "What happens as DPP requirements evolve?",
-    a: "A regulatory monitor evaluates tracked requirement changes against the catalog and shows preparation status: unaffected, already complete, missing data, or review needed. Brands do not start over. That is operational software, not legal advice.",
-  },
 ];
+
+function FaqIcon({ kind }: { kind: (typeof FAQ)[number]["icon"] }) {
+  const cls = "h-5 w-5 text-[var(--platform-primary)]";
+  if (kind === "catalog") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+        <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" />
+      </svg>
+    );
+  }
+  if (kind === "demand") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+        <path d="M12 22c4-4 8-7.5 8-12a8 8 0 1 0-16 0c0 4.5 4 8 8 12Z" />
+      </svg>
+    );
+  }
+  if (kind === "resolve") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+        <ellipse cx="12" cy="6" rx="7" ry="3" />
+        <path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
+      </svg>
+    );
+  }
+  if (kind === "deliver") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+        <rect x="3" y="4" width="18" height="13" rx="2" />
+        <path d="M7 20h10" />
+      </svg>
+    );
+  }
+  if (kind === "living") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+        <path d="M21 12a9 9 0 1 1-3-6.7" />
+        <path d="M21 3v6h-6" />
+      </svg>
+    );
+  }
+  return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+      <path d="M12 3 3 7v6c0 5 4.5 8 9 8s9-3 9-8V7l-9-4Z" />
+    </svg>
+  );
+}
 
 export function PlatformFaq() {
   return (
-    <section className="platform-abstract-band itx-abstract-motif border-t border-[#e8e3da]">
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-24">
-        <h2 className="mb-2 text-[1.75rem] sm:text-3xl md:text-4xl font-light text-[var(--platform-primary)]" style={SERIF}>
-          FAQ
-        </h2>
-        <p className="text-sm text-[#8a847c] mb-8">
-          Workspace questions for{" "}
-          <span className="text-[var(--platform-primary)]">intertexe.com/platform/discover</span>.
-        </p>
-        <div className="border-t border-[#e8e3da]">
-          {FAQ.map((item) => (
-            <details key={item.q} name="platform-faq" className="group border-b border-[#e8e3da]">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[#161513] [&::-webkit-details-marker]:hidden">
-                <span className="text-base sm:text-lg font-normal leading-snug" style={SERIF}>
-                  {item.q}
-                </span>
-                <svg
-                  className="h-4 w-4 shrink-0 text-[#8a847c] transition-transform duration-200 group-open:rotate-180"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  aria-hidden="true"
+    <section id="faq" className="scroll-mt-28 platform-abstract-band itx-abstract-motif border-t border-[#e8e3da] py-12 sm:py-16 lg:py-24">
+      <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-8 sm:gap-10 lg:gap-14 items-start">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--platform-quiet)] mb-5">FAQ</p>
+            <h2 className="text-[1.75rem] sm:text-[2.5rem] font-light text-[var(--platform-primary)] mb-4 leading-[1.12]" style={SERIF}>
+              Answers for a more transparent industry.
+            </h2>
+            <p className="text-[15px] text-[var(--platform-muted)] font-light leading-relaxed mb-8">
+              Workspace, delivery, and compliance questions — without overclaiming certification or inventing product
+              data.
+            </p>
+            <PrimaryLink href="/platform/demo">See it live →</PrimaryLink>
+          </div>
+          <div>
+            <div className="grid sm:grid-cols-2 gap-4 mb-8">
+              {FAQ.map((item) => (
+                <details
+                  key={item.q}
+                  name="platform-faq-grid"
+                  className="group rounded-xl border border-[var(--platform-border)] bg-white p-4 sm:p-5 shadow-[0_8px_24px_rgba(22,21,19,0.04)]"
                 >
-                  <path d="M3 5.5 8 10.5 13 5.5" stroke="currentColor" strokeWidth="1.2" />
-                </svg>
-              </summary>
-              <p className="pb-5 pr-8 text-sm text-[#5c5854] leading-relaxed">{item.a}</p>
-            </details>
-          ))}
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                    <span className="flex items-start gap-3">
+                      <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--platform-highlight)] border border-[var(--platform-border)] shrink-0">
+                        <FaqIcon kind={item.icon} />
+                      </span>
+                      <span className="text-sm font-medium text-[var(--platform-ink)] leading-snug pt-1" style={SERIF}>
+                        {item.q}
+                      </span>
+                    </span>
+                    <span className="text-[var(--platform-quiet)] text-lg leading-none shrink-0 group-open:rotate-45 transition-transform">+</span>
+                  </summary>
+                  <p className="mt-4 pl-11 text-sm text-[var(--platform-muted)] leading-relaxed">{item.a}</p>
+                </details>
+              ))}
+            </div>
+            <div className="border-t border-[var(--platform-border)]">
+              {MORE_FAQ.map((item) => (
+                <details key={item.q} name="platform-faq-more" className="group border-b border-[var(--platform-border)]">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-[var(--platform-ink)] [&::-webkit-details-marker]:hidden">
+                    <span className="text-sm leading-snug" style={SERIF}>
+                      {item.q}
+                    </span>
+                    <span className="text-[var(--platform-quiet)] group-open:rotate-180 transition-transform">▾</span>
+                  </summary>
+                  <p className="pb-4 pr-8 text-sm text-[var(--platform-muted)] leading-relaxed">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

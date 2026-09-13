@@ -1,245 +1,640 @@
-/* Premium guided tour — /platform/demo */
+/* See it live — editorial demo page (/platform/demo) */
 
-.demo-tour-hero {
-  background: linear-gradient(180deg, #faf8f4 0%, #f3efe8 100%);
+.demo-editorial-hero {
+  background: var(--platform-bg);
 }
 
-.demo-tour-hero-visual {
+.demo-editorial-hero-art {
   position: relative;
-  min-height: clamp(420px, 58vh, 640px);
-}
-
-.demo-tour-hero-garment {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: min(42%, 280px);
-  z-index: 1;
-}
-
-.demo-tour-hero-scan {
-  position: absolute;
-  left: 28%;
-  bottom: 8%;
-  width: min(28%, 180px);
-  z-index: 3;
-  filter: drop-shadow(0 24px 48px rgba(22, 21, 19, 0.14));
-}
-
-.demo-tour-hero-passport {
-  position: absolute;
-  right: 4%;
-  bottom: 6%;
-  width: min(26%, 200px);
-  z-index: 4;
-  filter: drop-shadow(0 32px 64px rgba(22, 21, 19, 0.16));
-}
-
-.demo-tour-hero-workspace {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: min(58%, 520px);
-  z-index: 2;
-  opacity: 0.92;
-}
-
-.demo-tour-scan-flow {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  align-items: center;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--platform-border) 70%, transparent);
+  background: #f3efe8;
+  min-height: 280px;
+  aspect-ratio: 16 / 10;
 }
 
 @media (min-width: 1024px) {
-  .demo-tour-scan-flow {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 2.5rem;
+  .demo-editorial-hero-art {
+    min-height: 420px;
+    aspect-ratio: 16 / 11;
   }
 }
 
-.demo-tour-scan-bridge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 0;
-}
-
-.demo-tour-scan-bridge-line {
+.demo-editorial-hero-art-image {
+  display: block;
   width: 100%;
-  max-width: 120px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #c4a574, transparent);
-  animation: demo-scan-pulse 2.8s ease-in-out infinite;
+  height: 100%;
+  object-fit: cover;
+  /* Crop to hero scan → passport → lifecycle circles from editorial mock */
+  object-position: 62% 10%;
 }
 
-@keyframes demo-scan-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scaleX(0.85);
-  }
-  50% {
-    opacity: 1;
-    transform: scaleX(1);
+@media (max-width: 1023px) {
+  .demo-editorial-hero-art-image {
+    object-position: 50% 8%;
   }
 }
 
-.demo-tour-chapter {
-  padding: 4rem 0;
-  border-bottom: 1px solid #e8e3da;
+.demo-editorial-flow {
+  background: #fff;
 }
 
-.demo-tour-chapter:last-child {
-  border-bottom: none;
+.demo-editorial-flow-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
 }
 
-.demo-tour-chapter--dark {
-  background: linear-gradient(180deg, #1a2332 0%, #243044 100%);
-  color: #f7f5f1;
-  border-bottom-color: #2a3548;
-  margin-left: calc(-1 * var(--demo-gutter, 1rem));
-  margin-right: calc(-1 * var(--demo-gutter, 1rem));
-  padding-left: var(--demo-gutter, 1rem);
-  padding-right: var(--demo-gutter, 1rem);
+@media (min-width: 768px) {
+  .demo-editorial-flow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+  }
 }
 
-.demo-tour-chapter-num {
+@media (min-width: 1100px) {
+  .demo-editorial-flow-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+.demo-editorial-flow-step {
+  position: relative;
+  padding-top: 0.25rem;
+}
+
+.demo-editorial-flow-arrow {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .demo-editorial-flow-arrow {
+    display: block;
+    position: absolute;
+    left: -0.55rem;
+    top: 2.1rem;
+    color: var(--platform-quiet);
+    font-size: 0.85rem;
+  }
+}
+
+.demo-editorial-flow-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--platform-primary);
+  margin-bottom: 0.85rem;
+}
+
+.demo-editorial-flow-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.demo-editorial-flow-num {
+  margin: 0 0 0.35rem;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
+}
+
+.demo-editorial-flow-title {
+  margin: 0 0 0.5rem;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--platform-ink);
+}
+
+.demo-editorial-flow-copy {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--platform-muted);
+}
+
+.demo-editorial-passport {
+  background: var(--platform-bg);
+}
+
+.demo-editorial-passport-grid {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .demo-editorial-passport-grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 2rem 2.5rem;
+  }
+}
+
+.demo-editorial-passport-thumb {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.demo-editorial-passport-thumb-image {
+  width: 72px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid var(--platform-border);
+  opacity: 0.45;
+}
+
+.demo-editorial-passport-thumb-image--active {
+  opacity: 1;
+  border-color: var(--platform-ink);
+  box-shadow: 0 8px 24px rgba(22, 21, 19, 0.08);
+}
+
+.demo-editorial-passport-lifestyle-image {
+  width: 100%;
+  max-height: 620px;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+.demo-editorial-passport-card {
+  border: 1px solid var(--platform-border);
+  border-radius: 1rem;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(22, 21, 19, 0.06);
+}
+
+.demo-editorial-passport-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--platform-border);
+}
+
+.demo-editorial-passport-verified {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.55rem;
+  border-radius: 9999px;
+  background: #eaf2ea;
+  color: #2d5a34;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.demo-editorial-passport-card-product {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--platform-border);
+}
+
+.demo-editorial-passport-card-product-image {
+  width: 72px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  background: #f0ebe4;
+}
+
+.demo-editorial-passport-tabs {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--platform-border);
+  [scrollbar-width: none];
+}
+
+.demo-editorial-passport-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.demo-editorial-passport-tabs button {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 0.35rem 0.55rem;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--platform-muted);
+  cursor: pointer;
+}
+
+.demo-editorial-passport-tabs button.is-active {
+  color: var(--platform-ink);
+  box-shadow: inset 0 -2px 0 var(--platform-ink);
+}
+
+.demo-editorial-passport-card-body {
+  padding: 1rem 1.15rem 1.15rem;
+}
+
+.demo-editorial-passport-bar {
+  height: 8px;
+  border-radius: 9999px;
+  background: #ece7df;
+  overflow: hidden;
+  margin-bottom: 0.65rem;
+}
+
+.demo-editorial-passport-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #c4a574, #8a847c);
+}
+
+.demo-editorial-passport-facts {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+}
+
+.demo-editorial-passport-facts dt {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
+  margin-bottom: 0.15rem;
+}
+
+.demo-editorial-passport-facts dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--platform-ink);
+}
+
+.demo-editorial-passport-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.15rem;
+  border-top: 1px solid var(--platform-border);
+  background: #faf8f4;
+}
+
+.demo-editorial-passport-dpp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--platform-primary);
+}
+
+.demo-editorial-passport-dpp::before {
+  content: "🌐";
+  font-size: 12px;
+}
+
+.demo-editorial-passport-share {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--platform-muted);
+  text-decoration: none;
+}
+
+.demo-editorial-passport-share:hover {
+  color: var(--platform-ink);
+}
+
+.demo-editorial-quote {
+  background: var(--platform-bg);
+}
+
+@media (max-width: 639px) {
+  .demo-editorial-hero h1 {
+    font-size: 2.15rem;
+  }
+
+  .demo-editorial-btn-primary,
+  .demo-editorial-btn-outline {
+    width: 100%;
+  }
+
+  .demo-editorial-passport-grid > * {
+    min-width: 0;
+  }
+
+  .demo-editorial-passport-lifestyle-image {
+    max-height: 420px;
+  }
+
+  .demo-editorial-chapter h3 {
+    font-size: 1.55rem;
+  }
+}
+
+.demo-editorial-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.85rem 1.75rem;
+  border-radius: 9999px;
+  background: #161513;
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.demo-editorial-btn-primary:hover {
+  background: #2a2826;
+}
+
+.demo-editorial-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.85rem 1.75rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--platform-ink) 20%, transparent);
+  background: #fff;
+  color: var(--platform-ink);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.demo-editorial-btn-text {
+  font-size: 13px;
+  color: var(--platform-muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.demo-editorial-btn-text:hover {
+  color: var(--platform-ink);
+}
+
+.demo-editorial-storyline {
+  background: var(--platform-bg);
+}
+
+.demo-editorial-chapter {
+  border-top: 1px solid color-mix(in srgb, var(--platform-border) 70%, transparent);
+}
+
+.demo-editorial-chapter--alt {
+  background: #fff;
+}
+
+.demo-editorial-chapter-meta {
+  margin: 0 0 0.75rem;
   font-size: 10px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #9c7b8b;
-  margin-bottom: 0.75rem;
+  color: var(--platform-quiet);
 }
 
-.demo-tour-chapter--dark .demo-tour-chapter-num {
-  color: #c4a574;
+.demo-editorial-panel {
+  border: 1px solid var(--platform-border);
+  border-radius: 1rem;
+  background: #fff;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 20px 50px rgba(22, 21, 19, 0.05);
 }
 
-.demo-tour-source-grid {
+.demo-editorial-source-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
 }
 
-.demo-tour-source-card {
+.demo-editorial-source-card {
   padding: 0.65rem 0.75rem;
   border-radius: 10px;
-  border: 1px solid #e8e3da;
+  border: 1px solid var(--platform-border);
   background: #faf8f4;
   font-size: 11px;
-  color: #5c5854;
+  color: var(--platform-muted);
 }
 
-.demo-tour-source-card code {
+.demo-editorial-source-card code {
   display: block;
   margin-top: 0.35rem;
   font-family: ui-monospace, monospace;
   font-size: 10px;
-  color: #8a847c;
+  color: var(--platform-quiet);
 }
 
-.demo-tour-split {
+.demo-editorial-source-arrow {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0;
+  color: var(--platform-accent);
+  font-size: 0.85rem;
+}
+
+.demo-editorial-record-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--platform-border);
+  background: #faf8f4;
+}
+
+.demo-editorial-record-chip-image {
+  width: 48px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 0.35rem;
+}
+
+.demo-editorial-split {
   display: grid;
   gap: 1rem;
 }
 
 @media (min-width: 640px) {
-  .demo-tour-split {
+  .demo-editorial-split {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-.demo-tour-messy,
-.demo-tour-clean {
+.demo-editorial-messy,
+.demo-editorial-clean {
   padding: 1rem 1.15rem;
   border-radius: 12px;
-  border: 1px solid #e8e3da;
+  border: 1px solid var(--platform-border);
 }
 
-.demo-tour-messy {
+.demo-editorial-messy {
   background: #f7f3ee;
   font-family: ui-monospace, monospace;
   font-size: 13px;
   color: #6b6560;
 }
 
-.demo-tour-clean {
+.demo-editorial-clean {
   background: #fff;
 }
 
-.demo-tour-issue {
+.demo-editorial-split-label {
+  margin: 0 0 0.5rem;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
+}
+
+.demo-editorial-split-label--accent {
+  color: var(--platform-primary);
+}
+
+.demo-editorial-issue {
   padding: 0.85rem 1rem;
   border-radius: 10px;
-  border: 1px solid #e8e3da;
+  border: 1px solid var(--platform-border);
   background: #fff;
   text-align: left;
   width: 100%;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.demo-tour-issue--open {
-  border-color: #c4a574;
+.demo-editorial-issue--open {
+  border-color: var(--platform-accent-muted);
   box-shadow: 0 12px 32px rgba(22, 21, 19, 0.06);
 }
 
-.demo-tour-intel-grid {
+.demo-editorial-intel-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.demo-tour-intel-metric {
+.demo-editorial-intel-metric {
   padding: 1rem;
   border-radius: 12px;
-  border: 1px solid #e8e3da;
+  border: 1px solid var(--platform-border);
   background: #fff;
 }
 
-.demo-tour-catalog-grid {
+.demo-editorial-phone {
+  border: 6px solid #161513;
+  border-radius: 2rem;
+  overflow: hidden;
+  max-width: 260px;
+  margin: 0 auto;
+  box-shadow: 0 32px 64px rgba(22, 21, 19, 0.12);
+  background: #161513;
+}
+
+.demo-editorial-phone-notch {
+  height: 20px;
+  background: #faf8f4;
+  display: flex;
+  justify-content: center;
+}
+
+.demo-editorial-phone-notch::after {
+  content: "";
+  width: 48px;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 9999px;
+  background: #ddd5cb;
+}
+
+.demo-editorial-phone-image {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+}
+
+.demo-editorial-phone-body {
+  background: #fff;
+  padding: 1rem;
+}
+
+.demo-editorial-phone-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+}
+
+.demo-editorial-phone-tags span {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--platform-border);
+  color: var(--platform-muted);
+}
+
+.demo-editorial-qr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--platform-border);
+  border-radius: 9999px;
+  background: #fff;
+  padding: 0.5rem 0.75rem;
+}
+
+.demo-editorial-qr-chip-icon {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 0.35rem;
+  border: 1px solid var(--platform-border);
+  font-size: 8px;
+  font-family: ui-monospace, monospace;
+}
+
+.demo-editorial-delivery-chip {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 120px;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--platform-border);
+  background: #fff;
+}
+
+.demo-editorial-delivery-chip span:first-child {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--platform-primary);
+}
+
+.demo-editorial-delivery-chip span:last-child {
+  margin-top: 0.25rem;
+  font-size: 11px;
+  color: var(--platform-muted);
+}
+
+.demo-editorial-passport-card-columns {
+  display: grid;
   gap: 1.25rem;
 }
 
-.demo-tour-product-card {
-  border-radius: 16px;
-  border: 1px solid #e8e3da;
-  background: #fff;
-  overflow: hidden;
-  box-shadow: 0 16px 40px rgba(22, 21, 19, 0.04);
-  transition: box-shadow 0.2s;
-}
-
-.demo-tour-product-card:hover {
-  box-shadow: 0 20px 50px rgba(22, 21, 19, 0.08);
-}
-
-.demo-tour-product-image {
-  aspect-ratio: 4 / 5;
-  background: #f0ebe4;
-  object-fit: cover;
-  width: 100%;
-}
-
-.demo-tour-api-card {
-  border-radius: 16px;
-  border: 1px solid #e8e3da;
-  background: #fff;
-  padding: 1.5rem;
-  box-shadow: 0 20px 50px rgba(22, 21, 19, 0.05);
-}
-
-.demo-tour-pilot {
-  background: linear-gradient(135deg, #f7f5f1 0%, #ebe4da 100%);
-  border-radius: 24px;
-  overflow: hidden;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .demo-tour-scan-bridge-line {
-    animation: none;
-    opacity: 0.7;
+@media (min-width: 640px) {
+  .demo-editorial-passport-card-columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    gap: 1.5rem;
   }
 }

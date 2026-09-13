@@ -18,7 +18,6 @@ export const API_NAV = [
   { id: "schema", label: "Response schema" },
   { id: "rate-limits", label: "Rate limits" },
   { id: "freshness", label: "Data freshness" },
-  { id: "examples", label: "Code examples" },
   { id: "support", label: "Support" },
 ] as const;
 
