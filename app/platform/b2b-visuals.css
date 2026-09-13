@@ -602,12 +602,50 @@
   color: #8a847c;
 }
 
+/* Platform hero — fixed workspace + floating insight card (editorial mock) */
+.platform-hero-visual {
+  isolation: isolate;
+}
+
+.platform-hero-product-cutout {
+  left: -4%;
+  bottom: 6%;
+  width: min(30%, 210px);
+}
+
+@media (min-width: 1280px) {
+  .platform-hero-product-cutout {
+    left: -6%;
+    bottom: 8%;
+    width: min(28%, 220px);
+  }
+}
+
+.platform-hero-insight-stack {
+  left: 6%;
+  bottom: 14%;
+  width: min(92%, 340px);
+}
+
+@media (min-width: 1024px) {
+  .platform-hero-insight-stack {
+    left: 5%;
+    bottom: 16%;
+    width: min(42%, 340px);
+  }
+}
+
+.platform-hero-insight {
+  animation: platform-dial-card-in 0.45s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .b2b-pulse-line,
   .b2b-pulse-line-delay,
   .b2b-pulse-vertical,
   .b2b-fade-in,
-  .platform-dial-card {
+  .platform-dial-card,
+  .platform-hero-insight {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
