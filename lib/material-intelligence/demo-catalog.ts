@@ -48,12 +48,12 @@ export type DemoCatalogProduct = {
 };
 
 export const DEMO_WORKFLOW = [
-  { id: "source", label: "Source" },
-  { id: "normalized", label: "Normalized" },
-  { id: "issues", label: "Issues" },
-  { id: "intelligence", label: "Intelligence" },
-  { id: "benchmark", label: "Benchmark" },
-  { id: "passports", label: "Passports" },
+  { id: "source", label: "Source", chapter: "01", title: "What the brand sends" },
+  { id: "normalized", label: "Normalize", chapter: "02", title: "What INTERTEXE understands" },
+  { id: "issues", label: "Resolve", chapter: "03", title: "What needs attention" },
+  { id: "intelligence", label: "Intelligence", chapter: "04", title: "What the data means" },
+  { id: "benchmark", label: "Compare", chapter: "05", title: "How the product performs" },
+  { id: "passports", label: "Publish", chapter: "06", title: "What the customer sees" },
 ] as const;
 
 export type DemoWorkflowId = (typeof DEMO_WORKFLOW)[number]["id"];
@@ -70,8 +70,30 @@ export const DEMO_ISSUE_LABEL: Record<DemoIssueKind, string> = {
 
 export const DEMO_CATALOG: DemoCatalogProduct[] = [
   {
-    id: "silk-evening-dress",
+    id: "silk-midi-skirt",
     sku: "ITX-4102",
+    name: "Silk Midi Skirt",
+    category: "Skirts",
+    source: {
+      main: "96% silk 4% elastane",
+      origin: "IT",
+      identifier: "ITX-4102",
+      supplier: "Atelier Nord · Milan",
+    },
+    normalized: {
+      shell: "96% Silk · 4% Elastane",
+      origin: "Italy",
+      identifier: "ITX-4102",
+      confidence: "high",
+    },
+    issues: [],
+    passport: { status: "ready", missing: [] },
+    naturalFiberShare: 96,
+    silk: true,
+  },
+  {
+    id: "silk-evening-dress",
+    sku: "ITX-4104",
     name: "Silk Evening Dress",
     category: "Dresses",
     source: {
@@ -79,13 +101,13 @@ export const DEMO_CATALOG: DemoCatalogProduct[] = [
       lining: "LINING 100 VI",
       supplier: "Portugal atelier declaration",
       origin: "PT",
-      identifier: "ITX-4102",
+      identifier: "ITX-4104",
     },
     normalized: {
       shell: "92% Silk · 8% Elastane",
       lining: "100% Viscose",
       origin: "Portugal",
-      identifier: "ITX-4102",
+      identifier: "ITX-4104",
       confidence: "high",
     },
     issues: [],
@@ -117,27 +139,6 @@ export const DEMO_CATALOG: DemoCatalogProduct[] = [
     passport: { status: "review", missing: ["resolved_composition", "country_of_origin"] },
     naturalFiberShare: null,
     silk: false,
-  },
-  {
-    id: "silk-midi-skirt",
-    sku: "SAMPLE-VERIFIED",
-    name: "Silk Midi Skirt",
-    category: "Skirts",
-    source: {
-      main: "96% silk 4% elastane",
-      origin: "IT",
-      identifier: "0200000000035",
-    },
-    normalized: {
-      shell: "96% Silk · 4% Elastane",
-      origin: "Italy",
-      identifier: "0200000000035",
-      confidence: "high",
-    },
-    issues: [],
-    passport: { status: "ready", missing: [] },
-    naturalFiberShare: 96,
-    silk: true,
   },
   {
     id: "cotton-poplin-shirt",

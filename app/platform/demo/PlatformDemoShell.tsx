@@ -6,10 +6,12 @@ import Link from "next/link";
 import { SERIF } from "../platform-ui";
 
 const JOURNEY = [
-  { id: "live-demo", label: "Live scan", hint: "Desktop → QR → customer" },
-  { id: "walkthrough", label: "Catalog", hint: "10-product sample" },
-  { id: "api", label: "API lookup", hint: "Live GTIN demo" },
-  { id: "book", label: "Request", hint: "Start with 10 products" },
+  { id: "hero", label: "Overview", hint: "Product intelligence tour" },
+  { id: "live-scan", label: "Live scan", hint: "Tag → passport" },
+  { id: "journey", label: "Workflow", hint: "Six chapters" },
+  { id: "catalog", label: "Catalog", hint: "10 sample products" },
+  { id: "api", label: "API", hint: "GTIN lookup" },
+  { id: "pilot", label: "Pilot", hint: "Start with 10 products" },
 ] as const;
 
 export function PlatformDemoShell({ children }: { children: ReactNode }) {
@@ -26,7 +28,7 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
         if (visible?.target?.id) setActive(visible.target.id);
       },
-      { rootMargin: "-20% 0px -55% 0px", threshold: [0, 0.25, 0.5] }
+      { rootMargin: "-18% 0px -55% 0px", threshold: [0, 0.2, 0.4, 0.6] }
     );
 
     for (const node of nodes) observer.observe(node);
@@ -34,11 +36,12 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+    <div
+      className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12"
+      style={{ "--demo-gutter": "clamp(1rem, 4vw, 3rem)" } as React.CSSProperties}
+    >
       <div className="rounded-2xl border border-[var(--platform-border)] bg-white/80 px-4 py-3 sm:px-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-sm text-[var(--platform-muted)]">
-          Need the full API reference? OpenAPI, auth, and error codes live on the docs page.
-        </p>
+        <p className="text-sm text-[var(--platform-muted)]">Guided product tour · Silk Midi Skirt · ITX-4102</p>
         <Link
           href="/platform/api"
           className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] shrink-0"
@@ -50,7 +53,7 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
 
       <div
         role="tablist"
-        aria-label="Demo sections"
+        aria-label="Tour sections"
         className="lg:hidden flex gap-2 overflow-x-auto pb-4 mb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {JOURNEY.map((item, i) => {
@@ -73,10 +76,10 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
         })}
       </div>
 
-      <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-14 xl:gap-20">
+      <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-14 xl:gap-20">
         <aside className="hidden lg:block">
-          <nav aria-label="Demo sections" className="sticky top-28 pt-4">
-            <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--platform-quiet)] mb-6">On this demo</p>
+          <nav aria-label="Tour sections" className="sticky top-28 pt-4">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--platform-quiet)] mb-6">On this tour</p>
             <ol className="space-y-1 border-l border-[var(--platform-border)]">
               {JOURNEY.map((item, i) => {
                 const selected = item.id === active;
@@ -91,7 +94,7 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
                       }`}
                     >
                       <span className="text-[10px] tracking-[0.14em] uppercase text-[var(--platform-quiet)] block mb-0.5">
-                        Step {i + 1}
+                        {String(i + 1).padStart(2, "0")}
                       </span>
                       <span className="text-[13px] block" style={SERIF}>
                         {item.label}

@@ -1,0 +1,245 @@
+/* Premium guided tour — /platform/demo */
+
+.demo-tour-hero {
+  background: linear-gradient(180deg, #faf8f4 0%, #f3efe8 100%);
+}
+
+.demo-tour-hero-visual {
+  position: relative;
+  min-height: clamp(420px, 58vh, 640px);
+}
+
+.demo-tour-hero-garment {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: min(42%, 280px);
+  z-index: 1;
+}
+
+.demo-tour-hero-scan {
+  position: absolute;
+  left: 28%;
+  bottom: 8%;
+  width: min(28%, 180px);
+  z-index: 3;
+  filter: drop-shadow(0 24px 48px rgba(22, 21, 19, 0.14));
+}
+
+.demo-tour-hero-passport {
+  position: absolute;
+  right: 4%;
+  bottom: 6%;
+  width: min(26%, 200px);
+  z-index: 4;
+  filter: drop-shadow(0 32px 64px rgba(22, 21, 19, 0.16));
+}
+
+.demo-tour-hero-workspace {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: min(58%, 520px);
+  z-index: 2;
+  opacity: 0.92;
+}
+
+.demo-tour-scan-flow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .demo-tour-scan-flow {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+.demo-tour-scan-bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.demo-tour-scan-bridge-line {
+  width: 100%;
+  max-width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c4a574, transparent);
+  animation: demo-scan-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes demo-scan-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scaleX(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.demo-tour-chapter {
+  padding: 4rem 0;
+  border-bottom: 1px solid #e8e3da;
+}
+
+.demo-tour-chapter:last-child {
+  border-bottom: none;
+}
+
+.demo-tour-chapter--dark {
+  background: linear-gradient(180deg, #1a2332 0%, #243044 100%);
+  color: #f7f5f1;
+  border-bottom-color: #2a3548;
+  margin-left: calc(-1 * var(--demo-gutter, 1rem));
+  margin-right: calc(-1 * var(--demo-gutter, 1rem));
+  padding-left: var(--demo-gutter, 1rem);
+  padding-right: var(--demo-gutter, 1rem);
+}
+
+.demo-tour-chapter-num {
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #9c7b8b;
+  margin-bottom: 0.75rem;
+}
+
+.demo-tour-chapter--dark .demo-tour-chapter-num {
+  color: #c4a574;
+}
+
+.demo-tour-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+}
+
+.demo-tour-source-card {
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e8e3da;
+  background: #faf8f4;
+  font-size: 11px;
+  color: #5c5854;
+}
+
+.demo-tour-source-card code {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: #8a847c;
+}
+
+.demo-tour-split {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .demo-tour-split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.demo-tour-messy,
+.demo-tour-clean {
+  padding: 1rem 1.15rem;
+  border-radius: 12px;
+  border: 1px solid #e8e3da;
+}
+
+.demo-tour-messy {
+  background: #f7f3ee;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  color: #6b6560;
+}
+
+.demo-tour-clean {
+  background: #fff;
+}
+
+.demo-tour-issue {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e8e3da;
+  background: #fff;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.demo-tour-issue--open {
+  border-color: #c4a574;
+  box-shadow: 0 12px 32px rgba(22, 21, 19, 0.06);
+}
+
+.demo-tour-intel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.demo-tour-intel-metric {
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e8e3da;
+  background: #fff;
+}
+
+.demo-tour-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.demo-tour-product-card {
+  border-radius: 16px;
+  border: 1px solid #e8e3da;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(22, 21, 19, 0.04);
+  transition: box-shadow 0.2s;
+}
+
+.demo-tour-product-card:hover {
+  box-shadow: 0 20px 50px rgba(22, 21, 19, 0.08);
+}
+
+.demo-tour-product-image {
+  aspect-ratio: 4 / 5;
+  background: #f0ebe4;
+  object-fit: cover;
+  width: 100%;
+}
+
+.demo-tour-api-card {
+  border-radius: 16px;
+  border: 1px solid #e8e3da;
+  background: #fff;
+  padding: 1.5rem;
+  box-shadow: 0 20px 50px rgba(22, 21, 19, 0.05);
+}
+
+.demo-tour-pilot {
+  background: linear-gradient(135deg, #f7f5f1 0%, #ebe4da 100%);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-tour-scan-bridge-line {
+    animation: none;
+    opacity: 0.7;
+  }
+}

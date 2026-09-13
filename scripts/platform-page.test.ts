@@ -17,9 +17,12 @@ describe("Platform B2B sales page", () => {
   const faq = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformFaq.tsx"), "utf8");
   const discover = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
   const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
+  const demoClient = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
 
   it("positions INTERTEXE as product intelligence infrastructure, not DPP-only software", () => {
-    assert.match(sections, /product intelligence infrastructure for fashion/i);
+    assert.match(sections, /product intelligence infrastructure for/i);
+    assert.match(sections, /WhatItIsProcessVisual/);
+    assert.match(sections, /PlatformCapabilityNav/);
     assert.match(hero, /INTERTEXE FOR BRANDS/);
     assert.match(sections, /one governed product record/i);
     assert.doesNotMatch(sections, /EU certified/i);
@@ -47,7 +50,11 @@ describe("Platform B2B sales page", () => {
 
   it("routes live QR flow and API detail to dedicated pages", () => {
     assert.match(demo, /PlatformDemoClient/);
-    assert.match(demo, /SaaSDemoFlowVisual|live-demo/i);
+    assert.match(demoClient, /DemoLiveScan/);
+    assert.match(demoClient, /ProductLifecycleVisual/);
+    assert.match(demoClient, /live-passport/);
+    assert.match(demoClient, /DemoScrollyJourney/);
+    assert.match(demo, /guided tour/i);
     assert.match(discover, /Consumer delivery/);
     assert.match(discover, /Headless API/);
   });
@@ -64,8 +71,9 @@ describe("Platform B2B sales page", () => {
     assert.match(login, /getEnterpriseLoginUrl/);
     assert.match(form, /Start with 10 products \(pilot workspace\)/);
     assert.doesNotMatch(form, /\$5,000/);
-    assert.match(demo, /Product tour/);
+    assert.match(demo, /See INTERTEXE live|guided tour/i);
     assert.doesNotMatch(demo, /Live demonstration/);
+    assert.doesNotMatch(demo, /PlatformPageHeader/);
   });
 
   it("uses professional SaaS language on the public platform page", () => {

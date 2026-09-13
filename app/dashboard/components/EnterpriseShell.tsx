@@ -34,6 +34,7 @@ export function EnterpriseShell({
   organizationName,
   organizationSlug,
   role,
+  plan,
   workspaceContexts,
   founderHq = false,
   pilotStatus = null,

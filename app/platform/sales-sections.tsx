@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { WhatItIsProcessVisual } from "./b2b-visuals/WhatItIsProcessVisual";
+import { PlatformCapabilityNav } from "./PlatformCapabilityNav";
 import {
   DeliveryModesVisual,
   IntelligenceBenchmarkVisual,
@@ -42,49 +44,40 @@ const OUTPUT_PILLARS = [
   },
 ] as const;
 
-const VALUE_PILLARS = [
-  {
-    title: "Govern",
-    copy: "Connect PLM, ERP, spreadsheets and supplier files into one structured product record — with evidence, provenance, and approval workflow.",
-  },
-  {
-    title: "Publish",
-    copy: "Turn approved data into passports, regulatory readiness, and consumer-ready product experiences — not just compliance fields in a dashboard.",
-  },
-  {
-    title: "Deliver",
-    copy: "Hosted passport, white-label domain, or headless API into your existing app. One governed record powers every channel.",
-  },
-] as const;
-
 export function SalesHeroSection() {
   return <PlatformHero />;
 }
 
 export function SalesWhatItIsSection() {
   return (
-    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-14 lg:py-20 border-b border-[#e8e3da]/60">
+    <section className="platform-what-it-is platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-24 border-b border-[#e8e3da]/60">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <div className="max-w-2xl lg:max-w-3xl mb-8 sm:mb-10 lg:mb-14">
+        <aside className="platform-what-rail hidden xl:flex" aria-hidden>
+          <span>Digital Product Passport</span>
+          <span>Trust information</span>
+          <span>A more circular tomorrow</span>
+        </aside>
+
+        <div className="max-w-2xl lg:max-w-3xl mb-10 sm:mb-12 lg:mb-16">
           <Eyebrow>What INTERTEXE is</Eyebrow>
-          <Heading className="mb-3">Product intelligence infrastructure for fashion.</Heading>
+          <Heading className="mb-4">
+            Product intelligence infrastructure for{" "}
+            <em className="not-italic italic text-[var(--platform-accent)]">fashion.</em>
+          </Heading>
           <Body className="mb-0">
             We don&apos;t just help you organize the information a Digital Product Passport requires. We turn that
             information into the digital product experience your customer actually sees — hosted by INTERTEXE, on your
             domain, or inside your existing app.
           </Body>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {VALUE_PILLARS.map((pillar) => (
-            <article
-              key={pillar.title}
-              className="bg-white border border-[#e8e3da] p-5 sm:p-6 lg:p-8 border-l-[3px] border-l-[var(--platform-accent)]/50 lg:hover:shadow-[0_20px_50px_rgba(22,21,19,0.04)] transition-shadow"
-            >
-              <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-2">{pillar.title}</p>
-              <p className="text-sm text-[#5c5854] leading-relaxed">{pillar.copy}</p>
-            </article>
-          ))}
-        </div>
+
+        <WhatItIsProcessVisual />
+
+        <PlatformCapabilityNav className="mt-10 sm:mt-12 lg:mt-14" />
+
+        <blockquote className="platform-what-quote mt-10 sm:mt-12 lg:mt-14">
+          <p style={SERIF}>Products live longer when information goes further.</p>
+        </blockquote>
       </div>
     </section>
   );

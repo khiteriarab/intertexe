@@ -203,8 +203,22 @@ export function PlatformScrollShowcase() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    function onSelect(event: Event) {
+      const id = (event as CustomEvent<{ id: string }>).detail?.id;
+      if (id && PLATFORM_SCROLL_STAGES.some((stage) => stage.id === id)) {
+        setActiveId(id);
+      }
+    }
+    window.addEventListener("platform-select-stage", onSelect);
+    return () => window.removeEventListener("platform-select-stage", onSelect);
+  }, []);
+
   return (
-    <section className="platform-scroll-showcase platform-abstract-band itx-abstract-motif border-y border-[var(--platform-border)]/60 overflow-visible">
+    <section
+      id="platform-journey"
+      className="platform-scroll-showcase platform-abstract-band itx-abstract-motif border-y border-[var(--platform-border)]/60 overflow-visible scroll-mt-24"
+    >
       {/* Mobile + tablet: tabbed dial */}
       <div className="lg:hidden max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16">
         <p className="text-[10px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-3 text-center">

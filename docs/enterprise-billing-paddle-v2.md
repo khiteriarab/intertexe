@@ -10,8 +10,8 @@ Paddle is the **billing source of truth**. obelisk-core / INTERTEXE is the **ent
 | `PADDLE_WEBHOOK_SECRET` | Server only | Webhook HMAC verification |
 | `PADDLE_ENV` | Server | `sandbox` (default) or `production` |
 | `PADDLE_GRACE_PERIOD_DAYS` | Server | Grace after `past_due` (default 14) |
-| `PADDLE_PRICE_PLATFORM` | Server | Platform $499/mo price ID |
-| `PADDLE_PRICE_PROFESSIONAL` | Server | Professional $1,250/mo price ID |
+| `PADDLE_PRICE_PLATFORM` | Server | **Professional** $499/mo price ID (legacy env key name) |
+| `PADDLE_PRICE_PROFESSIONAL` | Server | **Platform** $1,250/mo price ID (legacy env key name) |
 | `PADDLE_PRICE_IMPLEMENTATION` | Server | Implementation $5,000 one-time price ID |
 | `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` | Client (optional) | Paddle.js only if using overlay checkout |
 
@@ -29,9 +29,9 @@ Writes the commercial reference to `scripts/output/paddle-catalog-ids.json` — 
 
 | Plan | Products | Hosted passports | Paddle |
 |------|----------|------------------|--------|
-| demo | 10 | 10 | No |
-| platform | 500 | 500 | Yes |
-| professional | 5,000 | 5,000 | Yes |
+| demo / free_snapshot | 10 | 10 | No |
+| professional | 500 | 500 | Yes |
+| platform | 2,000 | 2,000 | Yes |
 | enterprise | contract | contract | Manual / invoice |
 
 Demo is **not** a Paddle product.

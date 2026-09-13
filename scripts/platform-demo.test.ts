@@ -194,10 +194,11 @@ describe("Public demo and docs source safety", () => {
   });
 
   it("keeps documentation examples on the demo endpoint and OpenAPI URL", () => {
-    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/api/page.tsx"), "utf8");
+    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/api/PlatformDocsClient.tsx"), "utf8");
+    const shared = fs.readFileSync(path.join(process.cwd(), "app/platform/api/api-docs-shared.ts"), "utf8");
     assert.match(docs, /\/api\/v1\/demo\/composition\//);
     assert.match(docs, /\/api\/openapi\.json/);
-    assert.match(docs, /DEMO_GTIN_VERIFIED/);
+    assert.match(shared, /DEMO_GTIN_VERIFIED/);
     assert.doesNotMatch(docs, /0198765432104/);
     assert.match(docs, /unknown_legacy/);
     assert.match(docs, /Authorization: Bearer/);
@@ -224,39 +225,38 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(conflict?.normalized.shell || "", /Conflict/);
   });
 
-  it("keeps the catalog walkthrough on /platform/demo without inventing missing fields", () => {
+  it("keeps the guided tour on /platform/demo without inventing missing fields", () => {
     const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
-    const walkthrough = fs.readFileSync(
-      path.join(process.cwd(), "app/platform/demo/DemoCatalogWalkthrough.tsx"),
-      "utf8"
-    );
+    const journey = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoScrollyJourney.tsx"), "utf8");
+    const catalog = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoCatalogGrid.tsx"), "utf8");
+    const featured = fs.readFileSync(path.join(process.cwd(), "lib/material-intelligence/demo-featured.ts"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
-    assert.match(demo, /DemoCatalogWalkthrough/);
-    assert.match(walkthrough, /CatalogPreview/);
-    assert.match(walkthrough, /IssuesPreview/);
-    assert.match(walkthrough, /messy source data/i);
-    assert.match(walkthrough, /does not overwrite the original string/i);
-    assert.match(walkthrough, /Coming \/ developing/);
-    assert.match(walkthrough, /INTERTEXE consumer signal/i);
-    assert.doesNotMatch(walkthrough, /EU Certified/);
-    assert.doesNotMatch(walkthrough, /Guaranteed Compliant/);
+    assert.match(demo, /DemoScrollyJourney/);
+    assert.match(demo, /DemoCatalogGrid/);
+    assert.match(journey, /Source retained/);
+    assert.match(journey, /DEMO_FEATURED_PRODUCT/);
+    assert.match(featured, /Silk Midi Skirt/);
+    assert.match(catalog, /View source data/);
+    assert.match(catalog, /DEMO_CATALOG_NOTICE/);
+    assert.match(featured, /ITX-4102/);
+    assert.doesNotMatch(journey, /EU Certified/);
+    assert.doesNotMatch(journey, /Guaranteed Compliant/);
     assert.doesNotMatch(previews, /Official DPP Score/);
   });
 
-  it("puts a Barcelona office and a demo form on /platform/demo", () => {
+  it("puts pilot CTA and lead form wiring on /platform/demo", () => {
     const page = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
-    const book = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoBookSection.tsx"), "utf8");
+    const pilot = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoPilotCta.tsx"), "utf8");
     const office = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoOfficeSection.tsx"), "utf8");
     const form = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformLeadForm.tsx"), "utf8");
     const leads = fs.readFileSync(path.join(process.cwd(), "app/api/v1/leads/route.ts"), "utf8");
     const constants = fs.readFileSync(path.join(process.cwd(), "lib/email-constants.ts"), "utf8");
     const chrome = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformChrome.tsx"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
-    assert.match(page, /DemoBookSection/);
-    assert.match(page, /DemoOfficeSection/);
     assert.match(page, /PlatformDemoClient/);
-    assert.match(book, /Start with 10 products/);
-    assert.match(book, /See INTERTEXE with your own products/);
+    assert.doesNotMatch(page, /DemoOfficeSection/);
+    assert.match(pilot, /Start with 10 products/);
+    assert.match(pilot, /Your catalog, governed in INTERTEXE/);
     assert.match(form, /Do not attach confidential catalogs/);
     assert.doesNotMatch(form, /type=["']file["']/);
     assert.match(office, /Barcelona, Spain/);
