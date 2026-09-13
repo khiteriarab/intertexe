@@ -9,6 +9,7 @@ import {
 import { PlatformGraphicOrFallback } from "./PlatformGraphic";
 import { QrMark, SERIF } from "./platform-ui";
 import {
+  ENTERPRISE_GROUP_TAGLINES,
   enterpriseModuleCatalogByGroup,
   marketingMaturityFootnote,
 } from "../../lib/enterprise/marketing-modules";
@@ -27,10 +28,47 @@ export { PublishExperienceVisual } from "./b2b-visuals/PublishExperienceVisual";
 /** Ecosystem consumer lane: Discover · Scan · Compare */
 
 const MATURITY_BADGE: Record<ImplementationState, string> = {
-  implemented: "bg-[#e4edea] text-[#2c4a3e]",
-  partial: "bg-[#f5efd8] text-[#7a6218]",
-  placeholder: "bg-[#f0ebe4] text-[#8a847c]",
+  implemented: "platform-module-badge platform-module-badge-production",
+  partial: "platform-module-badge platform-module-badge-operational",
+  placeholder: "platform-module-badge platform-module-badge-roadmap",
 };
+
+function ModuleGroupIcon({ groupId }: { groupId: string }) {
+  const cls = "h-[18px] w-[18px] text-[var(--platform-primary)]";
+  if (groupId === "core") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    );
+  }
+  if (groupId === "operations") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+        <path d="M12 2 2 7l10 5 10-5-10-5Z" />
+        <path d="m2 17 10 5 10-5" />
+        <path d="m2 12 10 5 10-5" />
+      </svg>
+    );
+  }
+  if (groupId === "intelligence") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+        <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7Z" />
+        <circle cx="12" cy="9" r="2.5" />
+      </svg>
+    );
+  }
+  return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M9 9h6v6H9z" />
+    </svg>
+  );
+}
 
 const PEERS = PLATFORM_BENCHMARK_PEERS;
 const CONVERSION_COHORTS = PLATFORM_CONVERSION_COHORTS;
@@ -311,30 +349,39 @@ export function PassportIdentityVisual() {
 export function PlatformModuleGrid() {
   const groups = enterpriseModuleCatalogByGroup();
   return (
-    <div>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+    <div className="platform-module-grid">
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
         {groups.map((group) => (
-          <div key={group.id} className="border border-[#e8e3da] bg-[#f7f5f1] p-5 sm:p-6">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">{group.label}</p>
-            <ul className="space-y-3">
+          <article key={group.id} className="platform-module-column">
+            <header className="platform-module-column-header">
+              <span className="platform-module-column-icon" aria-hidden>
+                <ModuleGroupIcon groupId={group.id} />
+              </span>
+              <div className="min-w-0">
+                <p className="platform-module-group-title">{group.label}</p>
+                <p className="platform-module-group-tagline">
+                  {ENTERPRISE_GROUP_TAGLINES[group.id] || "Workspace modules"}
+                </p>
+              </div>
+            </header>
+            <ul className="platform-module-list">
               {group.modules.map((mod) => (
-                <li key={mod.href || mod.label} className="pl-3 border-l-2 border-[var(--platform-accent)]/25">
-                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                    <span className="text-sm text-[#161513] leading-snug">{mod.label}</span>
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide ${MATURITY_BADGE[mod.state]}`}
-                    >
-                      {implementationLabel(mod.state)}
-                    </span>
+                <li key={mod.href || mod.label} className="platform-module-item">
+                  <div className="platform-module-item-head">
+                    <span className="platform-module-item-label">{mod.label}</span>
+                    <span className={MATURITY_BADGE[mod.state]}>{implementationLabel(mod.state)}</span>
                   </div>
-                  <p className="text-[11px] text-[#8a847c] leading-relaxed">{mod.description}</p>
+                  <p className="platform-module-item-copy">{mod.description}</p>
                 </li>
               ))}
             </ul>
-          </div>
+          </article>
         ))}
       </div>
-      <p className="mt-4 text-xs text-[#8a847c] leading-relaxed">{marketingMaturityFootnote()}.</p>
+      <footer className="platform-module-footer">
+        <p>{marketingMaturityFootnote()}.</p>
+        <p className="platform-module-footer-tagline">People · Products · A cleaner tomorrow</p>
+      </footer>
     </div>
   );
 }

@@ -30,7 +30,17 @@ const MODULE_DESCRIPTIONS: Record<string, string> = {
   Integrations: "CSV import, API credentials, registry connections",
   Developers: "API keys, webhooks, and resolver documentation",
   Exports: "Catalog and passport export jobs",
+  Billing: "Plan, usage meters, and subscription management",
+  Traceability: "Tier coverage, chain completeness, and provenance maps",
   Settings: "Team, entitlements, and organization admin",
+};
+
+/** Public platform grid — group subtitles synced with enterprise nav. */
+export const ENTERPRISE_GROUP_TAGLINES: Record<string, string> = {
+  core: "Foundations for impact",
+  operations: "From data to action",
+  intelligence: "Insights that matter",
+  system: "Built to scale",
 };
 
 /** Canonical module list — mirrors enterprise sidebar nav + maturity state. */

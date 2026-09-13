@@ -320,17 +320,26 @@ export function SalesConsumerSection() {
 
 export function SalesPlatformBreadthSection() {
   return (
-    <section className="platform-abstract-band itx-abstract-motif border-y border-[#e8e3da]/60 py-12 sm:py-16 lg:py-20">
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <Eyebrow>Platform breadth</Eyebrow>
-        <Heading className="mb-4">One workspace for product intelligence.</Heading>
-        <Body className="max-w-2xl mb-8 sm:mb-10">
+    <section className="platform-module-showcase platform-abstract-band itx-abstract-motif border-y border-[#e8e3da]/60 py-12 sm:py-16 lg:py-24">
+      <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-10 lg:mb-12">
+          <Eyebrow className="mb-0">Platform breadth</Eyebrow>
+          <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--platform-quiet)] sm:text-right max-w-xs sm:pt-1">
+            Product intelligence · for a more transparent tomorrow
+          </p>
+        </div>
+        <Heading className="mb-4 max-w-3xl">One workspace for product intelligence.</Heading>
+        <Body className="max-w-2xl lg:max-w-3xl mb-10 lg:mb-12 text-[#6b6560]">
           The operating environment brands buy — synced with the live enterprise workspace sidebar. Maturity badges
           reflect what is production-ready today versus expanding modules.
         </Body>
         <PlatformModuleGrid />
-        <p className="mt-8 text-xs text-[#8a847c] leading-relaxed max-w-2xl">
-          Explore the live product flow for module-level detail, or start with 10 of your own products after qualification.
+        <p className="mt-10 lg:mt-12 text-sm text-[#8a847c] leading-relaxed max-w-2xl">
+          Explore the live product flow for module-level detail, or{" "}
+          <Link href="/platform/request?intent=snapshot&cta=platform_breadth" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
+            start with 10 of your own products
+          </Link>
+          .
         </p>
       </div>
     </section>

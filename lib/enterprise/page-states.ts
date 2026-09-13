@@ -42,5 +42,6 @@ export const ORG_PAGE_STATES: Record<string, ImplementationState> = {
   integrations: "partial",
   developers: "partial",
   exports: "partial",
+  billing: "partial",
   settings: "partial",
 };
