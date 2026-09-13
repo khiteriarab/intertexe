@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { orgUpgradeUrl } from "../../../../../lib/enterprise/org-routes";
 import {
   entButtonClass,
   entButtonGhostClass,
@@ -59,12 +61,14 @@ export function CatalogImportClient({
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function onPreview(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setMessage(null);
+    setUpgradeUrl(null);
     const res = await fetch(`/api/dashboard/org/${slug}/imports/preview`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -86,6 +90,7 @@ export function CatalogImportClient({
   async function onCommit() {
     setBusy(true);
     setMessage(null);
+    setUpgradeUrl(null);
     const res = await fetch(`/api/dashboard/org/${slug}/imports/commit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -95,6 +100,7 @@ export function CatalogImportClient({
     setBusy(false);
     if (!res.ok) {
       setMessage(data.message || "Import failed.");
+      setUpgradeUrl(data.code === "product_allowance" ? data.upgradeUrl || orgUpgradeUrl(slug) : null);
       return;
     }
     if (data.alreadyImported) {
@@ -224,7 +230,16 @@ export function CatalogImportClient({
           </p>
         </div>
       ) : null}
-      {message ? <p className="text-sm text-[var(--ent-muted)] mt-4">{message}</p> : null}
+      {message ? (
+        <div className="mt-4 space-y-3">
+          <p className="text-sm text-[var(--ent-muted)]">{message}</p>
+          {upgradeUrl ? (
+            <Link href={upgradeUrl} className="inline-flex text-sm font-medium text-[var(--ent-petrol-deep)] hover:text-[var(--ent-forest)]">
+              View plans & upgrade →
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

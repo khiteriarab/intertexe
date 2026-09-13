@@ -30,9 +30,16 @@ export async function POST(
     });
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Import failed.";
+    const allowanceBlocked =
+      /allowance|product limit|10-product pilot|upgrade/i.test(message);
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Import failed." },
-      { status: 400 }
+      {
+        message,
+        code: allowanceBlocked ? "product_allowance" : "import_failed",
+        upgradeUrl: allowanceBlocked ? `/dashboard/${organization}/upgrade` : undefined,
+      },
+      { status: allowanceBlocked ? 402 : 400 }
     );
   }
 }

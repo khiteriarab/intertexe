@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { planDisplayName } from "../../../../../lib/enterprise/pricing";
+import { EntUpgradePrompt } from "../../../components/EntUpgradePrompt";
 import { entButtonClass, entButtonGhostClass } from "../../../components/EnterpriseUi";
 
 type Security = {
@@ -46,7 +47,17 @@ function meterLabel(key: string): string {
   return key.replaceAll("_", " ");
 }
 
-export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin: boolean }) {
+export function SettingsAdminPanel({
+  slug,
+  canAdmin,
+  canUseSso = false,
+  canWhiteLabel = false,
+}: {
+  slug: string;
+  canAdmin: boolean;
+  canUseSso?: boolean;
+  canWhiteLabel?: boolean;
+}) {
   const [security, setSecurity] = useState<Security>({});
   const [billing, setBilling] = useState<Billing>({});
   const [scim, setScim] = useState<ScimStatus>({ enabled: false });
@@ -248,6 +259,10 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
         ) : null}
 
         <p className="text-xs text-[var(--ent-muted-light)] mt-4">
+          <a href={`/dashboard/${slug}/billing`} className="underline">
+            Open billing page
+          </a>
+          {" · "}
           Need Enterprise, custom limits, or invoice billing?{" "}
           <a href="/platform/request?intent=enterprise" className="underline">
             Contact sales
@@ -256,26 +271,43 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
       </section>
 
       <section className="rounded-xl border border-[var(--ent-border)] p-5 lg:col-span-2">
-        <h3 className="text-sm font-semibold mb-3">SCIM provisioning</h3>
-        <p className="text-sm text-[var(--ent-muted)] mb-3">
-          {scim.enabled ? "SCIM is enabled for this organization." : "SCIM is not enabled."}
-        </p>
-        {scimToken ? (
-          <div className="mb-3 rounded-lg bg-[var(--ent-surface-muted)] p-3 text-xs break-all">
-            Bearer token (copy now): {scimToken}
-          </div>
+        <h3 className="text-sm font-semibold mb-3">SSO & SCIM</h3>
+        {!canUseSso ? (
+          <EntUpgradePrompt
+            slug={slug}
+            plan={billing.plan || "demo"}
+            feature="SSO & SCIM"
+            title="Enterprise SSO requires Enterprise"
+            body="Single sign-on and SCIM user provisioning are available on Enterprise deployments with custom security requirements."
+          />
+        ) : (
+          <>
+            <p className="text-sm text-[var(--ent-muted)] mb-3">
+              {scim.enabled ? "SCIM is enabled for this organization." : "SCIM is not enabled."}
+            </p>
+            {scimToken ? (
+              <div className="mb-3 rounded-lg bg-[var(--ent-surface-muted)] p-3 text-xs break-all">
+                Bearer token (copy now): {scimToken}
+              </div>
+            ) : null}
+            <div className="flex gap-2">
+              {!scim.enabled ? (
+                <button type="button" className={entButtonClass} onClick={() => toggleScim(true)}>
+                  Enable SCIM
+                </button>
+              ) : (
+                <button type="button" className={entButtonGhostClass} onClick={() => toggleScim(false)}>
+                  Disable SCIM
+                </button>
+              )}
+            </div>
+          </>
+        )}
+        {!canWhiteLabel ? (
+          <p className="text-xs text-[var(--ent-muted-light)] mt-4">
+            White-label passport experiences unlock on Platform — configure per product under the Passport tab.
+          </p>
         ) : null}
-        <div className="flex gap-2">
-          {!scim.enabled ? (
-            <button type="button" className={entButtonClass} onClick={() => toggleScim(true)}>
-              Enable SCIM
-            </button>
-          ) : (
-            <button type="button" className={entButtonGhostClass} onClick={() => toggleScim(false)}>
-              Disable SCIM
-            </button>
-          )}
-        </div>
       </section>
     </div>
   );

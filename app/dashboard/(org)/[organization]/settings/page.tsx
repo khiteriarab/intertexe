@@ -112,7 +112,12 @@ export default async function OrganizationSettingsPage({
         </HqCard>
       </div>
 
-      <SettingsAdminPanel slug={membership.slug} canAdmin={canAdmin} />
+      <SettingsAdminPanel
+        slug={membership.slug}
+        canAdmin={canAdmin}
+        canUseSso={entitlement.canUseSso}
+        canWhiteLabel={entitlement.canWhiteLabel}
+      />
     </OrgSectionFrame>
   );
 }

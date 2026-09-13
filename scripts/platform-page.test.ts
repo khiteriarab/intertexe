@@ -62,7 +62,10 @@ describe("Platform B2B sales page", () => {
     assert.match(nav, /Sign in/);
     assert.match(chrome, /getEnterpriseLoginUrl/);
     assert.match(login, /getEnterpriseLoginUrl/);
-    assert.match(form, /Free 10-product Material Snapshot/);
+    assert.match(form, /Start with 10 products \(pilot workspace\)/);
+    assert.doesNotMatch(form, /\$5,000/);
+    assert.match(demo, /Product tour/);
+    assert.doesNotMatch(demo, /Live demonstration/);
   });
 
   it("uses professional SaaS language on the public platform page", () => {

@@ -1,5 +1,7 @@
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
+import { entitlementsForPlan, type PlanKey } from "../../../../../lib/enterprise/entitlements";
 import { loadOrgIntegrations } from "../../../../../lib/enterprise/module-queries";
+import { EntUpgradePrompt } from "../../../components/EntUpgradePrompt";
 import {
   EntEmptyState,
   EntIntegrationTile,
@@ -17,11 +19,25 @@ export default async function IntegrationsPage({
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
   const { rows } = await loadOrgIntegrations(client, membership.organizationId, membership.slug);
+  const entitlements = entitlementsForPlan(membership.plan as PlanKey, {
+    productAllowance: membership.productAllowance,
+  });
 
   const connected = rows.filter((r) => r.state === "connected").length;
 
   return (
     <EntModulePage title="Integrations">
+      {!entitlements.canUseIntegrations ? (
+        <div className="mb-8">
+          <EntUpgradePrompt
+            slug={membership.slug}
+            plan={membership.plan}
+            feature="Advanced integrations"
+            title="Advanced integrations require Platform"
+            body="CSV import and standard API access are available on Professional. ERP, PIM, and automation connectors unlock on Platform and Enterprise."
+          />
+        </div>
+      ) : null}
       <IntegrationsHealthPanel slug={membership.slug} />
       {connected === 0 ? (
         <div className="mb-8">

@@ -30,6 +30,7 @@ import { EntCustomerZeroBanner } from "../../components/EntCustomerZeroBanner";
 import { EntDualModelFlywheel } from "../../components/EntDualModelFlywheel";
 import { EntPilotFindings } from "../../components/EntPilotFindings";
 import { UpgradePlanSelector } from "../../components/UpgradePlanSelector";
+import { EntPostPaymentSync } from "../../components/EntPostPaymentSync";
 import { countActiveProducts, loadBillingDashboard } from "../../../../lib/enterprise/billing-gates";
 import { isPilotPlan, isPaidSubscriptionPlan } from "../../../../lib/enterprise/pricing";
 
@@ -173,6 +174,7 @@ export default async function OrganizationOverviewPage({
 
       {activated ? (
         <div className="mb-10">
+          <EntPostPaymentSync slug={membership.slug} activated={activated} initialPlan={membership.plan} />
           <UpgradePlanSelector
             slug={membership.slug}
             currentPlan={membership.plan}

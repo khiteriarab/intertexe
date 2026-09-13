@@ -9,7 +9,7 @@ const JOURNEY = [
   { id: "live-demo", label: "Live scan", hint: "Desktop → QR → customer" },
   { id: "walkthrough", label: "Catalog", hint: "10-product sample" },
   { id: "api", label: "API lookup", hint: "Live GTIN demo" },
-  { id: "book", label: "Book", hint: "Onboarding fee" },
+  { id: "book", label: "Request", hint: "Start with 10 products" },
 ] as const;
 
 export function PlatformDemoShell({ children }: { children: ReactNode }) {

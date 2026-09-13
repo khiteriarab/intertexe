@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
+import { entitlementsForPlan, type PlanKey } from "../../../../../lib/enterprise/entitlements";
+import { EntUpgradePrompt } from "../../../components/EntUpgradePrompt";
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadDecisionIntelligence } from "../../../../../lib/enterprise/decision-intelligence";
 import { loadOrgAnalytics } from "../../../../../lib/enterprise/module-queries";
@@ -35,6 +37,9 @@ export default async function AnalyticsPage({
     loadBrandSustainabilityAnalytics(client, membership.organizationId),
   ]);
   const base = `/dashboard/${membership.slug}`;
+  const entitlements = entitlementsForPlan(membership.plan as PlanKey, {
+    productAllowance: membership.productAllowance,
+  });
 
   const stateRows = Object.entries(data.overview.productStateCounts)
     .filter(([, value]) => value > 0)
@@ -81,13 +86,26 @@ export default async function AnalyticsPage({
         </>
       }
     >
+      {!entitlements.canUseCircularity ? (
+        <div className="mb-10">
+          <EntUpgradePrompt
+            slug={membership.slug}
+            plan={membership.plan}
+            feature="Circularity & resale"
+            title="Circularity analytics require Platform"
+            body="Resale intelligence, circularity readiness, and next-life passport flows are included on Platform and Enterprise."
+          />
+        </div>
+      ) : null}
+
       {sustainability.productCount > 0 ? (
         <section className="mb-10 rounded-[var(--ent-radius-2xl)] p-6 md:p-8 ent-animate-in border border-[var(--ent-border)]">
           <div className="mb-6">
             <p className="ent-section-eyebrow mb-2">Environmental intelligence</p>
             <h2 className="ent-widget-title">Brand sustainability performance</h2>
             <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-2xl">
-              Aggregated from product-level evidence — traceability completeness, environmental cost, and circularity readiness. Prove it, don&apos;t claim it.
+              Aggregated from product-level evidence — traceability completeness, environmental cost
+              {entitlements.canUseCircularity ? ", and circularity readiness" : ""}. Prove it, don&apos;t claim it.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

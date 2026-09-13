@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
+import { entitlementsForPlan, type PlanKey } from "../../../../../lib/enterprise/entitlements";
 import { loadOrgDevelopers } from "../../../../../lib/enterprise/module-queries";
+import { EntUpgradePrompt } from "../../../components/EntUpgradePrompt";
 import {
   EntCodePanel,
   EntModulePage,
@@ -20,9 +22,23 @@ export default async function DevelopersPage({
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
   const data = await loadOrgDevelopers(client, membership.organizationId, membership.role);
+  const entitlements = entitlementsForPlan(membership.plan as PlanKey, {
+    productAllowance: membership.productAllowance,
+  });
 
   return (
     <EntModulePage title="Developers">
+      {!entitlements.canUseHeadlessApi ? (
+        <div className="mb-8">
+          <EntUpgradePrompt
+            slug={membership.slug}
+            plan={membership.plan}
+            feature="Headless passport API"
+            title="Headless API requires Enterprise"
+            body="Standard API access is included on Professional. Programmatic passport delivery, custom volume, and headless resolver access require Enterprise."
+          />
+        </div>
+      ) : null}
       <div className="grid lg:grid-cols-2 gap-5 md:gap-6 mb-6">
         <EntVisualPanel tone="cream" title="Organization identifiers">
           <div className="space-y-4">

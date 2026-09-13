@@ -12,14 +12,14 @@ export function DemoBookSection() {
           See INTERTEXE with your own products.
         </h2>
         <Body className="mb-6 max-w-xl mx-auto">
-          Send a catalog profile — not the files. The INTERTEXE team replies from Barcelona with qualification and the
-          next step for your free 10-product implementation or a paid plan.
+          Send a catalog profile — not the files. After a quick review, INTERTEXE opens your 10-product pilot workspace
+          or replies with next steps for Professional, Platform, or Enterprise.
         </Body>
         <ul className="space-y-3 text-sm text-[#161513] mb-8 max-w-md mx-auto text-left">
           {[
-            "Start with 10 products, implemented free",
-            "Professional · Platform · Enterprise — pricing after qualification",
-            "Implementation fee attached at checkout, not a subscription tier",
+            "Start with 10 products — pilot workspace activated after review",
+            "Professional · Platform · Enterprise — pricing shared during onboarding",
+            "Implementation fee bundled at checkout, not a subscription tier",
           ].map((point) => (
             <li key={point} className="flex items-start gap-2">
               <span className="text-[var(--platform-primary)] mt-0.5 shrink-0" aria-hidden="true">

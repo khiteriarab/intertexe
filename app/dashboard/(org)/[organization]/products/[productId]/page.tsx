@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { canMutateEnterprise, requireOrganizationAccess } from "../../../../../../lib/enterprise/access";
+import { entitlementsForPlan, type PlanKey } from "../../../../../../lib/enterprise/entitlements";
 import {
   identifierClassLabel,
   parseIdentifierIssueDetail,
@@ -47,6 +48,7 @@ import {
   buildFieldRows,
   PassportExperienceDesigner,
 } from "../../../../components/PassportExperienceDesigner";
+import { EntUpgradePrompt } from "../../../../components/EntUpgradePrompt";
 import { PassportPreviewPanel } from "../../../../components/PassportPreviewPanel";
 import { PublishPassportButton } from "../../passports/PublishPassportButton";
 import { ApproveFieldsButton } from "./ApproveFieldsButton";
@@ -78,6 +80,9 @@ export default async function ProductRecordPage({
   const { membership, client } = await requireOrganizationAccess(organization);
   const record = await loadOrgProduct(client, membership.organizationId, productId);
   if (!record) notFound();
+  const entitlements = entitlementsForPlan(membership.plan as PlanKey, {
+    productAllowance: membership.productAllowance,
+  });
   const canMutate = canMutateEnterprise(membership.role);
   const basePath = `/dashboard/${membership.slug}/products/${productId}`;
 
@@ -210,20 +215,30 @@ export default async function ProductRecordPage({
                 publishReady={publishability.status === "ready"}
               />
             </div>
-            <PassportExperienceDesigner
-              slug={membership.slug}
-              productId={productId}
-              canMutate={canMutate}
-              publishReady={publishability.status === "ready"}
-              published={isPublished}
-              publicId={effectivePublicId}
-              absoluteUrl={publicUrl}
-              carriers={(record.passport?.carriers as any[]) || []}
-              experience={experienceConfig}
-              content={previewContent}
-              fields={buildFieldRows(record.fields)}
-              versionNumber={record.passport?.versions.at(-1)?.version_number}
-            />
+            {entitlements.canWhiteLabel ? (
+              <PassportExperienceDesigner
+                slug={membership.slug}
+                productId={productId}
+                canMutate={canMutate}
+                publishReady={publishability.status === "ready"}
+                published={isPublished}
+                publicId={effectivePublicId}
+                absoluteUrl={publicUrl}
+                carriers={(record.passport?.carriers as any[]) || []}
+                experience={experienceConfig}
+                content={previewContent}
+                fields={buildFieldRows(record.fields)}
+                versionNumber={record.passport?.versions.at(-1)?.version_number}
+              />
+            ) : (
+              <EntUpgradePrompt
+                slug={membership.slug}
+                plan={membership.plan}
+                feature="White-label passports"
+                title="White-label passport design requires Platform"
+                body="Customize consumer passport layout, branding, and field visibility on Platform and Enterprise."
+              />
+            )}
             <ProductCarriersPanel
               slug={membership.slug}
               productId={productId}

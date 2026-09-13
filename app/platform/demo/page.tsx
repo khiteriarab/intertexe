@@ -7,9 +7,9 @@ import { DemoOfficeSection } from "./DemoOfficeSection";
 import { PlatformPageHeader } from "../PlatformPageHeader";
 
 export const metadata: Metadata = {
-  title: "INTERTEXE live demonstration",
+  title: "See INTERTEXE live",
   description:
-    "See INTERTEXE SaaS in action: govern the Customer Zero linen shirt on desktop, publish the passport, scan the QR, and open the live consumer page. Then explore the 10-product catalog walkthrough.",
+    "Walk through the INTERTEXE workspace: govern the Customer Zero linen shirt, publish the passport, scan the QR, and open the live consumer page. Then explore the 10-product catalog from raw data to DPP readiness.",
   alternates: { canonical: "https://www.intertexe.com/platform/demo" },
 };
 
@@ -17,7 +17,7 @@ export default function PlatformDemoPage() {
   return (
     <PlatformChrome active="demo">
       <PlatformPageHeader
-        eyebrow="Live demonstration"
+        eyebrow="Product tour"
         align="center"
         title="Workspace → identity carrier → consumer passport."
         description="Follow the end-to-end publish flow on ITX-LIVE-01 — Customer Zero linen shirt. Govern in the workspace, publish the passport, and open the live consumer page. Then walk the 10-product catalog from raw data to DPP readiness and next-life resale."

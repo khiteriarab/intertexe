@@ -9,7 +9,7 @@ export type PlatformNavKey = "demo" | "api" | "request" | "platform" | "login" |
 
 const NAV = [
   { href: "/platform/discover", label: "Discover" },
-  { href: "/platform/demo", label: "Live flow" },
+  { href: "/platform/demo", label: "See it live" },
   { href: "/platform/api", label: "API" },
 ] as const;
 

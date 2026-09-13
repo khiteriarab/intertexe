@@ -32,7 +32,7 @@ export default async function UpgradePage({
 
   return (
     <EntModulePage
-      title="Billing"
+      title="Upgrade"
       subtitle={
         showUpgrade
           ? "Choose a plan to continue beyond your pilot workspace."

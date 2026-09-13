@@ -220,12 +220,21 @@ export async function syncOrganizationFromPaddleSubscription(
   const isPaused = billingStatus === "paused";
 
   if (meta?.kind === "subscription" && meta && !isCanceled && !isPaused) {
+    const { data: orgRow } = await client
+      .from("organizations")
+      .select("plan, pilot_completed_at")
+      .eq("id", input.organizationId)
+      .maybeSingle();
+    const priorPlan = String(orgRow?.plan || "");
+    const fromPilot = priorPlan === "demo" || priorPlan === "free_snapshot" || priorPlan === "founding_pilot";
+
     await client
       .from("organizations")
       .update({
         plan: meta.plan,
         product_allowance: meta.productAllowance,
         passport_allowance: meta.passportAllowance,
+        pilot_completed_at: fromPilot && !orgRow?.pilot_completed_at ? new Date().toISOString() : orgRow?.pilot_completed_at,
         updated_at: new Date().toISOString(),
       })
       .eq("id", input.organizationId);
@@ -402,6 +411,14 @@ export async function handlePaddleWebhookEvent(
     );
 
     if (txMeta?.kind === "implementation" && /completed|paid/i.test(eventType)) {
+      await client.from("billing_accounts").upsert(
+        {
+          organization_id: organizationId,
+          implementation_fee_status: "paid",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "organization_id" }
+      );
       await recordBillingAudit(client, organizationId, "implementation_paid", "Implementation fee recorded", {
         price_id: txPriceId,
       });
@@ -460,4 +477,27 @@ export function checkoutPricesForPlan(plan: PlanKey): {
       process.env.PADDLE_PRICE_FOUNDING_PILOT?.trim() ||
       null,
   };
+}
+
+/** Paddle Billing customer portal — manage payment method and subscription. */
+export async function createPaddleCustomerPortalSession(input: {
+  paddleCustomerId: string;
+  returnUrl: string;
+}): Promise<{ portalUrl: string }> {
+  const customerId = String(input.paddleCustomerId || "").trim();
+  if (!customerId) throw new Error("Paddle customer ID is required.");
+
+  const data = await paddleFetch<{ urls?: { general?: { overview?: string } }; url?: string }>(
+    `/customers/${encodeURIComponent(customerId)}/portal-sessions`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        return_url: input.returnUrl,
+      }),
+    }
+  );
+
+  const portalUrl = data.urls?.general?.overview || data.url;
+  if (!portalUrl) throw new Error("Paddle did not return a customer portal URL.");
+  return { portalUrl };
 }

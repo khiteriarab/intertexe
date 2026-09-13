@@ -40,6 +40,8 @@ export const HQ_RESERVED_SLUGS = new Set([
   "supplier",
   "founder",
   "enterprise",
+  "billing",
+  "upgrade",
   ...HQ_NAV.map((item) => item.href.replace(/^\/dashboard\/?/, "").split("/")[0]).filter(Boolean),
 ]);
 
@@ -105,6 +107,7 @@ export const ENTERPRISE_NAV_GROUPS = [
       { href: "/integrations", label: "Integrations", icon: "integrations" as const },
       { href: "/developers", label: "Developers", icon: "developers" as const },
       { href: "/exports", label: "Exports", icon: "files" as const },
+      { href: "/billing", label: "Billing", icon: "billing" as const },
       { href: "/settings", label: "Settings", icon: "settings" as const },
     ],
   },

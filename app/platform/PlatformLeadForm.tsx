@@ -4,9 +4,9 @@ import { FormEvent, useState } from "react";
 import { trackPlatform } from "../../lib/platform-analytics";
 
 const INTENTS = [
-  { value: "snapshot", label: "Free 10-product Material Snapshot" },
-  { value: "founding_pilot", label: "Onboarding fee ($5,000)" },
-  { value: "saas", label: "SaaS — Platform / Professional / Enterprise" },
+  { value: "snapshot", label: "Start with 10 products (pilot workspace)" },
+  { value: "founding_pilot", label: "Implementation & onboarding" },
+  { value: "saas", label: "Professional, Platform, or Enterprise" },
 ] as const;
 
 const COMPANY_TYPES = [
@@ -232,7 +232,7 @@ export function PlatformLeadForm({
         disabled={state === "submitting"}
         className="text-[11px] tracking-[0.2em] uppercase bg-[var(--platform-primary)] text-white px-8 py-4 min-h-[44px] disabled:opacity-50 hover:bg-[var(--platform-primary-hover)]"
       >
-        {state === "submitting" ? "Sending…" : office ? "Send message" : demo ? "Book a conversation" : "Submit request"}
+        {state === "submitting" ? "Sending…" : office ? "Send message" : demo ? "Start with 10 products" : "Submit request"}
       </button>
     </form>
   );

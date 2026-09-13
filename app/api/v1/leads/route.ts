@@ -3,6 +3,7 @@ import { sendCustomerEmail } from "../../../../lib/resend-customer";
 import { EMAIL_TYPES, PLATFORM_LEAD_CC, PLATFORM_LEAD_TO } from "../../../../lib/email-constants";
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
 import { clientIpFromHeaders, demoRateLimit } from "../../../../lib/platform-demo-rate-limit";
+import { provisionPilotWorkspaceFromLead } from "../../../../lib/enterprise/provision-pilot-workspace";
 
 export const dynamic = "force-dynamic";
 
@@ -107,14 +108,14 @@ export async function POST(req: NextRequest) {
   const tier = cleanLeadField(body.tier, 40);
   const intentLabel =
     intent === "founding_pilot"
-      ? "Onboarding fee ($5,000)"
+      ? "Implementation & onboarding"
       : intent === "enterprise"
         ? "Enterprise (custom)"
         : intent === "saas" || intent === "api_access"
           ? tier
             ? `SaaS — ${tier}`
-            : "SaaS — Platform / Professional"
-          : "10-product snapshot";
+            : "Professional, Platform, or Enterprise"
+          : "10-product pilot workspace";
   const companyTypeLabel =
     extras.company_type === "brand"
       ? "Fashion or textile brand"
@@ -138,14 +139,38 @@ export async function POST(req: NextRequest) {
     metadata: { intent, company },
   }).catch(() => {});
 
+  let pilotProvision: Awaited<ReturnType<typeof provisionPilotWorkspaceFromLead>> | null = null;
+  if (intent === "snapshot") {
+    pilotProvision = await provisionPilotWorkspaceFromLead({
+      companyName: company,
+      contactEmail: email,
+      firstName,
+      lastName,
+    }).catch(() => ({ status: "skipped" as const, reason: "provision_failed" }));
+  }
+
+  const workspaceReady =
+    pilotProvision?.status === "created" || pilotProvision?.status === "existing"
+      ? pilotProvision.workspaceUrl
+      : null;
+
   await sendCustomerEmail({
     to: email,
-    subject: "We received your INTERTEXE request",
+    subject: workspaceReady ? "Your INTERTEXE pilot workspace is ready" : "We received your INTERTEXE request",
     emailType: EMAIL_TYPES.PLATFORM_LEAD,
-    html: `<p>We received your request. The INTERTEXE team will review your catalog profile and reply with the next step for a 10-product snapshot.</p>
+    html: workspaceReady
+      ? `<p>Your 10-product pilot workspace for ${company} is ready.</p>
+<p><a href="${workspaceReady}">Open your workspace</a> — set your password if this is your first sign-in, then import up to 10 products.</p>
+<p>Do not send confidential catalogs in email until we arrange secure transfer.</p>`
+      : `<p>We received your request. The INTERTEXE team will review your catalog profile and reply with the next step for your 10-product pilot.</p>
 <p>Do not send confidential catalogs in email until we arrange secure transfer.</p>`,
-    metadata: { intent: "confirmation" },
+    metadata: { intent: "confirmation", workspaceReady: Boolean(workspaceReady) },
   }).catch(() => {});
 
-  return NextResponse.json({ ok: true, duplicate: false });
+  return NextResponse.json({
+    ok: true,
+    duplicate: false,
+    workspaceReady: Boolean(workspaceReady),
+    workspaceUrl: workspaceReady,
+  });
 }
