@@ -54,19 +54,19 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
   const [loading, setLoading] = useState(true);
   const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
 
-  async function startPaddleCheckout(plan: "platform" | "professional" | "implementation") {
+  async function startPaddleCheckout(plan: "platform" | "professional") {
     setCheckoutBusy(plan);
     try {
-      const priceId =
-        plan === "platform"
-          ? billing.checkoutPrices?.subscriptionPriceId
-          : plan === "professional"
-            ? billing.checkoutPrices?.subscriptionPriceId
-            : billing.checkoutPrices?.implementationPriceId;
+      const origin = window.location.origin;
       const res = await fetch(`/api/dashboard/org/${slug}/billing/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, priceId }),
+        body: JSON.stringify({
+          plan,
+          includeImplementation: true,
+          successUrl: `${origin}/dashboard/${slug}?activated=${plan}`,
+          cancelUrl: `${origin}/dashboard/${slug}/upgrade?cancel=1`,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || "Checkout failed");
@@ -98,6 +98,14 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
     if (canAdmin) void load();
     else setLoading(false);
   }, [canAdmin, slug]);
+
+  useEffect(() => {
+    if (!canAdmin || loading) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("billing") === "success") {
+      void load();
+    }
+  }, [canAdmin, loading]);
 
   async function saveSecurity(patch: Security) {
     await fetch(`/api/dashboard/org/${slug}/admin`, {
@@ -212,37 +220,20 @@ export function SettingsAdminPanel({ slug, canAdmin }: { slug: string; canAdmin:
 
         {showCheckout ? (
           <div className="flex flex-wrap gap-2 mt-4">
-            {(billing.plan === "demo" || billing.plan === "free_snapshot" || billing.plan === "founding_pilot") && (
-              <>
-                <button
-                  type="button"
-                  className={entButtonClass}
-                  disabled={checkoutBusy !== null}
-                  onClick={() => startPaddleCheckout("platform")}
-                  data-testid="btn-paddle-platform"
-                >
-                  {checkoutBusy === "platform" ? "Opening…" : "Subscribe · Platform"}
-                </button>
-                <button
-                  type="button"
-                  className={entButtonGhostClass}
-                  disabled={checkoutBusy !== null}
-                  onClick={() => startPaddleCheckout("professional")}
-                  data-testid="btn-paddle-professional"
-                >
-                  {checkoutBusy === "professional" ? "Opening…" : "Subscribe · Professional"}
-                </button>
-              </>
+            <a href={`/dashboard/${slug}/upgrade`} className={entButtonClass}>
+              View plans & upgrade
+            </a>
+            {(billing.plan === "platform" || billing.plan === "professional" || billing.plan === "saas") && (
+              <button
+                type="button"
+                className={entButtonGhostClass}
+                disabled={checkoutBusy !== null}
+                onClick={() => startPaddleCheckout("platform")}
+                data-testid="btn-paddle-platform"
+              >
+                {checkoutBusy === "platform" ? "Opening…" : "Upgrade to Platform"}
+              </button>
             )}
-            <button
-              type="button"
-              className={entButtonGhostClass}
-              disabled={checkoutBusy !== null}
-              onClick={() => startPaddleCheckout("implementation")}
-              data-testid="btn-paddle-implementation"
-            >
-              {checkoutBusy === "implementation" ? "Opening…" : "Implementation fee"}
-            </button>
           </div>
         ) : billing.billingAccount?.paddle_subscription_id ? (
           <p className="text-xs text-[var(--ent-muted)] mt-4">

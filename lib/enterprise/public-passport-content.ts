@@ -1,3 +1,12 @@
+import { buildResaleIntelligence } from "../resale/intelligence";
+import type { ResaleValuation } from "../resale/types";
+import type {
+  ConsumerSustainabilityProfile,
+  ProductCircularity,
+  ProductEnvironmentalImpact,
+  ProductTraceabilityScore,
+  RegulatoryScores,
+} from "../sustainability/types";
 import { parseCompositionText } from "../material-intelligence/composition";
 import {
   pilotProductImage,
@@ -47,6 +56,12 @@ export type ConsumerPassportContent = {
   publicFields: Array<{ key: string; value: string }>;
   integrityStatus?: string;
   resaleEligible?: boolean;
+  resaleIntelligence?: ResaleValuation | null;
+  traceability?: ProductTraceabilityScore | null;
+  environmentalImpact?: ProductEnvironmentalImpact | null;
+  regulatoryScores?: RegulatoryScores | null;
+  circularity?: ProductCircularity | null;
+  sustainabilityProfile?: ConsumerSustainabilityProfile | null;
   lifecycleEvents?: Array<{ year: number | null; label: string; detail?: string | null }>;
 };
 
@@ -216,7 +231,7 @@ function buildNextLife(input: {
       title: "Sell this item",
       detail: sellDisabled
         ? input.integrityReason || "Passport data must be validated before resale listing."
-        : "List on eBay, Vinted, or prepare a Poshmark package from this governed product record.",
+        : "See estimated resale value, compare routes, and list with a verified passport-backed draft.",
       kind: "action",
       href: sellHref,
       cta: "Sell this item",
@@ -335,7 +350,7 @@ export function buildConsumerPassportContent(input: {
     careInstructions: fieldValue(fields, "care_instructions"),
   });
 
-  return {
+  const baseContent = {
     productName,
     brand,
     category,
@@ -350,19 +365,28 @@ export function buildConsumerPassportContent(input: {
     passportStatus: input.passportStatus || "published",
     careInstructions,
     journeyStages,
+    integrityStatus: integrity.status,
+    resaleEligible: integrity.resaleEligible,
+    lifecycleEvents: input.lifecycleEvents,
+    publicFields,
+  };
+
+  const resaleIntelligence = integrity.resaleEligible
+    ? buildResaleIntelligence(baseContent as ConsumerPassportContent)
+    : null;
+
+  return {
+    ...baseContent,
     nextLife: buildNextLife({
       publicId: input.publicId || undefined,
       resaleEligible: integrity.resaleEligible,
       integrityReason: integrity.checks.find((c) => c.severity === "error")?.message,
     }),
-    integrityStatus: integrity.status,
-    resaleEligible: integrity.resaleEligible,
-    lifecycleEvents: input.lifecycleEvents,
+    resaleIntelligence,
     timeline: buildTimeline({
       publishedAt: input.publishedAt || null,
       passportCreatedAt: input.passportCreatedAt || null,
       versions: input.versions || [],
     }),
-    publicFields,
   };
 }

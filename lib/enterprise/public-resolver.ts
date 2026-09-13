@@ -5,6 +5,8 @@ import { buildPassportPreviewContent } from "./passport-preview";
 import { buildConsumerPassportContent, type ConsumerPassportContent } from "./public-passport-content";
 import { loadProductExperienceConfig, type PassportExperienceConfig } from "./passport-experience";
 import { loadLifecycleEvents } from "./resale-service";
+import { buildIntertexeProductPassport, loadProductSustainabilityData } from "../sustainability";
+import type { IntertexeProductPassport } from "../sustainability/types";
 
 export type PublicPassportView = {
   found: boolean;
@@ -16,6 +18,7 @@ export type PublicPassportView = {
   snapshot?: Record<string, unknown>;
   consumer?: ConsumerPassportContent;
   experience?: PassportExperienceConfig;
+  passport?: IntertexeProductPassport;
 };
 
 async function resolvePreviewPassport(
@@ -255,6 +258,29 @@ export async function resolvePublicPassport(
     lifecycleEvents,
   });
 
+  const sustainabilityData = await loadProductSustainabilityData(supabase, {
+    organizationId: passport.organization_id,
+    productId: passport.product_id,
+    persistentIdentityId: identityRow?.id,
+  });
+
+  const fullPassport = buildIntertexeProductPassport({
+    consumer,
+    publicId: id,
+    traceNodes: traceNodes || [],
+    impactInputs: sustainabilityData.impactInputs,
+    regulatoryScores: sustainabilityData.regulatoryScores,
+    ownershipCount: sustainabilityData.ownershipCount,
+    evidenceCount: sustainabilityData.evidenceCount,
+    lastVerifiedAt: sustainabilityData.lastVerifiedAt,
+  });
+
+  consumer.traceability = fullPassport.traceability;
+  consumer.environmentalImpact = fullPassport.environmentalImpact;
+  consumer.regulatoryScores = fullPassport.regulatoryScores;
+  consumer.circularity = fullPassport.circularity;
+  consumer.sustainabilityProfile = fullPassport.sustainabilityProfile;
+
   const experience = await loadProductExperienceConfig(
     supabase,
     passport.organization_id,
@@ -284,6 +310,7 @@ export async function resolvePublicPassport(
     snapshot: publicSnapshot,
     consumer,
     experience,
+    passport: fullPassport,
   };
 }
 

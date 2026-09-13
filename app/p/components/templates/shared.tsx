@@ -244,6 +244,77 @@ export function NextLifeBlock({ content }: { content: ConsumerPassportContent })
   );
 }
 
+export function SustainabilityBlock({ content }: { content: ConsumerPassportContent }) {
+  const profile = content.sustainabilityProfile;
+  const fr = content.regulatoryScores?.franceEnvironmentalCost;
+  const trace = content.traceability;
+
+  if (!profile?.dimensions.length && !fr && !trace) return null;
+
+  return (
+    <section className="itx-passport-section">
+      <h2 className="itx-passport-section-title">Environmental impact & verification</h2>
+      <p className="text-xs text-[var(--pp-muted,#6b6560)] mb-4">
+        Separate regulatory scores, traceability completeness, and lifecycle dimensions — not a single invented green score.
+      </p>
+
+      {fr ? (
+        <div className="itx-passport-sustainability-card mb-4">
+          <p className="text-[10px] uppercase tracking-wider text-[var(--pp-muted-light,#9a948c)]">
+            French environmental cost
+          </p>
+          <p className="text-2xl font-medium mt-1">{fr.totalImpactPoints} impact points</p>
+          {fr.pointsPer100g != null ? (
+            <p className="text-sm text-[var(--pp-muted,#6b6560)]">{fr.pointsPer100g} points / 100g</p>
+          ) : null}
+          <p className="text-[0.65rem] text-[var(--pp-muted,#6b6560)] mt-2">
+            {fr.methodology} v{fr.methodologyVersion} · {fr.verificationStatus}
+          </p>
+        </div>
+      ) : null}
+
+      {trace ? (
+        <div className="itx-passport-sustainability-card mb-4">
+          <p className="text-[10px] uppercase tracking-wider text-[var(--pp-muted-light,#9a948c)]">
+            INTERTEXE traceability score
+          </p>
+          <p className="text-2xl font-medium mt-1">{trace.score}/100</p>
+          <p className="text-sm text-[var(--pp-muted,#6b6560)]">
+            {trace.supplyChainRecordCount} supply-chain records · {trace.certificateCount} certificates
+          </p>
+        </div>
+      ) : null}
+
+      {profile?.dimensions.length ? (
+        <table className="itx-passport-dimensions w-full text-sm">
+          <tbody>
+            {profile.dimensions.map((d) => (
+              <tr key={d.id}>
+                <th className="text-left font-normal text-[var(--pp-muted,#6b6560)] py-1.5 pr-3">{d.label}</th>
+                <td className="py-1.5">{d.result}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
+
+      {trace?.verifiedStages.length ? (
+        <details className="mt-4 text-xs">
+          <summary className="cursor-pointer text-[var(--pp-petrol,#3e6268)]">Verified evidence</summary>
+          <ul className="mt-2 space-y-1 text-[var(--pp-muted,#6b6560)]">
+            {trace.verifiedStages.map((s) => (
+              <li key={s.id}>✓ {s.label}{s.detail ? ` — ${s.detail}` : ""}</li>
+            ))}
+            {trace.unverifiedStages.filter((s) => s.status !== "verified").map((s) => (
+              <li key={s.id}>{s.status === "partial" ? "△" : "✕"} {s.label}</li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+    </section>
+  );
+}
+
 export function LifecycleHistoryBlock({ content }: { content: ConsumerPassportContent }) {
   if (!content.lifecycleEvents?.length) return null;
   return (

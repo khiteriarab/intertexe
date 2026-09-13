@@ -13,7 +13,12 @@ export async function POST(
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await context.params;
-  const body = (await request.json()) as { provider?: MarketplaceProvider };
+  const body = (await request.json()) as {
+    provider?: MarketplaceProvider;
+    salePrice?: number;
+    currency?: string;
+    channel?: string;
+  };
   if (!body.provider) return NextResponse.json({ error: "provider_required" }, { status: 400 });
 
   try {
@@ -21,6 +26,9 @@ export async function POST(
       resaleItemId: id,
       soldProvider: body.provider,
       userId,
+      salePrice: body.salePrice,
+      currency: body.currency,
+      channel: body.channel,
     });
     return NextResponse.json(result);
   } catch (err) {

@@ -64,8 +64,8 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
       detail: `${PLATFORM_CASE_STUDY.composition} · ${PLATFORM_LIVE_CATALOG.avgNaturalFiberPct}% natural fiber catalog average`,
       tone: "teal",
     },
-    image: "/platform/ecosystem-intelligence.jpg",
-    imageAlt: "Material intelligence and benchmark dashboard",
+    image: "/platform/compare-benchmark.png",
+    imageAlt: "INTERTEXE Material Benchmark — peer comparison and catalog readiness",
   },
   {
     id: "govern",
@@ -85,8 +85,8 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
       detail: `${PLATFORM_CASE_STUDY.composition} · provenance preserved · v4 published`,
       tone: "green",
     },
-    image: "/platform/hero-workspace-desktop.png",
-    imageAlt: "INTERTEXE enterprise workspace — Customer Zero catalog",
+    image: "/platform/understand-issues.png",
+    imageAlt: "INTERTEXE Issues inbox — composition conflicts and resolution workflow",
   },
   {
     id: "publish",
@@ -106,8 +106,8 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
       detail: `${PLATFORM_CASE_STUDY.template} template · QR linked · scan to open`,
       tone: "slate",
     },
-    image: "/platform/INTERTEXE_03_Fashion_Ecosystem.png",
-    imageAlt: "Fashion ecosystem from product record to passport and channels",
+    image: "/platform/act-passport.png",
+    imageAlt: "INTERTEXE Publish passport — workspace, QR identity, and consumer preview",
   },
   {
     id: "next-life",

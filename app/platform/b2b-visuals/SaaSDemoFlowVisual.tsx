@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PASSPORT_CASE_STUDY, caseStudyPassportUrl } from "../../../lib/enterprise/passport-case-study";
+import { PLATFORM_GRAPHICS } from "../../../lib/platform-graphics";
+import { PlatformGraphic } from "../PlatformGraphic";
 import { PlatformCaseStudyQr } from "./PlatformCaseStudyQr";
 import { SERIF } from "../platform-ui";
 
@@ -14,6 +16,21 @@ const FLOW = [
 
 export function SaaSDemoFlowVisual({ compact = false }: { compact?: boolean }) {
   const passportHref = `/p/${PASSPORT_CASE_STUDY.publicId}`;
+
+  if (PLATFORM_GRAPHICS.actPassport.ready) {
+    return (
+      <figure className="m-0">
+        <PlatformGraphic slot="actPassport" />
+        <figcaption className="mt-3 text-xs text-[var(--platform-quiet)] leading-relaxed">
+          Workspace publish → identity carrier → consumer passport. Case study {PASSPORT_CASE_STUDY.styleCode} ·{" "}
+          {PASSPORT_CASE_STUDY.productName}.{" "}
+          <Link href={passportHref} className="underline underline-offset-4">
+            Open live passport →
+          </Link>
+        </figcaption>
+      </figure>
+    );
+  }
 
   return (
     <figure className="m-0">

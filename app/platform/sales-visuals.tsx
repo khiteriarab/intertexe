@@ -6,6 +6,7 @@ import {
   PLATFORM_IDENTITY_LABEL,
   PLATFORM_LIVE_CATALOG,
 } from "../../lib/enterprise/platform-showcase";
+import { PlatformGraphicOrFallback } from "./PlatformGraphic";
 import { QrMark, SERIF } from "./platform-ui";
 import {
   enterpriseModuleCatalogByGroup,
@@ -147,9 +148,13 @@ export function GovernedRecordVisual() {
   );
 }
 
-/** Intelligence centerpiece — Material Benchmark visual system. */
+/** Intelligence centerpiece — Material Benchmark designed screenshot (P0). */
 export function IntelligenceBenchmarkVisual() {
   return (
+    <PlatformGraphicOrFallback
+      slot="compareBenchmark"
+      caption={`Customer Zero catalog · ${PLATFORM_LIVE_CATALOG.productCount} products · peer medians from governed datasets · illustrative only.`}
+      fallback={
     <SalesPanel tone="dark" caption={`Customer Zero catalog · ${PLATFORM_LIVE_CATALOG.productCount} products · peer medians from governed datasets.`}>
       <div className="p-5 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
@@ -254,6 +259,8 @@ export function IntelligenceBenchmarkVisual() {
         </div>
       </div>
     </SalesPanel>
+      }
+    />
   );
 }
 

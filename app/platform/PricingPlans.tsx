@@ -1,44 +1,25 @@
 import Link from "next/link";
-import { ONBOARDING_FEE_LABEL, SAAS_TIERS } from "../../lib/enterprise/pricing";
+import { PILOT_PRODUCT_LIMIT, SAAS_TIERS } from "../../lib/enterprise/pricing";
 import { Body, Eyebrow, Heading, SERIF } from "./platform-ui";
 
-const ENTRY = [
-  {
-    step: "1. Try it",
-    title: "Free demo workspace",
-    priceLabel: "No payment required",
-    popular: false,
-    copy: "See what INTERTEXE finds in your material data — inside a real workspace.",
-    points: [
-      "Material normalization & completeness score",
-      "Issues register & DPP readiness overview",
-      "Material Benchmark preview",
-      "10 products · live passport QR when published",
-    ],
-    href: "/platform/request?intent=snapshot&cta=pricing_snapshot",
-    cta: "Request demo access",
-  },
-  {
-    step: "2. Prove it",
-    title: ONBOARDING_FEE_LABEL,
-    priceLabel: "Quoted per engagement",
-    popular: true,
-    copy: "Implementation and onboarding — not a monthly subscription. Scoped with your commercial team.",
-    points: [
-      "Catalog onboarding & data mapping",
-      "Material intelligence, normalization & human review",
-      "DPP data preparation & passport publishing",
-      "QR identities and structured export",
-    ],
-    href: "/platform/request?intent=founding_pilot&cta=pricing_pilot",
-    cta: "Request onboarding",
-  },
-] as const;
+const PILOT = {
+  title: "See INTERTEXE with your own products",
+  priceLabel: "Start with 10 products, implemented free",
+  copy: "Send up to 10 product records. INTERTEXE implements them so you can evaluate passports, material intelligence, and traceability outputs on your actual catalog — not a slide deck.",
+  points: [
+    `${PILOT_PRODUCT_LIMIT} products implemented at no charge`,
+    "Material normalization & completeness review",
+    "Passport-ready outputs & hosted QR when published",
+    "No subscription · no recurring free plan",
+  ],
+  href: "/platform/request?intent=snapshot&cta=pricing_pilot",
+  cta: "Start with 10 products",
+} as const;
 
 const VALUES = [
   { title: "Infrastructure, not a tool", copy: "You pay for product intelligence and identity infrastructure — hosted, white-label, or via API.", icon: "shield" },
-  { title: "Volume-aware", copy: "Plans include managed product and passport allowances that grow with your catalog.", icon: "lock" },
-  { title: "Start with proof", copy: "Snapshot free, onboarding proves value, then subscribe to operate at scale.", icon: "clock" },
+  { title: "Volume-aware", copy: "Professional, Platform, and Enterprise include managed product allowances that grow with your catalog.", icon: "lock" },
+  { title: "Start with proof", copy: "Pilot with your products, then subscribe with a one-time implementation fee at checkout.", icon: "clock" },
   { title: "Built for fashion", copy: "Materials, compositions, and regulatory complexity — our focus.", icon: "people" },
 ] as const;
 
@@ -48,7 +29,7 @@ export function PricingPlans() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)] gap-8 lg:gap-12 mb-12 sm:mb-16 items-start">
           <div>
-            <Eyebrow>Try it · Prove it · Run it</Eyebrow>
+            <Eyebrow>Pilot · Subscribe · Scale</Eyebrow>
             <Heading className="mb-4">Product intelligence infrastructure — priced for how you consume it.</Heading>
             <Body className="max-w-xl">
               A brand pays INTERTEXE to operate the intelligence and identity layer behind its products — through our
@@ -58,33 +39,58 @@ export function PricingPlans() {
           <aside className="rounded-xl border border-[#e8e3da] bg-white p-5 sm:p-6">
             <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-2">Commercial path</p>
             <p className="text-sm text-[#5c5854] font-light leading-relaxed">
-              Free demo → scoped onboarding → Platform · Professional · Enterprise. Commercial terms are shared during
-              sales conversations — not published here.
+              10-product pilot → qualification → Professional · Platform · Enterprise. Pricing is shared after your
+              inquiry — not published here.
             </p>
           </aside>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5 mb-10 items-stretch">
-          {ENTRY.map((plan) => (
-            <EntryCard key={plan.title} plan={plan} />
-          ))}
-        </div>
+        <article className="flex flex-col rounded-xl overflow-hidden bg-white border-2 border-[var(--platform-primary)] shadow-[0_24px_50px_rgba(44,38,32,0.08)] mb-10">
+          <p className="bg-[var(--platform-primary)] text-white text-center text-[10px] tracking-[0.18em] uppercase py-2.5">
+            Start here
+          </p>
+          <div className="p-6 sm:p-7 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex-1">
+              <h3 className="text-xl sm:text-[1.35rem] leading-snug mb-2 text-[#161513]" style={SERIF}>
+                {PILOT.title}
+              </h3>
+              <p className="text-2xl sm:text-3xl font-light mb-3 text-[#161513]" style={SERIF}>
+                {PILOT.priceLabel}
+              </p>
+              <p className="text-sm text-[#5c5854] leading-relaxed mb-4 max-w-xl">{PILOT.copy}</p>
+              <ul className="space-y-2">
+                {PILOT.points.map((point) => (
+                  <li key={point} className="flex items-start gap-2.5 text-sm text-[#5c5854] leading-relaxed">
+                    <CheckMark />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Link
+              href={PILOT.href}
+              className="inline-flex shrink-0 items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-primary)] text-white px-5 py-3.5 hover:bg-[var(--platform-primary-hover)] min-h-[44px] rounded-md"
+            >
+              {PILOT.cta}
+            </Link>
+          </div>
+        </article>
 
         <div className="mb-6">
-          <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">3. Run it — monthly SaaS</p>
+          <p className="text-[10px] tracking-[0.18em] uppercase text-[#9c7b8b] mb-4">Paid plans — three tiers only</p>
           <div className="grid md:grid-cols-3 gap-5 items-stretch">
             {SAAS_TIERS.map((tier) => (
               <article
                 key={tier.key}
                 className={`flex flex-col rounded-xl overflow-hidden bg-white border ${
-                  tier.key === "professional"
+                  tier.key === "platform"
                     ? "border-2 border-[var(--platform-primary)] shadow-[0_24px_50px_rgba(44,38,32,0.08)]"
                     : "border-[#e8e3da]"
                 }`}
               >
-                {tier.key === "professional" ? (
+                {tier.key === "platform" ? (
                   <p className="bg-[var(--platform-primary)] text-white text-center text-[10px] tracking-[0.18em] uppercase py-2.5">
-                    Most brands start here
+                    Most brands scale here
                   </p>
                 ) : (
                   <p className="h-[38px] border-b border-[#eeeae4]" aria-hidden="true" />
@@ -94,7 +100,7 @@ export function PricingPlans() {
                     {tier.name}
                   </h3>
                   <p className="text-3xl font-light mb-3 text-[#161513]" style={SERIF}>
-                    {tier.priceLabel}
+                    {tier.publicPriceLabel}
                   </p>
                   <p className="text-sm text-[#5c5854] leading-relaxed mb-5">{tier.headline}</p>
                   <ul className="space-y-2.5 mb-6 flex-1">
@@ -114,7 +120,7 @@ export function PricingPlans() {
                     href={`/platform/request?intent=${tier.key === "enterprise" ? "enterprise" : "saas"}&tier=${tier.key}&cta=pricing_${tier.key}`}
                     className="inline-flex w-full items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-primary)] text-white px-5 py-3.5 hover:bg-[var(--platform-primary-hover)] min-h-[44px] rounded-md mt-auto"
                   >
-                    {tier.key === "enterprise" ? "Talk to sales" : `Choose ${tier.name}`}
+                    {tier.key === "enterprise" ? "Contact sales" : "Request access"}
                   </Link>
                 </div>
               </article>
@@ -123,10 +129,9 @@ export function PricingPlans() {
         </div>
 
         <p className="text-xs text-[#8a847c] max-w-3xl leading-relaxed mb-12">
-          The onboarding fee is a fixed-fee implementation project — analysis, software, and finished material data.
-          Monthly plans are priced by managed product volume and passport hosting. Headless passport API, SSO, custom
-          domains, and ERP integrations require Enterprise. Onboarding fees, enterprise contracts, API usage, NFC/RFID, and
-          hosting overages are additional to SaaS ARR.
+          Implementation is a one-time onboarding fee attached at checkout — not a fourth subscription tier. After your
+          pilot, choose Professional, Platform, or Enterprise. Enterprise contracts, API usage, NFC/RFID, and hosting
+          overages are additional to SaaS subscriptions.
         </p>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-10 border-t border-[#e8e3da] pb-10 sm:pb-12">
@@ -142,48 +147,6 @@ export function PricingPlans() {
         </div>
       </div>
     </section>
-  );
-}
-
-function EntryCard({ plan }: { plan: (typeof ENTRY)[number] }) {
-  return (
-    <article
-      className={`flex flex-col rounded-xl overflow-hidden bg-white ${
-        plan.popular ? "border-2 border-[var(--platform-primary)] shadow-[0_24px_50px_rgba(44,38,32,0.08)]" : "border border-[#e8e3da]"
-      }`}
-    >
-      {plan.popular ? (
-        <p className="bg-[var(--platform-primary)] text-white text-center text-[10px] tracking-[0.18em] uppercase py-2.5">
-          Most popular entry
-        </p>
-      ) : (
-        <p className="h-[38px] border-b border-[#eeeae4]" aria-hidden="true" />
-      )}
-      <div className="p-6 sm:p-7 flex flex-col flex-1">
-        <p className="text-[10px] tracking-[0.16em] uppercase text-[#9c7b8b] mb-3">{plan.step}</p>
-        <h3 className="text-xl sm:text-[1.35rem] leading-snug mb-3 text-[#161513]" style={SERIF}>
-          {plan.title}
-        </h3>
-        <p className="text-3xl sm:text-4xl font-light mb-4 text-[#161513]" style={SERIF}>
-          {plan.price}
-        </p>
-        <p className="text-sm text-[#5c5854] leading-relaxed mb-6">{plan.copy}</p>
-        <ul className="space-y-2.5 mb-8 flex-1">
-          {plan.points.map((point) => (
-            <li key={point} className="flex items-start gap-2.5 text-sm text-[#5c5854] leading-relaxed">
-              <CheckMark />
-              <span>{point}</span>
-            </li>
-          ))}
-        </ul>
-        <Link
-          href={plan.href}
-          className="inline-flex w-full items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-primary)] text-white px-5 py-3.5 hover:bg-[var(--platform-primary-hover)] min-h-[44px] rounded-md mt-auto"
-        >
-          {plan.cta}
-        </Link>
-      </div>
-    </article>
   );
 }
 

@@ -1,27 +1,29 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  FOUNDING_PILOT_PRICE_USD,
+  ONBOARDING_FEE_USD_DEFAULT,
   PLATFORM_MONTHLY_USD,
   PROFESSIONAL_MONTHLY_USD,
   SAAS_ARR_600K_MODEL,
+  resolveOnboardingFeeUsd,
   saasTierByKey,
 } from "./pricing.ts";
 import { entitlementsForPlan } from "./entitlements.ts";
 
 describe("enterprise pricing model", () => {
   it("defines onboarding fee and three SaaS tiers", () => {
-    assert.equal(FOUNDING_PILOT_PRICE_USD, 5000);
-    assert.equal(PLATFORM_MONTHLY_USD, 499);
-    assert.equal(PROFESSIONAL_MONTHLY_USD, 1250);
-    assert.equal(saasTierByKey("platform").productAllowance, 500);
-    assert.equal(saasTierByKey("platform").passportAllowance, 500);
-    assert.equal(saasTierByKey("professional").passportAllowance, 5000);
+    assert.equal(resolveOnboardingFeeUsd(), ONBOARDING_FEE_USD_DEFAULT);
+    assert.equal(PROFESSIONAL_MONTHLY_USD, 499);
+    assert.equal(PLATFORM_MONTHLY_USD, 1250);
+    assert.equal(saasTierByKey("professional").productAllowance, 500);
+    assert.equal(saasTierByKey("platform").productAllowance, 2000);
+    assert.equal(saasTierByKey("platform").passportAllowance, 2000);
   });
 
   it("gates headless API to enterprise only", () => {
     assert.equal(entitlementsForPlan("platform").canUseHeadlessApi, false);
-    assert.equal(entitlementsForPlan("professional").canWhiteLabel, true);
+    assert.equal(entitlementsForPlan("professional").canWhiteLabel, false);
+    assert.equal(entitlementsForPlan("platform").canWhiteLabel, true);
     assert.equal(entitlementsForPlan("professional").canUseHeadlessApi, false);
     assert.equal(entitlementsForPlan("enterprise").canUseHeadlessApi, true);
   });

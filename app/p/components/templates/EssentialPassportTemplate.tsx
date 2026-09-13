@@ -5,6 +5,7 @@ import {
   MaterialsBlock,
   NextLifeBlock,
   PassportShell,
+  SustainabilityBlock,
   ProductHero,
   ProductTitleBlock,
 } from "./shared";
@@ -24,6 +25,7 @@ export function EssentialPassportTemplate(props: TemplateProps) {
       ) : null}
       <ProductHero content={content} large={false} />
       <CareBlock content={content} />
+      <SustainabilityBlock content={content} />
       <LifecycleHistoryBlock content={content} />
       <NextLifeBlock content={content} />
     </PassportShell>

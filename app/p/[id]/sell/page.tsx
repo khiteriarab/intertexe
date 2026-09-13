@@ -4,8 +4,15 @@ import ResaleSellClient from "./ResaleSellClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function ResaleSellPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ResaleSellPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ session?: string }>;
+}) {
   const { id } = await params;
+  const { session: initialSessionId } = await searchParams;
   const view = await resolvePublicPassport(id);
   if (!view.found || !view.consumer) {
     return (
@@ -20,6 +27,7 @@ export default async function ResaleSellPage({ params }: { params: Promise<{ id:
       publicId={id}
       content={view.consumer}
       providers={providerSummaries()}
+      initialSessionId={initialSessionId}
     />
   );
 }

@@ -4,6 +4,7 @@ import {
   JourneyBlock,
   MaterialsBlock,
   PassportShell,
+  SustainabilityBlock,
   ProductHero,
   ProductTitleBlock,
 } from "./shared";
@@ -16,6 +17,7 @@ export function TracePassportTemplate(props: TemplateProps) {
       <ProductTitleBlock content={content} />
       <JourneyBlock content={content} />
       <MaterialsBlock content={content} />
+      <SustainabilityBlock content={content} />
       {content.manufacturingCountry || content.manufacturer ? (
         <section className="itx-passport-section">
           <h2 className="itx-passport-section-title">Made</h2>

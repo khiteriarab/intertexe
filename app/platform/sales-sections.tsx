@@ -7,10 +7,11 @@ import {
   PublishExperienceVisual,
   SaaSDemoFlowVisual,
 } from "./sales-visuals";
+import { PlatformGraphic } from "./PlatformGraphic";
 import { PlatformHero } from "./PlatformHero";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
-import { cfImage } from "../../lib/cloudflare-images";
+import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
 
 const GOVERNED_POINTS = [
   "Normalization across fragmented sources",
@@ -40,8 +41,6 @@ const OUTPUT_PILLARS = [
     copy: "Hosted passport, white-label domain, or headless API — the same approved record powers your app, website, QR scan, and customer service tools without rebuilding data per channel.",
   },
 ] as const;
-
-const SITE = "https://www.intertexe.com";
 
 const VALUE_PILLARS = [
   {
@@ -169,12 +168,6 @@ export function SalesPublishSection() {
 }
 
 export function SalesGovernedRecordSection() {
-  const workspaceSrc = cfImage(`${SITE}/platform/hero-workspace-desktop.png`, {
-    width: 1400,
-    quality: 82,
-    format: "auto",
-  });
-
   return (
     <section className="itx-abstract-section itx-abstract-motif bg-white border-y border-[#e8e3da] py-12 sm:py-16 lg:py-20">
       <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
@@ -195,19 +188,26 @@ export function SalesGovernedRecordSection() {
               ))}
             </ul>
           </div>
-          <figure className="m-0">
-            <img
-              src={workspaceSrc}
-              alt="INTERTEXE enterprise workspace — Customer Zero live catalog"
-              width={1400}
-              height={933}
-              className="w-full rounded-xl border border-[#e8e3da] shadow-[0_24px_60px_rgba(22,21,19,0.08)]"
-              loading="lazy"
+          {PLATFORM_GRAPHICS.understandIssues.ready ? (
+            <PlatformGraphic
+              slot="understandIssues"
+              caption="Customer Zero · conflicts surfaced, never overwritten · resolution workflow in the Issues inbox"
             />
-            <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
-              Customer Zero · catalog → materials → issues → benchmark → passport → next life
-            </figcaption>
-          </figure>
+          ) : (
+            <figure className="m-0">
+              <img
+                src="/platform/hero-workspace-desktop.png"
+                alt="INTERTEXE enterprise workspace — Customer Zero live catalog"
+                width={1400}
+                height={933}
+                className="w-full rounded-xl border border-[#e8e3da] shadow-[0_24px_60px_rgba(22,21,19,0.08)]"
+                loading="lazy"
+              />
+              <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
+                Customer Zero · catalog → materials → issues → benchmark → passport → next life
+              </figcaption>
+            </figure>
+          )}
         </div>
       </div>
     </section>
@@ -330,7 +330,7 @@ export function SalesPlatformBreadthSection() {
         </Body>
         <PlatformModuleGrid />
         <p className="mt-8 text-xs text-[#8a847c] leading-relaxed max-w-2xl">
-          Explore the live demo for module-level detail, or request a walkthrough tailored to your product data.
+          Explore the live product flow for module-level detail, or start with 10 of your own products after qualification.
         </p>
       </div>
     </section>
@@ -343,18 +343,18 @@ export function SalesStartFreeSection() {
     <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 lg:py-20 pb-20 sm:pb-24">
       <div className="itx-editorial-panel itx-editorial-panel-inner p-8 sm:p-12 lg:p-14 text-center">
         <Eyebrow>Get started</Eyebrow>
-        <Heading className="mb-4">Start with a free demo workspace.</Heading>
+        <Heading className="mb-4">See INTERTEXE with your own products.</Heading>
         <Body className="max-w-xl mx-auto mb-8">
-          Connect your product sources, govern one record, and publish a passport on Customer Zero. Create an account to
-          explore the workspace — commercial plans and pricing appear at checkout when you are ready to scale.
+          Start with 10 products, implemented free. After qualification, choose Professional, Platform, or Enterprise —
+          pricing is shared during onboarding, not published on this site.
         </Body>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <PrimaryLink href={signIn}>Start for free</PrimaryLink>
-          <SecondaryLink href="/platform/demo">Explore live demo</SecondaryLink>
+          <PrimaryLink href="/platform/request?intent=snapshot&cta=footer">Start with 10 products</PrimaryLink>
+          <SecondaryLink href="/platform/demo">See it live</SecondaryLink>
         </div>
         <p className="mt-8 text-xs text-[#8a847c]">
-          <Link href="/platform/request?intent=snapshot&cta=footer" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
-            Prefer a guided walkthrough? Request a demo →
+          <Link href={signIn} className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
+            Already a customer? Sign in →
           </Link>
         </p>
       </div>

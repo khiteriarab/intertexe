@@ -125,7 +125,7 @@ export function DemoCatalogWalkthrough() {
         </div>
       ) : null}
 
-      {step === "issues" ? (
+      {step === "issues" && !PLATFORM_GRAPHICS.understandIssues.ready ? (
         <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6">
           <Frame label="Issues Inbox">
             <ul className="divide-y divide-[#eeeae4]">
@@ -178,7 +178,7 @@ export function DemoCatalogWalkthrough() {
         </div>
       ) : null}
 
-      {step === "benchmark" ? (
+      {step === "benchmark" && !PLATFORM_GRAPHICS.compareBenchmark.ready ? (
         <div className="grid lg:grid-cols-[1.3fr_0.7fr] gap-8">
           <div>
             <p className="text-[11px] tracking-[0.16em] uppercase text-[var(--platform-primary)] mb-4">Your material position</p>
@@ -241,7 +241,7 @@ export function DemoCatalogWalkthrough() {
         </div>
       ) : null}
 
-      {step === "passports" ? (
+      {step === "passports" && !PLATFORM_GRAPHICS.actPassport.ready ? (
         <div className="grid lg:grid-cols-[1fr_0.9fr] gap-6">
           <ProductList
             selectedId={selected.id}

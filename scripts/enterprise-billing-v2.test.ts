@@ -29,16 +29,16 @@ describe("billing entitlements v2", () => {
     assert.equal(canAddProducts(ent, 10), false);
   });
 
-  it("B — platform org can create up to 500; 501st blocked", () => {
+  it("B — platform org can create up to 2,000; 2,001st blocked", () => {
     const ent = entitlementsForPlan("platform");
-    assert.equal(canAddProducts(ent, 499), true);
-    assert.equal(canAddProducts(ent, 500), false);
+    assert.equal(canAddProducts(ent, 1999), true);
+    assert.equal(canAddProducts(ent, 2000), false);
   });
 
-  it("C — professional org can create up to 5,000; 5,001st blocked", () => {
+  it("C — professional org can create up to 500; 501st blocked", () => {
     const ent = entitlementsForPlan("professional");
-    assert.equal(canAddProducts(ent, 4999), true);
-    assert.equal(canAddProducts(ent, 5000), false);
+    assert.equal(canAddProducts(ent, 499), true);
+    assert.equal(canAddProducts(ent, 500), false);
   });
 
   it("D — republish does not consume extra hosted passport allowance", () => {
@@ -54,8 +54,8 @@ describe("billing entitlements v2", () => {
     };
     process.env.PADDLE_PRICE_PLATFORM = "pri_platform_only";
     process.env.PADDLE_PRICE_PROFESSIONAL = "pri_pro_only";
-    assert.equal(paddlePlanByPriceId("pri_platform_only")?.plan, "platform");
-    assert.equal(paddlePlanByPriceId("pri_pro_only")?.plan, "professional");
+    assert.equal(paddlePlanByPriceId("pri_platform_only")?.plan, "professional");
+    assert.equal(paddlePlanByPriceId("pri_pro_only")?.plan, "platform");
     assert.equal(paddlePlanByPriceId("pri_unknown"), null);
     process.env.PADDLE_PRICE_PLATFORM = prev.platform;
     process.env.PADDLE_PRICE_PROFESSIONAL = prev.pro;
@@ -63,10 +63,10 @@ describe("billing entitlements v2", () => {
 
   it("I — downgrade over limit preserves data semantics (overLimit flag)", () => {
     const ent = entitlementsForPlan("platform");
-    const usage = checkUsageAllowance(ent, "products", 3000, 1);
+    const usage = checkUsageAllowance(ent, "products", 2500, 1);
     assert.equal(usage.overLimit, true);
     assert.equal(usage.allowed, false);
-    assert.equal(isOverLimit(3000, 500), true);
+    assert.equal(isOverLimit(2500, 2000), true);
   });
 
   it("J — past_due grace allows reads; restricted blocks new resources", () => {
@@ -106,11 +106,16 @@ describe("billing entitlements v2", () => {
   });
 
   it("centralized helpers — organizationCan and organizationLimit", () => {
-    const ent = entitlementsForPlan("professional");
-    assert.equal(organizationCan(ent, "white_label"), true);
-    assert.equal(organizationCan(ent, "sso"), false);
-    assert.equal(organizationLimit(ent, "products"), 5000);
-    assert.equal(planLimit("platform", "hosted_passports"), 500);
+    const pro = entitlementsForPlan("professional");
+    assert.equal(organizationCan(pro, "white_label"), false);
+    assert.equal(organizationCan(pro, "circularity"), false);
+    assert.equal(organizationCan(pro, "sso"), false);
+    assert.equal(organizationLimit(pro, "products"), 500);
+
+    const platform = entitlementsForPlan("platform");
+    assert.equal(organizationCan(platform, "white_label"), true);
+    assert.equal(organizationCan(platform, "circularity"), true);
+    assert.equal(planLimit("platform", "hosted_passports"), 2000);
   });
 
   it("N — public passports preserved during billing restriction policy", () => {

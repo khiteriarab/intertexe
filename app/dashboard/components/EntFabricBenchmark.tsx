@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { PeerComparisonRow } from "../../../lib/enterprise/composition-benchmark";
 import type { FiberShareRow } from "../../../lib/enterprise/composition-benchmark";
+import { fabricImageForFiberCode } from "../../../lib/fabric-images";
 import { EntStackedBarChart } from "./EnterpriseCharts";
 
 export function EntFabricPeerComparison({
@@ -59,6 +61,7 @@ export function EntFabricPeerComparison({
           <h3 className="ent-widget-title">Fiber distribution</h3>
           {fiberRows.length ? (
             <>
+              <EntMaterialMixStrip rows={fiberRows.slice(0, 6)} />
               <div className="mt-6">
                 <EntStackedBarChart
                   rows={fiberRows.map((row) => ({
@@ -73,7 +76,7 @@ export function EntFabricPeerComparison({
                 {fiberRows.slice(0, 10).map((row) => (
                   <li key={row.fiberCode} className="flex items-center justify-between text-sm gap-4">
                     <span className="flex items-center gap-2 text-[var(--ent-ink-soft)] min-w-0">
-                      <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: row.color }} />
+                      <EntFiberSwatch fiberCode={row.fiberCode} color={row.color} label={row.label} />
                       <span className="truncate">{row.label}</span>
                     </span>
                     <span className="ent-display text-base tabular-nums shrink-0">{row.sharePct}%</span>
@@ -145,5 +148,56 @@ export function EntFabricPeerComparison({
         </Link>
       </div>
     </section>
+  );
+}
+
+function EntFiberSwatch({
+  fiberCode,
+  color,
+  label,
+}: {
+  fiberCode: string;
+  color: string;
+  label: string;
+}) {
+  const imageUrl = fabricImageForFiberCode(fiberCode);
+  if (imageUrl) {
+    return (
+      <span className="ent-fiber-swatch shrink-0" aria-hidden>
+        <Image src={imageUrl} alt="" fill sizes="20px" className="object-cover" unoptimized />
+      </span>
+    );
+  }
+  return <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: color }} aria-hidden title={label} />;
+}
+
+function EntMaterialMixStrip({ rows }: { rows: FiberShareRow[] }) {
+  if (!rows.length) return null;
+  return (
+    <div className="ent-material-mix mt-6">
+      <p className="ent-section-eyebrow mb-3">Material mix</p>
+      <div className="ent-material-mix-strip">
+        {rows.map((row) => {
+          const imageUrl = fabricImageForFiberCode(row.fiberCode);
+          return (
+            <div
+              key={row.fiberCode}
+              className="ent-material-mix-segment"
+              style={{ flexGrow: Math.max(row.sharePct, 4) }}
+              title={`${row.label} · ${row.sharePct}%`}
+            >
+              {imageUrl ? (
+                <Image src={imageUrl} alt="" fill sizes="120px" className="object-cover" unoptimized />
+              ) : (
+                <span className="ent-material-mix-fallback" style={{ background: row.color }} aria-hidden />
+              )}
+              <span className="ent-material-mix-label">
+                {row.label} · {row.sharePct}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

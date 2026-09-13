@@ -3,6 +3,7 @@ import { resolvePublicPassport } from "../../../../lib/enterprise/public-resolve
 
 export const dynamic = "force-dynamic";
 
+/** Full structured passport — white-label brands consume this shape via their own interfaces. */
 export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> }
@@ -12,6 +13,15 @@ export async function GET(
   if (!view.found) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+
+  if (view.passport) {
+    return NextResponse.json({
+      public_id: view.publicId,
+      version: view.versionNumber,
+      passport: view.passport,
+    });
+  }
+
   return NextResponse.json({
     public_id: view.publicId,
     product_name: view.productName,
@@ -34,5 +44,7 @@ export async function GET(
       integrity_status: view.consumer?.integrityStatus ?? "unknown",
       sell_url: view.consumer?.resaleEligible ? `/p/${view.publicId}/sell` : null,
     },
+    resale_intelligence: view.consumer?.resaleIntelligence ?? null,
+    sustainability_profile: view.consumer?.sustainabilityProfile ?? null,
   });
 }

@@ -1,5 +1,50 @@
 export type MarketplaceProvider = "ebay" | "vinted" | "poshmark";
 
+export type ResaleRouteKind =
+  | "marketplace_listing"
+  | "instant_buyout"
+  | "consignment"
+  | "brand_trade_in";
+
+export type ResaleValuation = {
+  estimatedValue: number;
+  valueLow: number;
+  valueHigh: number;
+  currency: string;
+  originalRetail: number | null;
+  valueRetentionPct: number | null;
+  marketDemand: "low" | "medium" | "high";
+  typicalSellingDaysMin: number;
+  typicalSellingDaysMax: number;
+  bestChannel: string;
+  alternativeChannel: string | null;
+  methodology: "heuristic_v1";
+};
+
+export type ResaleRouteOption = {
+  id: string;
+  routeKind: ResaleRouteKind;
+  provider: string | null;
+  label: string;
+  youReceive: number;
+  youReceiveLabel: string;
+  currency: string;
+  speedLabel: string;
+  estimatedDaysMin: number | null;
+  estimatedDaysMax: number | null;
+  recommended: boolean;
+  metadata?: Record<string, unknown>;
+};
+
+export type ResaleSessionStatus =
+  | "open"
+  | "draft_ready"
+  | "route_selected"
+  | "listed"
+  | "completed"
+  | "expired"
+  | "cancelled";
+
 export type ProviderIntegrationStatus =
   | "live"
   | "requires_partner_access"

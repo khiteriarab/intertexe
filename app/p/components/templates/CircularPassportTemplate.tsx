@@ -4,6 +4,7 @@ import {
   MaterialsBlock,
   NextLifeBlock,
   PassportShell,
+  SustainabilityBlock,
   ProductHero,
   ProductTitleBlock,
 } from "./shared";
@@ -16,6 +17,7 @@ export function CircularPassportTemplate(props: TemplateProps) {
       <ProductHero content={content} large={false} />
       <ProductTitleBlock content={content} />
       <CareBlock content={content} />
+      <SustainabilityBlock content={content} />
       <NextLifeBlock content={content} />
       <MaterialsBlock content={content} />
     </PassportShell>

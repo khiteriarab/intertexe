@@ -21,10 +21,10 @@ export function DemoOfficeSection() {
             <p className="text-sm text-[#5c5854] leading-relaxed">Barcelona, Spain</p>
           </div>
           <p className="text-sm text-[#8a847c] leading-relaxed max-w-sm mb-6">
-            The INTERTEXE platform team is based in Barcelona. Use the form above to book a conversation, or
-            request a demo from the platform page.
+            The INTERTEXE platform team is based in Barcelona. Start with 10 products implemented free, or request
+            access to Professional, Platform, or Enterprise after qualification.
           </p>
-          <PrimaryLink href="/platform/request?intent=snapshot&cta=office_section">Request a demo</PrimaryLink>
+          <PrimaryLink href="/platform/request?intent=snapshot&cta=office_section">Start with 10 products</PrimaryLink>
         </div>
         <figure className="m-0 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -38,7 +38,7 @@ export function DemoOfficeSection() {
           <figcaption className="mt-3 text-xs text-[#8a847c] leading-relaxed">
             Barcelona, Spain. City context for the platform office — not a photograph of INTERTEXE rooms or staff.{" "}
             <Link href="#book" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
-              Book a conversation ↑
+              Request access ↑
             </Link>
           </figcaption>
         </figure>

@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
-import {
-  ONBOARDING_FEE_LABEL,
-  PLATFORM_MONTHLY_USD,
-  PROFESSIONAL_MONTHLY_USD,
-  onboardingFeePriceLabel,
-  saasTierByKey,
-} from "../../../lib/enterprise/pricing";
+import { PILOT_PRODUCT_LIMIT, saasTierByKey } from "../../../lib/enterprise/pricing";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformLeadForm } from "../PlatformLeadForm";
 import { PlatformViewTracker } from "../PlatformViewTracker";
 
 export const metadata: Metadata = {
   title: "See INTERTEXE with your own products",
-  description: `Free snapshot, ${onboardingFeePriceLabel()} onboarding fee, or SaaS from $${PLATFORM_MONTHLY_USD}/month.`,
+  description: `Start with ${PILOT_PRODUCT_LIMIT} products implemented free. Request access to Professional, Platform, or Enterprise after qualification.`,
 };
 
 export default async function PlatformRequestPage({
@@ -32,23 +26,24 @@ export default async function PlatformRequestPage({
         : "platform_snapshot_started";
 
   let headline = "See INTERTEXE with your own products";
-  let body =
-    "Send 10 product records. We will show you what INTERTEXE finds, what you are missing, how your material data compares, and what it would take to make those products passport-ready. Free. No commitment.";
+  let body = `Send up to ${PILOT_PRODUCT_LIMIT} product records. INTERTEXE implements them at no charge so you can evaluate passports, material intelligence, and traceability on your actual catalog. No commitment.`;
 
   if (intent === "founding_pilot") {
-    headline = `Request the ${ONBOARDING_FEE_LABEL.toLowerCase()}`;
-    body = `The onboarding fee is ${onboardingFeePriceLabel()} — implementation and onboarding, not a monthly subscription. 100 complex products or 500 structured rows.`;
+    headline = "Request access";
+    body =
+      "Implementation is a one-time onboarding fee attached at checkout — not a subscription tier. Share your catalog profile and we will qualify your brand and share commercial terms.";
   } else if (intent === "enterprise") {
     headline = "Talk to us about Enterprise";
     body =
-      "Headless passport API, SSO, custom domains, PLM/PIM/ERP integrations, high-volume hosting, NFC/RFID, and SLAs. Custom pricing.";
-  } else if (intent === "saas" && tier && (tier === "platform" || tier === "professional")) {
-    const def = saasTierByKey(tier);
+      "Custom product volume, headless passport API, SSO, custom domains, PLM/PIM/ERP integrations, multi-brand deployments, and SLAs.";
+  } else if (intent === "saas" && tier && (tier === "platform" || tier === "professional" || tier === "enterprise")) {
+    const def = saasTierByKey(tier as "platform" | "professional" | "enterprise");
     headline = `Request ${def.name}`;
-    body = `${def.priceLabel} — ${def.headline} Includes ${def.productAllowance?.toLocaleString("en-US") ?? "custom"} managed products and ${def.passportAllowance?.toLocaleString("en-US") ?? "custom"} active passports.`;
+    body = `${def.headline} Pricing is shared after qualification — ${def.publicPriceLabel.toLowerCase()}.`;
   } else if (intent === "saas" || intent === "api_access") {
     headline = "Choose your operating plan";
-    body = `Platform ($${PLATFORM_MONTHLY_USD}/mo) for core OS · Professional ($${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo) for white-label passports · Enterprise for headless API. We will recommend volume limits for your catalog.`;
+    body =
+      "Professional for standard DPP infrastructure · Platform for white-label, circularity, and advanced analytics · Enterprise for custom volume and headless API. Pricing is shared after qualification.";
   }
 
   return (

@@ -7,6 +7,7 @@ import {
   resolveIdentityByPublicId,
   upsertResaleProfile,
 } from "../../../../lib/enterprise/resale-service";
+import { linkSessionToResaleItem } from "../../../../lib/enterprise/resale-session-service";
 import type { MarketplaceProvider } from "../../../../lib/resale/types";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     consumerPhotos?: string[];
     providers?: MarketplaceProvider[];
     publish?: boolean;
+    sessionId?: string;
   };
 
   if (!body.publicId || !body.conditionGrade || body.askingPrice == null) {
@@ -100,6 +102,10 @@ export async function POST(request: Request) {
     providers: body.providers,
     draft,
   });
+
+  if (body.sessionId) {
+    await linkSessionToResaleItem(body.sessionId, itemId);
+  }
 
   return NextResponse.json({ resaleItemId: itemId, status: "listed", listings });
 }

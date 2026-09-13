@@ -62,16 +62,16 @@ export function IssuesBulkBar({
   }
 
   return (
-    <div className="mb-6 rounded-xl border border-[var(--ent-border)] bg-[var(--ent-surface-muted)]/40 p-4">
-      <div className="flex flex-wrap items-center gap-3 mb-3">
-        <button type="button" className={entButtonGhostClass} onClick={toggleAll} disabled={busy}>
+    <div className="mb-5 md:mb-6 rounded-xl border border-[var(--ent-border)] bg-[var(--ent-surface-muted)]/40 p-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-3">
+        <button type="button" className={`${entButtonGhostClass} w-full sm:w-auto justify-center`} onClick={toggleAll} disabled={busy}>
           {selected.size === openIssues.length ? "Clear selection" : `Select all open (${openIssues.length})`}
         </button>
         <span className="text-sm text-[var(--ent-muted)]">{selected.size} selected</span>
-        <div className="flex flex-wrap gap-2 ml-auto">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:ml-auto w-full sm:w-auto">
           <button
             type="button"
-            className={entButtonClass}
+            className={`${entButtonClass} w-full sm:w-auto justify-center`}
             disabled={busy || selected.size === 0}
             onClick={() => bulkResolve("resolve")}
           >
@@ -79,7 +79,7 @@ export function IssuesBulkBar({
           </button>
           <button
             type="button"
-            className={entButtonGhostClass}
+            className={`${entButtonGhostClass} w-full sm:w-auto justify-center`}
             disabled={busy || selected.size === 0}
             onClick={() => bulkResolve("not_applicable")}
           >

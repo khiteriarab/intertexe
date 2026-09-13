@@ -1,26 +1,58 @@
 /**
- * INTERTEXE commercial model — onboarding fee + three SaaS tiers.
- * Brands pay for product intelligence and identity infrastructure, not dashboard access alone.
+ * INTERTEXE commercial model — 10-product pilot + three SaaS tiers.
+ * Internal USD amounts are for sales/checkout only — not shown on the public marketing site.
  */
 
-/** Fixed-fee implementation and onboarding — not a monthly subscription. */
-export const ONBOARDING_FEE_USD = 5_000;
-/** @deprecated Prefer ONBOARDING_FEE_USD */
-export const FOUNDING_PILOT_PRICE_USD = ONBOARDING_FEE_USD;
+/** Free sales pilot — exactly 10 products, not a subscription tier. */
+export const PILOT_PRODUCT_LIMIT = 10;
 
-export const ONBOARDING_FEE_LABEL = "Onboarding fee";
+/** Managed product / passport limits — single source of truth for entitlements & UI. */
+export const PROFESSIONAL_PRODUCT_LIMIT = 500;
+export const PLATFORM_PRODUCT_LIMIT = 2_000;
+
+/** Internal monthly USD — revealed after qualification, proposal, or checkout only. */
+export const PROFESSIONAL_MONTHLY_USD = 499;
+export const PLATFORM_MONTHLY_USD = 1_250;
+
+/** Default one-time implementation fee — override via INTERTEXE_IMPLEMENTATION_FEE_USD. */
+export const ONBOARDING_FEE_USD_DEFAULT = 5_000;
+
+/** Resolved implementation fee (env-configurable, not hard-coded in UI). */
+export function resolveOnboardingFeeUsd(): number {
+  const raw = process.env.INTERTEXE_IMPLEMENTATION_FEE_USD || process.env.ONBOARDING_FEE_USD;
+  const parsed = raw ? Number.parseInt(String(raw), 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : ONBOARDING_FEE_USD_DEFAULT;
+}
+
+/** @deprecated Prefer resolveOnboardingFeeUsd() */
+export const ONBOARDING_FEE_USD = ONBOARDING_FEE_USD_DEFAULT;
+/** @deprecated Prefer resolveOnboardingFeeUsd() */
+export const FOUNDING_PILOT_PRICE_USD = ONBOARDING_FEE_USD_DEFAULT;
+
+export const ONBOARDING_FEE_LABEL = "Implementation fee";
 
 export function onboardingFeePriceLabel(): string {
-  return `$${ONBOARDING_FEE_USD.toLocaleString("en-US")}`;
+  return `$${resolveOnboardingFeeUsd().toLocaleString("en-US")}`;
 }
-export const PLATFORM_MONTHLY_USD = 499;
-export const PROFESSIONAL_MONTHLY_USD = 1_250;
 
-export type SaasTierKey = "platform" | "professional" | "enterprise";
+/** Plans that operate as the 10-product pilot workspace (no public pricing). */
+export function isPilotPlan(plan: string): boolean {
+  return plan === "demo" || plan === "free_snapshot";
+}
+
+export function isPaidSubscriptionPlan(plan: string): boolean {
+  const p = plan === "saas" ? "professional" : plan;
+  return p === "professional" || p === "platform";
+}
+
+export type SaasTierKey = "professional" | "platform" | "enterprise";
 
 export type SaasTierDefinition = {
   key: SaasTierKey;
   name: string;
+  /** Public marketing label — no dollar amounts on the website. */
+  publicPriceLabel: string;
+  /** Internal checkout / sales label — includes USD when set. */
   priceLabel: string;
   monthlyUsd: number | null;
   productAllowance: number | null;
@@ -33,61 +65,65 @@ export type SaasTierDefinition = {
 
 export const SAAS_TIERS: SaasTierDefinition[] = [
   {
-    key: "platform",
-    name: "Platform",
-    priceLabel: "$499/month",
-    monthlyUsd: PLATFORM_MONTHLY_USD,
-    productAllowance: 500,
-    passportAllowance: 500,
+    key: "professional",
+    name: "Professional",
+    publicPriceLabel: "Request pricing",
+    priceLabel: `$${PROFESSIONAL_MONTHLY_USD}/month`,
+    monthlyUsd: PROFESSIONAL_MONTHLY_USD,
+    productAllowance: PROFESSIONAL_PRODUCT_LIMIT,
+    passportAllowance: PROFESSIONAL_PRODUCT_LIMIT,
     userSeats: 3,
-    headline: "Core enterprise operating system for governed product records.",
+    headline: "Standard DPP and product passport infrastructure for growing catalogs.",
     features: [
-      "Governed product records & material intelligence",
-      "Issues register, workflows & basic Material Benchmark",
-      "DPP management, QR generation & passport publishing",
       "Up to 500 managed products · 500 hosted passports",
-      "3 workspace users",
+      "Material & composition data · traceability · sustainability fields",
+      "DPP management, QR / NFC / RFID passport access",
+      "Standard analytics dashboard & Material Benchmark",
+      "Standard API access",
     ],
     notIncluded: [
       "White-label consumer passport experiences",
-      "Headless passport API",
-      "SSO, custom domains & ERP/PLM integrations",
+      "Resale / circularity tooling",
+      "Advanced integrations & headless API",
     ],
   },
   {
-    key: "professional",
-    name: "Professional",
-    priceLabel: "$1,250/month",
-    monthlyUsd: PROFESSIONAL_MONTHLY_USD,
-    productAllowance: 5_000,
-    passportAllowance: 5_000,
+    key: "platform",
+    name: "Platform",
+    publicPriceLabel: "Request pricing",
+    priceLabel: `$${PLATFORM_MONTHLY_USD.toLocaleString("en-US")}/month`,
+    monthlyUsd: PLATFORM_MONTHLY_USD,
+    productAllowance: PLATFORM_PRODUCT_LIMIT,
+    passportAllowance: PLATFORM_PRODUCT_LIMIT,
     userSeats: 10,
-    headline: "Presentation and distribution layer on top of the operating system.",
+    headline: "Presentation, circularity, and automation on top of Professional.",
     features: [
-      "Everything in Platform",
-      "Up to 5,000 managed products · 5,000 hosted passports",
-      "White-label consumer passport experiences & branded templates",
-      "Advanced analytics & 10 workspace users",
-      "Resale / circularity tooling as released",
-      "Enhanced export limits — not headless infrastructure API",
+      "Everything in Professional",
+      "Up to 2,000 managed products · 2,000 hosted passports",
+      "Advanced API access · white-label passport experiences",
+      "Advanced sustainability & traceability analytics",
+      "Resale / circularity functionality",
+      "Integrations, automation & advanced brand reporting",
     ],
-    notIncluded: ["Headless passport API (Enterprise)", "SSO & custom domains", "PLM/PIM/ERP integrations"],
+    notIncluded: ["Headless passport API (Enterprise)", "SSO & custom domains", "Custom SLA & multi-brand deployments"],
   },
   {
     key: "enterprise",
     name: "Enterprise",
+    publicPriceLabel: "Contact sales",
     priceLabel: "Custom",
     monthlyUsd: null,
     productAllowance: null,
     passportAllowance: null,
     userSeats: null,
-    headline: "Infrastructure for brands powering product data inside their own apps.",
+    headline: "Custom volume, compliance, and infrastructure for multi-brand deployments.",
     features: [
-      "Custom / high-volume product & passport hosting",
-      "Headless passport API · SSO · custom domains",
-      "PLM / PIM / ERP integrations & custom roles",
-      "NFC / RFID carrier integrations & SLAs",
-      "Dedicated implementation & deeper resale integrations",
+      "Custom product & passport volume",
+      "Everything in Platform",
+      "Custom API volume · headless passport API",
+      "Custom integrations · SSO · custom domains",
+      "Enterprise / multi-brand deployments",
+      "Custom compliance / DPP requirements · SLA & migration",
     ],
     notIncluded: [],
   },
@@ -98,11 +134,11 @@ export const SAAS_ARR_600K_MODEL = {
   targetArrUsd: 600_000,
   targetMrrUsd: 50_000,
   mix: [
-    { tier: "platform" as const, customers: 30, monthlyUsd: PLATFORM_MONTHLY_USD },
-    { tier: "professional" as const, customers: 28, monthlyUsd: PROFESSIONAL_MONTHLY_USD },
+    { tier: "professional" as const, customers: 30, monthlyUsd: PROFESSIONAL_MONTHLY_USD },
+    { tier: "platform" as const, customers: 28, monthlyUsd: PLATFORM_MONTHLY_USD },
   ],
   totalCustomers: 58,
-  note: "Onboarding fees ($5K), enterprise contracts, API fees, and hosting overages sit on top of SaaS ARR.",
+  note: "Implementation fees, enterprise contracts, API fees, and hosting overages sit on top of SaaS ARR.",
 };
 
 export function formatTierPrice(monthlyUsd: number | null): string {
@@ -110,18 +146,23 @@ export function formatTierPrice(monthlyUsd: number | null): string {
   return `$${monthlyUsd.toLocaleString("en-US")}/month`;
 }
 
+/** Public-facing price copy — never exposes internal USD on the marketing site. */
+export function publicTierPriceLabel(tier: SaasTierKey): string {
+  return saasTierByKey(tier).publicPriceLabel;
+}
+
 export function planDisplayName(plan: string): string {
   switch (plan) {
     case "demo":
     case "free_snapshot":
-      return "Free demo";
+      return "10-product pilot";
     case "founding_pilot":
       return ONBOARDING_FEE_LABEL;
-    case "platform":
-      return "Platform";
     case "professional":
     case "saas":
       return "Professional";
+    case "platform":
+      return "Platform";
     case "enterprise":
       return "Enterprise";
     case "internal":
@@ -133,16 +174,16 @@ export function planDisplayName(plan: string): string {
 
 export function upgradeHintForPlan(plan: string): string {
   if (plan === "demo" || plan === "free_snapshot") {
-    return "Contact INTERTEXE to upgrade your plan or request implementation support.";
+    return "After your 10-product pilot, choose Professional, Platform, or Enterprise — pricing is shared during qualification.";
   }
   if (plan === "founding_pilot") {
-    return `Onboarding complete? Move to Platform ($${PLATFORM_MONTHLY_USD}/mo), Professional ($${PROFESSIONAL_MONTHLY_USD.toLocaleString("en-US")}/mo), or Enterprise for headless API & integrations.`;
+    return "Implementation complete? Subscribe to Professional or Platform — Enterprise for headless API, custom volume, and SLAs.";
+  }
+  if (plan === "professional") {
+    return "Need white-label passports, circularity, or higher catalog limits? Upgrade to Platform. Headless API requires Enterprise.";
   }
   if (plan === "platform") {
-    return "Need white-label passports or higher catalog limits? Upgrade to Professional ($1,250/mo). Headless API requires Enterprise.";
-  }
-  if (plan === "professional" || plan === "saas") {
-    return "Headless passport API, SSO, custom domains, and ERP integrations require Enterprise.";
+    return "Headless passport API, SSO, custom domains, and custom compliance require Enterprise.";
   }
   return "Contact INTERTEXE to adjust your plan or hosting volume.";
 }
@@ -152,3 +193,4 @@ export function saasTierByKey(key: SaasTierKey): SaasTierDefinition {
   if (!tier) throw new Error(`Unknown SaaS tier: ${key}`);
   return tier;
 }
+

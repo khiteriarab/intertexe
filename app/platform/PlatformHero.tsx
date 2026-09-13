@@ -166,8 +166,8 @@ export function PlatformHero() {
             and deliver through hosted pages, your domain, or your existing app.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-            <PrimaryLink href={signIn}>Start for free</PrimaryLink>
-            <SecondaryLink href="/platform/demo">Explore live demo</SecondaryLink>
+            <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Start with 10 products</PrimaryLink>
+            <SecondaryLink href="/platform/demo">See it live</SecondaryLink>
           </div>
           <HeroTabs className="mb-2" />
         </div>
@@ -225,8 +225,8 @@ export function PlatformHero() {
               raw material to the moment someone scans the QR on the hangtag.
             </p>
             <div className="flex flex-wrap gap-3 mb-8">
-              <PrimaryLink href={signIn}>Start for free</PrimaryLink>
-              <SecondaryLink href="/platform/demo">Explore live demo</SecondaryLink>
+              <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Start with 10 products</PrimaryLink>
+              <SecondaryLink href="/platform/demo">See it live</SecondaryLink>
             </div>
             <HeroTabs className="mb-10" />
             <dl className="grid grid-cols-3 gap-6 pt-8 border-t border-[var(--platform-border)]/80 max-w-lg">

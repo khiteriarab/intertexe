@@ -4,6 +4,14 @@
  */
 
 import type { PlanKey } from "./entitlements";
+import {
+  PILOT_PRODUCT_LIMIT,
+  PLATFORM_MONTHLY_USD,
+  PLATFORM_PRODUCT_LIMIT,
+  PROFESSIONAL_MONTHLY_USD,
+  PROFESSIONAL_PRODUCT_LIMIT,
+  ONBOARDING_FEE_USD,
+} from "./pricing";
 
 export type BillingProvider = "paddle" | "manual" | null;
 
@@ -30,7 +38,8 @@ export type PlanFeature =
   | "publish_passports"
   | "suppliers"
   | "regulatory_program"
-  | "export_unlimited";
+  | "export_unlimited"
+  | "circularity";
 
 export type PlanDefinition = {
   key: PlanKey;
@@ -40,7 +49,7 @@ export type PlanDefinition = {
   maxHostedPassports: number | null;
   maxTeamMembers: number | null;
   features: ReadonlySet<PlanFeature>;
-  /** Monthly USD — null for custom / demo */
+  /** Monthly USD — null for custom / pilot */
   monthlyUsd: number | null;
   /** One-time implementation USD — sold separately via Paddle when needed */
   implementationUsd: number | null;
@@ -51,10 +60,10 @@ const f = (...keys: PlanFeature[]) => new Set(keys);
 export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
   demo: {
     key: "demo",
-    label: "Free demo",
+    label: "10-product pilot",
     billingProvider: null,
-    maxProducts: 10,
-    maxHostedPassports: 10,
+    maxProducts: PILOT_PRODUCT_LIMIT,
+    maxHostedPassports: PILOT_PRODUCT_LIMIT,
     maxTeamMembers: 3,
     monthlyUsd: 0,
     implementationUsd: null,
@@ -62,10 +71,10 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
   },
   free_snapshot: {
     key: "free_snapshot",
-    label: "Free demo",
+    label: "10-product pilot",
     billingProvider: null,
-    maxProducts: 10,
-    maxHostedPassports: 10,
+    maxProducts: PILOT_PRODUCT_LIMIT,
+    maxHostedPassports: PILOT_PRODUCT_LIMIT,
     maxTeamMembers: 3,
     monthlyUsd: 0,
     implementationUsd: null,
@@ -73,35 +82,41 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
   },
   founding_pilot: {
     key: "founding_pilot",
-    label: "Onboarding",
+    label: "Implementation paid",
     billingProvider: "manual",
-    maxProducts: 500,
-    maxHostedPassports: 100,
+    maxProducts: PILOT_PRODUCT_LIMIT,
+    maxHostedPassports: PILOT_PRODUCT_LIMIT,
     maxTeamMembers: 5,
     monthlyUsd: null,
-    implementationUsd: 5_000,
+    implementationUsd: ONBOARDING_FEE_USD,
     features: f("publish_passports", "suppliers", "regulatory_program"),
-  },
-  platform: {
-    key: "platform",
-    label: "Platform",
-    billingProvider: "paddle",
-    maxProducts: 500,
-    maxHostedPassports: 500,
-    maxTeamMembers: 3,
-    monthlyUsd: 499,
-    implementationUsd: 5_000,
-    features: f("publish_passports", "suppliers", "advanced_benchmarking", "regulatory_program"),
   },
   professional: {
     key: "professional",
     label: "Professional",
     billingProvider: "paddle",
-    maxProducts: 5_000,
-    maxHostedPassports: 5_000,
+    maxProducts: PROFESSIONAL_PRODUCT_LIMIT,
+    maxHostedPassports: PROFESSIONAL_PRODUCT_LIMIT,
+    maxTeamMembers: 3,
+    monthlyUsd: PROFESSIONAL_MONTHLY_USD,
+    implementationUsd: ONBOARDING_FEE_USD,
+    features: f(
+      "publish_passports",
+      "suppliers",
+      "advanced_benchmarking",
+      "regulatory_program",
+      "api_access"
+    ),
+  },
+  platform: {
+    key: "platform",
+    label: "Platform",
+    billingProvider: "paddle",
+    maxProducts: PLATFORM_PRODUCT_LIMIT,
+    maxHostedPassports: PLATFORM_PRODUCT_LIMIT,
     maxTeamMembers: 10,
-    monthlyUsd: 1_250,
-    implementationUsd: 5_000,
+    monthlyUsd: PLATFORM_MONTHLY_USD,
+    implementationUsd: ONBOARDING_FEE_USD,
     features: f(
       "publish_passports",
       "suppliers",
@@ -111,28 +126,26 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
       "advanced_benchmarking",
       "priority_support",
       "regulatory_program",
-      "export_unlimited"
+      "export_unlimited",
+      "advanced_integrations",
+      "circularity"
     ),
   },
   saas: {
     key: "saas",
     label: "Professional",
     billingProvider: "paddle",
-    maxProducts: 5_000,
-    maxHostedPassports: 5_000,
-    maxTeamMembers: 10,
-    monthlyUsd: 1_250,
-    implementationUsd: 5_000,
+    maxProducts: PROFESSIONAL_PRODUCT_LIMIT,
+    maxHostedPassports: PROFESSIONAL_PRODUCT_LIMIT,
+    maxTeamMembers: 3,
+    monthlyUsd: PROFESSIONAL_MONTHLY_USD,
+    implementationUsd: ONBOARDING_FEE_USD,
     features: f(
       "publish_passports",
       "suppliers",
-      "api_access",
-      "white_label",
-      "advanced_analytics",
       "advanced_benchmarking",
-      "priority_support",
       "regulatory_program",
-      "export_unlimited"
+      "api_access"
     ),
   },
   enterprise: {
@@ -158,7 +171,8 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
       "advanced_analytics",
       "advanced_benchmarking",
       "regulatory_program",
-      "export_unlimited"
+      "export_unlimited",
+      "circularity"
     ),
   },
   internal: {
@@ -184,7 +198,8 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
       "advanced_analytics",
       "advanced_benchmarking",
       "regulatory_program",
-      "export_unlimited"
+      "export_unlimited",
+      "circularity"
     ),
   },
 };

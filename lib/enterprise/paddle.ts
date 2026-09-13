@@ -33,26 +33,28 @@ export function paddlePlanByPriceId(priceId: string): PaddlePlanMeta | null {
   const id = String(priceId || "").trim();
   if (!id) return null;
 
+  // Env var names reflect legacy Paddle product titles — map by price ID, not env key label.
+  // PADDLE_PRICE_PLATFORM → $499/mo Professional · PADDLE_PRICE_PROFESSIONAL → $1,250/mo Platform
   const fromEnv: Array<[string | undefined, PaddlePlanMeta]> = [
     [
       process.env.PADDLE_PRICE_PLATFORM || process.env.PADDLE_PRICE_SAAS_PLATFORM,
-      { plan: "platform", productAllowance: 500, passportAllowance: 500, kind: "subscription" },
+      { plan: "professional", productAllowance: 500, passportAllowance: 500, kind: "subscription" },
     ],
     [
       process.env.PADDLE_PRICE_PROFESSIONAL || process.env.PADDLE_PRICE_SAAS_PROFESSIONAL,
-      { plan: "professional", productAllowance: 5_000, passportAllowance: 5_000, kind: "subscription" },
+      { plan: "platform", productAllowance: 2_000, passportAllowance: 2_000, kind: "subscription" },
     ],
     [
       process.env.PADDLE_PRICE_IMPLEMENTATION || process.env.PADDLE_PRICE_FOUNDING_PILOT,
-      { plan: "founding_pilot", productAllowance: 500, passportAllowance: 100, kind: "implementation" },
+      { plan: "founding_pilot", productAllowance: 10, passportAllowance: 10, kind: "implementation" },
     ],
     [
       process.env.PADDLE_PRICE_SAAS_STARTER,
-      { plan: "platform", productAllowance: 500, passportAllowance: 500, kind: "subscription" },
+      { plan: "professional", productAllowance: 500, passportAllowance: 500, kind: "subscription" },
     ],
     [
       process.env.PADDLE_PRICE_SAAS_GROWTH,
-      { plan: "professional", productAllowance: 5_000, passportAllowance: 5_000, kind: "subscription" },
+      { plan: "platform", productAllowance: 2_000, passportAllowance: 2_000, kind: "subscription" },
     ],
   ];
   for (const [envId, meta] of fromEnv) {
@@ -123,6 +125,8 @@ export async function createPaddleCheckout(input: {
   organizationId: string;
   organizationSlug: string;
   priceId: string;
+  /** One-time implementation fee — bundled with subscription checkout when present. */
+  additionalPriceIds?: string[];
   customerEmail?: string | null;
   successUrl: string;
   cancelUrl?: string;
@@ -132,10 +136,16 @@ export async function createPaddleCheckout(input: {
     throw new Error("Unknown Paddle price. Configure PADDLE_PRICE_* env vars.");
   }
 
+  const items = [{ price_id: input.priceId, quantity: 1 }];
+  for (const extraId of input.additionalPriceIds ?? []) {
+    const trimmed = String(extraId || "").trim();
+    if (trimmed) items.push({ price_id: trimmed, quantity: 1 });
+  }
+
   const data = await paddleFetch<{ id: string; checkout?: { url?: string } }>("/transactions", {
     method: "POST",
     body: JSON.stringify({
-      items: [{ price_id: input.priceId, quantity: 1 }],
+      items,
       customer: input.customerEmail ? { email: input.customerEmail } : undefined,
       custom_data: {
         organization_id: input.organizationId,
@@ -413,7 +423,7 @@ export async function handlePaddleWebhookEvent(
 
 export function defaultCheckoutPriceForPlan(plan: PlanKey): string | null {
   const normalized = normalizePlanKey(plan);
-  if (normalized === "platform") {
+  if (normalized === "professional" || plan === "saas") {
     return (
       process.env.PADDLE_PRICE_PLATFORM?.trim() ||
       process.env.PADDLE_PRICE_SAAS_PLATFORM?.trim() ||
@@ -421,7 +431,7 @@ export function defaultCheckoutPriceForPlan(plan: PlanKey): string | null {
       null
     );
   }
-  if (normalized === "professional" || plan === "saas") {
+  if (normalized === "platform") {
     return (
       process.env.PADDLE_PRICE_PROFESSIONAL?.trim() ||
       process.env.PADDLE_PRICE_SAAS_PROFESSIONAL?.trim() ||

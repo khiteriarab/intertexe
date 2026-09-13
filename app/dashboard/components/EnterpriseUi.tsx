@@ -249,6 +249,41 @@ export function EntIssuePill({
   );
 }
 
+/** Priority indicator — colored dot + label (Issues inbox). */
+export function EntPriorityPill({
+  severity,
+  showLabel = false,
+}: {
+  severity: string;
+  showLabel?: boolean;
+}) {
+  const s = String(severity || "").toLowerCase();
+  const tone =
+    s === "critical" || s === "high"
+      ? "high"
+      : s === "medium" || s === "moderate"
+        ? "medium"
+        : "low";
+  const label = s === "critical" ? "Critical" : s === "high" ? "High" : s === "medium" ? "Medium" : "Low";
+  return (
+    <span className={`ent-priority-pill ent-priority-pill-${tone}`}>
+      <span className="ent-priority-dot" aria-hidden />
+      {showLabel ? label : null}
+    </span>
+  );
+}
+
+/** Workflow status pill — Needs review · Open · Resolved. */
+export function EntIssueStatusPill({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: "needs_review" | "open" | "in_progress" | "resolved";
+}) {
+  return <span className={`ent-issue-status-pill ent-issue-status-${tone}`}>{label}</span>;
+}
+
 /* ── Attention queue ── */
 
 export type EntAttentionItem = {

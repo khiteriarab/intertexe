@@ -2,7 +2,10 @@ import { connection } from "next/server";
 import { DM_Sans } from "next/font/google";
 import { redirect } from "next/navigation";
 import { requireOrganizationAccess } from "../../../../lib/enterprise/access";
+import { countActiveProducts } from "../../../../lib/enterprise/billing-gates";
 import { isReservedHqSlug } from "../../../../lib/enterprise/constants";
+import { loadOrgOverview } from "../../../../lib/enterprise/queries";
+import { isPilotPlan } from "../../../../lib/enterprise/pricing";
 import { EnterpriseShell } from "../../components/EnterpriseShell";
 import "../../enterprise-theme.css";
 
@@ -25,10 +28,26 @@ export default async function OrganizationLayout({
   const { organization } = await params;
   if (isReservedHqSlug(organization)) redirect("/dashboard");
 
-  const { actor, membership } = await requireOrganizationAccess(organization);
+  const { actor, membership, client } = await requireOrganizationAccess(organization);
   if (membership.role === "supplier_contributor") {
     redirect("/dashboard/supplier");
   }
+
+  const pilotWorkspace = isPilotPlan(membership.plan);
+  const pilotStatus = pilotWorkspace
+    ? await Promise.all([
+        countActiveProducts(client, membership.organizationId),
+        loadOrgOverview(client, membership.organizationId),
+      ]).then(([productCount, overview]) => ({
+        productCount,
+        processedCount: Math.max(
+          productCount,
+          overview.readyCount +
+            overview.publishedCount +
+            (overview.productStateCounts.review_required || 0)
+        ),
+      }))
+    : null;
 
   return (
     <div className={entSans.variable}>
@@ -41,6 +60,7 @@ export default async function OrganizationLayout({
         plan={membership.plan}
         workspaceContexts={actor.contexts}
         founderHq={actor.hq}
+        pilotStatus={pilotStatus}
       >
         {children}
       </EnterpriseShell>

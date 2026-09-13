@@ -315,3 +315,47 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.itx-passport-sustainability-card {
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(26, 31, 34, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.itx-passport-dimensions th {
+  width: 42%;
+  vertical-align: top;
+}
+
+.itx-resale-value-card {
+  padding: 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(26, 31, 34, 0.1);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.itx-resale-metrics {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.itx-resale-metrics dt {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--pp-muted-light);
+}
+
+.itx-resale-route-card {
+  padding: 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(26, 31, 34, 0.1);
+  background: rgba(255, 255, 255, 0.45);
+  transition: border-color 0.15s ease;
+}
+
+.itx-resale-route-card.selected {
+  border-color: var(--pp-petrol);
+  background: rgba(255, 255, 255, 0.72);
+}

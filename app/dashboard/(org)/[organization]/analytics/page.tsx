@@ -3,6 +3,7 @@ import { requireOrganizationAccess } from "../../../../../lib/enterprise/access"
 import { passportStateLabel } from "../../../../../lib/enterprise/issue-copy";
 import { loadDecisionIntelligence } from "../../../../../lib/enterprise/decision-intelligence";
 import { loadOrgAnalytics } from "../../../../../lib/enterprise/module-queries";
+import { loadBrandSustainabilityAnalytics } from "../../../../../lib/sustainability/brand-analytics";
 import {
   pilotImageMaps,
   loadConsumerSignals,
@@ -27,10 +28,11 @@ export default async function AnalyticsPage({
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
   const pilotImages = pilotImageMaps(livePilotProducts);
-  const [data, signals, decisions] = await Promise.all([
+  const [data, signals, decisions, sustainability] = await Promise.all([
     loadOrgAnalytics(client, membership.organizationId),
     loadConsumerSignals(client, membership.organizationId, { limit: 10, pilotImages }),
     loadDecisionIntelligence(client, membership.organizationId, membership.slug),
+    loadBrandSustainabilityAnalytics(client, membership.organizationId),
   ]);
   const base = `/dashboard/${membership.slug}`;
 
@@ -79,6 +81,48 @@ export default async function AnalyticsPage({
         </>
       }
     >
+      {sustainability.productCount > 0 ? (
+        <section className="mb-10 rounded-[var(--ent-radius-2xl)] p-6 md:p-8 ent-animate-in border border-[var(--ent-border)]">
+          <div className="mb-6">
+            <p className="ent-section-eyebrow mb-2">Environmental intelligence</p>
+            <h2 className="ent-widget-title">Brand sustainability performance</h2>
+            <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-2xl">
+              Aggregated from product-level evidence — traceability completeness, environmental cost, and circularity readiness. Prove it, don&apos;t claim it.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="ent-panel-nested px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Fully traceable</p>
+              <p className="ent-display text-2xl tabular-nums mt-1">{sustainability.fullyTraceablePct}%</p>
+            </div>
+            <div className="ent-panel-nested px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Avg traceability</p>
+              <p className="ent-display text-2xl tabular-nums mt-1">{sustainability.avgTraceabilityScore}</p>
+            </div>
+            <div className="ent-panel-nested px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Natural materials</p>
+              <p className="ent-display text-2xl tabular-nums mt-1">{sustainability.naturalMaterialsPct}%</p>
+            </div>
+            <div className="ent-panel-nested px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Supply-chain disclosure</p>
+              <p className="ent-display text-2xl tabular-nums mt-1">{sustainability.supplyChainDisclosurePct}%</p>
+            </div>
+            {sustainability.avgEnvironmentalCostPoints != null ? (
+              <div className="ent-panel-nested px-4 py-3">
+                <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Avg FR environmental cost</p>
+                <p className="ent-display text-2xl tabular-nums mt-1">{sustainability.avgEnvironmentalCostPoints} pts</p>
+              </div>
+            ) : null}
+            {sustainability.avgCarbonKg != null ? (
+              <div className="ent-panel-nested px-4 py-3">
+                <p className="text-[10px] uppercase tracking-wider text-[var(--ent-muted-light)]">Avg carbon</p>
+                <p className="ent-display text-2xl tabular-nums mt-1">{sustainability.avgCarbonKg} kg CO₂e</p>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       {decisions.length > 0 ? (
         <section className="mb-10">
           <p className="ent-section-eyebrow mb-3">Decision intelligence</p>

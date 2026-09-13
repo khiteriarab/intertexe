@@ -396,6 +396,7 @@ export type OrgIssueRow = {
   detail: string | null;
   productName: string | null;
   productSku: string | null;
+  productStyleCode: string | null;
   identifier: IdentifierIssueDetail | null;
   resolver: ReviewerIdentity | null;
   resolvedAt: string | null;
@@ -418,7 +419,11 @@ export async function loadOrgIssues(client: SupabaseClient, organizationId: stri
     .filter((id): id is string => Boolean(id));
   const allIds = Array.from(new Set([...productIds, ...matchedIds]));
   const products = allIds.length
-    ? await client.from("products").select("id, name, sku").eq("organization_id", organizationId).in("id", allIds)
+    ? await client
+        .from("products")
+        .select("id, name, sku, style_code")
+        .eq("organization_id", organizationId)
+        .in("id", allIds)
     : { data: [] };
   const productById = new Map((products.data || []).map((row) => [row.id, row]));
 
@@ -439,6 +444,7 @@ export async function loadOrgIssues(client: SupabaseClient, organizationId: stri
       detail: row.detail,
       productName: product?.name || null,
       productSku: product?.sku || null,
+      productStyleCode: product?.style_code || null,
       identifier: identifier
         ? {
             ...identifier,

@@ -236,8 +236,8 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(walkthrough, /IssuesPreview/);
     assert.match(walkthrough, /messy source data/i);
     assert.match(walkthrough, /does not overwrite the original string/i);
-    assert.match(previews, /Coming \/ developing/);
-    assert.match(previews, /INTERTEXE consumer signal/i);
+    assert.match(walkthrough, /Coming \/ developing/);
+    assert.match(walkthrough, /INTERTEXE consumer signal/i);
     assert.doesNotMatch(walkthrough, /EU Certified/);
     assert.doesNotMatch(walkthrough, /Guaranteed Compliant/);
     assert.doesNotMatch(previews, /Official DPP Score/);
@@ -254,9 +254,9 @@ describe("Permanent 10-product demonstration catalog", () => {
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
     assert.match(page, /DemoBookSection/);
     assert.match(page, /DemoOfficeSection/);
-    assert.match(page, /bg-\[#152238\]/);
-    assert.match(book, /sourceCta="demo_page"/);
-    assert.match(book, /variant="demo"/);
+    assert.match(page, /PlatformDemoClient/);
+    assert.match(book, /Start with 10 products/);
+    assert.match(book, /See INTERTEXE with your own products/);
     assert.match(form, /Do not attach confidential catalogs/);
     assert.doesNotMatch(form, /type=["']file["']/);
     assert.match(office, /Barcelona, Spain/);
@@ -270,7 +270,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(office, /Boulevard|Calle |Carrer |Via /);
     assert.doesNotMatch(page, /Fairly Made/);
     assert.doesNotMatch(page, /#004037/);
-    assert.match(chrome, /active === "platform" \|\| active === "demo"/);
+    assert.match(chrome, /PlatformNav active=\{active\}/);
     assert.match(previews, /Navy = your brand/);
     assert.doesNotMatch(previews, /Forest = your brand/);
     assert.match(constants, /PLATFORM_LEAD_TO = "info@intertexe\.com"/);

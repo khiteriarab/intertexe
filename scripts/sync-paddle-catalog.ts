@@ -17,23 +17,23 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const CATALOG = [
   {
-    name: "INTERTEXE Platform",
+    name: "INTERTEXE Professional",
     description:
-      "Product and material intelligence infrastructure for fashion brands, with managed product records, hosted product identities and Digital Product Passport workflows.",
+      "Standard DPP and product passport infrastructure — up to 500 products, traceability, sustainability data, and standard API access.",
     priceUsd: 499,
     interval: "month" as const,
     envKey: "PADDLE_PRICE_PLATFORM",
-    planKey: "platform" as const,
+    planKey: "professional" as const,
     kind: "subscription" as const,
   },
   {
-    name: "INTERTEXE Professional",
+    name: "INTERTEXE Platform",
     description:
-      "Expanded product intelligence infrastructure for growing fashion brands, with higher catalog capacity, advanced workflows and branded product experiences.",
+      "Advanced product intelligence — up to 2,000 products, white-label passports, circularity, integrations, and advanced analytics.",
     priceUsd: 1250,
     interval: "month" as const,
     envKey: "PADDLE_PRICE_PROFESSIONAL",
-    planKey: "professional" as const,
+    planKey: "platform" as const,
     kind: "subscription" as const,
   },
   {

@@ -52,13 +52,13 @@ describe("Platform B2B sales page", () => {
     assert.match(discover, /Headless API/);
   });
 
-  it("converts with Start for free, demo, and enterprise login", () => {
-    assert.match(hero, /Start for free/);
-    assert.match(hero, /Explore live demo/);
-    assert.match(sections, /Start for free/);
+  it("converts with 10-product pilot, live flow, and enterprise login", () => {
+    assert.match(hero, /Start with 10 products/);
+    assert.match(hero, /See it live/);
+    assert.match(sections, /Start with 10 products/);
     assert.match(sections, /getEnterpriseLoginUrl/);
     assert.match(nav, /getEnterpriseLoginUrl/);
-    assert.match(nav, /Request a demo/);
+    assert.match(nav, /Start with 10 products/);
     assert.match(nav, /Sign in/);
     assert.match(chrome, /getEnterpriseLoginUrl/);
     assert.match(login, /getEnterpriseLoginUrl/);
@@ -66,8 +66,8 @@ describe("Platform B2B sales page", () => {
   });
 
   it("uses professional SaaS language on the public platform page", () => {
-    assert.match(sections, /Start with a free demo workspace/i);
-    assert.match(sections, /pricing appear at checkout/i);
+    assert.match(sections, /See INTERTEXE with your own products/i);
+    assert.match(sections, /pricing is shared during onboarding/i);
     assert.doesNotMatch(home, /beside your desk/i);
     assert.doesNotMatch(home, /beside your laptop/i);
     assert.doesNotMatch(home, /thirty seconds/i);
@@ -102,6 +102,20 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(home, /PlatformFaq/);
     assert.doesNotMatch(home, /ComparisonView/);
     assert.match(page, /PlatformHome/);
+  });
+
+  it("uses P0 designed screenshots for benchmark, issues, and passport", () => {
+    const graphics = fs.readFileSync(path.join(process.cwd(), "lib/platform-graphics.ts"), "utf8");
+    const scroll = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-scroll-stages.ts"), "utf8");
+    assert.match(graphics, /compareBenchmark:[\s\S]*ready: true/);
+    assert.match(graphics, /understandIssues:[\s\S]*ready: true/);
+    assert.match(graphics, /actPassport:[\s\S]*ready: true/);
+    assert.match(scroll, /compare-benchmark\.png/);
+    assert.match(scroll, /understand-issues\.png/);
+    assert.match(scroll, /act-passport\.png/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/compare-benchmark.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/understand-issues.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/act-passport.png")));
   });
 
   it("uses native sales visuals instead of editorial PNG decks", () => {

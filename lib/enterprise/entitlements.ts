@@ -30,6 +30,7 @@ export type EntitlementSnapshot = {
   canAdvancedAnalytics: boolean;
   canPrioritySupport: boolean;
   canCustomCarriers: boolean;
+  canUseCircularity: boolean;
 };
 
 function fromPlanDefinition(
@@ -55,6 +56,7 @@ function fromPlanDefinition(
     canAdvancedAnalytics: def.features.has("advanced_analytics"),
     canPrioritySupport: def.features.has("priority_support"),
     canCustomCarriers: def.features.has("custom_carriers"),
+    canUseCircularity: def.features.has("circularity"),
   };
 }
 
@@ -99,6 +101,7 @@ export function organizationCan(
   if (feature === "suppliers") return entitlements.canUseSuppliers;
   if (feature === "regulatory_program") return entitlements.canUseRegulatoryProgram;
   if (feature === "export_unlimited") return entitlements.canExportUnlimited;
+  if (feature === "circularity") return entitlements.canUseCircularity;
   const key = feature as keyof EntitlementSnapshot;
   const val = entitlements[key];
   return typeof val === "boolean" ? val : false;

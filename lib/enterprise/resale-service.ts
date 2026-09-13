@@ -211,13 +211,16 @@ export async function markResaleItemSold(input: {
   resaleItemId: string;
   soldProvider: MarketplaceProvider;
   userId: string;
+  salePrice?: number | null;
+  currency?: string | null;
+  channel?: string | null;
 }) {
   const supabase = getEnterpriseServiceClient();
   if (!supabase) throw new Error("Enterprise database not configured");
 
   const { data: item } = await supabase
     .from("resale_items")
-    .select("id, status, persistent_identity_id, organization_id")
+    .select("id, status, persistent_identity_id, organization_id, asking_price, currency")
     .eq("id", input.resaleItemId)
     .maybeSingle();
 
@@ -268,12 +271,34 @@ export async function markResaleItemSold(input: {
     .update({ status: "transfer_pending", updated_at: new Date().toISOString() })
     .eq("id", input.resaleItemId);
 
+  const salePrice = input.salePrice ?? Number(item.asking_price) ?? null;
+  const currency = input.currency || (item.currency as string) || "USD";
+  const channel = input.channel || input.soldProvider;
+
+  const { data: sessionRow } = await supabase
+    .from("resale_sessions")
+    .select("valuation")
+    .eq("resale_item_id", input.resaleItemId)
+    .maybeSingle();
+  const valuation = (sessionRow?.valuation || {}) as { originalRetail?: number | null };
+  const originalRetail = valuation.originalRetail ?? null;
+  const valueRetention =
+    salePrice && originalRetail
+      ? Math.round((salePrice / originalRetail) * 1000) / 10
+      : null;
+
+  const detailParts = [
+    salePrice ? `Sold for ${currency} ${salePrice}` : null,
+    valueRetention != null ? `${valueRetention}% of asking price` : null,
+    channel ? `via ${channel}` : null,
+  ].filter(Boolean);
+
   await recordLifecycleEvent({
     persistentIdentityId: item.persistent_identity_id,
     organizationId: item.organization_id,
     eventKind: "resale_sold",
-    publicLabel: "Entered resale",
-    publicDetail: null,
+    publicLabel: "Ownership transferred",
+    publicDetail: detailParts.length ? detailParts.join(" · ") : null,
     eventYear: new Date().getFullYear(),
   });
 

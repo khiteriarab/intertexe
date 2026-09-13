@@ -11,6 +11,8 @@ import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { CONSUMER_PROOF_LINKS } from "../../../lib/enterprise/dual-model";
 import { NotificationBell } from "./NotificationBell";
 import { GlobalSearch } from "./GlobalSearch";
+import { EntPilotBanner } from "./EntPilotBanner";
+import { isPilotPlan } from "../../../lib/enterprise/pricing";
 
 type Props = {
   children: React.ReactNode;
@@ -22,6 +24,7 @@ type Props = {
   plan: string;
   workspaceContexts: WorkspaceContext[];
   founderHq?: boolean;
+  pilotStatus?: { productCount: number; processedCount: number } | null;
 };
 
 export function EnterpriseShell({
@@ -33,6 +36,7 @@ export function EnterpriseShell({
   role,
   workspaceContexts,
   founderHq = false,
+  pilotStatus = null,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -152,7 +156,17 @@ export function EnterpriseShell({
               </Link>
             </div>
           </header>
-          <div className="ent-canvas-inner px-5 md:px-10 lg:px-14 xl:px-16 py-8 md:py-10 max-w-[84rem]">{children}</div>
+          <div className="ent-canvas-inner px-5 md:px-10 lg:px-14 xl:px-16 py-8 md:py-10 max-w-[84rem]">
+            {isPilotPlan(plan) && pilotStatus ? (
+              <EntPilotBanner
+                base={base}
+                plan={plan}
+                productCount={pilotStatus.productCount}
+                processedCount={pilotStatus.processedCount}
+              />
+            ) : null}
+            {children}
+          </div>
         </main>
       </div>
     </div>

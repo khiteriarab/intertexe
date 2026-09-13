@@ -28,24 +28,42 @@ import livePilotProducts from "../../../../lib/enterprise/fixtures/intertexe-liv
 import { isCustomerZeroOrg } from "../../../../lib/enterprise/dual-model";
 import { EntCustomerZeroBanner } from "../../components/EntCustomerZeroBanner";
 import { EntDualModelFlywheel } from "../../components/EntDualModelFlywheel";
+import { EntPilotFindings } from "../../components/EntPilotFindings";
+import { UpgradePlanSelector } from "../../components/UpgradePlanSelector";
+import { countActiveProducts, loadBillingDashboard } from "../../../../lib/enterprise/billing-gates";
+import { isPilotPlan, isPaidSubscriptionPlan } from "../../../../lib/enterprise/pricing";
 
 export const dynamic = "force-dynamic";
 
+type ActivatedPlan = "professional" | "platform";
+
+function parseActivated(value: string | undefined): ActivatedPlan | null {
+  if (value === "professional" || value === "platform") return value;
+  return null;
+}
+
 export default async function OrganizationOverviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ organization: string }>;
+  searchParams?: Promise<{ activated?: string }>;
 }) {
   const { organization } = await params;
+  const query = (await searchParams) || {};
+  const activated = parseActivated(query.activated);
   const { membership, client } = await requireOrganizationAccess(organization);
   const pilotImages = pilotImageMaps(livePilotProducts);
-  const [overview, composition, signals, platform] = await Promise.all([
+  const [overview, composition, signals, platform, billing, productCount] = await Promise.all([
     loadOrgOverview(client, membership.organizationId),
     loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
     loadConsumerSignals(client, membership.organizationId, { limit: 10, pilotImages }),
     loadPlatformOverview(client, membership.organizationId, membership.slug),
+    loadBillingDashboard(client, membership.organizationId),
+    countActiveProducts(client, membership.organizationId),
   ]);
   const entitlement = entitlementsForPlan(membership.plan as PlanKey, {});
+  const pilotWorkspace = isPilotPlan(membership.plan);
   const base = `/dashboard/${membership.slug}`;
   const steps = buildGettingStartedSteps(overview);
   const cookieStore = await cookies();
@@ -153,6 +171,22 @@ export default async function OrganizationOverviewPage({
 
       <EntOverviewHero overview={overview} orgName={membership.name} />
 
+      {activated ? (
+        <div className="mb-10">
+          <UpgradePlanSelector
+            slug={membership.slug}
+            currentPlan={membership.plan}
+            productCount={productCount}
+            activated={activated}
+            paddleAvailable={billing.paddleCheckoutAvailable}
+          />
+        </div>
+      ) : null}
+
+      {pilotWorkspace && overview.productCount > 0 ? (
+        <EntPilotFindings base={base} overview={overview} composition={composition} />
+      ) : null}
+
       {isCustomerZeroOrg(membership.slug) ? <EntCustomerZeroBanner base={base} /> : null}
 
       <EntKpiGrid overview={overview} base={base} />
@@ -216,24 +250,28 @@ export default async function OrganizationOverviewPage({
 
       <EntModuleShowcase overview={overview} base={base} />
 
-      {membership.plan === "free_snapshot" || membership.plan === "founding_pilot" ? (
-        <div className="ent-zone ent-zone-butter rounded-[var(--ent-radius-2xl)] px-8 py-10 md:px-10 md:py-12 mb-14 shadow-[var(--ent-shadow-panel)]">
+      {(pilotWorkspace || membership.plan === "founding_pilot") && !activated ? (
+        <div className="ent-zone ent-zone-butter rounded-[var(--ent-radius-2xl)] px-6 py-8 md:px-10 md:py-12 mb-14 shadow-[var(--ent-shadow-panel)]">
           <p className="ent-heading text-[1.65rem] text-[var(--ent-ink)]">
-            {membership.plan === "free_snapshot" ? "Continue with the onboarding fee" : "Choose your operating plan"}
+            {pilotWorkspace ? "Ready to continue beyond 10 products?" : "Choose your operating plan"}
           </p>
           <p className="text-sm leading-relaxed text-[var(--ent-muted)] mt-3 max-w-2xl">
-            {membership.plan === "free_snapshot"
-              ? "$5,000 onboarding · 100 complex products or 500 structured rows — implementation, not a subscription. Then Platform ($499/mo), Professional ($1,250/mo), or Enterprise."
-              : "Onboarding is complete. Ongoing operation: Platform ($499/mo) for core OS · Professional ($1,250/mo) for white-label passports · Enterprise for headless API & integrations."}
+            {pilotWorkspace
+              ? "You’ve seen INTERTEXE on your catalog. Upgrade inside your workspace to unlock Professional, Platform, or Enterprise — pricing is shared when you’re ready, not on the public site."
+              : "Implementation is complete. Subscribe to Professional or Platform to operate your catalog at scale — Enterprise for headless API and custom volume."}
           </p>
-          <p className="text-xs text-[var(--ent-muted-light)] mt-4">
-            Products: {entitlement.productAllowance ?? "custom"} · Passports:{" "}
-            {entitlement.canPublishPassports
-              ? entitlement.passportAllowance ?? "custom"
-              : "preview QR only until pilot or SaaS"}
-            {!entitlement.canUseHeadlessApi ? " · Headless API: Enterprise only" : null}
-          </p>
+          <a href={`${base}/upgrade`} className="inline-flex mt-6 text-sm font-medium text-[var(--ent-petrol-deep)] hover:text-[var(--ent-forest)]">
+            View plans & upgrade →
+          </a>
         </div>
+      ) : null}
+
+      {isPaidSubscriptionPlan(membership.plan) && !activated ? (
+        <p className="text-xs text-[var(--ent-muted-light)] mb-10">
+          {entitlement.productAllowance ?? "Custom"} product allowance ·{" "}
+          {entitlement.passportAllowance ?? "Custom"} hosted passports
+          {!entitlement.canUseHeadlessApi ? " · Headless API: Enterprise" : null}
+        </p>
       ) : null}
 
       <EntActivityFeed items={overview.recentActivity} />

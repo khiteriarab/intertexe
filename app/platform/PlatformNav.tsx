@@ -9,7 +9,7 @@ export type PlatformNavKey = "demo" | "api" | "request" | "platform" | "login" |
 
 const NAV = [
   { href: "/platform/discover", label: "Discover" },
-  { href: "/platform/demo", label: "Demo" },
+  { href: "/platform/demo", label: "Live flow" },
   { href: "/platform/api", label: "API" },
 ] as const;
 
@@ -95,7 +95,7 @@ export function PlatformNav({
                 : "inline-flex items-center gap-2 rounded-full bg-[var(--platform-accent-soft)] px-4 sm:px-5 py-2.5 text-[12px] font-medium text-[var(--platform-primary)] min-h-[40px] hover:bg-[var(--platform-accent-muted)] transition-colors border border-[var(--platform-border)]"
             }
           >
-            Request a demo
+            Start with 10 products
             <Arrow />
           </Link>
           <button
