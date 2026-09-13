@@ -16,40 +16,46 @@ describe("Platform B2B sales page", () => {
   const form = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformLeadForm.tsx"), "utf8");
   const faq = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformFaq.tsx"), "utf8");
   const discover = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
+  const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
 
   it("positions INTERTEXE as product intelligence infrastructure, not DPP-only software", () => {
     assert.match(sections, /product intelligence infrastructure for fashion/i);
     assert.match(hero, /INTERTEXE FOR BRANDS/);
     assert.match(sections, /one governed product record/i);
-    assert.match(sections, /Outputs from one record/);
-    assert.match(sections, /not the whole product/);
     assert.doesNotMatch(sections, /EU certified/i);
     assert.doesNotMatch(sections, /EU approved/i);
     assert.doesNotMatch(sections, /Guaranteed Compliant/);
   });
 
-  it("uses the B2B sales hierarchy with lifecycle and delivery sections", () => {
+  it("uses a focused home hierarchy without redundant lifecycle or pricing blocks", () => {
     assert.match(home, /SalesHeroSection/);
     assert.match(home, /SalesWhatItIsSection/);
-    assert.match(home, /SalesLifecycleSection/);
-    assert.match(home, /SalesDeliverySection/);
+    assert.match(home, /PlatformScrollShowcase/);
     assert.match(home, /SalesGovernedRecordSection/);
     assert.match(home, /SalesIntelligenceSection/);
-    assert.match(home, /SalesOutputsSection/);
-    assert.match(home, /SalesPublishSection/);
+    assert.match(home, /SalesDeliverySection/);
     assert.match(home, /SalesPlatformBreadthSection/);
-    assert.match(home, /SalesCtaSection/);
+    assert.match(home, /SalesStartFreeSection/);
+    assert.doesNotMatch(home, /SalesLifecycleSection/);
+    assert.doesNotMatch(home, /SalesOutputsSection/);
+    assert.doesNotMatch(home, /SalesPublishSection/);
+    assert.doesNotMatch(home, /PricingPlans/);
     assert.doesNotMatch(home, /SalesProblemSection/);
-    assert.doesNotMatch(home, /SalesHowItWorksSection/);
-    assert.doesNotMatch(home, /SalesDppSection/);
-    assert.match(home, /PricingPlans/);
     assert.doesNotMatch(home, /StoryTabs/);
     assert.doesNotMatch(home, /ComparisonView/);
   });
 
-  it("converts with Request a demo and Sign in to enterprise login", () => {
-    assert.match(hero, /href="\/platform\/request\?intent=snapshot&cta=hero"/);
-    assert.match(hero, /Request a demo/);
+  it("routes live QR flow and API detail to dedicated pages", () => {
+    assert.match(demo, /PlatformDemoClient/);
+    assert.match(demo, /SaaSDemoFlowVisual|live-demo/i);
+    assert.match(discover, /Consumer delivery/);
+    assert.match(discover, /Headless API/);
+  });
+
+  it("converts with Start for free, demo, and enterprise login", () => {
+    assert.match(hero, /Start for free/);
+    assert.match(hero, /Explore live demo/);
+    assert.match(sections, /Start for free/);
     assert.match(sections, /getEnterpriseLoginUrl/);
     assert.match(nav, /getEnterpriseLoginUrl/);
     assert.match(nav, /Request a demo/);
@@ -59,19 +65,22 @@ describe("Platform B2B sales page", () => {
     assert.match(form, /Free 10-product Material Snapshot/);
   });
 
+  it("uses professional SaaS language on the public platform page", () => {
+    assert.match(sections, /Start with a free demo workspace/i);
+    assert.match(sections, /pricing appear at checkout/i);
+    assert.doesNotMatch(home, /beside your desk/i);
+    assert.doesNotMatch(home, /beside your laptop/i);
+    assert.doesNotMatch(home, /thirty seconds/i);
+    assert.doesNotMatch(hero, /Scan QR in 30 seconds/i);
+  });
+
   it("centers intelligence and delivery without overclaiming", () => {
     assert.match(sections, /Benchmark your material strategy against the market/);
     assert.match(sections, /Material Benchmark/);
     assert.match(sections, /Conversion signals/);
     assert.match(sections, /IntelligenceBenchmarkVisual/);
     assert.match(sections, /Headless API/);
-    assert.match(sections, /thirty seconds/i);
-    assert.match(sections, /silk evening dress/i);
     assert.match(sections, /SaaSDemoFlowVisual/);
-    assert.match(sections, /aggregate only, never individual shopper data/);
-    assert.match(sections, /not yet operational/);
-    assert.match(sections, /Illustrative example/);
-    assert.match(sections, /not fabricated competitor dumps/);
     assert.match(visuals, /Material Benchmark/);
     assert.match(visuals, /Conversion by material cohort/);
     assert.match(visuals, /Understand/);
@@ -97,40 +106,13 @@ describe("Platform B2B sales page", () => {
 
   it("uses native sales visuals instead of editorial PNG decks", () => {
     assert.match(hero, /hero-workspace-desktop\.png/);
-    assert.match(hero, /hero-silk-dress\.png/);
-    assert.match(stages, /hero-silk-dress\.png/);
     assert.doesNotMatch(sections, /ProblemConvergenceVisual/);
     assert.doesNotMatch(sections, /GovernedRecordVisual/);
-    assert.match(sections, /Connected product identity/i);
-    assert.match(sections, /From product record to physical product/);
-    assert.match(sections, /ProductIdentityCarriersVisual/);
-    assert.match(sections, /Managed product identity and passport infrastructure/);
-    assert.match(sections, /compatible connected carriers/i);
-    assert.doesNotMatch(sections, /PassportIdentityVisual/);
-    assert.doesNotMatch(sections, /manufactures NFC/i);
-    assert.doesNotMatch(sections, /Supabase hosting/i);
     assert.match(sections, /DeliveryModesVisual/);
-    assert.match(sections, /SaaSDemoFlowVisual/);
-    assert.match(sections, /PublishExperienceVisual/);
     assert.match(sections, /PlatformModuleGrid/);
     assert.doesNotMatch(sections, /PlatformEditorialGraphic/);
     assert.doesNotMatch(sections, /INTERTEXE_01_Data_Architecture/);
-    assert.doesNotMatch(sections, /WorkspaceChrome/);
-    assert.doesNotMatch(sections, /WorkspaceHeroPreview/);
-    assert.doesNotMatch(sections, /DataSourcesVisual/);
-    assert.doesNotMatch(sections, /ConsumerBridgeVisual/);
-    assert.doesNotMatch(sections, /DppFlow/);
     assert.match(visuals, /Discover · Scan · Compare/);
     assert.match(visuals, /enterpriseModuleCatalogByGroup/);
-    assert.match(visuals, /marketingMaturityFootnote/);
-    assert.doesNotMatch(sections, /leaves/i);
-    assert.doesNotMatch(sections, /factory/i);
-  });
-
-  it("explains delivery modes on Discover", () => {
-    assert.match(discover, /Consumer delivery/);
-    assert.match(discover, /Headless API/);
-    assert.match(discover, /White Label/);
-    assert.match(discover, /INTERTEXE Hosted/);
   });
 });

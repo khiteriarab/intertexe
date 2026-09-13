@@ -217,11 +217,11 @@ export function PlatformScrollShowcase() {
       </div>
 
       {/* Desktop: Phia-style scroll showcase */}
-      <div className="hidden lg:block max-w-[1280px] mx-auto px-8 xl:px-12 py-16 xl:py-20">
+      <div className="hidden lg:block max-w-[1280px] mx-auto px-8 xl:px-12 py-12 xl:py-16">
         <p className="text-[10px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-4 text-center">
           Platform capabilities
         </p>
-        <p className="text-center text-sm text-[var(--platform-muted)] max-w-xl mx-auto mb-16 xl:mb-20">
+        <p className="text-center text-sm text-[var(--platform-muted)] max-w-xl mx-auto mb-10 xl:mb-12">
           Scroll through Trace → Measure → Govern → Publish → Next life on ITX-LIVE-01 — the center dial updates with
           each stage.
         </p>
@@ -229,7 +229,7 @@ export function PlatformScrollShowcase() {
         <div className="platform-scroll-showcase-grid grid grid-cols-[minmax(0,1fr)_minmax(300px,400px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_440px_minmax(0,1fr)] gap-6 xl:gap-12 2xl:gap-14">
           <div className="relative min-h-0">
             {PLATFORM_SCROLL_STAGES.map((item) => (
-              <div key={item.id} id={`platform-scroll-${item.id}`} className="min-h-[68vh] scroll-mt-28" aria-hidden />
+              <div key={item.id} id={`platform-scroll-${item.id}`} className="min-h-[50vh] scroll-mt-28" aria-hidden />
             ))}
             <div className="platform-scroll-showcase-col-side">
               <div key={stage.id} className="max-w-md">

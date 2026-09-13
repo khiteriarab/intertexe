@@ -19,8 +19,8 @@ export default function PlatformDemoPage() {
       <PlatformPageHeader
         eyebrow="Live demonstration"
         align="center"
-        title="SaaS on desktop → QR on the garment → passport your customer sees."
-        description="Start with the live scan demo on ITX-LIVE-01 — God's True Cashmere linen shirt. Workspace publish, scannable QR, and the live consumer passport. Then walk through the 10-product Customer Zero catalog from raw data to DPP readiness and next-life resale."
+        title="Workspace → identity carrier → consumer passport."
+        description="Follow the end-to-end publish flow on ITX-LIVE-01 — Customer Zero linen shirt. Govern in the workspace, publish the passport, and open the live consumer page. Then walk the 10-product catalog from raw data to DPP readiness and next-life resale."
         primaryHref="#live-demo"
         primaryLabel="See the live scan"
         secondaryHref="#walkthrough"

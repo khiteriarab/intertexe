@@ -72,7 +72,7 @@ export function workspaceFrames(): WorkspaceFrame[] {
     {
       id: "studio",
       label: "Passport studio",
-      lead: "Publish product experience — choose carrier, template, or headless API. Scan the QR beside your desk to verify what your customer sees.",
+      lead: "Publish product experience — choose carrier, template, or headless API. Preview and verify the consumer experience before go-live.",
       children: PLATFORM_GRAPHICS.actPassport.ready ? (
         <PlatformGraphic slot="actPassport" />
       ) : (
@@ -108,7 +108,7 @@ export const WORKSPACE_NEEDS = [
   },
   {
     title: "Deliver the consumer experience your way",
-    copy: "Hosted passport, white-label domain, or headless API — same governed record, your choice of presentation. Scan the QR and demonstrate in thirty seconds.",
+    copy: "Hosted passport, white-label domain, or headless API — same governed record, your choice of presentation. Preview and verify before go-live.",
   },
 ] as const;
 

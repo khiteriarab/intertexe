@@ -166,8 +166,8 @@ export function PlatformHero() {
             and deliver through hosted pages, your domain, or your existing app.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-            <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Request a demo</PrimaryLink>
-            <SecondaryLink href={signIn}>Sign in</SecondaryLink>
+            <PrimaryLink href={signIn}>Start for free</PrimaryLink>
+            <SecondaryLink href="/platform/demo">Explore live demo</SecondaryLink>
           </div>
           <HeroTabs className="mb-2" />
         </div>
@@ -225,15 +225,15 @@ export function PlatformHero() {
               raw material to the moment someone scans the QR on the hangtag.
             </p>
             <div className="flex flex-wrap gap-3 mb-8">
-              <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Request a demo</PrimaryLink>
-              <SecondaryLink href={signIn}>Sign in</SecondaryLink>
+              <PrimaryLink href={signIn}>Start for free</PrimaryLink>
+              <SecondaryLink href="/platform/demo">Explore live demo</SecondaryLink>
             </div>
             <HeroTabs className="mb-10" />
             <dl className="grid grid-cols-3 gap-6 pt-8 border-t border-[var(--platform-border)]/80 max-w-lg">
               {[
                 { label: "Govern", value: "One product record" },
                 { label: "Deliver", value: "Hosted · API · white label" },
-                { label: "Demonstrate", value: "Scan QR in 30 seconds" },
+                { label: "Verify", value: "Preview before go-live" },
               ].map((stat) => (
                 <div key={stat.label}>
                   <dt className="text-[9px] tracking-[0.16em] uppercase text-[var(--platform-quiet)] mb-1">{stat.label}</dt>

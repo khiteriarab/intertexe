@@ -12,7 +12,7 @@ export function PublishExperienceVisual() {
         <div className="itx-editorial-panel-inner p-6 sm:p-8">
           <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--platform-quiet)] mb-2">Publish product experience</p>
           <h3 className="text-xl sm:text-2xl font-light text-[var(--platform-primary)] mb-6" style={SERIF}>
-            Scan the QR beside your desk. See what your customer sees.
+            Preview the consumer experience before go-live.
           </h3>
 
           <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-6 lg:gap-8">
@@ -136,7 +136,7 @@ export function PublishExperienceVisual() {
       </div>
       <figcaption className="mt-3 text-xs text-[var(--platform-quiet)] leading-relaxed">
         Publish screen from the enterprise workspace. Case study product: {PASSPORT_CASE_STUDY.styleCode} ·{" "}
-        {PASSPORT_CASE_STUDY.productName}. Configure, publish, scan, and verify — without leaving your desk.
+        {PASSPORT_CASE_STUDY.productName}. Configure, publish, and verify the consumer experience from the workspace.
       </figcaption>
     </figure>
   );

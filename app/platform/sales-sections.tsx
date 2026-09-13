@@ -64,7 +64,7 @@ export function SalesHeroSection() {
 
 export function SalesWhatItIsSection() {
   return (
-    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-14 lg:py-20 xl:py-24 border-b border-[#e8e3da]/60">
+    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-14 lg:py-20 border-b border-[#e8e3da]/60">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="max-w-2xl lg:max-w-3xl mb-8 sm:mb-10 lg:mb-14">
           <Eyebrow>What INTERTEXE is</Eyebrow>
@@ -91,23 +91,23 @@ export function SalesWhatItIsSection() {
   );
 }
 
+/** Live workspace → QR → passport flow. Primary home: /platform/demo */
 export function SalesLifecycleSection() {
   return (
-    <section className="itx-abstract-section itx-abstract-motif bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-28 xl:py-32">
+    <section className="itx-abstract-section itx-abstract-motif bg-white border-y border-[#e8e3da] py-12 sm:py-16 lg:py-20">
       <span className="itx-abstract-edge" aria-hidden>
         Lifecycle
       </span>
       <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <div className="max-w-3xl mb-10 lg:mb-14">
-          <Eyebrow>From raw data to the scan moment</Eyebrow>
+        <div className="max-w-3xl mb-8 lg:mb-10">
+          <Eyebrow>Publish to consumer experience</Eyebrow>
           <Heading className="mb-4">
-            Raw data → governed record → passport → experience → QR → scan → beautiful product page.
+            Workspace → identity carrier → consumer passport.
           </Heading>
           <Body className="mb-0">
-            INTERTEXE connects fashion brands, product data, and consumers across the full lifecycle of a garment.
-            Publish the Customer Zero linen shirt in the SaaS workspace, scan the QR beside your laptop, and open the
-            live passport your customer sees — product photograph, governed composition, trace journey, and next-life
-            resale options. That is the thirty-second demonstration for prospective clients.
+            Govern product data in the INTERTEXE workspace, publish a digital passport, and deliver the same approved
+            record through QR, hosted page, white-label domain, or headless API — with preview and verification before
+            go-live.
           </Body>
         </div>
         <SaaSDemoFlowVisual />
@@ -118,7 +118,7 @@ export function SalesLifecycleSection() {
 
 export function SalesDeliverySection() {
   return (
-    <section className="platform-abstract-band itx-abstract-motif py-16 sm:py-20 lg:py-28 xl:py-32">
+    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-20">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="max-w-3xl mb-10 lg:mb-14">
           <Eyebrow>How consumers experience your product</Eyebrow>
@@ -146,8 +146,8 @@ export function SalesPublishSection() {
             <Heading className="mb-4">The full-circle moment in your workspace.</Heading>
             <Body className="mb-6">
               When a brand finishes a product passport, the publish screen is where governance becomes experience: choose
-              your data carrier, select hosted or headless delivery, preview on mobile, and scan the QR beside your
-              computer to verify exactly what your customer will see.
+              your data carrier, select hosted or headless delivery, preview on mobile, and verify the consumer experience
+              before go-live.
             </Body>
             <ul className="space-y-2 text-sm text-[#5c5854]">
               <li className="pl-4 border-l-2 border-[var(--platform-accent)]/50">
@@ -176,9 +176,9 @@ export function SalesGovernedRecordSection() {
   });
 
   return (
-    <section className="itx-abstract-section itx-abstract-motif bg-white border-y border-[#e8e3da] py-16 sm:py-20 lg:py-28 xl:py-32">
+    <section className="itx-abstract-section itx-abstract-motif bg-white border-y border-[#e8e3da] py-12 sm:py-16 lg:py-20">
       <div className="max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-10 lg:gap-16 xl:gap-20 items-center">
+        <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-10 lg:gap-14 items-center">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <Eyebrow>One governed product record</Eyebrow>
             <Heading className="mb-4">One source of truth for product and material data.</Heading>
@@ -216,9 +216,9 @@ export function SalesGovernedRecordSection() {
 
 export function SalesIntelligenceSection() {
   return (
-    <section className="platform-abstract-band itx-abstract-motif py-16 sm:py-20 lg:py-28 xl:py-32">
+    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-20">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 lg:gap-16 xl:gap-20 items-start">
+        <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 lg:gap-14 items-start">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <Eyebrow>Intelligence</Eyebrow>
             <Heading className="mb-4">Benchmark your material strategy against the market.</Heading>
@@ -320,7 +320,7 @@ export function SalesConsumerSection() {
 
 export function SalesPlatformBreadthSection() {
   return (
-    <section className="platform-abstract-band itx-abstract-motif border-y border-[#e8e3da]/60 py-16 sm:py-20 lg:py-24">
+    <section className="platform-abstract-band itx-abstract-motif border-y border-[#e8e3da]/60 py-12 sm:py-16 lg:py-20">
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <Eyebrow>Platform breadth</Eyebrow>
         <Heading className="mb-4">One workspace for product intelligence.</Heading>
@@ -337,27 +337,32 @@ export function SalesPlatformBreadthSection() {
   );
 }
 
-export function SalesCtaSection() {
+export function SalesStartFreeSection() {
   const signIn = getEnterpriseLoginUrl();
   return (
-    <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-16 sm:py-20 lg:py-24 pb-24">
-      <div className="itx-editorial-panel itx-editorial-panel-inner p-10 sm:p-14 text-center">
-        <Eyebrow>Onboarding fee</Eyebrow>
-        <Heading className="mb-4">Start with your own product data.</Heading>
+    <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 lg:py-20 pb-20 sm:pb-24">
+      <div className="itx-editorial-panel itx-editorial-panel-inner p-8 sm:p-12 lg:p-14 text-center">
+        <Eyebrow>Get started</Eyebrow>
+        <Heading className="mb-4">Start with a free demo workspace.</Heading>
         <Body className="max-w-xl mx-auto mb-8">
-          Connect your sources, govern one product record, publish a passport, scan the QR, and show your customer the
-          real product page — in about thirty seconds. Available through the onboarding fee on your own catalog.
+          Connect your product sources, govern one record, and publish a passport on Customer Zero. Create an account to
+          explore the workspace — commercial plans and pricing appear at checkout when you are ready to scale.
         </Body>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <PrimaryLink href="/platform/request?intent=snapshot&cta=footer">Request a demo</PrimaryLink>
-          <SecondaryLink href={signIn}>Sign in</SecondaryLink>
+          <PrimaryLink href={signIn}>Start for free</PrimaryLink>
+          <SecondaryLink href="/platform/demo">Explore live demo</SecondaryLink>
         </div>
         <p className="mt-8 text-xs text-[#8a847c]">
-          <Link href="/platform/demo" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
-            Or explore the live demo first →
+          <Link href="/platform/request?intent=snapshot&cta=footer" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
+            Prefer a guided walkthrough? Request a demo →
           </Link>
         </p>
       </div>
     </section>
   );
+}
+
+/** @deprecated Use SalesStartFreeSection */
+export function SalesCtaSection() {
+  return <SalesStartFreeSection />;
 }

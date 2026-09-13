@@ -82,13 +82,13 @@ export function SaaSDemoFlowVisual({ compact = false }: { compact?: boolean }) {
               ) : null}
             </div>
 
-            <div className="flex flex-col items-center justify-center gap-3 py-2">
+            <div className="flex flex-col items-center justify-center gap-2 py-2 lg:min-w-[120px]">
               <span className="hidden lg:block text-[var(--platform-accent)] text-2xl" aria-hidden>
                 →
               </span>
               <PlatformCaseStudyQr compact />
               <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-quiet)] text-center max-w-[140px]">
-                Scan with iPhone
+                Live case study
               </p>
             </div>
 
@@ -140,8 +140,8 @@ export function SaaSDemoFlowVisual({ compact = false }: { compact?: boolean }) {
         </div>
       </div>
       <figcaption className="mt-3 text-xs text-[var(--platform-quiet)] leading-relaxed">
-        Desktop SaaS → QR carrier → consumer passport. Case study {PASSPORT_CASE_STUDY.styleCode} ·{" "}
-        {PASSPORT_CASE_STUDY.productName}. Scan the QR to verify the live page.
+        Workspace publish → identity carrier → consumer passport. Case study {PASSPORT_CASE_STUDY.styleCode} ·{" "}
+        {PASSPORT_CASE_STUDY.productName}. Open the live passport to verify the published experience.
       </figcaption>
     </figure>
   );

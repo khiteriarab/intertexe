@@ -108,8 +108,8 @@ export function ProductLifecycleVisual() {
                 <div className="flex flex-col gap-4">
                   <PlatformCaseStudyQr compact />
                   <p className="text-xs text-[var(--platform-muted)] leading-relaxed">
-                    Point your iPhone at the QR beside your laptop. You will see the real product photograph, full
-                    lifecycle journey, composition, care, and circularity guidance — exactly as your customer would.
+                    Open the live passport to review the published experience — product photography, lifecycle journey,
+                    composition, care, and circularity guidance from the same governed record.
                   </p>
                 </div>
               </div>

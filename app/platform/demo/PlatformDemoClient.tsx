@@ -103,12 +103,12 @@ export function PlatformDemoClient() {
           className="text-[1.75rem] sm:text-3xl md:text-4xl font-light mb-5 sm:mb-6 leading-[1.15]"
           style={{ fontFamily: "Georgia, serif" }}
         >
-          Desktop SaaS → QR → consumer passport.
+          Workspace → carrier → consumer passport.
         </h2>
         <p className="text-base sm:text-lg text-[#5c5854] font-light leading-relaxed max-w-2xl mb-8">
-          Publish {PASSPORT_CASE_STUDY.productName} in the INTERTEXE workspace, scan the QR with your iPhone, and
-          verify the live passport page — product image, materials, lifecycle journey, and circularity guidance exactly
-          as your customer would see them.
+          Publish {PASSPORT_CASE_STUDY.productName} in the INTERTEXE workspace, activate the identity carrier, and
+          verify the live passport — product image, governed materials, lifecycle journey, and next-life options from
+          the same approved record.
         </p>
         <SaaSDemoFlowVisual compact />
       </section>

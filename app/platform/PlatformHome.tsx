@@ -1,34 +1,29 @@
-import { PricingPlans } from "./PricingPlans";
 import { PlatformScrollShowcase } from "./PlatformScrollShowcase";
 import {
-  SalesCtaSection,
   SalesDeliverySection,
   SalesGovernedRecordSection,
   SalesHeroSection,
   SalesIntelligenceSection,
-  SalesLifecycleSection,
-  SalesOutputsSection,
   SalesPlatformBreadthSection,
-  SalesPublishSection,
+  SalesStartFreeSection,
   SalesWhatItIsSection,
 } from "./sales-sections";
 
-/** Public B2B sales page — intertexe.com/platform */
+/**
+ * Public B2B platform overview — intertexe.com/platform
+ * Lifecycle detail lives in PlatformScrollShowcase; live QR flow on /platform/demo; API on /platform/docs.
+ */
 export function PlatformHome() {
   return (
     <div>
       <SalesHeroSection />
       <SalesWhatItIsSection />
-      <SalesLifecycleSection />
       <PlatformScrollShowcase />
       <SalesGovernedRecordSection />
-      <SalesDeliverySection />
       <SalesIntelligenceSection />
-      <SalesOutputsSection />
-      <SalesPublishSection />
+      <SalesDeliverySection />
       <SalesPlatformBreadthSection />
-      <PricingPlans />
-      <SalesCtaSection />
+      <SalesStartFreeSection />
     </div>
   );
 }
