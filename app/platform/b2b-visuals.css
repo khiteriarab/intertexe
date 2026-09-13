@@ -107,37 +107,29 @@
 
 .platform-scroll-showcase-dial-wrap {
   overflow: visible;
-  padding-bottom: clamp(6.5rem, 18vw, 9rem);
+  padding-bottom: clamp(7rem, 20vw, 10rem);
 }
 
 .platform-scroll-showcase-dial-wrap--desktop {
-  min-height: min(460px, 58vh);
-  padding-bottom: 4rem;
+  min-height: min(420px, 52vh);
+  padding-bottom: clamp(5rem, 10vw, 6.5rem);
 }
 
 .platform-scroll-showcase-stage-nav {
   margin-top: clamp(2rem, 4vw, 3rem);
 }
 
+.platform-scroll-showcase-sentinel {
+  min-height: 72vh;
+}
+
+.platform-scroll-showcase-track {
+  pointer-events: none;
+}
+
 @media (min-width: 1024px) {
   .platform-scroll-showcase-grid {
     align-items: start;
-  }
-
-  .platform-scroll-showcase-col-center {
-    position: sticky;
-    top: 7rem;
-    align-self: start;
-    padding-top: 6vh;
-    padding-bottom: 8vh;
-  }
-
-  .platform-scroll-showcase-col-side {
-    position: sticky;
-    top: 7rem;
-    align-self: start;
-    padding-top: 8vh;
-    padding-bottom: 8vh;
   }
 }
 

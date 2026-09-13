@@ -9,6 +9,23 @@ import {
 } from "./platform-scroll-stages";
 import { SERIF } from "./platform-ui";
 
+function StageHeadline({ stage, className = "" }: { stage: PlatformScrollStage; className?: string }) {
+  return (
+    <h2
+      className={`font-light leading-[1.08] tracking-[-0.02em] text-[var(--platform-ink)] ${className}`}
+      style={SERIF}
+    >
+      {stage.headline}
+      {stage.headlineEmphasis ? (
+        <>
+          {" "}
+          <em className="not-italic italic text-[var(--platform-accent)]">{stage.headlineEmphasis}</em>
+        </>
+      ) : null}
+    </h2>
+  );
+}
+
 function RecordDial({
   stage,
   index,
@@ -53,29 +70,29 @@ function RecordDial({
             }`}
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#161513]/55 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#161513]/55 via-[#161513]/10 to-transparent" />
       </div>
 
       <div
         key={stage.id}
-        className="platform-dial-card absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(88%,280px)] z-20"
+        className="platform-dial-card absolute left-1/2 top-[14%] -translate-x-1/2 w-[min(78%,220px)] z-20"
       >
-        <div className="rounded-full bg-white/95 backdrop-blur-md border border-[var(--platform-border)] shadow-[0_20px_50px_rgba(22,21,19,0.14)] px-5 py-4 sm:px-6 sm:py-5 text-center">
+        <div className="rounded-full bg-white/95 backdrop-blur-md border border-[var(--platform-border)] shadow-[0_16px_40px_rgba(22,21,19,0.12)] px-4 py-3 sm:px-5 sm:py-4 text-center">
           <p
-            className={`${compact ? "text-[2rem]" : "text-[2.5rem] xl:text-[2.85rem]"} font-light leading-none text-[var(--platform-ink)]`}
+            className={`${compact ? "text-[1.75rem]" : "text-[2.15rem] xl:text-[2.4rem]"} font-light leading-none text-[var(--platform-ink)]`}
             style={SERIF}
           >
             {stage.dial.value}
           </p>
           <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--platform-quiet)] mt-1">{stage.dial.unit}</p>
-          <p className="text-[11px] sm:text-[12px] text-[var(--platform-muted)] mt-2 leading-snug">{stage.dial.label}</p>
+          <p className="text-[11px] sm:text-[12px] text-[var(--platform-muted)] mt-1.5 leading-snug">{stage.dial.label}</p>
         </div>
       </div>
 
       <div
         key={`${stage.id}-card`}
         className={`platform-dial-card absolute left-1/2 -translate-x-1/2 w-[min(92%,300px)] z-30 ${
-          compact ? "bottom-0 translate-y-[78%]" : "-bottom-2 translate-y-full"
+          compact ? "bottom-0 translate-y-[72%]" : "bottom-0 translate-y-[68%]"
         }`}
       >
         <div className="rounded-2xl border border-[var(--platform-border)] bg-white/97 backdrop-blur-md shadow-[0_24px_60px_rgba(22,21,19,0.12)] px-4 py-3.5 sm:px-5 sm:py-4 text-left">
@@ -135,18 +152,7 @@ function StageDetail({ stage }: { stage: PlatformScrollStage }) {
   return (
     <div key={stage.id}>
       <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-3">{stage.kicker}</p>
-      <h2
-        className="text-[1.85rem] sm:text-[2.35rem] font-light leading-[1.1] tracking-[-0.02em] text-[var(--platform-ink)] mb-4"
-        style={SERIF}
-      >
-        {stage.headline}
-        {stage.headlineEmphasis ? (
-          <>
-            {" "}
-            <em className="not-italic italic text-[var(--platform-accent)]">{stage.headlineEmphasis}</em>
-          </>
-        ) : null}
-      </h2>
+      <StageHeadline stage={stage} className="text-[1.85rem] sm:text-[2.35rem] mb-4" />
       <p className="text-[15px] text-[var(--platform-muted)] font-light leading-relaxed mb-5">{stage.copy}</p>
       <ul className="space-y-2.5 mb-6">
         {stage.points.map((point) => (
@@ -190,7 +196,7 @@ export function PlatformScrollShowcase() {
           setActiveId(visible.target.id.replace("platform-scroll-", ""));
         }
       },
-      { rootMargin: "-35% 0px -35% 0px", threshold: [0, 0.35, 0.6] }
+      { rootMargin: "-30% 0px -30% 0px", threshold: [0, 0.25, 0.5, 0.75] }
     );
 
     for (const node of nodes) observer.observe(node);
@@ -199,7 +205,7 @@ export function PlatformScrollShowcase() {
 
   return (
     <section className="platform-scroll-showcase platform-abstract-band itx-abstract-motif border-y border-[var(--platform-border)]/60 overflow-visible">
-      {/* Mobile + tablet: tabbed dial (Fairly Made pattern) */}
+      {/* Mobile + tablet: tabbed dial */}
       <div className="lg:hidden max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16">
         <p className="text-[10px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-3 text-center">
           Platform capabilities
@@ -216,7 +222,7 @@ export function PlatformScrollShowcase() {
         </div>
       </div>
 
-      {/* Desktop: Phia-style scroll showcase */}
+      {/* Desktop: sticky panel + scroll track (sentinels after sticky so content stays visible while scrolling) */}
       <div className="hidden lg:block max-w-[1280px] mx-auto px-8 xl:px-12 py-12 xl:py-16">
         <p className="text-[10px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-4 text-center">
           Platform capabilities
@@ -226,55 +232,43 @@ export function PlatformScrollShowcase() {
           each stage.
         </p>
 
-        <div className="platform-scroll-showcase-grid grid grid-cols-[minmax(0,1fr)_minmax(300px,400px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_440px_minmax(0,1fr)] gap-6 xl:gap-12 2xl:gap-14">
-          <div className="relative min-h-0">
-            {PLATFORM_SCROLL_STAGES.map((item) => (
-              <div key={item.id} id={`platform-scroll-${item.id}`} className="min-h-[50vh] scroll-mt-28" aria-hidden />
-            ))}
-            <div className="platform-scroll-showcase-col-side">
-              <div key={stage.id} className="max-w-md">
-                <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-4">
-                  {stage.kicker}
-                </p>
-                <h2
-                  className="text-[2.5rem] xl:text-[3rem] font-light leading-[1.08] tracking-[-0.02em] text-[var(--platform-ink)]"
-                  style={SERIF}
-                >
-                  {stage.headline}
-                  {stage.headlineEmphasis ? (
-                    <>
-                      <br />
-                      <em className="not-italic italic text-[var(--platform-accent)]">{stage.headlineEmphasis}</em>
-                    </>
-                  ) : null}
-                </h2>
+        <div className="relative">
+          <div className="sticky top-28 z-10 pb-8">
+            <div className="platform-scroll-showcase-grid grid grid-cols-[minmax(0,1fr)_minmax(300px,400px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_440px_minmax(0,1fr)] gap-6 xl:gap-12 2xl:gap-14 items-start">
+              <div className="pt-4 xl:pt-8">
+                <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-4">{stage.kicker}</p>
+                <StageHeadline stage={stage} className="text-[2.35rem] xl:text-[3rem] max-w-md" />
+              </div>
+
+              <div className="platform-scroll-showcase-dial-wrap platform-scroll-showcase-dial-wrap--desktop w-full mx-auto">
+                <RecordDial stage={stage} index={activeIndex} total={PLATFORM_SCROLL_STAGES.length} />
+              </div>
+
+              <div className="pt-4 xl:pt-8">
+                <StageDetail stage={stage} />
+                <div className="platform-scroll-showcase-stage-nav flex flex-col gap-2">
+                  {PLATFORM_SCROLL_STAGES.map((item, i) => (
+                    <a
+                      key={item.id}
+                      href={`#platform-scroll-${item.id}`}
+                      className={`text-[11px] tracking-[0.12em] uppercase py-1 transition-colors ${
+                        item.id === activeId
+                          ? "text-[var(--platform-ink)]"
+                          : "text-[var(--platform-quiet)] hover:text-[var(--platform-muted)]"
+                      }`}
+                    >
+                      {String(i + 1).padStart(2, "0")} {item.kicker}
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="platform-scroll-showcase-col-center flex items-center justify-center">
-            <div className="platform-scroll-showcase-dial-wrap platform-scroll-showcase-dial-wrap--desktop w-full">
-              <RecordDial stage={stage} index={activeIndex} total={PLATFORM_SCROLL_STAGES.length} />
-            </div>
-          </div>
-
-          <div className="platform-scroll-showcase-col-side">
-            <StageDetail stage={stage} />
-            <div className="platform-scroll-showcase-stage-nav flex flex-col gap-2">
-              {PLATFORM_SCROLL_STAGES.map((item, i) => (
-                <a
-                  key={item.id}
-                  href={`#platform-scroll-${item.id}`}
-                  className={`text-[11px] tracking-[0.12em] uppercase py-1 transition-colors ${
-                    item.id === activeId
-                      ? "text-[var(--platform-ink)]"
-                      : "text-[var(--platform-quiet)] hover:text-[var(--platform-muted)]"
-                  }`}
-                >
-                  {String(i + 1).padStart(2, "0")} {item.kicker}
-                </a>
-              ))}
-            </div>
+          <div aria-hidden className="platform-scroll-showcase-track">
+            {PLATFORM_SCROLL_STAGES.map((item) => (
+              <div key={item.id} id={`platform-scroll-${item.id}`} className="platform-scroll-showcase-sentinel scroll-mt-28" />
+            ))}
           </div>
         </div>
       </div>

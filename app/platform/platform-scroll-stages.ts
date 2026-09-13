@@ -43,8 +43,8 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
       detail: "100% Linen · European flax · Portugal assembly",
       tone: "amber",
     },
-    image: "/platform/INTERTEXE_02_Product_Data_Journey.png",
-    imageAlt: "Product data journey from supplier feeds to governed record",
+    image: "/platform/hero-workspace-desktop.png",
+    imageAlt: "INTERTEXE workspace connecting supplier feeds, ERP, and PLM into one governed record",
   },
   {
     id: "measure",
@@ -112,8 +112,8 @@ export const PLATFORM_SCROLL_STAGES: readonly PlatformScrollStage[] = [
   {
     id: "next-life",
     kicker: "Next life",
-    headline: "Resale and ownership",
-    headlineEmphasis: "after first sale",
+    headline: "Resale and",
+    headlineEmphasis: "ownership after first sale",
     copy: "When a garment moves on, the passport stays useful — list on connected marketplaces, transfer ownership, and keep circular options attached to the same product identity.",
     points: ["Multi-marketplace resale orchestration", "Ownership transfer on sold", "Repair · resell · donate · recycle"],
     dial: { value: "3", unit: "channels", label: "eBay · Vinted · Poshmark adapters" },
