@@ -247,42 +247,107 @@
   white-space: nowrap;
 }
 
-/* Platform scroll showcase — dial + floating card spacing */
+/* How it works — editorial step cards (2-up laptop mockups) */
+.platform-editorial-step-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .platform-editorial-step-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 1.75rem;
+  }
+}
+
+.platform-editorial-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  min-width: 0;
+}
+
+.platform-editorial-step-visual {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: #ece7df;
+  aspect-ratio: 16 / 11;
+  border: 1px solid color-mix(in srgb, var(--platform-border) 80%, transparent);
+  box-shadow: 0 24px 60px rgba(22, 21, 19, 0.06);
+}
+
+.platform-editorial-step-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.platform-editorial-step-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1;
+  padding: 0.45rem 0.9rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--platform-border);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--platform-primary);
+  box-shadow: 0 8px 24px rgba(22, 21, 19, 0.06);
+}
+
+.platform-editorial-step-copy {
+  margin: 0;
+  padding: 0 0.15rem;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 300;
+  color: var(--platform-muted);
+}
+
+.platform-editorial-pillars {
+  max-width: 48rem;
+}
+
+/* Platform scroll showcase — tab-driven dial (no scroll sentinels) */
 .platform-scroll-showcase {
-  overflow: visible;
+  overflow: hidden;
 }
 
-.platform-scroll-showcase-dial-wrap {
-  overflow: visible;
-  padding-bottom: clamp(7rem, 20vw, 10rem);
+.platform-scroll-dial {
+  width: 100%;
 }
 
-.platform-scroll-showcase-dial-wrap--desktop {
-  min-height: min(420px, 52vh);
-  padding-bottom: clamp(5rem, 10vw, 6.5rem);
+.platform-scroll-dial-ring {
+  isolation: isolate;
 }
 
-.platform-scroll-showcase-stage-nav {
-  margin-top: clamp(2rem, 4vw, 3rem);
+.platform-scroll-dial-card.platform-dial-card {
+  animation: platform-dial-card-in-flow 0.45s ease-out both;
 }
 
-.platform-scroll-showcase-sentinel {
-  min-height: 72vh;
-}
-
-.platform-scroll-showcase-track {
-  pointer-events: none;
-}
-
-@media (min-width: 1024px) {
-  .platform-scroll-showcase-grid {
-    align-items: start;
+@keyframes platform-dial-card-in-flow {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @media (max-width: 1023px) {
-  .platform-scroll-showcase-mobile-body {
-    margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  .platform-scroll-showcase .grid {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2rem;
   }
 }
 
@@ -789,6 +854,7 @@
   .b2b-pulse-vertical,
   .b2b-fade-in,
   .platform-dial-card,
+  .platform-scroll-dial-card.platform-dial-card,
   .platform-hero-lifecycle-arrow,
   .platform-hero-lifecycle-node,
   .platform-hero-lifecycle-highlight {

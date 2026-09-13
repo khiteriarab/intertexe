@@ -19,6 +19,7 @@ describe("Platform B2B sales page", () => {
   const page = fs.readFileSync(path.join(process.cwd(), "app/platform/page.tsx"), "utf8");
   const form = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformLeadForm.tsx"), "utf8");
   const faq = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformFaq.tsx"), "utf8");
+  const howItWorks = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHowItWorksSection.tsx"), "utf8");
   const gallery = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
   const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
   const demoClient = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
@@ -35,7 +36,10 @@ describe("Platform B2B sales page", () => {
   it("uses a focused home hierarchy without redundant lifecycle or pricing blocks", () => {
     assert.match(home, /SalesHeroSection/);
     assert.match(home, /PlatformHowItWorksSection/);
-    assert.match(home, /PlatformWorkflowDeepDive/);
+    assert.match(howItWorks, /platform-editorial-step-grid/);
+    assert.match(howItWorks, /understand-ingest-laptop\.jpg/);
+    assert.doesNotMatch(home, /PlatformWorkflowDeepDive/);
+    assert.doesNotMatch(home, /PlatformScrollShowcase/);
     assert.match(home, /SalesIntelligenceSection/);
     assert.match(home, /SalesDeliverySection/);
     assert.match(home, /SalesPlatformBreadthSection/);
@@ -43,7 +47,6 @@ describe("Platform B2B sales page", () => {
     assert.match(home, /PlatformFaq/);
     assert.match(home, /SalesStartFreeSection/);
     assert.doesNotMatch(home, /SalesWhatItIsSection/);
-    assert.match(home, /PlatformScrollShowcase/);
     assert.doesNotMatch(home, /SalesGovernedRecordSection/);
     assert.doesNotMatch(home, /SalesLifecycleSection/);
     assert.doesNotMatch(home, /SalesOutputsSection/);
