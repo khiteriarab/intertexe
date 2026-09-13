@@ -585,22 +585,40 @@
 
 .demo-editorial-qr-chip {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
+  max-width: 160px;
   border: 1px solid var(--platform-border);
-  border-radius: 9999px;
+  border-radius: 1rem;
   background: #fff;
-  padding: 0.5rem 0.75rem;
+  padding: 1rem 0.85rem;
+  text-align: center;
 }
 
 .demo-editorial-qr-chip-icon {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 0.35rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 0.5rem;
   border: 1px solid var(--platform-border);
-  font-size: 8px;
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  background: #faf8f4;
+}
+
+.demo-editorial-qr-chip-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--platform-primary);
+}
+
+.demo-editorial-qr-chip-detail {
+  font-size: 11px;
+  color: var(--platform-muted);
   font-family: ui-monospace, monospace;
 }
 

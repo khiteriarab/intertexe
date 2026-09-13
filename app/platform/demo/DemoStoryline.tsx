@@ -286,7 +286,8 @@ export function DemoStoryline() {
           <div className="space-y-4">
             <div className="demo-editorial-qr-chip">
               <span className="demo-editorial-qr-chip-icon">QR</span>
-              <span className="text-xs text-[var(--platform-muted)]">Stable identity · {DEMO_FEATURED.sku}</span>
+              <span className="demo-editorial-qr-chip-label">Stable identity</span>
+              <span className="demo-editorial-qr-chip-detail">{DEMO_FEATURED.sku}</span>
             </div>
             <p className="text-[10px] tracking-[0.16em] uppercase text-[var(--platform-quiet)]">Delivery modes</p>
             <div className="flex flex-wrap gap-2">

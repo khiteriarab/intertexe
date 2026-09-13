@@ -289,11 +289,10 @@ export function DemoScrollyJourney() {
             </div>
           </div>
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--platform-border)] bg-white px-3 py-2">
-              <span className="h-8 w-8 rounded-md border border-[var(--platform-border)] grid place-items-center text-[8px] font-mono">
-                QR
-              </span>
-              <span className="text-xs text-[var(--platform-muted)]">Stable identity · {DEMO_FEATURED.sku}</span>
+            <div className="demo-editorial-qr-chip">
+              <span className="demo-editorial-qr-chip-icon">QR</span>
+              <span className="demo-editorial-qr-chip-label">Stable identity</span>
+              <span className="demo-editorial-qr-chip-detail">{DEMO_FEATURED.sku}</span>
             </div>
             <p className="text-[10px] tracking-[0.16em] uppercase text-[var(--platform-quiet)]">Delivery modes</p>
             <div className="flex flex-wrap gap-2">

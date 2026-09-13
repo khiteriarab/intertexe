@@ -49,10 +49,8 @@ function EditorialStepCard({ step }: { step: (typeof STEPS)[number] }) {
     <article className="platform-editorial-step">
       <div className="platform-editorial-step-visual">
         <img src={step.image} alt={step.imageAlt} className="platform-editorial-step-image" loading="lazy" />
-        <span className="platform-editorial-step-badge">
-          {step.n} {step.title}
-        </span>
       </div>
+      <p className="platform-editorial-step-badge">{step.n} {step.title}</p>
       <p className="platform-editorial-step-copy">{step.copy}</p>
     </article>
   );
