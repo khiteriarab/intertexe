@@ -40,7 +40,7 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
           Need the full API reference? OpenAPI, auth, and error codes live on the docs page.
         </p>
         <Link
-          href="/platform/docs"
+          href="/platform/api"
           className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] shrink-0"
         >
           API documentation

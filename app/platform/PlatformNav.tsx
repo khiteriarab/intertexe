@@ -5,12 +5,12 @@ import { useEffect, useState } from "react";
 import { PlatformWordmark } from "./PlatformWordmark";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
-export type PlatformNavKey = "demo" | "docs" | "request" | "platform" | "login" | "discover";
+export type PlatformNavKey = "demo" | "api" | "request" | "platform" | "login" | "discover";
 
 const NAV = [
   { href: "/platform/discover", label: "Discover" },
   { href: "/platform/demo", label: "Demo" },
-  { href: "/platform/docs", label: "API" },
+  { href: "/platform/api", label: "API" },
 ] as const;
 
 function Arrow() {
@@ -45,7 +45,7 @@ export function PlatformNav({
     const isActive =
       (active === "discover" && href === "/platform/discover") ||
       (active === "demo" && href === "/platform/demo") ||
-      (active === "docs" && href === "/platform/docs");
+      (active === "api" && href === "/platform/api");
     if (dark) return isActive ? "text-white" : "text-white/70 hover:text-white";
     return isActive ? "text-[var(--platform-ink)]" : "text-[var(--platform-muted)] hover:text-[var(--platform-ink)]";
   };

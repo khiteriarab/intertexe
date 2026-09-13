@@ -11,7 +11,7 @@ import {
 
 /**
  * Public B2B platform overview — intertexe.com/platform
- * Lifecycle detail lives in PlatformScrollShowcase; live QR flow on /platform/demo; API on /platform/docs.
+ * Lifecycle detail lives in PlatformScrollShowcase; live QR flow on /platform/demo; API on /platform/api.
  */
 export function PlatformHome() {
   return (

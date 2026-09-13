@@ -227,7 +227,7 @@ async function composition(
 }
 
 async function publicPages() {
-  const paths = ["/platform/demo", "/platform/docs", "/platform/request", "/api/openapi.json"];
+  const paths = ["/platform/demo", "/platform/api", "/platform/request", "/api/openapi.json"];
   for (const p of paths) {
     const res = await fetchNoFollow(`${SITE}${p}`);
     const sso = isVercelSso(res);

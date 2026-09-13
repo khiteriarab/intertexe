@@ -73,6 +73,16 @@ const nextConfig = {
         destination: "/collections/leather-edit",
         permanent: true,
       },
+      {
+        source: "/platform/docs",
+        destination: "/platform/api",
+        permanent: true,
+      },
+      {
+        source: "/platform/docs/:path*",
+        destination: "/platform/api/:path*",
+        permanent: true,
+      },
     ];
   },
   async headers() {

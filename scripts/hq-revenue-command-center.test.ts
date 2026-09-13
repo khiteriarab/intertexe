@@ -556,7 +556,7 @@ describe("Founder-only authorization", () => {
   });
 
   it("does not change the public platform surface", () => {
-    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/docs/page.tsx"), "utf8");
+    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/api/page.tsx"), "utf8");
     assert.doesNotMatch(docs, /Command Center|50K|hq_deals/i);
   });
 });

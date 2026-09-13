@@ -38,7 +38,7 @@ export function PlatformChrome({
             <Link href="/platform/demo" className="hover:text-[var(--platform-ink)] transition-colors">
               Demo
             </Link>
-            <Link href="/platform/docs" className="hover:text-[var(--platform-ink)] transition-colors">
+            <Link href="/platform/api" className="hover:text-[var(--platform-ink)] transition-colors">
               API
             </Link>
             <Link href={getEnterpriseLoginUrl()} className="hover:text-[var(--platform-ink)] transition-colors">

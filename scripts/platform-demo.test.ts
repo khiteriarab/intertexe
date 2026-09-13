@@ -194,7 +194,7 @@ describe("Public demo and docs source safety", () => {
   });
 
   it("keeps documentation examples on the demo endpoint and OpenAPI URL", () => {
-    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/docs/page.tsx"), "utf8");
+    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/api/page.tsx"), "utf8");
     assert.match(docs, /\/api\/v1\/demo\/composition\//);
     assert.match(docs, /\/api\/openapi\.json/);
     assert.match(docs, /DEMO_GTIN_VERIFIED/);

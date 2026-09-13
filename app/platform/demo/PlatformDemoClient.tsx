@@ -300,7 +300,7 @@ export function PlatformDemoClient() {
               Download sample JSON
             </button>
             <Link
-              href="/platform/docs"
+              href="/platform/api"
               className="text-[11px] tracking-[0.12em] sm:tracking-[0.14em] uppercase px-4 py-3 underline underline-offset-4 text-center"
             >
               Documentation
