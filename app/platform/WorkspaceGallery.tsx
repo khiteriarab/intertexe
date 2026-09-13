@@ -239,9 +239,9 @@ export function DiscoverWorkspace() {
         }
         description="From raw data to the scan moment — govern one record, publish passports, and deliver consumer experiences through hosted pages, your domain, or your app."
         primaryHref="/platform/request?intent=snapshot&cta=discover"
-        primaryLabel="Book a demo"
+        primaryLabel="Start with 10 products"
         secondaryHref="/platform/demo"
-        secondaryLabel="See the live demo"
+        secondaryLabel="See it live"
       />
 
       <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pb-12 sm:pb-16">
@@ -373,7 +373,7 @@ export function DiscoverWorkspace() {
             href="/platform/request?intent=snapshot&cta=discover_needs"
             className="inline-flex items-center gap-2 rounded-md bg-[var(--platform-primary)] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[var(--platform-primary-hover)] w-fit"
           >
-            Book a demo
+            Start with 10 products
             <span aria-hidden="true">→</span>
           </a>
         </div>

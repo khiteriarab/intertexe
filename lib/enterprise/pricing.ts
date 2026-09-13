@@ -47,6 +47,55 @@ export function isPaidSubscriptionPlan(plan: string): boolean {
 
 export type SaasTierKey = "professional" | "platform" | "enterprise";
 
+export type IntertexePlanConfig = {
+  name: string;
+  publicLabel: string;
+  internalMonthlyPrice: number | null;
+  currency: "USD";
+  productLimit: number | null;
+  pricingPublic: false;
+  contactSales: boolean;
+  includesPilot: true;
+  implementationFeeType: "configurable_one_time" | "custom";
+};
+
+/** Centralized commercial plan config — use everywhere (public UI, checkout, entitlements). */
+export const INTERTEXE_PLANS: Record<SaasTierKey, IntertexePlanConfig> = {
+  professional: {
+    name: "Professional",
+    publicLabel: "Request pricing",
+    internalMonthlyPrice: PROFESSIONAL_MONTHLY_USD,
+    currency: "USD",
+    productLimit: PROFESSIONAL_PRODUCT_LIMIT,
+    pricingPublic: false,
+    contactSales: true,
+    includesPilot: true,
+    implementationFeeType: "configurable_one_time",
+  },
+  platform: {
+    name: "Platform",
+    publicLabel: "Request pricing",
+    internalMonthlyPrice: PLATFORM_MONTHLY_USD,
+    currency: "USD",
+    productLimit: PLATFORM_PRODUCT_LIMIT,
+    pricingPublic: false,
+    contactSales: true,
+    includesPilot: true,
+    implementationFeeType: "configurable_one_time",
+  },
+  enterprise: {
+    name: "Enterprise",
+    publicLabel: "Contact sales",
+    internalMonthlyPrice: null,
+    currency: "USD",
+    productLimit: null,
+    pricingPublic: false,
+    contactSales: true,
+    includesPilot: true,
+    implementationFeeType: "custom",
+  },
+};
+
 export type SaasTierDefinition = {
   key: SaasTierKey;
   name: string;
@@ -73,7 +122,8 @@ export const SAAS_TIERS: SaasTierDefinition[] = [
     productAllowance: PROFESSIONAL_PRODUCT_LIMIT,
     passportAllowance: PROFESSIONAL_PRODUCT_LIMIT,
     userSeats: 3,
-    headline: "Standard DPP and product passport infrastructure for growing catalogs.",
+    headline:
+      "For brands getting started with governed product passports, material intelligence, and traceability.",
     features: [
       "Up to 500 managed products · 500 hosted passports",
       "Material & composition data · traceability · sustainability fields",
@@ -96,7 +146,8 @@ export const SAAS_TIERS: SaasTierDefinition[] = [
     productAllowance: PLATFORM_PRODUCT_LIMIT,
     passportAllowance: PLATFORM_PRODUCT_LIMIT,
     userSeats: 10,
-    headline: "Presentation, circularity, and automation on top of Professional.",
+    headline:
+      "For brands ready for broader catalog coverage, white-label deployment, deeper analytics, and circularity features.",
     features: [
       "Everything in Professional",
       "Up to 2,000 managed products · 2,000 hosted passports",
@@ -116,7 +167,8 @@ export const SAAS_TIERS: SaasTierDefinition[] = [
     productAllowance: null,
     passportAllowance: null,
     userSeats: null,
-    headline: "Custom volume, compliance, and infrastructure for multi-brand deployments.",
+    headline:
+      "For large-scale deployments, custom compliance requirements, advanced integrations, and bespoke infrastructure.",
     features: [
       "Custom product & passport volume",
       "Everything in Platform",

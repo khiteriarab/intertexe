@@ -81,7 +81,7 @@ test("sales page links sign-in to enterprise login helper", () => {
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
   const hero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHero.tsx"), "utf8");
   assert.match(nav, /getEnterpriseLoginUrl/);
-  assert.match(sections, /Request a demo/);
+  assert.match(sections, /Start with 10 products/);
   assert.match(sections, /Sign in/);
   assert.match(hero, /INTERTEXE FOR BRANDS/);
   assert.doesNotMatch(nav, /\/dashboard\/login/);

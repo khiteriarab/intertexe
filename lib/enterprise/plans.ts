@@ -10,7 +10,7 @@ import {
   PLATFORM_PRODUCT_LIMIT,
   PROFESSIONAL_MONTHLY_USD,
   PROFESSIONAL_PRODUCT_LIMIT,
-  ONBOARDING_FEE_USD,
+  resolveOnboardingFeeUsd,
 } from "./pricing";
 
 export type BillingProvider = "paddle" | "manual" | null;
@@ -88,7 +88,7 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
     maxHostedPassports: PILOT_PRODUCT_LIMIT,
     maxTeamMembers: 5,
     monthlyUsd: null,
-    implementationUsd: ONBOARDING_FEE_USD,
+    implementationUsd: resolveOnboardingFeeUsd(),
     features: f("publish_passports", "suppliers", "regulatory_program"),
   },
   professional: {
@@ -99,7 +99,7 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
     maxHostedPassports: PROFESSIONAL_PRODUCT_LIMIT,
     maxTeamMembers: 3,
     monthlyUsd: PROFESSIONAL_MONTHLY_USD,
-    implementationUsd: ONBOARDING_FEE_USD,
+    implementationUsd: resolveOnboardingFeeUsd(),
     features: f(
       "publish_passports",
       "suppliers",
@@ -116,7 +116,7 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
     maxHostedPassports: PLATFORM_PRODUCT_LIMIT,
     maxTeamMembers: 10,
     monthlyUsd: PLATFORM_MONTHLY_USD,
-    implementationUsd: ONBOARDING_FEE_USD,
+    implementationUsd: resolveOnboardingFeeUsd(),
     features: f(
       "publish_passports",
       "suppliers",
@@ -139,7 +139,7 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
     maxHostedPassports: PROFESSIONAL_PRODUCT_LIMIT,
     maxTeamMembers: 3,
     monthlyUsd: PROFESSIONAL_MONTHLY_USD,
-    implementationUsd: ONBOARDING_FEE_USD,
+    implementationUsd: resolveOnboardingFeeUsd(),
     features: f(
       "publish_passports",
       "suppliers",
