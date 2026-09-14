@@ -4,7 +4,7 @@ import { DemoClosingQuote } from "./DemoClosingQuote";
 import { DemoFeaturedExample } from "./DemoFeaturedExample";
 import { DemoHero } from "./DemoHero";
 import { DemoIntertexeFlow } from "./DemoIntertexeFlow";
-import { DemoStoryline } from "./DemoStoryline";
+import { DemoProductWorkflow } from "./DemoProductWorkflow";
 
 /** See it live — editorial layout with the full Silk Midi Skirt storyline. */
 export function PlatformDemoClient() {
@@ -12,7 +12,7 @@ export function PlatformDemoClient() {
     <>
       <DemoHero />
       <DemoIntertexeFlow />
-      <DemoStoryline />
+      <DemoProductWorkflow />
       <DemoFeaturedExample />
       <DemoClosingQuote />
     </>

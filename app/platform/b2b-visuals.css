@@ -730,7 +730,7 @@
   min-height: 100%;
 }
 
-/* Platform hero — lifecycle composite with tab-driven arrows */
+/* Platform hero — composite image + coded lifecycle rail */
 .platform-hero-lifecycle {
   width: 100%;
 }
@@ -739,39 +739,165 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--platform-border) 80%, transparent);
   box-shadow: 0 40px 100px rgba(22, 21, 19, 0.08);
-  background: var(--platform-bg);
-  min-height: 280px;
-  aspect-ratio: 4 / 3;
+  background: linear-gradient(180deg, #f7f4ee 0%, #f3efe8 100%);
+}
+
+.platform-hero-lifecycle-composite {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 220px;
+  padding: 0.75rem 0.75rem 0.25rem;
 }
 
 @media (min-width: 1024px) {
-  .platform-hero-lifecycle-frame {
-    min-height: 420px;
-    aspect-ratio: 5 / 4;
+  .platform-hero-lifecycle-composite {
+    min-height: 320px;
+    padding: 1rem 1rem 0.35rem;
   }
 }
 
-.platform-hero-lifecycle-image {
+.platform-hero-lifecycle-composite-image {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  /* Crop to scan · workspace · passport · lifecycle bar (right side of editorial composite) */
-  object-position: 72% center;
+  min-height: 200px;
+  max-height: 360px;
+  object-fit: contain;
+  object-position: center center;
 }
 
-@media (max-width: 1023px) {
-  .platform-hero-lifecycle-image {
-    object-position: 58% center;
+@media (min-width: 1024px) {
+  .platform-hero-lifecycle-composite-image {
+    min-height: 280px;
+    max-height: 400px;
+  }
+}
+
+.platform-hero-lifecycle-rail {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  border-top: 1px solid color-mix(in srgb, var(--platform-border) 75%, transparent);
+  background: linear-gradient(180deg, #faf8f4 0%, #f5f0e8 100%);
+  padding: 1rem 0.5rem 1.1rem;
+}
+
+.platform-hero-lifecycle-rail-line {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 1.65rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--platform-border) 90%, transparent);
+  pointer-events: none;
+}
+
+.platform-hero-lifecycle-steps {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 900px) {
+  .platform-hero-lifecycle-steps {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  .platform-hero-lifecycle-steps::-webkit-scrollbar {
+    display: none;
+  }
+
+  .platform-hero-lifecycle-step {
+    flex: 0 0 88px;
+    scroll-snap-align: start;
+  }
+
+  .platform-hero-lifecycle-rail-line {
+    display: none;
+  }
+}
+
+.platform-hero-lifecycle-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.platform-hero-lifecycle-step-icon {
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 9999px;
+  border: 1px solid var(--platform-border);
+  background: #fff;
+  color: var(--platform-primary);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.platform-hero-lifecycle-step.is-active .platform-hero-lifecycle-step-icon {
+  border-color: var(--platform-accent);
+  background: var(--platform-accent-soft);
+  box-shadow: 0 0 0 4px rgba(215, 196, 169, 0.28);
+  transform: scale(1.06);
+}
+
+.platform-hero-lifecycle-step-label {
+  font-size: 7px;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--platform-ink);
+  max-width: 11ch;
+}
+
+@media (min-width: 640px) {
+  .platform-hero-lifecycle-step-label {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+  }
+}
+
+.platform-hero-lifecycle-step.is-active .platform-hero-lifecycle-step-label {
+  color: var(--platform-primary);
+}
+
+.platform-hero-lifecycle-step-detail {
+  font-size: 7px;
+  line-height: 1.35;
+  color: var(--platform-muted);
+  max-width: 12ch;
+}
+
+@media (min-width: 640px) {
+  .platform-hero-lifecycle-step-detail {
+    font-size: 8px;
   }
 }
 
 .platform-hero-lifecycle-svg {
   position: absolute;
   inset: 0;
+  z-index: 2;
   width: 100%;
   height: 100%;
   overflow: visible;
@@ -801,6 +927,7 @@
 
 .platform-hero-lifecycle-highlight {
   position: absolute;
+  z-index: 3;
   width: 7.5%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
@@ -865,5 +992,884 @@
 
   .platform-hero-lifecycle-highlight {
     transform: translate(-50%, -50%) !important;
+  }
+}
+
+/* Workspace explorer — group tabs, flip cards, screen mockup */
+.platform-workspace-explorer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .platform-workspace-explorer {
+    grid-template-columns: minmax(0, 11rem) minmax(0, 18rem) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 1rem 1.25rem;
+    align-items: start;
+  }
+
+  .platform-workspace-explorer-footer {
+    grid-column: 1 / -1;
+  }
+}
+
+.platform-workspace-groups {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+
+.platform-workspace-groups::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .platform-workspace-groups {
+    flex-direction: column;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+}
+
+.platform-workspace-group-tab {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 9.5rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid #e8e3da;
+  background: rgba(255, 255, 255, 0.72);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.platform-workspace-group-tab:hover {
+  border-color: #d4cdc4;
+  background: #fff;
+}
+
+.platform-workspace-group-tab.is-active {
+  border-color: #c4a574;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(22, 21, 19, 0.06);
+}
+
+.platform-workspace-group-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: #f4f0ea;
+  flex-shrink: 0;
+}
+
+.platform-workspace-group-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.platform-workspace-list-panel {
+  background: #fff;
+  border: 1px solid #e8e3da;
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(22, 21, 19, 0.05);
+  padding: 1rem 1rem 1.1rem;
+  min-height: 18rem;
+}
+
+.platform-workspace-list-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eeeae4;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9c7b8b;
+}
+
+.platform-workspace-list-heading span:last-child {
+  color: #b0a89c;
+  letter-spacing: 0.12em;
+}
+
+.platform-workspace-flip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 28rem;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.platform-workspace-flip {
+  display: block;
+  width: 100%;
+  perspective: 900px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.platform-workspace-flip-inner {
+  position: relative;
+  display: block;
+  min-height: 6.5rem;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+.platform-workspace-flip.is-flipped .platform-workspace-flip-inner,
+.platform-workspace-flip.is-active .platform-workspace-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.platform-workspace-flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  border: 1px solid #eeeae4;
+  background: #faf8f4;
+  padding: 0.85rem 0.9rem;
+}
+
+.platform-workspace-flip-front {
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-workspace-flip-back {
+  transform: rotateY(180deg);
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-workspace-flip.is-active .platform-workspace-flip-front,
+.platform-workspace-flip.is-active .platform-workspace-flip-back {
+  border-color: #c4a574;
+}
+
+.platform-workspace-flip-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.35rem;
+}
+
+.platform-workspace-flip-hint {
+  margin-top: auto;
+  padding-top: 0.65rem;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b0a89c;
+}
+
+.platform-workspace-flip-shot {
+  position: relative;
+  flex: 1;
+  min-height: 4.5rem;
+  background: #f0ebe4;
+}
+
+.platform-workspace-flip-back-label {
+  padding: 0.45rem 0.65rem;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5c5854;
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid #eeeae4;
+}
+
+.platform-workspace-screen-panel {
+  min-width: 0;
+}
+
+.platform-workspace-screen {
+  background: #fff;
+  border: 1px solid #e8e3da;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(22, 21, 19, 0.08);
+  overflow: hidden;
+}
+
+.platform-workspace-screen-chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #eeeae4;
+  background: linear-gradient(180deg, #faf8f4 0%, #f3efe8 100%);
+}
+
+.platform-workspace-screen-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #d4cdc4;
+}
+
+.platform-workspace-screen-url {
+  margin-left: 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  color: #8a847c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.platform-workspace-screen-body {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #f0ebe4;
+}
+
+.platform-workspace-screen-image {
+  animation: platform-workspace-screen-in 0.45s ease-out;
+}
+
+@keyframes platform-workspace-screen-in {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.platform-workspace-screen-caption {
+  padding: 0.75rem 1rem;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8a847c;
+  border-top: 1px solid #eeeae4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-workspace-flip-inner,
+  .platform-workspace-screen-image {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Consumer delivery — three visual mode cards */
+.platform-delivery-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.platform-delivery-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .platform-delivery-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.15rem;
+  }
+}
+
+.platform-delivery-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e8e3da;
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(22, 21, 19, 0.05);
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+
+.platform-delivery-card.is-active {
+  border-color: #c4a574;
+  box-shadow: 0 28px 64px rgba(22, 21, 19, 0.09);
+  transform: translateY(-2px);
+}
+
+.platform-delivery-card-select {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.platform-delivery-card-visual,
+.platform-delivery-card-copy,
+.platform-delivery-card-link {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.platform-delivery-card-link {
+  pointer-events: auto;
+}
+
+.platform-delivery-card-visual {
+  padding: 1rem 1rem 0.75rem;
+  background: linear-gradient(180deg, #faf8f4 0%, #f3efe8 100%);
+  border-bottom: 1px solid #eeeae4;
+  min-height: 11.5rem;
+}
+
+.platform-delivery-graphic {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 9.5rem;
+}
+
+.platform-delivery-arrow {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: #c4a574;
+  opacity: 0.85;
+}
+
+.platform-delivery-arrow-light {
+  color: #9c7b8b;
+}
+
+/* Hosted passport mini UI */
+.platform-delivery-passport-ui {
+  width: 100%;
+  max-width: 15.5rem;
+  background: #fff;
+  border: 1px solid #e8e3da;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(22, 21, 19, 0.08);
+  overflow: hidden;
+}
+
+.platform-delivery-passport-header {
+  padding: 0.55rem 0.65rem 0.45rem;
+  border-bottom: 1px solid #f0ebe4;
+}
+
+.platform-delivery-passport-brand {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8a847c;
+}
+
+.platform-delivery-passport-tagline {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 10px;
+  color: #5c5854;
+}
+
+.platform-delivery-passport-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem 0.65rem;
+}
+
+.platform-delivery-passport-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0ebe4;
+  margin-bottom: 0.35rem;
+}
+
+.platform-delivery-passport-name {
+  font-size: 11px;
+  line-height: 1.3;
+  color: #161513;
+}
+
+.platform-delivery-passport-meta {
+  margin-top: 0.15rem;
+  font-size: 9px;
+  color: #8a847c;
+}
+
+.platform-delivery-passport-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a847c;
+}
+
+.platform-delivery-passport-fields li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.platform-delivery-passport-qr {
+  margin-top: 0.45rem;
+  padding: 0.25rem;
+  background: #fff;
+  border: 1px solid #eeeae4;
+  border-radius: 6px;
+  line-height: 0;
+}
+
+/* White label stacked cards */
+.platform-delivery-stack {
+  position: relative;
+  width: 100%;
+  max-width: 13rem;
+  min-height: 8.5rem;
+}
+
+.platform-delivery-stack-card {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 88%;
+  border-radius: 10px;
+  border: 1px solid #e8e3da;
+  background: #fff;
+}
+
+.platform-delivery-stack-card-back {
+  top: 0.85rem;
+  height: 5.5rem;
+  opacity: 0.45;
+  background: #f7f5f1;
+}
+
+.platform-delivery-stack-card-mid {
+  top: 0.45rem;
+  height: 5.75rem;
+  opacity: 0.72;
+  background: #faf8f4;
+}
+
+.platform-delivery-stack-card-front {
+  top: 0;
+  padding: 0.55rem 0.65rem 0.65rem;
+  box-shadow: 0 14px 32px rgba(22, 21, 19, 0.08);
+}
+
+.platform-delivery-stack-brand {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9c7b8b;
+  margin-bottom: 0.45rem;
+}
+
+.platform-delivery-stack-row {
+  display: grid;
+  grid-template-columns: 3.25rem 1fr;
+  gap: 0.45rem;
+  align-items: start;
+}
+
+.platform-delivery-stack-image {
+  position: relative;
+  width: 3.25rem;
+  height: 4rem;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f0ebe4;
+}
+
+.platform-delivery-stack-fields {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a847c;
+}
+
+/* Headless API code panel */
+.platform-delivery-code {
+  width: 100%;
+  max-width: 15rem;
+  margin: 0;
+  padding: 0.75rem 0.8rem;
+  border-radius: 10px;
+  background: #1e2433;
+  color: #d8dee9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  box-shadow: 0 14px 32px rgba(22, 21, 19, 0.12);
+}
+
+.platform-delivery-card-copy {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.platform-delivery-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+}
+
+.platform-delivery-card-title {
+  font-size: 1.05rem;
+  line-height: 1.3;
+  color: #161513;
+  font-weight: 400;
+}
+
+.platform-delivery-card-tier {
+  flex-shrink: 0;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.45rem;
+  border-radius: 999px;
+  background: #f4f0ea;
+  color: #8a847c;
+  border: 1px solid #eeeae4;
+}
+
+.platform-delivery-card-desc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6b6560;
+  margin-bottom: 0.75rem;
+}
+
+.platform-delivery-card-bullets {
+  list-style: none;
+  margin: 0 0 0.85rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.platform-delivery-card-bullets li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 11px;
+  color: #5c5854;
+}
+
+.platform-delivery-card-example {
+  margin-bottom: 0.75rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid #eeeae4;
+  background: #faf8f4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  color: #5c5854;
+  word-break: break-all;
+}
+
+.platform-delivery-card-link {
+  margin-top: auto;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--platform-accent);
+  text-decoration: none;
+}
+
+.platform-delivery-card-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.platform-delivery-stack-footer {
+  box-shadow: 0 20px 50px rgba(44, 38, 32, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-delivery-card {
+    transition: none;
+  }
+}
+
+/* Govern / Publish / Deliver — interactive process cards */
+.platform-what-cards-interactive .platform-what-card {
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+
+.platform-what-cards-interactive .platform-what-card.is-active {
+  border-color: #c4a574;
+  box-shadow: 0 28px 64px rgba(22, 21, 19, 0.09);
+  transform: translateY(-2px);
+}
+
+.platform-what-card-trigger {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  min-height: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-what-between-arrow {
+  color: #c4a574;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.platform-what-experience-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #c4a574;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.platform-what-experience-arrow-inline {
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.platform-what-experience-arrow-deliver {
+  position: absolute;
+  right: -0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+}
+
+.platform-what-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.5rem;
+}
+
+.platform-what-flow-lines {
+  position: relative;
+  height: 1.1rem;
+  margin: 0.15rem 0;
+}
+
+.platform-what-flow-line {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 0.85rem;
+  background: #e8e3da;
+}
+
+.platform-what-flow-line-a { left: 22%; }
+.platform-what-flow-line-b { left: 38%; }
+.platform-what-flow-line-c { left: 62%; }
+.platform-what-flow-line-d { left: 78%; }
+
+.platform-what-diagram-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0 0.5rem;
+}
+
+.platform-what-diagram-connector-label {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b0a89c;
+}
+
+.platform-what-diagram.is-active .platform-what-diagram-output,
+.platform-what-diagram.is-active .platform-what-passport-card,
+.platform-what-diagram.is-active .platform-what-experience-phone {
+  border-color: #d4c4a8;
+}
+
+.platform-what-publish-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.platform-what-approved-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid #eeeae4;
+  background: #faf8f4;
+}
+
+.platform-what-check-sm {
+  width: 1.1rem;
+  height: 1.1rem;
+  font-size: 9px;
+}
+
+.platform-what-passport-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: start;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid #e8e3da;
+  background: linear-gradient(180deg, #fff 0%, #faf8f4 100%);
+}
+
+.platform-what-passport-fields {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.platform-what-passport-fields li {
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a847c;
+}
+
+.platform-what-passport-fields li::before {
+  content: "• ";
+  color: #c4a574;
+}
+
+.platform-what-passport-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid #eeeae4;
+  background: #fff;
+}
+
+.platform-what-passport-qr-link {
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--platform-accent);
+  text-decoration: none;
+}
+
+.platform-what-passport-qr-link:hover {
+  text-decoration: underline;
+}
+
+.platform-what-experience-phone {
+  position: relative;
+  padding-right: 0.5rem;
+}
+
+.platform-what-phone-ui {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0.35rem;
+}
+
+.platform-what-phone-brand {
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a847c;
+  margin-bottom: 0.25rem;
+}
+
+.platform-what-phone-title {
+  font-size: 9px;
+  line-height: 1.3;
+  color: #161513;
+  margin-bottom: 0.25rem;
+}
+
+.platform-what-phone-fields {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.15rem;
+  font-size: 7px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8a847c;
+}
+
+.platform-what-phone-qr {
+  margin-top: auto;
+  align-self: flex-end;
+  padding: 0.15rem;
+  background: #fff;
+  border: 1px solid #eeeae4;
+  border-radius: 4px;
+  line-height: 0;
+}
+
+.platform-what-diagram-deliver {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  align-items: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-what-cards-interactive .platform-what-card {
+    transition: none;
   }
 }

@@ -33,8 +33,9 @@ export function PassportShell({
   versionNumber,
   preview,
   compact,
+  hideDefaultHeader = false,
   children,
-}: TemplateProps & { children: React.ReactNode }) {
+}: TemplateProps & { children: React.ReactNode; hideDefaultHeader?: boolean }) {
   const brand = experience.branding.brandDisplayName || content.brand || "INTERTEXE";
   const style = {
     "--pp-accent": experience.branding.accentColor || "#c4a574",
@@ -51,15 +52,17 @@ export function PassportShell({
       <div className="itx-passport-inner">
         {preview ? <p className="itx-passport-preview-badge">Preview — consumer experience</p> : null}
 
-        <header className="mb-5 flex items-center gap-3">
-          {experience.branding.logoUrl ? (
-            <div className="relative h-8 w-24">
-              <Image src={experience.branding.logoUrl} alt="" fill className="object-contain object-left" unoptimized />
-            </div>
-          ) : (
-            <p className="itx-passport-brand">{brand}</p>
-          )}
-        </header>
+        {!hideDefaultHeader ? (
+          <header className="mb-5 flex items-center gap-3">
+            {experience.branding.logoUrl ? (
+              <div className="relative h-8 w-24">
+                <Image src={experience.branding.logoUrl} alt="" fill className="object-contain object-left" unoptimized />
+              </div>
+            ) : (
+              <p className="itx-passport-brand">{brand}</p>
+            )}
+          </header>
+        ) : null}
 
         {children}
 

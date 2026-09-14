@@ -112,15 +112,19 @@ export function SalesDeliverySection() {
   return (
     <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-20">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <div className="max-w-3xl mb-10 lg:mb-14">
-          <Eyebrow>How consumers experience your product</Eyebrow>
-          <Heading className="mb-4">You don&apos;t have to send customers to an INTERTEXE-looking page.</Heading>
-          <Body className="mb-0">
-            Already have the app and website? Perfect. INTERTEXE powers the product experience inside your existing
-            digital ecosystem. Smaller brands can choose hosted passports with zero development. Enterprise brands can
-            run all three delivery modes from the same governed record — QR on the garment, API in the app, white-label
-            on the web.
-          </Body>
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_auto] gap-6 lg:gap-10 mb-10 lg:mb-14 items-start">
+          <div className="max-w-3xl">
+            <Eyebrow>Consumer delivery</Eyebrow>
+            <Heading className="mb-4">One record. Three ways to deliver.</Heading>
+            <Body className="mb-0">
+              Turn your governed material data into trusted consumer experiences — whether you host it on INTERTEXE,
+              bring your own look and feel, or connect directly through our API. Smaller brands launch hosted passports
+              with zero development. Enterprise brands run all three delivery modes from the same approved record.
+            </Body>
+          </div>
+          <p className="hidden lg:block text-[10px] tracking-[0.18em] uppercase text-[var(--platform-accent)] border-l border-[var(--platform-accent)]/40 pl-4 max-w-[9rem] leading-relaxed">
+            Same data · more possibilities
+          </p>
         </div>
         <DeliveryModesVisual />
       </div>

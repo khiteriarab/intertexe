@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SERIF } from "../platform-ui";
+import { ApiDocsHeroVisual } from "./ApiDocsHeroVisual";
 
 export function ApiDocsHero() {
   return (
@@ -34,16 +35,7 @@ export function ApiDocsHero() {
             </p>
           </div>
 
-          <figure className="api-editorial-hero-art m-0">
-            <img
-              src="/platform/api-docs-editorial.jpg"
-              alt="From product identifier to product intelligence — GTIN resolves to composition, evidence, and DPP readiness"
-              width={1600}
-              height={900}
-              className="api-editorial-hero-art-image"
-              loading="eager"
-            />
-          </figure>
+          <ApiDocsHeroVisual />
         </div>
       </div>
     </section>

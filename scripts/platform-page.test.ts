@@ -36,14 +36,18 @@ describe("Platform B2B sales page", () => {
   it("uses a focused home hierarchy without redundant lifecycle or pricing blocks", () => {
     assert.match(home, /SalesHeroSection/);
     assert.match(home, /PlatformHowItWorksSection/);
-    assert.match(howItWorks, /platform-editorial-step-grid/);
-    assert.match(howItWorks, /understand-ingest-laptop\.jpg/);
+    assert.match(howItWorks, /WhatItIsProcessVisual/);
+    assert.match(howItWorks, /Govern/);
+    assert.match(howItWorks, /Publish/);
+    assert.match(howItWorks, /Deliver/);
+    assert.doesNotMatch(howItWorks, /understand-ingest-laptop\.jpg/);
+    assert.doesNotMatch(howItWorks, /platform-editorial-step-grid/);
     assert.doesNotMatch(home, /PlatformWorkflowDeepDive/);
     assert.doesNotMatch(home, /PlatformScrollShowcase/);
     assert.match(home, /SalesIntelligenceSection/);
     assert.match(home, /SalesDeliverySection/);
     assert.match(home, /SalesPlatformBreadthSection/);
-    assert.match(home, /PlatformProofSection/);
+    assert.doesNotMatch(home, /PlatformProofSection/);
     assert.match(home, /PlatformFaq/);
     assert.match(home, /SalesStartFreeSection/);
     assert.doesNotMatch(home, /SalesWhatItIsSection/);
@@ -60,7 +64,7 @@ describe("Platform B2B sales page", () => {
     assert.match(demo, /PlatformDemoClient/);
     assert.match(demoClient, /DemoHero/);
     assert.match(demoClient, /DemoIntertexeFlow/);
-    assert.match(demoClient, /DemoStoryline/);
+    assert.match(demoClient, /DemoProductWorkflow/);
     assert.match(demoClient, /DemoFeaturedExample/);
     const demoHero = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoHero.tsx"), "utf8");
     assert.match(demoHero, /demo-see-it-live\.jpg/);
@@ -145,6 +149,16 @@ describe("Platform B2B sales page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/act-passport.png")));
   });
 
+  it("uses real QR codes in govern publish deliver process visual", () => {
+    const processVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"), "utf8");
+    assert.match(processVisual, /QRCodeCanvas/);
+    assert.match(processVisual, /PASSPORT_CASE_STUDY/);
+    assert.match(processVisual, /Govern/);
+    assert.match(processVisual, /Publish/);
+    assert.match(processVisual, /Deliver/);
+    assert.doesNotMatch(processVisual, /understand-ingest-laptop/);
+  });
+
   it("uses native sales visuals instead of editorial PNG decks", () => {
     assert.match(hero, /PlatformHeroLifecycleVisual/);
     assert.match(heroVisual, /hero-lifecycle-experience\.jpg/);
@@ -153,6 +167,7 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(sections, /GovernedRecordVisual/);
     assert.match(sections, /DeliveryModesVisual/);
     assert.match(sections, /PlatformModuleGrid/);
+    assert.match(visuals, /PlatformWorkspaceExplorer/);
     assert.doesNotMatch(sections, /PlatformEditorialGraphic/);
     assert.doesNotMatch(sections, /INTERTEXE_01_Data_Architecture/);
     assert.match(visuals, /Discover · Scan · Compare/);

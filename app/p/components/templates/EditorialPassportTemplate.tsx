@@ -1,30 +1,34 @@
 import type { TemplateProps } from "./shared";
+import { PassportShell } from "./shared";
 import {
-  CareBlock,
-  JourneyBlock,
-  MaterialsBlock,
-  NextLifeBlock,
-  PassportShell,
-  ProductHero,
-  ProductTitleBlock,
-} from "./shared";
+  EditorialJourneyTimeline,
+  EditorialMaterialsCard,
+  EditorialMissionStrip,
+  EditorialNextLifeCards,
+  EditorialPassportFooter,
+  EditorialPassportHeader,
+  EditorialProductHero,
+  EditorialProductIntro,
+  EditorialScoresSection,
+  EditorialVerificationBadges,
+} from "./editorial-blocks";
 
-/** Editorial — large imagery, storytelling, origin journey. Luxury/fashion. */
+/** Editorial — mobile-first DPP layout: hero, verification, materials, journey, next life. */
 export function EditorialPassportTemplate(props: TemplateProps) {
-  const { content, experience } = props;
+  const { content, experience, publicId } = props;
+
   return (
-    <PassportShell {...props}>
-      <ProductHero content={content} large />
-      <ProductTitleBlock content={content} />
-      {experience.branding.editorialCopy ? (
-        <p className="mt-4 text-sm leading-relaxed text-[var(--pp-muted,#6b6560)] italic">
-          {experience.branding.editorialCopy}
-        </p>
-      ) : null}
-      <MaterialsBlock content={content} />
-      <JourneyBlock content={content} />
-      <CareBlock content={content} />
-      <NextLifeBlock content={content} />
+    <PassportShell {...props} hideDefaultHeader>
+      <EditorialPassportHeader />
+      <EditorialProductHero content={content} experience={experience} />
+      <EditorialProductIntro content={content} experience={experience} publicId={publicId} />
+      <EditorialVerificationBadges content={content} />
+      <EditorialMissionStrip />
+      <EditorialMaterialsCard content={content} />
+      <EditorialJourneyTimeline content={content} />
+      <EditorialScoresSection content={content} />
+      <EditorialNextLifeCards content={content} />
+      <EditorialPassportFooter />
     </PassportShell>
   );
 }

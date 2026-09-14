@@ -7,11 +7,10 @@ import {
 } from "./sales-sections";
 import { PlatformFaq } from "./PlatformFaq";
 import { PlatformHowItWorksSection } from "./PlatformHowItWorksSection";
-import { PlatformProofSection } from "./PlatformProofSection";
 
 /**
  * Public B2B platform overview — intertexe.com/platform
- * Single conversion journey: hero → how it works → intelligence → delivery → breadth → proof → FAQ → CTA.
+ * Single conversion journey: hero → how it works → intelligence → delivery → breadth → FAQ → CTA.
  * Live tour on /platform/demo. API on /platform/api.
  */
 export function PlatformHome() {
@@ -22,7 +21,6 @@ export function PlatformHome() {
       <SalesIntelligenceSection />
       <SalesDeliverySection />
       <SalesPlatformBreadthSection />
-      <PlatformProofSection />
       <PlatformFaq />
       <SalesStartFreeSection />
     </div>

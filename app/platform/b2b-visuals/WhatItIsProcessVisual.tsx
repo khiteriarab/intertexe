@@ -1,16 +1,56 @@
+"use client";
+
 import Image from "next/image";
-import { PLATFORM_CASE_STUDY } from "../../../lib/enterprise/platform-showcase";
+import Link from "next/link";
+import { QRCodeCanvas } from "qrcode.react";
+import { useState } from "react";
+import {
+  caseStudyPassportUrl,
+  PASSPORT_CASE_STUDY,
+} from "../../../lib/enterprise/passport-case-study";
 import { SERIF } from "../platform-ui";
 
-const SOURCES = ["PLM", "ERP", "Spreadsheets", "Supplier files"] as const;
+const SOURCES = [
+  { label: "PLM", icon: "▣" },
+  { label: "ERP", icon: "◫" },
+  { label: "Spreadsheets", icon: "▤" },
+  { label: "Supplier files", icon: "▥" },
+] as const;
 
-const PASSPORT_FIELDS = ["Materials", "Supply Chain", "Compliance", "Impact", "Care & Repair"] as const;
+const PASSPORT_FIELDS = [
+  "Materials",
+  "Supply Chain",
+  "Compliance",
+  "Impact",
+  "Care & Repair",
+] as const;
 
 const DELIVERY_CHANNELS = [
-  { id: "app", label: "Your App", icon: "phone" as const },
-  { id: "domain", label: "Your Brand Domain", icon: "globe" as const },
+  { id: "app", label: "Your App", sub: "In-app product page", icon: "phone" as const },
+  { id: "domain", label: "Your Brand Domain", sub: "passport.yourbrand.com", icon: "globe" as const },
   { id: "api", label: "Headless API", sub: "Integrate anywhere", icon: "code" as const },
 ] as const;
+
+const STAGES = [
+  {
+    id: "govern" as const,
+    label: "Govern",
+    title: "Connect & structure your product data.",
+    copy: "Connect PLM, ERP, spreadsheets and supplier files into one structured product record — with evidence, provenance, and approval workflow.",
+  },
+  {
+    id: "publish" as const,
+    label: "Publish",
+    title: "Turn data into experiences.",
+    copy: "Turn approved data into passports, regulatory readiness, and consumer-ready product experiences — not just compliance fields in a dashboard.",
+  },
+  {
+    id: "deliver" as const,
+    label: "Deliver",
+    title: "One record. Every channel.",
+    copy: "Hosted passport, white-label domain, or headless API into your existing app. One governed record powers every channel.",
+  },
+];
 
 function DeliverChannelIcon({ kind }: { kind: "phone" | "globe" | "code" }) {
   const cls = "h-3.5 w-3.5 text-[var(--platform-primary)]";
@@ -59,43 +99,58 @@ function StageIcon({ kind }: { kind: "govern" | "publish" | "deliver" }) {
   return (
     <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
       <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3l-2.8 2.8" />
+      <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
     </svg>
   );
 }
 
-function FlowArrow({ className = "" }: { className?: string }) {
+function ExperienceArrow({ className = "" }: { className?: string }) {
   return (
-    <div className={`hidden lg:flex items-center justify-center px-1 xl:px-2 ${className}`} aria-hidden>
-      <span className="text-[var(--platform-accent)] text-lg leading-none">→</span>
-    </div>
+    <span className={`platform-what-experience-arrow ${className}`} aria-hidden>
+      →
+    </span>
   );
 }
 
-function GovernDiagram() {
+function GovernDiagram({ active }: { active: boolean }) {
   return (
-    <div className="platform-what-diagram">
-      <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+    <div className={`platform-what-diagram ${active ? "is-active" : ""}`}>
+      <div className="platform-what-source-grid">
         {SOURCES.map((source) => (
-          <div key={source} className="platform-what-diagram-pill">
+          <div key={source.label} className="platform-what-diagram-pill">
             <span className="platform-what-diagram-pill-icon" aria-hidden>
-              ◦
+              {source.icon}
             </span>
-            {source}
+            {source.label}
           </div>
         ))}
       </div>
-      <div className="platform-what-diagram-connector" aria-hidden>
-        <span className="platform-what-diagram-line" />
-        <span>↓</span>
+      <div className="platform-what-flow-lines" aria-hidden>
+        <span className="platform-what-flow-line platform-what-flow-line-a" />
+        <span className="platform-what-flow-line platform-what-flow-line-b" />
+        <span className="platform-what-flow-line platform-what-flow-line-c" />
+        <span className="platform-what-flow-line platform-what-flow-line-d" />
+      </div>
+      <div className="platform-what-diagram-connector">
+        <ExperienceArrow />
+        <span className="platform-what-diagram-connector-label">Governed record</span>
       </div>
       <div className="platform-what-diagram-output">
-        <div className="relative h-11 w-9 shrink-0 overflow-hidden rounded-md bg-[#f0ebe4]">
-          <Image src={PLATFORM_CASE_STUDY.imageUrl} alt="" fill className="object-cover" sizes="36px" />
+        <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-md bg-[#f0ebe4]">
+          <Image
+            src={PASSPORT_CASE_STUDY.imageUrl}
+            alt={PASSPORT_CASE_STUDY.productName}
+            fill
+            className="object-cover"
+            sizes="44px"
+          />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-primary)]">Governed product record</p>
-          <p className="text-[11px] text-[var(--platform-muted)] truncate">{PLATFORM_CASE_STUDY.styleCode}</p>
+          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-primary)]">
+            Governed product record
+          </p>
+          <p className="text-[11px] text-[var(--platform-muted)] truncate">{PASSPORT_CASE_STUDY.styleCode}</p>
+          <p className="text-[10px] text-[var(--platform-quiet)] truncate">{PASSPORT_CASE_STUDY.composition}</p>
         </div>
         <span className="platform-what-check" aria-hidden>
           ✓
@@ -105,50 +160,84 @@ function GovernDiagram() {
   );
 }
 
-function PublishDiagram() {
+function PublishDiagram({ active }: { active: boolean }) {
+  const passportUrl = caseStudyPassportUrl();
+  const displayName = PASSPORT_CASE_STUDY.productName.split(" ").slice(-4).join(" ");
+
   return (
-    <div className="platform-what-diagram">
-      <div className="platform-what-diagram-pill platform-what-diagram-pill-wide">
-        Approved product record
-      </div>
-      <div className="platform-what-diagram-connector" aria-hidden>
-        <span className="platform-what-diagram-line" />
-        <span>→</span>
-      </div>
-      <div className="platform-what-passport-card">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div>
-            <p className="text-[9px] tracking-[0.14em] uppercase text-[var(--platform-quiet)]">Digital Product Passport</p>
-            <p className="text-sm text-[var(--platform-ink)] mt-0.5" style={SERIF}>
-              {PLATFORM_CASE_STUDY.productName.split(" ").slice(0, 3).join(" ")}…
-            </p>
+    <div className={`platform-what-diagram ${active ? "is-active" : ""}`}>
+      <div className="platform-what-publish-flow">
+        <div className="platform-what-approved-chip">
+          <div className="relative h-9 w-8 shrink-0 overflow-hidden rounded-md bg-[#f0ebe4]">
+            <Image src={PASSPORT_CASE_STUDY.imageUrl} alt="" fill className="object-cover" sizes="32px" />
           </div>
-          <div className="h-10 w-10 shrink-0 rounded-md border border-[var(--platform-border)] bg-white grid place-items-center">
-            <span className="text-[8px] font-mono text-[var(--platform-muted)]">QR</span>
+          <div>
+            <p className="text-[8px] tracking-[0.12em] uppercase text-[var(--platform-quiet)]">Approved record</p>
+            <p className="text-[10px] text-[var(--platform-muted)]">{PASSPORT_CASE_STUDY.styleCode}</p>
+          </div>
+          <span className="platform-what-check platform-what-check-sm" aria-hidden>
+            ✓
+          </span>
+        </div>
+        <ExperienceArrow className="platform-what-experience-arrow-inline" />
+        <div className="platform-what-passport-card">
+          <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-md bg-[#f0ebe4]">
+            <Image src={PASSPORT_CASE_STUDY.imageUrl} alt="" fill className="object-cover" sizes="48px" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] tracking-[0.14em] uppercase text-[var(--platform-quiet)]">
+              Digital Product Passport
+            </p>
+            <p className="text-[11px] text-[var(--platform-ink)] mt-0.5 leading-snug" style={SERIF}>
+              {displayName}
+            </p>
+            <ul className="platform-what-passport-fields mt-2">
+              {PASSPORT_FIELDS.map((field) => (
+                <li key={field}>{field}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="platform-what-passport-qr shrink-0">
+            <QRCodeCanvas value={passportUrl} size={56} marginSize={1} />
+            <Link href={`/p/${PASSPORT_CASE_STUDY.publicId}`} className="platform-what-passport-qr-link">
+              Scan live →
+            </Link>
           </div>
         </div>
-        <ul className="space-y-1.5">
-          {PASSPORT_FIELDS.map((field) => (
-            <li key={field} className="flex items-center gap-2 text-[10px] text-[var(--platform-muted)]">
-              <span className="h-1 w-1 rounded-full bg-[var(--platform-accent)]" aria-hidden />
-              {field}
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );
 }
 
-function DeliverDiagram() {
+function DeliverDiagram({ active }: { active: boolean }) {
+  const passportUrl = caseStudyPassportUrl();
+  const displayName = PASSPORT_CASE_STUDY.productName.split(" ").slice(-4).join(" ");
+
   return (
-    <div className="platform-what-diagram platform-what-diagram-deliver">
-      <div className="platform-what-phone-mock">
-        <div className="platform-what-phone-screen">
-          <div className="relative h-full w-full overflow-hidden rounded-[10px] bg-[#f0ebe4]">
-            <Image src={PLATFORM_CASE_STUDY.imageUrl} alt="" fill className="object-cover" sizes="80px" />
+    <div className={`platform-what-diagram platform-what-diagram-deliver ${active ? "is-active" : ""}`}>
+      <div className="platform-what-experience-phone">
+        <div className="platform-what-phone-mock">
+          <div className="platform-what-phone-screen">
+            <div className="platform-what-phone-ui">
+              <p className="platform-what-phone-brand">INTERTEXE</p>
+              <div className="relative h-14 w-full overflow-hidden rounded-md bg-[#f0ebe4] mb-2">
+                <Image src={PASSPORT_CASE_STUDY.imageUrl} alt="" fill className="object-cover" sizes="100px" />
+              </div>
+              <p className="platform-what-phone-title" style={SERIF}>
+                {displayName}
+              </p>
+              <ul className="platform-what-phone-fields">
+                {["Materials", "Origin", "Care", "Impact"].map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+              <div className="platform-what-phone-qr">
+                <QRCodeCanvas value={passportUrl} size={34} marginSize={0} />
+              </div>
+            </div>
           </div>
         </div>
+        <ExperienceArrow className="platform-what-experience-arrow-deliver" />
       </div>
       <div className="platform-what-deliver-branches">
         {DELIVERY_CHANNELS.map((channel) => (
@@ -158,9 +247,7 @@ function DeliverDiagram() {
             </span>
             <div>
               <p className="text-[10px] text-[var(--platform-ink)]">{channel.label}</p>
-              {"sub" in channel && channel.sub ? (
-                <p className="text-[9px] text-[var(--platform-quiet)]">{channel.sub}</p>
-              ) : null}
+              <p className="text-[9px] text-[var(--platform-quiet)]">{channel.sub}</p>
             </div>
           </div>
         ))}
@@ -169,53 +256,54 @@ function DeliverDiagram() {
   );
 }
 
-const STAGES = [
-  {
-    id: "govern",
-    label: "Govern",
-    title: "Connect & structure your product data.",
-    copy: "Connect PLM, ERP, spreadsheets and supplier files into one structured product record — with evidence, provenance, and approval workflow.",
-    diagram: <GovernDiagram />,
-  },
-  {
-    id: "publish",
-    label: "Publish",
-    title: "Turn data into experiences.",
-    copy: "Turn approved data into passports, regulatory readiness, and consumer-ready product experiences — not just compliance fields in a dashboard.",
-    diagram: <PublishDiagram />,
-  },
-  {
-    id: "deliver",
-    label: "Deliver",
-    title: "One record. Every channel.",
-    copy: "Hosted passport, white-label domain, or headless API into your existing app. One governed record powers every channel.",
-    diagram: <DeliverDiagram />,
-  },
-] as const;
+function StageDiagram({ id, active }: { id: (typeof STAGES)[number]["id"]; active: boolean }) {
+  if (id === "govern") return <GovernDiagram active={active} />;
+  if (id === "publish") return <PublishDiagram active={active} />;
+  return <DeliverDiagram active={active} />;
+}
 
 export function WhatItIsProcessVisual() {
+  const [activeId, setActiveId] = useState<(typeof STAGES)[number]["id"]>("govern");
+
   return (
-    <div className="platform-what-cards">
-      {STAGES.map((stage, i) => (
-        <div key={stage.id} className="contents">
-          <article className="platform-what-card">
-            <header className="platform-what-card-header">
-              <span className="platform-what-card-icon" aria-hidden>
-                <StageIcon kind={stage.id} />
-              </span>
-              <div>
-                <p className="platform-what-card-label">{stage.label}</p>
-                <h3 className="platform-what-card-title" style={SERIF}>
-                  {stage.title}
-                </h3>
+    <div className="platform-what-cards platform-what-cards-interactive">
+      {STAGES.map((stage, i) => {
+        const active = activeId === stage.id;
+        return (
+          <div key={stage.id} className="contents">
+            <article
+              className={`platform-what-card ${active ? "is-active" : ""}`}
+              onMouseEnter={() => setActiveId(stage.id)}
+            >
+              <button
+                type="button"
+                className="platform-what-card-trigger"
+                aria-pressed={active}
+                onClick={() => setActiveId(stage.id)}
+              >
+                <header className="platform-what-card-header">
+                  <span className="platform-what-card-icon" aria-hidden>
+                    <StageIcon kind={stage.id} />
+                  </span>
+                  <div>
+                    <p className="platform-what-card-label">{stage.label}</p>
+                    <h3 className="platform-what-card-title" style={SERIF}>
+                      {stage.title}
+                    </h3>
+                  </div>
+                </header>
+                <p className="platform-what-card-copy">{stage.copy}</p>
+                <StageDiagram id={stage.id} active={active} />
+              </button>
+            </article>
+            {i < STAGES.length - 1 ? (
+              <div className="hidden lg:flex items-center justify-center px-1 xl:px-2" aria-hidden>
+                <span className="platform-what-between-arrow">→</span>
               </div>
-            </header>
-            <p className="platform-what-card-copy">{stage.copy}</p>
-            {stage.diagram}
-          </article>
-          {i < STAGES.length - 1 ? <FlowArrow /> : null}
-        </div>
-      ))}
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }

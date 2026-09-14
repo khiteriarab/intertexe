@@ -8,13 +8,6 @@ import {
 } from "../../lib/enterprise/platform-showcase";
 import { PlatformGraphicOrFallback } from "./PlatformGraphic";
 import { QrMark, SERIF } from "./platform-ui";
-import {
-  ENTERPRISE_GROUP_TAGLINES,
-  enterpriseModuleCatalogByGroup,
-  marketingMaturityFootnote,
-} from "../../lib/enterprise/marketing-modules";
-import { implementationLabel, type ImplementationState } from "../../lib/enterprise/page-states";
-
 export { DataArchitectureVisual as ProblemConvergenceVisual } from "./b2b-visuals/DataArchitectureVisual";
 export { JourneyStepsVisual } from "./b2b-visuals/ProductDataJourneyVisual";
 export { ConsumerEcosystemVisual } from "./b2b-visuals/FashionEcosystemVisual";
@@ -23,52 +16,10 @@ export { ProductLifecycleVisual } from "./b2b-visuals/ProductLifecycleVisual";
 export { SaaSDemoFlowVisual } from "./b2b-visuals/SaaSDemoFlowVisual";
 export { DeliveryModesVisual } from "./b2b-visuals/DeliveryModesVisual";
 export { PublishExperienceVisual } from "./b2b-visuals/PublishExperienceVisual";
+export { PlatformWorkspaceExplorer } from "./b2b-visuals/PlatformWorkspaceExplorer";
 
 /** Journey stages: Connect · Normalize · Resolve · Understand · Publish */
 /** Ecosystem consumer lane: Discover · Scan · Compare */
-
-const MATURITY_BADGE: Record<ImplementationState, string> = {
-  implemented: "platform-module-badge platform-module-badge-production",
-  partial: "platform-module-badge platform-module-badge-operational",
-  placeholder: "platform-module-badge platform-module-badge-roadmap",
-};
-
-function ModuleGroupIcon({ groupId }: { groupId: string }) {
-  const cls = "h-[18px] w-[18px] text-[var(--platform-primary)]";
-  if (groupId === "core") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-        <rect x="3" y="3" width="7" height="7" rx="1.5" />
-        <rect x="14" y="3" width="7" height="7" rx="1.5" />
-        <rect x="3" y="14" width="7" height="7" rx="1.5" />
-        <rect x="14" y="14" width="7" height="7" rx="1.5" />
-      </svg>
-    );
-  }
-  if (groupId === "operations") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-        <path d="M12 2 2 7l10 5 10-5-10-5Z" />
-        <path d="m2 17 10 5 10-5" />
-        <path d="m2 12 10 5 10-5" />
-      </svg>
-    );
-  }
-  if (groupId === "intelligence") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-        <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7Z" />
-        <circle cx="12" cy="9" r="2.5" />
-      </svg>
-    );
-  }
-  return (
-    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-      <path d="M9 9h6v6H9z" />
-    </svg>
-  );
-}
 
 const PEERS = PLATFORM_BENCHMARK_PEERS;
 const CONVERSION_COHORTS = PLATFORM_CONVERSION_COHORTS;
@@ -345,43 +296,5 @@ export function PassportIdentityVisual() {
   );
 }
 
-/** Platform breadth — grouped module grid synced with enterprise nav + maturity. */
-export function PlatformModuleGrid() {
-  const groups = enterpriseModuleCatalogByGroup();
-  return (
-    <div className="platform-module-grid">
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
-        {groups.map((group) => (
-          <article key={group.id} className="platform-module-column">
-            <header className="platform-module-column-header">
-              <span className="platform-module-column-icon" aria-hidden>
-                <ModuleGroupIcon groupId={group.id} />
-              </span>
-              <div className="min-w-0">
-                <p className="platform-module-group-title">{group.label}</p>
-                <p className="platform-module-group-tagline">
-                  {ENTERPRISE_GROUP_TAGLINES[group.id] || "Workspace modules"}
-                </p>
-              </div>
-            </header>
-            <ul className="platform-module-list">
-              {group.modules.map((mod) => (
-                <li key={mod.href || mod.label} className="platform-module-item">
-                  <div className="platform-module-item-head">
-                    <span className="platform-module-item-label">{mod.label}</span>
-                    <span className={MATURITY_BADGE[mod.state]}>{implementationLabel(mod.state)}</span>
-                  </div>
-                  <p className="platform-module-item-copy">{mod.description}</p>
-                </li>
-              ))}
-            </ul>
-          </article>
-        ))}
-      </div>
-      <footer className="platform-module-footer">
-        <p>{marketingMaturityFootnote()}.</p>
-        <p className="platform-module-footer-tagline">People · Products · A cleaner tomorrow</p>
-      </footer>
-    </div>
-  );
-}
+/** Platform breadth — interactive workspace explorer synced with enterprise nav + maturity. */
+export { PlatformWorkspaceExplorer as PlatformModuleGrid } from "./b2b-visuals/PlatformWorkspaceExplorer";
