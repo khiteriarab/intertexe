@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseCompositionText, isKnownMaterialCode } from "../material-intelligence/composition";
 import { assertCanAddProducts, recordProductsImported } from "./billing-gates";
-import { recordImportRowError } from "./import-ops";
+import { recordImportRowError } from "./import-ops-records";
 import { applyColumnMapping } from "./import-preview";
 import { ITX_RULESET_VERSION, type IntelligenceKind } from "./intelligence";
 import {
