@@ -361,16 +361,11 @@ export function TraceabilityDashboard({ data, slug, period: initialPeriod = "12m
               </div>
             ))}
           </div>
-          ) : (
-            <p className="ent-trace-map-empty text-sm text-[var(--ent-muted)] mt-3">
-              No origin countries recorded yet. Add supply-chain nodes or import catalog data to populate the map.
-            </p>
-          )}
         </section>
 
         <section className="ent-trace-panel ent-trace-panel--map">
           <h2 className="ent-serif ent-trace-panel-title">Sourcing Geography</h2>
-          <SourcingMap countries={data.sourcing.countries} base={base} />
+          <SourcingMap countries={data.sourcing.countries} />
           <ul className="ent-trace-map-stats">
             <li>
               <strong>{data.sourcing.countries.length}</strong> sourcing countries
@@ -383,17 +378,22 @@ export function TraceabilityDashboard({ data, slug, period: initialPeriod = "12m
             </li>
           </ul>
           {data.sourcing.countries.length ? (
-          <div className="ent-trace-map-chips">
-            {data.sourcing.countries.map((country) => (
-              <Link
-                key={country.code}
-                href={`${base}/products?origin=${country.code}`}
-                className="ent-trace-map-chip"
-              >
-                {countryFlagEmoji(country.code)} {country.label}
-              </Link>
-            ))}
-          </div>
+            <div className="ent-trace-map-chips">
+              {data.sourcing.countries.map((country) => (
+                <Link
+                  key={country.code}
+                  href={`${base}/products?origin=${country.code}`}
+                  className="ent-trace-map-chip"
+                >
+                  {countryFlagEmoji(country.code)} {country.label}
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="ent-trace-map-empty text-sm text-[var(--ent-muted)] mt-3">
+              No origin countries recorded yet. Add supply-chain nodes or import catalog data to populate the map.
+            </p>
+          )}
         </section>
       </div>
 
