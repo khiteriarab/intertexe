@@ -5,19 +5,43 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { OrgWorkflowData, WorkflowStageId } from "../../../lib/enterprise/workflow";
 import { formatOperatorTime } from "../../../lib/enterprise/reviewer-display";
+import { EntOpsPanel, EntOpsStatusPill } from "./EntOpsModuleUi";
+import { entLinkClass } from "./EnterpriseUi";
+
+function statusLabel(status: "complete" | "active" | "upcoming"): string {
+  if (status === "complete") return "Complete";
+  if (status === "active") return "Active";
+  return "Queued";
+}
+
+function statusTone(status: "complete" | "active" | "upcoming") {
+  if (status === "complete") return "complete" as const;
+  if (status === "active") return "active" as const;
+  return "queued" as const;
+}
 
 export function EntWorkflowBoard({
   slug,
   data,
   canEdit,
+  displayStageIds,
 }: {
   slug: string;
   data: OrgWorkflowData;
   canEdit: boolean;
+  displayStageIds?: WorkflowStageId[];
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const stages = useMemo(() => {
+    if (!displayStageIds?.length) return data.stages;
+    const allowed = new Set(displayStageIds);
+    return data.stages.filter((stage) => allowed.has(stage.id));
+  }, [data.stages, displayStageIds]);
+
+  const completeCount = stages.filter((s) => s.status === "complete").length;
 
   const memberOptions = useMemo(
     () => data.members.filter((member) => member.id),
@@ -46,44 +70,51 @@ export function EntWorkflowBoard({
   }
 
   return (
-    <div>
+    <EntOpsPanel
+      title="Passport workflow"
+      subtitle="Stage assignments"
+      action={
+        <span className="ent-opsmod-progress-label">
+          {completeCount} of {stages.length} complete
+        </span>
+      }
+    >
       {error ? <p className="mb-4 text-sm text-[var(--ent-raspberry)]">{error}</p> : null}
-      <div className="grid gap-4">
-        {data.stages.map((stage, index) => {
+      <ol className="ent-opsmod-workflow-rail">
+        {stages.map((stage, index) => {
           const assignee = memberOptions.find((m) => m.id === stage.assignment.profileId);
+          const isLast = index === stages.length - 1;
           return (
-            <article
-              key={stage.id}
-              className={`ent-workflow-stage ent-workflow-stage-${stage.status}`}
-              data-assignment-scope="stage"
-              data-stage-id={stage.id}
-            >
-              <div className="flex flex-col lg:flex-row lg:items-start gap-5">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <span className="ent-workflow-step">{index + 1}</span>
+            <li key={stage.id} className={`ent-opsmod-workflow-item ${isLast ? "is-last" : ""}`}>
+              <article
+                className={`ent-opsmod-workflow-stage ent-opsmod-workflow-stage--${stage.status}`}
+                data-stage-id={stage.id}
+              >
+                <div className="ent-opsmod-workflow-main">
+                  <span className="ent-opsmod-workflow-step" aria-hidden>
+                    {stage.status === "complete" ? "✓" : index + 1}
+                  </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="ent-workflow-title">{stage.label}</h3>
-                      <span className={`ent-workflow-status ent-workflow-status-${stage.status}`}>
-                        {stage.status}
-                      </span>
+                      <h3 className="ent-opsmod-workflow-title">{stage.label}</h3>
+                      <EntOpsStatusPill tone={statusTone(stage.status)}>{statusLabel(stage.status)}</EntOpsStatusPill>
                       {stage.count != null && stage.count > 0 ? (
-                        <span className="ent-module-badge">{stage.count}</span>
+                        <span className="ent-opsmod-count-badge">{stage.count}</span>
                       ) : null}
                     </div>
-                    <p className="text-sm text-[var(--ent-muted)] mt-2 leading-relaxed">{stage.description}</p>
-                    <Link href={stage.href} className="ent-link-subtle inline-flex mt-3">
+                    <p className="ent-opsmod-workflow-desc">{stage.description}</p>
+                    <Link href={stage.href} className={`${entLinkClass} ent-opsmod-stage-link`}>
                       Open stage →
                     </Link>
                   </div>
                 </div>
 
-                <div className="lg:w-[320px] shrink-0 ent-workflow-assign-panel">
-                  <p className="ent-section-eyebrow mb-3">Assignment</p>
-                  <label className="block text-xs font-semibold text-[var(--ent-muted)] mb-1.5">
-                    Owner
+                <div className="ent-opsmod-workflow-assign">
+                  <p className="ent-opsmod-assign-label">Assignment</p>
+                  <label className="ent-opsmod-field">
+                    <span>Owner</span>
                     <select
-                      className="ent-select mt-1.5 w-full text-sm"
+                      className="ent-select ent-opsmod-select"
                       disabled={!canEdit || pending === stage.id}
                       value={stage.assignment.profileId || ""}
                       onChange={(event) =>
@@ -101,11 +132,11 @@ export function EntWorkflowBoard({
                       ))}
                     </select>
                   </label>
-                  <label className="block text-xs font-semibold text-[var(--ent-muted)] mt-4 mb-1.5">
-                    Due date
+                  <label className="ent-opsmod-field">
+                    <span>Due date</span>
                     <input
                       type="date"
-                      className="ent-input mt-1.5 w-full text-sm"
+                      className="ent-input ent-opsmod-select"
                       disabled={!canEdit || pending === stage.id}
                       value={stage.assignment.dueDate?.slice(0, 10) || ""}
                       onChange={(event) =>
@@ -115,29 +146,39 @@ export function EntWorkflowBoard({
                       }
                     />
                   </label>
-                  {assignee ? (
-                    <p className="text-xs text-[var(--ent-muted-light)] mt-3">
-                      Assigned to {assignee.name}
-                      {stage.assignment.dueDate
-                        ? ` · due ${formatOperatorTime(stage.assignment.dueDate).split(",")[0]}`
-                        : ""}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-[var(--ent-muted-light)] mt-3">
-                      Often owned by {stage.roleHint.replaceAll("_", " ")} — any member with edit access can be assigned
-                    </p>
-                  )}
+                  <p className="ent-opsmod-assign-hint">
+                    {assignee
+                      ? `Assigned to ${assignee.name}${
+                          stage.assignment.dueDate
+                            ? ` · due ${formatOperatorTime(stage.assignment.dueDate).split(",")[0]}`
+                            : ""
+                        }`
+                      : `Often owned by ${stage.roleHint.replaceAll("_", " ")} — any member with edit access can be assigned.`}
+                  </p>
                 </div>
-              </div>
-            </article>
+              </article>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ol>
+    </EntOpsPanel>
   );
 }
 
-export function EntWorkflowCalendar({ events }: { events: OrgWorkflowData["calendarEvents"] }) {
+function calendarDotClass(kind: OrgWorkflowData["calendarEvents"][number]["kind"]): string {
+  if (kind === "supplier" || kind === "due") return "attention";
+  if (kind === "publish") return "complete";
+  if (kind === "import") return "progress";
+  return "neutral";
+}
+
+export function EntWorkflowCalendar({
+  events,
+  base,
+}: {
+  events: OrgWorkflowData["calendarEvents"];
+  base: string;
+}) {
   const grouped = useMemo(() => {
     const map = new Map<string, typeof events>();
     for (const event of events) {
@@ -148,52 +189,60 @@ export function EntWorkflowCalendar({ events }: { events: OrgWorkflowData["calen
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(event);
     }
-    return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 14);
+    return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
   }, [events]);
 
-  if (!grouped.length) {
-    return (
-      <div className="ent-widget-card p-6">
-        <p className="text-sm text-[var(--ent-muted)]">No dated workflow events yet. Imports, activity, and due dates will appear here.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="ent-widget-card p-6 md:p-8">
-      <p className="ent-section-eyebrow">Timeline</p>
-      <h3 className="ent-widget-title">Workflow calendar</h3>
-      <ul className="mt-6 space-y-5">
-        {grouped.map(([date, rows]) => (
-          <li key={date}>
-            <p className="text-xs font-bold tracking-[0.08em] uppercase text-[var(--ent-muted-light)] mb-2">
-              {formatOperatorTime(`${date}T12:00:00.000Z`).split(",")[0]}
-            </p>
-            <ul className="space-y-2">
-              {rows.map((event) => (
-                <li key={event.id}>
-                  {event.href ? (
-                    <Link href={event.href} className="ent-calendar-event group">
-                      <span className={`ent-calendar-dot ent-calendar-dot-${event.kind}`} />
-                      <span className="flex-1 text-sm font-medium text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)]">
-                        {event.title}
-                      </span>
-                      <span className="text-xs text-[var(--ent-muted-light)]">
-                        {formatOperatorTime(event.date).split(", ").slice(1).join(", ") || "All day"}
-                      </span>
-                    </Link>
-                  ) : (
-                    <div className="ent-calendar-event">
-                      <span className={`ent-calendar-dot ent-calendar-dot-${event.kind}`} />
-                      <span className="flex-1 text-sm font-medium text-[var(--ent-ink)]">{event.title}</span>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <EntOpsPanel
+      title="Timeline"
+      subtitle="Recent workflow events"
+      action={
+        <Link href={`${base}/activity`} className={entLinkClass}>
+          View activity feed →
+        </Link>
+      }
+    >
+      {!grouped.length ? (
+        <p className="text-sm text-[var(--ent-muted)]">
+          No dated workflow events yet. Imports, activity, and due dates will appear here.
+        </p>
+      ) : (
+        <ul className="ent-opsmod-timeline">
+          {grouped.map(([date, rows]) => (
+            <li key={date}>
+              <p className="ent-opsmod-timeline-date">
+                {formatOperatorTime(`${date}T12:00:00.000Z`).split(",")[0].toUpperCase()}
+              </p>
+              <ul className="ent-opsmod-timeline-events">
+                {rows.map((event) => {
+                  const timeLabel = formatOperatorTime(event.date).split(", ").slice(1).join(", ") || "All day";
+                  const content = (
+                    <>
+                      <span className={`ent-opsmod-timeline-dot ent-opsmod-timeline-dot--${calendarDotClass(event.kind)}`} />
+                      <span className="ent-opsmod-timeline-title">{event.title}</span>
+                      <span className="ent-opsmod-timeline-time">{timeLabel}</span>
+                    </>
+                  );
+                  return (
+                    <li key={event.id}>
+                      {event.href ? (
+                        <Link href={event.href} className="ent-opsmod-timeline-row">
+                          {content}
+                        </Link>
+                      ) : (
+                        <div className="ent-opsmod-timeline-row">{content}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link href={`${base}/activity`} className={`${entLinkClass} ent-opsmod-timeline-footer`}>
+        View full timeline →
+      </Link>
+    </EntOpsPanel>
   );
 }

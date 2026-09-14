@@ -68,7 +68,11 @@ export const PASSPORT_WORKFLOW_STAGES = [
 /** @deprecated use PASSPORT_WORKFLOW_STAGES */
 export const DPP_WORKFLOW_STAGES = PASSPORT_WORKFLOW_STAGES;
 
+
 export type WorkflowStageId = (typeof PASSPORT_WORKFLOW_STAGES)[number]["id"];
+
+/** Primary passport workflow stages shown in the Workflows command center. */
+export const PASSPORT_WORKFLOW_DISPLAY_IDS: WorkflowStageId[] = ["import", "review", "issues", "publish"];
 
 export type WorkflowAssignment = {
   stageId: WorkflowStageId;

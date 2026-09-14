@@ -15,12 +15,6 @@ export function PlatformHowItWorksSection() {
       className="scroll-mt-28 platform-what-it-is platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-24 border-b border-[#e8e3da]/60"
     >
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <aside className="platform-what-rail hidden xl:flex" aria-hidden>
-          <span>Digital Product Passport</span>
-          <span>Trust information</span>
-          <span>A more circular tomorrow</span>
-        </aside>
-
         <div className="max-w-2xl lg:max-w-3xl mb-8 lg:mb-10">
           <Eyebrow>How INTERTEXE works</Eyebrow>
           <Heading className="mb-4">From raw data to the scan moment.</Heading>

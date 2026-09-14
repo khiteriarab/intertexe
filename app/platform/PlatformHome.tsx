@@ -6,6 +6,7 @@ import {
   SalesStartFreeSection,
 } from "./sales-sections";
 import { PlatformFaq } from "./PlatformFaq";
+import { PlatformCircularWardrobeBanner } from "./PlatformCircularWardrobeBanner";
 import { PlatformHowItWorksSection } from "./PlatformHowItWorksSection";
 
 /**
@@ -22,6 +23,7 @@ export function PlatformHome() {
       <SalesDeliverySection />
       <SalesPlatformBreadthSection />
       <PlatformFaq />
+      <PlatformCircularWardrobeBanner />
       <SalesStartFreeSection />
     </div>
   );

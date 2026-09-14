@@ -1,0 +1,34 @@
+import Image from "next/image";
+import Link from "next/link";
+import { EDITORIAL_GREENERY_BANNER } from "../../lib/editorial-assets";
+import { SERIF } from "./platform-ui";
+
+/** Editorial greenery banner — ivory fade + landscape, selective brand moment. */
+export function PlatformCircularWardrobeBanner() {
+  return (
+    <section className="platform-circular-banner-section max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-14">
+      <div className="platform-circular-banner">
+        <Image
+          src={EDITORIAL_GREENERY_BANNER}
+          alt=""
+          fill
+          className="platform-circular-banner-photo object-cover"
+          sizes="(max-width: 768px) 100vw, 1152px"
+          priority={false}
+        />
+        <div className="platform-circular-banner-gradient" aria-hidden />
+        <div className="platform-circular-banner-inner">
+          <div className="platform-circular-banner-copy">
+            <p className="platform-circular-banner-eyebrow">A more circular wardrobe</p>
+            <p className="platform-circular-banner-title" style={SERIF}>
+              Greater transparency for a brighter tomorrow.
+            </p>
+          </div>
+          <Link href="/platform/demo" className="platform-circular-banner-cta">
+            Learn more about INTERTEXE →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}

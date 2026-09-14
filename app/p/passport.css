@@ -817,40 +817,95 @@ a.itx-pp-editorial-next-life-card:active {
 
 .itx-pp-editorial-footer-banner {
   position: relative;
-  min-height: 8rem;
-  border-radius: 1rem;
+  min-height: 10.5rem;
+  border-radius: 1.5rem;
   overflow: hidden;
+  border: 1px solid rgba(28, 25, 21, 0.06);
+  box-shadow: 0 12px 36px rgba(44, 38, 32, 0.06);
+}
+
+.itx-pp-editorial-footer-photo {
+  object-position: 68% center;
+}
+
+.itx-pp-editorial-footer-gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to right,
+    rgba(253, 252, 249, 0.98) 0%,
+    rgba(250, 247, 242, 0.94) 26%,
+    rgba(245, 239, 230, 0.72) 44%,
+    rgba(245, 239, 230, 0.28) 58%,
+    transparent 74%
+  );
+}
+
+.itx-pp-editorial-footer-inner {
+  position: relative;
+  z-index: 2;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.1rem;
+  padding: 1.35rem 1.25rem 1.5rem;
+  min-height: 10.5rem;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .itx-pp-editorial-footer-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.35rem 1.65rem;
+    min-height: 11.5rem;
+  }
+}
+
+.itx-pp-editorial-footer-copy {
+  max-width: 15.5rem;
+}
+
+.itx-pp-editorial-footer-eyebrow {
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pp-muted);
+  margin-bottom: 0.55rem;
 }
 
 .itx-pp-editorial-footer-quote {
-  position: relative;
-  z-index: 1;
   font-family: var(--itx-serif);
-  font-size: 1.25rem;
+  font-size: clamp(1.35rem, 4.2vw, 1.85rem);
   font-weight: 300;
-  line-height: 1.35;
-  color: #fff;
-  padding: 1.25rem;
-  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.45));
-  width: 100%;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: var(--pp-ink);
 }
 
 .itx-pp-editorial-footer-cta {
-  display: block;
-  margin-top: 1rem;
-  padding: 0.9rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.72rem 1.05rem;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid rgba(26, 31, 34, 0.12);
-  text-align: center;
-  font-size: 0.6875rem;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(26, 31, 34, 0.1);
+  font-size: 0.625rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--pp-ink);
-  box-shadow: 0 8px 24px rgba(44, 38, 32, 0.06);
+  box-shadow: 0 8px 24px rgba(44, 38, 32, 0.08);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.itx-pp-editorial-footer-cta:hover {
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(44, 38, 32, 0.1);
 }
 
 @media (min-width: 768px) {

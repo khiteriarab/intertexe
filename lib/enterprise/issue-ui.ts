@@ -76,8 +76,67 @@ export function formatIssueRelativeTime(iso: string | null | undefined): string 
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
+export function parseIssueDetailJson(detail: string | null | undefined): Record<string, unknown> {
+  if (!detail) return {};
+  try {
+    const parsed = JSON.parse(detail);
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export type IssueNote = { at: string; authorId: string | null; authorName: string; text: string };
+
+export function parseIssueNotes(detail: string | null | undefined): IssueNote[] {
+  const parsed = parseIssueDetailJson(detail);
+  const notes = parsed.notes;
+  if (!Array.isArray(notes)) return [];
+  return notes
+    .map((row) => {
+      const note = row as Record<string, unknown>;
+      const text = String(note.text || "").trim();
+      if (!text) return null;
+      return {
+        at: String(note.at || ""),
+        authorId: note.authorId ? String(note.authorId) : null,
+        authorName: String(note.authorName || "Team member"),
+        text,
+      };
+    })
+    .filter(Boolean) as IssueNote[];
+}
+
+export function issueWithinPeriod(iso: string | null | undefined, period: string): boolean {
+  if (period === "all") return true;
+  if (!iso) return false;
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return false;
+  const months = period === "30d" ? 0 : period === "90d" ? 3 : 12;
+  if (period === "30d") return Date.now() - then <= 30 * 86400000;
+  if (period === "90d") return Date.now() - then <= 90 * 86400000;
+  return Date.now() - then <= 365 * 86400000;
+}
+
+export function isOriginIssue(input: {
+  title: string;
+  issue_type: string;
+  detail?: string | null;
+  original_value?: string | null;
+  interpreted_value?: string | null;
+}): boolean {
+  if (/origin|country|made in/i.test(input.title)) return true;
+  const parsed = parseIssueDetailJson(input.detail);
+  const fieldKey = String(parsed.field_key || parsed.fieldKey || "").toLowerCase();
+  if (/origin|country|manufacturing_country/.test(fieldKey)) return true;
+  if (input.original_value && countryFlagEmoji(input.original_value)) return true;
+  if (input.interpreted_value && countryFlagEmoji(input.interpreted_value)) return true;
+  return false;
+}
+
+/** @deprecated use isOriginIssue */
 export function isOriginConflictIssue(title: string, issueType: string): boolean {
-  return issueType === "conflict" && /origin|country/i.test(title);
+  return isOriginIssue({ title, issue_type: issueType });
 }
 
 export function isCompositionConflictIssue(title: string, issueType: string): boolean {

@@ -130,7 +130,7 @@ export function PlatformFaq() {
               {FAQ.map((item) => (
                 <details
                   key={item.q}
-                  name="platform-faq-grid"
+                  name="platform-faq"
                   className="group rounded-xl border border-[var(--platform-border)] bg-white p-4 sm:p-5 shadow-[0_8px_24px_rgba(22,21,19,0.04)]"
                 >
                   <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
@@ -150,7 +150,7 @@ export function PlatformFaq() {
             </div>
             <div className="border-t border-[var(--platform-border)]">
               {MORE_FAQ.map((item) => (
-                <details key={item.q} name="platform-faq-more" className="group border-b border-[var(--platform-border)]">
+                <details key={item.q} name="platform-faq" className="group border-b border-[var(--platform-border)]">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-[var(--platform-ink)] [&::-webkit-details-marker]:hidden">
                     <span className="text-sm leading-snug" style={SERIF}>
                       {item.q}

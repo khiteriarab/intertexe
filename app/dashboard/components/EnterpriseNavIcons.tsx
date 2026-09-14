@@ -99,6 +99,7 @@ export const ENT_NAV_ITEM_ICONS = {
   files: EntIconFiles,
   activity: EntIconActivity,
   workflows: EntIconWorkflows,
+  operations: EntIconOperations,
   regulations: EntIconRegulations,
   benchmarking: EntIconBenchmarking,
   analytics: EntIconAnalytics,

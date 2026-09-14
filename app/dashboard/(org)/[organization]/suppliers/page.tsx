@@ -1,16 +1,12 @@
-import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
-import { formatRelativeActivityTime } from "../../../../../lib/enterprise/display-format";
-import { collaborationStatusLabel } from "../../../../../lib/enterprise/issue-taxonomy";
-import { loadOrgSupplierCollaboration, loadOrgSuppliers } from "../../../../../lib/enterprise/module-queries";
 import {
-  EntHeroEmpty,
-  EntModuleList,
-  EntModuleMetrics,
-  EntModulePage,
-  EntModuleSection,
-  entLinkClass,
-} from "../../../components/EnterpriseModuleUi";
+  pilotImageMaps,
+  resolvePilotProductImage,
+} from "../../../../../lib/enterprise/consumer-signals";
+import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
+import { loadOrgSupplierCollaboration, loadOrgSupplierPerformance, loadOrgSuppliers } from "../../../../../lib/enterprise/module-queries";
+import { EntOpsPageHeader } from "../../../components/EntOpsModuleUi";
+import { SuppliersWorkspace } from "./SuppliersWorkspace";
 
 export const dynamic = "force-dynamic";
 
@@ -21,82 +17,58 @@ export default async function SuppliersPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const [data, collaboration] = await Promise.all([
+  const [data, collaboration, performance] = await Promise.all([
     loadOrgSuppliers(client, membership.organizationId),
     loadOrgSupplierCollaboration(client, membership.organizationId),
+    loadOrgSupplierPerformance(client, membership.organizationId),
   ]);
-  const base = `/dashboard/${membership.slug}`;
+
+  const productIds = Array.from(
+    new Set([
+      ...data.suppliers.flatMap((s) => s.productIds),
+      ...collaboration.requests.map((r) => r.productId).filter(Boolean),
+    ])
+  ) as string[];
+
+  const { data: products } = productIds.length
+    ? await client
+        .from("products")
+        .select("id, name, sku, category, passport_state, style_code")
+        .eq("organization_id", membership.organizationId)
+        .in("id", productIds)
+    : { data: [] };
+
+  const pilotImages = pilotImageMaps(livePilotProducts);
+  const productsById = Object.fromEntries(
+    (products || []).map((row) => [
+      row.id,
+      {
+        id: row.id,
+        name: row.name,
+        sku: row.sku,
+        category: row.category,
+        passportState: row.passport_state,
+        imageUrl: resolvePilotProductImage(row.sku, row.style_code, pilotImages),
+      },
+    ])
+  );
+
+  const requests = collaboration.requests;
 
   return (
-    <EntModulePage title="Suppliers">
-      {data.suppliers.length > 0 ? (
-        <EntModuleMetrics
-          items={[
-            { label: "Total suppliers", value: data.summary.total },
-            { label: "With linked products", value: data.summary.withProducts },
-            { label: "Open requests", value: data.summary.openRequests },
-            { label: "Open supplier issues", value: data.summary.openSupplierIssues, accent: data.summary.openSupplierIssues > 0 },
-          ]}
-        />
-      ) : null}
-
-      {data.suppliers.length === 0 ? (
-        <EntHeroEmpty
-          title="No supplier relationships yet."
-          body="Suppliers appear when you request evidence on a product issue, or when supplier records are created through your workflow."
-          ctaHref={`${base}/issues`}
-          ctaLabel="Review issues"
-          tone="blush"
-          motif="rings"
-        />
-      ) : (
-        <>
-          {collaboration.requests.length ? (
-            <EntModuleSection title="Active requests" subtitle="Supplier collaboration workflow — responses require review before canonical update">
-              <ul className="space-y-2 mb-8">
-                {collaboration.requests.slice(0, 8).map((req) => (
-                  <li key={req.id} className="ent-panel-nested px-4 py-3 text-sm flex flex-wrap justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-[var(--ent-ink)]">{req.title || "Supplier request"}</p>
-                      <p className="text-[var(--ent-muted)] mt-1">
-                        {req.supplierName} · {collaborationStatusLabel(req.collaborationStatus)}
-                        {req.dueAt ? ` · due ${req.dueAt}` : ""}
-                      </p>
-                    </div>
-                    {req.productId ? (
-                      <Link href={`${base}/products/${req.productId}?tab=suppliers`} className={entLinkClass}>
-                        Open product →
-                      </Link>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </EntModuleSection>
-          ) : null}
-
-          <EntModuleSection title="Supplier list" subtitle="Linked products, evidence status, and recent activity">
-            <EntModuleList
-              items={data.suppliers.map((supplier) => ({
-                key: supplier.id,
-                primary: supplier.name,
-                secondary: [
-                  supplier.email,
-                  supplier.productCount ? `${supplier.productCount} product${supplier.productCount === 1 ? "" : "s"}` : null,
-                  supplier.outstandingCount ? `${supplier.outstandingCount} outstanding` : null,
-                ].filter(Boolean).join(" · ") || undefined,
-                meta: supplier.lastActivityAt
-                  ? `Last activity ${formatRelativeActivityTime(supplier.lastActivityAt)}`
-                  : undefined,
-                trailing: supplier.productIds[0] ? (
-                  <Link href={`${base}/products/${supplier.productIds[0]}`} className={entLinkClass}>
-                    View product →
-                  </Link>
-                ) : undefined,
-              }))}
-            />
-          </EntModuleSection>
-        </>
-      )}
-    </EntModulePage>
+    <div className="ent-opsmod-page">
+      <EntOpsPageHeader
+        title="Suppliers"
+        subtitle="Evidence requests, linked suppliers, and collaboration."
+      />
+      <SuppliersWorkspace
+        slug={membership.slug}
+        suppliers={data.suppliers}
+        summary={data.summary}
+        requests={requests}
+        productsById={productsById}
+        avgResponseDays={performance.avgResponseDays}
+      />
+    </div>
   );
 }

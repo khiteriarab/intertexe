@@ -43,17 +43,10 @@ export function PlatformHero() {
   }
 
   function HeroTabs({ className = "" }: { className?: string }) {
-    const primaryTabs = HERO_STAGES.slice(0, 4);
-    const nextLifeTab = HERO_STAGES[4];
-
     return (
       <div className={`platform-hero-tabs ${className}`}>
-        <div
-          role="tablist"
-          aria-label="Platform journey"
-          className="flex flex-wrap gap-2 justify-center lg:justify-start"
-        >
-          {primaryTabs.map((tab, i) => {
+        <div role="tablist" aria-label="Platform journey" className="platform-hero-tab-row">
+          {HERO_STAGES.map((tab, i) => {
             const selected = i === index;
             return (
               <button
@@ -64,36 +57,13 @@ export function PlatformHero() {
                 aria-controls={`platform-hero-panel-${tab.id}`}
                 id={`platform-hero-tab-${tab.id}`}
                 onClick={() => selectTab(i)}
-                className={`px-4 py-2 min-h-[40px] text-[11px] tracking-[0.14em] uppercase rounded-full border transition-colors ${
-                  selected
-                    ? "bg-[var(--platform-accent-soft)] text-[var(--platform-primary)] border-[var(--platform-accent-muted)]"
-                    : "bg-white/80 text-[var(--platform-muted)] border-[var(--platform-border)] hover:text-[var(--platform-ink)]"
-                }`}
+                className={`platform-hero-tab ${selected ? "is-active" : ""}`}
               >
                 {tab.label}
               </button>
             );
           })}
         </div>
-        {nextLifeTab ? (
-          <div className="mt-2 flex justify-center lg:justify-start">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={index === 4}
-              aria-controls={`platform-hero-panel-${nextLifeTab.id}`}
-              id={`platform-hero-tab-${nextLifeTab.id}`}
-              onClick={() => selectTab(4)}
-              className={`px-4 py-2 min-h-[40px] text-[11px] tracking-[0.14em] uppercase rounded-full border transition-colors ${
-                index === 4
-                  ? "bg-[var(--platform-accent-soft)] text-[var(--platform-primary)] border-[var(--platform-accent-muted)]"
-                  : "bg-white/80 text-[var(--platform-muted)] border-[var(--platform-border)] hover:text-[var(--platform-ink)]"
-              }`}
-            >
-              {nextLifeTab.label}
-            </button>
-          </div>
-        ) : null}
       </div>
     );
   }

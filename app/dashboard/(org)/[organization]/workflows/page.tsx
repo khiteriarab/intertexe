@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { canMutateEnterprise } from "../../../../../lib/enterprise/roles";
-import { ORG_PAGE_STATES } from "../../../../../lib/enterprise/page-states";
-import { loadOrgWorkflow } from "../../../../../lib/enterprise/workflow";
+import { loadOrgWorkflow, PASSPORT_WORKFLOW_DISPLAY_IDS } from "../../../../../lib/enterprise/workflow";
 import { EntWorkflowBoard, EntWorkflowCalendar } from "../../../components/EntWorkflowBoard";
-import { EntModuleMetrics, EntModulePage, entLinkClass } from "../../../components/EnterpriseModuleUi";
+import { EntOpsMetaLine, EntOpsPageHeader } from "../../../components/EntOpsModuleUi";
+import { EntOpsKpiRow } from "../../../components/EntOpsModuleUi";
+import { entLinkClass } from "../../../components/EnterpriseUi";
 
 export const dynamic = "force-dynamic";
 
@@ -17,61 +18,69 @@ export default async function WorkflowsPage({
   const { membership, client } = await requireOrganizationAccess(organization);
   const data = await loadOrgWorkflow(client, membership.organizationId, membership.slug);
   const canEdit = canMutateEnterprise(membership.role);
+  const base = `/dashboard/${membership.slug}`;
 
-  const activeStages = data.stages.filter((s) => s.status === "active").length;
-  const assignedStages = data.stages.filter((s) => s.assignment.profileId).length;
+  const displayStages = data.stages.filter((s) => PASSPORT_WORKFLOW_DISPLAY_IDS.includes(s.id));
+  const activeStages = displayStages.filter((s) => s.status === "active").length;
+  const assignedStages = displayStages.filter((s) => s.assignment.profileId).length;
   const supplierDueCount = data.calendarEvents.filter((e) => e.kind === "supplier").length;
 
   return (
-    <EntModulePage
-      title="Workflows"
-      state={ORG_PAGE_STATES.workflows}
-      meta={
-        <>
-          <span>
-            <strong>{assignedStages}</strong> stages assigned
-          </span>
-          <span>
-            <strong>{activeStages}</strong> active now
-          </span>
-          <span>
-            <strong>{data.calendarEvents.length}</strong> dated entries
-          </span>
-          {supplierDueCount > 0 ? (
-            <span>
-              <strong>{supplierDueCount}</strong> supplier due dates
-            </span>
-          ) : null}
-          <Link href={`/dashboard/${membership.slug}/regulations`} className={entLinkClass}>
-            Regulatory readiness →
-          </Link>
-        </>
-      }
-    >
-      <EntModuleMetrics
+    <div className="ent-opsmod-page">
+      <EntOpsPageHeader
+        title="Workflows"
+        subtitle="Assign stage owners, track due dates, and coordinate passport publishing."
+        meta={
+          <EntOpsMetaLine
+            items={[
+              <>
+                <strong>{assignedStages}</strong> stages assigned
+              </>,
+              <>
+                <strong>{activeStages}</strong> active now
+              </>,
+              <>
+                <strong>{data.calendarEvents.length}</strong> calendar entries
+              </>,
+              supplierDueCount > 0 ? (
+                <>
+                  <strong>{supplierDueCount}</strong> supplier due date{supplierDueCount === 1 ? "" : "s"}
+                </>
+              ) : (
+                <>No supplier due dates</>
+              ),
+              <Link href={`${base}/regulations`} className={entLinkClass}>
+                Regulatory readiness →
+              </Link>,
+            ]}
+          />
+        }
+      />
+
+      <EntOpsKpiRow
         items={[
-          { label: "Workflow stages", value: data.stages.length },
-          { label: "Assigned owners", value: assignedStages },
-          { label: "Active stages", value: activeStages, accent: activeStages > 0 },
-          { label: "Calendar entries", value: data.calendarEvents.length },
+          { id: "stages", label: "Workflow stages", value: displayStages.length, icon: "▣" },
+          { id: "owners", label: "Assigned owners", value: assignedStages, icon: "👤" },
+          {
+            id: "active",
+            label: "Active stages",
+            value: activeStages,
+            hint: activeStages > 0 ? "In progress" : "Idle",
+            icon: "▶",
+          },
+          { id: "calendar", label: "Calendar entries", value: data.calendarEvents.length, icon: "📅" },
         ]}
       />
 
-      <div className="grid xl:grid-cols-[1.35fr_1fr] gap-6 mb-8">
-        <section>
-          <div className="mb-5">
-            <p className="ent-section-eyebrow">Passport workflow</p>
-            <h2 className="ent-section-title">Stage assignments</h2>
-            <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-2xl">
-              Assign responsibility at the stage level. Roles govern permissions; assignments govern who owns each step.
-              Product-level assignments will extend this view later.
-            </p>
-          </div>
-          <EntWorkflowBoard slug={membership.slug} data={data} canEdit={canEdit} />
-        </section>
-
-        <EntWorkflowCalendar events={data.calendarEvents} />
+      <div className="ent-opsmod-split ent-opsmod-split--workflows">
+        <EntWorkflowBoard
+          slug={membership.slug}
+          data={data}
+          canEdit={canEdit}
+          displayStageIds={[...PASSPORT_WORKFLOW_DISPLAY_IDS]}
+        />
+        <EntWorkflowCalendar events={data.calendarEvents} base={base} />
       </div>
-    </EntModulePage>
+    </div>
   );
 }

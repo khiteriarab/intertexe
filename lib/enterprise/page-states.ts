@@ -29,6 +29,7 @@ export const ORG_PAGE_STATES: Record<string, ImplementationState> = {
   issues: "implemented",
   traceability: "implemented",
   passports: "implemented",
+  operations: "implemented",
   workflows: "implemented",
   imports: "partial",
   approvals: "partial",

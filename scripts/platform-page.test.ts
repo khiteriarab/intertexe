@@ -13,6 +13,10 @@ describe("Platform B2B sales page", () => {
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
   const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
   const visuals = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-visuals.tsx"), "utf8");
+  const workspaceExplorer = fs.readFileSync(
+    path.join(process.cwd(), "app/platform/b2b-visuals/PlatformWorkspaceExplorer.tsx"),
+    "utf8",
+  );
   const chrome = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformChrome.tsx"), "utf8");
   const nav = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformNav.tsx"), "utf8");
   const login = fs.readFileSync(path.join(process.cwd(), "app/platform/login/page.tsx"), "utf8");
@@ -106,10 +110,15 @@ describe("Platform B2B sales page", () => {
   });
 
   it("centers intelligence and delivery without overclaiming", () => {
-    assert.match(sections, /Benchmark your material strategy against the market/);
-    assert.match(sections, /Material Benchmark/);
-    assert.match(sections, /Conversion signals/);
-    assert.match(sections, /IntelligenceBenchmarkVisual/);
+    const intelligence = fs.readFileSync(path.join(process.cwd(), "app/platform/intelligence/PlatformIntelligenceSection.tsx"), "utf8");
+    assert.match(intelligence, /Know what to make next/);
+    const intelligenceModules = fs.readFileSync(path.join(process.cwd(), "app/platform/intelligence/PlatformIntelligenceModules.tsx"), "utf8");
+    assert.match(intelligence, /MaterialBenchmarkModule/);
+    assert.match(intelligenceModules, /Material Benchmark/);
+    assert.match(sections, /PlatformIntelligenceSection/);
+    assert.match(sections, /PlatformIntelligenceSection/);
+    assert.match(sections, /PlatformIntelligenceSection/);
+    assert.match(sections, /PlatformIntelligenceSection/);
     assert.match(sections, /Headless API/);
     assert.match(sections, /SaaSDemoFlowVisual/);
     assert.match(visuals, /Material Benchmark/);
@@ -161,8 +170,8 @@ describe("Platform B2B sales page", () => {
 
   it("uses native sales visuals instead of editorial PNG decks", () => {
     assert.match(hero, /PlatformHeroLifecycleVisual/);
-    assert.match(heroVisual, /hero-lifecycle-experience\.jpg/);
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-lifecycle-experience.jpg")));
+    assert.match(heroVisual, /hero-lifecycle-composite\.png/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-lifecycle-composite.png")));
     assert.doesNotMatch(sections, /ProblemConvergenceVisual/);
     assert.doesNotMatch(sections, /GovernedRecordVisual/);
     assert.match(sections, /DeliveryModesVisual/);
@@ -170,7 +179,9 @@ describe("Platform B2B sales page", () => {
     assert.match(visuals, /PlatformWorkspaceExplorer/);
     assert.doesNotMatch(sections, /PlatformEditorialGraphic/);
     assert.doesNotMatch(sections, /INTERTEXE_01_Data_Architecture/);
+    assert.match(sections, /One workspace for the entire product lifecycle/);
+    assert.match(sections, /From first material decisions and manufacturing evidence/);
     assert.match(visuals, /Discover · Scan · Compare/);
-    assert.match(visuals, /enterpriseModuleCatalogByGroup/);
+    assert.match(workspaceExplorer, /lifecycleModuleCatalogByGroup/);
   });
 });

@@ -32,20 +32,27 @@ export function EnterpriseNav({
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    setOpenGroups((current) => {
-      const next = { ...current };
+    setOpenGroups(() => {
+      const next: Record<string, boolean> = {};
       for (const group of ENTERPRISE_NAV_GROUPS) {
-        if (next[group.id] === undefined) {
-          next[group.id] = group.id === activeGroupId;
-        }
+        next[group.id] = group.id === activeGroupId;
       }
-      next[activeGroupId] = true;
       return next;
     });
   }, [activeGroupId]);
 
   function toggleGroup(id: string) {
-    setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
+    setOpenGroups((current) => {
+      const isOpen = current[id] ?? id === activeGroupId;
+      if (isOpen) {
+        return { ...current, [id]: false };
+      }
+      const next: Record<string, boolean> = {};
+      for (const group of ENTERPRISE_NAV_GROUPS) {
+        next[group.id] = group.id === id;
+      }
+      return next;
+    });
   }
 
   return (

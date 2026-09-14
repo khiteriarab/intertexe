@@ -19,7 +19,7 @@ export type SupplierRow = {
 export async function loadOrgSupplierCollaboration(client: SupabaseClient, organizationId: string) {
   const { data: requests } = await client
     .from("supplier_requests")
-    .select("id, title, status, collaboration_status, due_at, product_id, supplier_id, request_kind, created_at")
+    .select("id, title, status, collaboration_status, due_at, product_id, supplier_id, request_kind, created_at, detail")
     .eq("organization_id", organizationId)
     .not("status", "eq", "closed")
     .order("created_at", { ascending: false })
@@ -41,6 +41,8 @@ export async function loadOrgSupplierCollaboration(client: SupabaseClient, organ
       productId: row.product_id,
       supplierName: row.supplier_id ? supplierById.get(row.supplier_id) || "Supplier" : "Supplier",
       dueAt: row.due_at,
+      createdAt: row.created_at,
+      body: row.detail || null,
     })),
   };
 }
@@ -256,3 +258,45 @@ export async function loadOrgActivityFeed(client: SupabaseClient, organizationId
   const { data } = await client.from("activity_events").select("id, title, detail, created_at, actor_id").eq("organization_id", organizationId).order("created_at", { ascending: false }).limit(limit);
   return (data || []).map((row) => ({ id: row.id, title: row.title, detail: row.detail, created_at: row.created_at, actor: reviewerFromDirectory(directory, row.actor_id) }));
 }
+
+export async function loadOrgSupplierPerformance(client: SupabaseClient, organizationId: string) {
+  const cutoff = new Date(Date.now() - 90 * 86400000).toISOString();
+  const { data: requests } = await client
+    .from("supplier_requests")
+    .select("id, created_at, sent_at, closed_at, status")
+    .eq("organization_id", organizationId)
+    .gte("created_at", cutoff);
+
+  const requestIds = (requests || []).map((row) => row.id);
+  const { data: submissions } = requestIds.length
+    ? await client
+        .from("supplier_submissions")
+        .select("request_id, created_at")
+        .eq("organization_id", organizationId)
+        .in("request_id", requestIds)
+        .order("created_at", { ascending: true })
+    : { data: [] };
+
+  const firstResponseByRequest = new Map<string, string>();
+  for (const submission of submissions || []) {
+    if (!firstResponseByRequest.has(submission.request_id)) {
+      firstResponseByRequest.set(submission.request_id, submission.created_at);
+    }
+  }
+
+  const responseMs: number[] = [];
+  for (const request of requests || []) {
+    const start = request.sent_at || request.created_at;
+    const end = request.closed_at || firstResponseByRequest.get(request.id);
+    if (!start || !end) continue;
+    const delta = new Date(end).getTime() - new Date(start).getTime();
+    if (delta > 0) responseMs.push(delta);
+  }
+
+  const avgMs = responseMs.length ? responseMs.reduce((sum, value) => sum + value, 0) / responseMs.length : null;
+  return {
+    avgResponseDays: avgMs != null ? Math.max(1, Math.round(avgMs / 86400000)) : null,
+    respondedCount: responseMs.length,
+  };
+}
+

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { OrgIssueRow } from "../../../../../lib/enterprise/queries";
+import type { ReviewerIdentity } from "../../../../../lib/enterprise/reviewer-display";
 import {
   issueAffectedField,
   issueBlocksPublish,
@@ -15,10 +16,12 @@ import {
   countryFlagEmoji,
   formatIssueRelativeTime,
   isCompositionConflictIssue,
-  isOriginConflictIssue,
+  isOriginIssue,
   issueSeverityLabel,
+  issueWithinPeriod,
   issueWorkflowStatus,
   normalizeIssueSeverity,
+  parseIssueNotes,
 } from "../../../../../lib/enterprise/issue-ui";
 import {
   EntIssuePill,
@@ -26,17 +29,24 @@ import {
   EntProductPlaceholder,
   EntIssueStatusPill,
   entLinkClass,
+  entSelectClass,
 } from "../../../components/EnterpriseUi";
 import { EntIssueCompare } from "../../../components/EnterpriseModuleUi";
 import { IssueActions } from "./IssueActions";
 import { IssuesBulkBar } from "./IssuesBulkBar";
 
 export type InboxIssue = OrgIssueRow & {
-  productStyleCode?: string | null;
   productImageUrl?: string | null;
 };
 
 type Segment = "open" | "review" | "resolved";
+
+type IssueFilters = {
+  issueType: string;
+  priority: string;
+  status: string;
+  period: string;
+};
 
 const SEGMENTS: Array<{ id: Segment; label: string; match: (issue: InboxIssue) => boolean }> = [
   {
@@ -54,24 +64,132 @@ const SEGMENTS: Array<{ id: Segment; label: string; match: (issue: InboxIssue) =
   { id: "resolved", label: "Resolved", match: (issue) => issue.status !== "open" },
 ];
 
+const ISSUE_TYPES = [
+  "",
+  "missing_data",
+  "conflict",
+  "validation",
+  "evidence",
+  "identifier",
+  "supplier",
+  "regulatory",
+  "review_required",
+];
+
+const PRIORITIES = ["", "critical", "high", "medium", "low"];
+const STATUSES = ["", "open", "assigned", "resolved", "rejected", "not_applicable"];
+const PERIODS = [
+  { value: "12m", label: "Last 12 months" },
+  { value: "90d", label: "Last 90 days" },
+  { value: "30d", label: "Last 30 days" },
+  { value: "all", label: "All time" },
+];
+
+function applyFilters(issues: InboxIssue[], filters: IssueFilters): InboxIssue[] {
+  return issues.filter((issue) => {
+    if (filters.issueType && issue.issue_type !== filters.issueType) return false;
+    if (filters.priority && normalizeIssueSeverity(issue.severity) !== filters.priority) return false;
+    if (filters.status && issue.status !== filters.status) return false;
+    if (!issueWithinPeriod(issue.updated_at || issue.created_at, filters.period)) return false;
+    return true;
+  });
+}
+
+function IssuesFilterBar({
+  filters,
+  onChange,
+}: {
+  filters: IssueFilters;
+  onChange: (next: IssueFilters) => void;
+}) {
+  return (
+    <div className="ent-inbox-filters mb-5 md:mb-6">
+      <select
+        value={filters.issueType}
+        onChange={(e) => onChange({ ...filters, issueType: e.target.value })}
+        className={`${entSelectClass} ent-inbox-filter-select`}
+        aria-label="Issue type"
+      >
+        <option value="">All issue types</option>
+        {ISSUE_TYPES.filter(Boolean).map((type) => (
+          <option key={type} value={type}>
+            {issueTypeLabel(type)}
+          </option>
+        ))}
+      </select>
+      <select
+        value={filters.priority}
+        onChange={(e) => onChange({ ...filters, priority: e.target.value })}
+        className={`${entSelectClass} ent-inbox-filter-select`}
+        aria-label="Priority"
+      >
+        <option value="">All priorities</option>
+        {PRIORITIES.filter(Boolean).map((priority) => (
+          <option key={priority} value={priority}>
+            {issueSeverityLabel(priority)}
+          </option>
+        ))}
+      </select>
+      <select
+        value={filters.status}
+        onChange={(e) => onChange({ ...filters, status: e.target.value })}
+        className={`${entSelectClass} ent-inbox-filter-select`}
+        aria-label="Status"
+      >
+        <option value="">All status</option>
+        {STATUSES.filter(Boolean).map((status) => (
+          <option key={status} value={status}>
+            {status.replaceAll("_", " ")}
+          </option>
+        ))}
+      </select>
+      <select
+        value={filters.period}
+        onChange={(e) => onChange({ ...filters, period: e.target.value })}
+        className={`${entSelectClass} ent-inbox-filter-select`}
+        aria-label="Time period"
+      >
+        {PERIODS.map((period) => (
+          <option key={period.value} value={period.value}>
+            {period.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export function IssuesInboxClient({
   issues,
   slug,
   base,
   canMutate,
+  members,
   initialSegment = "open",
+  initialIssueType = "",
 }: {
   issues: InboxIssue[];
   slug: string;
   base: string;
   canMutate: boolean;
+  members: ReviewerIdentity[];
   initialSegment?: Segment;
+  initialIssueType?: string;
 }) {
   const [segment, setSegment] = useState<Segment>(
     SEGMENTS.some((s) => s.id === initialSegment) ? initialSegment : "open"
   );
+  const [filters, setFilters] = useState<IssueFilters>({
+    issueType: initialIssueType,
+    priority: "",
+    status: "",
+    period: "12m",
+  });
 
-  const filtered = useMemo(() => issues.filter(SEGMENTS.find((s) => s.id === segment)!.match), [issues, segment]);
+  const filtered = useMemo(() => {
+    const inSegment = issues.filter(SEGMENTS.find((s) => s.id === segment)!.match);
+    return applyFilters(inSegment, filters);
+  }, [issues, segment, filters]);
 
   const [selectedId, setSelectedId] = useState<string | null>(filtered[0]?.id ?? null);
 
@@ -123,9 +241,14 @@ export function IssuesInboxClient({
         </div>
       </div>
 
+      <IssuesFilterBar filters={filters} onChange={setFilters} />
+
       <div className="ent-segmented mb-5 md:mb-6">
         {SEGMENTS.map((item) => {
-          const count = issues.filter(item.match).length;
+          const count = applyFilters(
+            issues.filter(item.match),
+            filters
+          ).length;
           const active = item.id === segment;
           return (
             <button
@@ -133,7 +256,7 @@ export function IssuesInboxClient({
               type="button"
               onClick={() => {
                 setSegment(item.id);
-                const next = issues.filter(item.match)[0];
+                const next = applyFilters(issues.filter(item.match), filters)[0];
                 setSelectedId(next?.id ?? null);
               }}
               className={`ent-segmented-link ${active ? "ent-segmented-link-active" : ""}`}
@@ -154,7 +277,7 @@ export function IssuesInboxClient({
       ) : null}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-[var(--ent-muted)] py-8">No issues in this segment.</p>
+        <p className="text-sm text-[var(--ent-muted)] py-8">No issues match these filters.</p>
       ) : (
         <div className="ent-inbox-split">
           <div className="ent-inbox-list" role="listbox" aria-label="Issues">
@@ -201,6 +324,7 @@ export function IssuesInboxClient({
               base={base}
               slug={slug}
               canMutate={canMutate}
+              members={members}
             />
           ) : null}
         </div>
@@ -214,18 +338,21 @@ function IssueDetailPanel({
   base,
   slug,
   canMutate,
+  members,
 }: {
   issue: InboxIssue;
   base: string;
   slug: string;
   canMutate: boolean;
+  members: ReviewerIdentity[];
 }) {
-  const open = issue.status === "open";
+  const open = issue.status === "open" || issue.status === "assigned";
   const workflow = issueWorkflowStatus(issue);
   const isConflict =
     issue.issue_type === "conflict" || Boolean(issue.original_value && issue.interpreted_value);
-  const originConflict = isOriginConflictIssue(issue.title, issue.issue_type);
+  const originIssue = isOriginIssue(issue);
   const compositionConflict = isCompositionConflictIssue(issue.title, issue.issue_type);
+  const notes = parseIssueNotes(issue.detail);
 
   return (
     <aside className="ent-inbox-detail">
@@ -251,6 +378,9 @@ function IssueDetailPanel({
             )}
             {issue.productSku ? ` · ${issue.productSku}` : ""}
           </p>
+          {issue.assignee?.name ? (
+            <p className="text-xs text-[var(--ent-muted-light)] mt-2">Owner: {issue.assignee.name}</p>
+          ) : null}
         </div>
       </div>
 
@@ -272,18 +402,38 @@ function IssueDetailPanel({
         </div>
       ) : null}
 
-      {originConflict && issue.original_value && issue.interpreted_value ? (
+      {originIssue ? (
         <div className="mt-5">
           <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-3">
             Country of origin
           </p>
-          <div className="ent-origin-compare">
-            <OriginSourceCard label="Source A" value={issue.original_value} />
-            <OriginSourceCard label="Source B" value={issue.interpreted_value} />
-          </div>
-          <p className="ent-inbox-unresolved mt-3">Unresolved — conflicting origin data. INTERTEXE does not overwrite either source.</p>
+          {issue.original_value && issue.interpreted_value ? (
+            <div className="ent-origin-compare">
+              <OriginSourceCard label="Current approved" value={issue.original_value} />
+              <OriginSourceCard label="Incoming source" value={issue.interpreted_value} variant="incoming" />
+            </div>
+          ) : issue.original_value || issue.interpreted_value || issue.productOrigin ? (
+            <OriginSourceCard
+              label="Recorded origin"
+              value={issue.original_value || issue.interpreted_value || issue.productOrigin || ""}
+            />
+          ) : (
+            <div className="ent-inbox-panel">
+              <p className="ent-inbox-panel-kicker">Not recorded</p>
+              <p className="text-sm text-[var(--ent-muted)] mt-2">
+                Manufacturing country is missing from the governed record.
+              </p>
+            </div>
+          )}
+          {issue.original_value && issue.interpreted_value ? (
+            <p className="ent-inbox-unresolved mt-3">
+              Unresolved — conflicting origin data. INTERTEXE does not overwrite either source.
+            </p>
+          ) : null}
         </div>
-      ) : isConflict && issue.original_value ? (
+      ) : null}
+
+      {!originIssue && isConflict && issue.original_value ? (
         <div className="mt-5">
           <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-3">
             {compositionConflict ? "Composition data" : "Source comparison"}
@@ -304,13 +454,32 @@ function IssueDetailPanel({
         </div>
       ) : null}
 
+      {notes.length ? (
+        <div className="mt-5">
+          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)] mb-3">Notes</p>
+          <ul className="space-y-2">
+            {notes.map((entry) => (
+              <li key={`${entry.at}-${entry.text}`} className="ent-inbox-panel">
+                <p className="text-sm text-[var(--ent-ink-soft)]">{entry.text}</p>
+                <p className="text-[10px] text-[var(--ent-muted-light)] mt-1.5">
+                  {entry.authorName} · {formatIssueRelativeTime(entry.at)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       {open ? (
         <div className="mt-6 pt-5 border-t border-[var(--ent-border)]">
           <IssueActions
             slug={slug}
             issueId={issue.id}
+            issueTitle={issue.title}
             canMutate={canMutate}
             kind={issue.identifier ? "identifier" : "standard"}
+            members={members}
+            assignee={issue.assignee}
           />
         </div>
       ) : (
@@ -332,13 +501,25 @@ function DetailBlock({ label, body }: { label: string; body: string }) {
   );
 }
 
-function OriginSourceCard({ label, value }: { label: string; value: string }) {
+function OriginSourceCard({
+  label,
+  value,
+  variant = "default",
+}: {
+  label: string;
+  value: string;
+  variant?: "default" | "incoming";
+}) {
   const flag = countryFlagEmoji(value);
   return (
-    <div className="ent-inbox-panel">
+    <div className={`ent-inbox-panel ${variant === "incoming" ? "ent-inbox-panel-incoming" : ""}`}>
       <p className="ent-inbox-panel-kicker">{label}</p>
       <p className="text-sm mt-2 flex items-center gap-2">
-        {flag ? <span className="text-lg leading-none" aria-hidden>{flag}</span> : null}
+        {flag ? (
+          <span className="text-xl leading-none" aria-hidden>
+            {flag}
+          </span>
+        ) : null}
         <span>{value}</span>
       </p>
     </div>

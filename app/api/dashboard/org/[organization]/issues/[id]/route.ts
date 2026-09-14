@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrgApi } from "../../../../../../../lib/enterprise/api-auth";
 import {
+  appendIssueNote,
   applyIdentifierDecision,
+  assignIssueOwner,
   resolveIssue,
   type IdentifierDecisionAction,
 } from "../../../../../../../lib/enterprise/review";
@@ -22,17 +24,32 @@ export async function POST(
   const gate = await requireOrgApi(organization, { mutate: true });
   if (gate.error) return gate.error;
   const body = await request.json();
-  const action = body.action as IdentifierDecisionAction | undefined;
+  const action = body.action as IdentifierDecisionAction | "assign" | "note" | undefined;
   try {
-    if (action) {
-      if (!IDENTIFIER_ACTIONS.includes(action)) {
-        return NextResponse.json({ message: "Invalid identifier action." }, { status: 400 });
-      }
+    if (action === "assign") {
+      await assignIssueOwner({
+        client: gate.access.client,
+        organizationId: gate.access.membership.organizationId,
+        issueId: id,
+        assigneeId: body.assigneeId ? String(body.assigneeId) : null,
+      });
+      return NextResponse.json({ ok: true });
+    }
+    if (action === "note") {
+      await appendIssueNote({
+        client: gate.access.client,
+        organizationId: gate.access.membership.organizationId,
+        issueId: id,
+        note: String(body.note || ""),
+      });
+      return NextResponse.json({ ok: true });
+    }
+    if (action && IDENTIFIER_ACTIONS.includes(action as IdentifierDecisionAction)) {
       await applyIdentifierDecision({
         client: gate.access.client,
         organizationId: gate.access.membership.organizationId,
         issueId: id,
-        action,
+        action: action as IdentifierDecisionAction,
         correctedIdentifier: body.correctedIdentifier,
       });
       return NextResponse.json({ ok: true });

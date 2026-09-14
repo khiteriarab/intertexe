@@ -94,7 +94,7 @@ function arrowPath(fromX: number, fromY: number, toX: number, toY: number, curve
 }
 
 function StepIcon({ icon }: { icon: (typeof HERO_LIFECYCLE_STEPS)[number]["icon"] }) {
-  const cls = "h-[15px] w-[15px]";
+  const cls = "h-[22px] w-[22px]";
   switch (icon) {
     case "leaf":
       return (

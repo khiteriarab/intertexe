@@ -17,6 +17,7 @@ const MODULE_DESCRIPTIONS: Record<string, string> = {
   Products: "Import, normalize, and approve product records",
   Issues: "Blocking findings, conflicts, and missing data inbox",
   Passports: "Publish and version Digital Product Passports",
+  Operations: "Imports, approvals, and passport publishing command center",
   Workflows: "Stage owners, due dates, and team coordination",
   "Import center": "CSV history, row errors, and import replay",
   Approvals: "Field and publish approval requests",

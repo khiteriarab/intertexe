@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ConsumerPassportContent } from "../../../../lib/enterprise/public-passport-content";
+import { EDITORIAL_GREENERY_BANNER } from "../../../../lib/editorial-assets";
 import type { PassportExperienceConfig } from "../../../../lib/enterprise/passport-experience";
 import { SustainabilityBlock } from "./shared";
 
@@ -411,12 +412,25 @@ export function EditorialPassportFooter() {
   return (
     <footer className="itx-pp-editorial-footer">
       <div className="itx-pp-editorial-footer-banner">
-        <Image src="/platform/demo-see-it-live.jpg" alt="" fill className="object-cover" sizes="640px" unoptimized />
-        <p className="itx-pp-editorial-footer-quote">Greater transparency for a brighter tomorrow.</p>
+        <Image
+          src={EDITORIAL_GREENERY_BANNER}
+          alt=""
+          fill
+          className="itx-pp-editorial-footer-photo object-cover"
+          sizes="640px"
+          unoptimized
+        />
+        <div className="itx-pp-editorial-footer-gradient" aria-hidden />
+        <div className="itx-pp-editorial-footer-inner">
+          <div className="itx-pp-editorial-footer-copy">
+            <p className="itx-pp-editorial-footer-eyebrow">A more circular wardrobe</p>
+            <p className="itx-pp-editorial-footer-quote">Greater transparency for a brighter tomorrow.</p>
+          </div>
+          <Link href="/platform" className="itx-pp-editorial-footer-cta">
+            Learn more about INTERTEXE →
+          </Link>
+        </div>
       </div>
-      <Link href="/platform" className="itx-pp-editorial-footer-cta">
-        Learn more about INTERTEXE →
-      </Link>
     </footer>
   );
 }

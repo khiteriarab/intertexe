@@ -2,6 +2,7 @@ import { canMutateEnterprise, requireOrganizationAccess } from "../../../../../l
 import { issueBlocksPublish } from "../../../../../lib/enterprise/issue-copy";
 import { pilotImageMaps, resolvePilotProductImage } from "../../../../../lib/enterprise/consumer-signals";
 import { loadOrgIssues } from "../../../../../lib/enterprise/queries";
+import { loadOrgMemberDirectory } from "../../../../../lib/enterprise/reviewer-display";
 import { EntEmptyState } from "../../../components/EnterpriseUi";
 import { EntModulePage } from "../../../components/EnterpriseModuleUi";
 import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
@@ -16,17 +17,22 @@ export default async function IssuesPage({
   searchParams,
 }: {
   params: Promise<{ organization: string }>;
-  searchParams?: Promise<{ segment?: string }>;
+  searchParams?: Promise<{ segment?: string; issueType?: string }>;
 }) {
   const { organization } = await params;
   const query = (await searchParams) || {};
   const segment = (query.segment || "open") as IssueSegment;
+  const initialIssueType = query.issueType || "";
 
   const { membership, client } = await requireOrganizationAccess(organization);
-  const issues = await loadOrgIssues(client, membership.organizationId);
+  const [issues, directory] = await Promise.all([
+    loadOrgIssues(client, membership.organizationId),
+    loadOrgMemberDirectory(client, membership.organizationId),
+  ]);
   const canMutate = canMutateEnterprise(membership.role);
   const base = `/dashboard/${membership.slug}`;
   const pilotImages = pilotImageMaps(livePilotProducts);
+  const members = Array.from(directory.values()).filter((member) => member.id);
 
   const openCount = issues.filter((issue) => issue.status === "open").length;
   const blockingCount = issues.filter((issue) => issueBlocksPublish(issue)).length;
@@ -68,7 +74,9 @@ export default async function IssuesPage({
           slug={membership.slug}
           base={base}
           canMutate={canMutate}
+          members={members}
           initialSegment={segment}
+          initialIssueType={initialIssueType}
         />
       )}
     </EntModulePage>

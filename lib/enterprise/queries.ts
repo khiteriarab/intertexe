@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { parseCatalogSort, catalogSortNeedsFullFetch, sortCatalogProducts } from "./catalog-sort";
+import { resolveTraceabilityFilterProductIds } from "./traceability-filters";
 import { parseIdentifierIssueDetail, type IdentifierIssueDetail } from "./identity-reconciliation";
 import {
   formatOperatorTime,
@@ -109,6 +111,7 @@ export type CatalogProductRow = {
   data_completeness: number | null;
   passport_state: string | null;
   last_updated_at: string;
+  created_at?: string;
   gtin: string | null;
   variant: string | null;
   composition: string | null;
@@ -119,29 +122,65 @@ export type CatalogProductRow = {
 export async function loadOrgProducts(
   client: SupabaseClient,
   organizationId: string,
-  filters: { q?: string; passportState?: string; page?: number; pageSize?: number } = {}
+  filters: {
+    q?: string;
+    passportState?: string;
+    page?: number;
+    pageSize?: number;
+    sort?: string;
+    category?: string;
+    focus?: string;
+    origin?: string;
+  } = {}
 ): Promise<{ rows: CatalogProductRow[]; total: number; page: number; pageSize: number }> {
   const pageSize = Math.min(Math.max(filters.pageSize || 50, 1), 200);
   const page = Math.max(filters.page || 1, 1);
   const q = sanitizeSearch(filters.q);
+  const sort = parseCatalogSort(filters.sort);
+  const needsFullSort = catalogSortNeedsFullFetch(sort);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  let traceabilityIds: string[] | null = null;
+  if (filters.focus || filters.origin) {
+    traceabilityIds = await resolveTraceabilityFilterProductIds(client, organizationId, {
+      focus: filters.focus,
+      origin: filters.origin,
+    });
+    if (traceabilityIds.length === 0) {
+      return { rows: [], total: 0, page, pageSize };
+    }
+  }
+
   let query = client
     .from("products")
-    .select("id, name, sku, style_code, category, data_completeness, passport_state, last_updated_at", {
+    .select("id, name, sku, style_code, category, data_completeness, passport_state, last_updated_at, created_at", {
       count: "exact",
     })
     .eq("organization_id", organizationId)
-    .eq("lifecycle", "active")
-    .order("last_updated_at", { ascending: false })
-    .range(from, to);
+    .eq("lifecycle", "active");
 
   if (q) {
     query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%,style_code.ilike.%${q}%`);
   }
   if (filters.passportState) {
     query = query.eq("passport_state", filters.passportState);
+  }
+  if (filters.category) {
+    query = query.eq("category", filters.category);
+  }
+  if (traceabilityIds) {
+    query = query.in("id", traceabilityIds);
+  }
+
+  if (!needsFullSort) {
+    if (sort === "name") query = query.order("name", { ascending: true });
+    else if (sort === "name_desc") query = query.order("name", { ascending: false });
+    else if (sort === "recent") query = query.order("created_at", { ascending: false });
+    else query = query.order("last_updated_at", { ascending: false });
+    query = query.range(from, to);
+  } else {
+    query = query.order("last_updated_at", { ascending: false }).limit(500);
   }
 
   const { data, count } = await query;
@@ -204,11 +243,7 @@ export async function loadOrgProducts(
     }
   }
 
-  return {
-    total: count || 0,
-    page,
-    pageSize,
-    rows: rows.map((row) => ({
+  const mapped = rows.map((row) => ({
       id: row.id,
       name: row.name,
       sku: row.sku,
@@ -217,12 +252,22 @@ export async function loadOrgProducts(
       data_completeness: row.data_completeness,
       passport_state: row.passport_state,
       last_updated_at: row.last_updated_at,
+      created_at: row.created_at,
       gtin: gtinByProduct.get(row.id) || null,
       variant: variantByProduct.get(row.id) || null,
       composition: compositionByProduct.get(row.id) || null,
       openIssueCount: openByProduct.get(row.id) || 0,
       blockingIssueCount: blockingByProduct.get(row.id) || 0,
-    })),
+    }));
+
+  const sorted = needsFullSort ? sortCatalogProducts(mapped, sort) : mapped;
+  const paged = needsFullSort ? sorted.slice(from, to + 1) : sorted;
+
+  return {
+    total: needsFullSort ? sorted.length : count || 0,
+    page,
+    pageSize,
+    rows: paged,
   };
 }
 
@@ -398,8 +443,10 @@ export type OrgIssueRow = {
   productSku: string | null;
   productStyleCode: string | null;
   identifier: IdentifierIssueDetail | null;
+  assignee: ReviewerIdentity | null;
   resolver: ReviewerIdentity | null;
   resolvedAt: string | null;
+  productOrigin: string | null;
 };
 
 export async function loadOrgIssues(client: SupabaseClient, organizationId: string): Promise<OrgIssueRow[]> {
@@ -418,14 +465,30 @@ export async function loadOrgIssues(client: SupabaseClient, organizationId: stri
     .map((row) => parseIdentifierIssueDetail(row.detail)?.matchedProductId)
     .filter((id): id is string => Boolean(id));
   const allIds = Array.from(new Set([...productIds, ...matchedIds]));
-  const products = allIds.length
-    ? await client
-        .from("products")
-        .select("id, name, sku, style_code")
-        .eq("organization_id", organizationId)
-        .in("id", allIds)
-    : { data: [] };
+  const [products, originFields] = await Promise.all([
+    allIds.length
+      ? client
+          .from("products")
+          .select("id, name, sku, style_code")
+          .eq("organization_id", organizationId)
+          .in("id", allIds)
+      : Promise.resolve({ data: [] }),
+    productIds.length
+      ? client
+          .from("normalized_fields")
+          .select("product_id, normalized_value")
+          .eq("organization_id", organizationId)
+          .in("product_id", productIds)
+          .in("field_key", ["manufacturing_country", "country_of_origin"])
+      : Promise.resolve({ data: [] }),
+  ]);
   const productById = new Map((products.data || []).map((row) => [row.id, row]));
+  const originByProduct = new Map<string, string>();
+  for (const row of originFields.data || []) {
+    if (row.product_id && row.normalized_value && !originByProduct.has(row.product_id)) {
+      originByProduct.set(row.product_id, String(row.normalized_value));
+    }
+  }
 
   return rows.map((row) => {
     const identifier = parseIdentifierIssueDetail(row.detail);
@@ -459,6 +522,10 @@ export async function loadOrgIssues(client: SupabaseClient, organizationId: stri
               : identifier.matched,
           }
         : null,
+      assignee:
+        row.status === "open" || row.status === "assigned"
+          ? reviewerFromDirectory(directory, row.assignee_id)
+          : null,
       resolver: identifier?.resolution
         ? {
             id: identifier.resolution.actorId,
@@ -466,12 +533,97 @@ export async function loadOrgIssues(client: SupabaseClient, organizationId: stri
             role: identifier.resolution.actorRole || null,
             email: null,
           }
-        : row.assignee_id
+        : row.status !== "open" && row.assignee_id
           ? reviewerFromDirectory(directory, row.assignee_id)
           : null,
       resolvedAt: identifier?.resolution?.at || (row.status !== "open" ? row.updated_at : null),
+      productOrigin: row.product_id ? originByProduct.get(row.product_id) || null : null,
     };
   });
+}
+
+export type OrgPassportCatalogItem = {
+  id: string;
+  productId: string;
+  passportId: string | null;
+  public_id: string | null;
+  state: string;
+  productName: string;
+  productSku: string | null;
+  productStyleCode: string | null;
+  productCategory: string | null;
+  variantId: string | null;
+  variantLabel: string | null;
+  marketLabel: string | null;
+  identityKey: string;
+  publicUrl: string;
+  versionCount: number;
+  currentVersion: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  hasPassportShell: boolean;
+  versions: Array<{
+    id: string;
+    passport_id: string;
+    version_number: number;
+    state: string;
+    published_at: string | null;
+    change_summary: string | null;
+    actor_id: string | null;
+    actor: ReviewerIdentity;
+    publishedLabel: string;
+  }>;
+};
+
+const PUBLISHED_PASSPORT_STATES = new Set(["published", "update_required"]);
+
+function passportStateRank(state: string): number {
+  const ranks: Record<string, number> = {
+    published: 50,
+    update_required: 40,
+    ready: 30,
+    review_required: 20,
+    incomplete: 10,
+    archived: 0,
+  };
+  return ranks[state] ?? 0;
+}
+
+function passportIdentityKey(input: {
+  product_id: string | null;
+  variant_id?: string | null;
+  public_id?: string | null;
+}): string {
+  return [input.product_id || "none", input.variant_id || "product-level", input.public_id || "pending"].join(":");
+}
+
+/** Merge only true duplicate shells — same product, variant scope, and public identity. */
+function dedupePassportIdentities<
+  T extends {
+    product_id: string | null;
+    variant_id?: string | null;
+    public_id?: string | null;
+    state: string;
+    updated_at: string | null;
+  },
+>(rows: T[]): T[] {
+  const map = new Map<string, T>();
+  for (const row of rows) {
+    const key = passportIdentityKey(row);
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, row);
+      continue;
+    }
+    const rankDiff = passportStateRank(row.state) - passportStateRank(existing.state);
+    if (
+      rankDiff > 0 ||
+      (rankDiff === 0 && Date.parse(row.updated_at || "") > Date.parse(existing.updated_at || ""))
+    ) {
+      map.set(key, row);
+    }
+  }
+  return Array.from(map.values());
 }
 
 export async function loadOrgPassports(client: SupabaseClient, organizationId: string) {
@@ -479,10 +631,10 @@ export async function loadOrgPassports(client: SupabaseClient, organizationId: s
   const [{ data: passports }, { data: carriers }, { data: versions }, { data: products }] = await Promise.all([
     client
       .from("passports")
-      .select("id, public_id, state, product_id, created_at, updated_at")
+      .select("id, public_id, state, product_id, variant_id, created_at, updated_at")
       .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false })
-      .limit(200),
+      .order("updated_at", { ascending: false })
+      .limit(500),
     client
       .from("data_carriers")
       .select("passport_id, public_url, carrier_type")
@@ -494,7 +646,7 @@ export async function loadOrgPassports(client: SupabaseClient, organizationId: s
       .order("version_number", { ascending: true }),
     client
       .from("products")
-      .select("id, name, sku, passport_state")
+      .select("id, name, sku, style_code, category, passport_state")
       .eq("organization_id", organizationId)
       .eq("lifecycle", "active"),
   ]);
@@ -522,29 +674,98 @@ export async function loadOrgPassports(client: SupabaseClient, organizationId: s
     versionsByPassport.set(row.passport_id, list);
   }
   const productById = new Map((products || []).map((row) => [row.id, row]));
-  const publishedIds = new Set((passports || []).map((row) => row.product_id));
-  const readyUnpublished = (products || []).filter(
-    (row) => row.passport_state === "ready" && !publishedIds.has(row.id)
+  const productIds = Array.from(productById.keys());
+  const { data: variants } = productIds.length
+    ? await client
+        .from("variants")
+        .select("id, product_id, name, sku, gtin")
+        .eq("organization_id", organizationId)
+        .in("product_id", productIds)
+    : { data: [] };
+  const variantById = new Map((variants || []).map((row) => [row.id, row]));
+  const passportProductIds = new Set((passports || []).map((row) => row.product_id).filter(Boolean));
+
+  const enriched = (passports || []).map((passport) => {
+    const versionRows = versionsByPassport.get(passport.id) || [];
+    const current = versionRows[versionRows.length - 1] || null;
+    const product = productById.get(passport.product_id);
+    const variant = passport.variant_id ? variantById.get(passport.variant_id) : null;
+    const variantLabel = variant?.sku || variant?.name || null;
+    return {
+      id: passport.id,
+      productId: passport.product_id,
+      passportId: passport.id,
+      public_id: passport.public_id,
+      state: passport.state,
+      productName: product?.name || "Product",
+      productSku: variant?.sku || product?.sku || null,
+      productStyleCode: product?.style_code || null,
+      productCategory: product?.category || null,
+      variantId: passport.variant_id || null,
+      variantLabel,
+      marketLabel: variantLabel ? `Variant · ${variantLabel}` : "Product-level identity",
+      identityKey: passportIdentityKey(passport),
+      publicUrl: urlByPassport.get(passport.id) || `/p/${passport.public_id}`,
+      versionCount: versionRows.length,
+      currentVersion: current?.version_number || null,
+      created_at: passport.created_at,
+      updated_at: passport.updated_at,
+      hasPassportShell: true,
+      product_id: passport.product_id,
+      variant_id: passport.variant_id,
+      versions: versionRows.map((row) => ({
+        ...row,
+        actor: reviewerFromDirectory(directory, row.actor_id),
+        publishedLabel: formatOperatorTime(row.published_at),
+      })),
+    };
+  });
+
+  const deduped = dedupePassportIdentities(enriched).map(({ product_id: _pid, ...row }) => row as OrgPassportCatalogItem);
+
+  const published = deduped
+    .filter((row) => PUBLISHED_PASSPORT_STATES.has(row.state))
+    .sort((a, b) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
+
+  const awaitingFromPassports = deduped
+    .filter((row) => !PUBLISHED_PASSPORT_STATES.has(row.state))
+    .sort((a, b) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
+
+  const awaitingFromProducts: OrgPassportCatalogItem[] = (products || [])
+    .filter((row) => row.passport_state === "ready" && !passportProductIds.has(row.id))
+    .map((row) => ({
+      id: row.id,
+      productId: row.id,
+      passportId: null,
+      public_id: null,
+      state: "ready",
+      productName: row.name,
+      productSku: row.sku,
+      productStyleCode: row.style_code,
+      productCategory: row.category,
+      variantId: null,
+      variantLabel: null,
+      marketLabel: "Product-level identity",
+      identityKey: `${row.id}:product-level:pending`,
+      publicUrl: "",
+      versionCount: 0,
+      currentVersion: null,
+      created_at: null,
+      updated_at: null,
+      hasPassportShell: false,
+      versions: [],
+    }));
+
+  const awaitingPublish = [...awaitingFromPassports, ...awaitingFromProducts].sort((a, b) =>
+    a.productName.localeCompare(b.productName)
   );
 
   return {
-    passports: (passports || []).map((passport) => {
-      const versionRows = versionsByPassport.get(passport.id) || [];
-      const current = versionRows[versionRows.length - 1] || null;
-      return {
-        ...passport,
-        productName: productById.get(passport.product_id)?.name || null,
-        productSku: productById.get(passport.product_id)?.sku || null,
-        publicUrl: urlByPassport.get(passport.id) || `/p/${passport.public_id}`,
-        versionCount: versionRows.length,
-        currentVersion: current?.version_number || null,
-        versions: versionRows.map((row) => ({
-          ...row,
-          actor: reviewerFromDirectory(directory, row.actor_id),
-          publishedLabel: formatOperatorTime(row.published_at),
-        })),
-      };
-    }),
-    readyUnpublished,
+    awaitingPublish,
+    published,
+    rawPassportCount: (passports || []).length,
+    identityCount: deduped.length,
+    productCount: new Set(deduped.map((row) => row.productId)).size,
   };
 }
+

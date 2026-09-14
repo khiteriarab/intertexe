@@ -2,8 +2,8 @@
 @import "../shared/intertexe-editorial.css";
 
 .platform-shell {
-  --platform-bg: #f5f0e8;
-  --platform-surface: #faf8f4;
+  --platform-bg: #faf9f7;
+  --platform-surface: #ffffff;
   --platform-ink: #1c1915;
   --platform-primary: #2c2620;
   --platform-primary-hover: #1f1a14;
@@ -79,4 +79,133 @@
 .platform-abstract-band.itx-abstract-motif::after,
 .itx-abstract-section.itx-abstract-motif::after {
   opacity: 0.35;
+}
+
+
+/* Get started CTA — white card on warm ivory canvas */
+.platform-get-started-section {
+  position: relative;
+}
+
+.platform-get-started-card {
+  position: relative;
+  max-width: 52rem;
+  margin-inline: auto;
+  padding: 2rem 1.75rem;
+  border-radius: 2rem;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid rgba(28, 25, 21, 0.06);
+  box-shadow:
+    0 24px 64px rgba(44, 38, 32, 0.06),
+    0 2px 8px rgba(44, 38, 32, 0.03);
+}
+
+@media (min-width: 640px) {
+  .platform-get-started-card {
+    padding: 3rem 3.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .platform-get-started-card {
+    padding: 3.5rem 3.75rem;
+  }
+}
+
+/* Circular wardrobe editorial banner — greenery with ivory fade */
+.platform-circular-banner {
+  position: relative;
+  min-height: 11rem;
+  border-radius: 1.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(28, 25, 21, 0.06);
+  box-shadow: 0 16px 48px rgba(44, 38, 32, 0.07);
+}
+
+@media (min-width: 768px) {
+  .platform-circular-banner { min-height: 12.5rem; }
+}
+
+.platform-circular-banner-photo {
+  object-position: 68% center;
+}
+
+.platform-circular-banner-gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to right,
+    rgba(253, 252, 249, 0.98) 0%,
+    rgba(250, 247, 242, 0.94) 24%,
+    rgba(245, 239, 230, 0.72) 42%,
+    rgba(245, 239, 230, 0.28) 56%,
+    transparent 72%
+  );
+}
+
+.platform-circular-banner-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.15rem;
+  padding: 1.5rem 1.35rem 1.65rem;
+  min-height: 11rem;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .platform-circular-banner-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.75rem 1.65rem 1.85rem;
+    min-height: 12.5rem;
+  }
+}
+
+.platform-circular-banner-copy {
+  max-width: 18rem;
+}
+
+.platform-circular-banner-eyebrow {
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
+  margin-bottom: 0.55rem;
+}
+
+.platform-circular-banner-title {
+  font-size: clamp(1.45rem, 3.5vw, 2.15rem);
+  font-weight: 300;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--platform-ink);
+}
+
+.platform-circular-banner-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(28, 25, 21, 0.1);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--platform-ink);
+  box-shadow: 0 8px 24px rgba(44, 38, 32, 0.08);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.platform-circular-banner-cta:hover {
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(44, 38, 32, 0.1);
 }

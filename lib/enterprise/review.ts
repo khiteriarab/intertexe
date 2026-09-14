@@ -383,3 +383,112 @@ export async function applyIdentifierDecision(input: {
     },
   });
 }
+
+
+export async function assignIssueOwner(input: {
+  client: SupabaseClient;
+  organizationId: string;
+  issueId: string;
+  assigneeId: string | null;
+}) {
+  const supabase = input.client;
+  const { data: issue } = await supabase
+    .from("issues")
+    .select("id, title, product_id, status")
+    .eq("organization_id", input.organizationId)
+    .eq("id", input.issueId)
+    .maybeSingle();
+  if (!issue) throw new Error("Issue not found.");
+  const profile = await currentProfile(supabase);
+  const { error } = await supabase
+    .from("issues")
+    .update({
+      assignee_id: input.assigneeId,
+      status: issue.status === "open" && input.assigneeId ? "assigned" : issue.status,
+    })
+    .eq("id", input.issueId)
+    .eq("organization_id", input.organizationId);
+  if (error) throw new Error(error.message);
+
+  await emitWorkflowEvent({
+    client: supabase,
+    organizationId: input.organizationId,
+    actorId: profile.id,
+    kind: "issue_assigned",
+    title: input.assigneeId ? `Issue assigned: ${issue.title}` : `Issue unassigned: ${issue.title}`,
+    detail: `issue:${issue.id}`,
+    href: `/dashboard/issues`,
+    audit: {
+      action: "issue_assign",
+      objectType: "issue",
+      objectId: input.issueId,
+      previousRef: issue.status,
+      resultingRef: input.assigneeId || "unassigned",
+    },
+    notify: input.assigneeId
+      ? {
+          recipientIds: [input.assigneeId],
+          category: "issue_assigned",
+          emailSubject: `Issue assigned: ${issue.title}`,
+        }
+      : undefined,
+  });
+}
+
+export async function appendIssueNote(input: {
+  client: SupabaseClient;
+  organizationId: string;
+  issueId: string;
+  note: string;
+}) {
+  const text = input.note.trim();
+  if (text.length < 2) throw new Error("Enter a note before saving.");
+  const supabase = input.client;
+  const { data: issue } = await supabase
+    .from("issues")
+    .select("id, title, detail")
+    .eq("organization_id", input.organizationId)
+    .eq("id", input.issueId)
+    .maybeSingle();
+  if (!issue) throw new Error("Issue not found.");
+  const profile = await currentProfile(supabase);
+  let parsed: Record<string, unknown> = {};
+  if (issue.detail) {
+    try {
+      parsed = JSON.parse(issue.detail);
+    } catch {
+      parsed = { legacyDetail: issue.detail };
+    }
+  }
+  const notes = Array.isArray(parsed.notes) ? [...parsed.notes] : [];
+  notes.push({
+    at: new Date().toISOString(),
+    authorId: profile.id,
+    authorName: profile.name,
+    text,
+  });
+  parsed.notes = notes;
+  const { error } = await supabase
+    .from("issues")
+    .update({ detail: JSON.stringify(parsed) })
+    .eq("id", input.issueId)
+    .eq("organization_id", input.organizationId);
+  if (error) throw new Error(error.message);
+
+  await emitWorkflowEvent({
+    client: supabase,
+    organizationId: input.organizationId,
+    actorId: profile.id,
+    kind: "issue_assigned",
+    title: `Note on issue: ${issue.title}`,
+    detail: text,
+    href: `/dashboard/issues`,
+    audit: {
+      action: "issue_note",
+      objectType: "issue",
+      objectId: input.issueId,
+      previousRef: null,
+      resultingRef: "note_added",
+    },
+  });
+}

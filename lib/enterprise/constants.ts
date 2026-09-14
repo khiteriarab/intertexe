@@ -80,6 +80,7 @@ export const ENTERPRISE_NAV_GROUPS = [
     label: "Operations",
     icon: "operations" as const,
     items: [
+      { href: "/operations", label: "Operations", icon: "operations" as const, exact: true as const },
       { href: "/workflows", label: "Workflows", icon: "workflows" as const },
       { href: "/imports", label: "Import center", icon: "files" as const },
       { href: "/approvals", label: "Approvals", icon: "issues" as const },

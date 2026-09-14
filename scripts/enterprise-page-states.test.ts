@@ -8,6 +8,7 @@ import {
   enterpriseModuleCatalog,
   enterpriseModuleCatalogByGroup,
 } from "../lib/enterprise/marketing-modules.ts";
+import { lifecycleModuleCatalogByGroup } from "../lib/enterprise/lifecycle-modules.ts";
 import { ORG_PAGE_STATES, pageStateForNavHref } from "../lib/enterprise/page-states.ts";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -37,14 +38,20 @@ describe("Enterprise page states and marketing sync", () => {
     }
   });
 
-  it("platform marketing grid imports shared module catalog", () => {
-    const visuals = fs.readFileSync(path.join(ROOT, "app/platform/sales-visuals.tsx"), "utf8");
-    assert.match(visuals, /enterpriseModuleCatalogByGroup/);
-    assert.match(visuals, /marketingMaturityFootnote/);
-    const groups = enterpriseModuleCatalogByGroup();
-    assert.ok(groups.length >= 4);
-    assert.ok(groups.some((g) => g.modules.some((m) => m.label === "Regulations")));
-    assert.ok(groups.some((g) => g.modules.some((m) => m.label === "Workflows")));
+  it("platform marketing grid uses lifecycle outcomes catalog", () => {
+    const explorer = fs.readFileSync(
+      path.join(ROOT, "app/platform/b2b-visuals/PlatformWorkspaceExplorer.tsx"),
+      "utf8",
+    );
+    assert.match(explorer, /lifecycleModuleCatalogByGroup/);
+    assert.doesNotMatch(explorer, /enterpriseModuleCatalogByGroup/);
+    assert.doesNotMatch(explorer, /marketingMaturityFootnote/);
+    const groups = lifecycleModuleCatalogByGroup();
+    assert.equal(groups.length, 4);
+    assert.deepEqual(groups.map((g) => g.label), ["Create", "Prove", "Understand", "Extend"]);
+    assert.ok(groups.some((g) => g.modules.some((m) => m.label === "Material Benchmark")));
+    assert.ok(groups.some((g) => g.modules.some((m) => m.label === "Digital Product Passport")));
+    assert.ok(!groups.some((g) => g.modules.some((m) => m.label === "Billing")));
   });
 
   it("overview module showcase uses maturity badges", () => {

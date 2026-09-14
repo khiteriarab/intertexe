@@ -3,7 +3,6 @@ import { WhatItIsProcessVisual } from "./b2b-visuals/WhatItIsProcessVisual";
 import { PlatformCapabilityNav } from "./PlatformCapabilityNav";
 import {
   DeliveryModesVisual,
-  IntelligenceBenchmarkVisual,
   PlatformModuleGrid,
   ProductIdentityCarriersVisual,
   PublishExperienceVisual,
@@ -11,6 +10,7 @@ import {
 } from "./sales-visuals";
 import { PlatformGraphic } from "./PlatformGraphic";
 import { PlatformHero } from "./PlatformHero";
+import { PlatformIntelligenceSection } from "./intelligence/PlatformIntelligenceSection";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
@@ -22,12 +22,6 @@ const GOVERNED_POINTS = [
   "Versioned product and passport history",
 ] as const;
 
-const INTELLIGENCE_POINTS = [
-  "Material Benchmark — compare fiber mix, completeness, and readiness against governed peer segments in your market",
-  "Conversion signals — see which material compositions and categories outperform or underperform vs peers",
-  "Cohort drill-down — slice by category, price tier, natural-fiber threshold, and passport readiness",
-  "Governed datasets only — aggregate peer medians, never individual competitor catalogs or shopper identity",
-] as const;
 
 const OUTPUT_PILLARS = [
   {
@@ -52,12 +46,6 @@ export function SalesWhatItIsSection() {
   return (
     <section className="platform-what-it-is platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-24 border-b border-[#e8e3da]/60">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <aside className="platform-what-rail hidden xl:flex" aria-hidden>
-          <span>Digital Product Passport</span>
-          <span>Trust information</span>
-          <span>A more circular tomorrow</span>
-        </aside>
-
         <div className="max-w-2xl lg:max-w-3xl mb-10 sm:mb-12 lg:mb-16">
           <Eyebrow>What INTERTEXE is</Eyebrow>
           <Heading className="mb-4">
@@ -212,36 +200,7 @@ export function SalesGovernedRecordSection() {
 }
 
 export function SalesIntelligenceSection() {
-  return (
-    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-20">
-      <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-10 lg:gap-14 items-start">
-          <div className="lg:sticky lg:top-28 lg:self-start">
-            <Eyebrow>Intelligence</Eyebrow>
-            <Heading className="mb-4">Benchmark your material strategy against the market.</Heading>
-            <Body className="mb-6">
-              Material Benchmark is the subscription-style dataset brands use to compare fabric strategy — your catalog
-              against governed peer segments, with conversion signals that show what is working and what is not. Same
-              product record powers readiness gaps, regulatory field tracking, and peer comparison before passports or
-              public surfaces.
-            </Body>
-            <ul className="space-y-2">
-              {INTELLIGENCE_POINTS.map((item) => (
-                <li key={item} className="text-sm text-[var(--platform-muted)] pl-4 border-l-2 border-[var(--platform-accent-muted)] leading-relaxed">
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-6 text-xs text-[var(--platform-quiet)] leading-relaxed">
-              Customer Zero catalog · 10 live products · peer medians from governed datasets. Individual competitor
-              catalogs and shopper identity are never exposed.
-            </p>
-          </div>
-          <IntelligenceBenchmarkVisual />
-        </div>
-      </div>
-    </section>
-  );
+  return <PlatformIntelligenceSection />;
 }
 
 const IDENTITY_CAPABILITIES = [
@@ -320,15 +279,15 @@ export function SalesPlatformBreadthSection() {
     <section className="platform-module-showcase platform-abstract-band itx-abstract-motif border-y border-[#e8e3da]/60 py-12 sm:py-16 lg:py-24">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-10 lg:mb-12">
-          <Eyebrow className="mb-0">Platform breadth</Eyebrow>
+          <Eyebrow className="mb-0">Product lifecycle</Eyebrow>
           <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--platform-quiet)] sm:text-right max-w-xs sm:pt-1">
-            Product intelligence · for a more transparent tomorrow
+            Create · Prove · Understand · Extend
           </p>
         </div>
-        <Heading className="mb-4 max-w-3xl">One workspace for product intelligence.</Heading>
+        <Heading className="mb-4 max-w-3xl">One workspace for the entire product lifecycle.</Heading>
         <Body className="max-w-2xl lg:max-w-3xl mb-10 lg:mb-12 text-[#6b6560]">
-          The operating environment brands buy — synced with the live enterprise workspace sidebar. Maturity badges
-          reflect what is production-ready today versus expanding modules.
+          From first material decisions and manufacturing evidence to consumer passports, sustainability intelligence
+          and resale, INTERTEXE keeps every stage connected to one governed product record.
         </Body>
         <PlatformModuleGrid />
         <p className="mt-10 lg:mt-12 text-sm text-[#8a847c] leading-relaxed max-w-2xl">
@@ -349,9 +308,9 @@ export function SalesPlatformBreadthSection() {
 export function SalesStartFreeSection() {
   const signIn = getEnterpriseLoginUrl();
   return (
-    <section className="itx-abstract-section itx-abstract-motif max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 lg:py-20 pb-20 sm:pb-24">
-      <div className="itx-editorial-panel itx-editorial-panel-inner p-8 sm:p-12 lg:p-14 text-center">
-        <Eyebrow>Get started</Eyebrow>
+    <section className="platform-get-started-section max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 lg:py-20 pb-20 sm:pb-24">
+      <div className="platform-get-started-card">
+        <Eyebrow className="mb-4">Get started</Eyebrow>
         <Heading className="mb-4">See INTERTEXE with your own products.</Heading>
         <Body className="max-w-xl mx-auto mb-8">
           Start with 10 products, implemented free. After qualification, choose Professional, Platform, or Enterprise —
@@ -361,7 +320,7 @@ export function SalesStartFreeSection() {
           <PrimaryLink href="/platform/request?intent=snapshot&cta=footer">Start with 10 products</PrimaryLink>
           <SecondaryLink href="/platform/demo">See it live</SecondaryLink>
         </div>
-        <p className="mt-8 text-xs text-[#8a847c]">
+        <p className="mt-8 text-xs text-[var(--platform-quiet)]">
           <Link href={signIn} className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
             Already a customer? Sign in →
           </Link>
