@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { ImportSummary } from "../../../../../lib/enterprise/import-ops";
-import { IMPORT_PIPELINE_STAGES } from "../../../../../lib/enterprise/import-ops";
+import type { ImportSummary } from "../../../../../lib/enterprise/import-ops-shared";
+import { IMPORT_PIPELINE_STAGES } from "../../../../../lib/enterprise/import-ops-shared";
 import {
   EntOpsEmptyState,
   EntOpsKpiRow,
