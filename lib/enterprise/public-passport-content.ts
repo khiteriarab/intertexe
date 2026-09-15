@@ -222,9 +222,16 @@ function buildNextLife(input: {
   publicId?: string;
   resaleEligible?: boolean;
   integrityReason?: string;
+  careInstructions?: string[] | null;
+  composition?: string | null;
 }): NextLifeItem[] {
-  const sellHref = input.publicId ? `/p/${input.publicId}/sell` : undefined;
+  const base = input.publicId ? `/p/${input.publicId}` : "";
+  const sellHref = base ? `${base}/sell` : undefined;
   const sellDisabled = input.resaleEligible === false;
+  const hasCare = Boolean(input.careInstructions?.length);
+  const repairDetail = hasCare
+    ? "View care instructions and repair guidance for this product."
+    : "Extending wear through repair and alteration is the highest-impact circular action.";
 
   return [
     {
@@ -241,18 +248,28 @@ function buildNextLife(input: {
     },
     {
       title: "Repair & rewear",
-      detail: "Extending wear through repair and alteration is the highest-impact circular action.",
-      kind: "guidance",
+      detail: repairDetail,
+      kind: "action",
+      href: base ? `${base}#care` : "#care",
+      cta: "Repair & rewear",
     },
     {
       title: "Donate",
-      detail: "Quality garments can enter donation channels when you no longer wear them.",
-      kind: "guidance",
+      detail: input.composition
+        ? `Donation suitability based on ${input.composition.toLowerCase()} composition and product condition.`
+        : "Quality garments can enter donation channels when you no longer wear them.",
+      kind: "action",
+      href: base ? `${base}#donate` : "#donate",
+      cta: "Donate",
     },
     {
       title: "Recycle",
-      detail: "Check local textile collection — fiber mix affects recyclability.",
-      kind: "guidance",
+      detail: input.composition
+        ? `Recyclability depends on fiber mix — see guidance for ${input.composition.toLowerCase()}.`
+        : "Check local textile collection — fiber mix affects recyclability.",
+      kind: "action",
+      href: base ? `${base}#recycle` : "#recycle",
+      cta: "Recycle",
     },
   ];
 }
@@ -381,6 +398,8 @@ export function buildConsumerPassportContent(input: {
       publicId: input.publicId || undefined,
       resaleEligible: integrity.resaleEligible,
       integrityReason: integrity.checks.find((c) => c.severity === "error")?.message,
+      careInstructions,
+      composition,
     }),
     resaleIntelligence,
     timeline: buildTimeline({

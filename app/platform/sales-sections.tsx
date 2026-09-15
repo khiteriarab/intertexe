@@ -9,7 +9,7 @@ import {
   SaaSDemoFlowVisual,
 } from "./sales-visuals";
 import { PlatformGraphic } from "./PlatformGraphic";
-import { PlatformHero } from "./PlatformHero";
+import { PlatformBrandShowcaseHero } from "./PlatformBrandShowcaseHero";
 import { PlatformIntelligenceSection } from "./intelligence/PlatformIntelligenceSection";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
@@ -39,7 +39,7 @@ const OUTPUT_PILLARS = [
 ] as const;
 
 export function SalesHeroSection() {
-  return <PlatformHero />;
+  return <PlatformBrandShowcaseHero />;
 }
 
 export function SalesWhatItIsSection() {
@@ -48,23 +48,26 @@ export function SalesWhatItIsSection() {
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="max-w-2xl lg:max-w-3xl mb-10 sm:mb-12 lg:mb-16">
           <Eyebrow>What INTERTEXE is</Eyebrow>
-          <Heading className="mb-4">
-            Product intelligence infrastructure for{" "}
-            <em className="not-italic italic text-[var(--platform-accent)]">fashion.</em>
-          </Heading>
+          <Heading className="mb-4">From raw product data to a living product record.</Heading>
           <Body className="mb-0">
-            We don&apos;t just help you organize the information a Digital Product Passport requires. We turn that
-            information into the digital product experience your customer actually sees — hosted by INTERTEXE, on your
-            domain, or inside your existing app.
+            INTERTEXE transforms fragmented product, material, and manufacturing information into one governed record
+            that powers compliance, consumer transparency, and circular commerce — from conception to after-sale.
           </Body>
         </div>
+
+        <p className="platform-lifecycle-line mb-8 lg:mb-10">
+          Conception → Product data → Manufacturing evidence → Compliance → Consumer scan → Care → Resale → Next life
+        </p>
 
         <WhatItIsProcessVisual />
 
         <PlatformCapabilityNav className="mt-10 sm:mt-12 lg:mt-14" />
 
         <blockquote className="platform-what-quote mt-10 sm:mt-12 lg:mt-14">
-          <p style={SERIF}>Products live longer when information goes further.</p>
+          <p style={SERIF}>
+            INTERTEXE takes products from fragmented internal data to governed consumer-facing records that support
+            compliance, transparency, care, and resale.
+          </p>
         </blockquote>
       </div>
     </section>
@@ -199,6 +202,7 @@ export function SalesGovernedRecordSection() {
   );
 }
 
+/** @deprecated Intelligence is embedded in PlatformHowItWorksSection */
 export function SalesIntelligenceSection() {
   return <PlatformIntelligenceSection />;
 }

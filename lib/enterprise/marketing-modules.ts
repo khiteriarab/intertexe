@@ -25,6 +25,7 @@ const MODULE_DESCRIPTIONS: Record<string, string> = {
   Files: "Imports, source records, and uploaded assets",
   Activity: "Audit trail across the organization",
   "Audit log": "Immutable admin and security events",
+  Intelligence: "AI decision layer — brief, actions, benchmark, forecast, and evidence",
   Regulations: "Rulesets, readiness gaps, and requirement domains",
   "Signals & benchmarks": "Material Benchmark — peer comparison, conversion signals, category cohorts",
   Analytics: "Readiness trends and catalog health",

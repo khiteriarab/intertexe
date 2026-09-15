@@ -31,26 +31,62 @@ const DELIVERY_CHANNELS = [
   { id: "api", label: "Headless API", sub: "Integrate anywhere", icon: "code" as const },
 ] as const;
 
+const NEXT_LIFE_ACTIONS = [
+  { label: "Sell this item", sub: "Verified resale draft" },
+  { label: "Repair & rewear", sub: "Care guidance" },
+  { label: "Donate", sub: "Pass on in use" },
+  { label: "Recycle", sub: "Fiber-aware routing" },
+] as const;
+
 const STAGES = [
   {
-    id: "govern" as const,
-    label: "Govern",
-    title: "Connect & structure your product data.",
-    copy: "Connect PLM, ERP, spreadsheets and supplier files into one structured product record — with evidence, provenance, and approval workflow.",
+    id: "create" as const,
+    micro: "Input",
+    label: "Create",
+    title: "Capture and structure product data",
+    copy: "Bring together product identity, composition, supplier inputs, specifications, and manufacturing details into one structured foundation.",
+    chips: ["Product identity", "Materials & composition", "Supplier + factory data", "Source files & specifications"],
+    foot: "From disconnected files to one usable data layer.",
   },
   {
-    id: "publish" as const,
-    label: "Publish",
-    title: "Turn data into experiences.",
-    copy: "Turn approved data into passports, regulatory readiness, and consumer-ready product experiences — not just compliance fields in a dashboard.",
+    id: "verify" as const,
+    micro: "Validation",
+    label: "Verify",
+    title: "Find gaps before they become risk",
+    copy: "Identify missing composition, incomplete traceability, unsupported claims, and supplier evidence gaps across the product record.",
+    chips: ["Missing composition", "Supplier evidence gaps", "Unsupported claims", "Incomplete manufacturing details"],
+    foot: "Turn fragmented product data into trusted product data.",
   },
   {
-    id: "deliver" as const,
-    label: "Deliver",
-    title: "One record. Every channel.",
-    copy: "Hosted passport, white-label domain, or headless API into your existing app. One governed record powers every channel.",
+    id: "comply" as const,
+    micro: "Compliance",
+    label: "Comply",
+    title: "Prepare products for trust and regulation",
+    copy: "Turn approved product data into a governed record ready for Digital Product Passports, regulatory requirements, and controlled transparency.",
+    chips: ["Digital Product Passport ready", "Traceability structure", "Regulatory requirements", "Approved evidence layer"],
+    foot: "One governed record. Ready for regulation, audit, and consumer use.",
+  },
+  {
+    id: "distribute" as const,
+    micro: "Delivery",
+    label: "Distribute",
+    title: "One record, every channel",
+    copy: "Publish product data through hosted passports, branded experiences, or API so every channel works from the same governed source.",
+    chips: ["Hosted passport", "Brand domain", "Headless API", "One record, every channel"],
+    foot: "Infrastructure — not just a page builder.",
+  },
+  {
+    id: "extend" as const,
+    micro: "Circularity",
+    label: "Extend",
+    title: "Support the product after the sale",
+    copy: "Power scan-based care, repair, resale, transfer, and circular next-life experiences from the same product record.",
+    chips: ["Composition & origin", "Care & aftercare", "Repair guidance", "Resale & transfer"],
+    foot: "From first sale to second life.",
   },
 ];
+
+type StageId = (typeof STAGES)[number]["id"];
 
 function DeliverChannelIcon({ kind }: { kind: "phone" | "globe" | "code" }) {
   const cls = "h-3.5 w-3.5 text-[var(--platform-primary)]";
@@ -77,9 +113,9 @@ function DeliverChannelIcon({ kind }: { kind: "phone" | "globe" | "code" }) {
   );
 }
 
-function StageIcon({ kind }: { kind: "govern" | "publish" | "deliver" }) {
-  const cls = "h-[22px] w-[22px] text-[var(--platform-primary)]";
-  if (kind === "govern") {
+function StageIcon({ kind }: { kind: StageId }) {
+  const cls = "h-[20px] w-[20px] text-[var(--platform-primary)]";
+  if (kind === "create") {
     return (
       <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
         <ellipse cx="12" cy="6" rx="7" ry="3" />
@@ -88,7 +124,23 @@ function StageIcon({ kind }: { kind: "govern" | "publish" | "deliver" }) {
       </svg>
     );
   }
-  if (kind === "publish") {
+  if (kind === "verify") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+        <path d="M12 9v4M12 17h.01" />
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      </svg>
+    );
+  }
+  if (kind === "comply") {
+    return (
+      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+        <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    );
+  }
+  if (kind === "distribute") {
     return (
       <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
         <rect x="5" y="3" width="14" height="18" rx="2" />
@@ -98,8 +150,8 @@ function StageIcon({ kind }: { kind: "govern" | "publish" | "deliver" }) {
   }
   return (
     <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+      <path d="M4 12a8 8 0 0 1 13.5-5.7M20 12a8 8 0 0 1-13.5 5.7" />
+      <path d="M17 3h3v3M7 21H4v-3" />
     </svg>
   );
 }
@@ -112,7 +164,7 @@ function ExperienceArrow({ className = "" }: { className?: string }) {
   );
 }
 
-function GovernDiagram({ active }: { active: boolean }) {
+function CreateDiagram({ active }: { active: boolean }) {
   return (
     <div className={`platform-what-diagram ${active ? "is-active" : ""}`}>
       <div className="platform-what-source-grid">
@@ -133,7 +185,7 @@ function GovernDiagram({ active }: { active: boolean }) {
       </div>
       <div className="platform-what-diagram-connector">
         <ExperienceArrow />
-        <span className="platform-what-diagram-connector-label">Governed record</span>
+        <span className="platform-what-diagram-connector-label">Structured record</span>
       </div>
       <div className="platform-what-diagram-output">
         <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-md bg-[#f0ebe4]">
@@ -146,23 +198,49 @@ function GovernDiagram({ active }: { active: boolean }) {
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-primary)]">
-            Governed product record
-          </p>
+          <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-primary)]">Product record</p>
           <p className="text-[11px] text-[var(--platform-muted)] truncate">{PASSPORT_CASE_STUDY.styleCode}</p>
           <p className="text-[10px] text-[var(--platform-quiet)] truncate">{PASSPORT_CASE_STUDY.composition}</p>
         </div>
-        <span className="platform-what-check" aria-hidden>
-          ✓
-        </span>
       </div>
     </div>
   );
 }
 
-function PublishDiagram({ active }: { active: boolean }) {
+function VerifyDiagram({ active }: { active: boolean }) {
+  const issues = [
+    { label: "Missing composition", tone: "warn" as const },
+    { label: "Supplier evidence gap", tone: "warn" as const },
+    { label: "Traceability tier 3", tone: "info" as const },
+    { label: "Care instructions", tone: "ok" as const },
+  ];
+
+  return (
+    <div className={`platform-what-diagram ${active ? "is-active" : ""}`}>
+      <div className="platform-what-verify-list">
+        {issues.map((issue) => (
+          <div
+            key={issue.label}
+            className={`platform-what-verify-row platform-what-verify-row--${issue.tone}`}
+          >
+            <span className="platform-what-verify-dot" aria-hidden />
+            <span>{issue.label}</span>
+            {issue.tone === "warn" ? (
+              <span className="platform-what-verify-badge">Open</span>
+            ) : issue.tone === "ok" ? (
+              <span className="platform-what-verify-badge platform-what-verify-badge--ok">Resolved</span>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <p className="platform-what-diagram-foot">3 issues flagged · guided resolution in workspace</p>
+    </div>
+  );
+}
+
+function ComplyDiagram({ active }: { active: boolean }) {
   const passportUrl = caseStudyPassportUrl();
-  const displayName = PASSPORT_CASE_STUDY.productName.split(" ").slice(-4).join(" ");
+  const displayName = PASSPORT_CASE_STUDY.productName;
 
   return (
     <div className={`platform-what-diagram ${active ? "is-active" : ""}`}>
@@ -172,7 +250,7 @@ function PublishDiagram({ active }: { active: boolean }) {
             <Image src={PASSPORT_CASE_STUDY.imageUrl} alt="" fill className="object-cover" sizes="32px" />
           </div>
           <div>
-            <p className="text-[8px] tracking-[0.12em] uppercase text-[var(--platform-quiet)]">Approved record</p>
+            <p className="text-[8px] tracking-[0.12em] uppercase text-[var(--platform-quiet)]">Governed record</p>
             <p className="text-[10px] text-[var(--platform-muted)]">{PASSPORT_CASE_STUDY.styleCode}</p>
           </div>
           <span className="platform-what-check platform-what-check-sm" aria-hidden>
@@ -209,9 +287,9 @@ function PublishDiagram({ active }: { active: boolean }) {
   );
 }
 
-function DeliverDiagram({ active }: { active: boolean }) {
+function DistributeDiagram({ active }: { active: boolean }) {
   const passportUrl = caseStudyPassportUrl();
-  const displayName = PASSPORT_CASE_STUDY.productName.split(" ").slice(-4).join(" ");
+  const displayName = PASSPORT_CASE_STUDY.productName;
 
   return (
     <div className={`platform-what-diagram platform-what-diagram-deliver ${active ? "is-active" : ""}`}>
@@ -256,17 +334,57 @@ function DeliverDiagram({ active }: { active: boolean }) {
   );
 }
 
-function StageDiagram({ id, active }: { id: (typeof STAGES)[number]["id"]; active: boolean }) {
-  if (id === "govern") return <GovernDiagram active={active} />;
-  if (id === "publish") return <PublishDiagram active={active} />;
-  return <DeliverDiagram active={active} />;
+function ExtendDiagram({ active }: { active: boolean }) {
+  const passportUrl = caseStudyPassportUrl();
+
+  return (
+    <div className={`platform-what-diagram platform-what-diagram-extend ${active ? "is-active" : ""}`}>
+      <div className="platform-what-experience-phone">
+        <div className="platform-what-phone-mock">
+          <div className="platform-what-phone-screen">
+            <div className="platform-what-phone-ui">
+              <p className="platform-what-phone-brand">Next life</p>
+              <div className="relative h-10 w-full overflow-hidden rounded-md bg-[#f0ebe4] mb-2">
+                <Image src={PASSPORT_CASE_STUDY.imageUrl} alt="" fill className="object-cover" sizes="80px" />
+              </div>
+              <ul className="platform-what-extend-actions">
+                {NEXT_LIFE_ACTIONS.map((action) => (
+                  <li key={action.label}>
+                    <span className="platform-what-extend-action-title">{action.label}</span>
+                    <span className="platform-what-extend-action-sub">{action.sub}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="platform-what-extend-meta">
+        <p className="text-[9px] tracking-[0.12em] uppercase text-[var(--platform-quiet)]">Same governed record</p>
+        <Link href={`/p/${PASSPORT_CASE_STUDY.publicId}/sell`} className="platform-what-passport-qr-link">
+          Open resale flow →
+        </Link>
+        <div className="platform-what-phone-qr mt-2">
+          <QRCodeCanvas value={passportUrl} size={40} marginSize={0} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StageDiagram({ id, active }: { id: StageId; active: boolean }) {
+  if (id === "create") return <CreateDiagram active={active} />;
+  if (id === "verify") return <VerifyDiagram active={active} />;
+  if (id === "comply") return <ComplyDiagram active={active} />;
+  if (id === "distribute") return <DistributeDiagram active={active} />;
+  return <ExtendDiagram active={active} />;
 }
 
 export function WhatItIsProcessVisual() {
-  const [activeId, setActiveId] = useState<(typeof STAGES)[number]["id"]>("govern");
+  const [activeId, setActiveId] = useState<StageId>("create");
 
   return (
-    <div className="platform-what-cards platform-what-cards-interactive">
+    <div className="platform-what-cards platform-what-cards-five platform-what-cards-interactive">
       {STAGES.map((stage, i) => {
         const active = activeId === stage.id;
         return (
@@ -281,6 +399,7 @@ export function WhatItIsProcessVisual() {
                 aria-pressed={active}
                 onClick={() => setActiveId(stage.id)}
               >
+                <p className="platform-what-card-micro">{stage.micro}</p>
                 <header className="platform-what-card-header">
                   <span className="platform-what-card-icon" aria-hidden>
                     <StageIcon kind={stage.id} />
@@ -293,11 +412,17 @@ export function WhatItIsProcessVisual() {
                   </div>
                 </header>
                 <p className="platform-what-card-copy">{stage.copy}</p>
+                <ul className="platform-what-card-chips">
+                  {stage.chips.map((chip) => (
+                    <li key={chip}>{chip}</li>
+                  ))}
+                </ul>
                 <StageDiagram id={stage.id} active={active} />
+                <p className="platform-what-card-foot">{stage.foot}</p>
               </button>
             </article>
             {i < STAGES.length - 1 ? (
-              <div className="hidden lg:flex items-center justify-center px-1 xl:px-2" aria-hidden>
+              <div className="hidden xl:flex items-center justify-center px-0.5" aria-hidden>
                 <span className="platform-what-between-arrow">→</span>
               </div>
             ) : null}

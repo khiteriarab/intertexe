@@ -71,7 +71,7 @@ function SourcePill({ children, tone = "neutral" }: { children: React.ReactNode;
 /** Governed record — sources, conflict detection, approved value. */
 export function GovernedRecordVisual() {
   return (
-    <SalesPanel caption="Customer Zero · ITX-LIVE-01. INTERTEXE does not blindly overwrite source data.">
+    <SalesPanel caption="Customer Zero · ITX-LIVE-07. INTERTEXE does not blindly overwrite source data.">
       <div className="p-5 sm:p-8">
         <div className="grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.1fr)_auto_minmax(0,1fr)] gap-4 lg:gap-6 items-stretch">
           <div className="bg-white border border-[#e8e3da] p-4 sm:p-5">

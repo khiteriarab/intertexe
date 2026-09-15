@@ -187,28 +187,9 @@ export async function loadCatalogTraceabilitySummary(
         .not("source_supplier_id", "is", null),
     ]);
 
-  let rows = products || [];
-  const allRows = rows;
-  if (cutoff) {
-    rows = rows.filter((p) => p.last_updated_at && new Date(p.last_updated_at) >= cutoff);
-  }
+  const rows = products || [];
   const count = rows.length;
 
-  let priorAvgCompleteness: number | null = null;
-  if (cutoff && priorCutoff && allRows.length) {
-    let priorSum = 0;
-    let priorCount = 0;
-    for (const product of allRows) {
-      if (!product.last_updated_at) continue;
-      const updated = new Date(product.last_updated_at);
-      if (updated < priorCutoff || updated >= cutoff) continue;
-      const missing = computeMissingStagesForProduct(product.id, product.passport_state, traceCtx);
-      const completenessPct = Math.round(((4 - missing.length) / 4) * 100);
-      priorSum += completenessPct;
-      priorCount += 1;
-    }
-    if (priorCount) priorAvgCompleteness = Math.round(priorSum / priorCount);
-  }
   if (!count) {
     return {
       productCount: 0,

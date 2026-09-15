@@ -95,6 +95,7 @@ export const ENTERPRISE_NAV_GROUPS = [
     label: "Intelligence",
     icon: "intelligence" as const,
     items: [
+      { href: "/intelligence", label: "Intelligence", icon: "intelligence" as const },
       { href: "/regulations", label: "Regulations", icon: "regulations" as const },
       { href: "/benchmarking", label: "Signals & benchmarks", icon: "benchmarking" as const },
       { href: "/analytics", label: "Analytics", icon: "analytics" as const },

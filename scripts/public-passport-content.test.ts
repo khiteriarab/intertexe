@@ -85,4 +85,22 @@ describe("public passport content — data integrity", () => {
     assert.ok(ids.includes("care"));
     assert.equal(content.journeyStages.find((s) => s.id === "sale")?.location, "Barcelona");
   });
+
+  it("links all next-life actions when publicId is present", () => {
+    const content = buildConsumerPassportContent({
+      productName: "Test Shirt",
+      publicId: "itx_test",
+      snapshotFields: [
+        { key: "composition", value: "100% Cotton" },
+        { key: "care_instructions", value: "Cold wash · Line dry" },
+      ],
+    });
+    const repair = content.nextLife.find((item) => item.title === "Repair & rewear");
+    const donate = content.nextLife.find((item) => item.title === "Donate");
+    const recycle = content.nextLife.find((item) => item.title === "Recycle");
+    assert.equal(repair?.kind, "action");
+    assert.equal(repair?.href, "/p/itx_test#care");
+    assert.equal(donate?.href, "/p/itx_test#donate");
+    assert.equal(recycle?.href, "/p/itx_test#recycle");
+  });
 });

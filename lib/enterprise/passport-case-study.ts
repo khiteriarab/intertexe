@@ -1,29 +1,29 @@
 import { getConsumerSiteUrl } from "../platform-urls";
 
 /**
- * Customer Zero ITX-LIVE-01 — aligned with intertexe-live-10-products.json fixture.
- * Platform silk-dress demo is separate (PLATFORM_SALES_DEMO).
+ * Customer Zero ITX-LIVE-07 — aligned with intertexe-live-10-products.json fixture.
+ * White cotton poplin shirt — composition matches product photography (not plaid/linen mismatch).
  */
 export const PASSPORT_CASE_STUDY = {
-  styleCode: "ITX-LIVE-01",
-  sku: "P01152404-3",
-  publicId: "itx_4p2h31174z5e4f6n6f1a",
-  productName: "God's True Cashmere Brilliant Linen Shirt with Lapis Lazuli",
-  brand: "God's True Cashmere",
-  composition: "100% Linen",
+  styleCode: "ITX-LIVE-07",
+  sku: "66e629f4-5755-4cdf-b2fb-de69845df13a",
+  publicId: "itx_5h454m6h0c673h5g0n6d",
+  productName: "Cotton Poplin Shirt",
+  brand: "Walter Baker",
+  composition: "100% Cotton",
   category: "Shirt",
   imageUrl:
-    "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/33/P01152404.jpg",
+    "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/35/P01118549.jpg",
   template: "Editorial" as const,
   lifecycleStages: [
-    { stage: "Raw material", detail: "European flax cultivation", location: "Belgium" },
-    { stage: "Processing", detail: "Flax retting & scutching", location: "Belgium" },
-    { stage: "Fabric", detail: "Linen weaving mill", location: "Portugal" },
-    { stage: "Manufacturing", detail: "Shirt assembly · Atelier Norte", location: "Portugal" },
-    { stage: "Product", detail: "Brilliant Linen Shirt with Lapis Lazuli", location: "" },
+    { stage: "Raw material", detail: "Cotton cultivation", location: "Turkey" },
+    { stage: "Processing", detail: "Spinning & weaving", location: "Portugal" },
+    { stage: "Fabric", detail: "Poplin mill", location: "Portugal" },
+    { stage: "Manufacturing", detail: "Shirt assembly", location: "Portugal" },
+    { stage: "Product", detail: "Cotton Poplin Shirt", location: "" },
     { stage: "Distribution", detail: "European distribution", location: "" },
-    { stage: "Sale", detail: "Luxury retail", location: "Barcelona" },
-    { stage: "Ownership", detail: "Machine wash cold · Line dry · Iron medium", location: "" },
+    { stage: "Sale", detail: "Contemporary retail", location: "Barcelona" },
+    { stage: "Ownership", detail: "Machine wash cold · Line dry", location: "" },
     { stage: "Next life", detail: "Repair · Resell · Donate · Recycle", location: "" },
   ],
 } as const;
@@ -46,28 +46,28 @@ export const CASE_STUDY_SUPPLY_CHAIN = [
   {
     tier: 4,
     tier_label: "Raw material",
-    facility_name: "European flax cultivation",
-    country_code: "BE",
+    facility_name: "Cotton cultivation",
+    country_code: "TR",
     data_status: "provided" as const,
   },
   {
     tier: 3,
     tier_label: "Processing",
-    facility_name: "Flax retting & scutching",
-    country_code: "BE",
+    facility_name: "Spinning & weaving",
+    country_code: "PT",
     data_status: "provided" as const,
   },
   {
     tier: 2,
     tier_label: "Fabric",
-    facility_name: "Linen weaving mill",
+    facility_name: "Poplin mill",
     country_code: "PT",
     data_status: "provided" as const,
   },
   {
     tier: 1,
     tier_label: "Manufacturing",
-    facility_name: "Shirt assembly · Atelier Norte",
+    facility_name: "Shirt assembly",
     country_code: "PT",
     data_status: "provided" as const,
   },
@@ -75,7 +75,7 @@ export const CASE_STUDY_SUPPLY_CHAIN = [
 
 export const CASE_STUDY_PUBLIC_FIELDS = {
   manufacturer: "Atelier Norte",
-  care_instructions: "Machine wash cold · Line dry · Iron medium",
+  care_instructions: "Machine wash cold · Line dry",
   distribution: "European distribution",
   retail_market: "Barcelona",
 } as const;

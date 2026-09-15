@@ -79,7 +79,7 @@ export function PlatformCapabilityNav({ className = "" }: { className?: string }
           </div>
         ))}
       </div>
-      <p className="platform-capability-nav-tagline hidden sm:block">A more circular tomorrow</p>
+      <p className="platform-capability-nav-tagline hidden sm:block">One record · every stage</p>
     </nav>
   );
 }

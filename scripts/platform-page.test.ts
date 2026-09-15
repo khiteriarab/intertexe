@@ -26,11 +26,15 @@ describe("Platform B2B sales page", () => {
   const howItWorks = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHowItWorksSection.tsx"), "utf8");
   const gallery = fs.readFileSync(path.join(process.cwd(), "app/platform/WorkspaceGallery.tsx"), "utf8");
   const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
+  const requestPage = fs.readFileSync(path.join(process.cwd(), "app/platform/request/page.tsx"), "utf8");
   const demoClient = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
 
   it("positions INTERTEXE as product intelligence infrastructure, not DPP-only software", () => {
-    assert.match(sections, /product intelligence infrastructure for/i);
-    assert.match(hero, /INTERTEXE FOR BRANDS/);
+    assert.match(chrome, /product intelligence infrastructure for/i);
+    assert.match(sections, /PlatformBrandShowcaseHero/);
+    const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
+    assert.match(showcaseHero, /Request a demo/);
+    assert.match(showcaseHero, /\/platform\/request/);
     assert.match(sections, /one governed product record/i);
     assert.doesNotMatch(sections, /EU certified/i);
     assert.doesNotMatch(sections, /EU approved/i);
@@ -39,21 +43,34 @@ describe("Platform B2B sales page", () => {
 
   it("uses a focused home hierarchy without redundant lifecycle or pricing blocks", () => {
     assert.match(home, /SalesHeroSection/);
+    assert.match(sections, /PlatformBrandShowcaseHero/);
     assert.match(home, /PlatformHowItWorksSection/);
     assert.match(howItWorks, /WhatItIsProcessVisual/);
-    assert.match(howItWorks, /Govern/);
-    assert.match(howItWorks, /Publish/);
-    assert.match(howItWorks, /Deliver/);
+    assert.match(howItWorks, /Create/);
+    assert.match(howItWorks, /Verify/);
+    assert.match(howItWorks, /Comply/);
+    assert.match(howItWorks, /Distribute/);
+    assert.match(howItWorks, /Extend/);
+    assert.match(howItWorks, /PlatformIntelligenceLayer/);
+    assert.match(howItWorks, /Analyze/);
+    assert.match(howItWorks, /Benchmark/);
+    assert.match(howItWorks, /Forecast/);
+    assert.match(howItWorks, /Recommend/);
+    assert.match(howItWorks, /Act/);
+    assert.match(howItWorks, /From raw product data to intelligent action/);
     assert.doesNotMatch(howItWorks, /understand-ingest-laptop\.jpg/);
     assert.doesNotMatch(howItWorks, /platform-editorial-step-grid/);
     assert.doesNotMatch(home, /PlatformWorkflowDeepDive/);
     assert.doesNotMatch(home, /PlatformScrollShowcase/);
-    assert.match(home, /SalesIntelligenceSection/);
+    assert.doesNotMatch(home, /SalesIntelligenceSection/);
     assert.match(home, /SalesDeliverySection/);
     assert.match(home, /SalesPlatformBreadthSection/);
     assert.doesNotMatch(home, /PlatformProofSection/);
     assert.match(home, /PlatformFaq/);
-    assert.match(home, /SalesStartFreeSection/);
+    assert.doesNotMatch(home, /SalesStartFreeSection/);
+    assert.match(home, /PlatformCircularWardrobeBanner/);
+    assert.match(requestPage, /platform-request-page/);
+    assert.match(requestPage, /platform-request-copy/);
     assert.doesNotMatch(home, /SalesWhatItIsSection/);
     assert.doesNotMatch(home, /SalesGovernedRecordSection/);
     assert.doesNotMatch(home, /SalesLifecycleSection/);
@@ -70,9 +87,13 @@ describe("Platform B2B sales page", () => {
     assert.match(demoClient, /DemoIntertexeFlow/);
     assert.match(demoClient, /DemoProductWorkflow/);
     assert.match(demoClient, /DemoFeaturedExample/);
+    assert.doesNotMatch(demoClient, /DemoBookSection/);
     const demoHero = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoHero.tsx"), "utf8");
     assert.match(demoHero, /demo-see-it-live\.jpg/);
     assert.match(demo, /See INTERTEXE live/i);
+    const banner = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformCircularWardrobeBanner.tsx"), "utf8");
+    assert.match(banner, /Request a demo/);
+    assert.match(banner, /\/platform\/request/);
     assert.match(gallery, /WorkspaceGallery/);
     assert.match(gallery, /headless API/i);
     assert.ok(!fs.existsSync(path.join(process.cwd(), "app/platform/discover/page.tsx")));
@@ -110,14 +131,18 @@ describe("Platform B2B sales page", () => {
   });
 
   it("centers intelligence and delivery without overclaiming", () => {
-    const intelligence = fs.readFileSync(path.join(process.cwd(), "app/platform/intelligence/PlatformIntelligenceSection.tsx"), "utf8");
-    assert.match(intelligence, /Know what to make next/);
-    const intelligenceModules = fs.readFileSync(path.join(process.cwd(), "app/platform/intelligence/PlatformIntelligenceModules.tsx"), "utf8");
-    assert.match(intelligence, /MaterialBenchmarkModule/);
+    const intelligenceLayer = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/intelligence/PlatformIntelligenceLayer.tsx"),
+      "utf8",
+    );
+    const intelligenceModules = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/intelligence/PlatformIntelligenceModules.tsx"),
+      "utf8",
+    );
+    assert.match(howItWorks, /PlatformIntelligenceLayer/);
+    assert.match(howItWorks, /Material intelligence/);
+    assert.match(intelligenceLayer, /MaterialBenchmarkModule/);
     assert.match(intelligenceModules, /Material Benchmark/);
-    assert.match(sections, /PlatformIntelligenceSection/);
-    assert.match(sections, /PlatformIntelligenceSection/);
-    assert.match(sections, /PlatformIntelligenceSection/);
     assert.match(sections, /PlatformIntelligenceSection/);
     assert.match(sections, /Headless API/);
     assert.match(sections, /SaaSDemoFlowVisual/);
@@ -158,13 +183,15 @@ describe("Platform B2B sales page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/act-passport.png")));
   });
 
-  it("uses real QR codes in govern publish deliver process visual", () => {
+  it("uses real QR codes in five-stage lifecycle process visual", () => {
     const processVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"), "utf8");
     assert.match(processVisual, /QRCodeCanvas/);
     assert.match(processVisual, /PASSPORT_CASE_STUDY/);
-    assert.match(processVisual, /Govern/);
-    assert.match(processVisual, /Publish/);
-    assert.match(processVisual, /Deliver/);
+    assert.match(processVisual, /Create/);
+    assert.match(processVisual, /Verify/);
+    assert.match(processVisual, /Comply/);
+    assert.match(processVisual, /Distribute/);
+    assert.match(processVisual, /Extend/);
     assert.doesNotMatch(processVisual, /understand-ingest-laptop/);
   });
 
@@ -175,6 +202,9 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(sections, /ProblemConvergenceVisual/);
     assert.doesNotMatch(sections, /GovernedRecordVisual/);
     assert.match(sections, /DeliveryModesVisual/);
+    const deliveryVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/DeliveryModesVisual.tsx"), "utf8");
+    assert.match(deliveryVisual, /platform-delivery-storyline/);
+    assert.match(deliveryVisual, /One governed record · three delivery modes · not mutually exclusive/);
     assert.match(sections, /PlatformModuleGrid/);
     assert.match(visuals, /PlatformWorkspaceExplorer/);
     assert.doesNotMatch(sections, /PlatformEditorialGraphic/);

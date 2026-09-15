@@ -217,22 +217,26 @@ export function NextLifeBlock({ content }: { content: ConsumerPassportContent })
       <ul className="space-y-3">
         {content.nextLife.map((item) => (
           <li key={item.title} className="itx-passport-next-life">
-            {item.kind === "action" ? (
-              item.disabled ? (
-                <>
-                  <p className="itx-passport-guidance-tag">{item.disabledReason || "Unavailable"}</p>
-                  <p className="font-medium mt-1">{item.title}</p>
-                  <p className="text-sm text-[var(--pp-muted,#6b6560)] mt-1">{item.detail}</p>
-                </>
-              ) : item.href ? (
-                <Link href={item.href} className="itx-passport-sell-cta block">
+            {item.disabled ? (
+              <>
+                <p className="itx-passport-guidance-tag">{item.disabledReason || "Unavailable"}</p>
+                <p className="font-medium mt-1">{item.title}</p>
+                <p className="text-sm text-[var(--pp-muted,#6b6560)] mt-1">{item.detail}</p>
+              </>
+            ) : item.href ? (
+              <Link href={item.href} className={`itx-passport-sell-cta block ${item.primary ? "" : "itx-passport-next-life-link"}`}>
+                {item.primary ? (
                   <span className="text-[10px] tracking-[0.18em] uppercase text-[var(--pp-petrol,#3e6268)]">
                     Primary
                   </span>
-                  <span className="block font-medium mt-1">{item.cta || item.title}</span>
-                  <span className="block text-sm text-[var(--pp-muted,#6b6560)] mt-1">{item.detail}</span>
-                </Link>
-              ) : null
+                ) : (
+                  <span className="text-[10px] tracking-[0.18em] uppercase text-[var(--pp-muted-light,#9a948c)]">
+                    Next life
+                  </span>
+                )}
+                <span className="block font-medium mt-1">{item.cta || item.title}</span>
+                <span className="block text-sm text-[var(--pp-muted,#6b6560)] mt-1">{item.detail}</span>
+              </Link>
             ) : (
               <>
                 <p className="itx-passport-guidance-tag">Guidance</p>

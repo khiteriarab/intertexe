@@ -24,8 +24,8 @@ export function PlatformCircularWardrobeBanner() {
               Greater transparency for a brighter tomorrow.
             </p>
           </div>
-          <Link href="/platform/demo" className="platform-circular-banner-cta">
-            Learn more about INTERTEXE →
+          <Link href="/platform/request?intent=snapshot&cta=request_demo" className="platform-circular-banner-cta">
+            Request a demo →
           </Link>
         </div>
       </div>

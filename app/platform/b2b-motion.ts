@@ -76,3 +76,38 @@ export function useScrollSteps(stepCount: number): [RefObject<HTMLElement | null
 
   return [ref, step];
 }
+
+/** 0–1 scroll progress while element traverses the viewport (for growing rails). */
+export function useScrollProgress(): [RefObject<HTMLElement | null>, number] {
+  const ref = useRef<HTMLElement | null>(null);
+  const [progress, setProgress] = useState(0);
+  const reduced = useReducedMotion();
+
+  const onScroll = useCallback(() => {
+    const node = ref.current;
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    const start = vh * 0.9;
+    const end = vh * 0.12;
+    const travelled = start - rect.top;
+    const total = Math.max(rect.height + start - end, 1);
+    setProgress(Math.min(1, Math.max(0, travelled / total)));
+  }, []);
+
+  useEffect(() => {
+    if (reduced) {
+      setProgress(1);
+      return;
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [onScroll, reduced]);
+
+  return [ref, progress];
+}

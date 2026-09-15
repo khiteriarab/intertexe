@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ConsumerPassportContent } from "../../../../lib/enterprise/public-passport-content";
-import { EDITORIAL_GREENERY_BANNER } from "../../../../lib/editorial-assets";
 import type { PassportExperienceConfig } from "../../../../lib/enterprise/passport-experience";
 import { SustainabilityBlock } from "./shared";
 
@@ -90,7 +89,7 @@ export function EditorialPassportHeader() {
     <header className="itx-pp-editorial-header">
       <div>
         <p className="itx-pp-editorial-logo">INTERTEXE</p>
-        <p className="itx-pp-editorial-tagline">A more circular wardrobe</p>
+        <p className="itx-pp-editorial-tagline">Digital Product Passport</p>
       </div>
       <button type="button" className="itx-pp-editorial-menu" aria-label="Menu">
         <span />
@@ -125,9 +124,9 @@ export function EditorialProductHero({
       <div className="itx-pp-editorial-hero-overlay">
         <div className="itx-pp-editorial-hero-top">
           <p className="itx-pp-editorial-hero-brand">{brand}</p>
-          <p className="itx-pp-editorial-hero-eyebrow">Style lives longer</p>
+          <p className="itx-pp-editorial-hero-eyebrow">Verified product record</p>
         </div>
-        <p className="itx-pp-editorial-hero-foot">Clothes for a brighter tomorrow</p>
+        <p className="itx-pp-editorial-hero-foot">{content.productName}</p>
       </div>
     </div>
   );
@@ -165,6 +164,9 @@ export function EditorialProductIntro({
 export function EditorialVerificationBadges({ content }: { content: ConsumerPassportContent }) {
   const verified = content.integrityStatus !== "conflict" && content.passportStatus === "published";
   const natural = isNaturalFiber(content.composition);
+  const traceScore = content.traceability?.score;
+  const repairability = content.sustainabilityProfile?.dimensions.find((d) => d.id === "repairability");
+  const circularity = content.sustainabilityProfile?.dimensions.find((d) => d.id === "circularity");
 
   const badges = [
     {
@@ -197,8 +199,11 @@ export function EditorialVerificationBadges({ content }: { content: ConsumerPass
           <path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20" />
         </svg>
       ),
-      title: "A more circular wardrobe",
-      detail: "Greater transparency for a brighter tomorrow.",
+      title: traceScore != null ? "Traceability" : circularity?.label || "Circularity",
+      detail:
+        traceScore != null
+          ? `${traceScore}% supply-chain coverage recorded.`
+          : circularity?.result || repairability?.result || "Circularity data from passport record.",
     },
   ];
 
@@ -215,13 +220,34 @@ export function EditorialVerificationBadges({ content }: { content: ConsumerPass
   );
 }
 
-export function EditorialMissionStrip() {
+export function EditorialMissionStrip({ content }: { content: ConsumerPassportContent }) {
+  const repairability = content.sustainabilityProfile?.dimensions.find((d) => d.id === "repairability");
+  const circularity = content.sustainabilityProfile?.dimensions.find((d) => d.id === "circularity");
+  const resaleValue = content.sustainabilityProfile?.dimensions.find((d) => d.id === "resale_value");
+  const metrics = [repairability, circularity, resaleValue].filter(Boolean);
+
+  if (!metrics.length && !content.composition) return null;
+
   return (
-    <section className="itx-pp-editorial-mission">
-      <Image src="/fabric-hero.jpg" alt="" fill className="object-cover" sizes="640px" unoptimized />
+    <section className="itx-pp-editorial-mission itx-pp-editorial-mission--data">
       <div className="itx-pp-editorial-mission-copy">
-        <p className="itx-pp-editorial-mission-title">Exceptional pieces live longer</p>
-        <p className="itx-pp-editorial-mission-sub">People care. Clothes travel. A brighter tomorrow.</p>
+        {metrics.length ? (
+          <dl className="itx-pp-editorial-mission-metrics">
+            {metrics.map((metric) => (
+              <div key={metric!.id}>
+                <dt>{metric!.label}</dt>
+                <dd>{metric!.result}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <>
+            <p className="itx-pp-editorial-mission-title">{content.composition}</p>
+            {content.manufacturingCountry ? (
+              <p className="itx-pp-editorial-mission-sub">Manufactured in {content.manufacturingCountry}</p>
+            ) : null}
+          </>
+        )}
       </div>
     </section>
   );
@@ -289,10 +315,7 @@ export function EditorialJourneyTimeline({ content }: { content: ConsumerPasspor
 
   return (
     <section className="itx-pp-editorial-card itx-pp-editorial-journey">
-      <div className="itx-pp-editorial-journey-head">
-        <h2 className="itx-passport-section-title !mb-0">Product journey</h2>
-        <span className="itx-pp-editorial-journey-meta">About this journey</span>
-      </div>
+      <h2 className="itx-passport-section-title">Product journey</h2>
       <div className="itx-pp-editorial-journey-track">
         {stages.map((stage) => {
           if (!stage) return null;
@@ -393,7 +416,7 @@ export function EditorialNextLifeCards({ content }: { content: ConsumerPassportC
 
           return (
             <li key={item.title}>
-              {item.kind === "action" && item.href && !item.disabled ? (
+              {item.href && !item.disabled ? (
                 <Link href={item.href} className={`itx-pp-editorial-next-life-card ${isPrimary ? "is-primary" : ""}`}>
                   {inner}
                 </Link>
@@ -408,28 +431,112 @@ export function EditorialNextLifeCards({ content }: { content: ConsumerPassportC
   );
 }
 
-export function EditorialPassportFooter() {
+export function EditorialCareSection({ content }: { content: ConsumerPassportContent }) {
+  const repairable = content.circularity?.repairable;
+  return (
+    <section id="care" className="itx-pp-editorial-card itx-pp-editorial-detail scroll-mt-6">
+      <h2 className="itx-passport-section-title">Care & repair</h2>
+      {content.careInstructions?.length ? (
+        <ul className="itx-pp-editorial-detail-list">
+          {content.careInstructions.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="itx-passport-unavailable">Care instructions not yet recorded in this passport.</p>
+      )}
+      {repairable != null ? (
+        <p className="itx-pp-editorial-detail-meta">
+          Repairability: {repairable ? "High — suitable for repair and alteration" : "Limited — check specialist guidance"}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+export function EditorialDonateSection({ content }: { content: ConsumerPassportContent }) {
+  const natural = isNaturalFiber(content.composition);
+  return (
+    <section id="donate" className="itx-pp-editorial-card itx-pp-editorial-detail scroll-mt-6">
+      <h2 className="itx-passport-section-title">Donate</h2>
+      <p className="itx-pp-editorial-detail-copy">
+        {content.composition
+          ? `${content.productName} is recorded as ${content.composition.toLowerCase()}.`
+          : "Donation suitability depends on product condition and local collection programs."}
+      </p>
+      <ul className="itx-pp-editorial-detail-list">
+        <li>{natural ? "Natural-fiber composition is generally suitable for textile donation channels." : "Check donation program requirements for blended or synthetic fibers."}</li>
+        <li>Ensure the garment is clean and passport-linked ownership can be transferred if required.</li>
+        {content.category ? <li>Category on record: {content.category}</li> : null}
+      </ul>
+    </section>
+  );
+}
+
+export function EditorialRecycleSection({ content }: { content: ConsumerPassportContent }) {
+  const recyclable = content.circularity?.recyclable;
+  return (
+    <section id="recycle" className="itx-pp-editorial-card itx-pp-editorial-detail scroll-mt-6">
+      <h2 className="itx-passport-section-title">Recycle</h2>
+      <p className="itx-pp-editorial-detail-copy">
+        {content.composition
+          ? `Fiber mix: ${content.composition}. Recyclability depends on local textile collection and sorting capacity.`
+          : "Recyclability guidance requires composition data in the passport record."}
+      </p>
+      {recyclable != null ? (
+        <p className="itx-pp-editorial-detail-meta">
+          {recyclable
+            ? "Single-fiber or high-purity blends are more likely to enter mechanical or chemical recycling streams."
+            : "Blended or elastane-heavy constructions may require specialist take-back programs."}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+export function EditorialPassportFooter({
+  content,
+  publicId,
+  versionNumber,
+}: {
+  content: ConsumerPassportContent;
+  publicId: string;
+  versionNumber?: number;
+}) {
+  const published = content.timeline.find((row) => row.label === "Published")?.date;
+  const verified = content.integrityStatus !== "conflict" && content.passportStatus === "published";
+
   return (
     <footer className="itx-pp-editorial-footer">
-      <div className="itx-pp-editorial-footer-banner">
-        <Image
-          src={EDITORIAL_GREENERY_BANNER}
-          alt=""
-          fill
-          className="itx-pp-editorial-footer-photo object-cover"
-          sizes="640px"
-          unoptimized
-        />
-        <div className="itx-pp-editorial-footer-gradient" aria-hidden />
-        <div className="itx-pp-editorial-footer-inner">
-          <div className="itx-pp-editorial-footer-copy">
-            <p className="itx-pp-editorial-footer-eyebrow">A more circular wardrobe</p>
-            <p className="itx-pp-editorial-footer-quote">Greater transparency for a brighter tomorrow.</p>
+      <div className="itx-pp-editorial-footer-record">
+        <dl className="itx-pp-editorial-footer-meta">
+          <div>
+            <dt>Record</dt>
+            <dd>{content.identifier || publicId}</dd>
           </div>
-          <Link href="/platform" className="itx-pp-editorial-footer-cta">
-            Learn more about INTERTEXE →
-          </Link>
-        </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{verified ? "Verified · published" : content.passportStatus}</dd>
+          </div>
+          {published ? (
+            <div>
+              <dt>Published</dt>
+              <dd>{new Date(published).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</dd>
+            </div>
+          ) : null}
+          {versionNumber ? (
+            <div>
+              <dt>Version</dt>
+              <dd>v{versionNumber}</dd>
+            </div>
+          ) : null}
+          {content.composition ? (
+            <div>
+              <dt>Composition</dt>
+              <dd>{content.composition}</dd>
+            </div>
+          ) : null}
+        </dl>
       </div>
     </footer>
   );

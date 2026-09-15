@@ -10,12 +10,14 @@ import {
 import { entitlementsForPlan, type PlanKey } from "../../../../lib/enterprise/entitlements";
 import { loadOrgOverview } from "../../../../lib/enterprise/queries";
 import { loadOrgCompositionBenchmark } from "../../../../lib/enterprise/composition-benchmark";
+import { loadPlatformIntelligenceForOrg } from "../../../../lib/enterprise/platform-intelligence";
 import {
   loadConsumerSignals,
   pilotImageMaps,
 } from "../../../../lib/enterprise/consumer-signals";
 import { EntOverviewHero } from "../../components/EnterpriseUi";
-import { EntKpiGrid, EntOverviewBenchmarkTeaser, EntOverviewCharts } from "../../components/EntDashboardWidgets";
+import { EntKpiGrid, EntOverviewCharts } from "../../components/EntDashboardWidgets";
+import { EntIntelligenceWorkspace } from "../../components/EntIntelligenceWorkspace";
 import { EntConsumerSignalsTeaser } from "../../components/EntConsumerSignals";
 import livePilotProducts from "../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import { isCustomerZeroOrg } from "../../../../lib/enterprise/dual-model";
@@ -48,9 +50,10 @@ export default async function OrganizationOverviewPage({
   const activated = parseActivated(query.activated);
   const { membership, client } = await requireOrganizationAccess(organization);
   const pilotImages = pilotImageMaps(livePilotProducts);
-  const [overview, composition, signals, billing, productCount] = await Promise.all([
+  const [overview, composition, intelligence, signals, billing, productCount] = await Promise.all([
     loadOrgOverview(client, membership.organizationId),
     loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
+    loadPlatformIntelligenceForOrg(client, membership.organizationId, membership.slug, membership.plan),
     loadConsumerSignals(client, membership.organizationId, { limit: 10, pilotImages }),
     loadBillingDashboard(client, membership.organizationId),
     countActiveProducts(client, membership.organizationId),
@@ -113,12 +116,7 @@ export default async function OrganizationOverviewPage({
         </div>
       </section>
 
-      <EntOverviewBenchmarkTeaser
-        base={base}
-        overview={overview}
-        stats={composition.stats}
-        peerRows={composition.peerRows}
-      />
+      <EntIntelligenceWorkspace data={intelligence} base={base} variant="home" />
 
       <EntConsumerSignalsTeaser base={base} signals={signals} />
 

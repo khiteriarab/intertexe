@@ -904,6 +904,99 @@ a.itx-pp-editorial-next-life-card:active {
 }
 
 .itx-pp-editorial-footer-cta:hover {
+.itx-pp-editorial-mission--data {
+  position: relative;
+  min-height: auto;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(196, 165, 116, 0.18);
+  padding: 1rem 1.1rem;
+}
+
+.itx-pp-editorial-mission--data .itx-pp-editorial-mission-copy {
+  position: static;
+  padding: 0;
+}
+
+.itx-pp-editorial-mission-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.85rem;
+  margin: 0;
+}
+
+.itx-pp-editorial-mission-metrics dt {
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pp-muted-light);
+  margin-bottom: 0.25rem;
+}
+
+.itx-pp-editorial-mission-metrics dd {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pp-ink);
+  margin: 0;
+}
+
+.itx-pp-editorial-detail-list {
+  list-style: disc;
+  padding-left: 1.1rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--pp-muted);
+}
+
+.itx-pp-editorial-detail-copy,
+.itx-pp-editorial-detail-meta {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--pp-muted);
+  margin-top: 0.5rem;
+}
+
+.itx-pp-editorial-detail-meta {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(26, 31, 34, 0.08);
+}
+
+.itx-pp-editorial-footer-record {
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(196, 165, 116, 0.18);
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.itx-pp-editorial-footer-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+  margin: 0;
+}
+
+.itx-pp-editorial-footer-meta dt {
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pp-muted-light);
+  margin-bottom: 0.2rem;
+}
+
+.itx-pp-editorial-footer-meta dd {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--pp-ink);
+  margin: 0;
+  word-break: break-word;
+}
+
+.itx-passport-next-life-link {
+  border-color: rgba(196, 165, 116, 0.22);
+}
+
   background: #fff;
   box-shadow: 0 10px 28px rgba(44, 38, 32, 0.1);
 }

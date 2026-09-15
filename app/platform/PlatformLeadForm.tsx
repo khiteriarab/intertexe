@@ -29,7 +29,7 @@ export function PlatformLeadForm({
   intent?: string;
   sourceCta: string;
   tier?: string;
-  variant?: "default" | "demo" | "office";
+  variant?: "default" | "demo" | "request" | "office";
 }) {
   const [state, setState] = useState<"idle" | "submitting" | "done" | "dup" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -66,7 +66,9 @@ export function PlatformLeadForm({
   }
 
   const demo = variant === "demo";
+  const request = variant === "request";
   const office = variant === "office";
+  const expanded = demo || request;
 
   if (state === "done" || state === "dup") {
     return (
@@ -80,7 +82,7 @@ export function PlatformLeadForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className={`grid gap-4 ${demo || office ? "" : "max-w-xl"}`}>
+    <form onSubmit={onSubmit} className={`grid gap-4 ${expanded || office ? "" : "max-w-xl"}`}>
       <input name="company_fax" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
       <input type="hidden" name="intent" value={selectedIntent} />
       {office ? (
@@ -132,7 +134,7 @@ export function PlatformLeadForm({
           Work email*
           <input required type="email" name="email" autoComplete="email" className={FIELD} />
         </label>
-        {demo ? (
+        {expanded ? (
           <>
             <label className={LABEL}>
               Phone
@@ -155,7 +157,7 @@ export function PlatformLeadForm({
       </div>
         </>
       )}
-      {office ? null : demo ? (
+      {office ? null : expanded ? (
         <fieldset>
           <legend className={`${LABEL} mb-3`}>Company type</legend>
           <div className="grid sm:grid-cols-2 gap-2">
@@ -168,7 +170,7 @@ export function PlatformLeadForm({
           </div>
         </fieldset>
       ) : null}
-      {office ? null : demo ? null : (
+      {office ? null : expanded ? null : (
         <>
           <label className={LABEL}>
             Role
@@ -180,7 +182,29 @@ export function PlatformLeadForm({
           </label>
         </>
       )}
-      {office ? null : (
+      {request ? (
+        <>
+          <label className={LABEL}>
+            Message
+            <textarea
+              name="message"
+              rows={4}
+              placeholder="Tell us about your catalog, timeline, or what you want to evaluate."
+              className={`${FIELD} resize-y min-h-[112px]`}
+            />
+          </label>
+          <label className={LABEL}>
+            Sell or plan to sell into the EU?
+            <select name="sells_into_eu" className={FIELD} defaultValue="">
+              <option value="">Select</option>
+              <option value="yes">Yes</option>
+              <option value="planning">Planning to</option>
+              <option value="no">No</option>
+            </select>
+          </label>
+        </>
+      ) : null}
+      {office || request ? null : (
         <>
       <label className={LABEL}>
         Company website
@@ -232,7 +256,7 @@ export function PlatformLeadForm({
         disabled={state === "submitting"}
         className="text-[11px] tracking-[0.2em] uppercase bg-[var(--platform-primary)] text-white px-8 py-4 min-h-[44px] disabled:opacity-50 hover:bg-[var(--platform-primary-hover)]"
       >
-        {state === "submitting" ? "Sending…" : office ? "Send message" : demo ? "Start with 10 products" : "Submit request"}
+        {state === "submitting" ? "Sending…" : office ? "Send message" : request ? "Request a demo" : demo ? "Start with 10 products" : "Submit request"}
       </button>
     </form>
   );
