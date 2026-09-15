@@ -205,12 +205,23 @@ describe("Platform B2B sales page", () => {
     const deliveryVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/DeliveryModesVisual.tsx"), "utf8");
     assert.match(deliveryVisual, /platform-delivery-storyline/);
     assert.match(deliveryVisual, /One governed record · three delivery modes · not mutually exclusive/);
-    assert.match(sections, /PlatformModuleGrid/);
+    assert.match(sections, /PlatformProductPillarsVisual/);
+    assert.match(visuals, /PlatformProductPillarsVisual/);
     assert.match(visuals, /PlatformWorkspaceExplorer/);
     assert.doesNotMatch(sections, /PlatformEditorialGraphic/);
     assert.doesNotMatch(sections, /INTERTEXE_01_Data_Architecture/);
-    assert.match(sections, /One workspace for the entire product lifecycle/);
-    assert.match(sections, /From first material decisions and manufacturing evidence/);
+    assert.match(sections, /One record\. An entire product lifecycle\./);
+    assert.match(sections, /INTERTEXE connects product creation, compliance, consumer transparency, and resale/);
+    const pillarsVisual = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/b2b-visuals/PlatformProductPillarsVisual.tsx"),
+      "utf8",
+    );
+    assert.match(pillarsVisual, /platform-journey-map/);
+    assert.match(pillarsVisual, /Create/);
+    assert.match(pillarsVisual, /Explore product intelligence/);
+    assert.match(pillarsVisual, /Explore traceability/);
+    assert.match(pillarsVisual, /Explore the lifecycle/);
+    assert.match(pillarsVisual, /Learn more/);
     assert.match(visuals, /Discover · Scan · Compare/);
     assert.match(workspaceExplorer, /lifecycleModuleCatalogByGroup/);
   });

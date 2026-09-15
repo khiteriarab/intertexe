@@ -297,4 +297,6 @@ export function PassportIdentityVisual() {
 }
 
 /** Platform breadth — interactive workspace explorer synced with enterprise nav + maturity. */
+export { PlatformProductPillarsVisual } from "./b2b-visuals/PlatformProductPillarsVisual";
+/** @deprecated Use PlatformProductPillarsVisual on the platform home */
 export { PlatformWorkspaceExplorer as PlatformModuleGrid } from "./b2b-visuals/PlatformWorkspaceExplorer";

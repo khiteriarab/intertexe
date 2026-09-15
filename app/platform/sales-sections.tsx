@@ -3,7 +3,7 @@ import { WhatItIsProcessVisual } from "./b2b-visuals/WhatItIsProcessVisual";
 import { PlatformCapabilityNav } from "./PlatformCapabilityNav";
 import {
   DeliveryModesVisual,
-  PlatformModuleGrid,
+  PlatformProductPillarsVisual,
   ProductIdentityCarriersVisual,
   PublishExperienceVisual,
   SaaSDemoFlowVisual,
@@ -280,26 +280,28 @@ export function SalesConsumerSection() {
 
 export function SalesPlatformBreadthSection() {
   return (
-    <section className="platform-module-showcase platform-abstract-band itx-abstract-motif border-y border-[#e8e3da]/60 py-12 sm:py-16 lg:py-24">
+    <section className="platform-product-pillars-section py-14 sm:py-16 lg:py-24 border-y border-[#2a3d5c]/40">
       <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-10 lg:mb-12">
-          <Eyebrow className="mb-0">Product lifecycle</Eyebrow>
-          <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--platform-quiet)] sm:text-right max-w-xs sm:pt-1">
-            Create · Prove · Understand · Extend
-          </p>
+        <div className="max-w-3xl mb-10 lg:mb-14">
+          <Eyebrow className="mb-4 text-[var(--platform-accent-muted)]">One workspace</Eyebrow>
+          <Heading className="mb-4 max-w-3xl text-white">One record. An entire product lifecycle.</Heading>
+          <Body className="max-w-2xl lg:max-w-3xl text-white/72">
+            INTERTEXE connects product creation, compliance, consumer transparency, and resale through one governed
+            source of truth.
+          </Body>
         </div>
-        <Heading className="mb-4 max-w-3xl">One workspace for the entire product lifecycle.</Heading>
-        <Body className="max-w-2xl lg:max-w-3xl mb-10 lg:mb-12 text-[#6b6560]">
-          From first material decisions and manufacturing evidence to consumer passports, sustainability intelligence
-          and resale, INTERTEXE keeps every stage connected to one governed product record.
-        </Body>
-        <PlatformModuleGrid />
-        <p className="mt-10 lg:mt-12 text-sm text-[#8a847c] leading-relaxed max-w-2xl">
-          <Link href="/platform/demo" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
+
+        <PlatformProductPillarsVisual />
+
+        <p className="mt-10 lg:mt-12 text-sm text-white/50 leading-relaxed max-w-2xl">
+          <Link href="/platform/demo" className="underline underline-offset-4 hover:text-white/80 text-white/65">
             See it live
           </Link>{" "}
           with sample products, or{" "}
-          <Link href="/platform/request?intent=snapshot&cta=platform_breadth" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
+          <Link
+            href="/platform/request?intent=snapshot&cta=platform_breadth"
+            className="underline underline-offset-4 hover:text-white/80 text-white/65"
+          >
             start with 10 of your own products
           </Link>
           .
