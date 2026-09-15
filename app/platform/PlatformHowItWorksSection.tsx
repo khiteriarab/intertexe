@@ -1,8 +1,8 @@
+import Link from "next/link";
 import { WhatItIsProcessVisual } from "./b2b-visuals/WhatItIsProcessVisual";
 import { PlatformCapabilityNav } from "./PlatformCapabilityNav";
-import { PlatformIntelligenceLayer } from "./intelligence/PlatformIntelligenceLayer";
+import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink } from "./platform-ui";
-import "./platform-intelligence.css";
 
 const LIFECYCLE_PILLARS = [
   ["Create", "Capture and structure product data"],
@@ -99,11 +99,22 @@ export function PlatformHowItWorksSection() {
             </p>
           </header>
 
-          <div className="mb-8 lg:mb-10">
+          <div className="mb-6 lg:mb-8">
             <ProductStoryPillars items={INTELLIGENCE_PILLARS} />
           </div>
 
-          <PlatformIntelligenceLayer />
+          <p className="text-sm text-[var(--platform-quiet)] leading-relaxed max-w-2xl">
+            Brief, benchmark, forecast, and recommended actions live inside your INTERTEXE workspace — assembled from
+            your governed catalog, not generic output.{" "}
+            <Link href={getEnterpriseLoginUrl()} className="underline underline-offset-2 hover:text-[var(--platform-ink)]">
+              Sign in to open intelligence
+            </Link>{" "}
+            or{" "}
+            <Link href="/platform/demo" className="underline underline-offset-2 hover:text-[var(--platform-ink)]">
+              tour the live demo
+            </Link>
+            .
+          </p>
         </div>
 
         <PlatformCapabilityNav className="mt-10 sm:mt-12 lg:mt-14" />

@@ -51,12 +51,13 @@ describe("Platform B2B sales page", () => {
     assert.match(howItWorks, /Comply/);
     assert.match(howItWorks, /Distribute/);
     assert.match(howItWorks, /Extend/);
-    assert.match(howItWorks, /PlatformIntelligenceLayer/);
+    assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
     assert.match(howItWorks, /Analyze/);
     assert.match(howItWorks, /Benchmark/);
     assert.match(howItWorks, /Forecast/);
     assert.match(howItWorks, /Recommend/);
     assert.match(howItWorks, /Act/);
+    assert.match(howItWorks, /Sign in to open intelligence/);
     assert.match(howItWorks, /From raw product data to intelligent action/);
     assert.doesNotMatch(howItWorks, /understand-ingest-laptop\.jpg/);
     assert.doesNotMatch(howItWorks, /platform-editorial-step-grid/);
@@ -131,18 +132,18 @@ describe("Platform B2B sales page", () => {
   });
 
   it("centers intelligence and delivery without overclaiming", () => {
-    const intelligenceLayer = fs.readFileSync(
-      path.join(process.cwd(), "app/platform/intelligence/PlatformIntelligenceLayer.tsx"),
+    const entIntelligence = fs.readFileSync(
+      path.join(process.cwd(), "app/dashboard/components/EntIntelligenceWorkspace.tsx"),
       "utf8",
     );
-    const intelligenceModules = fs.readFileSync(
-      path.join(process.cwd(), "app/platform/intelligence/PlatformIntelligenceModules.tsx"),
+    const entIntelligenceModules = fs.readFileSync(
+      path.join(process.cwd(), "app/dashboard/components/EntIntelligenceModules.tsx"),
       "utf8",
     );
-    assert.match(howItWorks, /PlatformIntelligenceLayer/);
+    assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
     assert.match(howItWorks, /Material intelligence/);
-    assert.match(intelligenceLayer, /MaterialBenchmarkModule/);
-    assert.match(intelligenceModules, /Material Benchmark/);
+    assert.match(entIntelligence, /EntMaterialBenchmarkModule/);
+    assert.match(entIntelligenceModules, /Material Benchmark/);
     assert.match(sections, /PlatformIntelligenceSection/);
     assert.match(sections, /Headless API/);
     assert.match(sections, /SaaSDemoFlowVisual/);
@@ -216,12 +217,13 @@ describe("Platform B2B sales page", () => {
       path.join(process.cwd(), "app/platform/b2b-visuals/PlatformProductPillarsVisual.tsx"),
       "utf8",
     );
-    assert.match(pillarsVisual, /platform-journey-map/);
-    assert.match(pillarsVisual, /Create/);
+    assert.match(pillarsVisual, /platform-product-pillars-grid/);
+    assert.match(pillarsVisual, /Product intelligence/);
+    assert.match(pillarsVisual, /Traceability \+ compliance/);
+    assert.match(pillarsVisual, /Connected product lifecycle/);
     assert.match(pillarsVisual, /Explore product intelligence/);
     assert.match(pillarsVisual, /Explore traceability/);
     assert.match(pillarsVisual, /Explore the lifecycle/);
-    assert.match(pillarsVisual, /Learn more/);
     assert.match(visuals, /Discover · Scan · Compare/);
     assert.match(workspaceExplorer, /lifecycleModuleCatalogByGroup/);
   });
