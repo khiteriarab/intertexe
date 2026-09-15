@@ -2452,6 +2452,20 @@
   background: var(--platform-highlight, #f5f1ea);
 }
 
+.platform-delivery-story-visual--symbol {
+  background: #f7f5f1;
+}
+
+.platform-delivery-story-photo--symbol {
+  aspect-ratio: 1 / 1;
+  min-height: 11rem;
+  background: radial-gradient(circle at 50% 42%, #1a1816 0%, #0d0c0b 72%);
+}
+
+.platform-delivery-story-photo--symbol img {
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.35));
+}
+
 .platform-delivery-mini-modes {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -206,6 +206,12 @@ describe("Platform B2B sales page", () => {
     const deliveryVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/DeliveryModesVisual.tsx"), "utf8");
     assert.match(deliveryVisual, /platform-delivery-storyline/);
     assert.match(deliveryVisual, /One governed record · three delivery modes · not mutually exclusive/);
+    assert.match(deliveryVisual, /story-product-identity\.png/);
+    assert.match(deliveryVisual, /story-publish-approved\.png/);
+    assert.match(deliveryVisual, /story-delivery-channels\.png/);
+    assert.match(deliveryVisual, /story-carrier-qr-nfc\.png/);
+    assert.match(deliveryVisual, /story-consumer-scan\.png/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/symbols/story-product-identity.png")));
     assert.match(sections, /PlatformProductPillarsVisual/);
     assert.match(visuals, /PlatformProductPillarsVisual/);
     assert.match(visuals, /PlatformWorkspaceExplorer/);
