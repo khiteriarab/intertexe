@@ -68,9 +68,9 @@ function PillarCta({ href, label }: { href: string; label: string }) {
   );
 }
 
-export function PlatformProductPillarsVisual() {
+export function PlatformProductPillarsVisual({ variant = "dark" }: { variant?: "dark" | "light" }) {
   return (
-    <div className="platform-product-pillars-grid">
+    <div className={`platform-product-pillars-grid ${variant === "light" ? "platform-product-pillars-grid--light" : ""}`}>
       {PILLARS.map((pillar) => (
         <article
           key={pillar.tag}

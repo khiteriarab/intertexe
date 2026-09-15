@@ -401,6 +401,31 @@
   }
 }
 
+/* Expanded lifecycle columns — full copy always visible (Fairly Made-style readability) */
+.platform-what-cards-expanded .platform-what-card-copy,
+.platform-what-cards-expanded .platform-what-card-chips,
+.platform-what-cards-expanded .platform-what-card-foot {
+  display: block;
+}
+
+.platform-what-cards-expanded .platform-what-card:not(.is-active) .platform-what-diagram {
+  display: none;
+}
+
+.platform-what-cards-expanded .platform-what-card {
+  align-self: stretch;
+}
+
+.platform-what-cards-expanded .platform-what-card-trigger {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-workspace-merge {
+  position: relative;
+}
+
 .platform-lifecycle-line {
   font-size: 10px;
   letter-spacing: 0.08em;
@@ -2738,6 +2763,55 @@
 .platform-product-pillar-cta:hover .platform-product-pillar-cta-icon {
   transform: translateX(2px);
   border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Light variant — embedded in cream product story section */
+.platform-product-pillars-grid--light .platform-product-pillar {
+  background: #fff;
+  border: 1px solid var(--platform-border);
+  border-radius: 0.85rem;
+  box-shadow: 0 14px 36px rgba(22, 21, 19, 0.05);
+}
+
+.platform-product-pillars-grid--light .platform-product-pillar--featured {
+  border-color: rgba(196, 165, 116, 0.55);
+  background: linear-gradient(180deg, #fff 0%, #faf8f4 100%);
+}
+
+.platform-product-pillars-grid--light .platform-product-pillar-icon {
+  border-color: rgba(62, 98, 104, 0.15);
+  background: #f7f5f1;
+  color: var(--platform-primary);
+}
+
+.platform-product-pillars-grid--light .platform-product-pillar-tag {
+  border-color: rgba(62, 98, 104, 0.18);
+  color: var(--platform-primary);
+  background: #faf8f4;
+}
+
+.platform-product-pillars-grid--light .platform-product-pillar-title {
+  color: var(--platform-ink);
+}
+
+.platform-product-pillars-grid--light .platform-product-pillar-copy {
+  color: var(--platform-muted);
+}
+
+.platform-product-pillars-grid--light .platform-product-pillar-cta {
+  border-color: rgba(62, 98, 104, 0.22);
+  color: var(--platform-primary);
+  background: #fff;
+}
+
+.platform-product-pillars-grid--light .platform-product-pillar-cta:hover {
+  border-color: rgba(196, 165, 116, 0.55);
+  background: #faf8f4;
+}
+
+.platform-product-pillars-grid--light .platform-product-pillar-cta-icon {
+  border-color: rgba(62, 98, 104, 0.22);
+  color: var(--platform-primary);
 }
 
 /* Journey map — horizontal scroll flow with flip nodes */

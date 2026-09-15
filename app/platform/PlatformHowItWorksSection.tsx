@@ -1,39 +1,9 @@
 import Link from "next/link";
 import { WhatItIsProcessVisual } from "./b2b-visuals/WhatItIsProcessVisual";
+import { PlatformProductPillarsVisual } from "./b2b-visuals/PlatformProductPillarsVisual";
 import { PlatformCapabilityNav } from "./PlatformCapabilityNav";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink } from "./platform-ui";
-
-const LIFECYCLE_PILLARS = [
-  ["Create", "Capture and structure product data"],
-  ["Verify", "Find gaps before they become risk"],
-  ["Comply", "Prepare products for trust and regulation"],
-  ["Distribute", "One record, every channel"],
-  ["Extend", "Support the product after the sale"],
-] as const;
-
-const INTELLIGENCE_PILLARS = [
-  ["Analyze", "Surface patterns across your catalog"],
-  ["Benchmark", "Compare against peer performance"],
-  ["Forecast", "Model demand and material trends"],
-  ["Recommend", "Prioritize actions with confidence"],
-  ["Act", "Execute from governed evidence"],
-] as const;
-
-function ProductStoryPillars({ items }: { items: readonly (readonly [string, string])[] }) {
-  return (
-    <ul className="platform-editorial-pillars grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
-      {items.map(([label, detail]) => (
-        <li key={label} className="border-t border-[var(--platform-border)] pt-4">
-          <span className="block text-[11px] tracking-[0.12em] uppercase text-[var(--platform-primary)] mb-1.5">
-            {label}
-          </span>
-          <span className="block text-[13px] text-[var(--platform-quiet)] font-light leading-snug">{detail}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 export function PlatformHowItWorksSection() {
   return (
@@ -57,24 +27,49 @@ export function PlatformHowItWorksSection() {
 
         <div className="platform-product-story-lifecycle">
           <header className="platform-product-story-phase-head">
-            <p className="platform-product-story-phase-kicker">Product data infrastructure</p>
+            <p className="platform-product-story-phase-kicker">One record · entire product lifecycle</p>
             <p className="platform-product-story-flow-line">
               <span>Raw data</span>
               <span className="platform-product-story-flow-arrow" aria-hidden>→</span>
               <span>Governed record</span>
               <span className="platform-product-story-flow-arrow" aria-hidden>→</span>
               <span>Passport · API · consumer</span>
+              <span className="platform-product-story-flow-arrow" aria-hidden>→</span>
+              <span>Intelligence · action</span>
             </p>
           </header>
 
-          <ProductStoryPillars items={LIFECYCLE_PILLARS} />
-
-          <div className="mt-8 lg:mt-10 mb-0">
-            <WhatItIsProcessVisual />
-          </div>
+          <WhatItIsProcessVisual />
         </div>
 
-        <div className="platform-product-story-bridge" aria-hidden>
+        <div className="platform-workspace-merge mt-14 sm:mt-16 lg:mt-20 pt-12 sm:pt-14 border-t border-[var(--platform-border)]">
+          <div className="max-w-3xl mb-8 lg:mb-10">
+            <Eyebrow className="mb-4">One workspace</Eyebrow>
+            <Heading className="mb-4 max-w-3xl">Three layers. One governed source of truth.</Heading>
+            <Body className="max-w-2xl lg:max-w-3xl">
+              INTERTEXE connects product creation, compliance, consumer transparency, and resale through the same record
+              — grouped here as product intelligence, traceability, and connected lifecycle.
+            </Body>
+          </div>
+
+          <PlatformProductPillarsVisual variant="light" />
+
+          <p className="mt-8 lg:mt-10 text-sm text-[var(--platform-quiet)] leading-relaxed max-w-2xl">
+            <Link href="/platform/demo" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
+              See it live
+            </Link>{" "}
+            with sample products, or{" "}
+            <Link
+              href="/platform/request?intent=snapshot&cta=platform_breadth"
+              className="underline underline-offset-4 hover:text-[var(--platform-primary)]"
+            >
+              start with 10 of your own products
+            </Link>
+            .
+          </p>
+        </div>
+
+        <div className="platform-product-story-bridge mt-12 sm:mt-14" aria-hidden>
           <div className="platform-product-story-bridge-line" />
           <div className="platform-product-story-bridge-node">
             <span className="platform-product-story-bridge-label">Trusted data layer</span>
@@ -98,10 +93,6 @@ export function PlatformHowItWorksSection() {
               <span>Act</span>
             </p>
           </header>
-
-          <div className="mb-6 lg:mb-8">
-            <ProductStoryPillars items={INTELLIGENCE_PILLARS} />
-          </div>
 
           <p className="text-sm text-[var(--platform-quiet)] leading-relaxed max-w-2xl">
             Brief, benchmark, forecast, and recommended actions live inside your INTERTEXE workspace — assembled from

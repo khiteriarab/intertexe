@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { EDITORIAL_GREENERY_BANNER } from "../../lib/editorial-assets";
+import { EDITORIAL_GREENERY_BANNER, EDITORIAL_GREENERY_BANNER_2X } from "../../lib/editorial-assets";
 import { SERIF } from "./platform-ui";
 
 /** Editorial greenery banner — ivory fade + landscape, selective brand moment. */
@@ -14,6 +14,7 @@ export function PlatformCircularWardrobeBanner() {
           fill
           className="platform-circular-banner-photo object-cover"
           sizes="(max-width: 768px) 100vw, 1152px"
+          srcSet={`${EDITORIAL_GREENERY_BANNER} 1x, ${EDITORIAL_GREENERY_BANNER_2X} 2x`}
           priority={false}
         />
         <div className="platform-circular-banner-gradient" aria-hidden />

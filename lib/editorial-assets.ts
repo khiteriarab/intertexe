@@ -80,9 +80,9 @@ export const HOMEPAGE_HERO_IMAGE_V8_DESKTOP_2X = "/hero-editorial-v8-desktop-384
 export const HOMEPAGE_HERO_IMAGE_V8_LANDSCAPE = "/hero-editorial-v8-landscape-2400.jpg";
 export const HOMEPAGE_HERO_IMAGE_V8_LANDSCAPE_2X = "/hero-editorial-v8-landscape-3840.jpg";
 
-/** Misty hills / forest — circular wardrobe editorial banners */
-export const EDITORIAL_GREENERY_BANNER = HOMEPAGE_HERO_IMAGE_V8_LANDSCAPE;
-export const EDITORIAL_GREENERY_BANNER_2X = HOMEPAGE_HERO_IMAGE_V8_LANDSCAPE_2X;
+/** Misty hills / forest — circular wardrobe editorial banners (not grotto landscape crop). */
+export const EDITORIAL_GREENERY_BANNER = "/editorial-greenery-banner-2400.jpg";
+export const EDITORIAL_GREENERY_BANNER_2X = "/editorial-greenery-banner-3840.jpg";
 
 export type HomepageHeroSlide = {
   url: string;

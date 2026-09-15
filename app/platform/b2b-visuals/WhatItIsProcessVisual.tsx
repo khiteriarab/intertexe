@@ -384,7 +384,7 @@ export function WhatItIsProcessVisual() {
   const [activeId, setActiveId] = useState<StageId>("create");
 
   return (
-    <div className="platform-what-cards platform-what-cards-five platform-what-cards-interactive">
+    <div className="platform-what-cards platform-what-cards-five platform-what-cards-expanded">
       {STAGES.map((stage, i) => {
         const active = activeId === stage.id;
         return (

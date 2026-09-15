@@ -46,11 +46,16 @@ describe("Platform B2B sales page", () => {
     assert.match(sections, /PlatformBrandShowcaseHero/);
     assert.match(home, /PlatformHowItWorksSection/);
     assert.match(howItWorks, /WhatItIsProcessVisual/);
-    assert.match(howItWorks, /Create/);
-    assert.match(howItWorks, /Verify/);
-    assert.match(howItWorks, /Comply/);
-    assert.match(howItWorks, /Distribute/);
-    assert.match(howItWorks, /Extend/);
+    const processVisual = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"),
+      "utf8",
+    );
+    assert.match(processVisual, /Create/);
+    assert.match(processVisual, /Verify/);
+    assert.match(processVisual, /Comply/);
+    assert.match(processVisual, /Distribute/);
+    assert.match(processVisual, /Extend/);
+    assert.match(processVisual, /platform-what-cards-expanded/);
     assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
     assert.match(howItWorks, /Analyze/);
     assert.match(howItWorks, /Benchmark/);
@@ -65,7 +70,10 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(home, /PlatformScrollShowcase/);
     assert.doesNotMatch(home, /SalesIntelligenceSection/);
     assert.match(home, /SalesDeliverySection/);
-    assert.match(home, /SalesPlatformBreadthSection/);
+    assert.doesNotMatch(home, /SalesPlatformBreadthSection/);
+    assert.match(howItWorks, /PlatformProductPillarsVisual/);
+    assert.match(howItWorks, /WhatItIsProcessVisual/);
+    assert.match(howItWorks, /Three layers\. One governed source of truth\./);
     assert.doesNotMatch(home, /PlatformProofSection/);
     assert.match(home, /PlatformFaq/);
     assert.doesNotMatch(home, /SalesStartFreeSection/);
@@ -212,7 +220,7 @@ describe("Platform B2B sales page", () => {
     assert.match(deliveryVisual, /story-carrier-qr-nfc\.png/);
     assert.match(deliveryVisual, /story-consumer-scan\.png/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/symbols/story-product-identity.png")));
-    assert.match(sections, /PlatformProductPillarsVisual/);
+    assert.match(howItWorks, /PlatformProductPillarsVisual/);
     assert.match(visuals, /PlatformProductPillarsVisual/);
     assert.match(visuals, /PlatformWorkspaceExplorer/);
     assert.doesNotMatch(sections, /PlatformEditorialGraphic/);
