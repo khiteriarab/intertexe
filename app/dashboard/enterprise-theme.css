@@ -7,75 +7,81 @@
 
 .enterprise-app {
   --ent-petrol: #c4a574;
-  --ent-petrol-deep: #b89968;
-  --ent-petrol-mid: #d4bc8e;
-  --ent-petrol-light: #e8dcc8;
-  --ent-petrol-glow: rgba(196, 165, 116, 0.22);
-  --ent-forest: #2c2620;
+  --ent-petrol-deep: #1c1915;
+  --ent-petrol-mid: #8a7a62;
+  --ent-petrol-light: #f6f5f2;
+  --ent-petrol-glow: rgba(196, 165, 116, 0.16);
+  --ent-forest: #2f4a38;
   --ent-charcoal: #1c1915;
-  --ent-stone: #b8b0a6;
-  --ent-stone-soft: #d4cdc4;
-  --ent-blush: #f3e6e4;
-  --ent-blush-deep: #ead9d6;
-  --ent-rose: #e8d4d0;
-  --ent-rose-glow: rgba(232, 180, 168, 0.35);
-  --ent-butter: #f5ecd4;
-  --ent-butter-soft: #faf4e4;
-  --ent-gold: #e8c547;
-  --ent-ivory: #faf8f5;
-  --ent-cream: #faf7f2;
-  --ent-sand: #f5efe6;
+  --ent-stone: #8a847c;
+  --ent-stone-soft: #d8d4cc;
+  --ent-blush: #f6f5f2;
+  --ent-blush-deep: #ece9e3;
+  --ent-rose: #ead9d6;
+  --ent-rose-glow: rgba(168, 92, 92, 0.12);
+  --ent-butter: #f6f5f2;
+  --ent-butter-soft: #fbfbf9;
+  --ent-gold: #c4a574;
+  --ent-ivory: #fbfbf9;
+  --ent-cream: #f6f5f2;
+  --ent-sand: #f6f5f2;
   --ent-surface: #ffffff;
-  --ent-surface-muted: #fafafa;
-  --ent-surface-tint: #faf7f2;
-  --ent-ink: #1a1f22;
-  --ent-ink-soft: #3d4549;
-  --ent-muted: #6b6560;
-  --ent-muted-light: #9a948c;
+  --ent-surface-muted: #f6f5f2;
+  --ent-surface-tint: #ffffff;
+  --ent-ink: #1a1916;
+  --ent-ink-soft: #3a3732;
+  --ent-muted: #5c5852;
+  --ent-muted-light: #8a847c;
   --ent-raspberry: #9e4a5a;
   --ent-raspberry-soft: #f5e8eb;
-  --ent-border: rgba(26, 31, 34, 0.06);
-  --ent-border-strong: rgba(26, 31, 34, 0.1);
-  --ent-shadow-sm: 0 4px 24px rgba(44, 38, 32, 0.06), 0 1px 2px rgba(44, 38, 32, 0.03);
-  --ent-shadow: 0 12px 40px rgba(44, 38, 32, 0.08), 0 2px 8px rgba(44, 38, 32, 0.03);
-  --ent-shadow-lg: 0 24px 64px rgba(44, 38, 32, 0.1), 0 4px 16px rgba(44, 38, 32, 0.04);
-  --ent-shadow-float: 0 32px 80px rgba(44, 38, 32, 0.08), 0 8px 24px rgba(44, 38, 32, 0.04);
-  --ent-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-  --ent-shadow-panel: 0 20px 60px rgba(44, 38, 32, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  --ent-gradient-hero: linear-gradient(145deg, #e8dcc8 0%, #d9c9a8 42%, #c4a574 100%);
-  --ent-gradient-dark: linear-gradient(160deg, #2c2620 0%, #1f1a14 100%);
-  --ent-gradient-sidebar: #f9f7f4;
-  --ent-sidebar-fg: rgba(28, 25, 21, 0.92);
-  --ent-sidebar-fg-muted: rgba(28, 25, 21, 0.58);
-  --ent-sidebar-fg-soft: rgba(28, 25, 21, 0.42);
-  --ent-gradient-canvas: linear-gradient(180deg, #fdfcf9 0%, #faf9f7 100%);
-  --ent-gradient-warm: linear-gradient(180deg, #ffffff 0%, #f8f4ee 100%);
-  --ent-gradient-blush: linear-gradient(135deg, #ffffff 0%, #f8f0ed 45%, #f3e6e4 100%);
-  --ent-gradient-butter: linear-gradient(145deg, #fffdf8 0%, #f5ecd4 48%, #f7f1e8 100%);
-  --ent-gradient-stone: linear-gradient(160deg, #f5f1eb 0%, #ebe4db 100%);
-  --ent-gradient-chart-area: linear-gradient(180deg, rgba(201, 169, 98, 0.35) 0%, rgba(196, 165, 116, 0.08) 100%);
-  --ent-gradient-chart-rose: linear-gradient(135deg, #e8dcc8 0%, #c4a574 100%);
-  --ent-gradient-chart-petrol: linear-gradient(135deg, #e8dcc8 0%, #b89968 100%);
-  --ent-radius: 1.125rem;
-  --ent-radius-lg: 1.375rem;
-  --ent-radius-xl: 1.75rem;
-  --ent-radius-2xl: 2rem;
-  --ent-radius-3xl: 2.5rem;
+  --ent-border: rgba(26, 25, 22, 0.1);
+  --ent-border-strong: rgba(26, 25, 22, 0.16);
+  --ent-shadow-sm: 0 1px 2px rgba(26, 25, 22, 0.04);
+  --ent-shadow: 0 1px 2px rgba(26, 25, 22, 0.05);
+  --ent-shadow-lg: 0 8px 24px rgba(26, 25, 22, 0.06);
+  --ent-shadow-float: 0 10px 28px rgba(26, 25, 22, 0.07);
+  --ent-shadow-inset: none;
+  --ent-shadow-panel: none;
+  --ent-gradient-hero: #f6f5f2;
+  --ent-gradient-dark: #1c1915;
+  --ent-gradient-sidebar: #f6f5f2;
+  --ent-sidebar-fg: rgba(26, 25, 22, 0.92);
+  --ent-sidebar-fg-muted: rgba(26, 25, 22, 0.58);
+  --ent-sidebar-fg-soft: rgba(26, 25, 22, 0.42);
+  --ent-gradient-canvas: #ffffff;
+  --ent-gradient-warm: #ffffff;
+  --ent-gradient-blush: #ffffff;
+  --ent-gradient-butter: #fbfbf9;
+  --ent-gradient-stone: #f6f5f2;
+  --ent-gradient-chart-area: linear-gradient(180deg, rgba(47, 74, 56, 0.22) 0%, rgba(47, 74, 56, 0.04) 100%);
+  --ent-gradient-chart-rose: linear-gradient(135deg, #9e4a5a 0%, #c4a574 100%);
+  --ent-gradient-chart-petrol: linear-gradient(135deg, #2f4a38 0%, #c4a574 100%);
+  --ent-radius: 0.375rem;
+  --ent-radius-lg: 0.5rem;
+  --ent-radius-xl: 0.625rem;
+  --ent-radius-2xl: 0.75rem;
+  --ent-radius-3xl: 0.75rem;
 }
 
 .enterprise-app {
-  background: #faf9f7;
+  background: #ffffff;
   color: var(--ent-ink);
   font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Editorial display — serif for headlines */
+/* SaaS uses sans throughout. Serif is opt-in for rare product-name moments. */
 .enterprise-app .ent-serif,
 .enterprise-app .ent-title {
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.enterprise-app .ent-serif-editorial {
   font-family: var(--itx-serif);
   font-weight: 300;
   letter-spacing: -0.025em;
@@ -94,8 +100,8 @@
 .enterprise-app .ent-display {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
-  font-family: var(--itx-serif);
-  font-weight: 400;
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
 }
 
 .enterprise-app .ent-brand {
@@ -110,35 +116,13 @@
 /* ── Canvas ambient background ── */
 .enterprise-app .ent-canvas {
   position: relative;
-  background: #fdfcf9;
+  background: #fbfbf9;
   min-height: 100%;
 }
 
 .enterprise-app .ent-canvas::before,
 .enterprise-app .ent-canvas::after {
-  content: "";
-  position: fixed;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.12;
-}
-
-.enterprise-app .ent-canvas::before {
-  width: min(42vw, 460px);
-  height: min(42vw, 460px);
-  top: 4%;
-  right: 2%;
-  background: radial-gradient(circle, rgba(201, 169, 98, 0.08) 0%, transparent 68%);
-}
-
-.enterprise-app .ent-canvas::after {
-  width: min(38vw, 400px);
-  height: min(38vw, 400px);
-  bottom: 10%;
-  left: 18%;
-  background: radial-gradient(circle, rgba(232, 220, 200, 0.12) 0%, transparent 70%);
+  display: none;
 }
 
 .enterprise-app .ent-canvas-inner {
@@ -475,8 +459,8 @@
 }
 
 .enterprise-app .ent-nav-link:hover {
-  color: var(--ent-sidebar-fg);
-  background: rgba(232, 220, 200, 0.35);
+  background: rgba(26, 25, 22, 0.04);
+  color: var(--ent-ink);
 }
 
 .enterprise-app .ent-nav-link-active {

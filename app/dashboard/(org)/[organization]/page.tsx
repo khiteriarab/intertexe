@@ -16,10 +16,8 @@ import {
   loadConsumerSignals,
   pilotImageMaps,
 } from "../../../../lib/enterprise/consumer-signals";
-import { EntOverviewHero } from "../../components/EnterpriseUi";
-import { EntKpiGrid, EntOverviewCharts } from "../../components/EntDashboardWidgets";
+import { EntDashboardHome } from "../../components/EntDashboardHome";
 import { EntIntelligenceWorkspace } from "../../components/EntIntelligenceWorkspace";
-import { EntConsumerSignalsTeaser } from "../../components/EntConsumerSignals";
 import livePilotProducts from "../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import { isCustomerZeroOrg } from "../../../../lib/enterprise/dual-model";
 import { EntCustomerZeroBanner } from "../../components/EntCustomerZeroBanner";
@@ -83,7 +81,13 @@ export default async function OrganizationOverviewPage({
         </p>
       ) : null}
 
-      <EntOverviewHero overview={overview} orgName={membership.name} />
+      <EntDashboardHome
+        overview={overview}
+        stats={composition.stats}
+        signals={signals}
+        base={base}
+        orgName={membership.name}
+      />
 
       {activated ? (
         <div className="mb-10">
@@ -104,8 +108,6 @@ export default async function OrganizationOverviewPage({
 
       {isCustomerZeroOrg(membership.slug) ? <EntCustomerZeroBanner base={base} /> : null}
 
-      <EntKpiGrid overview={overview} base={base} />
-
       <section className="ent-ops-teaser mb-10 md:mb-12">
         <div className="ent-ops-teaser-card">
           <div>
@@ -123,12 +125,7 @@ export default async function OrganizationOverviewPage({
 
       <EntIntelligenceWorkspace data={intelligence} base={base} variant="home" />
 
-      <EntConsumerSignalsTeaser base={base} signals={signals} />
-
       {isCustomerZeroOrg(membership.slug) ? <EntDualModelFlywheel base={base} /> : null}
-
-
-      <EntOverviewCharts overview={overview} />
 
 
 

@@ -1,0 +1,412 @@
+/**
+ * INTERTEXE product-intelligence surfaces — dense, white, graphite.
+ */
+
+.enterprise-app .ent-sidebar-art,
+.enterprise-app .ent-sidebar-edge {
+  display: none;
+}
+
+.enterprise-app .ent-metric-rail,
+.enterprise-app .ent-product-metric-rail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--ent-border);
+  background: #fff;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-metric-rail {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .enterprise-app .ent-product-metric-rail {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+
+.enterprise-app .ent-metric-rail-item,
+.enterprise-app .ent-product-metric-rail > div {
+  padding: 0.85rem 1rem;
+  border-right: 1px solid var(--ent-border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.enterprise-app .ent-metric-rail-item:last-child,
+.enterprise-app .ent-product-metric-rail > div:last-child {
+  border-right: 0;
+}
+
+.enterprise-app .ent-metric-rail-value,
+.enterprise-app .ent-product-metric-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ent-ink);
+  white-space: nowrap;
+}
+
+.enterprise-app .ent-product-metric-value small {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--ent-muted);
+}
+
+.enterprise-app .ent-product-metric-value--text {
+  font-size: 0.9375rem;
+  white-space: normal;
+}
+
+.enterprise-app .ent-metric-rail-label,
+.enterprise-app .ent-product-metric-label {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ent-muted);
+}
+
+.enterprise-app .ent-dash-home-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin: 0.2rem 0 0.35rem;
+}
+
+.enterprise-app .ent-dash-split {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .enterprise-app .ent-dash-split {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}
+
+.enterprise-app .ent-dash-panel {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  padding: 1.15rem 1.25rem 1.35rem;
+}
+
+.enterprise-app .ent-dash-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.enterprise-app .ent-dash-panel-head h2 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.enterprise-app .ent-dash-panel-head a,
+.enterprise-app .ent-overview-explore {
+  font-size: 0.75rem;
+  color: var(--ent-muted);
+  text-decoration: none;
+}
+
+.enterprise-app .ent-dash-readiness {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.enterprise-app .ent-dash-readiness ul,
+.enterprise-app .ent-dash-attention {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.enterprise-app .ent-dash-readiness li,
+.enterprise-app .ent-dash-attention a {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--ent-border-subtle);
+  font-size: 0.875rem;
+}
+
+.enterprise-app .ent-dash-readiness li span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.enterprise-app .ent-dash-readiness i {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 99px;
+}
+
+.enterprise-app .ent-dash-attention a.is-emphasis {
+  color: var(--ent-critical);
+}
+
+.enterprise-app .ent-dash-empty,
+.enterprise-app .ent-dash-next,
+.enterprise-app .ent-dash-signal-headline {
+  font-size: 0.875rem;
+  color: var(--ent-muted);
+  line-height: 1.5;
+}
+
+.enterprise-app .ent-dash-signal-headline {
+  color: var(--ent-ink);
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.enterprise-app .ent-dash-signals dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  margin-top: 1rem;
+}
+
+.enterprise-app .ent-dash-signals dt {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ent-muted);
+}
+
+.enterprise-app .ent-dash-signals dd {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.enterprise-app .ent-lca-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.enterprise-app .ent-lca-row {
+  display: grid;
+  grid-template-columns: 7.25rem minmax(0, 1fr) 4.75rem;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.enterprise-app .ent-lca-label {
+  font-size: 0.75rem;
+  color: var(--ent-ink-soft);
+}
+
+.enterprise-app .ent-lca-track {
+  height: 6px;
+  background: var(--ent-surface-muted);
+  overflow: hidden;
+}
+
+.enterprise-app .ent-lca-fill {
+  display: block;
+  height: 100%;
+}
+
+.enterprise-app .ent-lca-value {
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--ent-muted);
+  white-space: nowrap;
+}
+
+.enterprise-app .ent-lca-value strong {
+  display: block;
+  color: var(--ent-ink);
+  font-weight: 600;
+}
+
+.enterprise-app .ent-product-head {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  gap: 1rem 1.15rem;
+  align-items: start;
+  margin-bottom: 1.25rem;
+}
+
+.enterprise-app .ent-product-head-media {
+  position: relative;
+  width: 5.5rem;
+  height: 7rem;
+  background: var(--ent-surface-muted);
+  overflow: hidden;
+}
+
+.enterprise-app .ent-product-head-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-weight: 600;
+}
+
+.enterprise-app .ent-product-head-name {
+  font-family: var(--itx-serif);
+  font-size: 1.65rem;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.enterprise-app .ent-product-head-id,
+.enterprise-app .ent-product-head-summary {
+  font-size: 0.8125rem;
+  color: var(--ent-muted);
+  margin-top: 0.3rem;
+}
+
+.enterprise-app .ent-product-head-lifecycle {
+  grid-column: 1 / -1;
+}
+
+.enterprise-app .ent-lifecycle-nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.15rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ent-muted-light);
+}
+
+.enterprise-app .ent-lifecycle-nav-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.enterprise-app .ent-lifecycle-nav-arrow {
+  width: 1.15rem;
+  height: 1px;
+  background: var(--ent-border-strong);
+}
+
+.enterprise-app .ent-lifecycle-nav-step--current .ent-lifecycle-nav-label {
+  color: var(--ent-ink);
+  font-weight: 600;
+}
+
+.enterprise-app .ent-lifecycle-nav-step--complete .ent-lifecycle-nav-label {
+  color: var(--ent-ink-soft);
+}
+
+.enterprise-app .ent-product-tabs {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--ent-border);
+  margin-bottom: 1.5rem;
+}
+
+.enterprise-app .ent-product-tab {
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.7rem 0;
+  color: var(--ent-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+
+.enterprise-app .ent-product-tab.is-active {
+  color: var(--ent-ink);
+  border-bottom-color: var(--ent-ink);
+}
+
+.enterprise-app .ent-overview-split {
+  display: grid;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+@media (min-width: 1024px) {
+  .enterprise-app .ent-overview-split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.enterprise-app .ent-overview-viz {
+  min-width: 0;
+}
+
+.enterprise-app .ent-overview-section-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 0.85rem;
+}
+
+.enterprise-app .ent-overview-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.enterprise-app .ent-overview-meta {
+  padding-top: 1rem;
+  border-top: 1px solid var(--ent-border);
+}
+
+.enterprise-app .ent-overview-card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.enterprise-app .ent-circularity-steps {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.enterprise-app .ent-circularity-step {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--ent-border);
+}
+
+.enterprise-app .ent-circularity-step-stage {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ent-muted);
+}
+
+.enterprise-app .ent-circularity-step-label {
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+.enterprise-app .ent-insight-why.is-collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.enterprise-app .ent-intel-brief-toggle {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.75rem;
+  color: var(--ent-ink);
+  text-decoration: underline;
+  cursor: pointer;
+}

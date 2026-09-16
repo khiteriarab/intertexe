@@ -7,6 +7,7 @@ import {
   simulateProductImpactScores,
   type ImpactSimulationInputs,
 } from "../../../lib/enterprise/product-impact-scores";
+import { ImpactLcaBars } from "./ImpactLcaBars";
 
 export function ProductImpactModule({
   scores,
@@ -74,25 +75,7 @@ export function ProductImpactModule({
           <h3 className="ent-impact-breakdown-title">Impact breakdown</h3>
           <p className="text-xs text-[var(--ent-muted)]">What is driving the score</p>
         </div>
-        <div className="ent-impact-stack" aria-label="Lifecycle impact breakdown">
-          {active.segments.map((segment) => (
-            <div
-              key={segment.stage}
-              className="ent-impact-stack-segment"
-              style={{ width: `${segment.sharePct}%`, background: segment.color }}
-              title={`${segment.label}: ${segment.sharePct}%`}
-            />
-          ))}
-        </div>
-        <ul className="ent-impact-stack-legend">
-          {active.segments.map((segment) => (
-            <li key={segment.stage}>
-              <span className="ent-impact-stack-swatch" style={{ background: segment.color }} />
-              <span>{segment.label}</span>
-              <span className="ent-impact-stack-pct">{segment.sharePct}%</span>
-            </li>
-          ))}
-        </ul>
+        <ImpactLcaBars segments={active.segments} />
       </section>
 
       <div className="ent-impact-module-insights">

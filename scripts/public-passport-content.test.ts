@@ -24,20 +24,20 @@ describe("public passport content — data integrity", () => {
   it("resolves pilot product image from fixture", () => {
     const content = buildConsumerPassportContent({
       styleCode: "ITX-LIVE-08",
-      sku: "P01060555-4",
+      sku: "P01136600",
     });
-    assert.ok(content.imageUrl?.includes("mytheresa.com"));
+    assert.ok(content.imageUrl?.includes("toteme-leather-coat"));
   });
 
   it("exposes sell action in next life when passport is valid", () => {
     const content = buildConsumerPassportContent({
-      productName: "God's True Cashmere Brilliant Linen Shirt with Lapis Lazuli",
-      brand: "God's True Cashmere",
-      category: "Shirt",
+      productName: "Turtleneck Wool and Cashmere Top",
+      brand: "Róhe",
+      category: "Knitwear",
       styleCode: "ITX-LIVE-01",
-      sku: "P01152404-3",
+      sku: "P01103203",
       publicId: "itx_test",
-      snapshotFields: [{ key: "composition", value: "100% Linen" }],
+      snapshotFields: [{ key: "composition", value: "70% Wool, 30% Cashmere" }],
       traceNodes: [
         { tier_label: "Raw material", facility_name: "European flax cultivation" },
         { tier_label: "Manufacturing", facility_name: "Shirt assembly", country_code: "PT" },

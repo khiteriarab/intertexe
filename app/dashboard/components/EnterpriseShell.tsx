@@ -76,7 +76,7 @@ export function EnterpriseShell({
   }
 
   return (
-    <div className="enterprise-app itx-abstract-canvas min-h-screen">
+    <div className="enterprise-app min-h-screen">
       <div className="md:hidden ent-mobile-bar ent-mobile-bar-abstract px-4 py-3.5 flex items-center justify-between">
         <div>
           <p className="ent-brand">INTERTEXE</p>

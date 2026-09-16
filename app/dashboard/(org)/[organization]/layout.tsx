@@ -9,6 +9,7 @@ import { isPilotPlan } from "../../../../lib/enterprise/pricing";
 import { EnterpriseShell } from "../../components/EnterpriseShell";
 import "../../enterprise-theme.css";
 import "../../enterprise-premium.css";
+import "../../enterprise-product-intel.css";
 
 const entSans = DM_Sans({
   subsets: ["latin"],

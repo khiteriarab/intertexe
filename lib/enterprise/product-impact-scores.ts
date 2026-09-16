@@ -14,6 +14,7 @@ export type ImpactLifecycleSegment = {
   stage: ImpactLifecycleStage;
   label: string;
   sharePct: number;
+  climateKg: number;
   color: string;
 };
 
@@ -84,14 +85,18 @@ function baseClimate(report: ImpactReadinessReport | null, completenessPct: numb
   return Number((4.2 - completenessPct / 80).toFixed(1));
 }
 
-function buildSegments(weights: number[]): ImpactLifecycleSegment[] {
+function buildSegments(weights: number[], climateKgCo2e = 0): ImpactLifecycleSegment[] {
   const shares = normalizeShares(weights);
-  return STAGE_META.map((meta, i) => ({
-    stage: meta.stage,
-    label: meta.label,
-    sharePct: shares[i] ?? 0,
-    color: meta.color,
-  }));
+  return STAGE_META.map((meta, i) => {
+    const sharePct = shares[i] ?? 0;
+    return {
+      stage: meta.stage,
+      label: meta.label,
+      sharePct,
+      climateKg: Number(((climateKgCo2e * sharePct) / 100).toFixed(2)),
+      color: meta.color,
+    };
+  });
 }
 
 function sortByShare(segments: ImpactLifecycleSegment[]) {
@@ -119,17 +124,17 @@ export function buildProductImpactScores(input: {
     return w;
   });
 
-  const segments = buildSegments(weights);
-  const ranked = sortByShare(segments);
-  const largestDriver = ranked[0];
-  const secondDriver = ranked[1] || null;
-
   const pefSingleScore = Math.round(climate * 2100 * readinessBoost);
   const frenchEnvironmentalCost = Math.round(climate * 780 * readinessBoost);
   const frenchPer100g =
     input.weightGrams && input.weightGrams > 0
       ? Math.round((frenchEnvironmentalCost / input.weightGrams) * 100)
       : null;
+  const climateKgCo2e = Number(climate.toFixed(1));
+  const segments = buildSegments(weights, climateKgCo2e);
+  const ranked = sortByShare(segments);
+  const largestDriver = ranked[0];
+  const secondDriver = ranked[1] || null;
 
   const confidence: ProductImpactScores["confidence"] =
     completeness >= 75 && input.impactReadiness?.level === "ready"
@@ -169,7 +174,7 @@ export function buildProductImpactScores(input: {
     frenchEnvironmentalCost,
     frenchUnit: "points d'impact",
     frenchPer100g,
-    climateKgCo2e: Number(climate.toFixed(1)),
+    climateKgCo2e,
     climateUnit: "kgCO₂e",
     methodology: "PEFCR methodology",
     confidence,
@@ -259,9 +264,9 @@ export function simulateProductImpactScores(
     weightAdjust[stageIndex("end_of_life")] *= 0.8;
   }
 
-  const segments = buildSegments(weightAdjust);
-  const ranked = sortByShare(segments);
   const climateKgCo2e = Number((baseline.climateKgCo2e * climateFactor).toFixed(1));
+  const segments = buildSegments(weightAdjust, climateKgCo2e);
+  const ranked = sortByShare(segments);
   const pefSingleScore = Math.round(baseline.pefSingleScore * pefFactor);
   const frenchEnvironmentalCost = Math.round(baseline.frenchEnvironmentalCost * frenchFactor);
   const frenchPer100g =
