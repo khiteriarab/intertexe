@@ -8,11 +8,10 @@ import {
   GENERIC_SITE_DESCRIPTION,
   resolveShoppableBrandCount,
 } from "../lib/catalog-stats-labels";
-import { HOMEPAGE_REVALIDATE_SEC } from "../lib/homepage-cache-config";
 import { HomePageContent } from "./components/HomeClient";
 
-/** ISR homepage — serve from the CDN instead of a serverless round-trip on every visit. */
-export const revalidate = HOMEPAGE_REVALIDATE_SEC;
+/** Request-time homepage — static generation hangs the Vercel deploy when catalog IO is slow. */
+export const dynamic = "force-dynamic";
 
 async function loadHomePageData() {
   try {

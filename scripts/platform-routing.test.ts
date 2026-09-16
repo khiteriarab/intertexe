@@ -120,8 +120,8 @@ test("platform host strips consumer chrome from login", () => {
   assert.match(layout, /AppShell/);
   assert.match(layout, /ConsumerCookieConsent/);
   assert.doesNotMatch(layout, /Loading chunk/);
-  assert.doesNotMatch(layout, /fonts\.googleapis/);
-  assert.match(layout, /next\/font\/google/);
+  assert.doesNotMatch(layout, /next\/font\/google/);
+  assert.match(layout, /DeferredGoogleFonts/);
   assert.match(layout, /DeferredSiteMetrics/);
   assert.doesNotMatch(layout, /@vercel\/analytics/);
   assert.doesNotMatch(layout, /@vercel\/speed-insights/);
@@ -129,8 +129,8 @@ test("platform host strips consumer chrome from login", () => {
   const nextConfig = fs.readFileSync(path.join(process.cwd(), "next.config.js"), "utf8");
   assert.doesNotMatch(nextConfig, /no-store, no-cache, must-revalidate, proxy-revalidate/);
   const homePage = fs.readFileSync(path.join(process.cwd(), "app/page.tsx"), "utf8");
-  assert.doesNotMatch(homePage, /force-dynamic/);
-  assert.match(homePage, /revalidate = HOMEPAGE_REVALIDATE_SEC/);
+  assert.match(homePage, /force-dynamic/);
+  assert.match(homePage, /homepage-data-timeout/);
   const catalogImage = fs.readFileSync(
     path.join(process.cwd(), "app/components/CatalogProductImage.tsx"),
     "utf8"

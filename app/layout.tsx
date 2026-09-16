@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "./components/AppShell";
 import { ConsumerCookieConsent } from "./components/ConsumerCookieConsent";
+import { DeferredGoogleFonts } from "./components/DeferredGoogleFonts";
 import { DeferredSiteMetrics } from "./components/DeferredSiteMetrics";
 import { GENERIC_SITE_DESCRIPTION } from "../lib/catalog-stats-labels";
 import { CATALOG_STATS } from "../lib/catalog-stats";
@@ -14,18 +14,6 @@ import {
   SITE_URL,
   pageAlternates,
 } from "../lib/seo-international";
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-dm-sans",
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-playfair",
-});
 
 const HOME_DESCRIPTION =
   `Discover ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces across ${CATALOG_STATS.brandCountFormatted} brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to find better natural fiber alternatives at your price point.`;
@@ -154,7 +142,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${playfair.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta
           name="google-site-verification"
@@ -172,6 +160,7 @@ export default function RootLayout({
       </head>
       <body className="w-full min-h-screen overflow-x-hidden" suppressHydrationWarning>
         <AppShell>{children}</AppShell>
+        <DeferredGoogleFonts />
         <Suspense fallback={null}>
           <ConsumerCookieConsent />
         </Suspense>
