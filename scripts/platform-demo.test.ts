@@ -232,7 +232,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     const featured = fs.readFileSync(path.join(process.cwd(), "lib/material-intelligence/demo-featured.ts"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
     assert.match(demo, /DemoHero/);
-    assert.match(demo, /DemoIntertexeFlow/);
+    assert.doesNotMatch(demo, /DemoIntertexeFlow/);
     assert.match(demo, /DemoProductWorkflow/);
     assert.match(demo, /DemoFeaturedExample/);
     assert.doesNotMatch(demo, /DemoClosingQuote/);
@@ -250,8 +250,12 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
     assert.match(hero, /From a tag to full transparency/);
     assert.match(hero, /demo-see-it-live\.jpg/);
-    assert.match(featuredSection, /DEMO_FEATURED/);
-    assert.match(featuredSection, /DEMO_FEATURED\.name/);
+    assert.match(featuredSection, /Cotton Poplin Shirt/);
+    assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
+    assert.match(featuredSection, /View full passport/);
+    assert.match(featuredSection, /Try another product/);
+    assert.match(featuredSection, /Linen Wrap Top/);
+    assert.match(featuredSection, /Cashmere Crew/);
     assert.match(featured, /ITX-4102/);
     assert.doesNotMatch(featuredSection, /EU Certified/);
     assert.doesNotMatch(featuredSection, /Guaranteed Compliant/);

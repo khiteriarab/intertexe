@@ -175,15 +175,10 @@ function WorkflowPanel({
   );
 }
 
-export function DemoProductWorkflow({
-  activeStep,
-  onSelectStep,
-}: {
-  activeStep: FlowStepId;
-  onSelectStep: (id: FlowStepId) => void;
-}) {
+export function DemoProductWorkflow() {
   const featured = DEMO_FEATURED_PRODUCT;
   const stats = demoCatalogStats();
+  const [activeStep, setActiveStep] = useState<FlowStepId>("source");
   const [openIssue, setOpenIssue] = useState(SAMPLE_ISSUES[0].id);
   const passportUrl = `/platform/api?gtin=${DEMO_FEATURED.gtin}`;
 
@@ -209,7 +204,7 @@ export function DemoProductWorkflow({
                 <li key={step.id} className="demo-workflow-rail-item">
                   <button
                     type="button"
-                    onClick={() => onSelectStep(step.id)}
+                    onClick={() => setActiveStep(step.id)}
                     aria-current={active ? "step" : undefined}
                     className={`demo-workflow-rail-btn ${active ? "is-active" : ""}`}
                   >

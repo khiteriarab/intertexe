@@ -126,23 +126,38 @@
 
 @media (min-width: 1024px) {
   .demo-editorial-passport-grid {
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.85fr) minmax(0, 1.15fr);
-    gap: 2rem 2.5rem;
+    grid-template-columns: minmax(16rem, 0.78fr) minmax(0, 0.95fr) minmax(0, 1.2fr);
+    gap: 1.75rem 2rem;
+    align-items: start;
   }
 }
 
 .demo-editorial-passport-thumb {
   display: flex;
-  gap: 0.75rem;
+  flex-wrap: nowrap;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.demo-editorial-passport-thumb-btn {
+  flex: 0 0 auto;
+  display: block;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0.5rem;
 }
 
 .demo-editorial-passport-thumb-image {
-  width: 72px;
-  height: 90px;
+  display: block;
+  width: 64px;
+  height: 80px;
   object-fit: cover;
   border-radius: 0.5rem;
   border: 1px solid var(--platform-border);
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 .demo-editorial-passport-thumb-image--active {
@@ -151,11 +166,36 @@
   box-shadow: 0 8px 24px rgba(22, 21, 19, 0.08);
 }
 
+.demo-editorial-passport-thumb-btn:hover .demo-editorial-passport-thumb-image {
+  opacity: 0.85;
+}
+
 .demo-editorial-passport-lifestyle-image {
   width: 100%;
+  height: 100%;
   max-height: 620px;
   object-fit: cover;
-  border-radius: 0.25rem;
+  object-position: center top;
+  border-radius: 0.35rem;
+  background: #f3efe8;
+}
+
+.demo-editorial-passport-page {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--platform-border);
+  background: #f7f5f1;
+  box-shadow: 0 24px 60px rgba(22, 21, 19, 0.06);
+}
+
+.demo-editorial-passport-page-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1448 / 1006;
+  object-fit: cover;
+  object-position: top left;
+  background: #f7f5f1;
 }
 
 .demo-editorial-passport-card {
