@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { QRCodeCanvas } from "qrcode.react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   DEMO_CATALOG,
   DEMO_ISSUE_LABEL,
@@ -13,7 +13,7 @@ import { PlatformGraphic } from "../PlatformGraphic";
 import { SERIF } from "../platform-ui";
 import { PLATFORM_GRAPHICS } from "../../../lib/platform-graphics";
 
-const FLOW_STEPS = [
+export const FLOW_STEPS = [
   {
     id: "source",
     num: "01",
@@ -58,7 +58,7 @@ const FLOW_STEPS = [
   },
 ] as const;
 
-type FlowStepId = (typeof FLOW_STEPS)[number]["id"];
+export type FlowStepId = (typeof FLOW_STEPS)[number]["id"];
 
 const SOURCE_INPUTS = [
   ["PLM", "92 SE 8 EA"],
@@ -151,16 +151,13 @@ function StepIcon({ id }: { id: FlowStepId }) {
 function WorkflowPanel({
   step,
   children,
-  panelRef,
 }: {
   step: (typeof FLOW_STEPS)[number];
   children: ReactNode;
-  panelRef: (el: HTMLElement | null) => void;
 }) {
   return (
     <article
       id={`workflow-${step.id}`}
-      ref={panelRef}
       className="demo-workflow-panel scroll-mt-32"
       data-workflow-step={step.id}
     >
@@ -178,39 +175,17 @@ function WorkflowPanel({
   );
 }
 
-export function DemoProductWorkflow() {
+export function DemoProductWorkflow({
+  activeStep,
+  onSelectStep,
+}: {
+  activeStep: FlowStepId;
+  onSelectStep: (id: FlowStepId) => void;
+}) {
   const featured = DEMO_FEATURED_PRODUCT;
   const stats = demoCatalogStats();
-  const [activeStep, setActiveStep] = useState<FlowStepId>("source");
   const [openIssue, setOpenIssue] = useState(SAMPLE_ISSUES[0].id);
-  const panelRefs = useRef<Record<string, HTMLElement | null>>({});
   const passportUrl = `/platform/api?gtin=${DEMO_FEATURED.gtin}`;
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible?.target instanceof HTMLElement) {
-          const id = visible.target.dataset.workflowStep as FlowStepId | undefined;
-          if (id) setActiveStep(id);
-        }
-      },
-      { rootMargin: "-35% 0px -45% 0px", threshold: [0.15, 0.35, 0.55] },
-    );
-
-    for (const step of FLOW_STEPS) {
-      const el = panelRefs.current[step.id];
-      if (el) observer.observe(el);
-    }
-    return () => observer.disconnect();
-  }, []);
-
-  function scrollToStep(id: FlowStepId) {
-    setActiveStep(id);
-    document.getElementById(`workflow-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
 
   return (
     <section id="journey" className="demo-workflow-chart scroll-mt-24 border-y border-[var(--platform-border)]/70">
@@ -220,7 +195,7 @@ export function DemoProductWorkflow() {
           One product. A complete lifecycle.
         </h2>
         <p className="text-[15px] text-[var(--platform-muted)] font-light max-w-xl">
-          Scroll the {DEMO_FEATURED.name} record through Source → Measure — from messy inputs to the passport your
+          Select a stage to inspect the {DEMO_FEATURED.name} record — from messy inputs to the passport your
           customer scans.
         </p>
       </div>
@@ -234,7 +209,7 @@ export function DemoProductWorkflow() {
                 <li key={step.id} className="demo-workflow-rail-item">
                   <button
                     type="button"
-                    onClick={() => scrollToStep(step.id)}
+                    onClick={() => onSelectStep(step.id)}
                     aria-current={active ? "step" : undefined}
                     className={`demo-workflow-rail-btn ${active ? "is-active" : ""}`}
                   >
@@ -266,7 +241,8 @@ export function DemoProductWorkflow() {
         </nav>
 
         <div className="demo-workflow-panels">
-          <WorkflowPanel step={FLOW_STEPS[0]} panelRef={(el) => { panelRefs.current.source = el; }}>
+          {activeStep === "source" ? (
+          <WorkflowPanel step={FLOW_STEPS[0]}>
             <div className="demo-editorial-panel">
               <div className="demo-editorial-source-grid">
                 {SOURCE_INPUTS.map(([label, raw]) => (
@@ -289,8 +265,10 @@ export function DemoProductWorkflow() {
               </div>
             </div>
           </WorkflowPanel>
+          ) : null}
 
-          <WorkflowPanel step={FLOW_STEPS[1]} panelRef={(el) => { panelRefs.current.normalize = el; }}>
+          {activeStep === "normalize" ? (
+          <WorkflowPanel step={FLOW_STEPS[1]}>
             <div className="demo-editorial-split">
               <div className="demo-editorial-messy">
                 <p className="demo-editorial-split-label">Submitted</p>
@@ -307,8 +285,10 @@ export function DemoProductWorkflow() {
               </div>
             </div>
           </WorkflowPanel>
+          ) : null}
 
-          <WorkflowPanel step={FLOW_STEPS[2]} panelRef={(el) => { panelRefs.current.validate = el; }}>
+          {activeStep === "validate" ? (
+          <WorkflowPanel step={FLOW_STEPS[2]}>
             <div className="space-y-2">
               <div className="demo-workflow-featured-valid">
                 <img src={DEMO_FEATURED.image} alt="" width={36} height={44} className="rounded-md object-cover" />
@@ -346,8 +326,10 @@ export function DemoProductWorkflow() {
               })}
             </div>
           </WorkflowPanel>
+          ) : null}
 
-          <WorkflowPanel step={FLOW_STEPS[3]} panelRef={(el) => { panelRefs.current.publish = el; }}>
+          {activeStep === "publish" ? (
+          <WorkflowPanel step={FLOW_STEPS[3]}>
             <div className="demo-workflow-publish-grid">
               <div className="demo-workflow-passport-publish">
                 <img src={DEMO_FEATURED.image} alt={DEMO_FEATURED.name} width={200} height={260} className="demo-workflow-passport-image" />
@@ -376,8 +358,10 @@ export function DemoProductWorkflow() {
               )}
             </div>
           </WorkflowPanel>
+          ) : null}
 
-          <WorkflowPanel step={FLOW_STEPS[4]} panelRef={(el) => { panelRefs.current.activate = el; }}>
+          {activeStep === "activate" ? (
+          <WorkflowPanel step={FLOW_STEPS[4]}>
             <div className="demo-workflow-consumer">
               <div className="demo-workflow-consumer-scan">
                 <div className="demo-workflow-scan-tag">
@@ -416,8 +400,10 @@ export function DemoProductWorkflow() {
               </div>
             </div>
           </WorkflowPanel>
+          ) : null}
 
-          <WorkflowPanel step={FLOW_STEPS[5]} panelRef={(el) => { panelRefs.current.measure = el; }}>
+          {activeStep === "measure" ? (
+          <WorkflowPanel step={FLOW_STEPS[5]}>
             {PLATFORM_GRAPHICS.compareBenchmark.ready ? (
               <PlatformGraphic slot="compareBenchmark" className="rounded-xl overflow-hidden border border-[var(--platform-border)]" />
             ) : (
@@ -441,6 +427,7 @@ export function DemoProductWorkflow() {
             )}
             <p className="mt-4 text-xs text-[var(--platform-quiet)]">Illustrative peer medians · governed datasets only</p>
           </WorkflowPanel>
+          ) : null}
         </div>
       </div>
     </section>

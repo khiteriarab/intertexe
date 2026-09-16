@@ -30,9 +30,6 @@ export function DemoPilotCta() {
           </div>
         </div>
       </div>
-      <p className="mt-10 text-center italic text-[var(--platform-quiet)] text-lg" style={SERIF}>
-        Data that moves fashion forward.
-      </p>
     </section>
   );
 }

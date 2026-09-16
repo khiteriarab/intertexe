@@ -1028,3 +1028,10 @@
   background: rgba(255, 255, 255, 0.75);
   transform: translateY(-1px);
 }
+
+.demo-editorial-flow-step--interactive.is-active {
+  border-color: color-mix(in srgb, var(--platform-accent) 45%, var(--platform-border));
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(22, 21, 19, 0.06);
+  transform: none;
+}
