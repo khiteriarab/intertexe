@@ -70,8 +70,8 @@ export function EnterpriseNav({
               className={`ent-nav-group-trigger w-full ${groupActive ? "ent-nav-group-trigger-active" : ""}`}
               aria-expanded={isOpen}
             >
-              <span className="ent-nav-icon ent-nav-icon-group">
-                <GroupIcon className="h-[15px] w-[15px]" />
+              <span className={`ent-nav-icon ent-nav-icon-group ${groupActive ? "ent-nav-icon-group-active" : ""}`}>
+                <GroupIcon />
               </span>
               <span className="flex-1 text-left">{group.label}</span>
               <EntIconChevron className="ent-nav-chevron" open={isOpen} />
@@ -84,14 +84,14 @@ export function EnterpriseNav({
                   const active = navItemActive(pathname, base, item.href, "exact" in item && item.exact);
                   const ItemIcon = ENT_NAV_ITEM_ICONS[item.icon];
                   return (
-                    <li key={href}>
+                    <li key={`${group.id}-${item.label}`}>
                       <Link
                         href={href}
                         onClick={onNavigate}
                         className={`ent-nav-link ${active ? "ent-nav-link-active" : ""}`}
                       >
                         <span className={`ent-nav-icon ${active ? "ent-nav-icon-active" : ""}`}>
-                          <ItemIcon className="h-[16px] w-[16px]" />
+                          <ItemIcon />
                         </span>
                         <span>{item.label}</span>
                       </Link>

@@ -33,8 +33,11 @@ describe("Platform B2B sales page", () => {
     assert.match(chrome, /product intelligence infrastructure for/i);
     assert.match(sections, /PlatformBrandShowcaseHero/);
     const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
-    assert.match(showcaseHero, /Request a demo/);
-    assert.match(showcaseHero, /\/platform\/request/);
+    assert.match(showcaseHero, /See it live/i);
+    assert.match(showcaseHero, /\/platform\/demo/);
+    assert.match(showcaseHero, /One product record\. From conception to next life\./);
+    assert.match(showcaseHero, /70% faster/);
+    assert.match(showcaseHero, /Resale activation/);
     assert.match(sections, /one governed product record/i);
     assert.doesNotMatch(sections, /EU certified/i);
     assert.doesNotMatch(sections, /EU approved/i);
@@ -55,7 +58,13 @@ describe("Platform B2B sales page", () => {
     assert.match(processVisual, /Comply/);
     assert.match(processVisual, /Distribute/);
     assert.match(processVisual, /Extend/);
-    assert.match(processVisual, /platform-what-slides/);
+    assert.match(processVisual, /Discover/);
+    assert.match(processVisual, /platform-lifecycle-journey/);
+    assert.match(processVisual, /Input/);
+    assert.match(processVisual, /Validation/);
+    assert.match(processVisual, /Compliance/);
+    assert.match(processVisual, /Delivery/);
+    assert.match(processVisual, /Circularity/);
     assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
     assert.match(howItWorks, /Analyze/);
     assert.match(howItWorks, /Benchmark/);
@@ -112,9 +121,17 @@ describe("Platform B2B sales page", () => {
   });
 
   it("converts with 10-product pilot, live flow, and enterprise login", () => {
-    assert.match(hero, /Start with 10 products/);
-    assert.match(hero, /See it live/);
-    assert.match(sections, /Start with 10 products/);
+    assert.match(hero, /Discover/);
+    assert.match(hero, /Create/);
+    assert.match(hero, /Verify/);
+    assert.match(hero, /Comply/);
+    assert.match(hero, /Distribute/);
+    assert.match(hero, /Extend/);
+    assert.doesNotMatch(hero, /Start with 10 products/);
+    assert.match(howItWorks, /Discover/);
+    assert.match(howItWorks, /WhatItIsProcessVisual/);
+    assert.doesNotMatch(howItWorks, /Start with 10 products/);
+    assert.match(sections, /Start with 10 products|PlatformBrandShowcaseHero/);
     assert.match(sections, /getEnterpriseLoginUrl/);
     assert.match(nav, /getEnterpriseLoginUrl/);
     assert.match(nav, /Start with 10 products/);
@@ -192,9 +209,17 @@ describe("Platform B2B sales page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/act-passport.png")));
   });
 
-  it("uses real QR codes in five-stage lifecycle process visual", () => {
+  it("uses sliding lifecycle screens with product and software placeholders", () => {
     const processVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"), "utf8");
-    assert.match(processVisual, /QRCodeCanvas/);
+    const slideAssets = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/b2b-visuals/lifecycle-slide-assets.ts"),
+      "utf8",
+    );
+    assert.match(processVisual, /platform-lifecycle-journey/);
+    assert.match(processVisual, /DiscoverLink/);
+    assert.match(processVisual, /LIFECYCLE_SLIDE_ASSETS/);
+    assert.match(slideAssets, /productImage/);
+    assert.match(slideAssets, /softwareImage/);
     assert.match(processVisual, /PASSPORT_CASE_STUDY/);
     assert.match(processVisual, /Create/);
     assert.match(processVisual, /Verify/);

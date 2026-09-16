@@ -128,7 +128,7 @@ export default async function OrganizationOverviewPage({
 
 
       {(pilotWorkspace || membership.plan === "founding_pilot") && !activated ? (
-        <div className="ent-zone ent-zone-butter rounded-[var(--ent-radius-2xl)] px-6 py-8 md:px-10 md:py-12 mb-14 shadow-[var(--ent-shadow-panel)]">
+        <div className="ent-card ent-card-primary mb-14">
           <p className="ent-heading text-[1.65rem] text-[var(--ent-ink)]">
             {pilotWorkspace ? "Ready to continue beyond 10 products?" : "Choose your operating plan"}
           </p>

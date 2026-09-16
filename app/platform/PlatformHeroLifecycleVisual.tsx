@@ -45,37 +45,37 @@ export const HERO_LIFECYCLE_STEPS = [
   },
 ] as const;
 
-/** Tab index → lifecycle step index + composite highlight + screen reader callout */
+/** Tab index (Create → Extend) → lifecycle step highlight + callout */
 const STAGE_VISUAL = [
   {
-    stepIndex: 0,
-    targetX: 18,
-    targetY: 38,
-    callout: "Scan — a physical product connects to a digital record.",
-  },
-  {
-    stepIndex: 0,
-    targetX: 52,
-    targetY: 28,
-    callout: "Material impact — benchmark fiber mix and CO₂e against peers.",
+    stepIndex: 2,
+    targetX: 42,
+    targetY: 32,
+    callout: "Create — capture product identity, materials, and supplier inputs into one record.",
   },
   {
     stepIndex: 2,
-    targetX: 56,
+    targetX: 52,
+    targetY: 28,
+    callout: "Verify — surface gaps, conflicts, and missing evidence before they become risk.",
+  },
+  {
+    stepIndex: 3,
+    targetX: 58,
     targetY: 30,
-    callout: "Governed record — one product record, conflicts surfaced, never overwritten.",
+    callout: "Comply — prepare the governed record for Digital Product Passports and regulation.",
   },
   {
     stepIndex: 4,
-    targetX: 84,
-    targetY: 36,
-    callout: "A digital passport — trusted product information in your customer's hands.",
+    targetX: 78,
+    targetY: 34,
+    callout: "Distribute — hosted passport, brand domain, or headless API from the same source.",
   },
   {
     stepIndex: 5,
-    targetX: 84,
-    targetY: 42,
-    callout: "Next life — resale, ownership transfer, and circular insights.",
+    targetX: 86,
+    targetY: 40,
+    callout: "Extend — care, repair, resale, and circular next-life from the same product record.",
   },
 ] as const;
 

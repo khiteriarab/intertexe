@@ -25,7 +25,7 @@ export default async function IntelligencePage({
   return (
     <EntModulePage
       title="Intelligence"
-      description="Brief, recommended actions, material benchmark, demand forecast, and evidence confidence — assembled from your live workspace."
+      subtitle="Brief, recommended actions, material benchmark, demand forecast, and evidence confidence — assembled from your live workspace."
       state={ORG_PAGE_STATES.intelligence}
       action={
         <Link href={`${base}/benchmarking`} className="ent-link-subtle text-sm">

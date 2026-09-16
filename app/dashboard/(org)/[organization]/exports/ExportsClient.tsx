@@ -22,7 +22,7 @@ export function ExportsClient({ organization }: { organization: string }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-[var(--ent-muted)]">Governed exports for portability and compliance review.</p>
+      <p className="text-sm text-[var(--ent-muted)]">Workspace exports for portability and compliance review.</p>
       <div className="flex flex-wrap gap-2">
         {(["products", "issues", "passports", "audit_logs"] as const).map((kind) => (
           <button key={kind} type="button" className="ent-btn ent-btn-secondary text-sm" onClick={() => exportKind(kind)}>

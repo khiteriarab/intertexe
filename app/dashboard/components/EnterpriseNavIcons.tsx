@@ -2,9 +2,26 @@ import type { ReactNode } from "react";
 
 type IconProps = { className?: string };
 
-function base({ className, children }: { className?: string; children: ReactNode }) {
+function base({
+  className,
+  children,
+  bold = false,
+}: {
+  className?: string;
+  children: ReactNode;
+  bold?: boolean;
+}) {
   return (
-    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      className={`ent-nav-icon-svg ${className || ""}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={bold ? 2.25 : 2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       {children}
     </svg>
   );
@@ -62,16 +79,55 @@ export function EntIconSearch({ className }: IconProps) {
   return base({ className, children: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></> });
 }
 export function EntIconCore({ className }: IconProps) {
-  return base({ className, children: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></> });
+  return base({
+    className,
+    bold: true,
+    children: (
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" />
+      </>
+    ),
+  });
 }
 export function EntIconOperations({ className }: IconProps) {
-  return base({ className, children: <><path d="M12 2 2 7l10 5 10-5-10-5Z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" /></> });
+  return base({
+    className,
+    bold: true,
+    children: (
+      <>
+        <path d="M12 2 2 7l10 5 10-5-10-5Z" />
+        <path d="m2 17 10 5 10-5" />
+        <path d="m2 12 10 5 10-5" />
+      </>
+    ),
+  });
 }
 export function EntIconIntelligence({ className }: IconProps) {
-  return base({ className, children: <><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7Z" /><circle cx="12" cy="9" r="2.5" /></> });
+  return base({
+    className,
+    bold: true,
+    children: (
+      <>
+        <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7Z" />
+        <circle cx="12" cy="9" r="2.5" fill="none" stroke="currentColor" />
+      </>
+    ),
+  });
 }
 export function EntIconSystem({ className }: IconProps) {
-  return base({ className, children: <><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 9h6v6H9z" /></> });
+  return base({
+    className,
+    bold: true,
+    children: (
+      <>
+        <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" />
+        <rect x="9" y="9" width="6" height="6" rx="0.5" fill="none" stroke="currentColor" />
+      </>
+    ),
+  });
 }
 export function EntIconChevron({ className, open }: IconProps & { open?: boolean }) {
   return (
@@ -100,7 +156,6 @@ export const ENT_NAV_ITEM_ICONS = {
   activity: EntIconActivity,
   workflows: EntIconWorkflows,
   operations: EntIconOperations,
-  intelligence: EntIconIntelligence,
   regulations: EntIconRegulations,
   benchmarking: EntIconBenchmarking,
   analytics: EntIconAnalytics,

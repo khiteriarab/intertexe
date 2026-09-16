@@ -8,6 +8,7 @@ import { loadOrgOverview } from "../../../../lib/enterprise/queries";
 import { isPilotPlan } from "../../../../lib/enterprise/pricing";
 import { EnterpriseShell } from "../../components/EnterpriseShell";
 import "../../enterprise-theme.css";
+import "../../enterprise-premium.css";
 
 const entSans = DM_Sans({
   subsets: ["latin"],

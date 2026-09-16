@@ -3,7 +3,7 @@ import type { ProductGovernanceScore } from "../../../lib/enterprise/governance-
 export function GovernanceScorePanel({ score }: { score: ProductGovernanceScore }) {
   return (
     <div className="ent-governance-panel">
-      <p className="ent-journey-eyebrow mb-4">Data governance · transparent dimensions</p>
+      <p className="ent-journey-eyebrow mb-4">Data completeness · by dimension</p>
       <ul className="ent-governance-grid">
         {score.dimensions.map((dim) => (
           <li key={dim.key} className={`ent-governance-dim ent-governance-dim--${dim.status}`}>

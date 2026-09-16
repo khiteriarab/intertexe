@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { loadProviderConnections } from "../sustainability/store";
 import { ESPR_FOUNDATION_RULESET } from "./regulatory-evaluator";
 import { loadOrgOverview } from "./queries";
 import { loadOrgMemberDirectory, reviewerFromDirectory } from "./reviewer-display";
@@ -204,22 +205,89 @@ export async function loadOrgAnalytics(client: SupabaseClient, organizationId: s
     catalog: { total: overview.productCount, imports: importCount || 0 }, activityCounts };
 }
 
-export type IntegrationRow = { id: string; label: string; category: string; state: "connected" | "available" | "not_configured"; detail: string; href?: string };
+export type IntegrationRow = {
+  id: string;
+  label: string;
+  category: string;
+  state: "connected" | "available" | "not_configured" | "coming_soon";
+  detail: string;
+  href?: string;
+  actionLabel?: string;
+};
 
 export async function loadOrgIntegrations(client: SupabaseClient, organizationId: string, slug: string) {
-  const [{ count: importCount }, { count: apiCount }, { count: webhookCount }, { data: registrations }] = await Promise.all([
-    client.from("imports").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
-    client.from("api_credentials").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
-    client.from("webhooks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
-    client.from("dpp_registry_registrations").select("status").eq("organization_id", organizationId).limit(20),
-  ]);
-  const registryConnected = (registrations || []).some((r) => ["submitted", "registered", "registration_ready"].includes(String(r.status)));
+  const [{ count: importCount }, { count: apiCount }, { count: webhookCount }, { data: registrations }, connections] =
+    await Promise.all([
+      client.from("imports").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+      client.from("api_credentials").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+      client.from("webhooks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+      client.from("dpp_registry_registrations").select("status").eq("organization_id", organizationId).limit(20),
+      loadProviderConnections(client, organizationId, slug),
+    ]);
+  const registryConnected = (registrations || []).some((r) =>
+    ["submitted", "registered", "registration_ready"].includes(String(r.status))
+  );
+  const worldly = connections.find((c) => c.providerId === "worldly");
+  const greenStory = connections.find((c) => c.providerId === "green_story");
   return {
     rows: [
-      { id: "csv-import", label: "Catalog CSV import", category: "Data import", state: (importCount || 0) > 0 ? "connected" as const : "available" as const, detail: (importCount || 0) > 0 ? `${importCount} import(s) recorded` : "Upload and map a catalog from Products", href: `/dashboard/${slug}/products` },
-      { id: "org-api", label: "Organization API credentials", category: "API", state: (apiCount || 0) > 0 ? "connected" as const : "not_configured" as const, detail: (apiCount || 0) > 0 ? `${apiCount} credential(s) on file` : "No API credentials configured", href: `/dashboard/${slug}/developers` },
-      { id: "webhooks", label: "Outbound webhooks", category: "API", state: (webhookCount || 0) > 0 ? "connected" as const : "not_configured" as const, detail: (webhookCount || 0) > 0 ? `${webhookCount} webhook(s) configured` : "No webhooks configured" },
-      { id: "eu-registry", label: "EU DPP registry (manual provider)", category: "Registry", state: registryConnected ? "connected" as const : "available" as const, detail: registryConnected ? "Registration records exist" : "Available when a passport version is prepared for submission", href: `/dashboard/${slug}/passports` },
+      {
+        id: "worldly-higg",
+        label: "Worldly / Higg",
+        category: "Sustainability",
+        state: worldly?.credentialsConfigured ? ("connected" as const) : ("available" as const),
+        detail: "Material and product impact",
+        actionLabel: worldly?.credentialsConfigured ? "Manage" : "Connect",
+        href: `/dashboard/${slug}/integrations?sustainability=worldly`,
+      },
+      {
+        id: "green-story",
+        label: "Green Story",
+        category: "Sustainability",
+        state: greenStory?.credentialsConfigured ? ("connected" as const) : ("available" as const),
+        detail: "LCA, carbon and regulatory environmental scoring",
+        actionLabel: greenStory?.credentialsConfigured ? "Manage" : "Connect",
+        href: `/dashboard/${slug}/integrations?sustainability=green_story`,
+      },
+      {
+        id: "ecoinvent",
+        label: "ecoinvent",
+        category: "Sustainability",
+        state: "coming_soon" as const,
+        detail: "Advanced lifecycle inventory data",
+        actionLabel: "Advanced / coming later",
+      },
+      {
+        id: "csv-import",
+        label: "Catalog CSV import",
+        category: "Data import",
+        state: (importCount || 0) > 0 ? ("connected" as const) : ("available" as const),
+        detail: (importCount || 0) > 0 ? `${importCount} import(s) recorded` : "Upload and map a catalog from Products",
+        href: `/dashboard/${slug}/products`,
+      },
+      {
+        id: "org-api",
+        label: "Organization API credentials",
+        category: "API",
+        state: (apiCount || 0) > 0 ? ("connected" as const) : ("not_configured" as const),
+        detail: (apiCount || 0) > 0 ? `${apiCount} credential(s) on file` : "No API credentials configured",
+        href: `/dashboard/${slug}/developers`,
+      },
+      {
+        id: "webhooks",
+        label: "Outbound webhooks",
+        category: "API",
+        state: (webhookCount || 0) > 0 ? ("connected" as const) : ("not_configured" as const),
+        detail: (webhookCount || 0) > 0 ? `${webhookCount} webhook(s) configured` : "No webhooks configured",
+      },
+      {
+        id: "eu-registry",
+        label: "EU DPP registry (manual provider)",
+        category: "Registry",
+        state: registryConnected ? ("connected" as const) : ("available" as const),
+        detail: registryConnected ? "Registration records exist" : "Available when a passport version is prepared for submission",
+        href: `/dashboard/${slug}/passports`,
+      },
     ] satisfies IntegrationRow[],
   };
 }

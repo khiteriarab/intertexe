@@ -170,7 +170,7 @@ export default async function AnalyticsPage({
               <p className="ent-section-eyebrow mb-2">Consumer layer</p>
               <h2 className="ent-widget-title">Material intelligence beyond compliance</h2>
               <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-xl">
-                Governed shopper signals layered on passport readiness — what pure B2B compliance tools cannot show.
+                Shopper signals layered on passport readiness and catalog performance.
               </p>
             </div>
             <Link href={`${base}/benchmarking`} className={entLinkClass}>

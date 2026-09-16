@@ -23,55 +23,62 @@ export function ProductJourneyMap({ journey }: { journey: ProductJourney }) {
   const mapHeight = 240;
   const activeIndex = journey.nodes.findIndex((n) => n.status === "current");
   const highlightId = activeIndex >= 0 ? journey.nodes[activeIndex]?.id : journey.nodes.at(-1)?.id;
+  const hasQr = Boolean(journey.qrUrl && journey.publicId);
 
   return (
     <section className="ent-journey-hero">
       <div className="ent-journey-hero-grid">
         <div className="ent-journey-identity">
-          <div className="ent-journey-photo-wrap">
-            {journey.imageUrl ? (
-              <Image
-                src={journey.imageUrl}
-                alt={journey.productName}
-                fill
-                sizes="(max-width: 768px) 100vw, 280px"
-                className="object-cover"
-                unoptimized
-                priority
-              />
-            ) : (
-              <div className="ent-journey-photo-fallback" aria-hidden />
-            )}
-          </div>
-
-          <div className="ent-journey-qr-block">
-            {journey.qrUrl && journey.publicId ? (
-              <>
-                <div className="ent-journey-qr-frame">
-                  <QRCodeSVG value={journey.qrUrl} size={112} marginSize={1} />
-                </div>
-                <div className="min-w-0">
-                  <p className="ent-journey-qr-label">
-                    {journey.isPublished ? "Live passport QR" : "Preview QR · publish to activate"}
-                  </p>
-                  <p className="ent-journey-qr-id">{journey.publicId}</p>
-                  <p className="ent-journey-qr-hint">
-                    Scan with iPhone to open the consumer passport — origin through end of life.
-                  </p>
-                  <Link href={`/p/${journey.publicId}`} target="_blank" className="ent-journey-qr-link">
-                    Open consumer page →
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <div className="ent-journey-qr-pending">
-                <div className="ent-journey-qr-frame ent-journey-qr-frame--ghost">
-                  <span className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)]">QR</span>
-                </div>
-                <p className="text-sm text-[var(--ent-muted)]">
-                  Approve identity fields and publish the passport to generate the scannable QR your customer will use.
-                </p>
+          <div className="ent-journey-photo-stage">
+            <div className="ent-journey-photo-wrap">
+              <div className="ent-journey-photo-inner">
+                {journey.imageUrl ? (
+                  <Image
+                    src={journey.imageUrl}
+                    alt={journey.productName}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 480px"
+                    className="ent-journey-photo-img"
+                    unoptimized
+                    priority
+                  />
+                ) : (
+                  <div className="ent-journey-photo-fallback" aria-hidden />
+                )}
               </div>
+
+              {hasQr ? (
+                <div className="ent-journey-qr-overlay" aria-label="Product passport QR code">
+                  <div className="ent-journey-qr-frame">
+                    <QRCodeSVG value={journey.qrUrl!} size={92} marginSize={1} />
+                  </div>
+                </div>
+              ) : (
+                <div className="ent-journey-qr-overlay ent-journey-qr-overlay--pending" aria-hidden>
+                  <div className="ent-journey-qr-frame ent-journey-qr-frame--ghost">
+                    <span className="text-[10px] tracking-[0.12em] uppercase text-[var(--ent-muted-light)]">QR</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {hasQr ? (
+              <div className="ent-journey-qr-caption">
+                <p className="ent-journey-qr-label">
+                  {journey.isPublished ? "Live passport QR" : "Preview QR · publish to activate"}
+                </p>
+                <p className="ent-journey-qr-id">{journey.publicId}</p>
+                <p className="ent-journey-qr-hint">
+                  Scans to the public passport — source through end of life.
+                </p>
+                <Link href={`/p/${journey.publicId}`} target="_blank" className="ent-journey-qr-link">
+                  Open consumer page →
+                </Link>
+              </div>
+            ) : (
+              <p className="ent-journey-qr-pending-hint">
+                Approve identity fields and publish the passport to activate the product QR.
+              </p>
             )}
           </div>
 
@@ -87,8 +94,8 @@ export function ProductJourneyMap({ journey }: { journey: ProductJourney }) {
         <div className="ent-journey-map-panel">
           <div className="ent-journey-map-header">
             <div>
-              <p className="ent-journey-eyebrow">Line map · origin to end of life</p>
-              <h2 className="ent-journey-map-title">Governed journey your customer sees</h2>
+              <p className="ent-journey-eyebrow">Lifecycle · source to end of life</p>
+              <h2 className="ent-journey-map-title">Product lifecycle</h2>
             </div>
             <div className="ent-journey-view-toggle" role="tablist" aria-label="Journey view">
               {(
@@ -113,8 +120,7 @@ export function ProductJourneyMap({ journey }: { journey: ProductJourney }) {
           </div>
 
           <p className="ent-journey-map-copy">
-            Zoom out to see every lifecycle group, or open the map for the path from fiber source through QR scan,
-            retail, care, and next life — the same story on the public passport.
+            Eight stages from fiber source through passport, retail, ownership, and next life — mirrored on the public passport.
           </p>
 
           {view === "overview" ? (

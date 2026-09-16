@@ -3,7 +3,7 @@ import { WhatItIsProcessVisual } from "./b2b-visuals/WhatItIsProcessVisual";
 import { PlatformProductPillarsVisual } from "./b2b-visuals/PlatformProductPillarsVisual";
 import { PlatformCapabilityNav } from "./PlatformCapabilityNav";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
-import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink } from "./platform-ui";
+import { Body, Eyebrow, Heading } from "./platform-ui";
 
 export function PlatformHowItWorksSection() {
   return (
@@ -15,20 +15,13 @@ export function PlatformHowItWorksSection() {
         <div className="max-w-2xl lg:max-w-3xl mb-8 lg:mb-10">
           <Eyebrow>How INTERTEXE works</Eyebrow>
           <Heading className="mb-4">From raw product data to intelligent action.</Heading>
-          <Body className="mb-8">
-            INTERTEXE structures, verifies, and governs product data across the full lifecycle, then turns that trusted
-            data into compliance readiness, consumer experiences, and AI-powered decisions.
+          <Body className="mb-0">
+            Create, verify, comply, distribute, and extend — one product record across the full lifecycle. Each stage
+            has its own Discover path.
           </Body>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <PrimaryLink href="/platform/request?intent=snapshot&cta=how_it_works">Start with 10 products</PrimaryLink>
-            <SecondaryLink href="/platform/demo">See it live</SecondaryLink>
-          </div>
         </div>
 
         <div className="platform-product-story-lifecycle">
-          <p className="platform-product-story-phase-kicker mb-6 lg:mb-8">
-            One record · entire product lifecycle
-          </p>
           <WhatItIsProcessVisual />
         </div>
 

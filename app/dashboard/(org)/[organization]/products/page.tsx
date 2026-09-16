@@ -19,7 +19,7 @@ import {
   entMetaClass,
   entSelectClass,
 } from "../../../components/EnterpriseUi";
-import { EntModulePage } from "../../../components/EnterpriseModuleUi";
+import { EntModuleMetrics, EntModulePage } from "../../../components/EnterpriseModuleUi";
 import { ProductsBulkBar } from "./ProductsBulkBar";
 import { ProductsImportDrawer } from "./ProductsImportDrawer";
 
@@ -70,23 +70,19 @@ export default async function ProductsPage({
   return (
     <EntModulePage
       title="Products"
-      meta={
-        <>
-          <span>
-            <strong>{overview.productCount}</strong> products
-          </span>
-          <span>
-            <strong>{overview.publishedCount || overview.passportCounts.published || 0}</strong> published
-          </span>
-          <span>
-            <strong>{overview.readyCount}</strong> ready
-          </span>
-        </>
-      }
+      subtitle="Product catalog — composition, passport state, and open issues."
       action={<ProductsImportDrawer slug={membership.slug} canMutate={canMutate} autoOpen={autoOpenImport} />}
     >
+      <EntModuleMetrics
+        items={[
+          { label: "Active products", value: overview.productCount, hint: "In catalog" },
+          { label: "Published", value: overview.publishedCount || overview.passportCounts.published || 0, hint: "Live passports" },
+          { label: "Ready to publish", value: overview.readyCount, hint: "Requirements met" },
+          { label: "Open issues", value: overview.issueCount, hint: overview.issueCount ? "Needs review" : "Clear", accent: overview.issueCount > 0 },
+        ]}
+      />
       {focus || origin || category ? (
-        <div className="mb-6 px-4 py-3 rounded-[var(--ent-radius-lg)] bg-[var(--ent-cream)] text-sm text-[var(--ent-muted)] border border-[var(--ent-border)] flex flex-wrap items-center justify-between gap-3">
+        <div className="ent-alert-banner ent-alert-banner--info">
           <span>
             Filtered from{" "}
             <Link href={`${base.replace("/products", "/traceability")}`} className={entLinkClass}>
@@ -103,7 +99,7 @@ export default async function ProductsPage({
       ) : null}
 
       {imported != null && !Number.isNaN(imported) ? (
-        <div className="mb-6 px-4 py-3 rounded-[var(--ent-radius-lg)] bg-[var(--ent-butter-soft)] text-sm text-[var(--ent-muted)] border border-[var(--ent-border)]">
+        <div className="ent-alert-banner ent-alert-banner--success">
           Imported {imported} products · {importedIssues} issues opened
           {importedCollisions ? ` · ${importedCollisions} identifier collisions kept separate` : ""}. Next: resolve
           blocking issues, then review and publish.
@@ -164,46 +160,63 @@ export default async function ProductsPage({
               blockingIssueCount: product.blockingIssueCount,
             }))}
           />
-          <ul className="ent-catalog-grid">
-          {catalog.rows.map((product) => {
-            const compositionLines = formatCompositionLines(product.composition);
-            const compositionDisplay = formatCompositionDisplay(product.composition);
-            return (
-              <li key={product.id}>
-                <Link href={`${base}/${product.id}`} className="ent-catalog-card group h-full">
-                  <EntProductPlaceholder
-                    category={product.category}
-                    imageUrl={resolvePilotProductImage(product.sku, product.style_code, pilotImages)}
-                    alt={product.name}
-                  />
-                  <div className="min-w-0 flex-1 flex flex-col">
-                    <p className="ent-title text-[1.05rem] text-[var(--ent-ink)] group-hover:text-[var(--ent-petrol-deep)] transition-colors line-clamp-2">
-                      {product.name}
-                    </p>
-                    <p className="text-[13px] text-[var(--ent-muted)] mt-1 line-clamp-2">
-                      {compositionLines.length > 0 ? compositionDisplay : "Composition not recorded"}
-                    </p>
-                    <p className={`${entMetaClass} mt-auto pt-3`}>
-                      {[product.sku, product.style_code && `Style ${product.style_code}`].filter(Boolean).join(" · ") || "—"}
-                    </p>
-                    <div className="flex items-center justify-between gap-3 mt-3">
-                      <EntPassportPill state={product.passport_state} />
-                      {product.blockingIssueCount ? (
-                        <span className="text-[11px] font-medium text-[var(--ent-raspberry)]">
-                          {product.blockingIssueCount} priority fix{product.blockingIssueCount === 1 ? "" : "es"}
-                        </span>
-                      ) : product.openIssueCount ? (
-                        <span className="text-[11px] text-[var(--ent-raspberry)]">{product.openIssueCount} issue{product.openIssueCount === 1 ? "" : "s"}</span>
-                      ) : (
-                        <span className="text-[11px] text-[var(--ent-muted-light)]">Open →</span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+          <div className="ent-catalog-table-wrap">
+            <table className="ent-trace-table ent-catalog-table">
+              <thead>
+                <tr>
+                  <th scope="col">Product</th>
+                  <th scope="col">Composition</th>
+                  <th scope="col">Passport</th>
+                  <th scope="col">Issues</th>
+                  <th scope="col" className="ent-catalog-actions">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {catalog.rows.map((product) => {
+                  const compositionDisplay = formatCompositionDisplay(product.composition);
+                  return (
+                    <tr key={product.id}>
+                      <td>
+                        <Link href={`${base}/${product.id}`} className="ent-catalog-product-cell">
+                          <EntProductPlaceholder
+                            category={product.category}
+                            imageUrl={resolvePilotProductImage(product.sku, product.style_code, pilotImages)}
+                            alt={product.name}
+                          />
+                          <span>
+                            <span className="ent-catalog-product-name">{product.name}</span>
+                            <span className="ent-catalog-product-meta">
+                              {[product.sku, product.style_code && `Style ${product.style_code}`].filter(Boolean).join(" · ") || "—"}
+                            </span>
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="text-sm text-[var(--ent-muted)] max-w-[14rem]">
+                        {compositionDisplay || "Not recorded"}
+                      </td>
+                      <td>
+                        <EntPassportPill state={product.passport_state} />
+                      </td>
+                      <td className="text-sm">
+                        {product.blockingIssueCount ? (
+                          <span className="ent-status-pill ent-status-pill--critical">{product.blockingIssueCount} blocking</span>
+                        ) : product.openIssueCount ? (
+                          <span className="ent-status-pill ent-status-pill--warning">{product.openIssueCount} open</span>
+                        ) : (
+                          <span className="text-[var(--ent-muted-light)]">—</span>
+                        )}
+                      </td>
+                      <td className="ent-catalog-actions">
+                        <Link href={`${base}/${product.id}`} className={entLinkClass}>
+                          Open →
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
 

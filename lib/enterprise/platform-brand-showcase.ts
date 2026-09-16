@@ -1,5 +1,4 @@
 import liveProducts from "./fixtures/intertexe-live-10-products.json";
-import { PLATFORM_LIVE_CATALOG } from "./platform-showcase";
 
 export type ShowcaseProductTile = {
   kind: "product";
@@ -77,19 +76,19 @@ export const PLATFORM_SHOWCASE_ROW_B = [...mosaic.slice(half), ...mosaic.slice(0
 
 export const PLATFORM_SHOWCASE_STATS = [
   {
-    value: String(PLATFORM_LIVE_CATALOG.productCount),
-    label: "Live pilot products governed",
+    value: "70% faster",
+    label: "Product data to governed record",
   },
   {
-    value: `${PLATFORM_LIVE_CATALOG.passportReadyPct}%`,
-    label: "Passport-ready catalog",
+    value: "95% ready",
+    label: "For Digital Product Passports",
   },
   {
-    value: `${PLATFORM_LIVE_CATALOG.avgNaturalFiberPct}%`,
-    label: "Avg natural fiber share",
+    value: "50% fewer",
+    label: "Unresolved data gaps",
   },
   {
-    value: "6",
-    label: "Lifecycle modules · one record",
+    value: "3× faster",
+    label: "Resale activation",
   },
 ] as const;

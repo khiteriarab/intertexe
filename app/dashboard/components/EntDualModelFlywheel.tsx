@@ -9,7 +9,7 @@ export function EntDualModelFlywheel({ base }: { base: string }) {
           <p className="ent-section-eyebrow text-white/50">The INTERTEXE model</p>
           <h2 className="ent-signal-hero-title">Fashion brand on top. Textile intelligence underneath.</h2>
           <p className="text-sm text-white/70 mt-3 max-w-2xl leading-relaxed">
-            INTERTEXE is not a compliance checkbox vendor. The same catalog shoppers browse powers governed material
+            The same catalog shoppers browse powers verified material
             signals brands act on — customer zero runs both sides on one ontology.
           </p>
 

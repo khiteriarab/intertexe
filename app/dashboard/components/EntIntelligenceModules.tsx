@@ -36,38 +36,43 @@ export function EntIntelligenceBriefCard({ brief }: { brief: PlatformIntelligenc
 
   const generated = formatRelativeTime(brief.generatedAt);
 
+  const primaryMetric = brief.metrics[0];
+  const secondaryMetrics = brief.metrics.slice(1);
+
   return (
     <article className="ent-intel-card ent-intel-card--brief">
       <header className="ent-intel-card-head">
         <div>
-          <p className="ent-intel-card-label">INTERTEXE Intelligence Brief</p>
+          <p className="ent-section-eyebrow">INTERTEXE Intelligence Brief</p>
           {generated ? <p className="text-[11px] text-[var(--ent-muted-light)] mt-1">{generated}</p> : null}
         </div>
-        <span className="text-lg text-[var(--ent-petrol)]" aria-hidden>
-          ✦
-        </span>
       </header>
-      <h3 className="ent-intel-brief-title">{brief.headline}</h3>
-      <p className="ent-intel-brief-copy">{brief.summary}</p>
-      <dl className="ent-intel-metrics">
-        {brief.metrics.map((metric) => (
-          <div key={metric.label}>
-            <dt className="sr-only">{metric.label}</dt>
-            <dd
-              className={`ent-intel-metric-value ${
-                metric.tone === "positive"
-                  ? "ent-intel-metric-value--positive"
-                  : metric.tone === "negative"
-                    ? "ent-intel-metric-value--negative"
-                    : ""
-              }`}
-            >
-              {metric.value}
-            </dd>
-            <dd className="ent-intel-metric-label">{metric.label}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="ent-insight-card mt-2">
+        <p className="ent-insight-statement">{brief.headline}</p>
+        <p className="ent-insight-why">{brief.summary}</p>
+        <div className="ent-insight-meta">
+          {primaryMetric ? (
+            <span className={`ent-insight-pill ${primaryMetric.tone === "positive" ? "ent-insight-pill--positive" : ""}`}>
+              {primaryMetric.value} {primaryMetric.label.toLowerCase()}
+            </span>
+          ) : null}
+          <span className="ent-insight-pill ent-insight-pill--high">High confidence</span>
+        </div>
+        {secondaryMetrics.length ? (
+          <dl className="ent-intel-metrics mt-4">
+            {secondaryMetrics.map((metric) => (
+              <div key={metric.label}>
+                <dt className="sr-only">{metric.label}</dt>
+                <dd className="ent-intel-metric-value">{metric.value}</dd>
+                <dd className="ent-intel-metric-label">{metric.label}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+        <Link href="#" className="ent-insight-action" onClick={(e) => e.preventDefault()}>
+          Review assortment →
+        </Link>
+      </div>
     </article>
   );
 }
@@ -93,30 +98,23 @@ export function EntRecommendedActionsCard({ recommendations }: { recommendations
       <ul className="m-0 p-0 list-none">
         {recommendations.map((row) => {
           const content = (
-            <>
-              <span className="ent-intel-action-title">{row.action}</span>
-              <span className="ent-intel-action-context">{row.context}</span>
-              <span className="ent-intel-action-meta">
-                <span>
-                  {impactLabel(row.impact)}
-                  <br />
-                  {row.confidencePct}% confidence
-                </span>
-                <span className="ent-intel-action-chevron" aria-hidden>
-                  ›
-                </span>
-              </span>
-            </>
+            <div className="ent-insight-card">
+              <p className="ent-insight-statement">{row.action}</p>
+              <p className="ent-insight-why">{row.context}</p>
+              <div className="ent-insight-meta">
+                <span className="ent-insight-pill ent-insight-pill--positive">{impactLabel(row.impact)}</span>
+                <span className="ent-insight-pill ent-insight-pill--high">{row.confidencePct}% confidence</span>
+              </div>
+              {row.href ? (
+                <Link href={row.href} className="ent-insight-action">
+                  Review assortment →
+                </Link>
+              ) : null}
+            </div>
           );
           return (
-            <li key={row.id}>
-              {row.href ? (
-                <Link href={row.href} className="ent-intel-action-row">
-                  {content}
-                </Link>
-              ) : (
-                <div className="ent-intel-action-row">{content}</div>
-              )}
+            <li key={row.id} className="py-3 border-b border-[var(--ent-border-subtle)] last:border-0">
+              {content}
             </li>
           );
         })}

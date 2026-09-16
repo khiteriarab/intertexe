@@ -1,5 +1,5 @@
 import { formatOperatorTime } from "./reviewer-display";
-import { pilotProductImage, resolvePilotFixture } from "./pilot-product-media";
+import { isPilotStyle, pilotProductImage, pilotPublicIdForStyle, resolvePilotFixture } from "./pilot-product-media";
 import { publicResolverUrl } from "./carriers";
 
 export type JourneyNodeStatus = "complete" | "current" | "pending";
@@ -190,8 +190,11 @@ export function buildProductJourney(record: ProductRecordInput, origin: string):
 
   const passportState = record.passport?.state || record.product.passport_state || null;
   const isPublished = passportState === "published" || passportState === "update_required";
-  const hasPassport = Boolean(record.passport?.public_id || record.identityPublicId);
-  const publicId = record.passport?.public_id || record.identityPublicId || null;
+  let publicId = record.passport?.public_id || record.identityPublicId || null;
+  if (!publicId && isPilotStyle(record.product.style_code)) {
+    publicId = pilotPublicIdForStyle(record.product.style_code);
+  }
+  const hasPassport = Boolean(publicId);
 
   const qrCarrier =
     record.passport?.carriers.find(
@@ -235,7 +238,7 @@ export function buildProductJourney(record: ProductRecordInput, origin: string):
       "publish",
       "04 · Passport",
       "Digital product passport",
-      hasPassport ? "Material truth linked to resolver" : "Awaiting review & publish",
+      hasPassport ? "Linked to public resolver" : "Awaiting review and publish",
       isPublished ? "complete" : hasPassport ? "current" : "pending",
       publishedAt ? formatOperatorTime(publishedAt) : null
     ),

@@ -19,6 +19,8 @@ import { buildProductProvenanceBundle } from "../../../../../../lib/enterprise/p
 import { loadOrgProduct } from "../../../../../../lib/enterprise/queries";
 import { buildProductJourney } from "../../../../../../lib/enterprise/product-journey";
 import { ensurePassportShell, provisionDraftQrCarrier, publicResolverUrl } from "../../../../../../lib/enterprise/carriers";
+import { getEnterpriseServiceClient } from "../../../../../../lib/enterprise/client";
+import { isPilotStyle, pilotPublicIdForStyle } from "../../../../../../lib/enterprise/pilot-product-media";
 import { publishabilityForProduct } from "../../../../../../lib/enterprise/publish";
 import { loadProductTraceability } from "../../../../../../lib/enterprise/traceability";
 import {
@@ -55,6 +57,10 @@ import { ApproveFieldsButton } from "./ApproveFieldsButton";
 import { AccessClassLegend, DppReadinessPanel } from "./DppReadinessPanel";
 import { SupplierEvidenceRequestButton } from "./SupplierEvidenceRequestButton";
 import { ProductCarriersPanel } from "./ProductCarriersPanel";
+import { ProductKeyIndicators } from "../../../../components/ProductKeyIndicators";
+import { ProductInformationPanel, productInfoFromRecord } from "../../../../components/ProductInformationPanel";
+import { buildProductKeyIndicators } from "../../../../../../lib/enterprise/product-key-indicators";
+import { resolvePilotFixture } from "../../../../../../lib/enterprise/pilot-product-media";
 
 export const dynamic = "force-dynamic";
 
@@ -92,24 +98,34 @@ export default async function ProductRecordPage({
     record.product.name && (record.product.sku || record.product.style_code)
   );
   const needsPassportShell = !record.passport?.public_id && !record.identityPublicId;
+  const isPilotProduct = isPilotStyle(record.product.style_code);
+  const preferredPublicId = isPilotProduct ? pilotPublicIdForStyle(record.product.style_code) : null;
+  const needsQrCarrier = !(record.passport?.carriers || []).some((c) => c.carrier_type === "qr");
+  const canProvisionPassport = hasProductIdentity && (canMutate || isPilotProduct);
+  const provisionClient =
+    canMutate && hasProductIdentity
+      ? client
+      : isPilotProduct && hasProductIdentity
+        ? getEnterpriseServiceClient()
+        : null;
 
-  if (canMutate && hasProductIdentity && needsPassportShell) {
+  if (canProvisionPassport && provisionClient && (needsPassportShell || needsQrCarrier)) {
     try {
-      await ensurePassportShell(client, membership.organizationId, productId);
-      await provisionDraftQrCarrier(client, membership.organizationId, productId);
+      if (needsPassportShell) {
+        await ensurePassportShell(provisionClient, membership.organizationId, productId, {
+          preferredPublicId,
+        });
+      }
+      if (needsPassportShell || needsQrCarrier) {
+        await provisionDraftQrCarrier(provisionClient, membership.organizationId, productId);
+      }
       const refreshed = await loadOrgProduct(client, membership.organizationId, productId);
       if (refreshed) Object.assign(record, refreshed);
-      publishability = await publishabilityForProduct(client, membership.organizationId, productId);
+      if (canMutate) {
+        publishability = await publishabilityForProduct(client, membership.organizationId, productId);
+      }
     } catch {
-      // Shell provisioning is best-effort on load
-    }
-  } else if (canMutate && hasProductIdentity && !(record.passport?.carriers || []).some((c) => c.carrier_type === "qr")) {
-    try {
-      await provisionDraftQrCarrier(client, membership.organizationId, productId);
-      const refreshed = await loadOrgProduct(client, membership.organizationId, productId);
-      if (refreshed) Object.assign(record, refreshed);
-    } catch {
-      // Draft QR provisioning is best-effort on load
+      // Shell + QR provisioning is best-effort on load
     }
   }
 
@@ -170,19 +186,41 @@ export default async function ProductRecordPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
-        <EntPageHeader
-          brandLine
-          title={String(record.product.name || "Product")}
-          description="Governed product record — identity, traceability, evidence, impact readiness, passport."
-        />
-        <EntPassportPill state={record.product.passport_state} />
+      <div className="ent-product-record-header mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="ent-serif text-[11px] tracking-[0.22em] uppercase text-[var(--ent-petrol-deep,#3e6268)] mb-2">
+              INTERTEXE product record
+            </p>
+            <h1 className="ent-product-record-title">{String(record.product.name || "Product")}</h1>
+            <p className="ent-page-lead mt-2 max-w-2xl">
+              Identity, materials, traceability, impact, passport, and evidence.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {showcaseUrl ? (
+              <Link href={showcaseUrl} target="_blank" className="ent-showcase-btn">
+                Go to public showcase
+                <span aria-hidden>↗</span>
+              </Link>
+            ) : null}
+            <EntPassportPill state={record.product.passport_state} />
+          </div>
+        </div>
       </div>
 
       <ProductRecordShell basePath={basePath}>
         {showOverview ? (
           <>
             <ProductJourneyMap journey={journey} />
+            <div className="mb-6 grid lg:grid-cols-2 gap-6 items-start">
+              <HqCard>
+                <ProductInformationPanel info={productInfo} />
+              </HqCard>
+              <HqCard>
+                <ProductKeyIndicators indicators={keyIndicators} />
+              </HqCard>
+            </div>
             <div className="mb-6">
               <GovernanceScorePanel score={governance} />
             </div>
@@ -253,36 +291,20 @@ export default async function ProductRecordPage({
         <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
           <div className="space-y-6">
             {(showOverview || tab === "materials") && (
-              <HqCard title="Identity">
-                <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-5 text-sm">
-                  <div>
-                    <dt className={entLabelClass}>SKU</dt>
-                    <dd className="mt-1 text-[var(--ent-ink)]">{record.product.sku || "—"}</dd>
-                  </div>
-                  <div>
-                    <dt className={entLabelClass}>Style</dt>
-                    <dd className="mt-1 text-[var(--ent-ink)]">{record.product.style_code || "—"}</dd>
-                  </div>
-                  <div>
-                    <dt className={entLabelClass}>Category</dt>
-                    <dd className="mt-1 text-[var(--ent-ink)]">{record.product.category || "—"}</dd>
-                  </div>
-                  <div>
-                    <dt className={entLabelClass}>Identifiers</dt>
-                    <dd className="mt-1 text-[var(--ent-ink-soft)]">
-                      {record.identifiers.length
-                        ? record.identifiers.map((row) => `${row.identifier_type}:${row.identifier_value}`).join(", ")
-                        : "None"}
-                    </dd>
-                  </div>
-                </dl>
-              </HqCard>
+              <>
+                <HqCard>
+                  <ProductInformationPanel info={productInfo} />
+                </HqCard>
+                <HqCard>
+                  <ProductKeyIndicators indicators={keyIndicators} />
+                </HqCard>
+              </>
             )}
 
             {showMaterials ? (
               <HqCard title="Materials & provenance">
                 {provenance.length === 0 ? (
-                  <p className="text-sm text-[var(--ent-muted)]">No governed material fields yet.</p>
+                  <p className="text-sm text-[var(--ent-muted)]">No material fields on record yet.</p>
                 ) : (
                   <div className="space-y-4">
                     {provenance.map((row) => (

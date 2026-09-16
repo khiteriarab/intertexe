@@ -216,13 +216,18 @@ export function TraceabilityDashboard({ data, slug, period: initialPeriod = "12m
   const overallPct = data.summary.avgCompletenessPct;
 
   return (
-    <div className="ent-trace-dashboard">
+    <div className="ent-trace-dashboard ent-fade-in">
       <header className="ent-trace-header">
         <div className="ent-trace-header-copy">
           <h1 className="ent-serif ent-trace-title">Traceability</h1>
-          <p className="ent-trace-subtitle">
+          <p className="ent-trace-subtitle ent-page-lead">
             Track material and supply-chain completeness from source to finished product.
           </p>
+          <div className="ent-page-meta mt-3">
+            <span><strong>{data.summary.productCount}</strong> products</span>
+            <span><strong>{data.summary.passportsLinked}</strong> passports linked</span>
+            <span><strong>{data.priorityGaps.length}</strong> priority gaps</span>
+          </div>
         </div>
         <div className="ent-trace-toolbar">
           <div className="ent-trace-search-wrap">
@@ -271,16 +276,7 @@ export function TraceabilityDashboard({ data, slug, period: initialPeriod = "12m
       </header>
 
       <div className="ent-trace-kpi-row">
-        <article className="ent-trace-kpi-card">
-          <span className="ent-trace-kpi-icon" aria-hidden>
-            ▢
-          </span>
-          <p className="ent-trace-kpi-value">{data.summary.productCount}</p>
-          <p className="ent-trace-kpi-label">Products</p>
-          <p className="ent-trace-kpi-hint">Total in catalog</p>
-        </article>
-
-        <article className="ent-trace-kpi-card ent-trace-kpi-card--featured">
+<article className="ent-trace-kpi-card ent-trace-kpi-card--featured">
           <div className="ent-trace-kpi-donut-wrap">
             <DonutChart pct={overallPct} />
             <span className="ent-trace-kpi-donut-value">{overallPct}%</span>

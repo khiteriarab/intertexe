@@ -31,7 +31,7 @@ export function EntFabricPeerComparison({
     <section className="mb-10">
       <div className="ent-benchmark-page-hero mb-8">
         <p className="ent-section-eyebrow">Benchmarking</p>
-        <h2 className="ent-benchmark-teaser-title">Material intelligence vs governed peers</h2>
+        <h2 className="ent-benchmark-teaser-title">Material intelligence vs peer benchmarks</h2>
         <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-2xl leading-relaxed">
           Understand what your products are made from, how complete your material data is, and how you compare to
           approved aggregate benchmarks. INTERTEXE only surfaces peer medians from governed datasets — never fabricated
@@ -92,7 +92,7 @@ export function EntFabricPeerComparison({
         </div>
 
         <div className="ent-widget-card ent-widget-card-elevated p-6 md:p-8">
-          <p className="ent-section-eyebrow">Governed peers · {segmentLabel || "Contemporary"} · {marketLabel || market.replaceAll("_", " ")}</p>
+          <p className="ent-section-eyebrow">Peer benchmarks · {segmentLabel || "Contemporary"} · {marketLabel || market.replaceAll("_", " ")}</p>
           <h3 className="ent-widget-title">Your brand vs peer median</h3>
           <div className="mt-6 overflow-x-auto">
             <table className="ent-benchmark-table w-full text-left text-sm">

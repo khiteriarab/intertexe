@@ -125,7 +125,7 @@ export function PassportExperienceDesigner({
           <p className="ent-journey-eyebrow">Passport experience</p>
           <h2 className="ent-serif text-2xl text-[var(--ent-ink)] mt-2">Experience designer</h2>
           <p className="text-sm text-[var(--ent-muted)] mt-2 leading-relaxed">
-            Same governed data — brand-controlled presentation. Configure what consumers see when they scan your product.
+            Brand-controlled passport presentation. Configure fields and layout for the public passport.
           </p>
         </div>
 

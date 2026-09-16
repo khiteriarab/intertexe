@@ -6,14 +6,14 @@ import { SERIF } from "./platform-ui";
 /** Editorial blossom banner — wide ivory fade + landscape, selective brand moment. */
 export function PlatformCircularWardrobeBanner() {
   return (
-    <section className="platform-circular-banner-section max-w-[1440px] mx-auto px-3 sm:px-5 md:px-6 lg:px-8 py-10 sm:py-14">
+    <section className="platform-circular-banner-section py-10 sm:py-14">
       <div className="platform-circular-banner platform-circular-banner--wide">
         <Image
           src={EDITORIAL_BLOSSOM_BANNER}
           alt=""
           fill
           className="platform-circular-banner-photo object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 92vw, 1440px"
+          sizes="100vw"
           priority={false}
         />
         <div className="platform-circular-banner-gradient" aria-hidden />

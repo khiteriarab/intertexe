@@ -25,7 +25,7 @@ export function EntConsumerSignals({
             <p className="ent-section-eyebrow">Consumer signals</p>
             <h2 className="ent-signal-hero-title">What shoppers respond to in material reality</h2>
             <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-2xl leading-relaxed">
-              INTERTEXE is not pure B2B compliance — the consumer layer adds governed behavior, discovery context,
+              The consumer layer adds verified behavior, discovery context,
               cultural relevance, and material preference signals on top of passport readiness, without attaching shopper
               identity to your brand.
             </p>

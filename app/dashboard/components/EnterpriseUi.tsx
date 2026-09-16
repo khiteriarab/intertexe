@@ -98,25 +98,15 @@ export function EntEmptyState({
   ctaLabel?: string;
 }) {
   return (
-    <div className="ent-zone ent-zone-blush ent-zone-glow relative overflow-hidden rounded-[var(--ent-radius-2xl)] px-8 py-14 md:px-12 md:py-18 shadow-[var(--ent-shadow-panel)]">
-      <div
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(var(--ent-petrol-deep) 1px, transparent 1px), linear-gradient(90deg, var(--ent-petrol-deep) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-        aria-hidden
-      />
-      <div className="relative max-w-lg">
-        <p className="ent-heading text-[2rem] md:text-[2.5rem] leading-tight text-[var(--ent-ink)]">{title}</p>
-        <p className="text-[15px] leading-relaxed text-[var(--ent-muted)] mt-4">{body}</p>
-        {ctaHref && ctaLabel ? (
-          <Link href={ctaHref} className={`${entButtonClass} mt-8 inline-flex`}>
-            {ctaLabel}
-          </Link>
-        ) : null}
-      </div>
+    <div className="ent-empty-premium">
+      <div className="ent-empty-premium-visual" aria-hidden>◇</div>
+      <p className="ent-empty-premium-title">{title}</p>
+      <p className="ent-empty-premium-body">{body}</p>
+      {ctaHref && ctaLabel ? (
+        <Link href={ctaHref} className={`${entButtonClass} mt-2 inline-flex`}>
+          {ctaLabel}
+        </Link>
+      ) : null}
     </div>
   );
 }
@@ -141,11 +131,11 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
   return (
     <section className="mb-10 md:mb-12">
       <div className="mb-8 md:mb-10">
-        <p className="ent-brand">INTERTEXE</p>
-        <h1 className="ent-title text-[2rem] md:text-[2.75rem] text-[var(--ent-ink)] mt-3">
+        <p className="ent-section-eyebrow">Overview</p>
+        <h1 className="ent-title ent-page-title text-[2rem] md:text-[2.75rem] text-[var(--ent-ink)] mt-1">
           {orgName}
         </h1>
-        <p className="text-[15px] text-[var(--ent-muted)] mt-3 max-w-2xl leading-relaxed">
+        <p className="ent-page-lead">
           What is in your catalog, where material and data gaps exist, how ready products are, and what your team
           should do next.
         </p>
@@ -165,16 +155,8 @@ export function EntOverviewHero({ overview, orgName }: { overview: OrgOverviewDa
         </div>
       </div>
 
-      <div className="ent-zone ent-zone-butter ent-zone-glow relative overflow-hidden rounded-[var(--ent-radius-2xl)] p-6 md:p-8 lg:p-10 ent-animate-in border border-[rgba(28,25,21,0.06)]">
-        <div
-          className="absolute inset-0 opacity-60 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 70% 55% at 100% 0%, rgba(201,169,98,0.22) 0%, transparent 58%), radial-gradient(ellipse 50% 45% at 0% 100%, rgba(232,220,200,0.45) 0%, transparent 55%)",
-          }}
-          aria-hidden
-        />
-        <div className="relative grid lg:grid-cols-[1fr_auto] gap-8 items-center">
+      <div className="ent-overview-intelligence ent-fade-in">
+        <div className="grid lg:grid-cols-[1fr_auto] gap-8 items-center">
           <div>
             <p className="text-[10px] tracking-[0.14em] uppercase text-[var(--ent-muted)]">Catalog intelligence</p>
             <p className="ent-title text-[1.5rem] md:text-[1.75rem] text-[var(--ent-ink)] mt-2 leading-tight">

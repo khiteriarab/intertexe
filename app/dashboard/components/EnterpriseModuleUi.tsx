@@ -27,7 +27,7 @@ export function EntInlinePageHeader({
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3 mb-1">
-            <h1 className="ent-title text-[1.625rem] md:text-[2rem] text-[var(--ent-ink)]">{title}</h1>
+            <h1 className="ent-title ent-page-title text-[1.625rem] md:text-[2rem] text-[var(--ent-ink)]">{title}</h1>
             {state ? <StateBadge state={state} /> : null}
           </div>
           {meta ? <div className="ent-page-meta">{meta}</div> : null}
@@ -77,27 +77,10 @@ export function EntModulePage({
 }) {
   const lead = subtitle || description;
   return (
-    <div className="ent-module-stage">
-      <div className="ent-module-motif" aria-hidden>
-        <svg viewBox="0 0 800 120" preserveAspectRatio="none" fill="none">
-          <path d="M0 80 C120 40 220 100 340 60 S520 20 800 50" stroke="rgba(196,165,116,0.35)" strokeWidth="1" />
-          <path d="M0 95 C160 55 280 110 420 70 S600 35 800 65" stroke="rgba(62,98,104,0.12)" strokeWidth="0.75" />
-          <circle cx="720" cy="28" r="36" fill="rgba(201,169,98,0.12)" />
-        </svg>
-      </div>
-      <EntInlinePageHeader
-        title={title}
-        state={state}
-        meta={
-          meta || lead ? (
-            <>
-              {lead ? <span>{lead}</span> : null}
-              {meta}
-            </>
-          ) : undefined
-        }
-        action={action}
-      />
+    <div className="ent-module-stage ent-fade-in">
+      <EntInlinePageHeader title={title} state={state} action={action} />
+      {lead ? <p className="ent-page-lead">{lead}</p> : null}
+      {meta ? <div className="ent-page-meta mb-6">{meta}</div> : null}
       {children}
     </div>
   );
@@ -115,7 +98,7 @@ export function EntMetricTile({
   accent?: boolean;
 }) {
   return (
-    <div className="ent-float-card px-5 py-5 md:px-6 md:py-6">
+    <div className="ent-card ent-card-secondary ent-float-card px-5 py-5 md:px-6 md:py-6">
       <p
         className={`ent-display leading-none tabular-nums ${accent ? "text-[var(--ent-petrol-deep)]" : "text-[var(--ent-ink)]"}`}
         style={{ fontSize: "clamp(2rem, 4vw, 2.75rem)" }}
@@ -134,7 +117,7 @@ export function EntModuleMetrics({
   items: Array<{ label: string; value: string | number; hint?: string; accent?: boolean }>;
 }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-10 md:mb-12">
+    <div className="ent-metrics-row mb-10 md:mb-12">
       {items.map((item) => (
         <EntMetricTile key={item.label} {...item} />
       ))}

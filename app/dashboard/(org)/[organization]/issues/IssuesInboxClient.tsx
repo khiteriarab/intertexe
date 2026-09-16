@@ -208,23 +208,10 @@ export function IssuesInboxClient({
     [filtered, selectedId]
   );
 
-  const openCount = issues.filter((i) => i.status === "open").length;
-  const highCount = issues.filter(
-    (i) => i.status === "open" && ["critical", "high"].includes(normalizeIssueSeverity(i.severity))
-  ).length;
-  const resolvedCount = issues.filter((i) => i.status !== "open").length;
-  const resolvedRate = issues.length ? Math.round((resolvedCount / issues.length) * 100) : 0;
 
   return (
     <div className="ent-inbox">
-      <div className="ent-inbox-stats">
-        <div className="ent-inbox-stat">
-          <span className="ent-inbox-stat-dot ent-inbox-stat-dot-open" aria-hidden />
-          <div>
-            <p className="ent-inbox-stat-value">{openCount}</p>
-            <p className="ent-inbox-stat-label">Open issues</p>
-          </div>
-        </div>
+</div>
         <div className="ent-inbox-stat">
           <span className="ent-inbox-stat-dot ent-inbox-stat-dot-high" aria-hidden />
           <div>
@@ -277,7 +264,11 @@ export function IssuesInboxClient({
       ) : null}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-[var(--ent-muted)] py-8">No issues match these filters.</p>
+        <div className="ent-empty-premium mx-auto my-8">
+          <div className="ent-empty-premium-visual" aria-hidden>◇</div>
+          <p className="ent-empty-premium-title">No matching issues</p>
+          <p className="ent-empty-premium-body">Adjust filters or switch segment to see other items in your inbox.</p>
+        </div>
       ) : (
         <div className="ent-inbox-split">
           <div className="ent-inbox-list" role="listbox" aria-label="Issues">
@@ -421,7 +412,7 @@ function IssueDetailPanel({
             <div className="ent-inbox-panel">
               <p className="ent-inbox-panel-kicker">Not recorded</p>
               <p className="text-sm text-[var(--ent-muted)] mt-2">
-                Manufacturing country is missing from the governed record.
+                Manufacturing country is missing from the product record.
               </p>
             </div>
           )}

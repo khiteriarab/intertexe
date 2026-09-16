@@ -82,12 +82,9 @@ export const ENTERPRISE_NAV_GROUPS = [
     items: [
       { href: "/operations", label: "Operations", icon: "operations" as const, exact: true as const },
       { href: "/workflows", label: "Workflows", icon: "workflows" as const },
-      { href: "/imports", label: "Import center", icon: "files" as const },
+      { href: "/imports", label: "Import Center", icon: "files" as const },
       { href: "/approvals", label: "Approvals", icon: "issues" as const },
       { href: "/suppliers", label: "Suppliers", icon: "suppliers" as const },
-      { href: "/files", label: "Files", icon: "files" as const },
-      { href: "/activity", label: "Activity", icon: "activity" as const },
-      { href: "/audit", label: "Audit log", icon: "settings" as const },
     ],
   },
   {
@@ -96,8 +93,9 @@ export const ENTERPRISE_NAV_GROUPS = [
     icon: "intelligence" as const,
     items: [
       { href: "/intelligence", label: "Intelligence", icon: "intelligence" as const },
-      { href: "/regulations", label: "Regulations", icon: "regulations" as const },
-      { href: "/benchmarking", label: "Signals & benchmarks", icon: "benchmarking" as const },
+      { href: "/benchmarking", label: "Material Benchmark", icon: "benchmarking" as const },
+      { href: "/analytics", label: "Consumer Signals", icon: "analytics" as const },
+      { href: "/impact", label: "Impact", icon: "regulations" as const },
       { href: "/analytics", label: "Analytics", icon: "analytics" as const },
     ],
   },

@@ -422,6 +422,181 @@
   flex-direction: column;
 }
 
+/* Five-stage lifecycle journey — Create · Verify · Comply · Distribute · Extend */
+.platform-lifecycle-journey {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.platform-lifecycle-journey-panel {
+  display: grid;
+  gap: 1.75rem;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .platform-lifecycle-journey-panel {
+    grid-template-columns: minmax(17rem, 22rem) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: center;
+  }
+}
+
+.platform-lifecycle-journey-copy {
+  min-width: 0;
+}
+
+.platform-lifecycle-journey-micro {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #9c9488;
+  margin-bottom: 0.35rem;
+}
+
+.platform-lifecycle-journey-label {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--platform-primary);
+  margin-bottom: 0.85rem;
+}
+
+.platform-lifecycle-journey-title {
+  font-size: clamp(1.55rem, 2.8vw, 2.15rem);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--platform-ink);
+  margin-bottom: 0.85rem;
+}
+
+.platform-lifecycle-journey-body {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--platform-muted);
+  margin-bottom: 1rem;
+}
+
+.platform-lifecycle-journey-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.platform-lifecycle-journey-bullets li {
+  position: relative;
+  padding-left: 1rem;
+  font-size: 0.875rem;
+  color: var(--platform-ink);
+}
+
+.platform-lifecycle-journey-bullets li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--platform-accent);
+}
+
+.platform-lifecycle-journey-foot {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #8a847c;
+  margin-bottom: 1.25rem;
+}
+
+.platform-lifecycle-journey-visual {
+  min-width: 0;
+  min-height: 22rem;
+}
+
+.platform-lifecycle-graphic {
+  position: relative;
+  height: 100%;
+  min-height: 22rem;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f7f3ec 0%, #ebe4da 55%, #e2dbd0 100%);
+  border: 1px solid rgba(44, 38, 32, 0.08);
+}
+
+.platform-lifecycle-graphic-scene {
+  opacity: 0.55;
+}
+
+.platform-lifecycle-graphic-fallback {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 70% 40%, rgba(196, 167, 125, 0.22), transparent 60%),
+    linear-gradient(160deg, #faf7f2, #ebe4da);
+}
+
+.platform-lifecycle-graphic-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, rgba(253, 252, 249, 0.2) 0%, transparent 45%, rgba(20, 28, 36, 0.12) 100%);
+  pointer-events: none;
+}
+
+.platform-lifecycle-graphic-product {
+  position: absolute;
+  left: 8%;
+  bottom: 6%;
+  width: min(42%, 220px);
+  aspect-ratio: 3 / 4;
+  z-index: 2;
+}
+
+.platform-lifecycle-graphic-product-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.platform-lifecycle-graphic-ui {
+  position: absolute;
+  right: 6%;
+  top: 12%;
+  width: min(52%, 280px);
+  aspect-ratio: 16 / 11;
+  z-index: 3;
+}
+
+.platform-lifecycle-graphic-ui-slot {
+  position: absolute;
+  right: 6%;
+  top: 14%;
+  width: min(52%, 280px);
+  aspect-ratio: 16 / 11;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 0.85rem;
+  border: 1px dashed rgba(44, 38, 32, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.platform-lifecycle-graphic-ui-slot-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--platform-ink);
+}
+
+.platform-lifecycle-graphic-ui-slot-note {
+  font-size: 11px;
+  color: #9c9488;
+}
+
 /* Five-stage lifecycle slider */
 .platform-what-slides {
   display: flex;
@@ -491,34 +666,133 @@
   opacity: 0.75;
 }
 
-.platform-what-slide-panel {
-  display: grid;
-  gap: 1.5rem;
-  padding: 1.25rem;
-  border-radius: 1rem;
-  border: 1px solid #ebe6de;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 16px 40px rgba(44, 38, 32, 0.05);
+/* Fairly Made–style lifecycle slide screens */
+.platform-lifecycle-slides {
+  width: calc(100vw - 1.25rem);
+  max-width: none;
+  margin-left: calc(50% - 50vw + 0.625rem);
 }
 
-@media (min-width: 1024px) {
-  .platform-what-slide-panel {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-    gap: 2rem;
-    padding: 1.75rem 2rem;
-    align-items: center;
+@media (min-width: 768px) {
+  .platform-lifecycle-slides {
+    width: calc(100vw - 2.5rem);
+    margin-left: calc(50% - 50vw + 1.25rem);
   }
 }
 
-.platform-what-slide-micro {
+.platform-lifecycle-screen-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.platform-lifecycle-screen-viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 28rem;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(28, 25, 21, 0.08);
+  box-shadow: 0 24px 64px rgba(44, 38, 32, 0.1);
+}
+
+@media (min-width: 1024px) {
+  .platform-lifecycle-screen-viewport {
+    min-height: 34rem;
+    border-radius: 1.5rem;
+  }
+}
+
+.platform-lifecycle-screen {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+
+.platform-lifecycle-screen.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.platform-lifecycle-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.platform-lifecycle-stage--create {
+  background: radial-gradient(ellipse 90% 80% at 70% 40%, #e8dfd0 0%, #d4c4ad 38%, #1a2838 100%);
+}
+
+.platform-lifecycle-stage--verify {
+  background: radial-gradient(ellipse 90% 80% at 70% 40%, #e5ddd2 0%, #c9bfb0 38%, #243038 100%);
+}
+
+.platform-lifecycle-stage--comply {
+  background: radial-gradient(ellipse 90% 80% at 70% 40%, #dde5df 0%, #b8c9be 38%, #1e2f28 100%);
+}
+
+.platform-lifecycle-stage--distribute {
+  background: radial-gradient(ellipse 90% 80% at 70% 40%, #dce2ea 0%, #b5c0d0 38%, #1a2438 100%);
+}
+
+.platform-lifecycle-stage--extend {
+  background: radial-gradient(ellipse 90% 80% at 70% 40%, #e8ddd8 0%, #cdb8ad 38%, #2a2220 100%);
+}
+
+.platform-lifecycle-stage-scene {
+  z-index: 0;
+}
+
+.platform-lifecycle-stage-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    105deg,
+    rgba(253, 252, 249, 0.97) 0%,
+    rgba(250, 247, 242, 0.92) 22%,
+    rgba(245, 239, 230, 0.55) 38%,
+    rgba(20, 28, 36, 0.15) 58%,
+    rgba(12, 18, 24, 0.55) 100%
+  );
+}
+
+.platform-lifecycle-screen-copy {
+  position: relative;
+  z-index: 3;
+  max-width: 26rem;
+  padding: 1.75rem 1.35rem 2rem;
+  color: var(--platform-ink);
+}
+
+@media (min-width: 768px) {
+  .platform-lifecycle-screen-copy {
+    padding: 2.25rem 2rem 2.5rem;
+    max-width: 28rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .platform-lifecycle-screen-copy {
+    padding: 2.75rem 2.5rem 3rem;
+    max-width: 31rem;
+  }
+}
+
+.platform-lifecycle-screen-micro {
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #b0a89c;
+  color: #9c9488;
   margin-bottom: 0.35rem;
 }
 
-.platform-what-slide-label {
+.platform-lifecycle-screen-label {
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -526,28 +800,21 @@
   margin-bottom: 0.65rem;
 }
 
-.platform-what-slide-title {
-  font-size: 1.45rem;
-  line-height: 1.25;
+.platform-lifecycle-screen-title {
+  font-size: clamp(1.5rem, 3.2vw, 2.15rem);
+  line-height: 1.2;
   color: var(--platform-ink);
   margin-bottom: 0.85rem;
 }
 
-@media (min-width: 1024px) {
-  .platform-what-slide-title {
-    font-size: 1.75rem;
-  }
-}
-
-.platform-what-slide-body {
+.platform-lifecycle-screen-body {
   font-size: 15px;
   line-height: 1.65;
   color: #5c5854;
   margin-bottom: 1rem;
-  max-width: 36rem;
 }
 
-.platform-what-slide-bullets {
+.platform-lifecycle-screen-bullets {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
@@ -556,57 +823,165 @@
   list-style: none;
 }
 
-.platform-what-slide-bullets li {
+.platform-lifecycle-screen-bullets li {
   font-size: 11px;
   letter-spacing: 0.03em;
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid #eeeae4;
-  background: #faf8f4;
+  border: 1px solid rgba(28, 25, 21, 0.08);
+  background: rgba(255, 255, 255, 0.72);
   color: #6b6560;
 }
 
-.platform-what-slide-foot {
+.platform-lifecycle-screen-foot {
   font-size: 12px;
   line-height: 1.5;
   color: #9c9488;
   padding-top: 0.85rem;
-  border-top: 1px solid #f0ebe4;
-  max-width: 36rem;
+  border-top: 1px solid rgba(28, 25, 21, 0.08);
 }
 
-.platform-what-slide-visual {
+.platform-lifecycle-stage-product {
+  position: absolute;
+  z-index: 2;
+  left: 34%;
+  bottom: -4%;
+  width: min(34vw, 17rem);
+  height: min(52vw, 26rem);
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .platform-lifecycle-stage-product {
+    left: 38%;
+    width: min(28vw, 19rem);
+    height: min(44vw, 28rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .platform-lifecycle-stage-product {
+    left: 40%;
+    width: 16rem;
+    height: 30rem;
+  }
+}
+
+.platform-lifecycle-product-frame {
   position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.platform-lifecycle-stage-ui {
+  position: absolute;
+  z-index: 2;
+  right: 4%;
+  bottom: 8%;
+  width: min(58vw, 22rem);
+  height: min(42vw, 16rem);
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .platform-lifecycle-stage-ui {
+    right: 6%;
+    bottom: 10%;
+    width: min(46vw, 26rem);
+    height: min(32vw, 18rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .platform-lifecycle-stage-ui {
+    right: 7%;
+    bottom: 11%;
+    width: 28rem;
+    height: 19rem;
+  }
+}
+
+.platform-lifecycle-software-frame {
+  position: absolute;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: #fff;
+  box-shadow: 0 24px 56px rgba(8, 12, 18, 0.28);
+}
+
+.platform-lifecycle-software-frame--primary {
+  inset: 0;
+  z-index: 2;
+}
+
+.platform-lifecycle-software-frame--secondary {
+  top: -12%;
+  right: -10%;
+  width: 62%;
+  height: 58%;
+  z-index: 1;
+  opacity: 0.92;
+  transform: rotate(2deg);
+}
+
+.platform-lifecycle-software-chrome {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
+  gap: 0.35rem;
+  padding: 0.45rem 0.65rem;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.platform-what-slide-frame {
-  flex: 1;
-  min-width: 0;
+.platform-lifecycle-software-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #d1d5db;
+}
+
+.platform-lifecycle-software-url {
+  margin-left: auto;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+}
+
+.platform-lifecycle-software-body {
+  position: relative;
+  height: calc(100% - 1.65rem);
+  min-height: 8rem;
+  background: #fafafa;
+}
+
+.platform-lifecycle-software-placeholder {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-}
-
-.platform-what-slide-image-slot {
-  display: none;
-  aspect-ratio: 16 / 10;
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, #f0ebe4 0%, #e8e3da 100%);
-}
-
-.platform-what-slide-diagram {
-  border-radius: 0.75rem;
-  border: 1px solid #f0ebe4;
-  background: #faf8f4;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   padding: 1rem;
-  min-height: 220px;
+  text-align: center;
+  background: linear-gradient(145deg, #f8f8f8 0%, #ececec 100%);
 }
 
-.platform-what-slides-nav {
+.platform-lifecycle-software-placeholder-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 0.35rem;
+}
+
+.platform-lifecycle-software-placeholder-note {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.platform-lifecycle-screen-nav {
   flex-shrink: 0;
   width: 2.75rem;
   height: 2.75rem;
@@ -620,24 +995,23 @@
   transition: background 0.2s;
 }
 
-.platform-what-slides-nav:hover {
+.platform-lifecycle-screen-nav:hover {
   background: #fff;
 }
 
 @media (max-width: 639px) {
-  .platform-what-slides-nav--prev,
-  .platform-what-slides-nav--next {
+  .platform-lifecycle-screen-nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    z-index: 2;
+    z-index: 4;
   }
 
-  .platform-what-slides-nav--prev {
+  .platform-lifecycle-screen-nav--prev {
     left: 0.35rem;
   }
 
-  .platform-what-slides-nav--next {
+  .platform-lifecycle-screen-nav--next {
     right: 0.35rem;
   }
 }
@@ -2476,19 +2850,40 @@
 
 .platform-hero-tab {
   display: inline-flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
+  gap: 0.1rem;
   min-height: 44px;
-  padding: 0.7rem 1.35rem;
+  padding: 0.65rem 1.1rem;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  border-radius: 9999px;
+  border-radius: 0.85rem;
   border: 1px solid var(--platform-border);
   background: rgba(255, 255, 255, 0.82);
   color: var(--platform-muted);
   transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
+  text-align: left;
+}
+
+.platform-hero-tab-index {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  opacity: 0.65;
+}
+
+.platform-hero-tab-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.platform-hero-tab-micro {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: #9c9488;
 }
 
 .platform-hero-tab:hover {
@@ -2499,6 +2894,11 @@
   background: var(--platform-accent-soft);
   color: var(--platform-primary);
   border-color: var(--platform-accent-muted);
+}
+
+.platform-hero-tab.is-active .platform-hero-tab-micro {
+  color: var(--platform-primary);
+  opacity: 0.75;
 }
 
 

@@ -9,6 +9,7 @@ export type PilotFixtureRow = {
   category?: string;
   composition?: string;
   brand?: string;
+  weight_g?: number;
   image_url?: string | null;
   country_of_origin?: string | null;
 };
@@ -44,4 +45,11 @@ export function pilotProductImage(
 
 export function isPilotStyle(styleCode: string | null | undefined): boolean {
   return String(styleCode || "").startsWith("ITX-LIVE-");
+}
+
+export function pilotPublicIdForStyle(styleCode: string | null | undefined): string | null {
+  const match = String(styleCode || "").trim().match(/^ITX-LIVE-(\d{1,2})$/i);
+  if (!match) return null;
+  const num = String(Number(match[1])).padStart(2, "0");
+  return `itxlive${num}`;
 }

@@ -1,0 +1,1271 @@
+/**
+ * INTERTEXE Enterprise — premium fashion-tech design system (v2).
+ * White/ivory canvas · charcoal hierarchy · beige accent only · dark intelligence panels.
+ * Loaded after enterprise-theme.css to override beige-dashboard defaults.
+ */
+
+.enterprise-app {
+  --ent-canvas: #fdfcfb;
+  --ent-canvas-muted: #faf9f7;
+  --ent-accent: #c4a574;
+  --ent-accent-soft: #f0ebe3;
+  --ent-accent-muted: rgba(196, 165, 116, 0.14);
+  --ent-dark: #1c1915;
+  --ent-dark-olive: #2a2f28;
+  --ent-ink: #1c1915;
+  --ent-ink-soft: #3d3832;
+  --ent-muted: #6b6560;
+  --ent-muted-light: #9c9488;
+  --ent-border: rgba(28, 25, 21, 0.08);
+  --ent-border-subtle: rgba(28, 25, 21, 0.05);
+  --ent-positive: #5a7d62;
+  --ent-positive-soft: rgba(90, 125, 98, 0.12);
+  --ent-warning: #b8893a;
+  --ent-warning-soft: rgba(184, 137, 58, 0.12);
+  --ent-critical: #a85c5c;
+  --ent-critical-soft: rgba(168, 92, 92, 0.1);
+  --ent-radius-sm: 0.5rem;
+  --ent-radius: 0.625rem;
+  --ent-radius-lg: 0.75rem;
+  --ent-radius-xl: 0.875rem;
+  --ent-shadow-card: 0 1px 2px rgba(28, 25, 21, 0.04);
+  --ent-shadow-lift: 0 8px 24px rgba(28, 25, 21, 0.07);
+  --ent-gradient-sidebar: #faf9f7;
+  background: var(--ent-canvas-muted);
+}
+
+.enterprise-app .ent-canvas {
+  background: var(--ent-canvas);
+}
+
+.enterprise-app .ent-canvas::before,
+.enterprise-app .ent-canvas::after {
+  opacity: 0.35;
+}
+
+/* ── Typography hierarchy ── */
+.enterprise-app .ent-title,
+.enterprise-app .ent-serif.ent-page-title {
+  font-family: var(--itx-serif);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-page-lead {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ent-muted);
+  max-width: 40rem;
+  margin-top: 0.5rem;
+}
+
+.enterprise-app .ent-section-eyebrow {
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ent-muted-light);
+  margin-bottom: 0.35rem;
+}
+
+.enterprise-app .ent-section-title {
+  font-family: var(--itx-serif);
+  font-size: 1.35rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-heading {
+  font-family: var(--font-ent-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ── Card hierarchy ── */
+.enterprise-app .ent-card {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius-lg);
+  box-shadow: var(--ent-shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.enterprise-app a.ent-card:hover,
+.enterprise-app button.ent-card:hover {
+  box-shadow: var(--ent-shadow-lift);
+  transform: translateY(-1px);
+}
+
+.enterprise-app .ent-card-primary {
+  padding: 1.5rem 1.65rem;
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-card-primary {
+    padding: 1.75rem 2rem;
+  }
+}
+
+.enterprise-app .ent-card-primary .ent-card-metric {
+  font-family: var(--itx-serif);
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-card-secondary {
+  padding: 1rem 1.15rem;
+}
+
+.enterprise-app .ent-card-secondary .ent-card-metric {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-card-label {
+  font-size: 0.8125rem;
+  color: var(--ent-muted);
+  margin-top: 0.35rem;
+}
+
+.enterprise-app .ent-card-hint {
+  font-size: 0.75rem;
+  color: var(--ent-muted-light);
+  margin-top: 0.2rem;
+}
+
+.enterprise-app .ent-card-dark {
+  background: var(--ent-dark-olive);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 40px rgba(28, 25, 21, 0.18);
+}
+
+.enterprise-app .ent-card-dark .ent-card-label,
+.enterprise-app .ent-card-dark .ent-card-hint {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.enterprise-app .ent-card-action {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 100%;
+}
+
+.enterprise-app .ent-card-action-cta {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ent-ink);
+  text-decoration: none;
+}
+
+.enterprise-app .ent-card-action-cta:hover {
+  color: var(--ent-accent);
+}
+
+/* Override legacy float cards */
+.enterprise-app .ent-float-card {
+  background: #fff;
+  backdrop-filter: none;
+  border-radius: var(--ent-radius-lg);
+  box-shadow: var(--ent-shadow-card);
+  border: 1px solid var(--ent-border);
+}
+
+.enterprise-app .ent-float-card::before {
+  display: none;
+}
+
+.enterprise-app .ent-float-card:hover {
+  box-shadow: var(--ent-shadow-lift);
+}
+
+/* ── Module page structure ── */
+.enterprise-app .ent-module-stage .ent-module-motif {
+  display: none;
+}
+
+.enterprise-app .ent-page-header {
+  margin-bottom: 1.75rem;
+}
+
+.enterprise-app .ent-page-header .ent-title {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+.enterprise-app .ent-page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--ent-muted);
+  margin-top: 0.65rem;
+}
+
+.enterprise-app .ent-page-meta strong {
+  color: var(--ent-ink);
+  font-weight: 600;
+}
+
+.enterprise-app .ent-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-metrics-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.enterprise-app .ent-metrics-row--primary-first {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .enterprise-app .ent-metrics-row--primary-first {
+    grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ── Navigation — quiet rail, dark selected ── */
+.enterprise-app .ent-nav-rail {
+  background: var(--ent-gradient-sidebar);
+  border-right: 1px solid var(--ent-border-subtle);
+}
+
+.enterprise-app .ent-nav-link:hover {
+  background: rgba(28, 25, 21, 0.04);
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-nav-link-active {
+  background: var(--ent-dark);
+  border-color: var(--ent-dark);
+  color: #fff;
+  font-weight: 500;
+}
+
+.enterprise-app .ent-nav-link-active .ent-nav-icon {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.enterprise-app .ent-nav-group-trigger:hover {
+  background: rgba(28, 25, 21, 0.04);
+}
+
+/* ── Nav icons — larger outlined symbols ── */
+.enterprise-app .ent-nav-icon-svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
+  flex-shrink: 0;
+}
+
+.enterprise-app .ent-nav-icon {
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(28, 25, 21, 0.1);
+  background: #fff;
+  color: var(--ent-ink-soft);
+}
+
+.enterprise-app .ent-nav-icon-group {
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(28, 25, 21, 0.12);
+  background: #fff;
+  color: var(--ent-muted);
+}
+
+.enterprise-app .ent-nav-icon-group-active {
+  border-color: rgba(28, 25, 21, 0.16);
+  background: rgba(28, 25, 21, 0.05);
+  color: var(--ent-ink);
+  box-shadow: 0 1px 2px rgba(28, 25, 21, 0.04);
+}
+
+.enterprise-app .ent-nav-group-trigger {
+  gap: 0.75rem;
+  padding: 0.55rem 0.6rem;
+}
+
+.enterprise-app .ent-nav-link {
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem 0.45rem 0.5rem;
+}
+
+.enterprise-app .ent-nav-link:hover .ent-nav-icon:not(.ent-nav-icon-active) {
+  border-color: rgba(28, 25, 21, 0.14);
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-nav-link-active .ent-nav-icon-svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+/* ── KPI cards (overview) ── */
+.enterprise-app .ent-kpi-card {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius-lg);
+  box-shadow: var(--ent-shadow-card);
+  padding: 1.15rem 1.25rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.enterprise-app .ent-kpi-card:hover {
+  box-shadow: var(--ent-shadow-lift);
+  transform: translateY(-1px);
+}
+
+.enterprise-app .ent-kpi-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--ent-radius-sm);
+}
+
+.enterprise-app .ent-kpi-label {
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ent-muted);
+  margin-top: 0.75rem;
+}
+
+.enterprise-app .ent-kpi-value {
+  font-family: var(--itx-serif);
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+}
+
+.enterprise-app .ent-kpi-hint {
+  font-size: 0.75rem;
+  color: var(--ent-muted-light);
+}
+
+/* ── Tonal zones → white cards only ── */
+.enterprise-app .ent-zone-blush,
+.enterprise-app .ent-zone-butter,
+.enterprise-app .ent-zone-cream,
+.enterprise-app .ent-zone-stone {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  box-shadow: var(--ent-shadow-card);
+}
+
+.enterprise-app .ent-zone-glow::before {
+  display: none;
+}
+
+.enterprise-app .ent-ops-teaser-card,
+.enterprise-app .ent-ops-teaser {
+  background: transparent;
+}
+
+.enterprise-app .ent-ops-teaser-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.75rem 2rem;
+  background: var(--ent-dark-olive);
+  border-radius: var(--ent-radius-xl);
+  border: none;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-ops-teaser-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.enterprise-app .ent-ops-teaser-card .ent-section-eyebrow {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.enterprise-app .ent-ops-teaser-card .ent-serif,
+.enterprise-app .ent-ops-teaser-card h2 {
+  color: #fff;
+}
+
+.enterprise-app .ent-ops-teaser-card p {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+/* ── Tables & lists ── */
+.enterprise-app .ent-trace-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.enterprise-app .ent-trace-table thead th {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ent-muted-light);
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--ent-border);
+}
+
+.enterprise-app .ent-trace-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.enterprise-app .ent-trace-table tbody tr:hover {
+  background: rgba(28, 25, 21, 0.02);
+}
+
+.enterprise-app .ent-trace-table tbody td {
+  padding: 0.85rem;
+  border-bottom: 1px solid var(--ent-border-subtle);
+  vertical-align: middle;
+}
+
+.enterprise-app .ent-catalog-card {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius-lg);
+  box-shadow: var(--ent-shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.enterprise-app .ent-catalog-card:hover {
+  box-shadow: var(--ent-shadow-lift);
+  transform: translateY(-1px);
+}
+
+.enterprise-app .ent-inbox-list-item {
+  border-radius: var(--ent-radius);
+  transition: background-color 0.15s ease;
+}
+
+.enterprise-app .ent-inbox-list-item:hover {
+  background: rgba(28, 25, 21, 0.03);
+}
+
+.enterprise-app .ent-inbox-list-item.is-active {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  box-shadow: var(--ent-shadow-card);
+}
+
+/* ── Empty states ── */
+.enterprise-app .ent-empty-premium {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 2.5rem 2rem;
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius-xl);
+  max-width: 28rem;
+}
+
+.enterprise-app .ent-empty-premium-visual {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--ent-radius);
+  background: var(--ent-accent-soft);
+  border: 1px solid var(--ent-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--ent-accent);
+}
+
+.enterprise-app .ent-empty-premium-title {
+  font-family: var(--itx-serif);
+  font-size: 1.25rem;
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-empty-premium-body {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--ent-muted);
+}
+
+/* ── Intelligence / AI insight cards ── */
+.enterprise-app .ent-intel-card {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius-lg);
+  box-shadow: var(--ent-shadow-card);
+  transition: box-shadow 0.2s ease;
+}
+
+.enterprise-app .ent-intel-card:hover {
+  box-shadow: var(--ent-shadow-lift);
+}
+
+.enterprise-app .ent-intel-card--benchmark {
+  background: var(--ent-dark-olive);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.enterprise-app .ent-intel-card--benchmark .ent-intel-card-label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.enterprise-app .ent-insight-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.enterprise-app .ent-insight-statement {
+  font-family: var(--itx-serif);
+  font-size: 1.125rem;
+  line-height: 1.35;
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-insight-why {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--ent-muted);
+}
+
+.enterprise-app .ent-insight-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.enterprise-app .ent-insight-pill {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: var(--ent-accent-soft);
+  color: var(--ent-ink-soft);
+}
+
+.enterprise-app .ent-insight-pill--positive {
+  background: var(--ent-positive-soft);
+  color: var(--ent-positive);
+}
+
+.enterprise-app .ent-insight-pill--high {
+  background: rgba(28, 25, 21, 0.06);
+  color: var(--ent-ink-soft);
+}
+
+.enterprise-app .ent-insight-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ent-ink);
+  text-decoration: none;
+  margin-top: 0.25rem;
+}
+
+.enterprise-app .ent-insight-action:hover {
+  color: var(--ent-accent);
+}
+
+/* ── Traceability panels ── */
+.enterprise-app .ent-trace-panel,
+.enterprise-app .ent-trace-kpi-card {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius-lg);
+  box-shadow: var(--ent-shadow-card);
+}
+
+.enterprise-app .ent-trace-kpi-card .ent-display {
+  font-family: var(--itx-serif);
+}
+
+/* ── Charts — editorial restraint ── */
+.enterprise-app .ent-chart-stroke-accent {
+  stroke: var(--ent-accent);
+}
+
+.enterprise-app .ent-chart-fill-muted {
+  fill: rgba(28, 25, 21, 0.06);
+}
+
+/* ── Status pills ── */
+.enterprise-app .ent-status-pill {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+}
+
+.enterprise-app .ent-status-pill--positive {
+  background: var(--ent-positive-soft);
+  color: var(--ent-positive);
+}
+
+.enterprise-app .ent-status-pill--warning {
+  background: var(--ent-warning-soft);
+  color: var(--ent-warning);
+}
+
+.enterprise-app .ent-status-pill--critical {
+  background: var(--ent-critical-soft);
+  color: var(--ent-critical);
+}
+
+/* ── Micro-interactions ── */
+@media (prefers-reduced-motion: no-preference) {
+  .enterprise-app .ent-fade-in {
+    animation: ent-fade-in 0.35s ease;
+  }
+
+  @keyframes ent-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.enterprise-app .ent-tab-panel {
+  transition: opacity 0.3s ease;
+}
+
+
+/* ── Overview intelligence panel (dark) ── */
+.enterprise-app .ent-overview-intelligence {
+  background: var(--ent-dark-olive);
+  border: none;
+  border-radius: var(--ent-radius-xl);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 1.75rem 2rem;
+  box-shadow: var(--ent-shadow-card);
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-overview-intelligence {
+    padding: 2rem 2.25rem;
+  }
+}
+
+.enterprise-app .ent-overview-intelligence .ent-section-eyebrow {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.enterprise-app .ent-overview-intelligence .ent-title,
+.enterprise-app .ent-overview-intelligence h2 {
+  color: #fff;
+}
+
+.enterprise-app .ent-overview-intelligence p {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.enterprise-app .ent-card-dark {
+  background: var(--ent-dark-olive);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* ── Alert banners (not beige) ── */
+.enterprise-app .ent-alert-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius);
+  font-size: 0.875rem;
+  color: var(--ent-muted);
+}
+
+.enterprise-app .ent-alert-banner--info {
+  border-left: 3px solid var(--ent-accent);
+}
+
+.enterprise-app .ent-alert-banner--success {
+  border-left: 3px solid var(--ent-positive);
+}
+
+/* ── Traceability premium overrides ── */
+.enterprise-app .ent-trace-dashboard {
+  animation: none;
+}
+
+.enterprise-app .ent-trace-header {
+  margin-bottom: 1.75rem;
+}
+
+.enterprise-app .ent-trace-title {
+  font-family: var(--itx-serif);
+  font-size: clamp(1.625rem, 3vw, 2rem);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-trace-subtitle {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ent-muted);
+  max-width: 40rem;
+  margin-top: 0.5rem;
+}
+
+.enterprise-app .ent-trace-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-trace-kpi-row {
+    grid-template-columns: 1.35fr repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.enterprise-app .ent-trace-kpi-card {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  box-shadow: var(--ent-shadow-card);
+  border-radius: var(--ent-radius-lg);
+}
+
+.enterprise-app .ent-trace-kpi-card--featured {
+  background: var(--ent-dark-olive);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.enterprise-app .ent-trace-kpi-card--featured .ent-trace-kpi-label,
+.enterprise-app .ent-trace-kpi-card--featured .ent-trace-kpi-hint,
+.enterprise-app .ent-trace-kpi-card--featured .ent-trace-kpi-trend {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.enterprise-app .ent-trace-kpi-card--featured .ent-trace-kpi-donut-value {
+  color: #fff;
+}
+
+.enterprise-app .ent-trace-kpi-value {
+  font-family: var(--itx-serif);
+  font-weight: 300;
+  letter-spacing: -0.03em;
+}
+
+.enterprise-app .ent-trace-panel {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  box-shadow: var(--ent-shadow-card);
+  border-radius: var(--ent-radius-lg);
+}
+
+.enterprise-app .ent-trace-panel-title {
+  font-family: var(--itx-serif);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.enterprise-app .ent-trace-bar-fill {
+  background: var(--ent-accent);
+}
+
+.enterprise-app .ent-trace-bar-fill--complete {
+  background: var(--ent-positive);
+}
+
+.enterprise-app .ent-trace-bar-fill--attention {
+  background: var(--ent-critical);
+}
+
+/* ── Catalog table (products) ── */
+.enterprise-app .ent-catalog-table-wrap {
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--ent-shadow-card);
+}
+
+.enterprise-app .ent-catalog-table .ent-catalog-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.enterprise-app .ent-catalog-table .ent-catalog-product-name {
+  display: block;
+  font-weight: 500;
+  color: var(--ent-ink);
+}
+
+.enterprise-app .ent-catalog-table .ent-catalog-product-meta {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ent-muted-light);
+  margin-top: 0.15rem;
+}
+
+.enterprise-app .ent-catalog-table .ent-catalog-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.enterprise-app .ent-catalog-table tbody tr:hover {
+  background: rgba(28, 25, 21, 0.02);
+}
+
+/* ── Issues inbox ── */
+.enterprise-app .ent-inbox {
+  margin-top: 0;
+}
+
+.enterprise-app .ent-inbox-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  border: 1px solid var(--ent-border);
+  border-radius: var(--ent-radius-lg);
+  background: #fff;
+  overflow: hidden;
+  box-shadow: var(--ent-shadow-card);
+}
+
+@media (min-width: 1024px) {
+  .enterprise-app .ent-inbox-split {
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  }
+}
+
+.enterprise-app .ent-inbox-list {
+  border-right: 1px solid var(--ent-border-subtle);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.enterprise-app .ent-inbox-row {
+  display: flex;
+  gap: 0.85rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.95rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--ent-border-subtle);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.enterprise-app .ent-inbox-row:hover {
+  background: rgba(28, 25, 21, 0.025);
+}
+
+.enterprise-app .ent-inbox-row-active {
+  background: var(--ent-canvas-muted);
+  border-left: 2px solid var(--ent-dark);
+}
+
+.enterprise-app .ent-inbox-detail {
+  padding: 1.25rem 1.5rem;
+}
+
+.enterprise-app .ent-inbox-detail-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.enterprise-app .ent-inbox-detail-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-inbox-detail-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.enterprise-app .ent-inbox-panel {
+  background: var(--ent-canvas-muted);
+  border: 1px solid var(--ent-border-subtle);
+  border-radius: var(--ent-radius);
+  padding: 1rem;
+}
+
+.enterprise-app .ent-segmented {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: #fff;
+  border: 1px solid var(--ent-border);
+  border-radius: 999px;
+}
+
+.enterprise-app .ent-segmented-link {
+  border: none;
+  background: transparent;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  color: var(--ent-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.enterprise-app .ent-segmented-link-active {
+  background: var(--ent-dark);
+  color: #fff;
+}
+
+.enterprise-app .ent-inbox-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ── Intelligence brief (editorial) ── */
+.enterprise-app .ent-intel-card--brief {
+  padding: 1.5rem 1.65rem;
+  grid-column: span 2;
+}
+
+@media (max-width: 1023px) {
+  .enterprise-app .ent-intel-card--brief {
+    grid-column: span 1;
+  }
+}
+
+.enterprise-app .ent-intel-brief-title {
+  font-family: var(--itx-serif);
+  font-size: 1.35rem;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: var(--ent-ink);
+  margin-top: 0.75rem;
+}
+
+.enterprise-app .ent-intel-brief-copy {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--ent-muted);
+  margin-top: 0.65rem;
+}
+
+.enterprise-app .ent-intel-card--ask {
+  display: none;
+}
+
+/* Hide chat-bot ask panel per premium spec */
+
+/* ── Product journey hero (Fairly Made–style isolated image + QR overlay) ── */
+.enterprise-app .ent-journey-hero-grid {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .enterprise-app .ent-journey-hero-grid {
+    grid-template-columns: minmax(360px, 480px) 1fr;
+  }
+}
+
+.enterprise-app .ent-journey-identity {
+  padding: 1.75rem 1.5rem 2rem;
+}
+
+@media (min-width: 1024px) {
+  .enterprise-app .ent-journey-identity {
+    padding: 2rem 2rem 2.25rem;
+  }
+}
+
+.enterprise-app .ent-journey-photo-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.enterprise-app .ent-journey-photo-wrap {
+  aspect-ratio: 1 / 1;
+  min-height: 320px;
+  background: var(--ent-accent-soft, #f0ebe3);
+  border: 1px solid rgba(28, 25, 21, 0.08);
+  box-shadow: 0 10px 32px rgba(28, 25, 21, 0.07);
+}
+
+@media (min-width: 1024px) {
+  .enterprise-app .ent-journey-photo-wrap {
+    min-height: 420px;
+  }
+}
+
+.enterprise-app .ent-journey-photo-inner {
+  position: absolute;
+  inset: 0;
+  padding: 2.25rem 2rem 3.5rem 2rem;
+}
+
+.enterprise-app .ent-journey-photo-img {
+  object-fit: contain;
+  object-position: center;
+}
+
+.enterprise-app .ent-journey-photo-fallback {
+  background: var(--ent-accent-soft, #f0ebe3);
+}
+
+.enterprise-app .ent-journey-qr-overlay {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+}
+
+.enterprise-app .ent-journey-qr-overlay .ent-journey-qr-frame {
+  padding: 0.45rem;
+  border-radius: 0.65rem;
+  box-shadow: 0 8px 24px rgba(28, 25, 21, 0.14);
+}
+
+.enterprise-app .ent-journey-qr-overlay--pending .ent-journey-qr-frame--ghost {
+  width: 88px;
+  height: 88px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.enterprise-app .ent-journey-qr-caption {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.enterprise-app .ent-journey-qr-pending-hint {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ent-muted);
+}
+
+.enterprise-app .ent-journey-qr-block {
+  display: none;
+}
+
+/* ── Product record header & Fairly Made–style information ── */
+.enterprise-app .ent-product-record-header {
+  padding-bottom: 0.25rem;
+}
+
+.enterprise-app .ent-product-record-title {
+  font-family: var(--itx-serif, Georgia, serif);
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--ent-petrol-deep, #3e6268);
+}
+
+.enterprise-app .ent-showcase-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 25, 21, 0.14);
+  background: #fff;
+  color: var(--ent-ink, #1c1915);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(28, 25, 21, 0.06);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.enterprise-app .ent-showcase-btn:hover {
+  background: var(--ent-accent-soft, #f0ebe3);
+  border-color: rgba(196, 165, 116, 0.45);
+}
+
+.enterprise-app .ent-product-information-title {
+  font-family: var(--itx-serif, Georgia, serif);
+  font-size: 1.35rem;
+  line-height: 1.25;
+  color: var(--ent-petrol-deep, #3e6268);
+  margin-bottom: 1.25rem;
+}
+
+.enterprise-app .ent-product-information-grid {
+  display: grid;
+  gap: 1.1rem 1.5rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .enterprise-app .ent-product-information-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .enterprise-app .ent-product-information-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.enterprise-app .ent-product-information-value {
+  margin-top: 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ent-ink, #1c1915);
+}
+
+.enterprise-app .ent-product-type-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(28, 25, 21, 0.16);
+  background: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ent-ink, #1c1915);
+  line-height: 1.2;
+}
+
+.enterprise-app .ent-product-materials-block,
+.enterprise-app .ent-product-certifications {
+  margin-top: 1.35rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(28, 25, 21, 0.08);
+}
+
+.enterprise-app .ent-product-materials-value {
+  margin-top: 0.45rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ent-ink, #1c1915);
+}
+
+.enterprise-app .ent-product-certification-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.enterprise-app .ent-product-certification-pill {
+  display: inline-flex;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 25, 21, 0.12);
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ent-petrol-deep, #3e6268);
+}
+
+.enterprise-app .ent-key-indicators-title {
+  font-family: var(--itx-serif, Georgia, serif);
+  font-size: 1.15rem;
+  color: var(--ent-ink, #1c1915);
+  margin-bottom: 1rem;
+}
+
+.enterprise-app .ent-key-indicators-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-key-indicators-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.enterprise-app .ent-key-indicator {
+  padding: 0.95rem 1rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(28, 25, 21, 0.07);
+}
+
+.enterprise-app .ent-key-indicator-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.enterprise-app .ent-key-indicator-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ent-muted-light, #8a847c);
+}
+
+.enterprise-app .ent-key-indicator-score {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ent-ink, #1c1915);
+  font-variant-numeric: tabular-nums;
+}
+
+.enterprise-app .ent-key-indicator-dots {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+}
+
+.enterprise-app .ent-key-indicator-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 25, 21, 0.18);
+  background: transparent;
+}
+
+.enterprise-app .ent-key-indicator-dot.is-filled {
+  background: var(--ent-petrol-deep, #3e6268);
+  border-color: var(--ent-petrol-deep, #3e6268);
+}
+
+.enterprise-app .ent-key-indicator-detail {
+  margin-top: 0.55rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ent-muted, #6b6560);
+}

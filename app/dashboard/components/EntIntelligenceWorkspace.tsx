@@ -32,7 +32,7 @@ export function EntIntelligenceWorkspace({ data, base, variant = "full" }: Props
           </h2>
           <p className="text-sm text-[var(--ent-muted)] mt-2 max-w-2xl leading-relaxed">
             Live intelligence from your catalog, peer benchmarks, conversion signals, traceability, and regulatory
-            readiness — every recommendation links to governed evidence in your workspace.
+            readiness — every recommendation links to evidence in your workspace.
           </p>
         </div>
         {variant === "home" ? (
@@ -46,7 +46,7 @@ export function EntIntelligenceWorkspace({ data, base, variant = "full" }: Props
         <div className="ent-widget-card p-6 md:p-8">
           <p className="ent-intel-unavailable mb-0">
             Import products and connect supplier evidence to activate the intelligence workspace. Benchmarks and
-            recommendations assemble from your governed catalog — not generic generative output.
+            recommendations assemble from your catalog and verified datasets.
           </p>
           <Link href={`${base}/products`} className="ent-btn ent-btn-primary inline-flex mt-6 text-sm">
             Import catalog →
@@ -55,7 +55,7 @@ export function EntIntelligenceWorkspace({ data, base, variant = "full" }: Props
       ) : (
         <>
           <div className="ent-intelligence-grid">
-            <EntIntelligenceBriefCard brief={data.intelligenceBrief} />
+            <EntIntelligenceBriefCard brief={data.intelligenceBrief} actionHref={`${base}/products`} />
             <EntRecommendedActionsCard recommendations={data.recommendations} />
             <EntMaterialBenchmarkModule benchmark={data.benchmark} benchmarkHref={benchmarkHref} />
             <EntDemandForecastCard forecast={data.forecast} />
@@ -68,8 +68,8 @@ export function EntIntelligenceWorkspace({ data, base, variant = "full" }: Props
           </div>
           {data.source === "org_live" ? (
             <p className="ent-intel-live-note">
-              Assembled from your organization catalog, governed peer benchmarks, conversion cohorts, traceability
-              nodes, and open issues. Updated when you refresh this page.
+              Assembled from your catalog, peer benchmarks, conversion cohorts, traceability nodes, and open issues.
+              Updated when you refresh this page.
             </p>
           ) : null}
         </>

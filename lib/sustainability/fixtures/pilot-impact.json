@@ -1,0 +1,158 @@
+{
+  "byStyleCode": {
+    "ITX-LIVE-01": {
+      "environmentalImpact": {
+        "carbon": { "value": 8.4, "unit": "kg CO2e" },
+        "water": { "value": 2100, "unit": "L" },
+        "energy": { "value": 42, "unit": "MJ" }
+      },
+      "impactAssessments": [
+        {
+          "provider": "green_story",
+          "methodology": "Product LCA",
+          "methodologyVersion": "2024.1",
+          "score": 8.4,
+          "unit": "kg CO2e",
+          "scope": "Cradle-to-gate",
+          "measuredShare": 74,
+          "estimatedShare": 26,
+          "confidence": 88,
+          "calculatedAt": "2026-03-10T09:00:00Z",
+          "sourceReference": "gs-lca-linen-shirt-001",
+          "externalRecordId": "gs-lca-linen-shirt-001"
+        },
+        {
+          "provider": "worldly",
+          "methodology": "Higg MSI",
+          "methodologyVersion": "3.7",
+          "score": 62,
+          "unit": "MSI points",
+          "scope": "Material stage",
+          "measuredShare": 68,
+          "estimatedShare": 32,
+          "confidence": 82,
+          "calculatedAt": "2026-03-08T14:30:00Z",
+          "sourceReference": "higg-msi-linen-001",
+          "externalRecordId": "higg-msi-linen-001"
+        }
+      ],
+      "sustainabilityScores": [
+        {
+          "type": "french_environmental_cost",
+          "provider": "green_story",
+          "value": 451,
+          "unit": "pts",
+          "market": "FR",
+          "methodologyVersion": "AGEC 2024",
+          "status": "verified",
+          "label": "French Coût Environnemental"
+        },
+        {
+          "type": "product_carbon",
+          "provider": "green_story",
+          "value": 8.4,
+          "unit": "kg CO2e",
+          "methodologyVersion": "2024.1",
+          "status": "verified",
+          "label": "Product carbon footprint"
+        },
+        {
+          "type": "higg_msi",
+          "provider": "worldly",
+          "value": 62,
+          "unit": "MSI points",
+          "methodologyVersion": "3.7",
+          "status": "estimated",
+          "label": "Higg MSI"
+        }
+      ],
+      "hotspots": [
+        { "stage": "Dyeing", "sharePct": 34, "provider": "green_story" },
+        { "stage": "Raw material", "sharePct": 28, "provider": "green_story" },
+        { "stage": "Transport", "sharePct": 18, "provider": "green_story" }
+      ],
+      "evidenceStatus": { "verified": 8, "required": 10 }
+    },
+    "ITX-LIVE-08": {
+      "environmentalImpact": {
+        "carbon": { "value": 12.1, "unit": "kg CO2e" },
+        "water": { "value": 3200, "unit": "L" }
+      },
+      "impactAssessments": [
+        {
+          "provider": "worldly",
+          "methodology": "Higg Product Module",
+          "methodologyVersion": "2.1",
+          "score": 12.1,
+          "unit": "kg CO2e",
+          "scope": "Cradle-to-gate",
+          "measuredShare": 61,
+          "estimatedShare": 39,
+          "confidence": 76,
+          "calculatedAt": "2026-03-05T11:00:00Z",
+          "sourceReference": "higg-pm-knit-008",
+          "externalRecordId": "higg-pm-knit-008"
+        }
+      ],
+      "sustainabilityScores": [
+        {
+          "type": "product_carbon",
+          "provider": "worldly",
+          "value": 12.1,
+          "unit": "kg CO2e",
+          "methodologyVersion": "2.1",
+          "status": "estimated",
+          "label": "Product carbon footprint"
+        }
+      ],
+      "hotspots": [
+        { "stage": "Knitting", "sharePct": 31, "provider": "worldly" },
+        { "stage": "Raw material", "sharePct": 27, "provider": "worldly" }
+      ],
+      "evidenceStatus": { "verified": 5, "required": 8 }
+    }
+  },
+  "facilities": [
+    {
+      "id": "fac-pt-001",
+      "name": "Porto garment assembly",
+      "countryCode": "PT",
+      "provider": "worldly",
+      "carbon": { "value": 0.42, "unit": "kg CO2e/unit" },
+      "water": { "value": 18, "unit": "L/unit" },
+      "lastSyncAt": "2026-03-08T14:30:00Z",
+      "externalRecordId": "higg-fac-pt-001"
+    },
+    {
+      "id": "fac-tr-002",
+      "name": "Izmir dye house",
+      "countryCode": "TR",
+      "provider": "worldly",
+      "carbon": { "value": 1.8, "unit": "kg CO2e/kg fabric" },
+      "energy": { "value": 12, "unit": "MJ/kg" },
+      "lastSyncAt": "2026-03-07T09:15:00Z",
+      "externalRecordId": "higg-fac-tr-002"
+    }
+  ],
+  "materials": [
+    {
+      "material": "Linen",
+      "productCount": 4,
+      "avgCarbon": { "value": 7.2, "unit": "kg CO2e" },
+      "provider": "green_story",
+      "measuredShare": 74
+    },
+    {
+      "material": "Organic cotton",
+      "productCount": 3,
+      "avgCarbon": { "value": 9.8, "unit": "kg CO2e" },
+      "provider": "worldly",
+      "measuredShare": 61
+    }
+  ],
+  "providerConnections": {
+    "worldly": { "credentialsConfigured": true, "connectionState": "connected", "lastSyncAt": "2026-03-10T08:00:00Z" },
+    "green_story": { "credentialsConfigured": true, "connectionState": "connected", "lastSyncAt": "2026-03-10T09:00:00Z" },
+    "ecoinvent": { "credentialsConfigured": false, "connectionState": "disconnected" }
+  }
+}

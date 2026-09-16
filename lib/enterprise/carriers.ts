@@ -35,7 +35,8 @@ export function publicResolverUrl(publicId: string): string {
 export async function ensurePassportShell(
   client: SupabaseClient,
   organizationId: string,
-  productId: string
+  productId: string,
+  opts?: { preferredPublicId?: string | null }
 ): Promise<{ passportId: string; publicId: string; publicUrl: string; identityId: string }> {
   let { data: identity } = await client
     .from("persistent_identities")
@@ -46,7 +47,7 @@ export async function ensurePassportShell(
     .maybeSingle();
 
   if (!identity?.public_id) {
-    const publicId = newPublicId();
+    const publicId = opts?.preferredPublicId?.trim() || newPublicId();
     const inserted = await client
       .from("persistent_identities")
       .insert({

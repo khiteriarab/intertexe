@@ -130,20 +130,20 @@ export function EntKpiGrid({ overview, base }: { overview: OrgOverviewData; base
       tone: "blush",
       icon: "benchmarking",
     },
-  ];
+  ].slice(0, 4);
 
   return (
     <section className="mb-10 md:mb-12">
       <div className="flex items-end justify-between gap-4 mb-6">
         <div>
-          <p className="ent-section-eyebrow">Platform snapshot</p>
-          <h2 className="ent-section-title">Key metrics</h2>
+          <p className="ent-section-eyebrow">Overview</p>
+          <h2 className="ent-section-title">What needs attention</h2>
         </div>
         <Link href={`${base}/analytics`} className="ent-link-subtle hidden sm:inline-flex">
           View analytics →
         </Link>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="ent-metrics-row">
         {cards.map((card) => {
           const Icon = ENT_NAV_ITEM_ICONS[card.icon];
           const tone = KPI_TONES[card.tone];
@@ -189,7 +189,7 @@ export function EntOverviewBenchmarkTeaser({
             <p className="ent-section-eyebrow">Material intelligence</p>
             <h2 className="ent-benchmark-teaser-title">How your catalog compares</h2>
             <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-xl leading-relaxed">
-              Fiber mix, data completeness, and passport readiness — benchmarked against governed peer medians when
+              Fiber mix, data completeness, and passport readiness — benchmarked against peer medians when
               available. No fabricated competitor data.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
@@ -237,7 +237,7 @@ export function EntOverviewBenchmarkTeaser({
               </ul>
             ) : (
               <p className="text-sm text-[var(--ent-muted)] leading-relaxed">
-                Governed peer medians appear here when approved benchmark datasets meet the sample threshold for your
+                Peer medians appear here when approved benchmark datasets meet the sample threshold for your
                 plan. Your catalog metrics above are already live.
               </p>
             )}
@@ -256,7 +256,7 @@ export function EntOverviewBenchmarkTeaser({
             <p className="text-[11px] text-[var(--ent-muted-light)] mt-5">
               {governedCount > 0
                 ? `${governedCount} governed peer metrics available`
-                : "Collecting governed peer benchmarks"}
+                : "Collecting peer benchmarks"}
             </p>
           </div>
         </div>

@@ -27,8 +27,8 @@ function ShowcaseTileCard({ tile, delayMs }: { tile: ShowcaseTile; delayMs: numb
         src={tile.imageUrl}
         alt={tile.name}
         fill
-        className="object-contain p-3"
-        sizes="120px"
+        className="object-contain p-1.5 scale-110"
+        sizes="160px"
         unoptimized
       />
     </div>
@@ -53,21 +53,23 @@ export function PlatformBrandShowcaseHero() {
         <div className="platform-showcase-hero-copy">
           <p className="platform-showcase-hero-eyebrow">INTERTEXE platform</p>
           <h1 className="platform-showcase-hero-title" style={SERIF}>
-            Transforming how fashion teams connect product data to the customer experience.
+            One product record. From conception to next life.
           </h1>
           <p className="platform-showcase-hero-sub">
-            From material origin to digital passport, care, resale, and next life — one governed record for compliance,
-            transparency, and circular commerce.
+            Turn fragmented product, material, supplier, and manufacturing data into one governed record that powers
+            traceability, compliance, Digital Product Passports, consumer intelligence, care, and resale.
           </p>
-          <Link href="/platform/request?intent=snapshot&cta=request_demo" className="platform-showcase-hero-cta">
-            Request a demo
+          <Link href="/platform/demo" className="platform-showcase-hero-cta">
+            See it live
             <span aria-hidden>→</span>
           </Link>
         </div>
 
-        <div className="platform-showcase-grid" aria-hidden>
-          <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_A} />
-          <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_B} offset={4} />
+        <div className="platform-showcase-grid-wrap">
+          <div className="platform-showcase-grid" aria-hidden>
+            <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_A} />
+            <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_B} offset={4} />
+          </div>
         </div>
 
         <div className="platform-showcase-stats">

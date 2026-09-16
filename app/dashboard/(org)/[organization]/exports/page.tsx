@@ -12,7 +12,7 @@ export default async function ExportsPage({
   const { organization } = await params;
   const { membership } = await requireOrganizationAccess(organization);
   return (
-    <EntModulePage title="Exports" subtitle="Download governed snapshots of your workspace data.">
+    <EntModulePage title="Exports" subtitle="Download workspace data exports.">
       <ExportsClient organization={membership.slug} />
     </EntModulePage>
   );

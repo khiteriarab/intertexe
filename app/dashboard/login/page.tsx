@@ -213,7 +213,7 @@ function LoginForm() {
             <span className="ent-login-wordmark-bold">TEXE</span>
           </p>
           <h1 className="ent-login-brand-statement">
-            Governed data.
+            Verified data.
             <br />
             Real product experiences.
           </h1>
@@ -238,7 +238,7 @@ function LoginForm() {
               <path d="M228 50 H260" stroke="rgba(44,38,32,0.2)" strokeWidth="1" strokeLinecap="round" />
             </svg>
             <ol className="ent-login-brand-motif-steps">
-              <li>Governed record</li>
+              <li>Product record</li>
               <li>Passport</li>
               <li>Consumer experience</li>
             </ol>

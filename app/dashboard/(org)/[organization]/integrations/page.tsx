@@ -1,13 +1,7 @@
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
-import { entitlementsForPlan, type PlanKey } from "../../../../../lib/enterprise/entitlements";
 import { loadOrgIntegrations } from "../../../../../lib/enterprise/module-queries";
-import { EntUpgradePrompt } from "../../../components/EntUpgradePrompt";
-import {
-  EntEmptyState,
-  EntIntegrationTile,
-  EntModulePage,
-} from "../../../components/EnterpriseModuleUi";
-import { IntegrationsHealthPanel } from "./IntegrationsHealthPanel";
+import { EntOpsPageHeader } from "../../../components/EntOpsModuleUi";
+import { IntegrationsWorkspace } from "./IntegrationsWorkspace";
 
 export const dynamic = "force-dynamic";
 
@@ -18,51 +12,15 @@ export default async function IntegrationsPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const { rows } = await loadOrgIntegrations(client, membership.organizationId, membership.slug);
-  const entitlements = entitlementsForPlan(membership.plan as PlanKey, {
-    productAllowance: membership.productAllowance,
-  });
-
-  const connected = rows.filter((r) => r.state === "connected").length;
+  const data = await loadOrgIntegrations(client, membership.organizationId, membership.slug);
 
   return (
-    <EntModulePage title="Integrations">
-      {!entitlements.canUseIntegrations ? (
-        <div className="mb-8">
-          <EntUpgradePrompt
-            slug={membership.slug}
-            plan={membership.plan}
-            feature="Advanced integrations"
-            title="Advanced integrations require Platform"
-            body="CSV import and standard API access are available on Professional. ERP, PIM, and automation connectors unlock on Platform and Enterprise."
-          />
-        </div>
-      ) : null}
-      <IntegrationsHealthPanel slug={membership.slug} />
-      {connected === 0 ? (
-        <div className="mb-8">
-          <EntEmptyState
-            title="No external connections are configured"
-            body="CSV catalog import is available from Products. API credentials and webhooks can be configured when your organization needs them."
-            ctaHref={`/dashboard/${membership.slug}/products`}
-            ctaLabel="Go to Products"
-          />
-        </div>
-      ) : null}
-
-      <div className="grid sm:grid-cols-2 gap-5 md:gap-6">
-        {rows.map((row, index) => (
-          <EntIntegrationTile
-            key={row.id}
-            category={row.category}
-            label={row.label}
-            detail={row.detail}
-            state={row.state}
-            href={row.href}
-            featured={index === 0 || row.id === "eu-registry"}
-          />
-        ))}
-      </div>
-    </EntModulePage>
+    <div className="ent-opsmod-page ent-fade-in">
+      <EntOpsPageHeader
+        title="Integrations"
+        subtitle="Connect sustainability providers, data imports, API credentials, and registry workflows."
+      />
+      <IntegrationsWorkspace rows={data.rows} slug={membership.slug} />
+    </div>
   );
 }

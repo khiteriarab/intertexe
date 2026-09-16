@@ -1,36 +1,34 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
-import { canMutateEnterprise, getOrganizationAccess } from "./access";
-import type { DashboardActor } from "./access";
-import type { EnterpriseMembership } from "./types";
 
-type OrgApiOk = {
-  error: null;
-  access: {
-    ok: true;
-    actor: DashboardActor;
-    membership: EnterpriseMembership;
-    client: SupabaseClient;
-  };
-};
-type OrgApiErr = { error: NextResponse; access: null };
+export type ApiAuthResult =
+  | { ok: true; organizationId: string; slug: string }
+  | { ok: false; status: number; message: string };
 
-export async function requireOrgApi(
-  slug: string,
-  opts?: { mutate?: boolean }
-): Promise<OrgApiOk | OrgApiErr> {
-  const result = await getOrganizationAccess(slug);
-  if (!result.ok) {
-    return {
-      error: NextResponse.json({ message: result.message }, { status: result.status }),
-      access: null,
-    };
+/** Resolve organization from Bearer API token (prefix match against stored credentials). */
+export async function authenticateApiRequest(
+  client: SupabaseClient,
+  authorizationHeader: string | null
+): Promise<ApiAuthResult> {
+  const token = (authorizationHeader || "").replace(/^Bearer\s+/i, "").trim();
+  if (!token) {
+    return { ok: false, status: 401, message: "Bearer token required" };
   }
-  if (opts?.mutate && !canMutateEnterprise(result.membership.role)) {
-    return {
-      error: NextResponse.json({ message: "Read-only role cannot mutate records." }, { status: 403 }),
-      access: null,
-    };
+
+  const prefix = token.slice(0, 12);
+  const { data: credential } = await client
+    .from("api_credentials")
+    .select("organization_id, prefix, organizations(slug)")
+    .eq("prefix", prefix)
+    .maybeSingle();
+
+  if (!credential?.organization_id) {
+    return { ok: false, status: 401, message: "Invalid API credential" };
   }
-  return { error: null, access: result };
+
+  const org = Array.isArray(credential.organizations) ? credential.organizations[0] : credential.organizations;
+  if (!org?.slug) {
+    return { ok: false, status: 401, message: "Organization not found for credential" };
+  }
+
+  return { ok: true, organizationId: credential.organization_id, slug: org.slug };
 }

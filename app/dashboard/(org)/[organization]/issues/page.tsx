@@ -4,7 +4,7 @@ import { pilotImageMaps, resolvePilotProductImage } from "../../../../../lib/ent
 import { loadOrgIssues } from "../../../../../lib/enterprise/queries";
 import { loadOrgMemberDirectory } from "../../../../../lib/enterprise/reviewer-display";
 import { EntEmptyState } from "../../../components/EnterpriseUi";
-import { EntModulePage } from "../../../components/EnterpriseModuleUi";
+import { EntModuleMetrics, EntModulePage } from "../../../components/EnterpriseModuleUi";
 import livePilotProducts from "../../../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import { IssuesInboxClient, type InboxIssue } from "./IssuesInboxClient";
 
@@ -47,20 +47,15 @@ export default async function IssuesPage({
     <EntModulePage
       title="Issues"
       subtitle="Conflicts, missing fields, and validation findings — resolve in place without losing source provenance."
-      meta={
-        <>
-          <span>
-            <strong>{openCount}</strong> open
-          </span>
-          <span>
-            <strong>{blockingCount}</strong> blocking
-          </span>
-          <span>
-            <strong>{resolvedCount}</strong> resolved
-          </span>
-        </>
-      }
     >
+      <EntModuleMetrics
+        items={[
+          { label: "Open issues", value: openCount, hint: "Needs action" },
+          { label: "Blocking publish", value: blockingCount, hint: "Priority fixes", accent: blockingCount > 0 },
+          { label: "Resolved", value: resolvedCount, hint: "Closed or waived" },
+          { label: "Resolution rate", value: issues.length ? `${Math.round((resolvedCount / issues.length) * 100)}%` : "—", hint: "All time" },
+        ]}
+      />
       {issues.length === 0 ? (
         <EntEmptyState
           title="Empty inbox"

@@ -1,20 +1,65 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
+import { DiscoverLink, SERIF } from "./platform-ui";
 import { PlatformHeroLifecycleVisual } from "./PlatformHeroLifecycleVisual";
 
 type HeroStage = {
   id: string;
   label: string;
+  micro: string;
+  title: string;
+  copy: string;
+  points: string[];
+  href: string;
 };
 
 const HERO_STAGES: HeroStage[] = [
-  { id: "trace", label: "Trace" },
-  { id: "measure", label: "Measure" },
-  { id: "govern", label: "Govern" },
-  { id: "publish", label: "Publish" },
-  { id: "next-life", label: "Next life" },
+  {
+    id: "create",
+    label: "Create",
+    micro: "Input",
+    title: "Capture and structure product data",
+    copy: "Bring together product identity, composition, supplier inputs, specifications, and manufacturing details into one structured foundation.",
+    points: ["Product identity", "Materials & composition", "Supplier + factory data", "Source files & specifications"],
+    href: "/platform/demo#create",
+  },
+  {
+    id: "verify",
+    label: "Verify",
+    micro: "Validation",
+    title: "Find gaps before they become risk",
+    copy: "Identify missing composition, incomplete traceability, unsupported claims, and supplier evidence gaps across the product record.",
+    points: ["Missing composition", "Supplier evidence gaps", "Unsupported claims", "Incomplete manufacturing details"],
+    href: "/platform/demo#verify",
+  },
+  {
+    id: "comply",
+    label: "Comply",
+    micro: "Compliance",
+    title: "Prepare products for trust and regulation",
+    copy: "Turn approved product data into a governed record ready for Digital Product Passports, regulatory requirements, and controlled transparency.",
+    points: ["Digital Product Passport ready", "Traceability structure", "Regulatory requirements", "Approved evidence layer"],
+    href: "/platform/demo#comply",
+  },
+  {
+    id: "distribute",
+    label: "Distribute",
+    micro: "Delivery",
+    title: "One record, every channel",
+    copy: "Publish product data through hosted passports, branded experiences, or API so every channel works from the same governed source.",
+    points: ["Hosted passport", "Brand domain", "Headless API", "One record, every channel"],
+    href: "/platform/demo#distribute",
+  },
+  {
+    id: "extend",
+    label: "Extend",
+    micro: "Circularity",
+    title: "Support the product after the sale",
+    copy: "Power scan-based care, repair, resale, transfer, and circular next-life experiences from the same product record.",
+    points: ["Composition & origin", "Care & aftercare", "Repair guidance", "Resale & transfer"],
+    href: "/platform/demo#extend",
+  },
 ];
 
 const TRUST_MARKS = [
@@ -42,63 +87,63 @@ export function PlatformHero() {
     window.setTimeout(() => setPaused(false), 12000);
   }
 
-  function HeroTabs({ className = "" }: { className?: string }) {
-    return (
-      <div className={`platform-hero-tabs ${className}`}>
-        <div role="tablist" aria-label="Platform journey" className="platform-hero-tab-row">
-          {HERO_STAGES.map((tab, i) => {
-            const selected = i === index;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                aria-controls={`platform-hero-panel-${tab.id}`}
-                id={`platform-hero-tab-${tab.id}`}
-                onClick={() => selectTab(i)}
-                className={`platform-hero-tab ${selected ? "is-active" : ""}`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
   const activeStage = HERO_STAGES[index] ?? HERO_STAGES[0];
 
   return (
     <section className="itx-abstract-section itx-abstract-motif relative overflow-hidden bg-[var(--platform-bg)] text-[var(--platform-ink)]">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pt-14 sm:pt-20 lg:pt-16 xl:pt-20 pb-8 lg:pb-10">
+        <div className="mb-8 lg:mb-10">
+          <div role="tablist" aria-label="Product lifecycle stages" className="platform-hero-tab-row">
+            {HERO_STAGES.map((tab, i) => {
+              const selected = i === index;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls={`platform-hero-panel-${tab.id}`}
+                  id={`platform-hero-tab-${tab.id}`}
+                  onClick={() => selectTab(i)}
+                  className={`platform-hero-tab ${selected ? "is-active" : ""}`}
+                >
+                  <span className="platform-hero-tab-index">{i + 1}</span>
+                  <span className="platform-hero-tab-label">{tab.label}</span>
+                  <span className="platform-hero-tab-micro">{tab.micro}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="lg:grid lg:grid-cols-[minmax(0,42%)_minmax(0,58%)] lg:gap-12 xl:gap-16 lg:items-center">
           <div className="text-center lg:text-left lg:pr-4 xl:pr-8 mb-10 lg:mb-0">
-            <p className="text-[10px] sm:text-[11px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-6 lg:mb-8">
-              INTERTEXE FOR BRANDS
+            <p className="text-[10px] sm:text-[11px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-3">
+              {activeStage.micro}
             </p>
+            <p className="text-[11px] tracking-[0.18em] uppercase text-[var(--platform-accent)] mb-4">{activeStage.label}</p>
             <h1
-              className="text-[2.35rem] sm:text-[3.25rem] md:text-[3.75rem] lg:text-[3.25rem] xl:text-[4rem] font-light leading-[1.06] lg:leading-[1.04] tracking-[-0.02em] max-w-4xl mx-auto lg:mx-0 mb-5 lg:mb-6"
+              className="text-[2rem] sm:text-[2.75rem] md:text-[3.25rem] lg:text-[2.85rem] xl:text-[3.35rem] font-light leading-[1.08] tracking-[-0.02em] max-w-4xl mx-auto lg:mx-0 mb-5"
               style={SERIF}
             >
-              Turn governed product data into the{" "}
-              <em className="not-italic italic text-[var(--platform-accent)]">experience</em>
-              <span className="hidden lg:inline">
-                <br />
-              </span>
-              <span className="lg:hidden"> </span>
-              your customer sees.
+              {activeStage.title}
             </h1>
-            <p className="mx-auto lg:mx-0 max-w-xl lg:max-w-md text-[16px] sm:text-[17px] lg:text-[17px] xl:text-[18px] font-light leading-relaxed text-[var(--platform-muted)] mb-8 lg:mb-10">
-              INTERTEXE connects fashion brands, product data, and consumers across the lifecycle of a garment — from
-              raw material to the moment someone scans the QR on the hangtag.
+            <p className="mx-auto lg:mx-0 max-w-xl lg:max-w-md text-[16px] sm:text-[17px] font-light leading-relaxed text-[var(--platform-muted)] mb-6">
+              {activeStage.copy}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-6 lg:mb-8">
-              <PrimaryLink href="/platform/request?intent=snapshot&cta=hero">Start with 10 products</PrimaryLink>
-              <SecondaryLink href="/platform/demo">See it live</SecondaryLink>
+            <ul className="space-y-2.5 mb-8 text-left max-w-md mx-auto lg:mx-0">
+              {activeStage.points.map((point) => (
+                <li key={point} className="flex items-start gap-2 text-sm text-[var(--platform-ink)]">
+                  <span className="text-[var(--platform-accent)] mt-0.5 shrink-0" aria-hidden>
+                    →
+                  </span>
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-center lg:justify-start">
+              <DiscoverLink href={activeStage.href}>Discover</DiscoverLink>
             </div>
-            <HeroTabs />
           </div>
 
           <div
