@@ -36,8 +36,15 @@ describe("Platform B2B sales page", () => {
     assert.match(showcaseHero, /See it live/i);
     assert.match(showcaseHero, /\/platform\/demo/);
     assert.match(showcaseHero, /One product record\. From conception to next life\./);
-    assert.match(showcaseHero, /70% faster/);
-    assert.match(showcaseHero, /Resale activation/);
+    assert.match(showcaseHero, /stat\.figure/);
+    assert.match(showcaseHero, /stat\.qualifier/);
+    const showcaseStats = fs.readFileSync(path.join(process.cwd(), "lib/enterprise/platform-brand-showcase.ts"), "utf8");
+    assert.match(showcaseStats, /figure: "70%"/);
+    assert.match(showcaseStats, /qualifier: "faster"/);
+    const showcaseCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-tokens.css"), "utf8");
+    assert.match(showcaseCss, /platform-showcase-stat::before/);
+    assert.match(showcaseCss, /clamp\(3\.35rem/);
+    assert.match(showcaseStats, /Resale activation/);
     assert.match(sections, /one governed product record/i);
     assert.doesNotMatch(sections, /EU certified/i);
     assert.doesNotMatch(sections, /EU approved/i);
@@ -48,6 +55,13 @@ describe("Platform B2B sales page", () => {
     assert.match(home, /SalesHeroSection/);
     assert.match(sections, /PlatformBrandShowcaseHero/);
     assert.match(home, /PlatformHowItWorksSection/);
+    assert.match(home, /PlatformFabricCinema/);
+    assert.match(howItWorks, /platform-band--white/);
+    assert.match(howItWorks, /platform-band--dark/);
+    const saasCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-saas.css"), "utf8");
+    assert.match(saasCss, /--platform-bg: #ffffff/);
+    assert.match(saasCss, /platform-band--dark/);
+    assert.match(chrome, /platform-saas\.css/);
     assert.match(howItWorks, /WhatItIsProcessVisual/);
     const processVisual = fs.readFileSync(
       path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"),
@@ -257,7 +271,7 @@ describe("Platform B2B sales page", () => {
     assert.equal(identityPng.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
     const deliveryCss = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals.css"), "utf8");
     assert.match(deliveryCss, /\.platform-delivery-story-visual--symbol \{[\s\S]*?background: transparent;/);
-    assert.match(deliveryCss, /width: min\(100%, 11\.5rem\)/);
+    assert.match(deliveryCss, /width: 16rem/);
     assert.match(deliveryCss, /\.platform-delivery-storyline-label \{[\s\S]*?clamp\(1\.55rem/);
     assert.doesNotMatch(deliveryCss, /radial-gradient\(circle at 50% 42%, #1a1816/);
     assert.match(howItWorks, /PlatformProductPillarsVisual/);

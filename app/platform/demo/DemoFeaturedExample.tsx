@@ -1,99 +1,82 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { DEMO_FEATURED } from "../../../lib/material-intelligence/demo-featured";
+import { useMemo, useState } from "react";
+import { QRCodeCanvas } from "qrcode.react";
+import liveProducts from "../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
+import { PASSPORT_CASE_STUDY, caseStudyPassportUrl } from "../../../lib/enterprise/passport-case-study";
+import { PLATFORM_FEATURED_EXAMPLE_STYLES } from "../../../lib/enterprise/platform-brand-showcase";
+import { getConsumerSiteUrl } from "../../../lib/platform-urls";
 import { SERIF } from "../platform-ui";
 
-const SAMPLE_PASSPORTS = [
-  {
-    id: "cotton-poplin-shirt",
-    name: "Cotton Poplin Shirt",
-    sku: "SAMPLE-REPORTED",
-    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
-    image: "/khiteri/ganni-poplin-shirt.jpg",
-    pageImage: "/platform/demo/workspace-cotton-poplin-shirt.png",
-    href: "/platform/api?gtin=0200000000011",
-  },
-  {
-    id: "silk-midi-skirt",
-    name: "Silk Midi Skirt",
-    sku: "ITX-4102",
-    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
-    image: "/platform/hero-silk-dress.png",
-    pageImage: "/platform/demo/workspace-silk-midi-skirt.jpg",
-    href: `/platform/api?gtin=${DEMO_FEATURED.gtin}`,
-  },
-  {
-    id: "linen-wrap-top",
-    name: "Linen Wrap Top",
-    sku: "ITX-1180",
-    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
-    image: "/editorial-linen.png",
-    pageImage: "/platform/demo/workspace-linen-wrap-top.jpg",
-    href: "/platform/api",
-  },
-  {
-    id: "wool-trouser",
-    name: "Wool Tailored Trouser",
-    sku: "ITX-3308",
-    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
-    image: "/editorial-tailoring.png",
-    pageImage: "/platform/demo/workspace-wool-trouser.jpg",
-    href: "/platform/api",
-  },
-  {
-    id: "cashmere-crew",
-    name: "Cashmere Crew",
-    sku: "ITX-2204",
-    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
-    image: "/editorial-cashmere.jpg",
-    pageImage: "/platform/demo/workspace-cashmere-crew.jpg",
-    href: "/platform/api",
-  },
-] as const;
+type LiveProduct = (typeof liveProducts)[number];
+
+const FEATURED_COPY =
+  "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.";
+
+/** Featured editor-pick clothing starts with Ganni Cotton Poplin Shirt. */
+
+function publicIdForStyle(style: string): string {
+  if (style === PASSPORT_CASE_STUDY.styleCode) return PASSPORT_CASE_STUDY.publicId;
+  const match = style.match(/^ITX-LIVE-(\d{1,2})$/i);
+  const num = match ? String(Number(match[1])).padStart(2, "0") : "01";
+  return `itxlive${num}`;
+}
+
+function passportPath(style: string): string {
+  return `/p/${publicIdForStyle(style)}`;
+}
+
+function passportUrl(style: string): string {
+  if (style === PASSPORT_CASE_STUDY.styleCode) return caseStudyPassportUrl();
+  return `${getConsumerSiteUrl().replace(/\/$/, "")}${passportPath(style)}`;
+}
 
 export function DemoFeaturedExample() {
-  const [selectedId, setSelectedId] = useState<(typeof SAMPLE_PASSPORTS)[number]["id"]>("cotton-poplin-shirt");
-  const selected = SAMPLE_PASSPORTS.find((product) => product.id === selectedId) ?? SAMPLE_PASSPORTS[0];
+  const samples = useMemo(
+    () =>
+      PLATFORM_FEATURED_EXAMPLE_STYLES.map((style) => liveProducts.find((row) => row.style === style)).filter(
+        (row): row is LiveProduct => Boolean(row),
+      ),
+    [],
+  );
+  const [selectedStyle, setSelectedStyle] = useState(samples[0]?.style || "ITX-LIVE-07");
+  // Default featured record: Cotton Poplin Shirt
+  const selected = samples.find((product) => product.style === selectedStyle) ?? samples[0];
+
+  if (!selected) return null;
 
   return (
     <section id="passport" className="demo-editorial-passport scroll-mt-24">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-12 sm:py-16 lg:py-20">
         <div className="demo-editorial-passport-grid">
           <div>
-            <p className="text-[10px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-4">
-              Explore a real example
-            </p>
             <h2 className="text-[2rem] sm:text-[2.5rem] font-light leading-[1.08] mb-4" style={SERIF}>
               {selected.name}
             </h2>
             <p className="text-[15px] sm:text-[16px] font-light leading-relaxed text-[var(--platform-muted)] mb-8 max-w-md">
-              {selected.copy}
+              {FEATURED_COPY}
             </p>
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mb-8">
-              <Link href={selected.href} className="demo-editorial-btn-primary">
+              <Link href={passportPath(selected.style)} className="demo-editorial-btn-primary">
                 View full passport →
               </Link>
-              <Link href="/platform/api" className="demo-editorial-btn-outline">
-                Try another product
-              </Link>
             </div>
-            <div className="demo-editorial-passport-thumb" role="list" aria-label="Sample products">
-              {SAMPLE_PASSPORTS.map((product) => {
-                const active = product.id === selected.id;
+            <div className="demo-editorial-passport-thumb" role="list" aria-label="Selected clothing records">
+              {samples.map((product) => {
+                const active = product.style === selected.style;
                 return (
                   <button
-                    key={product.id}
+                    key={product.style}
                     type="button"
                     role="listitem"
-                    onClick={() => setSelectedId(product.id)}
+                    onClick={() => setSelectedStyle(product.style)}
                     aria-pressed={active}
                     aria-label={product.name}
                     className="demo-editorial-passport-thumb-btn"
                   >
                     <img
-                      src={product.image}
+                      src={product.image_url}
                       alt=""
                       width={88}
                       height={110}
@@ -107,17 +90,20 @@ export function DemoFeaturedExample() {
 
           <figure className="demo-editorial-passport-lifestyle m-0">
             <img
-              src={selected.image}
+              src={selected.image_url}
               alt={selected.name}
               width={640}
               height={800}
               className="demo-editorial-passport-lifestyle-image"
             />
+            <div className="demo-editorial-passport-qr">
+              <QRCodeCanvas value={passportUrl(selected.style)} size={92} marginSize={1} />
+            </div>
           </figure>
 
           <figure className="demo-editorial-passport-page m-0">
             <img
-              src={selected.pageImage}
+              src="/platform/demo/workspace-cotton-poplin-shirt.png"
               alt={`${selected.name} workspace preview`}
               width={1448}
               height={1006}

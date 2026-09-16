@@ -2,18 +2,18 @@
 @import "../shared/intertexe-editorial.css";
 
 .platform-shell {
-  --platform-bg: #faf9f7;
+  --platform-bg: #ffffff;
   --platform-surface: #ffffff;
-  --platform-ink: #1c1915;
-  --platform-primary: #2c2620;
-  --platform-primary-hover: #1f1a14;
-  --platform-muted: #6f6a63;
-  --platform-quiet: #9c9488;
-  --platform-border: #e8e0d4;
+  --platform-ink: #111111;
+  --platform-primary: #111111;
+  --platform-primary-hover: #000000;
+  --platform-muted: #3d3a36;
+  --platform-quiet: #5a564f;
+  --platform-border: rgba(17, 17, 17, 0.1);
   --platform-accent: #c4a574;
-  --platform-accent-soft: #e8dcc8;
+  --platform-accent-soft: #f4efe6;
   --platform-accent-muted: #d9c9a8;
-  --platform-highlight: #f0ebe3;
+  --platform-highlight: #f7f6f4;
   --platform-gold: #c9a962;
   /* legacy aliases */
   --platform-navy: var(--platform-primary);
@@ -29,13 +29,7 @@
 
 .platform-shell.platform-editorial::before,
 .platform-shell.platform-editorial::after {
-  content: "";
-  pointer-events: none;
-  position: fixed;
-  z-index: 0;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.55;
+  display: none;
 }
 
 .platform-shell.platform-editorial::before {
@@ -63,17 +57,11 @@
 .platform-abstract-band {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--platform-accent-soft) 0%, var(--platform-highlight) 48%, var(--platform-bg) 100%);
+  background: #ffffff;
 }
 
 .platform-abstract-band::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 42% 58% at 88% 18%, rgba(201, 169, 98, 0.22) 0%, transparent 62%),
-    radial-gradient(ellipse 36% 48% at 8% 82%, rgba(212, 196, 168, 0.35) 0%, transparent 58%);
+  display: none;
 }
 
 .platform-abstract-band.itx-abstract-motif::after,
@@ -115,39 +103,38 @@
 
 /* Circular wardrobe editorial banner — near full-bleed landscape with ivory fade */
 .platform-circular-banner-section {
-  width: calc(100vw - 1.25rem);
+  width: 100%;
   max-width: none;
-  margin-left: calc(50% - 50vw + 0.625rem);
-  padding-left: 0;
-  padding-right: 0;
+  margin: 0;
+  padding: 0 !important;
 }
 
 @media (min-width: 768px) {
   .platform-circular-banner-section {
-    width: calc(100vw - 2.5rem);
-    margin-left: calc(50% - 50vw + 1.25rem);
+    width: 100%;
+    margin: 0;
   }
 }
 
 @media (min-width: 1280px) {
   .platform-circular-banner-section {
-    width: calc(100vw - 4rem);
-    margin-left: calc(50% - 50vw + 2rem);
+    width: 100%;
+    margin: 0;
   }
 }
 
 .platform-circular-banner {
   position: relative;
   min-height: 11rem;
-  border-radius: 1.75rem;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid rgba(28, 25, 21, 0.06);
-  box-shadow: 0 16px 48px rgba(44, 38, 32, 0.07);
+  border: 0;
+  box-shadow: none;
 }
 
 .platform-circular-banner--wide {
   min-height: 12.5rem;
-  border-radius: 2rem;
+  border-radius: 0;
 }
 
 @media (min-width: 768px) {
@@ -313,10 +300,10 @@
 }
 
 .platform-showcase-hero-title {
-  font-size: clamp(2rem, 4.8vw, 3.35rem);
+  font-size: clamp(3.5rem, 6vw, 4.5rem);
   font-weight: 300;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
   margin-bottom: 1rem;
 }
 
@@ -333,20 +320,20 @@
   align-items: center;
   gap: 0.45rem;
   padding: 0.85rem 1.35rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #4f7cff, #3b63e8);
-  color: #fff;
+  border-radius: 0.125rem;
+  background: #fff;
+  color: #111;
   font-size: 0.6875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
-  box-shadow: 0 12px 32px rgba(59, 99, 232, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .platform-showcase-hero-cta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 36px rgba(59, 99, 232, 0.42);
+  background: var(--platform-gold, #c9a962);
+  color: #111;
 }
 
 .platform-showcase-grid-wrap {
@@ -409,7 +396,7 @@
   flex: 0 0 auto;
   width: 6.75rem;
   height: 6.75rem;
-  border-radius: 1.1rem;
+  border-radius: 0.2rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
@@ -427,7 +414,7 @@
   .platform-showcase-tile {
     width: 9.5rem;
     height: 9.5rem;
-    border-radius: 1.2rem;
+    border-radius: 0.2rem;
   }
 }
 
@@ -474,53 +461,66 @@
 .platform-showcase-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  padding-top: 1.75rem;
+  gap: 2rem 1.75rem;
+  padding-top: 2.25rem;
 }
 
 @media (min-width: 768px) {
   .platform-showcase-stats {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0;
+    gap: 0 2.75rem;
   }
 }
 
 .platform-showcase-stat {
   position: relative;
-  text-align: center;
-  padding: 0 0.75rem;
+  text-align: left;
+  padding: 0;
+}
+
+.platform-showcase-stat::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin-bottom: 1.15rem;
+  background: var(--platform-gold, #c9a962);
+}
+
+.platform-showcase-stat:nth-child(2)::before {
+  background: var(--platform-accent, #c4a574);
+}
+
+.platform-showcase-stat:nth-child(3)::before {
+  background: var(--platform-accent-muted, #d9c9a8);
+}
+
+.platform-showcase-stat:nth-child(4)::before {
+  background: var(--platform-accent-soft, #e8dcc8);
 }
 
 .platform-showcase-stat-value {
-  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-size: clamp(3.35rem, 7.2vw, 5.5rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: #fff;
+  margin-bottom: 0.55rem;
+}
+
+.platform-showcase-stat-qualifier {
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
   font-weight: 300;
-  line-height: 1;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.92);
   margin-bottom: 0.45rem;
 }
 
 .platform-showcase-stat-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
   color: rgba(245, 243, 239, 0.62);
-  max-width: 11rem;
-  margin: 0 auto;
-}
-
-.platform-showcase-stat-divider {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .platform-showcase-stat-divider {
-    display: block;
-    position: absolute;
-    right: 0;
-    top: 0.35rem;
-    bottom: 0.35rem;
-    width: 1px;
-    background: rgba(255, 255, 255, 0.14);
-  }
+  max-width: 12rem;
 }
 
 /* Request demo page — Fairly Made-style split layout */

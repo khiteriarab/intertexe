@@ -73,13 +73,14 @@ export function PlatformBrandShowcaseHero() {
         </div>
 
         <div className="platform-showcase-stats">
-          {PLATFORM_SHOWCASE_STATS.map((stat, index) => (
+          {PLATFORM_SHOWCASE_STATS.map((stat) => (
             <div key={stat.label} className="platform-showcase-stat">
-              <p className="platform-showcase-stat-value">{stat.value}</p>
+              <p className="platform-showcase-stat-value">
+                {stat.figure}
+                <span className="sr-only"> {stat.qualifier}</span>
+              </p>
+              <p className="platform-showcase-stat-qualifier">{stat.qualifier}</p>
               <p className="platform-showcase-stat-label">{stat.label}</p>
-              {index < PLATFORM_SHOWCASE_STATS.length - 1 ? (
-                <span className="platform-showcase-stat-divider" aria-hidden />
-              ) : null}
             </div>
           ))}
         </div>

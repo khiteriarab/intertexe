@@ -92,7 +92,7 @@ export function PlatformNav({
             className={
               dark
                 ? "inline-flex items-center gap-2 rounded-full bg-[var(--platform-surface)] px-4 py-2.5 text-[12px] font-medium text-[var(--platform-primary)] min-h-[40px] hover:bg-[var(--platform-highlight)] border border-[var(--platform-border)]"
-                : "inline-flex items-center gap-2 rounded-full bg-[var(--platform-accent-soft)] px-4 sm:px-5 py-2.5 text-[12px] font-medium text-[var(--platform-primary)] min-h-[40px] hover:bg-[var(--platform-accent-muted)] transition-colors border border-[var(--platform-border)]"
+                : "inline-flex items-center gap-2 rounded-sm bg-[#111] px-4 sm:px-5 py-2.5 text-[12px] font-medium text-white min-h-[40px] hover:bg-black transition-colors"
             }
           >
             Start with 10 products
