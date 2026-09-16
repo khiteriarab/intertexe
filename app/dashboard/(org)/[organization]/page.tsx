@@ -9,6 +9,7 @@ import {
 } from "../../../../lib/enterprise/getting-started";
 import { entitlementsForPlan, type PlanKey } from "../../../../lib/enterprise/entitlements";
 import { loadOrgOverview } from "../../../../lib/enterprise/queries";
+import { loadOrganizationMeasurementPreferences } from "../../../../lib/enterprise/org-preferences";
 import { loadOrgCompositionBenchmark } from "../../../../lib/enterprise/composition-benchmark";
 import { loadPlatformIntelligenceForOrg } from "../../../../lib/enterprise/platform-intelligence";
 import {
@@ -50,18 +51,22 @@ export default async function OrganizationOverviewPage({
   const activated = parseActivated(query.activated);
   const { membership, client } = await requireOrganizationAccess(organization);
   const pilotImages = pilotImageMaps(livePilotProducts);
-  const [overview, composition, intelligence, signals, billing, productCount] = await Promise.all([
+  const [overview, composition, intelligence, signals, billing, productCount, measurementPreferences] = await Promise.all([
     loadOrgOverview(client, membership.organizationId),
     loadOrgCompositionBenchmark(client, membership.organizationId, membership.plan),
     loadPlatformIntelligenceForOrg(client, membership.organizationId, membership.slug, membership.plan),
     loadConsumerSignals(client, membership.organizationId, { limit: 10, pilotImages }),
     loadBillingDashboard(client, membership.organizationId),
     countActiveProducts(client, membership.organizationId),
+    loadOrganizationMeasurementPreferences(client, membership.organizationId),
   ]);
   const entitlement = entitlementsForPlan(membership.plan as PlanKey, {});
   const pilotWorkspace = isPilotPlan(membership.plan);
   const base = `/dashboard/${membership.slug}`;
-  const steps = buildGettingStartedSteps(overview);
+  const steps = buildGettingStartedSteps({
+    ...overview,
+    measurementConfigured: measurementPreferences.configured,
+  });
   const cookieStore = await cookies();
   const onboardingSkipped =
     cookieStore.get(onboardingSkipCookieName(membership.slug))?.value === "1";

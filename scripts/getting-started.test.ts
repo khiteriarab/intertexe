@@ -8,24 +8,28 @@ import {
 } from "../lib/enterprise/getting-started";
 
 describe("enterprise onboarding flow", () => {
-  it("builds four steps for a new org", () => {
+  it("builds five steps for a new org, starting with region and units", () => {
     const steps = buildGettingStartedSteps({
       productCount: 0,
       issueCount: 0,
       readyCount: 0,
       publishedCount: 0,
+      measurementConfigured: false,
     });
-    assert.equal(steps.length, 4);
+    assert.equal(steps.length, 5);
+    assert.equal(steps[0].id, "region");
+    assert.equal(steps[0].kind, "region_units");
     assert.equal(steps[0].done, false);
-    assert.equal(steps[0].minutesEstimate, 15);
+    assert.equal(steps[0].minutesEstimate, 3);
   });
 
-  it("marks onboarding complete after first publish", () => {
+  it("marks onboarding complete after region prefs and first publish", () => {
     const steps = buildGettingStartedSteps({
       productCount: 10,
       issueCount: 0,
       readyCount: 2,
       publishedCount: 1,
+      measurementConfigured: true,
     });
     assert.equal(isOnboardingComplete(steps), true);
   });
@@ -36,11 +40,13 @@ describe("enterprise onboarding flow", () => {
       issueCount: 2,
       readyCount: 0,
       publishedCount: 0,
+      measurementConfigured: true,
     });
     const stats = onboardingStats(steps);
     assert.ok(stats.remainingTasks >= 1);
     assert.ok(stats.remainingMinutes > 0);
-    assert.equal(stats.progressPct, 25);
+    // region done + import done = 2/5
+    assert.equal(stats.progressPct, 40);
   });
 
   it("names skip cookie per org slug", () => {

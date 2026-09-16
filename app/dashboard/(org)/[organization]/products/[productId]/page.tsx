@@ -61,6 +61,7 @@ import { ProductKeyIndicators } from "../../../../components/ProductKeyIndicator
 import { ProductInformationPanel, productInfoFromRecord } from "../../../../components/ProductInformationPanel";
 import { buildProductKeyIndicators } from "../../../../../../lib/enterprise/product-key-indicators";
 import { resolvePilotFixture } from "../../../../../../lib/enterprise/pilot-product-media";
+import { loadOrganizationMeasurementPreferences } from "../../../../../../lib/enterprise/org-preferences";
 
 export const dynamic = "force-dynamic";
 
@@ -167,6 +168,7 @@ export default async function ProductRecordPage({
       ? record.passport.publicUrl
       : publicResolverUrl(effectivePublicId)
     : null;
+  const showcaseUrl = publicUrl;
   const previewContent = buildPassportPreviewContent({
     product: record.product,
     fields: record.fields,
@@ -175,6 +177,21 @@ export default async function ProductRecordPage({
   });
   const isPublished =
     record.passport?.state === "published" || record.passport?.state === "update_required";
+
+  const measurementPreferences = await loadOrganizationMeasurementPreferences(
+    client,
+    membership.organizationId
+  );
+  const productInfo = productInfoFromRecord(
+    {
+      product: record.product,
+      fields: record.fields,
+      identifiers: record.identifiers,
+      brand: membership.name,
+    },
+    measurementPreferences.preferredMassUnit
+  );
+  const keyIndicators = buildProductKeyIndicators(governance, traceability);
 
   const showOverview = tab === "overview";
   const showMaterials = tab === "materials" || tab === "overview";

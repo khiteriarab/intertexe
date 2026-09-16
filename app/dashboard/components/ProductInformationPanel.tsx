@@ -1,5 +1,10 @@
 import { resolvePilotFixture } from "../../../lib/enterprise/pilot-product-media";
 import { formatProductTypeLabel } from "../../../lib/enterprise/product-type-label";
+import {
+  formatMassFromGrams,
+  parseMassInputToGrams,
+  type MassUnitSystem,
+} from "../../../lib/enterprise/org-preferences";
 import { entLabelClass } from "./EnterpriseUi";
 
 type ProductInfo = {
@@ -19,46 +24,43 @@ function fieldValue(fields: Array<{ field_key: string; normalized_value?: string
   return row?.normalized_value || row?.original_value || null;
 }
 
-function formatProductWeight(value: string | number | null | undefined): string | null {
-  if (value == null || value === "") return null;
-  const raw = String(value).trim();
-  if (!raw) return null;
-  if (/g$|kg$/i.test(raw)) return raw;
-  const num = Number(raw);
-  if (!Number.isNaN(num) && num > 0) return `${Math.round(num)}g`;
-  return raw;
-}
-
-function resolveProductWeight(
+function resolveProductWeightGrams(
   fields: Array<{ field_key: string; normalized_value?: string | null; original_value?: string | null }>,
   sku: string | null | undefined,
   styleCode: string | null | undefined
-): string | null {
+): number | null {
   const fromField =
     fieldValue(fields, "product_weight") ||
     fieldValue(fields, "weight") ||
     fieldValue(fields, "net_weight");
-  if (fromField) return formatProductWeight(fromField);
+  if (fromField) {
+    const parsed = parseMassInputToGrams(fromField);
+    if (parsed != null) return parsed;
+  }
 
   const pilot = resolvePilotFixture(sku, styleCode);
   if (pilot && "weight_g" in pilot && pilot.weight_g != null) {
-    return formatProductWeight(pilot.weight_g);
+    return Number(pilot.weight_g);
   }
 
   return null;
 }
 
-export function productInfoFromRecord(record: {
-  product: {
-    name?: string | null;
-    sku?: string | null;
-    style_code?: string | null;
-    category?: string | null;
-  };
-  fields: Array<{ field_key: string; normalized_value?: string | null; original_value?: string | null }>;
-  identifiers: Array<{ identifier_type: string; identifier_value: string }>;
-  brand?: string | null;
-}): ProductInfo {
+export function productInfoFromRecord(
+  record: {
+    product: {
+      name?: string | null;
+      sku?: string | null;
+      style_code?: string | null;
+      category?: string | null;
+    };
+    fields: Array<{ field_key: string; normalized_value?: string | null; original_value?: string | null }>;
+    identifiers: Array<{ identifier_type: string; identifier_value: string }>;
+    brand?: string | null;
+  },
+  massUnit: MassUnitSystem = "metric"
+): ProductInfo {
+  const grams = resolveProductWeightGrams(record.fields, record.product.sku, record.product.style_code);
   return {
     name: String(record.product.name || "Product"),
     sku: record.product.sku || null,
@@ -69,7 +71,7 @@ export function productInfoFromRecord(record: {
     countryOfOrigin:
       fieldValue(record.fields, "manufacturing_country") || fieldValue(record.fields, "country_of_origin"),
     brand: record.brand || fieldValue(record.fields, "brand"),
-    weight: resolveProductWeight(record.fields, record.product.sku, record.product.style_code),
+    weight: formatMassFromGrams(grams, massUnit),
   };
 }
 

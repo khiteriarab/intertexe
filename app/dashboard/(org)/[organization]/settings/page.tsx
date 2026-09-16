@@ -8,6 +8,8 @@ import { HqCard } from "../section-frame";
 import { OrgSectionFrame } from "../section-frame";
 import { ORG_PAGE_STATES } from "../../../../../lib/enterprise/page-states";
 import { SettingsAdminPanel } from "./SettingsAdminPanel";
+import { EntSettingsMeasurementPreferences } from "../../../components/EntOnboardingPreferences";
+import { loadOrganizationMeasurementPreferences } from "../../../../../lib/enterprise/org-preferences";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +24,10 @@ export default async function OrganizationSettingsPage({
   const base = `/dashboard/${membership.slug}`;
   const canInvite = ["owner", "admin"].includes(membership.role);
   const canAdmin = ["owner", "admin"].includes(membership.role);
-  const [members, invitations] = await Promise.all([
+  const [members, invitations, measurementPreferences] = await Promise.all([
     loadOrgMemberDirectory(client, membership.organizationId),
     canInvite ? listOrganizationInvitations(client, membership.organizationId) : Promise.resolve([]),
+    loadOrganizationMeasurementPreferences(client, membership.organizationId),
   ]);
 
   return (
@@ -52,8 +55,20 @@ export default async function OrganizationSettingsPage({
         </div>
       </div>
 
+      <div className="mb-6">
+        <HqCard title="Region & units" tone="blush">
+          <p className="text-xs text-[var(--ent-muted)] mb-4 leading-relaxed">
+            Company country drives default units of measure for product weight and related fields.
+          </p>
+          <EntSettingsMeasurementPreferences
+            orgSlug={membership.slug}
+            initial={measurementPreferences}
+          />
+        </HqCard>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-6 mb-6">
-        <HqCard title="Organization" tone="blush">
+        <HqCard title="Organization" tone="cream">
           <dl className="text-sm space-y-4">
             <div>
               <dt className="text-[var(--ent-muted-light)] text-xs mb-1">Name</dt>

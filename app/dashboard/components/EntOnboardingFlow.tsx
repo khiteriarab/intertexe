@@ -9,6 +9,8 @@ import {
   onboardingStats,
 } from "../../../lib/enterprise/getting-started";
 import { ENT_NAV_ITEM_ICONS } from "./EnterpriseNavIcons";
+import { EntOnboardingPreferences } from "./EntOnboardingPreferences";
+import type { OrganizationMeasurementPreferences } from "../../../lib/enterprise/org-preferences";
 
 function ProgressRing({ pct, size = 128 }: { pct: number; size?: number }) {
   const stroke = 10;
@@ -45,11 +47,13 @@ export function EntOnboardingFlow({
   orgSlug,
   orgName,
   steps,
+  measurementPreferences = null,
 }: {
   base: string;
   orgSlug: string;
   orgName: string;
   steps: GettingStartedStep[];
+  measurementPreferences?: OrganizationMeasurementPreferences | null;
 }) {
   const router = useRouter();
   const stats = useMemo(() => onboardingStats(steps), [steps]);
@@ -95,7 +99,7 @@ export function EntOnboardingFlow({
         <p className="ent-onboarding-kicker">Set up INTERTEXE</p>
         <h1 className="ent-onboarding-page-title">Let&apos;s start building your product program</h1>
         <p className="ent-onboarding-lede">
-          {orgName} · import catalog, govern material data, resolve issues, then publish passports.
+          {orgName} · set region & units, import catalog, govern material data, resolve issues, then publish passports.
         </p>
       </header>
 
@@ -104,7 +108,7 @@ export function EntOnboardingFlow({
           <div className="ent-onboarding-hero-copy">
             <h2 className="ent-onboarding-serif-title">Let&apos;s get up and running</h2>
             <p className="ent-onboarding-hero-body">
-              You&apos;ll import your catalog, review governed fields, clear issues, then publish live passports.
+              You&apos;ll set region and units, import your catalog, review governed fields, clear issues, then publish live passports.
               Each step links directly into the workspace — no separate setup project required.
             </p>
             <ul className="ent-onboarding-meta">
@@ -151,16 +155,26 @@ export function EntOnboardingFlow({
               ))}
             </ul>
 
-            <div className="ent-onboarding-step-actions">
-              <Link href={`${base}${activeStep.href}`} className="ent-onboarding-primary-btn">
-                {activeStep.label}
-              </Link>
-              {activeIndex < steps.length - 1 ? (
-                <button type="button" onClick={() => setActiveIndex((i) => i + 1)} className="ent-onboarding-secondary-btn">
-                  Preview next step
-                </button>
-              ) : null}
-            </div>
+            {activeStep.kind === "region_units" && !activeStep.done ? (
+              <EntOnboardingPreferences
+                orgSlug={orgSlug}
+                initial={measurementPreferences}
+                onSaved={() => {
+                  if (activeIndex < steps.length - 1) setActiveIndex((i) => i + 1);
+                }}
+              />
+            ) : (
+              <div className="ent-onboarding-step-actions">
+                <Link href={`${base}${activeStep.href}`} className="ent-onboarding-primary-btn">
+                  {activeStep.label}
+                </Link>
+                {activeIndex < steps.length - 1 ? (
+                  <button type="button" onClick={() => setActiveIndex((i) => i + 1)} className="ent-onboarding-secondary-btn">
+                    Preview next step
+                  </button>
+                ) : null}
+              </div>
+            )}
           </div>
 
           <div className="ent-onboarding-dots" role="tablist" aria-label="Onboarding steps">

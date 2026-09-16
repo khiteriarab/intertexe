@@ -1,5 +1,6 @@
 import { requireOrganizationAccess } from "../../../../../lib/enterprise/access";
 import { buildGettingStartedSteps } from "../../../../../lib/enterprise/getting-started";
+import { loadOrganizationMeasurementPreferences } from "../../../../../lib/enterprise/org-preferences";
 import { loadOrgOverview } from "../../../../../lib/enterprise/queries";
 import { EntOnboardingFlow } from "../../../components/EntOnboardingFlow";
 
@@ -12,9 +13,15 @@ export default async function OrganizationOnboardingPage({
 }) {
   const { organization } = await params;
   const { membership, client } = await requireOrganizationAccess(organization);
-  const overview = await loadOrgOverview(client, membership.organizationId);
+  const [overview, measurementPreferences] = await Promise.all([
+    loadOrgOverview(client, membership.organizationId),
+    loadOrganizationMeasurementPreferences(client, membership.organizationId),
+  ]);
   const base = `/dashboard/${membership.slug}`;
-  const steps = buildGettingStartedSteps(overview);
+  const steps = buildGettingStartedSteps({
+    ...overview,
+    measurementConfigured: measurementPreferences.configured,
+  });
 
   return (
     <EntOnboardingFlow
@@ -22,6 +29,7 @@ export default async function OrganizationOnboardingPage({
       orgSlug={membership.slug}
       orgName={membership.name}
       steps={steps}
+      measurementPreferences={measurementPreferences}
     />
   );
 }
