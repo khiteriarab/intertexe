@@ -5,38 +5,57 @@ import { useState } from "react";
 import { DEMO_FEATURED } from "../../../lib/material-intelligence/demo-featured";
 import { SERIF } from "../platform-ui";
 
-const PASSPORT_TABS = ["Overview", "Materials", "Origin", "Impact", "Care", "Resale"] as const;
-
-const TAB_COPY: Record<(typeof PASSPORT_TABS)[number], { title: string; body: string }> = {
-  Overview: {
-    title: "Material composition",
-    body: DEMO_FEATURED.composition,
+const SAMPLE_PASSPORTS = [
+  {
+    id: "cotton-poplin-shirt",
+    name: "Cotton Poplin Shirt",
+    sku: "SAMPLE-REPORTED",
+    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
+    image: "/khiteri/ganni-poplin-shirt.jpg",
+    pageImage: "/platform/demo/workspace-cotton-poplin-shirt.png",
+    href: "/platform/api?gtin=0200000000011",
   },
-  Materials: {
-    title: "Fiber breakdown",
-    body: "96% Silk · 4% Elastane · verified label evidence on file.",
+  {
+    id: "silk-midi-skirt",
+    name: "Silk Midi Skirt",
+    sku: "ITX-4102",
+    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
+    image: "/platform/hero-silk-dress.png",
+    pageImage: "/platform/demo/workspace-silk-midi-skirt.jpg",
+    href: `/platform/api?gtin=${DEMO_FEATURED.gtin}`,
   },
-  Origin: {
-    title: "Country of origin",
-    body: `${DEMO_FEATURED.origin} · Supplier verified · Atelier Nord · Milan.`,
+  {
+    id: "linen-wrap-top",
+    name: "Linen Wrap Top",
+    sku: "ITX-1180",
+    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
+    image: "/editorial-linen.png",
+    pageImage: "/platform/demo/workspace-linen-wrap-top.jpg",
+    href: "/platform/api",
   },
-  Impact: {
-    title: "Environmental impact",
-    body: "Impact fields tracked against DPP readiness — illustrative sample metrics.",
+  {
+    id: "wool-trouser",
+    name: "Wool Tailored Trouser",
+    sku: "ITX-3308",
+    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
+    image: "/editorial-tailoring.png",
+    pageImage: "/platform/demo/workspace-wool-trouser.jpg",
+    href: "/platform/api",
   },
-  Care: {
-    title: "Care instructions",
-    body: "Dry clean only · Source retained from submitted product record.",
+  {
+    id: "cashmere-crew",
+    name: "Cashmere Crew",
+    sku: "ITX-2204",
+    copy: "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.",
+    image: "/editorial-cashmere.jpg",
+    pageImage: "/platform/demo/workspace-cashmere-crew.jpg",
+    href: "/platform/api",
   },
-  Resale: {
-    title: "Resale potential",
-    body: `${DEMO_FEATURED.resalePotential} · Next-life options attached to stable product identity.`,
-  },
-};
+] as const;
 
 export function DemoFeaturedExample() {
-  const [activeTab, setActiveTab] = useState<(typeof PASSPORT_TABS)[number]>("Overview");
-  const tabCopy = TAB_COPY[activeTab];
+  const [selectedId, setSelectedId] = useState<(typeof SAMPLE_PASSPORTS)[number]["id"]>("cotton-poplin-shirt");
+  const selected = SAMPLE_PASSPORTS.find((product) => product.id === selectedId) ?? SAMPLE_PASSPORTS[0];
 
   return (
     <section id="passport" className="demo-editorial-passport scroll-mt-24">
@@ -47,127 +66,64 @@ export function DemoFeaturedExample() {
               Explore a real example
             </p>
             <h2 className="text-[2rem] sm:text-[2.5rem] font-light leading-[1.08] mb-4" style={SERIF}>
-              {DEMO_FEATURED.name}
+              {selected.name}
             </h2>
             <p className="text-[15px] sm:text-[16px] font-light leading-relaxed text-[var(--platform-muted)] mb-8 max-w-md">
-              See how a single product record unlocks composition data, origin, impact insights, and next-life options
-              — all in one place.
+              {selected.copy}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              <Link href={`/platform/api?gtin=${DEMO_FEATURED.gtin}`} className="demo-editorial-btn-primary">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mb-8">
+              <Link href={selected.href} className="demo-editorial-btn-primary">
                 View full passport →
               </Link>
               <Link href="/platform/api" className="demo-editorial-btn-outline">
                 Try another product
               </Link>
             </div>
-            <div className="demo-editorial-passport-thumb">
-              <img
-                src={DEMO_FEATURED.image}
-                alt={DEMO_FEATURED.name}
-                width={120}
-                height={150}
-                className="demo-editorial-passport-thumb-image demo-editorial-passport-thumb-image--active"
-              />
+            <div className="demo-editorial-passport-thumb" role="list" aria-label="Sample products">
+              {SAMPLE_PASSPORTS.map((product) => {
+                const active = product.id === selected.id;
+                return (
+                  <button
+                    key={product.id}
+                    type="button"
+                    role="listitem"
+                    onClick={() => setSelectedId(product.id)}
+                    aria-pressed={active}
+                    aria-label={product.name}
+                    className="demo-editorial-passport-thumb-btn"
+                  >
+                    <img
+                      src={product.image}
+                      alt=""
+                      width={88}
+                      height={110}
+                      className={`demo-editorial-passport-thumb-image ${active ? "demo-editorial-passport-thumb-image--active" : ""}`}
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <figure className="demo-editorial-passport-lifestyle m-0">
             <img
-              src={DEMO_FEATURED.image}
-              alt={`Model wearing ${DEMO_FEATURED.name}`}
-              width={600}
-              height={900}
+              src={selected.image}
+              alt={selected.name}
+              width={640}
+              height={800}
               className="demo-editorial-passport-lifestyle-image"
             />
           </figure>
 
-          <article className="demo-editorial-passport-card">
-            <div className="demo-editorial-passport-card-header">
-              <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--platform-quiet)]">
-                Product passport (illustrative)
-              </p>
-              <span className="demo-editorial-passport-verified">Verified by INTERTEXE</span>
-            </div>
-
-            <div className="demo-editorial-passport-card-product">
-              <img
-                src={DEMO_FEATURED.image}
-                alt=""
-                width={120}
-                height={150}
-                className="demo-editorial-passport-card-product-image"
-              />
-              <div>
-                <p className="text-base font-medium text-[var(--platform-ink)]" style={SERIF}>
-                  {DEMO_FEATURED.name}
-                </p>
-                <p className="text-[11px] text-[var(--platform-muted)] mt-1">
-                  INTERTEXE Sample · {DEMO_FEATURED.sku}
-                </p>
-              </div>
-            </div>
-
-            <div role="tablist" aria-label="Passport sections" className="demo-editorial-passport-tabs">
-              {PASSPORT_TABS.map((tab) => {
-                const selected = tab === activeTab;
-                return (
-                  <button
-                    key={tab}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    onClick={() => setActiveTab(tab)}
-                    className={selected ? "is-active" : undefined}
-                  >
-                    {tab}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="demo-editorial-passport-card-body">
-              <div className="demo-editorial-passport-card-columns">
-                <div>
-                  <p className="text-[10px] tracking-[0.16em] uppercase text-[var(--platform-quiet)] mb-3">
-                    {tabCopy.title}
-                  </p>
-                  {activeTab === "Overview" || activeTab === "Materials" ? (
-                    <div className="demo-editorial-passport-bar">
-                      <span style={{ width: "96%" }} />
-                    </div>
-                  ) : null}
-                  <p className="text-sm text-[var(--platform-ink)] mb-5">{tabCopy.body}</p>
-                </div>
-
-                <dl className="demo-editorial-passport-facts">
-                  <div>
-                    <dt>Country of origin</dt>
-                    <dd>{DEMO_FEATURED.origin}</dd>
-                  </div>
-                  <div>
-                    <dt>Production details</dt>
-                    <dd>Supplier verified</dd>
-                  </div>
-                  <div>
-                    <dt>Care instructions</dt>
-                    <dd>Dry clean only</dd>
-                  </div>
-                  <div>
-                    <dt>Resale potential</dt>
-                    <dd>{DEMO_FEATURED.resalePotential}</dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-
-            <div className="demo-editorial-passport-card-footer">
-              <span className="demo-editorial-passport-dpp">DPP Ready</span>
-              <Link href={`/platform/api?gtin=${DEMO_FEATURED.gtin}`} className="demo-editorial-passport-share">
-                Share
-              </Link>
-            </div>
-          </article>
+          <figure className="demo-editorial-passport-page m-0">
+            <img
+              src={selected.pageImage}
+              alt={`${selected.name} workspace preview`}
+              width={1448}
+              height={1006}
+              className="demo-editorial-passport-page-image"
+            />
+          </figure>
         </div>
       </div>
     </section>
