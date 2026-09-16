@@ -211,9 +211,10 @@ describe("Platform B2B sales page", () => {
     assert.match(page, /PlatformHome/);
     assert.match(page, /dynamic = "force-static"/);
     const platformLoading = fs.readFileSync(path.join(process.cwd(), "app/platform/loading.tsx"), "utf8");
-    const rootLoading = fs.readFileSync(path.join(process.cwd(), "app/loading.tsx"), "utf8");
+    const shopLoading = fs.readFileSync(path.join(process.cwd(), "app/shop/loading.tsx"), "utf8");
     assert.doesNotMatch(platformLoading, /aspect-\[3\/4\]/);
-    assert.match(rootLoading, /aspect-\[3\/4\]/);
+    assert.match(shopLoading, /aspect-\[3\/4\]/);
+    assert.equal(fs.existsSync(path.join(process.cwd(), "app/loading.tsx")), false);
   });
 
   it("uses P0 designed screenshots for benchmark, issues, and passport", () => {

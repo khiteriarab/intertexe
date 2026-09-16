@@ -149,11 +149,6 @@ export default function RootLayout({
           content="qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRWlPBoOkStg"
         />
         <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var r=0;window.addEventListener("error",function(e){if(e&&e.message&&e.message.indexOf("Loading chunk")!==-1&&r<3){r++;setTimeout(function(){window.location.reload()},1500)}},true);window.addEventListener("unhandledrejection",function(e){if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf("Loading chunk")!==-1&&r<3){r++;setTimeout(function(){window.location.reload()},1500)}},true)})();`,
-          }}
-        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

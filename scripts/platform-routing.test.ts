@@ -119,6 +119,9 @@ test("platform host strips consumer chrome from login", () => {
   assert.match(clientApp, /platformHost \|\| b2b/);
   assert.match(layout, /AppShell/);
   assert.match(layout, /ConsumerCookieConsent/);
+  assert.doesNotMatch(layout, /Loading chunk/);
+  assert.equal(fs.existsSync(path.join(process.cwd(), "app/loading.tsx")), false);
   assert.match(cookies, /\/platform/);
   assert.match(cookies, /isPlatformHost/);
+  assert.doesNotMatch(cookies, /usePathname/);
 });
