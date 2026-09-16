@@ -208,10 +208,23 @@ export function IssuesInboxClient({
     [filtered, selectedId]
   );
 
+  const openCount = issues.filter((i) => i.status === "open").length;
+  const highCount = issues.filter(
+    (i) => i.status === "open" && ["critical", "high"].includes(normalizeIssueSeverity(i.severity))
+  ).length;
+  const resolvedCount = issues.filter((i) => i.status !== "open").length;
+  const resolvedRate = issues.length ? Math.round((resolvedCount / issues.length) * 100) : 0;
 
   return (
     <div className="ent-inbox">
-</div>
+      <div className="ent-inbox-stats">
+        <div className="ent-inbox-stat">
+          <span className="ent-inbox-stat-dot ent-inbox-stat-dot-open" aria-hidden />
+          <div>
+            <p className="ent-inbox-stat-value">{openCount}</p>
+            <p className="ent-inbox-stat-label">Open issues</p>
+          </div>
+        </div>
         <div className="ent-inbox-stat">
           <span className="ent-inbox-stat-dot ent-inbox-stat-dot-high" aria-hidden />
           <div>
