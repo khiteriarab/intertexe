@@ -51,10 +51,10 @@ function StepVisual({ image, imageAlt, wide = false }: { image: string; imageAlt
         <Image
           src={image}
           alt={imageAlt}
-          fill
+          width={wide ? 840 : 560}
+          height={wide ? 640 : 560}
           unoptimized
-          className="object-contain"
-          sizes={wide ? "(max-width: 768px) 100vw, 420px" : "(max-width: 768px) 240px, 280px"}
+          className="platform-delivery-story-symbol-img"
         />
       </div>
     </div>

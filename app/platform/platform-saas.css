@@ -621,6 +621,8 @@
 
 .platform-delivery-story-visual--symbol {
   background: transparent;
+  overflow: visible;
+  width: min(100%, 22rem);
 }
 
 .platform-delivery-story-visual {
@@ -628,10 +630,24 @@
   border-radius: 0;
   box-shadow: none;
   background: transparent;
+  overflow: visible;
 }
 
 .platform-delivery-story-photo {
   background: transparent;
+  min-height: 0;
+}
+
+.platform-delivery-storyline-visual-wrap {
+  min-width: 16rem;
+}
+
+.platform-delivery-storyline-step {
+  opacity: 1;
+}
+
+.platform-delivery-storyline-step:not(.is-active) .platform-delivery-storyline-copy {
+  opacity: 0.45;
 }
 
 .platform-delivery-storyline-node {
