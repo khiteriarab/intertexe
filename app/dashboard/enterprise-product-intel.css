@@ -7,6 +7,10 @@
   display: none;
 }
 
+.enterprise-app .ent-nav-rail {
+  background: #ffffff;
+}
+
 .enterprise-app .ent-metric-rail,
 .enterprise-app .ent-product-metric-rail {
   display: grid;
@@ -41,7 +45,7 @@
 
 .enterprise-app .ent-metric-rail-value,
 .enterprise-app .ent-product-metric-value {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
   gap: 0.3rem;
   font-size: 1.25rem;
@@ -49,6 +53,7 @@
   letter-spacing: -0.03em;
   color: var(--ent-ink);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .enterprise-app .ent-product-metric-value small {

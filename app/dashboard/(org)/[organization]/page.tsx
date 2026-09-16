@@ -112,7 +112,7 @@ export default async function OrganizationOverviewPage({
         <div className="ent-ops-teaser-card">
           <div>
             <p className="ent-section-eyebrow">Operations</p>
-            <h2 className="ent-serif text-[1.75rem] md:text-[2rem] text-[var(--ent-ink)]">From data to action</h2>
+            <h2 className="ent-heading text-[1.35rem] md:text-[1.5rem] text-[var(--ent-ink)]">From data to action</h2>
             <p className="text-sm text-[var(--ent-muted)] mt-3 max-w-xl leading-relaxed">
               Imports, approvals, supplier evidence, and passport publishing — in one operational command center.
             </p>
