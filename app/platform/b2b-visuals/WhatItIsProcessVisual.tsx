@@ -167,9 +167,7 @@ export function WhatItIsProcessVisual() {
               onClick={() => go(index)}
               className={`platform-what-slides-tab ${selected ? "is-active" : ""}`}
             >
-              <span className="platform-what-slides-tab-index">{item.index}</span>
-              <span className="platform-what-slides-tab-label">{item.label}</span>
-              <span className="platform-what-slides-tab-micro">{item.micro}</span>
+              {item.label}
             </button>
           );
         })}
@@ -183,7 +181,6 @@ export function WhatItIsProcessVisual() {
         key={slide.id}
       >
         <div className="platform-lifecycle-journey-copy">
-          <p className="platform-lifecycle-journey-micro">{slide.micro}</p>
           <p className="platform-lifecycle-journey-label">{slide.label}</p>
           <h3 className="platform-lifecycle-journey-title" style={SERIF}>
             {slide.title}
@@ -191,7 +188,12 @@ export function WhatItIsProcessVisual() {
           <p className="platform-lifecycle-journey-body">{slide.copy}</p>
           <ul className="platform-lifecycle-journey-bullets">
             {slide.bullets.map((bullet) => (
-              <li key={bullet}>{bullet}</li>
+              <li key={bullet}>
+                <span className="platform-lifecycle-journey-check" aria-hidden>
+                  ✓
+                </span>
+                <span>{bullet}</span>
+              </li>
             ))}
           </ul>
           <p className="platform-lifecycle-journey-foot">{slide.foot}</p>
