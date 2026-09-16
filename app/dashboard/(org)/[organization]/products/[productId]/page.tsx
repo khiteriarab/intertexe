@@ -38,6 +38,9 @@ import {
 } from "../../../../components/EnterpriseUi";
 import { GovernanceScorePanel } from "../../../../components/GovernanceScorePanel";
 import { ImpactReadinessPanel } from "../../../../components/ImpactReadinessPanel";
+import { ProductImpactModule } from "../../../../components/ProductImpactModule";
+import { buildProductImpactScores } from "../../../../../../lib/enterprise/product-impact-scores";
+import { parseMassInputToGrams } from "../../../../../../lib/enterprise/org-preferences";
 import { ProductJourneyMap } from "../../../../components/ProductJourneyMap";
 import { ProductRecordShell } from "../../../../components/ProductRecordShell";
 import type { ProductRecordTab } from "../../../../components/ProductRecordNav";
@@ -192,6 +195,27 @@ export default async function ProductRecordPage({
     measurementPreferences.preferredMassUnit
   );
   const keyIndicators = buildProductKeyIndicators(governance, traceability);
+  const weightGrams =
+    parseMassInputToGrams(
+      record.fields.find((f) => f.field_key === "product_weight" || f.field_key === "weight" || f.field_key === "net_weight")
+        ?.normalized_value ||
+        record.fields.find((f) => f.field_key === "product_weight" || f.field_key === "weight" || f.field_key === "net_weight")
+          ?.original_value
+    ) ||
+    (() => {
+      const pilot = resolvePilotFixture(record.product.sku, record.product.style_code);
+      return pilot && "weight_g" in pilot ? Number(pilot.weight_g) : null;
+    })();
+  const impactScores = buildProductImpactScores({
+    productName: record.product.name,
+    weightGrams,
+    traceability,
+    impactReadiness,
+    composition:
+      record.fields.find((f) => f.field_key === "composition")?.normalized_value ||
+      record.fields.find((f) => f.field_key === "composition")?.original_value ||
+      null,
+  });
 
   const showOverview = tab === "overview";
   const showMaterials = tab === "materials" || tab === "overview";
@@ -334,7 +358,7 @@ export default async function ProductRecordPage({
 
             {showTraceability ? (
               <HqCard title="Traceability">
-                <TraceabilityPanel traceability={traceability} />
+                <TraceabilityPanel traceability={traceability} productName={record.product.name} />
               </HqCard>
             ) : null}
 
@@ -361,9 +385,14 @@ export default async function ProductRecordPage({
             ) : null}
 
             {showImpact ? (
-              <HqCard title="Impact readiness">
-                <ImpactReadinessPanel report={impactReadiness} />
-              </HqCard>
+              <>
+                <HqCard title="Environmental impact">
+                  <ProductImpactModule scores={impactScores} />
+                </HqCard>
+                <HqCard title="Impact readiness">
+                  <ImpactReadinessPanel report={impactReadiness} />
+                </HqCard>
+              </>
             ) : null}
 
             {showOverview && identifierIssues.length ? (

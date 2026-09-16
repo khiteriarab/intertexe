@@ -1269,3 +1269,390 @@
   line-height: 1.45;
   color: var(--ent-muted, #6b6560);
 }
+
+/* —— Product traceability graph —— */
+.enterprise-app .ent-trace-graph {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.enterprise-app .ent-trace-graph-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.enterprise-app .ent-trace-graph-layout {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 960px) {
+  .enterprise-app .ent-trace-graph-layout {
+    grid-template-columns: minmax(0, 1.2fr) minmax(14rem, 0.8fr);
+    align-items: start;
+  }
+}
+
+.enterprise-app .ent-trace-graph-canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 0.5rem 0;
+}
+
+.enterprise-app .ent-trace-graph-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 28rem;
+}
+
+.enterprise-app .ent-trace-graph-link {
+  width: 1px;
+  height: 1.35rem;
+  background: rgba(28, 25, 21, 0.18);
+}
+
+.enterprise-app .ent-trace-graph-link.is-verified {
+  background: rgba(90, 102, 72, 0.55);
+}
+
+.enterprise-app .ent-trace-graph-link.is-incomplete {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(28, 25, 21, 0.22) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.enterprise-app .ent-trace-graph-node {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(28, 25, 21, 0.12);
+  background: #f7f4ef;
+  color: var(--ent-ink, #1c1915);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.enterprise-app .ent-trace-graph-node--verified {
+  background: #f3eee4;
+  border-color: rgba(138, 118, 72, 0.35);
+}
+
+.enterprise-app .ent-trace-graph-node--incomplete {
+  background: #fafafa;
+  border-style: dashed;
+  border-color: rgba(28, 25, 21, 0.2);
+  color: #6b6560;
+}
+
+.enterprise-app .ent-trace-graph-node--product {
+  background: #1c1915;
+  border-color: #1c1915;
+  color: #f7f4ef;
+}
+
+.enterprise-app .ent-trace-graph-node.is-selected {
+  box-shadow: 0 0 0 2px rgba(62, 98, 104, 0.35);
+}
+
+.enterprise-app .ent-trace-graph-node-glyph {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  opacity: 0.7;
+  font-size: 0.75rem;
+}
+
+.enterprise-app .ent-trace-graph-node-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.enterprise-app .ent-trace-graph-node-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.enterprise-app .ent-trace-graph-node-role {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.enterprise-app .ent-trace-graph-detail {
+  border-radius: 1rem;
+  border: 1px solid rgba(28, 25, 21, 0.08);
+  background: #faf7f2;
+  padding: 1.15rem 1.25rem;
+}
+
+.enterprise-app .ent-trace-graph-detail-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ent-ink, #1c1915);
+  margin-top: 0.35rem;
+}
+
+.enterprise-app .ent-trace-graph-detail-role {
+  font-size: 0.8125rem;
+  color: var(--ent-muted, #6b6560);
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.enterprise-app .ent-trace-graph-detail-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.enterprise-app .ent-trace-graph-detail-grid dt {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ent-muted-light, #8a847c);
+}
+
+.enterprise-app .ent-trace-graph-detail-grid dd {
+  font-size: 0.875rem;
+  color: var(--ent-ink-soft, #2c2620);
+  margin-top: 0.15rem;
+}
+
+/* —— Environmental impact module —— */
+.enterprise-app .ent-impact-module {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.enterprise-app .ent-impact-module-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.enterprise-app .ent-impact-mode-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(28, 25, 21, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.enterprise-app .ent-impact-mode-toggle button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ent-muted, #6b6560);
+  cursor: pointer;
+}
+
+.enterprise-app .ent-impact-mode-toggle button.is-active {
+  background: var(--ent-petrol-deep, #3e6268);
+  color: #fff;
+}
+
+.enterprise-app .ent-impact-module-scores {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 768px) {
+  .enterprise-app .ent-impact-module-scores {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.enterprise-app .ent-impact-score-card {
+  border: 1px solid rgba(28, 25, 21, 0.08);
+  border-radius: 0.9rem;
+  padding: 1rem 1.1rem;
+  background: #fff;
+}
+
+.enterprise-app .ent-impact-score-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ent-muted-light, #8a847c);
+}
+
+.enterprise-app .ent-impact-score-value {
+  margin-top: 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ent-ink, #1c1915);
+  font-variant-numeric: tabular-nums;
+}
+
+.enterprise-app .ent-impact-score-meta {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--ent-muted, #6b6560);
+}
+
+.enterprise-app .ent-impact-breakdown-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ent-ink, #1c1915);
+}
+
+.enterprise-app .ent-impact-stack {
+  display: flex;
+  width: 100%;
+  height: 0.85rem;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 0.85rem;
+  background: rgba(28, 25, 21, 0.06);
+}
+
+.enterprise-app .ent-impact-stack-segment {
+  height: 100%;
+  min-width: 2px;
+}
+
+.enterprise-app .ent-impact-stack-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+@media (min-width: 720px) {
+  .enterprise-app .ent-impact-stack-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.enterprise-app .ent-impact-stack-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--ent-ink-soft, #2c2620);
+}
+
+.enterprise-app .ent-impact-stack-swatch {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.enterprise-app .ent-impact-stack-pct {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--ent-muted, #6b6560);
+}
+
+.enterprise-app .ent-impact-module-insights {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 800px) {
+  .enterprise-app .ent-impact-module-insights {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.enterprise-app .ent-impact-driver {
+  margin-top: 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ent-ink, #1c1915);
+}
+
+.enterprise-app .ent-impact-driver span {
+  font-weight: 500;
+  color: var(--ent-muted, #6b6560);
+}
+
+.enterprise-app .ent-impact-insight-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.enterprise-app .ent-impact-insight-list li {
+  position: relative;
+  padding-left: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ent-ink-soft, #2c2620);
+}
+
+.enterprise-app .ent-impact-insight-list li::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+  color: var(--ent-petrol-deep, #3e6268);
+}
+
+.enterprise-app .ent-impact-confidence {
+  margin-top: 0.85rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ent-muted, #6b6560);
+}
+
+.enterprise-app .ent-impact-sim {
+  border-top: 1px solid rgba(28, 25, 21, 0.08);
+  padding-top: 1.25rem;
+}
+
+.enterprise-app .ent-impact-sim-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 720px) {
+  .enterprise-app .ent-impact-sim-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.enterprise-app .ent-impact-sim-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ent-muted-light, #8a847c);
+}
+
+.enterprise-app .ent-impact-sim-field select {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.875rem;
+  color: var(--ent-ink, #1c1915);
+}
