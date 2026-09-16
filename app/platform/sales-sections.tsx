@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { WhatItIsProcessVisual } from "./b2b-visuals/WhatItIsProcessVisual";
 import { PlatformCapabilityNav } from "./PlatformCapabilityNav";
 import {
@@ -101,32 +100,21 @@ export function SalesLifecycleSection() {
 
 export function SalesDeliverySection() {
   return (
-    <section className="platform-band platform-band--white">
-      <div className="platform-band-inner">
-        <div className="max-w-3xl mb-10 lg:mb-14">
-          <Eyebrow>Consumer delivery</Eyebrow>
-          <Heading className="mb-5">One record. Three ways to deliver.</Heading>
-          <Body className="mb-0">
-            Turn your governed material data into trusted consumer experiences — whether you host it on INTERTEXE,
-            bring your own look and feel, or connect directly through our API. Smaller brands launch hosted passports
-            with zero development. Enterprise brands run all three delivery modes from the same approved record.
-          </Body>
-        </div>
-        <div className="platform-stage platform-delivery-stage">
-          <Image
-            src="/fabrics/fabric-silk.jpg"
-            alt=""
-            fill
-            className="platform-stage-fabric"
-            sizes="100vw"
-          />
-          <Image
-            src="/platform/act-passport.png"
-            alt="INTERTEXE Digital Product Passport — hosted consumer experience"
-            width={1800}
-            height={1120}
-            className="platform-stage-ui"
-          />
+    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-20">
+      <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_auto] gap-6 lg:gap-10 mb-10 lg:mb-14 items-start">
+          <div className="max-w-3xl">
+            <Eyebrow>Consumer delivery</Eyebrow>
+            <Heading className="mb-4">One record. Three ways to deliver.</Heading>
+            <Body className="mb-0">
+              Turn your governed material data into trusted consumer experiences — whether you host it on INTERTEXE,
+              bring your own look and feel, or connect directly through our API. Smaller brands launch hosted passports
+              with zero development. Enterprise brands run all three delivery modes from the same approved record.
+            </Body>
+          </div>
+          <p className="hidden lg:block text-[10px] tracking-[0.18em] uppercase text-[var(--platform-accent)] border-l border-[var(--platform-accent)]/40 pl-4 max-w-[9rem] leading-relaxed">
+            Same data · more possibilities
+          </p>
         </div>
         <DeliveryModesVisual />
       </div>
