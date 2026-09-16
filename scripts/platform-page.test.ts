@@ -55,12 +55,9 @@ describe("Platform B2B sales page", () => {
     assert.match(home, /SalesHeroSection/);
     assert.match(sections, /PlatformBrandShowcaseHero/);
     assert.match(home, /PlatformHowItWorksSection/);
-    assert.match(home, /PlatformFabricCinema/);
-    assert.match(howItWorks, /platform-band--white/);
-    assert.match(howItWorks, /platform-band--dark/);
+    assert.doesNotMatch(home, /PlatformFabricCinema/);
     const saasCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-saas.css"), "utf8");
     assert.match(saasCss, /--platform-bg: #ffffff/);
-    assert.match(saasCss, /platform-band--dark/);
     assert.match(chrome, /platform-saas\.css/);
     assert.match(howItWorks, /WhatItIsProcessVisual/);
     const processVisual = fs.readFileSync(
