@@ -1,8 +1,8 @@
 import { customProvider } from "./custom";
-import { ecoinventProvider } from "./ecoinvent";
-import { greenStoryProvider } from "./green-story";
+import { ecoinventProvider, ECOINVENT_INTEGRATION_CARD } from "./ecoinvent";
+import { greenStoryProvider, GREEN_STORY_INTEGRATION_CARD } from "./green-story";
 import type { SustainabilityProviderAdapter } from "./types";
-import { worldlyProvider } from "./worldly";
+import { worldlyProvider, WORLDLY_INTEGRATION_CARD } from "./worldly";
 
 export const SUSTAINABILITY_PROVIDERS: SustainabilityProviderAdapter[] = [
   worldlyProvider,
@@ -34,4 +34,4 @@ export {
   worldlyProvider,
   WORLDLY_INTEGRATION_CARD,
 };
-export type { ProviderFetchContext, ProviderFetchResult, SustainabilityProviderAdapter };
+export type { ProviderFetchContext, ProviderFetchResult, SustainabilityProviderAdapter } from "./types";
