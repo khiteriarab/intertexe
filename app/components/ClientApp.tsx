@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, type ReactNode } from "react";
+import { Suspense, useState, useSyncExternalStore, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { RouteProgress } from "./RouteProgress";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ import { SignInBenefitsBanner } from "./SignInBenefitsBanner";
 import { AuthLoginPromptProvider } from "../hooks/use-auth-login-prompt";
 import { UtmCapture } from "./UtmCapture";
 import { AppDownloadPrompt } from "./AppDownloadPrompt";
+import { isPlatformHost } from "@/lib/dashboard/constants";
 
 const B2B_ROUTE_PREFIXES = ["/platform", "/partners", "/khiteri", "/dashboard"];
 const DOCUMENT_ROUTE_PREFIXES = ["/press-kit"];
@@ -35,6 +36,28 @@ function isPassportRoute(pathname: string) {
   return pathname === "/p" || pathname.startsWith(PASSPORT_ROUTE_PREFIX);
 }
 
+function subscribePlatformHost() {
+  return () => {};
+}
+
+function getPlatformHostSnapshot() {
+  return isPlatformHost(window.location.host);
+}
+
+function getPlatformHostServerSnapshot() {
+  return false;
+}
+
+/** platform.intertexe.com — entire host is private SaaS; URL stays at / for login. */
+function usePlatformHostFlag(serverFlag: boolean) {
+  const clientFlag = useSyncExternalStore(
+    subscribePlatformHost,
+    getPlatformHostSnapshot,
+    getPlatformHostServerSnapshot
+  );
+  return serverFlag || clientFlag;
+}
+
 export function ClientApp({
   children,
   platformHost = false,
@@ -42,12 +65,6 @@ export function ClientApp({
   children: ReactNode;
   platformHost?: boolean;
 }) {
-  const pathname = usePathname();
-  const b2b = isB2BRoute(pathname ?? "");
-  const document = isDocumentRoute(pathname ?? "");
-  /** platform.intertexe.com — entire host is private SaaS; URL stays at / for login. */
-  const minimalChrome = platformHost || b2b || document || isPassportRoute(pathname ?? "");
-  const showConsumerChrome = !platformHost && !minimalChrome;
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -64,12 +81,37 @@ export function ClientApp({
   return (
     <QueryClientProvider client={queryClient}>
       <AuthLoginPromptProvider>
-      <UtmCapture />
+        <UtmCapture />
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
+        <Suspense fallback={children}>
+          <AppFrame platformHost={platformHost}>{children}</AppFrame>
+        </Suspense>
+        <Toaster position="top-right" />
+      </AuthLoginPromptProvider>
+    </QueryClientProvider>
+  );
+}
+
+function AppFrame({
+  children,
+  platformHost: serverPlatformHost = false,
+}: {
+  children: ReactNode;
+  platformHost?: boolean;
+}) {
+  const pathname = usePathname();
+  const platformHost = usePlatformHostFlag(serverPlatformHost);
+  const b2b = isB2BRoute(pathname ?? "");
+  const document = isDocumentRoute(pathname ?? "");
+  const minimalChrome = platformHost || b2b || document || isPassportRoute(pathname ?? "");
+  const showConsumerChrome = !platformHost && !minimalChrome;
+
+  return (
+    <>
       {showConsumerChrome ? <Analytics /> : null}
       {showConsumerChrome ? <MetaPixel /> : null}
-      <Suspense fallback={null}>
-        <RouteProgress />
-      </Suspense>
       <div
         className={`min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden ${
           minimalChrome ? "bg-white text-gray-900" : "bg-background text-foreground"
@@ -91,8 +133,6 @@ export function ClientApp({
         {showConsumerChrome ? <ScrollToTop /> : null}
         {showConsumerChrome ? <AppDownloadPrompt /> : null}
       </div>
-      <Toaster position="top-right" />
-      </AuthLoginPromptProvider>
-    </QueryClientProvider>
+    </>
   );
 }

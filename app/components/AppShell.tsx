@@ -1,11 +1,11 @@
-import { headers } from "next/headers";
-import { isPlatformHost } from "@/lib/dashboard/constants";
 import { ClientApp } from "./ClientApp";
 
-/** Server shell — platform.intertexe.com is a private surface with no consumer chrome. */
-export async function AppShell({ children }: { children: React.ReactNode }) {
-  const host = (await headers()).get("host");
-  const platformHost = isPlatformHost(host);
-
-  return <ClientApp platformHost={platformHost}>{children}</ClientApp>;
+/**
+ * Root chrome wrapper. Keep this a plain server component with no request
+ * APIs — reading the host here dynamizes every route (including /platform)
+ * and streams the shop catalog skeleton as the first paint. Host detection
+ * lives in ClientApp from the URL / pathname.
+ */
+export function AppShell({ children }: { children: React.ReactNode }) {
+  return <ClientApp>{children}</ClientApp>;
 }

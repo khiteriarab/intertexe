@@ -48,9 +48,11 @@ export function PlatformChrome({
             <Link href="/terms" className="hover:text-[var(--platform-ink)] transition-colors">
               Terms
             </Link>
+            <span dangerouslySetInnerHTML={{ __html: "<!--email_off-->" }} />
             <a href="mailto:info@intertexe.com" className="hover:text-[var(--platform-ink)] transition-colors">
               info@intertexe.com
             </a>
+            <span dangerouslySetInnerHTML={{ __html: "<!--email_on-->" }} />
           </div>
         </div>
       </footer>

@@ -11,6 +11,7 @@ describe("Platform B2B sales page", () => {
     "utf8",
   );
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
+  const homeSections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-home-sections.tsx"), "utf8");
   const stages = fs.readFileSync(path.join(process.cwd(), "app/platform/product-stages.tsx"), "utf8");
   const visuals = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-visuals.tsx"), "utf8");
   const workspaceExplorer = fs.readFileSync(
@@ -31,7 +32,7 @@ describe("Platform B2B sales page", () => {
 
   it("positions INTERTEXE as product intelligence infrastructure, not DPP-only software", () => {
     assert.match(chrome, /product intelligence infrastructure for/i);
-    assert.match(sections, /PlatformBrandShowcaseHero/);
+    assert.match(homeSections, /PlatformBrandShowcaseHero/);
     const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
     assert.match(showcaseHero, /See it live/i);
     assert.match(showcaseHero, /\/platform\/demo/);
@@ -53,7 +54,7 @@ describe("Platform B2B sales page", () => {
 
   it("uses a focused home hierarchy without redundant lifecycle or pricing blocks", () => {
     assert.match(home, /SalesHeroSection/);
-    assert.match(sections, /PlatformBrandShowcaseHero/);
+    assert.match(homeSections, /PlatformBrandShowcaseHero/);
     assert.match(home, /PlatformHowItWorksSection/);
     assert.doesNotMatch(home, /PlatformFabricCinema/);
     const saasCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-saas.css"), "utf8");
@@ -90,6 +91,8 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(home, /PlatformScrollShowcase/);
     assert.doesNotMatch(home, /SalesIntelligenceSection/);
     assert.match(home, /SalesDeliverySection/);
+    assert.match(home, /sales-home-sections/);
+    assert.doesNotMatch(home, /from \".\/sales-sections\"/);
     assert.doesNotMatch(home, /SalesPlatformBreadthSection/);
     assert.match(howItWorks, /PlatformProductPillarsVisual/);
     assert.match(howItWorks, /WhatItIsProcessVisual/);
@@ -143,7 +146,8 @@ describe("Platform B2B sales page", () => {
     assert.match(howItWorks, /Discover/);
     assert.match(howItWorks, /WhatItIsProcessVisual/);
     assert.doesNotMatch(howItWorks, /Start with 10 products/);
-    assert.match(sections, /Start with 10 products|PlatformBrandShowcaseHero/);
+    assert.match(sections, /Start with 10 products/);
+    assert.match(homeSections, /PlatformBrandShowcaseHero/);
     assert.match(sections, /getEnterpriseLoginUrl/);
     assert.match(nav, /getEnterpriseLoginUrl/);
     assert.match(nav, /Start with 10 products/);
@@ -205,6 +209,11 @@ describe("Platform B2B sales page", () => {
     assert.match(home, /PlatformFaq/);
     assert.doesNotMatch(home, /ComparisonView/);
     assert.match(page, /PlatformHome/);
+    assert.match(page, /dynamic = "force-static"/);
+    const platformLoading = fs.readFileSync(path.join(process.cwd(), "app/platform/loading.tsx"), "utf8");
+    const rootLoading = fs.readFileSync(path.join(process.cwd(), "app/loading.tsx"), "utf8");
+    assert.doesNotMatch(platformLoading, /aspect-\[3\/4\]/);
+    assert.match(rootLoading, /aspect-\[3\/4\]/);
   });
 
   it("uses P0 designed screenshots for benchmark, issues, and passport", () => {
@@ -255,7 +264,7 @@ describe("Platform B2B sales page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-lifecycle-composite.png")));
     assert.doesNotMatch(sections, /ProblemConvergenceVisual/);
     assert.doesNotMatch(sections, /GovernedRecordVisual/);
-    assert.match(sections, /DeliveryModesVisual/);
+    assert.match(homeSections, /DeliveryModesVisual/);
     const deliveryVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/DeliveryModesVisual.tsx"), "utf8");
     assert.match(deliveryVisual, /platform-delivery-storyline/);
     assert.match(deliveryVisual, /One governed record · three delivery modes · not mutually exclusive/);

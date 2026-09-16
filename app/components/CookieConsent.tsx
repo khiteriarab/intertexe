@@ -1,16 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { isPlatformHost } from "@/lib/dashboard/constants";
 import { META_PIXEL_CONSENT_EVENT, META_PIXEL_CONSENT_KEY } from "../../lib/meta-pixel";
 
+const HIDE_PREFIXES = ["/platform", "/partners", "/khiteri", "/dashboard", "/press-kit"];
+
+function hideCookieBanner(pathname: string) {
+  if (pathname === "/p" || pathname.startsWith("/p/")) return true;
+  return HIDE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 export function CookieConsent() {
+  return (
+    <Suspense fallback={null}>
+      <CookieConsentBanner />
+    </Suspense>
+  );
+}
+
+function CookieConsentBanner() {
+  const pathname = usePathname() ?? "";
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    if (hideCookieBanner(pathname) || isPlatformHost(window.location.host)) return;
     const consent = localStorage.getItem(META_PIXEL_CONSENT_KEY);
     if (!consent) setShow(true);
-  }, []);
+  }, [pathname]);
 
   const accept = () => {
     localStorage.setItem(META_PIXEL_CONSENT_KEY, "accepted");

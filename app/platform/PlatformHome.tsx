@@ -1,4 +1,4 @@
-import { SalesDeliverySection, SalesHeroSection } from "./sales-sections";
+import { SalesDeliverySection, SalesHeroSection } from "./sales-home-sections";
 import { PlatformFaq } from "./PlatformFaq";
 import { PlatformCircularWardrobeBanner } from "./PlatformCircularWardrobeBanner";
 import { PlatformHowItWorksSection } from "./PlatformHowItWorksSection";

@@ -79,11 +79,14 @@ test("consumer sign-in banner targets www account, not enterprise login", () => 
 test("sales page links sign-in to enterprise login helper", () => {
   const nav = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformNav.tsx"), "utf8");
   const sections = fs.readFileSync(path.join(process.cwd(), "app/platform/sales-sections.tsx"), "utf8");
-  const hero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformHero.tsx"), "utf8");
+  const showcase = fs.readFileSync(
+    path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"),
+    "utf8"
+  );
   assert.match(nav, /getEnterpriseLoginUrl/);
   assert.match(sections, /Start with 10 products/);
   assert.match(sections, /Sign in/);
-  assert.match(hero, /INTERTEXE FOR BRANDS/);
+  assert.match(showcase, /One product record/);
   assert.doesNotMatch(nav, /\/dashboard\/login/);
 });
 
@@ -92,7 +95,7 @@ test("enterprise login supports SSO without consumer chrome", () => {
   assert.match(login, /Continue with SSO/);
   assert.match(login, /Welcome to INTERTEXE/);
   assert.match(login, /Go to INTERTEXE/);
-  assert.match(login, /Governed data/);
+  assert.match(login, /Product record/);
   assert.match(login, /getConsumerAccountUrl/);
 });
 
@@ -107,11 +110,15 @@ test("platform host strips consumer chrome from login", () => {
   const appShell = fs.readFileSync(path.join(process.cwd(), "app/components/AppShell.tsx"), "utf8");
   const clientApp = fs.readFileSync(path.join(process.cwd(), "app/components/ClientApp.tsx"), "utf8");
   const layout = fs.readFileSync(path.join(process.cwd(), "app/layout.tsx"), "utf8");
-  assert.match(appShell, /isPlatformHost/);
-  assert.match(appShell, /platformHost/);
+  const cookies = fs.readFileSync(path.join(process.cwd(), "app/components/CookieConsent.tsx"), "utf8");
+  assert.doesNotMatch(appShell, /await headers/);
+  assert.match(appShell, /ClientApp/);
+  assert.match(clientApp, /isPlatformHost/);
   assert.match(clientApp, /platformHost/);
   assert.match(clientApp, /showConsumerChrome/);
   assert.match(clientApp, /platformHost \|\| b2b/);
   assert.match(layout, /AppShell/);
   assert.match(layout, /ConsumerCookieConsent/);
+  assert.match(cookies, /\/platform/);
+  assert.match(cookies, /isPlatformHost/);
 });

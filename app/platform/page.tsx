@@ -3,6 +3,8 @@ import { PlatformChrome } from "./PlatformChrome";
 import { PlatformHome } from "./PlatformHome";
 import { PlatformViewTracker } from "./PlatformViewTracker";
 
+export const dynamic = "force-static";
+
 export const metadata: Metadata = {
   title: {
     absolute: "INTERTEXE for Brands | Product Intelligence Infrastructure for Fashion",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { AppShell } from "./components/AppShell";
 import { ConsumerCookieConsent } from "./components/ConsumerCookieConsent";
@@ -174,7 +175,9 @@ export default function RootLayout({
       </head>
       <body className="w-full min-h-screen overflow-x-hidden" suppressHydrationWarning>
         <AppShell>{children}</AppShell>
-        <ConsumerCookieConsent />
+        <Suspense fallback={null}>
+          <ConsumerCookieConsent />
+        </Suspense>
         <Analytics />
         <SpeedInsights />
       </body>
