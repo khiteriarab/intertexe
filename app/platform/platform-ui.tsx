@@ -4,32 +4,19 @@ import type { ReactNode } from "react";
 export const SERIF = { fontFamily: "var(--itx-serif, Georgia, 'Iowan Old Style', Palatino, serif)" } as const;
 
 export function Eyebrow({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <p
-      className={`text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-[var(--platform-quiet,#9c9488)] mb-5 ${className}`}
-    >
-      {children}
-    </p>
-  );
+  return <p className={`platform-kicker mb-5 text-[var(--platform-quiet,#5c5852)] ${className}`}>{children}</p>;
 }
 
 export function Heading({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <h2
-      className={`text-[1.75rem] sm:text-3xl md:text-4xl font-light leading-[1.15] text-[var(--platform-ink,#161513)] ${className}`}
-      style={SERIF}
-    >
+    <h2 className={`platform-display text-[var(--platform-ink,#111111)] ${className}`} style={SERIF}>
       {children}
     </h2>
   );
 }
 
 export function Body({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <p className={`text-[15px] sm:text-base text-[var(--platform-muted,#5c5854)] font-light leading-relaxed ${className}`}>
-      {children}
-    </p>
-  );
+  return <p className={`platform-copy ${className}`}>{children}</p>;
 }
 
 export function PrimaryLink({
@@ -48,7 +35,7 @@ export function PrimaryLink({
       className={
         onDark
           ? "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-surface)] text-[var(--platform-primary)] px-7 py-3.5 hover:bg-[var(--platform-highlight)] min-h-[44px] transition-colors"
-          : "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-accent-soft)] text-[var(--platform-primary)] px-7 py-3.5 hover:bg-[var(--platform-accent-muted)] min-h-[44px] transition-colors border border-[var(--platform-border)]"
+          : "inline-flex w-full sm:w-auto items-center justify-center rounded-sm text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-ink)] text-white px-7 py-3.5 hover:bg-black min-h-[44px] transition-colors"
       }
     >
       {children}
@@ -72,7 +59,7 @@ export function SecondaryLink({
       className={
         onDark
           ? "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase border border-white/70 text-white px-7 py-3.5 hover:bg-white/10 min-h-[44px] transition-colors"
-          : "inline-flex w-full sm:w-auto items-center justify-center rounded-full text-[11px] tracking-[0.14em] uppercase border border-[var(--platform-ink,#161513)]/20 text-[var(--platform-ink,#161513)] px-7 py-3.5 hover:bg-white min-h-[44px] transition-colors"
+          : "inline-flex w-full sm:w-auto items-center justify-center rounded-sm text-[11px] tracking-[0.14em] uppercase border border-[var(--platform-ink,#111111)]/25 text-[var(--platform-ink,#111111)] px-7 py-3.5 hover:bg-[var(--platform-highlight)] min-h-[44px] transition-colors"
       }
     >
       {children}
@@ -90,12 +77,12 @@ export function SoftwareStage({
   copy?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--platform-border)] bg-[var(--platform-surface)] p-5 sm:p-8 shadow-[0_24px_60px_rgba(44,38,32,0.06)]">
+    <div className="bg-[var(--platform-surface)] p-0">
       {title ? (
         <p className="text-[15px] sm:text-[17px] font-medium text-[var(--platform-primary)] mb-1">{title}</p>
       ) : null}
       {copy ? <p className="text-sm text-[var(--platform-muted)] font-light mb-5">{copy}</p> : null}
-      <div className="rounded-xl bg-[var(--platform-highlight)] p-3 sm:p-6">{children}</div>
+      <div className="p-0">{children}</div>
     </div>
   );
 }
@@ -104,7 +91,7 @@ export function DiscoverLink({ href, children }: { href: string; children: React
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 rounded-md bg-[var(--platform-accent-soft)] px-5 py-2.5 text-[13px] font-medium text-[var(--platform-primary)] min-h-[44px] hover:bg-[var(--platform-accent-muted)] border border-[var(--platform-border)] transition-colors"
+      className="inline-flex items-center gap-2 px-0 py-2.5 text-[13px] font-medium text-[var(--platform-ink)] min-h-[44px] hover:text-[var(--platform-gold)] transition-colors underline underline-offset-4"
     >
       {children}
       <span aria-hidden="true">→</span>
@@ -123,8 +110,8 @@ export function Frame({
 }) {
   return (
     <figure className="m-0">
-      <div className="rounded-xl border border-[#e8e3da] bg-white overflow-hidden shadow-[0_20px_50px_rgba(22,21,19,0.04)]">
-        <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#eeeae4] bg-[#faf8f5]">
+      <div className="bg-white overflow-hidden">
+        <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[var(--platform-border)]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />
           <span className="w-1.5 h-1.5 rounded-full bg-[#ddd5cb]" />

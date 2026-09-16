@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { PASSPORT_CASE_STUDY } from "../../../lib/enterprise/passport-case-study";
 import { useReducedMotion, useScrollProgress } from "../b2b-motion";
-import { SERIF } from "../platform-ui";
 
 const STORY_STEPS = [
   {
@@ -40,15 +39,23 @@ const STORY_STEPS = [
     label: "Consumer — brand app · brand site · hosted passport",
     detail: "After scan, consumers see materials, care, repair, and next life — whether you host it or embed it in your own experience.",
     image: "/platform/symbols/story-consumer-scan.png",
-    imageAlt: "Consumer scanning a product to view passport details on mobile.",
+    imageAlt: "Scan a price tag or care label in the INTERTEXE app to read materials and find better options.",
+    wide: true,
   },
 ] as const;
 
-function StepVisual({ image, imageAlt }: { image: string; imageAlt: string }) {
+function StepVisual({ image, imageAlt, wide = false }: { image: string; imageAlt: string; wide?: boolean }) {
   return (
-    <div className="platform-delivery-story-visual platform-delivery-story-visual--symbol">
+    <div className={`platform-delivery-story-visual platform-delivery-story-visual--symbol ${wide ? "is-wide" : ""}`}>
       <div className="platform-delivery-story-photo platform-delivery-story-photo--symbol">
-        <Image src={image} alt={imageAlt} fill className="object-contain" sizes="(max-width: 768px) 220px, 200px" />
+        <Image
+          src={image}
+          alt={imageAlt}
+          width={wide ? 840 : 560}
+          height={wide ? 640 : 560}
+          unoptimized
+          className="platform-delivery-story-symbol-img"
+        />
       </div>
     </div>
   );
@@ -85,7 +92,7 @@ export function DeliveryModesVisual() {
               >
                 <div className="platform-delivery-storyline-copy">
                   <p className="platform-delivery-storyline-index">{index + 1}.</p>
-                  <h3 className="platform-delivery-storyline-label" style={SERIF}>{step.label}</h3>
+                  <h3 className="platform-delivery-storyline-label">{step.label}</h3>
                   <p className="platform-delivery-storyline-detail">{step.detail}</p>
                 </div>
 
@@ -94,7 +101,7 @@ export function DeliveryModesVisual() {
                 </div>
 
                 <div className="platform-delivery-storyline-visual-wrap">
-                  <StepVisual image={step.image} imageAlt={step.imageAlt} />
+                  <StepVisual image={step.image} imageAlt={step.imageAlt} wide={"wide" in step && step.wide} />
                 </div>
               </li>
             );

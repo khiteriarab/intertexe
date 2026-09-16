@@ -26,15 +26,18 @@ type PilotRow = {
 
 /** Curated Customer Zero / Mytheresa pilot products for the platform hero mosaic. */
 const SHOWCASE_STYLES = [
-  "ITX-LIVE-02",
-  "ITX-LIVE-04",
+  "ITX-LIVE-07",
+  "ITX-LIVE-01",
+  "ITX-LIVE-09",
   "ITX-LIVE-05",
   "ITX-LIVE-06",
   "ITX-LIVE-08",
-  "ITX-LIVE-09",
   "ITX-LIVE-10",
-  "ITX-LIVE-01",
+  "ITX-LIVE-02",
 ] as const;
+
+/** Three clothing records shown on /platform/demo — selected from the editor-pick 10. */
+export const PLATFORM_FEATURED_EXAMPLE_STYLES = ["ITX-LIVE-07", "ITX-LIVE-01", "ITX-LIVE-09"] as const;
 
 function productTiles(): ShowcaseProductTile[] {
   const rows = liveProducts as PilotRow[];
@@ -76,19 +79,23 @@ export const PLATFORM_SHOWCASE_ROW_B = [...mosaic.slice(half), ...mosaic.slice(0
 
 export const PLATFORM_SHOWCASE_STATS = [
   {
-    value: "70% faster",
+    figure: "70%",
+    qualifier: "faster",
     label: "Product data to governed record",
   },
   {
-    value: "95% ready",
+    figure: "95%",
+    qualifier: "ready",
     label: "For Digital Product Passports",
   },
   {
-    value: "50% fewer",
+    figure: "50%",
+    qualifier: "fewer",
     label: "Unresolved data gaps",
   },
   {
-    value: "3× faster",
+    figure: "3×",
+    qualifier: "faster",
     label: "Resale activation",
   },
 ] as const;

@@ -253,9 +253,11 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
     assert.match(featuredSection, /View full passport/);
-    assert.match(featuredSection, /Try another product/);
-    assert.match(featuredSection, /Linen Wrap Top/);
-    assert.match(featuredSection, /Cashmere Crew/);
+    assert.doesNotMatch(featuredSection, /Try another product/);
+    assert.doesNotMatch(featuredSection, /Explore a real example/);
+    assert.match(featuredSection, /QRCodeCanvas/);
+    assert.match(featuredSection, /PLATFORM_FEATURED_EXAMPLE_STYLES/);
+    assert.match(featured, /ITX-4102/);
     assert.match(featured, /ITX-4102/);
     assert.doesNotMatch(featuredSection, /EU Certified/);
     assert.doesNotMatch(featuredSection, /Guaranteed Compliant/);

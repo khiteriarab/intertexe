@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { PLATFORM_SALES_DEMO } from "../../../lib/enterprise/passport-case-study";
-import { DiscoverLink, SERIF } from "../platform-ui";
+import { DiscoverLink } from "../platform-ui";
 import { LIFECYCLE_SLIDE_ASSETS } from "./lifecycle-slide-assets";
 
 const SLIDES = [
@@ -120,7 +120,7 @@ function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boole
             src={softwareSrc}
             alt=""
             fill
-            className="object-cover object-top rounded-xl border border-white/40 shadow-lg"
+            className="object-cover object-top"
             sizes="(max-width: 768px) 50vw, 320px"
           />
         </div>
@@ -182,7 +182,7 @@ export function WhatItIsProcessVisual() {
       >
         <div className="platform-lifecycle-journey-copy">
           <p className="platform-lifecycle-journey-label">{slide.label}</p>
-          <h3 className="platform-lifecycle-journey-title" style={SERIF}>
+          <h3 className="platform-lifecycle-journey-title">
             {slide.title}
           </h3>
           <p className="platform-lifecycle-journey-body">{slide.copy}</p>

@@ -6,7 +6,7 @@ import { SERIF } from "./platform-ui";
 /** Editorial blossom banner — wide ivory fade + landscape, selective brand moment. */
 export function PlatformCircularWardrobeBanner() {
   return (
-    <section className="platform-circular-banner-section py-10 sm:py-14">
+    <section className="platform-circular-banner-section">
       <div className="platform-circular-banner platform-circular-banner--wide">
         <Image
           src={EDITORIAL_BLOSSOM_BANNER}

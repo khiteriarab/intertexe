@@ -23,25 +23,30 @@ export const LIFECYCLE_SLIDE_ASSETS: Record<
     productImage: "/platform/hero-silk-dress.png",
     softwareImage: "/platform/understand-ingest-laptop.jpg",
     softwareImageSecondary: "/platform/workspace-products.png",
+    sceneImage: "/fabrics/fabric-linen.jpg",
   },
   verify: {
     productImage: "/platform/hero-silk-dress.png",
     softwareImage: "/platform/understand-issues.png",
     softwareImageSecondary: "/platform/workspace-issues.png",
+    sceneImage: "/fabrics/fabric-cotton.jpg",
   },
   comply: {
     productImage: "/platform/hero-product-window.png",
     softwareImage: "/platform/hero-workspace-desktop.png",
     softwareImageSecondary: "/platform/understand-structure-laptop.jpg",
+    sceneImage: "/fabrics/fabric-wool.jpg",
   },
   distribute: {
     productImage: "/platform/hero-silk-dress.png",
     softwareImage: "/platform/act-passport.png",
     softwareImageSecondary: "/platform/hero-workspace-desktop.png",
+    sceneImage: "/fabrics/fabric-silk.jpg",
   },
   extend: {
     productImage: "/platform/hero-silk-dress.png",
     softwareImage: "/platform/hero-lifecycle-experience.jpg",
     softwareImageSecondary: "/platform/surface-iphone-scanner.jpg",
+    sceneImage: "/fabrics/fabric-cashmere.jpg",
   },
 };

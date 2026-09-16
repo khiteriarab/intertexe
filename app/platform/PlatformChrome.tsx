@@ -5,6 +5,7 @@ import { PlatformWordmark } from "./PlatformWordmark";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import "./platform-tokens.css";
 import "./b2b-visuals.css";
+import "./platform-saas.css";
 
 export function PlatformChrome({
   children,
