@@ -81,6 +81,14 @@ const SLIDES = [
 
 type SlideId = (typeof SLIDES)[number]["id"];
 
+const SOFTWARE_ALTS: Record<SlideId, string> = {
+  create: "INTERTEXE workspace overview — catalog readiness, products, and what to do next.",
+  verify: "INTERTEXE issues inbox — missing fields, conflicts, and blocking publish findings.",
+  comply: "INTERTEXE operations — from data to action, approvals, and passports ready to publish.",
+  distribute: "Product record with CREATE, PROVE, MARKET, OWN, NEXT LIFE and a QR-ready passport.",
+  extend: "INTERTEXE suppliers — evidence requests, linked products, and supplier collaboration.",
+};
+
 function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boolean }) {
   const assets = LIFECYCLE_SLIDE_ASSETS[slideId];
   const productSrc = assets.productImage ?? PLATFORM_SALES_DEMO.imageUrl;
@@ -118,7 +126,7 @@ function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boole
         <div className="platform-lifecycle-graphic-ui">
           <Image
             src={softwareSrc}
-            alt=""
+            alt={SOFTWARE_ALTS[slideId]}
             fill
             className="object-cover object-top"
             sizes="(max-width: 768px) 50vw, 320px"

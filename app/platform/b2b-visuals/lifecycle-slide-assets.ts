@@ -11,9 +11,8 @@ export type LifecycleSlideAssets = {
 };
 
 /**
- * Uses the workspace / product graphics already shipped in public/platform
- * (hero silk, ingest/structure/diagnose laptops, issues, passport, experience).
- * Empty slots previously rendered the "Ready for stage artwork" placeholder.
+ * Highlighted workspace UI next to Create / Verify / Comply / Distribute / Extend
+ * uses live INTERTEXE dashboard screens (overview, issues, operations, product record, suppliers).
  */
 export const LIFECYCLE_SLIDE_ASSETS: Record<
   "create" | "verify" | "comply" | "distribute" | "extend",
@@ -21,32 +20,32 @@ export const LIFECYCLE_SLIDE_ASSETS: Record<
 > = {
   create: {
     productImage: "/platform/hero-silk-dress.png",
-    softwareImage: "/platform/understand-ingest-laptop.jpg",
-    softwareImageSecondary: "/platform/workspace-products.png",
+    softwareImage: "/platform/workspace-overview.png",
+    softwareImageSecondary: "/platform/workspace-operations.png",
     sceneImage: "/fabrics/fabric-linen.jpg",
   },
   verify: {
     productImage: "/platform/hero-silk-dress.png",
-    softwareImage: "/platform/understand-issues.png",
+    softwareImage: "/platform/workspace-issues-inbox.png",
     softwareImageSecondary: "/platform/workspace-issues.png",
     sceneImage: "/fabrics/fabric-cotton.jpg",
   },
   comply: {
     productImage: "/platform/hero-product-window.png",
-    softwareImage: "/platform/hero-workspace-desktop.png",
-    softwareImageSecondary: "/platform/understand-structure-laptop.jpg",
+    softwareImage: "/platform/workspace-operations.png",
+    softwareImageSecondary: "/platform/workspace-overview.png",
     sceneImage: "/fabrics/fabric-wool.jpg",
   },
   distribute: {
     productImage: "/platform/hero-silk-dress.png",
-    softwareImage: "/platform/act-passport.png",
-    softwareImageSecondary: "/platform/hero-workspace-desktop.png",
+    softwareImage: "/platform/workspace-product-record.png",
+    softwareImageSecondary: "/platform/workspace-overview.png",
     sceneImage: "/fabrics/fabric-silk.jpg",
   },
   extend: {
     productImage: "/platform/hero-silk-dress.png",
-    softwareImage: "/platform/hero-lifecycle-experience.jpg",
-    softwareImageSecondary: "/platform/surface-iphone-scanner.jpg",
+    softwareImage: "/platform/workspace-suppliers.png",
+    softwareImageSecondary: "/platform/workspace-product-record.png",
     sceneImage: "/fabrics/fabric-cashmere.jpg",
   },
 };
