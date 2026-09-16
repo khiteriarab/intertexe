@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { ProductImpactBundle } from "../../../../../lib/sustainability/product-impact";
-import { providerAttribution } from "../../../../../lib/sustainability/providers";
-import type { ProductImpactRecord } from "../../../../../lib/sustainability/types";
+import type { ProductImpactBundle } from "../../../../../../lib/sustainability/product-impact";
+import { providerAttribution } from "../../../../../../lib/sustainability/providers";
+import type { ProductImpactRecord } from "../../../../../../lib/sustainability/types";
 import { entLinkClass } from "../../../../components/EnterpriseUi";
 
 const TABS = [
