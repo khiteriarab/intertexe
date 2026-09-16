@@ -23,7 +23,15 @@ function impactLabel(impact: PlatformRecommendation["impact"]): string {
   return `${impact.charAt(0).toUpperCase()}${impact.slice(1)} impact`;
 }
 
-export function EntIntelligenceBriefCard({ brief }: { brief: PlatformIntelligenceBrief | null }) {
+export function EntIntelligenceBriefCard({
+  brief,
+  actionHref,
+}: {
+  brief: PlatformIntelligenceBrief | null;
+  actionHref?: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
   if (!brief) {
     return (
       <article className="ent-intel-card ent-intel-card--brief">
@@ -38,6 +46,7 @@ export function EntIntelligenceBriefCard({ brief }: { brief: PlatformIntelligenc
 
   const primaryMetric = brief.metrics[0];
   const secondaryMetrics = brief.metrics.slice(1);
+  const longCopy = (brief.summary || "").length > 160;
 
   return (
     <article className="ent-intel-card ent-intel-card--brief">
@@ -49,7 +58,17 @@ export function EntIntelligenceBriefCard({ brief }: { brief: PlatformIntelligenc
       </header>
       <div className="ent-insight-card mt-2">
         <p className="ent-insight-statement">{brief.headline}</p>
-        <p className="ent-insight-why">{brief.summary}</p>
+        <p className={`ent-insight-why${longCopy && !expanded ? " is-collapsed" : ""}`}>{brief.summary}</p>
+        {longCopy ? (
+          <button
+            type="button"
+            className="ent-intel-brief-toggle"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((open) => !open)}
+          >
+            {expanded ? "Show less" : "Show more"}
+          </button>
+        ) : null}
         <div className="ent-insight-meta">
           {primaryMetric ? (
             <span className={`ent-insight-pill ${primaryMetric.tone === "positive" ? "ent-insight-pill--positive" : ""}`}>
@@ -69,7 +88,7 @@ export function EntIntelligenceBriefCard({ brief }: { brief: PlatformIntelligenc
             ))}
           </dl>
         ) : null}
-        <Link href="#" className="ent-insight-action" onClick={(e) => e.preventDefault()}>
+        <Link href={actionHref || "#"} className="ent-insight-action">
           Review assortment →
         </Link>
       </div>

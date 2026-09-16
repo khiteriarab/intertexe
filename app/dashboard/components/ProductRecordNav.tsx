@@ -2,26 +2,17 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { PRODUCT_RECORD_TABS, resolveProductRecordTab, type ProductRecordTab } from "../../../lib/enterprise/product-record-tabs";
 
-const TABS = [
-  { id: "overview", label: "Overview" },
-  { id: "materials", label: "Materials" },
-  { id: "traceability", label: "Traceability" },
-  { id: "suppliers", label: "Suppliers & evidence" },
-  { id: "impact", label: "Impact" },
-  { id: "passport", label: "Passport" },
-  { id: "history", label: "History" },
-] as const;
-
-export type ProductRecordTab = (typeof TABS)[number]["id"];
+export type { ProductRecordTab };
 
 export function ProductRecordNav({ basePath }: { basePath: string }) {
   const searchParams = useSearchParams();
-  const active = (searchParams.get("tab") as ProductRecordTab) || "overview";
+  const active = resolveProductRecordTab(searchParams.get("tab"));
 
   return (
     <nav className="ent-product-tabs" aria-label="Product record sections">
-      {TABS.map((tab) => {
+      {PRODUCT_RECORD_TABS.map((tab) => {
         const href = tab.id === "overview" ? basePath : `${basePath}?tab=${tab.id}`;
         const isActive = active === tab.id;
         return (

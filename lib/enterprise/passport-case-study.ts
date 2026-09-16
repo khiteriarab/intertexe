@@ -1,19 +1,17 @@
 import { getConsumerSiteUrl } from "../platform-urls";
 
 /**
- * Customer Zero ITX-LIVE-07 — aligned with intertexe-live-10-products.json fixture.
- * White cotton poplin shirt — composition matches product photography (not plaid/linen mismatch).
+ * Customer Zero ITX-LIVE-07 — Ganni cotton poplin from the editor-pick clothing set.
  */
 export const PASSPORT_CASE_STUDY = {
   styleCode: "ITX-LIVE-07",
-  sku: "66e629f4-5755-4cdf-b2fb-de69845df13a",
+  sku: "P01135201",
   publicId: "itx_5h454m6h0c673h5g0n6d",
   productName: "Cotton Poplin Shirt",
-  brand: "Walter Baker",
-  composition: "100% Cotton",
+  brand: "Ganni",
+  composition: "97% Cotton, 3% Elastane",
   category: "Shirt",
-  imageUrl:
-    "https://img.mytheresa.com/1000/1000/95/jpeg/catalog/product/35/P01118549.jpg",
+  imageUrl: "/khiteri/ganni-poplin-shirt.jpg",
   template: "Editorial" as const,
   lifecycleStages: [
     { stage: "Raw material", detail: "Cotton cultivation", location: "Turkey" },

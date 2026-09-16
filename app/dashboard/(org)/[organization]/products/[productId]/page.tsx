@@ -10,7 +10,6 @@ import {
   issueBlocksPublish,
   issueTypeLabel,
   issueWhyItMatters,
-  passportStateLabel,
 } from "../../../../../../lib/enterprise/issue-copy";
 import { loadDppReadiness } from "../../../../../../lib/enterprise/dpp-readiness";
 import { loadProductGovernanceScore } from "../../../../../../lib/enterprise/governance-score";
@@ -28,23 +27,20 @@ import {
   formatReviewerLine,
 } from "../../../../../../lib/enterprise/reviewer-display";
 import { HqCard } from "../../section-frame";
-import { EntIssueCompare } from "../../../../components/EnterpriseModuleUi";
 import {
-  EntPageHeader,
-  EntPassportPill,
   EntIssuePill,
-  entLinkClass,
-  entLabelClass,
 } from "../../../../components/EnterpriseUi";
-import { GovernanceScorePanel } from "../../../../components/GovernanceScorePanel";
 import { ImpactReadinessPanel } from "../../../../components/ImpactReadinessPanel";
 import { ProductImpactModule } from "../../../../components/ProductImpactModule";
 import { ProductOverviewBoard } from "../../../../components/ProductOverviewBoard";
+import { ProductRecordHeader } from "../../../../components/ProductRecordHeader";
+import { ProductCircularityPanel } from "../../../../components/ProductCircularityPanel";
 import { buildProductImpactScores } from "../../../../../../lib/enterprise/product-impact-scores";
 import { parseMassInputToGrams } from "../../../../../../lib/enterprise/org-preferences";
 import { ProductJourneyMap } from "../../../../components/ProductJourneyMap";
 import { ProductRecordShell } from "../../../../components/ProductRecordShell";
-import type { ProductRecordTab } from "../../../../components/ProductRecordNav";
+import { resolveProductRecordTab } from "../../../../../../lib/enterprise/product-record-tabs";
+import { buildProductLifecycleState } from "../../../../../../lib/enterprise/product-lifecycle";
 import { ProvenanceInline } from "../../../../components/ProvenanceInline";
 import { TraceabilityPanel } from "../../../../components/TraceabilityPanel";
 import { buildPassportPreviewContent } from "../../../../../../lib/enterprise/passport-preview";
@@ -61,8 +57,7 @@ import { ApproveFieldsButton } from "./ApproveFieldsButton";
 import { AccessClassLegend, DppReadinessPanel } from "./DppReadinessPanel";
 import { SupplierEvidenceRequestButton } from "./SupplierEvidenceRequestButton";
 import { ProductCarriersPanel } from "./ProductCarriersPanel";
-import { ProductKeyIndicators } from "../../../../components/ProductKeyIndicators";
-import { ProductInformationPanel, productInfoFromRecord } from "../../../../components/ProductInformationPanel";
+import { productInfoFromRecord } from "../../../../components/ProductInformationPanel";
 import { buildProductKeyIndicators } from "../../../../../../lib/enterprise/product-key-indicators";
 import { resolvePilotFixture } from "../../../../../../lib/enterprise/pilot-product-media";
 import { loadOrganizationMeasurementPreferences } from "../../../../../../lib/enterprise/org-preferences";
@@ -87,7 +82,7 @@ export default async function ProductRecordPage({
 }) {
   const { organization, productId } = await params;
   const query = (await searchParams) || {};
-  const tab = (query.tab as ProductRecordTab) || "overview";
+  const tab = resolveProductRecordTab(query.tab);
   const { membership, client } = await requireOrganizationAccess(organization);
   const record = await loadOrgProduct(client, membership.organizationId, productId);
   if (!record) notFound();
@@ -196,6 +191,13 @@ export default async function ProductRecordPage({
     measurementPreferences.preferredMassUnit
   );
   const keyIndicators = buildProductKeyIndicators(governance, traceability);
+  const collection =
+    record.fields.find((f) => f.field_key === "collection" || f.field_key === "season")
+      ?.normalized_value ||
+    record.fields.find((f) => f.field_key === "collection" || f.field_key === "season")
+      ?.original_value ||
+    null;
+  const evidenceDim = governance.dimensions.find((dimension) => dimension.key === "evidence");
   const weightGrams =
     parseMassInputToGrams(
       record.fields.find((f) => f.field_key === "product_weight" || f.field_key === "weight" || f.field_key === "net_weight")
@@ -217,39 +219,53 @@ export default async function ProductRecordPage({
       record.fields.find((f) => f.field_key === "composition")?.original_value ||
       null,
   });
+  const evidenceConfidence =
+    evidenceDim?.score != null ? `${evidenceDim.score}%` : impactScores.confidence;
+  const dppReadinessLabel = readiness
+    ? `${readiness.domains.filter((domain) => domain.status === "ready").length}/${readiness.domains.length}`
+    : "Unavailable";
+  const resaleReadinessLabel = isPublished
+    ? "Eligible"
+    : record.product.passport_state === "ready"
+      ? "After publish"
+      : "Not ready";
+  const lifecycle = buildProductLifecycleState({
+    passportState: record.product.passport_state,
+    hasIdentity: hasProductIdentity,
+    hasComposition: Boolean(productInfo.composition),
+    traceabilityPct: traceability.completenessPct,
+    isPublished,
+    resaleEligible: isPublished,
+  });
 
   const showOverview = tab === "overview";
-  const showMaterials = tab === "materials";
   const showTraceability = tab === "traceability";
-  const showSuppliers = tab === "suppliers";
   const showImpact = tab === "impact";
+  const showCompliance = tab === "compliance";
   const showPassport = tab === "passport";
-  const showHistory = tab === "history";
+  const showCircularity = tab === "circularity";
 
   return (
     <div>
-      <div className="ent-product-record-header mb-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <p className="ent-serif text-[11px] tracking-[0.22em] uppercase text-[var(--ent-petrol-deep,#3e6268)] mb-2">
-              INTERTEXE product record
-            </p>
-            <h1 className="ent-product-record-title">{String(record.product.name || "Product")}</h1>
-            <p className="ent-page-lead mt-2 max-w-2xl">
-              Identity, materials, traceability, impact, passport, and evidence.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            {showcaseUrl ? (
-              <Link href={showcaseUrl} target="_blank" className="ent-showcase-btn">
-                Go to public showcase
-                <span aria-hidden>↗</span>
-              </Link>
-            ) : null}
-            <EntPassportPill state={record.product.passport_state} />
-          </div>
-        </div>
-      </div>
+      <ProductRecordHeader
+        name={String(record.product.name || "Product")}
+        imageUrl={journey.imageUrl}
+        productId={productId}
+        sku={record.product.sku}
+        category={productInfo.category}
+        collection={collection}
+        composition={productInfo.composition}
+        passportState={record.product.passport_state}
+        lifecycle={lifecycle}
+      />
+      {showcaseUrl ? (
+        <p className="mb-6">
+          <Link href={showcaseUrl} target="_blank" className="ent-showcase-btn">
+            Go to public showcase
+            <span aria-hidden>↗</span>
+          </Link>
+        </p>
+      ) : null}
 
       <ProductRecordShell basePath={basePath}>
         {showOverview ? (
@@ -267,6 +283,9 @@ export default async function ProductRecordPage({
                 openIssueCount={record.issues.filter((i) => i.status === "open").length}
                 traceability={traceability}
                 impactScores={impactScores}
+                evidenceConfidence={evidenceConfidence}
+                dppReadiness={dppReadinessLabel}
+                resaleReadiness={resaleReadinessLabel}
               />
             </div>
           </>
@@ -335,15 +354,12 @@ export default async function ProductRecordPage({
         ) : showOverview ? null : (
         <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
           <div className="space-y-6">
-            {showMaterials ? (
+            {showTraceability ? (
               <>
-                <HqCard>
-                  <ProductInformationPanel info={productInfo} />
+                <HqCard title="Traceability">
+                  <TraceabilityPanel traceability={traceability} productName={record.product.name} />
                 </HqCard>
-                <HqCard>
-                  <ProductKeyIndicators indicators={keyIndicators} />
-                </HqCard>
-                  <HqCard title="Materials & provenance">
+                <HqCard title="Materials & provenance">
                   {provenance.length === 0 ? (
                     <p className="text-sm text-[var(--ent-muted)]">No material fields on record yet.</p>
                   ) : (
@@ -354,35 +370,26 @@ export default async function ProductRecordPage({
                     </div>
                   )}
                 </HqCard>
+                <HqCard title="Supplier collaboration">
+                  {(supplierRequests.data || []).length === 0 ? (
+                    <p className="text-sm text-[var(--ent-muted)]">
+                      No supplier requests for this product. Request evidence from an open issue.
+                    </p>
+                  ) : (
+                    <ul className="space-y-3">
+                      {(supplierRequests.data || []).map((req) => (
+                        <li key={req.id} className="ent-panel-nested p-4 text-sm">
+                          <p className="font-medium text-[var(--ent-ink)]">{req.title || "Supplier request"}</p>
+                          <p className="text-[var(--ent-muted)] mt-1">
+                            {req.request_kind || "evidence"} · {req.collaboration_status || req.status}
+                            {req.due_at ? ` · due ${formatOperatorTime(req.due_at)}` : ""}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </HqCard>
               </>
-            ) : null}
-
-            {showTraceability ? (
-              <HqCard title="Traceability">
-                <TraceabilityPanel traceability={traceability} productName={record.product.name} />
-              </HqCard>
-            ) : null}
-
-            {showSuppliers ? (
-              <HqCard title="Supplier collaboration">
-                {(supplierRequests.data || []).length === 0 ? (
-                  <p className="text-sm text-[var(--ent-muted)]">
-                    No supplier requests for this product. Request evidence from an open issue.
-                  </p>
-                ) : (
-                  <ul className="space-y-3">
-                    {(supplierRequests.data || []).map((req) => (
-                      <li key={req.id} className="ent-panel-nested p-4 text-sm">
-                        <p className="font-medium text-[var(--ent-ink)]">{req.title || "Supplier request"}</p>
-                        <p className="text-[var(--ent-muted)] mt-1">
-                          {req.request_kind || "evidence"} · {req.collaboration_status || req.status}
-                          {req.due_at ? ` · due ${formatOperatorTime(req.due_at)}` : ""}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </HqCard>
             ) : null}
 
             {showImpact ? (
@@ -418,7 +425,7 @@ export default async function ProductRecordPage({
               </HqCard>
             ) : null}
 
-            {showHistory && (
+            {showCompliance && (
               <HqCard title="Issues">
                 {record.issues.length === 0 ? (
                   <p className="text-sm text-[var(--ent-muted)]">No issues on this product.</p>
@@ -447,7 +454,7 @@ export default async function ProductRecordPage({
               </HqCard>
             )}
 
-            {showHistory ? (
+            {showCompliance ? (
               <>
                 <HqCard title="Source records">
                   {record.sourceRecords.length === 0 ? (
@@ -479,7 +486,7 @@ export default async function ProductRecordPage({
               </>
             ) : null}
 
-            {tab === "passport" ? (
+            {showCompliance ? (
               <HqCard title="DPP & regulatory readiness">
                 {readiness ? <DppReadinessPanel report={readiness} /> : (
                   <p className="text-sm text-[var(--ent-muted)]">Readiness unavailable until EU DPP foundations are migrated.</p>
@@ -487,6 +494,16 @@ export default async function ProductRecordPage({
                 <div className="mt-4">
                   <AccessClassLegend />
                 </div>
+              </HqCard>
+            ) : null}
+
+            {showCircularity ? (
+              <HqCard title="Circularity">
+                <ProductCircularityPanel
+                  journey={journey}
+                  composition={productInfo.composition}
+                  resaleReady={resaleReadinessLabel}
+                />
               </HqCard>
             ) : null}
           </div>

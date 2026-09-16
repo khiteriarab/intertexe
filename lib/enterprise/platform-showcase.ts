@@ -4,7 +4,7 @@ import { PASSPORT_CASE_STUDY, caseStudyPassportUrl } from "./passport-case-study
 /** Canonical live product for platform marketing, demo, and publish visuals. */
 export const PLATFORM_CASE_STUDY = PASSPORT_CASE_STUDY;
 
-export const PLATFORM_PRODUCT_SHORT_NAME = "Brilliant Linen Shirt";
+export const PLATFORM_PRODUCT_SHORT_NAME = "Cotton Poplin Shirt";
 
 export const PLATFORM_PASSPORT_URL = caseStudyPassportUrl();
 
