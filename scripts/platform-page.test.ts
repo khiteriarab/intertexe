@@ -244,7 +244,13 @@ describe("Platform B2B sales page", () => {
     assert.match(deliveryVisual, /story-delivery-channels\.png/);
     assert.match(deliveryVisual, /story-carrier-qr-nfc\.png/);
     assert.match(deliveryVisual, /story-consumer-scan\.png/);
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/symbols/story-product-identity.png")));
+    const identityPng = fs.readFileSync(path.join(process.cwd(), "public/platform/symbols/story-product-identity.png"));
+    assert.equal(identityPng.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+    const deliveryCss = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals.css"), "utf8");
+    assert.match(deliveryCss, /\.platform-delivery-story-visual--symbol \{[\s\S]*?background: transparent;/);
+    assert.match(deliveryCss, /width: min\(100%, 11\.5rem\)/);
+    assert.match(deliveryCss, /\.platform-delivery-storyline-label \{[\s\S]*?clamp\(1\.55rem/);
+    assert.doesNotMatch(deliveryCss, /radial-gradient\(circle at 50% 42%, #1a1816/);
     assert.match(howItWorks, /PlatformProductPillarsVisual/);
     assert.match(visuals, /PlatformProductPillarsVisual/);
     assert.match(visuals, /PlatformWorkspaceExplorer/);

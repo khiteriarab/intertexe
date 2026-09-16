@@ -48,7 +48,7 @@ function StepVisual({ image, imageAlt }: { image: string; imageAlt: string }) {
   return (
     <div className="platform-delivery-story-visual platform-delivery-story-visual--symbol">
       <div className="platform-delivery-story-photo platform-delivery-story-photo--symbol">
-        <Image src={image} alt={imageAlt} fill className="object-contain p-4 sm:p-6" sizes="(max-width: 768px) 100vw, 420px" />
+        <Image src={image} alt={imageAlt} fill className="object-contain" sizes="(max-width: 768px) 220px, 200px" />
       </div>
     </div>
   );
