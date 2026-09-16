@@ -4,11 +4,13 @@ export type GettingStartedStep = {
   body: string;
   href: string;
   label: string;
-  icon: "products" | "issues" | "passports";
+  icon: "products" | "issues" | "passports" | "settings";
   done: boolean;
   minutesEstimate: number;
   /** Plain-language checklist for the workspace admin completing this step. */
   checklist: string[];
+  /** Inline preference form instead of navigating away. */
+  kind?: "link" | "region_units";
 };
 
 export function buildGettingStartedSteps(overview: {
@@ -16,8 +18,25 @@ export function buildGettingStartedSteps(overview: {
   issueCount: number;
   readyCount: number;
   publishedCount: number;
+  measurementConfigured?: boolean;
 }): GettingStartedStep[] {
   return [
+    {
+      id: "region",
+      title: "Set region and units",
+      body: "Tell us where the brand operates so INTERTEXE can use the right fields and units of measure.",
+      href: "/settings",
+      label: "Save preferences",
+      icon: "settings",
+      done: Boolean(overview.measurementConfigured),
+      minutesEstimate: 3,
+      kind: "region_units",
+      checklist: [
+        "Select the company headquarters or primary operating country",
+        "Confirm mass units (metric g/kg or imperial oz/lb)",
+        "These defaults apply to product weight and related fields across the workspace",
+      ],
+    },
     {
       id: "import",
       title: "Import your catalog",
