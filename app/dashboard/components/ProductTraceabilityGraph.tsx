@@ -10,9 +10,11 @@ import {
 export function ProductTraceabilityGraph({
   traceability,
   productName,
+  compact = false,
 }: {
   traceability: ProductTraceability;
   productName?: string | null;
+  compact?: boolean;
 }) {
   const graph = useMemo(
     () => buildProductTraceabilityGraph(traceability, productName),
@@ -24,7 +26,8 @@ export function ProductTraceabilityGraph({
   const selected = graph.nodes.find((n) => n.id === selectedId) || null;
 
   return (
-    <div className="ent-trace-graph">
+    <div className={`ent-trace-graph ${compact ? "ent-trace-graph--compact" : ""}`}>
+      {!compact ? (
       <div className="ent-trace-graph-summary">
         <div>
           <p className="ent-journey-eyebrow">Traceability completeness</p>
@@ -41,6 +44,7 @@ export function ProductTraceabilityGraph({
           </ul>
         ) : null}
       </div>
+      ) : null}
 
       <div className="ent-trace-graph-layout">
         <div className="ent-trace-graph-canvas" role="list" aria-label="Product traceability graph">
@@ -74,6 +78,7 @@ export function ProductTraceabilityGraph({
           ))}
         </div>
 
+        {!compact ? (
         <aside className="ent-trace-graph-detail" aria-live="polite">
           {selected ? (
             <>
@@ -111,6 +116,7 @@ export function ProductTraceabilityGraph({
             <p className="text-sm text-[var(--ent-muted)]">Select a node to inspect evidence and verification.</p>
           )}
         </aside>
+        ) : null}
       </div>
     </div>
   );

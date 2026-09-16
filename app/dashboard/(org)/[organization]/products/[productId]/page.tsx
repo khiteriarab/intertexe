@@ -39,6 +39,7 @@ import {
 import { GovernanceScorePanel } from "../../../../components/GovernanceScorePanel";
 import { ImpactReadinessPanel } from "../../../../components/ImpactReadinessPanel";
 import { ProductImpactModule } from "../../../../components/ProductImpactModule";
+import { ProductOverviewBoard } from "../../../../components/ProductOverviewBoard";
 import { buildProductImpactScores } from "../../../../../../lib/enterprise/product-impact-scores";
 import { parseMassInputToGrams } from "../../../../../../lib/enterprise/org-preferences";
 import { ProductJourneyMap } from "../../../../components/ProductJourneyMap";
@@ -218,10 +219,10 @@ export default async function ProductRecordPage({
   });
 
   const showOverview = tab === "overview";
-  const showMaterials = tab === "materials" || tab === "overview";
-  const showTraceability = tab === "traceability" || tab === "overview";
+  const showMaterials = tab === "materials";
+  const showTraceability = tab === "traceability";
   const showSuppliers = tab === "suppliers";
-  const showImpact = tab === "impact" || tab === "overview";
+  const showImpact = tab === "impact";
   const showPassport = tab === "passport";
   const showHistory = tab === "history";
 
@@ -254,16 +255,19 @@ export default async function ProductRecordPage({
         {showOverview ? (
           <>
             <ProductJourneyMap journey={journey} />
-            <div className="mb-6 grid lg:grid-cols-2 gap-6 items-start">
-              <HqCard>
-                <ProductInformationPanel info={productInfo} />
-              </HqCard>
-              <HqCard>
-                <ProductKeyIndicators indicators={keyIndicators} />
-              </HqCard>
-            </div>
-            <div className="mb-6">
-              <GovernanceScorePanel score={governance} />
+            <div className="mt-6">
+              <ProductOverviewBoard
+                basePath={basePath}
+                productName={String(record.product.name || "Product")}
+                info={productInfo}
+                indicators={keyIndicators}
+                composition={productInfo.composition}
+                provenanceCount={provenance.length}
+                supplierRequestCount={(supplierRequests.data || []).length}
+                openIssueCount={record.issues.filter((i) => i.status === "open").length}
+                traceability={traceability}
+                impactScores={impactScores}
+              />
             </div>
           </>
         ) : null}
@@ -328,10 +332,10 @@ export default async function ProductRecordPage({
               publicId={effectivePublicId}
             />
           </div>
-        ) : (
+        ) : showOverview ? null : (
         <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
           <div className="space-y-6">
-            {(showOverview || tab === "materials") && (
+            {showMaterials ? (
               <>
                 <HqCard>
                   <ProductInformationPanel info={productInfo} />
@@ -339,21 +343,18 @@ export default async function ProductRecordPage({
                 <HqCard>
                   <ProductKeyIndicators indicators={keyIndicators} />
                 </HqCard>
+                  <HqCard title="Materials & provenance">
+                  {provenance.length === 0 ? (
+                    <p className="text-sm text-[var(--ent-muted)]">No material fields on record yet.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {provenance.map((row) => (
+                        <ProvenanceInline key={row.fieldKey} provenance={row} />
+                      ))}
+                    </div>
+                  )}
+                </HqCard>
               </>
-            )}
-
-            {showMaterials ? (
-              <HqCard title="Materials & provenance">
-                {provenance.length === 0 ? (
-                  <p className="text-sm text-[var(--ent-muted)]">No material fields on record yet.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {provenance.map((row) => (
-                      <ProvenanceInline key={row.fieldKey} provenance={row} />
-                    ))}
-                  </div>
-                )}
-              </HqCard>
             ) : null}
 
             {showTraceability ? (
@@ -395,7 +396,7 @@ export default async function ProductRecordPage({
               </>
             ) : null}
 
-            {showOverview && identifierIssues.length ? (
+            {false && identifierIssues.length ? (
               <HqCard title="Identifier reconciliation">
                 <ul className="space-y-3">
                   {identifierIssues.map((issue) => {
@@ -417,7 +418,7 @@ export default async function ProductRecordPage({
               </HqCard>
             ) : null}
 
-            {(showOverview || showHistory) && (
+            {showHistory && (
               <HqCard title="Issues">
                 {record.issues.length === 0 ? (
                   <p className="text-sm text-[var(--ent-muted)]">No issues on this product.</p>
@@ -478,7 +479,7 @@ export default async function ProductRecordPage({
               </>
             ) : null}
 
-            {showOverview ? (
+            {tab === "passport" ? (
               <HqCard title="DPP & regulatory readiness">
                 {readiness ? <DppReadinessPanel report={readiness} /> : (
                   <p className="text-sm text-[var(--ent-muted)]">Readiness unavailable until EU DPP foundations are migrated.</p>
@@ -516,7 +517,7 @@ export default async function ProductRecordPage({
               />
             </div>
 
-            {showOverview && (
+            {false && (
               <PassportPreviewPanel
                 content={previewContent}
                 publicId={effectivePublicId}
@@ -526,7 +527,7 @@ export default async function ProductRecordPage({
               />
             )}
 
-            {showOverview && (
+            {false && (
               <ProductCarriersPanel
                 slug={membership.slug}
                 productId={productId}

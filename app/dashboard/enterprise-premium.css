@@ -1656,3 +1656,147 @@
   font-size: 0.875rem;
   color: var(--ent-ink, #1c1915);
 }
+
+/* —— Fairly Made–style product overview board —— */
+.enterprise-app .ent-overview-board {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.enterprise-app .ent-overview-card {
+  border: 1px solid rgba(28, 25, 21, 0.08);
+  border-radius: 1rem;
+  background: #fff;
+  padding: 1.25rem 1.35rem;
+}
+
+.enterprise-app .ent-overview-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.enterprise-app .ent-overview-section-title {
+  margin-top: 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ent-ink, #1c1915);
+}
+
+.enterprise-app .ent-overview-explore {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ent-petrol-deep, #3e6268);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.enterprise-app .ent-overview-explore:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.enterprise-app .ent-overview-materials-value {
+  font-size: 1.05rem;
+  line-height: 1.45;
+  color: var(--ent-ink, #1c1915);
+}
+
+.enterprise-app .ent-overview-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.enterprise-app .ent-overview-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 25, 21, 0.1);
+  font-size: 0.75rem;
+  color: var(--ent-ink-soft, #2c2620);
+  text-decoration: none;
+}
+
+.enterprise-app .ent-overview-chip span {
+  font-variant-numeric: tabular-nums;
+  color: var(--ent-muted, #6b6560);
+}
+
+.enterprise-app .ent-overview-trace-embed .ent-trace-graph-node {
+  padding: 0.65rem 0.85rem;
+}
+
+.enterprise-app .ent-overview-trace-embed .ent-trace-graph-node-label {
+  font-size: 0.8125rem;
+}
+
+.enterprise-app .ent-overview-impact-scores {
+  display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.enterprise-app .ent-overview-impact-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ent-muted-light, #8a847c);
+}
+
+.enterprise-app .ent-overview-impact-value {
+  margin-top: 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ent-ink, #1c1915);
+  font-variant-numeric: tabular-nums;
+}
+
+.enterprise-app .ent-overview-impact-meta {
+  font-size: 0.75rem;
+  color: var(--ent-muted, #6b6560);
+}
+
+.enterprise-app .ent-overview-impact-stack {
+  margin-top: 0.25rem;
+}
+
+.enterprise-app .ent-overview-impact-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.9rem;
+}
+
+.enterprise-app .ent-overview-impact-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--ent-muted, #6b6560);
+}
+
+.enterprise-app .ent-overview-impact-legend li span {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 2px;
+}
+
+.enterprise-app .ent-overview-impact-driver {
+  margin-top: 0.85rem;
+  font-size: 0.8125rem;
+  color: var(--ent-ink-soft, #2c2620);
+}
+
+.enterprise-app .ent-trace-graph--compact .ent-trace-graph-layout {
+  grid-template-columns: 1fr;
+}

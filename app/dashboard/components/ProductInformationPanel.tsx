@@ -7,7 +7,7 @@ import {
 } from "../../../lib/enterprise/org-preferences";
 import { entLabelClass } from "./EnterpriseUi";
 
-type ProductInfo = {
+export type ProductInfo = {
   name: string;
   sku: string | null;
   styleCode: string | null;
