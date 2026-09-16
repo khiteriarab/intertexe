@@ -8,37 +8,58 @@ import {
   GENERIC_SITE_DESCRIPTION,
   resolveShoppableBrandCount,
 } from "../lib/catalog-stats-labels";
+import { HOMEPAGE_REVALIDATE_SEC } from "../lib/homepage-cache-config";
 import { HomePageContent } from "./components/HomeClient";
 
-/** Request-time homepage — avoid Vercel SSG hangs when Supabase Disk IO is elevated. */
-export const dynamic = "force-dynamic";
+/** ISR homepage — serve from the CDN instead of a serverless round-trip on every visit. */
+export const revalidate = HOMEPAGE_REVALIDATE_SEC;
+
+async function loadHomePageData() {
+  try {
+    return await Promise.race([
+      getCachedHomePageData(),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("homepage-data-timeout")), 6000);
+      }),
+    ]);
+  } catch {
+    return undefined;
+  }
+}
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [platformStats, brandStats] = await Promise.all([
-    getCachedPlatformStats(),
-    getCachedBrandStats(),
-  ]);
-  const shoppableBrands = resolveShoppableBrandCount(
-    platformStats.brandCount,
-    brandStats.filter((b) => b.count >= 2).length
-  );
-  const description =
-    platformStats.productCount > 0 && shoppableBrands > 0
-      ? `INTERTEXE is the luxury fashion search engine for natural fabrics. Shop ${formatProductCountLabel(platformStats.productCount)} verified silk, cashmere, linen, wool, and cotton clothing across ${formatBrandCountLabel(shoppableBrands)} brands.`
-      : GENERIC_SITE_DESCRIPTION;
-  return {
+  const fallback: Metadata = {
     title: "INTERTEXE | The Luxury Fashion Search Engine for Natural Fabrics",
-    description,
+    description: GENERIC_SITE_DESCRIPTION,
     keywords: "INTERTEXE, intertexe, natural fiber fashion, shop by fabric, silk clothing, cashmere clothing, linen clothing, wool clothing, cotton clothing, luxury fashion, natural fabric clothing, sustainable fashion",
     alternates: { canonical: "https://www.intertexe.com" },
     verification: {
       google: "qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRWlPBoOkStg",
     },
   };
+  try {
+    const [platformStats, brandStats] = await Promise.race([
+      Promise.all([getCachedPlatformStats(), getCachedBrandStats()]),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("homepage-metadata-timeout")), 4000);
+      }),
+    ]);
+    const shoppableBrands = resolveShoppableBrandCount(
+      platformStats.brandCount,
+      brandStats.filter((b) => b.count >= 2).length
+    );
+    const description =
+      platformStats.productCount > 0 && shoppableBrands > 0
+        ? `INTERTEXE is the luxury fashion search engine for natural fabrics. Shop ${formatProductCountLabel(platformStats.productCount)} verified silk, cashmere, linen, wool, and cotton clothing across ${formatBrandCountLabel(shoppableBrands)} brands.`
+        : GENERIC_SITE_DESCRIPTION;
+    return { ...fallback, description };
+  } catch {
+    return fallback;
+  }
 }
 
 export default async function HomePage() {
-  const data = await getCachedHomePageData();
+  const data = await loadHomePageData();
 
   return (
     <>

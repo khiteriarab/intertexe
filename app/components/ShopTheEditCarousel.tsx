@@ -106,7 +106,7 @@ export function ShopTheEditCarousel({
                   src={imageUrl}
                   alt={slide.title}
                   className="absolute inset-0 w-full h-full object-cover object-top"
-                  loading={i < slides.length ? "eager" : "lazy"}
+                  loading={i === 0 ? "eager" : "lazy"}
                   draggable={false}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />

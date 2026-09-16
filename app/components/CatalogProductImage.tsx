@@ -63,7 +63,7 @@ export function CatalogProductImage({
           }`}
           loading={eager ? "eager" : "lazy"}
           decoding="async"
-          fetchPriority={eager ? "high" : "auto"}
+          fetchPriority="auto"
           draggable={false}
         />
       )}

@@ -367,7 +367,9 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
       initialData !== undefined &&
       (!(initialData.newInProducts?.length) || !(initialData.saleProducts?.length));
     if (initialData !== undefined && !ssrMissingRails) return;
-    fetch("/api/homepage")
+    const ac = new AbortController();
+    const timer = window.setTimeout(() => ac.abort(), 8000);
+    fetch("/api/homepage", { signal: ac.signal })
       .then((r) => {
         if (!r.ok) throw new Error("API error");
         return r.json();
@@ -377,7 +379,12 @@ export function HomePageContent({ initialData }: { initialData?: HomePageData })
           setData(d);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => window.clearTimeout(timer));
+    return () => {
+      window.clearTimeout(timer);
+      ac.abort();
+    };
   }, [initialData]);
 
   const displayCount =

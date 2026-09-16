@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "./components/AppShell";
 import { ConsumerCookieConsent } from "./components/ConsumerCookieConsent";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { DeferredSiteMetrics } from "./components/DeferredSiteMetrics";
 import { GENERIC_SITE_DESCRIPTION } from "../lib/catalog-stats-labels";
 import { CATALOG_STATS } from "../lib/catalog-stats";
 import {
@@ -14,6 +14,18 @@ import {
   SITE_URL,
   pageAlternates,
 } from "../lib/seo-international";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-dm-sans",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-playfair",
+});
 
 const HOME_DESCRIPTION =
   `Discover ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces across ${CATALOG_STATS.brandCountFormatted} brands. Shop silk, cashmere, linen, wool and cotton clothing. Scan any label to find better natural fiber alternatives at your price point.`;
@@ -142,23 +154,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${dmSans.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
         <meta
           name="google-site-verification"
           content="qXXzGyPefX7A6jC4g3doUUbA7esRlm4IRWlPBoOkStg"
         />
         <style dangerouslySetInnerHTML={{ __html: `nextjs-portal,next-devtools,next-badge-root{display:none!important}` }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
-          rel="stylesheet"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
@@ -173,8 +175,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <ConsumerCookieConsent />
         </Suspense>
-        <Analytics />
-        <SpeedInsights />
+        <DeferredSiteMetrics />
       </body>
     </html>
   );

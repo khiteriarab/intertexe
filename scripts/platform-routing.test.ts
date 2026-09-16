@@ -120,7 +120,23 @@ test("platform host strips consumer chrome from login", () => {
   assert.match(layout, /AppShell/);
   assert.match(layout, /ConsumerCookieConsent/);
   assert.doesNotMatch(layout, /Loading chunk/);
+  assert.doesNotMatch(layout, /fonts\.googleapis/);
+  assert.match(layout, /next\/font\/google/);
+  assert.match(layout, /DeferredSiteMetrics/);
+  assert.doesNotMatch(layout, /@vercel\/analytics/);
+  assert.doesNotMatch(layout, /@vercel\/speed-insights/);
   assert.equal(fs.existsSync(path.join(process.cwd(), "app/loading.tsx")), false);
+  const nextConfig = fs.readFileSync(path.join(process.cwd(), "next.config.js"), "utf8");
+  assert.doesNotMatch(nextConfig, /no-store, no-cache, must-revalidate, proxy-revalidate/);
+  const homePage = fs.readFileSync(path.join(process.cwd(), "app/page.tsx"), "utf8");
+  assert.doesNotMatch(homePage, /force-dynamic/);
+  assert.match(homePage, /revalidate = HOMEPAGE_REVALIDATE_SEC/);
+  const catalogImage = fs.readFileSync(
+    path.join(process.cwd(), "app/components/CatalogProductImage.tsx"),
+    "utf8"
+  );
+  assert.match(catalogImage, /fetchPriority="auto"/);
+  assert.doesNotMatch(catalogImage, /fetchPriority=\{eager/);
   assert.match(cookies, /\/platform/);
   assert.match(cookies, /isPlatformHost/);
   assert.doesNotMatch(cookies, /usePathname/);

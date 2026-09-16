@@ -56,7 +56,7 @@ export function HomepageHeroSection({
           aria-hidden={!isVisible}
           loading={isFirst ? "eager" : "lazy"}
           fetchPriority={isFirst ? "high" : "auto"}
-          decoding={isFirst ? "sync" : "async"}
+          decoding="async"
           draggable={false}
           className={`homepage-hero-img transition-opacity duration-500 ${
             isVisible ? "opacity-100" : "opacity-0"

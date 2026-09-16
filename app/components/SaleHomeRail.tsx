@@ -202,7 +202,7 @@ export function SaleHomeRail({ products: initialProducts }: { products?: any[] }
             <SaleProductCard
               key={product.id}
               product={product}
-              eager={i < 8}
+              eager={i < 2}
               suppressNavigate={suppressNavigate}
             />
           ))}

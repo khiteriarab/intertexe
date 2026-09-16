@@ -85,9 +85,7 @@ export function ClientApp({
         <Suspense fallback={null}>
           <RouteProgress />
         </Suspense>
-        <Suspense fallback={children}>
-          <AppFrame platformHost={platformHost}>{children}</AppFrame>
-        </Suspense>
+        <AppFrame platformHost={platformHost}>{children}</AppFrame>
         <Toaster position="top-right" />
       </AuthLoginPromptProvider>
     </QueryClientProvider>
