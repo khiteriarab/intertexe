@@ -182,19 +182,23 @@ export async function lookupProductionComposition(
     return applyDocumentedEvidence(mapped, evidence);
   }
 
+  // Look up by UPC only. Filtering approved/is_active in SQL made Postgres
+  // walk the live-catalog created_at index (~500k rows, >60s) and time out,
+  // so a GS1 prefix match was returned instead of the stored composition.
   const productQuery = await supabase
     .from("products")
     .select(
       "upc, brand_name, name, composition, natural_fiber_percent, approved, is_active, country_of_origin, care_instructions"
     )
-    .eq("approved", "yes")
-    .eq("is_active", true)
     .in("upc", candidates)
-    .limit(3);
+    .limit(5);
 
   const products = productQuery.error ? [] : productQuery.data || [];
-
-  const product = (products || []).find((row) => String(row.composition || "").trim()) || products?.[0];
+  const product = (products || []).find((row) => {
+    const approved = String(row.approved || "").toLowerCase() === "yes";
+    const active = row.is_active !== false;
+    return approved && active && String(row.composition || "").trim();
+  });
   if (product) {
     return applyDocumentedEvidence(fromProduct(product as ProductRow, gtin), evidence);
   }
