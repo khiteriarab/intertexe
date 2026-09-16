@@ -3204,28 +3204,44 @@
 
 .enterprise-app .ent-product-tabs {
   display: flex;
-  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1.75rem;
   overflow-x: auto;
-  padding-bottom: 0.75rem;
+  padding: 0.15rem 0 1rem;
   margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(28, 25, 21, 0.08);
   -webkit-overflow-scrolling: touch;
 }
 
 .enterprise-app .ent-product-tab {
   flex-shrink: 0;
-  padding: 0.5rem 0.9rem;
-  border-radius: 999px;
-  font-size: 0.8125rem;
+  padding: 0.2rem 0;
+  border-radius: 0;
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  font-weight: 500;
   color: var(--ent-muted);
-  border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.45);
+  border: none;
+  background: transparent;
+  text-decoration: none;
+  text-underline-offset: 0.32em;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.enterprise-app .ent-product-tab:hover {
+  color: var(--ent-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
 }
 
 .enterprise-app .ent-product-tab.is-active {
   color: var(--ent-ink);
-  border-color: rgba(62, 98, 104, 0.15);
-  background: white;
+  border: none;
+  background: transparent;
   font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
 }
 
 .enterprise-app .ent-trace-panel { display: grid; gap: 1.25rem; }

@@ -449,17 +449,17 @@
 
 .platform-lifecycle-journey-label {
   display: inline-block;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 500;
-  color: var(--platform-primary);
+  font-size: 1.0625rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 600;
+  color: var(--platform-ink);
   margin-bottom: 0.85rem;
   padding: 0;
   border: none;
   background: none;
   text-decoration: none;
-  text-underline-offset: 0.28em;
+  text-underline-offset: 0.32em;
 }
 
 .platform-lifecycle-journey-title {
@@ -632,20 +632,20 @@
   flex: 0 0 auto;
   appearance: none;
   min-height: 0;
-  padding: 0.2rem 0;
+  padding: 0.25rem 0;
   border: none;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
   color: #8a847c;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 1.0625rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
   font-weight: 500;
   text-align: left;
   cursor: pointer;
   text-decoration: none;
-  text-underline-offset: 0.28em;
+  text-underline-offset: 0.32em;
   transition: color 0.2s ease, text-decoration-color 0.2s ease;
 }
 
@@ -656,9 +656,10 @@
 }
 
 .platform-what-slides-tab.is-active {
-  color: var(--platform-primary);
+  color: var(--platform-ink);
+  font-weight: 600;
   text-decoration: underline;
-  text-decoration-thickness: 1px;
+  text-decoration-thickness: 1.5px;
   background: transparent;
   border: none;
   box-shadow: none;
