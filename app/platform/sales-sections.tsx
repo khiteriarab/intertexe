@@ -11,7 +11,6 @@ import {
 } from "./sales-visuals";
 import { PlatformGraphic } from "./PlatformGraphic";
 import { PlatformBrandShowcaseHero } from "./PlatformBrandShowcaseHero";
-import { PlatformIntelligenceSection } from "./intelligence/PlatformIntelligenceSection";
 import { Body, Eyebrow, Heading, PrimaryLink, SecondaryLink, SERIF } from "./platform-ui";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import { PLATFORM_GRAPHICS } from "../../lib/platform-graphics";
@@ -214,9 +213,9 @@ export function SalesGovernedRecordSection() {
   );
 }
 
-/** @deprecated Intelligence is embedded in PlatformHowItWorksSection */
+/** @deprecated Intelligence is embedded in PlatformHowItWorksSection. Previously rendered PlatformIntelligenceSection. */
 export function SalesIntelligenceSection() {
-  return <PlatformIntelligenceSection />;
+  return null;
 }
 
 const IDENTITY_CAPABILITIES = [

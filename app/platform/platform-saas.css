@@ -7,6 +7,9 @@
  */
 
 .platform-shell {
+  --itx-canvas: #ffffff;
+  --itx-surface: #ffffff;
+  --itx-highlight: #ffffff;
   --platform-bg: #ffffff;
   --platform-surface: #ffffff;
   --platform-ink: #111111;
@@ -33,6 +36,11 @@
   background-color: #ffffff;
   color: var(--platform-ink);
   font-family: var(--itx-sans, "DM Sans", ui-sans-serif, system-ui, sans-serif);
+}
+
+html:has(.platform-shell),
+html:has(.platform-shell) body {
+  background: #ffffff;
 }
 
 /* Kill beige editorial atmosphere */

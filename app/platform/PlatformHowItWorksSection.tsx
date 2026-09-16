@@ -7,7 +7,7 @@ import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
 export function PlatformHowItWorksSection() {
   return (
-    <section id="how-it-works" className="scroll-mt-28 platform-product-story platform-what-it-is">
+    <section id="how-it-works" className="scroll-mt-28 platform-product-story">
       <div className="platform-band platform-band--white">
         <div className="platform-band-inner">
           <p className="platform-band-kicker">How INTERTEXE works</p>
