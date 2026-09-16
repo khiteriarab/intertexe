@@ -10,13 +10,38 @@ export type LifecycleSlideAssets = {
   sceneImage?: string;
 };
 
+/**
+ * Uses the workspace / product graphics already shipped in public/platform
+ * (hero silk, ingest/structure/diagnose laptops, issues, passport, experience).
+ * Empty slots previously rendered the "Ready for stage artwork" placeholder.
+ */
 export const LIFECYCLE_SLIDE_ASSETS: Record<
   "create" | "verify" | "comply" | "distribute" | "extend",
   LifecycleSlideAssets
 > = {
-  create: {},
-  verify: {},
-  comply: {},
-  distribute: {},
-  extend: {},
+  create: {
+    productImage: "/platform/hero-silk-dress.png",
+    softwareImage: "/platform/understand-ingest-laptop.jpg",
+    softwareImageSecondary: "/platform/workspace-products.png",
+  },
+  verify: {
+    productImage: "/platform/hero-silk-dress.png",
+    softwareImage: "/platform/understand-issues.png",
+    softwareImageSecondary: "/platform/workspace-issues.png",
+  },
+  comply: {
+    productImage: "/platform/hero-product-window.png",
+    softwareImage: "/platform/hero-workspace-desktop.png",
+    softwareImageSecondary: "/platform/understand-structure-laptop.jpg",
+  },
+  distribute: {
+    productImage: "/platform/hero-silk-dress.png",
+    softwareImage: "/platform/act-passport.png",
+    softwareImageSecondary: "/platform/hero-workspace-desktop.png",
+  },
+  extend: {
+    productImage: "/platform/hero-silk-dress.png",
+    softwareImage: "/platform/hero-lifecycle-experience.jpg",
+    softwareImageSecondary: "/platform/surface-iphone-scanner.jpg",
+  },
 };

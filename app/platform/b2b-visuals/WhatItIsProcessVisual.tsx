@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { PASSPORT_CASE_STUDY } from "../../../lib/enterprise/passport-case-study";
+import { PLATFORM_SALES_DEMO } from "../../../lib/enterprise/passport-case-study";
 import { DiscoverLink, SERIF } from "../platform-ui";
 import { LIFECYCLE_SLIDE_ASSETS } from "./lifecycle-slide-assets";
 
@@ -83,7 +83,7 @@ type SlideId = (typeof SLIDES)[number]["id"];
 
 function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boolean }) {
   const assets = LIFECYCLE_SLIDE_ASSETS[slideId];
-  const productSrc = assets.productImage ?? PASSPORT_CASE_STUDY.imageUrl;
+  const productSrc = assets.productImage ?? PLATFORM_SALES_DEMO.imageUrl;
   const sceneSrc = assets.sceneImage;
   const softwareSrc = assets.softwareImage;
 
@@ -106,7 +106,7 @@ function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boole
         <div className="platform-lifecycle-graphic-product-frame">
           <Image
             src={productSrc}
-            alt={PASSPORT_CASE_STUDY.productName}
+            alt={PLATFORM_SALES_DEMO.productName}
             fill
             className="object-contain object-bottom"
             sizes="(max-width: 768px) 45vw, 260px"

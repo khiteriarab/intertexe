@@ -209,7 +209,7 @@ describe("Platform B2B sales page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/act-passport.png")));
   });
 
-  it("uses sliding lifecycle screens with product and software placeholders", () => {
+  it("uses sliding lifecycle screens with product and workspace graphics", () => {
     const processVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"), "utf8");
     const slideAssets = fs.readFileSync(
       path.join(process.cwd(), "app/platform/b2b-visuals/lifecycle-slide-assets.ts"),
@@ -218,15 +218,23 @@ describe("Platform B2B sales page", () => {
     assert.match(processVisual, /platform-lifecycle-journey/);
     assert.match(processVisual, /DiscoverLink/);
     assert.match(processVisual, /LIFECYCLE_SLIDE_ASSETS/);
-    assert.match(slideAssets, /productImage/);
-    assert.match(slideAssets, /softwareImage/);
-    assert.match(processVisual, /PASSPORT_CASE_STUDY/);
+    assert.match(slideAssets, /productImage: "\/platform\/hero-silk-dress\.png"/);
+    assert.match(slideAssets, /softwareImage: "\/platform\/understand-ingest-laptop\.jpg"/);
+    assert.match(slideAssets, /softwareImage: "\/platform\/understand-issues\.png"/);
+    assert.match(slideAssets, /softwareImage: "\/platform\/hero-workspace-desktop\.png"/);
+    assert.match(slideAssets, /softwareImage: "\/platform\/act-passport\.png"/);
+    assert.match(slideAssets, /softwareImage: "\/platform\/hero-lifecycle-experience\.jpg"/);
+    assert.match(processVisual, /PLATFORM_SALES_DEMO/);
+    assert.doesNotMatch(processVisual, /PASSPORT_CASE_STUDY/);
     assert.match(processVisual, /Create/);
     assert.match(processVisual, /Verify/);
     assert.match(processVisual, /Comply/);
     assert.match(processVisual, /Distribute/);
     assert.match(processVisual, /Extend/);
     assert.doesNotMatch(processVisual, /understand-ingest-laptop/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/understand-ingest-laptop.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-workspace-desktop.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-silk-dress.png")));
   });
 
   it("uses native sales visuals instead of editorial PNG decks", () => {
