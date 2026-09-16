@@ -113,7 +113,7 @@
   }
 }
 
-/* Circular wardrobe editorial banner — greenery with ivory fade */
+/* Circular wardrobe editorial banner — wide landscape with ivory fade */
 .platform-circular-banner {
   position: relative;
   min-height: 11rem;
@@ -123,12 +123,26 @@
   box-shadow: 0 16px 48px rgba(44, 38, 32, 0.07);
 }
 
+.platform-circular-banner--wide {
+  min-height: 12.5rem;
+  border-radius: 2rem;
+}
+
 @media (min-width: 768px) {
   .platform-circular-banner { min-height: 12.5rem; }
+  .platform-circular-banner--wide { min-height: 15rem; }
+}
+
+@media (min-width: 1024px) {
+  .platform-circular-banner--wide { min-height: 17.5rem; }
 }
 
 .platform-circular-banner-photo {
-  object-position: 58% 46%;
+  object-position: 55% 42%;
+}
+
+.platform-circular-banner--wide .platform-circular-banner-photo {
+  object-position: 52% 38%;
 }
 
 .platform-circular-banner-gradient {
@@ -169,6 +183,21 @@
 
 .platform-circular-banner-copy {
   max-width: 18rem;
+}
+
+.platform-circular-banner--wide .platform-circular-banner-copy {
+  max-width: 22rem;
+}
+
+@media (min-width: 1024px) {
+  .platform-circular-banner--wide .platform-circular-banner-inner {
+    padding: 2rem 2.25rem 2.15rem;
+    min-height: 17.5rem;
+  }
+
+  .platform-circular-banner--wide .platform-circular-banner-copy {
+    max-width: 26rem;
+  }
 }
 
 .platform-circular-banner-eyebrow {

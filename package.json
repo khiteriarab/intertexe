@@ -41,7 +41,8 @@
     "audit:customer-zero-integrity": "npx tsx scripts/audit-customer-zero-integrity.ts",
     "audit:pilot-passports": "npx tsx scripts/audit-pilot-passports.ts",
     "provision:pilot-qr": "npx tsx scripts/provision-pilot-qr.ts",
-    "provision:case-study": "npx tsx scripts/provision-case-study-lifecycle.ts"
+    "provision:case-study": "npx tsx scripts/provision-case-study-lifecycle.ts",
+    "dev:next": "next dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -1,20 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
-import { EDITORIAL_GREENERY_BANNER, EDITORIAL_GREENERY_BANNER_2X } from "../../lib/editorial-assets";
+import { EDITORIAL_BLOSSOM_BANNER } from "../../lib/editorial-assets";
 import { SERIF } from "./platform-ui";
 
-/** Editorial greenery banner — ivory fade + landscape, selective brand moment. */
+/** Editorial blossom banner — wide ivory fade + landscape, selective brand moment. */
 export function PlatformCircularWardrobeBanner() {
   return (
-    <section className="platform-circular-banner-section max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-14">
-      <div className="platform-circular-banner">
+    <section className="platform-circular-banner-section max-w-[1440px] mx-auto px-3 sm:px-5 md:px-6 lg:px-8 py-10 sm:py-14">
+      <div className="platform-circular-banner platform-circular-banner--wide">
         <Image
-          src={EDITORIAL_GREENERY_BANNER}
+          src={EDITORIAL_BLOSSOM_BANNER}
           alt=""
           fill
           className="platform-circular-banner-photo object-cover"
-          sizes="(max-width: 768px) 100vw, 1152px"
-          srcSet={`${EDITORIAL_GREENERY_BANNER} 1x, ${EDITORIAL_GREENERY_BANNER_2X} 2x`}
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 92vw, 1440px"
           priority={false}
         />
         <div className="platform-circular-banner-gradient" aria-hidden />

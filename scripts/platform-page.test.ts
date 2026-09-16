@@ -55,7 +55,7 @@ describe("Platform B2B sales page", () => {
     assert.match(processVisual, /Comply/);
     assert.match(processVisual, /Distribute/);
     assert.match(processVisual, /Extend/);
-    assert.match(processVisual, /platform-what-cards-expanded/);
+    assert.match(processVisual, /platform-what-slides/);
     assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
     assert.match(howItWorks, /Analyze/);
     assert.match(howItWorks, /Benchmark/);

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { QRCodeCanvas } from "qrcode.react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   caseStudyPassportUrl,
   PASSPORT_CASE_STUDY,
@@ -38,55 +38,76 @@ const NEXT_LIFE_ACTIONS = [
   { label: "Recycle", sub: "Fiber-aware routing" },
 ] as const;
 
-const STAGES = [
+/** Five-stage lifecycle — one slide per step. */
+const SLIDES = [
   {
-    id: "create" as const,
+    id: "create",
     micro: "Input",
     label: "Create",
     title: "Capture and structure product data",
     copy: "Bring together product identity, composition, supplier inputs, specifications, and manufacturing details into one structured foundation.",
-    chips: ["Product identity", "Materials & composition", "Supplier + factory data", "Source files & specifications"],
+    bullets: [
+      "Product identity",
+      "Materials & composition",
+      "Supplier + factory data",
+      "Source files & specifications",
+    ],
     foot: "From disconnected files to one usable data layer.",
+    diagramId: "create" as const,
   },
   {
-    id: "verify" as const,
+    id: "verify",
     micro: "Validation",
     label: "Verify",
     title: "Find gaps before they become risk",
     copy: "Identify missing composition, incomplete traceability, unsupported claims, and supplier evidence gaps across the product record.",
-    chips: ["Missing composition", "Supplier evidence gaps", "Unsupported claims", "Incomplete manufacturing details"],
+    bullets: [
+      "Missing composition",
+      "Supplier evidence gaps",
+      "Unsupported claims",
+      "Incomplete manufacturing details",
+    ],
     foot: "Turn fragmented product data into trusted product data.",
+    diagramId: "verify" as const,
   },
   {
-    id: "comply" as const,
+    id: "comply",
     micro: "Compliance",
     label: "Comply",
     title: "Prepare products for trust and regulation",
     copy: "Turn approved product data into a governed record ready for Digital Product Passports, regulatory requirements, and controlled transparency.",
-    chips: ["Digital Product Passport ready", "Traceability structure", "Regulatory requirements", "Approved evidence layer"],
+    bullets: [
+      "Digital Product Passport ready",
+      "Traceability structure",
+      "Regulatory requirements",
+      "Approved evidence layer",
+    ],
     foot: "One governed record. Ready for regulation, audit, and consumer use.",
+    diagramId: "comply" as const,
   },
   {
-    id: "distribute" as const,
+    id: "distribute",
     micro: "Delivery",
     label: "Distribute",
     title: "One record, every channel",
     copy: "Publish product data through hosted passports, branded experiences, or API so every channel works from the same governed source.",
-    chips: ["Hosted passport", "Brand domain", "Headless API", "One record, every channel"],
+    bullets: ["Hosted passport", "Brand domain", "Headless API", "One record, every channel"],
     foot: "Infrastructure — not just a page builder.",
+    diagramId: "distribute" as const,
   },
   {
-    id: "extend" as const,
+    id: "extend",
     micro: "Circularity",
     label: "Extend",
     title: "Support the product after the sale",
     copy: "Power scan-based care, repair, resale, transfer, and circular next-life experiences from the same product record.",
-    chips: ["Composition & origin", "Care & aftercare", "Repair guidance", "Resale & transfer"],
+    bullets: ["Composition & origin", "Care & aftercare", "Repair guidance", "Resale & transfer"],
     foot: "From first sale to second life.",
+    diagramId: "extend" as const,
   },
-];
+] as const;
 
-type StageId = (typeof STAGES)[number]["id"];
+type StageId = "create" | "verify" | "comply" | "distribute" | "extend";
 
 function DeliverChannelIcon({ kind }: { kind: "phone" | "globe" | "code" }) {
   const cls = "h-3.5 w-3.5 text-[var(--platform-primary)]";
@@ -113,49 +134,6 @@ function DeliverChannelIcon({ kind }: { kind: "phone" | "globe" | "code" }) {
   );
 }
 
-function StageIcon({ kind }: { kind: StageId }) {
-  const cls = "h-[20px] w-[20px] text-[var(--platform-primary)]";
-  if (kind === "create") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-        <ellipse cx="12" cy="6" rx="7" ry="3" />
-        <path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
-        <path d="M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4" />
-      </svg>
-    );
-  }
-  if (kind === "verify") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-        <path d="M12 9v4M12 17h.01" />
-        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      </svg>
-    );
-  }
-  if (kind === "comply") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-        <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" />
-        <path d="M9 12l2 2 4-4" />
-      </svg>
-    );
-  }
-  if (kind === "distribute") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-        <rect x="5" y="3" width="14" height="18" rx="2" />
-        <path d="M9 8h6M9 12h6M9 16h4" />
-      </svg>
-    );
-  }
-  return (
-    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-      <path d="M4 12a8 8 0 0 1 13.5-5.7M20 12a8 8 0 0 1-13.5 5.7" />
-      <path d="M17 3h3v3M7 21H4v-3" />
-    </svg>
-  );
-}
-
 function ExperienceArrow({ className = "" }: { className?: string }) {
   return (
     <span className={`platform-what-experience-arrow ${className}`} aria-hidden>
@@ -164,9 +142,9 @@ function ExperienceArrow({ className = "" }: { className?: string }) {
   );
 }
 
-function CreateDiagram({ active }: { active: boolean }) {
+function CreateDiagram() {
   return (
-    <div className={`platform-what-diagram ${active ? "is-active" : ""}`}>
+    <div className="platform-what-diagram is-active">
       <div className="platform-what-source-grid">
         {SOURCES.map((source) => (
           <div key={source.label} className="platform-what-diagram-pill">
@@ -207,7 +185,7 @@ function CreateDiagram({ active }: { active: boolean }) {
   );
 }
 
-function VerifyDiagram({ active }: { active: boolean }) {
+function VerifyDiagram() {
   const issues = [
     { label: "Missing composition", tone: "warn" as const },
     { label: "Supplier evidence gap", tone: "warn" as const },
@@ -216,7 +194,7 @@ function VerifyDiagram({ active }: { active: boolean }) {
   ];
 
   return (
-    <div className={`platform-what-diagram ${active ? "is-active" : ""}`}>
+    <div className="platform-what-diagram is-active">
       <div className="platform-what-verify-list">
         {issues.map((issue) => (
           <div
@@ -238,12 +216,12 @@ function VerifyDiagram({ active }: { active: boolean }) {
   );
 }
 
-function ComplyDiagram({ active }: { active: boolean }) {
+function ComplyDiagram() {
   const passportUrl = caseStudyPassportUrl();
   const displayName = PASSPORT_CASE_STUDY.productName;
 
   return (
-    <div className={`platform-what-diagram ${active ? "is-active" : ""}`}>
+    <div className="platform-what-diagram is-active">
       <div className="platform-what-publish-flow">
         <div className="platform-what-approved-chip">
           <div className="relative h-9 w-8 shrink-0 overflow-hidden rounded-md bg-[#f0ebe4]">
@@ -287,12 +265,12 @@ function ComplyDiagram({ active }: { active: boolean }) {
   );
 }
 
-function DistributeDiagram({ active }: { active: boolean }) {
+function DistributeDiagram() {
   const passportUrl = caseStudyPassportUrl();
   const displayName = PASSPORT_CASE_STUDY.productName;
 
   return (
-    <div className={`platform-what-diagram platform-what-diagram-deliver ${active ? "is-active" : ""}`}>
+    <div className="platform-what-diagram platform-what-diagram-deliver is-active">
       <div className="platform-what-experience-phone">
         <div className="platform-what-phone-mock">
           <div className="platform-what-phone-screen">
@@ -334,11 +312,11 @@ function DistributeDiagram({ active }: { active: boolean }) {
   );
 }
 
-function ExtendDiagram({ active }: { active: boolean }) {
+function ExtendDiagram() {
   const passportUrl = caseStudyPassportUrl();
 
   return (
-    <div className={`platform-what-diagram platform-what-diagram-extend ${active ? "is-active" : ""}`}>
+    <div className="platform-what-diagram platform-what-diagram-extend is-active">
       <div className="platform-what-experience-phone">
         <div className="platform-what-phone-mock">
           <div className="platform-what-phone-screen">
@@ -372,63 +350,125 @@ function ExtendDiagram({ active }: { active: boolean }) {
   );
 }
 
-function StageDiagram({ id, active }: { id: StageId; active: boolean }) {
-  if (id === "create") return <CreateDiagram active={active} />;
-  if (id === "verify") return <VerifyDiagram active={active} />;
-  if (id === "comply") return <ComplyDiagram active={active} />;
-  if (id === "distribute") return <DistributeDiagram active={active} />;
-  return <ExtendDiagram active={active} />;
+function StageDiagram({ id }: { id: StageId }) {
+  if (id === "create") return <CreateDiagram />;
+  if (id === "verify") return <VerifyDiagram />;
+  if (id === "comply") return <ComplyDiagram />;
+  if (id === "distribute") return <DistributeDiagram />;
+  return <ExtendDiagram />;
 }
 
 export function WhatItIsProcessVisual() {
-  const [activeId, setActiveId] = useState<StageId>("create");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const slide = SLIDES[activeIndex];
+
+  const go = useCallback((index: number) => {
+    setActiveIndex((index + SLIDES.length) % SLIDES.length);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") go(activeIndex - 1);
+      if (event.key === "ArrowRight") go(activeIndex + 1);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeIndex, go]);
 
   return (
-    <div className="platform-what-cards platform-what-cards-five platform-what-cards-expanded">
-      {STAGES.map((stage, i) => {
-        const active = activeId === stage.id;
-        return (
-          <div key={stage.id} className="contents">
-            <article
-              className={`platform-what-card ${active ? "is-active" : ""}`}
-              onMouseEnter={() => setActiveId(stage.id)}
+    <div className="platform-what-slides">
+      <div
+        role="tablist"
+        aria-label="Product lifecycle stages"
+        className="platform-what-slides-tabs"
+      >
+        {SLIDES.map((item, index) => {
+          const selected = index === activeIndex;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              id={`lifecycle-tab-${item.id}`}
+              aria-selected={selected}
+              aria-controls="lifecycle-slide-panel"
+              onClick={() => go(index)}
+              className={`platform-what-slides-tab ${selected ? "is-active" : ""}`}
             >
-              <button
-                type="button"
-                className="platform-what-card-trigger"
-                aria-pressed={active}
-                onClick={() => setActiveId(stage.id)}
-              >
-                <p className="platform-what-card-micro">{stage.micro}</p>
-                <header className="platform-what-card-header">
-                  <span className="platform-what-card-icon" aria-hidden>
-                    <StageIcon kind={stage.id} />
-                  </span>
-                  <div>
-                    <p className="platform-what-card-label">{stage.label}</p>
-                    <h3 className="platform-what-card-title" style={SERIF}>
-                      {stage.title}
-                    </h3>
-                  </div>
-                </header>
-                <p className="platform-what-card-copy">{stage.copy}</p>
-                <ul className="platform-what-card-chips">
-                  {stage.chips.map((chip) => (
-                    <li key={chip}>{chip}</li>
-                  ))}
-                </ul>
-                <StageDiagram id={stage.id} active={active} />
-                <p className="platform-what-card-foot">{stage.foot}</p>
-              </button>
-            </article>
-            {i < STAGES.length - 1 ? (
-              <div className="hidden xl:flex items-center justify-center px-0.5" aria-hidden>
-                <span className="platform-what-between-arrow">→</span>
-              </div>
-            ) : null}
+              <span className="platform-what-slides-tab-index">{index + 1}</span>
+              <span className="platform-what-slides-tab-label">{item.label}</span>
+              <span className="platform-what-slides-tab-micro">{item.micro}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        id="lifecycle-slide-panel"
+        role="tabpanel"
+        aria-labelledby={`lifecycle-tab-${slide.id}`}
+        className="platform-what-slide-panel"
+      >
+        <div className="platform-what-slide-copy">
+          <p className="platform-what-slide-micro">{slide.micro}</p>
+          <p className="platform-what-slide-label">{slide.label}</p>
+          <h3 className="platform-what-slide-title" style={SERIF}>
+            {slide.title}
+          </h3>
+          <p className="platform-what-slide-body">{slide.copy}</p>
+          <ul className="platform-what-slide-bullets">
+            {slide.bullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
+          </ul>
+          <p className="platform-what-slide-foot">{slide.foot}</p>
+        </div>
+
+        <div className="platform-what-slide-visual">
+          <button
+            type="button"
+            onClick={() => go(activeIndex - 1)}
+            aria-label="Previous lifecycle stage"
+            className="platform-what-slides-nav platform-what-slides-nav--prev"
+          >
+            ←
+          </button>
+
+          <div className="platform-what-slide-frame">
+            <div className="platform-what-slide-image-slot" aria-hidden>
+              {/* Reserved for stage photography — diagrams below until assets are added. */}
+            </div>
+            <div className="platform-what-slide-diagram">
+              <StageDiagram id={slide.diagramId} />
+            </div>
           </div>
-        );
-      })}
+
+          <button
+            type="button"
+            onClick={() => go(activeIndex + 1)}
+            aria-label="Next lifecycle stage"
+            className="platform-what-slides-nav platform-what-slides-nav--next"
+          >
+            →
+          </button>
+        </div>
+      </div>
+
+      <div className="platform-what-slides-footer">
+        <div className="platform-what-slides-dots" aria-hidden>
+          {SLIDES.map((item, index) => (
+            <span
+              key={item.id}
+              className={`platform-what-slides-dot ${index === activeIndex ? "is-active" : ""}`}
+            />
+          ))}
+        </div>
+        <p className="platform-what-slides-progress">
+          {slide.label}
+          <span className="platform-what-slides-progress-sep" aria-hidden>·</span>
+          {activeIndex + 1} of {SLIDES.length}
+        </p>
+      </div>
     </div>
   );
 }

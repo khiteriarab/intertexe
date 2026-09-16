@@ -26,19 +26,9 @@ export function PlatformHowItWorksSection() {
         </div>
 
         <div className="platform-product-story-lifecycle">
-          <header className="platform-product-story-phase-head">
-            <p className="platform-product-story-phase-kicker">One record · entire product lifecycle</p>
-            <p className="platform-product-story-flow-line">
-              <span>Raw data</span>
-              <span className="platform-product-story-flow-arrow" aria-hidden>→</span>
-              <span>Governed record</span>
-              <span className="platform-product-story-flow-arrow" aria-hidden>→</span>
-              <span>Passport · API · consumer</span>
-              <span className="platform-product-story-flow-arrow" aria-hidden>→</span>
-              <span>Intelligence · action</span>
-            </p>
-          </header>
-
+          <p className="platform-product-story-phase-kicker mb-6 lg:mb-8">
+            One record · entire product lifecycle
+          </p>
           <WhatItIsProcessVisual />
         </div>
 

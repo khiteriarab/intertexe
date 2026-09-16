@@ -83,6 +83,8 @@ export const HOMEPAGE_HERO_IMAGE_V8_LANDSCAPE_2X = "/hero-editorial-v8-landscape
 /** Misty hills / forest — circular wardrobe editorial banners (not grotto landscape crop). */
 export const EDITORIAL_GREENERY_BANNER = "/editorial-greenery-banner-2400.jpg";
 export const EDITORIAL_GREENERY_BANNER_2X = "/editorial-greenery-banner-3840.jpg";
+/** Cherry blossom landscape — circular wardrobe CTA banner on /platform. */
+export const EDITORIAL_BLOSSOM_BANNER = "/editorial-blossom-banner.jpg";
 
 export type HomepageHeroSlide = {
   url: string;
