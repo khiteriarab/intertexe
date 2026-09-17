@@ -36,13 +36,17 @@ describe("Platform B2B sales page", () => {
     const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
     assert.match(showcaseHero, /See it live/i);
     assert.match(showcaseHero, /\/platform\/demo/);
+    assert.ok(showcaseHero.indexOf("platform-showcase-hero-cta") < showcaseHero.indexOf("platform-showcase-hero-sub"));
+    const showcaseCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-tokens.css"), "utf8");
+    assert.match(showcaseCss, /@media \(max-width: 767px\)/);
+    assert.match(showcaseCss, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+    assert.match(nav, /hidden md:inline-flex/);
     assert.match(showcaseHero, /One product record\. From conception to next life\./);
     assert.match(showcaseHero, /stat\.figure/);
     assert.match(showcaseHero, /stat\.qualifier/);
     const showcaseStats = fs.readFileSync(path.join(process.cwd(), "lib/enterprise/platform-brand-showcase.ts"), "utf8");
     assert.match(showcaseStats, /figure: "70%"/);
     assert.match(showcaseStats, /qualifier: "faster"/);
-    const showcaseCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-tokens.css"), "utf8");
     assert.match(showcaseCss, /platform-showcase-stat::before/);
     assert.match(showcaseCss, /clamp\(3\.35rem/);
     assert.match(showcaseStats, /Resale activation/);
@@ -231,7 +235,7 @@ describe("Platform B2B sales page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/act-passport.png")));
   });
 
-  it("uses sliding lifecycle screens with product and workspace graphics", () => {
+  it("uses sliding lifecycle screens with workspace screenshots only", () => {
     const processVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"), "utf8");
     const slideAssets = fs.readFileSync(
       path.join(process.cwd(), "app/platform/b2b-visuals/lifecycle-slide-assets.ts"),
@@ -240,18 +244,32 @@ describe("Platform B2B sales page", () => {
     assert.match(processVisual, /platform-lifecycle-journey/);
     assert.match(processVisual, /DiscoverLink/);
     assert.match(processVisual, /LIFECYCLE_SLIDE_ASSETS/);
-    assert.match(slideAssets, /productImage: "\/platform\/hero-silk-dress\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-overview\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-issues-inbox\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-operations\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-product-record\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-suppliers\.png"/);
+    assert.match(processVisual, /platform-lifecycle-journey-lead/);
+    assert.match(processVisual, /platform-lifecycle-accordion/);
+    assert.match(processVisual, /aria-expanded/);
+    assert.match(processVisual, /platform-lifecycle-graphic--screenshot/);
+    assert.match(processVisual, /platform-lifecycle-graphic-shot/);
+    assert.match(processVisual, /sizes="\(max-width: 767px\) 92vw, 420px"/);
+    assert.match(processVisual, /open \? \(/);
+    assert.doesNotMatch(processVisual, /tablist/);
+    assert.doesNotMatch(processVisual, /platform-lifecycle-journey-visual/);
+    assert.doesNotMatch(processVisual, /platform-lifecycle-graphic-scene/);
+    assert.doesNotMatch(processVisual, /platform-lifecycle-graphic-product/);
+    assert.doesNotMatch(processVisual, /PLATFORM_SALES_DEMO/);
+    assert.doesNotMatch(slideAssets, /productImage/);
+    assert.doesNotMatch(slideAssets, /sceneImage/);
+    assert.doesNotMatch(slideAssets, /hero-silk-dress/);
+    assert.doesNotMatch(slideAssets, /\/fabrics\//);
+    assert.match(slideAssets, /create:[\s\S]*softwareImage: "\/platform\/workspace-overview\.png"/);
+    assert.match(slideAssets, /verify:[\s\S]*softwareImage: "\/platform\/workspace-issues-inbox\.png"/);
+    assert.match(slideAssets, /comply:[\s\S]*softwareImage: "\/platform\/workspace-operations\.png"/);
+    assert.match(slideAssets, /distribute:[\s\S]*softwareImage: "\/platform\/workspace-product-record\.png"/);
+    assert.match(slideAssets, /extend:[\s\S]*softwareImage: "\/platform\/workspace-suppliers\.png"/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-overview.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-issues-inbox.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-operations.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-product-record.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-suppliers.png")));
-    assert.match(processVisual, /PLATFORM_SALES_DEMO/);
     assert.doesNotMatch(processVisual, /PASSPORT_CASE_STUDY/);
     assert.match(processVisual, /Create/);
     assert.match(processVisual, /Verify/);
@@ -272,7 +290,13 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(sections, /GovernedRecordVisual/);
     assert.match(homeSections, /DeliveryModesVisual/);
     const deliveryVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/DeliveryModesVisual.tsx"), "utf8");
+    const deliveryCss = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals.css"), "utf8");
     assert.match(deliveryVisual, /platform-delivery-storyline/);
+    assert.match(deliveryVisual, /aria-expanded/);
+    assert.match(deliveryVisual, /setOpenIndex/);
+    assert.match(deliveryVisual, /index === openIndex/);
+    assert.match(deliveryVisual, /active \? \(/);
+    assert.match(deliveryCss, /platform-delivery-storyline-reveal/);
     assert.match(deliveryVisual, /One governed record · three delivery modes · not mutually exclusive/);
     assert.match(deliveryVisual, /story-product-identity\.png/);
     assert.match(deliveryVisual, /story-publish-approved\.png/);
@@ -281,9 +305,8 @@ describe("Platform B2B sales page", () => {
     assert.match(deliveryVisual, /story-consumer-scan\.png/);
     const identityPng = fs.readFileSync(path.join(process.cwd(), "public/platform/symbols/story-product-identity.png"));
     assert.equal(identityPng.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
-    const deliveryCss = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals.css"), "utf8");
     assert.match(deliveryCss, /\.platform-delivery-story-visual--symbol \{[\s\S]*?background: transparent;/);
-    assert.match(deliveryCss, /width: 16rem/);
+    assert.match(deliveryCss, /\.platform-delivery-story-visual--symbol \{[\s\S]*?width: 3\.5rem/);
     assert.match(deliveryCss, /\.platform-delivery-storyline-label \{[\s\S]*?clamp\(1\.55rem/);
     assert.doesNotMatch(deliveryCss, /radial-gradient\(circle at 50% 42%, #1a1816/);
     assert.match(howItWorks, /PlatformProductPillarsVisual/);

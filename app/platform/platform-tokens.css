@@ -523,6 +523,79 @@
   max-width: 12rem;
 }
 
+@media (max-width: 767px) {
+  .platform-showcase-hero-inner {
+    padding: 1.35rem 1rem 2rem;
+  }
+
+  .platform-showcase-hero-copy {
+    margin-bottom: 1.15rem;
+  }
+
+  .platform-showcase-hero-eyebrow {
+    margin-bottom: 0.7rem;
+  }
+
+  .platform-showcase-hero-title {
+    font-size: 2.05rem;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    margin-bottom: 1rem;
+  }
+
+  .platform-showcase-hero-cta {
+    border-radius: 999px;
+    padding: 0.8rem 1.45rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .platform-showcase-hero-sub {
+    display: none;
+  }
+
+  .platform-showcase-grid-wrap {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-bottom: 1.5rem;
+    overflow: visible;
+  }
+
+  .platform-showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0;
+    transform: none;
+    mask-image: none;
+  }
+
+  .platform-showcase-row,
+  .platform-showcase-row--offset {
+    display: contents;
+    padding-left: 0;
+  }
+
+  .platform-showcase-tile {
+    width: auto;
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 0.75rem;
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+
+  .platform-showcase-stats {
+    gap: 1.25rem 1rem;
+    padding-top: 1.25rem;
+  }
+
+  .platform-showcase-stat-value {
+    font-size: 2rem;
+  }
+}
+
 /* Request demo page — Fairly Made-style split layout */
 .platform-request-page {
   background: var(--platform-bg, #faf9f7);

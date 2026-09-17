@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { PASSPORT_CASE_STUDY } from "../../../lib/enterprise/passport-case-study";
-import { useReducedMotion, useScrollProgress } from "../b2b-motion";
 
 const STORY_STEPS = [
   {
@@ -51,8 +51,8 @@ function StepVisual({ image, imageAlt, wide = false }: { image: string; imageAlt
         <Image
           src={image}
           alt={imageAlt}
-          width={wide ? 840 : 560}
-          height={wide ? 640 : 560}
+          width={72}
+          height={72}
           unoptimized
           className="platform-delivery-story-symbol-img"
         />
@@ -62,9 +62,7 @@ function StepVisual({ image, imageAlt, wide = false }: { image: string; imageAlt
 }
 
 export function DeliveryModesVisual() {
-  const [trackRef, progress] = useScrollProgress();
-  const reduced = useReducedMotion();
-  const activeCount = reduced ? STORY_STEPS.length : Math.max(1, Math.ceil(progress * STORY_STEPS.length));
+  const [openIndex, setOpenIndex] = useState(0);
 
   return (
     <figure className="m-0 platform-delivery-storyline">
@@ -72,18 +70,18 @@ export function DeliveryModesVisual() {
         One governed record · three delivery modes · not mutually exclusive
       </p>
 
-      <div ref={trackRef} className="platform-delivery-storyline-track">
+      <div className="platform-delivery-storyline-track">
         <div className="platform-delivery-storyline-rail" aria-hidden>
           <div className="platform-delivery-storyline-line-bg" />
           <div
             className="platform-delivery-storyline-line-fill"
-            style={{ transform: `scaleY(${progress})` }}
+            style={{ transform: `scaleY(${(openIndex + 1) / STORY_STEPS.length})` }}
           />
         </div>
 
         <ol className="platform-delivery-storyline-steps">
           {STORY_STEPS.map((step, index) => {
-            const active = index < activeCount;
+            const active = index === openIndex;
             const side = index % 2 === 0 ? "left" : "right";
             return (
               <li
@@ -92,17 +90,40 @@ export function DeliveryModesVisual() {
               >
                 <div className="platform-delivery-storyline-copy">
                   <p className="platform-delivery-storyline-index">{index + 1}.</p>
-                  <h3 className="platform-delivery-storyline-label">{step.label}</h3>
-                  <p className="platform-delivery-storyline-detail">{step.detail}</p>
+                  <h3 className="platform-delivery-storyline-label">
+                    <button
+                      type="button"
+                      className="platform-delivery-storyline-trigger"
+                      aria-expanded={active}
+                      aria-controls={`delivery-step-panel-${step.id}`}
+                      id={`delivery-step-${step.id}`}
+                      onClick={() => setOpenIndex(index)}
+                    >
+                      {step.label}
+                    </button>
+                  </h3>
+                  <div
+                    id={`delivery-step-panel-${step.id}`}
+                    role="region"
+                    aria-labelledby={`delivery-step-${step.id}`}
+                    aria-hidden={!active}
+                    className="platform-delivery-storyline-reveal"
+                  >
+                    <div className="platform-delivery-storyline-reveal-inner">
+                      <p className="platform-delivery-storyline-detail">{step.detail}</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="platform-delivery-storyline-node-wrap">
                   <span className={`platform-delivery-storyline-node ${active ? "is-active" : ""}`} />
                 </div>
 
-                <div className="platform-delivery-storyline-visual-wrap">
-                  <StepVisual image={step.image} imageAlt={step.imageAlt} wide={"wide" in step && step.wide} />
-                </div>
+                {active ? (
+                  <div className="platform-delivery-storyline-visual-wrap">
+                    <StepVisual image={step.image} imageAlt={step.imageAlt} wide={"wide" in step && step.wide} />
+                  </div>
+                ) : null}
               </li>
             );
           })}
