@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { PLATFORM_SALES_DEMO } from "../../../lib/enterprise/passport-case-study";
 import { DiscoverLink } from "../platform-ui";
 import { LIFECYCLE_SLIDE_ASSETS } from "./lifecycle-slide-assets";
 
@@ -90,38 +89,10 @@ const SOFTWARE_ALTS: Record<SlideId, string> = {
 };
 
 function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boolean }) {
-  const assets = LIFECYCLE_SLIDE_ASSETS[slideId];
-  const productSrc = assets.productImage ?? PLATFORM_SALES_DEMO.imageUrl;
-  const sceneSrc = assets.sceneImage;
-  const softwareSrc = assets.softwareImage;
+  const softwareSrc = LIFECYCLE_SLIDE_ASSETS[slideId].softwareImage;
 
   return (
-    <div className={`platform-lifecycle-graphic platform-lifecycle-graphic--${slideId}`}>
-      {sceneSrc ? (
-        <Image
-          src={sceneSrc}
-          alt=""
-          fill
-          className="platform-lifecycle-graphic-scene object-cover"
-          sizes="(max-width: 1024px) 100vw, 55vw"
-          priority={isActive}
-        />
-      ) : (
-        <div className="platform-lifecycle-graphic-fallback" aria-hidden />
-      )}
-      <div className="platform-lifecycle-graphic-scrim" aria-hidden />
-      <div className="platform-lifecycle-graphic-product">
-        <div className="platform-lifecycle-graphic-product-frame">
-          <Image
-            src={productSrc}
-            alt={PLATFORM_SALES_DEMO.productName}
-            fill
-            className="object-contain object-bottom"
-            sizes="(max-width: 768px) 45vw, 260px"
-            priority={isActive}
-          />
-        </div>
-      </div>
+    <div className={`platform-lifecycle-graphic platform-lifecycle-graphic--screenshot platform-lifecycle-graphic--${slideId}`}>
       {softwareSrc ? (
         <div className="platform-lifecycle-graphic-ui">
           <Image
@@ -129,7 +100,8 @@ function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boole
             alt={SOFTWARE_ALTS[slideId]}
             fill
             className="object-cover object-top"
-            sizes="(max-width: 768px) 50vw, 320px"
+            sizes="(max-width: 1024px) 100vw, 55vw"
+            priority={isActive}
           />
         </div>
       ) : (

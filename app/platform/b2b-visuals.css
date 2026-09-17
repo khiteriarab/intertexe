@@ -529,8 +529,16 @@
   min-height: 22rem;
   border-radius: 0;
   overflow: hidden;
-  background: #10151b;
-  border: 0;
+  background: #f4f1ec;
+  border: 1px solid rgba(28, 25, 21, 0.08);
+}
+
+.platform-lifecycle-graphic--screenshot .platform-lifecycle-graphic-ui {
+  inset: 0;
+  right: auto;
+  top: auto;
+  width: auto;
+  aspect-ratio: auto;
 }
 
 .platform-lifecycle-graphic-scene {
@@ -569,10 +577,7 @@
 
 .platform-lifecycle-graphic-ui {
   position: absolute;
-  right: 4%;
-  top: 8%;
-  width: min(82%, 720px);
-  aspect-ratio: 16 / 10;
+  inset: 0;
   z-index: 3;
 }
 

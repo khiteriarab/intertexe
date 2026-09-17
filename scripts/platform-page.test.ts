@@ -231,7 +231,7 @@ describe("Platform B2B sales page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/act-passport.png")));
   });
 
-  it("uses sliding lifecycle screens with product and workspace graphics", () => {
+  it("uses sliding lifecycle screens with workspace screenshots only", () => {
     const processVisual = fs.readFileSync(path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"), "utf8");
     const slideAssets = fs.readFileSync(
       path.join(process.cwd(), "app/platform/b2b-visuals/lifecycle-slide-assets.ts"),
@@ -240,7 +240,14 @@ describe("Platform B2B sales page", () => {
     assert.match(processVisual, /platform-lifecycle-journey/);
     assert.match(processVisual, /DiscoverLink/);
     assert.match(processVisual, /LIFECYCLE_SLIDE_ASSETS/);
-    assert.match(slideAssets, /productImage: "\/platform\/hero-silk-dress\.png"/);
+    assert.match(processVisual, /platform-lifecycle-graphic--screenshot/);
+    assert.doesNotMatch(processVisual, /platform-lifecycle-graphic-scene/);
+    assert.doesNotMatch(processVisual, /platform-lifecycle-graphic-product/);
+    assert.doesNotMatch(processVisual, /PLATFORM_SALES_DEMO/);
+    assert.doesNotMatch(slideAssets, /productImage/);
+    assert.doesNotMatch(slideAssets, /sceneImage/);
+    assert.doesNotMatch(slideAssets, /hero-silk-dress/);
+    assert.doesNotMatch(slideAssets, /\/fabrics\//);
     assert.match(slideAssets, /softwareImage: "\/platform\/workspace-overview\.png"/);
     assert.match(slideAssets, /softwareImage: "\/platform\/workspace-issues-inbox\.png"/);
     assert.match(slideAssets, /softwareImage: "\/platform\/workspace-operations\.png"/);
@@ -251,7 +258,6 @@ describe("Platform B2B sales page", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-operations.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-product-record.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-suppliers.png")));
-    assert.match(processVisual, /PLATFORM_SALES_DEMO/);
     assert.doesNotMatch(processVisual, /PASSPORT_CASE_STUDY/);
     assert.match(processVisual, /Create/);
     assert.match(processVisual, /Verify/);
