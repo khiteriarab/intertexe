@@ -98,9 +98,10 @@ function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boole
           <Image
             src={softwareSrc}
             alt={SOFTWARE_ALTS[slideId]}
-            fill
-            className="object-cover object-top"
-            sizes="(max-width: 1024px) 100vw, 55vw"
+            width={152}
+            height={152}
+            className="platform-lifecycle-graphic-shot"
+            sizes="68px"
             priority={isActive}
           />
         </div>
@@ -160,29 +161,28 @@ export function WhatItIsProcessVisual() {
         className="platform-lifecycle-journey-panel"
         key={slide.id}
       >
-        <div className="platform-lifecycle-journey-copy">
-          <p className="platform-lifecycle-journey-label">{slide.label}</p>
-          <h3 className="platform-lifecycle-journey-title">
-            {slide.title}
-          </h3>
-          <p className="platform-lifecycle-journey-body">{slide.copy}</p>
-          <ul className="platform-lifecycle-journey-bullets">
-            {slide.bullets.map((bullet) => (
-              <li key={bullet}>
-                <span className="platform-lifecycle-journey-check" aria-hidden>
-                  ✓
-                </span>
-                <span>{bullet}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="platform-lifecycle-journey-foot">{slide.foot}</p>
-          <DiscoverLink href={slide.discoverHref}>Discover</DiscoverLink>
-        </div>
-
-        <div className="platform-lifecycle-journey-visual">
+        <div className="platform-lifecycle-journey-lead">
           <StageGraphic slideId={slide.id} isActive />
+          <div className="platform-lifecycle-journey-copy">
+            <p className="platform-lifecycle-journey-label">{slide.label}</p>
+            <h3 className="platform-lifecycle-journey-title">
+              {slide.title}
+            </h3>
+          </div>
         </div>
+        <p className="platform-lifecycle-journey-body">{slide.copy}</p>
+        <ul className="platform-lifecycle-journey-bullets">
+          {slide.bullets.map((bullet) => (
+            <li key={bullet}>
+              <span className="platform-lifecycle-journey-check" aria-hidden>
+                ✓
+              </span>
+              <span>{bullet}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="platform-lifecycle-journey-foot">{slide.foot}</p>
+        <DiscoverLink href={slide.discoverHref}>Discover</DiscoverLink>
       </div>
     </div>
   );

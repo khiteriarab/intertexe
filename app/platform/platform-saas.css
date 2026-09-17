@@ -232,6 +232,18 @@ html:has(.platform-shell) body {
   padding-bottom: 4.5rem;
 }
 
+@media (max-width: 767px) {
+  .platform-showcase-hero-inner {
+    padding-top: 1.35rem;
+    padding-bottom: 2rem;
+  }
+
+  .platform-showcase-hero-title {
+    font-size: 2.05rem;
+    max-width: none;
+  }
+}
+
 .platform-showcase-hero-title {
   font-size: var(--platform-display);
   line-height: 0.98;
@@ -290,54 +302,49 @@ html:has(.platform-shell) body {
   border: 0;
 }
 
-/* ── Workflow: workspace screenshot fills the stage ── */
+/* ── Workflow: profile-size screenshot symbol next to the wording ── */
 
 .platform-lifecycle-journey-panel {
-  gap: 3rem;
+  gap: 0.85rem;
+  max-width: 40rem;
 }
 
 @media (min-width: 1024px) {
   .platform-lifecycle-journey-panel {
-    grid-template-columns: minmax(15rem, 0.62fr) minmax(0, 1.55fr);
-    gap: 4rem;
-    align-items: center;
+    grid-template-columns: none;
+    gap: 0.85rem;
+    align-items: flex-start;
   }
 }
 
-.platform-lifecycle-journey-visual {
-  min-height: 32rem;
-}
-
-@media (min-width: 1024px) {
-  .platform-lifecycle-journey-visual {
-    min-height: 42rem;
-  }
+.platform-lifecycle-journey-visual,
+.platform-lifecycle-graphic {
+  min-height: 0;
 }
 
 .platform-lifecycle-graphic {
-  min-height: 32rem;
-  border-radius: 0;
-  border: 1px solid rgba(17, 17, 17, 0.08);
-  background: #f4f1ec;
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  background: #fff;
 }
 
 @media (min-width: 1024px) {
   .platform-lifecycle-graphic {
-    min-height: 42rem;
+    width: 4.25rem;
+    height: 4.25rem;
   }
 }
 
-.platform-lifecycle-graphic--screenshot .platform-lifecycle-graphic-ui {
-  inset: 0;
-  right: auto;
-  top: auto;
-  width: auto;
-  aspect-ratio: auto;
+.platform-lifecycle-graphic-shot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
 }
 
 .platform-lifecycle-graphic-ui img {
   border-radius: 0;
-  border: 0;
   box-shadow: none;
 }
 
@@ -620,7 +627,7 @@ html:has(.platform-shell) body {
 .platform-delivery-story-visual--symbol {
   background: transparent;
   overflow: visible;
-  width: min(100%, 22rem);
+  width: 3.5rem;
 }
 
 .platform-delivery-story-visual {
@@ -637,7 +644,7 @@ html:has(.platform-shell) body {
 }
 
 .platform-delivery-storyline-visual-wrap {
-  min-width: 16rem;
+  min-width: 0;
 }
 
 .platform-delivery-storyline-step {
@@ -645,7 +652,11 @@ html:has(.platform-shell) body {
 }
 
 .platform-delivery-storyline-step:not(.is-active) .platform-delivery-storyline-copy {
-  opacity: 0.45;
+  opacity: 0.55;
+}
+
+.platform-delivery-storyline-trigger {
+  font: inherit;
 }
 
 .platform-delivery-storyline-node {

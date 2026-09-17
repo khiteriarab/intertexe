@@ -55,14 +55,14 @@ export function PlatformBrandShowcaseHero() {
           <h1 className="platform-showcase-hero-title" style={SERIF}>
             One product record. From conception to next life.
           </h1>
-          <p className="platform-showcase-hero-sub">
-            Turn fragmented product, material, supplier, and manufacturing data into one governed record that powers
-            traceability, compliance, Digital Product Passports, consumer intelligence, care, and resale.
-          </p>
           <Link href="/platform/demo" className="platform-showcase-hero-cta">
             See it live
             <span aria-hidden>→</span>
           </Link>
+          <p className="platform-showcase-hero-sub">
+            Turn fragmented product, material, supplier, and manufacturing data into one governed record that powers
+            traceability, compliance, Digital Product Passports, consumer intelligence, care, and resale.
+          </p>
         </div>
 
         <div className="platform-showcase-grid-wrap">
