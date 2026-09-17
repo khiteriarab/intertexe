@@ -323,16 +323,17 @@ html:has(.platform-shell) body {
 }
 
 .platform-lifecycle-graphic {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 8.75rem;
+  height: 5.5rem;
+  border-radius: 0.55rem;
   border: 1px solid rgba(17, 17, 17, 0.1);
   background: #fff;
 }
 
 @media (min-width: 1024px) {
   .platform-lifecycle-graphic {
-    width: 4.25rem;
-    height: 4.25rem;
+    width: 10.5rem;
+    height: 6.5rem;
   }
 }
 

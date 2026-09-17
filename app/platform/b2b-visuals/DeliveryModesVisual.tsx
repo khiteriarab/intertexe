@@ -119,11 +119,11 @@ export function DeliveryModesVisual() {
                   <span className={`platform-delivery-storyline-node ${active ? "is-active" : ""}`} />
                 </div>
 
-                <div className="platform-delivery-storyline-visual-wrap" aria-hidden={!active}>
-                  <div className="platform-delivery-storyline-reveal-inner">
+                {active ? (
+                  <div className="platform-delivery-storyline-visual-wrap">
                     <StepVisual image={step.image} imageAlt={step.imageAlt} wide={"wide" in step && step.wide} />
                   </div>
-                </div>
+                ) : null}
               </li>
             );
           })}

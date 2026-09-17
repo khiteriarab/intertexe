@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { DiscoverLink } from "../platform-ui";
 import { LIFECYCLE_SLIDE_ASSETS } from "./lifecycle-slide-assets";
 
@@ -88,102 +88,82 @@ const SOFTWARE_ALTS: Record<SlideId, string> = {
   extend: "INTERTEXE suppliers — evidence requests, linked products, and supplier collaboration.",
 };
 
-function StageGraphic({ slideId, isActive }: { slideId: SlideId; isActive: boolean }) {
+function StageGraphic({ slideId }: { slideId: SlideId }) {
   const softwareSrc = LIFECYCLE_SLIDE_ASSETS[slideId].softwareImage;
+  if (!softwareSrc) return null;
 
   return (
     <div className={`platform-lifecycle-graphic platform-lifecycle-graphic--screenshot platform-lifecycle-graphic--${slideId}`}>
-      {softwareSrc ? (
-        <div className="platform-lifecycle-graphic-ui">
-          <Image
-            src={softwareSrc}
-            alt={SOFTWARE_ALTS[slideId]}
-            width={152}
-            height={152}
-            className="platform-lifecycle-graphic-shot"
-            sizes="68px"
-            priority={isActive}
-          />
-        </div>
-      ) : (
-        <div className="platform-lifecycle-graphic-ui-slot" aria-hidden>
-          <p className="platform-lifecycle-graphic-ui-slot-label">Workspace graphic</p>
-          <p className="platform-lifecycle-graphic-ui-slot-note">Ready for stage artwork</p>
-        </div>
-      )}
+      <div className="platform-lifecycle-graphic-ui">
+        <Image
+          src={softwareSrc}
+          alt={SOFTWARE_ALTS[slideId]}
+          width={280}
+          height={176}
+          className="platform-lifecycle-graphic-shot"
+          sizes="140px"
+          priority
+        />
+      </div>
     </div>
   );
 }
 
 export function WhatItIsProcessVisual() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const slide = SLIDES[activeIndex];
-
-  const go = useCallback((index: number) => {
-    setActiveIndex((index + SLIDES.length) % SLIDES.length);
-  }, []);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowLeft") go(activeIndex - 1);
-      if (event.key === "ArrowRight") go(activeIndex + 1);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeIndex, go]);
 
   return (
     <div className="platform-lifecycle-journey">
-      <div role="tablist" aria-label="Product lifecycle stages" className="platform-what-slides-tabs">
-        {SLIDES.map((item, index) => {
-          const selected = index === activeIndex;
-          return (
+      {SLIDES.map((item, index) => {
+        const open = index === activeIndex;
+        const panelId = `lifecycle-slide-panel-${item.id}`;
+        return (
+          <div
+            key={item.id}
+            className={`platform-lifecycle-accordion ${open ? "is-open" : ""}`}
+          >
             <button
-              key={item.id}
               type="button"
-              role="tab"
               id={`lifecycle-tab-${item.id}`}
-              aria-selected={selected}
-              aria-controls="lifecycle-slide-panel"
-              onClick={() => go(index)}
-              className={`platform-what-slides-tab ${selected ? "is-active" : ""}`}
+              className={`platform-what-slides-tab platform-lifecycle-accordion-trigger ${open ? "is-active" : ""}`}
+              aria-expanded={open}
+              aria-controls={panelId}
+              onClick={() => setActiveIndex(index)}
             >
               {item.label}
             </button>
-          );
-        })}
-      </div>
 
-      <div
-        id="lifecycle-slide-panel"
-        role="tabpanel"
-        aria-labelledby={`lifecycle-tab-${slide.id}`}
-        className="platform-lifecycle-journey-panel"
-        key={slide.id}
-      >
-        <div className="platform-lifecycle-journey-lead">
-          <StageGraphic slideId={slide.id} isActive />
-          <div className="platform-lifecycle-journey-copy">
-            <p className="platform-lifecycle-journey-label">{slide.label}</p>
-            <h3 className="platform-lifecycle-journey-title">
-              {slide.title}
-            </h3>
+            {open ? (
+              <div
+                id={panelId}
+                role="region"
+                aria-labelledby={`lifecycle-tab-${item.id}`}
+                className="platform-lifecycle-journey-panel"
+              >
+                <div className="platform-lifecycle-journey-lead">
+                  <StageGraphic slideId={item.id} />
+                  <div className="platform-lifecycle-journey-copy">
+                    <h3 className="platform-lifecycle-journey-title">{item.title}</h3>
+                  </div>
+                </div>
+                <p className="platform-lifecycle-journey-body">{item.copy}</p>
+                <ul className="platform-lifecycle-journey-bullets">
+                  {item.bullets.map((bullet) => (
+                    <li key={bullet}>
+                      <span className="platform-lifecycle-journey-check" aria-hidden>
+                        ✓
+                      </span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="platform-lifecycle-journey-foot">{item.foot}</p>
+                <DiscoverLink href={item.discoverHref}>Discover</DiscoverLink>
+              </div>
+            ) : null}
           </div>
-        </div>
-        <p className="platform-lifecycle-journey-body">{slide.copy}</p>
-        <ul className="platform-lifecycle-journey-bullets">
-          {slide.bullets.map((bullet) => (
-            <li key={bullet}>
-              <span className="platform-lifecycle-journey-check" aria-hidden>
-                ✓
-              </span>
-              <span>{bullet}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="platform-lifecycle-journey-foot">{slide.foot}</p>
-        <DiscoverLink href={slide.discoverHref}>Discover</DiscoverLink>
-      </div>
+        );
+      })}
     </div>
   );
 }

@@ -245,9 +245,13 @@ describe("Platform B2B sales page", () => {
     assert.match(processVisual, /DiscoverLink/);
     assert.match(processVisual, /LIFECYCLE_SLIDE_ASSETS/);
     assert.match(processVisual, /platform-lifecycle-journey-lead/);
+    assert.match(processVisual, /platform-lifecycle-accordion/);
+    assert.match(processVisual, /aria-expanded/);
     assert.match(processVisual, /platform-lifecycle-graphic--screenshot/);
     assert.match(processVisual, /platform-lifecycle-graphic-shot/);
-    assert.match(processVisual, /sizes="68px"/);
+    assert.match(processVisual, /sizes="140px"/);
+    assert.match(processVisual, /open \? \(/);
+    assert.doesNotMatch(processVisual, /tablist/);
     assert.doesNotMatch(processVisual, /platform-lifecycle-journey-visual/);
     assert.doesNotMatch(processVisual, /platform-lifecycle-graphic-scene/);
     assert.doesNotMatch(processVisual, /platform-lifecycle-graphic-product/);
@@ -291,6 +295,7 @@ describe("Platform B2B sales page", () => {
     assert.match(deliveryVisual, /aria-expanded/);
     assert.match(deliveryVisual, /setOpenIndex/);
     assert.match(deliveryVisual, /index === openIndex/);
+    assert.match(deliveryVisual, /active \? \(/);
     assert.match(deliveryCss, /platform-delivery-storyline-reveal/);
     assert.match(deliveryVisual, /One governed record · three delivery modes · not mutually exclusive/);
     assert.match(deliveryVisual, /story-product-identity\.png/);
