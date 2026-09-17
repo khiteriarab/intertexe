@@ -98,10 +98,10 @@ function StageGraphic({ slideId }: { slideId: SlideId }) {
         <Image
           src={softwareSrc}
           alt={SOFTWARE_ALTS[slideId]}
-          width={280}
-          height={176}
+          width={1138}
+          height={678}
           className="platform-lifecycle-graphic-shot"
-          sizes="140px"
+          sizes="(max-width: 767px) 92vw, 420px"
           priority
         />
       </div>
@@ -144,21 +144,21 @@ export function WhatItIsProcessVisual() {
                   <StageGraphic slideId={item.id} />
                   <div className="platform-lifecycle-journey-copy">
                     <h3 className="platform-lifecycle-journey-title">{item.title}</h3>
+                    <p className="platform-lifecycle-journey-body">{item.copy}</p>
+                    <ul className="platform-lifecycle-journey-bullets">
+                      {item.bullets.map((bullet) => (
+                        <li key={bullet}>
+                          <span className="platform-lifecycle-journey-check" aria-hidden>
+                            ✓
+                          </span>
+                          <span>{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="platform-lifecycle-journey-foot">{item.foot}</p>
+                    <DiscoverLink href={item.discoverHref}>Discover</DiscoverLink>
                   </div>
                 </div>
-                <p className="platform-lifecycle-journey-body">{item.copy}</p>
-                <ul className="platform-lifecycle-journey-bullets">
-                  {item.bullets.map((bullet) => (
-                    <li key={bullet}>
-                      <span className="platform-lifecycle-journey-check" aria-hidden>
-                        ✓
-                      </span>
-                      <span>{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="platform-lifecycle-journey-foot">{item.foot}</p>
-                <DiscoverLink href={item.discoverHref}>Discover</DiscoverLink>
               </div>
             ) : null}
           </div>

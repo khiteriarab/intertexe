@@ -5,8 +5,9 @@ export type LifecycleSlideAssets = {
 };
 
 /**
- * Highlighted workspace UI next to Create / Verify / Comply / Distribute / Extend.
- * Screenshots only — no fashion photography or garment overlays behind the product UI.
+ * One original workspace screenshot per stage, shown next to Create / Verify /
+ * Comply / Distribute / Extend. Screenshots only — no person behind the UI and
+ * no product photo in the corner.
  */
 export const LIFECYCLE_SLIDE_ASSETS: Record<
   "create" | "verify" | "comply" | "distribute" | "extend",

@@ -249,7 +249,7 @@ describe("Platform B2B sales page", () => {
     assert.match(processVisual, /aria-expanded/);
     assert.match(processVisual, /platform-lifecycle-graphic--screenshot/);
     assert.match(processVisual, /platform-lifecycle-graphic-shot/);
-    assert.match(processVisual, /sizes="140px"/);
+    assert.match(processVisual, /sizes="\(max-width: 767px\) 92vw, 420px"/);
     assert.match(processVisual, /open \? \(/);
     assert.doesNotMatch(processVisual, /tablist/);
     assert.doesNotMatch(processVisual, /platform-lifecycle-journey-visual/);
@@ -260,11 +260,11 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(slideAssets, /sceneImage/);
     assert.doesNotMatch(slideAssets, /hero-silk-dress/);
     assert.doesNotMatch(slideAssets, /\/fabrics\//);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-overview\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-issues-inbox\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-operations\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-product-record\.png"/);
-    assert.match(slideAssets, /softwareImage: "\/platform\/workspace-suppliers\.png"/);
+    assert.match(slideAssets, /create:[\s\S]*softwareImage: "\/platform\/workspace-overview\.png"/);
+    assert.match(slideAssets, /verify:[\s\S]*softwareImage: "\/platform\/workspace-issues-inbox\.png"/);
+    assert.match(slideAssets, /comply:[\s\S]*softwareImage: "\/platform\/workspace-operations\.png"/);
+    assert.match(slideAssets, /distribute:[\s\S]*softwareImage: "\/platform\/workspace-product-record\.png"/);
+    assert.match(slideAssets, /extend:[\s\S]*softwareImage: "\/platform\/workspace-suppliers\.png"/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-overview.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-issues-inbox.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-operations.png")));
