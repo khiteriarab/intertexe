@@ -99,7 +99,7 @@ function StageGraphic({ slideId }: { slideId: SlideId }) {
           src={softwareSrc}
           alt={SOFTWARE_ALTS[slideId]}
           width={1138}
-          height={678}
+          height={706}
           className="platform-lifecycle-graphic-shot"
           sizes="(max-width: 767px) 92vw, 420px"
           priority
