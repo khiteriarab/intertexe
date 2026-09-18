@@ -123,7 +123,10 @@ export function PlatformBrandShowcaseHero() {
         <div className="platform-showcase-stats">
           {PLATFORM_SHOWCASE_STATS.map((stat) => (
             <div key={stat.label} className="platform-showcase-stat">
-              <p className="platform-showcase-stat-value">{stat.figure}</p>
+              <p className="platform-showcase-stat-value" style={SERIF}>
+                {stat.figure}
+                <span className="sr-only"> {stat.qualifier}</span>
+              </p>
               <p className="platform-showcase-stat-qualifier">{stat.qualifier}</p>
               <p className="platform-showcase-stat-label">{stat.label}</p>
             </div>

@@ -86,23 +86,23 @@ export const PLATFORM_SHOWCASE_ROW_B = [...mosaic.slice(half), ...mosaic.slice(0
 
 export const PLATFORM_SHOWCASE_STATS = [
   {
-    figure: "01",
-    qualifier: "One record",
-    label: "Across the product lifecycle",
+    figure: "70%",
+    qualifier: "faster",
+    label: "Product data to governed record",
   },
   {
-    figure: "02",
-    qualifier: "Multiple outputs",
-    label: "Passport · API · Consumer",
+    figure: "95%",
+    qualifier: "ready",
+    label: "For Digital Product Passports",
   },
   {
-    figure: "03",
-    qualifier: "Governed data",
-    label: "Approved fields only",
+    figure: "50%",
+    qualifier: "fewer",
+    label: "Unresolved data gaps",
   },
   {
-    figure: "04",
-    qualifier: "Lifecycle ready",
-    label: "Creation through resale",
+    figure: "3×",
+    qualifier: "faster",
+    label: "Resale activation",
   },
 ] as const;

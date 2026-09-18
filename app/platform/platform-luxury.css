@@ -414,27 +414,57 @@
   color: #c9a962;
 }
 
+.platform-showcase-stats {
+  width: min(1320px, 100%);
+  margin-inline: auto;
+  padding-top: 3rem;
+  gap: 2.5rem 2rem;
+}
+
+@media (min-width: 768px) {
+  .platform-showcase-stats {
+    gap: 0 3.25rem;
+    padding-top: 3.5rem;
+  }
+}
+
+.platform-showcase-stat::before {
+  margin-bottom: 1.5rem;
+}
+
 .platform-showcase-stat-value {
-  font-family: var(--itx-sans, sans-serif);
-  font-size: clamp(0.6875rem, 1vw, 0.75rem);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  font-weight: 500;
+  font-family: var(--itx-serif, Georgia, serif);
+  font-size: clamp(4.25rem, 9vw, 8rem);
+  font-weight: 300;
+  line-height: 0.85;
+  letter-spacing: -0.05em;
+  color: #fff;
+  margin-bottom: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
 .platform-showcase-stat-qualifier {
-  font-family: var(--itx-serif, Georgia, serif);
-  font-size: clamp(1.15rem, 2vw, 1.45rem);
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  margin: 0.35rem 0 0.2rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: clamp(0.75rem, 1.1vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--platform-gold);
+  margin: 0 0 0.65rem;
 }
 
 .platform-showcase-stat-label {
   font-family: var(--itx-sans, sans-serif);
-  font-size: 0.75rem;
-  color: rgba(245, 243, 239, 0.62);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: rgba(245, 243, 239, 0.66);
+  max-width: 13rem;
+}
+
+@media (max-width: 767px) {
+  .platform-showcase-stat-value {
+    font-size: clamp(3.25rem, 16vw, 4.5rem);
+  }
 }
 
 @keyframes platform-lux-enter {

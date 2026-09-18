@@ -46,11 +46,13 @@ describe("Platform B2B sales page", () => {
     assert.match(showcaseHero, /stat\.figure/);
     assert.match(showcaseHero, /stat\.qualifier/);
     const showcaseStats = fs.readFileSync(path.join(process.cwd(), "lib/enterprise/platform-brand-showcase.ts"), "utf8");
-    assert.match(showcaseStats, /figure: "01"/);
-    assert.match(showcaseStats, /qualifier: "One record"/);
+    assert.match(showcaseStats, /figure: "70%"/);
+    assert.match(showcaseStats, /qualifier: "faster"/);
     assert.match(showcaseCss, /platform-showcase-stat::before/);
     assert.match(showcaseCss, /clamp\(3\.35rem/);
-    assert.match(showcaseStats, /Creation through resale/);
+    assert.match(showcaseStats, /Resale activation/);
+    const luxuryCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-luxury.css"), "utf8");
+    assert.match(luxuryCss, /\.platform-showcase-stat-value \{[\s\S]*?clamp\(4\.25rem, 9vw, 8rem\)/);
     assert.match(sections, /one governed product record/i);
     assert.doesNotMatch(sections, /EU certified/i);
     assert.doesNotMatch(sections, /EU approved/i);
