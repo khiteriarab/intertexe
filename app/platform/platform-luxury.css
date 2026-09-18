@@ -299,63 +299,6 @@
   position: relative;
 }
 
-.platform-showcase-record {
-  position: absolute;
-  right: max(1rem, calc(50% - 640px));
-  top: 8%;
-  z-index: 3;
-  width: min(16.5rem, 72vw);
-  padding: 1.1rem 1.15rem 1.05rem;
-  background: rgba(16, 19, 18, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(16px);
-  color: #f5f3ef;
-  pointer-events: none;
-}
-
-@media (max-width: 899px) {
-  .platform-showcase-record {
-    position: relative;
-    right: auto;
-    top: auto;
-    margin: 0 auto 1.5rem;
-  }
-}
-
-.platform-showcase-record-kicker {
-  font-family: var(--itx-sans, sans-serif);
-  font-size: 0.625rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(245, 243, 239, 0.55);
-  margin-bottom: 0.35rem;
-}
-
-.platform-showcase-record-name {
-  font-family: var(--itx-sans, sans-serif);
-  font-size: 0.8125rem;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.85rem;
-}
-
-.platform-showcase-record-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-family: var(--itx-sans, sans-serif);
-  font-size: 0.6875rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(245, 243, 239, 0.7);
-  padding: 0.28rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  font-variant-numeric: tabular-nums;
-}
-
-.platform-showcase-record-row span:last-child {
-  color: #e8d7a8;
-}
-
 .platform-showcase-tile-photo {
   position: absolute;
   inset: 0;
@@ -436,6 +379,24 @@
   color: #c9a962;
 }
 
+/* The mosaic is scaled from its top edge, so it overflows its layout box.
+   Reserve that overflow here or the bottom row sits under the statistics. */
+.platform-showcase-grid-wrap {
+  margin-bottom: 4.5rem;
+}
+
+@media (min-width: 768px) {
+  .platform-showcase-grid-wrap {
+    margin-bottom: 6rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .platform-showcase-grid-wrap {
+    margin-bottom: 7rem;
+  }
+}
+
 .platform-showcase-stats {
   width: min(1320px, 100%);
   margin-inline: auto;
@@ -501,13 +462,8 @@
 }
 
 .platform-showcase-hero-copy,
-.platform-showcase-record,
 .platform-showcase-stats {
   animation: platform-lux-enter 0.7s ease both;
-}
-
-.platform-showcase-record {
-  animation-delay: 0.15s;
 }
 
 .platform-showcase-stats {
@@ -516,7 +472,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .platform-showcase-hero-copy,
-  .platform-showcase-record,
   .platform-showcase-stats,
   .platform-showcase-tile,
   .platform-showcase-flip {
