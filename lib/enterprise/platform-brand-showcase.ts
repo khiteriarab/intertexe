@@ -7,7 +7,6 @@ export type ShowcaseProductTile = {
   name: string;
   imageUrl: string;
   composition?: string;
-  featured?: boolean;
 };
 
 export type ShowcaseBrandTile = {
@@ -42,8 +41,6 @@ const SHOWCASE_STYLES = [
 /** Three clothing records shown on /platform/demo — selected from the editor-pick 10. */
 export const PLATFORM_FEATURED_EXAMPLE_STYLES = ["ITX-LIVE-07", "ITX-LIVE-01", "ITX-LIVE-09"] as const;
 
-const FEATURED_MOSAIC_STYLES = new Set(["ITX-LIVE-07", "ITX-LIVE-09", "ITX-LIVE-06"]);
-
 function productTiles(): ShowcaseProductTile[] {
   const rows = liveProducts as PilotRow[];
   return SHOWCASE_STYLES.map((style) => {
@@ -56,7 +53,6 @@ function productTiles(): ShowcaseProductTile[] {
       name: row.name,
       imageUrl: row.image_url,
       composition: row.composition,
-      featured: FEATURED_MOSAIC_STYLES.has(style),
     };
   }).filter(Boolean) as ShowcaseProductTile[];
 }

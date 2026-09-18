@@ -357,35 +357,57 @@
 }
 
 .platform-showcase-tile-photo {
-  position: relative;
-  flex: 1;
-  min-height: 6.5rem;
-}
-
-.platform-showcase-tile--product:not(.platform-showcase-tile--featured) .platform-showcase-tile-photo {
   position: absolute;
   inset: 0;
 }
 
-.platform-showcase-tile--featured {
-  width: 9.5rem;
-  height: auto;
-  min-height: 11rem;
-  display: flex;
-  flex-direction: column;
-  background: #f7f4ef;
+/* Product tiles turn to reveal the governed composition, then turn back. */
+.platform-showcase-tile--product {
+  perspective: 900px;
+  background: transparent;
 }
 
-@media (min-width: 1024px) {
-  .platform-showcase-tile--featured {
-    width: 11.25rem;
+.platform-showcase-flip {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: platform-showcase-turn 9s ease-in-out infinite;
+}
+
+.platform-showcase-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.platform-showcase-face--back {
+  transform: rotateY(180deg);
+}
+
+@keyframes platform-showcase-turn {
+  0%,
+  40% {
+    transform: rotateY(0deg);
+  }
+  52%,
+  90% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
   }
 }
 
 .platform-showcase-tile-meta {
-  position: relative;
-  padding: 0.45rem 0.5rem 0.55rem;
-  background: #101312;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.45rem 0.55rem 0.55rem;
+  background: rgba(16, 19, 18, 0.92);
   color: #f5f3ef;
 }
 
@@ -496,8 +518,18 @@
   .platform-showcase-hero-copy,
   .platform-showcase-record,
   .platform-showcase-stats,
-  .platform-showcase-tile {
+  .platform-showcase-tile,
+  .platform-showcase-flip {
     animation: none;
+  }
+
+  /* Composition stays readable when the turn is switched off. */
+  .platform-showcase-face--front {
+    display: none;
+  }
+
+  .platform-showcase-face--back {
+    transform: none;
   }
 }
 
