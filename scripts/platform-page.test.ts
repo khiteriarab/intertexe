@@ -295,8 +295,14 @@ describe("Platform B2B sales page", () => {
     assert.match(deliveryVisual, /aria-expanded/);
     assert.match(deliveryVisual, /setOpenIndex/);
     assert.match(deliveryVisual, /index === openIndex/);
-    assert.match(deliveryVisual, /active \? \(/);
+    assert.match(deliveryVisual, /<StepVisual/);
+    assert.doesNotMatch(deliveryVisual, /active \? \(/);
     assert.match(deliveryCss, /platform-delivery-storyline-reveal/);
+    assert.match(deliveryCss, /\.platform-delivery-storyline-visual-wrap \{[\s\S]*?display: flex;/);
+    assert.doesNotMatch(
+      deliveryCss,
+      /\.platform-delivery-storyline-reveal,\s*\.platform-delivery-storyline-visual-wrap \{[\s\S]*?display: none;/,
+    );
     assert.match(deliveryVisual, /One governed record · three delivery modes · not mutually exclusive/);
     assert.match(deliveryVisual, /story-product-identity\.png/);
     assert.match(deliveryVisual, /story-publish-approved\.png/);
