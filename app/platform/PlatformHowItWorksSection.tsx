@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { WhatItIsProcessVisual } from "./b2b-visuals/WhatItIsProcessVisual";
 import { PlatformProductPillarsVisual } from "./b2b-visuals/PlatformProductPillarsVisual";
-import { PlatformCapabilityNav } from "./PlatformCapabilityNav";
-import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import { Body, Eyebrow, Heading } from "./platform-ui";
 
 export function PlatformHowItWorksSection() {
@@ -51,55 +49,6 @@ export function PlatformHowItWorksSection() {
             .
           </p>
         </div>
-
-        <div className="platform-product-story-bridge mt-12 sm:mt-14" aria-hidden>
-          <div className="platform-product-story-bridge-line" />
-          <div className="platform-product-story-bridge-node">
-            <span className="platform-product-story-bridge-label">Trusted data layer</span>
-            <span className="platform-product-story-bridge-chevron">↓</span>
-          </div>
-          <div className="platform-product-story-bridge-line platform-product-story-bridge-line--fade" />
-        </div>
-
-        <div className="platform-product-story-intelligence" id="material-intelligence">
-          <header className="platform-product-story-phase-head platform-product-story-phase-head--intel">
-            <p className="platform-product-story-phase-kicker">Material intelligence</p>
-            <p className="platform-product-story-flow-line">
-              <span>Analyze</span>
-              <span className="platform-product-story-flow-arrow" aria-hidden>
-                →
-              </span>
-              <span>Benchmark</span>
-              <span className="platform-product-story-flow-arrow" aria-hidden>
-                →
-              </span>
-              <span>Forecast</span>
-              <span className="platform-product-story-flow-arrow" aria-hidden>
-                →
-              </span>
-              <span>Recommend</span>
-              <span className="platform-product-story-flow-arrow" aria-hidden>
-                →
-              </span>
-              <span>Act</span>
-            </p>
-          </header>
-
-          <p className="text-sm text-[var(--platform-quiet)] leading-relaxed max-w-2xl">
-            Brief, benchmark, forecast, and recommended actions live inside your INTERTEXE workspace — assembled from
-            your governed catalog, not generic output.{" "}
-            <Link href={getEnterpriseLoginUrl()} className="underline underline-offset-2 hover:text-[var(--platform-ink)]">
-              Sign in to open intelligence
-            </Link>{" "}
-            or{" "}
-            <Link href="/platform/demo" className="underline underline-offset-2 hover:text-[var(--platform-ink)]">
-              tour the live demo
-            </Link>
-            .
-          </p>
-        </div>
-
-        <PlatformCapabilityNav className="mt-10 sm:mt-12 lg:mt-14" />
       </div>
     </section>
   );

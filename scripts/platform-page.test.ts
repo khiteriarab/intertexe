@@ -84,12 +84,9 @@ describe("Platform B2B sales page", () => {
     assert.match(processVisual, /Delivery/);
     assert.match(processVisual, /Circularity/);
     assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
-    assert.match(howItWorks, /Analyze/);
-    assert.match(howItWorks, /Benchmark/);
-    assert.match(howItWorks, /Forecast/);
-    assert.match(howItWorks, /Recommend/);
-    assert.match(howItWorks, /Act/);
-    assert.match(howItWorks, /Sign in to open intelligence/);
+    assert.doesNotMatch(howItWorks, /platform-product-story-flow-line/);
+    assert.doesNotMatch(howItWorks, /platform-product-story-bridge/);
+    assert.doesNotMatch(howItWorks, /PlatformCapabilityNav/);
     assert.match(howItWorks, /From raw product data to intelligent action/);
     assert.doesNotMatch(howItWorks, /understand-ingest-laptop\.jpg/);
     assert.doesNotMatch(howItWorks, /platform-editorial-step-grid/);
@@ -189,7 +186,6 @@ describe("Platform B2B sales page", () => {
       "utf8",
     );
     assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
-    assert.match(howItWorks, /Material intelligence/);
     assert.match(entIntelligence, /EntMaterialBenchmarkModule/);
     assert.match(entIntelligenceModules, /Material Benchmark/);
     assert.match(sections, /PlatformIntelligenceSection/);
